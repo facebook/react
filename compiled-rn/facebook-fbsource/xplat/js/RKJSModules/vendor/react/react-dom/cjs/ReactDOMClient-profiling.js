@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c2bdd17115f851cb9395dbc112d05098>>
+ * @generated SignedSource<<e48319f84d7218f1b8bf443004d40b8b>>
  */
 
 /*
@@ -12888,6 +12888,7 @@ var DefaultAsyncDispatcher = {
   pendingRecoverableErrors = null,
   pendingSuspendedCommitReason = 0,
   pendingDelayedCommitReason = 0,
+  pendingSuspendedViewTransitionReason = null,
   nestedUpdateCount = 0,
   rootWithNestedUpdates = null;
 function requestUpdateLane(fiber) {
@@ -14178,6 +14179,7 @@ function commitRoot(
     pendingEffectsRenderEndTime = completedRenderEndTime;
     pendingSuspendedCommitReason = suspendedCommitReason;
     pendingDelayedCommitReason = 0;
+    pendingSuspendedViewTransitionReason = null;
     (enableComponentPerformanceTrack && 0 !== finishedWork.actualDuration) ||
     0 !== (finishedWork.subtreeFlags & 10256) ||
     0 !== (finishedWork.flags & 10256)
@@ -14367,18 +14369,36 @@ function flushMutationEffects() {
 function flushLayoutEffects() {
   if (2 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
-    var root = pendingEffectsRoot,
-      finishedWork = pendingFinishedWork,
+    if (enableComponentPerformanceTrack) {
+      var suspendedViewTransitionReason = pendingSuspendedViewTransitionReason;
+      null !== suspendedViewTransitionReason &&
+        ((commitStartTime = now()),
+        !supportsUserTiming ||
+          commitStartTime <= commitEndTime ||
+          console.timeStamp(
+            suspendedViewTransitionReason,
+            commitEndTime,
+            commitStartTime,
+            currentTrack,
+            "Scheduler \u269b",
+            "secondary-light"
+          ));
+    }
+    suspendedViewTransitionReason = pendingEffectsRoot;
+    var finishedWork = pendingFinishedWork,
       lanes = pendingEffectsLanes,
-      cleanUpIndicator = root.pendingIndicator;
-    if (null !== cleanUpIndicator && 0 === root.indicatorLanes) {
+      cleanUpIndicator = suspendedViewTransitionReason.pendingIndicator;
+    if (
+      null !== cleanUpIndicator &&
+      0 === suspendedViewTransitionReason.indicatorLanes
+    ) {
       var prevTransition = ReactSharedInternals.T;
       ReactSharedInternals.T = null;
       var previousPriority = ReactDOMSharedInternals.p;
       ReactDOMSharedInternals.p = 2;
       var prevExecutionContext = executionContext;
       executionContext |= 4;
-      root.pendingIndicator = null;
+      suspendedViewTransitionReason.pendingIndicator = null;
       try {
         cleanUpIndicator();
       } catch (x) {
@@ -14403,9 +14423,13 @@ function flushLayoutEffects() {
             typeof injectedProfilingHooks.markLayoutEffectsStarted &&
           injectedProfilingHooks.markLayoutEffectsStarted(lanes),
           (inProgressLanes = lanes),
-          (inProgressRoot = root),
+          (inProgressRoot = suspendedViewTransitionReason),
           resetComponentEffectTimers(),
-          commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
+          commitLayoutEffectOnFiber(
+            suspendedViewTransitionReason,
+            finishedWork.alternate,
+            finishedWork
+          ),
           (inProgressRoot = inProgressLanes = null),
           null !== injectedProfilingHooks &&
             "function" ===
@@ -14417,20 +14441,21 @@ function flushLayoutEffects() {
           (ReactSharedInternals.T = cleanUpIndicator);
       }
     }
-    root = pendingEffectsRenderEndTime;
+    suspendedViewTransitionReason = pendingEffectsRenderEndTime;
     finishedWork = pendingSuspendedCommitReason;
     enableComponentPerformanceTrack &&
       ((commitEndTime = now()),
-      (root = 0 === finishedWork ? root : commitStartTime),
+      (suspendedViewTransitionReason =
+        0 === finishedWork ? suspendedViewTransitionReason : commitStartTime),
       (finishedWork = commitEndTime),
       (lanes = 1 === pendingDelayedCommitReason),
       null !== commitErrors
-        ? logCommitErrored(root, finishedWork)
+        ? logCommitErrored(suspendedViewTransitionReason, finishedWork)
         : !supportsUserTiming ||
-          finishedWork <= root ||
+          finishedWork <= suspendedViewTransitionReason ||
           console.timeStamp(
             lanes ? "Commit Interrupted View Transition" : "Commit",
-            root,
+            suspendedViewTransitionReason,
             finishedWork,
             currentTrack,
             "Scheduler \u269b",
@@ -15230,20 +15255,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1924 = 0;
-  i$jscomp$inline_1924 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1924++
+  var i$jscomp$inline_1930 = 0;
+  i$jscomp$inline_1930 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1930++
 ) {
-  var eventName$jscomp$inline_1925 =
-      simpleEventPluginEvents[i$jscomp$inline_1924],
-    domEventName$jscomp$inline_1926 =
-      eventName$jscomp$inline_1925.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1927 =
-      eventName$jscomp$inline_1925[0].toUpperCase() +
-      eventName$jscomp$inline_1925.slice(1);
+  var eventName$jscomp$inline_1931 =
+      simpleEventPluginEvents[i$jscomp$inline_1930],
+    domEventName$jscomp$inline_1932 =
+      eventName$jscomp$inline_1931.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1933 =
+      eventName$jscomp$inline_1931[0].toUpperCase() +
+      eventName$jscomp$inline_1931.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1926,
-    "on" + capitalizedEvent$jscomp$inline_1927
+    domEventName$jscomp$inline_1932,
+    "on" + capitalizedEvent$jscomp$inline_1933
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -19584,16 +19609,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2335 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2341 = React.version;
 if (
-  "19.2.0-native-fb-58132116-20250918" !==
-  isomorphicReactPackageVersion$jscomp$inline_2335
+  "19.2.0-native-fb-ad578aa0-20250918" !==
+  isomorphicReactPackageVersion$jscomp$inline_2341
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2335,
-      "19.2.0-native-fb-58132116-20250918"
+      isomorphicReactPackageVersion$jscomp$inline_2341,
+      "19.2.0-native-fb-ad578aa0-20250918"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19613,12 +19638,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2342 = {
+var internals$jscomp$inline_2348 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-58132116-20250918",
+  version: "19.2.0-native-fb-ad578aa0-20250918",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-58132116-20250918",
+  reconcilerVersion: "19.2.0-native-fb-ad578aa0-20250918",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$324 = 0;
@@ -19636,16 +19661,16 @@ var internals$jscomp$inline_2342 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2913 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2919 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2913.isDisabled &&
-    hook$jscomp$inline_2913.supportsFiber
+    !hook$jscomp$inline_2919.isDisabled &&
+    hook$jscomp$inline_2919.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2913.inject(
-        internals$jscomp$inline_2342
+      (rendererID = hook$jscomp$inline_2919.inject(
+        internals$jscomp$inline_2348
       )),
-        (injectedHook = hook$jscomp$inline_2913);
+        (injectedHook = hook$jscomp$inline_2919);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -19741,4 +19766,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-58132116-20250918";
+exports.version = "19.2.0-native-fb-ad578aa0-20250918";

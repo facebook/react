@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<50432e2278d3cafd204f72dac5e3e3f2>>
+ * @generated SignedSource<<797659a129e0a0c2850052b348b77671>>
  */
 
 "use strict";
@@ -15588,6 +15588,7 @@ __DEV__ &&
         pendingEffectsRenderEndTime = completedRenderEndTime;
         pendingSuspendedCommitReason = suspendedCommitReason;
         pendingDelayedCommitReason = IMMEDIATE_COMMIT;
+        pendingSuspendedViewTransitionReason = null;
         (enableComponentPerformanceTrack &&
           0 !== finishedWork.actualDuration) ||
         0 !== (finishedWork.subtreeFlags & 10256) ||
@@ -15674,18 +15675,52 @@ __DEV__ &&
     function flushLayoutEffects() {
       if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var root = pendingEffectsRoot,
-          finishedWork = pendingFinishedWork,
-          lanes = pendingEffectsLanes,
-          cleanUpIndicator = root.pendingIndicator;
-        if (null !== cleanUpIndicator && 0 === root.indicatorLanes) {
+        if (enableComponentPerformanceTrack) {
+          var suspendedViewTransitionReason =
+            pendingSuspendedViewTransitionReason;
+          if (null !== suspendedViewTransitionReason) {
+            commitStartTime = now();
+            var startTime = commitEndTime,
+              endTime = commitStartTime;
+            !supportsUserTiming ||
+              endTime <= startTime ||
+              (workInProgressUpdateTask
+                ? workInProgressUpdateTask.run(
+                    console.timeStamp.bind(
+                      console,
+                      suspendedViewTransitionReason,
+                      startTime,
+                      endTime,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      "secondary-light"
+                    )
+                  )
+                : console.timeStamp(
+                    suspendedViewTransitionReason,
+                    startTime,
+                    endTime,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    "secondary-light"
+                  ));
+          }
+        }
+        suspendedViewTransitionReason = pendingEffectsRoot;
+        startTime = pendingFinishedWork;
+        endTime = pendingEffectsLanes;
+        var cleanUpIndicator = suspendedViewTransitionReason.pendingIndicator;
+        if (
+          null !== cleanUpIndicator &&
+          0 === suspendedViewTransitionReason.indicatorLanes
+        ) {
           var prevTransition = ReactSharedInternals.T;
           ReactSharedInternals.T = null;
           var previousPriority = currentUpdatePriority;
           currentUpdatePriority = DiscreteEventPriority;
           var prevExecutionContext = executionContext;
           executionContext |= CommitContext;
-          root.pendingIndicator = null;
+          suspendedViewTransitionReason.pendingIndicator = null;
           try {
             cleanUpIndicator();
           } catch (x) {
@@ -15696,8 +15731,8 @@ __DEV__ &&
               (ReactSharedInternals.T = prevTransition);
           }
         }
-        cleanUpIndicator = 0 !== (finishedWork.flags & 8772);
-        if (0 !== (finishedWork.subtreeFlags & 8772) || cleanUpIndicator) {
+        cleanUpIndicator = 0 !== (startTime.flags & 8772);
+        if (0 !== (startTime.subtreeFlags & 8772) || cleanUpIndicator) {
           cleanUpIndicator = ReactSharedInternals.T;
           ReactSharedInternals.T = null;
           prevTransition = currentUpdatePriority;
@@ -15708,14 +15743,14 @@ __DEV__ &&
             null !== injectedProfilingHooks &&
               "function" ===
                 typeof injectedProfilingHooks.markLayoutEffectsStarted &&
-              injectedProfilingHooks.markLayoutEffectsStarted(lanes),
-              (inProgressLanes = lanes),
-              (inProgressRoot = root),
+              injectedProfilingHooks.markLayoutEffectsStarted(endTime),
+              (inProgressLanes = endTime),
+              (inProgressRoot = suspendedViewTransitionReason),
               resetComponentEffectTimers(),
               commitLayoutEffectOnFiber(
-                root,
-                finishedWork.alternate,
-                finishedWork
+                suspendedViewTransitionReason,
+                startTime.alternate,
+                startTime
               ),
               (inProgressRoot = inProgressLanes = null),
               null !== injectedProfilingHooks &&
@@ -15728,44 +15763,47 @@ __DEV__ &&
               (ReactSharedInternals.T = cleanUpIndicator);
           }
         }
-        root = pendingEffectsRenderEndTime;
-        finishedWork = pendingSuspendedCommitReason;
+        suspendedViewTransitionReason = pendingEffectsRenderEndTime;
+        startTime = pendingSuspendedCommitReason;
         enableComponentPerformanceTrack &&
           ((commitEndTime = now()),
-          (root = finishedWork === IMMEDIATE_COMMIT ? root : commitStartTime),
-          (finishedWork = commitEndTime),
-          (lanes =
+          (suspendedViewTransitionReason =
+            startTime === IMMEDIATE_COMMIT
+              ? suspendedViewTransitionReason
+              : commitStartTime),
+          (startTime = commitEndTime),
+          (endTime =
             pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT),
           (cleanUpIndicator = workInProgressUpdateTask),
           null !== commitErrors
             ? logCommitErrored(
-                root,
-                finishedWork,
+                suspendedViewTransitionReason,
+                startTime,
                 commitErrors,
                 !1,
                 cleanUpIndicator
               )
             : !supportsUserTiming ||
-              finishedWork <= root ||
+              startTime <= suspendedViewTransitionReason ||
               (cleanUpIndicator
                 ? cleanUpIndicator.run(
                     console.timeStamp.bind(
                       console,
-                      lanes ? "Commit Interrupted View Transition" : "Commit",
-                      root,
-                      finishedWork,
+                      endTime ? "Commit Interrupted View Transition" : "Commit",
+                      suspendedViewTransitionReason,
+                      startTime,
                       currentTrack,
                       "Scheduler \u269b",
-                      lanes ? "error" : "secondary-dark"
+                      endTime ? "error" : "secondary-dark"
                     )
                   )
                 : console.timeStamp(
-                    lanes ? "Commit Interrupted View Transition" : "Commit",
-                    root,
-                    finishedWork,
+                    endTime ? "Commit Interrupted View Transition" : "Commit",
+                    suspendedViewTransitionReason,
+                    startTime,
                     currentTrack,
                     "Scheduler \u269b",
-                    lanes ? "error" : "secondary-dark"
+                    endTime ? "error" : "secondary-dark"
                   )));
         pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
       }
@@ -20039,6 +20077,7 @@ __DEV__ &&
       pendingRecoverableErrors = null,
       pendingSuspendedCommitReason = IMMEDIATE_COMMIT,
       pendingDelayedCommitReason = IMMEDIATE_COMMIT,
+      pendingSuspendedViewTransitionReason = null,
       NESTED_UPDATE_LIMIT = 50,
       nestedUpdateCount = 0,
       rootWithNestedUpdates = null,
@@ -20139,11 +20178,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-58132116-20250918" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-ad578aa0-20250918" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-58132116-20250918\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-ad578aa0-20250918\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -20169,10 +20208,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-58132116-20250918",
+        version: "19.2.0-native-fb-ad578aa0-20250918",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-58132116-20250918"
+        reconcilerVersion: "19.2.0-native-fb-ad578aa0-20250918"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
