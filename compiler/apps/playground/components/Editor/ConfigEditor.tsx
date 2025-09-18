@@ -61,15 +61,6 @@ function ExpandedEditor({
   const dispatchStore = useStoreDispatch();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup timeout on unmount
-  useEffect((): (() => void) => {
-    return (): void => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
-
   const handleChange: (value: string | undefined) => void = (
     value: string | undefined,
   ) => {
