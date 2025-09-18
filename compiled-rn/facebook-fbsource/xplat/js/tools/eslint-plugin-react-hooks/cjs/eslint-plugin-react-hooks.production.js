@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<81d60690a5772c1e1ff53f3339f44aeb>>
+ * @generated SignedSource<<1bcdbec6f4e7881ef00582a5c118da84>>
  */
 
 'use strict';
@@ -25474,6 +25474,10 @@ function isReorderableExpression(builder, expr, allowLocalIdentifiers) {
             else {
                 return true;
             }
+        }
+        case 'TSInstantiationExpression': {
+            const innerExpr = expr.get('expression');
+            return isReorderableExpression(builder, innerExpr, allowLocalIdentifiers);
         }
         case 'RegExpLiteral':
         case 'StringLiteral':

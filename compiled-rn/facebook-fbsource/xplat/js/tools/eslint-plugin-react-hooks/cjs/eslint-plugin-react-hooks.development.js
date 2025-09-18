@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<74966bae93f7a47b1d09a33c5c9a0c3c>>
+ * @generated SignedSource<<60518f860ab77ca91f3dd6ff778aeac6>>
  */
 
 'use strict';
@@ -25489,6 +25489,10 @@ function isReorderableExpression(builder, expr, allowLocalIdentifiers) {
             else {
                 return true;
             }
+        }
+        case 'TSInstantiationExpression': {
+            const innerExpr = expr.get('expression');
+            return isReorderableExpression(builder, innerExpr, allowLocalIdentifiers);
         }
         case 'RegExpLiteral':
         case 'StringLiteral':
