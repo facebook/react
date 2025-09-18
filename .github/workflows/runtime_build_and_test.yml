@@ -194,7 +194,7 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: |
           yarn generate-inline-fizz-runtime
-          git diff --exit-code || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
+          git diff --exit-code || (echo "There was a change to the Fizz runtime. Run \`yarn generate-inline-fizz-runtime\` and check in the result." && false)
 
   # ----- FEATURE FLAGS -----
   flags:
