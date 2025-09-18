@@ -12,9 +12,13 @@ import type {
   SuspenseNode,
   Rect,
 } from 'react-devtools-shared/src/frontend/types';
+import typeof {
+  SyntheticMouseEvent,
+  SyntheticPointerEvent,
+} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
-import {useContext} from 'react';
+import {createContext, useContext} from 'react';
 import {
   TreeDispatcherContext,
   TreeStateContext,
@@ -26,19 +30,32 @@ import {
   SuspenseTreeStateContext,
   SuspenseTreeDispatcherContext,
 } from './SuspenseTreeContext';
-import typeof {
-  SyntheticMouseEvent,
-  SyntheticPointerEvent,
-} from 'react-dom-bindings/src/events/SyntheticEvent';
 
-function SuspenseRect({rect}: {rect: Rect}): React$Node {
+function ScaledRect({
+  className,
+  rect,
+  ...props
+}: {
+  className: string,
+  rect: Rect,
+  ...
+}): React$Node {
+  const viewBox = useContext(ViewBox);
+  const width = (rect.width / viewBox.width) * 100 + '%';
+  const height = (rect.height / viewBox.height) * 100 + '%';
+  const x = ((rect.x - viewBox.x) / viewBox.width) * 100 + '%';
+  const y = ((rect.y - viewBox.y) / viewBox.height) * 100 + '%';
+
   return (
-    <rect
-      className={styles.SuspenseRect}
-      x={rect.x}
-      y={rect.y}
-      width={rect.width}
-      height={rect.height}
+    <div
+      {...props}
+      className={styles.SuspenseRectsScaledRect + ' ' + className}
+      style={{
+        width,
+        height,
+        top: y,
+        left: x,
+      }}
     />
   );
 }
@@ -97,22 +114,65 @@ function SuspenseRects({
   // TODO: Use the nearest Suspense boundary
   const selected = inspectedElementID === suspenseID;
 
+  const boundingBox = getBoundingBox(suspense.rects);
+
   return (
-    <g
-      data-highlighted={selected}
-      onClick={handleClick}
-      onPointerOver={handlePointerOver}
-      onPointerLeave={handlePointerLeave}>
-      <title>{suspense.name}</title>
-      {suspense.rects !== null &&
-        suspense.rects.map((rect, index) => {
-          return <SuspenseRect key={index} rect={rect} />;
-        })}
-      {suspense.children.map(childID => {
-        return <SuspenseRects key={childID} suspenseID={childID} />;
-      })}
-    </g>
+    <ScaledRect rect={boundingBox} className={styles.SuspenseRectsBoundary}>
+      <ViewBox.Provider value={boundingBox}>
+        {suspense.rects !== null &&
+          suspense.rects.map((rect, index) => {
+            return (
+              <ScaledRect
+                key={index}
+                className={styles.SuspenseRectsRect}
+                rect={rect}
+                data-highlighted={selected}
+                onClick={handleClick}
+                onPointerOver={handlePointerOver}
+                onPointerLeave={handlePointerLeave}
+                // Reach-UI tooltip will go out of bounds of parent scroll container.
+                title={suspense.name}
+              />
+            );
+          })}
+        {suspense.children.length > 0 && (
+          <ScaledRect
+            className={styles.SuspenseRectsBoundaryChildren}
+            rect={boundingBox}>
+            {suspense.children.map(childID => {
+              return <SuspenseRects key={childID} suspenseID={childID} />;
+            })}
+          </ScaledRect>
+        )}
+      </ViewBox.Provider>
+    </ScaledRect>
   );
+}
+
+function getBoundingBox(rects: $ReadOnlyArray<Rect> | null): Rect {
+  if (rects === null || rects.length === 0) {
+    return {x: 0, y: 0, width: 0, height: 0};
+  }
+
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+
+  for (let i = 0; i < rects.length; i++) {
+    const rect = rects[i];
+    minX = Math.min(minX, rect.x);
+    minY = Math.min(minY, rect.y);
+    maxX = Math.max(maxX, rect.x + rect.width);
+    maxY = Math.max(maxY, rect.y + rect.height);
+  }
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+  };
 }
 
 function getDocumentBoundingRect(
@@ -169,42 +229,42 @@ function SuspenseRectsShell({
   const store = useContext(StoreContext);
   const root = store.getSuspenseByID(rootID);
   if (root === null) {
-    console.warn(`<Element> Could not find suspense node id ${rootID}`);
+    // getSuspenseByID will have already warned
     return null;
   }
 
-  return (
-    <g>
-      {root.children.map(childID => {
-        return <SuspenseRects key={childID} suspenseID={childID} />;
-      })}
-    </g>
-  );
+  return root.children.map(childID => {
+    return <SuspenseRects key={childID} suspenseID={childID} />;
+  });
 }
+
+const ViewBox = createContext<Rect>((null: any));
 
 function SuspenseRectsContainer(): React$Node {
   const store = useContext(StoreContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
   const {roots} = useContext(SuspenseTreeStateContext);
 
-  const boundingRect = getDocumentBoundingRect(store, roots);
+  const boundingBox = getDocumentBoundingRect(store, roots);
 
+  const boundingBoxWidth = boundingBox.width;
+  const heightScale =
+    boundingBoxWidth === 0 ? 1 : boundingBox.height / boundingBoxWidth;
+  // Scales the inspected document to fit into the available width
   const width = '100%';
-  const boundingRectWidth = boundingRect.width;
-  const height =
-    (boundingRectWidth === 0 ? 0 : boundingRect.height / boundingRect.width) *
-      100 +
-    '%';
+  const aspectRatio = `1 / ${heightScale}`;
 
   return (
     <div className={styles.SuspenseRectsContainer}>
-      <svg
-        style={{width, height}}
-        viewBox={`${boundingRect.x} ${boundingRect.y} ${boundingRect.width} ${boundingRect.height}`}>
-        {roots.map(rootID => {
-          return <SuspenseRectsShell key={rootID} rootID={rootID} />;
-        })}
-      </svg>
+      <ViewBox.Provider value={boundingBox}>
+        <div
+          className={styles.SuspenseRectsViewBox}
+          style={{aspectRatio, width}}>
+          {roots.map(rootID => {
+            return <SuspenseRectsShell key={rootID} rootID={rootID} />;
+          })}
+        </div>
+      </ViewBox.Provider>
     </div>
   );
 }
