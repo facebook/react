@@ -38,7 +38,6 @@ import {
   enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableTransitionTracing,
-  passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
   enableViewTransition,
   enableSuspenseyImages,
@@ -488,7 +487,7 @@ function updateHostComponent(
 
     let newChildSet = null;
     let hasOffscreenComponentChild = false;
-    if (requiresClone && passChildrenWhenCloningPersistedNodes) {
+    if (requiresClone) {
       markCloned(workInProgress);
       newChildSet = createContainerChildSet();
       // If children might have changed, we have to add them all to the set.
@@ -533,10 +532,7 @@ function updateHostComponent(
         // Otherwise parents won't know that there are new children to propagate upwards.
         markUpdate(workInProgress);
       }
-    } else if (
-      !passChildrenWhenCloningPersistedNodes ||
-      hasOffscreenComponentChild
-    ) {
+    } else if (hasOffscreenComponentChild) {
       // If children have changed, we have to add them all to the set.
       appendAllChildren(
         newInstance,

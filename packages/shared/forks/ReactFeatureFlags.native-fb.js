@@ -24,7 +24,6 @@ export const {
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableEagerAlternateStateNodeCleanup,
-  passChildrenWhenCloningPersistedNodes,
   renameElementSymbol,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,

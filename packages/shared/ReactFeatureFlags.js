@@ -127,8 +127,6 @@ export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 
 export const alwaysThrottleRetries: boolean = true;
 
-export const passChildrenWhenCloningPersistedNodes: boolean = false;
-
 /**
  * Enables a new Fiber flag used in persisted mode to reduce the number
  * of cloned host components.
