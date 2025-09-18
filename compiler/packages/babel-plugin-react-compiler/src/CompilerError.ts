@@ -520,7 +520,7 @@ function printErrorSummary(category: ErrorCategory, message: string): string {
     case ErrorCategory.AutomaticEffectDependencies:
     case ErrorCategory.CapitalizedCalls:
     case ErrorCategory.Config:
-    case ErrorCategory.EffectDerivationsOfState:
+    case ErrorCategory.EffectStateDerivationCalculateInRender:
     case ErrorCategory.EffectSetState:
     case ErrorCategory.ErrorBoundaries:
     case ErrorCategory.Factories:
@@ -614,7 +614,10 @@ export enum ErrorCategory {
    * Checks for no setState in effect bodies
    */
   EffectSetState = 'EffectSetState',
-  EffectDerivationsOfState = 'EffectDerivationsOfState',
+  /**
+   * Checks for no deriving state in effects, solved by calculate in render
+   */
+  EffectStateDerivationCalculateInRender = 'EffectStateDerivationCalculateInRender',
   /**
    * Validates against try/catch in place of error boundaries
    */
@@ -751,11 +754,11 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         recommended: false,
       };
     }
-    case ErrorCategory.EffectDerivationsOfState: {
+    case ErrorCategory.EffectStateDerivationCalculateInRender: {
       return {
         category,
         severity: ErrorSeverity.Error,
-        name: 'no-deriving-state-in-effects',
+        name: 'no-deriving-state-in-effects-calculate-in-render',
         description:
           'Validates against deriving values from state in an effect',
         recommended: false,
