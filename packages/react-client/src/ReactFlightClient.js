@@ -1078,7 +1078,7 @@ function getTaskName(type: mixed): string {
 function initializeElement(
   response: Response,
   element: any,
-  lazyType: null | LazyComponent<
+  lazyNode: null | LazyComponent<
     React$Element<any>,
     SomeChunk<React$Element<any>>,
   >,
@@ -1150,25 +1150,15 @@ function initializeElement(
     initializeFakeStack(response, owner);
   }
 
-  if (lazyType !== null) {
-    // In case the JSX runtime has validated the lazy type as a static child, we
-    // need to transfer this information to the element.
-    if (
-      lazyType._store &&
-      lazyType._store.validated &&
-      !element._store.validated
-    ) {
-      element._store.validated = lazyType._store.validated;
-    }
-
-    // If the lazy type has debug info, and the element doesn't have any,
-    // we should forward it.
-    if (lazyType._debugInfo !== null && element._debugInfo === null) {
-      element._debugInfo = lazyType._debugInfo;
-      // We need to clean it from the lazy type now, so the element won't show
-      // up twice in the component tree.
-      lazyType._debugInfo = null;
-    }
+  // In case the JSX runtime has validated the lazy type as a static child, we
+  // need to transfer this information to the element.
+  if (
+    lazyNode &&
+    lazyNode._store &&
+    lazyNode._store.validated &&
+    !element._store.validated
+  ) {
+    element._store.validated = lazyNode._store.validated;
   }
 
   // TODO: We should be freezing the element but currently, we might write into
@@ -1178,6 +1168,7 @@ function initializeElement(
 
 function createElement(
   response: Response,
+  isRoot: boolean,
   type: mixed,
   key: mixed,
   props: mixed,
@@ -1286,15 +1277,24 @@ function createElement(
       // a Lazy node referencing this Element to let everything around it proceed.
       const blockedChunk: BlockedChunk<React$Element<any>> =
         createBlockedChunk(response);
+      if (__DEV__) {
+        // If this is the root element, forward the live debug info of the
+        // initializing chunk to the blocked chunk.
+        if (isRoot && initializingChunk !== null) {
+          blockedChunk._debugInfo = initializingChunk._debugInfo;
+        }
+      }
       handler.value = element;
       handler.chunk = blockedChunk;
-      const lazyType = createLazyChunkWrapper(blockedChunk, validated);
+      const lazyNode = createLazyChunkWrapper(blockedChunk, validated);
       if (__DEV__) {
+        // Forward the live debug info of the lazy node to the element.
+        element._debugInfo = lazyNode._debugInfo;
         // After we have initialized any blocked references, initialize stack etc.
-        const init = initializeElement.bind(null, response, element, lazyType);
+        const init = initializeElement.bind(null, response, element, lazyNode);
         blockedChunk.then(init, init);
       }
-      return lazyType;
+      return lazyNode;
     }
   }
   if (__DEV__) {
@@ -1836,8 +1836,7 @@ function transferReferencedDebugInfo(
       referencedValue !== null &&
       (isArray(referencedValue) ||
         typeof referencedValue[ASYNC_ITERATOR] === 'function' ||
-        referencedValue.$$typeof === REACT_ELEMENT_TYPE ||
-        referencedValue.$$typeof === REACT_LAZY_TYPE)
+        referencedValue.$$typeof === REACT_ELEMENT_TYPE)
     ) {
       // We should maybe use a unique symbol for arrays but this is a React owned array.
       // $FlowFixMe[prop-missing]: This should be added to elements.
@@ -1860,14 +1859,16 @@ function transferReferencedDebugInfo(
     // is extracted, or if the root is rendered as is.
     if (parentChunk !== null) {
       const parentDebugInfo = parentChunk._debugInfo;
-      for (let i = 0; i < referencedDebugInfo.length; ++i) {
-        const debugInfoEntry = referencedDebugInfo[i];
-        if (debugInfoEntry.name != null) {
-          (debugInfoEntry: ReactComponentInfo);
-          // We're not transferring Component info since we use Component info
-          // in Debug info to fill in gaps between Fibers for the parent stack.
-        } else {
-          parentDebugInfo.push(debugInfoEntry);
+      if (parentDebugInfo !== referencedDebugInfo) {
+        for (let i = 0; i < referencedDebugInfo.length; ++i) {
+          const debugInfoEntry = referencedDebugInfo[i];
+          if (debugInfoEntry.name != null) {
+            (debugInfoEntry: ReactComponentInfo);
+            // We're not transferring Component info since we use Component info
+            // in Debug info to fill in gaps between Fibers for the parent stack.
+          } else {
+            parentDebugInfo.push(debugInfoEntry);
+          }
         }
       }
     }
@@ -2467,6 +2468,7 @@ function parseModelString(
 function parseModelTuple(
   response: Response,
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
+  isRoot: boolean,
 ): any {
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
 
@@ -2475,6 +2477,7 @@ function parseModelTuple(
     // Or even change the ReactElement type to be an array.
     return createElement(
       response,
+      isRoot,
       tuple[1],
       tuple[2],
       tuple[3],
@@ -5041,7 +5044,8 @@ function createFromJSONCallback(response: Response) {
       return parseModelString(response, this, key, value);
     }
     if (typeof value === 'object' && value !== null) {
-      return parseModelTuple(response, value);
+      const isRoot = key === '';
+      return parseModelTuple(response, value, isRoot);
     }
     return value;
   };
