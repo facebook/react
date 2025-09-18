@@ -33,20 +33,6 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
-function formatV8Stack(stack) {
-  let v8StyleStack = '';
-  if (stack) {
-    for (let i = 0; i < stack.length; i++) {
-      const [name] = stack[i];
-      if (v8StyleStack !== '') {
-        v8StyleStack += '\n';
-      }
-      v8StyleStack += '    in ' + name + ' (at **)';
-    }
-  }
-  return v8StyleStack;
-}
-
 const repoRoot = path.resolve(__dirname, '../../../../');
 function normalizeReactCodeLocInfo(str) {
   const repoRootForRegexp = repoRoot.replace(/\//g, '\\/');
@@ -65,35 +51,6 @@ function getErrorForJestMatcher(error) {
     message: error.message,
     stack: normalizeReactCodeLocInfo(error.stack),
   };
-}
-
-function normalizeComponentInfo(debugInfo) {
-  if (Array.isArray(debugInfo.stack)) {
-    const {debugTask, debugStack, debugLocation, ...copy} = debugInfo;
-    copy.stack = formatV8Stack(debugInfo.stack);
-    if (debugInfo.owner) {
-      copy.owner = normalizeComponentInfo(debugInfo.owner);
-    }
-    return copy;
-  } else {
-    return debugInfo;
-  }
-}
-
-function getDebugInfo(obj) {
-  const debugInfo = obj._debugInfo;
-  if (debugInfo) {
-    const copy = [];
-    for (let i = 0; i < debugInfo.length; i++) {
-      if (debugInfo[i].awaited && debugInfo[i].awaited.name === 'RSC stream') {
-        // Ignore RSC stream I/O info.
-      } else {
-        copy.push(normalizeComponentInfo(debugInfo[i]));
-      }
-    }
-    return copy;
-  }
-  return debugInfo;
 }
 
 const finalizationRegistries = [];
@@ -132,6 +89,7 @@ let NoErrorExpected;
 let Scheduler;
 let assertLog;
 let assertConsoleErrorDev;
+let getDebugInfo;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -168,6 +126,11 @@ describe('ReactFlight', () => {
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
     assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
+
+    getDebugInfo = InternalTestUtils.getDebugInfo.bind(null, {
+      useV8Stack: true,
+      ignoreRscStreamInfo: true,
+    });
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
