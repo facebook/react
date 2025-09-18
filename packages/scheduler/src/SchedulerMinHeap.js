@@ -30,10 +30,8 @@ export function pop<T: Node>(heap: Heap<T>): T | null {
   }
   const first = heap[0];
   const last = heap.pop();
-  if (last !== first) {
-    // $FlowFixMe[incompatible-type]
+  if (last !== undefined && last !== first) {
     heap[0] = last;
-    // $FlowFixMe[incompatible-call]
     siftDown(heap, last, 0);
   }
   return first;
