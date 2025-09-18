@@ -895,11 +895,11 @@ export default class Store extends EventEmitter<{
     if (root === null) {
       return [];
     }
-    if (!this.supportsTogglingSuspense(root.id)) {
+    if (!this.supportsTogglingSuspense(rootID)) {
       return [];
     }
     const list: SuspenseNode['id'][] = [];
-    const suspense = this.getSuspenseByID(root.id);
+    const suspense = this.getSuspenseByID(rootID);
     if (suspense !== null) {
       const stack = [suspense];
       while (stack.length > 0) {
