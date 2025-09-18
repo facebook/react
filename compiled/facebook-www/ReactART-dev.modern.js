@@ -15926,6 +15926,7 @@ __DEV__ &&
         pendingEffectsRenderEndTime = completedRenderEndTime;
         pendingSuspendedCommitReason = suspendedCommitReason;
         pendingDelayedCommitReason = IMMEDIATE_COMMIT;
+        pendingSuspendedViewTransitionReason = null;
         enableViewTransition
           ? ((pendingViewTransitionEvents = null),
             (lanes & 335544064) === lanes
@@ -16024,18 +16025,52 @@ __DEV__ &&
     function flushLayoutEffects() {
       if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var root = pendingEffectsRoot,
-          finishedWork = pendingFinishedWork,
-          lanes = pendingEffectsLanes,
-          cleanUpIndicator = root.pendingIndicator;
-        if (null !== cleanUpIndicator && 0 === root.indicatorLanes) {
+        if (enableComponentPerformanceTrack) {
+          var suspendedViewTransitionReason =
+            pendingSuspendedViewTransitionReason;
+          if (null !== suspendedViewTransitionReason) {
+            commitStartTime = now();
+            var startTime = commitEndTime,
+              endTime = commitStartTime;
+            !supportsUserTiming ||
+              endTime <= startTime ||
+              (workInProgressUpdateTask
+                ? workInProgressUpdateTask.run(
+                    console.timeStamp.bind(
+                      console,
+                      suspendedViewTransitionReason,
+                      startTime,
+                      endTime,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      "secondary-light"
+                    )
+                  )
+                : console.timeStamp(
+                    suspendedViewTransitionReason,
+                    startTime,
+                    endTime,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    "secondary-light"
+                  ));
+          }
+        }
+        suspendedViewTransitionReason = pendingEffectsRoot;
+        startTime = pendingFinishedWork;
+        endTime = pendingEffectsLanes;
+        var cleanUpIndicator = suspendedViewTransitionReason.pendingIndicator;
+        if (
+          null !== cleanUpIndicator &&
+          0 === suspendedViewTransitionReason.indicatorLanes
+        ) {
           var prevTransition = ReactSharedInternals.T;
           ReactSharedInternals.T = null;
           var previousPriority = currentUpdatePriority;
           currentUpdatePriority = DiscreteEventPriority;
           var prevExecutionContext = executionContext;
           executionContext |= CommitContext;
-          root.pendingIndicator = null;
+          suspendedViewTransitionReason.pendingIndicator = null;
           try {
             cleanUpIndicator();
           } catch (x) {
@@ -16046,8 +16081,8 @@ __DEV__ &&
               (ReactSharedInternals.T = prevTransition);
           }
         }
-        cleanUpIndicator = 0 !== (finishedWork.flags & 8772);
-        if (0 !== (finishedWork.subtreeFlags & 8772) || cleanUpIndicator) {
+        cleanUpIndicator = 0 !== (startTime.flags & 8772);
+        if (0 !== (startTime.subtreeFlags & 8772) || cleanUpIndicator) {
           cleanUpIndicator = ReactSharedInternals.T;
           ReactSharedInternals.T = null;
           prevTransition = currentUpdatePriority;
@@ -16060,14 +16095,14 @@ __DEV__ &&
               null !== injectedProfilingHooks &&
               "function" ===
                 typeof injectedProfilingHooks.markLayoutEffectsStarted &&
-              injectedProfilingHooks.markLayoutEffectsStarted(lanes),
-              (inProgressLanes = lanes),
-              (inProgressRoot = root),
+              injectedProfilingHooks.markLayoutEffectsStarted(endTime),
+              (inProgressLanes = endTime),
+              (inProgressRoot = suspendedViewTransitionReason),
               resetComponentEffectTimers(),
               commitLayoutEffectOnFiber(
-                root,
-                finishedWork.alternate,
-                finishedWork
+                suspendedViewTransitionReason,
+                startTime.alternate,
+                startTime
               ),
               (inProgressRoot = inProgressLanes = null),
               enableSchedulingProfiler &&
@@ -16082,44 +16117,47 @@ __DEV__ &&
               (ReactSharedInternals.T = cleanUpIndicator);
           }
         }
-        root = pendingEffectsRenderEndTime;
-        finishedWork = pendingSuspendedCommitReason;
+        suspendedViewTransitionReason = pendingEffectsRenderEndTime;
+        startTime = pendingSuspendedCommitReason;
         enableComponentPerformanceTrack &&
           ((commitEndTime = now()),
-          (root = finishedWork === IMMEDIATE_COMMIT ? root : commitStartTime),
-          (finishedWork = commitEndTime),
-          (lanes =
+          (suspendedViewTransitionReason =
+            startTime === IMMEDIATE_COMMIT
+              ? suspendedViewTransitionReason
+              : commitStartTime),
+          (startTime = commitEndTime),
+          (endTime =
             pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT),
           (cleanUpIndicator = workInProgressUpdateTask),
           null !== commitErrors
             ? logCommitErrored(
-                root,
-                finishedWork,
+                suspendedViewTransitionReason,
+                startTime,
                 commitErrors,
                 !1,
                 cleanUpIndicator
               )
             : !supportsUserTiming ||
-              finishedWork <= root ||
+              startTime <= suspendedViewTransitionReason ||
               (cleanUpIndicator
                 ? cleanUpIndicator.run(
                     console.timeStamp.bind(
                       console,
-                      lanes ? "Commit Interrupted View Transition" : "Commit",
-                      root,
-                      finishedWork,
+                      endTime ? "Commit Interrupted View Transition" : "Commit",
+                      suspendedViewTransitionReason,
+                      startTime,
                       currentTrack,
                       "Scheduler \u269b",
-                      lanes ? "error" : "secondary-dark"
+                      endTime ? "error" : "secondary-dark"
                     )
                   )
                 : console.timeStamp(
-                    lanes ? "Commit Interrupted View Transition" : "Commit",
-                    root,
-                    finishedWork,
+                    endTime ? "Commit Interrupted View Transition" : "Commit",
+                    suspendedViewTransitionReason,
+                    startTime,
                     currentTrack,
                     "Scheduler \u269b",
-                    lanes ? "error" : "secondary-dark"
+                    endTime ? "error" : "secondary-dark"
                   )));
         pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
       }
@@ -19392,6 +19430,7 @@ __DEV__ &&
       pendingDidIncludeRenderPhaseUpdate = !1,
       pendingSuspendedCommitReason = IMMEDIATE_COMMIT,
       pendingDelayedCommitReason = IMMEDIATE_COMMIT,
+      pendingSuspendedViewTransitionReason = null,
       NESTED_UPDATE_LIMIT = 50,
       nestedUpdateCount = 0,
       rootWithNestedUpdates = null,
@@ -19631,10 +19670,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-58132116-20250918",
+        version: "19.2.0-www-modern-ad578aa0-20250918",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-58132116-20250918"
+        reconcilerVersion: "19.2.0-www-modern-ad578aa0-20250918"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -19668,7 +19707,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-58132116-20250918";
+    exports.version = "19.2.0-www-modern-ad578aa0-20250918";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

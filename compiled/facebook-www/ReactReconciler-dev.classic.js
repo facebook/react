@@ -1826,6 +1826,42 @@ __DEV__ &&
           : performance.measure("Errored", startTime);
       }
     }
+    function logCommitPhase(
+      startTime,
+      endTime,
+      errors,
+      abortedViewTransition,
+      debugTask
+    ) {
+      null !== errors
+        ? logCommitErrored(startTime, endTime, errors, !1, debugTask)
+        : !supportsUserTiming ||
+          endTime <= startTime ||
+          (debugTask
+            ? debugTask.run(
+                console.timeStamp.bind(
+                  console,
+                  abortedViewTransition
+                    ? "Commit Interrupted View Transition"
+                    : "Commit",
+                  startTime,
+                  endTime,
+                  currentTrack,
+                  "Scheduler \u269b",
+                  abortedViewTransition ? "error" : "secondary-dark"
+                )
+              )
+            : console.timeStamp(
+                abortedViewTransition
+                  ? "Commit Interrupted View Transition"
+                  : "Commit",
+                startTime,
+                endTime,
+                currentTrack,
+                "Scheduler \u269b",
+                abortedViewTransition ? "error" : "secondary-dark"
+              ));
+    }
     function logPaintYieldPhase(
       startTime,
       endTime,
@@ -18424,6 +18460,7 @@ __DEV__ &&
         pendingEffectsRenderEndTime = completedRenderEndTime;
         pendingSuspendedCommitReason = suspendedCommitReason;
         pendingDelayedCommitReason = IMMEDIATE_COMMIT;
+        pendingSuspendedViewTransitionReason = null;
         enableViewTransition
           ? ((pendingViewTransitionEvents = null),
             (lanes & 335544064) === lanes
@@ -18492,7 +18529,8 @@ __DEV__ &&
               flushAfterMutationEffects,
               flushSpawnedWork,
               flushPassiveEffects,
-              reportViewTransitionError
+              reportViewTransitionError,
+              suspendedViewTransition
             ))
           : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
       }
@@ -18502,6 +18540,21 @@ __DEV__ &&
         var onRecoverableError = pendingEffectsRoot.onRecoverableError;
         onRecoverableError(error, makeErrorInfo(null));
       }
+    }
+    function suspendedViewTransition(reason) {
+      enableComponentPerformanceTrack &&
+        ((commitEndTime = now()),
+        logCommitPhase(
+          pendingSuspendedCommitReason === IMMEDIATE_COMMIT
+            ? pendingEffectsRenderEndTime
+            : commitStartTime,
+          commitEndTime,
+          commitErrors,
+          pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
+          workInProgressUpdateTask
+        ),
+        (pendingSuspendedViewTransitionReason = reason),
+        (pendingSuspendedCommitReason = SUSPENDED_COMMIT));
     }
     function flushAfterMutationEffects() {
       pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE &&
@@ -18552,18 +18605,52 @@ __DEV__ &&
     function flushLayoutEffects() {
       if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
-        var root = pendingEffectsRoot,
-          finishedWork = pendingFinishedWork,
-          lanes = pendingEffectsLanes,
-          cleanUpIndicator = root.pendingIndicator;
-        if (null !== cleanUpIndicator && 0 === root.indicatorLanes) {
+        if (enableComponentPerformanceTrack) {
+          var suspendedViewTransitionReason =
+            pendingSuspendedViewTransitionReason;
+          if (null !== suspendedViewTransitionReason) {
+            commitStartTime = now();
+            var startTime = commitEndTime,
+              endTime = commitStartTime;
+            !supportsUserTiming ||
+              endTime <= startTime ||
+              (workInProgressUpdateTask
+                ? workInProgressUpdateTask.run(
+                    console.timeStamp.bind(
+                      console,
+                      suspendedViewTransitionReason,
+                      startTime,
+                      endTime,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      "secondary-light"
+                    )
+                  )
+                : console.timeStamp(
+                    suspendedViewTransitionReason,
+                    startTime,
+                    endTime,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    "secondary-light"
+                  ));
+          }
+        }
+        suspendedViewTransitionReason = pendingEffectsRoot;
+        startTime = pendingFinishedWork;
+        endTime = pendingEffectsLanes;
+        var cleanUpIndicator = suspendedViewTransitionReason.pendingIndicator;
+        if (
+          null !== cleanUpIndicator &&
+          0 === suspendedViewTransitionReason.indicatorLanes
+        ) {
           var prevTransition = ReactSharedInternals.T;
           ReactSharedInternals.T = null;
           var previousPriority = getCurrentUpdatePriority();
           setCurrentUpdatePriority(2);
           var prevExecutionContext = executionContext;
           executionContext |= CommitContext;
-          root.pendingIndicator = null;
+          suspendedViewTransitionReason.pendingIndicator = null;
           try {
             cleanUpIndicator();
           } catch (x) {
@@ -18574,8 +18661,8 @@ __DEV__ &&
               (ReactSharedInternals.T = prevTransition);
           }
         }
-        cleanUpIndicator = 0 !== (finishedWork.flags & 8772);
-        if (0 !== (finishedWork.subtreeFlags & 8772) || cleanUpIndicator) {
+        cleanUpIndicator = 0 !== (startTime.flags & 8772);
+        if (0 !== (startTime.subtreeFlags & 8772) || cleanUpIndicator) {
           cleanUpIndicator = ReactSharedInternals.T;
           ReactSharedInternals.T = null;
           prevTransition = getCurrentUpdatePriority();
@@ -18588,14 +18675,14 @@ __DEV__ &&
               null !== injectedProfilingHooks &&
               "function" ===
                 typeof injectedProfilingHooks.markLayoutEffectsStarted &&
-              injectedProfilingHooks.markLayoutEffectsStarted(lanes),
-              (inProgressLanes = lanes),
-              (inProgressRoot = root),
+              injectedProfilingHooks.markLayoutEffectsStarted(endTime),
+              (inProgressLanes = endTime),
+              (inProgressRoot = suspendedViewTransitionReason),
               resetComponentEffectTimers(),
               commitLayoutEffectOnFiber(
-                root,
-                finishedWork.alternate,
-                finishedWork
+                suspendedViewTransitionReason,
+                startTime.alternate,
+                startTime
               ),
               (inProgressRoot = inProgressLanes = null),
               enableSchedulingProfiler &&
@@ -18610,45 +18697,19 @@ __DEV__ &&
               (ReactSharedInternals.T = cleanUpIndicator);
           }
         }
-        root = pendingEffectsRenderEndTime;
-        finishedWork = pendingSuspendedCommitReason;
+        suspendedViewTransitionReason = pendingEffectsRenderEndTime;
+        startTime = pendingSuspendedCommitReason;
         enableComponentPerformanceTrack &&
           ((commitEndTime = now()),
-          (root = finishedWork === IMMEDIATE_COMMIT ? root : commitStartTime),
-          (finishedWork = commitEndTime),
-          (lanes =
-            pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT),
-          (cleanUpIndicator = workInProgressUpdateTask),
-          null !== commitErrors
-            ? logCommitErrored(
-                root,
-                finishedWork,
-                commitErrors,
-                !1,
-                cleanUpIndicator
-              )
-            : !supportsUserTiming ||
-              finishedWork <= root ||
-              (cleanUpIndicator
-                ? cleanUpIndicator.run(
-                    console.timeStamp.bind(
-                      console,
-                      lanes ? "Commit Interrupted View Transition" : "Commit",
-                      root,
-                      finishedWork,
-                      currentTrack,
-                      "Scheduler \u269b",
-                      lanes ? "error" : "secondary-dark"
-                    )
-                  )
-                : console.timeStamp(
-                    lanes ? "Commit Interrupted View Transition" : "Commit",
-                    root,
-                    finishedWork,
-                    currentTrack,
-                    "Scheduler \u269b",
-                    lanes ? "error" : "secondary-dark"
-                  )));
+          logCommitPhase(
+            startTime === IMMEDIATE_COMMIT
+              ? suspendedViewTransitionReason
+              : commitStartTime,
+            commitEndTime,
+            commitErrors,
+            pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
+            workInProgressUpdateTask
+          ));
         pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
       }
     }
@@ -22241,6 +22302,7 @@ __DEV__ &&
       pendingDidIncludeRenderPhaseUpdate = !1,
       pendingSuspendedCommitReason = IMMEDIATE_COMMIT,
       pendingDelayedCommitReason = IMMEDIATE_COMMIT,
+      pendingSuspendedViewTransitionReason = null,
       NESTED_UPDATE_LIMIT = 50,
       nestedUpdateCount = 0,
       rootWithNestedUpdates = null,
@@ -22788,7 +22850,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-58132116-20250918"
+        reconcilerVersion: "19.2.0-www-classic-ad578aa0-20250918"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

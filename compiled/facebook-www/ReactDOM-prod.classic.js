@@ -13326,7 +13326,8 @@ function commitRoot(
           flushAfterMutationEffects,
           flushSpawnedWork,
           flushPassiveEffects,
-          reportViewTransitionError
+          reportViewTransitionError,
+          null
         ))
       : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
   }
@@ -17486,16 +17487,16 @@ function startViewTransition(
           (forceLayout(ownerDocument),
           "loading" === ownerDocument.fonts.status &&
             blockingPromises.push(ownerDocument.fonts.ready));
-        if (null !== suspendedState) {
-          previousFontLoadingStatus = suspendedState.suspenseyImages;
+        previousFontLoadingStatus = blockingPromises.length;
+        if (null !== suspendedState)
           for (
-            var blockingIndexSnapshot = blockingPromises.length,
+            var suspenseyImages = suspendedState.suspenseyImages,
               imgBytes = 0,
               i = 0;
-            i < previousFontLoadingStatus.length;
+            i < suspenseyImages.length;
             i++
           ) {
-            var suspenseyImage = previousFontLoadingStatus[i];
+            var suspenseyImage = suspenseyImages[i];
             if (!suspenseyImage.complete) {
               var rect = suspenseyImage.getBoundingClientRect();
               if (
@@ -17506,7 +17507,7 @@ function startViewTransition(
               ) {
                 imgBytes += estimateImageBytes(suspenseyImage);
                 if (imgBytes > estimatedBytesWithinLimit) {
-                  blockingPromises.length = blockingIndexSnapshot;
+                  blockingPromises.length = previousFontLoadingStatus;
                   break;
                 }
                 suspenseyImage = new Promise(
@@ -17516,7 +17517,6 @@ function startViewTransition(
               }
             }
           }
-        }
         if (0 < blockingPromises.length)
           return (
             (ownerWindow = Promise.race([
@@ -19970,14 +19970,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2127 = React.version;
 if (
-  "19.2.0-www-classic-58132116-20250918" !==
+  "19.2.0-www-classic-ad578aa0-20250918" !==
   isomorphicReactPackageVersion$jscomp$inline_2127
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2127,
-      "19.2.0-www-classic-58132116-20250918"
+      "19.2.0-www-classic-ad578aa0-20250918"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19995,10 +19995,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2759 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-58132116-20250918",
+  version: "19.2.0-www-classic-ad578aa0-20250918",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-58132116-20250918"
+  reconcilerVersion: "19.2.0-www-classic-ad578aa0-20250918"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2760 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20427,4 +20427,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-58132116-20250918";
+exports.version = "19.2.0-www-classic-ad578aa0-20250918";
