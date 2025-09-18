@@ -3584,12 +3584,12 @@ re-resizable@^6.9.16:
   resolved "https://registry.yarnpkg.com/re-resizable/-/re-resizable-6.10.0.tgz#d684a096ab438f1a93f59ad3a580a206b0ce31ee"
   integrity sha512-hysSK0xmA5nz24HBVztlk4yCqCLCvS32E6ZpWxVKop9x3tqCa4yAj1++facrmkOf62JsJHjmjABdKxXofYioCw==
 
-react-dom@^0.0.0-experimental-67a44bcd-20250915:
-  version "0.0.0-experimental-67a44bcd-20250915"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-67a44bcd-20250915.tgz#5116b798e0574fce3decfa25f7ba493623b9a564"
-  integrity sha512-No88tqsklmnvXZBsKUAFG71vZeJtaGQCmZp7BI4085FJ1ZHFBX7rdI37oQAZfaVaoPPZiio6XCV7/PtyUu0M6A==
+react-dom@19.1.1:
+  version "19.1.1"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-19.1.1.tgz#2daa9ff7f3ae384aeb30e76d5ee38c046dc89893"
+  integrity sha512-Dlq/5LAZgF0Gaz6yiqZCf6VCcZs1ghAJyrsu84Q/GT0gV+mCxbfmKNoGRKBYMJ8IEdGPqu49YWXD02GCknEDkw==
   dependencies:
-    scheduler "0.0.0-experimental-67a44bcd-20250915"
+    scheduler "^0.26.0"
 
 react-is@^16.13.1:
   version "16.13.1"
@@ -3601,10 +3601,10 @@ react-is@^18.0.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.3.1.tgz#e83557dc12eae63a99e003a46388b1dcbb44db7e"
   integrity sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==
 
-react@^0.0.0-experimental-67a44bcd-20250915:
-  version "0.0.0-experimental-67a44bcd-20250915"
-  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-67a44bcd-20250915.tgz#803c74089c9abe1ba290de659c3e34d5709032b8"
-  integrity sha512-eMX1vgHKP6mlwNWrcH405h6F6Ut6AR7jeON+nFc7+vrcxbZvbVBTd9eZVE4ml2bxz7uoNGFNPd3p6SgtdlCvWQ==
+react@19.1.1:
+  version "19.1.1"
+  resolved "https://registry.yarnpkg.com/react/-/react-19.1.1.tgz#06d9149ec5e083a67f9a1e39ce97b06a03b644af"
+  integrity sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==
 
 read-cache@^1.0.0:
   version "1.0.0"
@@ -3780,10 +3780,10 @@ safe-regex-test@^1.1.0:
     es-errors "^1.3.0"
     is-regex "^1.2.1"
 
-scheduler@0.0.0-experimental-67a44bcd-20250915:
-  version "0.0.0-experimental-67a44bcd-20250915"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-67a44bcd-20250915.tgz#5af10b25cb263a6471d885192dc7ac42d2ff4c51"
-  integrity sha512-vs2NDlwa5YAI2VK/Qgpue/0ldvyiy4z3K1UkIoIull5Ehcuojf5UeE0qXvibJ1AP3zJKYWEbBMSNpneJzlbsPA==
+scheduler@^0.26.0:
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.26.0.tgz#4ce8a8c2a2095f13ea11bf9a445be50c555d6337"
+  integrity sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==
 
 semver@^6.3.1:
   version "6.3.1"
