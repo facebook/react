@@ -1320,6 +1320,7 @@ export function logCommitPhase(
   startTime: number,
   endTime: number,
   errors: null | Array<CapturedValue<mixed>>,
+  abortedViewTransition: boolean,
   debugTask: null | ConsoleTask,
 ): void {
   if (errors !== null) {
@@ -1335,22 +1336,24 @@ export function logCommitPhase(
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
           console,
-          'Commit',
+          abortedViewTransition
+            ? 'Commit Interrupted View Transition'
+            : 'Commit',
           startTime,
           endTime,
           currentTrack,
           LANES_TRACK_GROUP,
-          'secondary-dark',
+          abortedViewTransition ? 'error' : 'secondary-dark',
         ),
       );
     } else {
       console.timeStamp(
-        'Commit',
+        abortedViewTransition ? 'Commit Interrupted View Transition' : 'Commit',
         startTime,
         endTime,
         currentTrack,
         LANES_TRACK_GROUP,
-        'secondary-dark',
+        abortedViewTransition ? 'error' : 'secondary-dark',
       );
     }
   }
@@ -1387,6 +1390,81 @@ export function logPaintYieldPhase(
         currentTrack,
         LANES_TRACK_GROUP,
         'secondary-light',
+      );
+    }
+  }
+}
+
+export function logStartViewTransitionYieldPhase(
+  startTime: number,
+  endTime: number,
+  abortedViewTransition: boolean,
+  debugTask: null | ConsoleTask,
+): void {
+  if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          abortedViewTransition
+            ? 'Interrupted View Transition'
+            : 'Starting Animation',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          abortedViewTransition ? 'error' : 'secondary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        abortedViewTransition
+          ? 'Interrupted View Transition'
+          : 'Starting Animation',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        abortedViewTransition ? ' error' : 'secondary-light',
+      );
+    }
+  }
+}
+
+export function logAnimatingPhase(
+  startTime: number,
+  endTime: number,
+  debugTask: null | ConsoleTask,
+): void {
+  if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Animating',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Animating',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary',
       );
     }
   }

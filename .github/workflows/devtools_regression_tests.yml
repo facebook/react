@@ -201,5 +201,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: screenshots
-          path: ./tmp/screenshots
+          path: ./tmp/playwright-artifacts
           if-no-files-found: warn

@@ -831,6 +831,12 @@ jobs:
       - run: ./scripts/ci/run_devtools_e2e_tests.js
         env:
           RELEASE_CHANNEL: experimental
+      - name: Archive Playwright report
+        uses: actions/upload-artifact@v4
+        with:
+          name: devtools-playwright-artifacts
+          path: tmp/playwright-artifacts
+          if-no-files-found: warn
 
   # ----- SIZEBOT -----
   sizebot:
