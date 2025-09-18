@@ -324,6 +324,7 @@ function TextTabContent({
         <DiffEditor
           original={diff}
           modified={output}
+          loading={''}
           options={{
             ...monacoOptions,
             readOnly: true,
@@ -338,6 +339,7 @@ function TextTabContent({
         <MonacoEditor
           language={language ?? 'javascript'}
           value={output}
+          loading={''}
           options={{
             ...monacoOptions,
             readOnly: true,

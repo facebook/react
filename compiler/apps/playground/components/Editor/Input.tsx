@@ -13,7 +13,6 @@ import {
 import invariant from 'invariant';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import {Resizable} from 're-resizable';
 import {useEffect, useState} from 'react';
 import {renderReactCompilerMarkers} from '../../lib/reactCompilerMonacoDiagnostics';
 import {useStore, useStoreDispatch} from '../StoreContext';
@@ -46,11 +45,6 @@ export default function Input({errors, language}: Props): JSX.Element {
       details: errors,
       source: store.source,
     });
-    /**
-     * N.B. that `tabSize` is a model property, not an editor property.
-     * So, the tab size has to be set per model.
-     */
-    model.updateOptions({tabSize: 2});
   }, [monaco, errors, store.source]);
 
   useEffect(() => {
@@ -152,38 +146,24 @@ export default function Input({errors, language}: Props): JSX.Element {
       onMount={handleMount}
       onChange={handleChange}
       options={monacoOptions}
+      loading={''}
     />
   );
 
   const tabs = new Map([['Input', editorContent]]);
   const [activeTab, setActiveTab] = useState('Input');
 
-  const tabbedContent = (
-    <div className="flex flex-col h-full">
-      <TabbedWindow
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-    </div>
-  );
-
   return (
     <div className="relative flex flex-col flex-none border-r border-gray-200">
-      {store.showInternals ? (
-        <Resizable
-          minWidth={550}
-          enable={{right: true}}
-          /**
-           * Restrict MonacoEditor's height, since the config autoLayout:true
-           * will grow the editor to fit within parent element
-           */
-          className="!h-[calc(100vh_-_3.5rem)]">
-          {tabbedContent}
-        </Resizable>
-      ) : (
-        <div className="!h-[calc(100vh_-_3.5rem)]">{tabbedContent}</div>
-      )}
+      <div className="!h-[calc(100vh_-_3.5rem)]">
+        <div className="flex flex-col h-full">
+          <TabbedWindow
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+        </div>
+      </div>
     </div>
   );
 }

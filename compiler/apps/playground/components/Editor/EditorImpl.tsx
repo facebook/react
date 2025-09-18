@@ -24,19 +24,8 @@ import BabelPluginReactCompiler, {
   printFunctionWithOutlined,
   type LoggerEvent,
 } from 'babel-plugin-react-compiler';
-import invariant from 'invariant';
-import {useSnackbar} from 'notistack';
 import {useDeferredValue, useMemo} from 'react';
-import {useMountEffect} from '../../hooks';
-import {defaultStore} from '../../lib/defaultStore';
-import {
-  createMessage,
-  initStoreFromUrlOrLocalStorage,
-  MessageLevel,
-  MessageSource,
-  type Store,
-} from '../../lib/stores';
-import {useStore, useStoreDispatch} from '../StoreContext';
+import {useStore} from '../StoreContext';
 import ConfigEditor from './ConfigEditor';
 import Input from './Input';
 import {
@@ -174,7 +163,6 @@ function parseOptions(
   // Parse config overrides from config editor
   let configOverrideOptions: any = {};
   const configMatch = configOverrides.match(/^\s*import.*?\n\n\((.*)\)/s);
-  // TODO: initialize store with URL params, not empty store
   if (configOverrides.trim()) {
     if (configMatch && configMatch[1]) {
       const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
@@ -327,8 +315,6 @@ function compile(
 export default function Editor(): JSX.Element {
   const store = useStore();
   const deferredStore = useDeferredValue(store);
-  const dispatchStore = useStoreDispatch();
-  const {enqueueSnackbar} = useSnackbar();
   const [compilerOutput, language, appliedOptions] = useMemo(
     () => compile(deferredStore.source, 'compiler', deferredStore.config),
     [deferredStore.source, deferredStore.config],
@@ -337,32 +323,6 @@ export default function Editor(): JSX.Element {
     () => compile(deferredStore.source, 'linter', deferredStore.config),
     [deferredStore.source, deferredStore.config],
   );
-
-  useMountEffect(() => {
-    // Initialize store
-    let mountStore: Store;
-    try {
-      mountStore = initStoreFromUrlOrLocalStorage();
-    } catch (e) {
-      invariant(e instanceof Error, 'Only Error may be caught.');
-      enqueueSnackbar(e.message, {
-        variant: 'warning',
-        ...createMessage(
-          'Bad URL - fell back to the default Playground.',
-          MessageLevel.Info,
-          MessageSource.Playground,
-        ),
-      });
-      mountStore = defaultStore;
-    }
-
-    dispatchStore({
-      type: 'setStore',
-      payload: {
-        store: mountStore,
-      },
-    });
-  });
 
   let mergedOutput: CompilerOutput;
   let errors: Array<CompilerErrorDetail | CompilerDiagnostic>;

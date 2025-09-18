@@ -9,7 +9,7 @@ import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
 import {PluginOptions} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import React, {useState} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
@@ -28,10 +28,25 @@ export default function ConfigEditor({
 }): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  return isExpanded ? (
-    <ExpandedEditor onToggle={setIsExpanded} appliedOptions={appliedOptions} />
-  ) : (
-    <CollapsedEditor onToggle={setIsExpanded} />
+  return (
+    // TODO: Use <Activity> when it is compatible with Monaco: https://github.com/suren-atoyan/monaco-react/issues/753
+    <>
+      <div
+        style={{
+          display: isExpanded ? 'block' : 'none',
+        }}>
+        <ExpandedEditor
+          onToggle={setIsExpanded}
+          appliedOptions={appliedOptions}
+        />
+      </div>
+      <div
+        style={{
+          display: !isExpanded ? 'block' : 'none',
+        }}>
+        <CollapsedEditor onToggle={setIsExpanded} />
+      </div>
+    </>
   );
 }
 
@@ -44,16 +59,25 @@ function ExpandedEditor({
 }): React.ReactElement {
   const store = useStore();
   const dispatchStore = useStoreDispatch();
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleChange: (value: string | undefined) => void = value => {
+  const handleChange: (value: string | undefined) => void = (
+    value: string | undefined,
+  ) => {
     if (value === undefined) return;
 
-    dispatchStore({
-      type: 'updateConfig',
-      payload: {
-        config: value,
-      },
-    });
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      dispatchStore({
+        type: 'updateConfig',
+        payload: {
+          config: value,
+        },
+      });
+    }, 500); // 500ms debounce delay
   };
 
   const handleMount: (
@@ -77,12 +101,6 @@ function ExpandedEditor({
       allowSyntheticDefaultImports: true,
       jsx: monaco.languages.typescript.JsxEmit.React,
     });
-
-    const uri = monaco.Uri.parse(`file:///config.ts`);
-    const model = monaco.editor.getModel(uri);
-    if (model) {
-      model.updateOptions({tabSize: 2});
-    }
   };
 
   const formattedAppliedOptions = appliedOptions
@@ -126,6 +144,7 @@ function ExpandedEditor({
               value={store.config}
               onMount={handleMount}
               onChange={handleChange}
+              loading={''}
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',
@@ -139,7 +158,6 @@ function ExpandedEditor({
             />
           </div>
         </div>
-
         <div className="flex-1 flex flex-col m-2">
           <div className="pb-2">
             <h2 className="inline-block text-blue-50 py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
@@ -151,6 +169,7 @@ function ExpandedEditor({
               path={'applied-config.js'}
               language={'javascript'}
               value={formattedAppliedOptions}
+              loading={''}
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',
