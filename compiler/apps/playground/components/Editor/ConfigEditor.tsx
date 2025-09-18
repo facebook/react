@@ -145,6 +145,7 @@ function ExpandedEditor({
               onMount={handleMount}
               onChange={handleChange}
               loading={''}
+              className="monaco-editor-config"
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',
@@ -170,6 +171,7 @@ function ExpandedEditor({
               language={'javascript'}
               value={formattedAppliedOptions}
               loading={''}
+              className="monaco-editor-applied-config"
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',
