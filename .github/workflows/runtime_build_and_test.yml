@@ -766,6 +766,11 @@ jobs:
           name: react-devtools-${{ matrix.browser }}-extension
           path: build/devtools/${{ matrix.browser }}-extension.zip
           if-no-files-found: error
+      - name: Archive ${{ matrix.browser }} metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-devtools-${{ matrix.browser }}-metadata
+          path: build/devtools/webpack-stats.*.json
 
   merge_devtools_artifacts:
     name: Merge DevTools artifacts
@@ -776,7 +781,7 @@ jobs:
         uses: actions/upload-artifact/merge@v4
         with:
           name: react-devtools
-          pattern: react-devtools-*-extension
+          pattern: react-devtools-*
 
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
@@ -826,6 +831,12 @@ jobs:
       - run: ./scripts/ci/run_devtools_e2e_tests.js
         env:
           RELEASE_CHANNEL: experimental
+      - name: Archive Playwright report
+        uses: actions/upload-artifact@v4
+        with:
+          name: devtools-playwright-artifacts
+          path: tmp/playwright-artifacts
+          if-no-files-found: warn
 
   # ----- SIZEBOT -----
   sizebot:

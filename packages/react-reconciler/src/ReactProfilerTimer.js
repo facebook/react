@@ -246,6 +246,7 @@ export function clearBlockingTimers(): void {
   blockingUpdateComponentName = null;
   blockingSuspendedTime = -1.1;
   blockingEventIsRepeat = true;
+  blockingClampTime = now();
 }
 
 export function startAsyncTransitionTimer(): void {
@@ -282,6 +283,7 @@ export function clearTransitionTimers(): void {
   transitionUpdateType = 0;
   transitionSuspendedTime = -1.1;
   transitionEventIsRepeat = true;
+  transitionClampTime = now();
 }
 
 export function clampBlockingTimers(finalTime: number): void {
