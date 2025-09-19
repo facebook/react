@@ -1458,7 +1458,7 @@ export function logAnimatingPhase(
           endTime,
           currentTrack,
           LANES_TRACK_GROUP,
-          'secondary',
+          'secondary-dark',
         ),
       );
     } else {
@@ -1468,7 +1468,7 @@ export function logAnimatingPhase(
         endTime,
         currentTrack,
         LANES_TRACK_GROUP,
-        'secondary',
+        'secondary-dark',
       );
     }
   }
