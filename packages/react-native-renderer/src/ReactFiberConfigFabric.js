@@ -645,6 +645,9 @@ export type FragmentInstanceType = {
   observeUsing: (observer: IntersectionObserver) => void,
   unobserveUsing: (observer: IntersectionObserver) => void,
   compareDocumentPosition: (otherNode: PublicInstance) => number,
+  getRootNode(getRootNodeOptions?: {
+    composed: boolean,
+  }): Node | FragmentInstanceType,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -753,6 +756,21 @@ function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
   collection.push(child);
   return false;
 }
+
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getRootNode = function (
+  this: FragmentInstanceType,
+  getRootNodeOptions?: {composed: boolean},
+): Node | FragmentInstanceType {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return this;
+  }
+  const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
+  // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
+  const rootNode = (parentHostInstance.getRootNode(getRootNodeOptions): Node);
+  return rootNode;
+};
 
 export function createFragmentInstance(
   fragmentFiber: Fiber,
