@@ -1337,7 +1337,11 @@ function fulfillReference(
   const {response, handler, parentObject, key, map, path} = reference;
 
   for (let i = 1; i < path.length; i++) {
-    while (value.$$typeof === REACT_LAZY_TYPE) {
+    while (
+      typeof value === 'object' &&
+      value !== null &&
+      value.$$typeof === REACT_LAZY_TYPE
+    ) {
       // We never expect to see a Lazy node on this path because we encode those as
       // separate models. This must mean that we have inserted an extra lazy node
       // e.g. to replace a blocked element. We must instead look for it inside.
@@ -1408,6 +1412,39 @@ function fulfillReference(
     }
     value = value[path[i]];
   }
+
+  while (
+    typeof value === 'object' &&
+    value !== null &&
+    value.$$typeof === REACT_LAZY_TYPE
+  ) {
+    // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
+    // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
+    const referencedChunk: SomeChunk<any> = value._payload;
+    if (referencedChunk === handler.chunk) {
+      // This is a reference to the thing we're currently blocking. We can peak
+      // inside of it to get the value.
+      value = handler.value;
+      continue;
+    } else {
+      switch (referencedChunk.status) {
+        case RESOLVED_MODEL:
+          initializeModelChunk(referencedChunk);
+          break;
+        case RESOLVED_MODULE:
+          initializeModuleChunk(referencedChunk);
+          break;
+      }
+      switch (referencedChunk.status) {
+        case INITIALIZED: {
+          value = referencedChunk.value;
+          continue;
+        }
+      }
+    }
+    break;
+  }
+
   const mappedValue = map(response, value, parentObject, key);
   parentObject[key] = mappedValue;
 
@@ -1855,7 +1892,11 @@ function getOutlinedModel<T>(
     case INITIALIZED:
       let value = chunk.value;
       for (let i = 1; i < path.length; i++) {
-        while (value.$$typeof === REACT_LAZY_TYPE) {
+        while (
+          typeof value === 'object' &&
+          value !== null &&
+          value.$$typeof === REACT_LAZY_TYPE
+        ) {
           const referencedChunk: SomeChunk<any> = value._payload;
           switch (referencedChunk.status) {
             case RESOLVED_MODEL:
@@ -1924,6 +1965,32 @@ function getOutlinedModel<T>(
         }
         value = value[path[i]];
       }
+
+      while (
+        typeof value === 'object' &&
+        value !== null &&
+        value.$$typeof === REACT_LAZY_TYPE
+      ) {
+        // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
+        // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
+        const referencedChunk: SomeChunk<any> = value._payload;
+        switch (referencedChunk.status) {
+          case RESOLVED_MODEL:
+            initializeModelChunk(referencedChunk);
+            break;
+          case RESOLVED_MODULE:
+            initializeModuleChunk(referencedChunk);
+            break;
+        }
+        switch (referencedChunk.status) {
+          case INITIALIZED: {
+            value = referencedChunk.value;
+            continue;
+          }
+        }
+        break;
+      }
+
       const chunkValue = map(response, value, parentObject, key);
       if (
         parentObject[0] === REACT_ELEMENT_TYPE &&
