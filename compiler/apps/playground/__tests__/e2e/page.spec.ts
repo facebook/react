@@ -240,7 +240,6 @@ test('error is displayed when config has syntax error', async ({page}) => {
     showInternals: false,
   };
   const hash = encodeStore(store);
-  console.log(hash);
   await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
   await page.waitForFunction(isMonacoLoaded);
   await expandConfigs(page);
@@ -283,6 +282,37 @@ test('error is displayed when config has validation error', async ({page}) => {
   expect(output.replace(/\s+/g, ' ')).toContain('Unexpected compilationMode');
 });
 
+test('disableMemoizationForDebugging flag works as expected', async ({
+  page,
+}) => {
+  const store: Store = {
+    source: TEST_SOURCE,
+    config: `import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
+
+({
+  environment: {
+    disableMemoizationForDebugging: true
+  }
+} satisfies Partial<PluginOptions>);`,
+    showInternals: false,
+  };
+  const hash = encodeStore(store);
+  await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
+  await page.waitForFunction(isMonacoLoaded);
+  await expandConfigs(page);
+  await page.screenshot({
+    fullPage: true,
+    path: 'test-results/07-config-disableMemoizationForDebugging-flag.png',
+  });
+
+  const text =
+    (await page.locator('.monaco-editor-output').allInnerTexts()) ?? [];
+  const output = await formatPrint(text);
+
+  expect(output).not.toEqual('');
+  expect(output).toMatchSnapshot('disableMemoizationForDebugging-output.txt');
+});
+
 TEST_CASE_INPUTS.forEach((t, idx) =>
   test(`playground compiles: ${t.name}`, async ({page}) => {
     const store: Store = {
@@ -295,7 +325,7 @@ TEST_CASE_INPUTS.forEach((t, idx) =>
     await page.waitForFunction(isMonacoLoaded);
     await page.screenshot({
       fullPage: true,
-      path: `test-results/07-0${idx}-${t.name}.png`,
+      path: `test-results/08-0${idx}-${t.name}.png`,
     });
 
     const text =
