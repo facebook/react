@@ -2100,6 +2100,7 @@ export function startViewTransition(
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
   blockedCallback: string => void, // Profiling-only
+  finishedAnimation: () => void, // Profiling-only
 ): null | RunningViewTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
@@ -2301,6 +2302,9 @@ export function startViewTransition(
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
         ownerDocument.__reactViewTransition = null;
+      }
+      if (enableProfilerTimer) {
+        finishedAnimation();
       }
       passiveCallback();
     });

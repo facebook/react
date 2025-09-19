@@ -316,6 +316,8 @@ import {
   resetCommitErrors,
   PINGED_UPDATE,
   SPAWNED_UPDATE,
+  startAnimating,
+  stopAnimating,
 } from './ReactProfilerTimer';
 
 // DEV stuff
@@ -3602,6 +3604,7 @@ function commitRoot(
 
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
   if (enableViewTransition && willStartViewTransition) {
+    startAnimating(lanes);
     pendingViewTransition = startViewTransition(
       suspendedState,
       root.containerInfo,
@@ -3613,6 +3616,9 @@ function commitRoot(
       flushPassiveEffects,
       reportViewTransitionError,
       enableProfilerTimer ? suspendedViewTransition : (null: any),
+      enableProfilerTimer
+        ? finishedViewTransition.bind(null, lanes)
+        : (null: any),
     );
   } else {
     // Flush synchronously.
@@ -3649,6 +3655,10 @@ function suspendedViewTransition(reason: string): void {
     pendingSuspendedViewTransitionReason = reason;
     pendingSuspendedCommitReason = reason;
   }
+}
+
+function finishedViewTransition(lanes: Lanes): void {
+  stopAnimating(lanes);
 }
 
 function flushAfterMutationEffects(): void {

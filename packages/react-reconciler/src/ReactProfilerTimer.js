@@ -22,6 +22,7 @@ import {
   includesTransitionLane,
   includesBlockingLane,
   includesSyncLane,
+  NoLanes,
 } from './ReactFiberLane';
 
 import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
@@ -90,6 +91,8 @@ export let transitionSuspendedTime: number = -1.1;
 
 export let retryClampTime: number = -0;
 export let idleClampTime: number = -0;
+
+export let animatingLanes: Lanes = NoLanes;
 
 export let yieldReason: SuspendedReason = (0: any);
 export let yieldStartTime: number = -1.1; // The time when we yielded to the event loop
@@ -594,4 +597,12 @@ export function transferActualDuration(fiber: Fiber): void {
     fiber.actualDuration += child.actualDuration;
     child = child.sibling;
   }
+}
+
+export function startAnimating(lanes: Lanes): void {
+  animatingLanes |= lanes;
+}
+
+export function stopAnimating(lanes: Lanes): void {
+  animatingLanes &= ~lanes;
 }

@@ -860,6 +860,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           spawnedWorkCallback: () => void,
           passiveCallback: () => mixed,
           errorCallback: mixed => void,
+          blockedCallback: string => void, // Profiling-only
+          finishedAnimation: () => void, // Profiling-only
         ): null | RunningViewTransition {
           mutationCallback();
           layoutCallback();
