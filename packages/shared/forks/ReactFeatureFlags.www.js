@@ -92,8 +92,6 @@ export const enableFizzExternalRuntime: boolean = true;
 
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
-export const enablePersistedModeClonedFlag: boolean = false;
-
 export const enableAsyncDebugInfo: boolean = false;
 export const disableClientCache: boolean = true;
 
