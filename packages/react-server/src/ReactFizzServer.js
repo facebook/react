@@ -3550,10 +3550,14 @@ function retryNode(request: Request, task: Task): void {
         childString === '[object Object]'
           ? 'object with keys {' + Object.keys(node).join(', ') + '}'
           : childString
-      }). ` +
-        'If you meant to render a collection of children, use an array ' +
-        'instead.',
+      }). If you meant to render a collection of children, use an array instead. 
+    
+    Tip: You might want to convert the object to a string with JSON.stringify(obj), 
+    or explicitly render its properties in JSX. 
+    
+    See: https://react.dev/learn/rendering-lists`
     );
+    
   }
 
   if (typeof node === 'string') {

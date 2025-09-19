@@ -313,10 +313,14 @@ function throwOnInvalidObjectTypeImpl(returnFiber: Fiber, newChild: Object) {
       childString === '[object Object]'
         ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
         : childString
-    }). ` +
-      'If you meant to render a collection of children, use an array ' +
-      'instead.',
+    }). If you meant to render a collection of children, use an array instead. 
+  
+  Tip: You might want to convert the object to a string with JSON.stringify(obj), 
+  or explicitly render its properties in JSX. 
+  
+  See: https://react.dev/learn/rendering-lists`
   );
+  
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {

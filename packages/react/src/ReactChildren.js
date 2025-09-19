@@ -325,14 +325,17 @@ function mapIntoArray(
       throw new Error(
         `Objects are not valid as a React child (found: ${
           childrenString === '[object Object]'
-            ? 'object with keys {' +
-              Object.keys((children: any)).join(', ') +
-              '}'
+            ? 'object with keys {' + Object.keys((children: any)).join(', ') + '}'
             : childrenString
-        }). ` +
-          'If you meant to render a collection of children, use an array ' +
-          'instead.',
+        }). If you meant to render a collection of children, use an array instead. 
+      
+      Tip: You might want to convert the object to a string with JSON.stringify(obj), 
+      or explicitly render its properties in JSX. 
+      
+      See: https://react.dev/learn/rendering-lists`
       );
+      
+
     }
   }
 
