@@ -4716,9 +4716,16 @@ function renderDebugModel(
             case -1 /* Uninitialized */:
             case 0 /* Pending */:
               break;
-            case 1 /* Resolved */:
-            case 2 /* Rejected */: {
+            case 1 /* Resolved */: {
               const id = outlineDebugModel(request, counter, payload._result);
+              return serializeLazyID(id);
+            }
+            case 2 /* Rejected */: {
+              // We don't log these errors since they didn't actually throw into
+              // Flight.
+              const digest = '';
+              const id = request.nextChunkId++;
+              emitErrorChunk(request, id, digest, payload._result, true, null);
               return serializeLazyID(id);
             }
           }
@@ -4733,14 +4740,18 @@ function renderDebugModel(
               break;
             case 'resolved_module':
               // The value is client reference metadata from the Flight client.
-              // It's likely for SSR, so we chose not to emit it.
+              // It's likely for SSR, so we choose not to emit it.
               break;
             case 'fulfilled': {
               const id = outlineDebugModel(request, counter, payload.value);
               return serializeLazyID(id);
             }
             case 'rejected': {
-              const id = outlineDebugModel(request, counter, payload.reason);
+              // We don't log these errors since they didn't actually throw into
+              // Flight.
+              const digest = '';
+              const id = request.nextChunkId++;
+              emitErrorChunk(request, id, digest, payload.reason, true, null);
               return serializeLazyID(id);
             }
           }
