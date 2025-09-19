@@ -478,6 +478,14 @@ function useSyncExternalStore<T>(
     debugInfo: null,
     dispatcherHookName: 'SyncExternalStore',
   });
+  hookLog.push({
+    displayName: null,
+    primitive: 'InternalSyncExternalStoreEffect',
+    stackError: new Error(),
+    value: null,
+    debugInfo: null,
+    dispatcherHookName: 'InternalSyncExternalStoreEffect',
+  });
   return value;
 }
 
@@ -492,6 +500,15 @@ function useTransition(): [
   nextHook(); // Callback
 
   const isPending = stateHook !== null ? stateHook.memoizedState : false;
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'InternalTransitionState',
+    stackError: new Error(),
+    value: null,
+    debugInfo: null,
+    dispatcherHookName: 'InternalTransitionState',
+  });
 
   hookLog.push({
     displayName: null,
@@ -642,6 +659,24 @@ function useFormState<S, P>(
     dispatcherHookName: 'FormState',
   });
 
+  hookLog.push({
+    displayName: null,
+    primitive: 'InternalFormState',
+    stackError: new Error(),
+    value: null,
+    debugInfo: null,
+    dispatcherHookName: 'State',
+  });
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'InternalFormActionQueue',
+    stackError: new Error(),
+    value: null,
+    debugInfo: null,
+    dispatcherHookName: 'InternalFormActionQueue',
+  });
+
   if (error !== null) {
     throw error;
   }
@@ -710,6 +745,24 @@ function useActionState<S, P>(
     value: value,
     debugInfo: debugInfo,
     dispatcherHookName: 'ActionState',
+  });
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'InternalActionState',
+    stackError: new Error(),
+    value: null,
+    debugInfo: null,
+    dispatcherHookName: 'InternalActionState',
+  });
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'InternalActionQueue',
+    stackError: new Error(),
+    value: null,
+    debugInfo: null,
+    dispatcherHookName: 'InternalActionQueue',
   });
 
   if (error !== null) {
