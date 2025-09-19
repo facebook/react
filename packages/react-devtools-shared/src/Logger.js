@@ -11,10 +11,10 @@ import {enableLogger} from 'react-devtools-feature-flags';
 
 export type LoggerEvent =
   | {
-      +event_name: 'loaded-dev-tools',
+      +event_name: 'loaded-dev-tools';
     }
   | {
-      +event_name: 'error',
+      +event_name: 'error';
       +error_message: string | null,
       +error_stack: string | null,
       +error_component_stack: string | null,
