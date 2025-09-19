@@ -1438,6 +1438,7 @@ function finishConcurrentRender(
         // immediately, wait for more data to arrive.
         // TODO: Combine retry throttling with Suspensey commits. Right now they
         // run one after the other.
+        pendingEffectsLanes = lanes;
         root.timeoutHandle = scheduleTimeout(
           commitRootWhenReady.bind(
             null,
@@ -1551,6 +1552,7 @@ function commitRootWhenReady(
       // Not yet ready to commit. Delay the commit until the renderer notifies
       // us that it's ready. This will be canceled if we start work on the
       // root again.
+      pendingEffectsLanes = lanes;
       root.cancelPendingCommit = schedulePendingCommit(
         commitRoot.bind(
           null,
@@ -2092,6 +2094,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     root.cancelPendingCommit = null;
     cancelPendingCommit();
   }
+
+  pendingEffectsLanes = NoLanes;
 
   resetWorkInProgressStack();
   workInProgressRoot = root;
