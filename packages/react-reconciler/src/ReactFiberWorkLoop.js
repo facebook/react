@@ -1957,6 +1957,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       }
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
     }
+    const previousUpdateTask = workInProgressUpdateTask;
 
     workInProgressUpdateTask = null;
     if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
@@ -1969,18 +1970,30 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         blockingEventTime >= 0 && blockingEventTime < blockingClampTime
           ? blockingClampTime
           : blockingEventTime;
+      const clampedRenderStartTime = // Clamp the suspended time to the first event/update.
+        clampedEventTime >= 0
+          ? clampedEventTime
+          : clampedUpdateTime >= 0
+            ? clampedUpdateTime
+            : renderStartTime;
       if (blockingSuspendedTime >= 0) {
-        setCurrentTrackFromLanes(lanes);
+        setCurrentTrackFromLanes(SyncLane);
         logSuspendedWithDelayPhase(
           blockingSuspendedTime,
-          // Clamp the suspended time to the first event/update.
-          clampedEventTime >= 0
-            ? clampedEventTime
-            : clampedUpdateTime >= 0
-              ? clampedUpdateTime
-              : renderStartTime,
+          clampedRenderStartTime,
           lanes,
-          workInProgressUpdateTask,
+          previousUpdateTask,
+        );
+      } else if (
+        includesSyncLane(animatingLanes) ||
+        includesBlockingLane(animatingLanes)
+      ) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(SyncLane);
+        logAnimatingPhase(
+          blockingClampTime,
+          clampedRenderStartTime,
+          previousUpdateTask,
         );
       }
       logBlockingStart(
@@ -2012,18 +2025,28 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         transitionEventTime >= 0 && transitionEventTime < transitionClampTime
           ? transitionClampTime
           : transitionEventTime;
+      const clampedRenderStartTime =
+        // Clamp the suspended time to the first event/update.
+        clampedEventTime >= 0
+          ? clampedEventTime
+          : clampedUpdateTime >= 0
+            ? clampedUpdateTime
+            : renderStartTime;
       if (transitionSuspendedTime >= 0) {
-        setCurrentTrackFromLanes(lanes);
+        setCurrentTrackFromLanes(SomeTransitionLane);
         logSuspendedWithDelayPhase(
           transitionSuspendedTime,
-          // Clamp the suspended time to the first event/update.
-          clampedEventTime >= 0
-            ? clampedEventTime
-            : clampedUpdateTime >= 0
-              ? clampedUpdateTime
-              : renderStartTime,
+          clampedRenderStartTime,
           lanes,
           workInProgressUpdateTask,
+        );
+      } else if (includesTransitionLane(animatingLanes)) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(SomeTransitionLane);
+        logAnimatingPhase(
+          transitionClampTime,
+          clampedRenderStartTime,
+          previousUpdateTask,
         );
       }
       logTransitionStart(
@@ -2039,6 +2062,20 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         transitionUpdateComponentName,
       );
       clearTransitionTimers();
+    }
+    if (includesRetryLane(lanes)) {
+      if (includesRetryLane(animatingLanes)) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(SomeRetryLane);
+        logAnimatingPhase(retryClampTime, renderStartTime, previousUpdateTask);
+      }
+    }
+    if (includesIdleGroupLanes(lanes)) {
+      if (includesIdleGroupLanes(animatingLanes)) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(IdleLane);
+        logAnimatingPhase(idleClampTime, renderStartTime, previousUpdateTask);
+      }
     }
   }
 
