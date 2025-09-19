@@ -203,6 +203,9 @@ import {
   includesOnlyViewTransitionEligibleLanes,
   isGestureRender,
   GestureLane,
+  SomeTransitionLane,
+  SomeRetryLane,
+  IdleLane,
 } from './ReactFiberLane';
 import {
   DiscreteEventPriority,
@@ -318,6 +321,9 @@ import {
   SPAWNED_UPDATE,
   startAnimating,
   stopAnimating,
+  animatingLanes,
+  retryClampTime,
+  idleClampTime,
 } from './ReactProfilerTimer';
 
 // DEV stuff
@@ -3604,7 +3610,9 @@ function commitRoot(
 
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
   if (enableViewTransition && willStartViewTransition) {
-    startAnimating(lanes);
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      startAnimating(lanes);
+    }
     pendingViewTransition = startViewTransition(
       suspendedState,
       root.containerInfo,
@@ -3617,7 +3625,13 @@ function commitRoot(
       reportViewTransitionError,
       enableProfilerTimer ? suspendedViewTransition : (null: any),
       enableProfilerTimer
-        ? finishedViewTransition.bind(null, lanes)
+        ? // This callback fires after "pendingEffects" so we need to snapshot the arguments.
+          finishedViewTransition.bind(
+            null,
+            lanes,
+            // TODO: Use a ViewTransition Task
+            __DEV__ ? workInProgressUpdateTask : null,
+          )
         : (null: any),
     );
   } else {
@@ -3650,15 +3664,60 @@ function suspendedViewTransition(reason: string): void {
       commitEndTime,
       commitErrors,
       pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
-      workInProgressUpdateTask,
+      workInProgressUpdateTask, // TODO: Use a ViewTransition Task and this is not safe to read in this phase.
     );
     pendingSuspendedViewTransitionReason = reason;
     pendingSuspendedCommitReason = reason;
   }
 }
 
-function finishedViewTransition(lanes: Lanes): void {
-  stopAnimating(lanes);
+function finishedViewTransition(
+  lanes: Lanes,
+  task: null | ConsoleTask, // DEV-only
+): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if ((animatingLanes & lanes) === NoLanes) {
+      // Was already stopped by some other action or maybe other root.
+      return;
+    }
+    stopAnimating(lanes);
+    // If an affected track isn't in the middle of rendering or committing, log from the previous
+    // finished render until the end of the animation.
+    if (
+      (includesSyncLane(lanes) || includesBlockingLane(lanes)) &&
+      !includesSyncLane(workInProgressRootRenderLanes) &&
+      !includesBlockingLane(workInProgressRootRenderLanes) &&
+      !includesSyncLane(pendingEffectsLanes) &&
+      !includesBlockingLane(pendingEffectsLanes)
+    ) {
+      setCurrentTrackFromLanes(SyncLane);
+      logAnimatingPhase(blockingClampTime, now(), task);
+    }
+    if (
+      includesTransitionLane(lanes) &&
+      !includesTransitionLane(workInProgressRootRenderLanes) &&
+      !includesTransitionLane(pendingEffectsLanes)
+    ) {
+      setCurrentTrackFromLanes(SomeTransitionLane);
+      logAnimatingPhase(transitionClampTime, now(), task);
+    }
+    if (
+      includesRetryLane(lanes) &&
+      !includesRetryLane(workInProgressRootRenderLanes) &&
+      !includesRetryLane(pendingEffectsLanes)
+    ) {
+      setCurrentTrackFromLanes(SomeRetryLane);
+      logAnimatingPhase(retryClampTime, now(), task);
+    }
+    if (
+      includesIdleGroupLanes(lanes) &&
+      !includesIdleGroupLanes(workInProgressRootRenderLanes) &&
+      !includesIdleGroupLanes(pendingEffectsLanes)
+    ) {
+      setCurrentTrackFromLanes(IdleLane);
+      logAnimatingPhase(idleClampTime, now(), task);
+    }
+  }
 }
 
 function flushAfterMutationEffects(): void {
@@ -3735,7 +3794,7 @@ function flushLayoutEffects(): void {
         commitEndTime, // The start is the end of the first commit part.
         commitStartTime, // The end is the start of the second commit part.
         suspendedViewTransitionReason,
-        workInProgressUpdateTask,
+        workInProgressUpdateTask, // TODO: Use a ViewTransition Task and this is not safe to read in this phase.
       );
     }
   }

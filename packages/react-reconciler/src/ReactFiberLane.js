@@ -73,6 +73,8 @@ const TransitionLane12: Lane = /*                       */ 0b0000000000010000000
 const TransitionLane13: Lane = /*                       */ 0b0000000000100000000000000000000;
 const TransitionLane14: Lane = /*                       */ 0b0000000001000000000000000000000;
 
+export const SomeTransitionLane: Lane = TransitionLane1;
+
 const TransitionUpdateLanes =
   TransitionLane1 |
   TransitionLane2 |
