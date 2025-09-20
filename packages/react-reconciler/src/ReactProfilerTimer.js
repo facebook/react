@@ -21,7 +21,6 @@ import {
   isSyncLane,
   includesTransitionLane,
   includesBlockingLane,
-  includesSyncLane,
   NoLanes,
 } from './ReactFiberLane';
 
@@ -220,7 +219,7 @@ export function startPingTimerByLanes(lanes: Lanes): void {
   // Mark the update time and clamp anything before it because we don't want
   // to show the event time for pings but we also don't want to clear it
   // because we still need to track if this was a repeat.
-  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+  if (includesBlockingLane(lanes)) {
     if (blockingUpdateTime < 0) {
       blockingClampTime = blockingUpdateTime = now();
       blockingUpdateTask = createTask('Promise Resolved');
@@ -239,7 +238,7 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+  if (includesBlockingLane(lanes)) {
     blockingSuspendedTime = renderEndTime;
   } else if (includesTransitionLane(lanes)) {
     transitionSuspendedTime = renderEndTime;
