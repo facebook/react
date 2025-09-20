@@ -1943,6 +1943,20 @@ export function attach(
     return false;
   }
 
+  function isUseSyncExternalStoreHook(hookObject: any): boolean {
+    const queue = hookObject.queue;
+    if (!queue) {
+      return false;
+    }
+
+    const boundHasOwnProperty = hasOwnProperty.bind(queue);
+    return (
+      boundHasOwnProperty('value') &&
+      boundHasOwnProperty('getSnapshot') &&
+      typeof queue.getSnapshot === 'function'
+    );
+  }
+
   function getChangedHooksIndices(prev: any, next: any): null | Array<number> {
     if (prev == null || next == null) {
       return null;
@@ -1950,13 +1964,30 @@ export function attach(
 
     const indices = [];
     let index = 0;
-    while (next !== null) {
-      if (didStatefulHookChange(prev, next)) {
-        indices.push(index);
+
+    if (
+      next.hasOwnProperty('baseState') &&
+      next.hasOwnProperty('memoizedState') &&
+      next.hasOwnProperty('next') &&
+      next.hasOwnProperty('queue')
+    ) {
+      while (next !== null) {
+        if (didStatefulHookChange(prev, next)) {
+          indices.push(index);
+        }
+
+        // useSyncExternalStore creates 2 internal hooks, but we only count it as 1 user-facing hook
+        if (isUseSyncExternalStoreHook(next)) {
+          if (next.next !== null) {
+            next = next.next;
+            prev = prev.next;
+          }
+        }
+
+        index++;
+        next = next.next;
+        prev = prev.next;
       }
-      next = next.next;
-      prev = prev.next;
-      index++;
     }
 
     return indices;
