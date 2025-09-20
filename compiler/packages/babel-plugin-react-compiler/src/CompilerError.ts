@@ -520,7 +520,8 @@ function printErrorSummary(category: ErrorCategory, message: string): string {
     case ErrorCategory.AutomaticEffectDependencies:
     case ErrorCategory.CapitalizedCalls:
     case ErrorCategory.Config:
-    case ErrorCategory.EffectDerivationsOfState:
+    case ErrorCategory.EffectDerivationDeriveInRender:
+    case ErrorCategory.EffectDerivationShadowingParentState:
     case ErrorCategory.EffectSetState:
     case ErrorCategory.ErrorBoundaries:
     case ErrorCategory.Factories:
@@ -614,7 +615,14 @@ export enum ErrorCategory {
    * Checks for no setState in effect bodies
    */
   EffectSetState = 'EffectSetState',
-  EffectDerivationsOfState = 'EffectDerivationsOfState',
+  /**
+   * Checks for derived state in effects that could be calculated in render
+   */
+  EffectDerivationDeriveInRender = 'EffectDerivationDeriveInRender',
+  /**
+   * Checks for derived state in effects that could be hoisted to parent
+   */
+  EffectDerivationShadowingParentState = 'EffectDerivationShadowingParentState',
   /**
    * Validates against try/catch in place of error boundaries
    */
@@ -751,13 +759,23 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         recommended: false,
       };
     }
-    case ErrorCategory.EffectDerivationsOfState: {
+    case ErrorCategory.EffectDerivationDeriveInRender: {
       return {
         category,
         severity: ErrorSeverity.Error,
-        name: 'no-deriving-state-in-effects',
+        name: 'effect-derive-in-render',
         description:
-          'Validates against deriving values from state in an effect',
+          'Validates if a useEffect is deriving state from props and/or local state that could be calculated in render.',
+        recommended: false,
+      };
+    }
+    case ErrorCategory.EffectDerivationShadowingParentState: {
+      return {
+        category,
+        severity: ErrorSeverity.Error,
+        name: 'effect-shadow-parent-state',
+        description:
+          'Validates if a useEffect is deriving state from parent state and if the component is updating the shadowed state locally.',
         recommended: false,
       };
     }
