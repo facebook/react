@@ -2054,7 +2054,10 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
           lanes,
           previousUpdateTask,
         );
-      } else if (includesBlockingLane(animatingLanes)) {
+      } else if (
+        !isGestureRender(animatingLanes) &&
+        includesBlockingLane(animatingLanes)
+      ) {
         // If this lane is still animating, log the time from previous render finishing to now as animating.
         setCurrentTrackFromLanes(SyncLane);
         logAnimatingPhase(
