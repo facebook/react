@@ -2189,4 +2189,66 @@ describe('ReactUse', () => {
       expect(root).toMatchRenderedOutput('Updated');
     },
   );
+
+  it('accepts allowClientFallback option without breaking existing behavior', async () => {
+    // Test that the new options parameter doesn't break existing functionality
+    const TestContext = React.createContext('context-value');
+
+    function ComponentUsingContext() {
+      // Test with options
+      const value1 = use(TestContext, {allowClientFallback: false});
+      return <Text text={value1} />;
+    }
+
+    function ComponentUsingContextDefault() {
+      // Test without options (backward compatibility)
+      const value2 = use(TestContext);
+      return <Text text={value2} />;
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Test with context and options
+    await act(() => {
+      root.render(
+        <TestContext.Provider value="test-value">
+          <ComponentUsingContext />
+        </TestContext.Provider>,
+      );
+    });
+    assertLog(['test-value']);
+    expect(root).toMatchRenderedOutput('test-value');
+
+    // Test with context but no options (backward compatibility)
+    await act(() => {
+      root.render(
+        <TestContext.Provider value="test-value-2">
+          <ComponentUsingContextDefault />
+        </TestContext.Provider>,
+      );
+    });
+    assertLog(['test-value-2']);
+    expect(root).toMatchRenderedOutput('test-value-2');
+  });
+
+  it('does not affect context usage with allowClientFallback option', async () => {
+    const TestContext = React.createContext('default');
+
+    function Component() {
+      const contextValue = use(TestContext, {allowClientFallback: false});
+      return <Text text={contextValue} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <TestContext.Provider value="provided">
+          <Component />
+        </TestContext.Provider>,
+      );
+    });
+
+    assertLog(['provided']);
+    expect(root).toMatchRenderedOutput('provided');
+  });
 });
