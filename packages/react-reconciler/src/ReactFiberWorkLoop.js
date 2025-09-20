@@ -79,7 +79,6 @@ import {
   logErroredRenderPhase,
   logInconsistentRender,
   logSuspendedWithDelayPhase,
-  logSuspenseThrottlePhase,
   logSuspendedCommitPhase,
   logSuspendedViewTransitionPhase,
   logCommitPhase,
@@ -103,6 +102,7 @@ import {
   startSuspendingCommit,
   suspendOnActiveViewTransition,
   waitForCommitToBeReady,
+  getSuspendedCommitReason,
   preloadInstance,
   preloadResource,
   supportsHydration,
@@ -672,12 +672,10 @@ export function getRenderTargetTime(): number {
 
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
-type SuspendedCommitReason = 0 | 1 | 2;
-const IMMEDIATE_COMMIT = 0;
-const SUSPENDED_COMMIT = 1;
-const THROTTLED_COMMIT = 2;
+type SuspendedCommitReason = null | string;
 
 type DelayedCommitReason = 0 | 1 | 2 | 3;
+const IMMEDIATE_COMMIT = 0;
 const ABORTED_VIEW_TRANSITION_COMMIT = 1;
 const DELAYED_PASSIVE_COMMIT = 2;
 const ANIMATION_STARTED_COMMIT = 3;
@@ -703,7 +701,7 @@ let pendingViewTransitionEvents: Array<(types: Array<string>) => void> | null =
   null;
 let pendingTransitionTypes: null | TransitionTypes = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
-let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
+let pendingSuspendedCommitReason: SuspendedCommitReason = null; // Profiling-only
 let pendingDelayedCommitReason: DelayedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
 let pendingSuspendedViewTransitionReason: null | string = null; // Profiling-only
 
@@ -1391,7 +1389,7 @@ function finishConcurrentRender(
       workInProgressSuspendedRetryLanes,
       exitStatus,
       null,
-      IMMEDIATE_COMMIT,
+      null,
       renderStartTime,
       renderEndTime,
     );
@@ -1442,7 +1440,7 @@ function finishConcurrentRender(
             workInProgressSuspendedRetryLanes,
             workInProgressRootDidSkipSuspendedSiblings,
             exitStatus,
-            THROTTLED_COMMIT,
+            'Throttled',
             renderStartTime,
             renderEndTime,
           ),
@@ -1463,7 +1461,7 @@ function finishConcurrentRender(
       workInProgressSuspendedRetryLanes,
       workInProgressRootDidSkipSuspendedSiblings,
       exitStatus,
-      IMMEDIATE_COMMIT,
+      null,
       renderStartTime,
       renderEndTime,
     );
@@ -1555,7 +1553,9 @@ function commitRootWhenReady(
           suspendedRetryLanes,
           exitStatus,
           suspendedState,
-          SUSPENDED_COMMIT,
+          enableProfilerTimer
+            ? getSuspendedCommitReason(suspendedState, root.containerInfo)
+            : null,
           completedRenderStartTime,
           completedRenderEndTime,
         ),
@@ -3458,7 +3458,7 @@ function commitRoot(
       recoverableErrors,
       suspendedState,
       enableProfilerTimer
-        ? suspendedCommitReason === IMMEDIATE_COMMIT
+        ? suspendedCommitReason === null
           ? completedRenderEndTime
           : commitStartTime
         : 0,
@@ -3530,16 +3530,11 @@ function commitRoot(
     resetCommitErrors();
     recordCommitTime();
     if (enableComponentPerformanceTrack) {
-      if (suspendedCommitReason === SUSPENDED_COMMIT) {
+      if (suspendedCommitReason !== null) {
         logSuspendedCommitPhase(
           completedRenderEndTime,
           commitStartTime,
-          workInProgressUpdateTask,
-        );
-      } else if (suspendedCommitReason === THROTTLED_COMMIT) {
-        logSuspenseThrottlePhase(
-          completedRenderEndTime,
-          commitStartTime,
+          suspendedCommitReason,
           workInProgressUpdateTask,
         );
       }
@@ -3633,7 +3628,7 @@ function suspendedViewTransition(reason: string): void {
     // We'll split the commit into two phases, because we're suspended in the middle.
     recordCommitEndTime();
     logCommitPhase(
-      pendingSuspendedCommitReason === IMMEDIATE_COMMIT
+      pendingSuspendedCommitReason === null
         ? pendingEffectsRenderEndTime
         : commitStartTime,
       commitEndTime,
@@ -3642,7 +3637,7 @@ function suspendedViewTransition(reason: string): void {
       workInProgressUpdateTask,
     );
     pendingSuspendedViewTransitionReason = reason;
-    pendingSuspendedCommitReason = SUSPENDED_COMMIT;
+    pendingSuspendedCommitReason = reason;
   }
 }
 
@@ -3792,9 +3787,7 @@ function flushLayoutEffects(): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     recordCommitEndTime();
     logCommitPhase(
-      suspendedCommitReason === IMMEDIATE_COMMIT
-        ? completedRenderEndTime
-        : commitStartTime,
+      suspendedCommitReason === null ? completedRenderEndTime : commitStartTime,
       commitEndTime,
       commitErrors,
       pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,

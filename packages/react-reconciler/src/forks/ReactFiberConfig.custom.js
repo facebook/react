@@ -99,6 +99,7 @@ export const suspendInstance = $$$config.suspendInstance;
 export const suspendOnActiveViewTransition =
   $$$config.suspendOnActiveViewTransition;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
+export const getSuspendedCommitReason = $$$config.getSuspendedCommitReason;
 export const NotPendingTransition = $$$config.NotPendingTransition;
 export const HostTransitionContext = $$$config.HostTransitionContext;
 export const resetFormInstance = $$$config.resetFormInstance;

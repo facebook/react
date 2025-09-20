@@ -627,6 +627,13 @@ export function waitForCommitToBeReady(
   return null;
 }
 
+export function getSuspendedCommitReason(
+  state: SuspendedState,
+  rootContainer: Container,
+): null | string {
+  return null;
+}
+
 export type FragmentInstanceType = {
   _fragmentFiber: Fiber,
   _observers: null | Set<IntersectionObserver>,

@@ -5965,6 +5965,7 @@ export opaque type SuspendedState = {
   imgBytes: number, // number of bytes we estimate needing to download
   suspenseyImages: Array<HTMLImageElement>, // instances of suspensey images (whether loaded or not)
   waitingForImages: boolean, // false when we're no longer blocking on images
+  waitingForViewTransition: boolean,
   unsuspend: null | (() => void),
 };
 
@@ -5976,6 +5977,7 @@ export function startSuspendingCommit(): SuspendedState {
     imgBytes: 0,
     suspenseyImages: [],
     waitingForImages: true,
+    waitingForViewTransition: false,
     // We use a noop function when we begin suspending because if possible we want the
     // waitfor step to finish synchronously. If it doesn't we'll return a function to
     // provide the actual unsuspend function and that will get completed when the count
@@ -6123,6 +6125,7 @@ export function suspendOnActiveViewTransition(
     return;
   }
   state.count++;
+  state.waitingForViewTransition = true;
   const ping = onUnsuspend.bind(state);
   activeViewTransition.finished.then(ping, ping);
 }
@@ -6202,6 +6205,28 @@ export function waitForCommitToBeReady(
         clearTimeout(imgTimer);
       };
     };
+  }
+  return null;
+}
+
+export function getSuspendedCommitReason(
+  state: SuspendedState,
+  rootContainer: Container,
+): null | string {
+  if (state.waitingForViewTransition) {
+    return 'Waiting for the previous Animation';
+  }
+  if (state.count > 0) {
+    if (state.imgCount > 0) {
+      return 'Suspended on CSS and Images';
+    }
+    return 'Suspended on CSS';
+  }
+  if (state.imgCount === 1) {
+    return 'Suspended on an Image';
+  }
+  if (state.imgCount > 0) {
+    return 'Suspended on Images';
   }
   return null;
 }
