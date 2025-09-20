@@ -622,7 +622,7 @@ export function waitForCommitToBeReady(timeoutOffset) {
 }
 
 export function getSuspendedCommitReason(state, rootContainer) {
-  return '';
+  return null;
 }
 
 export const NotPendingTransition = null;
