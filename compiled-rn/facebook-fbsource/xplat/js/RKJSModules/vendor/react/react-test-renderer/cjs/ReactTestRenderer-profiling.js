@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<86748e4c87257c5ed3ebefeb0d5bc9c8>>
+ * @generated SignedSource<<42cc9546e86b2a7b43422dace7553c7f>>
  */
 
 "use strict";
@@ -8939,6 +8939,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
             !workInProgressRootDidSkipSuspendedSiblings
           );
           if (0 !== getNextLanes(shouldTimeSlice, 0, !0)) break a;
+          pendingEffectsLanes = lanes;
           shouldTimeSlice.timeoutHandle = scheduleTimeout(
             commitRootWhenReady.bind(
               null,
@@ -9108,6 +9109,7 @@ function prepareFreshStack(root, lanes) {
   timeoutHandle = root.cancelPendingCommit;
   null !== timeoutHandle &&
     ((root.cancelPendingCommit = null), timeoutHandle());
+  pendingEffectsLanes = 0;
   resetWorkInProgressStack();
   workInProgressRoot = root;
   workInProgress = timeoutHandle = createWorkInProgress(root.current, null);
@@ -10673,10 +10675,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1273 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-b204edda-20250920",
+  version: "19.2.0-native-fb-b4fe1e6c-20250920",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-b204edda-20250920",
+  reconcilerVersion: "19.2.0-native-fb-b4fe1e6c-20250920",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$145 = 0;
@@ -10827,4 +10829,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-b204edda-20250920";
+exports.version = "19.2.0-native-fb-b4fe1e6c-20250920";

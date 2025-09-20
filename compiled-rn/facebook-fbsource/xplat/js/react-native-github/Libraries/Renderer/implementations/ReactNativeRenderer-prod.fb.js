@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<85091a8cf30ee374ce8ce741b8d6dbd6>>
+ * @generated SignedSource<<24daedc985b88877d3cb8e248dac02c7>>
  */
 
 "use strict";
@@ -10063,6 +10063,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
             !workInProgressRootDidSkipSuspendedSiblings
           );
           if (0 !== getNextLanes(shouldTimeSlice, 0, !0)) break a;
+          pendingEffectsLanes = lanes;
           shouldTimeSlice.timeoutHandle = scheduleTimeout(
             commitRootWhenReady.bind(
               null,
@@ -10213,6 +10214,7 @@ function prepareFreshStack(root, lanes) {
   timeoutHandle = root.cancelPendingCommit;
   null !== timeoutHandle &&
     ((root.cancelPendingCommit = null), timeoutHandle());
+  pendingEffectsLanes = 0;
   resetWorkInProgressStack();
   workInProgressRoot = root;
   workInProgress = timeoutHandle = createWorkInProgress(root.current, null);
@@ -11377,11 +11379,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-b204edda-20250920" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-b4fe1e6c-20250920" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-b204edda-20250920\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-b4fe1e6c-20250920\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11431,10 +11433,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1325 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-b204edda-20250920",
+    version: "19.2.0-native-fb-b4fe1e6c-20250920",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-b204edda-20250920"
+    reconcilerVersion: "19.2.0-native-fb-b4fe1e6c-20250920"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1325.rendererConfig = extraDevToolsConfig);

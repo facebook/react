@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<009472b74f087dc0c0022b27114f5fd6>>
+ * @generated SignedSource<<d6ba8b52ad5502c5abac117e6fc0a7d5>>
  */
 
 "use strict";
@@ -13903,6 +13903,7 @@ __DEV__ &&
                   !workInProgressRootDidSkipSuspendedSiblings
                 );
                 if (0 !== getNextLanes(yieldEndTime, 0, !0)) break a;
+                pendingEffectsLanes = lanes;
                 yieldEndTime.timeoutHandle = scheduleTimeout(
                   commitRootWhenReady.bind(
                     null,
@@ -14171,10 +14172,11 @@ __DEV__ &&
           }
           finalizeRender(workInProgressRootRenderLanes, renderStartTime);
         }
+        previousRenderStartTime = workInProgressUpdateTask;
         workInProgressUpdateTask = null;
         if (0 !== (lanes & 3) || 0 !== (lanes & 124)) {
           workInProgressUpdateTask = blockingUpdateTask;
-          previousRenderStartTime =
+          debugTask =
             0 <= blockingUpdateTime && blockingUpdateTime < blockingClampTime
               ? blockingClampTime
               : blockingUpdateTime;
@@ -14182,18 +14184,21 @@ __DEV__ &&
             0 <= blockingEventTime && blockingEventTime < blockingClampTime
               ? blockingClampTime
               : blockingEventTime;
+          color =
+            0 <= endTime
+              ? endTime
+              : 0 <= debugTask
+                ? debugTask
+                : renderStartTime;
           0 <= blockingSuspendedTime &&
-            (setCurrentTrackFromLanes(lanes),
+            (setCurrentTrackFromLanes(2),
             logSuspendedWithDelayPhase(
               blockingSuspendedTime,
-              0 <= endTime
-                ? endTime
-                : 0 <= previousRenderStartTime
-                  ? previousRenderStartTime
-                  : renderStartTime,
+              color,
               lanes,
-              workInProgressUpdateTask
+              previousRenderStartTime
             ));
+          previousRenderStartTime = debugTask;
           var eventTime = endTime,
             eventType = blockingEventType,
             eventIsRepeat = blockingEventIsRepeat,
@@ -14303,15 +14308,17 @@ __DEV__ &&
             transitionEventTime < transitionClampTime
               ? transitionClampTime
               : transitionEventTime),
+          (color =
+            0 <= endTime
+              ? endTime
+              : 0 <= previousRenderStartTime
+                ? previousRenderStartTime
+                : renderStartTime),
           0 <= transitionSuspendedTime &&
-            (setCurrentTrackFromLanes(lanes),
+            (setCurrentTrackFromLanes(256),
             logSuspendedWithDelayPhase(
               transitionSuspendedTime,
-              0 <= endTime
-                ? endTime
-                : 0 <= previousRenderStartTime
-                  ? previousRenderStartTime
-                  : renderStartTime,
+              color,
               lanes,
               workInProgressUpdateTask
             )),
@@ -14424,6 +14431,7 @@ __DEV__ &&
       previousRenderStartTime = root.cancelPendingCommit;
       null !== previousRenderStartTime &&
         ((root.cancelPendingCommit = null), previousRenderStartTime());
+      pendingEffectsLanes = 0;
       resetWorkInProgressStack();
       workInProgressRoot = root;
       workInProgress = previousRenderStartTime = createWorkInProgress(
@@ -15532,7 +15540,7 @@ __DEV__ &&
                       endTime,
                       currentTrack,
                       "Scheduler \u269b",
-                      "secondary"
+                      "secondary-dark"
                     )
                   )
                 : console.timeStamp(
@@ -15541,7 +15549,7 @@ __DEV__ &&
                     endTime,
                     currentTrack,
                     "Scheduler \u269b",
-                    "secondary"
+                    "secondary-dark"
                   ));
           } else {
             startTime = commitEndTime;
@@ -19867,10 +19875,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-b204edda-20250920",
+        version: "19.2.0-native-fb-b4fe1e6c-20250920",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-b204edda-20250920"
+        reconcilerVersion: "19.2.0-native-fb-b4fe1e6c-20250920"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
