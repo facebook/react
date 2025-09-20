@@ -18,7 +18,6 @@ import type {CapturedValue} from './ReactCapturedValue';
 import {
   isTransitionLane,
   isBlockingLane,
-  isSyncLane,
   includesTransitionLane,
   includesBlockingLane,
   NoLanes,
@@ -113,7 +112,7 @@ export function startUpdateTimerByLane(
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  if (isSyncLane(lane) || isBlockingLane(lane)) {
+  if (isBlockingLane(lane)) {
     if (blockingUpdateTime < 0) {
       blockingUpdateTime = now();
       blockingUpdateTask = createTask(method);
