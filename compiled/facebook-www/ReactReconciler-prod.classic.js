@@ -8066,7 +8066,7 @@ module.exports = function ($$$config) {
     return prevChildren;
   }
   function applyViewTransitionToHostInstances(
-    child,
+    fiber,
     name,
     className,
     collectMeasurements,
@@ -8074,7 +8074,7 @@ module.exports = function ($$$config) {
   ) {
     viewTransitionHostInstanceIdx = 0;
     return applyViewTransitionToHostInstancesRecursive(
-      child,
+      fiber.child,
       name,
       className,
       collectMeasurements,
@@ -8157,7 +8157,7 @@ module.exports = function ($$$config) {
             props = getViewTransitionClassName(props.default, props.share);
             "none" !== props &&
               (applyViewTransitionToHostInstances(
-                placement.child,
+                placement,
                 name,
                 props,
                 null,
@@ -8179,7 +8179,7 @@ module.exports = function ($$$config) {
         );
       "none" !== className
         ? applyViewTransitionToHostInstances(
-            placement.child,
+            placement,
             name,
             className,
             null,
@@ -8218,7 +8218,7 @@ module.exports = function ($$$config) {
                   );
                   "none" !== className &&
                     (applyViewTransitionToHostInstances(
-                      deletion.child,
+                      deletion,
                       name,
                       className,
                       null,
@@ -8256,13 +8256,7 @@ module.exports = function ($$$config) {
           void 0 !== pair ? props.share : props.exit
         );
       "none" !== className &&
-        (applyViewTransitionToHostInstances(
-          deletion.child,
-          name,
-          className,
-          null,
-          !1
-        )
+        (applyViewTransitionToHostInstances(deletion, name, className, null, !1)
           ? void 0 !== pair
             ? ((className = deletion.stateNode),
               (pair.paired = className),
@@ -8289,7 +8283,7 @@ module.exports = function ($$$config) {
         changedParent.flags &= -5;
         "none" !== props &&
           applyViewTransitionToHostInstances(
-            changedParent.child,
+            changedParent,
             name,
             props,
             (changedParent.memoizedState = []),
@@ -8587,7 +8581,7 @@ module.exports = function ($$$config) {
               (flags = getViewTransitionClassName(flags.default, flags.update)),
               "none" !== flags &&
                 applyViewTransitionToHostInstances(
-                  current.child,
+                  current,
                   isViewTransitionEligible,
                   flags,
                   (current.memoizedState = []),
@@ -14239,7 +14233,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-b4fe1e6c-20250920"
+      reconcilerVersion: "19.2.0-www-classic-d91d28c8-20250920"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
