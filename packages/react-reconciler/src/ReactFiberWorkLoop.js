@@ -324,6 +324,7 @@ import {
   animatingLanes,
   retryClampTime,
   idleClampTime,
+  animatingTask,
 } from './ReactProfilerTimer';
 
 // DEV stuff
@@ -1995,7 +1996,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         logAnimatingPhase(
           blockingClampTime,
           clampedRenderStartTime,
-          previousUpdateTask,
+          animatingTask,
         );
       }
       logBlockingStart(
@@ -2048,7 +2049,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         logAnimatingPhase(
           transitionClampTime,
           clampedRenderStartTime,
-          previousUpdateTask,
+          animatingTask,
         );
       }
       logTransitionStart(
@@ -2069,14 +2070,14 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       if (includesRetryLane(animatingLanes)) {
         // If this lane is still animating, log the time from previous render finishing to now as animating.
         setCurrentTrackFromLanes(SomeRetryLane);
-        logAnimatingPhase(retryClampTime, renderStartTime, previousUpdateTask);
+        logAnimatingPhase(retryClampTime, renderStartTime, animatingTask);
       }
     }
     if (includesIdleGroupLanes(lanes)) {
       if (includesIdleGroupLanes(animatingLanes)) {
         // If this lane is still animating, log the time from previous render finishing to now as animating.
         setCurrentTrackFromLanes(IdleLane);
-        logAnimatingPhase(idleClampTime, renderStartTime, previousUpdateTask);
+        logAnimatingPhase(idleClampTime, renderStartTime, animatingTask);
       }
     }
   }
@@ -3667,12 +3668,7 @@ function commitRoot(
       enableProfilerTimer ? suspendedViewTransition : (null: any),
       enableProfilerTimer
         ? // This callback fires after "pendingEffects" so we need to snapshot the arguments.
-          finishedViewTransition.bind(
-            null,
-            lanes,
-            // TODO: Use a ViewTransition Task
-            __DEV__ ? workInProgressUpdateTask : null,
-          )
+          finishedViewTransition.bind(null, lanes)
         : (null: any),
     );
   } else {
@@ -3712,15 +3708,13 @@ function suspendedViewTransition(reason: string): void {
   }
 }
 
-function finishedViewTransition(
-  lanes: Lanes,
-  task: null | ConsoleTask, // DEV-only
-): void {
+function finishedViewTransition(lanes: Lanes): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if ((animatingLanes & lanes) === NoLanes) {
       // Was already stopped by some other action or maybe other root.
       return;
     }
+    const task = animatingTask;
     stopAnimating(lanes);
     // If an affected track isn't in the middle of rendering or committing, log from the previous
     // finished render until the end of the animation.
@@ -3835,7 +3829,7 @@ function flushLayoutEffects(): void {
         commitEndTime, // The start is the end of the first commit part.
         commitStartTime, // The end is the start of the second commit part.
         suspendedViewTransitionReason,
-        workInProgressUpdateTask, // TODO: Use a ViewTransition Task and this is not safe to read in this phase.
+        animatingTask,
       );
     }
   }
@@ -3938,7 +3932,7 @@ function flushSpawnedWork(): void {
         startViewTransitionStartTime,
         commitEndTime,
         pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
-        workInProgressUpdateTask, // TODO: Use a ViewTransition Task.
+        animatingTask,
       );
       if (pendingDelayedCommitReason !== ABORTED_VIEW_TRANSITION_COMMIT) {
         pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT;
@@ -4440,11 +4434,7 @@ function flushPassiveEffectsImpl() {
     passiveEffectStartTime = now();
     if (pendingDelayedCommitReason === ANIMATION_STARTED_COMMIT) {
       // The animation was started, so we've been animating since that happened.
-      logAnimatingPhase(
-        commitEndTime,
-        passiveEffectStartTime,
-        workInProgressUpdateTask, // TODO: Use a ViewTransition Task
-      );
+      logAnimatingPhase(commitEndTime, passiveEffectStartTime, animatingTask);
     } else {
       logPaintYieldPhase(
         commitEndTime,
