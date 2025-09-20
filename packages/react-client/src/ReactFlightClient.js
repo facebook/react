@@ -649,7 +649,6 @@ function triggerErrorOnChunk<T>(
       }
       try {
         initializeDebugChunk(response, chunk);
-        chunk._debugChunk = null;
         if (initializingHandler !== null) {
           if (initializingHandler.errored) {
             // Ignore error parsing debug info, we'll report the original error instead.
@@ -932,9 +931,9 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   }
 
   if (__DEV__) {
-    // Lazily initialize any debug info and block the initializing chunk on any unresolved entries.
+    // Initialize any debug info and block the initializing chunk on any
+    // unresolved entries.
     initializeDebugChunk(response, chunk);
-    chunk._debugChunk = null;
   }
 
   try {
@@ -1079,7 +1078,7 @@ function getTaskName(type: mixed): string {
 function initializeElement(
   response: Response,
   element: any,
-  lazyType: null | LazyComponent<
+  lazyNode: null | LazyComponent<
     React$Element<any>,
     SomeChunk<React$Element<any>>,
   >,
@@ -1154,12 +1153,12 @@ function initializeElement(
   // In case the JSX runtime has validated the lazy type as a static child, we
   // need to transfer this information to the element.
   if (
-    lazyType &&
-    lazyType._store &&
-    lazyType._store.validated &&
+    lazyNode &&
+    lazyNode._store &&
+    lazyNode._store.validated &&
     !element._store.validated
   ) {
-    element._store.validated = lazyType._store.validated;
+    element._store.validated = lazyNode._store.validated;
   }
 
   // TODO: We should be freezing the element but currently, we might write into
@@ -1169,6 +1168,7 @@ function initializeElement(
 
 function createElement(
   response: Response,
+  isRoot: boolean,
   type: mixed,
   key: mixed,
   props: mixed,
@@ -1277,15 +1277,24 @@ function createElement(
       // a Lazy node referencing this Element to let everything around it proceed.
       const blockedChunk: BlockedChunk<React$Element<any>> =
         createBlockedChunk(response);
+      if (__DEV__) {
+        // If this is the root element, forward the live debug info of the
+        // initializing chunk to the blocked chunk.
+        if (isRoot && initializingChunk !== null) {
+          blockedChunk._debugInfo = initializingChunk._debugInfo;
+        }
+      }
       handler.value = element;
       handler.chunk = blockedChunk;
-      const lazyType = createLazyChunkWrapper(blockedChunk, validated);
+      const lazyNode = createLazyChunkWrapper(blockedChunk, validated);
       if (__DEV__) {
+        // Forward the live debug info of the lazy node to the element.
+        element._debugInfo = lazyNode._debugInfo;
         // After we have initialized any blocked references, initialize stack etc.
-        const init = initializeElement.bind(null, response, element, lazyType);
+        const init = initializeElement.bind(null, response, element, lazyNode);
         blockedChunk.then(init, init);
       }
-      return lazyType;
+      return lazyNode;
     }
   }
   if (__DEV__) {
@@ -1850,14 +1859,16 @@ function transferReferencedDebugInfo(
     // is extracted, or if the root is rendered as is.
     if (parentChunk !== null) {
       const parentDebugInfo = parentChunk._debugInfo;
-      for (let i = 0; i < referencedDebugInfo.length; ++i) {
-        const debugInfoEntry = referencedDebugInfo[i];
-        if (debugInfoEntry.name != null) {
-          (debugInfoEntry: ReactComponentInfo);
-          // We're not transferring Component info since we use Component info
-          // in Debug info to fill in gaps between Fibers for the parent stack.
-        } else {
-          parentDebugInfo.push(debugInfoEntry);
+      if (parentDebugInfo !== referencedDebugInfo) {
+        for (let i = 0; i < referencedDebugInfo.length; ++i) {
+          const debugInfoEntry = referencedDebugInfo[i];
+          if (debugInfoEntry.name != null) {
+            (debugInfoEntry: ReactComponentInfo);
+            // We're not transferring Component info since we use Component info
+            // in Debug info to fill in gaps between Fibers for the parent stack.
+          } else {
+            parentDebugInfo.push(debugInfoEntry);
+          }
         }
       }
     }
@@ -2457,6 +2468,7 @@ function parseModelString(
 function parseModelTuple(
   response: Response,
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
+  isRoot: boolean,
 ): any {
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
 
@@ -2465,6 +2477,7 @@ function parseModelTuple(
     // Or even change the ReactElement type to be an array.
     return createElement(
       response,
+      isRoot,
       tuple[1],
       tuple[2],
       tuple[3],
@@ -2714,9 +2727,19 @@ function resolveChunkDebugInfo(
   chunk: SomeChunk<any>,
 ): void {
   if (__DEV__ && enableAsyncDebugInfo) {
-    // Push the currently resolving chunk's debug info representing the stream on the Promise
-    // that was waiting on the stream.
-    chunk._debugInfo.push({awaited: streamState._debugInfo});
+    // Push the currently resolving chunk's debug info representing the stream
+    // on the Promise that was waiting on the stream.
+    const ioInfo = streamState._debugInfo;
+    const debugChunk = chunk._debugChunk;
+    if (debugChunk != null) {
+      // If there's a debug chunk, then we wait for it to resolve before adding
+      // the stream info as the last entry.
+      debugChunk.then(() => {
+        chunk._debugInfo.push({awaited: ioInfo});
+      });
+    } else {
+      chunk._debugInfo.push({awaited: ioInfo});
+    }
   }
 }
 
@@ -2909,7 +2932,8 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   const resolveListeners = chunk.value;
 
   if (__DEV__) {
-    // Lazily initialize any debug info and block the initializing chunk on any unresolved entries.
+    // Initialize any debug info and block the initializing chunk on any
+    // unresolved entries.
     if (chunk._debugChunk != null) {
       const prevHandler = initializingHandler;
       const prevChunk = initializingChunk;
@@ -2923,7 +2947,6 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
       }
       try {
         initializeDebugChunk(response, chunk);
-        chunk._debugChunk = null;
         if (initializingHandler !== null) {
           if (initializingHandler.errored) {
             // Ignore error parsing debug info, we'll report the original error instead.
@@ -5021,7 +5044,8 @@ function createFromJSONCallback(response: Response) {
       return parseModelString(response, this, key, value);
     }
     if (typeof value === 'object' && value !== null) {
-      return parseModelTuple(response, value);
+      const isRoot = key === '';
+      return parseModelTuple(response, value, isRoot);
     }
     return value;
   };
