@@ -25,7 +25,6 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
 import {
   getFragmentParentHostFiber,
-  getInstanceFromHostFiber,
   traverseFragmentInstance,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
@@ -303,6 +302,13 @@ export function getPublicInstance(instance: Instance): null | PublicInstance {
     return instance.canonical.publicInstance;
   }
 
+  // Handle root containers
+  if (instance.containerInfo != null) {
+    if (instance.containerInfo.publicInstance != null) {
+      return instance.containerInfo.publicInstance;
+    }
+  }
+
   // For compatibility with the legacy renderer, in case it's used with Fabric
   // in the same app.
   // $FlowExpectedError[prop-missing]
@@ -347,9 +353,8 @@ export function getPublicInstanceFromInternalInstanceHandle(
 }
 
 function getPublicInstanceFromHostFiber(fiber: Fiber): PublicInstance {
-  const instance = getInstanceFromHostFiber<Instance>(fiber);
-  const publicInstance = getPublicInstance(instance);
-  if (publicInstance == null) {
+  const publicInstance = getPublicInstance(fiber.stateNode);
+  if (publicInstance === null) {
     throw new Error('Expected to find a host node. This is a bug in React.');
   }
   return publicInstance;
@@ -640,6 +645,10 @@ export type FragmentInstanceType = {
   observeUsing: (observer: IntersectionObserver) => void,
   unobserveUsing: (observer: IntersectionObserver) => void,
   compareDocumentPosition: (otherNode: PublicInstance) => number,
+  getRootNode(getRootNodeOptions?: {
+    composed: boolean,
+  }): Node | FragmentInstanceType,
+  getClientRects: () => Array<DOMRect>,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -698,11 +707,11 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   if (parentHostFiber === null) {
     return Node.DOCUMENT_POSITION_DISCONNECTED;
   }
-  const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
   const children: Array<Fiber> = [];
   traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
   if (children.length === 0) {
-    return compareDocumentPositionForEmptyFragment(
+    const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
+    return compareDocumentPositionForEmptyFragment<PublicInstance>(
       this._fragmentFiber,
       parentHostInstance,
       otherNode,
@@ -746,6 +755,42 @@ FragmentInstance.prototype.compareDocumentPosition = function (
 
 function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
   collection.push(child);
+  return false;
+}
+
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getRootNode = function (
+  this: FragmentInstanceType,
+  getRootNodeOptions?: {composed: boolean},
+): Node | FragmentInstanceType {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return this;
+  }
+  const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
+  // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
+  const rootNode = (parentHostInstance.getRootNode(getRootNodeOptions): Node);
+  return rootNode;
+};
+
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getClientRects = function (
+  this: FragmentInstanceType,
+): Array<DOMRect> {
+  const rects: Array<DOMRect> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
+  return rects;
+};
+function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
+  const instance = getPublicInstanceFromHostFiber(child);
+
+  // getBoundingClientRect is available on Fabric instances while getClientRects is not.
+  // This should work as a substitute in this case because the only equivalent of a multi-rect
+  // element in RN would be a nested Text component.
+  // Since we only use top-level nodes here, we can assume that getBoundingClientRect is sufficient.
+  // $FlowFixMe[method-unbinding]
+  // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
+  rects.push(instance.getBoundingClientRect());
   return false;
 }
 
