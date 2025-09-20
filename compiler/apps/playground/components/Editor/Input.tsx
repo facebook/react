@@ -145,6 +145,7 @@ export default function Input({errors, language}: Props): JSX.Element {
       value={store.source}
       onMount={handleMount}
       onChange={handleChange}
+      className="monaco-editor-input"
       options={monacoOptions}
       loading={''}
     />

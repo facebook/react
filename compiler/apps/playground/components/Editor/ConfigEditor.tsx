@@ -9,7 +9,7 @@ import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
 import {PluginOptions} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
@@ -145,6 +145,7 @@ function ExpandedEditor({
               onMount={handleMount}
               onChange={handleChange}
               loading={''}
+              className="monaco-editor-config"
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',
@@ -170,6 +171,7 @@ function ExpandedEditor({
               language={'javascript'}
               value={formattedAppliedOptions}
               loading={''}
+              className="monaco-editor-applied-config"
               options={{
                 ...monacoOptions,
                 lineNumbers: 'off',

@@ -58,7 +58,7 @@ export default function Header(): JSX.Element {
       </div>
       <div className="flex items-center text-[15px] gap-4">
         <div className="flex items-center gap-2">
-          <label className="relative inline-block w-[34px] h-5">
+          <label className="show-internals relative inline-block w-[34px] h-5">
             <input
               type="checkbox"
               checked={store.showInternals}
