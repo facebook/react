@@ -28,6 +28,7 @@ import {
   retryLaneExpirationMs,
   disableLegacyMode,
   enableDefaultTransitionIndicator,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {clz32} from './clz32';
@@ -710,6 +711,9 @@ export function isTransitionLane(lane: Lane): boolean {
 }
 
 export function isGestureRender(lanes: Lanes): boolean {
+  if (!enableGestureTransition) {
+    return false;
+  }
   // This should render only the one lane.
   return lanes === GestureLane;
 }
@@ -1271,10 +1275,12 @@ export function getGroupNameOfHighestPriorityLane(lanes: Lanes): string {
       InputContinuousHydrationLane |
       InputContinuousLane |
       DefaultHydrationLane |
-      DefaultLane |
-      GestureLane)
+      DefaultLane)
   ) {
     return 'Blocking';
+  }
+  if (lanes & GestureLane) {
+    return 'Gesture';
   }
   if (lanes & (TransitionHydrationLane | TransitionLanes)) {
     return 'Transition';
