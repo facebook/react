@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+// @ts-ignore
 import {NodePath} from '@babel/core';
+// @ts-ignore
 import * as t from '@babel/types';
 import {
   CompilerError,
@@ -265,7 +267,9 @@ export function createNewFunctionNode(
       break;
     }
     default: {
+      // @ts-ignore
       assertExhaustive(
+        // @ts-ignore
         originalFn.node,
         `Creating unhandled function: ${originalFn.node}`,
       );
@@ -321,7 +325,9 @@ function insertNewOutlinedFunctionNode(
       return insertedFuncDecl;
     }
     default: {
+      // @ts-ignore
       assertExhaustive(
+        // @ts-ignore
         originalFn,
         `Inserting unhandled function: ${originalFn}`,
       );
@@ -961,10 +967,13 @@ function getReactFunctionType(
       return componentSyntaxType;
     }
     case 'all': {
+      // @ts-ignore
       return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
     }
     default: {
+      // @ts-ignore
       assertExhaustive(
+        // @ts-ignore
         pass.opts.compilationMode,
         `Unexpected compilationMode \`${pass.opts.compilationMode}\``,
       );
@@ -1125,6 +1134,7 @@ function isValidPropsAnnotation(
   } else if (annot.type === 'Noop') {
     return true;
   } else {
+    // @ts-ignore
     assertExhaustive(annot, `Unexpected annotation node \`${annot}\``);
   }
 }
