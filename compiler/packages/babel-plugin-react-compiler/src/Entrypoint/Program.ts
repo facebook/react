@@ -1398,6 +1398,23 @@ function getFunctionReferencedBeforeDeclarationAtTopLevel(
        */
       if (scope === null && id.isReferencedIdentifier()) {
         referencedBeforeDeclaration.add(fn.fn);
+      } else if (scope !== null && id.isReferencedIdentifier()) {
+        // Check if this function call is within another function that's being compiled
+        // This handles the case where named functions call other named functions
+        // defined in a different order within the same component
+        const parentFunction = scope.getFunctionParent();
+        if (parentFunction !== null) {
+          const parentFnName = getFunctionName(parentFunction);
+          if (parentFnName && parentFnName.isIdentifier()) {
+            const parentFn = fnNames.get(parentFnName.node.name);
+            if (parentFn) {
+              // This is a named function calling another named function
+              // Add the called function to referencedBeforeDeclaration to ensure
+              // proper ordering during compilation
+              referencedBeforeDeclaration.add(fn.fn);
+            }
+          }
+        }
       }
     },
   });
