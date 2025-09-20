@@ -93,6 +93,7 @@ export let retryClampTime: number = -0;
 export let idleClampTime: number = -0;
 
 export let animatingLanes: Lanes = NoLanes;
+export let animatingTask: null | ConsoleTask = null; // First ViewTransition applying an Animation.
 
 export let yieldReason: SuspendedReason = (0: any);
 export let yieldStartTime: number = -1.1; // The time when we yielded to the event loop
@@ -601,8 +602,16 @@ export function transferActualDuration(fiber: Fiber): void {
 
 export function startAnimating(lanes: Lanes): void {
   animatingLanes |= lanes;
+  animatingTask = null;
 }
 
 export function stopAnimating(lanes: Lanes): void {
   animatingLanes &= ~lanes;
+  animatingTask = null;
+}
+
+export function trackAnimatingTask(task: ConsoleTask): void {
+  if (animatingTask === null) {
+    animatingTask = task;
+  }
 }
