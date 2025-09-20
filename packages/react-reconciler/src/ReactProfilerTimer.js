@@ -371,6 +371,16 @@ export function clearGestureTimers(): void {
   gestureClampTime = now();
 }
 
+export function clearGestureUpdates(): void {
+  // Same as clearGestureTimers but doesn't reset the clamp time because we didn't
+  // actually emit a render.
+  gestureStartTime = -1.1;
+  gestureUpdateTime = -1.1;
+  gestureUpdateType = 0;
+  gestureSuspendedTime = -1.1;
+  gestureEventIsRepeat = true;
+}
+
 export function clampBlockingTimers(finalTime: number): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;

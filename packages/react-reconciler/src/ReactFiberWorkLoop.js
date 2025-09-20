@@ -307,6 +307,7 @@ import {
   transitionSuspendedTime,
   clearBlockingTimers,
   clearGestureTimers,
+  clearGestureUpdates,
   clearTransitionTimers,
   clampBlockingTimers,
   clampGestureTimers,
@@ -3531,6 +3532,11 @@ function commitRoot(
     // Gestures don't clear their lanes while the gesture is still active but it
     // might not be scheduled to do any more renders and so we shouldn't schedule
     // any more gesture lane work until a new gesture is scheduled.
+    if (enableProfilerTimer && (remainingLanes & GestureLane) !== NoLanes) {
+      // We need to clear any updates scheduled so that we can treat future updates
+      // as the cause of the render.
+      clearGestureUpdates();
+    }
     remainingLanes &= ~GestureLane;
   }
 
