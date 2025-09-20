@@ -2492,6 +2492,26 @@ describe('InspectedElement', () => {
       `);
     });
 
+    it('should handle custom hooks named "useState" without crashing', async () => {
+      function useState() {
+        React.useState(0);
+        React.useEffect(() => () => {});
+      }
+
+      function Counter() {
+        useState();
+        React.useState(0);
+        return null;
+      }
+
+      await utils.actAsync(() => render(<Counter />));
+
+      const inspectedElement = await inspectElementAtIndex(0);
+      
+      expect(inspectedElement).not.toBe(null);
+      expect(Array.isArray(inspectedElement.hooks)).toBe(true);
+    });
+
     it('should support class components', async () => {
       class Example extends React.Component {
         state = {
