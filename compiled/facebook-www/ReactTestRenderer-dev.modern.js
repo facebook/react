@@ -11488,7 +11488,7 @@ __DEV__ &&
                     workInProgressSuspendedRetryLanes,
                     workInProgressRootDidSkipSuspendedSiblings,
                     exitStatus,
-                    THROTTLED_COMMIT,
+                    "Throttled",
                     -0,
                     0
                   ),
@@ -11508,7 +11508,7 @@ __DEV__ &&
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
                 exitStatus,
-                IMMEDIATE_COMMIT,
+                null,
                 -0,
                 0
               );
@@ -15370,8 +15370,6 @@ __DEV__ &&
       RENDER_TIMEOUT_MS = 500,
       workInProgressTransitions = null,
       legacyErrorBoundariesThatAlreadyFailed = null,
-      IMMEDIATE_COMMIT = 0,
-      THROTTLED_COMMIT = 2,
       NO_PENDING_EFFECTS = 0,
       PENDING_MUTATION_PHASE = 1,
       PENDING_LAYOUT_PHASE = 2,
@@ -15610,10 +15608,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-ad578aa0-20250918",
+        version: "19.2.0-www-modern-b204edda-20250920",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-ad578aa0-20250918"
+        reconcilerVersion: "19.2.0-www-modern-b204edda-20250920"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15748,5 +15746,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-modern-ad578aa0-20250918";
+    exports.version = "19.2.0-www-modern-b204edda-20250920";
   })();

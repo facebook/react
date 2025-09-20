@@ -12313,7 +12313,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
               renderWasConcurrent,
-              2,
+              "Throttled",
               -0,
               0
             ),
@@ -12333,7 +12333,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           workInProgressSuspendedRetryLanes,
           workInProgressRootDidSkipSuspendedSiblings,
           renderWasConcurrent,
-          0,
+          null,
           -0,
           0
         );
@@ -12377,6 +12377,7 @@ function commitRootWhenReady(
         imgBytes: 0,
         suspenseyImages: [],
         waitingForImages: !0,
+        waitingForViewTransition: !1,
         unsuspend: noop$1
       }),
       (appearingViewTransitions = null),
@@ -12395,6 +12396,7 @@ function commitRootWhenReady(
         ).__reactViewTransition),
         null != isViewTransitionEligible &&
           (subtreeFlags.count++,
+          (subtreeFlags.waitingForViewTransition = !0),
           (subtreeFlags = onUnsuspend.bind(subtreeFlags)),
           isViewTransitionEligible.finished.then(subtreeFlags, subtreeFlags))),
       (subtreeFlags =
@@ -12423,7 +12425,7 @@ function commitRootWhenReady(
           suspendedRetryLanes,
           exitStatus,
           suspendedCommitReason,
-          1,
+          null,
           completedRenderStartTime,
           completedRenderEndTime
         )
@@ -19699,14 +19701,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2117 = React.version;
 if (
-  "19.2.0-www-modern-ad578aa0-20250918" !==
+  "19.2.0-www-modern-b204edda-20250920" !==
   isomorphicReactPackageVersion$jscomp$inline_2117
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2117,
-      "19.2.0-www-modern-ad578aa0-20250918"
+      "19.2.0-www-modern-b204edda-20250920"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19724,10 +19726,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2741 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-ad578aa0-20250918",
+  version: "19.2.0-www-modern-b204edda-20250920",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-ad578aa0-20250918"
+  reconcilerVersion: "19.2.0-www-modern-b204edda-20250920"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2742 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20156,4 +20158,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-ad578aa0-20250918";
+exports.version = "19.2.0-www-modern-b204edda-20250920";

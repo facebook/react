@@ -11345,7 +11345,7 @@ module.exports = function ($$$config) {
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
                 renderWasConcurrent,
-                2,
+                "Throttled",
                 -0,
                 0
               ),
@@ -11365,7 +11365,7 @@ module.exports = function ($$$config) {
             workInProgressSuspendedRetryLanes,
             workInProgressRootDidSkipSuspendedSiblings,
             renderWasConcurrent,
-            0,
+            null,
             -0,
             0
           );
@@ -11440,7 +11440,7 @@ module.exports = function ($$$config) {
             suspendedRetryLanes,
             exitStatus,
             suspendedCommitReason,
-            1,
+            null,
             completedRenderStartTime,
             completedRenderEndTime
           )
@@ -13079,8 +13079,9 @@ module.exports = function ($$$config) {
     startSuspendingCommit = $$$config.startSuspendingCommit,
     suspendInstance = $$$config.suspendInstance,
     suspendOnActiveViewTransition = $$$config.suspendOnActiveViewTransition,
-    waitForCommitToBeReady = $$$config.waitForCommitToBeReady,
-    NotPendingTransition = $$$config.NotPendingTransition,
+    waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
+  $$$config.getSuspendedCommitReason;
+  var NotPendingTransition = $$$config.NotPendingTransition,
     HostTransitionContext = $$$config.HostTransitionContext,
     resetFormInstance = $$$config.resetFormInstance;
   $$$config.bindToConsole;
@@ -14234,7 +14235,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-classic-ad578aa0-20250918"
+      reconcilerVersion: "19.2.0-www-classic-b204edda-20250920"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

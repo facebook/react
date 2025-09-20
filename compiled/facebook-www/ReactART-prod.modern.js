@@ -9645,7 +9645,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
               renderWasConcurrent,
-              2,
+              "Throttled",
               -0,
               0
             ),
@@ -11138,10 +11138,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1618 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-ad578aa0-20250918",
+  version: "19.2.0-www-modern-b204edda-20250920",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-ad578aa0-20250918"
+  reconcilerVersion: "19.2.0-www-modern-b204edda-20250920"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1619 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11167,4 +11167,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-ad578aa0-20250918";
+exports.version = "19.2.0-www-modern-b204edda-20250920";

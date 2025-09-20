@@ -1743,14 +1743,14 @@ __DEV__ &&
               "error"
             ));
     }
-    function logSuspenseThrottlePhase(startTime, endTime, debugTask) {
+    function logSuspendedCommitPhase(startTime, endTime, reason, debugTask) {
       !supportsUserTiming ||
         endTime <= startTime ||
         (debugTask
           ? debugTask.run(
               console.timeStamp.bind(
                 console,
-                "Throttled",
+                reason,
                 startTime,
                 endTime,
                 currentTrack,
@@ -1759,31 +1759,7 @@ __DEV__ &&
               )
             )
           : console.timeStamp(
-              "Throttled",
-              startTime,
-              endTime,
-              currentTrack,
-              "Scheduler \u269b",
-              "secondary-light"
-            ));
-    }
-    function logSuspendedCommitPhase(startTime, endTime, debugTask) {
-      !supportsUserTiming ||
-        endTime <= startTime ||
-        (debugTask
-          ? debugTask.run(
-              console.timeStamp.bind(
-                console,
-                "Suspended on CSS or Images",
-                startTime,
-                endTime,
-                currentTrack,
-                "Scheduler \u269b",
-                "secondary-light"
-              )
-            )
-          : console.timeStamp(
-              "Suspended on CSS or Images",
+              reason,
               startTime,
               endTime,
               currentTrack,
@@ -17165,7 +17141,7 @@ __DEV__ &&
                 workInProgressSuspendedRetryLanes,
                 startTime,
                 null,
-                IMMEDIATE_COMMIT,
+                null,
                 renderStartTime,
                 forceSync
               );
@@ -17200,7 +17176,7 @@ __DEV__ &&
                     workInProgressSuspendedRetryLanes,
                     workInProgressRootDidSkipSuspendedSiblings,
                     startTime,
-                    THROTTLED_COMMIT,
+                    "Throttled",
                     renderStartTime,
                     forceSync
                   ),
@@ -17220,7 +17196,7 @@ __DEV__ &&
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
                 startTime,
-                IMMEDIATE_COMMIT,
+                null,
                 renderStartTime,
                 forceSync
               );
@@ -17286,7 +17262,7 @@ __DEV__ &&
               suspendedRetryLanes,
               exitStatus,
               suspendedState,
-              SUSPENDED_COMMIT,
+              getSuspendedCommitReason(suspendedState, root.containerInfo),
               completedRenderStartTime,
               completedRenderEndTime
             )
@@ -18485,18 +18461,13 @@ __DEV__ &&
         commitErrors = null;
         commitStartTime = now();
         enableComponentPerformanceTrack &&
-          (suspendedCommitReason === SUSPENDED_COMMIT
-            ? logSuspendedCommitPhase(
-                completedRenderEndTime,
-                commitStartTime,
-                workInProgressUpdateTask
-              )
-            : suspendedCommitReason === THROTTLED_COMMIT &&
-              logSuspenseThrottlePhase(
-                completedRenderEndTime,
-                commitStartTime,
-                workInProgressUpdateTask
-              ));
+          null !== suspendedCommitReason &&
+          logSuspendedCommitPhase(
+            completedRenderEndTime,
+            commitStartTime,
+            suspendedCommitReason,
+            workInProgressUpdateTask
+          );
         shouldStartViewTransition = !1;
         suspendedCommitReason = 0 !== (finishedWork.flags & 13878);
         if (
@@ -18545,7 +18516,7 @@ __DEV__ &&
       enableComponentPerformanceTrack &&
         ((commitEndTime = now()),
         logCommitPhase(
-          pendingSuspendedCommitReason === IMMEDIATE_COMMIT
+          null === pendingSuspendedCommitReason
             ? pendingEffectsRenderEndTime
             : commitStartTime,
           commitEndTime,
@@ -18553,8 +18524,8 @@ __DEV__ &&
           pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
           workInProgressUpdateTask
         ),
-        (pendingSuspendedViewTransitionReason = reason),
-        (pendingSuspendedCommitReason = SUSPENDED_COMMIT));
+        (pendingSuspendedCommitReason = pendingSuspendedViewTransitionReason =
+          reason));
     }
     function flushAfterMutationEffects() {
       pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE &&
@@ -18702,7 +18673,7 @@ __DEV__ &&
         enableComponentPerformanceTrack &&
           ((commitEndTime = now()),
           logCommitPhase(
-            startTime === IMMEDIATE_COMMIT
+            null === startTime
               ? suspendedViewTransitionReason
               : commitStartTime,
             commitEndTime,
@@ -20163,6 +20134,7 @@ __DEV__ &&
       suspendInstance = $$$config.suspendInstance,
       suspendOnActiveViewTransition = $$$config.suspendOnActiveViewTransition,
       waitForCommitToBeReady = $$$config.waitForCommitToBeReady,
+      getSuspendedCommitReason = $$$config.getSuspendedCommitReason,
       NotPendingTransition = $$$config.NotPendingTransition,
       HostTransitionContext = $$$config.HostTransitionContext,
       resetFormInstance = $$$config.resetFormInstance,
@@ -22277,8 +22249,6 @@ __DEV__ &&
       currentEndTime = null,
       legacyErrorBoundariesThatAlreadyFailed = null,
       IMMEDIATE_COMMIT = 0,
-      SUSPENDED_COMMIT = 1,
-      THROTTLED_COMMIT = 2,
       ABORTED_VIEW_TRANSITION_COMMIT = 1,
       DELAYED_PASSIVE_COMMIT = 2,
       ANIMATION_STARTED_COMMIT = 3,
@@ -22300,7 +22270,7 @@ __DEV__ &&
       pendingViewTransitionEvents = null,
       pendingTransitionTypes = null,
       pendingDidIncludeRenderPhaseUpdate = !1,
-      pendingSuspendedCommitReason = IMMEDIATE_COMMIT,
+      pendingSuspendedCommitReason = null,
       pendingDelayedCommitReason = IMMEDIATE_COMMIT,
       pendingSuspendedViewTransitionReason = null,
       NESTED_UPDATE_LIMIT = 50,
@@ -22850,7 +22820,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-ad578aa0-20250918"
+        reconcilerVersion: "19.2.0-www-classic-b204edda-20250920"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

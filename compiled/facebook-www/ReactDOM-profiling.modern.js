@@ -13637,7 +13637,7 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   pendingViewTransitionEvents = null,
   pendingTransitionTypes = null,
   pendingDidIncludeRenderPhaseUpdate = !1,
-  pendingSuspendedCommitReason = 0,
+  pendingSuspendedCommitReason = null,
   pendingDelayedCommitReason = 0,
   pendingSuspendedViewTransitionReason = null,
   nestedUpdateCount = 0,
@@ -13945,7 +13945,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
               renderWasConcurrent,
-              2,
+              "Throttled",
               renderStartTime,
               yieldEndTime
             ),
@@ -13965,7 +13965,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           workInProgressSuspendedRetryLanes,
           workInProgressRootDidSkipSuspendedSiblings,
           renderWasConcurrent,
-          0,
+          null,
           renderStartTime,
           yieldEndTime
         );
@@ -14009,6 +14009,7 @@ function commitRootWhenReady(
         imgBytes: 0,
         suspenseyImages: [],
         waitingForImages: !0,
+        waitingForViewTransition: !1,
         unsuspend: noop$1
       }),
       (appearingViewTransitions = null),
@@ -14023,6 +14024,7 @@ function commitRootWhenReady(
         ).__reactViewTransition),
         null != isViewTransitionEligible &&
           (subtreeFlags.count++,
+          (subtreeFlags.waitingForViewTransition = !0),
           (subtreeFlags = onUnsuspend.bind(subtreeFlags)),
           isViewTransitionEligible.finished.then(subtreeFlags, subtreeFlags))),
       (subtreeFlags =
@@ -14048,7 +14050,17 @@ function commitRootWhenReady(
           suspendedRetryLanes,
           exitStatus,
           suspendedState,
-          1,
+          suspendedState.waitingForViewTransition
+            ? "Waiting for the previous Animation"
+            : 0 < suspendedState.count
+              ? 0 < suspendedState.imgCount
+                ? "Suspended on CSS and Images"
+                : "Suspended on CSS"
+              : 1 === suspendedState.imgCount
+                ? "Suspended on an Image"
+                : 0 < suspendedState.imgCount
+                  ? "Suspended on Images"
+                  : null,
           completedRenderStartTime,
           completedRenderEndTime
         )
@@ -15007,28 +15019,17 @@ function commitRoot(
     commitErrors = null;
     commitStartTime = now();
     enableComponentPerformanceTrack &&
-      (1 === suspendedCommitReason
-        ? !supportsUserTiming ||
-          commitStartTime <= completedRenderEndTime ||
-          console.timeStamp(
-            "Suspended on CSS or Images",
-            completedRenderEndTime,
-            commitStartTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "secondary-light"
-          )
-        : 2 === suspendedCommitReason &&
-          (!supportsUserTiming ||
-            commitStartTime <= completedRenderEndTime ||
-            console.timeStamp(
-              "Throttled",
-              completedRenderEndTime,
-              commitStartTime,
-              currentTrack,
-              "Scheduler \u269b",
-              "secondary-light"
-            )));
+      null !== suspendedCommitReason &&
+      (!supportsUserTiming ||
+        commitStartTime <= completedRenderEndTime ||
+        console.timeStamp(
+          suspendedCommitReason,
+          completedRenderEndTime,
+          commitStartTime,
+          currentTrack,
+          "Scheduler \u269b",
+          "secondary-light"
+        ));
     shouldStartViewTransition = !1;
     suspendedCommitReason = 0 !== (finishedWork.flags & 13878);
     if (0 !== (finishedWork.subtreeFlags & 13878) || suspendedCommitReason) {
@@ -15074,15 +15075,15 @@ function suspendedViewTransition(reason) {
   enableComponentPerformanceTrack &&
     ((commitEndTime = now()),
     logCommitPhase(
-      0 === pendingSuspendedCommitReason
+      null === pendingSuspendedCommitReason
         ? pendingEffectsRenderEndTime
         : commitStartTime,
       commitEndTime,
       commitErrors,
       1 === pendingDelayedCommitReason
     ),
-    (pendingSuspendedViewTransitionReason = reason),
-    (pendingSuspendedCommitReason = 1));
+    (pendingSuspendedCommitReason = pendingSuspendedViewTransitionReason =
+      reason));
 }
 function flushAfterMutationEffects() {
   3 === pendingEffectsStatus &&
@@ -15314,7 +15315,7 @@ function flushLayoutEffects() {
     enableComponentPerformanceTrack &&
       ((commitEndTime = now()),
       logCommitPhase(
-        0 === finishedWork ? suspendedViewTransitionReason : commitStartTime,
+        null === finishedWork ? suspendedViewTransitionReason : commitStartTime,
         commitEndTime,
         commitErrors,
         1 === pendingDelayedCommitReason
@@ -17150,20 +17151,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_2101 = 0;
-  i$jscomp$inline_2101 < simpleEventPluginEvents.length;
-  i$jscomp$inline_2101++
+  var i$jscomp$inline_2098 = 0;
+  i$jscomp$inline_2098 < simpleEventPluginEvents.length;
+  i$jscomp$inline_2098++
 ) {
-  var eventName$jscomp$inline_2102 =
-      simpleEventPluginEvents[i$jscomp$inline_2101],
-    domEventName$jscomp$inline_2103 =
-      eventName$jscomp$inline_2102.toLowerCase(),
-    capitalizedEvent$jscomp$inline_2104 =
-      eventName$jscomp$inline_2102[0].toUpperCase() +
-      eventName$jscomp$inline_2102.slice(1);
+  var eventName$jscomp$inline_2099 =
+      simpleEventPluginEvents[i$jscomp$inline_2098],
+    domEventName$jscomp$inline_2100 =
+      eventName$jscomp$inline_2099.toLowerCase(),
+    capitalizedEvent$jscomp$inline_2101 =
+      eventName$jscomp$inline_2099[0].toUpperCase() +
+      eventName$jscomp$inline_2099.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_2103,
-    "on" + capitalizedEvent$jscomp$inline_2104
+    domEventName$jscomp$inline_2100,
+    "on" + capitalizedEvent$jscomp$inline_2101
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -21908,16 +21909,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2381 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2378 = React.version;
 if (
-  "19.2.0-www-modern-ad578aa0-20250918" !==
-  isomorphicReactPackageVersion$jscomp$inline_2381
+  "19.2.0-www-modern-b204edda-20250920" !==
+  isomorphicReactPackageVersion$jscomp$inline_2378
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2381,
-      "19.2.0-www-modern-ad578aa0-20250918"
+      isomorphicReactPackageVersion$jscomp$inline_2378,
+      "19.2.0-www-modern-b204edda-20250920"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21933,27 +21934,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2383 = {
+var internals$jscomp$inline_2380 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-ad578aa0-20250918",
+  version: "19.2.0-www-modern-b204edda-20250920",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-ad578aa0-20250918"
+  reconcilerVersion: "19.2.0-www-modern-b204edda-20250920"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2383.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2383.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2380.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2380.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2993 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2990 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2993.isDisabled &&
-    hook$jscomp$inline_2993.supportsFiber
+    !hook$jscomp$inline_2990.isDisabled &&
+    hook$jscomp$inline_2990.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2993.inject(
-        internals$jscomp$inline_2383
+      (rendererID = hook$jscomp$inline_2990.inject(
+        internals$jscomp$inline_2380
       )),
-        (injectedHook = hook$jscomp$inline_2993);
+        (injectedHook = hook$jscomp$inline_2990);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -22371,7 +22372,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-ad578aa0-20250918";
+exports.version = "19.2.0-www-modern-b204edda-20250920";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
