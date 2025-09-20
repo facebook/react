@@ -9631,6 +9631,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
             !workInProgressRootDidSkipSuspendedSiblings
           );
           if (0 !== getNextLanes(shouldTimeSlice, 0, !0)) break a;
+          pendingEffectsLanes = lanes;
           shouldTimeSlice.timeoutHandle = scheduleTimeout(
             commitRootWhenReady.bind(
               null,
@@ -9802,6 +9803,7 @@ function prepareFreshStack(root, lanes) {
   timeoutHandle = root.cancelPendingCommit;
   null !== timeoutHandle &&
     ((root.cancelPendingCommit = null), timeoutHandle());
+  pendingEffectsLanes = 0;
   resetWorkInProgressStack();
   workInProgressRoot = root;
   workInProgress = timeoutHandle = createWorkInProgress(root.current, null);
@@ -11138,10 +11140,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1618 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-b204edda-20250920",
+  version: "19.2.0-www-modern-b4fe1e6c-20250920",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-b204edda-20250920"
+  reconcilerVersion: "19.2.0-www-modern-b4fe1e6c-20250920"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1619 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11167,4 +11169,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-b204edda-20250920";
+exports.version = "19.2.0-www-modern-b4fe1e6c-20250920";

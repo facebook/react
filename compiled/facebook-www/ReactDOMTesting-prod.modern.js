@@ -12571,6 +12571,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
             !workInProgressRootDidSkipSuspendedSiblings
           );
           if (0 !== getNextLanes(shouldTimeSlice, 0, !0)) break a;
+          pendingEffectsLanes = lanes;
           shouldTimeSlice.timeoutHandle = scheduleTimeout(
             commitRootWhenReady.bind(
               null,
@@ -12683,6 +12684,7 @@ function commitRootWhenReady(
       )),
       null !== subtreeFlags)
     ) {
+      pendingEffectsLanes = lanes;
       root.cancelPendingCommit = subtreeFlags(
         commitRoot.bind(
           null,
@@ -12814,6 +12816,7 @@ function prepareFreshStack(root, lanes) {
   timeoutHandle = root.cancelPendingCommit;
   null !== timeoutHandle &&
     ((root.cancelPendingCommit = null), timeoutHandle());
+  pendingEffectsLanes = 0;
   resetWorkInProgressStack();
   workInProgressRoot = root;
   workInProgress = timeoutHandle = createWorkInProgress(root.current, null);
@@ -13341,6 +13344,7 @@ function commitRoot(
           flushSpawnedWork,
           flushPassiveEffects,
           reportViewTransitionError,
+          null,
           null
         ))
       : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
@@ -20017,14 +20021,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2146 = React.version;
 if (
-  "19.2.0-www-modern-b204edda-20250920" !==
+  "19.2.0-www-modern-b4fe1e6c-20250920" !==
   isomorphicReactPackageVersion$jscomp$inline_2146
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2146,
-      "19.2.0-www-modern-b204edda-20250920"
+      "19.2.0-www-modern-b4fe1e6c-20250920"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20042,10 +20046,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2775 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-b204edda-20250920",
+  version: "19.2.0-www-modern-b4fe1e6c-20250920",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-b204edda-20250920"
+  reconcilerVersion: "19.2.0-www-modern-b4fe1e6c-20250920"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2776 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20625,4 +20629,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-b204edda-20250920";
+exports.version = "19.2.0-www-modern-b4fe1e6c-20250920";

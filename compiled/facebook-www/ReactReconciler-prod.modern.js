@@ -11087,6 +11087,7 @@ module.exports = function ($$$config) {
               !workInProgressRootDidSkipSuspendedSiblings
             );
             if (0 !== getNextLanes(shouldTimeSlice, 0, !0)) break a;
+            pendingEffectsLanes = lanes;
             shouldTimeSlice.timeoutHandle = scheduleTimeout(
               commitRootWhenReady.bind(
                 null,
@@ -11182,6 +11183,7 @@ module.exports = function ($$$config) {
         )),
         null !== subtreeFlags)
       ) {
+        pendingEffectsLanes = lanes;
         root.cancelPendingCommit = subtreeFlags(
           commitRoot.bind(
             null,
@@ -11313,6 +11315,7 @@ module.exports = function ($$$config) {
     timeoutHandle = root.cancelPendingCommit;
     null !== timeoutHandle &&
       ((root.cancelPendingCommit = null), timeoutHandle());
+    pendingEffectsLanes = 0;
     resetWorkInProgressStack();
     workInProgressRoot = root;
     workInProgress = timeoutHandle = createWorkInProgress(root.current, null);
@@ -11849,6 +11852,7 @@ module.exports = function ($$$config) {
             flushSpawnedWork,
             flushPassiveEffects,
             reportViewTransitionError,
+            null,
             null
           ))
         : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
@@ -13952,7 +13956,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-b204edda-20250920"
+      reconcilerVersion: "19.2.0-www-modern-b4fe1e6c-20250920"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

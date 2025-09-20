@@ -593,6 +593,9 @@ __DEV__ &&
           );
       }
     }
+    function includesSyncLane(lanes) {
+      return 0 !== (lanes & 3);
+    }
     function claimNextRetryLane() {
       var lane = nextRetryLane;
       nextRetryLane <<= 1;
@@ -1818,7 +1821,7 @@ __DEV__ &&
                 endTime,
                 currentTrack,
                 "Scheduler \u269b",
-                "secondary"
+                "secondary-dark"
               )
             )
           : console.timeStamp(
@@ -1827,7 +1830,7 @@ __DEV__ &&
               endTime,
               currentTrack,
               "Scheduler \u269b",
-              "secondary"
+              "secondary-dark"
             ));
     }
     function logPassiveCommitPhase(startTime, endTime, errors, debugTask) {
@@ -3534,8 +3537,8 @@ __DEV__ &&
                     null !== root.cancelPendingCommit ||
                       root.timeoutHandle !== noTimeout
                   )),
-                  0 === (nextLanes & 3) ||
-                    checkIfRootIsPrerendering(root, nextLanes) ||
+                  includesSyncLane(nextLanes) &&
+                    !checkIfRootIsPrerendering(root, nextLanes) &&
                     ((didPerformSomeWork = !0),
                     performSyncWorkOnRoot(root, nextLanes));
             root = root.next;
@@ -3570,7 +3573,8 @@ __DEV__ &&
             null === prev ? (firstScheduledRoot = next) : (prev.next = next),
             null === next && (lastScheduledRoot = prev);
         else if (
-          ((prev = root), 0 !== syncTransitionLanes || 0 !== (nextLanes & 3))
+          ((prev = root),
+          0 !== syncTransitionLanes || includesSyncLane(nextLanes))
         )
           mightHavePendingSyncWork = !0;
         root = next;
@@ -3660,7 +3664,7 @@ __DEV__ &&
           (root.callbackPriority = 0)
         );
       if (
-        0 !== (suspendedLanes & 3) &&
+        includesSyncLane(suspendedLanes) &&
         !checkIfRootIsPrerendering(root, suspendedLanes)
       )
         return (
@@ -16926,7 +16930,8 @@ __DEV__ &&
                   finalizeRender(lanes, forceSync),
                   (yieldedFiber = lanes),
                   enableComponentPerformanceTrack &&
-                    (0 !== (yieldedFiber & 3) || 0 !== (yieldedFiber & 124)
+                    (includesSyncLane(yieldedFiber) ||
+                    0 !== (yieldedFiber & 124)
                       ? (blockingSuspendedTime = forceSync)
                       : 0 !== (yieldedFiber & 4194048) &&
                         (transitionSuspendedTime = forceSync)));
@@ -16980,6 +16985,7 @@ __DEV__ &&
                   !workInProgressRootDidSkipSuspendedSiblings
                 );
                 if (0 !== getNextLanes(yieldEndTime, 0, !0)) break a;
+                pendingEffectsLanes = lanes;
                 yieldEndTime.timeoutHandle = scheduleTimeout(
                   commitRootWhenReady.bind(
                     null,
@@ -17066,6 +17072,7 @@ __DEV__ &&
           (subtreeFlags = waitForCommitToBeReady(suspendedState, subtreeFlags)),
           null !== subtreeFlags)
         ) {
+          pendingEffectsLanes = lanes;
           root.cancelPendingCommit = subtreeFlags(
             commitRoot.bind(
               null,
@@ -17206,12 +17213,18 @@ __DEV__ &&
     }
     function finalizeRender(lanes, finalizationTime) {
       enableComponentPerformanceTrack &&
-        ((0 !== (lanes & 3) || 0 !== (lanes & 124)) &&
+        ((includesSyncLane(lanes) || 0 !== (lanes & 124)) &&
           enableComponentPerformanceTrack &&
           (blockingClampTime = finalizationTime),
         0 !== (lanes & 4194048) &&
           enableComponentPerformanceTrack &&
-          (transitionClampTime = finalizationTime));
+          (transitionClampTime = finalizationTime),
+        0 !== (lanes & 62914560) &&
+          enableComponentPerformanceTrack &&
+          (retryClampTime = finalizationTime),
+        0 !== (lanes & 2080374784) &&
+          enableComponentPerformanceTrack &&
+          (idleClampTime = finalizationTime));
     }
     function prepareFreshStack(root, lanes) {
       if (enableComponentPerformanceTrack) {
@@ -17303,59 +17316,70 @@ __DEV__ &&
           }
           finalizeRender(workInProgressRootRenderLanes, renderStartTime);
         }
+        previousRenderStartTime = workInProgressUpdateTask;
         workInProgressUpdateTask = null;
-        if (0 !== (lanes & 3) || 0 !== (lanes & 124)) {
+        if (includesSyncLane(lanes) || 0 !== (lanes & 124)) {
           workInProgressUpdateTask = blockingUpdateTask;
-          previousRenderStartTime =
+          endTime =
             0 <= blockingUpdateTime && blockingUpdateTime < blockingClampTime
               ? blockingClampTime
               : blockingUpdateTime;
-          endTime =
+          debugTask =
             0 <= blockingEventTime && blockingEventTime < blockingClampTime
               ? blockingClampTime
               : blockingEventTime;
-          0 <= blockingSuspendedTime &&
-            (setCurrentTrackFromLanes(lanes),
-            logSuspendedWithDelayPhase(
-              blockingSuspendedTime,
-              0 <= endTime
+          color =
+            0 <= debugTask
+              ? debugTask
+              : 0 <= endTime
                 ? endTime
-                : 0 <= previousRenderStartTime
-                  ? previousRenderStartTime
-                  : renderStartTime,
-              lanes,
-              workInProgressUpdateTask
-            ));
-          var eventTime = endTime,
+                : renderStartTime;
+          if (0 <= blockingSuspendedTime)
+            setCurrentTrackFromLanes(2),
+              logSuspendedWithDelayPhase(
+                blockingSuspendedTime,
+                color,
+                lanes,
+                previousRenderStartTime
+              );
+          else if (
+            includesSyncLane(animatingLanes) ||
+            0 !== (animatingLanes & 124)
+          )
+            setCurrentTrackFromLanes(2),
+              logAnimatingPhase(
+                blockingClampTime,
+                color,
+                previousRenderStartTime
+              );
+          var eventTime = debugTask,
             eventType = blockingEventType,
             eventIsRepeat = blockingEventIsRepeat,
             isSpawnedUpdate = 1 === blockingUpdateType,
             isPingedUpdate = 2 === blockingUpdateType;
-          debugTask = renderStartTime;
-          endTime = blockingUpdateTask;
-          color = blockingUpdateMethodName;
-          label = blockingUpdateComponentName;
+          color = renderStartTime;
+          debugTask = blockingUpdateTask;
+          label = blockingUpdateMethodName;
+          var updateComponentName = blockingUpdateComponentName;
           if (supportsUserTiming) {
             currentTrack = "Blocking";
-            0 < previousRenderStartTime
-              ? previousRenderStartTime > debugTask &&
-                (previousRenderStartTime = debugTask)
-              : (previousRenderStartTime = debugTask);
+            0 < endTime
+              ? endTime > color && (endTime = color)
+              : (endTime = color);
             0 < eventTime
-              ? eventTime > previousRenderStartTime &&
-                (eventTime = previousRenderStartTime)
-              : (eventTime = previousRenderStartTime);
-            if (null !== eventType && previousRenderStartTime > eventTime) {
+              ? eventTime > endTime && (eventTime = endTime)
+              : (eventTime = endTime);
+            if (null !== eventType && endTime > eventTime) {
               var color$jscomp$0 = eventIsRepeat
                 ? "secondary-light"
                 : "warning";
-              endTime
-                ? endTime.run(
+              debugTask
+                ? debugTask.run(
                     console.timeStamp.bind(
                       console,
                       eventIsRepeat ? "Consecutive" : "Event: " + eventType,
                       eventTime,
-                      previousRenderStartTime,
+                      endTime,
                       currentTrack,
                       "Scheduler \u269b",
                       color$jscomp$0
@@ -17364,13 +17388,13 @@ __DEV__ &&
                 : console.timeStamp(
                     eventIsRepeat ? "Consecutive" : "Event: " + eventType,
                     eventTime,
-                    previousRenderStartTime,
+                    endTime,
                     currentTrack,
                     "Scheduler \u269b",
                     color$jscomp$0
                   );
             }
-            debugTask > previousRenderStartTime &&
+            color > endTime &&
               ((eventTime = isSpawnedUpdate
                 ? "error"
                 : (lanes & 738197653) === lanes
@@ -17380,15 +17404,16 @@ __DEV__ &&
                 ? "Promise Resolved"
                 : isSpawnedUpdate
                   ? "Cascading Update"
-                  : 5 < debugTask - previousRenderStartTime
+                  : 5 < color - endTime
                     ? "Update Blocked"
                     : "Update"),
               (isPingedUpdate = []),
-              null != label && isPingedUpdate.push(["Component name", label]),
-              null != color && isPingedUpdate.push(["Method name", color]),
-              (previousRenderStartTime = {
-                start: previousRenderStartTime,
-                end: debugTask,
+              null != updateComponentName &&
+                isPingedUpdate.push(["Component name", updateComponentName]),
+              null != label && isPingedUpdate.push(["Method name", label]),
+              (endTime = {
+                start: endTime,
+                end: color,
                 detail: {
                   devtools: {
                     properties: isPingedUpdate,
@@ -17398,18 +17423,15 @@ __DEV__ &&
                   }
                 }
               }),
-              endTime
-                ? endTime.run(
+              debugTask
+                ? debugTask.run(
                     performance.measure.bind(
                       performance,
                       isSpawnedUpdate,
-                      previousRenderStartTime
+                      endTime
                     )
                   )
-                : performance.measure(
-                    isSpawnedUpdate,
-                    previousRenderStartTime
-                  ));
+                : performance.measure(isSpawnedUpdate, endTime));
           }
           blockingUpdateTime = -1.1;
           blockingUpdateType = 0;
@@ -17420,64 +17442,71 @@ __DEV__ &&
         }
         0 !== (lanes & 4194048) &&
           ((workInProgressUpdateTask = transitionUpdateTask),
-          (debugTask =
+          (color =
             0 <= transitionStartTime &&
             transitionStartTime < transitionClampTime
               ? transitionClampTime
               : transitionStartTime),
-          (previousRenderStartTime =
+          (endTime =
             0 <= transitionUpdateTime &&
             transitionUpdateTime < transitionClampTime
               ? transitionClampTime
               : transitionUpdateTime),
-          (endTime =
+          (debugTask =
             0 <= transitionEventTime &&
             transitionEventTime < transitionClampTime
               ? transitionClampTime
               : transitionEventTime),
-          0 <= transitionSuspendedTime &&
-            (setCurrentTrackFromLanes(lanes),
-            logSuspendedWithDelayPhase(
-              transitionSuspendedTime,
-              0 <= endTime
+          (label =
+            0 <= debugTask
+              ? debugTask
+              : 0 <= endTime
                 ? endTime
-                : 0 <= previousRenderStartTime
-                  ? previousRenderStartTime
-                  : renderStartTime,
-              lanes,
-              workInProgressUpdateTask
-            )),
-          (isPingedUpdate = endTime),
+                : renderStartTime),
+          0 <= transitionSuspendedTime
+            ? (setCurrentTrackFromLanes(256),
+              logSuspendedWithDelayPhase(
+                transitionSuspendedTime,
+                label,
+                lanes,
+                workInProgressUpdateTask
+              ))
+            : 0 !== (animatingLanes & 4194048) &&
+              (setCurrentTrackFromLanes(256),
+              logAnimatingPhase(
+                transitionClampTime,
+                label,
+                previousRenderStartTime
+              )),
+          (isPingedUpdate = debugTask),
           (eventTime = transitionEventType),
           (eventType = transitionEventIsRepeat),
           (eventIsRepeat = 2 === transitionUpdateType),
-          (color = renderStartTime),
-          (endTime = transitionUpdateTask),
-          (label = transitionUpdateMethodName),
+          (label = renderStartTime),
+          (debugTask = transitionUpdateTask),
+          (updateComponentName = transitionUpdateMethodName),
           (isSpawnedUpdate = transitionUpdateComponentName),
           supportsUserTiming &&
             ((currentTrack = "Transition"),
-            0 < previousRenderStartTime
-              ? previousRenderStartTime > color &&
-                (previousRenderStartTime = color)
-              : (previousRenderStartTime = color),
-            0 < debugTask
-              ? debugTask > previousRenderStartTime &&
-                (debugTask = previousRenderStartTime)
-              : (debugTask = previousRenderStartTime),
+            0 < endTime
+              ? endTime > label && (endTime = label)
+              : (endTime = label),
+            0 < color
+              ? color > endTime && (color = endTime)
+              : (color = endTime),
             0 < isPingedUpdate
-              ? isPingedUpdate > debugTask && (isPingedUpdate = debugTask)
-              : (isPingedUpdate = debugTask),
-            debugTask > isPingedUpdate &&
+              ? isPingedUpdate > color && (isPingedUpdate = color)
+              : (isPingedUpdate = color),
+            color > isPingedUpdate &&
               null !== eventTime &&
               ((color$jscomp$0 = eventType ? "secondary-light" : "warning"),
-              endTime
-                ? endTime.run(
+              debugTask
+                ? debugTask.run(
                     console.timeStamp.bind(
                       console,
                       eventType ? "Consecutive" : "Event: " + eventTime,
                       isPingedUpdate,
-                      debugTask,
+                      color,
                       currentTrack,
                       "Scheduler \u269b",
                       color$jscomp$0
@@ -17486,19 +17515,19 @@ __DEV__ &&
                 : console.timeStamp(
                     eventType ? "Consecutive" : "Event: " + eventTime,
                     isPingedUpdate,
-                    debugTask,
+                    color,
                     currentTrack,
                     "Scheduler \u269b",
                     color$jscomp$0
                   )),
-            previousRenderStartTime > debugTask &&
-              (endTime
-                ? endTime.run(
+            endTime > color &&
+              (debugTask
+                ? debugTask.run(
                     console.timeStamp.bind(
                       console,
                       "Action",
-                      debugTask,
-                      previousRenderStartTime,
+                      color,
+                      endTime,
                       currentTrack,
                       "Scheduler \u269b",
                       "primary-dark"
@@ -17506,25 +17535,26 @@ __DEV__ &&
                   )
                 : console.timeStamp(
                     "Action",
-                    debugTask,
-                    previousRenderStartTime,
+                    color,
+                    endTime,
                     currentTrack,
                     "Scheduler \u269b",
                     "primary-dark"
                   )),
-            color > previousRenderStartTime &&
-              ((debugTask = eventIsRepeat
+            label > endTime &&
+              ((color = eventIsRepeat
                 ? "Promise Resolved"
-                : 5 < color - previousRenderStartTime
+                : 5 < label - endTime
                   ? "Update Blocked"
                   : "Update"),
               (isPingedUpdate = []),
               null != isSpawnedUpdate &&
                 isPingedUpdate.push(["Component name", isSpawnedUpdate]),
-              null != label && isPingedUpdate.push(["Method name", label]),
-              (previousRenderStartTime = {
-                start: previousRenderStartTime,
-                end: color,
+              null != updateComponentName &&
+                isPingedUpdate.push(["Method name", updateComponentName]),
+              (endTime = {
+                start: endTime,
+                end: label,
                 detail: {
                   devtools: {
                     properties: isPingedUpdate,
@@ -17534,20 +17564,32 @@ __DEV__ &&
                   }
                 }
               }),
-              endTime
-                ? endTime.run(
-                    performance.measure.bind(
-                      performance,
-                      debugTask,
-                      previousRenderStartTime
-                    )
+              debugTask
+                ? debugTask.run(
+                    performance.measure.bind(performance, color, endTime)
                   )
-                : performance.measure(debugTask, previousRenderStartTime))),
+                : performance.measure(color, endTime))),
           (transitionUpdateTime = transitionStartTime = -1.1),
           (transitionUpdateType = 0),
           (transitionSuspendedTime = -1.1),
           (transitionEventIsRepeat = !0),
           (transitionClampTime = now()));
+        0 !== (lanes & 62914560) &&
+          0 !== (animatingLanes & 62914560) &&
+          (setCurrentTrackFromLanes(4194304),
+          logAnimatingPhase(
+            retryClampTime,
+            renderStartTime,
+            previousRenderStartTime
+          ));
+        0 !== (lanes & 2080374784) &&
+          0 !== (animatingLanes & 2080374784) &&
+          (setCurrentTrackFromLanes(268435456),
+          logAnimatingPhase(
+            idleClampTime,
+            renderStartTime,
+            previousRenderStartTime
+          ));
       }
       previousRenderStartTime = root.timeoutHandle;
       previousRenderStartTime !== noTimeout &&
@@ -17556,6 +17598,7 @@ __DEV__ &&
       previousRenderStartTime = root.cancelPendingCommit;
       null !== previousRenderStartTime &&
         ((root.cancelPendingCommit = null), previousRenderStartTime());
+      pendingEffectsLanes = 0;
       resetWorkInProgressStack();
       workInProgressRoot = root;
       workInProgress = previousRenderStartTime = createWorkInProgress(
@@ -18304,7 +18347,8 @@ __DEV__ &&
         finishedWork = shouldStartViewTransition;
         pendingEffectsStatus = PENDING_MUTATION_PHASE;
         enableViewTransition && finishedWork
-          ? (pendingViewTransition = startViewTransition(
+          ? (enableComponentPerformanceTrack && (animatingLanes |= lanes),
+            (pendingViewTransition = startViewTransition(
               suspendedState,
               root.containerInfo,
               pendingTransitionTypes,
@@ -18314,8 +18358,9 @@ __DEV__ &&
               flushSpawnedWork,
               flushPassiveEffects,
               reportViewTransitionError,
-              suspendedViewTransition
-            ))
+              suspendedViewTransition,
+              finishedViewTransition.bind(null, lanes, workInProgressUpdateTask)
+            )))
           : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
       }
     }
@@ -18339,6 +18384,33 @@ __DEV__ &&
         ),
         (pendingSuspendedCommitReason = pendingSuspendedViewTransitionReason =
           reason));
+    }
+    function finishedViewTransition(lanes, task) {
+      enableComponentPerformanceTrack &&
+        0 !== (animatingLanes & lanes) &&
+        ((animatingLanes &= ~lanes),
+        (!includesSyncLane(lanes) && 0 === (lanes & 124)) ||
+          includesSyncLane(workInProgressRootRenderLanes) ||
+          0 !== (workInProgressRootRenderLanes & 124) ||
+          includesSyncLane(pendingEffectsLanes) ||
+          0 !== (pendingEffectsLanes & 124) ||
+          (setCurrentTrackFromLanes(2),
+          logAnimatingPhase(blockingClampTime, now$1(), task)),
+        0 !== (lanes & 4194048) &&
+          0 === (workInProgressRootRenderLanes & 4194048) &&
+          0 === (pendingEffectsLanes & 4194048) &&
+          (setCurrentTrackFromLanes(256),
+          logAnimatingPhase(transitionClampTime, now$1(), task)),
+        0 !== (lanes & 62914560) &&
+          0 === (workInProgressRootRenderLanes & 62914560) &&
+          0 === (pendingEffectsLanes & 62914560) &&
+          (setCurrentTrackFromLanes(4194304),
+          logAnimatingPhase(retryClampTime, now$1(), task)),
+        0 !== (lanes & 2080374784) &&
+          0 === (workInProgressRootRenderLanes & 2080374784) &&
+          0 === (pendingEffectsLanes & 2080374784) &&
+          (setCurrentTrackFromLanes(268435456),
+          logAnimatingPhase(idleClampTime, now$1(), task)));
     }
     function flushAfterMutationEffects() {
       pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE &&
@@ -18594,7 +18666,7 @@ __DEV__ &&
             errorInfo++
           )
             (0, onRecoverableError[errorInfo])(recoverableError);
-        0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
+        includesSyncLane(pendingEffectsLanes) && flushPendingEffects();
         ensureRootIsScheduled(startViewTransitionStartTime);
         remainingLanes = startViewTransitionStartTime.pendingLanes;
         (enableInfiniteRenderLoopDetection &&
@@ -18880,7 +18952,7 @@ __DEV__ &&
         throwIfInfiniteUpdateLoopDetected());
       enableComponentPerformanceTrack &&
         enableComponentPerformanceTrack &&
-        (0 !== (pingedLanes & 3) || 0 !== (pingedLanes & 124)
+        (includesSyncLane(pingedLanes) || 0 !== (pingedLanes & 124)
           ? 0 > blockingUpdateTime &&
             ((blockingClampTime = blockingUpdateTime = now()),
             (blockingUpdateTask = createTask("Promise Resolved")),
@@ -20267,6 +20339,9 @@ __DEV__ &&
       transitionEventType = null,
       transitionEventIsRepeat = !1,
       transitionSuspendedTime = -1.1,
+      retryClampTime = -0,
+      idleClampTime = -0,
+      animatingLanes = 0,
       yieldReason = 0,
       yieldStartTime = -1.1,
       currentUpdateIsNested = !1,
@@ -22600,7 +22675,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-b204edda-20250920"
+        reconcilerVersion: "19.2.0-www-modern-b4fe1e6c-20250920"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
