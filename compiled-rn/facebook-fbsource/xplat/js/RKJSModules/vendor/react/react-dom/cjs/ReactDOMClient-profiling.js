@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e48319f84d7218f1b8bf443004d40b8b>>
+ * @generated SignedSource<<0dc0e212ee85a92501e026e7b83d42ec>>
  */
 
 /*
@@ -12886,7 +12886,7 @@ var DefaultAsyncDispatcher = {
   pendingEffectsRenderEndTime = -0,
   pendingPassiveTransitions = null,
   pendingRecoverableErrors = null,
-  pendingSuspendedCommitReason = 0,
+  pendingSuspendedCommitReason = null,
   pendingDelayedCommitReason = 0,
   pendingSuspendedViewTransitionReason = null,
   nestedUpdateCount = 0,
@@ -13172,7 +13172,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
               renderWasConcurrent,
-              2,
+              "Throttled",
               renderStartTime,
               yieldEndTime
             ),
@@ -13192,7 +13192,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           workInProgressSuspendedRetryLanes,
           workInProgressRootDidSkipSuspendedSiblings,
           renderWasConcurrent,
-          0,
+          null,
           renderStartTime,
           yieldEndTime
         );
@@ -13230,6 +13230,7 @@ function commitRootWhenReady(
         imgBytes: 0,
         suspenseyImages: [],
         waitingForImages: !0,
+        waitingForViewTransition: !1,
         unsuspend: noop$1
       }),
       accumulateSuspenseyCommitOnFiber(finishedWork, lanes, suspendedState),
@@ -13256,7 +13257,17 @@ function commitRootWhenReady(
           suspendedRetryLanes,
           exitStatus,
           suspendedState,
-          1,
+          suspendedState.waitingForViewTransition
+            ? "Waiting for the previous Animation"
+            : 0 < suspendedState.count
+              ? 0 < suspendedState.imgCount
+                ? "Suspended on CSS and Images"
+                : "Suspended on CSS"
+              : 1 === suspendedState.imgCount
+                ? "Suspended on an Image"
+                : 0 < suspendedState.imgCount
+                  ? "Suspended on Images"
+                  : null,
           completedRenderStartTime,
           completedRenderEndTime
         )
@@ -14195,28 +14206,17 @@ function commitRoot(
     commitErrors = null;
     commitStartTime = now();
     enableComponentPerformanceTrack &&
-      (1 === suspendedCommitReason
-        ? !supportsUserTiming ||
-          commitStartTime <= completedRenderEndTime ||
-          console.timeStamp(
-            "Suspended on CSS or Images",
-            completedRenderEndTime,
-            commitStartTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "secondary-light"
-          )
-        : 2 === suspendedCommitReason &&
-          (!supportsUserTiming ||
-            commitStartTime <= completedRenderEndTime ||
-            console.timeStamp(
-              "Throttled",
-              completedRenderEndTime,
-              commitStartTime,
-              currentTrack,
-              "Scheduler \u269b",
-              "secondary-light"
-            )));
+      null !== suspendedCommitReason &&
+      (!supportsUserTiming ||
+        commitStartTime <= completedRenderEndTime ||
+        console.timeStamp(
+          suspendedCommitReason,
+          completedRenderEndTime,
+          commitStartTime,
+          currentTrack,
+          "Scheduler \u269b",
+          "secondary-light"
+        ));
     recoverableErrors = 0 !== (finishedWork.flags & 13878);
     if (0 !== (finishedWork.subtreeFlags & 13878) || recoverableErrors) {
       recoverableErrors = ReactSharedInternals.T;
@@ -14446,7 +14446,9 @@ function flushLayoutEffects() {
     enableComponentPerformanceTrack &&
       ((commitEndTime = now()),
       (suspendedViewTransitionReason =
-        0 === finishedWork ? suspendedViewTransitionReason : commitStartTime),
+        null === finishedWork
+          ? suspendedViewTransitionReason
+          : commitStartTime),
       (finishedWork = commitEndTime),
       (lanes = 1 === pendingDelayedCommitReason),
       null !== commitErrors
@@ -15255,20 +15257,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1930 = 0;
-  i$jscomp$inline_1930 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1930++
+  var i$jscomp$inline_1927 = 0;
+  i$jscomp$inline_1927 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1927++
 ) {
-  var eventName$jscomp$inline_1931 =
-      simpleEventPluginEvents[i$jscomp$inline_1930],
-    domEventName$jscomp$inline_1932 =
-      eventName$jscomp$inline_1931.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1933 =
-      eventName$jscomp$inline_1931[0].toUpperCase() +
-      eventName$jscomp$inline_1931.slice(1);
+  var eventName$jscomp$inline_1928 =
+      simpleEventPluginEvents[i$jscomp$inline_1927],
+    domEventName$jscomp$inline_1929 =
+      eventName$jscomp$inline_1928.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1930 =
+      eventName$jscomp$inline_1928[0].toUpperCase() +
+      eventName$jscomp$inline_1928.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1932,
-    "on" + capitalizedEvent$jscomp$inline_1933
+    domEventName$jscomp$inline_1929,
+    "on" + capitalizedEvent$jscomp$inline_1930
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -19609,16 +19611,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2341 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2338 = React.version;
 if (
-  "19.2.0-native-fb-ad578aa0-20250918" !==
-  isomorphicReactPackageVersion$jscomp$inline_2341
+  "19.2.0-native-fb-b204edda-20250920" !==
+  isomorphicReactPackageVersion$jscomp$inline_2338
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2341,
-      "19.2.0-native-fb-ad578aa0-20250918"
+      isomorphicReactPackageVersion$jscomp$inline_2338,
+      "19.2.0-native-fb-b204edda-20250920"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19638,12 +19640,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2348 = {
+var internals$jscomp$inline_2345 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-ad578aa0-20250918",
+  version: "19.2.0-native-fb-b204edda-20250920",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-ad578aa0-20250918",
+  reconcilerVersion: "19.2.0-native-fb-b204edda-20250920",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$324 = 0;
@@ -19661,16 +19663,16 @@ var internals$jscomp$inline_2348 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2919 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2916 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2919.isDisabled &&
-    hook$jscomp$inline_2919.supportsFiber
+    !hook$jscomp$inline_2916.isDisabled &&
+    hook$jscomp$inline_2916.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2919.inject(
-        internals$jscomp$inline_2348
+      (rendererID = hook$jscomp$inline_2916.inject(
+        internals$jscomp$inline_2345
       )),
-        (injectedHook = hook$jscomp$inline_2919);
+        (injectedHook = hook$jscomp$inline_2916);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -19766,4 +19768,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-ad578aa0-20250918";
+exports.version = "19.2.0-native-fb-b204edda-20250920";

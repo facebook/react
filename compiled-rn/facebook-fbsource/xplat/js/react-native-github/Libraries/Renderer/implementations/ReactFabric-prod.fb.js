@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9075f3da3ca1f71493e732223ecdc8f3>>
+ * @generated SignedSource<<3f125624e1b723b7885fcf85636077cd>>
  */
 
 "use strict";
@@ -9582,7 +9582,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
               renderWasConcurrent,
-              2,
+              "Throttled",
               -0,
               0
             ),
@@ -11218,10 +11218,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1294 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-ad578aa0-20250918",
+    version: "19.2.0-native-fb-b204edda-20250920",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-ad578aa0-20250918"
+    reconcilerVersion: "19.2.0-native-fb-b204edda-20250920"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1294.rendererConfig = extraDevToolsConfig);

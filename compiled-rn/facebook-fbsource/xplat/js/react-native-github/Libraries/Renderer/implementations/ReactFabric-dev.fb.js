@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0fb3a89e367454ea6d0901781b343a98>>
+ * @generated SignedSource<<009472b74f087dc0c0022b27114f5fd6>>
  */
 
 "use strict";
@@ -2696,14 +2696,14 @@ __DEV__ &&
               "error"
             ));
     }
-    function logSuspenseThrottlePhase(startTime, endTime, debugTask) {
+    function logSuspendedCommitPhase(startTime, endTime, reason, debugTask) {
       !supportsUserTiming ||
         endTime <= startTime ||
         (debugTask
           ? debugTask.run(
               console.timeStamp.bind(
                 console,
-                "Throttled",
+                reason,
                 startTime,
                 endTime,
                 currentTrack,
@@ -2712,31 +2712,7 @@ __DEV__ &&
               )
             )
           : console.timeStamp(
-              "Throttled",
-              startTime,
-              endTime,
-              currentTrack,
-              "Scheduler \u269b",
-              "secondary-light"
-            ));
-    }
-    function logSuspendedCommitPhase(startTime, endTime, debugTask) {
-      !supportsUserTiming ||
-        endTime <= startTime ||
-        (debugTask
-          ? debugTask.run(
-              console.timeStamp.bind(
-                console,
-                "Suspended on CSS or Images",
-                startTime,
-                endTime,
-                currentTrack,
-                "Scheduler \u269b",
-                "secondary-light"
-              )
-            )
-          : console.timeStamp(
-              "Suspended on CSS or Images",
+              reason,
               startTime,
               endTime,
               currentTrack,
@@ -13906,7 +13882,7 @@ __DEV__ &&
                 workInProgressSuspendedRetryLanes,
                 startTime,
                 null,
-                IMMEDIATE_COMMIT,
+                null,
                 renderStartTime,
                 forceSync
               );
@@ -13941,7 +13917,7 @@ __DEV__ &&
                     workInProgressSuspendedRetryLanes,
                     workInProgressRootDidSkipSuspendedSiblings,
                     startTime,
-                    THROTTLED_COMMIT,
+                    "Throttled",
                     renderStartTime,
                     forceSync
                   ),
@@ -13961,7 +13937,7 @@ __DEV__ &&
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
                 startTime,
-                IMMEDIATE_COMMIT,
+                null,
                 renderStartTime,
                 forceSync
               );
@@ -15135,18 +15111,13 @@ __DEV__ &&
         commitErrors = null;
         commitStartTime = now();
         enableComponentPerformanceTrack &&
-          (suspendedCommitReason === SUSPENDED_COMMIT
-            ? logSuspendedCommitPhase(
-                completedRenderEndTime,
-                commitStartTime,
-                workInProgressUpdateTask
-              )
-            : suspendedCommitReason === THROTTLED_COMMIT &&
-              logSuspenseThrottlePhase(
-                completedRenderEndTime,
-                commitStartTime,
-                workInProgressUpdateTask
-              ));
+          null !== suspendedCommitReason &&
+          logSuspendedCommitPhase(
+            completedRenderEndTime,
+            commitStartTime,
+            suspendedCommitReason,
+            workInProgressUpdateTask
+          );
         recoverableErrors = 0 !== (finishedWork.flags & 13878);
         if (0 !== (finishedWork.subtreeFlags & 13878) || recoverableErrors) {
           recoverableErrors = ReactSharedInternals.T;
@@ -15298,7 +15269,7 @@ __DEV__ &&
         enableComponentPerformanceTrack &&
           ((commitEndTime = now()),
           (suspendedViewTransitionReason =
-            startTime === IMMEDIATE_COMMIT
+            null === startTime
               ? suspendedViewTransitionReason
               : commitStartTime),
           (startTime = commitEndTime),
@@ -19425,8 +19396,6 @@ __DEV__ &&
       workInProgressUpdateTask = null,
       legacyErrorBoundariesThatAlreadyFailed = null,
       IMMEDIATE_COMMIT = 0,
-      SUSPENDED_COMMIT = 1,
-      THROTTLED_COMMIT = 2,
       ABORTED_VIEW_TRANSITION_COMMIT = 1,
       DELAYED_PASSIVE_COMMIT = 2,
       ANIMATION_STARTED_COMMIT = 3,
@@ -19444,7 +19413,7 @@ __DEV__ &&
       pendingEffectsRenderEndTime = -0,
       pendingPassiveTransitions = null,
       pendingRecoverableErrors = null,
-      pendingSuspendedCommitReason = IMMEDIATE_COMMIT,
+      pendingSuspendedCommitReason = null,
       pendingDelayedCommitReason = IMMEDIATE_COMMIT,
       pendingSuspendedViewTransitionReason = null,
       NESTED_UPDATE_LIMIT = 50,
@@ -19898,10 +19867,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-ad578aa0-20250918",
+        version: "19.2.0-native-fb-b204edda-20250920",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-ad578aa0-20250918"
+        reconcilerVersion: "19.2.0-native-fb-b204edda-20250920"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

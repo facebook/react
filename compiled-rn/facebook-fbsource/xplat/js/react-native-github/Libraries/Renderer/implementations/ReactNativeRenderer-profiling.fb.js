@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<985dcd07e741eedce61c2a0ddb260134>>
+ * @generated SignedSource<<bff45cdf1b7fa5c49f59915a64219951>>
  */
 
 "use strict";
@@ -11216,7 +11216,7 @@ var DefaultAsyncDispatcher = {
   pendingEffectsRenderEndTime = -0,
   pendingPassiveTransitions = null,
   pendingRecoverableErrors = null,
-  pendingSuspendedCommitReason = 0,
+  pendingSuspendedCommitReason = null,
   pendingDelayedCommitReason = 0,
   pendingSuspendedViewTransitionReason = null,
   nestedUpdateCount = 0,
@@ -11498,7 +11498,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
               renderWasConcurrent,
-              2,
+              "Throttled",
               renderStartTime,
               yieldEndTime
             ),
@@ -11518,7 +11518,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           workInProgressSuspendedRetryLanes,
           workInProgressRootDidSkipSuspendedSiblings,
           renderWasConcurrent,
-          0,
+          null,
           renderStartTime,
           yieldEndTime
         );
@@ -12468,28 +12468,17 @@ function commitRoot(
     commitErrors = null;
     commitStartTime = now();
     enableComponentPerformanceTrack &&
-      (1 === suspendedCommitReason
-        ? !supportsUserTiming ||
-          commitStartTime <= completedRenderEndTime ||
-          console.timeStamp(
-            "Suspended on CSS or Images",
-            completedRenderEndTime,
-            commitStartTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "secondary-light"
-          )
-        : 2 === suspendedCommitReason &&
-          (!supportsUserTiming ||
-            commitStartTime <= completedRenderEndTime ||
-            console.timeStamp(
-              "Throttled",
-              completedRenderEndTime,
-              commitStartTime,
-              currentTrack,
-              "Scheduler \u269b",
-              "secondary-light"
-            )));
+      null !== suspendedCommitReason &&
+      (!supportsUserTiming ||
+        commitStartTime <= completedRenderEndTime ||
+        console.timeStamp(
+          suspendedCommitReason,
+          completedRenderEndTime,
+          commitStartTime,
+          currentTrack,
+          "Scheduler \u269b",
+          "secondary-light"
+        ));
     recoverableErrors = 0 !== (finishedWork.flags & 13878);
     if (0 !== (finishedWork.subtreeFlags & 13878) || recoverableErrors) {
       recoverableErrors = ReactSharedInternals.T;
@@ -12622,7 +12611,9 @@ function flushLayoutEffects() {
     enableComponentPerformanceTrack &&
       ((commitEndTime = now()),
       (suspendedViewTransitionReason =
-        0 === finishedWork ? suspendedViewTransitionReason : commitStartTime),
+        null === finishedWork
+          ? suspendedViewTransitionReason
+          : commitStartTime),
       (finishedWork = commitEndTime),
       (lanes = 1 === pendingDelayedCommitReason),
       null !== commitErrors
@@ -13392,11 +13383,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-ad578aa0-20250918" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-b204edda-20250920" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-ad578aa0-20250918\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-b204edda-20250920\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13444,16 +13435,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1587 = {
+  internals$jscomp$inline_1584 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-ad578aa0-20250918",
+    version: "19.2.0-native-fb-b204edda-20250920",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-ad578aa0-20250918"
+    reconcilerVersion: "19.2.0-native-fb-b204edda-20250920"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1587.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1587.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1584.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1584.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$174 = 0;
     31 > index$174;
@@ -13465,20 +13456,20 @@ internals$jscomp$inline_1587.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1587.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1584.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1956 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1953 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1956.isDisabled &&
-    hook$jscomp$inline_1956.supportsFiber
+    !hook$jscomp$inline_1953.isDisabled &&
+    hook$jscomp$inline_1953.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1956.inject(
-        internals$jscomp$inline_1587
+      (rendererID = hook$jscomp$inline_1953.inject(
+        internals$jscomp$inline_1584
       )),
-        (injectedHook = hook$jscomp$inline_1956);
+        (injectedHook = hook$jscomp$inline_1953);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

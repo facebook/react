@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6619ea7fd5810bb08997a7deb6eb539f>>
+ * @generated SignedSource<<ae4c89d49a79b1be0a4a36978b41a172>>
  */
 
 "use strict";
@@ -11684,7 +11684,7 @@ __DEV__ &&
                     workInProgressSuspendedRetryLanes,
                     workInProgressRootDidSkipSuspendedSiblings,
                     exitStatus,
-                    THROTTLED_COMMIT,
+                    "Throttled",
                     -0,
                     0
                   ),
@@ -11704,7 +11704,7 @@ __DEV__ &&
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
                 exitStatus,
-                IMMEDIATE_COMMIT,
+                null,
                 -0,
                 0
               );
@@ -15680,8 +15680,6 @@ __DEV__ &&
       RENDER_TIMEOUT_MS = 500,
       workInProgressTransitions = null,
       legacyErrorBoundariesThatAlreadyFailed = null,
-      IMMEDIATE_COMMIT = 0,
-      THROTTLED_COMMIT = 2,
       NO_PENDING_EFFECTS = 0,
       PENDING_MUTATION_PHASE = 1,
       PENDING_LAYOUT_PHASE = 2,
@@ -15920,10 +15918,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-ad578aa0-20250918",
+        version: "19.2.0-native-fb-b204edda-20250920",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-ad578aa0-20250918"
+        reconcilerVersion: "19.2.0-native-fb-b204edda-20250920"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16068,5 +16066,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.2.0-native-fb-ad578aa0-20250918";
+    exports.version = "19.2.0-native-fb-b204edda-20250920";
   })();

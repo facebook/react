@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bdd2539b2956ba28410666ed89b97932>>
+ * @generated SignedSource<<af2c78406fb8b8371fa7a490dee3a30c>>
  */
 
 "use strict";
@@ -10730,7 +10730,7 @@ var DefaultAsyncDispatcher = {
   pendingEffectsRenderEndTime = -0,
   pendingPassiveTransitions = null,
   pendingRecoverableErrors = null,
-  pendingSuspendedCommitReason = 0,
+  pendingSuspendedCommitReason = null,
   pendingDelayedCommitReason = 0,
   pendingSuspendedViewTransitionReason = null,
   nestedUpdateCount = 0,
@@ -11013,7 +11013,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
               renderWasConcurrent,
-              2,
+              "Throttled",
               renderStartTime,
               yieldEndTime
             ),
@@ -11033,7 +11033,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           workInProgressSuspendedRetryLanes,
           workInProgressRootDidSkipSuspendedSiblings,
           renderWasConcurrent,
-          0,
+          null,
           renderStartTime,
           yieldEndTime
         );
@@ -11983,28 +11983,17 @@ function commitRoot(
     commitErrors = null;
     commitStartTime = now();
     enableComponentPerformanceTrack &&
-      (1 === suspendedCommitReason
-        ? !supportsUserTiming ||
-          commitStartTime <= completedRenderEndTime ||
-          console.timeStamp(
-            "Suspended on CSS or Images",
-            completedRenderEndTime,
-            commitStartTime,
-            currentTrack,
-            "Scheduler \u269b",
-            "secondary-light"
-          )
-        : 2 === suspendedCommitReason &&
-          (!supportsUserTiming ||
-            commitStartTime <= completedRenderEndTime ||
-            console.timeStamp(
-              "Throttled",
-              completedRenderEndTime,
-              commitStartTime,
-              currentTrack,
-              "Scheduler \u269b",
-              "secondary-light"
-            )));
+      null !== suspendedCommitReason &&
+      (!supportsUserTiming ||
+        commitStartTime <= completedRenderEndTime ||
+        console.timeStamp(
+          suspendedCommitReason,
+          completedRenderEndTime,
+          commitStartTime,
+          currentTrack,
+          "Scheduler \u269b",
+          "secondary-light"
+        ));
     recoverableErrors = 0 !== (finishedWork.flags & 13878);
     if (0 !== (finishedWork.subtreeFlags & 13878) || recoverableErrors) {
       recoverableErrors = ReactSharedInternals.T;
@@ -12137,7 +12126,9 @@ function flushLayoutEffects() {
     enableComponentPerformanceTrack &&
       ((commitEndTime = now()),
       (suspendedViewTransitionReason =
-        0 === finishedWork ? suspendedViewTransitionReason : commitStartTime),
+        null === finishedWork
+          ? suspendedViewTransitionReason
+          : commitStartTime),
       (finishedWork = commitEndTime),
       (lanes = 1 === pendingDelayedCommitReason),
       null !== commitErrors
@@ -13241,16 +13232,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1556 = {
+  internals$jscomp$inline_1553 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-ad578aa0-20250918",
+    version: "19.2.0-native-fb-b204edda-20250920",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-ad578aa0-20250918"
+    reconcilerVersion: "19.2.0-native-fb-b204edda-20250920"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1556.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1556.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1553.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1553.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$167 = 0;
     31 > index$167;
@@ -13262,20 +13253,20 @@ internals$jscomp$inline_1556.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1556.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1553.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1892 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1889 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1892.isDisabled &&
-    hook$jscomp$inline_1892.supportsFiber
+    !hook$jscomp$inline_1889.isDisabled &&
+    hook$jscomp$inline_1889.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1892.inject(
-        internals$jscomp$inline_1556
+      (rendererID = hook$jscomp$inline_1889.inject(
+        internals$jscomp$inline_1553
       )),
-        (injectedHook = hook$jscomp$inline_1892);
+        (injectedHook = hook$jscomp$inline_1889);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
