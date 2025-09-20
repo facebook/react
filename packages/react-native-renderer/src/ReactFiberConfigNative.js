@@ -674,6 +674,7 @@ export function startViewTransition(
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
   blockedCallback: string => void, // Profiling-only
+  finishedAnimation: () => void, // Profiling-only
 ): null | RunningViewTransition {
   mutationCallback();
   layoutCallback();
