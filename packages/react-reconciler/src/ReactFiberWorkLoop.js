@@ -4268,6 +4268,9 @@ function commitGestureOnRoot(
   pendingTransitionTypes = finishedGesture.types;
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    startAnimating(pendingEffectsLanes);
+  }
   pendingViewTransition = finishedGesture.running = startGestureTransition(
     suspendedState,
     root.containerInfo,
@@ -4278,6 +4281,10 @@ function commitGestureOnRoot(
     flushGestureMutations,
     flushGestureAnimations,
     reportViewTransitionError,
+    enableProfilerTimer
+      ? // This callback fires after "pendingEffects" so we need to snapshot the arguments.
+        finishedViewTransition.bind(null, pendingEffectsLanes)
+      : (null: any),
   );
 }
 
@@ -4320,6 +4327,23 @@ function flushGestureAnimations(): void {
   if (pendingEffectsStatus !== PENDING_GESTURE_ANIMATION_PHASE) {
     return;
   }
+
+  const lanes = pendingEffectsLanes;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Update the new commitEndTime to when we started the animation.
+    recordCommitEndTime();
+    logStartViewTransitionYieldPhase(
+      pendingEffectsRenderEndTime,
+      commitEndTime,
+      pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
+      animatingTask,
+    );
+    if (pendingDelayedCommitReason !== ABORTED_VIEW_TRANSITION_COMMIT) {
+      pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT;
+    }
+  }
+
   pendingEffectsStatus = NO_PENDING_EFFECTS;
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
@@ -4342,6 +4366,10 @@ function flushGestureAnimations(): void {
     executionContext = prevExecutionContext;
     setCurrentUpdatePriority(previousPriority);
     ReactSharedInternals.T = prevTransition;
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    finalizeRender(lanes, commitEndTime);
   }
 
   // Now that we've rendered this lane. Start working on the next lane.
