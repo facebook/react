@@ -6997,6 +6997,10 @@ export function hoistHoistables(
   childState.stylesheets.forEach(hoistStylesheetDependency, parentState);
 }
 
+export function hasSuspenseyContent(hoistableState: HoistableState): boolean {
+  return hoistableState.stylesheets.size > 0;
+}
+
 // This function is called at various times depending on whether we are rendering
 // or prerendering. In this implementation we only actually emit headers once and
 // subsequent calls are ignored. We track whether the request has a completed shell
