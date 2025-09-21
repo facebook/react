@@ -23,7 +23,11 @@ import {
   ProgramContext,
   validateRestrictedImports,
 } from './Imports';
-import {CompilerReactTarget, PluginOptions} from './Options';
+import {
+  CompilerReactTarget,
+  ParsedPluginOptions,
+  PluginOptions,
+} from './Options';
 import {compileFn} from './Pipeline';
 import {
   filterSuppressionsThatAffectFunction,
@@ -34,7 +38,7 @@ import {GeneratedSource} from '../HIR';
 import {Err, Ok, Result} from '../Utils/Result';
 
 export type CompilerPass = {
-  opts: PluginOptions;
+  opts: ParsedPluginOptions;
   filename: string | null;
   comments: Array<t.CommentBlock | t.CommentLine>;
   code: string | null;
@@ -45,7 +49,7 @@ const DYNAMIC_GATING_DIRECTIVE = new RegExp('^use memo if\\(([^\\)]*)\\)$');
 
 export function tryFindDirectiveEnablingMemoization(
   directives: Array<t.Directive>,
-  opts: PluginOptions,
+  opts: ParsedPluginOptions,
 ): Result<t.Directive | null, CompilerError> {
   const optIn = directives.find(directive =>
     OPT_IN_DIRECTIVES.has(directive.value.value),
@@ -81,7 +85,7 @@ export function findDirectiveDisablingMemoization(
 }
 function findDirectivesDynamicGating(
   directives: Array<t.Directive>,
-  opts: PluginOptions,
+  opts: ParsedPluginOptions,
 ): Result<
   {
     gating: ExternalFunction;

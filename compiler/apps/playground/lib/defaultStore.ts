@@ -18,7 +18,7 @@ import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
 
 ({
   //compilationMode: "all"
-} satisfies Partial<PluginOptions>);`;
+} satisfies PluginOptions);`;
 
 export const defaultStore: Store = {
   source: index,
