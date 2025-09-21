@@ -284,7 +284,6 @@ import {
   blockingEventIsRepeat,
   blockingSuspendedTime,
   gestureClampTime,
-  gestureStartTime,
   gestureUpdateTime,
   gestureUpdateTask,
   gestureUpdateType,
@@ -1982,10 +1981,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     workInProgressUpdateTask = null;
     if (isGestureRender(lanes)) {
       workInProgressUpdateTask = gestureUpdateTask;
-      const clampedStartTime =
-        gestureStartTime >= 0 && gestureStartTime < gestureClampTime
-          ? gestureClampTime
-          : gestureStartTime;
       const clampedUpdateTime =
         gestureUpdateTime >= 0 && gestureUpdateTime < gestureClampTime
           ? gestureClampTime
@@ -2019,7 +2014,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         );
       }
       logGestureStart(
-        clampedStartTime,
         clampedUpdateTime,
         clampedEventTime,
         gestureEventType,

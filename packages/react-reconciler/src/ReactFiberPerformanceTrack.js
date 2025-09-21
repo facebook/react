@@ -753,7 +753,6 @@ export function logBlockingStart(
 }
 
 export function logGestureStart(
-  startTime: number,
   updateTime: number,
   eventTime: number,
   eventType: null | string,
@@ -774,22 +773,15 @@ export function logGestureStart(
     } else {
       updateTime = renderStartTime;
     }
-    if (startTime > 0) {
-      if (startTime > updateTime) {
-        startTime = updateTime;
-      }
-    } else {
-      startTime = updateTime;
-    }
     if (eventTime > 0) {
-      if (eventTime > startTime) {
-        eventTime = startTime;
+      if (eventTime > updateTime) {
+        eventTime = updateTime;
       }
     } else {
-      eventTime = startTime;
+      eventTime = updateTime;
     }
 
-    if (startTime > eventTime && eventType !== null) {
+    if (updateTime > eventTime && eventType !== null) {
       // Log the time from the event timeStamp until we started a gesture.
       const color = eventIsRepeat ? 'secondary-light' : 'warning';
       if (__DEV__ && debugTask) {
@@ -798,7 +790,7 @@ export function logGestureStart(
             console,
             eventIsRepeat ? 'Consecutive' : 'Event: ' + eventType,
             eventTime,
-            startTime,
+            updateTime,
             currentTrack,
             LANES_TRACK_GROUP,
             color,
@@ -808,36 +800,10 @@ export function logGestureStart(
         console.timeStamp(
           eventIsRepeat ? 'Consecutive' : 'Event: ' + eventType,
           eventTime,
-          startTime,
-          currentTrack,
-          LANES_TRACK_GROUP,
-          color,
-        );
-      }
-    }
-    if (updateTime > startTime) {
-      // Log the time from when we started a gesture until we called setState or started rendering.
-      if (__DEV__ && debugTask) {
-        debugTask.run(
-          // $FlowFixMe[method-unbinding]
-          console.timeStamp.bind(
-            console,
-            'Gesture',
-            startTime,
-            updateTime,
-            currentTrack,
-            LANES_TRACK_GROUP,
-            'primary-dark',
-          ),
-        );
-      } else {
-        console.timeStamp(
-          'Gesture',
-          startTime,
           updateTime,
           currentTrack,
           LANES_TRACK_GROUP,
-          'primary-dark',
+          color,
         );
       }
     }
@@ -846,8 +812,8 @@ export function logGestureStart(
       const label = isPingedUpdate
         ? 'Promise Resolved'
         : renderStartTime - updateTime > 5
-          ? 'Update Blocked'
-          : 'Update';
+          ? 'Gesture Blocked'
+          : 'Gesture';
       if (__DEV__) {
         const properties = [];
         if (updateComponentName != null) {
