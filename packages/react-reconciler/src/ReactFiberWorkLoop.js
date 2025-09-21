@@ -4260,6 +4260,10 @@ function commitGestureOnRoot(
   }
   deleteScheduledGesture(root, finishedGesture);
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    startAnimating(pendingEffectsLanes);
+  }
+
   const prevTransition = ReactSharedInternals.T;
   ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
@@ -4277,9 +4281,6 @@ function commitGestureOnRoot(
   pendingTransitionTypes = finishedGesture.types;
   pendingEffectsStatus = PENDING_GESTURE_MUTATION_PHASE;
 
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    startAnimating(pendingEffectsLanes);
-  }
   pendingViewTransition = finishedGesture.running = startGestureTransition(
     suspendedState,
     root.containerInfo,

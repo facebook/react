@@ -77,6 +77,12 @@ import {
   getViewTransitionClassName,
 } from './ReactFiberViewTransitionComponent';
 
+import {
+  enableProfilerTimer,
+  enableComponentPerformanceTrack,
+} from 'shared/ReactFeatureFlags';
+import {trackAnimatingTask} from './ReactProfilerTimer';
+
 let didWarnForRootClone = false;
 
 // Used during the apply phase to track whether a parent ViewTransition component
@@ -101,6 +107,7 @@ function applyViewTransitionToClones(
   name: string,
   className: ?string,
   clones: Array<Instance>,
+  fiber: Fiber,
 ): void {
   // This gets called when we have found a pair, but after the clone in created. The clone is
   // created by the insertion side. If the insertion side if found before the deletion side
@@ -116,6 +123,11 @@ function applyViewTransitionToClones(
           name + '_' + i,
       className,
     );
+  }
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (fiber._debugTask != null) {
+      trackAnimatingTask(fiber._debugTask);
+    }
   }
 }
 
@@ -171,7 +183,7 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
                 // If we have clones that means that we've already visited this
                 // ViewTransition boundary before and we can now apply the name
                 // to those clones. Otherwise, we have to wait until we clone it.
-                applyViewTransitionToClones(name, className, clones);
+                applyViewTransitionToClones(name, className, clones, child);
               }
             }
             if (pairs.size === 0) {
@@ -221,7 +233,7 @@ function trackEnterViewTransitions(deletion: Fiber): void {
           // If we have clones that means that we've already visited this
           // ViewTransition boundary before and we can now apply the name
           // to those clones. Otherwise, we have to wait until we clone it.
-          applyViewTransitionToClones(name, className, clones);
+          applyViewTransitionToClones(name, className, clones, deletion);
         }
       }
     }
@@ -266,7 +278,7 @@ function applyAppearingPairViewTransition(child: Fiber): void {
         // If there are no clones at this point, that should mean that there are no
         // HostComponent children in this ViewTransition.
         if (clones !== null) {
-          applyViewTransitionToClones(name, className, clones);
+          applyViewTransitionToClones(name, className, clones, child);
         }
       }
     }
@@ -296,7 +308,7 @@ function applyExitViewTransition(placement: Fiber): void {
     // If there are no clones at this point, that should mean that there are no
     // HostComponent children in this ViewTransition.
     if (clones !== null) {
-      applyViewTransitionToClones(name, className, clones);
+      applyViewTransitionToClones(name, className, clones, placement);
     }
   }
 }
@@ -314,7 +326,7 @@ function applyNestedViewTransition(child: Fiber): void {
     // If there are no clones at this point, that should mean that there are no
     // HostComponent children in this ViewTransition.
     if (clones !== null) {
-      applyViewTransitionToClones(name, className, clones);
+      applyViewTransitionToClones(name, className, clones, child);
     }
   }
 }
@@ -346,7 +358,7 @@ function applyUpdateViewTransition(current: Fiber, finishedWork: Fiber): void {
   // If there are no clones at this point, that should mean that there are no
   // HostComponent children in this ViewTransition.
   if (clones !== null) {
-    applyViewTransitionToClones(oldName, className, clones);
+    applyViewTransitionToClones(oldName, className, clones, finishedWork);
   }
 }
 
