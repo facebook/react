@@ -3,7 +3,7 @@
 
 /* DataTransfer */
 
-declare class DataTransfer {
+declare class Data {
   clearData(format?: string): void;
   getData(format: string): string;
   setData(format: string, data: string): void;
