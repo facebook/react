@@ -5749,6 +5749,10 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else if (
+    // We don't outline when we're emitting partially completed boundaries optimistically
+    // because it doesn't make sense to outline something if its parent is going to be
+    // blocked on something later in the stream anyway.
+    !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
     (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
       hasSuspenseyContent(boundary.contentState))
@@ -5982,6 +5986,8 @@ function flushPartiallyCompletedSegment(
   }
 }
 
+let flushingPartialBoundaries = false;
+
 function flushCompletedQueues(
   request: Request,
   destination: Destination,
@@ -6097,6 +6103,7 @@ function flushCompletedQueues(
 
     // Next we emit any segments of any boundaries that are partially complete
     // but not deeply complete.
+    flushingPartialBoundaries = true;
     const partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
       const boundary = partialBoundaries[i];
@@ -6108,6 +6115,7 @@ function flushCompletedQueues(
       }
     }
     partialBoundaries.splice(0, i);
+    flushingPartialBoundaries = false;
 
     // Next we check the completed boundaries again. This may have had
     // boundaries added to it in case they were too larged to be inlined.
@@ -6125,6 +6133,7 @@ function flushCompletedQueues(
     }
     largeBoundaries.splice(0, i);
   } finally {
+    flushingPartialBoundaries = false;
     if (
       request.allPendingTasks === 0 &&
       request.clientRenderedBoundaries.length === 0 &&
