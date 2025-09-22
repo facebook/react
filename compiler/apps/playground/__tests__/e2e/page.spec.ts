@@ -263,7 +263,7 @@ test('error is displayed when config has validation error', async ({page}) => {
 
 ({
   compilationMode: "123"
-} satisfies Partial<PluginOptions>);`,
+} satisfies PluginOptions);`,
     showInternals: false,
   };
   const hash = encodeStore(store);
@@ -293,7 +293,7 @@ test('disableMemoizationForDebugging flag works as expected', async ({
   environment: {
     disableMemoizationForDebugging: true
   }
-} satisfies Partial<PluginOptions>);`,
+} satisfies PluginOptions);`,
     showInternals: false,
   };
   const hash = encodeStore(store);
