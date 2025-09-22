@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e8364cee321958901d1531bfc4aaec8e>>
+ * @generated SignedSource<<9834f6a926c59b12ea1f9dc611a433f8>>
  */
 
 "use strict";
@@ -13393,11 +13393,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-b4fe1e6c-20250920" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-07e4974b-20250922" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-b4fe1e6c-20250920\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-07e4974b-20250922\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13445,16 +13445,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1589 = {
+  internals$jscomp$inline_1583 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-b4fe1e6c-20250920",
+    version: "19.2.0-native-fb-07e4974b-20250922",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-b4fe1e6c-20250920"
+    reconcilerVersion: "19.2.0-native-fb-07e4974b-20250922"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1589.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1589.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1583.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1583.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$175 = 0;
     31 > index$175;
@@ -13466,7 +13466,7 @@ internals$jscomp$inline_1589.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1589.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1583.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
@@ -13477,7 +13477,7 @@ if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   )
     try {
       (rendererID = hook$jscomp$inline_1955.inject(
-        internals$jscomp$inline_1589
+        internals$jscomp$inline_1583
       )),
         (injectedHook = hook$jscomp$inline_1955);
     } catch (err) {}
