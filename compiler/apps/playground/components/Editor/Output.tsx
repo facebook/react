@@ -340,6 +340,7 @@ function TextTabContent({
           language={language ?? 'javascript'}
           value={output}
           loading={''}
+          className="monaco-editor-output"
           options={{
             ...monacoOptions,
             readOnly: true,
