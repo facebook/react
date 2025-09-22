@@ -54117,7 +54117,7 @@ const COMPILER_OPTIONS = {
     noEmit: true,
     panicThreshold: 'none',
     flowSuppressions: false,
-    environment: validateEnvironmentConfig({
+    environment: {
         validateRefAccessDuringRender: true,
         validateNoSetStateInRender: true,
         validateNoSetStateInEffects: true,
@@ -54129,7 +54129,7 @@ const COMPILER_OPTIONS = {
         validateNoCapitalizedCalls: [],
         validateHooksUsage: true,
         validateNoDerivedComputationsInEffects: true,
-    }),
+    },
 };
 const FLOW_SUPPRESSION_REGEX = /\$FlowFixMe\[([^\]]*)\]/g;
 function getFlowSuppressions(sourceCode) {
