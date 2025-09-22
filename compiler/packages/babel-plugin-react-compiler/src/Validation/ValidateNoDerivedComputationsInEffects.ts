@@ -18,6 +18,7 @@ import {
   CallExpression,
   Instruction,
   isUseStateType,
+  isUseRefType,
 } from '../HIR';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
@@ -284,6 +285,11 @@ function validateEffect(
     }
 
     for (const instr of block.instructions) {
+      // Early return if any instruction is deriving a value from a ref
+      if (isUseRefType(instr.lvalue.identifier)) {
+        return;
+      }
+
       if (
         instr.value.kind === 'CallExpression' &&
         isSetStateType(instr.value.callee.identifier) &&
