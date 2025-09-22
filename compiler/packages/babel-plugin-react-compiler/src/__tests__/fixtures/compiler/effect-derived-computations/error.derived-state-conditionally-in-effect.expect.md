@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-Found 2 errors:
+Found 1 error:
 
 Error: Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
 
@@ -42,17 +42,6 @@ error.derived-state-conditionally-in-effect.ts:9:6
   10 |     } else {
   11 |       setLocalValue('disabled');
   12 |     }
-
-Error: Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
-
-error.derived-state-conditionally-in-effect.ts:11:6
-   9 |       setLocalValue(value);
-  10 |     } else {
-> 11 |       setLocalValue('disabled');
-     |       ^^^^^^^^^^^^^^^^^^^^^^^^^ Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
-  12 |     }
-  13 |   }, [value, enabled]);
-  14 |
 ```
           
       
