@@ -3289,6 +3289,7 @@ function pushImg(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  hoistableState: null | HoistableState,
   formatContext: FormatContext,
 ): null {
   const pictureOrNoScriptTagInScope =
@@ -3321,6 +3322,12 @@ function pushImg(
   ) {
     // We have a suspensey image and ought to preload it to optimize the loading of display blocking
     // resumableState.
+
+    if (hoistableState !== null) {
+      // Mark this boundary's state as having suspensey images.
+      hoistableState.suspenseyImages = true;
+    }
+
     const sizes = typeof props.sizes === 'string' ? props.sizes : undefined;
     const key = getImageResourceKey(src, srcSet, sizes);
 
@@ -4255,7 +4262,14 @@ export function pushStartInstance(
       return pushStartPreformattedElement(target, props, type, formatContext);
     }
     case 'img': {
-      return pushImg(target, props, resumableState, renderState, formatContext);
+      return pushImg(
+        target,
+        props,
+        resumableState,
+        renderState,
+        hoistableState,
+        formatContext,
+      );
     }
     // Omitted close tags
     case 'base':
@@ -6125,6 +6139,7 @@ type StylesheetResource = {
 export type HoistableState = {
   styles: Set<StyleQueue>,
   stylesheets: Set<StylesheetResource>,
+  suspenseyImages: boolean,
 };
 
 export type StyleQueue = {
@@ -6138,6 +6153,7 @@ export function createHoistableState(): HoistableState {
   return {
     styles: new Set(),
     stylesheets: new Set(),
+    suspenseyImages: false,
   };
 }
 
@@ -6995,10 +7011,18 @@ export function hoistHoistables(
 ): void {
   childState.styles.forEach(hoistStyleQueueDependency, parentState);
   childState.stylesheets.forEach(hoistStylesheetDependency, parentState);
+  if (childState.suspenseyImages) {
+    // If the child has suspensey images, the parent now does too if it's inlined.
+    // Similarly, if a SuspenseList row has a suspensey image then effectively
+    // the next row should be blocked on it as well since the next row can't show
+    // earlier. In practice, since the child will be outlined this transferring
+    // may never matter but is conceptually correct.
+    parentState.suspenseyImages = true;
+  }
 }
 
 export function hasSuspenseyContent(hoistableState: HoistableState): boolean {
-  return hoistableState.stylesheets.size > 0;
+  return hoistableState.stylesheets.size > 0 || hoistableState.suspenseyImages;
 }
 
 // This function is called at various times depending on whether we are rendering
