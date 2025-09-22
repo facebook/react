@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<1bcdbec6f4e7881ef00582a5c118da84>>
+ * @generated SignedSource<<815a751adc2a53417f7afb7d2beeffaf>>
  */
 
 'use strict';
@@ -53897,7 +53897,7 @@ const COMPILER_OPTIONS = {
     noEmit: true,
     panicThreshold: 'none',
     flowSuppressions: false,
-    environment: validateEnvironmentConfig({
+    environment: {
         validateRefAccessDuringRender: true,
         validateNoSetStateInRender: true,
         validateNoSetStateInEffects: true,
@@ -53909,7 +53909,7 @@ const COMPILER_OPTIONS = {
         validateNoCapitalizedCalls: [],
         validateHooksUsage: true,
         validateNoDerivedComputationsInEffects: true,
-    }),
+    },
 };
 const FLOW_SUPPRESSION_REGEX = /\$FlowFixMe\[([^\]]*)\]/g;
 function getFlowSuppressions(sourceCode) {
