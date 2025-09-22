@@ -238,8 +238,8 @@ export default function Page({url, navigate}) {
                   <Suspend />
                 </div>
               </ViewTransition>
+              {show ? <Component /> : null}
             </Suspense>
-            {show ? <Component /> : null}
           </div>
         </ViewTransition>
       </SwipeRecognizer>
