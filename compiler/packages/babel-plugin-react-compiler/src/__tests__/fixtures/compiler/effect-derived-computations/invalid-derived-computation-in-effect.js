@@ -1,7 +1,7 @@
 // @validateNoDerivedComputationsInEffects
-function BadExample() {
+function Component() {
   const [firstName, setFirstName] = useState('Taylor');
-  const [lastName, setLastName] = useState('Swift');
+  const lastName = 'Swift';
 
   // 🔴 Avoid: redundant state and unnecessary Effect
   const [fullName, setFullName] = useState('');
@@ -11,3 +11,8 @@ function BadExample() {
 
   return <div>{fullName}</div>;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+};
