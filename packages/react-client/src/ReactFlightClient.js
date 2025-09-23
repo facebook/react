@@ -512,6 +512,27 @@ function wakeChunk<T>(
       fulfillReference(listener, value, chunk);
     }
   }
+
+  if (__DEV__ && chunk.status === INITIALIZED) {
+    const resolvedValue = resolveLazy(value);
+    if (isReactElementOrArrayLike(resolvedValue) || isLazy(resolvedValue)) {
+      const debugInfo = chunk._debugInfo.splice(0);
+      if (resolvedValue._debugInfo) {
+        // $FlowFixMe[method-unbinding]
+        resolvedValue._debugInfo.push.apply(
+          resolvedValue._debugInfo,
+          debugInfo,
+        );
+      } else {
+        Object.defineProperty(resolvedValue, '_debugInfo', {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: debugInfo,
+        });
+      }
+    }
+  }
 }
 
 function rejectChunk(
@@ -959,6 +980,24 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
         return;
       }
     }
+
+    if (__DEV__) {
+      if (isReactElementOrArrayLike(value)) {
+        const debugInfo = chunk._debugInfo.splice(0);
+        if (value._debugInfo) {
+          // $FlowFixMe[method-unbinding]
+          value._debugInfo.push.apply(value._debugInfo, debugInfo);
+        } else {
+          Object.defineProperty(value, '_debugInfo', {
+            configurable: false,
+            enumerable: false,
+            writable: true,
+            value: debugInfo,
+          });
+        }
+      }
+    }
+
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
@@ -1052,11 +1091,7 @@ function getTaskName(type: mixed): string {
     // the client. There should only be one for any given owner chain.
     return '"use client"';
   }
-  if (
-    typeof type === 'object' &&
-    type !== null &&
-    type.$$typeof === REACT_LAZY_TYPE
-  ) {
+  if (isLazy(type)) {
     if (type._init === readChunk) {
       // This is a lazy node created by Flight. It is probably a client reference.
       // We use the "use client" string to indicate that this is the boundary into
@@ -1168,7 +1203,6 @@ function initializeElement(
 
 function createElement(
   response: Response,
-  isRoot: boolean,
   type: mixed,
   key: mixed,
   props: mixed,
@@ -1277,19 +1311,10 @@ function createElement(
       // a Lazy node referencing this Element to let everything around it proceed.
       const blockedChunk: BlockedChunk<React$Element<any>> =
         createBlockedChunk(response);
-      if (__DEV__) {
-        // If this is the root element, forward the live debug info of the
-        // initializing chunk to the blocked chunk.
-        if (isRoot && initializingChunk !== null) {
-          blockedChunk._debugInfo = initializingChunk._debugInfo;
-        }
-      }
       handler.value = element;
       handler.chunk = blockedChunk;
       const lazyNode = createLazyChunkWrapper(blockedChunk, validated);
       if (__DEV__) {
-        // Forward the live debug info of the lazy node to the element.
-        element._debugInfo = lazyNode._debugInfo;
         // After we have initialized any blocked references, initialize stack etc.
         const init = initializeElement.bind(null, response, element, lazyNode);
         blockedChunk.then(init, init);
@@ -1346,11 +1371,7 @@ function fulfillReference(
   const {response, handler, parentObject, key, map, path} = reference;
 
   for (let i = 1; i < path.length; i++) {
-    while (
-      typeof value === 'object' &&
-      value !== null &&
-      value.$$typeof === REACT_LAZY_TYPE
-    ) {
+    while (isLazy(value)) {
       // We never expect to see a Lazy node on this path because we encode those as
       // separate models. This must mean that we have inserted an extra lazy node
       // e.g. to replace a blocked element. We must instead look for it inside.
@@ -1422,11 +1443,7 @@ function fulfillReference(
     value = value[path[i]];
   }
 
-  while (
-    typeof value === 'object' &&
-    value !== null &&
-    value.$$typeof === REACT_LAZY_TYPE
-  ) {
+  while (isLazy(value)) {
     // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
     // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
     const referencedChunk: SomeChunk<any> = value._payload;
@@ -1475,7 +1492,7 @@ function fulfillReference(
     const element: any = handler.value;
     switch (key) {
       case '3':
-        transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
+        transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
         element.props = mappedValue;
         break;
       case '4':
@@ -1491,11 +1508,11 @@ function fulfillReference(
         }
         break;
       default:
-        transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
+        transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
         break;
     }
   } else if (__DEV__ && !reference.isDebug) {
-    transferReferencedDebugInfo(handler.chunk, fulfilledChunk, mappedValue);
+    transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
   }
 
   handler.deps--;
@@ -1817,49 +1834,59 @@ function loadServerReference<A: Iterable<any>, T>(
   return (null: any);
 }
 
+function isReactElementOrArrayLike(
+  value: any,
+  // eslint-disable-next-line no-undef
+): value is {_debugInfo: null | ReactDebugInfo, ...} {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (isArray(value) ||
+      typeof value[ASYNC_ITERATOR] === 'function' ||
+      value.$$typeof === REACT_ELEMENT_TYPE)
+  );
+}
+
+function isLazy(
+  value: any,
+  // eslint-disable-next-line no-undef
+): implies value is LazyComponent<
+  React$Element<any>,
+  SomeChunk<React$Element<any>>,
+> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value.$$typeof === REACT_LAZY_TYPE
+  );
+}
+
+function resolveLazy(value: mixed): mixed {
+  while (isLazy(value)) {
+    const payload: SomeChunk<any> = value._payload;
+    if (payload.status === INITIALIZED) {
+      value = payload.value;
+      continue;
+    }
+    break;
+  }
+
+  return value;
+}
+
 function transferReferencedDebugInfo(
   parentChunk: null | SomeChunk<any>,
   referencedChunk: SomeChunk<any>,
-  referencedValue: mixed,
 ): void {
   if (__DEV__) {
-    const referencedDebugInfo = referencedChunk._debugInfo;
-    // If we have a direct reference to an object that was rendered by a synchronous
-    // server component, it might have some debug info about how it was rendered.
-    // We forward this to the underlying object. This might be a React Element or
-    // an Array fragment.
-    // If this was a string / number return value we lose the debug info. We choose
-    // that tradeoff to allow sync server components to return plain values and not
-    // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
-    if (
-      typeof referencedValue === 'object' &&
-      referencedValue !== null &&
-      (isArray(referencedValue) ||
-        typeof referencedValue[ASYNC_ITERATOR] === 'function' ||
-        referencedValue.$$typeof === REACT_ELEMENT_TYPE)
-    ) {
-      // We should maybe use a unique symbol for arrays but this is a React owned array.
-      // $FlowFixMe[prop-missing]: This should be added to elements.
-      const existingDebugInfo: ?ReactDebugInfo =
-        (referencedValue._debugInfo: any);
-      if (existingDebugInfo == null) {
-        Object.defineProperty((referencedValue: any), '_debugInfo', {
-          configurable: false,
-          enumerable: false,
-          writable: true,
-          value: referencedDebugInfo.slice(0), // Clone so that pushing later isn't going into the original
-        });
-      } else {
-        // $FlowFixMe[method-unbinding]
-        existingDebugInfo.push.apply(existingDebugInfo, referencedDebugInfo);
-      }
-    }
-    // We also add the debug info to the initializing chunk since the resolution of that promise is
-    // also blocked by the referenced debug info. By adding it to both we can track it even if the array/element
-    // is extracted, or if the root is rendered as is.
+    // We add the debug info to the initializing chunk since the resolution of
+    // that promise is also blocked by the referenced debug info. By adding it
+    // to both we can track it even if the array/element/lazy is extracted, or
+    // if the root is rendered as is.
     if (parentChunk !== null) {
-      const parentDebugInfo = parentChunk._debugInfo;
-      if (parentDebugInfo !== referencedDebugInfo) {
+      const referencedDebugInfo = referencedChunk._debugInfo;
+      if (referencedDebugInfo !== null) {
+        const parentDebugInfo = parentChunk._debugInfo;
         for (let i = 0; i < referencedDebugInfo.length; ++i) {
           const debugInfoEntry = referencedDebugInfo[i];
           if (debugInfoEntry.name != null) {
@@ -1903,11 +1930,7 @@ function getOutlinedModel<T>(
     case INITIALIZED:
       let value = chunk.value;
       for (let i = 1; i < path.length; i++) {
-        while (
-          typeof value === 'object' &&
-          value !== null &&
-          value.$$typeof === REACT_LAZY_TYPE
-        ) {
+        while (isLazy(value)) {
           const referencedChunk: SomeChunk<any> = value._payload;
           switch (referencedChunk.status) {
             case RESOLVED_MODEL:
@@ -1977,11 +2000,7 @@ function getOutlinedModel<T>(
         value = value[path[i]];
       }
 
-      while (
-        typeof value === 'object' &&
-        value !== null &&
-        value.$$typeof === REACT_LAZY_TYPE
-      ) {
+      while (isLazy(value)) {
         // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
         // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
         const referencedChunk: SomeChunk<any> = value._payload;
@@ -2010,7 +2029,7 @@ function getOutlinedModel<T>(
         // If we're resolving the "owner" or "stack" slot of an Element array, we don't call
         // transferReferencedDebugInfo because this reference is to a debug chunk.
       } else {
-        transferReferencedDebugInfo(initializingChunk, chunk, chunkValue);
+        transferReferencedDebugInfo(initializingChunk, chunk);
       }
       return chunkValue;
     case PENDING:
@@ -2468,7 +2487,6 @@ function parseModelString(
 function parseModelTuple(
   response: Response,
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
-  isRoot: boolean,
 ): any {
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
 
@@ -2477,7 +2495,6 @@ function parseModelTuple(
     // Or even change the ReactElement type to be an array.
     return createElement(
       response,
-      isRoot,
       tuple[1],
       tuple[2],
       tuple[3],
@@ -2727,18 +2744,34 @@ function resolveChunkDebugInfo(
   chunk: SomeChunk<any>,
 ): void {
   if (__DEV__ && enableAsyncDebugInfo) {
-    // Push the currently resolving chunk's debug info representing the stream
-    // on the Promise that was waiting on the stream.
-    const ioInfo = streamState._debugInfo;
-    const debugChunk = chunk._debugChunk;
-    if (debugChunk != null) {
-      // If there's a debug chunk, then we wait for it to resolve before adding
-      // the stream info as the last entry.
-      debugChunk.then(() => {
-        chunk._debugInfo.push({awaited: ioInfo});
-      });
+    // Add the currently resolving chunk's debug info representing the stream
+    // to the Promise that was waiting on the stream, or its underlying value.
+    const debugInfoEntry: ReactAsyncInfo = {awaited: streamState._debugInfo};
+
+    const addDebugInfo = () => {
+      const value = resolveLazy(chunk.value);
+      if (isReactElementOrArrayLike(value)) {
+        const debugInfo: ReactDebugInfo = [debugInfoEntry];
+        if (value._debugInfo) {
+          // $FlowFixMe[method-unbinding]
+          value._debugInfo.push.apply(value._debugInfo, debugInfo);
+        } else {
+          Object.defineProperty(value, '_debugInfo', {
+            configurable: false,
+            enumerable: false,
+            writable: true,
+            value: debugInfo,
+          });
+        }
+      } else if (chunk._debugInfo !== null) {
+        chunk._debugInfo.push(debugInfoEntry);
+      }
+    };
+
+    if (chunk.status === PENDING || chunk.status === BLOCKED) {
+      chunk.then(addDebugInfo, addDebugInfo);
     } else {
-      chunk._debugInfo.push({awaited: ioInfo});
+      addDebugInfo();
     }
   }
 }
@@ -5044,8 +5077,7 @@ function createFromJSONCallback(response: Response) {
       return parseModelString(response, this, key, value);
     }
     if (typeof value === 'object' && value !== null) {
-      const isRoot = key === '';
-      return parseModelTuple(response, value, isRoot);
+      return parseModelTuple(response, value);
     }
     return value;
   };
