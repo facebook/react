@@ -5,22 +5,19 @@
 // @validateNoDerivedComputationsInEffects
 import {useEffect, useState} from 'react';
 
-function MockComponent({onSet}) {
-  return <div onClick={() => onSet('clicked')}>Mock Component</div>;
-}
-
-function Component({propValue}) {
+function Component({propValue, onChange}) {
   const [value, setValue] = useState(null);
   useEffect(() => {
     setValue(propValue);
+    onChange();
   }, [propValue]);
 
-  return <MockComponent onSet={setValue} />;
+  return <div>{value}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{propValue: 'test'}],
+  params: [{propValue: 'test', onChange: () => {}}],
 };
 
 ```
@@ -33,14 +30,14 @@ Found 1 error:
 
 Error: Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
 
-error.derived-state-from-prop-setter-used-outside-effect-no-error.ts:11:4
-   9 |   const [value, setValue] = useState(null);
-  10 |   useEffect(() => {
-> 11 |     setValue(propValue);
+error.effect-contains-prop-function-call-no-error.ts:7:4
+   5 |   const [value, setValue] = useState(null);
+   6 |   useEffect(() => {
+>  7 |     setValue(propValue);
      |     ^^^^^^^^^^^^^^^^^^^ Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
-  12 |   }, [propValue]);
-  13 |
-  14 |   return <MockComponent onSet={setValue} />;
+   8 |     onChange();
+   9 |   }, [propValue]);
+  10 |
 ```
           
       

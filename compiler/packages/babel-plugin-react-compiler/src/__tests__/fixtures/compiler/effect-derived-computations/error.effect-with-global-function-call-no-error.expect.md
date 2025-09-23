@@ -34,7 +34,7 @@ error.effect-with-global-function-call-no-error.ts:7:4
    5 |   const [value, setValue] = useState(null);
    6 |   useEffect(() => {
 >  7 |     setValue(propValue);
-     |     ^^^^^^^^ Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
+     |     ^^^^^^^^^^^^^^^^^^^ Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
    8 |     globalCall();
    9 |   }, [propValue]);
   10 |
