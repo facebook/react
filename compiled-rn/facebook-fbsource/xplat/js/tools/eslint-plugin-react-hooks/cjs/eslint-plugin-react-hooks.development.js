@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<02a39bfef4a575dda5d671df1dd20818>>
+ * @generated SignedSource<<c0266966ef9e14f1b961f8403f9783ff>>
  */
 
 'use strict';
@@ -57360,8 +57360,8 @@ function getNodeWithoutReactNamespace(node) {
     }
     return node;
 }
-function isUseEffectIdentifier(node) {
-    return node.type === 'Identifier' && node.name === 'useEffect';
+function isEffectIdentifier(node) {
+    return node.type === 'Identifier' && (node.name === 'useEffect' || node.name === 'useLayoutEffect' || node.name === 'useInsertionEffect');
 }
 function isUseEffectEventIdentifier(node) {
     {
@@ -57661,7 +57661,7 @@ const rule = {
                     reactHooks.push(node.callee);
                 }
                 const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
-                if ((isUseEffectIdentifier(nodeWithoutNamespace) ||
+                if ((isEffectIdentifier(nodeWithoutNamespace) ||
                     isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
                     node.arguments.length > 0) {
                     lastEffect = node;

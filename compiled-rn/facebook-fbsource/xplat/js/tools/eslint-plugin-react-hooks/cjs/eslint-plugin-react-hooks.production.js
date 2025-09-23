@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<815a751adc2a53417f7afb7d2beeffaf>>
+ * @generated SignedSource<<ebcdf84d33b1a4be1c267e56fabfa82b>>
  */
 
 'use strict';
@@ -57139,8 +57139,8 @@ function getNodeWithoutReactNamespace(node) {
     }
     return node;
 }
-function isUseEffectIdentifier(node) {
-    return node.type === 'Identifier' && node.name === 'useEffect';
+function isEffectIdentifier(node) {
+    return node.type === 'Identifier' && (node.name === 'useEffect' || node.name === 'useLayoutEffect' || node.name === 'useInsertionEffect');
 }
 function isUseEffectEventIdentifier(node) {
     {
@@ -57440,7 +57440,7 @@ const rule = {
                     reactHooks.push(node.callee);
                 }
                 const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
-                if ((isUseEffectIdentifier(nodeWithoutNamespace) ||
+                if ((isEffectIdentifier(nodeWithoutNamespace) ||
                     isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
                     node.arguments.length > 0) {
                     lastEffect = node;
