@@ -78,6 +78,18 @@ const fetchFromNetworkCache = (url, resolve, reject) => {
   });
 };
 
+const pendingFetchRequests = new Set();
+function pendingFetchRequestsCleanup({payload, source}) {
+  if (source === 'react-devtools-background') {
+    switch (payload?.type) {
+      case 'fetch-file-with-cache-complete':
+      case 'fetch-file-with-cache-error':
+        pendingFetchRequests.delete(payload.url);
+    }
+  }
+}
+chrome.runtime.onMessage.addListener(pendingFetchRequestsCleanup);
+
 const fetchFromPage = async (url, resolve, reject) => {
   debugLog('[main] fetchFromPage()', url);
 
@@ -97,7 +109,11 @@ const fetchFromPage = async (url, resolve, reject) => {
   }
 
   chrome.runtime.onMessage.addListener(onPortMessage);
+  if (pendingFetchRequests.has(url)) {
+    return;
+  }
 
+  pendingFetchRequests.add(url);
   chrome.runtime.sendMessage({
     source: 'devtools-page',
     payload: {
