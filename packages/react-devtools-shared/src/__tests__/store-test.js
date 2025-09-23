@@ -2828,7 +2828,7 @@ describe('Store', () => {
       `);
   });
 
-  // @reactVersion >= 18.0
+  // @reactVersion >= 17.0
   it('can reconcile Suspense in fallback positions', async () => {
     let resolveFallback;
     const fallbackPromise = new Promise(resolve => {
@@ -2907,7 +2907,7 @@ describe('Store', () => {
     `);
   });
 
-  // @reactVersion >= 18.0
+  // @reactVersion >= 17.0
   it('can reconcile resuspended Suspense with Suspense in fallback positions', async () => {
     let resolveHeadFallback;
     let resolveHeadContent;
