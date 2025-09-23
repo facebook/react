@@ -981,20 +981,18 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       }
     }
 
-    if (__DEV__) {
-      if (isReactElementOrArrayLike(value)) {
-        const debugInfo = chunk._debugInfo.splice(0);
-        if (value._debugInfo) {
-          // $FlowFixMe[method-unbinding]
-          value._debugInfo.push.apply(value._debugInfo, debugInfo);
-        } else {
-          Object.defineProperty(value, '_debugInfo', {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: debugInfo,
-          });
-        }
+    if (__DEV__ && isReactElementOrArrayLike(value)) {
+      const debugInfo = chunk._debugInfo.splice(0);
+      if (value._debugInfo) {
+        // $FlowFixMe[method-unbinding]
+        value._debugInfo.push.apply(value._debugInfo, debugInfo);
+      } else {
+        Object.defineProperty(value, '_debugInfo', {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: debugInfo,
+        });
       }
     }
 
@@ -1185,7 +1183,7 @@ function initializeElement(
     initializeFakeStack(response, owner);
   }
 
-  if (lazyNode) {
+  if (lazyNode !== null) {
     // In case the JSX runtime has validated the lazy type as a static child, we
     // need to transfer this information to the element.
     if (
@@ -1196,7 +1194,7 @@ function initializeElement(
       element._store.validated = lazyNode._store.validated;
     }
 
-    if (lazyNode._payload.status === INITIALIZED) {
+    if (lazyNode._payload.status === INITIALIZED && lazyNode._debugInfo) {
       const debugInfo = lazyNode._debugInfo.splice(0);
       if (element._debugInfo) {
         // $FlowFixMe[method-unbinding]
@@ -1901,17 +1899,15 @@ function transferReferencedDebugInfo(
     // if the root is rendered as is.
     if (parentChunk !== null) {
       const referencedDebugInfo = referencedChunk._debugInfo;
-      if (referencedDebugInfo !== null) {
-        const parentDebugInfo = parentChunk._debugInfo;
-        for (let i = 0; i < referencedDebugInfo.length; ++i) {
-          const debugInfoEntry = referencedDebugInfo[i];
-          if (debugInfoEntry.name != null) {
-            (debugInfoEntry: ReactComponentInfo);
-            // We're not transferring Component info since we use Component info
-            // in Debug info to fill in gaps between Fibers for the parent stack.
-          } else {
-            parentDebugInfo.push(debugInfoEntry);
-          }
+      const parentDebugInfo = parentChunk._debugInfo;
+      for (let i = 0; i < referencedDebugInfo.length; ++i) {
+        const debugInfoEntry = referencedDebugInfo[i];
+        if (debugInfoEntry.name != null) {
+          (debugInfoEntry: ReactComponentInfo);
+          // We're not transferring Component info since we use Component info
+          // in Debug info to fill in gaps between Fibers for the parent stack.
+        } else {
+          parentDebugInfo.push(debugInfoEntry);
         }
       }
     }
@@ -2779,7 +2775,7 @@ function resolveChunkDebugInfo(
             value: debugInfo,
           });
         }
-      } else if (chunk._debugInfo !== null) {
+      } else {
         chunk._debugInfo.push(debugInfoEntry);
       }
     };
