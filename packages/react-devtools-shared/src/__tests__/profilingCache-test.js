@@ -725,14 +725,14 @@ describe('ProfilingCache', () => {
     const commitData = store.profilerStore.getDataForRoot(rootID).commitData;
     expect(commitData).toHaveLength(2);
 
-    const isLegacySuspense = React.version.startsWith('17');
-    if (isLegacySuspense) {
+    if (React.version.startsWith('17')) {
+      // React 17 will mount all children until it suspends in a LegacyHidden
+      // The ID gap is from the Fiber for <Async> that's in the disconnected tree.
       expect(commitData[0].fiberActualDurations).toMatchInlineSnapshot(`
         Map {
           1 => 15,
           2 => 15,
           3 => 5,
-          4 => 3,
           5 => 2,
         }
       `);
@@ -741,7 +741,6 @@ describe('ProfilingCache', () => {
           1 => 0,
           2 => 10,
           3 => 3,
-          4 => 3,
           5 => 2,
         }
       `);
