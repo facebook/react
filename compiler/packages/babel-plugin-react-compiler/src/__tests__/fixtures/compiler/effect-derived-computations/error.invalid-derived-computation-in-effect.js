@@ -6,7 +6,7 @@ function BadExample() {
   // 🔴 Avoid: redundant state and unnecessary Effect
   const [fullName, setFullName] = useState('');
   useEffect(() => {
-    setFullName(capitalize(firstName + ' ' + lastName));
+    setFullName(firstName + ' ' + lastName);
   }, [firstName, lastName]);
 
   return <div>{fullName}</div>;
