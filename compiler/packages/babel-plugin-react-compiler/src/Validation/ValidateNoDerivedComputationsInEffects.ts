@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect} from '..';
+import {CompilerDiagnostic, CompilerError, Effect} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
   BlockId,
@@ -18,6 +18,9 @@ import {
   CallExpression,
   Instruction,
   isUseStateType,
+  isUseRefType,
+  GeneratedSource,
+  SourceLocation,
 } from '../HIR';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
@@ -58,6 +61,10 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
 
   const derivationCache: Map<IdentifierId, DerivationMetadata> = new Map();
+  const setStateCache: Map<string | undefined | null, Array<Place>> = new Map();
+
+  const effects: Array<HIRFunction> = [];
+
   if (fn.fnType === 'Hook') {
     for (const param of fn.params) {
       if (param.kind === 'Identifier') {
@@ -126,11 +133,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
           ) {
             const effectFunction = functions.get(value.args[0].identifier.id);
             if (effectFunction != null) {
-              validateEffect(
-                effectFunction.loweredFunc.func,
-                errors,
-                derivationCache,
-              );
+              effects.push(effectFunction.loweredFunc.func);
             }
           } else if (isUseStateType(lvalue.identifier)) {
             const stateValueSource = value.args[0];
@@ -142,6 +145,25 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
         }
 
         for (const operand of eachInstructionOperand(instr)) {
+          // Record setState usages everywhere
+          switch (instr.value.kind) {
+            case 'JsxExpression':
+            case 'CallExpression':
+            case 'MethodCall':
+              if (
+                isSetStateType(operand.identifier) &&
+                operand.loc !== GeneratedSource
+              ) {
+                if (setStateCache.has(operand.loc.identifierName)) {
+                  setStateCache.get(operand.loc.identifierName)!.push(operand);
+                } else {
+                  setStateCache.set(operand.loc.identifierName, [operand]);
+                }
+              }
+              break;
+            default:
+          }
+
           const operandMetadata = derivationCache.get(operand.identifier.id);
 
           if (operandMetadata === undefined) {
@@ -210,6 +232,10 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     }
   }
 
+  for (const effect of effects) {
+    validateEffect(effect, errors, derivationCache, setStateCache);
+  }
+
   if (errors.hasAnyErrors()) {
     throw errors;
   }
@@ -267,14 +293,22 @@ function validateEffect(
   effectFunction: HIRFunction,
   errors: CompilerError,
   derivationCache: Map<IdentifierId, DerivationMetadata>,
+  setStateCache: Map<string | undefined | null, Array<Place>>,
 ): void {
+  const effectSetStateCache: Map<
+    string | undefined | null,
+    Array<Place>
+  > = new Map();
   const seenBlocks: Set<BlockId> = new Set();
 
   const effectDerivedSetStateCalls: Array<{
     value: CallExpression;
+    loc: SourceLocation;
     sourceIds: Set<IdentifierId>;
+    typeOfValue: TypeOfValue;
   }> = [];
 
+  const globals: Set<IdentifierId> = new Set();
   for (const block of effectFunction.body.blocks.values()) {
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
@@ -284,6 +318,33 @@ function validateEffect(
     }
 
     for (const instr of block.instructions) {
+      // Early return if any instruction is deriving a value from a ref
+      if (isUseRefType(instr.lvalue.identifier)) {
+        return;
+      }
+
+      for (const operand of eachInstructionOperand(instr)) {
+        switch (instr.value.kind) {
+          case 'JsxExpression':
+          case 'CallExpression':
+          case 'MethodCall':
+            if (
+              isSetStateType(operand.identifier) &&
+              operand.loc !== GeneratedSource
+            ) {
+              if (effectSetStateCache.has(operand.loc.identifierName)) {
+                effectSetStateCache
+                  .get(operand.loc.identifierName)!
+                  .push(operand);
+              } else {
+                effectSetStateCache.set(operand.loc.identifierName, [operand]);
+              }
+            }
+            break;
+          default:
+        }
+      }
+
       if (
         instr.value.kind === 'CallExpression' &&
         isSetStateType(instr.value.callee.identifier) &&
@@ -297,8 +358,33 @@ function validateEffect(
         if (argMetadata !== undefined) {
           effectDerivedSetStateCalls.push({
             value: instr.value,
+            loc: instr.value.callee.loc,
             sourceIds: argMetadata.sourcesIds,
+            typeOfValue: argMetadata.typeOfValue,
           });
+        }
+      } else if (instr.value.kind === 'CallExpression') {
+        const calleeMetadata = derivationCache.get(
+          instr.value.callee.identifier.id,
+        );
+
+        if (
+          calleeMetadata !== undefined &&
+          (calleeMetadata.typeOfValue === 'fromProps' ||
+            calleeMetadata.typeOfValue === 'fromPropsAndState')
+        ) {
+          // If the callee is a prop we can't confidently say that it should be derived in render
+          return;
+        }
+
+        if (globals.has(instr.value.callee.identifier.id)) {
+          // If the callee is a global we can't confidently say that it should be derived in render
+          return;
+        }
+      } else if (instr.value.kind === 'LoadGlobal') {
+        globals.add(instr.lvalue.identifier.id);
+        for (const operand of eachInstructionOperand(instr)) {
+          globals.add(operand.identifier.id);
         }
       }
     }
@@ -306,13 +392,44 @@ function validateEffect(
   }
 
   for (const derivedSetStateCall of effectDerivedSetStateCalls) {
-    errors.push({
-      category: ErrorCategory.EffectDerivationsOfState,
-      reason:
-        'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
-      description: null,
-      loc: derivedSetStateCall.value.loc,
-      suggestions: null,
-    });
+    if (
+      derivedSetStateCall.loc !== GeneratedSource &&
+      effectSetStateCache.has(derivedSetStateCall.loc.identifierName) &&
+      setStateCache.has(derivedSetStateCall.loc.identifierName) &&
+      effectSetStateCache.get(derivedSetStateCall.loc.identifierName)!
+        .length ===
+        setStateCache.get(derivedSetStateCall.loc.identifierName)!.length
+    ) {
+      const derivedDepsStr = Array.from(derivedSetStateCall.sourceIds)
+        .map(sourceId => {
+          const sourceMetadata = derivationCache.get(sourceId);
+          return sourceMetadata?.place.identifier.name?.value;
+        })
+        .filter(Boolean)
+        .join(', ');
+
+      let description;
+
+      if (derivedSetStateCall.typeOfValue === 'fromProps') {
+        description = `From props: [${derivedDepsStr}]`;
+      } else if (derivedSetStateCall.typeOfValue === 'fromState') {
+        description = `From local state: [${derivedDepsStr}]`;
+      } else {
+        description = `From props and local state: [${derivedDepsStr}]`;
+      }
+
+      errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          description: `Derived values (${description}) should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user`,
+          category: ErrorCategory.EffectDerivationsOfState,
+          reason:
+            'You might not need an effect. Derive values in render, not effects.',
+        }).withDetails({
+          kind: 'error',
+          loc: derivedSetStateCall.value.loc,
+          message: 'This should be computed during render, not in an effect',
+        }),
+      );
+    }
   }
 }
