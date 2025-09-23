@@ -1185,15 +1185,31 @@ function initializeElement(
     initializeFakeStack(response, owner);
   }
 
-  // In case the JSX runtime has validated the lazy type as a static child, we
-  // need to transfer this information to the element.
-  if (
-    lazyNode &&
-    lazyNode._store &&
-    lazyNode._store.validated &&
-    !element._store.validated
-  ) {
-    element._store.validated = lazyNode._store.validated;
+  if (lazyNode) {
+    // In case the JSX runtime has validated the lazy type as a static child, we
+    // need to transfer this information to the element.
+    if (
+      lazyNode._store &&
+      lazyNode._store.validated &&
+      !element._store.validated
+    ) {
+      element._store.validated = lazyNode._store.validated;
+    }
+
+    if (lazyNode._payload.status === INITIALIZED) {
+      const debugInfo = lazyNode._debugInfo.splice(0);
+      if (element._debugInfo) {
+        // $FlowFixMe[method-unbinding]
+        element._debugInfo.push.apply(element._debugInfo, debugInfo);
+      } else {
+        Object.defineProperty(element, '_debugInfo', {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: debugInfo,
+        });
+      }
+    }
   }
 
   // TODO: We should be freezing the element but currently, we might write into
