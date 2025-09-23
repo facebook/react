@@ -3,27 +3,21 @@
 
 ```javascript
 // @validateNoDerivedComputationsInEffects
-import {useEffect, useState} from 'react';
 
-function Component({initialName}) {
-  const [name, setName] = useState('');
+function Component({value}) {
+  const [localValue, setLocalValue] = useState('');
 
   useEffect(() => {
-    setName(initialName);
-  }, [initialName]);
+    setLocalValue(value);
+    document.title = `Value: ${value}`;
+  }, [value]);
 
-  return (
-    <div>
-      // 🟡 If the is also called outside of the effect, it's still wrong but
-      // should be solved by hoisting state
-      <input value={name} onChange={e => setName(e.target.value)} />
-    </div>
-  );
+  return <div>{localValue}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{initialName: 'John'}],
+  params: [{value: 'test'}],
 };
 
 ```
@@ -36,14 +30,14 @@ Found 1 error:
 
 Error: Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
 
-error.derived-state-from-prop-setter-call-outside-effect-no-error.ts:8:4
-   6 |
-   7 |   useEffect(() => {
->  8 |     setName(initialName);
+error.derived-state-from-prop-with-side-effect.ts:7:4
+   5 |
+   6 |   useEffect(() => {
+>  7 |     setLocalValue(value);
      |     ^^^^^^^^^^^^^^^^^^^^ Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
-   9 |   }, [initialName]);
+   8 |     document.title = `Value: ${value}`;
+   9 |   }, [value]);
   10 |
-  11 |   return (
 ```
           
       
