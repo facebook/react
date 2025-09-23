@@ -33,22 +33,29 @@ export default function ConfigEditor({
 }): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (isExpanded) {
-    return (
-      <ExpandedEditor
-        onToggle={() => {
-          startTransition(() => setIsExpanded(false));
-        }}
-        appliedOptions={appliedOptions}
-      />
-    );
-  } else {
-    return (
-      <CollapsedEditor
-        onToggle={() => startTransition(() => setIsExpanded(true))}
-      />
-    );
-  }
+  return (
+    <>
+      <div
+        style={{
+          display: isExpanded ? 'block' : 'none',
+        }}>
+        <ExpandedEditor
+          onToggle={() => {
+            startTransition(() => setIsExpanded(false));
+          }}
+          appliedOptions={appliedOptions}
+        />
+      </div>
+      <div
+        style={{
+          display: !isExpanded ? 'block' : 'none',
+        }}>
+        <CollapsedEditor
+          onToggle={() => startTransition(() => setIsExpanded(true))}
+        />
+      </div>
+    </>
+  );
 }
 
 function ExpandedEditor({
@@ -112,7 +119,7 @@ function ExpandedEditor({
     : 'Invalid configs';
 
   return (
-    <ViewTransition enter="slide-in-forward" exit="slide-out-back">
+    <ViewTransition update="slide-in-forward">
       <Resizable
         minWidth={300}
         maxWidth={600}

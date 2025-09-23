@@ -70,22 +70,12 @@
   }
 }
 
-::view-transition-old(.slide-out-back) {
-  animation-name: slideOutLeft;
-}
-
-::view-transition-new(.slide-out-back) {
-  animation-name: slideInLeft;
-}
-
 ::view-transition-old(.slide-in-forward) {
   animation-name: slideOutLeft;
 }
-
 ::view-transition-new(.slide-in-forward) {
   animation-name: slideInLeft;
 }
-
 
 @keyframes slideOutLeft {
   from {
@@ -95,7 +85,6 @@
     transform: translateX(-100%);
   }
 }
-
 @keyframes slideInLeft {
   from {
     transform: translateX(-100%);
@@ -104,7 +93,6 @@
     transform: translateX(0);
   }
 }
-
 @keyframes slideInRight {
   from {
     transform: translateX(100%);
