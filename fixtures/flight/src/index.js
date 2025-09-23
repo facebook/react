@@ -14,40 +14,6 @@ function findSourceMapURL(fileName) {
   );
 }
 
-function createDelayedStream(
-  stream: ReadableStream<Uint8Array>
-): ReadableStream<Uint8Array> {
-  return new ReadableStream({
-    async start(controller) {
-      const reader = stream.getReader();
-
-      try {
-        while (true) {
-          const {done, value} = await reader.read();
-          if (done) {
-            if (!controller.desiredSize === null) {
-              controller.close();
-            }
-            break;
-          } else {
-            // Artificially delay between enqueuing chunks.
-            await new Promise(resolve => setTimeout(resolve, 10));
-            if (controller.desiredSize !== null) {
-              controller.enqueue(value);
-            }
-          }
-        }
-      } catch (error) {
-        if (controller.desiredSize !== null) {
-          controller.error(error);
-        }
-      } finally {
-        reader.releaseLock();
-      }
-    },
-  });
-}
-
 async function createWebSocketStream(url) {
   const ws = new WebSocket(url);
   ws.binaryType = 'arraybuffer';
@@ -83,7 +49,7 @@ async function createWebSocketStream(url) {
     },
   });
 
-  return {readable: createDelayedStream(readable), writable};
+  return {readable, writable};
 }
 
 let updateRoot;
