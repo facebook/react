@@ -145,6 +145,8 @@ function SuspendedByRow({
     <div className={styles.CollapsableRow}>
       <Button
         className={styles.CollapsableHeader}
+        // TODO: May be better to leave to React's default Transition indicator.
+        // Though no apps implement this option at the moment.
         data-pending={openIsPending}
         onClick={() => {
           startOpenTransition(() => {
