@@ -22,6 +22,7 @@ import {
   includesTransitionLane,
   includesBlockingLane,
   includesSyncLane,
+  NoLanes,
 } from './ReactFiberLane';
 
 import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
@@ -87,6 +88,12 @@ export let transitionEventTime: number = -1.1; // Event timeStamp of the first t
 export let transitionEventType: null | string = null; // Event type of the first transition.
 export let transitionEventIsRepeat: boolean = false;
 export let transitionSuspendedTime: number = -1.1;
+
+export let retryClampTime: number = -0;
+export let idleClampTime: number = -0;
+
+export let animatingLanes: Lanes = NoLanes;
+export let animatingTask: null | ConsoleTask = null; // First ViewTransition applying an Animation.
 
 export let yieldReason: SuspendedReason = (0: any);
 export let yieldStartTime: number = -1.1; // The time when we yielded to the event loop
@@ -304,6 +311,20 @@ export function clampTransitionTimers(finalTime: number): void {
   // those update times to create overlapping tracks in the performance timeline so we clamp
   // them to the end of the commit phase.
   transitionClampTime = finalTime;
+}
+
+export function clampRetryTimers(finalTime: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  retryClampTime = finalTime;
+}
+
+export function clampIdleTimers(finalTime: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  idleClampTime = finalTime;
 }
 
 export function pushNestedEffectDurations(): number {
@@ -576,5 +597,21 @@ export function transferActualDuration(fiber: Fiber): void {
     // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
     fiber.actualDuration += child.actualDuration;
     child = child.sibling;
+  }
+}
+
+export function startAnimating(lanes: Lanes): void {
+  animatingLanes |= lanes;
+  animatingTask = null;
+}
+
+export function stopAnimating(lanes: Lanes): void {
+  animatingLanes &= ~lanes;
+  animatingTask = null;
+}
+
+export function trackAnimatingTask(task: ConsoleTask): void {
+  if (animatingTask === null) {
+    animatingTask = task;
   }
 }

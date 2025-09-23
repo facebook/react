@@ -79,7 +79,6 @@ import {
   logErroredRenderPhase,
   logInconsistentRender,
   logSuspendedWithDelayPhase,
-  logSuspenseThrottlePhase,
   logSuspendedCommitPhase,
   logSuspendedViewTransitionPhase,
   logCommitPhase,
@@ -103,6 +102,7 @@ import {
   startSuspendingCommit,
   suspendOnActiveViewTransition,
   waitForCommitToBeReady,
+  getSuspendedCommitReason,
   preloadInstance,
   preloadResource,
   supportsHydration,
@@ -179,6 +179,8 @@ import {
   includesOnlyTransitions,
   includesBlockingLane,
   includesTransitionLane,
+  includesRetryLane,
+  includesIdleGroupLanes,
   includesExpiredLane,
   getNextLanes,
   getEntangledLanes,
@@ -201,6 +203,9 @@ import {
   includesOnlyViewTransitionEligibleLanes,
   isGestureRender,
   GestureLane,
+  SomeTransitionLane,
+  SomeRetryLane,
+  IdleLane,
 } from './ReactFiberLane';
 import {
   DiscreteEventPriority,
@@ -292,6 +297,8 @@ import {
   clearTransitionTimers,
   clampBlockingTimers,
   clampTransitionTimers,
+  clampRetryTimers,
+  clampIdleTimers,
   markNestedUpdateScheduled,
   renderStartTime,
   commitStartTime,
@@ -312,6 +319,12 @@ import {
   resetCommitErrors,
   PINGED_UPDATE,
   SPAWNED_UPDATE,
+  startAnimating,
+  stopAnimating,
+  animatingLanes,
+  retryClampTime,
+  idleClampTime,
+  animatingTask,
 } from './ReactProfilerTimer';
 
 // DEV stuff
@@ -672,12 +685,10 @@ export function getRenderTargetTime(): number {
 
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
-type SuspendedCommitReason = 0 | 1 | 2;
-const IMMEDIATE_COMMIT = 0;
-const SUSPENDED_COMMIT = 1;
-const THROTTLED_COMMIT = 2;
+type SuspendedCommitReason = null | string;
 
 type DelayedCommitReason = 0 | 1 | 2 | 3;
+const IMMEDIATE_COMMIT = 0;
 const ABORTED_VIEW_TRANSITION_COMMIT = 1;
 const DELAYED_PASSIVE_COMMIT = 2;
 const ANIMATION_STARTED_COMMIT = 3;
@@ -703,7 +714,7 @@ let pendingViewTransitionEvents: Array<(types: Array<string>) => void> | null =
   null;
 let pendingTransitionTypes: null | TransitionTypes = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
-let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
+let pendingSuspendedCommitReason: SuspendedCommitReason = null; // Profiling-only
 let pendingDelayedCommitReason: DelayedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
 let pendingSuspendedViewTransitionReason: null | string = null; // Profiling-only
 
@@ -1391,7 +1402,7 @@ function finishConcurrentRender(
       workInProgressSuspendedRetryLanes,
       exitStatus,
       null,
-      IMMEDIATE_COMMIT,
+      null,
       renderStartTime,
       renderEndTime,
     );
@@ -1428,6 +1439,7 @@ function finishConcurrentRender(
         // immediately, wait for more data to arrive.
         // TODO: Combine retry throttling with Suspensey commits. Right now they
         // run one after the other.
+        pendingEffectsLanes = lanes;
         root.timeoutHandle = scheduleTimeout(
           commitRootWhenReady.bind(
             null,
@@ -1442,7 +1454,7 @@ function finishConcurrentRender(
             workInProgressSuspendedRetryLanes,
             workInProgressRootDidSkipSuspendedSiblings,
             exitStatus,
-            THROTTLED_COMMIT,
+            'Throttled',
             renderStartTime,
             renderEndTime,
           ),
@@ -1463,7 +1475,7 @@ function finishConcurrentRender(
       workInProgressSuspendedRetryLanes,
       workInProgressRootDidSkipSuspendedSiblings,
       exitStatus,
-      IMMEDIATE_COMMIT,
+      null,
       renderStartTime,
       renderEndTime,
     );
@@ -1541,6 +1553,7 @@ function commitRootWhenReady(
       // Not yet ready to commit. Delay the commit until the renderer notifies
       // us that it's ready. This will be canceled if we start work on the
       // root again.
+      pendingEffectsLanes = lanes;
       root.cancelPendingCommit = schedulePendingCommit(
         commitRoot.bind(
           null,
@@ -1555,7 +1568,9 @@ function commitRootWhenReady(
           suspendedRetryLanes,
           exitStatus,
           suspendedState,
-          SUSPENDED_COMMIT,
+          enableProfilerTimer
+            ? getSuspendedCommitReason(suspendedState, root.containerInfo)
+            : null,
           completedRenderStartTime,
           completedRenderEndTime,
         ),
@@ -1889,6 +1904,12 @@ function finalizeRender(lanes: Lanes, finalizationTime: number): void {
     if (includesTransitionLane(lanes)) {
       clampTransitionTimers(finalizationTime);
     }
+    if (includesRetryLane(lanes)) {
+      clampRetryTimers(finalizationTime);
+    }
+    if (includesIdleGroupLanes(lanes)) {
+      clampIdleTimers(finalizationTime);
+    }
   }
 }
 
@@ -1939,6 +1960,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       }
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
     }
+    const previousUpdateTask = workInProgressUpdateTask;
 
     workInProgressUpdateTask = null;
     if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
@@ -1951,18 +1973,30 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         blockingEventTime >= 0 && blockingEventTime < blockingClampTime
           ? blockingClampTime
           : blockingEventTime;
+      const clampedRenderStartTime = // Clamp the suspended time to the first event/update.
+        clampedEventTime >= 0
+          ? clampedEventTime
+          : clampedUpdateTime >= 0
+            ? clampedUpdateTime
+            : renderStartTime;
       if (blockingSuspendedTime >= 0) {
-        setCurrentTrackFromLanes(lanes);
+        setCurrentTrackFromLanes(SyncLane);
         logSuspendedWithDelayPhase(
           blockingSuspendedTime,
-          // Clamp the suspended time to the first event/update.
-          clampedEventTime >= 0
-            ? clampedEventTime
-            : clampedUpdateTime >= 0
-              ? clampedUpdateTime
-              : renderStartTime,
+          clampedRenderStartTime,
           lanes,
-          workInProgressUpdateTask,
+          previousUpdateTask,
+        );
+      } else if (
+        includesSyncLane(animatingLanes) ||
+        includesBlockingLane(animatingLanes)
+      ) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(SyncLane);
+        logAnimatingPhase(
+          blockingClampTime,
+          clampedRenderStartTime,
+          animatingTask,
         );
       }
       logBlockingStart(
@@ -1994,18 +2028,28 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         transitionEventTime >= 0 && transitionEventTime < transitionClampTime
           ? transitionClampTime
           : transitionEventTime;
+      const clampedRenderStartTime =
+        // Clamp the suspended time to the first event/update.
+        clampedEventTime >= 0
+          ? clampedEventTime
+          : clampedUpdateTime >= 0
+            ? clampedUpdateTime
+            : renderStartTime;
       if (transitionSuspendedTime >= 0) {
-        setCurrentTrackFromLanes(lanes);
+        setCurrentTrackFromLanes(SomeTransitionLane);
         logSuspendedWithDelayPhase(
           transitionSuspendedTime,
-          // Clamp the suspended time to the first event/update.
-          clampedEventTime >= 0
-            ? clampedEventTime
-            : clampedUpdateTime >= 0
-              ? clampedUpdateTime
-              : renderStartTime,
+          clampedRenderStartTime,
           lanes,
           workInProgressUpdateTask,
+        );
+      } else if (includesTransitionLane(animatingLanes)) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(SomeTransitionLane);
+        logAnimatingPhase(
+          transitionClampTime,
+          clampedRenderStartTime,
+          animatingTask,
         );
       }
       logTransitionStart(
@@ -2022,6 +2066,20 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       );
       clearTransitionTimers();
     }
+    if (includesRetryLane(lanes)) {
+      if (includesRetryLane(animatingLanes)) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(SomeRetryLane);
+        logAnimatingPhase(retryClampTime, renderStartTime, animatingTask);
+      }
+    }
+    if (includesIdleGroupLanes(lanes)) {
+      if (includesIdleGroupLanes(animatingLanes)) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(IdleLane);
+        logAnimatingPhase(idleClampTime, renderStartTime, animatingTask);
+      }
+    }
   }
 
   const timeoutHandle = root.timeoutHandle;
@@ -2037,6 +2095,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     root.cancelPendingCommit = null;
     cancelPendingCommit();
   }
+
+  pendingEffectsLanes = NoLanes;
 
   resetWorkInProgressStack();
   workInProgressRoot = root;
@@ -3458,7 +3518,7 @@ function commitRoot(
       recoverableErrors,
       suspendedState,
       enableProfilerTimer
-        ? suspendedCommitReason === IMMEDIATE_COMMIT
+        ? suspendedCommitReason === null
           ? completedRenderEndTime
           : commitStartTime
         : 0,
@@ -3530,16 +3590,11 @@ function commitRoot(
     resetCommitErrors();
     recordCommitTime();
     if (enableComponentPerformanceTrack) {
-      if (suspendedCommitReason === SUSPENDED_COMMIT) {
+      if (suspendedCommitReason !== null) {
         logSuspendedCommitPhase(
           completedRenderEndTime,
           commitStartTime,
-          workInProgressUpdateTask,
-        );
-      } else if (suspendedCommitReason === THROTTLED_COMMIT) {
-        logSuspenseThrottlePhase(
-          completedRenderEndTime,
-          commitStartTime,
+          suspendedCommitReason,
           workInProgressUpdateTask,
         );
       }
@@ -3597,6 +3652,9 @@ function commitRoot(
 
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
   if (enableViewTransition && willStartViewTransition) {
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      startAnimating(lanes);
+    }
     pendingViewTransition = startViewTransition(
       suspendedState,
       root.containerInfo,
@@ -3608,6 +3666,10 @@ function commitRoot(
       flushPassiveEffects,
       reportViewTransitionError,
       enableProfilerTimer ? suspendedViewTransition : (null: any),
+      enableProfilerTimer
+        ? // This callback fires after "pendingEffects" so we need to snapshot the arguments.
+          finishedViewTransition.bind(null, lanes)
+        : (null: any),
     );
   } else {
     // Flush synchronously.
@@ -3633,16 +3695,63 @@ function suspendedViewTransition(reason: string): void {
     // We'll split the commit into two phases, because we're suspended in the middle.
     recordCommitEndTime();
     logCommitPhase(
-      pendingSuspendedCommitReason === IMMEDIATE_COMMIT
+      pendingSuspendedCommitReason === null
         ? pendingEffectsRenderEndTime
         : commitStartTime,
       commitEndTime,
       commitErrors,
       pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
-      workInProgressUpdateTask,
+      workInProgressUpdateTask, // TODO: Use a ViewTransition Task and this is not safe to read in this phase.
     );
     pendingSuspendedViewTransitionReason = reason;
-    pendingSuspendedCommitReason = SUSPENDED_COMMIT;
+    pendingSuspendedCommitReason = reason;
+  }
+}
+
+function finishedViewTransition(lanes: Lanes): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if ((animatingLanes & lanes) === NoLanes) {
+      // Was already stopped by some other action or maybe other root.
+      return;
+    }
+    const task = animatingTask;
+    stopAnimating(lanes);
+    // If an affected track isn't in the middle of rendering or committing, log from the previous
+    // finished render until the end of the animation.
+    if (
+      (includesSyncLane(lanes) || includesBlockingLane(lanes)) &&
+      !includesSyncLane(workInProgressRootRenderLanes) &&
+      !includesBlockingLane(workInProgressRootRenderLanes) &&
+      !includesSyncLane(pendingEffectsLanes) &&
+      !includesBlockingLane(pendingEffectsLanes)
+    ) {
+      setCurrentTrackFromLanes(SyncLane);
+      logAnimatingPhase(blockingClampTime, now(), task);
+    }
+    if (
+      includesTransitionLane(lanes) &&
+      !includesTransitionLane(workInProgressRootRenderLanes) &&
+      !includesTransitionLane(pendingEffectsLanes)
+    ) {
+      setCurrentTrackFromLanes(SomeTransitionLane);
+      logAnimatingPhase(transitionClampTime, now(), task);
+    }
+    if (
+      includesRetryLane(lanes) &&
+      !includesRetryLane(workInProgressRootRenderLanes) &&
+      !includesRetryLane(pendingEffectsLanes)
+    ) {
+      setCurrentTrackFromLanes(SomeRetryLane);
+      logAnimatingPhase(retryClampTime, now(), task);
+    }
+    if (
+      includesIdleGroupLanes(lanes) &&
+      !includesIdleGroupLanes(workInProgressRootRenderLanes) &&
+      !includesIdleGroupLanes(pendingEffectsLanes)
+    ) {
+      setCurrentTrackFromLanes(IdleLane);
+      logAnimatingPhase(idleClampTime, now(), task);
+    }
   }
 }
 
@@ -3720,7 +3829,7 @@ function flushLayoutEffects(): void {
         commitEndTime, // The start is the end of the first commit part.
         commitStartTime, // The end is the start of the second commit part.
         suspendedViewTransitionReason,
-        workInProgressUpdateTask,
+        animatingTask,
       );
     }
   }
@@ -3792,9 +3901,7 @@ function flushLayoutEffects(): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     recordCommitEndTime();
     logCommitPhase(
-      suspendedCommitReason === IMMEDIATE_COMMIT
-        ? completedRenderEndTime
-        : commitStartTime,
+      suspendedCommitReason === null ? completedRenderEndTime : commitStartTime,
       commitEndTime,
       commitErrors,
       pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
@@ -3825,7 +3932,7 @@ function flushSpawnedWork(): void {
         startViewTransitionStartTime,
         commitEndTime,
         pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
-        workInProgressUpdateTask, // TODO: Use a ViewTransition Task.
+        animatingTask,
       );
       if (pendingDelayedCommitReason !== ABORTED_VIEW_TRANSITION_COMMIT) {
         pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT;
@@ -4327,11 +4434,7 @@ function flushPassiveEffectsImpl() {
     passiveEffectStartTime = now();
     if (pendingDelayedCommitReason === ANIMATION_STARTED_COMMIT) {
       // The animation was started, so we've been animating since that happened.
-      logAnimatingPhase(
-        commitEndTime,
-        passiveEffectStartTime,
-        workInProgressUpdateTask, // TODO: Use a ViewTransition Task
-      );
+      logAnimatingPhase(commitEndTime, passiveEffectStartTime, animatingTask);
     } else {
       logPaintYieldPhase(
         commitEndTime,

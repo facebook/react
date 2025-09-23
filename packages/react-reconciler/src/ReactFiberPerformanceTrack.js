@@ -1180,45 +1180,10 @@ export function logInconsistentRender(
   }
 }
 
-export function logSuspenseThrottlePhase(
-  startTime: number,
-  endTime: number,
-  debugTask: null | ConsoleTask,
-): void {
-  // This was inside a throttled Suspense boundary commit.
-  if (supportsUserTiming) {
-    if (endTime <= startTime) {
-      return;
-    }
-    if (__DEV__ && debugTask) {
-      debugTask.run(
-        // $FlowFixMe[method-unbinding]
-        console.timeStamp.bind(
-          console,
-          'Throttled',
-          startTime,
-          endTime,
-          currentTrack,
-          LANES_TRACK_GROUP,
-          'secondary-light',
-        ),
-      );
-    } else {
-      console.timeStamp(
-        'Throttled',
-        startTime,
-        endTime,
-        currentTrack,
-        LANES_TRACK_GROUP,
-        'secondary-light',
-      );
-    }
-  }
-}
-
 export function logSuspendedCommitPhase(
   startTime: number,
   endTime: number,
+  reason: string,
   debugTask: null | ConsoleTask,
 ): void {
   // This means the commit was suspended on CSS or images.
@@ -1233,7 +1198,7 @@ export function logSuspendedCommitPhase(
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
           console,
-          'Suspended on CSS or Images',
+          reason,
           startTime,
           endTime,
           currentTrack,
@@ -1243,7 +1208,7 @@ export function logSuspendedCommitPhase(
       );
     } else {
       console.timeStamp(
-        'Suspended on CSS or Images',
+        reason,
         startTime,
         endTime,
         currentTrack,
@@ -1493,7 +1458,7 @@ export function logAnimatingPhase(
           endTime,
           currentTrack,
           LANES_TRACK_GROUP,
-          'secondary',
+          'secondary-dark',
         ),
       );
     } else {
@@ -1503,7 +1468,7 @@ export function logAnimatingPhase(
         endTime,
         currentTrack,
         LANES_TRACK_GROUP,
-        'secondary',
+        'secondary-dark',
       );
     }
   }

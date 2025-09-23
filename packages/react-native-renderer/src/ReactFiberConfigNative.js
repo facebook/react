@@ -674,6 +674,7 @@ export function startViewTransition(
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
   blockedCallback: string => void, // Profiling-only
+  finishedAnimation: () => void, // Profiling-only
 ): null | RunningViewTransition {
   mutationCallback();
   layoutCallback();
@@ -803,6 +804,13 @@ export function waitForCommitToBeReady(
   state: SuspendedState,
   timeoutOffset: number,
 ): null {
+  return null;
+}
+
+export function getSuspendedCommitReason(
+  state: SuspendedState,
+  rootContainer: Container,
+): null | string {
   return null;
 }
 
