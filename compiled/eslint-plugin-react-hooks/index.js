@@ -57359,8 +57359,8 @@ function getNodeWithoutReactNamespace(node) {
     }
     return node;
 }
-function isUseEffectIdentifier(node) {
-    return node.type === 'Identifier' && node.name === 'useEffect';
+function isEffectIdentifier(node) {
+    return node.type === 'Identifier' && (node.name === 'useEffect' || node.name === 'useLayoutEffect' || node.name === 'useInsertionEffect');
 }
 function isUseEffectEventIdentifier(node) {
     {
@@ -57660,7 +57660,7 @@ const rule = {
                     reactHooks.push(node.callee);
                 }
                 const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
-                if ((isUseEffectIdentifier(nodeWithoutNamespace) ||
+                if ((isEffectIdentifier(nodeWithoutNamespace) ||
                     isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
                     node.arguments.length > 0) {
                     lastEffect = node;
