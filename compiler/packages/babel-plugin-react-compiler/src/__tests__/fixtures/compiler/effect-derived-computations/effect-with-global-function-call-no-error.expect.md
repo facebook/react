@@ -7,14 +7,9 @@ import {useEffect, useState} from 'react';
 
 function Component({propValue}) {
   const [value, setValue] = useState(null);
-
-  function localFunction() {
-    console.log('local function');
-  }
-
   useEffect(() => {
     setValue(propValue);
-    localFunction();
+    globalCall();
   }, [propValue]);
 
   return <div>{value}</div>;
@@ -34,44 +29,34 @@ import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputati
 import { useEffect, useState } from "react";
 
 function Component(t0) {
-  const $ = _c(6);
+  const $ = _c(5);
   const { propValue } = t0;
   const [value, setValue] = useState(null);
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = function localFunction() {
-      console.log("local function");
-    };
-    $[0] = t1;
-  } else {
-    t1 = $[0];
-  }
-  const localFunction = t1;
   let t2;
-  let t3;
-  if ($[1] !== propValue) {
-    t2 = () => {
+  if ($[0] !== propValue) {
+    t1 = () => {
       setValue(propValue);
-      localFunction();
+      globalCall();
     };
-    t3 = [propValue];
-    $[1] = propValue;
+    t2 = [propValue];
+    $[0] = propValue;
+    $[1] = t1;
     $[2] = t2;
-    $[3] = t3;
   } else {
+    t1 = $[1];
     t2 = $[2];
-    t3 = $[3];
   }
-  useEffect(t2, t3);
-  let t4;
-  if ($[4] !== value) {
-    t4 = <div>{value}</div>;
-    $[4] = value;
-    $[5] = t4;
+  useEffect(t1, t2);
+  let t3;
+  if ($[3] !== value) {
+    t3 = <div>{value}</div>;
+    $[3] = value;
+    $[4] = t3;
   } else {
-    t4 = $[5];
+    t3 = $[4];
   }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -82,5 +67,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>test</div>
-logs: ['local function']
+(kind: exception) globalCall is not defined
