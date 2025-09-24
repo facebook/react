@@ -35,10 +35,7 @@ export default function ConfigEditor({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-<<<<<<< HEAD
     // TODO: Use <Activity> when it is compatible with Monaco: https://github.com/suren-atoyan/monaco-react/issues/753
-=======
->>>>>>> refs/remotes/origin/playground-view-transitions2
     <>
       <div
         style={{
