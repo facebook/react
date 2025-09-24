@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ * testing testing
  */
 
 'use strict';
@@ -47,6 +48,7 @@ module.exports = function autoImporter(babel) {
         if (path.matchesPattern('Object.assign')) {
           const id = getAssignIdent(path, file, this);
           path.replaceWith(id);
+
         }
       },
     },
