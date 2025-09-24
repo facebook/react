@@ -3231,7 +3231,7 @@ module.exports = function ($$$config) {
       );
       if (null === workInProgressRoot) throw Error(formatProdErrorMessage(349));
       isHydrating$jscomp$0 ||
-        0 !== (renderLanes & 124) ||
+        0 !== (renderLanes & 127) ||
         pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
     }
     return getServerSnapshot;
@@ -10958,7 +10958,7 @@ module.exports = function ($$$config) {
     if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
     var shouldTimeSlice =
         (!forceSync &&
-          0 === (lanes & 124) &&
+          0 === (lanes & 127) &&
           0 === (lanes & root$jscomp$0.expiredLanes)) ||
         checkIfRootIsPrerendering(root$jscomp$0, lanes),
       exitStatus = shouldTimeSlice
@@ -13258,7 +13258,7 @@ module.exports = function ($$$config) {
           getServerSnapshot = getSnapshot();
           if (null === workInProgressRoot)
             throw Error(formatProdErrorMessage(349));
-          0 !== (workInProgressRootRenderLanes & 124) ||
+          0 !== (workInProgressRootRenderLanes & 127) ||
             pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
         }
         hook.memoizedState = getServerSnapshot;
@@ -13950,7 +13950,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-e02c173f-20250923"
+      reconcilerVersion: "19.2.0-www-modern-e0c421ab-20250924"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
