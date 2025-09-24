@@ -8,6 +8,7 @@ import React, {
   startTransition,
   useId,
   unstable_ViewTransition as ViewTransition,
+  unstable_addTransitionType as addTransitionType,
 } from 'react';
 import clsx from 'clsx';
 
@@ -23,8 +24,9 @@ export default function TabbedWindow({
   const id = useId();
   const transitionName = `tab-highlight-${id}`;
 
-  const handleTabChange = (tab: string) => {
+  const handleTabChange = (tab: string): void => {
     startTransition(() => {
+      addTransitionType('tab');
       onTabChange(tab);
     });
   };
@@ -43,11 +45,14 @@ export default function TabbedWindow({
                 isActive ? 'text-link' : 'hover:bg-primary/5',
               )}>
               {isActive && (
-                <ViewTransition name={transitionName} share="tab-highlight">
+                <ViewTransition
+                  name={transitionName}
+                  share={{tab: 'tab-highlight'}}
+                  update={{default: 'none'}}>
                   <div className="absolute inset-0 bg-highlight rounded-full" />
                 </ViewTransition>
               )}
-              <ViewTransition update="tab-text">
+              <ViewTransition update={{tab: 'tab-text', default: 'none'}}>
                 <span className="relative z-1">{tab}</span>
               </ViewTransition>
             </button>

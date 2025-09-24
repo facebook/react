@@ -347,7 +347,12 @@ export default function Editor(): JSX.Element {
           <ConfigEditor appliedOptions={appliedOptions} />
         </div>
 
-        <ViewTransition update="container">
+        <ViewTransition
+          update={{
+            'config-panel': 'container',
+            'show-internals': 'container',
+            default: 'none',
+          }}>
           <div className="flex flex-1 min-w-0">
             <div className="flex-1 min-w-[550px] sm:min-w-0">
               <Input language={language} errors={errors} />

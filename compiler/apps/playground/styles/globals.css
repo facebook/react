@@ -76,6 +76,9 @@
 ::view-transition-new(.slide-in-forward) {
   animation-name: slideInLeft;
 }
+::view-transition-group(.slide-in-forward) {
+  z-index: 1;
+}
 
 @keyframes slideOutLeft {
   from {

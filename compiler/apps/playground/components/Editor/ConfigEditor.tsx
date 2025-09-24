@@ -13,6 +13,7 @@ import React, {
   useState,
   useRef,
   unstable_ViewTransition as ViewTransition,
+  unstable_addTransitionType as addTransitionType,
   startTransition,
 } from 'react';
 import {Resizable} from 're-resizable';
@@ -41,7 +42,10 @@ export default function ConfigEditor({
         }}>
         <ExpandedEditor
           onToggle={() => {
-            startTransition(() => setIsExpanded(false));
+            startTransition(() => {
+              addTransitionType('config-panel');
+              setIsExpanded(false);
+            });
           }}
           appliedOptions={appliedOptions}
         />
@@ -51,7 +55,12 @@ export default function ConfigEditor({
           display: !isExpanded ? 'block' : 'none',
         }}>
         <CollapsedEditor
-          onToggle={() => startTransition(() => setIsExpanded(true))}
+          onToggle={() => {
+            startTransition(() => {
+              addTransitionType('config-panel');
+              setIsExpanded(true);
+            });
+          }}
         />
       </div>
     </>
@@ -119,7 +128,8 @@ function ExpandedEditor({
     : 'Invalid configs';
 
   return (
-    <ViewTransition update="slide-in-forward">
+    <ViewTransition
+      update={{'config-panel': 'slide-in-forward', default: 'none'}}>
       <Resizable
         minWidth={300}
         maxWidth={600}
