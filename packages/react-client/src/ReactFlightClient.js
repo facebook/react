@@ -518,7 +518,10 @@ function moveDebugInfoFromChunkToInnerValue<T>(
     const debugInfo = chunk._debugInfo.splice(0);
     if (isArray(resolvedValue._debugInfo)) {
       // $FlowFixMe[method-unbinding]
-      resolvedValue._debugInfo.push.apply(resolvedValue._debugInfo, debugInfo);
+      resolvedValue._debugInfo.unshift.apply(
+        resolvedValue._debugInfo,
+        debugInfo,
+      );
     } else {
       Object.defineProperty((resolvedValue: any), '_debugInfo', {
         configurable: false,
@@ -1213,7 +1216,7 @@ function initializeElement(
       const debugInfo = lazyNode._debugInfo.splice(0);
       if (element._debugInfo) {
         // $FlowFixMe[method-unbinding]
-        element._debugInfo.push.apply(element._debugInfo, debugInfo);
+        element._debugInfo.unshift.apply(element._debugInfo, debugInfo);
       } else {
         Object.defineProperty(element, '_debugInfo', {
           configurable: false,
