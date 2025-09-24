@@ -2762,6 +2762,33 @@ function incrementChunkDebugInfo(
   }
 }
 
+function addDebugInfo(chunk: SomeChunk<any>, debugInfo: ReactDebugInfo): void {
+  const value = resolveLazy(chunk.value);
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    (isArray(value) ||
+      typeof value[ASYNC_ITERATOR] === 'function' ||
+      value.$$typeof === REACT_ELEMENT_TYPE ||
+      value.$$typeof === REACT_LAZY_TYPE)
+  ) {
+    if (isArray(value._debugInfo)) {
+      // $FlowFixMe[method-unbinding]
+      value._debugInfo.push.apply(value._debugInfo, debugInfo);
+    } else {
+      Object.defineProperty((value: any), '_debugInfo', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: debugInfo,
+      });
+    }
+  } else {
+    // $FlowFixMe[method-unbinding]
+    chunk._debugInfo.push.apply(chunk._debugInfo, debugInfo);
+  }
+}
+
 function resolveChunkDebugInfo(
   streamState: StreamState,
   chunk: SomeChunk<any>,
@@ -2769,38 +2796,12 @@ function resolveChunkDebugInfo(
   if (__DEV__ && enableAsyncDebugInfo) {
     // Add the currently resolving chunk's debug info representing the stream
     // to the Promise that was waiting on the stream, or its underlying value.
-    const debugInfoEntry: ReactAsyncInfo = {awaited: streamState._debugInfo};
-
-    const addDebugInfo = () => {
-      const value = resolveLazy(chunk.value);
-      if (
-        typeof value === 'object' &&
-        value !== null &&
-        (isArray(value) ||
-          typeof value[ASYNC_ITERATOR] === 'function' ||
-          value.$$typeof === REACT_ELEMENT_TYPE)
-      ) {
-        const debugInfo: ReactDebugInfo = [debugInfoEntry];
-        if (isArray(value._debugInfo)) {
-          // $FlowFixMe[method-unbinding]
-          value._debugInfo.push.apply(value._debugInfo, debugInfo);
-        } else {
-          Object.defineProperty((value: any), '_debugInfo', {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: debugInfo,
-          });
-        }
-      } else {
-        chunk._debugInfo.push(debugInfoEntry);
-      }
-    };
-
+    const debugInfo: ReactDebugInfo = [{awaited: streamState._debugInfo}];
     if (chunk.status === PENDING || chunk.status === BLOCKED) {
-      chunk.then(addDebugInfo, addDebugInfo);
+      const boundAddDebugInfo = addDebugInfo.bind(null, chunk, debugInfo);
+      chunk.then(boundAddDebugInfo, boundAddDebugInfo);
     } else {
-      addDebugInfo();
+      addDebugInfo(chunk, debugInfo);
     }
   }
 }
