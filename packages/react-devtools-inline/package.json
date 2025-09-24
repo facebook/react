@@ -22,8 +22,8 @@
     "test:e2e": "playwright test --config=playwright.config.js"
   },
   "dependencies": {
-    "source-map-js": "^0.6.2",
-    "sourcemap-codec": "^1.4.8"
+    "@jridgewell/sourcemap-codec": "1.5.5",
+    "source-map-js": "^0.6.2"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
