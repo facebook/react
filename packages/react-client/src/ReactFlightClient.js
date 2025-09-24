@@ -515,16 +515,23 @@ function wakeChunk<T>(
 
   if (__DEV__ && chunk.status === INITIALIZED) {
     const resolvedValue = resolveLazy(value);
-    if (isReactElementOrArrayLike(resolvedValue) || isLazy(resolvedValue)) {
+    if (
+      typeof resolvedValue === 'object' &&
+      resolvedValue !== null &&
+      (isArray(resolvedValue) ||
+        typeof resolvedValue[ASYNC_ITERATOR] === 'function' ||
+        resolvedValue.$$typeof === REACT_ELEMENT_TYPE ||
+        resolvedValue.$$typeof === REACT_LAZY_TYPE)
+    ) {
       const debugInfo = chunk._debugInfo.splice(0);
-      if (resolvedValue._debugInfo) {
+      if (isArray(resolvedValue._debugInfo)) {
         // $FlowFixMe[method-unbinding]
         resolvedValue._debugInfo.push.apply(
           resolvedValue._debugInfo,
           debugInfo,
         );
       } else {
-        Object.defineProperty(resolvedValue, '_debugInfo', {
+        Object.defineProperty((resolvedValue: any), '_debugInfo', {
           configurable: false,
           enumerable: false,
           writable: true,
@@ -981,13 +988,20 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       }
     }
 
-    if (__DEV__ && isReactElementOrArrayLike(value)) {
+    if (
+      __DEV__ &&
+      typeof value === 'object' &&
+      value !== null &&
+      (isArray(value) ||
+        typeof value[ASYNC_ITERATOR] === 'function' ||
+        value.$$typeof === REACT_ELEMENT_TYPE)
+    ) {
       const debugInfo = chunk._debugInfo.splice(0);
-      if (value._debugInfo) {
+      if (isArray(value._debugInfo)) {
         // $FlowFixMe[method-unbinding]
         value._debugInfo.push.apply(value._debugInfo, debugInfo);
       } else {
-        Object.defineProperty(value, '_debugInfo', {
+        Object.defineProperty((value: any), '_debugInfo', {
           configurable: false,
           enumerable: false,
           writable: true,
@@ -1089,7 +1103,11 @@ function getTaskName(type: mixed): string {
     // the client. There should only be one for any given owner chain.
     return '"use client"';
   }
-  if (isLazy(type)) {
+  if (
+    typeof type === 'object' &&
+    type !== null &&
+    type.$$typeof === REACT_LAZY_TYPE
+  ) {
     if (type._init === readChunk) {
       // This is a lazy node created by Flight. It is probably a client reference.
       // We use the "use client" string to indicate that this is the boundary into
@@ -1385,7 +1403,11 @@ function fulfillReference(
   const {response, handler, parentObject, key, map, path} = reference;
 
   for (let i = 1; i < path.length; i++) {
-    while (isLazy(value)) {
+    while (
+      typeof value === 'object' &&
+      value !== null &&
+      value.$$typeof === REACT_LAZY_TYPE
+    ) {
       // We never expect to see a Lazy node on this path because we encode those as
       // separate models. This must mean that we have inserted an extra lazy node
       // e.g. to replace a blocked element. We must instead look for it inside.
@@ -1457,7 +1479,11 @@ function fulfillReference(
     value = value[path[i]];
   }
 
-  while (isLazy(value)) {
+  while (
+    typeof value === 'object' &&
+    value !== null &&
+    value.$$typeof === REACT_LAZY_TYPE
+  ) {
     // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
     // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
     const referencedChunk: SomeChunk<any> = value._payload;
@@ -1848,35 +1874,12 @@ function loadServerReference<A: Iterable<any>, T>(
   return (null: any);
 }
 
-function isReactElementOrArrayLike(
-  value: any,
-  // eslint-disable-next-line no-undef
-): value is {_debugInfo: null | ReactDebugInfo, ...} {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    (isArray(value) ||
-      typeof value[ASYNC_ITERATOR] === 'function' ||
-      value.$$typeof === REACT_ELEMENT_TYPE)
-  );
-}
-
-function isLazy(
-  value: any,
-  // eslint-disable-next-line no-undef
-): implies value is LazyComponent<
-  React$Element<any>,
-  SomeChunk<React$Element<any>>,
-> {
-  return (
+function resolveLazy(value: any): mixed {
+  while (
     typeof value === 'object' &&
     value !== null &&
     value.$$typeof === REACT_LAZY_TYPE
-  );
-}
-
-function resolveLazy(value: mixed): mixed {
-  while (isLazy(value)) {
+  ) {
     const payload: SomeChunk<any> = value._payload;
     if (payload.status === INITIALIZED) {
       value = payload.value;
@@ -1942,7 +1945,11 @@ function getOutlinedModel<T>(
     case INITIALIZED:
       let value = chunk.value;
       for (let i = 1; i < path.length; i++) {
-        while (isLazy(value)) {
+        while (
+          typeof value === 'object' &&
+          value !== null &&
+          value.$$typeof === REACT_LAZY_TYPE
+        ) {
           const referencedChunk: SomeChunk<any> = value._payload;
           switch (referencedChunk.status) {
             case RESOLVED_MODEL:
@@ -2012,7 +2019,11 @@ function getOutlinedModel<T>(
         value = value[path[i]];
       }
 
-      while (isLazy(value)) {
+      while (
+        typeof value === 'object' &&
+        value !== null &&
+        value.$$typeof === REACT_LAZY_TYPE
+      ) {
         // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
         // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
         const referencedChunk: SomeChunk<any> = value._payload;
@@ -2762,13 +2773,19 @@ function resolveChunkDebugInfo(
 
     const addDebugInfo = () => {
       const value = resolveLazy(chunk.value);
-      if (isReactElementOrArrayLike(value)) {
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        (isArray(value) ||
+          typeof value[ASYNC_ITERATOR] === 'function' ||
+          value.$$typeof === REACT_ELEMENT_TYPE)
+      ) {
         const debugInfo: ReactDebugInfo = [debugInfoEntry];
-        if (value._debugInfo) {
+        if (isArray(value._debugInfo)) {
           // $FlowFixMe[method-unbinding]
           value._debugInfo.push.apply(value._debugInfo, debugInfo);
         } else {
-          Object.defineProperty(value, '_debugInfo', {
+          Object.defineProperty((value: any), '_debugInfo', {
             configurable: false,
             enumerable: false,
             writable: true,
