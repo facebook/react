@@ -108,3 +108,11 @@
   object-fit: none;
   object-position: left;
 }
+
+::view-transition-old(.tab-highlight),
+::view-transition-new(.tab-highlight) {
+  height: 100%;
+}
+::view-transition-group(.tab-text) {
+	z-index: 1;
+}
