@@ -118,7 +118,6 @@
 }
 ::view-transition-old(.expand-accordion),
 ::view-transition-new(.expand-accordion) {
-  height: 100%;
   width: auto;
 }
 ::view-transition-group(.expand-accordion) {
