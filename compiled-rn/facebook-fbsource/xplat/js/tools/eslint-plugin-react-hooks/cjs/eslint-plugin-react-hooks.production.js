@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<e8880f7016080d2573cfd40778fd37fd>>
+ * @generated SignedSource<<11abba96d50bb5629c894f59b82b85ee>>
  */
 
 'use strict';
@@ -53435,7 +53435,18 @@ function addImportsToProgram(path, programContext) {
             maybeExistingImports.pushContainer('specifiers', importSpecifiers);
         }
         else {
-            stmts.push(libExports$1.importDeclaration(importSpecifiers, libExports$1.stringLiteral(moduleName)));
+            if (path.node.sourceType === 'module') {
+                stmts.push(libExports$1.importDeclaration(importSpecifiers, libExports$1.stringLiteral(moduleName)));
+            }
+            else {
+                stmts.push(libExports$1.variableDeclaration('const', [
+                    libExports$1.variableDeclarator(libExports$1.objectPattern(sortedImport.map(specifier => {
+                        return libExports$1.objectProperty(libExports$1.identifier(specifier.imported), libExports$1.identifier(specifier.name));
+                    })), libExports$1.callExpression(libExports$1.identifier('require'), [
+                        libExports$1.stringLiteral(moduleName),
+                    ])),
+                ]));
+            }
         }
     }
     path.unshiftContainer('body', stmts);
