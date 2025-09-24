@@ -29,13 +29,15 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Error: Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
+Error: You might not need an effect. Derive values in render, not effects.
+
+Derived values (From props: [input]) should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
 
 error.derived-state-from-default-props.ts:9:4
    7 |
    8 |   useEffect(() => {
 >  9 |     setCurrInput(input + localConst);
-     |     ^^^^^^^^^^^^ Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
+     |     ^^^^^^^^^^^^ This should be computed during render, not in an effect
   10 |   }, [input, localConst]);
   11 |
   12 |   return <div>{currInput}</div>;
