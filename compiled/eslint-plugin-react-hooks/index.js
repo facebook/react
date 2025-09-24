@@ -53655,7 +53655,18 @@ function addImportsToProgram(path, programContext) {
             maybeExistingImports.pushContainer('specifiers', importSpecifiers);
         }
         else {
-            stmts.push(libExports$1.importDeclaration(importSpecifiers, libExports$1.stringLiteral(moduleName)));
+            if (path.node.sourceType === 'module') {
+                stmts.push(libExports$1.importDeclaration(importSpecifiers, libExports$1.stringLiteral(moduleName)));
+            }
+            else {
+                stmts.push(libExports$1.variableDeclaration('const', [
+                    libExports$1.variableDeclarator(libExports$1.objectPattern(sortedImport.map(specifier => {
+                        return libExports$1.objectProperty(libExports$1.identifier(specifier.imported), libExports$1.identifier(specifier.name));
+                    })), libExports$1.callExpression(libExports$1.identifier('require'), [
+                        libExports$1.stringLiteral(moduleName),
+                    ])),
+                ]));
+            }
         }
     }
     path.unshiftContainer('body', stmts);
