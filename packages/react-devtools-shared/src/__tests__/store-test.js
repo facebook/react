@@ -3107,4 +3107,45 @@ describe('Store', () => {
     await actAsync(() => render(<span />));
     expect(store).toMatchInlineSnapshot(`[root]`);
   });
+
+  // @reactVersion >= 19.0
+  it('should reconcile promise-as-a-child', async () => {
+    function Component({children}) {
+      return <div>{children}</div>;
+    }
+
+    await actAsync(() =>
+      render(
+        <React.Suspense>
+          {Promise.resolve(<Component key="A">A</Component>)}
+        </React.Suspense>,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <Component key="A">
+      [suspense-root]  rects={[{x:1,y:2,width:1,height:1}]}
+        <Suspense name="Unknown" rects={[{x:1,y:2,width:1,height:1}]}>
+    `);
+
+    await actAsync(() =>
+      render(
+        <React.Suspense>
+          {Promise.resolve(<Component key="not-A">not A</Component>)}
+        </React.Suspense>,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <Component key="not-A">
+      [suspense-root]  rects={[{x:1,y:2,width:5,height:1}]}
+        <Suspense name="Unknown" rects={[{x:1,y:2,width:5,height:1}]}>
+    `);
+
+    await actAsync(() => render(null));
+    expect(store).toMatchInlineSnapshot(``);
+  });
 });
