@@ -19,8 +19,6 @@ describe('commit tree', () => {
   let Scheduler;
   let store: Store;
   let utils;
-  const isLegacySuspense =
-    React.version.startsWith('16') || React.version.startsWith('17');
 
   beforeEach(() => {
     utils = require('./utils');
@@ -186,24 +184,13 @@ describe('commit tree', () => {
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() => legacyRender(<App renderChildren={true} />));
       await Promise.resolve();
-      if (isLegacySuspense) {
-        expect(store).toMatchInlineSnapshot(`
-          [root]
-            ▾ <App>
-              ▾ <Suspense>
-                  <Lazy>
-          [suspense-root]  rects={null}
-            <Suspense name="App" rects={null}>
-        `);
-      } else {
-        expect(store).toMatchInlineSnapshot(`
-          [root]
-            ▾ <App>
-                <Suspense>
-          [suspense-root]  rects={null}
-            <Suspense name="App" rects={null}>
-        `);
-      }
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <App>
+              <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
+      `);
       utils.act(() => legacyRender(<App renderChildren={true} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
@@ -231,13 +218,7 @@ describe('commit tree', () => {
         );
       }
 
-      expect(commitTrees[0].nodes.size).toBe(
-        isLegacySuspense
-          ? // <Root> + <App> + <Suspense> + <Lazy>
-            4
-          : // <Root> + <App> + <Suspense>
-            3,
-      );
+      expect(commitTrees[0].nodes.size).toBe(3);
       expect(commitTrees[1].nodes.size).toBe(4); // <Root> + <App> + <Suspense> + <LazyInnerComponent>
       expect(commitTrees[2].nodes.size).toBe(2); // <Root> + <App>
     });
@@ -291,24 +272,13 @@ describe('commit tree', () => {
     it('should support Lazy components that are unmounted before resolving (legacy render)', async () => {
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() => legacyRender(<App renderChildren={true} />));
-      if (isLegacySuspense) {
-        expect(store).toMatchInlineSnapshot(`
-          [root]
-            ▾ <App>
-              ▾ <Suspense>
-                  <Lazy>
-          [suspense-root]  rects={null}
-            <Suspense name="App" rects={null}>
-        `);
-      } else {
-        expect(store).toMatchInlineSnapshot(`
-          [root]
-            ▾ <App>
-                <Suspense>
-          [suspense-root]  rects={null}
-            <Suspense name="App" rects={null}>
-        `);
-      }
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <App>
+              <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
+      `);
       utils.act(() => legacyRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
         [root]
@@ -327,13 +297,7 @@ describe('commit tree', () => {
         );
       }
 
-      expect(commitTrees[0].nodes.size).toBe(
-        isLegacySuspense
-          ? // <Root> + <App> + <Suspense> + <Lazy>
-            4
-          : // <Root> + <App> + <Suspense>
-            3,
-      );
+      expect(commitTrees[0].nodes.size).toBe(3);
       expect(commitTrees[1].nodes.size).toBe(2); // <Root> + <App>
     });
 

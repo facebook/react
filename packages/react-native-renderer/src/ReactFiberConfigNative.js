@@ -35,6 +35,8 @@ import {
 } from 'react-reconciler/src/ReactEventPriorities';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
 
@@ -680,6 +682,9 @@ export function startViewTransition(
   layoutCallback();
   // Skip afterMutationCallback(). We don't need it since we're not animating.
   spawnedWorkCallback();
+  if (enableProfilerTimer) {
+    finishedAnimation();
+  }
   // Skip passiveCallback(). Spawned work will schedule a task.
   return null;
 }
@@ -696,9 +701,13 @@ export function startGestureTransition(
   mutationCallback: () => void,
   animateCallback: () => void,
   errorCallback: mixed => void,
+  finishedAnimation: () => void, // Profiling-only
 ): null | RunningViewTransition {
   mutationCallback();
   animateCallback();
+  if (enableProfilerTimer) {
+    finishedAnimation();
+  }
   return null;
 }
 

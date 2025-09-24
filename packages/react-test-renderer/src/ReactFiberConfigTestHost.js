@@ -17,6 +17,7 @@ import {
   NoEventPriority,
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
 export const rendererPackageName = 'react-test-renderer';
@@ -446,9 +447,13 @@ export function startGestureTransition(
   mutationCallback: () => void,
   animateCallback: () => void,
   errorCallback: mixed => void,
+  finishedAnimation: () => void, // Profiling-only
 ): null | RunningViewTransition {
   mutationCallback();
   animateCallback();
+  if (enableProfilerTimer) {
+    finishedAnimation();
+  }
   return null;
 }
 
