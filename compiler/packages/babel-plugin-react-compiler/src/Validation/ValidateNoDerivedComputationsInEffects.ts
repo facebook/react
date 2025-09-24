@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect} from '..';
+import {CompilerDiagnostic, CompilerError, Effect} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
   BlockId,
@@ -305,6 +305,7 @@ function validateEffect(
     value: CallExpression;
     loc: SourceLocation;
     sourceIds: Set<IdentifierId>;
+    typeOfValue: TypeOfValue;
   }> = [];
 
   const globals: Set<IdentifierId> = new Set();
@@ -359,6 +360,7 @@ function validateEffect(
             value: instr.value,
             loc: instr.value.callee.loc,
             sourceIds: argMetadata.sourcesIds,
+            typeOfValue: argMetadata.typeOfValue,
           });
         }
       } else if (instr.value.kind === 'CallExpression') {
@@ -398,14 +400,36 @@ function validateEffect(
         .length ===
         setStateCache.get(derivedSetStateCall.loc.identifierName)!.length
     ) {
-      errors.push({
-        category: ErrorCategory.EffectDerivationsOfState,
-        reason:
-          'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
-        description: null,
-        loc: derivedSetStateCall.value.callee.loc,
-        suggestions: null,
-      });
+      const derivedDepsStr = Array.from(derivedSetStateCall.sourceIds)
+        .map(sourceId => {
+          const sourceMetadata = derivationCache.get(sourceId);
+          return sourceMetadata?.place.identifier.name?.value;
+        })
+        .filter(Boolean)
+        .join(', ');
+
+      let description;
+
+      if (derivedSetStateCall.typeOfValue === 'fromProps') {
+        description = `From props: [${derivedDepsStr}]`;
+      } else if (derivedSetStateCall.typeOfValue === 'fromState') {
+        description = `From local state: [${derivedDepsStr}]`;
+      } else {
+        description = `From props and local state: [${derivedDepsStr}]`;
+      }
+
+      errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          description: `Derived values (${description}) should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user`,
+          category: ErrorCategory.EffectDerivationsOfState,
+          reason:
+            'You might not need an effect. Derive values in render, not effects.',
+        }).withDetails({
+          kind: 'error',
+          loc: derivedSetStateCall.value.callee.loc,
+          message: 'This should be computed during render, not in an effect',
+        }),
+      );
     }
   }
 }
