@@ -499,6 +499,37 @@ function createErrorChunk<T>(
   return new ReactPromise(ERRORED, null, error);
 }
 
+function moveDebugInfoFromChunkToInnerValue<T>(
+  chunk: InitializedChunk<T>,
+  value: T,
+): void {
+  // Remove the debug info from the initialized chunk, and add it to the inner
+  // value instead. This can be a React element, an array, or an uninitialized
+  // Lazy.
+  const resolvedValue = resolveLazy(value);
+  if (
+    typeof resolvedValue === 'object' &&
+    resolvedValue !== null &&
+    (isArray(resolvedValue) ||
+      typeof resolvedValue[ASYNC_ITERATOR] === 'function' ||
+      resolvedValue.$$typeof === REACT_ELEMENT_TYPE ||
+      resolvedValue.$$typeof === REACT_LAZY_TYPE)
+  ) {
+    const debugInfo = chunk._debugInfo.splice(0);
+    if (isArray(resolvedValue._debugInfo)) {
+      // $FlowFixMe[method-unbinding]
+      resolvedValue._debugInfo.push.apply(resolvedValue._debugInfo, debugInfo);
+    } else {
+      Object.defineProperty((resolvedValue: any), '_debugInfo', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: debugInfo,
+      });
+    }
+  }
+}
+
 function wakeChunk<T>(
   listeners: Array<InitializationReference | (T => mixed)>,
   value: T,
@@ -514,34 +545,7 @@ function wakeChunk<T>(
   }
 
   if (__DEV__) {
-    // Remove the debug info from the initialized chunk, and add it to the inner
-    // value instead. This can be a React element, an array, or an uninitialized
-    // Lazy.
-    const resolvedValue = resolveLazy(value);
-    if (
-      typeof resolvedValue === 'object' &&
-      resolvedValue !== null &&
-      (isArray(resolvedValue) ||
-        typeof resolvedValue[ASYNC_ITERATOR] === 'function' ||
-        resolvedValue.$$typeof === REACT_ELEMENT_TYPE ||
-        resolvedValue.$$typeof === REACT_LAZY_TYPE)
-    ) {
-      const debugInfo = chunk._debugInfo.splice(0);
-      if (isArray(resolvedValue._debugInfo)) {
-        // $FlowFixMe[method-unbinding]
-        resolvedValue._debugInfo.push.apply(
-          resolvedValue._debugInfo,
-          debugInfo,
-        );
-      } else {
-        Object.defineProperty((resolvedValue: any), '_debugInfo', {
-          configurable: false,
-          enumerable: false,
-          writable: true,
-          value: debugInfo,
-        });
-      }
-    }
+    moveDebugInfoFromChunkToInnerValue(chunk, value);
   }
 }
 
@@ -997,41 +1001,13 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
         return;
       }
     }
-
-    if (__DEV__) {
-      // Remove the debug info from the initialized chunk, and add it to the
-      // inner value instead. This can be a React element, an array, or an
-      // uninitialized Lazy.
-      const resolvedValue = resolveLazy(value);
-      if (
-        typeof resolvedValue === 'object' &&
-        resolvedValue !== null &&
-        (isArray(resolvedValue) ||
-          typeof resolvedValue[ASYNC_ITERATOR] === 'function' ||
-          resolvedValue.$$typeof === REACT_ELEMENT_TYPE ||
-          resolvedValue.$$typeof === REACT_LAZY_TYPE)
-      ) {
-        const debugInfo = chunk._debugInfo.splice(0);
-        if (isArray(resolvedValue._debugInfo)) {
-          // $FlowFixMe[method-unbinding]
-          resolvedValue._debugInfo.push.apply(
-            resolvedValue._debugInfo,
-            debugInfo,
-          );
-        } else {
-          Object.defineProperty((resolvedValue: any), '_debugInfo', {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: debugInfo,
-          });
-        }
-      }
-    }
-
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
+
+    if (__DEV__) {
+      moveDebugInfoFromChunkToInnerValue(initializedChunk, value);
+    }
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
@@ -1231,6 +1207,8 @@ function initializeElement(
       element._store.validated = lazyNode._store.validated;
     }
 
+    // If the lazy node is initialized, we move its debug info to the inner
+    // value.
     if (lazyNode._payload.status === INITIALIZED && lazyNode._debugInfo) {
       const debugInfo = lazyNode._debugInfo.splice(0);
       if (element._debugInfo) {
