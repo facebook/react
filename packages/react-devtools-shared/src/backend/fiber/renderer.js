@@ -2886,9 +2886,16 @@ export function attach(
     previousSuspendedBy: null | Array<ReactAsyncInfo>,
     parentSuspenseNode: null | SuspenseNode,
   ): void {
-    // Remove any async info from the parent, if they were in the previous set but
+    // Remove any async info if they were in the previous set but
     // is no longer in the new set.
-    if (previousSuspendedBy !== null && parentSuspenseNode !== null) {
+    // If we just reconciled a SuspenseNode, we need to remove from that node instead of the parent.
+    // This is different from inserting because inserting is done during reconiliation
+    // whereas removal is done after we're done reconciling.
+    const suspenseNode =
+      instance.suspenseNode === null
+        ? parentSuspenseNode
+        : instance.suspenseNode;
+    if (previousSuspendedBy !== null && suspenseNode !== null) {
       const nextSuspendedBy = instance.suspendedBy;
       for (let i = 0; i < previousSuspendedBy.length; i++) {
         const asyncInfo = previousSuspendedBy[i];
@@ -2901,7 +2908,7 @@ export function attach(
           // This IO entry is no longer blocking the current tree.
           // Let's remove it from the parent SuspenseNode.
           const ioInfo = asyncInfo.awaited;
-          const suspendedBySet = parentSuspenseNode.suspendedBy.get(ioInfo);
+          const suspendedBySet = suspenseNode.suspendedBy.get(ioInfo);
 
           if (
             suspendedBySet === undefined ||
@@ -2928,16 +2935,16 @@ export function attach(
             }
           }
           if (suspendedBySet !== undefined && suspendedBySet.size === 0) {
-            parentSuspenseNode.suspendedBy.delete(asyncInfo.awaited);
+            suspenseNode.suspendedBy.delete(asyncInfo.awaited);
           }
           if (
-            parentSuspenseNode.hasUniqueSuspenders &&
-            !ioExistsInSuspenseAncestor(parentSuspenseNode, ioInfo)
+            suspenseNode.hasUniqueSuspenders &&
+            !ioExistsInSuspenseAncestor(suspenseNode, ioInfo)
           ) {
             // This entry wasn't in any ancestor and is no longer in this suspense boundary.
             // This means that a child might now be the unique suspender for this IO.
             // Search the child boundaries to see if we can reveal any of them.
-            unblockSuspendedBy(parentSuspenseNode, ioInfo);
+            unblockSuspendedBy(suspenseNode, ioInfo);
           }
         }
       }
