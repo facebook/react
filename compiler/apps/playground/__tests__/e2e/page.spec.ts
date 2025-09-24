@@ -23,7 +23,8 @@ function formatPrint(data: Array<string>): Promise<string> {
 
 async function expandConfigs(page: Page): Promise<void> {
   const expandButton = page.locator('[title="Expand config editor"]');
-  expandButton.click();
+  await expandButton.click();
+  await page.waitForSelector('.monaco-editor-config', {state: 'visible'});
 }
 
 const TEST_SOURCE = `export default function TestComponent({ x }) {
