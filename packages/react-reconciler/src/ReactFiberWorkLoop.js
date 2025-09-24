@@ -284,7 +284,6 @@ import {
   blockingEventIsRepeat,
   blockingSuspendedTime,
   gestureClampTime,
-  gestureStartTime,
   gestureUpdateTime,
   gestureUpdateTask,
   gestureUpdateType,
@@ -307,6 +306,7 @@ import {
   transitionSuspendedTime,
   clearBlockingTimers,
   clearGestureTimers,
+  clearGestureUpdates,
   clearTransitionTimers,
   clampBlockingTimers,
   clampGestureTimers,
@@ -1981,10 +1981,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     workInProgressUpdateTask = null;
     if (isGestureRender(lanes)) {
       workInProgressUpdateTask = gestureUpdateTask;
-      const clampedStartTime =
-        gestureStartTime >= 0 && gestureStartTime < gestureClampTime
-          ? gestureClampTime
-          : gestureStartTime;
       const clampedUpdateTime =
         gestureUpdateTime >= 0 && gestureUpdateTime < gestureClampTime
           ? gestureClampTime
@@ -2018,7 +2014,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         );
       }
       logGestureStart(
-        clampedStartTime,
         clampedUpdateTime,
         clampedEventTime,
         gestureEventType,
@@ -2054,7 +2049,10 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
           lanes,
           previousUpdateTask,
         );
-      } else if (includesBlockingLane(animatingLanes)) {
+      } else if (
+        !isGestureRender(animatingLanes) &&
+        includesBlockingLane(animatingLanes)
+      ) {
         // If this lane is still animating, log the time from previous render finishing to now as animating.
         setCurrentTrackFromLanes(SyncLane);
         logAnimatingPhase(
@@ -3528,6 +3526,11 @@ function commitRoot(
     // Gestures don't clear their lanes while the gesture is still active but it
     // might not be scheduled to do any more renders and so we shouldn't schedule
     // any more gesture lane work until a new gesture is scheduled.
+    if (enableProfilerTimer && (remainingLanes & GestureLane) !== NoLanes) {
+      // We need to clear any updates scheduled so that we can treat future updates
+      // as the cause of the render.
+      clearGestureUpdates();
+    }
     remainingLanes &= ~GestureLane;
   }
 
@@ -4251,6 +4254,10 @@ function commitGestureOnRoot(
   }
   deleteScheduledGesture(root, finishedGesture);
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    startAnimating(pendingEffectsLanes);
+  }
+
   const prevTransition = ReactSharedInternals.T;
   ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
@@ -4278,6 +4285,10 @@ function commitGestureOnRoot(
     flushGestureMutations,
     flushGestureAnimations,
     reportViewTransitionError,
+    enableProfilerTimer
+      ? // This callback fires after "pendingEffects" so we need to snapshot the arguments.
+        finishedViewTransition.bind(null, pendingEffectsLanes)
+      : (null: any),
   );
 }
 
@@ -4320,6 +4331,23 @@ function flushGestureAnimations(): void {
   if (pendingEffectsStatus !== PENDING_GESTURE_ANIMATION_PHASE) {
     return;
   }
+
+  const lanes = pendingEffectsLanes;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Update the new commitEndTime to when we started the animation.
+    recordCommitEndTime();
+    logStartViewTransitionYieldPhase(
+      pendingEffectsRenderEndTime,
+      commitEndTime,
+      pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
+      animatingTask,
+    );
+    if (pendingDelayedCommitReason !== ABORTED_VIEW_TRANSITION_COMMIT) {
+      pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT;
+    }
+  }
+
   pendingEffectsStatus = NO_PENDING_EFFECTS;
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
@@ -4342,6 +4370,10 @@ function flushGestureAnimations(): void {
     executionContext = prevExecutionContext;
     setCurrentUpdatePriority(previousPriority);
     ReactSharedInternals.T = prevTransition;
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    finalizeRender(lanes, commitEndTime);
   }
 
   // Now that we've rendered this lane. Start working on the next lane.

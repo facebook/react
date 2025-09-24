@@ -2320,6 +2320,9 @@ export function startViewTransition(
     mutationCallback();
     layoutCallback();
     // Skip afterMutationCallback(). We don't need it since we're not animating.
+    if (enableProfilerTimer) {
+      finishedAnimation();
+    }
     spawnedWorkCallback();
     // Skip passiveCallback(). Spawned work will schedule a task.
     return null;
@@ -2509,6 +2512,7 @@ export function startGestureTransition(
   mutationCallback: () => void,
   animateCallback: () => void,
   errorCallback: mixed => void,
+  finishedAnimation: () => void, // Profiling-only
 ): null | RunningViewTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
@@ -2723,6 +2727,12 @@ export function startGestureTransition(
         // $FlowFixMe[prop-missing]
         ownerDocument.__reactViewTransition = null;
       }
+      if (enableProfilerTimer) {
+        // Signal that the Transition was unable to continue. We do that here
+        // instead of when we stop the running View Transition to ensure that
+        // we cover cases when something else stops it early.
+        finishedAnimation();
+      }
     });
     return transition;
   } catch (x) {
@@ -2735,6 +2745,9 @@ export function startGestureTransition(
     // Run through the sequence to put state back into a consistent state.
     mutationCallback();
     animateCallback();
+    if (enableProfilerTimer) {
+      finishedAnimation();
+    }
     return null;
   }
 }

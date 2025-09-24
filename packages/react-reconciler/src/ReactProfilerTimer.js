@@ -77,7 +77,6 @@ export let blockingEventIsRepeat: boolean = false;
 export let blockingSuspendedTime: number = -1.1;
 
 export let gestureClampTime: number = -0;
-export let gestureStartTime: number = -1.1; // First startGestureTransition call before setOptimistic.
 export let gestureUpdateTime: number = -1.1; // First setOptimistic scheduled inside startGestureTransition.
 export let gestureUpdateTask: null | ConsoleTask = null; // First sync setState's stack trace.
 export let gestureUpdateType: UpdateType = 0;
@@ -134,18 +133,16 @@ export function startUpdateTimerByLane(
       if (__DEV__ && fiber != null) {
         gestureUpdateComponentName = getComponentNameFromFiber(fiber);
       }
-      if (gestureStartTime < 0) {
-        const newEventTime = resolveEventTimeStamp();
-        const newEventType = resolveEventType();
-        if (
-          newEventTime !== gestureEventTime ||
-          newEventType !== gestureEventType
-        ) {
-          gestureEventIsRepeat = false;
-        }
-        gestureEventTime = newEventTime;
-        gestureEventType = newEventType;
+      const newEventTime = resolveEventTimeStamp();
+      const newEventType = resolveEventType();
+      if (
+        newEventTime !== gestureEventTime ||
+        newEventType !== gestureEventType
+      ) {
+        gestureEventIsRepeat = false;
       }
+      gestureEventTime = newEventTime;
+      gestureEventType = newEventType;
     }
   } else if (isBlockingLane(lane)) {
     if (blockingUpdateTime < 0) {
@@ -334,41 +331,26 @@ export function clearTransitionTimers(): void {
   transitionClampTime = now();
 }
 
-export function startGestureTransitionTimer(): void {
-  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
-    return;
-  }
-  if (gestureStartTime < 0 && gestureUpdateTime < 0) {
-    gestureStartTime = now();
-    const newEventTime = resolveEventTimeStamp();
-    const newEventType = resolveEventType();
-    if (
-      newEventTime !== gestureEventTime ||
-      newEventType !== gestureEventType
-    ) {
-      gestureEventIsRepeat = false;
-    }
-    gestureEventTime = newEventTime;
-    gestureEventType = newEventType;
-  }
-}
-
 export function hasScheduledGestureTransitionWork(): boolean {
   // If we have call setOptimistic on a gesture
   return gestureUpdateTime > -1;
 }
 
-export function clearGestureTransitionTimer(): void {
-  gestureStartTime = -1.1;
-}
-
 export function clearGestureTimers(): void {
-  gestureStartTime = -1.1;
   gestureUpdateTime = -1.1;
   gestureUpdateType = 0;
   gestureSuspendedTime = -1.1;
   gestureEventIsRepeat = true;
   gestureClampTime = now();
+}
+
+export function clearGestureUpdates(): void {
+  // Same as clearGestureTimers but doesn't reset the clamp time because we didn't
+  // actually emit a render.
+  gestureUpdateTime = -1.1;
+  gestureUpdateType = 0;
+  gestureSuspendedTime = -1.1;
+  gestureEventIsRepeat = true;
 }
 
 export function clampBlockingTimers(finalTime: number): void {
