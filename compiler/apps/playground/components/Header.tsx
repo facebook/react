@@ -10,7 +10,11 @@ import {CheckIcon} from '@heroicons/react/solid';
 import clsx from 'clsx';
 import Link from 'next/link';
 import {useSnackbar} from 'notistack';
-import {useState, startTransition} from 'react';
+import {
+  useState,
+  startTransition,
+  unstable_addTransitionType as addTransitionType,
+} from 'react';
 import {defaultStore} from '../lib/defaultStore';
 import {IconGitHub} from './Icons/IconGitHub';
 import Logo from './Logo';
@@ -63,7 +67,10 @@ export default function Header(): JSX.Element {
               type="checkbox"
               checked={store.showInternals}
               onChange={() =>
-                startTransition(() => dispatchStore({type: 'toggleInternals'}))
+                startTransition(() => {
+                  addTransitionType('show-internals');
+                  dispatchStore({type: 'toggleInternals'});
+                })
               }
               className="absolute opacity-0 cursor-pointer h-full w-full m-0"
             />
