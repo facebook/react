@@ -502,7 +502,7 @@ function createErrorChunk<T>(
 function wakeChunk<T>(
   listeners: Array<InitializationReference | (T => mixed)>,
   value: T,
-  chunk: SomeChunk<T>,
+  chunk: InitializedChunk<T>,
 ): void {
   for (let i = 0; i < listeners.length; i++) {
     const listener = listeners[i];
@@ -513,7 +513,10 @@ function wakeChunk<T>(
     }
   }
 
-  if (__DEV__ && chunk.status === INITIALIZED) {
+  if (__DEV__) {
+    // Remove the debug info from the initialized chunk, and add it to the inner
+    // value instead. This can be a React element, an array, or an uninitialized
+    // Lazy.
     const resolvedValue = resolveLazy(value);
     if (
       typeof resolvedValue === 'object' &&
@@ -973,7 +976,14 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     if (resolveListeners !== null) {
       cyclicChunk.value = null;
       cyclicChunk.reason = null;
-      wakeChunk(resolveListeners, value, cyclicChunk);
+      for (let i = 0; i < resolveListeners.length; i++) {
+        const listener = resolveListeners[i];
+        if (typeof listener === 'function') {
+          listener(value);
+        } else {
+          fulfillReference(listener, value, cyclicChunk);
+        }
+      }
     }
     if (initializingHandler !== null) {
       if (initializingHandler.errored) {
@@ -988,25 +998,34 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       }
     }
 
-    if (
-      __DEV__ &&
-      typeof value === 'object' &&
-      value !== null &&
-      (isArray(value) ||
-        typeof value[ASYNC_ITERATOR] === 'function' ||
-        value.$$typeof === REACT_ELEMENT_TYPE)
-    ) {
-      const debugInfo = chunk._debugInfo.splice(0);
-      if (isArray(value._debugInfo)) {
-        // $FlowFixMe[method-unbinding]
-        value._debugInfo.push.apply(value._debugInfo, debugInfo);
-      } else {
-        Object.defineProperty((value: any), '_debugInfo', {
-          configurable: false,
-          enumerable: false,
-          writable: true,
-          value: debugInfo,
-        });
+    if (__DEV__) {
+      // Remove the debug info from the initialized chunk, and add it to the
+      // inner value instead. This can be a React element, an array, or an
+      // uninitialized Lazy.
+      const resolvedValue = resolveLazy(value);
+      if (
+        typeof resolvedValue === 'object' &&
+        resolvedValue !== null &&
+        (isArray(resolvedValue) ||
+          typeof resolvedValue[ASYNC_ITERATOR] === 'function' ||
+          resolvedValue.$$typeof === REACT_ELEMENT_TYPE ||
+          resolvedValue.$$typeof === REACT_LAZY_TYPE)
+      ) {
+        const debugInfo = chunk._debugInfo.splice(0);
+        if (isArray(resolvedValue._debugInfo)) {
+          // $FlowFixMe[method-unbinding]
+          resolvedValue._debugInfo.push.apply(
+            resolvedValue._debugInfo,
+            debugInfo,
+          );
+        } else {
+          Object.defineProperty((resolvedValue: any), '_debugInfo', {
+            configurable: false,
+            enumerable: false,
+            writable: true,
+            value: debugInfo,
+          });
+        }
       }
     }
 
@@ -3032,7 +3051,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   resolvedChunk.value = stream;
   resolvedChunk.reason = controller;
   if (resolveListeners !== null) {
-    wakeChunk(resolveListeners, chunk.value, chunk);
+    wakeChunk(resolveListeners, chunk.value, (chunk: any));
   }
 }
 
