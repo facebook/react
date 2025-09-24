@@ -283,6 +283,7 @@ function validateEffect(
     sourceIds: Set<IdentifierId>;
   }> = [];
 
+  const globals: Set<IdentifierId> = new Set();
   for (const block of effectFunction.body.blocks.values()) {
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
@@ -325,6 +326,16 @@ function validateEffect(
         ) {
           // If the callee is a prop we can't confidently say that it should be derived in render
           return;
+        }
+
+        if (globals.has(instr.value.callee.identifier.id)) {
+          // If the callee is a global we can't confidently say that it should be derived in render
+          return;
+        }
+      } else if (instr.value.kind === 'LoadGlobal') {
+        globals.add(instr.lvalue.identifier.id);
+        for (const operand of eachInstructionOperand(instr)) {
+          globals.add(operand.identifier.id);
         }
       }
     }
