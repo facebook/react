@@ -307,6 +307,19 @@ function validateEffect(
             sourceIds: argMetadata.sourcesIds,
           });
         }
+      } else if (instr.value.kind === 'CallExpression') {
+        const calleeMetadata = derivationCache.get(
+          instr.value.callee.identifier.id,
+        );
+
+        if (
+          calleeMetadata !== undefined &&
+          (calleeMetadata.typeOfValue === 'fromProps' ||
+            calleeMetadata.typeOfValue === 'fromPropsAndState')
+        ) {
+          // If the callee is a prop we can't confidently say that it should be derived in render
+          return;
+        }
       }
     }
     seenBlocks.add(block.id);
