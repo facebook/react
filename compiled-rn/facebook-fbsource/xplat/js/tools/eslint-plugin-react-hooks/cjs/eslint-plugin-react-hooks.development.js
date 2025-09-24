@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<c0266966ef9e14f1b961f8403f9783ff>>
+ * @generated SignedSource<<2df76a4160677a7f3ed7e97e33db62da>>
  */
 
 'use strict';
@@ -51992,7 +51992,7 @@ function nameAnonymousFunctions(fn) {
     const functions = nameAnonymousFunctionsImpl(fn);
     function visit(node, prefix) {
         var _a, _b;
-        if (node.generatedName != null) {
+        if (node.generatedName != null && node.fn.nameHint == null) {
             const name = `${prefix}${node.generatedName}]`;
             node.fn.nameHint = name;
             node.fn.loweredFunc.func.nameHint = name;
@@ -52025,6 +52025,10 @@ function nameAnonymousFunctionsImpl(fn) {
                     if (name != null && name.kind === 'named') {
                         names.set(lvalue.identifier.id, name.value);
                     }
+                    const func = functions.get(value.place.identifier.id);
+                    if (func != null) {
+                        functions.set(lvalue.identifier.id, func);
+                    }
                     break;
                 }
                 case 'PropertyLoad': {
@@ -52052,6 +52056,7 @@ function nameAnonymousFunctionsImpl(fn) {
                     const node = functions.get(value.value.identifier.id);
                     const variableName = value.lvalue.place.identifier.name;
                     if (node != null &&
+                        node.generatedName == null &&
                         variableName != null &&
                         variableName.kind === 'named') {
                         node.generatedName = variableName.value;
@@ -52082,7 +52087,7 @@ function nameAnonymousFunctionsImpl(fn) {
                             continue;
                         }
                         const node = functions.get(arg.identifier.id);
-                        if (node != null) {
+                        if (node != null && node.generatedName == null) {
                             const generatedName = fnArgCount > 1 ? `${calleeName}(arg${i})` : `${calleeName}()`;
                             node.generatedName = generatedName;
                             functions.delete(arg.identifier.id);
@@ -52096,7 +52101,7 @@ function nameAnonymousFunctionsImpl(fn) {
                             continue;
                         }
                         const node = functions.get(attr.place.identifier.id);
-                        if (node != null) {
+                        if (node != null && node.generatedName == null) {
                             const elementName = value.tag.kind === 'BuiltinTag'
                                 ? value.tag.name
                                 : ((_b = names.get(value.tag.identifier.id)) !== null && _b !== void 0 ? _b : null);
