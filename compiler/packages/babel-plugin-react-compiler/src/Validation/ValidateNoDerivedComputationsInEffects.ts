@@ -18,6 +18,7 @@ import {
   CallExpression,
   Instruction,
   isUseStateType,
+  isUseRefType,
 } from '../HIR';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
@@ -291,6 +292,11 @@ function validateEffect(
     }
 
     for (const instr of block.instructions) {
+      // Early return if any instruction is deriving a value from a ref
+      if (isUseRefType(instr.lvalue.identifier)) {
+        return;
+      }
+
       if (
         instr.value.kind === 'CallExpression' &&
         isSetStateType(instr.value.callee.identifier) &&
@@ -306,6 +312,19 @@ function validateEffect(
             value: instr.value,
             sourceIds: argMetadata.sourcesIds,
           });
+        }
+      } else if (instr.value.kind === 'CallExpression') {
+        const calleeMetadata = derivationCache.get(
+          instr.value.callee.identifier.id,
+        );
+
+        if (
+          calleeMetadata !== undefined &&
+          (calleeMetadata.typeOfValue === 'fromProps' ||
+            calleeMetadata.typeOfValue === 'fromPropsAndState')
+        ) {
+          // If the callee is a prop we can't confidently say that it should be derived in render
+          return;
         }
       }
     }
