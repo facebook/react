@@ -30,13 +30,15 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Error: Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
+Error: You might not need an effect. Derive values in render, not effects.
+
+Derived values (From props: [props]) should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
 
 error.invalid-derived-state-from-destructured-props.ts:10:4
    8 |
    9 |   useEffect(() => {
 > 10 |     setFullName(props.firstName + ' ' + props.lastName);
-     |     ^^^^^^^^^^^ Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)
+     |     ^^^^^^^^^^^ This should be computed during render, not in an effect
   11 |   }, [props.firstName, props.lastName]);
   12 |
   13 |   return <div>{fullName}</div>;
