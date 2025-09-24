@@ -611,10 +611,6 @@ export function includesSyncLane(lanes: Lanes): boolean {
   return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
 }
 
-export function isSyncLane(lanes: Lanes): boolean {
-  return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
-}
-
 export function includesNonIdleWork(lanes: Lanes): boolean {
   return (lanes & NonIdleLanes) !== NoLanes;
 }
@@ -681,6 +677,8 @@ export function includesLoadingIndicatorLanes(lanes: Lanes): boolean {
 
 export function includesBlockingLane(lanes: Lanes): boolean {
   const SyncDefaultLanes =
+    SyncHydrationLane |
+    SyncLane |
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
@@ -697,10 +695,13 @@ export function includesExpiredLane(root: FiberRoot, lanes: Lanes): boolean {
 
 export function isBlockingLane(lane: Lane): boolean {
   const SyncDefaultLanes =
+    SyncHydrationLane |
+    SyncLane |
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
-    DefaultLane;
+    DefaultLane |
+    GestureLane;
   return (lane & SyncDefaultLanes) !== NoLanes;
 }
 

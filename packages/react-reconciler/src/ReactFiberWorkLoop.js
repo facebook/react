@@ -1898,7 +1898,7 @@ function resetWorkInProgressStack() {
 
 function finalizeRender(lanes: Lanes, finalizationTime: number): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+    if (includesBlockingLane(lanes)) {
       clampBlockingTimers(finalizationTime);
     }
     if (includesTransitionLane(lanes)) {
@@ -1963,7 +1963,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     const previousUpdateTask = workInProgressUpdateTask;
 
     workInProgressUpdateTask = null;
-    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+    if (includesBlockingLane(lanes)) {
       workInProgressUpdateTask = blockingUpdateTask;
       const clampedUpdateTime =
         blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
@@ -1987,10 +1987,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
           lanes,
           previousUpdateTask,
         );
-      } else if (
-        includesSyncLane(animatingLanes) ||
-        includesBlockingLane(animatingLanes)
-      ) {
+      } else if (includesBlockingLane(animatingLanes)) {
         // If this lane is still animating, log the time from previous render finishing to now as animating.
         setCurrentTrackFromLanes(SyncLane);
         logAnimatingPhase(
@@ -3719,10 +3716,8 @@ function finishedViewTransition(lanes: Lanes): void {
     // If an affected track isn't in the middle of rendering or committing, log from the previous
     // finished render until the end of the animation.
     if (
-      (includesSyncLane(lanes) || includesBlockingLane(lanes)) &&
-      !includesSyncLane(workInProgressRootRenderLanes) &&
+      includesBlockingLane(lanes) &&
       !includesBlockingLane(workInProgressRootRenderLanes) &&
-      !includesSyncLane(pendingEffectsLanes) &&
       !includesBlockingLane(pendingEffectsLanes)
     ) {
       setCurrentTrackFromLanes(SyncLane);
