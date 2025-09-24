@@ -109,11 +109,18 @@
 ::view-transition-new(.container) {
   height: 100%;
 }
-
 ::view-transition-old(.tab-highlight),
 ::view-transition-new(.tab-highlight) {
   height: 100%;
 }
 ::view-transition-group(.tab-text) {
 	z-index: 1;
+}
+::view-transition-old(.expand-accordion),
+::view-transition-new(.expand-accordion) {
+  height: 100%;
+  width: auto;
+}
+::view-transition-group(.expand-accordion) {
+  overflow: clip;
 }

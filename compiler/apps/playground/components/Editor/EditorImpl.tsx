@@ -350,6 +350,7 @@ export default function Editor(): JSX.Element {
         <ViewTransition
           update={{
             'config-panel': 'container',
+            'show-internals': 'container',
             default: 'none',
           }}>
           <div className="flex flex-1 min-w-0">
