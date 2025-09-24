@@ -4702,6 +4702,70 @@ function renderDebugModel(
           element._store.validated,
         ];
       }
+      case REACT_LAZY_TYPE: {
+        // To avoid actually initializing a lazy causing a side-effect, we make
+        // some assumptions about the structure of the payload even though
+        // that's not really part of the contract. In practice, this is really
+        // just coming from React.lazy helper or Flight.
+        const lazy: LazyComponent<any, any> = (value: any);
+        const payload = lazy._payload;
+
+        if (payload !== null && typeof payload === 'object') {
+          // React.lazy constructor
+          switch (payload._status) {
+            case -1 /* Uninitialized */:
+            case 0 /* Pending */:
+              break;
+            case 1 /* Resolved */: {
+              const id = outlineDebugModel(request, counter, payload._result);
+              return serializeLazyID(id);
+            }
+            case 2 /* Rejected */: {
+              // We don't log these errors since they didn't actually throw into
+              // Flight.
+              const digest = '';
+              const id = request.nextChunkId++;
+              emitErrorChunk(request, id, digest, payload._result, true, null);
+              return serializeLazyID(id);
+            }
+          }
+
+          // React Flight
+          switch (payload.status) {
+            case 'pending':
+            case 'blocked':
+            case 'resolved_model':
+              // The value is an uninitialized model from the Flight client.
+              // It's not very useful to emit that.
+              break;
+            case 'resolved_module':
+              // The value is client reference metadata from the Flight client.
+              // It's likely for SSR, so we choose not to emit it.
+              break;
+            case 'fulfilled': {
+              const id = outlineDebugModel(request, counter, payload.value);
+              return serializeLazyID(id);
+            }
+            case 'rejected': {
+              // We don't log these errors since they didn't actually throw into
+              // Flight.
+              const digest = '';
+              const id = request.nextChunkId++;
+              emitErrorChunk(request, id, digest, payload.reason, true, null);
+              return serializeLazyID(id);
+            }
+          }
+        }
+
+        // We couldn't emit a resolved or rejected value synchronously. For now,
+        // we emit this as a halted chunk. TODO: We could maybe also handle
+        // pending lazy debug models like we do in serializeDebugThenable,
+        // if/when we determine that it's worth the added complexity.
+        request.pendingDebugChunks++;
+        const id = request.nextChunkId++;
+        emitDebugHaltChunk(request, id);
+        return serializeLazyID(id);
+      }
     }
 
     // $FlowFixMe[method-unbinding]

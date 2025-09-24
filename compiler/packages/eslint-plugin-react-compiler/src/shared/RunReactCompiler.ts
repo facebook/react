@@ -24,7 +24,7 @@ import * as HermesParser from 'hermes-parser';
 import {isDeepStrictEqual} from 'util';
 import type {ParseResult} from '@babel/parser';
 
-const COMPILER_OPTIONS: Partial<PluginOptions> = {
+const COMPILER_OPTIONS: PluginOptions = {
   noEmit: true,
   panicThreshold: 'none',
   // Don't emit errors on Flow suppressions--Flow already gave a signal

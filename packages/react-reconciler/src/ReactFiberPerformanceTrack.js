@@ -33,7 +33,10 @@ import {
   addObjectDiffToProperties,
 } from 'shared/ReactPerformanceTrackProperties';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {
+  enableProfilerTimer,
+  enableGestureTransition,
+} from 'shared/ReactFeatureFlags';
 
 const supportsUserTiming =
   enableProfilerTimer &&
@@ -68,6 +71,16 @@ export function markAllLanesInOrder() {
       LANES_TRACK_GROUP,
       'primary-light',
     );
+    if (enableGestureTransition) {
+      console.timeStamp(
+        'Gesture Track',
+        0.003,
+        0.003,
+        'Gesture',
+        LANES_TRACK_GROUP,
+        'primary-light',
+      );
+    }
     console.timeStamp(
       'Transition Track',
       0.003,
@@ -739,6 +752,111 @@ export function logBlockingStart(
   }
 }
 
+export function logGestureStart(
+  updateTime: number,
+  eventTime: number,
+  eventType: null | string,
+  eventIsRepeat: boolean,
+  isPingedUpdate: boolean,
+  renderStartTime: number,
+  debugTask: null | ConsoleTask, // DEV-only
+  updateMethodName: null | string,
+  updateComponentName: null | string,
+): void {
+  if (supportsUserTiming) {
+    currentTrack = 'Gesture';
+    // Clamp start times
+    if (updateTime > 0) {
+      if (updateTime > renderStartTime) {
+        updateTime = renderStartTime;
+      }
+    } else {
+      updateTime = renderStartTime;
+    }
+    if (eventTime > 0) {
+      if (eventTime > updateTime) {
+        eventTime = updateTime;
+      }
+    } else {
+      eventTime = updateTime;
+    }
+
+    if (updateTime > eventTime && eventType !== null) {
+      // Log the time from the event timeStamp until we started a gesture.
+      const color = eventIsRepeat ? 'secondary-light' : 'warning';
+      if (__DEV__ && debugTask) {
+        debugTask.run(
+          console.timeStamp.bind(
+            console,
+            eventIsRepeat ? 'Consecutive' : 'Event: ' + eventType,
+            eventTime,
+            updateTime,
+            currentTrack,
+            LANES_TRACK_GROUP,
+            color,
+          ),
+        );
+      } else {
+        console.timeStamp(
+          eventIsRepeat ? 'Consecutive' : 'Event: ' + eventType,
+          eventTime,
+          updateTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          color,
+        );
+      }
+    }
+    if (renderStartTime > updateTime) {
+      // Log the time from when we called setState until we started rendering.
+      const label = isPingedUpdate
+        ? 'Promise Resolved'
+        : renderStartTime - updateTime > 5
+          ? 'Gesture Blocked'
+          : 'Gesture';
+      if (__DEV__) {
+        const properties = [];
+        if (updateComponentName != null) {
+          properties.push(['Component name', updateComponentName]);
+        }
+        if (updateMethodName != null) {
+          properties.push(['Method name', updateMethodName]);
+        }
+        const measureOptions = {
+          start: updateTime,
+          end: renderStartTime,
+          detail: {
+            devtools: {
+              properties,
+              track: currentTrack,
+              trackGroup: LANES_TRACK_GROUP,
+              color: 'primary-light',
+            },
+          },
+        };
+
+        if (debugTask) {
+          debugTask.run(
+            // $FlowFixMe[method-unbinding]
+            performance.measure.bind(performance, label, measureOptions),
+          );
+        } else {
+          performance.measure(label, measureOptions);
+        }
+      } else {
+        console.timeStamp(
+          label,
+          updateTime,
+          renderStartTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'primary-light',
+        );
+      }
+    }
+  }
+}
+
 export function logTransitionStart(
   startTime: number,
   updateTime: number,
@@ -1180,45 +1298,10 @@ export function logInconsistentRender(
   }
 }
 
-export function logSuspenseThrottlePhase(
-  startTime: number,
-  endTime: number,
-  debugTask: null | ConsoleTask,
-): void {
-  // This was inside a throttled Suspense boundary commit.
-  if (supportsUserTiming) {
-    if (endTime <= startTime) {
-      return;
-    }
-    if (__DEV__ && debugTask) {
-      debugTask.run(
-        // $FlowFixMe[method-unbinding]
-        console.timeStamp.bind(
-          console,
-          'Throttled',
-          startTime,
-          endTime,
-          currentTrack,
-          LANES_TRACK_GROUP,
-          'secondary-light',
-        ),
-      );
-    } else {
-      console.timeStamp(
-        'Throttled',
-        startTime,
-        endTime,
-        currentTrack,
-        LANES_TRACK_GROUP,
-        'secondary-light',
-      );
-    }
-  }
-}
-
 export function logSuspendedCommitPhase(
   startTime: number,
   endTime: number,
+  reason: string,
   debugTask: null | ConsoleTask,
 ): void {
   // This means the commit was suspended on CSS or images.
@@ -1233,7 +1316,7 @@ export function logSuspendedCommitPhase(
         // $FlowFixMe[method-unbinding]
         console.timeStamp.bind(
           console,
-          'Suspended on CSS or Images',
+          reason,
           startTime,
           endTime,
           currentTrack,
@@ -1243,7 +1326,7 @@ export function logSuspendedCommitPhase(
       );
     } else {
       console.timeStamp(
-        'Suspended on CSS or Images',
+        reason,
         startTime,
         endTime,
         currentTrack,
@@ -1493,7 +1576,7 @@ export function logAnimatingPhase(
           endTime,
           currentTrack,
           LANES_TRACK_GROUP,
-          'secondary',
+          'secondary-dark',
         ),
       );
     } else {
@@ -1503,7 +1586,7 @@ export function logAnimatingPhase(
         endTime,
         currentTrack,
         LANES_TRACK_GROUP,
-        'secondary',
+        'secondary-dark',
       );
     }
   }

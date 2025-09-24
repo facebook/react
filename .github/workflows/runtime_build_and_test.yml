@@ -194,7 +194,7 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: |
           yarn generate-inline-fizz-runtime
-          git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
+          git diff --exit-code || (echo "There was a change to the Fizz runtime. Run \`yarn generate-inline-fizz-runtime\` and check in the result." && false)
 
   # ----- FEATURE FLAGS -----
   flags:
@@ -567,7 +567,7 @@ jobs:
       - name: Search build artifacts for unminified errors
         run: |
           yarn extract-errors
-          git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
+          git diff --exit-code || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
 
   check_release_dependencies:
     name: Check release dependencies

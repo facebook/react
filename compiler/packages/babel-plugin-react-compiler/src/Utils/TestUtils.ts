@@ -175,7 +175,7 @@ function parseConfigPragmaEnvironmentForTest(
   });
 }
 
-const testComplexPluginOptionDefaults: Partial<PluginOptions> = {
+const testComplexPluginOptionDefaults: PluginOptions = {
   gating: {
     source: 'ReactForgetFeatureFlag',
     importSpecifierName: 'isForgetEnabled_Fixtures',

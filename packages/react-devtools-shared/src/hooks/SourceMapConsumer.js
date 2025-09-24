@@ -7,7 +7,7 @@
  * @flow
  */
 import {withSyncPerfMeasurements} from 'react-devtools-shared/src/PerformanceLoggingUtils';
-import {decode} from 'sourcemap-codec';
+import {decode} from '@jridgewell/sourcemap-codec';
 
 import type {
   IndexSourceMap,
@@ -47,7 +47,7 @@ export default function SourceMapConsumer(
 
 function BasicSourceMapConsumer(sourceMapJSON: BasicSourceMap) {
   const decodedMappings: Mappings = withSyncPerfMeasurements(
-    'Decoding source map mappings with sourcemap-codec',
+    'Decoding source map mappings with @jridgewell/sourcemap-codec',
     () => decode(sourceMapJSON.mappings),
   );
 

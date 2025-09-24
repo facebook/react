@@ -702,6 +702,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     waitForCommitToBeReady,
 
+    getSuspendedCommitReason(
+      state: SuspendedState,
+      rootContainer: Container,
+    ): null | string {
+      return null;
+    },
+
     NotPendingTransition: (null: TransitionStatus),
 
     resetFormInstance(form: Instance) {},
@@ -853,6 +860,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           spawnedWorkCallback: () => void,
           passiveCallback: () => mixed,
           errorCallback: mixed => void,
+          blockedCallback: string => void, // Profiling-only
+          finishedAnimation: () => void, // Profiling-only
         ): null | RunningViewTransition {
           mutationCallback();
           layoutCallback();

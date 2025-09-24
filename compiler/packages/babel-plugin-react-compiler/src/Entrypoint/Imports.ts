@@ -18,7 +18,7 @@ import {
 import {getOrInsertWith} from '../Utils/utils';
 import {ExternalFunction, isHookName} from '../HIR/Environment';
 import {Err, Ok, Result} from '../Utils/Result';
-import {LoggerEvent, PluginOptions} from './Options';
+import {LoggerEvent, ParsedPluginOptions} from './Options';
 import {BabelFn, getReactCompilerRuntimeModule} from './Program';
 import {SuppressionRange} from './Suppression';
 
@@ -56,7 +56,7 @@ export function validateRestrictedImports(
 type ProgramContextOptions = {
   program: NodePath<t.Program>;
   suppressions: Array<SuppressionRange>;
-  opts: PluginOptions;
+  opts: ParsedPluginOptions;
   filename: string | null;
   code: string | null;
   hasModuleScopeOptOut: boolean;
@@ -66,7 +66,7 @@ export class ProgramContext {
    * Program and environment context
    */
   scope: BabelScope;
-  opts: PluginOptions;
+  opts: ParsedPluginOptions;
   filename: string | null;
   code: string | null;
   reactRuntimeModule: string;
