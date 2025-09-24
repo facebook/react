@@ -1329,15 +1329,17 @@ __DEV__ &&
     }
     function setCurrentTrackFromLanes(lanes) {
       currentTrack =
-        lanes & 127
+        lanes & 63
           ? "Blocking"
-          : lanes & 4194176
-            ? "Transition"
-            : lanes & 62914560
-              ? "Suspense"
-              : lanes & 2080374784
-                ? "Idle"
-                : "Other";
+          : lanes & 64
+            ? "Gesture"
+            : lanes & 4194176
+              ? "Transition"
+              : lanes & 62914560
+                ? "Suspense"
+                : lanes & 2080374784
+                  ? "Idle"
+                  : "Other";
     }
     function logComponentTrigger(fiber, startTime, endTime, trigger) {
       supportsUserTiming &&
@@ -16309,11 +16311,6 @@ __DEV__ &&
         var task = animatingTask;
         animatingLanes &= ~lanes;
         animatingTask = null;
-        0 !== (lanes & 127) &&
-          0 === (workInProgressRootRenderLanes & 127) &&
-          0 === (pendingEffectsLanes & 127) &&
-          (setCurrentTrackFromLanes(2),
-          logAnimatingPhase(blockingClampTime, now$1(), task));
         0 !== (lanes & 4194048) &&
           0 === (workInProgressRootRenderLanes & 4194048) &&
           0 === (pendingEffectsLanes & 4194048) &&
@@ -19998,10 +19995,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-e0c421ab-20250924",
+        version: "19.2.0-www-modern-05b61f81-20250924",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-e0c421ab-20250924"
+        reconcilerVersion: "19.2.0-www-modern-05b61f81-20250924"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20035,7 +20032,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-modern-e0c421ab-20250924";
+    exports.version = "19.2.0-www-modern-05b61f81-20250924";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -1345,15 +1345,17 @@ __DEV__ &&
     }
     function setCurrentTrackFromLanes(lanes) {
       currentTrack =
-        lanes & 127
+        lanes & 63
           ? "Blocking"
-          : lanes & 4194176
-            ? "Transition"
-            : lanes & 62914560
-              ? "Suspense"
-              : lanes & 2080374784
-                ? "Idle"
-                : "Other";
+          : lanes & 64
+            ? "Gesture"
+            : lanes & 4194176
+              ? "Transition"
+              : lanes & 62914560
+                ? "Suspense"
+                : lanes & 2080374784
+                  ? "Idle"
+                  : "Other";
     }
     function logComponentTrigger(fiber, startTime, endTime, trigger) {
       supportsUserTiming &&
@@ -18565,11 +18567,6 @@ __DEV__ &&
         var task = animatingTask;
         animatingLanes &= ~lanes;
         animatingTask = null;
-        0 !== (lanes & 127) &&
-          0 === (workInProgressRootRenderLanes & 127) &&
-          0 === (pendingEffectsLanes & 127) &&
-          (setCurrentTrackFromLanes(2),
-          logAnimatingPhase(blockingClampTime, now$1(), task));
         0 !== (lanes & 4194048) &&
           0 === (workInProgressRootRenderLanes & 4194048) &&
           0 === (pendingEffectsLanes & 4194048) &&
@@ -22884,7 +22881,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-e0c421ab-20250924"
+        reconcilerVersion: "19.2.0-www-classic-05b61f81-20250924"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
