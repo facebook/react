@@ -71,6 +71,7 @@ import {
 } from './Scheduler';
 import {
   logBlockingStart,
+  logGestureStart,
   logTransitionStart,
   logRenderPhase,
   logInterruptedRenderPhase,
@@ -282,6 +283,17 @@ import {
   blockingEventType,
   blockingEventIsRepeat,
   blockingSuspendedTime,
+  gestureClampTime,
+  gestureStartTime,
+  gestureUpdateTime,
+  gestureUpdateTask,
+  gestureUpdateType,
+  gestureUpdateMethodName,
+  gestureUpdateComponentName,
+  gestureEventTime,
+  gestureEventType,
+  gestureEventIsRepeat,
+  gestureSuspendedTime,
   transitionClampTime,
   transitionStartTime,
   transitionUpdateTime,
@@ -294,8 +306,10 @@ import {
   transitionEventIsRepeat,
   transitionSuspendedTime,
   clearBlockingTimers,
+  clearGestureTimers,
   clearTransitionTimers,
   clampBlockingTimers,
+  clampGestureTimers,
   clampTransitionTimers,
   clampRetryTimers,
   clampIdleTimers,
@@ -1898,7 +1912,9 @@ function resetWorkInProgressStack() {
 
 function finalizeRender(lanes: Lanes, finalizationTime: number): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    if (includesBlockingLane(lanes)) {
+    if (isGestureRender(lanes)) {
+      clampGestureTimers(finalizationTime);
+    } else if (includesBlockingLane(lanes)) {
       clampBlockingTimers(finalizationTime);
     }
     if (includesTransitionLane(lanes)) {
@@ -1963,7 +1979,58 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     const previousUpdateTask = workInProgressUpdateTask;
 
     workInProgressUpdateTask = null;
-    if (includesBlockingLane(lanes)) {
+    if (isGestureRender(lanes)) {
+      workInProgressUpdateTask = gestureUpdateTask;
+      const clampedStartTime =
+        gestureStartTime >= 0 && gestureStartTime < gestureClampTime
+          ? gestureClampTime
+          : gestureStartTime;
+      const clampedUpdateTime =
+        gestureUpdateTime >= 0 && gestureUpdateTime < gestureClampTime
+          ? gestureClampTime
+          : gestureUpdateTime;
+      const clampedEventTime =
+        gestureEventTime >= 0 && gestureEventTime < gestureClampTime
+          ? gestureClampTime
+          : gestureEventTime;
+      const clampedRenderStartTime =
+        // Clamp the suspended time to the first event/update.
+        clampedEventTime >= 0
+          ? clampedEventTime
+          : clampedUpdateTime >= 0
+            ? clampedUpdateTime
+            : renderStartTime;
+      if (gestureSuspendedTime >= 0) {
+        setCurrentTrackFromLanes(GestureLane);
+        logSuspendedWithDelayPhase(
+          gestureSuspendedTime,
+          clampedRenderStartTime,
+          lanes,
+          workInProgressUpdateTask,
+        );
+      } else if (isGestureRender(animatingLanes)) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(GestureLane);
+        logAnimatingPhase(
+          gestureClampTime,
+          clampedRenderStartTime,
+          animatingTask,
+        );
+      }
+      logGestureStart(
+        clampedStartTime,
+        clampedUpdateTime,
+        clampedEventTime,
+        gestureEventType,
+        gestureEventIsRepeat,
+        gestureUpdateType === PINGED_UPDATE,
+        renderStartTime,
+        gestureUpdateTask,
+        gestureUpdateMethodName,
+        gestureUpdateComponentName,
+      );
+      clearGestureTimers();
+    } else if (includesBlockingLane(lanes)) {
       workInProgressUpdateTask = blockingUpdateTask;
       const clampedUpdateTime =
         blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
@@ -3716,12 +3783,12 @@ function finishedViewTransition(lanes: Lanes): void {
     // If an affected track isn't in the middle of rendering or committing, log from the previous
     // finished render until the end of the animation.
     if (
-      includesBlockingLane(lanes) &&
-      !includesBlockingLane(workInProgressRootRenderLanes) &&
-      !includesBlockingLane(pendingEffectsLanes)
+      isGestureRender(lanes) &&
+      !isGestureRender(workInProgressRootRenderLanes) &&
+      !isGestureRender(pendingEffectsLanes)
     ) {
-      setCurrentTrackFromLanes(SyncLane);
-      logAnimatingPhase(blockingClampTime, now(), task);
+      setCurrentTrackFromLanes(GestureLane);
+      logAnimatingPhase(gestureClampTime, now(), task);
     }
     if (
       includesTransitionLane(lanes) &&
