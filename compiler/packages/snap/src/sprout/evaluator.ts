@@ -298,7 +298,10 @@ export function doEval(source: string): EvaluatorResult {
     return {
       kind: 'UnexpectedError',
       value:
-        'Unexpected error during eval, possible syntax error?\n' + e.message,
+        'Unexpected error during eval, possible syntax error?\n' +
+        e.message +
+        '\n\nsource:\n' +
+        source,
       logs,
     };
   } finally {

@@ -240,7 +240,7 @@ export function addImportsToProgram(
   programContext: ProgramContext,
 ): void {
   const existingImports = getExistingImports(path);
-  const stmts: Array<t.ImportDeclaration> = [];
+  const stmts: Array<t.ImportDeclaration | t.VariableDeclaration> = [];
   const sortedModules = [...programContext.imports.entries()].sort(([a], [b]) =>
     a.localeCompare(b),
   );
@@ -303,9 +303,29 @@ export function addImportsToProgram(
     if (maybeExistingImports != null) {
       maybeExistingImports.pushContainer('specifiers', importSpecifiers);
     } else {
-      stmts.push(
-        t.importDeclaration(importSpecifiers, t.stringLiteral(moduleName)),
-      );
+      if (path.node.sourceType === 'module') {
+        stmts.push(
+          t.importDeclaration(importSpecifiers, t.stringLiteral(moduleName)),
+        );
+      } else {
+        stmts.push(
+          t.variableDeclaration('const', [
+            t.variableDeclarator(
+              t.objectPattern(
+                sortedImport.map(specifier => {
+                  return t.objectProperty(
+                    t.identifier(specifier.imported),
+                    t.identifier(specifier.name),
+                  );
+                }),
+              ),
+              t.callExpression(t.identifier('require'), [
+                t.stringLiteral(moduleName),
+              ]),
+            ),
+          ]),
+        );
+      }
     }
   }
   path.unshiftContainer('body', stmts);
