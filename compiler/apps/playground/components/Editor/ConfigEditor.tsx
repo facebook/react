@@ -21,6 +21,7 @@ import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoOptions} from './monacoOptions';
 import {IconChevron} from '../Icons/IconChevron';
 import prettyFormat from 'pretty-format';
+import {CONFIG_PANEL_TRANSITION} from '../../lib/transitionTypes';
 
 // @ts-expect-error - webpack asset/source loader handles .d.ts files as strings
 import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
@@ -44,7 +45,7 @@ export default function ConfigEditor({
         <ExpandedEditor
           onToggle={() => {
             startTransition(() => {
-              addTransitionType('config-panel');
+              addTransitionType(CONFIG_PANEL_TRANSITION);
               setIsExpanded(false);
             });
           }}
@@ -58,11 +59,11 @@ export default function ConfigEditor({
         <CollapsedEditor
           onToggle={() => {
             startTransition(() => {
-              addTransitionType('config-panel');
+              addTransitionType(CONFIG_PANEL_TRANSITION);
               setIsExpanded(true);
             });
           }}
-        />{' '}
+        />
       </div>
     </>
   );
@@ -129,7 +130,8 @@ function ExpandedEditor({
     : 'Invalid configs';
 
   return (
-    <ViewTransition update={{'config-panel': 'slide-in', default: 'none'}}>
+    <ViewTransition
+      update={{[CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none'}}>
       <Resizable
         minWidth={300}
         maxWidth={600}

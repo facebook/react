@@ -96,16 +96,15 @@
     transform: translateX(0);
   }
 }
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
 
 ::view-transition-old(.container),
 ::view-transition-new(.container) {
   height: 100%;
+}
+
+::view-transition-old(.accordion-container),
+::view-transition-new(.accordion-container) {
+  height: 100%;
+  object-fit: none;
+  object-position: left;
 }
