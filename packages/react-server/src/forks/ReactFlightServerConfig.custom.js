@@ -32,3 +32,17 @@ export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
 export function createHints(): any {
   return null;
 }
+
+export type FormatContext = null;
+
+export function createRootFormatContext(): FormatContext {
+  return null;
+}
+
+export function getChildFormatContext(
+  parentContext: FormatContext,
+  type: string,
+  props: Object,
+): FormatContext {
+  return parentContext;
+}
