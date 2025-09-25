@@ -61,3 +61,17 @@ export type Hints = Set<string>;
 export function createHints(): Hints {
   return new Set();
 }
+
+export opaque type FormatContext = null;
+
+export function createRootFormatContext(): FormatContext {
+  return null;
+}
+
+export function getChildFormatContext(
+  parentContext: FormatContext,
+  type: string,
+  props: Object,
+): FormatContext {
+  return parentContext;
+}
