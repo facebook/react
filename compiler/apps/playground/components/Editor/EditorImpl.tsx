@@ -24,7 +24,11 @@ import BabelPluginReactCompiler, {
   printFunctionWithOutlined,
   type LoggerEvent,
 } from 'babel-plugin-react-compiler';
-import {useDeferredValue, useMemo} from 'react';
+import {
+  useDeferredValue,
+  useMemo,
+  unstable_ViewTransition as ViewTransition,
+} from 'react';
 import {useStore} from '../StoreContext';
 import ConfigEditor from './ConfigEditor';
 import Input from './Input';
@@ -342,14 +346,21 @@ export default function Editor(): JSX.Element {
         <div className="flex-shrink-0">
           <ConfigEditor appliedOptions={appliedOptions} />
         </div>
-        <div className="flex flex-1 min-w-0">
-          <div className="flex-1 min-w-[550px] sm:min-w-0">
-            <Input language={language} errors={errors} />
+
+        <ViewTransition
+          update={{
+            'config-panel': 'container',
+            default: 'none',
+          }}>
+          <div className="flex flex-1 min-w-0">
+            <div className="flex-1 min-w-[550px] sm:min-w-0">
+              <Input language={language} errors={errors} />
+            </div>
+            <div className="flex-1 min-w-[550px] sm:min-w-0">
+              <Output store={deferredStore} compilerOutput={mergedOutput} />
+            </div>
           </div>
-          <div className="flex-1 min-w-[550px] sm:min-w-0">
-            <Output store={deferredStore} compilerOutput={mergedOutput} />
-          </div>
-        </div>
+        </ViewTransition>
       </div>
     </>
   );
