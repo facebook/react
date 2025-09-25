@@ -34,7 +34,7 @@ export default MemoizedOutput;
 export const BASIC_OUTPUT_TAB_NAMES = ['Output', 'SourceMap'];
 
 const tabifyCache = new LRUCache<Store, Promise<Map<string, ReactNode>>>({
-  max: 100,
+  max: 5,
 });
 
 export type PrintedCompilerPipelineValue =
