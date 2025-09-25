@@ -198,6 +198,13 @@ export function attach(
         type: 'not-found',
       };
     },
+    inspectRoots(requestID: number, arbitraryRootID: number) {
+      return {
+        id: arbitraryRootID,
+        responseID: requestID,
+        type: 'not-found',
+      };
+    },
     logElementToConsole() {},
     getElementAttributeByPath() {},
     getElementSourceFunctionById() {},

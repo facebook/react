@@ -433,14 +433,17 @@ export type RendererInterface = {
     inspectedPaths: Object,
     forceFullData: boolean,
   ) => InspectedElementPayload,
+  inspectRoots: (
+    requestID: number,
+    arbitraryRootID: number,
+    path: Array<string | number> | null,
+    forceFullData: boolean,
+  ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
-  overrideSuspenseMilestone: (
-    rootID: number,
-    suspendedSet: Array<number>,
-  ) => void,
+  overrideSuspenseMilestone: (suspendedSet: Array<number>) => void,
   overrideValueAtPath: (
     type: Type,
     id: number,
