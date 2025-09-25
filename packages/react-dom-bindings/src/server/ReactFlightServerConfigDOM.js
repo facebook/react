@@ -18,7 +18,7 @@ import type {
 
 // This module registers the host dispatcher so it needs to be imported
 // even if no exports are used.
-import {preload} from './ReactDOMFlightServerHostDispatcher';
+import {preload, preloadModule} from './ReactDOMFlightServerHostDispatcher';
 
 import {getCrossOriginString} from '../shared/crossOriginStrings';
 
@@ -129,7 +129,59 @@ function processImg(props: Object, formatContext: FormatContext): void {
   }
 }
 
-function processLink(props: Object, formatContext: FormatContext): void {}
+function processLink(props: Object, formatContext: FormatContext): void {
+  const noscriptTagInScope = formatContext & NOSCRIPT_SCOPE;
+  const rel = props.rel;
+  const href = props.href;
+  if (
+    noscriptTagInScope ||
+    props.itemProp != null ||
+    typeof rel !== 'string' ||
+    typeof href !== 'string' ||
+    href === ''
+  ) {
+    // We shouldn't preload resources that are in noscript or have no configuration.
+    return;
+  }
+
+  switch (rel) {
+    case 'preload': {
+      preload(href, props.as, {
+        crossOrigin: props.crossOrigin,
+        integrity: props.integrity,
+        nonce: props.nonce,
+        type: props.type,
+        fetchPriority: props.fetchPriority,
+        referrerPolicy: props.referrerPolicy,
+        imageSrcSet: props.imageSrcSet,
+        imageSizes: props.imageSizes,
+        media: props.media,
+      });
+      return;
+    }
+    case 'modulepreload': {
+      preloadModule(href, {
+        as: props.as,
+        crossOrigin: props.crossOrigin,
+        integrity: props.integrity,
+        nonce: props.nonce,
+      });
+      return;
+    }
+    case 'stylesheet': {
+      preload(href, 'stylesheet', {
+        crossOrigin: props.crossOrigin,
+        integrity: props.integrity,
+        nonce: props.nonce,
+        type: props.type,
+        fetchPriority: props.fetchPriority,
+        referrerPolicy: props.referrerPolicy,
+        media: props.media,
+      });
+      return;
+    }
+  }
+}
 
 export function getChildFormatContext(
   parentContext: FormatContext,

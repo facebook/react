@@ -116,7 +116,10 @@ export function preload(
   }
 }
 
-function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
+export function preloadModule(
+  href: string,
+  options?: ?PreloadModuleImplOptions,
+): void {
   if (typeof href === 'string') {
     const request = resolveRequest();
     if (request) {
