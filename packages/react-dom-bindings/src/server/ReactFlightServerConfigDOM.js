@@ -62,16 +62,37 @@ export function createHints(): Hints {
   return new Set();
 }
 
-export opaque type FormatContext = null;
+const NO_SCOPE = /*         */ 0b000000;
+const NOSCRIPT_SCOPE = /*   */ 0b000001;
+const PICTURE_SCOPE = /*    */ 0b000010;
+
+export opaque type FormatContext = number;
 
 export function createRootFormatContext(): FormatContext {
-  return null;
+  return NO_SCOPE;
 }
+
+function processImg(props: Object, formatContext: FormatContext): void {}
+
+function processLink(props: Object, formatContext: FormatContext): void {}
 
 export function getChildFormatContext(
   parentContext: FormatContext,
   type: string,
   props: Object,
 ): FormatContext {
-  return parentContext;
+  switch (type) {
+    case 'img':
+      processImg(props, parentContext);
+      return parentContext;
+    case 'link':
+      processLink(props, parentContext);
+      return parentContext;
+    case 'picture':
+      return parentContext | PICTURE_SCOPE;
+    case 'noscript':
+      return parentContext | NOSCRIPT_SCOPE;
+    default:
+      return parentContext;
+  }
 }
