@@ -79,7 +79,11 @@ function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
   }
 }
 
-function preload(href: string, as: string, options?: ?PreloadImplOptions) {
+export function preload(
+  href: string,
+  as: string,
+  options?: ?PreloadImplOptions,
+) {
   if (typeof href === 'string') {
     const request = resolveRequest();
     if (request) {
