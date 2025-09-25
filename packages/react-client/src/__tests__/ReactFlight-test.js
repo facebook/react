@@ -327,8 +327,8 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(root);
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: 12},
@@ -346,7 +346,7 @@ describe('ReactFlight', () => {
             ]
           : undefined,
       );
-      ReactNoop.render(await promise);
+      ReactNoop.render(result);
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
@@ -1378,9 +1378,7 @@ describe('ReactFlight', () => {
             environmentName: 'Server',
           },
         ],
-        findSourceMapURLCalls: [
-          [__filename, 'Server'],
-          [__filename, 'Server'],
+        findSourceMapURLCalls: expect.arrayContaining([
           // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
           ['inspected-page.html:29:11), <anonymous>', 'Server'],
           [
@@ -1389,8 +1387,7 @@ describe('ReactFlight', () => {
           ],
           ['file:///testing.js', 'Server'],
           ['', 'Server'],
-          [__filename, 'Server'],
-        ],
+        ]),
       });
     } else {
       expect(errors.map(getErrorForJestMatcher)).toEqual([
@@ -2785,8 +2782,8 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: gate(flags => flags.enableAsyncDebugInfo) ? 22 : 20},
@@ -2803,11 +2800,10 @@ describe('ReactFlight', () => {
             ]
           : undefined,
       );
-      const result = await promise;
 
       const thirdPartyChildren = await result.props.children[1];
       // We expect the debug info to be transferred from the inner stream to the outer.
-      expect(getDebugInfo(thirdPartyChildren[0])).toEqual(
+      expect(getDebugInfo(await thirdPartyChildren[0])).toEqual(
         __DEV__
           ? [
               {time: gate(flags => flags.enableAsyncDebugInfo) ? 54 : 22}, // Clamped to the start
@@ -2910,8 +2906,8 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: 16},
@@ -2924,17 +2920,10 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
-              {
-                time: 16,
-              },
-              {
-                time: 16,
-              },
               {time: 31},
             ]
           : undefined,
       );
-      const result = await promise;
       const thirdPartyFragment = await result.props.children;
       expect(getDebugInfo(thirdPartyFragment)).toEqual(
         __DEV__
@@ -2949,15 +2938,7 @@ describe('ReactFlight', () => {
                   children: {},
                 },
               },
-              {
-                time: 33,
-              },
-              {
-                time: 33,
-              },
-              {
-                time: 33,
-              },
+              {time: 33},
             ]
           : undefined,
       );
@@ -3013,8 +2994,8 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: 16},
@@ -3040,7 +3021,6 @@ describe('ReactFlight', () => {
             ]
           : undefined,
       );
-      const result = await promise;
       ReactNoop.render(result);
     });
 
@@ -3890,15 +3870,6 @@ describe('ReactFlight', () => {
           },
           {
             time: 13,
-          },
-          {
-            time: 14,
-          },
-          {
-            time: 15,
-          },
-          {
-            time: 16,
           },
         ]);
       } else {

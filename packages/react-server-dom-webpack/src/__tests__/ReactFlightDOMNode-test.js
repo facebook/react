@@ -722,11 +722,19 @@ describe('ReactFlightDOMNode', () => {
 
     if (__DEV__) {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
-        '\n    in Component (at **)\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+        '\n    in Component (at **)\n' +
+          '    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in App (at **)\n' +
+          '    in ClientRoot (at **)',
       );
     } else {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
-        '\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+        '\n    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in ClientRoot (at **)',
       );
     }
 
@@ -861,11 +869,19 @@ describe('ReactFlightDOMNode', () => {
 
     if (__DEV__) {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
-        '\n    in Component (at **)\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+        '\n    in Component (at **)\n' +
+          '    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in App (at **)\n' +
+          '    in ClientRoot (at **)',
       );
     } else {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
-        '\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+        '\n    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in ClientRoot (at **)',
       );
     }
 
