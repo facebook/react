@@ -20,8 +20,8 @@
   },
   "scripts": {
     "dev": "react-scripts start",
-    "predev": "cp -a ../../build/oss-experimental/. node_modules",
-    "build": "react-scripts build && cp build/index.html build/200.html",
+    "predev": "xcopy /E /I /Y ..\\..\\build\\oss-experimental\\* node_modules\\",
+    "build": "react-scripts build && copy build\\index.html build\\200.html",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   }
