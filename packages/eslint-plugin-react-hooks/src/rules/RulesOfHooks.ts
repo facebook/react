@@ -892,10 +892,10 @@ function getFunctionNameSkippingCallExpressions(node: Node) {
     }
 
     if (parent?.type === 'VariableDeclarator' && parent.init === current) {
-      // const ComponentWithConditionalHook = memo(() => {});
-      // const ComponentWithConditionalHook = forwardRef(() => {});
-      // const ComponentWithConditionalHook = anyWrapper(() => {});
-      // const ComponentWithConditionalHook = anyWrapper1(anyWrapper2(() => {}));
+      // const ComponentName = memo(() => {});
+      // const ComponentName = forwardRef(() => {});
+      // const ComponentName = anyWrapper(() => {});
+      // const ComponentName = anyWrapper1(anyWrapper2(() => {}));
       //
       // This handles the case where a function is passed as an argument to
       // one or more wrapper functions that are assigned to a component-named variable.
