@@ -69,6 +69,9 @@ type ACTION_SUSPENSE_PLAY_PAUSE = {
   type: 'SUSPENSE_PLAY_PAUSE',
   payload: 'toggle' | 'play' | 'pause',
 };
+type ACTION_SUSPENSE_PLAY_TICK = {
+  type: 'SUSPENSE_PLAY_TICK',
+};
 
 export type SuspenseTreeAction =
   | ACTION_SUSPENSE_TREE_MUTATION
@@ -77,7 +80,8 @@ export type SuspenseTreeAction =
   | ACTION_SET_SUSPENSE_TIMELINE
   | ACTION_SUSPENSE_SET_TIMELINE_INDEX
   | ACTION_SUSPENSE_SKIP_TIMELINE_INDEX
-  | ACTION_SUSPENSE_PLAY_PAUSE;
+  | ACTION_SUSPENSE_PLAY_PAUSE
+  | ACTION_SUSPENSE_PLAY_TICK;
 export type SuspenseTreeDispatch = (action: SuspenseTreeAction) => void;
 
 const SuspenseTreeStateContext: ReactContext<SuspenseTreeState> =
@@ -367,6 +371,30 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
               playing: mode === 'toggle' ? !state.playing : mode === 'play',
+            };
+          }
+          case 'SUSPENSE_PLAY_TICK': {
+            if (!state.playing) {
+              // We stopped but haven't yet cleaned up the callback. Noop.
+              return state;
+            }
+            // Advance time
+            const nextTimelineIndex = state.timelineIndex + 1;
+            if (nextTimelineIndex > state.timeline.length - 1) {
+              return state;
+            }
+            const nextSelectedSuspenseID = state.timeline[nextTimelineIndex];
+            const nextLineage = store.getSuspenseLineage(
+              nextSelectedSuspenseID,
+            );
+            // Stop once we reach the end.
+            const nextPlaying = nextTimelineIndex < state.timeline.length - 1;
+            return {
+              ...state,
+              lineage: nextLineage,
+              selectedSuspenseID: nextSelectedSuspenseID,
+              timelineIndex: nextTimelineIndex,
+              playing: nextPlaying,
             };
           }
           default:
