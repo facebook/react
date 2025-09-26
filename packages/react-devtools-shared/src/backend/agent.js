@@ -29,7 +29,7 @@ import type {
 } from './types';
 import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
 import type {GroupItem} from './views/TraceUpdates/canvas';
-import {isReactNativeEnvironment} from './utils';
+import {gte, isReactNativeEnvironment} from './utils';
 import {
   sessionStorageGetItem,
   sessionStorageRemoveItem,
@@ -739,7 +739,7 @@ export default class Agent extends EventEmitter<{
     if (renderer !== null) {
       const devRenderer = renderer.bundleType === 1;
       const enableSuspenseTab =
-        devRenderer && renderer.version.includes('-experimental-');
+        devRenderer && gte(renderer.version, '19.2.0-canary');
       if (enableSuspenseTab) {
         this._bridge.send('enableSuspenseTab');
       }
