@@ -1,5 +1,5 @@
 import React, {PureComponent, startTransition} from 'react';
-import {createRoot} from 'react-dom/client';
+import {unstable_createRoot} from 'react-dom';
 import _ from 'lodash';
 import Charts from './Charts';
 import Clock from './Clock';
@@ -142,5 +142,5 @@ class App extends PureComponent {
 }
 
 const container = document.getElementById('root');
-const root = createRoot(container);
+const root = unstable_createRoot(container);
 root.render(<App />);
