@@ -12,7 +12,7 @@ import * as monaco from 'monaco-editor';
 import React, {useState, useRef} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
-import {monacoOptions} from './monacoOptions';
+import {monacoConfigOptions} from './monacoOptions';
 import {IconChevron} from '../Icons/IconChevron';
 import prettyFormat from 'pretty-format';
 
@@ -151,16 +151,7 @@ function ExpandedEditor({
               onChange={handleChange}
               loading={''}
               className="monaco-editor-config"
-              options={{
-                ...monacoOptions,
-                lineNumbers: 'off',
-                renderLineHighlight: 'none',
-                overviewRulerBorder: false,
-                overviewRulerLanes: 0,
-                fontSize: 12,
-                scrollBeyondLastLine: false,
-                glyphMargin: false,
-              }}
+              options={monacoConfigOptions}
             />
           </div>
         </div>
@@ -178,15 +169,8 @@ function ExpandedEditor({
               loading={''}
               className="monaco-editor-applied-config"
               options={{
-                ...monacoOptions,
-                lineNumbers: 'off',
-                renderLineHighlight: 'none',
-                overviewRulerBorder: false,
-                overviewRulerLanes: 0,
-                fontSize: 12,
-                scrollBeyondLastLine: false,
+                ...monacoConfigOptions,
                 readOnly: true,
-                glyphMargin: false,
               }}
             />
           </div>
