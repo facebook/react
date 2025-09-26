@@ -47,6 +47,9 @@ describe('ReactFlightDOM', () => {
     // condition
     jest.resetModules();
 
+    // Some of the tests pollute the head.
+    document.head.innerHTML = '';
+
     JSDOM = require('jsdom').JSDOM;
 
     patchSetImmediate();
@@ -1996,6 +1999,105 @@ describe('ReactFlightDOM', () => {
 
     await collectHints(readable);
     expect(hintRows.length).toEqual(6);
+  });
+
+  it('preloads resources without needing to render them', async () => {
+    function NoScriptComponent() {
+      return (
+        <p>
+          <img src="image-do-not-load" />
+          <link rel="stylesheet" href="css-do-not-load" />
+        </p>
+      );
+    }
+
+    function Component() {
+      return (
+        <div>
+          <img src="image-resource" />
+          <img
+            src="image-do-not-load"
+            srcSet="image-preload-src-set"
+            sizes="image-sizes"
+          />
+          <img src="image-do-not-load" loading="lazy" />
+          <link
+            rel="preload"
+            href="video-resource"
+            as="video"
+            media="(orientation: landscape)"
+          />
+          <link rel="modulepreload" href="module-resource" />
+          <picture>
+            <source
+              srcSet="image-not-yet-preloaded"
+              media="(orientation: portrait)"
+            />
+            <img src="image-do-not-load" />
+          </picture>
+          <noscript>
+            <NoScriptComponent />
+          </noscript>
+          <link rel="stylesheet" href="css-resource" />
+        </div>
+      );
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<Component />, webpackMap),
+    );
+    pipe(writable);
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(readable);
+      }
+      return response;
+    }
+
+    function App() {
+      // Not rendered but use for its side-effects.
+      getResponse();
+      return (
+        <html>
+          <body>
+            <p>hello world</p>
+          </body>
+        </html>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(document);
+    await act(() => {
+      root.render(<App />);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="image" href="image-resource" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="image-preload-src-set"
+            imagesizes="image-sizes"
+          />
+          <link
+            rel="preload"
+            as="video"
+            href="video-resource"
+            media="(orientation: landscape)"
+          />
+          <link rel="modulepreload" href="module-resource" />
+          <link rel="preload" as="stylesheet" href="css-resource" />
+        </head>
+        <body>
+          <p>hello world</p>
+        </body>
+      </html>,
+    );
   });
 
   it('should be able to include a client reference in printed errors', async () => {
