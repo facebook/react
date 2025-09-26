@@ -645,6 +645,10 @@ export type FragmentInstanceType = {
   observeUsing: (observer: IntersectionObserver) => void,
   unobserveUsing: (observer: IntersectionObserver) => void,
   compareDocumentPosition: (otherNode: PublicInstance) => number,
+  getRootNode(getRootNodeOptions?: {
+    composed: boolean,
+  }): Node | FragmentInstanceType,
+  getClientRects: () => Array<DOMRect>,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -751,6 +755,42 @@ FragmentInstance.prototype.compareDocumentPosition = function (
 
 function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
   collection.push(child);
+  return false;
+}
+
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getRootNode = function (
+  this: FragmentInstanceType,
+  getRootNodeOptions?: {composed: boolean},
+): Node | FragmentInstanceType {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return this;
+  }
+  const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
+  // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
+  const rootNode = (parentHostInstance.getRootNode(getRootNodeOptions): Node);
+  return rootNode;
+};
+
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getClientRects = function (
+  this: FragmentInstanceType,
+): Array<DOMRect> {
+  const rects: Array<DOMRect> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
+  return rects;
+};
+function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
+  const instance = getPublicInstanceFromHostFiber(child);
+
+  // getBoundingClientRect is available on Fabric instances while getClientRects is not.
+  // This should work as a substitute in this case because the only equivalent of a multi-rect
+  // element in RN would be a nested Text component.
+  // Since we only use top-level nodes here, we can assume that getBoundingClientRect is sufficient.
+  // $FlowFixMe[method-unbinding]
+  // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
+  rects.push(instance.getBoundingClientRect());
   return false;
 }
 
