@@ -48,13 +48,20 @@ const execRead = async (command, options) => {
 };
 
 const extractCommitFromVersionNumber = version => {
+  if (typeof version !== 'string' || !version) {
+    throw new Error(`Invalid version: expected a non-empty string, got "${version}"`);
+  }
   // Support stable version format e.g. "0.0.0-0e526bcec-20210202"
   // and experimental version format e.g. "0.0.0-experimental-0e526bcec-20210202"
   const match = version.match(/0\.0\.0\-([a-z]+\-){0,1}([^-]+).+/);
   if (match === null) {
-    throw Error(`Could not extra commit from version "${version}"`);
+    throw new Error(`Could not extract commit from version "${version}": invalid format`);
   }
-  return match[2];
+  const commit = match[2];
+  if (!/^[a-f0-9]{7,40}$/.test(commit)) {
+    throw new Error(`Invalid commit hash extracted: "${commit}"`);
+  }
+  return commit;
 };
 
 const getBuildInfo = async () => {
@@ -62,32 +69,71 @@ const getBuildInfo = async () => {
 
   const isExperimental = process.env.RELEASE_CHANNEL === 'experimental';
 
-  const branch = await execRead('git branch | grep \\* | cut -d " " -f2', {
-    cwd,
-  });
-  const commit = await execRead('git show -s --no-show-signature --format=%h', {
-    cwd,
-  });
-  const checksum = await getChecksumForCurrentRevision(cwd);
-  const dateString = await getDateStringForCommit(commit);
+  console.log(theme`{info Gathering build information...}`);
+
+  let branch, commit, checksum, dateString;
+  try {
+    console.log(theme`{info Getting current git branch...}`);
+    branch = await execRead('git branch | grep \\* | cut -d " " -f2', {
+      cwd,
+    });
+  } catch (error) {
+    throw new Error(`Failed to get git branch: ensure you're in a git repository. ${error.message}`);
+  }
+
+  try {
+    console.log(theme`{info Getting current commit hash...}`);
+    commit = await execRead('git show -s --no-show-signature --format=%h', {
+      cwd,
+    });
+  } catch (error) {
+    throw new Error(`Failed to get commit hash: ensure you're in a git repository. ${error.message}`);
+  }
+
+  try {
+    console.log(theme`{info Calculating checksum for packages...}`);
+    checksum = await getChecksumForCurrentRevision(cwd);
+  } catch (error) {
+    throw new Error(`Failed to calculate checksum: ${error.message}`);
+  }
+
+  try {
+    console.log(theme`{info Getting date string for commit...}`);
+    dateString = await getDateStringForCommit(commit);
+  } catch (error) {
+    throw new Error(`Failed to get date string: ${error.message}`);
+  }
+
   const version = isExperimental
     ? `0.0.0-experimental-${commit}-${dateString}`
     : `0.0.0-${commit}-${dateString}`;
 
   // React version is stored explicitly, separately for DevTools support.
   // See updateVersionsForNext() below for more info.
-  const packageJSON = await readJson(
-    join(cwd, 'packages', 'react', 'package.json')
-  );
+  let packageJSON;
+  try {
+    console.log(theme`{info Reading React package.json...}`);
+    packageJSON = await readJson(
+      join(cwd, 'packages', 'react', 'package.json')
+    );
+  } catch (error) {
+    throw new Error(`Failed to read React package.json: ensure packages/react/package.json exists. ${error.message}`);
+  }
+
   const reactVersion = isExperimental
     ? `${packageJSON.version}-experimental-${commit}-${dateString}`
     : `${packageJSON.version}-${commit}-${dateString}`;
+
+  console.log(theme`{success Build info gathered successfully.}`);
 
   return {branch, checksum, commit, reactVersion, version};
 };
 
 const getChecksumForCurrentRevision = async cwd => {
   const packagesDir = join(cwd, 'packages');
+  if (!existsSync(packagesDir)) {
+    throw new Error(`Packages directory does not exist: ${packagesDir}`);
+  }
   const hashedPackages = await hashElement(packagesDir, {
     encoding: 'hex',
     files: {exclude: ['.DS_Store']},
@@ -205,14 +251,35 @@ const splitCommaParams = array => {
 // It is based on the version of React in the local package.json (e.g. 16.12.0-01974a867-20200129).
 // Both numbers will be replaced if the "next" release is promoted to a stable release.
 const updateVersionsForNext = async (cwd, reactVersion, version) => {
+  if (typeof cwd !== 'string' || !cwd) {
+    throw new Error(`Invalid cwd: expected a non-empty string, got "${cwd}"`);
+  }
+  if (typeof reactVersion !== 'string' || !reactVersion) {
+    throw new Error(`Invalid reactVersion: expected a non-empty string, got "${reactVersion}"`);
+  }
+  if (typeof version !== 'string' || !version) {
+    throw new Error(`Invalid version: expected a non-empty string, got "${version}"`);
+  }
+
   const isExperimental = reactVersion.includes('experimental');
   const packages = getPublicPackages(isExperimental);
   const packagesDir = join(cwd, 'packages');
+
+  console.log(theme`{info Updating versions for next release...}`);
+
+  // Check if packages dir exists
+  if (!existsSync(packagesDir)) {
+    throw new Error(`Packages directory does not exist: ${packagesDir}`);
+  }
 
   // Update the shared React version source file.
   // This is bundled into built renderers.
   // The promote script will replace this with a final version later.
   const sourceReactVersionPath = join(cwd, 'packages/shared/ReactVersion.js');
+  if (!existsSync(sourceReactVersionPath)) {
+    throw new Error(`ReactVersion.js file does not exist: ${sourceReactVersionPath}`);
+  }
+  console.log(theme`{info Updating ReactVersion.js...}`);
   const sourceReactVersion = readFileSync(
     sourceReactVersionPath,
     'utf8'
@@ -223,6 +290,10 @@ const updateVersionsForNext = async (cwd, reactVersion, version) => {
   // This is required to pass a later version check script.
   {
     const packageJSONPath = join(cwd, 'package.json');
+    if (!existsSync(packageJSONPath)) {
+      throw new Error(`Root package.json does not exist: ${packageJSONPath}`);
+    }
+    console.log(theme`{info Updating root package.json...}`);
     const packageJSON = await readJson(packageJSONPath);
     packageJSON.version = version;
     await writeJson(packageJSONPath, packageJSON, {spaces: 2});
@@ -231,9 +302,16 @@ const updateVersionsForNext = async (cwd, reactVersion, version) => {
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
     const packagePath = join(packagesDir, packageName);
+    if (!existsSync(packagePath)) {
+      throw new Error(`Package directory does not exist: ${packagePath}`);
+    }
 
     // Update version numbers in package JSONs
     const packageJSONPath = join(packagePath, 'package.json');
+    if (!existsSync(packageJSONPath)) {
+      throw new Error(`Package.json does not exist: ${packageJSONPath}`);
+    }
+    console.log(theme`{info Updating ${packageName} package.json...}`);
     const packageJSON = await readJson(packageJSONPath);
     packageJSON.version = version;
 
@@ -253,6 +331,8 @@ const updateVersionsForNext = async (cwd, reactVersion, version) => {
 
     await writeJson(packageJSONPath, packageJSON, {spaces: 2});
   }
+
+  console.log(theme`{success Versions updated successfully.}`);
 };
 
 module.exports = {
