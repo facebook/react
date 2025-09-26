@@ -52,7 +52,7 @@ type Props = {
   type: IconType,
 };
 
-const panelIcons = '0 -960 960 820';
+const panelIcons = '96 -864 768 768';
 export default function ButtonIcon({className = '', type}: Props): React.Node {
   let pathData = null;
   let viewBox = '0 0 24 24';
