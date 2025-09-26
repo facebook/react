@@ -299,6 +299,7 @@ type SuspenseNode = {
   nextSibling: null | SuspenseNode,
   rects: null | Array<Rect>, // The bounding rects of content children.
   suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
+  environments: Map<string, number>, // Tracks the Flight environment names that suspended this. I.e. if the server blocked this.
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
   hasUniqueSuspenders: boolean,
@@ -327,6 +328,7 @@ function createSuspenseNode(
     nextSibling: null,
     rects: null,
     suspendedBy: new Map(),
+    environments: new Map(),
     hasUniqueSuspenders: false,
     hasUnknownSuspenders: false,
   });
@@ -2220,6 +2222,10 @@ export function attach(
         }
         operations[i++] = fiberIdWithChanges;
         operations[i++] = suspense.hasUniqueSuspenders ? 1 : 0;
+        operations[i++] = suspense.environments.size;
+        suspense.environments.forEach((count, env) => {
+          operations[i++] = getStringID(env);
+        });
       });
     }
 
@@ -2725,6 +2731,13 @@ export function attach(
       return;
     }
 
+    // TODO: Just enqueue the operations here instead of stashing by id.
+
+    // Ensure each environment gets recorded in the string table since it is emitted
+    // before we loop it over again later during flush.
+    suspenseNode.environments.forEach((count, env) => {
+      getStringID(env);
+    });
     pendingSuspenderChanges.add(fiberInstance.id);
   }
 
@@ -2807,7 +2820,20 @@ export function attach(
     let suspendedBySet = suspenseNodeSuspendedBy.get(ioInfo);
     if (suspendedBySet === undefined) {
       suspendedBySet = new Set();
-      suspenseNodeSuspendedBy.set(asyncInfo.awaited, suspendedBySet);
+      suspenseNodeSuspendedBy.set(ioInfo, suspendedBySet);
+      // We've added a dependency. We must increment the ref count of the environment.
+      const env = ioInfo.env;
+      if (env != null) {
+        const environmentCounts = parentSuspenseNode.environments;
+        const count = environmentCounts.get(env);
+        if (count === undefined || count === 0) {
+          environmentCounts.set(env, 1);
+          // We've discovered a new environment for this SuspenseNode. We'll to update the node.
+          recordSuspenseSuspenders(parentSuspenseNode);
+        } else {
+          environmentCounts.set(env, count + 1);
+        }
+      }
     }
     // The child of the Suspense boundary that was suspended on this, or null if suspended at the root.
     // This is used to keep track of how many dependents are still alive and also to get information
@@ -2897,6 +2923,7 @@ export function attach(
         : instance.suspenseNode;
     if (previousSuspendedBy !== null && suspenseNode !== null) {
       const nextSuspendedBy = instance.suspendedBy;
+      let changedEnvironment = false;
       for (let i = 0; i < previousSuspendedBy.length; i++) {
         const asyncInfo = previousSuspendedBy[i];
         if (
@@ -2935,7 +2962,26 @@ export function attach(
             }
           }
           if (suspendedBySet !== undefined && suspendedBySet.size === 0) {
-            suspenseNode.suspendedBy.delete(asyncInfo.awaited);
+            suspenseNode.suspendedBy.delete(ioInfo);
+            // Successfully removed all dependencies. We can decrement the ref count of the environment.
+            const env = ioInfo.env;
+            if (env != null) {
+              const environmentCounts = suspenseNode.environments;
+              const count = environmentCounts.get(env);
+              if (count === undefined || count === 0) {
+                throw new Error(
+                  'We are removing an environment but it was not in the set. ' +
+                    'This is a bug in React.',
+                );
+              }
+              if (count === 1) {
+                environmentCounts.delete(env);
+                // Last one. We've now change the set of environments. We'll need to update the node.
+                changedEnvironment = true;
+              } else {
+                environmentCounts.set(env, count - 1);
+              }
+            }
           }
           if (
             suspenseNode.hasUniqueSuspenders &&
@@ -2947,6 +2993,9 @@ export function attach(
             unblockSuspendedBy(suspenseNode, ioInfo);
           }
         }
+      }
+      if (changedEnvironment) {
+        recordSuspenseSuspenders(suspenseNode);
       }
     }
   }
