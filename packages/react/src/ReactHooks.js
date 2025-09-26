@@ -12,6 +12,7 @@ import type {
   ReactContext,
   StartTransitionOptions,
   Usable,
+  UseOptions,
   Awaited,
 } from 'shared/ReactTypes';
 import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
@@ -204,9 +205,9 @@ export function useCacheRefresh(): <T>(?() => T, ?T) => void {
   return dispatcher.useCacheRefresh();
 }
 
-export function use<T>(usable: Usable<T>): T {
+export function use<T>(usable: Usable<T>, options?: UseOptions): T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.use(usable);
+  return dispatcher.use(usable, options);
 }
 
 export function useMemoCache(size: number): Array<mixed> {
