@@ -75,7 +75,7 @@ export function createRootFormatContext(): FormatContext {
 }
 
 function processImg(props: Object, formatContext: FormatContext): void {
-  // This should mirror the login of pushImg in ReactFizzConfigDOM.
+  // This should mirror the logic of pushImg in ReactFizzConfigDOM.
   const pictureOrNoScriptTagInScope =
     formatContext & (PICTURE_SCOPE | NOSCRIPT_SCOPE);
   const {src, srcSet} = props;
