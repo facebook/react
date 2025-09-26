@@ -101,26 +101,7 @@ function SuspenseTimelineInput() {
   }
 
   function handleChange(event: SyntheticEvent) {
-    if (rootID === null) {
-      return;
-    }
-    const rendererID = store.getRendererIDForElement(rootID);
-    if (rendererID === null) {
-      console.error(
-        `No renderer ID found for root element ${rootID} in suspense timeline.`,
-      );
-      return;
-    }
-
     const pendingTimelineIndex = +event.currentTarget.value;
-    const suspendedSet = timeline.slice(pendingTimelineIndex);
-
-    bridge.send('overrideSuspenseMilestone', {
-      rendererID,
-      rootID,
-      suspendedSet,
-    });
-
     switchSuspenseNode(pendingTimelineIndex);
   }
 
@@ -188,6 +169,32 @@ function SuspenseTimelineInput() {
       payload: 'toggle',
     });
   }
+
+  // TODO: useEffectEvent here once it's supported in all versions DevTools supports.
+  // For now we just exclude it from deps since we don't lint those anyway.
+  function changeTimelineIndex(newIndex: number) {
+    // Synchronize timeline index with what is resuspended.
+    if (rootID === null) {
+      return;
+    }
+    const rendererID = store.getRendererIDForElement(rootID);
+    if (rendererID === null) {
+      console.error(
+        `No renderer ID found for root element ${rootID} in suspense timeline.`,
+      );
+      return;
+    }
+    const suspendedSet = timeline.slice(timelineIndex);
+    bridge.send('overrideSuspenseMilestone', {
+      rendererID,
+      rootID,
+      suspendedSet,
+    });
+  }
+
+  useEffect(() => {
+    changeTimelineIndex(timelineIndex);
+  }, [timelineIndex]);
 
   useEffect(() => {
     if (!playing) {
