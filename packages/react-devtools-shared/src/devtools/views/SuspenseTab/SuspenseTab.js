@@ -117,6 +117,11 @@ function SuspenseTab(_: {}) {
     initLayoutState,
   );
 
+  // If there are no named Activity boundaries, we don't have any tree list and we should hide
+  // both the panel and the button to toggle it. Since we currently don't support it yet, it's
+  // always disabled.
+  const treeListDisabled = true;
+
   const wrapperTreeRef = useRef<null | HTMLElement>(null);
   const resizeTreeRef = useRef<null | HTMLElement>(null);
   const resizeTreeListRef = useRef<null | HTMLElement>(null);
@@ -290,23 +295,31 @@ function SuspenseTab(_: {}) {
   return (
     <div className={styles.SuspenseTab} ref={wrapperTreeRef}>
       <div className={styles.TreeWrapper} ref={resizeTreeRef}>
-        <div
-          className={styles.TreeList}
-          hidden={treeListHidden}
-          ref={resizeTreeListRef}>
-          <SuspenseTreeList />
-        </div>
-        <div className={styles.ResizeBarWrapper} hidden={treeListHidden}>
+        {treeListDisabled ? null : (
           <div
-            onPointerDown={onResizeStart}
-            onPointerMove={onResizeTreeList}
-            onPointerUp={onResizeEnd}
-            className={styles.ResizeBar}
-          />
-        </div>
+            className={styles.TreeList}
+            hidden={treeListHidden}
+            ref={resizeTreeListRef}>
+            <SuspenseTreeList />
+          </div>
+        )}
+        {treeListDisabled ? null : (
+          <div className={styles.ResizeBarWrapper} hidden={treeListHidden}>
+            <div
+              onPointerDown={onResizeStart}
+              onPointerMove={onResizeTreeList}
+              onPointerUp={onResizeEnd}
+              className={styles.ResizeBar}
+            />
+          </div>
+        )}
         <div className={styles.TreeView}>
           <div className={styles.SuspenseTreeViewHeader}>
-            <ToggleTreeList dispatch={dispatch} state={state} />
+            {treeListDisabled ? (
+              <div />
+            ) : (
+              <ToggleTreeList dispatch={dispatch} state={state} />
+            )}
             <div className={styles.SuspenseTreeViewHeaderMain}>
               <div className={styles.SuspenseTimeline}>
                 <SuspenseTimeline />
