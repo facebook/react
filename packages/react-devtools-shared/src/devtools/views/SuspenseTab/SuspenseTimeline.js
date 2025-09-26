@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useContext, useLayoutEffect, useRef} from 'react';
+import {useContext, useState, useLayoutEffect, useRef} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
@@ -21,6 +21,8 @@ import typeof {
   SyntheticEvent,
   SyntheticPointerEvent,
 } from 'react-dom-bindings/src/events/SyntheticEvent';
+import Button from '../Button';
+import ButtonIcon, {type IconType} from '../ButtonIcon';
 
 function SuspenseTimelineInput() {
   const bridge = useContext(BridgeContext);
@@ -153,10 +155,25 @@ function SuspenseTimelineInput() {
     highlightHostInstance(suspenseID);
   }
 
+  const [playing, setPlaying] = useState(false);
+
   return (
     <>
-      {timelineIndex}/{max}
-      <div className={styles.SuspenseTimelineInput}>
+      <Button disabled={timelineIndex === 0} title={'Previous'}>
+        <ButtonIcon type={'skip-previous'} />
+      </Button>
+      <Button
+        onClick={() => setPlaying(playing => !playing)}
+        disabled={max === 0 && !playing}
+        title={playing ? 'Pause' : 'Play'}>
+        <ButtonIcon type={playing ? 'pause' : 'play'} />
+      </Button>
+      <Button disabled={timelineIndex === max} title={'Next'}>
+        <ButtonIcon type={'skip-next'} />
+      </Button>
+      <div
+        className={styles.SuspenseTimelineInput}
+        title={timelineIndex + '/' + max}>
         <input
           className={styles.SuspenseTimelineSlider}
           type="range"
