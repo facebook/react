@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useContext, useLayoutEffect, useRef} from 'react';
+import {useContext, useLayoutEffect, useEffect, useRef} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
@@ -188,6 +188,22 @@ function SuspenseTimelineInput() {
       payload: 'toggle',
     });
   }
+
+  useEffect(() => {
+    if (!playing) {
+      return undefined;
+    }
+    // While playing, advance one step every second.
+    const PLAY_SPEED_INTERVAL = 1000;
+    const timer = setInterval(() => {
+      suspenseTreeDispatch({
+        type: 'SUSPENSE_PLAY_TICK',
+      });
+    }, PLAY_SPEED_INTERVAL);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [playing]);
 
   return (
     <>
