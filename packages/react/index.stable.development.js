@@ -37,6 +37,7 @@ export {
   useDebugValue,
   useDeferredValue,
   useEffect,
+  useEffectEvent,
   useImperativeHandle,
   useInsertionEffect,
   useLayoutEffect,
