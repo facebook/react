@@ -32,6 +32,7 @@ export type SuspenseTreeState = {
   timeline: $ReadOnlyArray<SuspenseNode['id']>,
   timelineIndex: number | -1,
   uniqueSuspendersOnly: boolean,
+  playing: boolean,
 };
 
 type ACTION_SUSPENSE_TREE_MUTATION = {
@@ -64,13 +65,19 @@ type ACTION_SUSPENSE_SKIP_TIMELINE_INDEX = {
   type: 'SUSPENSE_SKIP_TIMELINE_INDEX',
   payload: boolean,
 };
+type ACTION_SUSPENSE_PLAY_PAUSE = {
+  type: 'SUSPENSE_PLAY_PAUSE',
+  payload: 'toggle' | 'play' | 'pause',
+};
+
 export type SuspenseTreeAction =
   | ACTION_SUSPENSE_TREE_MUTATION
   | ACTION_SET_SUSPENSE_LINEAGE
   | ACTION_SELECT_SUSPENSE_BY_ID
   | ACTION_SET_SUSPENSE_TIMELINE
   | ACTION_SUSPENSE_SET_TIMELINE_INDEX
-  | ACTION_SUSPENSE_SKIP_TIMELINE_INDEX;
+  | ACTION_SUSPENSE_SKIP_TIMELINE_INDEX
+  | ACTION_SUSPENSE_PLAY_PAUSE;
 export type SuspenseTreeDispatch = (action: SuspenseTreeAction) => void;
 
 const SuspenseTreeStateContext: ReactContext<SuspenseTreeState> =
@@ -112,6 +119,7 @@ function getInitialState(store: Store): SuspenseTreeState {
       timeline: [],
       timelineIndex: -1,
       uniqueSuspendersOnly,
+      playing: false,
     };
   } else {
     const timeline = store.getSuspendableDocumentOrderSuspense(
@@ -133,6 +141,7 @@ function getInitialState(store: Store): SuspenseTreeState {
       timeline,
       timelineIndex,
       uniqueSuspendersOnly,
+      playing: false,
     };
   }
 
@@ -239,6 +248,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               ...state,
               selectedSuspenseID,
               selectedRootID,
+              playing: false, // pause
             };
           }
           case 'SET_SUSPENSE_LINEAGE': {
@@ -252,6 +262,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               lineage,
               selectedSuspenseID: suspenseID,
               selectedRootID,
+              playing: false, // pause
             };
           }
           case 'SET_SUSPENSE_TIMELINE': {
@@ -307,6 +318,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               lineage: nextLineage,
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
+              playing: false, // pause
             };
           }
           case 'SUSPENSE_SKIP_TIMELINE_INDEX': {
@@ -328,6 +340,33 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               lineage: nextLineage,
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
+              playing: false, // pause
+            };
+          }
+          case 'SUSPENSE_PLAY_PAUSE': {
+            const mode = action.payload;
+
+            let nextTimelineIndex = state.timelineIndex;
+            let nextSelectedSuspenseID = state.selectedSuspenseID;
+            let nextLineage = state.lineage;
+
+            if (
+              !state.playing &&
+              mode !== 'pause' &&
+              nextTimelineIndex === state.timeline.length - 1
+            ) {
+              // If we're restarting at the end. Then loop around and start again from the beginning.
+              nextTimelineIndex = 0;
+              nextSelectedSuspenseID = state.timeline[nextTimelineIndex];
+              nextLineage = store.getSuspenseLineage(nextSelectedSuspenseID);
+            }
+
+            return {
+              ...state,
+              lineage: nextLineage,
+              selectedSuspenseID: nextSelectedSuspenseID,
+              timelineIndex: nextTimelineIndex,
+              playing: mode === 'toggle' ? !state.playing : mode === 'play',
             };
           }
           default:

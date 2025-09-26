@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useContext, useState, useLayoutEffect, useRef} from 'react';
+import {useContext, useLayoutEffect, useRef} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
@@ -36,6 +36,7 @@ function SuspenseTimelineInput() {
     selectedRootID: rootID,
     timeline,
     timelineIndex,
+    playing,
   } = useContext(SuspenseTreeStateContext);
 
   const inputRef = useRef<HTMLElement | null>(null);
@@ -181,7 +182,12 @@ function SuspenseTimelineInput() {
     });
   }
 
-  const [playing, setPlaying] = useState(false);
+  function togglePlaying() {
+    suspenseTreeDispatch({
+      type: 'SUSPENSE_PLAY_PAUSE',
+      payload: 'toggle',
+    });
+  }
 
   return (
     <>
@@ -192,9 +198,9 @@ function SuspenseTimelineInput() {
         <ButtonIcon type={'skip-previous'} />
       </Button>
       <Button
-        onClick={() => setPlaying(p => !p)}
         disabled={max === 0 && !playing}
-        title={playing ? 'Pause' : 'Play'}>
+        title={playing ? 'Pause' : 'Play'}
+        onClick={togglePlaying}>
         <ButtonIcon type={playing ? 'pause' : 'play'} />
       </Button>
       <Button
