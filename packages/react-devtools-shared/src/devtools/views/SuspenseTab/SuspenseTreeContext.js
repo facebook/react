@@ -60,12 +60,17 @@ type ACTION_SUSPENSE_SET_TIMELINE_INDEX = {
   type: 'SUSPENSE_SET_TIMELINE_INDEX',
   payload: number,
 };
+type ACTION_SUSPENSE_SKIP_TIMELINE_INDEX = {
+  type: 'SUSPENSE_SKIP_TIMELINE_INDEX',
+  payload: boolean,
+};
 export type SuspenseTreeAction =
   | ACTION_SUSPENSE_TREE_MUTATION
   | ACTION_SET_SUSPENSE_LINEAGE
   | ACTION_SELECT_SUSPENSE_BY_ID
   | ACTION_SET_SUSPENSE_TIMELINE
-  | ACTION_SUSPENSE_SET_TIMELINE_INDEX;
+  | ACTION_SUSPENSE_SET_TIMELINE_INDEX
+  | ACTION_SUSPENSE_SKIP_TIMELINE_INDEX;
 export type SuspenseTreeDispatch = (action: SuspenseTreeAction) => void;
 
 const SuspenseTreeStateContext: ReactContext<SuspenseTreeState> =
@@ -297,6 +302,27 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               nextSelectedSuspenseID,
             );
 
+            return {
+              ...state,
+              lineage: nextLineage,
+              selectedSuspenseID: nextSelectedSuspenseID,
+              timelineIndex: nextTimelineIndex,
+            };
+          }
+          case 'SUSPENSE_SKIP_TIMELINE_INDEX': {
+            const direction = action.payload;
+            const nextTimelineIndex =
+              state.timelineIndex + (direction ? 1 : -1);
+            if (
+              nextTimelineIndex < 0 ||
+              nextTimelineIndex > state.timeline.length - 1
+            ) {
+              return state;
+            }
+            const nextSelectedSuspenseID = state.timeline[nextTimelineIndex];
+            const nextLineage = store.getSuspenseLineage(
+              nextSelectedSuspenseID,
+            );
             return {
               ...state,
               lineage: nextLineage,

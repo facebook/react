@@ -22,7 +22,7 @@ import typeof {
   SyntheticPointerEvent,
 } from 'react-dom-bindings/src/events/SyntheticEvent';
 import Button from '../Button';
-import ButtonIcon, {type IconType} from '../ButtonIcon';
+import ButtonIcon from '../ButtonIcon';
 
 function SuspenseTimelineInput() {
   const bridge = useContext(BridgeContext);
@@ -155,20 +155,52 @@ function SuspenseTimelineInput() {
     highlightHostInstance(suspenseID);
   }
 
+  function skipPrevious() {
+    const nextSelectedSuspenseID = timeline[timelineIndex - 1];
+    highlightHostInstance(nextSelectedSuspenseID);
+    treeDispatch({
+      type: 'SELECT_ELEMENT_BY_ID',
+      payload: nextSelectedSuspenseID,
+    });
+    suspenseTreeDispatch({
+      type: 'SUSPENSE_SKIP_TIMELINE_INDEX',
+      payload: false,
+    });
+  }
+
+  function skipForward() {
+    const nextSelectedSuspenseID = timeline[timelineIndex + 1];
+    highlightHostInstance(nextSelectedSuspenseID);
+    treeDispatch({
+      type: 'SELECT_ELEMENT_BY_ID',
+      payload: nextSelectedSuspenseID,
+    });
+    suspenseTreeDispatch({
+      type: 'SUSPENSE_SKIP_TIMELINE_INDEX',
+      payload: true,
+    });
+  }
+
   const [playing, setPlaying] = useState(false);
 
   return (
     <>
-      <Button disabled={timelineIndex === 0} title={'Previous'}>
+      <Button
+        disabled={timelineIndex === 0}
+        title={'Previous'}
+        onClick={skipPrevious}>
         <ButtonIcon type={'skip-previous'} />
       </Button>
       <Button
-        onClick={() => setPlaying(playing => !playing)}
+        onClick={() => setPlaying(p => !p)}
         disabled={max === 0 && !playing}
         title={playing ? 'Pause' : 'Play'}>
         <ButtonIcon type={playing ? 'pause' : 'play'} />
       </Button>
-      <Button disabled={timelineIndex === max} title={'Next'}>
+      <Button
+        disabled={timelineIndex === max}
+        title={'Next'}
+        onClick={skipForward}>
         <ButtonIcon type={'skip-next'} />
       </Button>
       <div
