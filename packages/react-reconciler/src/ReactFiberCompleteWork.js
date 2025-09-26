@@ -35,7 +35,6 @@ import {
   enableLegacyHidden,
   enableSuspenseCallback,
   enableScopeAPI,
-  enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableTransitionTracing,
   passChildrenWhenCloningPersistedNodes,
@@ -92,7 +91,6 @@ import {
   Snapshot,
   ChildDeletion,
   StaticMask,
-  MutationMask,
   Passive,
   ForceClientRender,
   MaySuspendCommit,
@@ -205,7 +203,7 @@ function markUpdate(workInProgress: Fiber) {
  * it received an update that requires a clone of the tree above.
  */
 function markCloned(workInProgress: Fiber) {
-  if (supportsPersistence && enablePersistedModeClonedFlag) {
+  if (supportsPersistence) {
     workInProgress.flags |= Cloned;
   }
 }
@@ -227,9 +225,7 @@ function doesRequireClone(current: null | Fiber, completedWork: Fiber) {
   // then we only have to check the `completedWork.subtreeFlags`.
   let child = completedWork.child;
   while (child !== null) {
-    const checkedFlags = enablePersistedModeClonedFlag
-      ? Cloned | Visibility | Placement | ChildDeletion
-      : MutationMask;
+    const checkedFlags = Cloned | Visibility | Placement | ChildDeletion;
     if (
       (child.flags & checkedFlags) !== NoFlags ||
       (child.subtreeFlags & checkedFlags) !== NoFlags
@@ -526,16 +522,9 @@ function updateHostComponent(
       markUpdate(workInProgress);
     }
     workInProgress.stateNode = newInstance;
-    if (!requiresClone) {
-      if (!enablePersistedModeClonedFlag) {
-        // If there are no other effects in this tree, we need to flag this node as having one.
-        // Even though we're not going to use it for anything.
-        // Otherwise parents won't know that there are new children to propagate upwards.
-        markUpdate(workInProgress);
-      }
-    } else if (
-      !passChildrenWhenCloningPersistedNodes ||
-      hasOffscreenComponentChild
+    if (
+      requiresClone &&
+      (!passChildrenWhenCloningPersistedNodes || hasOffscreenComponentChild)
     ) {
       // If children have changed, we have to add them all to the set.
       appendAllChildren(
@@ -693,11 +682,6 @@ function updateHostText(
         currentHostContext,
         workInProgress,
       );
-      if (!enablePersistedModeClonedFlag) {
-        // We'll have to mark it as having an effect, even though we won't use the effect for anything.
-        // This lets the parents know that at least one of their children has changed.
-        markUpdate(workInProgress);
-      }
     } else {
       workInProgress.stateNode = current.stateNode;
     }
