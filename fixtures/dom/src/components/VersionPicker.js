@@ -1,4 +1,5 @@
 import getVersionTags from '../tags';
+import PropTypes from 'prop-types';
 
 const React = window.React;
 
@@ -37,5 +38,12 @@ class VersionPicker extends React.Component {
     );
   }
 }
+
+VersionPicker.propTypes = {
+  version: PropTypes.string,
+  id: PropTypes.string,
+  name: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+};
 
 export default VersionPicker;
