@@ -1371,7 +1371,7 @@ const allTests = {
         // Invalid because rules-of-hooks must also apply to components wrapped in wrapper functions.
         // This is a case where it wraps an anonymous function.
         // This *must* be invalid.
-        const ComponentWithConditionalHook = anyWrapper(function ComponentWithConditionalHook() {
+        const ComponentWithConditionalHook = anyWrapper(function() {
           if (cond) {
             useConditionalHook();
           }
