@@ -2380,14 +2380,17 @@ function parseModelString(
         // $NaN
         return NaN;
       }
-      case 'u': {
-        // matches "$undefined"
+      case '_': {
         // Special encoding for `undefined` which can't be serialized as JSON otherwise.
         return undefined;
       }
       case 'D': {
         // Date
         return new Date(Date.parse(value.slice(2)));
+      }
+      case 'u': {
+        // URL
+        return new URL(value.slice(2));
       }
       case 'n': {
         // BigInt
@@ -3216,7 +3219,7 @@ function startAsyncIterable<T>(
         resolveIteratorResultChunk(
           response,
           buffer[nextWriteIndex++],
-          '"$undefined"',
+          '"$_"',
           true,
         );
       }
@@ -3283,7 +3286,7 @@ function stopStream(
   }
   const streamChunk: InitializedStreamChunk<any> = (chunk: any);
   const controller = streamChunk.reason;
-  controller.close(row === '' ? '"$undefined"' : row);
+  controller.close(row === '' ? '"$_"' : row);
 }
 
 type ErrorWithDigest = Error & {digest?: string};

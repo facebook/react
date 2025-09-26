@@ -245,6 +245,14 @@ describe('ReactFlightDOMReply', () => {
     expect(d % 1000).toEqual(123); // double-check the milliseconds made it through
   });
 
+  it('can pass a URL as a reply', async () => {
+    const url = new URL('https://example.com/foo?bar=baz#qux');
+    const body = await ReactServerDOMClient.encodeReply(url);
+    const url2 = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+
+    expect(url).toEqual(url2);
+  });
+
   it('can pass a Map as a reply', async () => {
     const objKey = {obj: 'key'};
     const m = new Map([

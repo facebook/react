@@ -551,6 +551,22 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput('prop: 2009-02-13T23:31:30.123Z');
   });
 
+  it('can transport URL', async () => {
+    const url = new URL('https://example.com/foo?bar=baz#qux');
+    const transport = ReactNoopFlightServer.render({url});
+    const model = await ReactNoopFlightClient.read(transport);
+
+    expect(model).toEqual({url});
+  });
+
+  it('can transport URL as top-level value', async () => {
+    const url = new URL('https://example.com/foo?bar=baz#qux');
+    const transport = ReactNoopFlightServer.render(url);
+    const model = await ReactNoopFlightClient.read(transport);
+
+    expect(model).toEqual(url);
+  });
+
   it('can transport Map', async () => {
     function ComponentClient({prop, selected}) {
       return `

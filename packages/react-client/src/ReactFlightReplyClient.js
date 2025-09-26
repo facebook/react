@@ -135,13 +135,19 @@ function serializeNumber(number: number): string | number {
 }
 
 function serializeUndefined(): string {
-  return '$undefined';
+  return '$_';
 }
 
 function serializeDateFromDateJSON(dateJSON: string): string {
   // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
-  // We need only tack on a $D prefix.
+  // We need to only tack on a $D prefix.
   return '$D' + dateJSON;
+}
+
+function serializeURLFromHref(href: string): string {
+  // JSON.stringify automatically calls URL.prototype.toJSON which returns href.
+  // We need to only tack on a $u prefix.
+  return '$u' + href;
 }
 
 function serializeBigInt(n: bigint): string {
@@ -369,7 +375,8 @@ export function processReply(
       if (
         typeof originalValue === 'object' &&
         originalValue !== value &&
-        !(originalValue instanceof Date)
+        !(originalValue instanceof Date) &&
+        !(originalValue instanceof URL)
       ) {
         if (objectName(originalValue) !== 'Object') {
           console.error(
@@ -732,13 +739,23 @@ export function processReply(
     }
 
     if (typeof value === 'string') {
-      // TODO: Maybe too clever. If we support URL there's no similar trick.
+      // TODO: Maybe too clever.
       if (value[value.length - 1] === 'Z') {
         // Possibly a Date, whose toJSON automatically calls toISOString
         // $FlowFixMe[incompatible-use]
         const originalValue = parent[key];
         if (originalValue instanceof Date) {
           return serializeDateFromDateJSON(value);
+        }
+      }
+      // TODO: This check avoids a megamorphic key look up in the parent object
+      // for every string value. Is it really faster though?
+      if (isMaybeHref(value)) {
+        // Possibly a URL, whose toJSON automatically returns the href
+        // $FlowFixMe[incompatible-use]
+        const originalValue = parent[key];
+        if (originalValue instanceof URL) {
+          return serializeURLFromHref(value);
         }
       }
 
@@ -1031,6 +1048,39 @@ function isSignatureEqual(
       throw boundPromise;
     }
   }
+}
+
+/**
+ * Cheap check for strings that *could* be a URL href. Follows the scheme syntax
+ * from RFC 3986 §3.1. Allows false positives but no false negatives for valid
+ * `URL.prototype.toJSON()` output.
+ */
+function isMaybeHref(value: string): boolean {
+  const colonIndex = value.indexOf(':');
+  if (colonIndex <= 0) {
+    return false;
+  }
+  const c0 = value.charCodeAt(0);
+  // scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+  if (!((c0 >= 65 && c0 <= 90) || (c0 >= 97 && c0 <= 122))) {
+    return false;
+  }
+  for (let i = 1; i < colonIndex; i++) {
+    const c = value.charCodeAt(i);
+    if (
+      !(
+        (c >= 65 && c <= 90) ||
+        (c >= 97 && c <= 122) ||
+        (c >= 48 && c <= 57) ||
+        c === 43 ||
+        c === 45 ||
+        c === 46
+      )
+    ) {
+      return false;
+    }
+  }
+  return true;
 }
 
 let fakeServerFunctionIdx = 0;

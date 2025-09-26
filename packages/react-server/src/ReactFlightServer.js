@@ -2598,7 +2598,8 @@ function createTask(
         if (
           typeof originalValue === 'object' &&
           originalValue !== value &&
-          !(originalValue instanceof Date)
+          !(originalValue instanceof Date) &&
+          !(originalValue instanceof URL)
         ) {
           // Call with the server component as the currently rendering component
           // for context.
@@ -2716,19 +2717,31 @@ function serializeNumber(number: number): string | number {
 }
 
 function serializeUndefined(): string {
-  return '$undefined';
+  return '$_';
 }
 
 function serializeDate(date: Date): string {
   // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
-  // We need only tack on a $D prefix.
+  // We need to only tack on a $D prefix.
   return '$D' + date.toJSON();
 }
 
 function serializeDateFromDateJSON(dateJSON: string): string {
   // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
-  // We need only tack on a $D prefix.
+  // We need to only tack on a $D prefix.
   return '$D' + dateJSON;
+}
+
+function serializeURL(url: URL): string {
+  // JSON.stringify automatically calls URL.prototype.toJSON which returns href.
+  // We need to only tack on a $u prefix.
+  return '$u' + url.toJSON();
+}
+
+function serializeURLFromHref(href: string): string {
+  // JSON.stringify automatically calls URL.prototype.toJSON which returns href.
+  // We need to only tack on a $u prefix.
+  return '$u' + href;
 }
 
 function serializeBigInt(n: bigint): string {
@@ -3189,6 +3202,39 @@ function escapeStringValue(value: string): string {
   } else {
     return value;
   }
+}
+
+/**
+ * Cheap check for strings that *could* be a URL href. Follows the scheme syntax
+ * from RFC 3986 §3.1. Allows false positives but no false negatives for valid
+ * `URL.prototype.toJSON()` output.
+ */
+function isMaybeHref(value: string): boolean {
+  const colonIndex = value.indexOf(':');
+  if (colonIndex <= 0) {
+    return false;
+  }
+  const c0 = value.charCodeAt(0);
+  // scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+  if (!((c0 >= 65 && c0 <= 90) || (c0 >= 97 && c0 <= 122))) {
+    return false;
+  }
+  for (let i = 1; i < colonIndex; i++) {
+    const c = value.charCodeAt(i);
+    if (
+      !(
+        (c >= 65 && c <= 90) ||
+        (c >= 97 && c <= 122) ||
+        (c >= 48 && c <= 57) ||
+        c === 43 ||
+        c === 45 ||
+        c === 46
+      )
+    ) {
+      return false;
+    }
+  }
+  return true;
 }
 
 let modelRoot: null | ReactClientValue = false;
@@ -3719,12 +3765,17 @@ function renderModelDestructive(
       return renderAsyncFragment(request, task, (value: any), getAsyncIterator);
     }
 
-    // We put the Date check low b/c most of the time Date's will already have been serialized
-    // before we process it in this function but when rendering a Date() as a top level it can
-    // end up being a Date instance here. This is rare so we deprioritize it by putting it deep
-    // in this function
+    // We place the Date & URL checks low because in most cases these instances
+    // are already serialized to a JSON string, before reaching this function.
+    // Those cases are handled below (see the serializeDateFromDateJSON &
+    // serializeURLFromHref call sites). However, when rendering a Date/URL at
+    // the top level, it may still appear here as a Date/URL instance. Since
+    // this is rare, we deprioritize it by handling it late in the function.
     if (value instanceof Date) {
       return serializeDate(value);
+    }
+    if (value instanceof URL) {
+      return serializeURL(value);
     }
 
     // Verify that this is a simple plain object.
@@ -3784,13 +3835,23 @@ function renderModelDestructive(
       }
     }
     serializedSize += value.length;
-    // TODO: Maybe too clever. If we support URL there's no similar trick.
+    // TODO: Maybe too clever.
     if (value[value.length - 1] === 'Z') {
       // Possibly a Date, whose toJSON automatically calls toISOString
       // $FlowFixMe[incompatible-use]
       const originalValue = parent[parentPropertyName];
       if (originalValue instanceof Date) {
         return serializeDateFromDateJSON(value);
+      }
+    }
+    // TODO: This check avoids a megamorphic key look up in the parent object
+    // for every string value. Is it really faster though?
+    if (isMaybeHref(value)) {
+      // Possibly a URL, whose toJSON automatically returns the href
+      // $FlowFixMe[incompatible-use]
+      const originalValue = parent[parentPropertyName];
+      if (originalValue instanceof URL) {
+        return serializeURLFromHref(value);
       }
     }
     if (value.length >= 1024 && byteLengthOfChunk !== null) {
@@ -4939,6 +5000,16 @@ function renderDebugModel(
         return serializeDateFromDateJSON(value);
       }
     }
+    // TODO: This check avoids a megamorphic key look up in the parent object
+    // for every string value. Is it really faster though?
+    if (isMaybeHref(value)) {
+      // Possibly a URL, whose toJSON automatically returns the href
+      // $FlowFixMe[incompatible-use]
+      const originalValue = parent[parentPropertyName];
+      if (originalValue instanceof URL) {
+        return serializeURLFromHref(value);
+      }
+    }
     if (value.length >= 1024) {
       // Large strings are counted towards the object limit.
       if (counter.objectLimit <= 0) {
@@ -5038,6 +5109,10 @@ function renderDebugModel(
 
   if (value instanceof Date) {
     return serializeDate(value);
+  }
+
+  if (value instanceof URL) {
+    return serializeURL(value);
   }
 
   return 'unknown type ' + typeof value;

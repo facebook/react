@@ -276,7 +276,7 @@ function resolveModelChunk<T>(
     const streamChunk: InitializedStreamChunk<any> = (chunk: any);
     const controller = streamChunk.reason;
     if (value[0] === 'C') {
-      controller.close(value === 'C' ? '"$undefined"' : value.slice(1));
+      controller.close(value === 'C' ? '"$_"' : value.slice(1));
     } else {
       controller.enqueueModel(value);
     }
@@ -714,7 +714,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
     // We assume that this is a string entry for now.
     const value: string = (existingEntries[i]: any);
     if (value[0] === 'C') {
-      controller.close(value === 'C' ? '"$undefined"' : value.slice(1));
+      controller.close(value === 'C' ? '"$_"' : value.slice(1));
     } else {
       controller.enqueueModel(value);
     }
@@ -862,11 +862,7 @@ function parseAsyncIterable<T>(
       nextWriteIndex++;
       while (nextWriteIndex < buffer.length) {
         // In generators, any extra reads from the iterator have the value undefined.
-        resolveIteratorResultChunk(
-          buffer[nextWriteIndex++],
-          '"$undefined"',
-          true,
-        );
+        resolveIteratorResultChunk(buffer[nextWriteIndex++], '"$_"', true);
       }
     },
     error(error: Error): void {
@@ -1015,14 +1011,17 @@ function parseModelString(
         // $NaN
         return NaN;
       }
-      case 'u': {
-        // matches "$undefined"
+      case '_': {
         // Special encoding for `undefined` which can't be serialized as JSON otherwise.
         return undefined;
       }
       case 'D': {
         // Date
         return new Date(Date.parse(value.slice(2)));
+      }
+      case 'u': {
+        // URL
+        return new URL(value.slice(2));
       }
       case 'n': {
         // BigInt
