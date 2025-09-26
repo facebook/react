@@ -3021,7 +3021,8 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<div>loading...</div>);
   });
 
-  // @gate enableHalt
+  // This could be a bug. Discovered while making enableAsyncDebugInfo dynamic for www.
+  // @gate experimental && (enableHalt || (enableAsyncDebugInfo && __DEV__))
   it('will leave async iterables in an incomplete state when halting', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
