@@ -49,10 +49,6 @@
   cursor: ew-resize;
 }
 
-.TreeView footer {
-  display: none;
-}
-
 @container devtools (width < 600px) {
   .SuspenseTab {
     flex-direction: column;
@@ -76,13 +72,13 @@
     cursor: ns-resize;
   }
 
-  .TreeView footer {
-    display: flex;
-    justify-content: end;
-    border-top: 1px solid var(--color-border);
-  }
-
   .ToggleInspectedElement[data-orientation="horizontal"] {
+    display: none;
+  }
+}
+
+@container devtools (width >= 600px) {
+  .ToggleInspectedElement[data-orientation="vertical"] {
     display: none;
   }
 }
@@ -103,22 +99,18 @@
 }
 
 .Rects {
-  border-top: 1px solid var(--color-border);
   padding: 0.25rem;
   flex-grow: 1;
   overflow: auto;
 }
 
 .SuspenseTreeViewHeader {
-  padding: 0.25rem;
+  flex: 0 0 42px;
+  padding: 0.5rem;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto auto auto;
   align-items: flex-start;
-}
-
-.SuspenseTreeViewHeaderMain {
-  display: grid;
-  grid-template-rows: auto auto;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .SuspenseBreadcrumbs {
@@ -127,4 +119,15 @@
    * OwnerStack has more constraints that make it easier so it won't be a 1:1 port.
    */
   overflow-x: auto;
+}
+
+.SuspenseTreeViewFooter {
+  flex: 0 0 42px;
+  display: flex;
+  justify-content: end;
+  border-top: 1px solid var(--color-border);
+  padding: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: flex-start;
 }
