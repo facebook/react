@@ -139,3 +139,7 @@
   grid-template-columns: 1fr auto;
   align-items: center;
 }
+
+.SuspenseTreeViewFooterButtons {
+  padding: 0.25rem;
+}

@@ -441,14 +441,14 @@ function SuspenseTab(_: {}) {
               <SuspenseRects />
             </div>
             <footer className={styles.SuspenseTreeViewFooter}>
-              <div className={styles.SuspenseTimeline}>
-                <SuspenseTimeline />
+              <SuspenseTimeline />
+              <div className={styles.SuspenseTreeViewFooterButtons}>
+                <ToggleInspectedElement
+                  dispatch={dispatch}
+                  state={state}
+                  orientation="vertical"
+                />
               </div>
-              <ToggleInspectedElement
-                dispatch={dispatch}
-                state={state}
-                orientation="vertical"
-              />
             </footer>
           </div>
         </div>
