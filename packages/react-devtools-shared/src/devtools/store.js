@@ -1797,7 +1797,6 @@ export default class Store extends EventEmitter<{
 
             suspense.hasUniqueSuspenders = hasUniqueSuspenders;
             // TODO: Recompute the environment names.
-            console.log(id, environmentNames);
           }
 
           hasSuspenseTreeChanged = true;
