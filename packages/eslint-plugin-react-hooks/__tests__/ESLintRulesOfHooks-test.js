@@ -1353,6 +1353,58 @@ const allTests = {
       `,
       errors: [tryCatchUseError('use')],
     },
+    {
+      code: normalizeIndent`
+        // Invalid because rules-of-hooks must also apply to components wrapped in wrapper functions.
+        // This is a case where it wraps a properly named function.
+        // This *must* be invalid.
+        const ComponentWithConditionalHook = anyWrapper(function ComponentWithConditionalHook() {
+          if (cond) {
+            useConditionalHook();
+          }
+        })
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because rules-of-hooks must also apply to components wrapped in wrapper functions.
+        // This is a case where it wraps an anonymous function.
+        // This *must* be invalid.
+        const ComponentWithConditionalHook = anyWrapper(function ComponentWithConditionalHook() {
+          if (cond) {
+            useConditionalHook();
+          }
+        })
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because rules-of-hooks must also apply to components wrapped in wrapper functions.
+        // This is a case where it wraps an arrow function.
+        // This *must* be invalid.
+        const ComponentWithConditionalHook = anyWrapper(() => {
+          if (cond) {
+            useConditionalHook();
+          }
+        })
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because rules-of-hooks must also apply to components wrapped in many wrapper functions.
+        // This is a case where it double wraps an arrow function.
+        // This *must* be invalid.
+        const ComponentWithConditionalHook = anyWrapper1(anyWrapper2(() => {
+          if (cond) {
+            useConditionalHook();
+          }
+        }))
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
   ],
 };
 
