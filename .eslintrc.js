@@ -379,15 +379,15 @@ module.exports = {
       files: ['**/__tests__/*.js'],
       rules: {
         // https://github.com/jest-community/eslint-plugin-jest
-        // Meh, who cares.
+  // This rule is not enforced in our test code.
         'jest/consistent-test-it': OFF,
-        // Meh, we have a lot of these, who cares.
+  // This rule is not enforced due to frequent occurrences in our codebase.
         'jest/no-alias-methods': OFF,
         // We do conditions based on feature flags.
         'jest/no-conditional-expect': OFF,
         // We have our own assertion helpers.
         'jest/expect-expect': OFF,
-        // Lame rule that fires in itRender helpers or in render methods.
+  // This rule triggers in itRender helpers or in render methods, so it is not enforced.
         'jest/no-standalone-expect': OFF,
       },
     },
@@ -556,7 +556,7 @@ module.exports = {
     $ArrayBufferView: 'readonly',
     $Shape: 'readonly',
     CallSite: 'readonly',
-    ConsoleTask: 'readonly', // TOOD: Figure out what the official name of this will be.
+  ConsoleTask: 'readonly', // TODO: Figure out what the official name of this will be.
     ReturnType: 'readonly',
     AnimationFrameID: 'readonly',
     WeakRef: 'readonly',

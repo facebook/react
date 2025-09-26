@@ -1,7 +1,7 @@
 {
   "name": "react-compiler-healthcheck",
   "version": "0.0.0-experimental-ab3118d-20240725",
-  "description": "Health check script to test violations of the rules of react.",
+  "description": "Health check script to test violations of the rules of React.",
   "bin": {
     "react-compiler-healthcheck": "dist/index.js"
   },
