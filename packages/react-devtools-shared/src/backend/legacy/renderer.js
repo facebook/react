@@ -793,6 +793,20 @@ export function attach(
     };
   }
 
+  function inspectRoots(
+    requestID: number,
+    arbitraryRootID: number,
+    path: Array<string | number> | null,
+    forceFullData: boolean,
+  ): InspectedElementPayload {
+    // TODO: Implement once we figured out how to merge InspectedElements on the Frontend.
+    return {
+      id: arbitraryRootID,
+      responseID: requestID,
+      type: 'not-found',
+    };
+  }
+
   function inspectElementRaw(id: number): InspectedElement | null {
     const internalInstance = idToInternalInstanceMap.get(id);
 
@@ -1176,6 +1190,7 @@ export function attach(
     handlePostCommitFiberRoot,
     hasElementWithId,
     inspectElement,
+    inspectRoots,
     logElementToConsole,
     overrideError,
     overrideSuspense,

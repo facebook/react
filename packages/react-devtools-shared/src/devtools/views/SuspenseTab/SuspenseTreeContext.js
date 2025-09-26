@@ -27,7 +27,6 @@ import {StoreContext} from '../context';
 export type SuspenseTreeState = {
   lineage: $ReadOnlyArray<SuspenseNode['id']> | null,
   roots: $ReadOnlyArray<SuspenseNode['id']>,
-  selectedRootID: SuspenseNode['id'] | null,
   selectedSuspenseID: SuspenseNode['id'] | null,
   timeline: $ReadOnlyArray<SuspenseNode['id']>,
   timelineIndex: number | -1,
@@ -103,16 +102,13 @@ function getInitialState(store: Store): SuspenseTreeState {
       selectedSuspenseID: null,
       lineage: null,
       roots: store.roots,
-      selectedRootID,
       timeline: [],
       timelineIndex: -1,
       uniqueSuspendersOnly,
     };
   } else {
-    const timeline = store.getSuspendableDocumentOrderSuspense(
-      selectedRootID,
-      uniqueSuspendersOnly,
-    );
+    const timeline =
+      store.getSuspendableDocumentOrderSuspense(uniqueSuspendersOnly);
     const timelineIndex = timeline.length - 1;
     const selectedSuspenseID =
       timelineIndex === -1 ? null : timeline[timelineIndex];
@@ -124,7 +120,6 @@ function getInitialState(store: Store): SuspenseTreeState {
       selectedSuspenseID,
       lineage,
       roots: store.roots,
-      selectedRootID,
       timeline,
       timelineIndex,
       uniqueSuspendersOnly,
@@ -178,23 +173,10 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedTimelineID = removedIDs.get(selectedTimelineID);
             }
 
-            let nextRootID = state.selectedRootID;
-            if (selectedTimelineID !== null && selectedTimelineID !== 0) {
-              nextRootID =
-                store.getSuspenseRootIDForSuspense(selectedTimelineID);
-            }
-            if (nextRootID === null) {
-              nextRootID = getDefaultRootID(store);
-            }
-
-            const nextTimeline =
-              nextRootID === null
-                ? []
-                : // TODO: Handle different timeline modes (e.g. random order)
-                  store.getSuspendableDocumentOrderSuspense(
-                    nextRootID,
-                    state.uniqueSuspendersOnly,
-                  );
+            // TODO: Handle different timeline modes (e.g. random order)
+            const nextTimeline = store.getSuspendableDocumentOrderSuspense(
+              state.uniqueSuspendersOnly,
+            );
 
             let nextTimelineIndex =
               selectedTimelineID === null || nextTimeline.length === 0
@@ -219,7 +201,6 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               ...state,
               lineage: nextLineage,
               roots: store.roots,
-              selectedRootID: nextRootID,
               selectedSuspenseID,
               timeline: nextTimeline,
               timelineIndex: nextTimelineIndex,
@@ -227,26 +208,20 @@ function SuspenseTreeContextController({children}: Props): React.Node {
           }
           case 'SELECT_SUSPENSE_BY_ID': {
             const selectedSuspenseID = action.payload;
-            const selectedRootID =
-              store.getSuspenseRootIDForSuspense(selectedSuspenseID);
 
             return {
               ...state,
               selectedSuspenseID,
-              selectedRootID,
             };
           }
           case 'SET_SUSPENSE_LINEAGE': {
             const suspenseID = action.payload;
             const lineage = store.getSuspenseLineage(suspenseID);
-            const selectedRootID =
-              store.getSuspenseRootIDForSuspense(suspenseID);
 
             return {
               ...state,
               lineage,
               selectedSuspenseID: suspenseID,
-              selectedRootID,
             };
           }
           case 'SET_SUSPENSE_TIMELINE': {
@@ -283,8 +258,6 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               ...state,
               selectedSuspenseID: nextSelectedSuspenseID,
               lineage: nextLineage,
-              selectedRootID:
-                nextRootID === null ? state.selectedRootID : nextRootID,
               timeline: nextTimeline,
               timelineIndex: nextMilestoneIndex,
               uniqueSuspendersOnly: nextUniqueSuspendersOnly,
