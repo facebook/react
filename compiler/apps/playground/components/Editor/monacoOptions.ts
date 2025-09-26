@@ -32,3 +32,14 @@ export const monacoOptions: Partial<EditorProps['options']> = {
 
   tabSize: 2,
 };
+
+export const monacoConfigOptions: Partial<EditorProps['options']> = {
+  ...monacoOptions,
+  lineNumbers: 'off',
+  renderLineHighlight: 'none',
+  overviewRulerBorder: false,
+  overviewRulerLanes: 0,
+  fontSize: 12,
+  scrollBeyondLastLine: false,
+  glyphMargin: false,
+};

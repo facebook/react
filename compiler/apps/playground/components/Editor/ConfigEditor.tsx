@@ -12,7 +12,7 @@ import * as monaco from 'monaco-editor';
 import React, {useState, useRef} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
-import {monacoOptions} from './monacoOptions';
+import {monacoConfigOptions} from './monacoOptions';
 import {IconChevron} from '../Icons/IconChevron';
 import prettyFormat from 'pretty-format';
 
@@ -60,6 +60,7 @@ function ExpandedEditor({
   const store = useStore();
   const dispatchStore = useStoreDispatch();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastValidOptionsRef = useRef<string>('');
 
   const handleChange: (value: string | undefined) => void = (
     value: string | undefined,
@@ -103,12 +104,16 @@ function ExpandedEditor({
     });
   };
 
-  const formattedAppliedOptions = appliedOptions
-    ? prettyFormat(appliedOptions, {
-        printFunctionName: false,
-        printBasicPrototype: false,
-      })
-    : 'Invalid configs';
+  let formattedAppliedOptions = '';
+  if (appliedOptions) {
+    formattedAppliedOptions = prettyFormat(appliedOptions, {
+      printFunctionName: false,
+      printBasicPrototype: false,
+    });
+    lastValidOptionsRef.current = formattedAppliedOptions;
+  } else {
+    formattedAppliedOptions = lastValidOptionsRef.current;
+  }
 
   return (
     <Resizable
@@ -137,7 +142,7 @@ function ExpandedEditor({
               Config Overrides
             </h2>
           </div>
-          <div className="flex-1 rounded-lg overflow-hidden border border-gray-300">
+          <div className="flex-1 border border-gray-300">
             <MonacoEditor
               path={'config.ts'}
               language={'typescript'}
@@ -146,16 +151,7 @@ function ExpandedEditor({
               onChange={handleChange}
               loading={''}
               className="monaco-editor-config"
-              options={{
-                ...monacoOptions,
-                lineNumbers: 'off',
-                renderLineHighlight: 'none',
-                overviewRulerBorder: false,
-                overviewRulerLanes: 0,
-                fontSize: 12,
-                scrollBeyondLastLine: false,
-                glyphMargin: false,
-              }}
+              options={monacoConfigOptions}
             />
           </div>
         </div>
@@ -165,7 +161,7 @@ function ExpandedEditor({
               Applied Configs
             </h2>
           </div>
-          <div className="flex-1 rounded-lg overflow-hidden border border-gray-300">
+          <div className="flex-1 border border-gray-300">
             <MonacoEditor
               path={'applied-config.js'}
               language={'javascript'}
@@ -173,15 +169,8 @@ function ExpandedEditor({
               loading={''}
               className="monaco-editor-applied-config"
               options={{
-                ...monacoOptions,
-                lineNumbers: 'off',
-                renderLineHighlight: 'none',
-                overviewRulerBorder: false,
-                overviewRulerLanes: 0,
-                fontSize: 12,
-                scrollBeyondLastLine: false,
+                ...monacoConfigOptions,
                 readOnly: true,
-                glyphMargin: false,
               }}
             />
           </div>
