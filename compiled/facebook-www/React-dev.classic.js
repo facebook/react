@@ -536,8 +536,12 @@ __DEV__ &&
     }
     function lazyInitializer(payload) {
       if (-1 === payload._status) {
-        var ctor = payload._result,
-          thenable = ctor();
+        if (enableAsyncDebugInfo) {
+          var ioInfo = payload._ioInfo;
+          null != ioInfo && (ioInfo.start = ioInfo.end = performance.now());
+        }
+        ioInfo = payload._result;
+        var thenable = ioInfo();
         thenable.then(
           function (moduleObject) {
             if (0 === payload._status || -1 === payload._status) {
@@ -552,26 +556,43 @@ __DEV__ &&
           },
           function (error) {
             if (0 === payload._status || -1 === payload._status)
-              (payload._status = 2), (payload._result = error);
+              if (
+                ((payload._status = 2),
+                (payload._result = error),
+                enableAsyncDebugInfo)
+              ) {
+                var _ioInfo2 = payload._ioInfo;
+                null != _ioInfo2 && (_ioInfo2.end = performance.now());
+                void 0 === thenable.status &&
+                  ((thenable.status = "rejected"), (thenable.reason = error));
+              }
           }
         );
+        if (
+          enableAsyncDebugInfo &&
+          ((ioInfo = payload._ioInfo), null != ioInfo)
+        ) {
+          ioInfo.value = thenable;
+          var displayName = thenable.displayName;
+          "string" === typeof displayName && (ioInfo.name = displayName);
+        }
         -1 === payload._status &&
           ((payload._status = 0), (payload._result = thenable));
       }
       if (1 === payload._status)
         return (
-          (ctor = payload._result),
-          void 0 === ctor &&
+          (ioInfo = payload._result),
+          void 0 === ioInfo &&
             console.error(
               "lazy: Expected the result of a dynamic import() call. Instead received: %s\n\nYour code should look like: \n  const MyComponent = lazy(() => import('./MyComponent'))\n\nDid you accidentally put curly braces around the import?",
-              ctor
+              ioInfo
             ),
-          "default" in ctor ||
+          "default" in ioInfo ||
             console.error(
               "lazy: Expected the result of a dynamic import() call. Instead received: %s\n\nYour code should look like: \n  const MyComponent = lazy(() => import('./MyComponent'))",
-              ctor
+              ioInfo
             ),
-          ctor.default
+          ioInfo.default
         );
       throw payload._result;
     }
@@ -744,7 +765,8 @@ __DEV__ &&
     var dynamicFeatureFlags = require("ReactFeatureFlags"),
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition;
+      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
+      enableAsyncDebugInfo = dynamicFeatureFlags.enableAsyncDebugInfo;
     dynamicFeatureFlags = Symbol.for("react.element");
     var REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
@@ -1285,11 +1307,26 @@ __DEV__ &&
       );
     };
     exports.lazy = function (ctor) {
-      return {
+      ctor = { _status: -1, _result: ctor };
+      var lazyType = {
         $$typeof: REACT_LAZY_TYPE,
-        _payload: { _status: -1, _result: ctor },
+        _payload: ctor,
         _init: lazyInitializer
       };
+      if (enableAsyncDebugInfo) {
+        var ioInfo = {
+          name: "lazy",
+          start: -1,
+          end: -1,
+          value: null,
+          owner: null,
+          debugStack: Error("react-stack-top-frame"),
+          debugTask: console.createTask ? console.createTask("lazy()") : null
+        };
+        ctor._ioInfo = ioInfo;
+        lazyType._debugInfo = [{ awaited: ioInfo }];
+      }
+      return lazyType;
     };
     exports.memo = function (type, compare) {
       null == type &&
@@ -1421,7 +1458,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-www-classic-df38ac9a-20250926";
+    exports.version = "19.2.0-www-classic-c552618a-20250926";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -4654,6 +4654,27 @@ __DEV__ &&
       }
       return JSCompiler_inline_result$jscomp$0;
     }
+    function pushHaltedAwaitOnComponentStack(task, debugInfo) {
+      if (null != debugInfo)
+        for (var i = debugInfo.length - 1; 0 <= i; i--) {
+          var info = debugInfo[i];
+          if ("string" === typeof info.name) break;
+          if ("number" === typeof info.time) break;
+          if (null != info.awaited) {
+            var bestStack = null == info.debugStack ? info.awaited : info;
+            if (void 0 !== bestStack.debugStack) {
+              task.componentStack = {
+                parent: task.componentStack,
+                type: info,
+                owner: bestStack.owner,
+                stack: bestStack.debugStack
+              };
+              task.debugTask = bestStack.debugTask;
+              break;
+            }
+          }
+        }
+    }
     function pushServerComponentStack(task, debugInfo) {
       if (null != debugInfo)
         for (var i = 0; i < debugInfo.length; i++) {
@@ -6962,6 +6983,12 @@ __DEV__ &&
         segment.status = 3;
       }
       segment = getThrownInfo(task.componentStack);
+      if (enableAsyncDebugInfo) {
+        var node = task.node;
+        null !== node &&
+          "object" === typeof node &&
+          pushHaltedAwaitOnComponentStack(task, node._debugInfo);
+      }
       if (null === boundary) {
         if (13 !== request.status && 14 !== request.status) {
           boundary = task.replay;
@@ -6971,38 +6998,28 @@ __DEV__ &&
             return;
           }
           boundary.pendingTasks--;
-          if (0 === boundary.pendingTasks && 0 < boundary.nodes.length) {
-            var errorDigest = logRecoverableError(
-              request,
-              error,
-              segment,
-              null
-            );
+          0 === boundary.pendingTasks &&
+            0 < boundary.nodes.length &&
+            ((node = logRecoverableError(request, error, segment, null)),
             abortRemainingReplayNodes(
               request,
               null,
               boundary.nodes,
               boundary.slots,
               error,
-              errorDigest,
+              node,
               segment,
               !0
-            );
-          }
+            ));
           request.pendingRootTasks--;
           0 === request.pendingRootTasks && completeShell(request);
         }
       } else
         4 !== boundary.status &&
           ((boundary.status = 4),
-          (errorDigest = logRecoverableError(
-            request,
-            error,
-            segment,
-            task.debugTask
-          )),
+          (node = logRecoverableError(request, error, segment, task.debugTask)),
           (boundary.status = 4),
-          encodeErrorForBoundary(boundary, errorDigest, error, segment, !0),
+          encodeErrorForBoundary(boundary, node, error, segment, !0),
           untrackBoundary(request, boundary),
           boundary.parentFlushed &&
             request.clientRenderedBoundaries.push(boundary)),
@@ -8071,6 +8088,7 @@ __DEV__ &&
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition,
+      enableAsyncDebugInfo = dynamicFeatureFlags.enableAsyncDebugInfo,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
