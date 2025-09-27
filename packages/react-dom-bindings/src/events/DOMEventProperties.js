@@ -62,6 +62,8 @@ const simpleEventPluginEvents = [
   'encrypted',
   'ended',
   'error',
+  'fullscreenChange',
+  'fullscreenError',
   'gotPointerCapture',
   'input',
   'invalid',
