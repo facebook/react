@@ -18,10 +18,9 @@ import type {CapturedValue} from './ReactCapturedValue';
 import {
   isTransitionLane,
   isBlockingLane,
-  isSyncLane,
+  isGestureRender,
   includesTransitionLane,
   includesBlockingLane,
-  includesSyncLane,
   NoLanes,
 } from './ReactFiberLane';
 
@@ -76,6 +75,18 @@ export let blockingEventTime: number = -1.1; // Event timeStamp of the first set
 export let blockingEventType: null | string = null; // Event type of the first setState.
 export let blockingEventIsRepeat: boolean = false;
 export let blockingSuspendedTime: number = -1.1;
+
+export let gestureClampTime: number = -0;
+export let gestureUpdateTime: number = -1.1; // First setOptimistic scheduled inside startGestureTransition.
+export let gestureUpdateTask: null | ConsoleTask = null; // First sync setState's stack trace.
+export let gestureUpdateType: UpdateType = 0;
+export let gestureUpdateMethodName: null | string = null; // The name of the method that caused first gesture update.
+export let gestureUpdateComponentName: null | string = null; // The name of the component where first gesture update happened.
+export let gestureEventTime: number = -1.1; // Event timeStamp of the first setState.
+export let gestureEventType: null | string = null; // Event type of the first setState.
+export let gestureEventIsRepeat: boolean = false;
+export let gestureSuspendedTime: number = -1.1;
+
 // TODO: This should really be one per Transition lane.
 export let transitionClampTime: number = -0;
 export let transitionStartTime: number = -1.1; // First startTransition call before setState.
@@ -114,7 +125,26 @@ export function startUpdateTimerByLane(
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  if (isSyncLane(lane) || isBlockingLane(lane)) {
+  if (isGestureRender(lane)) {
+    if (gestureUpdateTime < 0) {
+      gestureUpdateTime = now();
+      gestureUpdateTask = createTask(method);
+      gestureUpdateMethodName = method;
+      if (__DEV__ && fiber != null) {
+        gestureUpdateComponentName = getComponentNameFromFiber(fiber);
+      }
+      const newEventTime = resolveEventTimeStamp();
+      const newEventType = resolveEventType();
+      if (
+        newEventTime !== gestureEventTime ||
+        newEventType !== gestureEventType
+      ) {
+        gestureEventIsRepeat = false;
+      }
+      gestureEventTime = newEventTime;
+      gestureEventType = newEventType;
+    }
+  } else if (isBlockingLane(lane)) {
     if (blockingUpdateTime < 0) {
       blockingUpdateTime = now();
       blockingUpdateTask = createTask(method);
@@ -220,7 +250,13 @@ export function startPingTimerByLanes(lanes: Lanes): void {
   // Mark the update time and clamp anything before it because we don't want
   // to show the event time for pings but we also don't want to clear it
   // because we still need to track if this was a repeat.
-  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+  if (isGestureRender(lanes)) {
+    if (gestureUpdateTime < 0) {
+      gestureClampTime = gestureUpdateTime = now();
+      gestureUpdateTask = createTask('Promise Resolved');
+      gestureUpdateType = PINGED_UPDATE;
+    }
+  } else if (includesBlockingLane(lanes)) {
     if (blockingUpdateTime < 0) {
       blockingClampTime = blockingUpdateTime = now();
       blockingUpdateTask = createTask('Promise Resolved');
@@ -239,7 +275,9 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+  if (isGestureRender(lanes)) {
+    gestureSuspendedTime = renderEndTime;
+  } else if (includesBlockingLane(lanes)) {
     blockingSuspendedTime = renderEndTime;
   } else if (includesTransitionLane(lanes)) {
     transitionSuspendedTime = renderEndTime;
@@ -293,6 +331,28 @@ export function clearTransitionTimers(): void {
   transitionClampTime = now();
 }
 
+export function hasScheduledGestureTransitionWork(): boolean {
+  // If we have call setOptimistic on a gesture
+  return gestureUpdateTime > -1;
+}
+
+export function clearGestureTimers(): void {
+  gestureUpdateTime = -1.1;
+  gestureUpdateType = 0;
+  gestureSuspendedTime = -1.1;
+  gestureEventIsRepeat = true;
+  gestureClampTime = now();
+}
+
+export function clearGestureUpdates(): void {
+  // Same as clearGestureTimers but doesn't reset the clamp time because we didn't
+  // actually emit a render.
+  gestureUpdateTime = -1.1;
+  gestureUpdateType = 0;
+  gestureSuspendedTime = -1.1;
+  gestureEventIsRepeat = true;
+}
+
 export function clampBlockingTimers(finalTime: number): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
@@ -301,6 +361,16 @@ export function clampBlockingTimers(finalTime: number): void {
   // those update times to create overlapping tracks in the performance timeline so we clamp
   // them to the end of the commit phase.
   blockingClampTime = finalTime;
+}
+
+export function clampGestureTimers(finalTime: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // If we had new updates come in while we were still rendering or committing, we don't want
+  // those update times to create overlapping tracks in the performance timeline so we clamp
+  // them to the end of the commit phase.
+  gestureClampTime = finalTime;
 }
 
 export function clampTransitionTimers(finalTime: number): void {

@@ -71,6 +71,7 @@ import {
 } from './Scheduler';
 import {
   logBlockingStart,
+  logGestureStart,
   logTransitionStart,
   logRenderPhase,
   logInterruptedRenderPhase,
@@ -282,6 +283,16 @@ import {
   blockingEventType,
   blockingEventIsRepeat,
   blockingSuspendedTime,
+  gestureClampTime,
+  gestureUpdateTime,
+  gestureUpdateTask,
+  gestureUpdateType,
+  gestureUpdateMethodName,
+  gestureUpdateComponentName,
+  gestureEventTime,
+  gestureEventType,
+  gestureEventIsRepeat,
+  gestureSuspendedTime,
   transitionClampTime,
   transitionStartTime,
   transitionUpdateTime,
@@ -294,8 +305,11 @@ import {
   transitionEventIsRepeat,
   transitionSuspendedTime,
   clearBlockingTimers,
+  clearGestureTimers,
+  clearGestureUpdates,
   clearTransitionTimers,
   clampBlockingTimers,
+  clampGestureTimers,
   clampTransitionTimers,
   clampRetryTimers,
   clampIdleTimers,
@@ -1898,7 +1912,9 @@ function resetWorkInProgressStack() {
 
 function finalizeRender(lanes: Lanes, finalizationTime: number): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+    if (isGestureRender(lanes)) {
+      clampGestureTimers(finalizationTime);
+    } else if (includesBlockingLane(lanes)) {
       clampBlockingTimers(finalizationTime);
     }
     if (includesTransitionLane(lanes)) {
@@ -1963,7 +1979,53 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     const previousUpdateTask = workInProgressUpdateTask;
 
     workInProgressUpdateTask = null;
-    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+    if (isGestureRender(lanes)) {
+      workInProgressUpdateTask = gestureUpdateTask;
+      const clampedUpdateTime =
+        gestureUpdateTime >= 0 && gestureUpdateTime < gestureClampTime
+          ? gestureClampTime
+          : gestureUpdateTime;
+      const clampedEventTime =
+        gestureEventTime >= 0 && gestureEventTime < gestureClampTime
+          ? gestureClampTime
+          : gestureEventTime;
+      const clampedRenderStartTime =
+        // Clamp the suspended time to the first event/update.
+        clampedEventTime >= 0
+          ? clampedEventTime
+          : clampedUpdateTime >= 0
+            ? clampedUpdateTime
+            : renderStartTime;
+      if (gestureSuspendedTime >= 0) {
+        setCurrentTrackFromLanes(GestureLane);
+        logSuspendedWithDelayPhase(
+          gestureSuspendedTime,
+          clampedRenderStartTime,
+          lanes,
+          workInProgressUpdateTask,
+        );
+      } else if (isGestureRender(animatingLanes)) {
+        // If this lane is still animating, log the time from previous render finishing to now as animating.
+        setCurrentTrackFromLanes(GestureLane);
+        logAnimatingPhase(
+          gestureClampTime,
+          clampedRenderStartTime,
+          animatingTask,
+        );
+      }
+      logGestureStart(
+        clampedUpdateTime,
+        clampedEventTime,
+        gestureEventType,
+        gestureEventIsRepeat,
+        gestureUpdateType === PINGED_UPDATE,
+        renderStartTime,
+        gestureUpdateTask,
+        gestureUpdateMethodName,
+        gestureUpdateComponentName,
+      );
+      clearGestureTimers();
+    } else if (includesBlockingLane(lanes)) {
       workInProgressUpdateTask = blockingUpdateTask;
       const clampedUpdateTime =
         blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
@@ -1988,7 +2050,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
           previousUpdateTask,
         );
       } else if (
-        includesSyncLane(animatingLanes) ||
+        !isGestureRender(animatingLanes) &&
         includesBlockingLane(animatingLanes)
       ) {
         // If this lane is still animating, log the time from previous render finishing to now as animating.
@@ -3464,6 +3526,11 @@ function commitRoot(
     // Gestures don't clear their lanes while the gesture is still active but it
     // might not be scheduled to do any more renders and so we shouldn't schedule
     // any more gesture lane work until a new gesture is scheduled.
+    if (enableProfilerTimer && (remainingLanes & GestureLane) !== NoLanes) {
+      // We need to clear any updates scheduled so that we can treat future updates
+      // as the cause of the render.
+      clearGestureUpdates();
+    }
     remainingLanes &= ~GestureLane;
   }
 
@@ -3719,14 +3786,12 @@ function finishedViewTransition(lanes: Lanes): void {
     // If an affected track isn't in the middle of rendering or committing, log from the previous
     // finished render until the end of the animation.
     if (
-      (includesSyncLane(lanes) || includesBlockingLane(lanes)) &&
-      !includesSyncLane(workInProgressRootRenderLanes) &&
-      !includesBlockingLane(workInProgressRootRenderLanes) &&
-      !includesSyncLane(pendingEffectsLanes) &&
-      !includesBlockingLane(pendingEffectsLanes)
+      isGestureRender(lanes) &&
+      !isGestureRender(workInProgressRootRenderLanes) &&
+      !isGestureRender(pendingEffectsLanes)
     ) {
-      setCurrentTrackFromLanes(SyncLane);
-      logAnimatingPhase(blockingClampTime, now(), task);
+      setCurrentTrackFromLanes(GestureLane);
+      logAnimatingPhase(gestureClampTime, now(), task);
     }
     if (
       includesTransitionLane(lanes) &&
@@ -4189,6 +4254,10 @@ function commitGestureOnRoot(
   }
   deleteScheduledGesture(root, finishedGesture);
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    startAnimating(pendingEffectsLanes);
+  }
+
   const prevTransition = ReactSharedInternals.T;
   ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
@@ -4216,6 +4285,10 @@ function commitGestureOnRoot(
     flushGestureMutations,
     flushGestureAnimations,
     reportViewTransitionError,
+    enableProfilerTimer
+      ? // This callback fires after "pendingEffects" so we need to snapshot the arguments.
+        finishedViewTransition.bind(null, pendingEffectsLanes)
+      : (null: any),
   );
 }
 
@@ -4258,6 +4331,23 @@ function flushGestureAnimations(): void {
   if (pendingEffectsStatus !== PENDING_GESTURE_ANIMATION_PHASE) {
     return;
   }
+
+  const lanes = pendingEffectsLanes;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Update the new commitEndTime to when we started the animation.
+    recordCommitEndTime();
+    logStartViewTransitionYieldPhase(
+      pendingEffectsRenderEndTime,
+      commitEndTime,
+      pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
+      animatingTask,
+    );
+    if (pendingDelayedCommitReason !== ABORTED_VIEW_TRANSITION_COMMIT) {
+      pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT;
+    }
+  }
+
   pendingEffectsStatus = NO_PENDING_EFFECTS;
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
@@ -4280,6 +4370,10 @@ function flushGestureAnimations(): void {
     executionContext = prevExecutionContext;
     setCurrentUpdatePriority(previousPriority);
     ReactSharedInternals.T = prevTransition;
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    finalizeRender(lanes, commitEndTime);
   }
 
   // Now that we've rendered this lane. Start working on the next lane.

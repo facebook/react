@@ -34,10 +34,12 @@ import {
 function ScaledRect({
   className,
   rect,
+  visible,
   ...props
 }: {
   className: string,
   rect: Rect,
+  visible: boolean,
   ...
 }): React$Node {
   const viewBox = useContext(ViewBox);
@@ -50,6 +52,7 @@ function ScaledRect({
     <div
       {...props}
       className={styles.SuspenseRectsScaledRect + ' ' + className}
+      data-visible={visible}
       style={{
         width,
         height,
@@ -68,6 +71,7 @@ function SuspenseRects({
   const store = useContext(StoreContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
+  const {uniqueSuspendersOnly} = useContext(SuspenseTreeStateContext);
 
   const {inspectedElementID} = useContext(TreeStateContext);
 
@@ -79,6 +83,7 @@ function SuspenseRects({
     // getSuspenseByID will have already warned
     return null;
   }
+  const visible = suspense.hasUniqueSuspenders || !uniqueSuspendersOnly;
 
   function handleClick(event: SyntheticMouseEvent) {
     if (event.defaultPrevented) {
@@ -117,9 +122,13 @@ function SuspenseRects({
   const boundingBox = getBoundingBox(suspense.rects);
 
   return (
-    <ScaledRect rect={boundingBox} className={styles.SuspenseRectsBoundary}>
+    <ScaledRect
+      rect={boundingBox}
+      className={styles.SuspenseRectsBoundary}
+      visible={visible}>
       <ViewBox.Provider value={boundingBox}>
-        {suspense.rects !== null &&
+        {visible &&
+          suspense.rects !== null &&
           suspense.rects.map((rect, index) => {
             return (
               <ScaledRect
@@ -245,6 +254,7 @@ function SuspenseRectsContainer(): React$Node {
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
   const {roots} = useContext(SuspenseTreeStateContext);
 
+  // TODO: bbox does not consider uniqueSuspendersOnly filter
   const boundingBox = getDocumentBoundingRect(store, roots);
 
   const boundingBoxWidth = boundingBox.width;

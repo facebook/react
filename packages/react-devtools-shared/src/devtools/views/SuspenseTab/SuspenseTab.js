@@ -8,7 +8,13 @@
  */
 
 import * as React from 'react';
-import {useEffect, useLayoutEffect, useReducer, useRef} from 'react';
+import {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+} from 'react';
 
 import {
   localStorageGetItem,
@@ -23,8 +29,18 @@ import SuspenseBreadcrumbs from './SuspenseBreadcrumbs';
 import SuspenseRects from './SuspenseRects';
 import SuspenseTimeline from './SuspenseTimeline';
 import SuspenseTreeList from './SuspenseTreeList';
+import {
+  SuspenseTreeDispatcherContext,
+  SuspenseTreeStateContext,
+} from './SuspenseTreeContext';
+import {StoreContext} from '../context';
+import {TreeDispatcherContext} from '../Components/TreeContext';
 import Button from '../Button';
-import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
+import Tooltip from '../Components/reach-ui/tooltip';
+import typeof {
+  SyntheticEvent,
+  SyntheticPointerEvent,
+} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -47,6 +63,91 @@ type LayoutState = {
   inspectedElementVerticalFraction: number,
 };
 type LayoutDispatch = (action: LayoutAction) => void;
+
+function ToggleUniqueSuspenders() {
+  const store = useContext(StoreContext);
+  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
+
+  const {selectedRootID: rootID, uniqueSuspendersOnly} = useContext(
+    SuspenseTreeStateContext,
+  );
+
+  function handleToggleUniqueSuspenders(event: SyntheticEvent) {
+    const nextUniqueSuspendersOnly = (event.currentTarget as HTMLInputElement)
+      .checked;
+    const nextTimeline =
+      rootID === null
+        ? []
+        : // TODO: Handle different timeline modes (e.g. random order)
+          store.getSuspendableDocumentOrderSuspense(
+            rootID,
+            nextUniqueSuspendersOnly,
+          );
+    suspenseTreeDispatch({
+      type: 'SET_SUSPENSE_TIMELINE',
+      payload: [nextTimeline, null, nextUniqueSuspendersOnly],
+    });
+  }
+
+  return (
+    <Tooltip label="Only include boundaries with unique suspenders">
+      <input
+        checked={uniqueSuspendersOnly}
+        type="checkbox"
+        onChange={handleToggleUniqueSuspenders}
+      />
+    </Tooltip>
+  );
+}
+
+function SelectRoot() {
+  const store = useContext(StoreContext);
+  const {roots, selectedRootID, uniqueSuspendersOnly} = useContext(
+    SuspenseTreeStateContext,
+  );
+  const treeDispatch = useContext(TreeDispatcherContext);
+  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
+
+  function handleChange(event: SyntheticEvent) {
+    const newRootID = +event.currentTarget.value;
+    // TODO: scrollIntoView both suspense rects and host instance.
+    const nextTimeline = store.getSuspendableDocumentOrderSuspense(
+      newRootID,
+      uniqueSuspendersOnly,
+    );
+    suspenseTreeDispatch({
+      type: 'SET_SUSPENSE_TIMELINE',
+      payload: [nextTimeline, newRootID, uniqueSuspendersOnly],
+    });
+    if (nextTimeline.length > 0) {
+      const milestone = nextTimeline[nextTimeline.length - 1];
+      treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: milestone});
+    }
+  }
+  return (
+    roots.length > 0 && (
+      <select
+        aria-label="Select Suspense Root"
+        className={styles.SuspenseTimelineRootSwitcher}
+        onChange={handleChange}
+        value={selectedRootID === null ? -1 : selectedRootID}>
+        <option disabled={true} value={-1}>
+          ----
+        </option>
+        {roots.map(rootID => {
+          // TODO: Use name
+          const name = '#' + rootID;
+          // TODO: Highlight host on hover
+          return (
+            <option key={rootID} value={rootID}>
+              {name}
+            </option>
+          );
+        })}
+      </select>
+    )
+  );
+}
 
 function ToggleTreeList({
   dispatch,
@@ -116,6 +217,11 @@ function SuspenseTab(_: {}) {
     null,
     initLayoutState,
   );
+
+  // If there are no named Activity boundaries, we don't have any tree list and we should hide
+  // both the panel and the button to toggle it. Since we currently don't support it yet, it's
+  // always disabled.
+  const treeListDisabled = true;
 
   const wrapperTreeRef = useRef<null | HTMLElement>(null);
   const resizeTreeRef = useRef<null | HTMLElement>(null);
@@ -290,41 +396,49 @@ function SuspenseTab(_: {}) {
   return (
     <div className={styles.SuspenseTab} ref={wrapperTreeRef}>
       <div className={styles.TreeWrapper} ref={resizeTreeRef}>
-        <div
-          className={styles.TreeList}
-          hidden={treeListHidden}
-          ref={resizeTreeListRef}>
-          <SuspenseTreeList />
-        </div>
-        <div className={styles.ResizeBarWrapper} hidden={treeListHidden}>
+        {treeListDisabled ? null : (
           <div
-            onPointerDown={onResizeStart}
-            onPointerMove={onResizeTreeList}
-            onPointerUp={onResizeEnd}
-            className={styles.ResizeBar}
-          />
-        </div>
+            className={styles.TreeList}
+            hidden={treeListHidden}
+            ref={resizeTreeListRef}>
+            <SuspenseTreeList />
+          </div>
+        )}
+        {treeListDisabled ? null : (
+          <div className={styles.ResizeBarWrapper} hidden={treeListHidden}>
+            <div
+              onPointerDown={onResizeStart}
+              onPointerMove={onResizeTreeList}
+              onPointerUp={onResizeEnd}
+              className={styles.ResizeBar}
+            />
+          </div>
+        )}
         <div className={styles.TreeView}>
-          <div className={styles.SuspenseTreeViewHeader}>
-            <ToggleTreeList dispatch={dispatch} state={state} />
-            <div className={styles.SuspenseTreeViewHeaderMain}>
-              <div className={styles.SuspenseTimeline}>
-                <SuspenseTimeline />
-              </div>
-              <div className={styles.SuspenseBreadcrumbs}>
-                <SuspenseBreadcrumbs />
-              </div>
+          <header className={styles.SuspenseTreeViewHeader}>
+            {treeListDisabled ? (
+              <div />
+            ) : (
+              <ToggleTreeList dispatch={dispatch} state={state} />
+            )}
+            <div className={styles.SuspenseBreadcrumbs}>
+              <SuspenseBreadcrumbs />
             </div>
+            <ToggleUniqueSuspenders />
+            <SelectRoot />
             <ToggleInspectedElement
               dispatch={dispatch}
               state={state}
               orientation="horizontal"
             />
-          </div>
+          </header>
           <div className={styles.Rects}>
             <SuspenseRects />
           </div>
-          <footer>
+          <footer className={styles.SuspenseTreeViewFooter}>
+            <div className={styles.SuspenseTimeline}>
+              <SuspenseTimeline />
+            </div>
             <ToggleInspectedElement
               dispatch={dispatch}
               state={state}

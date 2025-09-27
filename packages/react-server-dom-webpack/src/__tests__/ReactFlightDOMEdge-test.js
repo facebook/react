@@ -1240,7 +1240,7 @@ describe('ReactFlightDOMEdge', () => {
         env: 'Server',
       });
       if (gate(flags => flags.enableAsyncDebugInfo)) {
-        expect(lazyWrapper._debugInfo).toEqual([
+        expect(greeting._debugInfo).toEqual([
           {time: 12},
           greetInfo,
           {time: 13},
@@ -1259,7 +1259,7 @@ describe('ReactFlightDOMEdge', () => {
       }
       // The owner that created the span was the outer server component.
       // We expect the debug info to be referentially equal to the owner.
-      expect(greeting._owner).toBe(lazyWrapper._debugInfo[1]);
+      expect(greeting._owner).toBe(greeting._debugInfo[1]);
     } else {
       expect(lazyWrapper._debugInfo).toBe(undefined);
       expect(greeting._owner).toBe(undefined);
@@ -1930,11 +1930,19 @@ describe('ReactFlightDOMEdge', () => {
 
     if (__DEV__) {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
-        '\n    in Component\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+        '\n    in Component\n' +
+          '    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in App (at **)\n' +
+          '    in ClientRoot (at **)',
       );
     } else {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
-        '\n    in Suspense\n    in body\n    in html\n    in ClientRoot (at **)',
+        '\n    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in ClientRoot (at **)',
       );
     }
 

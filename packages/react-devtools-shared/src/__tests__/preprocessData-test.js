@@ -111,9 +111,31 @@ describe('Timeline profiler', () => {
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
 
-      const InternalTestUtils = require('internal-test-utils');
-      assertLog = InternalTestUtils.assertLog;
-      waitFor = InternalTestUtils.waitFor;
+      if (typeof Scheduler.log !== 'function') {
+        // backwards compat for older scheduler versions
+        Scheduler.log = Scheduler.unstable_yieldValue;
+        Scheduler.unstable_clearLog = Scheduler.unstable_clearYields;
+        const InternalTestUtils = require('internal-test-utils');
+        assertLog = InternalTestUtils.assertLog;
+
+        // polyfill waitFor as Scheduler.toFlushAndYieldThrough
+        waitFor = expectedYields => {
+          let actualYields = Scheduler.unstable_clearYields();
+          if (actualYields.length !== 0) {
+            throw new Error(
+              'Log of yielded values is not empty. ' +
+                'Call expect(Scheduler).toHaveYielded(...) first.',
+            );
+          }
+          Scheduler.unstable_flushNumberOfYields(expectedYields.length);
+          actualYields = Scheduler.unstable_clearYields();
+          expect(actualYields).toEqual(expectedYields);
+        };
+      } else {
+        const InternalTestUtils = require('internal-test-utils');
+        assertLog = InternalTestUtils.assertLog;
+        waitFor = InternalTestUtils.waitFor;
+      }
 
       setPerformanceMock =
         require('react-devtools-shared/src/backend/profilingHooks').setPerformanceMock_ONLY_FOR_TESTING;

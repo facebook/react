@@ -28,6 +28,7 @@ import {
   retryLaneExpirationMs,
   disableLegacyMode,
   enableDefaultTransitionIndicator,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {clz32} from './clz32';
@@ -611,10 +612,6 @@ export function includesSyncLane(lanes: Lanes): boolean {
   return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
 }
 
-export function isSyncLane(lanes: Lanes): boolean {
-  return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
-}
-
 export function includesNonIdleWork(lanes: Lanes): boolean {
   return (lanes & NonIdleLanes) !== NoLanes;
 }
@@ -681,6 +678,8 @@ export function includesLoadingIndicatorLanes(lanes: Lanes): boolean {
 
 export function includesBlockingLane(lanes: Lanes): boolean {
   const SyncDefaultLanes =
+    SyncHydrationLane |
+    SyncLane |
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
@@ -697,10 +696,13 @@ export function includesExpiredLane(root: FiberRoot, lanes: Lanes): boolean {
 
 export function isBlockingLane(lane: Lane): boolean {
   const SyncDefaultLanes =
+    SyncHydrationLane |
+    SyncLane |
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
-    DefaultLane;
+    DefaultLane |
+    GestureLane;
   return (lane & SyncDefaultLanes) !== NoLanes;
 }
 
@@ -709,6 +711,9 @@ export function isTransitionLane(lane: Lane): boolean {
 }
 
 export function isGestureRender(lanes: Lanes): boolean {
+  if (!enableGestureTransition) {
+    return false;
+  }
   // This should render only the one lane.
   return lanes === GestureLane;
 }
@@ -1270,10 +1275,12 @@ export function getGroupNameOfHighestPriorityLane(lanes: Lanes): string {
       InputContinuousHydrationLane |
       InputContinuousLane |
       DefaultHydrationLane |
-      DefaultLane |
-      GestureLane)
+      DefaultLane)
   ) {
     return 'Blocking';
+  }
+  if (lanes & GestureLane) {
+    return 'Gesture';
   }
   if (lanes & (TransitionHydrationLane | TransitionLanes)) {
     return 'Transition';

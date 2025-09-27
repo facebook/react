@@ -19,6 +19,10 @@
    overflow: hidden;
 }
 
+.SuspenseRectsScaledRect[data-visible='false'] > .SuspenseRectsBoundaryChildren {
+  overflow: initial;
+}
+
 .SuspenseRectsRect {
   box-shadow: var(--elevation-4);
   pointer-events: all;
@@ -29,6 +33,11 @@
 .SuspenseRectsScaledRect {
   position: absolute;
   outline-color: var(--color-background-selected);
+}
+
+.SuspenseRectsScaledRect[data-visible='false'] {
+  pointer-events: none;
+  outline-width: 0;
 }
 
 /* highlight this boundary */

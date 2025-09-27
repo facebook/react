@@ -9,7 +9,7 @@
 
 import {copy} from 'clipboard-js';
 import * as React from 'react';
-import {useState} from 'react';
+import {useState, useTransition} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
@@ -101,6 +101,7 @@ function SuspendedByRow({
   maxTime,
 }: RowProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openIsPending, startOpenTransition] = useTransition();
   const ioInfo = asyncInfo.awaited;
   const name = useInferredName(asyncInfo);
   const description = ioInfo.description;
@@ -144,7 +145,16 @@ function SuspendedByRow({
     <div className={styles.CollapsableRow}>
       <Button
         className={styles.CollapsableHeader}
-        onClick={() => setIsOpen(prevIsOpen => !prevIsOpen)}
+        // TODO: May be better to leave to React's default Transition indicator.
+        // Though no apps implement this option at the moment.
+        data-pending={openIsPending}
+        onClick={() => {
+          startOpenTransition(() => {
+            setIsOpen(prevIsOpen => !prevIsOpen);
+          });
+        }}
+        // Changing the title on pending transition will not be visible since
+        // (Reach?) tooltips are dismissed on activation.
         title={
           longName +
           ' — ' +
