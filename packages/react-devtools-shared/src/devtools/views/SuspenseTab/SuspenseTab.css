@@ -116,7 +116,7 @@
   flex: 0 0 42px;
   padding: 0.5rem;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -137,5 +137,5 @@
   padding: 0.5rem;
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: flex-start;
+  align-items: center;
 }
