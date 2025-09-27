@@ -104,6 +104,7 @@ import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEf
 import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRanges';
 import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
 import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
+import {validateExhaustiveDependencies} from '../Validation/ValidateExhaustiveDependencies';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -292,6 +293,11 @@ function runWithEnvironment(
 
   inferReactivePlaces(hir);
   log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
+
+  if (env.config.validateExhaustiveMemoizationDependencies) {
+    // NOTE: this relies on reactivity inference running first
+    validateExhaustiveDependencies(hir).unwrap();
+  }
 
   rewriteInstructionKindsBasedOnReassignment(hir);
   log({
