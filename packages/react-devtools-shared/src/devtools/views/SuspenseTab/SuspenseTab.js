@@ -36,7 +36,7 @@ import {
 import {StoreContext, OptionsContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import Button from '../Button';
-import Tooltip from '../Components/reach-ui/tooltip';
+import Toggle from '../Toggle';
 import typeof {
   SyntheticEvent,
   SyntheticPointerEvent,
@@ -75,9 +75,8 @@ function ToggleUniqueSuspenders() {
     SuspenseTreeStateContext,
   );
 
-  function handleToggleUniqueSuspenders(event: SyntheticEvent) {
-    const nextUniqueSuspendersOnly = (event.currentTarget as HTMLInputElement)
-      .checked;
+  function handleToggleUniqueSuspenders() {
+    const nextUniqueSuspendersOnly = !uniqueSuspendersOnly;
     const nextTimeline =
       rootID === null
         ? []
@@ -93,13 +92,12 @@ function ToggleUniqueSuspenders() {
   }
 
   return (
-    <Tooltip label="Only include boundaries with unique suspenders">
-      <input
-        checked={uniqueSuspendersOnly}
-        type="checkbox"
-        onChange={handleToggleUniqueSuspenders}
-      />
-    </Tooltip>
+    <Toggle
+      isChecked={uniqueSuspendersOnly}
+      onChange={handleToggleUniqueSuspenders}
+      title={'Only include boundaries with unique suspenders'}>
+      <ButtonIcon type={uniqueSuspendersOnly ? 'filter-on' : 'filter-off'} />
+    </Toggle>
   );
 }
 
@@ -429,9 +427,9 @@ function SuspenseTab(_: {}) {
               <div className={styles.SuspenseBreadcrumbs}>
                 <SuspenseBreadcrumbs />
               </div>
-              <ToggleUniqueSuspenders />
               <SelectRoot />
-              {!hideSettings && <div className={styles.VRule} />}
+              <div className={styles.VRule} />
+              <ToggleUniqueSuspenders />
               {!hideSettings && <SettingsModalContextToggle />}
               <ToggleInspectedElement
                 dispatch={dispatch}
