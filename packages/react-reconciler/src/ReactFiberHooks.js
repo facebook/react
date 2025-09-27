@@ -576,7 +576,7 @@ export function renderWithHooks<Props, SecondArg>(
   //
   // We want memoized functions to run twice, too, so account for this, user
   // functions are double invoked during the *first* invocation of the component
-  // function, and are *not* double invoked during the second incovation:
+  // function, and are *not* double invoked during the second invocation:
   //
   // - First execution of component function: user functions are double invoked
   // - Second execution of component function (in Strict Mode, during
