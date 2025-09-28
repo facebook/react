@@ -581,6 +581,27 @@ const allTests = {
         };
       `,
     },
+    {
+      code: normalizeIndent`
+        // Valid: useEffectEvent can be called in custom effect hooks configured via ESLint settings
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useMyEffect(() => {
+            onClick();
+          });
+          useServerEffect(() => {
+            onClick();  
+          });
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalEffectHooks: '(useMyEffect|useServerEffect)',
+        },
+      },
+    },
   ],
   invalid: [
     {
@@ -1352,6 +1373,39 @@ const allTests = {
         }
       `,
       errors: [tryCatchUseError('use')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid: useEffectEvent should not be callable in regular custom hooks without additional configuration
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useCustomHook(() => {
+            onClick();
+          });
+        }
+      `,
+      errors: [useEffectEventError('onClick', true)],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid: useEffectEvent should not be callable in hooks not matching the settings regex
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useWrongHook(() => {
+            onClick();
+          });
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalEffectHooks: 'useMyEffect',
+        },
+      },
+      errors: [useEffectEventError('onClick', true)],
     },
   ],
 };
