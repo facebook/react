@@ -69,19 +69,25 @@ const rule = {
           },
           requireExplicitEffectDeps: {
             type: 'boolean',
-          }
+          },
         },
       },
     ],
   },
   create(context: Rule.RuleContext) {
     const rawOptions = context.options && context.options[0];
+    const settings = context.settings || {};
+
 
     // Parse the `additionalHooks` regex.
+    // Use rule-level additionalHooks if provided, otherwise fall back to settings
     const additionalHooks =
       rawOptions && rawOptions.additionalHooks
         ? new RegExp(rawOptions.additionalHooks)
-        : undefined;
+        : settings['react-eslint'] &&
+            settings['react-eslint'].additionalEffectHooks
+          ? new RegExp(settings['react-eslint'].additionalEffectHooks)
+          : undefined;
 
     const enableDangerousAutofixThisMayCauseInfiniteLoops: boolean =
       (rawOptions &&
@@ -93,7 +99,8 @@ const rule = {
         ? rawOptions.experimental_autoDependenciesHooks
         : [];
 
-    const requireExplicitEffectDeps: boolean = rawOptions && rawOptions.requireExplicitEffectDeps || false;
+    const requireExplicitEffectDeps: boolean =
+      (rawOptions && rawOptions.requireExplicitEffectDeps) || false;
 
     const options = {
       additionalHooks,
@@ -1351,7 +1358,7 @@ const rule = {
           node: reactiveHook,
           message:
             `React Hook ${reactiveHookName} always requires dependencies. ` +
-            `Please add a dependency array or an explicit \`undefined\``
+            `Please add a dependency array or an explicit \`undefined\``,
         });
       }
 
