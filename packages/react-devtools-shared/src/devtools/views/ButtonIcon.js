@@ -40,6 +40,8 @@ export type IconType =
   | 'panel-right-open'
   | 'panel-bottom-open'
   | 'panel-bottom-close'
+  | 'filter-on'
+  | 'filter-off'
   | 'error'
   | 'suspend'
   | 'undo'
@@ -151,6 +153,14 @@ export default function ButtonIcon({className = '', type}: Props): React.Node {
       break;
     case 'panel-bottom-close':
       pathData = PATH_MATERIAL_PANEL_BOTTOM_CLOSE;
+      viewBox = panelIcons;
+      break;
+    case 'filter-on':
+      pathData = PATH_MATERIAL_FILTER_ALT;
+      viewBox = panelIcons;
+      break;
+    case 'filter-off':
+      pathData = PATH_MATERIAL_FILTER_ALT_OFF;
       viewBox = panelIcons;
       break;
     case 'suspend':
@@ -337,4 +347,14 @@ const PATH_MATERIAL_PANEL_BOTTOM_OPEN = `
 // Source: Material Design Icons bottom_panel_close
 const PATH_MATERIAL_PANEL_BOTTOM_CLOSE = `
   m506-508 102-110q8-8.82 3.5-19.41T595-648H365q-12.25 0-16.62 10.5Q344-627 352-618l102 110q11.18 11 26.09 11T506-508Zm243-308q27.64 0 47.32 19.68T816-749v538q0 27.64-19.68 47.32T749-144H211q-27.64 0-47.32-19.68T144-211v-538q0-27.64 19.68-47.32T211-816h538ZM216-336v120h528v-120H216Zm528-72v-336H216v336h528Zm-528 72v120-120Z
+`;
+
+// Source: Material Design Icons filter_alt
+const PATH_MATERIAL_FILTER_ALT = `
+  M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z
+`;
+
+// Source: Material Design Icons filter_alt_off
+const PATH_MATERIAL_FILTER_ALT_OFF = `
+  m592-481-57-57 143-182H353l-80-80h487q25 0 36 22t-4 42L592-481ZM791-56 560-287v87q0 17-11.5 28.5T520-160h-80q-17 0-28.5-11.5T400-200v-247L56-791l56-57 736 736-57 56ZM535-538Z
 `;
