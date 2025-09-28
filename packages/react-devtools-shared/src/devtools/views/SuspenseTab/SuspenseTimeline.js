@@ -184,7 +184,11 @@ function SuspenseTimelineInput() {
       );
       return;
     }
-    const suspendedSet = timeline.slice(timelineIndex);
+    // We suspend everything after the current selection. The root isn't showing
+    // anything suspended in the root. The step after that should have one less
+    // thing suspended. I.e. the first suspense boundary should be unsuspended
+    // when it's selected. This also lets you show everything in the last step.
+    const suspendedSet = timeline.slice(timelineIndex + 1);
     bridge.send('overrideSuspenseMilestone', {
       rendererID,
       rootID,
