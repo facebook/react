@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<eabe1b37063d6edeb5bdcecfec9c07e9>>
+ * @generated SignedSource<<56bae65996335c3dc07c49bfd6029883>>
  */
 
 "use strict";
@@ -20173,6 +20173,7 @@ __DEV__ &&
       overridePropsDeletePath = null,
       overridePropsRenamePath = null,
       scheduleUpdate = null,
+      scheduleRetry = null,
       setErrorHandler = null,
       setSuspenseHandler = null;
     overrideHookState = function (fiber, id, path, value) {
@@ -20231,6 +20232,11 @@ __DEV__ &&
       var root = enqueueConcurrentRenderForLane(fiber, 2);
       null !== root && scheduleUpdateOnFiber(root, fiber, 2);
     };
+    scheduleRetry = function (fiber) {
+      var lane = claimNextRetryLane(),
+        root = enqueueConcurrentRenderForLane(fiber, lane);
+      null !== root && scheduleUpdateOnFiber(root, fiber, lane);
+    };
     setErrorHandler = function (newShouldErrorImpl) {
       shouldErrorImpl = newShouldErrorImpl;
     };
@@ -20238,11 +20244,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-df38ac9a-20250926" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-8309724c-20250928" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-df38ac9a-20250926\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-8309724c-20250928\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -20268,10 +20274,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-df38ac9a-20250926",
+        version: "19.2.0-native-fb-8309724c-20250928",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-df38ac9a-20250926"
+        reconcilerVersion: "19.2.0-native-fb-8309724c-20250928"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -20282,6 +20288,7 @@ __DEV__ &&
       internals.overridePropsDeletePath = overridePropsDeletePath;
       internals.overridePropsRenamePath = overridePropsRenamePath;
       internals.scheduleUpdate = scheduleUpdate;
+      internals.scheduleRetry = scheduleRetry;
       internals.setErrorHandler = setErrorHandler;
       internals.setSuspenseHandler = setSuspenseHandler;
       internals.scheduleRefresh = scheduleRefresh;
