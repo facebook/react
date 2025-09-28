@@ -82,7 +82,7 @@ export const enableTaint = __EXPERIMENTAL__;
 
 export const enablePostpone = __EXPERIMENTAL__;
 
-export const enableHalt = __EXPERIMENTAL__;
+export const enableHalt: boolean = true;
 
 export const enableViewTransition = __EXPERIMENTAL__;
 
