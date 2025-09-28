@@ -69,12 +69,10 @@ describe('ReactFlightDOMBrowser', () => {
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
     ReactServerDOMServer = require('react-server-dom-webpack/server');
-    if (__EXPERIMENTAL__) {
-      jest.mock('react-server-dom-webpack/static', () =>
-        require('react-server-dom-webpack/static.browser'),
-      );
-      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
-    }
+    jest.mock('react-server-dom-webpack/static', () =>
+      require('react-server-dom-webpack/static.browser'),
+    );
+    ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
     __unmockReact();
     jest.resetModules();
@@ -2497,7 +2495,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([reason]);
   });
 
-  // @gate experimental
+  // @gate enableHalt || enablePostpone
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2520,7 +2518,7 @@ describe('ReactFlightDOMBrowser', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           <App />,
           webpackMap,
         ),
@@ -2573,7 +2571,7 @@ describe('ReactFlightDOMBrowser', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           <App />,
           webpackMap,
           {
@@ -3011,9 +3009,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2937,
+                2935,
                 27,
-                2931,
+                2929,
                 34,
               ],
               [
@@ -3027,9 +3025,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2931,
+                2929,
                 18,
-                2918,
+                2916,
                 89,
               ],
             ],
