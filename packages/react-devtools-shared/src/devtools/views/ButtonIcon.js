@@ -42,6 +42,10 @@ export type IconType =
   | 'panel-bottom-close'
   | 'filter-on'
   | 'filter-off'
+  | 'play'
+  | 'pause'
+  | 'skip-previous'
+  | 'skip-next'
   | 'error'
   | 'suspend'
   | 'undo'
@@ -161,6 +165,22 @@ export default function ButtonIcon({className = '', type}: Props): React.Node {
       break;
     case 'filter-off':
       pathData = PATH_MATERIAL_FILTER_ALT_OFF;
+      viewBox = panelIcons;
+      break;
+    case 'play':
+      pathData = PATH_MATERIAL_PLAY_ARROW;
+      viewBox = panelIcons;
+      break;
+    case 'pause':
+      pathData = PATH_MATERIAL_PAUSE;
+      viewBox = panelIcons;
+      break;
+    case 'skip-previous':
+      pathData = PATH_MATERIAL_SKIP_PREVIOUS_ARROW;
+      viewBox = panelIcons;
+      break;
+    case 'skip-next':
+      pathData = PATH_MATERIAL_SKIP_NEXT_ARROW;
       viewBox = panelIcons;
       break;
     case 'suspend':
@@ -357,4 +377,24 @@ const PATH_MATERIAL_FILTER_ALT = `
 // Source: Material Design Icons filter_alt_off
 const PATH_MATERIAL_FILTER_ALT_OFF = `
   m592-481-57-57 143-182H353l-80-80h487q25 0 36 22t-4 42L592-481ZM791-56 560-287v87q0 17-11.5 28.5T520-160h-80q-17 0-28.5-11.5T400-200v-247L56-791l56-57 736 736-57 56ZM535-538Z
+`;
+
+// Source: Material Design Icons play_arrow
+const PATH_MATERIAL_PLAY_ARROW = `
+  M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z
+`;
+
+// Source: Material Design Icons pause
+const PATH_MATERIAL_PAUSE = `
+  M520-200v-560h240v560H520Zm-320 0v-560h240v560H200Zm400-80h80v-400h-80v400Zm-320 0h80v-400h-80v400Zm0-400v400-400Zm320 0v400-400Z
+`;
+
+// Source: Material Design Icons skip_previous
+const PATH_MATERIAL_SKIP_PREVIOUS_ARROW = `
+  M220-240v-480h80v480h-80Zm520 0L380-480l360-240v480Zm-80-240Zm0 90v-180l-136 90 136 90Z
+`;
+
+// Source: Material Design Icons skip_next
+const PATH_MATERIAL_SKIP_NEXT_ARROW = `
+  M660-240v-480h80v480h-80Zm-440 0v-480l360 240-360 240Zm80-240Zm0 90 136-90-136-90v180Z
 `;
