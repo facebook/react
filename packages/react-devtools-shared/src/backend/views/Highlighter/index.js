@@ -35,17 +35,14 @@ export default function setupHighlighter(
   bridge.addListener('stopInspectingHost', stopInspectingHost);
   bridge.addListener('scrollTo', scrollDocumentTo);
 
-  function scrollDocumentTo({
-    left,
-    top,
-    right,
-    bottom,
-  }: {
-    left: number,
-    top: number,
-    right: number,
-    bottom: number,
-  }) {
+  function scrollDocumentTo({x, y}: {x: number, y: number}) {
+    const element = document.documentElement;
+    if (element === null) {
+      return;
+    }
+    const left = x * (element.scrollWidth - element.clientWidth);
+    const top = y * (element.scrollHeight - element.clientHeight);
+    console.log('scroll doc', left, top, x, y);
     window.scrollTo({
       top: top,
       left: left,
@@ -59,11 +56,16 @@ export default function setupHighlighter(
       clearTimeout(scrollTimer);
       scrollTimer = null;
     }
-    const left = window.scrollX;
-    const top = window.scrollY;
-    const right = left + window.innerWidth;
-    const bottom = top + window.innerHeight;
-    bridge.send('scrollTo', {left, top, right, bottom});
+    // We send in fraction of scrollable area.
+    const element = document.documentElement;
+    if (element === null) {
+      return;
+    }
+    const w = element.scrollWidth - element.clientWidth;
+    const x = w === 0 ? 0 : window.scrollX / w;
+    const h = element.scrollHeight - element.clientHeight;
+    const y = h === 0 ? 0 : window.scrollY / h;
+    bridge.send('scrollTo', {x, y});
   }
 
   document.addEventListener(
