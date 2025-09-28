@@ -1,10 +1,31 @@
 #!/bin/sh
 #
 # To enable this hook, symlink or copy this file to .git/hooks/pre-commit.
+#   ln -s ../../scripts/git/pre-commit .git/hooks/pre-commit
+#
+# This hook lints staged JS/TS files before committing.
+# If ESLint errors are found, the commit will be blocked.
 
-# Redirect output to stderr.
+# Redirect output to stderr
 exec 1>&2
 
-git diff --cached --name-only --diff-filter=ACMRTUB | \
-  grep '\.js$' | \
-  xargs ./node_modules/.bin/eslint --
+# Collect staged JS/TS files
+files=$(git diff --cached --name-only --diff-filter=ACMRTUB | grep -E '\.(js|jsx|ts|tsx)$')
+
+# Exit if no files match
+[ -z "$files" ] && exit 0
+
+echo "🔍 Running ESLint on staged files..."
+
+# Run ESLint (local version from node_modules)
+echo "$files" | xargs ./node_modules/.bin/eslint --max-warnings=0
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo "❌ ESLint failed. Please fix the above issues before committing."
+  exit 1
+fi
+
+echo "✅ ESLint passed."
+exit 0
+
