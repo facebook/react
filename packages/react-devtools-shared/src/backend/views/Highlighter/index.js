@@ -33,6 +33,56 @@ export default function setupHighlighter(
   bridge.addListener('shutdown', stopInspectingHost);
   bridge.addListener('startInspectingHost', startInspectingHost);
   bridge.addListener('stopInspectingHost', stopInspectingHost);
+  bridge.addListener('scrollTo', scrollDocumentTo);
+
+  function scrollDocumentTo({
+    left,
+    top,
+    right,
+    bottom,
+  }: {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+  }) {
+    window.scrollTo({
+      top: top,
+      left: left,
+      behavior: 'smooth',
+    });
+  }
+
+  let scrollTimer = null;
+  function sendScroll() {
+    if (scrollTimer) {
+      clearTimeout(scrollTimer);
+      scrollTimer = null;
+    }
+    const left = window.scrollX;
+    const top = window.scrollY;
+    const right = left + window.innerWidth;
+    const bottom = top + window.innerHeight;
+    bridge.send('scrollTo', {left, top, right, bottom});
+  }
+
+  document.addEventListener(
+    'scroll',
+    () => {
+      if (!scrollTimer) {
+        // Periodically synchronize the scroll while scrolling.
+        scrollTimer = setTimeout(sendScroll, 400);
+      }
+    },
+    true,
+  );
+
+  document.addEventListener(
+    'scrollend',
+    // Upon scrollend send it immediately.
+    sendScroll,
+    true,
+  );
 
   function startInspectingHost(onlySuspenseNodes: boolean) {
     inspectOnlySuspenseNodes = onlySuspenseNodes;

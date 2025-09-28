@@ -35,7 +35,7 @@ import {
   SuspenseTreeDispatcherContext,
   SuspenseTreeStateContext,
 } from './SuspenseTreeContext';
-import {StoreContext, OptionsContext} from '../context';
+import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Button from '../Button';
 import Toggle from '../Toggle';
 import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
@@ -154,6 +154,95 @@ function ToggleInspectedElement({
       }>
       <ButtonIcon type={iconType} />
     </Button>
+  );
+}
+
+function SynchronizedScrollContainer({
+  className,
+  children,
+}: {
+  className?: string,
+  children: React.Node,
+}) {
+  const bridge = useContext(BridgeContext);
+  const ref = useRef(null);
+
+  // TODO: useEffectEvent
+  function scrollContainerTo({
+    left,
+    top,
+    right,
+    bottom,
+  }: {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+  }): void {
+    const element = ref.current;
+    if (element === null) {
+      return;
+    }
+    element.scrollTo({
+      left,
+      top,
+      behavior: 'smooth',
+    });
+  }
+
+  useEffect(() => {
+    const callback = scrollContainerTo;
+    bridge.addListener('scrollTo', callback);
+    return () => bridge.removeListener('scrollTo', callback);
+  }, [bridge]);
+
+  const scrollTimer = useRef<null | TimeoutID>(null);
+
+  // TODO: useEffectEvent
+  function sendScroll() {
+    if (scrollTimer.current) {
+      clearTimeout(scrollTimer.current);
+      scrollTimer.current = null;
+    }
+    const element = ref.current;
+    if (element === null) {
+      return;
+    }
+    const left = element.scrollLeft;
+    const top = element.scrollTop;
+    const right = left + element.clientWidth;
+    const bottom = top + element.clientHeight;
+    bridge.send('scrollTo', {left, top, right, bottom});
+  }
+
+  // TODO: useEffectEvent
+  function throttleScroll() {
+    if (!scrollTimer.current) {
+      // Periodically synchronize the scroll while scrolling.
+      scrollTimer.current = setTimeout(sendScroll, 400);
+    }
+  }
+
+  useEffect(() => {
+    const element = ref.current;
+    if (element === null) {
+      return;
+    }
+    const scrollCallback = throttleScroll;
+    // Upon scrollend send it immediately.
+    const scrollEndCallback = sendScroll;
+    element.addEventListener('scroll', scrollCallback);
+    element.addEventListener('scrollend', scrollEndCallback);
+    return () => {
+      element.removeEventListener('scroll', scrollCallback);
+      element.removeEventListener('scrollend', scrollEndCallback);
+    };
+  }, [ref]);
+
+  return (
+    <div className={className} ref={ref}>
+      {children}
+    </div>
   );
 }
 
@@ -388,9 +477,9 @@ function SuspenseTab(_: {}) {
                 orientation="horizontal"
               />
             </header>
-            <div className={styles.Rects}>
+            <SynchronizedScrollContainer className={styles.Rects}>
               <SuspenseRects />
-            </div>
+            </SynchronizedScrollContainer>
             <footer className={styles.SuspenseTreeViewFooter}>
               <SuspenseTimeline />
               <div className={styles.SuspenseTreeViewFooterButtons}>
