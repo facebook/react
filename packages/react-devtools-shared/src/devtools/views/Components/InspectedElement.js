@@ -205,6 +205,11 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     );
   }
 
+  let fullName = element.displayName || '';
+  if (element.nameProp !== null) {
+    fullName += ' "' + element.nameProp + '"';
+  }
+
   return (
     <div
       className={styles.InspectedElement}
@@ -228,8 +233,8 @@ export default function InspectedElementWrapper(_: Props): React.Node {
                 ? `${styles.ComponentName} ${styles.StrictModeNonCompliantComponentName}`
                 : styles.ComponentName
             }
-            title={element.displayName}>
-            {element.displayName}
+            title={fullName}>
+            {fullName}
           </div>
         </div>
 
