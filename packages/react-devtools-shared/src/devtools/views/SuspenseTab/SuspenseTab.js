@@ -215,9 +215,11 @@ function ToggleInspectedElement({
 function SynchronizedScrollContainer({
   className,
   children,
+  scaleRef,
 }: {
   className?: string,
   children: React.Node,
+  scaleRef: {current: number},
 }) {
   const bridge = useContext(BridgeContext);
   const ref = useRef(null);
@@ -238,9 +240,10 @@ function SynchronizedScrollContainer({
     if (element === null) {
       return;
     }
+    const scale = scaleRef.current / element.clientWidth;
     element.scrollTo({
-      left,
-      top,
+      left: left / scale,
+      top: top / scale,
       behavior: 'smooth',
     });
   }
@@ -263,10 +266,11 @@ function SynchronizedScrollContainer({
     if (element === null) {
       return;
     }
-    const left = element.scrollLeft;
-    const top = element.scrollTop;
-    const right = left + element.clientWidth;
-    const bottom = top + element.clientHeight;
+    const scale = scaleRef.current / element.clientWidth;
+    const left = element.scrollLeft * scale;
+    const top = element.scrollTop * scale;
+    const right = left + element.clientWidth * scale;
+    const bottom = top + element.clientHeight * scale;
     bridge.send('scrollTo', {left, top, right, bottom});
   }
 
@@ -484,6 +488,8 @@ function SuspenseTab(_: {}) {
     }
   };
 
+  const scaleRef = useRef(0);
+
   return (
     <SettingsModalContextController>
       <div className={styles.SuspenseTab} ref={wrapperTreeRef}>
@@ -526,8 +532,10 @@ function SuspenseTab(_: {}) {
                 orientation="horizontal"
               />
             </header>
-            <SynchronizedScrollContainer className={styles.Rects}>
-              <SuspenseRects />
+            <SynchronizedScrollContainer
+              className={styles.Rects}
+              scaleRef={scaleRef}>
+              <SuspenseRects scaleRef={scaleRef} />
             </SynchronizedScrollContainer>
             <footer className={styles.SuspenseTreeViewFooter}>
               <SuspenseTimeline />

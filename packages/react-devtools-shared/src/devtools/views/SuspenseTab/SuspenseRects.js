@@ -18,7 +18,7 @@ import typeof {
 } from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
-import {createContext, useContext} from 'react';
+import {createContext, useContext, useLayoutEffect} from 'react';
 import {
   TreeDispatcherContext,
   TreeStateContext,
@@ -276,7 +276,11 @@ function SuspenseRectsShell({
 
 const ViewBox = createContext<Rect>((null: any));
 
-function SuspenseRectsContainer(): React$Node {
+function SuspenseRectsContainer({
+  scaleRef,
+}: {
+  scaleRef: {current: number},
+}): React$Node {
   const store = useContext(StoreContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
   const {roots} = useContext(SuspenseTreeStateContext);
@@ -290,6 +294,11 @@ function SuspenseRectsContainer(): React$Node {
   // Scales the inspected document to fit into the available width
   const width = '100%';
   const aspectRatio = `1 / ${heightScale}`;
+
+  useLayoutEffect(() => {
+    // 100% of the width represents this many pixels in the real document.
+    scaleRef.current = boundingBoxWidth;
+  }, [boundingBoxWidth]);
 
   return (
     <div className={styles.SuspenseRectsContainer}>
