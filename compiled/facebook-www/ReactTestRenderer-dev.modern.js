@@ -15501,6 +15501,7 @@ __DEV__ &&
       overridePropsDeletePath = null,
       overridePropsRenamePath = null,
       scheduleUpdate = null,
+      scheduleRetry = null,
       setErrorHandler = null,
       setSuspenseHandler = null;
     overrideHookState = function (fiber, id, path, value) {
@@ -15558,6 +15559,11 @@ __DEV__ &&
     scheduleUpdate = function (fiber) {
       var root = enqueueConcurrentRenderForLane(fiber, 2);
       null !== root && scheduleUpdateOnFiber(root, fiber, 2);
+    };
+    scheduleRetry = function (fiber) {
+      var lane = claimNextRetryLane(),
+        root = enqueueConcurrentRenderForLane(fiber, lane);
+      null !== root && scheduleUpdateOnFiber(root, fiber, lane);
     };
     setErrorHandler = function (newShouldErrorImpl) {
       shouldErrorImpl = newShouldErrorImpl;
@@ -15695,10 +15701,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-c552618a-20250926",
+        version: "19.2.0-www-modern-8309724c-20250928",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-c552618a-20250926"
+        reconcilerVersion: "19.2.0-www-modern-8309724c-20250928"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15707,6 +15713,7 @@ __DEV__ &&
       internals.overridePropsDeletePath = overridePropsDeletePath;
       internals.overridePropsRenamePath = overridePropsRenamePath;
       internals.scheduleUpdate = scheduleUpdate;
+      internals.scheduleRetry = scheduleRetry;
       internals.setErrorHandler = setErrorHandler;
       internals.setSuspenseHandler = setSuspenseHandler;
       internals.scheduleRefresh = scheduleRefresh;
@@ -15833,5 +15840,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-modern-c552618a-20250926";
+    exports.version = "19.2.0-www-modern-8309724c-20250928";
   })();
