@@ -215,35 +215,24 @@ function ToggleInspectedElement({
 function SynchronizedScrollContainer({
   className,
   children,
-  scaleRef,
 }: {
   className?: string,
   children: React.Node,
-  scaleRef: {current: number},
 }) {
   const bridge = useContext(BridgeContext);
   const ref = useRef(null);
 
   // TODO: useEffectEvent
-  function scrollContainerTo({
-    left,
-    top,
-    right,
-    bottom,
-  }: {
-    left: number,
-    top: number,
-    right: number,
-    bottom: number,
-  }): void {
+  function scrollContainerTo({x, y}: {x: number, y: number}): void {
     const element = ref.current;
     if (element === null) {
       return;
     }
-    const scale = scaleRef.current / element.clientWidth;
+    const left = x * (element.scrollWidth - element.clientWidth);
+    const top = y * (element.scrollHeight - element.clientHeight);
     element.scrollTo({
-      left: left / scale,
-      top: top / scale,
+      left,
+      top,
       behavior: 'smooth',
     });
   }
@@ -266,12 +255,11 @@ function SynchronizedScrollContainer({
     if (element === null) {
       return;
     }
-    const scale = scaleRef.current / element.clientWidth;
-    const left = element.scrollLeft * scale;
-    const top = element.scrollTop * scale;
-    const right = left + element.clientWidth * scale;
-    const bottom = top + element.clientHeight * scale;
-    bridge.send('scrollTo', {left, top, right, bottom});
+    const w = element.scrollWidth - element.clientWidth;
+    const x = w === 0 ? 0 : element.scrollLeft / w;
+    const h = element.scrollHeight - element.clientHeight;
+    const y = h === 0 ? 0 : element.scrollTop / h;
+    bridge.send('scrollTo', {x, y});
   }
 
   // TODO: useEffectEvent
@@ -488,8 +476,6 @@ function SuspenseTab(_: {}) {
     }
   };
 
-  const scaleRef = useRef(0);
-
   return (
     <SettingsModalContextController>
       <div className={styles.SuspenseTab} ref={wrapperTreeRef}>
@@ -532,10 +518,8 @@ function SuspenseTab(_: {}) {
                 orientation="horizontal"
               />
             </header>
-            <SynchronizedScrollContainer
-              className={styles.Rects}
-              scaleRef={scaleRef}>
-              <SuspenseRects scaleRef={scaleRef} />
+            <SynchronizedScrollContainer className={styles.Rects}>
+              <SuspenseRects />
             </SynchronizedScrollContainer>
             <footer className={styles.SuspenseTreeViewFooter}>
               <SuspenseTimeline />
