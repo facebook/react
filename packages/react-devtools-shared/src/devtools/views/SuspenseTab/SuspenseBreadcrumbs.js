@@ -48,9 +48,7 @@ export default function SuspenseBreadcrumbs(): React$Node {
         selectedRootID !== null ? (
           <li
             className={styles.SuspenseBreadcrumbsListItem}
-            aria-current={selectedSuspenseID === selectedRootID}
-            onPointerEnter={highlightHostInstance.bind(null, selectedRootID)}
-            onPointerLeave={clearHighlightHostInstance}>
+            aria-current={selectedSuspenseID === selectedRootID}>
             <button
               className={styles.SuspenseBreadcrumbsButton}
               onClick={handleClick.bind(null, selectedRootID)}
