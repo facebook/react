@@ -343,12 +343,8 @@ export default function Editor(): JSX.Element {
           <ConfigEditor appliedOptions={appliedOptions} />
         </div>
         <div className="flex flex-1 min-w-0">
-          <div className="flex-1 min-w-[550px] sm:min-w-0">
-            <Input language={language} errors={errors} />
-          </div>
-          <div className="flex-1 min-w-[550px] sm:min-w-0">
-            <Output store={deferredStore} compilerOutput={mergedOutput} />
-          </div>
+          <Input language={language} errors={errors} />
+          <Output store={deferredStore} compilerOutput={mergedOutput} />
         </div>
       </div>
     </>

@@ -69,3 +69,42 @@
     scrollbar-width: none; /* Firefox */
   }
 }
+
+::view-transition-old(.slide-in) {
+  animation-name: slideOutLeft;
+}
+::view-transition-new(.slide-in) {
+  animation-name: slideInLeft;
+}
+::view-transition-group(.slide-in) {
+  z-index: 1;
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+::view-transition-old(.container),
+::view-transition-new(.container) {
+  height: 100%;
+}
+
+::view-transition-old(.accordion-container),
+::view-transition-new(.accordion-container) {
+  height: 100%;
+  object-fit: none;
+  object-position: left;
+}

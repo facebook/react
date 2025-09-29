@@ -18,19 +18,21 @@ export default function AccordionWindow(props: {
   changedPasses: Set<string>;
 }): React.ReactElement {
   return (
-    <div className="flex flex-row h-full">
-      {Array.from(props.tabs.keys()).map(name => {
-        return (
-          <AccordionWindowItem
-            name={name}
-            key={name}
-            tabs={props.tabs}
-            tabsOpen={props.tabsOpen}
-            setTabsOpen={props.setTabsOpen}
-            hasChanged={props.changedPasses.has(name)}
-          />
-        );
-      })}
+    <div className="flex-1 min-w-[550px] sm:min-w-0">
+      <div className="flex flex-row h-full">
+        {Array.from(props.tabs.keys()).map(name => {
+          return (
+            <AccordionWindowItem
+              name={name}
+              key={name}
+              tabs={props.tabs}
+              tabsOpen={props.tabsOpen}
+              setTabsOpen={props.setTabsOpen}
+              hasChanged={props.changedPasses.has(name)}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
