@@ -31,6 +31,7 @@ export type SuspenseTreeState = {
   selectedSuspenseID: SuspenseNode['id'] | null,
   timeline: $ReadOnlyArray<SuspenseNode['id']>,
   timelineIndex: number | -1,
+  hoveredTimelineIndex: number | -1,
   uniqueSuspendersOnly: boolean,
   playing: boolean,
 };
@@ -76,6 +77,10 @@ type ACTION_TOGGLE_TIMELINE_FOR_ID = {
   type: 'TOGGLE_TIMELINE_FOR_ID',
   payload: SuspenseNode['id'],
 };
+type ACTION_HOVER_TIMELINE_FOR_ID = {
+  type: 'HOVER_TIMELINE_FOR_ID',
+  payload: SuspenseNode['id'],
+};
 
 export type SuspenseTreeAction =
   | ACTION_SUSPENSE_TREE_MUTATION
@@ -86,7 +91,8 @@ export type SuspenseTreeAction =
   | ACTION_SUSPENSE_SKIP_TIMELINE_INDEX
   | ACTION_SUSPENSE_PLAY_PAUSE
   | ACTION_SUSPENSE_PLAY_TICK
-  | ACTION_TOGGLE_TIMELINE_FOR_ID;
+  | ACTION_TOGGLE_TIMELINE_FOR_ID
+  | ACTION_HOVER_TIMELINE_FOR_ID;
 export type SuspenseTreeDispatch = (action: SuspenseTreeAction) => void;
 
 const SuspenseTreeStateContext: ReactContext<SuspenseTreeState> =
@@ -127,6 +133,7 @@ function getInitialState(store: Store): SuspenseTreeState {
       selectedRootID,
       timeline: [],
       timelineIndex: -1,
+      hoveredTimelineIndex: -1,
       uniqueSuspendersOnly,
       playing: false,
     };
@@ -149,6 +156,7 @@ function getInitialState(store: Store): SuspenseTreeState {
       selectedRootID,
       timeline,
       timelineIndex,
+      hoveredTimelineIndex: -1,
       uniqueSuspendersOnly,
       playing: false,
     };
@@ -432,6 +440,15 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
               playing: false, // pause
+            };
+          }
+          case 'HOVER_TIMELINE_FOR_ID': {
+            const suspenseID = action.payload;
+            const timelineIndexForSuspenseID =
+              state.timeline.indexOf(suspenseID);
+            return {
+              ...state,
+              hoveredTimelineIndex: timelineIndexForSuspenseID,
             };
           }
           default:

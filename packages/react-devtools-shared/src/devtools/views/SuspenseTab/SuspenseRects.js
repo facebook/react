@@ -117,6 +117,10 @@ function SuspenseRects({
     }
     event.preventDefault();
     highlightHostInstance(suspenseID);
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: suspenseID,
+    });
   }
 
   function handlePointerLeave(event: SyntheticPointerEvent) {
@@ -126,6 +130,10 @@ function SuspenseRects({
     }
     event.preventDefault();
     clearHighlightHostInstance();
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: -1,
+    });
   }
 
   // TODO: Use the nearest Suspense boundary
