@@ -7230,8 +7230,9 @@ export function attach(
   }
 
   function inspectRootsRaw(arbitraryRootID: number): InspectedElement | null {
-    const roots = hook.getFiberRoots(rendererID);
-    if (roots.size === 0) {
+    // Merges roots of all known roots. The agent is supposed to only use the result
+    // of single renderer implementation.
+    if (rootToFiberInstanceMap.size === 0) {
       return null;
     }
 
@@ -7277,13 +7278,7 @@ export function attach(
 
     let minSuspendedByRange = Infinity;
     let maxSuspendedByRange = -Infinity;
-    roots.forEach(root => {
-      const rootInstance = rootToFiberInstanceMap.get(root);
-      if (rootInstance === undefined) {
-        throw new Error(
-          'Expected a root instance to exist for this Fiber root',
-        );
-      }
+    rootToFiberInstanceMap.forEach(rootInstance => {
       const inspectedRoot = inspectFiberInstanceRaw(rootInstance);
       if (inspectedRoot === null) {
         return;

@@ -565,7 +565,7 @@ export default class Agent extends EventEmitter<{
           // If we hydrated a path, it must've been in a specific renderer so we can stop here.
           return;
         case 'full-data':
-          // TODO: Handle merging roots from different renderers.
+          // TODO: Handle merging of roots from different renderer implementations.
           this._bridge.send('inspectedScreen', inspectedRoots);
           return;
         case 'not-found':
