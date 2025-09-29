@@ -217,10 +217,11 @@ function SynchronizedScrollContainer({
   children,
 }: {
   className?: string,
-  children: React.Node,
+  children?: React.Node,
 }) {
   const bridge = useContext(BridgeContext);
   const ref = useRef(null);
+  const applyingScrollRef = useRef(false);
 
   // TODO: useEffectEvent
   function scrollContainerTo({x, y}: {x: number, y: number}): void {
@@ -228,13 +229,20 @@ function SynchronizedScrollContainer({
     if (element === null) {
       return;
     }
-    const left = x * (element.scrollWidth - element.clientWidth);
-    const top = y * (element.scrollHeight - element.clientHeight);
-    element.scrollTo({
-      left,
-      top,
-      behavior: 'smooth',
-    });
+    const left = Math.round(x * (element.scrollWidth - element.clientWidth));
+    const top = Math.round(y * (element.scrollHeight - element.clientHeight));
+    if (
+      left !== Math.round(element.scrollLeft) ||
+      top !== Math.round(element.scrollTop)
+    ) {
+      // Disable scroll events until we've applied the new scroll position.
+      applyingScrollRef.current = true;
+      element.scrollTo({
+        left,
+        top,
+        behavior: 'smooth',
+      });
+    }
   }
 
   useEffect(() => {
@@ -250,6 +258,9 @@ function SynchronizedScrollContainer({
     if (scrollTimer.current) {
       clearTimeout(scrollTimer.current);
       scrollTimer.current = null;
+    }
+    if (applyingScrollRef.current) {
+      return;
     }
     const element = ref.current;
     if (element === null) {
@@ -270,14 +281,19 @@ function SynchronizedScrollContainer({
     }
   }
 
+  function scrollEnd() {
+    // Upon scrollend send it immediately.
+    sendScroll();
+    applyingScrollRef.current = false;
+  }
+
   useEffect(() => {
     const element = ref.current;
     if (element === null) {
       return;
     }
     const scrollCallback = throttleScroll;
-    // Upon scrollend send it immediately.
-    const scrollEndCallback = sendScroll;
+    const scrollEndCallback = scrollEnd;
     element.addEventListener('scroll', scrollCallback);
     element.addEventListener('scrollend', scrollEndCallback);
     return () => {

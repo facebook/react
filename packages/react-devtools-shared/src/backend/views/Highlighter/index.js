@@ -30,6 +30,8 @@ export default function setupHighlighter(
   bridge.addListener('stopInspectingHost', stopInspectingHost);
   bridge.addListener('scrollTo', scrollDocumentTo);
 
+  let applyingScroll = false;
+
   function scrollDocumentTo({x, y}: {x: number, y: number}) {
     const element = document.documentElement;
     if (element === null) {
@@ -37,12 +39,18 @@ export default function setupHighlighter(
     }
     const left = x * (element.scrollWidth - element.clientWidth);
     const top = y * (element.scrollHeight - element.clientHeight);
-    console.log('scroll doc', left, top, x, y);
-    window.scrollTo({
-      top: top,
-      left: left,
-      behavior: 'smooth',
-    });
+    if (
+      left !== Math.round(window.scrollX) ||
+      top !== Math.round(window.scrollY)
+    ) {
+      // Disable scroll events until we've applied the new scroll position.
+      applyingScroll = true;
+      window.scrollTo({
+        top: top,
+        left: left,
+        behavior: 'smooth',
+      });
+    }
   }
 
   let scrollTimer = null;
@@ -50,6 +58,9 @@ export default function setupHighlighter(
     if (scrollTimer) {
       clearTimeout(scrollTimer);
       scrollTimer = null;
+    }
+    if (applyingScroll) {
+      return;
     }
     // We send in fraction of scrollable area.
     const element = document.documentElement;
@@ -63,23 +74,20 @@ export default function setupHighlighter(
     bridge.send('scrollTo', {x, y});
   }
 
-  document.addEventListener(
-    'scroll',
-    () => {
-      if (!scrollTimer) {
-        // Periodically synchronize the scroll while scrolling.
-        scrollTimer = setTimeout(sendScroll, 400);
-      }
-    },
-    true,
-  );
-
-  document.addEventListener(
-    'scrollend',
+  function scrollEnd() {
     // Upon scrollend send it immediately.
-    sendScroll,
-    true,
-  );
+    sendScroll();
+    applyingScroll = false;
+  }
+
+  document.addEventListener('scroll', () => {
+    if (!scrollTimer) {
+      // Periodically synchronize the scroll while scrolling.
+      scrollTimer = setTimeout(sendScroll, 400);
+    }
+  });
+
+  document.addEventListener('scrollend', scrollEnd);
 
   function startInspectingHost() {
     registerListenersOnWindow(window);
