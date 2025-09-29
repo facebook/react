@@ -38,7 +38,15 @@ export default function SuspenseBreadcrumbs(): React$Node {
 
   return (
     <ol className={styles.SuspenseBreadcrumbsList}>
-      {lineage !== null &&
+      {lineage === null ? null : lineage.length === 0 ? (
+        // We selected the root. This means that we're currently viewing the Transition
+        // that rendered the whole screen. In laymans terms this is really "Initial Paint".
+        // TODO: Once we add subtree selection, then the equivalent should be called
+        // "Transition" since in that case it's really about a Transition within the page.
+        <li className={styles.SuspenseBreadcrumbsListItem}>
+          <span className={styles.SuspenseBreadcrumbsText}>Initial Paint</span>
+        </li>
+      ) : (
         lineage.map((id, index) => {
           const node = store.getSuspenseByID(id);
 
@@ -57,7 +65,8 @@ export default function SuspenseBreadcrumbs(): React$Node {
               </button>
             </li>
           );
-        })}
+        })
+      )}
     </ol>
   );
 }
