@@ -426,12 +426,18 @@ export function printOperationsArray(operations: Array<number>) {
         break;
       }
       case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
-        const changeLength = operations[i + 1];
-        i += 2;
-        const changes = operations.slice(i, i + changeLength * 2);
-        i += changeLength;
+        i++;
+        const changeLength = ((operations[i++]: any): number);
 
-        logs.push(`Suspense node suspender changes ${changes.join(',')}`);
+        for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
+          const id = operations[i++];
+          const hasUniqueSuspenders = operations[i++] === 1;
+          const environmentNamesLength = operations[i++];
+          i += environmentNamesLength;
+          logs.push(
+            `Suspense node ${id} unique suspenders set to ${String(hasUniqueSuspenders)} with ${String(environmentNamesLength)} environments`,
+          );
+        }
 
         break;
       }

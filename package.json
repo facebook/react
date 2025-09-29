@@ -71,6 +71,7 @@
     "eslint-plugin-no-for-of-loops": "^1.0.0",
     "eslint-plugin-no-function-declare-after-return": "^1.0.0",
     "eslint-plugin-react": "^6.7.1",
+    "eslint-plugin-react-hooks-published": "npm:eslint-plugin-react-hooks@^5.2.0",
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules",
     "fbjs-scripts": "^3.0.1",
     "filesize": "^6.0.1",

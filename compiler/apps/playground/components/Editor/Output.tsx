@@ -33,6 +33,7 @@ import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 import {BabelFileResult} from '@babel/core';
 import {CONFIG_PANEL_TRANSITION} from '../../lib/transitionTypes';
+import {LRUCache} from 'lru-cache';
 
 const MemoizedOutput = memo(Output);
 
@@ -40,7 +41,9 @@ export default MemoizedOutput;
 
 export const BASIC_OUTPUT_TAB_NAMES = ['Output', 'SourceMap'];
 
-let tabifyCache = new Map<Store, Promise<Map<string, ReactNode>>>();
+const tabifyCache = new LRUCache<Store, Promise<Map<string, ReactNode>>>({
+  max: 5,
+});
 
 export type PrintedCompilerPipelineValue =
   | {
@@ -214,17 +217,14 @@ function tabifyCached(
   store: Store,
   compilerOutput: CompilerOutput,
 ): Promise<Map<string, ReactNode>> {
-  const key = store;
-  if (tabifyCache.has(key)) {
-    return tabifyCache.get(key)!;
-  }
+  const cached = tabifyCache.get(store);
+  if (cached) return cached;
   const result = tabify(store.source, compilerOutput, store.showInternals);
-  tabifyCache.set(key, result);
+  tabifyCache.set(store, result);
   return result;
 }
 
 function Fallback(): JSX.Element {
-  console.log('Fallback');
   return (
     <div className="w-full h-monaco_small sm:h-monaco flex items-center justify-center">
       Loading...

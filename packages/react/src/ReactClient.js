@@ -88,7 +88,7 @@ export {
   useCallback,
   useContext,
   useEffect,
-  useEffectEvent as experimental_useEffectEvent,
+  useEffectEvent,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
