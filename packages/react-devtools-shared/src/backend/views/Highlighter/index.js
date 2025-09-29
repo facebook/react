@@ -184,7 +184,7 @@ export default function setupHighlighter(
           // $FlowFixMe[method-unbinding]
           if (typeof node.scrollIntoView === 'function') {
             node.scrollIntoView({
-              block: 'start',
+              block: 'nearest',
               inline: 'nearest',
               behavior: 'smooth',
             });
@@ -246,11 +246,23 @@ export default function setupHighlighter(
           y = rect.y;
         }
       }
-      window.scrollTo({
-        top: y,
-        left: x,
-        behavior: 'smooth',
-      });
+      const element = document.documentElement;
+      if (!element) {
+        return;
+      }
+      // Check if the target corner is already in the viewport.
+      if (
+        x < window.scrollX ||
+        y < window.scrollY ||
+        x > window.scrollX + element.clientWidth ||
+        y > window.scrollY + element.clientHeight
+      ) {
+        window.scrollTo({
+          top: y,
+          left: x,
+          behavior: 'smooth',
+        });
+      }
       // It's possible that after mount, we're able to scroll deeper once the new nodes
       // have mounted. Let's try again after mount. Ideally we'd know which commit this
       // is going to be but for now we just try after 100ms.
