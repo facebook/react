@@ -96,7 +96,6 @@ export type Capabilities = {
   supportsBasicProfiling: boolean,
   hasOwnerMetadata: boolean,
   supportsStrictMode: boolean,
-  supportsTogglingSuspense: boolean,
   supportsAdvancedProfiling: AdvancedProfiling,
 };
 
@@ -504,14 +503,6 @@ export default class Store extends EventEmitter<{
       this._isReloadAndProfileFrontendSupported &&
       this._isReloadAndProfileBackendSupported
     );
-  }
-
-  supportsTogglingSuspense(rootID: Element['id']): boolean {
-    const capabilities = this._rootIDToCapabilities.get(rootID);
-    if (capabilities === undefined) {
-      throw new Error(`No capabilities registered for root ${rootID}`);
-    }
-    return capabilities.supportsTogglingSuspense;
   }
 
   // This build of DevTools supports the Timeline profiler.
@@ -1202,7 +1193,6 @@ export default class Store extends EventEmitter<{
 
             let supportsStrictMode = false;
             let hasOwnerMetadata = false;
-            let supportsTogglingSuspense = false;
 
             // If we don't know the bridge protocol, guess that we're dealing with the latest.
             // If we do know it, we can take it into consideration when parsing operations.
@@ -1215,9 +1205,6 @@ export default class Store extends EventEmitter<{
 
               hasOwnerMetadata = operations[i] > 0;
               i++;
-
-              supportsTogglingSuspense = operations[i] > 0;
-              i++;
             }
 
             this._roots = this._roots.concat(id);
@@ -1226,7 +1213,6 @@ export default class Store extends EventEmitter<{
               supportsBasicProfiling,
               hasOwnerMetadata,
               supportsStrictMode,
-              supportsTogglingSuspense,
               supportsAdvancedProfiling,
             });
 

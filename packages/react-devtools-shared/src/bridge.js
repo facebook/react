@@ -65,12 +65,6 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
   {
     version: 2,
     minNpmVersion: '4.22.0',
-    maxNpmVersion: '6.2.0',
-  },
-  // Version 3 adds supports-toggling-suspense bit to add-root
-  {
-    version: 3,
-    minNpmVersion: '6.2.0',
     maxNpmVersion: null,
   },
 ];

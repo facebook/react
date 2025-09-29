@@ -412,7 +412,6 @@ export function attach(
       pushOperation(0); // Profiling flag
       pushOperation(0); // StrictMode supported?
       pushOperation(hasOwnerMetadata ? 1 : 0);
-      pushOperation(supportsTogglingSuspense ? 1 : 0);
 
       pushOperation(SUSPENSE_TREE_OPERATION_ADD);
       pushOperation(id);

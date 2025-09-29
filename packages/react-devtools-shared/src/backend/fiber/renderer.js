@@ -2420,7 +2420,6 @@ export function attach(
         !isProductionBuildOfRenderer && StrictModeBits !== 0 ? 1 : 0,
       );
       pushOperation(hasOwnerMetadata ? 1 : 0);
-      pushOperation(supportsTogglingSuspense ? 1 : 0);
 
       if (isProfiling) {
         if (displayNamesByRootID !== null) {
