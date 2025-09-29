@@ -256,6 +256,7 @@ type FrontendEvents = {
   startProfiling: [StartProfilingParams],
   stopInspectingHost: [boolean],
   scrollTo: [{x: number, y: number}],
+  requestScrollPosition: [],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
