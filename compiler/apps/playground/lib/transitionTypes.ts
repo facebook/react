@@ -6,3 +6,4 @@
  */
 
 export const CONFIG_PANEL_TRANSITION = 'config-panel';
+export const TOGGLE_TAB_TRANSITION = 'toggle-tab';

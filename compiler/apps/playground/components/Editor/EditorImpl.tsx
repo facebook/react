@@ -24,7 +24,11 @@ import BabelPluginReactCompiler, {
   printFunctionWithOutlined,
   type LoggerEvent,
 } from 'babel-plugin-react-compiler';
-import {useDeferredValue, useMemo} from 'react';
+import {
+  useDeferredValue,
+  useMemo,
+  unstable_ViewTransition as ViewTransition,
+} from 'react';
 import {useStore} from '../StoreContext';
 import ConfigEditor from './ConfigEditor';
 import Input from './Input';
