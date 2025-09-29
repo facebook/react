@@ -314,6 +314,7 @@ function LoadLater() {
 
 function readRecord(promise: any): any {
   if (typeof React.use === 'function') {
+    // eslint-disable-next-line react-hooks-published/rules-of-hooks
     return React.use(promise);
   }
   switch (promise.status) {
