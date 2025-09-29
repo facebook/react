@@ -73,6 +73,7 @@ import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   AsyncSequence,
+  AwaitNode,
   IONode,
   PromiseNode,
   UnresolvedPromiseNode,
@@ -2254,7 +2255,7 @@ function visitAsyncNode(
   node: AsyncSequence,
   visited: Set<AsyncSequence | ReactDebugInfo>,
   cutOff: number,
-): void | null | PromiseNode | IONode {
+): void | null | PromiseNode | IONode | AwaitNode {
   if (visited.has(node)) {
     // It's possible to visit them same node twice when it's part of both an "awaited" path
     // and a "previous" path. This also gracefully handles cycles which would be a bug.
@@ -2291,8 +2292,9 @@ function visitAsyncNode(
         // The technique for debugging the effects of uncached data on the render is to simply uncache it.
         return previousIONode;
       }
-      const awaited = node.awaited;
-      let match: void | null | PromiseNode | IONode = previousIONode;
+      let awaited = node.awaited;
+      let match: void | null | PromiseNode | IONode | AwaitNode =
+        previousIONode;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode === undefined) {
@@ -2324,7 +2326,23 @@ function visitAsyncNode(
             // We aborted this render. If this Promise spanned the abort time it was probably the
             // Promise that was aborted. This won't necessarily have I/O associated with it but
             // it's a point of interest.
+
+            // If the awaited node was an await in user space, that will typically have a more
+            // useful stack. Try to find one, before falling back to using the promise node.
+            while (awaited !== null && awaited.tag === AWAIT_NODE) {
+              if (
+                awaited.stack !== null &&
+                hasUnfilteredFrame(request, awaited.stack)
+              ) {
+                match = awaited;
+                break;
+              } else {
+                awaited = awaited.awaited;
+              }
+            }
+
             if (
+              match === null &&
               node.stack !== null &&
               hasUnfilteredFrame(request, node.stack)
             ) {
@@ -2350,7 +2368,8 @@ function visitAsyncNode(
     }
     case AWAIT_NODE: {
       const awaited = node.awaited;
-      let match: void | null | PromiseNode | IONode = previousIONode;
+      let match: void | null | PromiseNode | IONode | AwaitNode =
+        previousIONode;
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode === undefined) {
@@ -4421,7 +4440,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
 
 function serializeIONode(
   request: Request,
-  ioNode: IONode | PromiseNode | UnresolvedPromiseNode,
+  ioNode: IONode | PromiseNode | UnresolvedPromiseNode | AwaitNode,
   promiseRef: null | WeakRef<Promise<mixed>>,
 ): string {
   const existingRef = request.writtenDebugObjects.get(ioNode);
