@@ -112,25 +112,44 @@ export default function setupHighlighter(
     }
 
     const nodes = renderer.findHostInstancesForElementID(id);
+    if (nodes != null) {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[0];
+        if (node === null) {
+          continue;
+        }
+        const nodeRects =
+          // $FlowFixMe[method-unbinding]
+          typeof node.getClientRects === 'function'
+            ? node.getClientRects()
+            : [];
+        // If this is currently display: none, then try another node.
+        // This can happen when one of the host instances is a hoistable.
+        if (
+          nodeRects.length > 0 &&
+          (nodeRects.length > 2 ||
+            nodeRects[0].width > 0 ||
+            nodeRects[0].height > 0)
+        ) {
+          // $FlowFixMe[method-unbinding]
+          if (scrollIntoView && typeof node.scrollIntoView === 'function') {
+            // If the node isn't visible show it before highlighting it.
+            // We may want to reconsider this; it might be a little disruptive.
+            node.scrollIntoView({block: 'nearest', inline: 'nearest'});
+          }
 
-    if (nodes != null && nodes[0] != null) {
-      const node = nodes[0];
-      // $FlowFixMe[method-unbinding]
-      if (scrollIntoView && typeof node.scrollIntoView === 'function') {
-        // If the node isn't visible show it before highlighting it.
-        // We may want to reconsider this; it might be a little disruptive.
-        node.scrollIntoView({block: 'nearest', inline: 'nearest'});
+          showOverlay(nodes, displayName, agent, hideAfterTimeout);
+
+          if (openBuiltinElementsPanel) {
+            window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
+            bridge.send('syncSelectionToBuiltinElementsPanel');
+          }
+          return;
+        }
       }
-
-      showOverlay(nodes, displayName, agent, hideAfterTimeout);
-
-      if (openBuiltinElementsPanel) {
-        window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
-        bridge.send('syncSelectionToBuiltinElementsPanel');
-      }
-    } else {
-      hideOverlay(agent);
     }
+
+    hideOverlay(agent);
   }
 
   function scrollToHostInstance({
@@ -157,16 +176,35 @@ export default function setupHighlighter(
     }
 
     const nodes = renderer.findHostInstancesForElementID(id);
-    if (nodes != null && nodes[0] != null) {
-      const node = nodes[0];
-      // $FlowFixMe[method-unbinding]
-      if (typeof node.scrollIntoView === 'function') {
-        node.scrollIntoView({
-          block: 'start',
-          inline: 'nearest',
-          behavior: 'smooth',
-        });
-        return;
+    if (nodes != null) {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[0];
+        if (node === null) {
+          continue;
+        }
+        const nodeRects =
+          // $FlowFixMe[method-unbinding]
+          typeof node.getClientRects === 'function'
+            ? node.getClientRects()
+            : [];
+        // If this is currently display: none, then try another node.
+        // This can happen when one of the host instances is a hoistable.
+        if (
+          nodeRects.length > 0 &&
+          (nodeRects.length > 2 ||
+            nodeRects[0].width > 0 ||
+            nodeRects[0].height > 0)
+        ) {
+          // $FlowFixMe[method-unbinding]
+          if (typeof node.scrollIntoView === 'function') {
+            node.scrollIntoView({
+              block: 'start',
+              inline: 'nearest',
+              behavior: 'smooth',
+            });
+            return;
+          }
+        }
       }
     }
     // It's possible that the current state of a Suspense boundary doesn't have a position
