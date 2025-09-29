@@ -193,6 +193,8 @@ function SynchronizedScrollContainer({
   useEffect(() => {
     const callback = scrollContainerTo;
     bridge.addListener('scrollTo', callback);
+    // Ask for the current scroll position when we mount so we can attach ourselves to it.
+    bridge.send('requestScrollPosition');
     return () => bridge.removeListener('scrollTo', callback);
   }, [bridge]);
 

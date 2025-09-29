@@ -272,6 +272,7 @@ type FrontendEvents = {
   stopInspectingHost: [],
   scrollToHostInstance: [ScrollToHostInstance],
   scrollTo: [{x: number, y: number}],
+  requestScrollPosition: [],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],

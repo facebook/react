@@ -34,6 +34,7 @@ export default function setupHighlighter(
   bridge.addListener('startInspectingHost', startInspectingHost);
   bridge.addListener('stopInspectingHost', stopInspectingHost);
   bridge.addListener('scrollTo', scrollDocumentTo);
+  bridge.addListener('requestScrollPosition', sendScroll);
 
   let applyingScroll = false;
 
