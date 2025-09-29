@@ -51,6 +51,7 @@ export {
 } from './ReactiveScopes';
 export {parseConfigPragmaForTests} from './Utils/TestUtils';
 declare global {
+  // @internal
   let __DEV__: boolean | null | undefined;
 }
 

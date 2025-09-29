@@ -28,6 +28,7 @@ import {
   retryLaneExpirationMs,
   disableLegacyMode,
   enableDefaultTransitionIndicator,
+  enableGestureTransition,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {clz32} from './clz32';
@@ -72,6 +73,8 @@ const TransitionLane11: Lane = /*                       */ 0b0000000000001000000
 const TransitionLane12: Lane = /*                       */ 0b0000000000010000000000000000000;
 const TransitionLane13: Lane = /*                       */ 0b0000000000100000000000000000000;
 const TransitionLane14: Lane = /*                       */ 0b0000000001000000000000000000000;
+
+export const SomeTransitionLane: Lane = TransitionLane1;
 
 const TransitionUpdateLanes =
   TransitionLane1 |
@@ -609,10 +612,6 @@ export function includesSyncLane(lanes: Lanes): boolean {
   return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
 }
 
-export function isSyncLane(lanes: Lanes): boolean {
-  return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
-}
-
 export function includesNonIdleWork(lanes: Lanes): boolean {
   return (lanes & NonIdleLanes) !== NoLanes;
 }
@@ -631,6 +630,22 @@ export function includesOnlyTransitions(lanes: Lanes): boolean {
 
 export function includesTransitionLane(lanes: Lanes): boolean {
   return (lanes & TransitionLanes) !== NoLanes;
+}
+
+export function includesRetryLane(lanes: Lanes): boolean {
+  return (lanes & RetryLanes) !== NoLanes;
+}
+
+export function includesIdleGroupLanes(lanes: Lanes): boolean {
+  return (
+    (lanes &
+      (SelectiveHydrationLane |
+        IdleHydrationLane |
+        IdleLane |
+        OffscreenLane |
+        DeferredLane)) !==
+    NoLanes
+  );
 }
 
 export function includesOnlyHydrationLanes(lanes: Lanes): boolean {
@@ -663,6 +678,8 @@ export function includesLoadingIndicatorLanes(lanes: Lanes): boolean {
 
 export function includesBlockingLane(lanes: Lanes): boolean {
   const SyncDefaultLanes =
+    SyncHydrationLane |
+    SyncLane |
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
@@ -679,10 +696,13 @@ export function includesExpiredLane(root: FiberRoot, lanes: Lanes): boolean {
 
 export function isBlockingLane(lane: Lane): boolean {
   const SyncDefaultLanes =
+    SyncHydrationLane |
+    SyncLane |
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
-    DefaultLane;
+    DefaultLane |
+    GestureLane;
   return (lane & SyncDefaultLanes) !== NoLanes;
 }
 
@@ -691,6 +711,9 @@ export function isTransitionLane(lane: Lane): boolean {
 }
 
 export function isGestureRender(lanes: Lanes): boolean {
+  if (!enableGestureTransition) {
+    return false;
+  }
   // This should render only the one lane.
   return lanes === GestureLane;
 }
@@ -1252,10 +1275,12 @@ export function getGroupNameOfHighestPriorityLane(lanes: Lanes): string {
       InputContinuousHydrationLane |
       InputContinuousLane |
       DefaultHydrationLane |
-      DefaultLane |
-      GestureLane)
+      DefaultLane)
   ) {
     return 'Blocking';
+  }
+  if (lanes & GestureLane) {
+    return 'Gesture';
   }
   if (lanes & (TransitionHydrationLane | TransitionLanes)) {
     return 'Transition';

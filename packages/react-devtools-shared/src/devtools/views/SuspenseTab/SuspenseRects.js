@@ -12,29 +12,53 @@ import type {
   SuspenseNode,
   Rect,
 } from 'react-devtools-shared/src/frontend/types';
-
-import * as React from 'react';
-import {useContext} from 'react';
-import {
-  TreeDispatcherContext,
-  TreeStateContext,
-} from '../Components/TreeContext';
-import {useHighlightHostInstance} from '../hooks';
-import styles from './SuspenseRects.css';
-import {useSuspenseStore} from './SuspenseTreeContext';
 import typeof {
   SyntheticMouseEvent,
   SyntheticPointerEvent,
 } from 'react-dom-bindings/src/events/SyntheticEvent';
 
-function SuspenseRect({rect}: {rect: Rect}): React$Node {
+import * as React from 'react';
+import {createContext, useContext} from 'react';
+import {
+  TreeDispatcherContext,
+  TreeStateContext,
+} from '../Components/TreeContext';
+import {StoreContext} from '../context';
+import {useHighlightHostInstance} from '../hooks';
+import styles from './SuspenseRects.css';
+import {
+  SuspenseTreeStateContext,
+  SuspenseTreeDispatcherContext,
+} from './SuspenseTreeContext';
+
+function ScaledRect({
+  className,
+  rect,
+  visible,
+  ...props
+}: {
+  className: string,
+  rect: Rect,
+  visible: boolean,
+  ...
+}): React$Node {
+  const viewBox = useContext(ViewBox);
+  const width = (rect.width / viewBox.width) * 100 + '%';
+  const height = (rect.height / viewBox.height) * 100 + '%';
+  const x = ((rect.x - viewBox.x) / viewBox.width) * 100 + '%';
+  const y = ((rect.y - viewBox.y) / viewBox.height) * 100 + '%';
+
   return (
-    <rect
-      className={styles.SuspenseRect}
-      x={rect.x}
-      y={rect.y}
-      width={rect.width}
-      height={rect.height}
+    <div
+      {...props}
+      className={styles.SuspenseRectsScaledRect + ' ' + className}
+      data-visible={visible}
+      style={{
+        width,
+        height,
+        top: y,
+        left: x,
+      }}
     />
   );
 }
@@ -44,8 +68,10 @@ function SuspenseRects({
 }: {
   suspenseID: SuspenseNode['id'],
 }): React$Node {
-  const dispatch = useContext(TreeDispatcherContext);
-  const store = useSuspenseStore();
+  const store = useContext(StoreContext);
+  const treeDispatch = useContext(TreeDispatcherContext);
+  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
+  const {uniqueSuspendersOnly} = useContext(SuspenseTreeStateContext);
 
   const {inspectedElementID} = useContext(TreeStateContext);
 
@@ -57,6 +83,7 @@ function SuspenseRects({
     // getSuspenseByID will have already warned
     return null;
   }
+  const visible = suspense.hasUniqueSuspenders || !uniqueSuspendersOnly;
 
   function handleClick(event: SyntheticMouseEvent) {
     if (event.defaultPrevented) {
@@ -64,7 +91,23 @@ function SuspenseRects({
       return;
     }
     event.preventDefault();
-    dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: suspenseID});
+    treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: suspenseID});
+    suspenseTreeDispatch({
+      type: 'SET_SUSPENSE_LINEAGE',
+      payload: suspenseID,
+    });
+  }
+
+  function handleDoubleClick(event: SyntheticMouseEvent) {
+    if (event.defaultPrevented) {
+      // Already clicked on an inner rect
+      return;
+    }
+    event.preventDefault();
+    suspenseTreeDispatch({
+      type: 'TOGGLE_TIMELINE_FOR_ID',
+      payload: suspenseID,
+    });
   }
 
   function handlePointerOver(event: SyntheticPointerEvent) {
@@ -74,6 +117,10 @@ function SuspenseRects({
     }
     event.preventDefault();
     highlightHostInstance(suspenseID);
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: suspenseID,
+    });
   }
 
   function handlePointerLeave(event: SyntheticPointerEvent) {
@@ -83,34 +130,57 @@ function SuspenseRects({
     }
     event.preventDefault();
     clearHighlightHostInstance();
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: -1,
+    });
   }
 
   // TODO: Use the nearest Suspense boundary
   const selected = inspectedElementID === suspenseID;
 
+  const boundingBox = getBoundingBox(suspense.rects);
+
   return (
-    <g
-      data-highlighted={selected}
-      onClick={handleClick}
-      onPointerOver={handlePointerOver}
-      onPointerLeave={handlePointerLeave}>
-      <title>{suspense.name}</title>
-      {suspense.rects !== null &&
-        suspense.rects.map((rect, index) => {
-          return <SuspenseRect key={index} rect={rect} />;
-        })}
-      {suspense.children.map(childID => {
-        return <SuspenseRects key={childID} suspenseID={childID} />;
-      })}
-    </g>
+    <ScaledRect
+      rect={boundingBox}
+      className={styles.SuspenseRectsBoundary}
+      visible={visible}>
+      <ViewBox.Provider value={boundingBox}>
+        {visible &&
+          suspense.rects !== null &&
+          suspense.rects.map((rect, index) => {
+            return (
+              <ScaledRect
+                key={index}
+                className={styles.SuspenseRectsRect}
+                rect={rect}
+                data-highlighted={selected}
+                onClick={handleClick}
+                onDoubleClick={handleDoubleClick}
+                onPointerOver={handlePointerOver}
+                onPointerLeave={handlePointerLeave}
+                // Reach-UI tooltip will go out of bounds of parent scroll container.
+                title={suspense.name}
+              />
+            );
+          })}
+        {suspense.children.length > 0 && (
+          <ScaledRect
+            className={styles.SuspenseRectsBoundaryChildren}
+            rect={boundingBox}>
+            {suspense.children.map(childID => {
+              return <SuspenseRects key={childID} suspenseID={childID} />;
+            })}
+          </ScaledRect>
+        )}
+      </ViewBox.Provider>
+    </ScaledRect>
   );
 }
 
-function getDocumentBoundingRect(
-  store: Store,
-  roots: $ReadOnlyArray<SuspenseNode['id']>,
-): Rect {
-  if (roots.length === 0) {
+function getBoundingBox(rects: $ReadOnlyArray<Rect> | null): Rect {
+  if (rects === null || rects.length === 0) {
     return {x: 0, y: 0, width: 0, height: 0};
   }
 
@@ -119,29 +189,12 @@ function getDocumentBoundingRect(
   let maxX = Number.NEGATIVE_INFINITY;
   let maxY = Number.NEGATIVE_INFINITY;
 
-  for (let i = 0; i < roots.length; i++) {
-    const rootID = roots[i];
-    const root = store.getSuspenseByID(rootID);
-    if (root === null) {
-      continue;
-    }
-
-    const rects = root.rects;
-    if (rects === null) {
-      continue;
-    }
-    for (let j = 0; j < rects.length; j++) {
-      const rect = rects[j];
-      minX = Math.min(minX, rect.x);
-      minY = Math.min(minY, rect.y);
-      maxX = Math.max(maxX, rect.x + rect.width);
-      maxY = Math.max(maxY, rect.y + rect.height);
-    }
-  }
-
-  if (minX === Number.POSITIVE_INFINITY) {
-    // No rects found, return empty rect
-    return {x: 0, y: 0, width: 0, height: 0};
+  for (let i = 0; i < rects.length; i++) {
+    const rect = rects[i];
+    minX = Math.min(minX, rect.x);
+    minY = Math.min(minY, rect.y);
+    maxX = Math.max(maxX, rect.x + rect.width);
+    maxY = Math.max(maxY, rect.y + rect.height);
   }
 
   return {
@@ -152,50 +205,124 @@ function getDocumentBoundingRect(
   };
 }
 
+function computeBoundingRectRecursively(
+  store: Store,
+  node: SuspenseNode,
+  bounds: {
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  },
+): void {
+  const rects = node.rects;
+  if (rects !== null) {
+    for (let j = 0; j < rects.length; j++) {
+      const rect = rects[j];
+      if (rect.x < bounds.minX) {
+        bounds.minX = rect.x;
+      }
+      if (rect.x + rect.width > bounds.maxX) {
+        bounds.maxX = rect.x + rect.width;
+      }
+      if (rect.y < bounds.minY) {
+        bounds.minY = rect.y;
+      }
+      if (rect.y + rect.height > bounds.maxY) {
+        bounds.maxY = rect.y + rect.height;
+      }
+    }
+  }
+  for (let i = 0; i < node.children.length; i++) {
+    const child = store.getSuspenseByID(node.children[i]);
+    if (child !== null) {
+      computeBoundingRectRecursively(store, child, bounds);
+    }
+  }
+}
+
+function getDocumentBoundingRect(
+  store: Store,
+  roots: $ReadOnlyArray<SuspenseNode['id']>,
+): Rect {
+  if (roots.length === 0) {
+    return {x: 0, y: 0, width: 0, height: 0};
+  }
+
+  const bounds = {
+    minX: Number.POSITIVE_INFINITY,
+    minY: Number.POSITIVE_INFINITY,
+    maxX: Number.NEGATIVE_INFINITY,
+    maxY: Number.NEGATIVE_INFINITY,
+  };
+
+  for (let i = 0; i < roots.length; i++) {
+    const rootID = roots[i];
+    const root = store.getSuspenseByID(rootID);
+    if (root === null) {
+      continue;
+    }
+    computeBoundingRectRecursively(store, root, bounds);
+  }
+
+  if (bounds.minX === Number.POSITIVE_INFINITY) {
+    // No rects found, return empty rect
+    return {x: 0, y: 0, width: 0, height: 0};
+  }
+
+  return {
+    x: bounds.minX,
+    y: bounds.minY,
+    width: bounds.maxX - bounds.minX,
+    height: bounds.maxY - bounds.minY,
+  };
+}
+
 function SuspenseRectsShell({
   rootID,
 }: {
   rootID: SuspenseNode['id'],
 }): React$Node {
-  const store = useSuspenseStore();
+  const store = useContext(StoreContext);
   const root = store.getSuspenseByID(rootID);
   if (root === null) {
-    console.warn(`<Element> Could not find suspense node id ${rootID}`);
+    // getSuspenseByID will have already warned
     return null;
   }
 
-  return (
-    <g>
-      {root.children.map(childID => {
-        return <SuspenseRects key={childID} suspenseID={childID} />;
-      })}
-    </g>
-  );
+  return root.children.map(childID => {
+    return <SuspenseRects key={childID} suspenseID={childID} />;
+  });
 }
 
+const ViewBox = createContext<Rect>((null: any));
+
 function SuspenseRectsContainer(): React$Node {
-  const store = useSuspenseStore();
+  const store = useContext(StoreContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
-  const roots = store.roots;
+  const {roots} = useContext(SuspenseTreeStateContext);
 
-  const boundingRect = getDocumentBoundingRect(store, roots);
+  // TODO: bbox does not consider uniqueSuspendersOnly filter
+  const boundingBox = getDocumentBoundingRect(store, roots);
 
+  const boundingBoxWidth = boundingBox.width;
+  const heightScale =
+    boundingBoxWidth === 0 ? 1 : boundingBox.height / boundingBoxWidth;
+  // Scales the inspected document to fit into the available width
   const width = '100%';
-  const boundingRectWidth = boundingRect.width;
-  const height =
-    (boundingRectWidth === 0 ? 0 : boundingRect.height / boundingRect.width) *
-      100 +
-    '%';
+  const aspectRatio = `1 / ${heightScale}`;
 
   return (
     <div className={styles.SuspenseRectsContainer}>
-      <svg
-        style={{width, height}}
-        viewBox={`${boundingRect.x} ${boundingRect.y} ${boundingRect.width} ${boundingRect.height}`}>
-        {roots.map(rootID => {
-          return <SuspenseRectsShell key={rootID} rootID={rootID} />;
-        })}
-      </svg>
+      <ViewBox.Provider value={boundingBox}>
+        <div
+          className={styles.SuspenseRectsViewBox}
+          style={{aspectRatio, width}}>
+          {roots.map(rootID => {
+            return <SuspenseRectsShell key={rootID} rootID={rootID} />;
+          })}
+        </div>
+      </ViewBox.Provider>
     </div>
   );
 }

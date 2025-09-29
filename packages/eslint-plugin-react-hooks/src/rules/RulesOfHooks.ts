@@ -147,8 +147,8 @@ function getNodeWithoutReactNamespace(
   return node;
 }
 
-function isUseEffectIdentifier(node: Node): boolean {
-  return node.type === 'Identifier' && node.name === 'useEffect';
+function isEffectIdentifier(node: Node): boolean {
+  return node.type === 'Identifier' && (node.name === 'useEffect' || node.name === 'useLayoutEffect' || node.name === 'useInsertionEffect');
 }
 function isUseEffectEventIdentifier(node: Node): boolean {
   if (__EXPERIMENTAL__) {
@@ -726,7 +726,7 @@ const rule = {
         // Check all `useEffect` and `React.useEffect`, `useEffectEvent`, and `React.useEffectEvent`
         const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
         if (
-          (isUseEffectIdentifier(nodeWithoutNamespace) ||
+          (isEffectIdentifier(nodeWithoutNamespace) ||
             isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
           node.arguments.length > 0
         ) {

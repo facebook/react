@@ -25,12 +25,12 @@ import * as HermesParser from 'hermes-parser';
 import {isDeepStrictEqual} from 'util';
 import type {ParseResult} from '@babel/parser';
 
-const COMPILER_OPTIONS: Partial<PluginOptions> = {
+const COMPILER_OPTIONS: PluginOptions = {
   noEmit: true,
   panicThreshold: 'none',
   // Don't emit errors on Flow suppressions--Flow already gave a signal
   flowSuppressions: false,
-  environment: validateEnvironmentConfig({
+  environment: {
     validateRefAccessDuringRender: true,
     validateNoSetStateInRender: true,
     validateNoSetStateInEffects: true,
@@ -43,7 +43,7 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
     validateNoCapitalizedCalls: [],
     validateHooksUsage: true,
     validateNoDerivedComputationsInEffects: true,
-  }),
+  },
 };
 
 export type UnusedOptOutDirective = {
@@ -113,7 +113,7 @@ function runReactCompilerImpl({
   userOpts,
 }: RunParams): RunCacheEntry {
   // Compat with older versions of eslint
-  const options: PluginOptions = parsePluginOptions({
+  const options = parsePluginOptions({
     ...COMPILER_OPTIONS,
     ...userOpts,
     environment: {

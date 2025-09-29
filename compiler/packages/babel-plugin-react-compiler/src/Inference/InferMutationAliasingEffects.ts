@@ -1816,8 +1816,16 @@ function computeSignatureForInstruction(
     }
     case 'PropertyStore':
     case 'ComputedStore': {
+      /**
+       * Add a hint about naming as "ref"/"-Ref", but only if we weren't able to infer any
+       * type for the object. In some cases the variable may be named like a ref, but is
+       * also used as a ref callback such that we infer the type as a function rather than
+       * a ref.
+       */
       const mutationReason: MutationReason | null =
-        value.kind === 'PropertyStore' && value.property === 'current'
+        value.kind === 'PropertyStore' &&
+        value.property === 'current' &&
+        value.object.identifier.type.kind === 'Type'
           ? {kind: 'AssignCurrentProperty'}
           : null;
       effects.push({

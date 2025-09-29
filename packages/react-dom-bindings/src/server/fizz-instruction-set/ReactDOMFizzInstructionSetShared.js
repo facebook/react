@@ -297,6 +297,8 @@ export function revealCompletedBoundariesWithViewTransitions(
                 rect.top < window.innerHeight &&
                 rect.left < window.innerWidth;
               if (inViewport) {
+                // TODO: Use decode() instead of the load event here once the fix in
+                // https://issues.chromium.org/issues/420748301 has propagated fully.
                 const loadingImage = new Promise(resolve => {
                   suspenseyImage.addEventListener('load', resolve);
                   suspenseyImage.addEventListener('error', resolve);

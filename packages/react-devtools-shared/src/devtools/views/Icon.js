@@ -33,12 +33,14 @@ type Props = {
   className?: string,
   title?: string,
   type: IconType,
+  ...
 };
 
 export default function Icon({
   className = '',
   title = '',
   type,
+  ...props
 }: Props): React.Node {
   let pathData = null;
   let viewBox = '0 0 24 24';
@@ -102,6 +104,7 @@ export default function Icon({
 
   return (
     <svg
+      {...props}
       xmlns="http://www.w3.org/2000/svg"
       className={`${styles.Icon} ${className}`}
       width="24"

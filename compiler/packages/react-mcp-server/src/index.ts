@@ -145,7 +145,7 @@ server.tool(
       }
     };
     const errors: Array<{message: string; loc: SourceLocation | null}> = [];
-    const compilerOptions: Partial<PluginOptions> = {
+    const compilerOptions: PluginOptions = {
       panicThreshold: 'none',
       logger: {
         debugLogIRs: logIR,

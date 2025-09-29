@@ -20,6 +20,7 @@ import {
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from 'react-devtools-shared/src/constants';
 import {
   parseElementDisplayNameFromBackend,
@@ -448,6 +449,26 @@ function updateTree(
         }
 
         i += 3 + (numRects === -1 ? 0 : numRects * 4);
+
+        break;
+      }
+
+      case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
+        i++;
+        const changeLength = ((operations[i++]: any): number);
+
+        for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
+          const suspenseNodeId = operations[i++];
+          const hasUniqueSuspenders = operations[i++] === 1;
+          const environmentNamesLength = operations[i++];
+          i += environmentNamesLength;
+          if (__DEBUG__) {
+            debug(
+              'Suspender changes',
+              `Suspense node ${suspenseNodeId} unique suspenders set to ${String(hasUniqueSuspenders)} with ${String(environmentNamesLength)} environments`,
+            );
+          }
+        }
 
         break;
       }

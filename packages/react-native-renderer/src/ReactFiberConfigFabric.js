@@ -25,7 +25,6 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
 import {
   getFragmentParentHostFiber,
-  getInstanceFromHostFiber,
   traverseFragmentInstance,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
@@ -303,6 +302,13 @@ export function getPublicInstance(instance: Instance): null | PublicInstance {
     return instance.canonical.publicInstance;
   }
 
+  // Handle root containers
+  if (instance.containerInfo != null) {
+    if (instance.containerInfo.publicInstance != null) {
+      return instance.containerInfo.publicInstance;
+    }
+  }
+
   // For compatibility with the legacy renderer, in case it's used with Fabric
   // in the same app.
   // $FlowExpectedError[prop-missing]
@@ -347,9 +353,8 @@ export function getPublicInstanceFromInternalInstanceHandle(
 }
 
 function getPublicInstanceFromHostFiber(fiber: Fiber): PublicInstance {
-  const instance = getInstanceFromHostFiber<Instance>(fiber);
-  const publicInstance = getPublicInstance(instance);
-  if (publicInstance == null) {
+  const publicInstance = getPublicInstance(fiber.stateNode);
+  if (publicInstance === null) {
     throw new Error('Expected to find a host node. This is a bug in React.');
   }
   return publicInstance;
@@ -602,17 +607,35 @@ export function preloadInstance(
   return true;
 }
 
-export function startSuspendingCommit(): void {}
+export opaque type SuspendedState = null;
+
+export function startSuspendingCommit(): SuspendedState {
+  return null;
+}
 
 export function suspendInstance(
+  state: SuspendedState,
   instance: Instance,
   type: Type,
   props: Props,
 ): void {}
 
-export function suspendOnActiveViewTransition(container: Container): void {}
+export function suspendOnActiveViewTransition(
+  state: SuspendedState,
+  container: Container,
+): void {}
 
-export function waitForCommitToBeReady(): null {
+export function waitForCommitToBeReady(
+  state: SuspendedState,
+  timeoutOffset: number,
+): null {
+  return null;
+}
+
+export function getSuspendedCommitReason(
+  state: SuspendedState,
+  rootContainer: Container,
+): null | string {
   return null;
 }
 
@@ -680,11 +703,11 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   if (parentHostFiber === null) {
     return Node.DOCUMENT_POSITION_DISCONNECTED;
   }
-  const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
   const children: Array<Fiber> = [];
   traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
   if (children.length === 0) {
-    return compareDocumentPositionForEmptyFragment(
+    const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
+    return compareDocumentPositionForEmptyFragment<PublicInstance>(
       this._fragmentFiber,
       parentHostInstance,
       otherNode,
