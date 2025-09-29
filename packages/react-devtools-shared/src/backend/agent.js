@@ -26,6 +26,7 @@ import type {
   RendererID,
   RendererInterface,
   DevToolsHookSettings,
+  InspectedElementPayload,
 } from './types';
 import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
 import type {GroupItem} from './views/TraceUpdates/canvas';
@@ -70,6 +71,13 @@ type InspectElementParams = {
   id: number,
   path: Array<string | number> | null,
   rendererID: number,
+  requestID: number,
+};
+
+type InspectScreenParams = {
+  forceFullData: boolean,
+  id: number,
+  path: Array<string | number> | null,
   requestID: number,
 };
 
@@ -131,8 +139,6 @@ type OverrideSuspenseParams = {
 };
 
 type OverrideSuspenseMilestoneParams = {
-  rendererID: number,
-  rootID: number,
   suspendedSet: Array<number>,
 };
 
@@ -201,6 +207,7 @@ export default class Agent extends EventEmitter<{
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
+    bridge.addListener('inspectScreen', this.inspectScreen);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideError', this.overrideError);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
@@ -531,6 +538,49 @@ export default class Agent extends EventEmitter<{
     }
   };
 
+  inspectScreen: InspectScreenParams => void = ({
+    requestID,
+    id,
+    forceFullData,
+    path,
+  }) => {
+    const payload: InspectedElementPayload = {
+      type: 'no-change',
+      id,
+      responseID: requestID,
+    };
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      const inspectedRoots = renderer.inspectElement(
+        requestID,
+        id,
+        path,
+        forceFullData,
+      );
+      switch (inspectedRoots.type) {
+        case 'hydrated-path':
+          this._bridge.send('inspectedScreen', inspectedRoots);
+          // If we hydrated a path, it must've been in a specific renderer so we can stop here.
+          return;
+        case 'full-data':
+          // TODO: Handle merging roots from different renderers.
+          this._bridge.send('inspectedScreen', inspectedRoots);
+          return;
+        case 'not-found':
+          continue;
+        case 'error':
+          // bail out and show the error
+          // TODO: aggregate errors
+          this._bridge.send('inspectedScreen', inspectedRoots);
+          return;
+      }
+    }
+
+    this._bridge.send('inspectedScreen', payload);
+  };
+
   logElementToConsole: ElementAndRendererID => void = ({id, rendererID}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -567,17 +617,15 @@ export default class Agent extends EventEmitter<{
   };
 
   overrideSuspenseMilestone: OverrideSuspenseMilestoneParams => void = ({
-    rendererID,
-    rootID,
     suspendedSet,
   }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(
-        `Invalid renderer id "${rendererID}" to override suspense milestone`,
-      );
-    } else {
-      renderer.overrideSuspenseMilestone(rootID, suspendedSet);
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      if (renderer.supportsTogglingSuspense) {
+        renderer.overrideSuspenseMilestone(suspendedSet);
+      }
     }
   };
 

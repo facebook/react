@@ -145,8 +145,6 @@ type OverrideSuspense = {
 };
 
 type OverrideSuspenseMilestone = {
-  rendererID: number,
-  rootID: number,
   suspendedSet: Array<number>,
 };
 
@@ -165,6 +163,13 @@ type InspectElementParams = {
   forceFullData: boolean,
   path: Array<number | string> | null,
   requestID: number,
+};
+
+type InspectScreenParams = {
+  requestID: number,
+  id: number,
+  forceFullData: boolean,
+  path: Array<number | string> | null,
 };
 
 type StoreAsGlobalParams = {
@@ -199,6 +204,7 @@ export type BackendEvents = {
   fastRefreshScheduled: [],
   getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
+  inspectedScreen: [InspectedElementPayload],
   isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
@@ -244,6 +250,7 @@ type FrontendEvents = {
   getProfilingStatus: [],
   highlightHostInstance: [HighlightHostInstance],
   inspectElement: [InspectElementParams],
+  inspectScreen: [InspectScreenParams],
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],
   overrideSuspense: [OverrideSuspense],

@@ -867,10 +867,11 @@ export default class Store extends EventEmitter<{
     const lineage: Array<SuspenseNode['id']> = [];
     let next: null | SuspenseNode = this.getSuspenseByID(suspenseID);
     while (next !== null) {
+      // Include Root so that Screen can be inspected.
+      lineage.unshift(next.id);
       if (next.parentID === 0) {
         next = null;
       } else {
-        lineage.unshift(next.id);
         next = this.getSuspenseByID(next.parentID);
       }
     }
@@ -898,38 +899,48 @@ export default class Store extends EventEmitter<{
    * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
    */
   getSuspendableDocumentOrderSuspense(
-    rootID: Element['id'] | void,
     uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseNode['id']> {
-    if (rootID === undefined) {
+    const roots = this.roots;
+    if (roots.length === 0) {
       return [];
     }
-    const root = this.getElementByID(rootID);
-    if (root === null) {
-      return [];
-    }
-    if (!this.supportsTogglingSuspense(rootID)) {
-      return [];
-    }
+
     const list: SuspenseNode['id'][] = [];
-    const suspense = this.getSuspenseByID(rootID);
-    if (suspense !== null) {
-      const stack = [suspense];
-      while (stack.length > 0) {
-        const current = stack.pop();
-        if (current === undefined) {
-          continue;
+    for (let i = 0; i < roots.length; i++) {
+      const rootID = roots[i];
+      const root = this.getElementByID(rootID);
+      if (root === null) {
+        continue;
+      }
+      // TODO: This includes roots that can't be suspended due to no support from the renderer.
+
+      const suspense = this.getSuspenseByID(rootID);
+      if (suspense !== null) {
+        if (list.length === 0) {
+          // start with an arbitrary root that will allow inspection of the Screen
+          list.push(suspense.id);
         }
-        // Include the root even if we won't show it suspended (because that's just blank).
-        // You should be able to see what suspended the shell.
-        if (!uniqueSuspendersOnly || current.hasUniqueSuspenders) {
-          list.push(current.id);
-        }
-        // Add children in reverse order to maintain document order
-        for (let j = current.children.length - 1; j >= 0; j--) {
-          const childSuspense = this.getSuspenseByID(current.children[j]);
-          if (childSuspense !== null) {
-            stack.push(childSuspense);
+
+        const stack = [suspense];
+        while (stack.length > 0) {
+          const current = stack.pop();
+          if (current === undefined) {
+            continue;
+          }
+          if (
+            (!uniqueSuspendersOnly || current.hasUniqueSuspenders) &&
+            // Roots are already included as part of the Screen
+            current.id !== rootID
+          ) {
+            list.push(current.id);
+          }
+          // Add children in reverse order to maintain document order
+          for (let j = current.children.length - 1; j >= 0; j--) {
+            const childSuspense = this.getSuspenseByID(current.children[j]);
+            if (childSuspense !== null) {
+              stack.push(childSuspense);
+            }
           }
         }
       }
@@ -1227,7 +1238,7 @@ export default class Store extends EventEmitter<{
             this._idToElement.set(id, {
               children: [],
               depth: -1,
-              displayName: null,
+              displayName: 'Initial Paint',
               hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
@@ -1561,7 +1572,12 @@ export default class Store extends EventEmitter<{
             if (name === null) {
               // The boundary isn't explicitly named.
               // Pick a sensible default.
-              name = this._guessSuspenseName(element);
+              if (parentID === 0) {
+                // For Roots we use their display name.
+                name = element.displayName;
+              } else {
+                name = this._guessSuspenseName(element);
+              }
             }
           }
 

@@ -278,11 +278,7 @@ function getDocumentBoundingRect(
   };
 }
 
-function SuspenseRectsShell({
-  rootID,
-}: {
-  rootID: SuspenseNode['id'],
-}): React$Node {
+function SuspenseRectsRoot({rootID}: {rootID: SuspenseNode['id']}): React$Node {
   const store = useContext(StoreContext);
   const root = store.getSuspenseByID(rootID);
   if (root === null) {
@@ -299,6 +295,8 @@ const ViewBox = createContext<Rect>((null: any));
 
 function SuspenseRectsContainer(): React$Node {
   const store = useContext(StoreContext);
+  const treeDispatch = useContext(TreeDispatcherContext);
+  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
   const {roots} = useContext(SuspenseTreeStateContext);
 
@@ -312,14 +310,33 @@ function SuspenseRectsContainer(): React$Node {
   const width = '100%';
   const aspectRatio = `1 / ${heightScale}`;
 
+  function handleClick(event: SyntheticMouseEvent) {
+    if (event.defaultPrevented) {
+      // Already clicked on an inner rect
+      return;
+    }
+    if (roots.length === 0) {
+      // Nothing to select
+      return;
+    }
+    const arbitraryRootID = roots[0];
+
+    event.preventDefault();
+    treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: arbitraryRootID});
+    suspenseTreeDispatch({
+      type: 'SET_SUSPENSE_LINEAGE',
+      payload: arbitraryRootID,
+    });
+  }
+
   return (
-    <div className={styles.SuspenseRectsContainer}>
+    <div className={styles.SuspenseRectsContainer} onClick={handleClick}>
       <ViewBox.Provider value={boundingBox}>
         <div
           className={styles.SuspenseRectsViewBox}
           style={{aspectRatio, width}}>
           {roots.map(rootID => {
-            return <SuspenseRectsShell key={rootID} rootID={rootID} />;
+            return <SuspenseRectsRoot key={rootID} rootID={rootID} />;
           })}
         </div>
       </ViewBox.Provider>

@@ -7,10 +7,7 @@
  * @flow
  */
 import type {ReactContext} from 'shared/ReactTypes';
-import type {
-  Element,
-  SuspenseNode,
-} from 'react-devtools-shared/src/frontend/types';
+import type {SuspenseNode} from 'react-devtools-shared/src/frontend/types';
 import type Store from '../../store';
 
 import * as React from 'react';
@@ -27,7 +24,6 @@ import {StoreContext} from '../context';
 export type SuspenseTreeState = {
   lineage: $ReadOnlyArray<SuspenseNode['id']> | null,
   roots: $ReadOnlyArray<SuspenseNode['id']>,
-  selectedRootID: SuspenseNode['id'] | null,
   selectedSuspenseID: SuspenseNode['id'] | null,
   timeline: $ReadOnlyArray<SuspenseNode['id']>,
   timelineIndex: number | -1,
@@ -107,60 +103,27 @@ type Props = {
   children: React$Node,
 };
 
-function getDefaultRootID(store: Store): Element['id'] | null {
-  const designatedRootID = store.roots.find(rootID => {
-    const suspense = store.getSuspenseByID(rootID);
-    return (
-      store.supportsTogglingSuspense(rootID) &&
-      suspense !== null &&
-      suspense.children.length > 1
-    );
-  });
-
-  return designatedRootID === undefined ? null : designatedRootID;
-}
-
 function getInitialState(store: Store): SuspenseTreeState {
-  let initialState: SuspenseTreeState;
   const uniqueSuspendersOnly = true;
-  const selectedRootID = getDefaultRootID(store);
-  // TODO: Default to nearest from inspected
-  if (selectedRootID === null) {
-    initialState = {
-      selectedSuspenseID: null,
-      lineage: null,
-      roots: store.roots,
-      selectedRootID,
-      timeline: [],
-      timelineIndex: -1,
-      hoveredTimelineIndex: -1,
-      uniqueSuspendersOnly,
-      playing: false,
-    };
-  } else {
-    const timeline = store.getSuspendableDocumentOrderSuspense(
-      selectedRootID,
-      uniqueSuspendersOnly,
-    );
-    const timelineIndex = timeline.length - 1;
-    const selectedSuspenseID =
-      timelineIndex === -1 ? null : timeline[timelineIndex];
-    const lineage =
-      selectedSuspenseID !== null
-        ? store.getSuspenseLineage(selectedSuspenseID)
-        : [];
-    initialState = {
-      selectedSuspenseID,
-      lineage,
-      roots: store.roots,
-      selectedRootID,
-      timeline,
-      timelineIndex,
-      hoveredTimelineIndex: -1,
-      uniqueSuspendersOnly,
-      playing: false,
-    };
-  }
+  const timeline =
+    store.getSuspendableDocumentOrderSuspense(uniqueSuspendersOnly);
+  const timelineIndex = timeline.length - 1;
+  const selectedSuspenseID =
+    timelineIndex === -1 ? null : timeline[timelineIndex];
+  const lineage =
+    selectedSuspenseID !== null
+      ? store.getSuspenseLineage(selectedSuspenseID)
+      : [];
+  const initialState: SuspenseTreeState = {
+    selectedSuspenseID,
+    lineage,
+    roots: store.roots,
+    timeline,
+    timelineIndex,
+    hoveredTimelineIndex: -1,
+    uniqueSuspendersOnly,
+    playing: false,
+  };
 
   return initialState;
 }
@@ -209,23 +172,10 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedTimelineID = removedIDs.get(selectedTimelineID);
             }
 
-            let nextRootID = state.selectedRootID;
-            if (selectedTimelineID !== null && selectedTimelineID !== 0) {
-              nextRootID =
-                store.getSuspenseRootIDForSuspense(selectedTimelineID);
-            }
-            if (nextRootID === null) {
-              nextRootID = getDefaultRootID(store);
-            }
-
-            const nextTimeline =
-              nextRootID === null
-                ? []
-                : // TODO: Handle different timeline modes (e.g. random order)
-                  store.getSuspendableDocumentOrderSuspense(
-                    nextRootID,
-                    state.uniqueSuspendersOnly,
-                  );
+            // TODO: Handle different timeline modes (e.g. random order)
+            const nextTimeline = store.getSuspendableDocumentOrderSuspense(
+              state.uniqueSuspendersOnly,
+            );
 
             let nextTimelineIndex =
               selectedTimelineID === null || nextTimeline.length === 0
@@ -250,7 +200,6 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               ...state,
               lineage: nextLineage,
               roots: store.roots,
-              selectedRootID: nextRootID,
               selectedSuspenseID,
               timeline: nextTimeline,
               timelineIndex: nextTimelineIndex,
@@ -258,27 +207,21 @@ function SuspenseTreeContextController({children}: Props): React.Node {
           }
           case 'SELECT_SUSPENSE_BY_ID': {
             const selectedSuspenseID = action.payload;
-            const selectedRootID =
-              store.getSuspenseRootIDForSuspense(selectedSuspenseID);
 
             return {
               ...state,
               selectedSuspenseID,
-              selectedRootID,
               playing: false, // pause
             };
           }
           case 'SET_SUSPENSE_LINEAGE': {
             const suspenseID = action.payload;
             const lineage = store.getSuspenseLineage(suspenseID);
-            const selectedRootID =
-              store.getSuspenseRootIDForSuspense(suspenseID);
 
             return {
               ...state,
               lineage,
               selectedSuspenseID: suspenseID,
-              selectedRootID,
               playing: false, // pause
             };
           }
@@ -316,8 +259,6 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               ...state,
               selectedSuspenseID: nextSelectedSuspenseID,
               lineage: nextLineage,
-              selectedRootID:
-                nextRootID === null ? state.selectedRootID : nextRootID,
               timeline: nextTimeline,
               timelineIndex: nextMilestoneIndex,
               uniqueSuspendersOnly: nextUniqueSuspendersOnly,
