@@ -23,6 +23,7 @@ const API_TIMEOUT = 3000;
 function readRecord<T>(record: Thenable<T>): T | null {
   if (typeof React.use === 'function') {
     try {
+      // eslint-disable-next-line react-hooks-published/rules-of-hooks
       return React.use(record);
     } catch (x) {
       if (x === null) {
