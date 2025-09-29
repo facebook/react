@@ -221,7 +221,8 @@ function processStable(buildDir) {
       );
     }
 
-    const rnVersionString = ReactVersion + '-native-fb-' + sha + '-' + dateString;
+    const rnVersionString =
+      ReactVersion + '-native-fb-' + sha + '-' + dateString;
     if (fs.existsSync(buildDir + '/facebook-react-native')) {
       updatePlaceholderReactVersionInCompiledArtifacts(
         buildDir + '/facebook-react-native',
@@ -233,13 +234,13 @@ function processStable(buildDir) {
       updatePlaceholderReactVersionInCompiledArtifacts(
         buildDir + '/react-native',
         rnVersionString,
-        (filename) => filename.endsWith('.fb.js')
+        filename => filename.endsWith('.fb.js')
       );
 
       updatePlaceholderReactVersionInCompiledArtifacts(
         buildDir + '/react-native',
         ReactVersion,
-        (filename) => !filename.endsWith('.fb.js') && filename.endsWith('.js')
+        filename => !filename.endsWith('.fb.js') && filename.endsWith('.js')
       );
     }
 
@@ -349,13 +350,13 @@ function processExperimental(buildDir, version) {
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/react-native',
       rnVersionString,
-      (filename) => filename.endsWith('.fb.js')
+      filename => filename.endsWith('.fb.js')
     );
 
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/react-native',
       ReactVersion,
-      (filename) => !filename.endsWith('.fb.js') && filename.endsWith('.js')
+      filename => !filename.endsWith('.fb.js') && filename.endsWith('.js')
     );
   }
 
@@ -456,7 +457,7 @@ function updatePlaceholderReactVersionInCompiledArtifacts(
   // Update the version of React in the compiled artifacts by searching for
   // the placeholder string and replacing it with a new one.
   if (filteringClosure == null) {
-    filteringClosure = filename => filename.endsWith('.js')
+    filteringClosure = filename => filename.endsWith('.js');
   }
 
   const artifactFilenames = String(
@@ -480,7 +481,6 @@ function updatePlaceholderReactVersionInCompiledArtifacts(
     fs.writeFileSync(artifactFilename, replacedText);
   }
 }
-
 
 /**
  * cross-platform alternative to `rsync -ar`
