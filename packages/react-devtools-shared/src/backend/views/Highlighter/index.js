@@ -25,6 +25,7 @@ export default function setupHighlighter(
 ): void {
   bridge.addListener('clearHostInstanceHighlight', clearHostInstanceHighlight);
   bridge.addListener('highlightHostInstance', highlightHostInstance);
+  bridge.addListener('scrollToHostInstance', scrollToHostInstance);
   bridge.addListener('shutdown', stopInspectingHost);
   bridge.addListener('startInspectingHost', startInspectingHost);
   bridge.addListener('stopInspectingHost', stopInspectingHost);
@@ -129,6 +130,44 @@ export default function setupHighlighter(
       }
     } else {
       hideOverlay(agent);
+    }
+  }
+
+  function scrollToHostInstance({
+    id,
+    rendererID,
+  }: {
+    id: number,
+    rendererID: number,
+  }) {
+    // Always hide the existing overlay so it doesn't obscure the element.
+    // If you wanted to show the overlay, highlightHostInstance should be used instead
+    // with the scrollIntoView option.
+    hideOverlay(agent);
+
+    const renderer = agent.rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      return;
+    }
+
+    // In some cases fiber may already be unmounted
+    if (!renderer.hasElementWithId(id)) {
+      return;
+    }
+
+    const nodes = renderer.findHostInstancesForElementID(id);
+
+    if (nodes != null && nodes[0] != null) {
+      const node = nodes[0];
+      // $FlowFixMe[method-unbinding]
+      if (typeof node.scrollIntoView === 'function') {
+        node.scrollIntoView({
+          block: 'nearest',
+          inline: 'nearest',
+          behavior: 'smooth',
+        });
+      }
     }
   }
 
