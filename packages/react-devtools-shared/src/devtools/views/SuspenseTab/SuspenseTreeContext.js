@@ -72,6 +72,10 @@ type ACTION_SUSPENSE_PLAY_PAUSE = {
 type ACTION_SUSPENSE_PLAY_TICK = {
   type: 'SUSPENSE_PLAY_TICK',
 };
+type ACTION_TOGGLE_TIMELINE_FOR_ID = {
+  type: 'TOGGLE_TIMELINE_FOR_ID',
+  payload: SuspenseNode['id'],
+};
 
 export type SuspenseTreeAction =
   | ACTION_SUSPENSE_TREE_MUTATION
@@ -81,7 +85,8 @@ export type SuspenseTreeAction =
   | ACTION_SUSPENSE_SET_TIMELINE_INDEX
   | ACTION_SUSPENSE_SKIP_TIMELINE_INDEX
   | ACTION_SUSPENSE_PLAY_PAUSE
-  | ACTION_SUSPENSE_PLAY_TICK;
+  | ACTION_SUSPENSE_PLAY_TICK
+  | ACTION_TOGGLE_TIMELINE_FOR_ID;
 export type SuspenseTreeDispatch = (action: SuspenseTreeAction) => void;
 
 const SuspenseTreeStateContext: ReactContext<SuspenseTreeState> =
@@ -395,6 +400,38 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
               playing: nextPlaying,
+            };
+          }
+          case 'TOGGLE_TIMELINE_FOR_ID': {
+            const suspenseID = action.payload;
+            const timelineIndexForSuspenseID =
+              state.timeline.indexOf(suspenseID);
+            if (timelineIndexForSuspenseID === -1) {
+              // This boundary is no longer in the timeline.
+              return state;
+            }
+            const nextTimelineIndex =
+              timelineIndexForSuspenseID === 0
+                ? // For roots, there's no toggling. It's always just jump to beginning.
+                  0
+                : // For boundaries, we'll either jump to before or after its reveal depending
+                  // on if we're currently displaying it or not according to the timeline.
+                  state.timelineIndex < timelineIndexForSuspenseID
+                  ? // We're currently before this suspense boundary has been revealed so we
+                    // should jump ahead to reveal it.
+                    timelineIndexForSuspenseID
+                  : // Otherwise, if we're currently showing it, jump to right before to hide it.
+                    timelineIndexForSuspenseID - 1;
+            const nextSelectedSuspenseID = state.timeline[nextTimelineIndex];
+            const nextLineage = store.getSuspenseLineage(
+              nextSelectedSuspenseID,
+            );
+            return {
+              ...state,
+              lineage: nextLineage,
+              selectedSuspenseID: nextSelectedSuspenseID,
+              timelineIndex: nextTimelineIndex,
+              playing: false, // pause
             };
           }
           default:

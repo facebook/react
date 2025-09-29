@@ -98,6 +98,18 @@ function SuspenseRects({
     });
   }
 
+  function handleDoubleClick(event: SyntheticMouseEvent) {
+    if (event.defaultPrevented) {
+      // Already clicked on an inner rect
+      return;
+    }
+    event.preventDefault();
+    suspenseTreeDispatch({
+      type: 'TOGGLE_TIMELINE_FOR_ID',
+      payload: suspenseID,
+    });
+  }
+
   function handlePointerOver(event: SyntheticPointerEvent) {
     if (event.defaultPrevented) {
       // Already hovered an inner rect
@@ -137,6 +149,7 @@ function SuspenseRects({
                 rect={rect}
                 data-highlighted={selected}
                 onClick={handleClick}
+                onDoubleClick={handleDoubleClick}
                 onPointerOver={handlePointerOver}
                 onPointerLeave={handlePointerLeave}
                 // Reach-UI tooltip will go out of bounds of parent scroll container.
