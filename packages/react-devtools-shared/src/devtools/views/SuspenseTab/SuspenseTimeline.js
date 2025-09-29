@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useContext, useLayoutEffect, useEffect, useRef} from 'react';
+import {useContext, useEffect} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
@@ -17,10 +17,7 @@ import {
   SuspenseTreeStateContext,
 } from './SuspenseTreeContext';
 import styles from './SuspenseTimeline.css';
-import typeof {
-  SyntheticEvent,
-  SyntheticPointerEvent,
-} from 'react-dom-bindings/src/events/SyntheticEvent';
+import SuspenseScrubber from './SuspenseScrubber';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 
@@ -38,29 +35,6 @@ function SuspenseTimelineInput() {
     timelineIndex,
     playing,
   } = useContext(SuspenseTreeStateContext);
-
-  const inputRef = useRef<HTMLElement | null>(null);
-  const inputBBox = useRef<ClientRect | null>(null);
-  useLayoutEffect(() => {
-    if (timeline.length === 0) {
-      return;
-    }
-
-    const input = inputRef.current;
-    if (input === null) {
-      throw new Error('Expected an input HTML element to be present.');
-    }
-
-    inputBBox.current = input.getBoundingClientRect();
-    const observer = new ResizeObserver(entries => {
-      inputBBox.current = input.getBoundingClientRect();
-    });
-    observer.observe(input);
-    return () => {
-      inputBBox.current = null;
-      observer.disconnect();
-    };
-  }, [timeline.length]);
 
   const min = 0;
   const max = timeline.length > 0 ? timeline.length - 1 : 0;
@@ -100,8 +74,7 @@ function SuspenseTimelineInput() {
     });
   }
 
-  function handleChange(event: SyntheticEvent) {
-    const pendingTimelineIndex = +event.currentTarget.value;
+  function handleChange(pendingTimelineIndex: number) {
     switchSuspenseNode(pendingTimelineIndex);
   }
 
@@ -113,25 +86,11 @@ function SuspenseTimelineInput() {
     switchSuspenseNode(timelineIndex);
   }
 
-  function handlePointerMove(event: SyntheticPointerEvent) {
-    const bbox = inputBBox.current;
-    if (bbox === null) {
-      throw new Error('Bounding box of slider is unknown.');
-    }
-
-    const hoveredValue = Math.max(
-      min,
-      Math.min(
-        Math.round(
-          min + ((event.clientX - bbox.left) / bbox.width) * (max - min),
-        ),
-        max,
-      ),
-    );
+  function handleHoverSegment(hoveredValue: number) {
     const suspenseID = timeline[hoveredValue];
     if (suspenseID === undefined) {
       throw new Error(
-        `Suspense node not found for value ${hoveredValue} in timeline when on ${event.clientX} in bounding box ${JSON.stringify(bbox)}.`,
+        `Suspense node not found for value ${hoveredValue} in timeline.`,
       );
     }
     highlightHostInstance(suspenseID);
@@ -239,18 +198,15 @@ function SuspenseTimelineInput() {
       <div
         className={styles.SuspenseTimelineInput}
         title={timelineIndex + '/' + max}>
-        <input
-          className={styles.SuspenseTimelineSlider}
-          type="range"
+        <SuspenseScrubber
           min={min}
           max={max}
           value={timelineIndex}
           onBlur={handleBlur}
           onChange={handleChange}
           onFocus={handleFocus}
-          onPointerMove={handlePointerMove}
-          onPointerUp={clearHighlightHostInstance}
-          ref={inputRef}
+          onHoverSegment={handleHoverSegment}
+          onHoverLeave={clearHighlightHostInstance}
         />
       </div>
     </>
