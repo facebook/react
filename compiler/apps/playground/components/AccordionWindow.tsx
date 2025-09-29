@@ -13,6 +13,7 @@ import React, {
   unstable_addTransitionType as addTransitionType,
   startTransition,
 } from 'react';
+import {EXPAND_ACCORDION_TRANSITION} from '../lib/transitionTypes';
 
 type TabsRecord = Map<string, React.ReactNode>;
 
@@ -63,7 +64,7 @@ function AccordionWindowItem({
 
   const toggleTabs = () => {
     startTransition(() => {
-      addTransitionType('accordion-window');
+      addTransitionType(EXPAND_ACCORDION_TRANSITION);
       const nextState = new Set(tabsOpen);
       if (nextState.has(name)) {
         nextState.delete(name);
@@ -82,7 +83,10 @@ function AccordionWindowItem({
       {isShow ? (
         <ViewTransition
           name={transitionName}
-          update={{'accordion-window': 'expand-accordion', default: 'none'}}>
+          update={{
+            [EXPAND_ACCORDION_TRANSITION]: 'expand-accordion',
+            default: 'none',
+          }}>
           <Resizable className="border-r" minWidth={550} enable={{right: true}}>
             <h2
               title="Minimize tab"
@@ -99,7 +103,10 @@ function AccordionWindowItem({
       ) : (
         <ViewTransition
           name={transitionName}
-          update={{'accordion-window': 'expand-accordion', default: 'none'}}>
+          update={{
+            [EXPAND_ACCORDION_TRANSITION]: 'expand-accordion',
+            default: 'none',
+          }}>
           <div className="relative items-center h-full px-1 py-6 align-middle border-r border-grey-200">
             <button
               title={`Expand compiler tab: ${name}`}

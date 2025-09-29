@@ -19,6 +19,7 @@ import {defaultStore} from '../lib/defaultStore';
 import {IconGitHub} from './Icons/IconGitHub';
 import Logo from './Logo';
 import {useStore, useStoreDispatch} from './StoreContext';
+import {TOGGLE_INTERNALS_TRANSITION} from '../lib/transitionTypes';
 
 export default function Header(): JSX.Element {
   const [showCheck, setShowCheck] = useState(false);
@@ -68,7 +69,7 @@ export default function Header(): JSX.Element {
               checked={store.showInternals}
               onChange={() =>
                 startTransition(() => {
-                  addTransitionType('show-internals');
+                  addTransitionType(TOGGLE_INTERNALS_TRANSITION);
                   dispatchStore({type: 'toggleInternals'});
                 })
               }

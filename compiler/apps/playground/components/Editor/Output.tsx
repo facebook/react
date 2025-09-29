@@ -32,7 +32,10 @@ import AccordionWindow from '../AccordionWindow';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 import {BabelFileResult} from '@babel/core';
-import {CONFIG_PANEL_TRANSITION} from '../../lib/transitionTypes';
+import {
+  CONFIG_PANEL_TRANSITION,
+  TOGGLE_INTERNALS_TRANSITION,
+} from '../../lib/transitionTypes';
 import {LRUCache} from 'lru-cache';
 
 const MemoizedOutput = memo(Output);
@@ -291,6 +294,7 @@ function OutputContent({store, compilerOutput}: Props): JSX.Element {
       <ViewTransition
         update={{
           [CONFIG_PANEL_TRANSITION]: 'container',
+          [TOGGLE_INTERNALS_TRANSITION]: '',
           default: 'none',
         }}>
         <TabbedWindow
@@ -306,6 +310,7 @@ function OutputContent({store, compilerOutput}: Props): JSX.Element {
     <ViewTransition
       update={{
         [CONFIG_PANEL_TRANSITION]: 'accordion-container',
+        [TOGGLE_INTERNALS_TRANSITION]: '',
         default: 'none',
       }}>
       <AccordionWindow
