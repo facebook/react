@@ -18,6 +18,7 @@ export default function SuspenseScrubber({
   min,
   max,
   value,
+  highlight,
   onBlur,
   onChange,
   onFocus,
@@ -27,6 +28,7 @@ export default function SuspenseScrubber({
   min: number,
   max: number,
   value: number,
+  highlight: number,
   onBlur: () => void,
   onChange: (index: number) => void,
   onFocus: () => void,
@@ -53,7 +55,12 @@ export default function SuspenseScrubber({
     steps.push(
       <div
         key={index}
-        className={styles.SuspenseScrubberStep}
+        className={
+          styles.SuspenseScrubberStep +
+          (highlight === index
+            ? ' ' + styles.SuspenseScrubberStepHighlight
+            : '')
+        }
         onPointerDown={handlePress.bind(null, index)}
         onMouseEnter={onHoverSegment.bind(null, index)}>
         <div

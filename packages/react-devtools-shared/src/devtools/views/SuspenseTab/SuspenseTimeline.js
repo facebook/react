@@ -33,6 +33,7 @@ function SuspenseTimelineInput() {
     selectedRootID: rootID,
     timeline,
     timelineIndex,
+    hoveredTimelineIndex,
     playing,
   } = useContext(SuspenseTreeStateContext);
 
@@ -202,6 +203,7 @@ function SuspenseTimelineInput() {
           min={min}
           max={max}
           value={timelineIndex}
+          highlight={hoveredTimelineIndex}
           onBlur={handleBlur}
           onChange={handleChange}
           onFocus={handleFocus}
