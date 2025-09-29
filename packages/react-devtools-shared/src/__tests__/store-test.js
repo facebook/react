@@ -838,7 +838,7 @@ describe('Store', () => {
             <Suspense name="two" rects={null}>
             <Suspense name="three" rects={null}>
       `);
-      await act(() =>
+      await actAsync(() =>
         agent.overrideSuspense({
           id: store.getElementIDAtIndex(2),
           rendererID,

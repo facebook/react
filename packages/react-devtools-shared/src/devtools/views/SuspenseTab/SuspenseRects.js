@@ -184,6 +184,42 @@ function getBoundingBox(rects: $ReadOnlyArray<Rect> | null): Rect {
   };
 }
 
+function computeBoundingRectRecursively(
+  store: Store,
+  node: SuspenseNode,
+  bounds: {
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  },
+): void {
+  const rects = node.rects;
+  if (rects !== null) {
+    for (let j = 0; j < rects.length; j++) {
+      const rect = rects[j];
+      if (rect.x < bounds.minX) {
+        bounds.minX = rect.x;
+      }
+      if (rect.x + rect.width > bounds.maxX) {
+        bounds.maxX = rect.x + rect.width;
+      }
+      if (rect.y < bounds.minY) {
+        bounds.minY = rect.y;
+      }
+      if (rect.y + rect.height > bounds.maxY) {
+        bounds.maxY = rect.y + rect.height;
+      }
+    }
+  }
+  for (let i = 0; i < node.children.length; i++) {
+    const child = store.getSuspenseByID(node.children[i]);
+    if (child !== null) {
+      computeBoundingRectRecursively(store, child, bounds);
+    }
+  }
+}
+
 function getDocumentBoundingRect(
   store: Store,
   roots: $ReadOnlyArray<SuspenseNode['id']>,
@@ -192,10 +228,12 @@ function getDocumentBoundingRect(
     return {x: 0, y: 0, width: 0, height: 0};
   }
 
-  let minX = Number.POSITIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
+  const bounds = {
+    minX: Number.POSITIVE_INFINITY,
+    minY: Number.POSITIVE_INFINITY,
+    maxX: Number.NEGATIVE_INFINITY,
+    maxY: Number.NEGATIVE_INFINITY,
+  };
 
   for (let i = 0; i < roots.length; i++) {
     const rootID = roots[i];
@@ -203,30 +241,19 @@ function getDocumentBoundingRect(
     if (root === null) {
       continue;
     }
-
-    const rects = root.rects;
-    if (rects === null) {
-      continue;
-    }
-    for (let j = 0; j < rects.length; j++) {
-      const rect = rects[j];
-      minX = Math.min(minX, rect.x);
-      minY = Math.min(minY, rect.y);
-      maxX = Math.max(maxX, rect.x + rect.width);
-      maxY = Math.max(maxY, rect.y + rect.height);
-    }
+    computeBoundingRectRecursively(store, root, bounds);
   }
 
-  if (minX === Number.POSITIVE_INFINITY) {
+  if (bounds.minX === Number.POSITIVE_INFINITY) {
     // No rects found, return empty rect
     return {x: 0, y: 0, width: 0, height: 0};
   }
 
   return {
-    x: minX,
-    y: minY,
-    width: maxX - minX,
-    height: maxY - minY,
+    x: bounds.minX,
+    y: bounds.minY,
+    width: bounds.maxX - bounds.minX,
+    height: bounds.maxY - bounds.minY,
   };
 }
 
