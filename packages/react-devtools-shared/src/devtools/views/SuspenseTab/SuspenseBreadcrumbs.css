@@ -11,13 +11,6 @@
   display: inline;
 }
 
-.SuspenseBreadcrumbsText {
-  font-family: var(--font-family-monospace);
-  font-size: var(--font-size-monospace-normal);
-  padding: 0.25rem;
-  white-space: nowrap;
-}
-
 .SuspenseBreadcrumbsListItem[aria-current="true"] .SuspenseBreadcrumbsButton {
   color: var(--color-button-active);
 }
