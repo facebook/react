@@ -157,17 +157,40 @@ export default function setupHighlighter(
     }
 
     const nodes = renderer.findHostInstancesForElementID(id);
-
     if (nodes != null && nodes[0] != null) {
       const node = nodes[0];
       // $FlowFixMe[method-unbinding]
       if (typeof node.scrollIntoView === 'function') {
         node.scrollIntoView({
-          block: 'nearest',
+          block: 'start',
           inline: 'nearest',
           behavior: 'smooth',
         });
+        return;
       }
+    }
+    // It's possible that the current state of a Suspense boundary doesn't have a position
+    // in the tree. E.g. because it's not yet mounted in the state we're moving to.
+    // Such as if it's in a null tree or inside another boundary's hidden state.
+    // In this case we use the last known position and try to scroll to that.
+    const rects = renderer.findLastKnownRectsForID(id);
+    if (rects !== null && rects.length > 0) {
+      let x = Infinity;
+      let y = Infinity;
+      for (let i = 0; i < rects.length; i++) {
+        const rect = rects[i];
+        if (rect.x < x) {
+          x = rect.x;
+        }
+        if (rect.y < y) {
+          y = rect.y;
+        }
+      }
+      window.scrollTo({
+        top: y,
+        left: x,
+        behavior: 'smooth',
+      });
     }
   }
 
