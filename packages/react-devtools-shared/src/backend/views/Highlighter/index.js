@@ -11,6 +11,7 @@ import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type {RendererInterface} from '../../types';
 
 // This plug-in provides in-page highlighting of the selected element.
 // It is used by the browser extension and the standalone DevTools shell (when connected to a browser).
@@ -133,6 +134,10 @@ export default function setupHighlighter(
         ) {
           // $FlowFixMe[method-unbinding]
           if (scrollIntoView && typeof node.scrollIntoView === 'function') {
+            if (scrollDelayTimer) {
+              clearTimeout(scrollDelayTimer);
+              scrollDelayTimer = null;
+            }
             // If the node isn't visible show it before highlighting it.
             // We may want to reconsider this; it might be a little disruptive.
             node.scrollIntoView({block: 'nearest', inline: 'nearest'});
@@ -152,29 +157,10 @@ export default function setupHighlighter(
     hideOverlay(agent);
   }
 
-  function scrollToHostInstance({
-    id,
-    rendererID,
-  }: {
+  function attemptScrollToHostInstance(
+    renderer: RendererInterface,
     id: number,
-    rendererID: number,
-  }) {
-    // Always hide the existing overlay so it doesn't obscure the element.
-    // If you wanted to show the overlay, highlightHostInstance should be used instead
-    // with the scrollIntoView option.
-    hideOverlay(agent);
-
-    const renderer = agent.rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
-      return;
-    }
-
-    // In some cases fiber may already be unmounted
-    if (!renderer.hasElementWithId(id)) {
-      return;
-    }
-
+  ) {
     const nodes = renderer.findHostInstancesForElementID(id);
     if (nodes != null) {
       for (let i = 0; i < nodes.length; i++) {
@@ -202,11 +188,47 @@ export default function setupHighlighter(
               inline: 'nearest',
               behavior: 'smooth',
             });
-            return;
+            return true;
           }
         }
       }
     }
+    return false;
+  }
+
+  let scrollDelayTimer = null;
+  function scrollToHostInstance({
+    id,
+    rendererID,
+  }: {
+    id: number,
+    rendererID: number,
+  }) {
+    // Always hide the existing overlay so it doesn't obscure the element.
+    // If you wanted to show the overlay, highlightHostInstance should be used instead
+    // with the scrollIntoView option.
+    hideOverlay(agent);
+
+    if (scrollDelayTimer) {
+      clearTimeout(scrollDelayTimer);
+      scrollDelayTimer = null;
+    }
+
+    const renderer = agent.rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      return;
+    }
+
+    // In some cases fiber may already be unmounted
+    if (!renderer.hasElementWithId(id)) {
+      return;
+    }
+
+    if (attemptScrollToHostInstance(renderer, id)) {
+      return;
+    }
+
     // It's possible that the current state of a Suspense boundary doesn't have a position
     // in the tree. E.g. because it's not yet mounted in the state we're moving to.
     // Such as if it's in a null tree or inside another boundary's hidden state.
@@ -229,6 +251,12 @@ export default function setupHighlighter(
         left: x,
         behavior: 'smooth',
       });
+      // It's possible that after mount, we're able to scroll deeper once the new nodes
+      // have mounted. Let's try again after mount. Ideally we'd know which commit this
+      // is going to be but for now we just try after 100ms.
+      scrollDelayTimer = setTimeout(() => {
+        attemptScrollToHostInstance(renderer, id);
+      }, 100);
     }
   }
 
