@@ -86,6 +86,12 @@ type HighlightHostInstance = {
   openBuiltinElementsPanel: boolean,
   scrollIntoView: boolean,
 };
+type HighlightHostInstances = {
+  elements: Array<ElementAndRendererID>,
+  displayName: string | null,
+  hideAfterTimeout: boolean,
+  scrollIntoView: boolean,
+};
 
 type ScrollToHostInstance = {
   ...ElementAndRendererID,
@@ -243,6 +249,7 @@ type FrontendEvents = {
   getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
   highlightHostInstance: [HighlightHostInstance],
+  highlightHostInstances: [HighlightHostInstances],
   inspectElement: [InspectElementParams],
   inspectScreen: [InspectScreenParams],
   logElementToConsole: [ElementAndRendererID],
