@@ -20,7 +20,7 @@ import type {
 
 // @ts-expect-error untyped module
 import CodePathAnalyzer from '../code-path-analysis/code-path-analyzer';
-import { getAdditionalEffectHooksFromSettings } from '../shared/Utils';
+import {getAdditionalEffectHooksFromSettings} from '../shared/Utils';
 
 /**
  * Catch all identifiers that begin with "use" followed by an uppercase Latin
@@ -167,10 +167,7 @@ function isEffectIdentifier(node: Node, additionalHooks?: RegExp): boolean {
   return false;
 }
 function isUseEffectEventIdentifier(node: Node): boolean {
-  if (__EXPERIMENTAL__) {
-    return node.type === 'Identifier' && node.name === 'useEffectEvent';
-  }
-  return false;
+  return node.type === 'Identifier' && node.name === 'useEffectEvent';
 }
 
 function isUseIdentifier(node: Node): boolean {
@@ -200,7 +197,8 @@ const rule = {
   create(context: Rule.RuleContext) {
     const settings = context.settings || {};
 
-    const additionalEffectHooks = getAdditionalEffectHooksFromSettings(settings);
+    const additionalEffectHooks =
+      getAdditionalEffectHooksFromSettings(settings);
 
     let lastEffect: CallExpression | null = null;
     const codePathReactHooksMapStack: Array<

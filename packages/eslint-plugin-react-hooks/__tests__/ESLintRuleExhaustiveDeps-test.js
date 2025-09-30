@@ -1549,6 +1549,21 @@ const tests = {
         },
       },
     },
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onStuff = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, []);
+          React.useEffect(() => {
+            onStuff();
+          }, []);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -7819,31 +7834,6 @@ const tests = {
         },
       ],
     },
-  ],
-};
-
-if (__EXPERIMENTAL__) {
-  tests.valid = [
-    ...tests.valid,
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          const onStuff = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          useEffect(() => {
-            onStuff();
-          }, []);
-          React.useEffect(() => {
-            onStuff();
-          }, []);
-        }
-      `,
-    },
-  ];
-
-  tests.invalid = [
-    ...tests.invalid,
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
@@ -7907,8 +7897,8 @@ if (__EXPERIMENTAL__) {
         },
       ],
     },
-  ];
-}
+  ],
+};
 
 // Tests that are only valid/invalid across parsers supporting Flow
 const testsFlow = {
