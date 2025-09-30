@@ -3192,7 +3192,8 @@ __DEV__ &&
             null != fiber &&
               (blockingUpdateComponentName = getComponentNameFromFiber(fiber));
             (executionContext & (RenderContext | CommitContext)) !==
-              NoContext && (blockingUpdateType = 1);
+              NoContext &&
+              ((componentEffectSpawnedUpdate = !0), (blockingUpdateType = 1));
             if (-1.1 !== blockingEventTime || null !== blockingEventType)
               blockingEventIsRepeat = !1;
             blockingEventTime = -1.1;
@@ -3252,6 +3253,11 @@ __DEV__ &&
       var prevErrors = componentEffectErrors;
       componentEffectErrors = null;
       return prevErrors;
+    }
+    function pushComponentEffectDidSpawnUpdate() {
+      var prev = componentEffectSpawnedUpdate;
+      componentEffectSpawnedUpdate = !1;
+      return prev;
     }
     function startProfilerTimer(fiber) {
       profilerStartTime = now();
@@ -12006,6 +12012,7 @@ __DEV__ &&
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
+        prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate(),
         flags = finishedWork.flags;
       switch (finishedWork.tag) {
         case 0:
@@ -12231,7 +12238,7 @@ __DEV__ &&
         0 !== (finishedWork.mode & 2) &&
         0 <= componentEffectStartTime &&
         0 <= componentEffectEndTime &&
-        (0.05 < componentEffectDuration &&
+        ((componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
           logComponentEffect(
             finishedWork,
             componentEffectStartTime,
@@ -12256,6 +12263,7 @@ __DEV__ &&
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
+      componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
     }
     function abortRootTransitions(
       root,
@@ -12494,7 +12502,8 @@ __DEV__ &&
         }
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
-        prevEffectErrors = pushComponentEffectErrors();
+        prevEffectErrors = pushComponentEffectErrors(),
+        prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
       switch (deletedFiber.tag) {
         case 26:
         case 27:
@@ -12670,7 +12679,7 @@ __DEV__ &&
         0 !== (deletedFiber.mode & 2) &&
         0 <= componentEffectStartTime &&
         0 <= componentEffectEndTime &&
-        0.05 < componentEffectDuration &&
+        (componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
         logComponentEffect(
           deletedFiber,
           componentEffectStartTime,
@@ -12681,6 +12690,7 @@ __DEV__ &&
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
+      componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
     }
     function getRetryCache(finishedWork) {
       switch (finishedWork.tag) {
@@ -12785,6 +12795,7 @@ __DEV__ &&
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
+        prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate(),
         current = finishedWork.alternate,
         flags = finishedWork.flags;
       switch (finishedWork.tag) {
@@ -13149,7 +13160,7 @@ __DEV__ &&
         0 !== (finishedWork.mode & 2) &&
         0 <= componentEffectStartTime &&
         0 <= componentEffectEndTime &&
-        (0.05 < componentEffectDuration &&
+        ((componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
           logComponentEffect(
             finishedWork,
             componentEffectStartTime,
@@ -13174,6 +13185,7 @@ __DEV__ &&
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
+      componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
     }
     function commitReconciliationEffects(finishedWork) {
       var flags = finishedWork.flags;
@@ -13280,7 +13292,8 @@ __DEV__ &&
     function disappearLayoutEffects(finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
-        prevEffectErrors = pushComponentEffectErrors();
+        prevEffectErrors = pushComponentEffectErrors(),
+        prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
       switch (finishedWork.tag) {
         case 0:
         case 11:
@@ -13331,7 +13344,7 @@ __DEV__ &&
         0 !== (finishedWork.mode & 2) &&
         0 <= componentEffectStartTime &&
         0 <= componentEffectEndTime &&
-        0.05 < componentEffectDuration &&
+        (componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
         logComponentEffect(
           finishedWork,
           componentEffectStartTime,
@@ -13342,6 +13355,7 @@ __DEV__ &&
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
+      componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
     }
     function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
       for (parentFiber = parentFiber.child; null !== parentFiber; )
@@ -13357,6 +13371,7 @@ __DEV__ &&
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
+        prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate(),
         flags = finishedWork.flags;
       switch (finishedWork.tag) {
         case 0:
@@ -13493,7 +13508,7 @@ __DEV__ &&
         0 !== (finishedWork.mode & 2) &&
         0 <= componentEffectStartTime &&
         0 <= componentEffectEndTime &&
-        0.05 < componentEffectDuration &&
+        (componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
         logComponentEffect(
           finishedWork,
           componentEffectStartTime,
@@ -13504,6 +13519,7 @@ __DEV__ &&
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
+      componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
     }
     function recursivelyTraverseReappearLayoutEffects(
       finishedRoot,
@@ -13660,6 +13676,7 @@ __DEV__ &&
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
+        prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate(),
         prevDeepEquality = alreadyWarnedForDeepEquality,
         isViewTransitionEligible = enableViewTransition
           ? (committedLanes & 335544064) === committedLanes
@@ -14051,7 +14068,7 @@ __DEV__ &&
               );
         0 <= componentEffectStartTime &&
           0 <= componentEffectEndTime &&
-          (0.05 < componentEffectDuration &&
+          ((componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
             logComponentEffect(
               finishedWork,
               componentEffectStartTime,
@@ -14071,6 +14088,7 @@ __DEV__ &&
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
+      componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
       alreadyWarnedForDeepEquality = prevDeepEquality;
     }
     function recursivelyTraverseReconnectPassiveEffects(
@@ -14118,6 +14136,7 @@ __DEV__ &&
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
         prevEffectErrors = pushComponentEffectErrors(),
+        prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate(),
         prevDeepEquality = alreadyWarnedForDeepEquality;
       enableComponentPerformanceTrack &&
         includeWorkInProgressEffects &&
@@ -14241,7 +14260,7 @@ __DEV__ &&
         0 !== (finishedWork.mode & 2) &&
         0 <= componentEffectStartTime &&
         0 <= componentEffectEndTime &&
-        0.05 < componentEffectDuration &&
+        (componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
         logComponentEffect(
           finishedWork,
           componentEffectStartTime,
@@ -14252,6 +14271,7 @@ __DEV__ &&
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
       componentEffectErrors = prevEffectErrors;
+      componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
       alreadyWarnedForDeepEquality = prevDeepEquality;
     }
     function recursivelyTraverseAtomicPassiveEffects(
@@ -14446,7 +14466,8 @@ __DEV__ &&
     function commitPassiveUnmountOnFiber(finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
-        prevEffectErrors = pushComponentEffectErrors();
+        prevEffectErrors = pushComponentEffectErrors(),
+        prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
       switch (finishedWork.tag) {
         case 0:
         case 11:
@@ -14500,7 +14521,7 @@ __DEV__ &&
         0 !== (finishedWork.mode & 2) &&
         0 <= componentEffectStartTime &&
         0 <= componentEffectEndTime &&
-        0.05 < componentEffectDuration &&
+        (componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
         logComponentEffect(
           finishedWork,
           componentEffectStartTime,
@@ -14510,6 +14531,7 @@ __DEV__ &&
         );
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
+      componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
       componentEffectErrors = prevEffectErrors;
     }
     function recursivelyTraverseDisconnectPassiveEffects(parentFiber) {
@@ -14546,7 +14568,8 @@ __DEV__ &&
     function disconnectPassiveEffect(finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
         prevEffectDuration = pushComponentEffectDuration(),
-        prevEffectErrors = pushComponentEffectErrors();
+        prevEffectErrors = pushComponentEffectErrors(),
+        prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
       switch (finishedWork.tag) {
         case 0:
         case 11:
@@ -14571,7 +14594,7 @@ __DEV__ &&
         0 !== (finishedWork.mode & 2) &&
         0 <= componentEffectStartTime &&
         0 <= componentEffectEndTime &&
-        0.05 < componentEffectDuration &&
+        (componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
         logComponentEffect(
           finishedWork,
           componentEffectStartTime,
@@ -14581,6 +14604,7 @@ __DEV__ &&
         );
       popComponentEffectStart(prevEffectStart);
       popComponentEffectDuration(prevEffectDuration);
+      componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
       componentEffectErrors = prevEffectErrors;
     }
     function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
@@ -14593,7 +14617,8 @@ __DEV__ &&
           nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
           prevEffectStart = pushComponentEffectStart(),
           prevEffectDuration = pushComponentEffectDuration(),
-          prevEffectErrors = pushComponentEffectErrors();
+          prevEffectErrors = pushComponentEffectErrors(),
+          prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
         switch (current.tag) {
           case 0:
           case 11:
@@ -14675,7 +14700,7 @@ __DEV__ &&
           0 !== (current.mode & 2) &&
           0 <= componentEffectStartTime &&
           0 <= componentEffectEndTime &&
-          0.05 < componentEffectDuration &&
+          (componentEffectSpawnedUpdate || 0.05 < componentEffectDuration) &&
           logComponentEffect(
             current,
             componentEffectStartTime,
@@ -14685,6 +14710,7 @@ __DEV__ &&
           );
         popComponentEffectStart(prevEffectStart);
         popComponentEffectDuration(prevEffectDuration);
+        componentEffectSpawnedUpdate = prevEffectDidSpawnUpdate;
         componentEffectErrors = prevEffectErrors;
         current = fiber.child;
         if (null !== current) (current.return = fiber), (nextEffect = current);
@@ -18274,6 +18300,7 @@ __DEV__ &&
       componentEffectStartTime = -1.1,
       componentEffectEndTime = -1.1,
       componentEffectErrors = null,
+      componentEffectSpawnedUpdate = !1,
       blockingClampTime = -0,
       blockingUpdateTime = -1.1,
       blockingUpdateTask = null,
@@ -20254,10 +20281,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-d8a15c49-20250930",
+        version: "19.2.0-www-classic-063394cf-20250930",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-d8a15c49-20250930"
+        reconcilerVersion: "19.2.0-www-classic-063394cf-20250930"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20292,7 +20319,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-d8a15c49-20250930";
+    exports.version = "19.2.0-www-classic-063394cf-20250930";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
