@@ -48,7 +48,6 @@ import {
   alwaysThrottleRetries,
   enableCreateEventHandleAPI,
   enableHiddenSubtreeInsertionEffectCleanup,
-  enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableSuspenseCallback,
@@ -1969,10 +1968,7 @@ function recursivelyTraverseMutationEffects(
     }
   }
 
-  if (
-    parentFiber.subtreeFlags &
-    (enablePersistedModeClonedFlag ? MutationMask | Cloned : MutationMask)
-  ) {
+  if (parentFiber.subtreeFlags & (MutationMask | Cloned)) {
     let child = parentFiber.child;
     while (child !== null) {
       commitMutationEffectsOnFiber(child, root, lanes);
