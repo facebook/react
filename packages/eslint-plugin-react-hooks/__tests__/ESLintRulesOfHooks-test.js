@@ -602,6 +602,143 @@ const allTests = {
         },
       },
     },
+    {
+      code: normalizeIndent`
+        // Valid because functions created with useEffectEvent can be called in a useEffect.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onClick();
+          });
+          React.useEffect(() => {
+            onClick();
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions created with useEffectEvent can be passed by reference in useEffect
+        // and useEffectEvent.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          const onClick2 = useEffectEvent(() => {
+            debounce(onClick);
+            debounce(() => onClick());
+            debounce(() => { onClick() });
+            deboucne(() => debounce(onClick));
+          });
+          useEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          React.useEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          return null;
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          useEffect(() => {
+            onClick();
+          });
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          // Can receive arguments
+          const onEvent = useEffectEvent((text) => {
+            console.log(text);
+          });
+
+          useEffect(() => {
+            onEvent('Hello world');
+          });
+          React.useEffect(() => {
+            onEvent('Hello world');
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions created with useEffectEvent can be called in useLayoutEffect.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useLayoutEffect(() => {
+            onClick();
+          });
+          React.useLayoutEffect(() => {
+            onClick();
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions created with useEffectEvent can be called in useInsertionEffect.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useInsertionEffect(() => {
+            onClick();
+          });
+          React.useInsertionEffect(() => {
+            onClick();
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions created with useEffectEvent can be passed by reference in useLayoutEffect 
+        // and useInsertionEffect.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          const onClick2 = useEffectEvent(() => {
+            debounce(onClick);
+            debounce(() => onClick());
+            debounce(() => { onClick() });
+            deboucne(() => debounce(onClick));
+          });
+          useLayoutEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          React.useLayoutEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          useInsertionEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          React.useInsertionEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          return null;
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -1407,152 +1544,6 @@ const allTests = {
       },
       errors: [useEffectEventError('onClick', true)],
     },
-  ],
-};
-
-if (__EXPERIMENTAL__) {
-  allTests.valid = [
-    ...allTests.valid,
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in a useEffect.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          useEffect(() => {
-            onClick();
-          });
-          React.useEffect(() => {
-            onClick();
-          });
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be passed by reference in useEffect
-        // and useEffectEvent.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          const onClick2 = useEffectEvent(() => {
-            debounce(onClick);
-            debounce(() => onClick());
-            debounce(() => { onClick() });
-            deboucne(() => debounce(onClick));
-          });
-          useEffect(() => {
-            let id = setInterval(() => onClick(), 100);
-            return () => clearInterval(onClick);
-          }, []);
-          React.useEffect(() => {
-            let id = setInterval(() => onClick(), 100);
-            return () => clearInterval(onClick);
-          }, []);
-          return null;
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          useEffect(() => {
-            onClick();
-          });
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent({ theme }) {
-          // Can receive arguments
-          const onEvent = useEffectEvent((text) => {
-            console.log(text);
-          });
-
-          useEffect(() => {
-            onEvent('Hello world');
-          });
-          React.useEffect(() => {
-            onEvent('Hello world');
-          });
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in useLayoutEffect.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          useLayoutEffect(() => {
-            onClick();
-          });
-          React.useLayoutEffect(() => {
-            onClick();
-          });
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be called in useInsertionEffect.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          useInsertionEffect(() => {
-            onClick();
-          });
-          React.useInsertionEffect(() => {
-            onClick();
-          });
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be passed by reference in useLayoutEffect 
-        // and useInsertionEffect.
-        function MyComponent({ theme }) {
-          const onClick = useEffectEvent(() => {
-            showNotification(theme);
-          });
-          const onClick2 = useEffectEvent(() => {
-            debounce(onClick);
-            debounce(() => onClick());
-            debounce(() => { onClick() });
-            deboucne(() => debounce(onClick));
-          });
-          useLayoutEffect(() => {
-            let id = setInterval(() => onClick(), 100);
-            return () => clearInterval(onClick);
-          }, []);
-          React.useLayoutEffect(() => {
-            let id = setInterval(() => onClick(), 100);
-            return () => clearInterval(onClick);
-          }, []);
-          useInsertionEffect(() => {
-            let id = setInterval(() => onClick(), 100);
-            return () => clearInterval(onClick);
-          }, []);
-          React.useInsertionEffect(() => {
-            let id = setInterval(() => onClick(), 100);
-            return () => clearInterval(onClick);
-          }, []);
-          return null;
-        }
-      `,
-    },
-  ];
-  allTests.invalid = [
-    ...allTests.invalid,
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
@@ -1659,8 +1650,8 @@ if (__EXPERIMENTAL__) {
         useEffectEventError('onClick', true),
       ],
     },
-  ];
-}
+  ],
+};
 
 function conditionalError(hook, hasPreviousFinalizer = false) {
   return {
