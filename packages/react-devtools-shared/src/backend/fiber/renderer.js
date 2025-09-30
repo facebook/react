@@ -2251,8 +2251,23 @@ export function attach(
     }
     if (typeof instance.getClientRects === 'function') {
       // DOM
-      const result: Array<Rect> = [];
       const doc = instance.ownerDocument;
+      if (instance === doc.documentElement) {
+        // This is the document element. The size of this element is not actually
+        // what determines the whole scrollable area of the screen. Because any
+        // thing that overflows the document will also contribute to the scrollable.
+        // This is unlike overflow: scroll which clips those.
+        // Therefore, we use the scrollable size for this rect instead.
+        return [
+          {
+            x: 0,
+            y: 0,
+            width: instance.scrollWidth,
+            height: instance.scrollHeight,
+          },
+        ];
+      }
+      const result: Array<Rect> = [];
       const win = doc && doc.defaultView;
       const scrollX = win ? win.scrollX : 0;
       const scrollY = win ? win.scrollY : 0;
