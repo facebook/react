@@ -514,6 +514,23 @@ const performWorkUntilDeadline = () => {
 };
 
 let schedulePerformWorkUntilDeadline;
+
+// Detect Firefox to avoid using MessageChannel due to nested event loop
+// behavior when alerts/breakpoints are hit in DevTools (see #17355).
+// In those cases, MessageChannel can resume immediately in a way that
+// causes React to incorrectly continue work. Falling back to setTimeout
+// aligns with macrotask semantics and fixes the issue.
+let isFirefox = false;
+try {
+  // eslint-disable-next-line no-undef
+  const ua = typeof navigator === 'object' && navigator !== null ? navigator.userAgent : null;
+  if (typeof ua === 'string' && ua.indexOf('Firefox') !== -1) {
+    isFirefox = true;
+  }
+} catch (e) {
+  // Ignore
+}
+
 if (typeof localSetImmediate === 'function') {
   // Node.js and old IE.
   // There's a few reasons for why we prefer setImmediate.
@@ -529,7 +546,7 @@ if (typeof localSetImmediate === 'function') {
   schedulePerformWorkUntilDeadline = () => {
     localSetImmediate(performWorkUntilDeadline);
   };
-} else if (typeof MessageChannel !== 'undefined') {
+} else if (typeof MessageChannel !== 'undefined' && !isFirefox) {
   // DOM and Worker environments.
   // We prefer MessageChannel because of the 4ms setTimeout clamping.
   const channel = new MessageChannel();
