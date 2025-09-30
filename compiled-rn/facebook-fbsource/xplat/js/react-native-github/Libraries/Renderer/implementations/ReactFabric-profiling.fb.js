@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<29b0f83eab680f665a631353af749fdb>>
+ * @generated SignedSource<<a1ccb0d8d30f48afdd59a5f95c0870be>>
  */
 
 "use strict";
@@ -27,8 +27,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enableHiddenSubtreeInsertionEffectCleanup =
     dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
-  enablePersistedModeClonedFlag =
-    dynamicFlagsUntyped.enablePersistedModeClonedFlag,
   enableEagerAlternateStateNodeCleanup =
     dynamicFlagsUntyped.enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes =
@@ -7640,17 +7638,13 @@ function beginWork(current, workInProgress, renderLanes) {
   );
 }
 function markCloned(workInProgress) {
-  enablePersistedModeClonedFlag && (workInProgress.flags |= 8);
+  workInProgress.flags |= 8;
 }
 function doesRequireClone(current, completedWork) {
   if (null !== current && current.child === completedWork.child) return !1;
   if (0 !== (completedWork.flags & 16)) return !0;
   for (current = completedWork.child; null !== current; ) {
-    completedWork = enablePersistedModeClonedFlag ? 8218 : 13878;
-    if (
-      0 !== (current.flags & completedWork) ||
-      0 !== (current.subtreeFlags & completedWork)
-    )
+    if (0 !== (current.flags & 8218) || 0 !== (current.subtreeFlags & 8218))
       return !0;
     current = current.sibling;
   }
@@ -7951,10 +7945,9 @@ function completeWork(current, workInProgress, renderLanes) {
             ? (workInProgress.stateNode = renderLanes)
             : (markCloned(workInProgress),
               (workInProgress.stateNode = newProps),
-              current
-                ? (passChildrenWhenCloningPersistedNodes && !type) ||
-                  appendAllChildren(newProps, workInProgress, !1, !1)
-                : enablePersistedModeClonedFlag || (workInProgress.flags |= 4));
+              !current ||
+                (passChildrenWhenCloningPersistedNodes && !type) ||
+                appendAllChildren(newProps, workInProgress, !1, !1));
         } else workInProgress.stateNode = renderLanes;
       } else {
         if (!newProps) {
@@ -8008,8 +8001,7 @@ function completeWork(current, workInProgress, renderLanes) {
               current,
               renderLanes,
               workInProgress
-            )),
-            enablePersistedModeClonedFlag || (workInProgress.flags |= 4))
+            )))
           : (workInProgress.stateNode = current.stateNode);
       else {
         if ("string" !== typeof newProps && null === workInProgress.stateNode)
@@ -9323,9 +9315,7 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber, lanes) {
       null !== root && (root.return = null);
       childToDelete.return = null;
     }
-  if (
-    parentFiber.subtreeFlags & (enablePersistedModeClonedFlag ? 13886 : 13878)
-  )
+  if (parentFiber.subtreeFlags & 13886)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0, lanes),
         (parentFiber = parentFiber.sibling);
@@ -13280,16 +13270,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1598 = {
+  internals$jscomp$inline_1602 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-8309724c-20250928",
+    version: "19.2.0-native-fb-ef889445-20250930",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-8309724c-20250928"
+    reconcilerVersion: "19.2.0-native-fb-ef889445-20250930"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1598.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1598.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1602.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1602.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$173 = 0;
     31 > index$173;
@@ -13301,20 +13291,20 @@ internals$jscomp$inline_1598.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1598.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1602.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1935 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1928 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1935.isDisabled &&
-    hook$jscomp$inline_1935.supportsFiber
+    !hook$jscomp$inline_1928.isDisabled &&
+    hook$jscomp$inline_1928.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1935.inject(
-        internals$jscomp$inline_1598
+      (rendererID = hook$jscomp$inline_1928.inject(
+        internals$jscomp$inline_1602
       )),
-        (injectedHook = hook$jscomp$inline_1935);
+        (injectedHook = hook$jscomp$inline_1928);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

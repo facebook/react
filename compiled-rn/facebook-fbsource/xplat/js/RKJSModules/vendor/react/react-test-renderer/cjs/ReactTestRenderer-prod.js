@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<726fdd5aea21d0cbb4ef1b35eccdf80b>>
+ * @generated SignedSource<<4eba89e9a6b93cfe57dad60722be9f29>>
  */
 
 "use strict";
@@ -7334,7 +7334,7 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber, lanes) {
       null !== root && (root.return = null);
       childToDelete.return = null;
     }
-  if (parentFiber.subtreeFlags & 13878)
+  if (parentFiber.subtreeFlags & 13886)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0, lanes),
         (parentFiber = parentFiber.sibling);
@@ -10100,10 +10100,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1492 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-8309724c-20250928",
+  version: "19.2.0-native-fb-ef889445-20250930",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-8309724c-20250928"
+  reconcilerVersion: "19.2.0-native-fb-ef889445-20250930"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1493 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10239,4 +10239,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-8309724c-20250928";
+exports.version = "19.2.0-native-fb-ef889445-20250930";
