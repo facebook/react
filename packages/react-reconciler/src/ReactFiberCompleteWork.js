@@ -37,7 +37,6 @@ import {
   enableScopeAPI,
   enableProfilerTimer,
   enableTransitionTracing,
-  passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
   enableViewTransition,
   enableSuspenseyImages,
@@ -484,7 +483,7 @@ function updateHostComponent(
 
     let newChildSet = null;
     let hasOffscreenComponentChild = false;
-    if (requiresClone && passChildrenWhenCloningPersistedNodes) {
+    if (requiresClone) {
       markCloned(workInProgress);
       newChildSet = createContainerChildSet();
       // If children might have changed, we have to add them all to the set.
@@ -522,10 +521,7 @@ function updateHostComponent(
       markUpdate(workInProgress);
     }
     workInProgress.stateNode = newInstance;
-    if (
-      requiresClone &&
-      (!passChildrenWhenCloningPersistedNodes || hasOffscreenComponentChild)
-    ) {
+    if (requiresClone && hasOffscreenComponentChild) {
       // If children have changed, we have to add them all to the set.
       appendAllChildren(
         newInstance,

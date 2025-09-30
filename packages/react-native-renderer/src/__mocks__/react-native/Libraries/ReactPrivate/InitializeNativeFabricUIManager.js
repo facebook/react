@@ -87,13 +87,7 @@ const RCTFabricUIManager = {
     },
   ),
   cloneNodeWithNewChildrenAndProps: jest.fn(
-    function cloneNodeWithNewChildrenAndProps(node, newPropsDiff) {
-      let children = [];
-      if (arguments.length === 3) {
-        children = newPropsDiff;
-        newPropsDiff = arguments[2];
-      }
-
+    function cloneNodeWithNewChildrenAndProps(node, children, newPropsDiff) {
       return {
         reactTag: node.reactTag,
         viewName: node.viewName,
@@ -104,14 +98,6 @@ const RCTFabricUIManager = {
   ),
   appendChild: jest.fn(function appendChild(parentNode, childNode) {
     parentNode.children.push(childNode);
-  }),
-
-  createChildSet: jest.fn(function createChildSet() {
-    return [];
-  }),
-
-  appendChildToSet: jest.fn(function appendChildToSet(childSet, childNode) {
-    childSet.push(childNode);
   }),
 
   completeRoot: jest.fn(function completeRoot(rootTag, newChildSet) {
