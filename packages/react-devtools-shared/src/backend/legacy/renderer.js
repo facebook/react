@@ -1168,6 +1168,9 @@ export function attach(
       const hostInstance = findHostInstanceForInternalID(id);
       return hostInstance == null ? null : [hostInstance];
     },
+    findLastKnownRectsForID() {
+      return null;
+    },
     getOwnersList,
     getPathForElement,
     getProfilingData,

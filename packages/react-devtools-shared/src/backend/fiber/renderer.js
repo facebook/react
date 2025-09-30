@@ -5651,6 +5651,23 @@ export function attach(
     }
   }
 
+  function findLastKnownRectsForID(id: number): null | Array<Rect> {
+    try {
+      const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+      if (devtoolsInstance === undefined) {
+        console.warn(`Could not find DevToolsInstance with id "${id}"`);
+        return null;
+      }
+      if (devtoolsInstance.suspenseNode === null) {
+        return null;
+      }
+      return devtoolsInstance.suspenseNode.rects;
+    } catch (err) {
+      // The fiber might have unmounted by now.
+      return null;
+    }
+  }
+
   function getDisplayNameForElementID(id: number): null | string {
     const devtoolsInstance = idToDevToolsInstanceMap.get(id);
     if (devtoolsInstance === undefined) {
@@ -8387,6 +8404,7 @@ export function attach(
     getSerializedElementValueByPath,
     deletePath,
     findHostInstancesForElementID,
+    findLastKnownRectsForID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,

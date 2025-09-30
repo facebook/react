@@ -101,6 +101,16 @@ export type FindHostInstancesForElementID = (
   id: number,
 ) => null | $ReadOnlyArray<HostInstance>;
 
+type Rect = {
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  ...
+};
+export type FindLastKnownRectsForID = (
+  id: number,
+) => null | $ReadOnlyArray<Rect>;
 export type ReactProviderType<T> = {
   $$typeof: symbol | number,
   _context: ReactContext<T>,
@@ -411,6 +421,7 @@ export type RendererInterface = {
     path: Array<string | number>,
   ) => void,
   findHostInstancesForElementID: FindHostInstancesForElementID,
+  findLastKnownRectsForID: FindLastKnownRectsForID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
   getComponentStack?: GetComponentStack,
