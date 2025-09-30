@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<224ad190107133468e04c23ff73058f8>>
+ * @generated SignedSource<<013287e9866147d7472a083baf2431bb>>
  */
 
 'use strict';
@@ -29,6 +29,17 @@ var crypto = require('crypto');
 var PluginProposalPrivateMethods = require('@babel/plugin-proposal-private-methods');
 var HermesParser = require('hermes-parser');
 var util = require('util');
+
+const SETTINGS_KEY = 'react-hooks';
+const SETTINGS_ADDITIONAL_EFFECT_HOOKS_KEY = 'additionalEffectHooks';
+function getAdditionalEffectHooksFromSettings(settings) {
+    var _a;
+    const additionalHooks = (_a = settings[SETTINGS_KEY]) === null || _a === void 0 ? void 0 : _a[SETTINGS_ADDITIONAL_EFFECT_HOOKS_KEY];
+    if (additionalHooks != null && typeof additionalHooks === 'string') {
+        return new RegExp(additionalHooks);
+    }
+    return undefined;
+}
 
 const rule$1 = {
     meta: {
@@ -60,23 +71,24 @@ const rule$1 = {
                     },
                     requireExplicitEffectDeps: {
                         type: 'boolean',
-                    }
+                    },
                 },
             },
         ],
     },
     create(context) {
         const rawOptions = context.options && context.options[0];
+        const settings = context.settings || {};
         const additionalHooks = rawOptions && rawOptions.additionalHooks
             ? new RegExp(rawOptions.additionalHooks)
-            : undefined;
+            : getAdditionalEffectHooksFromSettings(settings);
         const enableDangerousAutofixThisMayCauseInfiniteLoops = (rawOptions &&
             rawOptions.enableDangerousAutofixThisMayCauseInfiniteLoops) ||
             false;
         const experimental_autoDependenciesHooks = rawOptions && Array.isArray(rawOptions.experimental_autoDependenciesHooks)
             ? rawOptions.experimental_autoDependenciesHooks
             : [];
-        const requireExplicitEffectDeps = rawOptions && rawOptions.requireExplicitEffectDeps || false;
+        const requireExplicitEffectDeps = (rawOptions && rawOptions.requireExplicitEffectDeps) || false;
         const options = {
             additionalHooks,
             experimental_autoDependenciesHooks,
@@ -945,7 +957,7 @@ const rule$1 = {
                 reportProblem({
                     node: reactiveHook,
                     message: `React Hook ${reactiveHookName} always requires dependencies. ` +
-                        `Please add a dependency array or an explicit \`undefined\``
+                        `Please add a dependency array or an explicit \`undefined\``,
                 });
             }
             const isAutoDepsHook = options.experimental_autoDependenciesHooks.includes(reactiveHookName);
@@ -1447,9 +1459,7 @@ function isAncestorNodeOf(a, b) {
         a.range[1] >= b.range[1]);
 }
 function isUseEffectEventIdentifier$1(node) {
-    {
-        return node.type === 'Identifier' && node.name === 'useEffectEvent';
-    }
+    return node.type === 'Identifier' && node.name === 'useEffectEvent';
 }
 function getUnknownDependenciesMessage(reactiveHookName) {
     return (`React Hook ${reactiveHookName} received a function whose dependencies ` +
@@ -57292,17 +57302,6 @@ function requireCodePathAnalyzer() {
 var codePathAnalyzerExports = requireCodePathAnalyzer();
 var CodePathAnalyzer = /*@__PURE__*/getDefaultExportFromCjs(codePathAnalyzerExports);
 
-const SETTINGS_KEY = 'react-hooks';
-const SETTINGS_ADDITIONAL_EFFECT_HOOKS_KEY = 'additionalEffectHooks';
-function getAdditionalEffectHooksFromSettings(settings) {
-    var _a;
-    const additionalHooks = (_a = settings[SETTINGS_KEY]) === null || _a === void 0 ? void 0 : _a[SETTINGS_ADDITIONAL_EFFECT_HOOKS_KEY];
-    if (additionalHooks != null && typeof additionalHooks === 'string') {
-        return new RegExp(additionalHooks);
-    }
-    return undefined;
-}
-
 function isHookName(s) {
     return s === 'use' || /^use[A-Z0-9]/.test(s);
 }
@@ -57401,9 +57400,7 @@ function isEffectIdentifier(node, additionalHooks) {
     return false;
 }
 function isUseEffectEventIdentifier(node) {
-    {
-        return node.type === 'Identifier' && node.name === 'useEffectEvent';
-    }
+    return node.type === 'Identifier' && node.name === 'useEffectEvent';
 }
 function isUseIdentifier(node) {
     return isReactFunction(node, 'use');
