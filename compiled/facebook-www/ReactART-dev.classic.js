@@ -7705,22 +7705,24 @@ __DEV__ &&
         "unstable-defer-without-hiding" === nextProps.mode
       ) {
         if (0 !== (workInProgress.flags & 128)) {
-          nextChildren =
+          prevState =
             null !== prevState
               ? prevState.baseLanes | renderLanes
               : renderLanes;
           if (null !== current) {
-            prevState = workInProgress.child = current.child;
-            for (nextProps = 0; null !== prevState; )
-              (nextProps = nextProps | prevState.lanes | prevState.childLanes),
-                (prevState = prevState.sibling);
-            workInProgress.childLanes = nextProps & ~nextChildren;
-          } else (workInProgress.childLanes = 0), (workInProgress.child = null);
+            nextChildren = workInProgress.child = current.child;
+            for (nextProps = 0; null !== nextChildren; )
+              (nextProps =
+                nextProps | nextChildren.lanes | nextChildren.childLanes),
+                (nextChildren = nextChildren.sibling);
+            nextChildren = nextProps & ~prevState;
+          } else (nextChildren = 0), (workInProgress.child = null);
           return deferHiddenOffscreenComponent(
             current,
             workInProgress,
-            nextChildren,
-            renderLanes
+            prevState,
+            renderLanes,
+            nextChildren
           );
         }
         if (0 !== (renderLanes & 536870912))
@@ -7737,14 +7739,15 @@ __DEV__ &&
             pushOffscreenSuspenseHandler(workInProgress);
         else
           return (
-            (workInProgress.lanes = workInProgress.childLanes = 536870912),
+            (nextChildren = workInProgress.lanes = 536870912),
             deferHiddenOffscreenComponent(
               current,
               workInProgress,
               null !== prevState
                 ? prevState.baseLanes | renderLanes
                 : renderLanes,
-              renderLanes
+              renderLanes,
+              nextChildren
             )
           );
       } else if (null !== prevState) {
@@ -7782,7 +7785,8 @@ __DEV__ &&
       current,
       workInProgress,
       nextBaseLanes,
-      renderLanes
+      renderLanes,
+      remainingChildLanes
     ) {
       var JSCompiler_inline_result = peekCacheFromPool();
       JSCompiler_inline_result =
@@ -7801,6 +7805,7 @@ __DEV__ &&
       pushOffscreenSuspenseHandler(workInProgress);
       null !== current &&
         propagateParentContextChanges(current, workInProgress, renderLanes, !0);
+      workInProgress.childLanes = remainingChildLanes;
       return null;
     }
     function mountActivityChildren(workInProgress, nextProps) {
@@ -20249,10 +20254,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-ef889445-20250930",
+        version: "19.2.0-www-classic-d8a15c49-20250930",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-ef889445-20250930"
+        reconcilerVersion: "19.2.0-www-classic-d8a15c49-20250930"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20287,7 +20292,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-ef889445-20250930";
+    exports.version = "19.2.0-www-classic-d8a15c49-20250930";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
