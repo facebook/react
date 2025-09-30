@@ -66,7 +66,7 @@ export default function SuspenseBreadcrumbs(): React$Node {
               key={id}
               className={styles.SuspenseBreadcrumbsListItem}
               aria-current={selectedSuspenseID === id}
-              onPointerEnter={highlightHostInstance.bind(null, id)}
+              onPointerEnter={highlightHostInstance.bind(null, id, false)}
               onPointerLeave={clearHighlightHostInstance}>
               <button
                 className={styles.SuspenseBreadcrumbsButton}
