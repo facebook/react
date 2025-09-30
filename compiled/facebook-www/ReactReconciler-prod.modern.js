@@ -6472,11 +6472,14 @@ module.exports = function ($$$config) {
   function markUpdate(workInProgress) {
     workInProgress.flags |= 4;
   }
+  function markCloned(workInProgress) {
+    supportsPersistence && (workInProgress.flags |= 8);
+  }
   function doesRequireClone(current, completedWork) {
     if (null !== current && current.child === completedWork.child) return !1;
     if (0 !== (completedWork.flags & 16)) return !0;
     for (current = completedWork.child; null !== current; ) {
-      if (0 !== (current.flags & 13878) || 0 !== (current.subtreeFlags & 13878))
+      if (0 !== (current.flags & 8218) || 0 !== (current.subtreeFlags & 8218))
         return !0;
       current = current.sibling;
     }
@@ -6643,16 +6646,15 @@ module.exports = function ($$$config) {
         );
         oldProps$98 === currentInstance
           ? (workInProgress.stateNode = currentInstance)
-          : (finalizeInitialChildren(
+          : (markCloned(workInProgress),
+            finalizeInitialChildren(
               oldProps$98,
               type,
               newProps,
               currentHostContext
             ) && markUpdate(workInProgress),
             (workInProgress.stateNode = oldProps$98),
-            current
-              ? appendAllChildren(oldProps$98, workInProgress, !1, !1)
-              : markUpdate(workInProgress));
+            current && appendAllChildren(oldProps$98, workInProgress, !1, !1));
       } else workInProgress.stateNode = currentInstance;
     }
   }
@@ -6915,6 +6917,7 @@ module.exports = function ($$$config) {
               nextResource,
               workInProgress
             );
+            markCloned(workInProgress);
             appendAllChildren(instance$111, workInProgress, !1, !1);
             workInProgress.stateNode = instance$111;
             finalizeInitialChildren(
@@ -6942,13 +6945,15 @@ module.exports = function ($$$config) {
               ? renderLanes !== newProps && markUpdate(workInProgress)
               : supportsPersistence &&
                 (renderLanes !== newProps
-                  ? ((workInProgress.stateNode = createTextInstance(
+                  ? ((current = rootInstanceStackCursor.current),
+                    (renderLanes = contextStackCursor.current),
+                    markCloned(workInProgress),
+                    (workInProgress.stateNode = createTextInstance(
                       newProps,
-                      rootInstanceStackCursor.current,
-                      contextStackCursor.current,
+                      current,
+                      renderLanes,
                       workInProgress
-                    )),
-                    markUpdate(workInProgress))
+                    )))
                   : (workInProgress.stateNode = current.stateNode));
         else {
           if ("string" !== typeof newProps && null === workInProgress.stateNode)
@@ -6974,12 +6979,13 @@ module.exports = function ($$$config) {
               newProps
             ) || throwOnHydrationMismatch(workInProgress, !0);
           } else
-            workInProgress.stateNode = createTextInstance(
-              newProps,
-              current,
-              renderLanes,
-              workInProgress
-            );
+            markCloned(workInProgress),
+              (workInProgress.stateNode = createTextInstance(
+                newProps,
+                current,
+                renderLanes,
+                workInProgress
+              ));
         }
         bubbleProperties(workInProgress);
         return null;
@@ -9068,7 +9074,7 @@ module.exports = function ($$$config) {
         null !== root && (root.return = null);
         childToDelete.return = null;
       }
-    if (parentFiber.subtreeFlags & 13878)
+    if (parentFiber.subtreeFlags & 13886)
       for (parentFiber = parentFiber.child; null !== parentFiber; )
         commitMutationEffectsOnFiber(parentFiber, root$jscomp$0, lanes),
           (parentFiber = parentFiber.sibling);
@@ -13950,7 +13956,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.2.0-www-modern-8309724c-20250928"
+      reconcilerVersion: "19.2.0-www-modern-ef889445-20250930"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

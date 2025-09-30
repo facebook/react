@@ -10883,14 +10883,14 @@ __DEV__ &&
     function markUpdate(workInProgress) {
       workInProgress.flags |= 4;
     }
+    function markCloned(workInProgress) {
+      supportsPersistence && (workInProgress.flags |= 8);
+    }
     function doesRequireClone(current, completedWork) {
       if (null !== current && current.child === completedWork.child) return !1;
       if (0 !== (completedWork.flags & 16)) return !0;
       for (current = completedWork.child; null !== current; ) {
-        if (
-          0 !== (current.flags & 13878) ||
-          0 !== (current.subtreeFlags & 13878)
-        )
+        if (0 !== (current.flags & 8218) || 0 !== (current.subtreeFlags & 8218))
           return !0;
         current = current.sibling;
       }
@@ -11060,16 +11060,15 @@ __DEV__ &&
           );
           _oldProps === currentInstance
             ? (workInProgress.stateNode = currentInstance)
-            : (finalizeInitialChildren(
+            : (markCloned(workInProgress),
+              finalizeInitialChildren(
                 _oldProps,
                 type,
                 newProps,
                 currentHostContext
               ) && markUpdate(workInProgress),
               (workInProgress.stateNode = _oldProps),
-              current
-                ? appendAllChildren(_oldProps, workInProgress, !1, !1)
-                : markUpdate(workInProgress));
+              current && appendAllChildren(_oldProps, workInProgress, !1, !1));
         } else workInProgress.stateNode = currentInstance;
       }
     }
@@ -11382,6 +11381,7 @@ __DEV__ &&
                 nextResource,
                 workInProgress
               );
+              markCloned(workInProgress);
               appendAllChildren(_rootContainerInstance, workInProgress, !1, !1);
               workInProgress.stateNode = _rootContainerInstance;
               finalizeInitialChildren(
@@ -11413,13 +11413,13 @@ __DEV__ &&
                         rootInstanceStackCursor.current
                       )),
                       (renderLanes = getHostContext()),
+                      markCloned(workInProgress),
                       (workInProgress.stateNode = createTextInstance(
                         newProps,
                         current,
                         renderLanes,
                         workInProgress
-                      )),
-                      markUpdate(workInProgress))
+                      )))
                     : (workInProgress.stateNode = current.stateNode));
           else {
             if (
@@ -11476,12 +11476,13 @@ __DEV__ &&
                 newProps
               ) || throwOnHydrationMismatch(workInProgress, !0);
             } else
-              workInProgress.stateNode = createTextInstance(
-                newProps,
-                current,
-                renderLanes,
-                workInProgress
-              );
+              markCloned(workInProgress),
+                (workInProgress.stateNode = createTextInstance(
+                  newProps,
+                  current,
+                  renderLanes,
+                  workInProgress
+                ));
           }
           bubbleProperties(workInProgress);
           return null;
@@ -14326,7 +14327,7 @@ __DEV__ &&
           null !== returnFiber && (returnFiber.return = null);
           root.return = null;
         }
-      if (parentFiber.subtreeFlags & 13878)
+      if (parentFiber.subtreeFlags & 13886)
         for (parentFiber = parentFiber.child; null !== parentFiber; )
           commitMutationEffectsOnFiber(parentFiber, root$jscomp$0, lanes),
             (parentFiber = parentFiber.sibling);
@@ -22906,7 +22907,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-8309724c-20250928"
+        reconcilerVersion: "19.2.0-www-classic-ef889445-20250930"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

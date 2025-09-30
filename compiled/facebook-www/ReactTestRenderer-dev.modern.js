@@ -10195,7 +10195,7 @@ __DEV__ &&
           null !== returnFiber && (returnFiber.return = null);
           root.return = null;
         }
-      if (parentFiber.subtreeFlags & 13878)
+      if (parentFiber.subtreeFlags & 13886)
         for (parentFiber = parentFiber.child; null !== parentFiber; )
           commitMutationEffectsOnFiber(parentFiber, root$jscomp$0, lanes),
             (parentFiber = parentFiber.sibling);
@@ -15701,10 +15701,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-modern-8309724c-20250928",
+        version: "19.2.0-www-modern-ef889445-20250930",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-modern-8309724c-20250928"
+        reconcilerVersion: "19.2.0-www-modern-ef889445-20250930"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15840,5 +15840,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-modern-8309724c-20250928";
+    exports.version = "19.2.0-www-modern-ef889445-20250930";
   })();

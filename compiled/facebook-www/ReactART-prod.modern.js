@@ -8104,7 +8104,7 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber, lanes) {
       null !== root && (root.return = null);
       childToDelete.return = null;
     }
-  if (parentFiber.subtreeFlags & 13878)
+  if (parentFiber.subtreeFlags & 13886)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0, lanes),
         (parentFiber = parentFiber.sibling);
@@ -11140,10 +11140,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1618 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-8309724c-20250928",
+  version: "19.2.0-www-modern-ef889445-20250930",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-8309724c-20250928"
+  reconcilerVersion: "19.2.0-www-modern-ef889445-20250930"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1619 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11169,4 +11169,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-modern-8309724c-20250928";
+exports.version = "19.2.0-www-modern-ef889445-20250930";

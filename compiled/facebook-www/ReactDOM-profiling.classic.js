@@ -11516,7 +11516,7 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber, lanes) {
       null !== root && (root.return = null);
       childToDelete.return = null;
     }
-  if (parentFiber.subtreeFlags & 13878)
+  if (parentFiber.subtreeFlags & 13886)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0, lanes),
         (parentFiber = parentFiber.sibling);
@@ -22170,14 +22170,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2413 = React.version;
 if (
-  "19.2.0-www-classic-8309724c-20250928" !==
+  "19.2.0-www-classic-ef889445-20250930" !==
   isomorphicReactPackageVersion$jscomp$inline_2413
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2413,
-      "19.2.0-www-classic-8309724c-20250928"
+      "19.2.0-www-classic-ef889445-20250930"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22195,10 +22195,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2415 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-8309724c-20250928",
+  version: "19.2.0-www-classic-ef889445-20250930",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-8309724c-20250928"
+  reconcilerVersion: "19.2.0-www-classic-ef889445-20250930"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2415.getLaneLabelMap = getLaneLabelMap),
@@ -22631,7 +22631,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-8309724c-20250928";
+exports.version = "19.2.0-www-classic-ef889445-20250930";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
