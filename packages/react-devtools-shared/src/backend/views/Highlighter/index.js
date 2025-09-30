@@ -28,6 +28,67 @@ export default function setupHighlighter(
   bridge.addListener('shutdown', stopInspectingHost);
   bridge.addListener('startInspectingHost', startInspectingHost);
   bridge.addListener('stopInspectingHost', stopInspectingHost);
+  bridge.addListener('scrollTo', scrollDocumentTo);
+  bridge.addListener('requestScrollPosition', sendScroll);
+
+  let applyingScroll = false;
+
+  function scrollDocumentTo({x, y}: {x: number, y: number}) {
+    const element = document.documentElement;
+    if (element === null) {
+      return;
+    }
+    const left = x * (element.scrollWidth - element.clientWidth);
+    const top = y * (element.scrollHeight - element.clientHeight);
+    if (
+      left !== Math.round(window.scrollX) ||
+      top !== Math.round(window.scrollY)
+    ) {
+      // Disable scroll events until we've applied the new scroll position.
+      applyingScroll = true;
+      window.scrollTo({
+        top: top,
+        left: left,
+        behavior: 'smooth',
+      });
+    }
+  }
+
+  let scrollTimer = null;
+  function sendScroll() {
+    if (scrollTimer) {
+      clearTimeout(scrollTimer);
+      scrollTimer = null;
+    }
+    if (applyingScroll) {
+      return;
+    }
+    // We send in fraction of scrollable area.
+    const element = document.documentElement;
+    if (element === null) {
+      return;
+    }
+    const w = element.scrollWidth - element.clientWidth;
+    const x = w === 0 ? 0 : window.scrollX / w;
+    const h = element.scrollHeight - element.clientHeight;
+    const y = h === 0 ? 0 : window.scrollY / h;
+    bridge.send('scrollTo', {x, y});
+  }
+
+  function scrollEnd() {
+    // Upon scrollend send it immediately.
+    sendScroll();
+    applyingScroll = false;
+  }
+
+  document.addEventListener('scroll', () => {
+    if (!scrollTimer) {
+      // Periodically synchronize the scroll while scrolling.
+      scrollTimer = setTimeout(sendScroll, 400);
+    }
+  });
+
+  document.addEventListener('scrollend', scrollEnd);
 
   function startInspectingHost() {
     registerListenersOnWindow(window);
