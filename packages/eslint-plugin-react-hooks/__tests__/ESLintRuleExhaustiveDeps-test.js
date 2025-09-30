@@ -1485,6 +1485,70 @@ const tests = {
         }
       `,
     },
+    {
+      // Test settings-based additionalHooks - should work with settings
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomEffect(() => {
+            console.log(props.foo);
+          });
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalEffectHooks: 'useCustomEffect',
+        },
+      },
+    },
+    {
+      // Test settings-based additionalHooks - should work with dependencies
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalEffectHooks: 'useCustomEffect',
+        },
+      },
+    },
+    {
+      // Test that rule-level additionalHooks takes precedence over settings
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomEffect(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      options: [{additionalHooks: 'useAnotherEffect'}],
+      settings: {
+        'react-hooks': {
+          additionalEffectHooks: 'useCustomEffect',
+        },
+      },
+    },
+    {
+      // Test settings with multiple hooks pattern
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          useAnotherEffect(() => {
+            console.log(props.bar);
+          }, [props.bar]);
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalEffectHooks: '(useCustomEffect|useAnotherEffect)',
+        },
+      },
+    },
   ],
   invalid: [
     {
@@ -3707,6 +3771,40 @@ const tests = {
                   React.useCustomEffect(() => {
                     console.log(props.foo);
                   }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      // Test settings-based additionalHooks - should detect missing dependency
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomEffect(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalEffectHooks: 'useCustomEffect',
+        },
+      },
+      errors: [
+        {
+          message:
+            "React Hook useCustomEffect has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCustomEffect(() => {
+                    console.log(props.foo);
+                  }, [props.foo]);
                 }
               `,
             },
