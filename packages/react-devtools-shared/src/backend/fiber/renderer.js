@@ -7080,8 +7080,8 @@ export function attach(
       if (!hasElementUpdatedSinceLastInspected) {
         if (path !== null) {
           let secondaryCategory: 'suspendedBy' | 'hooks' | null = null;
-          if (path[0] === 'hooks') {
-            secondaryCategory = 'hooks';
+          if (path[0] === 'hooks' || path[0] === 'suspendedBy') {
+            secondaryCategory = path[0];
           }
 
           // If this element has not been updated since it was last inspected,
@@ -7230,9 +7230,8 @@ export function attach(
   }
 
   function inspectRootsRaw(arbitraryRootID: number): InspectedElement | null {
-    // Merges roots of all known roots. The agent is supposed to only use the result
-    // of single renderer implementation.
-    if (rootToFiberInstanceMap.size === 0) {
+    const roots = hook.getFiberRoots(rendererID);
+    if (roots.size === 0) {
       return null;
     }
 
@@ -7278,7 +7277,13 @@ export function attach(
 
     let minSuspendedByRange = Infinity;
     let maxSuspendedByRange = -Infinity;
-    rootToFiberInstanceMap.forEach(rootInstance => {
+    roots.forEach(root => {
+      const rootInstance = rootToFiberInstanceMap.get(root);
+      if (rootInstance === undefined) {
+        throw new Error(
+          'Expected a root instance to exist for this Fiber root',
+        );
+      }
       const inspectedRoot = inspectFiberInstanceRaw(rootInstance);
       if (inspectedRoot === null) {
         return;

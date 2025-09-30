@@ -8,7 +8,11 @@
  */
 
 import EventEmitter from '../events';
-import {SESSION_STORAGE_LAST_SELECTION_KEY, __DEBUG__} from '../constants';
+import {
+  SESSION_STORAGE_LAST_SELECTION_KEY,
+  UNKNOWN_SUSPENDERS_NONE,
+  __DEBUG__,
+} from '../constants';
 import setupHighlighter from './views/Highlighter';
 import {
   initialize as setupTraceUpdates,
@@ -26,9 +30,13 @@ import type {
   RendererID,
   RendererInterface,
   DevToolsHookSettings,
-  InspectedElementPayload,
+  InspectedElement,
 } from './types';
-import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
+import type {
+  ComponentFilter,
+  DehydratedData,
+  ElementType,
+} from 'react-devtools-shared/src/frontend/types';
 import type {GroupItem} from './views/TraceUpdates/canvas';
 import {gte, isReactNativeEnvironment} from './utils';
 import {
@@ -146,6 +154,111 @@ type PersistedSelection = {
   rendererID: number,
   path: Array<PathFrame>,
 };
+
+function createEmptyInspectedScreen(
+  arbitraryRootID: number,
+  type: ElementType,
+): InspectedElement {
+  const suspendedBy: DehydratedData = {
+    cleaned: [],
+    data: [],
+    unserializable: [],
+  };
+  return {
+    // invariants
+    id: arbitraryRootID,
+    type: type,
+    // Properties we merge
+    isErrored: false,
+    errors: [],
+    warnings: [],
+    suspendedBy,
+    suspendedByRange: null,
+    // TODO: How to merge these?
+    unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
+    // Properties where merging doesn't make sense so we ignore them entirely in the UI
+    rootType: null,
+    plugins: {stylex: null},
+    nativeTag: null,
+    env: null,
+    source: null,
+    stack: null,
+    rendererPackageName: null,
+    rendererVersion: null,
+    // These don't make sense for a Root. They're just bottom values.
+    key: null,
+    canEditFunctionProps: false,
+    canEditHooks: false,
+    canEditFunctionPropsDeletePaths: false,
+    canEditFunctionPropsRenamePaths: false,
+    canEditHooksAndDeletePaths: false,
+    canEditHooksAndRenamePaths: false,
+    canToggleError: false,
+    canToggleSuspense: false,
+    isSuspended: false,
+    hasLegacyContext: false,
+    context: null,
+    hooks: null,
+    props: null,
+    state: null,
+    owners: null,
+  };
+}
+
+function mergeRoots(
+  left: InspectedElement,
+  right: InspectedElement,
+  suspendedByOffset: number,
+): void {
+  const leftSuspendedByRange = left.suspendedByRange;
+  const rightSuspendedByRange = right.suspendedByRange;
+
+  if (right.isErrored) {
+    left.isErrored = true;
+  }
+  for (let i = 0; i < right.errors.length; i++) {
+    left.errors.push(right.errors[i]);
+  }
+  for (let i = 0; i < right.warnings.length; i++) {
+    left.warnings.push(right.warnings[i]);
+  }
+
+  const leftSuspendedBy: DehydratedData = left.suspendedBy;
+  const {data, cleaned, unserializable} = (right.suspendedBy: DehydratedData);
+  const leftSuspendedByData = ((leftSuspendedBy.data: any): Array<mixed>);
+  const rightSuspendedByData = ((data: any): Array<mixed>);
+  for (let i = 0; i < rightSuspendedByData.length; i++) {
+    leftSuspendedByData.push(rightSuspendedByData[i]);
+  }
+  for (let i = 0; i < cleaned.length; i++) {
+    leftSuspendedBy.cleaned.push(
+      [suspendedByOffset + cleaned[i][0]].concat(cleaned[i].slice(1)),
+    );
+  }
+  for (let i = 0; i < unserializable.length; i++) {
+    leftSuspendedBy.unserializable.push(
+      [suspendedByOffset + unserializable[i][0]].concat(
+        unserializable[i].slice(1),
+      ),
+    );
+  }
+
+  if (rightSuspendedByRange !== null) {
+    if (leftSuspendedByRange === null) {
+      left.suspendedByRange = [
+        rightSuspendedByRange[0],
+        rightSuspendedByRange[1],
+      ];
+    } else {
+      if (rightSuspendedByRange[0] < leftSuspendedByRange[0]) {
+        leftSuspendedByRange[0] = rightSuspendedByRange[0];
+      }
+      if (rightSuspendedByRange[1] > leftSuspendedByRange[1]) {
+        leftSuspendedByRange[1] = rightSuspendedByRange[1];
+      }
+    }
+  }
+}
 
 export default class Agent extends EventEmitter<{
   hideNativeHighlight: [],
@@ -542,43 +655,132 @@ export default class Agent extends EventEmitter<{
     requestID,
     id,
     forceFullData,
-    path,
+    path: screenPath,
   }) => {
-    const payload: InspectedElementPayload = {
-      type: 'no-change',
-      id,
-      responseID: requestID,
-    };
+    let inspectedScreen: InspectedElement | null = null;
+    let found = false;
+    // the suspendedBy index will be from the previously merged roots.
+    // We need to keep track of how many suspendedBy we've already seen to know
+    // to which renderer the index belongs.
+    let suspendedByOffset = 0;
+    let suspendedByPathIndex: number | null = null;
+    // The path to hydrate for a specific renderer
+    let rendererPath: InspectElementParams['path'] = null;
+    if (screenPath !== null && screenPath.length > 1) {
+      const secondaryCategory = screenPath[0];
+      if (secondaryCategory !== 'suspendedBy') {
+        throw new Error(
+          'Only hydrating suspendedBy paths is supported. This is a bug.',
+        );
+      }
+      if (typeof screenPath[1] !== 'number') {
+        throw new Error(
+          `Expected suspendedBy index to be a number. Received '${screenPath[1]}' instead. This is a bug.`,
+        );
+      }
+      suspendedByPathIndex = screenPath[1];
+      rendererPath = screenPath.slice(2);
+    }
+
     for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
-      const inspectedRoots = renderer.inspectElement(
+      let path: InspectElementParams['path'] = null;
+      if (suspendedByPathIndex !== null && rendererPath !== null) {
+        const suspendedByPathRendererIndex =
+          suspendedByPathIndex - suspendedByOffset;
+        const rendererHasRequestedSuspendedByPath =
+          renderer.getElementAttributeByPath(id, [
+            'suspendedBy',
+            suspendedByPathRendererIndex,
+          ]) !== undefined;
+        if (rendererHasRequestedSuspendedByPath) {
+          path = ['suspendedBy', suspendedByPathRendererIndex].concat(
+            rendererPath,
+          );
+        }
+      }
+
+      const inspectedRootsPayload = renderer.inspectElement(
         requestID,
         id,
         path,
         forceFullData,
       );
-      switch (inspectedRoots.type) {
+      switch (inspectedRootsPayload.type) {
         case 'hydrated-path':
-          this._bridge.send('inspectedScreen', inspectedRoots);
+          // The path will be relative to the Roots of this renderer. We adjust it
+          // to be relative to all Roots of this implementation.
+          inspectedRootsPayload.path[1] += suspendedByOffset;
+          // TODO: Hydration logic is flawed since the Frontend path is not based
+          // on the original backend data but rather its own representation of it (e.g. due to reorder).
+          // So we can receive null here instead when hydration fails
+          if (inspectedRootsPayload.value !== null) {
+            for (
+              let i = 0;
+              i < inspectedRootsPayload.value.cleaned.length;
+              i++
+            ) {
+              inspectedRootsPayload.value.cleaned[i][1] += suspendedByOffset;
+            }
+          }
+          this._bridge.send('inspectedScreen', inspectedRootsPayload);
           // If we hydrated a path, it must've been in a specific renderer so we can stop here.
           return;
         case 'full-data':
-          // TODO: Handle merging of roots from different renderer implementations.
-          this._bridge.send('inspectedScreen', inspectedRoots);
-          return;
+          const inspectedRoots = inspectedRootsPayload.value;
+          if (inspectedScreen === null) {
+            inspectedScreen = createEmptyInspectedScreen(
+              inspectedRoots.id,
+              inspectedRoots.type,
+            );
+          }
+          mergeRoots(inspectedScreen, inspectedRoots, suspendedByOffset);
+          const dehydratedSuspendedBy: DehydratedData =
+            inspectedRoots.suspendedBy;
+          const suspendedBy = ((dehydratedSuspendedBy.data: any): Array<mixed>);
+          suspendedByOffset += suspendedBy.length;
+          found = true;
+          break;
+        case 'no-change':
+          found = true;
+          const rootsSuspendedBy: Array<mixed> =
+            (renderer.getElementAttributeByPath(id, ['suspendedBy']): any);
+          suspendedByOffset += rootsSuspendedBy.length;
+          break;
         case 'not-found':
-          continue;
+          break;
         case 'error':
           // bail out and show the error
           // TODO: aggregate errors
-          this._bridge.send('inspectedScreen', inspectedRoots);
+          this._bridge.send('inspectedScreen', inspectedRootsPayload);
           return;
       }
     }
 
-    this._bridge.send('inspectedScreen', payload);
+    if (inspectedScreen === null) {
+      if (found) {
+        this._bridge.send('inspectedScreen', {
+          type: 'no-change',
+          responseID: requestID,
+          id,
+        });
+      } else {
+        this._bridge.send('inspectedScreen', {
+          type: 'not-found',
+          responseID: requestID,
+          id,
+        });
+      }
+    } else {
+      this._bridge.send('inspectedScreen', {
+        type: 'full-data',
+        responseID: requestID,
+        id,
+        value: inspectedScreen,
+      });
+    }
   };
 
   logElementToConsole: ElementAndRendererID => void = ({id, rendererID}) => {
