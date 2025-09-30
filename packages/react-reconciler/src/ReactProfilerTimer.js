@@ -64,6 +64,7 @@ export let componentEffectDuration: number = -0;
 export let componentEffectStartTime: number = -1.1;
 export let componentEffectEndTime: number = -1.1;
 export let componentEffectErrors: null | Array<CapturedValue<mixed>> = null;
+export let componentEffectSpawnedUpdate: boolean = false;
 
 export let blockingClampTime: number = -0;
 export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
@@ -153,6 +154,7 @@ export function startUpdateTimerByLane(
         blockingUpdateComponentName = getComponentNameFromFiber(fiber);
       }
       if (isAlreadyRendering()) {
+        componentEffectSpawnedUpdate = true;
         blockingUpdateType = SPAWNED_UPDATE;
       }
       const newEventTime = resolveEventTimeStamp();
@@ -493,6 +495,24 @@ export function popComponentEffectErrors(
     return;
   }
   componentEffectErrors = prevErrors;
+}
+
+export function pushComponentEffectDidSpawnUpdate(): boolean {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return false;
+  }
+
+  const prev = componentEffectSpawnedUpdate;
+  componentEffectSpawnedUpdate = false; // Reset.
+  return prev;
+}
+
+export function popComponentEffectDidSpawnUpdate(previousValue: boolean): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+
+  componentEffectSpawnedUpdate = previousValue;
 }
 
 /**
