@@ -1,0 +1,19 @@
+// @validateNoDerivedComputationsInEffects
+import {useEffect, useState} from 'react';
+
+function Component({value}) {
+  const [localValue, setLocalValue] = useState('');
+
+  useEffect(() => {
+    console.log('Value changed:', value);
+    setLocalValue(value);
+    document.title = `Value: ${value}`;
+  }, [value]);
+
+  return <div>{localValue}</div>;
+}
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{value: 'test'}],
+};
