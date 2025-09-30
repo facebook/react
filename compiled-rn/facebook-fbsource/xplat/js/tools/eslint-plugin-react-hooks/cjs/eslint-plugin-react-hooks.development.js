@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<eefc9bbd43a82069ced0d0740d8feb69>>
+ * @generated SignedSource<<224ad190107133468e04c23ff73058f8>>
  */
 
 'use strict';
@@ -57292,6 +57292,17 @@ function requireCodePathAnalyzer() {
 var codePathAnalyzerExports = requireCodePathAnalyzer();
 var CodePathAnalyzer = /*@__PURE__*/getDefaultExportFromCjs(codePathAnalyzerExports);
 
+const SETTINGS_KEY = 'react-hooks';
+const SETTINGS_ADDITIONAL_EFFECT_HOOKS_KEY = 'additionalEffectHooks';
+function getAdditionalEffectHooksFromSettings(settings) {
+    var _a;
+    const additionalHooks = (_a = settings[SETTINGS_KEY]) === null || _a === void 0 ? void 0 : _a[SETTINGS_ADDITIONAL_EFFECT_HOOKS_KEY];
+    if (additionalHooks != null && typeof additionalHooks === 'string') {
+        return new RegExp(additionalHooks);
+    }
+    return undefined;
+}
+
 function isHookName(s) {
     return s === 'use' || /^use[A-Z0-9]/.test(s);
 }
@@ -57376,8 +57387,18 @@ function getNodeWithoutReactNamespace(node) {
     }
     return node;
 }
-function isEffectIdentifier(node) {
-    return node.type === 'Identifier' && (node.name === 'useEffect' || node.name === 'useLayoutEffect' || node.name === 'useInsertionEffect');
+function isEffectIdentifier(node, additionalHooks) {
+    const isBuiltInEffect = node.type === 'Identifier' &&
+        (node.name === 'useEffect' ||
+            node.name === 'useLayoutEffect' ||
+            node.name === 'useInsertionEffect');
+    if (isBuiltInEffect) {
+        return true;
+    }
+    if (additionalHooks && node.type === 'Identifier') {
+        return additionalHooks.test(node.name);
+    }
+    return false;
 }
 function isUseEffectEventIdentifier(node) {
     {
@@ -57395,8 +57416,21 @@ const rule = {
             recommended: true,
             url: 'https://react.dev/reference/rules/rules-of-hooks',
         },
+        schema: [
+            {
+                type: 'object',
+                additionalProperties: false,
+                properties: {
+                    additionalHooks: {
+                        type: 'string',
+                    },
+                },
+            },
+        ],
     },
     create(context) {
+        const settings = context.settings || {};
+        const additionalEffectHooks = getAdditionalEffectHooksFromSettings(settings);
         let lastEffect = null;
         const codePathReactHooksMapStack = [];
         const codePathSegmentStack = [];
@@ -57677,7 +57711,7 @@ const rule = {
                     reactHooks.push(node.callee);
                 }
                 const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
-                if ((isEffectIdentifier(nodeWithoutNamespace) ||
+                if ((isEffectIdentifier(nodeWithoutNamespace, additionalEffectHooks) ||
                     isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
                     node.arguments.length > 0) {
                     lastEffect = node;

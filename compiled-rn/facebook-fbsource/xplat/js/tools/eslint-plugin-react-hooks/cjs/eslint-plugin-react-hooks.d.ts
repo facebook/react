@@ -52,6 +52,15 @@ declare const plugin: {
                     recommended: true;
                     url: string;
                 };
+                schema: {
+                    type: "object";
+                    additionalProperties: false;
+                    properties: {
+                        additionalHooks: {
+                            type: "string";
+                        };
+                    };
+                }[];
             };
             create(context: Rule.RuleContext): {
                 '*'(node: any): void;
