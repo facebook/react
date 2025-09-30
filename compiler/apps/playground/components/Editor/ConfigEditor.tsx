@@ -14,7 +14,6 @@ import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoConfigOptions} from './monacoOptions';
 import {IconChevron} from '../Icons/IconChevron';
-import prettyFormat from 'pretty-format';
 
 // @ts-expect-error - webpack asset/source loader handles .d.ts files as strings
 import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
@@ -60,7 +59,6 @@ function ExpandedEditor({
   const store = useStore();
   const dispatchStore = useStoreDispatch();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastValidOptionsRef = useRef<string>('');
 
   const handleChange: (value: string | undefined) => void = (
     value: string | undefined,
@@ -103,17 +101,6 @@ function ExpandedEditor({
       jsx: monaco.languages.typescript.JsxEmit.React,
     });
   };
-
-  let formattedAppliedOptions = '';
-  if (appliedOptions) {
-    formattedAppliedOptions = prettyFormat(appliedOptions, {
-      printFunctionName: false,
-      printBasicPrototype: false,
-    });
-    lastValidOptionsRef.current = formattedAppliedOptions;
-  } else {
-    formattedAppliedOptions = lastValidOptionsRef.current;
-  }
 
   return (
     <Resizable
@@ -165,7 +152,7 @@ function ExpandedEditor({
             <MonacoEditor
               path={'applied-config.js'}
               language={'javascript'}
-              value={formattedAppliedOptions}
+              value={store.appliedConfig}
               loading={''}
               className="monaco-editor-applied-config"
               options={{

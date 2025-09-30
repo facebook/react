@@ -19,8 +19,9 @@ export interface Store {
   source: string;
   config: string;
   showInternals: boolean;
+  appliedConfig: string;
 }
-export function encodeStore(store: Store): string {
+export function encodeStore(store: Partial<Store>): string {
   return compressToEncodedURIComponent(JSON.stringify(store));
 }
 export function decodeStore(hash: string): any {
@@ -31,7 +32,12 @@ export function decodeStore(hash: string): any {
  * Serialize, encode, and save @param store to localStorage and update URL.
  */
 export function saveStore(store: Store): void {
-  const hash = encodeStore(store);
+  const partialStore = {
+    source: store.source,
+    config: store.config,
+    showInternals: store.showInternals,
+  };
+  const hash = encodeStore(partialStore);
   localStorage.setItem('playgroundStore', hash);
   history.replaceState({}, '', `#${hash}`);
 }
@@ -73,5 +79,6 @@ export function initStoreFromUrlOrLocalStorage(): Store {
     source: raw.source,
     config: 'config' in raw && raw['config'] ? raw.config : defaultConfig,
     showInternals: 'showInternals' in raw ? raw.showInternals : false,
+    appliedConfig: '',
   };
 }

@@ -130,7 +130,7 @@ test('editor should open successfully', async ({page}) => {
 });
 
 test('editor should compile from hash successfully', async ({page}) => {
-  const store: Store = {
+  const store: Partial<Store> = {
     source: TEST_SOURCE,
     config: defaultConfig,
     showInternals: false,
@@ -153,7 +153,7 @@ test('editor should compile from hash successfully', async ({page}) => {
 });
 
 test('reset button works', async ({page}) => {
-  const store: Store = {
+  const store: Partial<Store> = {
     source: TEST_SOURCE,
     config: defaultConfig,
     showInternals: false,
@@ -234,7 +234,7 @@ test('show internals button toggles correctly', async ({page}) => {
 });
 
 test('error is displayed when config has syntax error', async ({page}) => {
-  const store: Store = {
+  const store: Partial<Store> = {
     source: TEST_SOURCE,
     config: `compilationMode: `,
     showInternals: false,
@@ -257,7 +257,7 @@ test('error is displayed when config has syntax error', async ({page}) => {
 });
 
 test('error is displayed when config has validation error', async ({page}) => {
-  const store: Store = {
+  const store: Partial<Store> = {
     source: TEST_SOURCE,
     config: `import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
 
@@ -285,7 +285,7 @@ test('error is displayed when config has validation error', async ({page}) => {
 test('disableMemoizationForDebugging flag works as expected', async ({
   page,
 }) => {
-  const store: Store = {
+  const store: Partial<Store> = {
     source: TEST_SOURCE,
     config: `import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
 
@@ -315,7 +315,7 @@ test('disableMemoizationForDebugging flag works as expected', async ({
 
 TEST_CASE_INPUTS.forEach((t, idx) =>
   test(`playground compiles: ${t.name}`, async ({page}) => {
-    const store: Store = {
+    const store: Partial<Store> = {
       source: t.input,
       config: defaultConfig,
       showInternals: false,

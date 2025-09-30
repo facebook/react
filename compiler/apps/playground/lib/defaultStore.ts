@@ -24,10 +24,12 @@ export const defaultStore: Store = {
   source: index,
   config: defaultConfig,
   showInternals: false,
+  appliedConfig: '',
 };
 
 export const emptyStore: Store = {
   source: '',
   config: '',
   showInternals: false,
+  appliedConfig: '',
 };
