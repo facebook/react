@@ -1,3 +1,18 @@
+## 6.1.0
+
+**Note:** Version 6.0.0 was mistakenly released and immediately deprecated and untagged on npm. This is the first official 6.x major release and includes breaking changes. 
+
+- **Breaking:** Require Node.js 18 or newer. ([@michaelfaith](https://github.com/michaelfaith) in [#32458](https://github.com/facebook/react/pull/32458))
+- **Breaking:** Flat config is now the default `recommended` preset. Legacy config moved to `recommended-legacy`. ([@michaelfaith](https://github.com/michaelfaith) in [#32457](https://github.com/facebook/react/pull/32457))
+- **New Violations:** Disallow calling `use` within try/catch blocks. ([@poteto](https://github.com/poteto) in [#34040](https://github.com/facebook/react/pull/34040))
+- **New Violations:** Disallow calling `useEffectEvent` functions in arbitrary closures. ([@jbrown215](https://github.com/jbrown215) in [#33544](https://github.com/facebook/react/pull/33544))
+- Handle `React.useEffect` in addition to `useEffect` in rules-of-hooks. ([@Ayc0](https://github.com/Ayc0) in [#34076](https://github.com/facebook/react/pull/34076))
+- Added `react-hooks` settings config option that to accept `additionalEffectHooks` that are used across exhaustive-deps and rules-of-hooks rules. ([@jbrown215](https://github.com/jbrown215)) in [#34497](https://github.com/facebook/react/pull/34497)
+
+## 6.0.0
+
+Accidentally released. See 6.1.0 for the actual changes.
+
 ## 5.2.0
 
 - Support flat config ([@michaelfaith](https://github.com/michaelfaith) in [#30774](https://github.com/facebook/react/pull/30774))
