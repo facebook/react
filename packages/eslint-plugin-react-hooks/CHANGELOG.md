@@ -7,7 +7,6 @@
 - **New Violations:** Disallow calling `use` within try/catch blocks. ([@poteto](https://github.com/poteto) in [#34040](https://github.com/facebook/react/pull/34040))
 - **New Violations:** Disallow calling `useEffectEvent` functions in arbitrary closures. ([@jbrown215](https://github.com/jbrown215) in [#33544](https://github.com/facebook/react/pull/33544))
 - Handle `React.useEffect` in addition to `useEffect` in rules-of-hooks. ([@Ayc0](https://github.com/Ayc0) in [#34076](https://github.com/facebook/react/pull/34076))
-- Allow `useEffectEvent` in `useLayoutEffect` and `useInsertionEffect`. ([@jbrown215](https://github.com/jbrown215) in [#34492](https://github.com/facebook/react/pull/34492))
 - Added `react-hooks` settings config option that to accept `additionalEffectHooks` that are used across exhaustive-deps and rules-of-hooks rules. ([@jbrown215](https://github.com/jbrown215)) in [#34497](https://github.com/facebook/react/pull/34497)
 
 ## 6.0.0
