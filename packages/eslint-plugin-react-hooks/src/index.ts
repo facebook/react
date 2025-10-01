@@ -7,12 +7,16 @@
 import type {Linter, Rule} from 'eslint';
 
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
+import {allRules} from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
 
 // All rules
 const rules = {
   'exhaustive-deps': ExhaustiveDeps,
   'rules-of-hooks': RulesOfHooks,
+  ...Object.fromEntries(
+    Object.entries(allRules).map(([name, config]) => [name, config.rule]),
+  ),
 } satisfies Record<string, Rule.RuleModule>;
 
 // Config rules
