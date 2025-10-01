@@ -24,9 +24,8 @@ let utils;
 let assertLog;
 let waitFor;
 
-// This flag is on experimental which disables timeline profiler.
-const enableComponentPerformanceTrack =
-  React.version.startsWith('19') && React.version.includes('experimental');
+// This flag is on in Canary which disables timeline profiler.
+const enableComponentPerformanceTrack = React.version.startsWith('19.2');
 
 describe('Timeline profiler', () => {
   if (enableComponentPerformanceTrack) {
@@ -874,126 +873,11 @@ describe('Timeline profiler', () => {
         ]);
         expect(data).toMatchInlineSnapshot(`
           {
-            "batchUIDToMeasuresMap": Map {
-              0 => [
-                {
-                  "batchUID": 0,
-                  "depth": 0,
-                  "duration": 0.012,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.008,
-                  "type": "render-idle",
-                },
-                {
-                  "batchUID": 0,
-                  "depth": 0,
-                  "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.008,
-                  "type": "render",
-                },
-                {
-                  "batchUID": 0,
-                  "depth": 0,
-                  "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.012,
-                  "type": "commit",
-                },
-                {
-                  "batchUID": 0,
-                  "depth": 0,
-                  "duration": 0.004,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.021,
-                  "type": "passive-effects",
-                },
-              ],
-              1 => [
-                {
-                  "batchUID": 1,
-                  "depth": 0,
-                  "duration": 0.012,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.026,
-                  "type": "render-idle",
-                },
-                {
-                  "batchUID": 1,
-                  "depth": 0,
-                  "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.026,
-                  "type": "render",
-                },
-                {
-                  "batchUID": 1,
-                  "depth": 0,
-                  "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.03,
-                  "type": "commit",
-                },
-                {
-                  "batchUID": 1,
-                  "depth": 0,
-                  "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.039,
-                  "type": "passive-effects",
-                },
-              ],
-            },
-            "componentMeasures": [
-              {
-                "componentName": "App",
-                "duration": 0.001,
-                "timestamp": 0.009,
-                "type": "render",
-                "warning": null,
-              },
-              {
-                "componentName": "App",
-                "duration": 0.002,
-                "timestamp": 0.022,
-                "type": "passive-effect-mount",
-                "warning": null,
-              },
-              {
-                "componentName": "App",
-                "duration": 0.001,
-                "timestamp": 0.027,
-                "type": "render",
-                "warning": null,
-              },
-              {
-                "componentName": "App",
-                "duration": 0.001,
-                "timestamp": 0.04,
-                "type": "passive-effect-mount",
-                "warning": null,
-              },
-            ],
-            "duration": 0.042,
+            "batchUIDToMeasuresMap": Map {},
+            "componentMeasures": [],
+            "duration": 0.002,
             "flamechart": [],
-            "internalModuleSourceToRanges": Map {
-              undefined => [
-                [
-                  {
-                    "columnNumber": 0,
-                    "functionName": "filtered",
-                    "lineNumber": 0,
-                    "source": "  at filtered (<anonymous>:0:0)",
-                  },
-                  {
-                    "columnNumber": 1,
-                    "functionName": "filtered",
-                    "lineNumber": 1,
-                    "source": "  at filtered (<anonymous>:1:1)",
-                  },
-                ],
-              ],
-            },
+            "internalModuleSourceToRanges": Map {},
             "laneToLabelMap": Map {
               0 => "Sync",
               1 => "InputContinuousHydration",
@@ -1033,72 +917,7 @@ describe('Timeline profiler', () => {
               2 => [],
               3 => [],
               4 => [],
-              5 => [
-                {
-                  "batchUID": 0,
-                  "depth": 0,
-                  "duration": 0.012,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.008,
-                  "type": "render-idle",
-                },
-                {
-                  "batchUID": 0,
-                  "depth": 0,
-                  "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.008,
-                  "type": "render",
-                },
-                {
-                  "batchUID": 0,
-                  "depth": 0,
-                  "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.012,
-                  "type": "commit",
-                },
-                {
-                  "batchUID": 0,
-                  "depth": 0,
-                  "duration": 0.004,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.021,
-                  "type": "passive-effects",
-                },
-                {
-                  "batchUID": 1,
-                  "depth": 0,
-                  "duration": 0.012,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.026,
-                  "type": "render-idle",
-                },
-                {
-                  "batchUID": 1,
-                  "depth": 0,
-                  "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.026,
-                  "type": "render",
-                },
-                {
-                  "batchUID": 1,
-                  "depth": 0,
-                  "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.03,
-                  "type": "commit",
-                },
-                {
-                  "batchUID": 1,
-                  "depth": 0,
-                  "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.039,
-                  "type": "passive-effects",
-                },
-              ],
+              5 => [],
               6 => [],
               7 => [],
               8 => [],
@@ -1129,21 +948,7 @@ describe('Timeline profiler', () => {
             "networkMeasures": [],
             "otherUserTimingMarks": [],
             "reactVersion": "<filtered-version>",
-            "schedulingEvents": [
-              {
-                "lanes": "0b0000000000000000000000000000101",
-                "timestamp": 0.007,
-                "type": "schedule-render",
-                "warning": null,
-              },
-              {
-                "componentName": "App",
-                "lanes": "0b0000000000000000000000000000101",
-                "timestamp": 0.023,
-                "type": "schedule-state-update",
-                "warning": null,
-              },
-            ],
+            "schedulingEvents": [],
             "snapshotHeight": 0,
             "snapshots": [],
             "startTime": 4,
