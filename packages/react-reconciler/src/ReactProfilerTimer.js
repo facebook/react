@@ -74,7 +74,7 @@ export let blockingUpdateMethodName: null | string = null; // The name of the me
 export let blockingUpdateComponentName: null | string = null; // The name of the component where first sync update happened.
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
-export let blockingEventIsRepeat: boolean = false;
+export let blockingEventRepeatTime: number = -1.1;
 export let blockingSuspendedTime: number = -1.1;
 
 export let gestureClampTime: number = -0;
@@ -85,7 +85,7 @@ export let gestureUpdateMethodName: null | string = null; // The name of the met
 export let gestureUpdateComponentName: null | string = null; // The name of the component where first gesture update happened.
 export let gestureEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let gestureEventType: null | string = null; // Event type of the first setState.
-export let gestureEventIsRepeat: boolean = false;
+export let gestureEventRepeatTime: number = -1.1;
 export let gestureSuspendedTime: number = -1.1;
 
 // TODO: This should really be one per Transition lane.
@@ -98,7 +98,7 @@ export let transitionUpdateMethodName: null | string = null; // The name of the 
 export let transitionUpdateComponentName: null | string = null; // The name of the component where first transition update happened.
 export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
 export let transitionEventType: null | string = null; // Event type of the first transition.
-export let transitionEventIsRepeat: boolean = false;
+export let transitionEventRepeatTime: number = -1.1;
 export let transitionSuspendedTime: number = -1.1;
 
 export let retryClampTime: number = -0;
@@ -137,10 +137,10 @@ export function startUpdateTimerByLane(
       const newEventTime = resolveEventTimeStamp();
       const newEventType = resolveEventType();
       if (
-        newEventTime !== gestureEventTime ||
+        newEventTime !== gestureEventRepeatTime ||
         newEventType !== gestureEventType
       ) {
-        gestureEventIsRepeat = false;
+        gestureEventRepeatTime = -1.1;
       }
       gestureEventTime = newEventTime;
       gestureEventType = newEventType;
@@ -160,10 +160,10 @@ export function startUpdateTimerByLane(
       const newEventTime = resolveEventTimeStamp();
       const newEventType = resolveEventType();
       if (
-        newEventTime !== blockingEventTime ||
+        newEventTime !== blockingEventRepeatTime ||
         newEventType !== blockingEventType
       ) {
-        blockingEventIsRepeat = false;
+        blockingEventRepeatTime = -1.1;
       } else if (newEventType !== null) {
         // If this is a second update in the same event, we treat it as a spawned update.
         // This might be a microtask spawned from useEffect, multiple flushSync or
@@ -185,10 +185,10 @@ export function startUpdateTimerByLane(
         const newEventTime = resolveEventTimeStamp();
         const newEventType = resolveEventType();
         if (
-          newEventTime !== transitionEventTime ||
+          newEventTime !== transitionEventRepeatTime ||
           newEventType !== transitionEventType
         ) {
-          transitionEventIsRepeat = false;
+          transitionEventRepeatTime = -1.1;
         }
         transitionEventTime = newEventTime;
         transitionEventType = newEventType;
@@ -213,10 +213,10 @@ export function startHostActionTimer(fiber: Fiber): void {
     const newEventTime = resolveEventTimeStamp();
     const newEventType = resolveEventType();
     if (
-      newEventTime !== blockingEventTime ||
+      newEventTime !== blockingEventRepeatTime ||
       newEventType !== blockingEventType
     ) {
-      blockingEventIsRepeat = false;
+      blockingEventRepeatTime = -1.1;
     } else if (newEventType !== null) {
       // If this is a second update in the same event, we treat it as a spawned update.
       // This might be a microtask spawned from useEffect, multiple flushSync or
@@ -234,10 +234,10 @@ export function startHostActionTimer(fiber: Fiber): void {
       const newEventTime = resolveEventTimeStamp();
       const newEventType = resolveEventType();
       if (
-        newEventTime !== transitionEventTime ||
+        newEventTime !== transitionEventRepeatTime ||
         newEventType !== transitionEventType
       ) {
-        transitionEventIsRepeat = false;
+        transitionEventRepeatTime = -1.1;
       }
       transitionEventTime = newEventTime;
       transitionEventType = newEventType;
@@ -292,7 +292,8 @@ export function clearBlockingTimers(): void {
   blockingUpdateMethodName = null;
   blockingUpdateComponentName = null;
   blockingSuspendedTime = -1.1;
-  blockingEventIsRepeat = true;
+  blockingEventRepeatTime = blockingEventTime;
+  blockingEventTime = -1.1;
   blockingClampTime = now();
 }
 
@@ -305,10 +306,10 @@ export function startAsyncTransitionTimer(): void {
     const newEventTime = resolveEventTimeStamp();
     const newEventType = resolveEventType();
     if (
-      newEventTime !== transitionEventTime ||
+      newEventTime !== transitionEventRepeatTime ||
       newEventType !== transitionEventType
     ) {
-      transitionEventIsRepeat = false;
+      transitionEventRepeatTime = -1.1;
     }
     transitionEventTime = newEventTime;
     transitionEventType = newEventType;
@@ -329,7 +330,8 @@ export function clearTransitionTimers(): void {
   transitionUpdateTime = -1.1;
   transitionUpdateType = 0;
   transitionSuspendedTime = -1.1;
-  transitionEventIsRepeat = true;
+  transitionEventRepeatTime = transitionEventTime;
+  transitionEventTime = -1.1;
   transitionClampTime = now();
 }
 
@@ -342,7 +344,8 @@ export function clearGestureTimers(): void {
   gestureUpdateTime = -1.1;
   gestureUpdateType = 0;
   gestureSuspendedTime = -1.1;
-  gestureEventIsRepeat = true;
+  gestureEventRepeatTime = gestureEventTime;
+  gestureEventTime = -1.1;
   gestureClampTime = now();
 }
 
@@ -352,7 +355,8 @@ export function clearGestureUpdates(): void {
   gestureUpdateTime = -1.1;
   gestureUpdateType = 0;
   gestureSuspendedTime = -1.1;
-  gestureEventIsRepeat = true;
+  gestureEventRepeatTime = gestureEventTime;
+  gestureEventTime = -1.1;
 }
 
 export function clampBlockingTimers(finalTime: number): void {
