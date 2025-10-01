@@ -12,6 +12,8 @@
 
 import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
 
+const path = require('path');
+
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 
@@ -88,12 +90,25 @@ describe('ReactFlightDOMNode', () => {
     );
   }
 
-  function normalizeCodeLocInfo(str) {
+  const repoRoot = path.resolve(__dirname, '../../../../');
+
+  function normalizeCodeLocInfo(str, {preserveLocation = false} = {}) {
     return (
       str &&
-      str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
-        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
-      })
+      str.replace(
+        /^ +(?:at|in) ([\S]+) ([^\n]*)/gm,
+        function (m, name, location) {
+          return (
+            '    in ' +
+            name +
+            (/\d/.test(m)
+              ? preserveLocation
+                ? ' ' + location.replace(repoRoot, '')
+                : ' (at **)'
+              : '')
+          );
+        },
+      )
     );
   }
 
@@ -893,6 +908,165 @@ describe('ReactFlightDOMNode', () => {
       );
     } else {
       expect(ownerStack).toBeNull();
+    }
+  });
+
+  // @gate enableHalt && enableAsyncDebugInfo
+  it('includes deeper location for aborted hanging promises', async () => {
+    // TODO: Remove when ReactServerDOMStaticServer moves out of experimental.
+    if (ReactServerDOMStaticServer === undefined) {
+      throw new Error(
+        'ReactFlightDOMStaticServer is not available in this release channel.',
+      );
+    }
+
+    function createHangingPromise(signal) {
+      return new Promise((resolve, reject) => {
+        signal.addEventListener('abort', () => reject(signal.reason));
+      });
+    }
+
+    async function Component({promise}) {
+      await promise;
+      return null;
+    }
+
+    function App({promise}) {
+      return ReactServer.createElement(
+        'html',
+        null,
+        ReactServer.createElement(
+          'body',
+          null,
+          ReactServer.createElement(
+            ReactServer.Suspense,
+            {fallback: 'Loading...'},
+            ReactServer.createElement(Component, {promise}),
+          ),
+        ),
+      );
+    }
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    // This test relies on tasks resolving exactly as they would in a real
+    // environment, which is not the case when using fake timers and serverAct.
+    jest.useRealTimers();
+
+    try {
+      const serverRenderAbortController = new AbortController();
+      const serverCleanupAbortController = new AbortController();
+      const promise = createHangingPromise(serverCleanupAbortController.signal);
+      const errors = [];
+
+      // destructure trick to avoid the act scope from awaiting the returned value
+      const {prelude} = await new Promise((resolve, reject) => {
+        let result;
+
+        setImmediate(() => {
+          result = ReactServerDOMStaticServer.unstable_prerender(
+            ReactServer.createElement(App, {promise}),
+            webpackMap,
+            {
+              signal: serverRenderAbortController.signal,
+              onError(error) {
+                errors.push(error);
+              },
+              filterStackFrame,
+            },
+          );
+
+          serverRenderAbortController.signal.addEventListener('abort', () => {
+            serverCleanupAbortController.abort();
+          });
+        });
+
+        setImmediate(() => {
+          serverRenderAbortController.abort();
+          resolve(result);
+        });
+      });
+
+      expect(errors).toEqual([]);
+
+      const prerenderResponse = ReactServerDOMClient.createFromReadableStream(
+        await createBufferedUnclosingStream(prelude),
+        {
+          serverConsumerManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+      );
+
+      let componentStack;
+      let ownerStack;
+
+      const clientAbortController = new AbortController();
+
+      const fizzPrerenderStream = await new Promise(resolve => {
+        let result;
+
+        setImmediate(() => {
+          result = ReactDOMFizzStatic.prerender(
+            React.createElement(ClientRoot, {response: prerenderResponse}),
+            {
+              signal: clientAbortController.signal,
+              onError(error, errorInfo) {
+                componentStack = errorInfo.componentStack;
+                ownerStack = React.captureOwnerStack
+                  ? React.captureOwnerStack()
+                  : null;
+              },
+            },
+          );
+        });
+
+        setImmediate(() => {
+          clientAbortController.abort();
+          resolve(result);
+        });
+      });
+
+      const prerenderHTML = await readWebResult(fizzPrerenderStream.prelude);
+
+      expect(prerenderHTML).toContain('Loading...');
+
+      if (__DEV__) {
+        expect(normalizeCodeLocInfo(componentStack, {preserveLocation: true}))
+          .toMatchInlineSnapshot(`
+          "
+              in Component (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:930:7)
+              in Suspense
+              in body
+              in html
+              in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:944:25)
+              in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:950:54)"
+        `);
+      } else {
+        expect(normalizeCodeLocInfo(componentStack)).toMatchInlineSnapshot(`
+          "
+              in Suspense
+              in body
+              in html
+              in ClientRoot (at **)"
+        `);
+      }
+
+      if (__DEV__) {
+        expect(normalizeCodeLocInfo(ownerStack, {preserveLocation: true}))
+          .toMatchInlineSnapshot(`
+          "
+              in Component (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:930:7)
+              in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:944:25)"
+        `);
+      } else {
+        expect(ownerStack).toBeNull();
+      }
+    } finally {
+      jest.useFakeTimers();
     }
   });
 
