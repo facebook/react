@@ -116,3 +116,11 @@
 ::view-transition-group(.tab-text) {
 	z-index: 1;
 }
+
+::view-transition-old(.expand-accordion),
+::view-transition-new(.expand-accordion) {
+  width: auto;
+}
+::view-transition-group(.expand-accordion) {
+  overflow: clip;
+}

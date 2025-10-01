@@ -7,11 +7,7 @@
 import type {Linter, Rule} from 'eslint';
 
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
-import {
-  allRules,
-  mapErrorSeverityToESlint,
-  recommendedRules,
-} from './shared/ReactCompiler';
+import {allRules} from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
 
 // All rules
@@ -19,7 +15,7 @@ const rules = {
   'exhaustive-deps': ExhaustiveDeps,
   'rules-of-hooks': RulesOfHooks,
   ...Object.fromEntries(
-    Object.entries(allRules).map(([name, config]) => [name, config.rule])
+    Object.entries(allRules).map(([name, config]) => [name, config.rule]),
   ),
 } satisfies Record<string, Rule.RuleModule>;
 
@@ -27,15 +23,6 @@ const rules = {
 const ruleConfigs = {
   'react-hooks/rules-of-hooks': 'error',
   'react-hooks/exhaustive-deps': 'warn',
-  // Compiler rules
-  ...Object.fromEntries(
-    Object.entries(recommendedRules).map(([name, ruleConfig]) => {
-      return [
-        'react-hooks/' + name,
-        mapErrorSeverityToESlint(ruleConfig.severity),
-      ];
-    }),
-  ),
 } satisfies Linter.RulesRecord;
 
 const plugin = {

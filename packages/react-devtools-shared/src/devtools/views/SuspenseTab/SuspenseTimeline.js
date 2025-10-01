@@ -8,10 +8,10 @@
  */
 
 import * as React from 'react';
-import {useContext, useEffect} from 'react';
+import {useContext, useEffect, useRef} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
-import {useHighlightHostInstance} from '../hooks';
+import {useHighlightHostInstance, useScrollToHostInstance} from '../hooks';
 import {
   SuspenseTreeDispatcherContext,
   SuspenseTreeStateContext,
@@ -28,6 +28,7 @@ function SuspenseTimelineInput() {
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
+  const scrollToHostInstance = useScrollToHostInstance();
 
   const {
     selectedRootID: rootID,
@@ -77,7 +78,6 @@ function SuspenseTimelineInput() {
 
   function skipPrevious() {
     const nextSelectedSuspenseID = timeline[timelineIndex - 1];
-    highlightHostInstance(nextSelectedSuspenseID);
     treeDispatch({
       type: 'SELECT_ELEMENT_BY_ID',
       payload: nextSelectedSuspenseID,
@@ -90,7 +90,6 @@ function SuspenseTimelineInput() {
 
   function skipForward() {
     const nextSelectedSuspenseID = timeline[timelineIndex + 1];
-    highlightHostInstance(nextSelectedSuspenseID);
     treeDispatch({
       type: 'SELECT_ELEMENT_BY_ID',
       payload: nextSelectedSuspenseID,
@@ -108,6 +107,7 @@ function SuspenseTimelineInput() {
     });
   }
 
+  const isInitialMount = useRef(true);
   // TODO: useEffectEvent here once it's supported in all versions DevTools supports.
   // For now we just exclude it from deps since we don't lint those anyway.
   function changeTimelineIndex(newIndex: number) {
@@ -132,6 +132,16 @@ function SuspenseTimelineInput() {
       rootID,
       suspendedSet,
     });
+    if (isInitialMount.current) {
+      // Skip scrolling on initial mount. Only when we're changing the timeline.
+      isInitialMount.current = false;
+    } else {
+      // When we're scrubbing through the timeline, scroll the current boundary
+      // into view as it was just revealed. This is after we override the milestone
+      // to reveal it.
+      const selectedSuspenseID = timeline[timelineIndex];
+      scrollToHostInstance(selectedSuspenseID);
+    }
   }
 
   useEffect(() => {
