@@ -4360,6 +4360,11 @@ function isEffectIdentifier(node, additionalHooks) {
 function isUseEffectEventIdentifier(node) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
 }
+function useEffectEventError(fn, called) {
+    return (`\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+        'Effects and Effect Events in the same component.' +
+        (called ? '' : ' It cannot be assigned to a variable or passed down.'));
+}
 function isUseIdentifier(node) {
     return isReactFunction(node, 'use');
 }
@@ -4674,11 +4679,7 @@ const rule = {
             },
             Identifier(node) {
                 if (lastEffect == null && useEffectEventFunctions.has(node)) {
-                    const message = `\`${getSourceCode().getText(node)}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-                        'the same component.' +
-                        (node.parent.type === 'CallExpression'
-                            ? ''
-                            : ' They cannot be assigned to variables or passed down.');
+                    const message = useEffectEventError(getSourceCode().getText(node), node.parent.type === 'CallExpression');
                     context.report({
                         node,
                         message,
