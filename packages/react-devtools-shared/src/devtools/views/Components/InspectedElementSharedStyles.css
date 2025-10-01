@@ -75,6 +75,10 @@
   display: flex;
 }
 
+.CollapsableHeader[data-pending="true"] {
+  cursor: progress;
+}
+
 .CollapsableHeaderIcon {
   flex: 0 0 1rem;
   margin-left: -0.25rem;

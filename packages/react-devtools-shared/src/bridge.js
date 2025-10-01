@@ -93,6 +93,10 @@ type HighlightHostInstance = {
   scrollIntoView: boolean,
 };
 
+type ScrollToHostInstance = {
+  ...ElementAndRendererID,
+};
+
 type OverrideValue = {
   ...ElementAndRendererID,
   path: Array<string | number>,
@@ -254,6 +258,7 @@ type FrontendEvents = {
   startInspectingHost: [],
   startProfiling: [StartProfilingParams],
   stopInspectingHost: [boolean],
+  scrollToHostInstance: [ScrollToHostInstance],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],

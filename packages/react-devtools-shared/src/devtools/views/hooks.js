@@ -345,13 +345,13 @@ export function useSubscription<Value>({
 
 export function useHighlightHostInstance(): {
   clearHighlightHostInstance: () => void,
-  highlightHostInstance: (id: number) => void,
+  highlightHostInstance: (id: number, scrollIntoView?: boolean) => void,
 } {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
   const highlightHostInstance = useCallback(
-    (id: number) => {
+    (id: number, scrollIntoView?: boolean = false) => {
       const element = store.getElementByID(id);
       const rendererID = store.getRendererIDForElement(id);
       if (element !== null && rendererID !== null) {
@@ -365,7 +365,7 @@ export function useHighlightHostInstance(): {
           id,
           openBuiltinElementsPanel: false,
           rendererID,
-          scrollIntoView: false,
+          scrollIntoView: scrollIntoView,
         });
       }
     },
@@ -380,4 +380,25 @@ export function useHighlightHostInstance(): {
     highlightHostInstance,
     clearHighlightHostInstance,
   };
+}
+
+export function useScrollToHostInstance(): (id: number) => void {
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
+
+  const scrollToHostInstance = useCallback(
+    (id: number) => {
+      const element = store.getElementByID(id);
+      const rendererID = store.getRendererIDForElement(id);
+      if (element !== null && rendererID !== null) {
+        bridge.send('scrollToHostInstance', {
+          id,
+          rendererID,
+        });
+      }
+    },
+    [store, bridge],
+  );
+
+  return scrollToHostInstance;
 }

@@ -11,6 +11,7 @@ import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type {RendererInterface} from '../../types';
 
 // This plug-in provides in-page highlighting of the selected element.
 // It is used by the browser extension and the standalone DevTools shell (when connected to a browser).
@@ -25,6 +26,7 @@ export default function setupHighlighter(
 ): void {
   bridge.addListener('clearHostInstanceHighlight', clearHostInstanceHighlight);
   bridge.addListener('highlightHostInstance', highlightHostInstance);
+  bridge.addListener('scrollToHostInstance', scrollToHostInstance);
   bridge.addListener('shutdown', stopInspectingHost);
   bridge.addListener('startInspectingHost', startInspectingHost);
   bridge.addListener('stopInspectingHost', stopInspectingHost);
@@ -111,24 +113,162 @@ export default function setupHighlighter(
     }
 
     const nodes = renderer.findHostInstancesForElementID(id);
+    if (nodes != null) {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[0];
+        if (node === null) {
+          continue;
+        }
+        const nodeRects =
+          // $FlowFixMe[method-unbinding]
+          typeof node.getClientRects === 'function'
+            ? node.getClientRects()
+            : [];
+        // If this is currently display: none, then try another node.
+        // This can happen when one of the host instances is a hoistable.
+        if (
+          nodeRects.length > 0 &&
+          (nodeRects.length > 2 ||
+            nodeRects[0].width > 0 ||
+            nodeRects[0].height > 0)
+        ) {
+          // $FlowFixMe[method-unbinding]
+          if (scrollIntoView && typeof node.scrollIntoView === 'function') {
+            if (scrollDelayTimer) {
+              clearTimeout(scrollDelayTimer);
+              scrollDelayTimer = null;
+            }
+            // If the node isn't visible show it before highlighting it.
+            // We may want to reconsider this; it might be a little disruptive.
+            node.scrollIntoView({block: 'nearest', inline: 'nearest'});
+          }
 
-    if (nodes != null && nodes[0] != null) {
-      const node = nodes[0];
-      // $FlowFixMe[method-unbinding]
-      if (scrollIntoView && typeof node.scrollIntoView === 'function') {
-        // If the node isn't visible show it before highlighting it.
-        // We may want to reconsider this; it might be a little disruptive.
-        node.scrollIntoView({block: 'nearest', inline: 'nearest'});
+          showOverlay(nodes, displayName, agent, hideAfterTimeout);
+
+          if (openBuiltinElementsPanel) {
+            window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
+            bridge.send('syncSelectionToBuiltinElementsPanel');
+          }
+          return;
+        }
       }
+    }
 
-      showOverlay(nodes, displayName, agent, hideAfterTimeout);
+    hideOverlay(agent);
+  }
 
-      if (openBuiltinElementsPanel) {
-        window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
-        bridge.send('syncSelectionToBuiltinElementsPanel');
+  function attemptScrollToHostInstance(
+    renderer: RendererInterface,
+    id: number,
+  ) {
+    const nodes = renderer.findHostInstancesForElementID(id);
+    if (nodes != null) {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[0];
+        if (node === null) {
+          continue;
+        }
+        const nodeRects =
+          // $FlowFixMe[method-unbinding]
+          typeof node.getClientRects === 'function'
+            ? node.getClientRects()
+            : [];
+        // If this is currently display: none, then try another node.
+        // This can happen when one of the host instances is a hoistable.
+        if (
+          nodeRects.length > 0 &&
+          (nodeRects.length > 2 ||
+            nodeRects[0].width > 0 ||
+            nodeRects[0].height > 0)
+        ) {
+          // $FlowFixMe[method-unbinding]
+          if (typeof node.scrollIntoView === 'function') {
+            node.scrollIntoView({
+              block: 'nearest',
+              inline: 'nearest',
+              behavior: 'smooth',
+            });
+            return true;
+          }
+        }
       }
-    } else {
-      hideOverlay(agent);
+    }
+    return false;
+  }
+
+  let scrollDelayTimer = null;
+  function scrollToHostInstance({
+    id,
+    rendererID,
+  }: {
+    id: number,
+    rendererID: number,
+  }) {
+    // Always hide the existing overlay so it doesn't obscure the element.
+    // If you wanted to show the overlay, highlightHostInstance should be used instead
+    // with the scrollIntoView option.
+    hideOverlay(agent);
+
+    if (scrollDelayTimer) {
+      clearTimeout(scrollDelayTimer);
+      scrollDelayTimer = null;
+    }
+
+    const renderer = agent.rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      return;
+    }
+
+    // In some cases fiber may already be unmounted
+    if (!renderer.hasElementWithId(id)) {
+      return;
+    }
+
+    if (attemptScrollToHostInstance(renderer, id)) {
+      return;
+    }
+
+    // It's possible that the current state of a Suspense boundary doesn't have a position
+    // in the tree. E.g. because it's not yet mounted in the state we're moving to.
+    // Such as if it's in a null tree or inside another boundary's hidden state.
+    // In this case we use the last known position and try to scroll to that.
+    const rects = renderer.findLastKnownRectsForID(id);
+    if (rects !== null && rects.length > 0) {
+      let x = Infinity;
+      let y = Infinity;
+      for (let i = 0; i < rects.length; i++) {
+        const rect = rects[i];
+        if (rect.x < x) {
+          x = rect.x;
+        }
+        if (rect.y < y) {
+          y = rect.y;
+        }
+      }
+      const element = document.documentElement;
+      if (!element) {
+        return;
+      }
+      // Check if the target corner is already in the viewport.
+      if (
+        x < window.scrollX ||
+        y < window.scrollY ||
+        x > window.scrollX + element.clientWidth ||
+        y > window.scrollY + element.clientHeight
+      ) {
+        window.scrollTo({
+          top: y,
+          left: x,
+          behavior: 'smooth',
+        });
+      }
+      // It's possible that after mount, we're able to scroll deeper once the new nodes
+      // have mounted. Let's try again after mount. Ideally we'd know which commit this
+      // is going to be but for now we just try after 100ms.
+      scrollDelayTimer = setTimeout(() => {
+        attemptScrollToHostInstance(renderer, id);
+      }, 100);
     }
   }
 

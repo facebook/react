@@ -17,7 +17,10 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Icon from '../Icon';
 import Toggle from '../Toggle';
-import {ElementTypeSuspense} from 'react-devtools-shared/src/frontend/types';
+import {
+  ElementTypeSuspense,
+  ElementTypeRoot,
+} from 'react-devtools-shared/src/frontend/types';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
 import {getAlwaysOpenInEditor} from '../../../utils';
@@ -205,6 +208,16 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     );
   }
 
+  let fullName = element.displayName || '';
+  if (element.nameProp !== null) {
+    fullName += ' "' + element.nameProp + '"';
+  }
+  if (element.type === ElementTypeRoot) {
+    // The root only has "suspended by" and it represents the things that block
+    // Initial Paint.
+    fullName = 'Initial Paint';
+  }
+
   return (
     <div
       className={styles.InspectedElement}
@@ -228,8 +241,8 @@ export default function InspectedElementWrapper(_: Props): React.Node {
                 ? `${styles.ComponentName} ${styles.StrictModeNonCompliantComponentName}`
                 : styles.ComponentName
             }
-            title={element.displayName}>
-            {element.displayName}
+            title={fullName}>
+            {fullName}
           </div>
         </div>
 

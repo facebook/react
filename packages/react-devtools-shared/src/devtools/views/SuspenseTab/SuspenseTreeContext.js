@@ -31,7 +31,9 @@ export type SuspenseTreeState = {
   selectedSuspenseID: SuspenseNode['id'] | null,
   timeline: $ReadOnlyArray<SuspenseNode['id']>,
   timelineIndex: number | -1,
+  hoveredTimelineIndex: number | -1,
   uniqueSuspendersOnly: boolean,
+  playing: boolean,
 };
 
 type ACTION_SUSPENSE_TREE_MUTATION = {
@@ -60,12 +62,37 @@ type ACTION_SUSPENSE_SET_TIMELINE_INDEX = {
   type: 'SUSPENSE_SET_TIMELINE_INDEX',
   payload: number,
 };
+type ACTION_SUSPENSE_SKIP_TIMELINE_INDEX = {
+  type: 'SUSPENSE_SKIP_TIMELINE_INDEX',
+  payload: boolean,
+};
+type ACTION_SUSPENSE_PLAY_PAUSE = {
+  type: 'SUSPENSE_PLAY_PAUSE',
+  payload: 'toggle' | 'play' | 'pause',
+};
+type ACTION_SUSPENSE_PLAY_TICK = {
+  type: 'SUSPENSE_PLAY_TICK',
+};
+type ACTION_TOGGLE_TIMELINE_FOR_ID = {
+  type: 'TOGGLE_TIMELINE_FOR_ID',
+  payload: SuspenseNode['id'],
+};
+type ACTION_HOVER_TIMELINE_FOR_ID = {
+  type: 'HOVER_TIMELINE_FOR_ID',
+  payload: SuspenseNode['id'],
+};
+
 export type SuspenseTreeAction =
   | ACTION_SUSPENSE_TREE_MUTATION
   | ACTION_SET_SUSPENSE_LINEAGE
   | ACTION_SELECT_SUSPENSE_BY_ID
   | ACTION_SET_SUSPENSE_TIMELINE
-  | ACTION_SUSPENSE_SET_TIMELINE_INDEX;
+  | ACTION_SUSPENSE_SET_TIMELINE_INDEX
+  | ACTION_SUSPENSE_SKIP_TIMELINE_INDEX
+  | ACTION_SUSPENSE_PLAY_PAUSE
+  | ACTION_SUSPENSE_PLAY_TICK
+  | ACTION_TOGGLE_TIMELINE_FOR_ID
+  | ACTION_HOVER_TIMELINE_FOR_ID;
 export type SuspenseTreeDispatch = (action: SuspenseTreeAction) => void;
 
 const SuspenseTreeStateContext: ReactContext<SuspenseTreeState> =
@@ -106,7 +133,9 @@ function getInitialState(store: Store): SuspenseTreeState {
       selectedRootID,
       timeline: [],
       timelineIndex: -1,
+      hoveredTimelineIndex: -1,
       uniqueSuspendersOnly,
+      playing: false,
     };
   } else {
     const timeline = store.getSuspendableDocumentOrderSuspense(
@@ -127,7 +156,9 @@ function getInitialState(store: Store): SuspenseTreeState {
       selectedRootID,
       timeline,
       timelineIndex,
+      hoveredTimelineIndex: -1,
       uniqueSuspendersOnly,
+      playing: false,
     };
   }
 
@@ -234,6 +265,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               ...state,
               selectedSuspenseID,
               selectedRootID,
+              playing: false, // pause
             };
           }
           case 'SET_SUSPENSE_LINEAGE': {
@@ -247,6 +279,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               lineage,
               selectedSuspenseID: suspenseID,
               selectedRootID,
+              playing: false, // pause
             };
           }
           case 'SET_SUSPENSE_TIMELINE': {
@@ -302,6 +335,120 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               lineage: nextLineage,
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
+              playing: false, // pause
+            };
+          }
+          case 'SUSPENSE_SKIP_TIMELINE_INDEX': {
+            const direction = action.payload;
+            const nextTimelineIndex =
+              state.timelineIndex + (direction ? 1 : -1);
+            if (
+              nextTimelineIndex < 0 ||
+              nextTimelineIndex > state.timeline.length - 1
+            ) {
+              return state;
+            }
+            const nextSelectedSuspenseID = state.timeline[nextTimelineIndex];
+            const nextLineage = store.getSuspenseLineage(
+              nextSelectedSuspenseID,
+            );
+            return {
+              ...state,
+              lineage: nextLineage,
+              selectedSuspenseID: nextSelectedSuspenseID,
+              timelineIndex: nextTimelineIndex,
+              playing: false, // pause
+            };
+          }
+          case 'SUSPENSE_PLAY_PAUSE': {
+            const mode = action.payload;
+
+            let nextTimelineIndex = state.timelineIndex;
+            let nextSelectedSuspenseID = state.selectedSuspenseID;
+            let nextLineage = state.lineage;
+
+            if (
+              !state.playing &&
+              mode !== 'pause' &&
+              nextTimelineIndex === state.timeline.length - 1
+            ) {
+              // If we're restarting at the end. Then loop around and start again from the beginning.
+              nextTimelineIndex = 0;
+              nextSelectedSuspenseID = state.timeline[nextTimelineIndex];
+              nextLineage = store.getSuspenseLineage(nextSelectedSuspenseID);
+            }
+
+            return {
+              ...state,
+              lineage: nextLineage,
+              selectedSuspenseID: nextSelectedSuspenseID,
+              timelineIndex: nextTimelineIndex,
+              playing: mode === 'toggle' ? !state.playing : mode === 'play',
+            };
+          }
+          case 'SUSPENSE_PLAY_TICK': {
+            if (!state.playing) {
+              // We stopped but haven't yet cleaned up the callback. Noop.
+              return state;
+            }
+            // Advance time
+            const nextTimelineIndex = state.timelineIndex + 1;
+            if (nextTimelineIndex > state.timeline.length - 1) {
+              return state;
+            }
+            const nextSelectedSuspenseID = state.timeline[nextTimelineIndex];
+            const nextLineage = store.getSuspenseLineage(
+              nextSelectedSuspenseID,
+            );
+            // Stop once we reach the end.
+            const nextPlaying = nextTimelineIndex < state.timeline.length - 1;
+            return {
+              ...state,
+              lineage: nextLineage,
+              selectedSuspenseID: nextSelectedSuspenseID,
+              timelineIndex: nextTimelineIndex,
+              playing: nextPlaying,
+            };
+          }
+          case 'TOGGLE_TIMELINE_FOR_ID': {
+            const suspenseID = action.payload;
+            const timelineIndexForSuspenseID =
+              state.timeline.indexOf(suspenseID);
+            if (timelineIndexForSuspenseID === -1) {
+              // This boundary is no longer in the timeline.
+              return state;
+            }
+            const nextTimelineIndex =
+              timelineIndexForSuspenseID === 0
+                ? // For roots, there's no toggling. It's always just jump to beginning.
+                  0
+                : // For boundaries, we'll either jump to before or after its reveal depending
+                  // on if we're currently displaying it or not according to the timeline.
+                  state.timelineIndex < timelineIndexForSuspenseID
+                  ? // We're currently before this suspense boundary has been revealed so we
+                    // should jump ahead to reveal it.
+                    timelineIndexForSuspenseID
+                  : // Otherwise, if we're currently showing it, jump to right before to hide it.
+                    timelineIndexForSuspenseID - 1;
+            const nextSelectedSuspenseID = state.timeline[nextTimelineIndex];
+            const nextLineage = store.getSuspenseLineage(
+              nextSelectedSuspenseID,
+            );
+            return {
+              ...state,
+              lineage: nextLineage,
+              selectedSuspenseID: nextSelectedSuspenseID,
+              timelineIndex: nextTimelineIndex,
+              playing: false, // pause
+            };
+          }
+          case 'HOVER_TIMELINE_FOR_ID': {
+            const suspenseID = action.payload;
+            const timelineIndexForSuspenseID =
+              state.timeline.indexOf(suspenseID);
+            return {
+              ...state,
+              hoveredTimelineIndex: timelineIndexForSuspenseID,
             };
           }
           default:

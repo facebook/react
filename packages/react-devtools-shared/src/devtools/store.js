@@ -1759,12 +1759,22 @@ export default class Store extends EventEmitter<{
           break;
         }
         case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
-          const changeLength = operations[i + 1];
-          i += 2;
+          i++;
+          const changeLength = operations[i++];
 
           for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
-            const id = operations[i];
-            const hasUniqueSuspenders = operations[i + 1] === 1;
+            const id = operations[i++];
+            const hasUniqueSuspenders = operations[i++] === 1;
+            const environmentNamesLength = operations[i++];
+            const environmentNames = [];
+            for (
+              let envIndex = 0;
+              envIndex < environmentNamesLength;
+              envIndex++
+            ) {
+              const environmentNameStringID = operations[i++];
+              environmentNames.push(stringTable[environmentNameStringID]);
+            }
             const suspense = this._idToSuspense.get(id);
 
             if (suspense === undefined) {
@@ -1777,8 +1787,6 @@ export default class Store extends EventEmitter<{
               break;
             }
 
-            i += 2;
-
             if (__DEBUG__) {
               const previousHasUniqueSuspenders = suspense.hasUniqueSuspenders;
               debug(
@@ -1788,6 +1796,7 @@ export default class Store extends EventEmitter<{
             }
 
             suspense.hasUniqueSuspenders = hasUniqueSuspenders;
+            // TODO: Recompute the environment names.
           }
 
           hasSuspenseTreeChanged = true;

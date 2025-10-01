@@ -25,7 +25,9 @@ export default function SuspenseBreadcrumbs(): React$Node {
   const store = useContext(StoreContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
-  const {selectedSuspenseID, lineage} = useContext(SuspenseTreeStateContext);
+  const {selectedSuspenseID, selectedRootID, lineage} = useContext(
+    SuspenseTreeStateContext,
+  );
 
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
@@ -38,7 +40,24 @@ export default function SuspenseBreadcrumbs(): React$Node {
 
   return (
     <ol className={styles.SuspenseBreadcrumbsList}>
-      {lineage !== null &&
+      {lineage === null ? null : lineage.length === 0 ? (
+        // We selected the root. This means that we're currently viewing the Transition
+        // that rendered the whole screen. In laymans terms this is really "Initial Paint".
+        // TODO: Once we add subtree selection, then the equivalent should be called
+        // "Transition" since in that case it's really about a Transition within the page.
+        selectedRootID !== null ? (
+          <li
+            className={styles.SuspenseBreadcrumbsListItem}
+            aria-current={selectedSuspenseID === selectedRootID}>
+            <button
+              className={styles.SuspenseBreadcrumbsButton}
+              onClick={handleClick.bind(null, selectedRootID)}
+              type="button">
+              Initial Paint
+            </button>
+          </li>
+        ) : null
+      ) : (
         lineage.map((id, index) => {
           const node = store.getSuspenseByID(id);
 
@@ -57,7 +76,8 @@ export default function SuspenseBreadcrumbs(): React$Node {
               </button>
             </li>
           );
-        })}
+        })
+      )}
     </ol>
   );
 }

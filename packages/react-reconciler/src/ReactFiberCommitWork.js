@@ -48,7 +48,6 @@ import {
   alwaysThrottleRetries,
   enableCreateEventHandleAPI,
   enableHiddenSubtreeInsertionEffectCleanup,
-  enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableSuspenseCallback,
@@ -131,10 +130,13 @@ import {
   popComponentEffectDuration,
   pushComponentEffectErrors,
   popComponentEffectErrors,
+  pushComponentEffectDidSpawnUpdate,
+  popComponentEffectDidSpawnUpdate,
   componentEffectStartTime,
   componentEffectEndTime,
   componentEffectDuration,
   componentEffectErrors,
+  componentEffectSpawnedUpdate,
 } from './ReactProfilerTimer';
 import {
   logComponentRender,
@@ -596,6 +598,7 @@ function commitLayoutEffectOnFiber(
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
   // When updating this function, also update reappearLayoutEffects, which does
   // most of the same things when an offscreen tree goes from hidden -> visible.
   const flags = finishedWork.flags;
@@ -877,7 +880,7 @@ function commitLayoutEffectOnFiber(
     componentEffectStartTime >= 0 &&
     componentEffectEndTime >= 0
   ) {
-    if (componentEffectDuration > 0.05) {
+    if (componentEffectSpawnedUpdate || componentEffectDuration > 0.05) {
       logComponentEffect(
         finishedWork,
         componentEffectStartTime,
@@ -910,6 +913,7 @@ function commitLayoutEffectOnFiber(
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
   popComponentEffectErrors(prevEffectErrors);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
 }
 
 function abortRootTransitions(
@@ -1431,6 +1435,7 @@ function commitDeletionEffectsOnFiber(
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
 
   // The cases in this outer switch modify the stack before they traverse
   // into their subtree. There are simpler cases in the inner switch
@@ -1751,7 +1756,7 @@ function commitDeletionEffectsOnFiber(
     (deletedFiber.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
     componentEffectEndTime >= 0 &&
-    componentEffectDuration > 0.05
+    (componentEffectSpawnedUpdate || componentEffectDuration > 0.05)
   ) {
     logComponentEffect(
       deletedFiber,
@@ -1765,6 +1770,7 @@ function commitDeletionEffectsOnFiber(
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
   popComponentEffectErrors(prevEffectErrors);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
 }
 
 function commitSuspenseCallback(finishedWork: Fiber) {
@@ -1969,10 +1975,7 @@ function recursivelyTraverseMutationEffects(
     }
   }
 
-  if (
-    parentFiber.subtreeFlags &
-    (enablePersistedModeClonedFlag ? MutationMask | Cloned : MutationMask)
-  ) {
+  if (parentFiber.subtreeFlags & (MutationMask | Cloned)) {
     let child = parentFiber.child;
     while (child !== null) {
       commitMutationEffectsOnFiber(child, root, lanes);
@@ -1991,6 +1994,7 @@ function commitMutationEffectsOnFiber(
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
@@ -2615,7 +2619,7 @@ function commitMutationEffectsOnFiber(
     componentEffectStartTime >= 0 &&
     componentEffectEndTime >= 0
   ) {
-    if (componentEffectDuration > 0.05) {
+    if (componentEffectSpawnedUpdate || componentEffectDuration > 0.05) {
       logComponentEffect(
         finishedWork,
         componentEffectStartTime,
@@ -2648,6 +2652,7 @@ function commitMutationEffectsOnFiber(
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
   popComponentEffectErrors(prevEffectErrors);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
 }
 
 function commitReconciliationEffects(
@@ -2904,6 +2909,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -2994,7 +3000,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
     componentEffectEndTime >= 0 &&
-    componentEffectDuration > 0.05
+    (componentEffectSpawnedUpdate || componentEffectDuration > 0.05)
   ) {
     logComponentEffect(
       finishedWork,
@@ -3008,6 +3014,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
   popComponentEffectErrors(prevEffectErrors);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
 }
 
 function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
@@ -3031,6 +3038,7 @@ export function reappearLayoutEffects(
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
   // Turn on layout effects in a tree that previously disappeared.
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
@@ -3228,7 +3236,7 @@ export function reappearLayoutEffects(
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
     componentEffectEndTime >= 0 &&
-    componentEffectDuration > 0.05
+    (componentEffectSpawnedUpdate || componentEffectDuration > 0.05)
   ) {
     logComponentEffect(
       finishedWork,
@@ -3242,6 +3250,7 @@ export function reappearLayoutEffects(
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
   popComponentEffectErrors(prevEffectErrors);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
 }
 
 function recursivelyTraverseReappearLayoutEffects(
@@ -3493,6 +3502,7 @@ function commitPassiveMountOnFiber(
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
   const prevDeepEquality = pushDeepEquality();
 
   const isViewTransitionEligible = enableViewTransition
@@ -4064,7 +4074,7 @@ function commitPassiveMountOnFiber(
       }
     }
     if (componentEffectStartTime >= 0 && componentEffectEndTime >= 0) {
-      if (componentEffectDuration > 0.05) {
+      if (componentEffectSpawnedUpdate || componentEffectDuration > 0.05) {
         logComponentEffect(
           finishedWork,
           componentEffectStartTime,
@@ -4086,6 +4096,7 @@ function commitPassiveMountOnFiber(
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
   popComponentEffectErrors(prevEffectErrors);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
   popDeepEquality(prevDeepEquality);
 }
 
@@ -4148,6 +4159,7 @@ export function reconnectPassiveEffects(
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
   const prevDeepEquality = pushDeepEquality();
 
   // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
@@ -4338,7 +4350,7 @@ export function reconnectPassiveEffects(
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
     componentEffectEndTime >= 0 &&
-    componentEffectDuration > 0.05
+    (componentEffectSpawnedUpdate || componentEffectDuration > 0.05)
   ) {
     logComponentEffect(
       finishedWork,
@@ -4352,6 +4364,7 @@ export function reconnectPassiveEffects(
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
   popComponentEffectErrors(prevEffectErrors);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
   popDeepEquality(prevDeepEquality);
 }
 
@@ -4741,6 +4754,7 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -4837,7 +4851,7 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
     componentEffectEndTime >= 0 &&
-    componentEffectDuration > 0.05
+    (componentEffectSpawnedUpdate || componentEffectDuration > 0.05)
   ) {
     logComponentEffect(
       finishedWork,
@@ -4850,6 +4864,7 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
 
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
   popComponentEffectErrors(prevEffectErrors);
 }
 
@@ -4907,6 +4922,7 @@ export function disconnectPassiveEffect(finishedWork: Fiber): void {
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
 
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -4946,7 +4962,7 @@ export function disconnectPassiveEffect(finishedWork: Fiber): void {
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
     componentEffectEndTime >= 0 &&
-    componentEffectDuration > 0.05
+    (componentEffectSpawnedUpdate || componentEffectDuration > 0.05)
   ) {
     logComponentEffect(
       finishedWork,
@@ -4959,6 +4975,7 @@ export function disconnectPassiveEffect(finishedWork: Fiber): void {
 
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
   popComponentEffectErrors(prevEffectErrors);
 }
 
@@ -5020,6 +5037,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
+  const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
   switch (current.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -5139,7 +5157,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
     (current.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
     componentEffectEndTime >= 0 &&
-    componentEffectDuration > 0.05
+    (componentEffectSpawnedUpdate || componentEffectDuration > 0.05)
   ) {
     logComponentEffect(
       current,
@@ -5152,6 +5170,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
 
   popComponentEffectStart(prevEffectStart);
   popComponentEffectDuration(prevEffectDuration);
+  popComponentEffectDidSpawnUpdate(prevEffectDidSpawnUpdate);
   popComponentEffectErrors(prevEffectErrors);
 }
 

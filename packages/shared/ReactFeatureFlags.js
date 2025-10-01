@@ -118,7 +118,7 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache: boolean = false;
 
-export const enableUseEffectEventHook = __EXPERIMENTAL__;
+export const enableUseEffectEventHook: boolean = true;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
@@ -128,12 +128,6 @@ export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 export const alwaysThrottleRetries: boolean = true;
 
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
-
-/**
- * Enables a new Fiber flag used in persisted mode to reduce the number
- * of cloned host components.
- */
-export const enablePersistedModeClonedFlag: boolean = false;
 
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 

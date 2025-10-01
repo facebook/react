@@ -20,11 +20,22 @@ import parserBabel from 'prettier/plugins/babel';
 import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
 import {type Store} from '../../lib/stores';
-import {memo, ReactNode, use, useState, Suspense} from 'react';
+import {
+  memo,
+  ReactNode,
+  use,
+  useState,
+  Suspense,
+  unstable_ViewTransition as ViewTransition,
+} from 'react';
 import AccordionWindow from '../AccordionWindow';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 import {BabelFileResult} from '@babel/core';
+import {
+  CONFIG_PANEL_TRANSITION,
+  TOGGLE_INTERNALS_TRANSITION,
+} from '../../lib/transitionTypes';
 import {LRUCache} from 'lru-cache';
 
 const MemoizedOutput = memo(Output);
@@ -280,22 +291,36 @@ function OutputContent({store, compilerOutput}: Props): JSX.Element {
 
   if (!store.showInternals) {
     return (
-      <TabbedWindow
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+      <ViewTransition
+        update={{
+          [CONFIG_PANEL_TRANSITION]: 'container',
+          [TOGGLE_INTERNALS_TRANSITION]: '',
+          default: 'none',
+        }}>
+        <TabbedWindow
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      </ViewTransition>
     );
   }
 
   return (
-    <AccordionWindow
-      defaultTab={store.showInternals ? 'HIR' : 'Output'}
-      setTabsOpen={setTabsOpen}
-      tabsOpen={tabsOpen}
-      tabs={tabs}
-      changedPasses={changedPasses}
-    />
+    <ViewTransition
+      update={{
+        [CONFIG_PANEL_TRANSITION]: 'accordion-container',
+        [TOGGLE_INTERNALS_TRANSITION]: '',
+        default: 'none',
+      }}>
+      <AccordionWindow
+        defaultTab={store.showInternals ? 'HIR' : 'Output'}
+        setTabsOpen={setTabsOpen}
+        tabsOpen={tabsOpen}
+        tabs={tabs}
+        changedPasses={changedPasses}
+      />
+    </ViewTransition>
   );
 }
 

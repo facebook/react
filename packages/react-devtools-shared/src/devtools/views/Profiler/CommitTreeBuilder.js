@@ -454,14 +454,22 @@ function updateTree(
       }
 
       case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
-        const changesLength = ((operations[i + 1]: any): number);
+        i++;
+        const changeLength = ((operations[i++]: any): number);
 
-        if (__DEBUG__) {
-          const changes = operations.slice(i + 2, i + 2 + changesLength * 2);
-          debug('Suspender changes', `[${changes.join(',')}]`);
+        for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
+          const suspenseNodeId = operations[i++];
+          const hasUniqueSuspenders = operations[i++] === 1;
+          const environmentNamesLength = operations[i++];
+          i += environmentNamesLength;
+          if (__DEBUG__) {
+            debug(
+              'Suspender changes',
+              `Suspense node ${suspenseNodeId} unique suspenders set to ${String(hasUniqueSuspenders)} with ${String(environmentNamesLength)} environments`,
+            );
+          }
         }
 
-        i += 2 + changesLength * 2;
         break;
       }
 

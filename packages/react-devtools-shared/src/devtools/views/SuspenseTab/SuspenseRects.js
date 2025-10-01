@@ -34,10 +34,12 @@ import {
 function ScaledRect({
   className,
   rect,
+  visible,
   ...props
 }: {
   className: string,
   rect: Rect,
+  visible: boolean,
   ...
 }): React$Node {
   const viewBox = useContext(ViewBox);
@@ -50,6 +52,7 @@ function ScaledRect({
     <div
       {...props}
       className={styles.SuspenseRectsScaledRect + ' ' + className}
+      data-visible={visible}
       style={{
         width,
         height,
@@ -68,6 +71,7 @@ function SuspenseRects({
   const store = useContext(StoreContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
+  const {uniqueSuspendersOnly} = useContext(SuspenseTreeStateContext);
 
   const {inspectedElementID} = useContext(TreeStateContext);
 
@@ -79,6 +83,7 @@ function SuspenseRects({
     // getSuspenseByID will have already warned
     return null;
   }
+  const visible = suspense.hasUniqueSuspenders || !uniqueSuspendersOnly;
 
   function handleClick(event: SyntheticMouseEvent) {
     if (event.defaultPrevented) {
@@ -93,6 +98,18 @@ function SuspenseRects({
     });
   }
 
+  function handleDoubleClick(event: SyntheticMouseEvent) {
+    if (event.defaultPrevented) {
+      // Already clicked on an inner rect
+      return;
+    }
+    event.preventDefault();
+    suspenseTreeDispatch({
+      type: 'TOGGLE_TIMELINE_FOR_ID',
+      payload: suspenseID,
+    });
+  }
+
   function handlePointerOver(event: SyntheticPointerEvent) {
     if (event.defaultPrevented) {
       // Already hovered an inner rect
@@ -100,6 +117,10 @@ function SuspenseRects({
     }
     event.preventDefault();
     highlightHostInstance(suspenseID);
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: suspenseID,
+    });
   }
 
   function handlePointerLeave(event: SyntheticPointerEvent) {
@@ -109,6 +130,10 @@ function SuspenseRects({
     }
     event.preventDefault();
     clearHighlightHostInstance();
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: -1,
+    });
   }
 
   // TODO: Use the nearest Suspense boundary
@@ -117,9 +142,13 @@ function SuspenseRects({
   const boundingBox = getBoundingBox(suspense.rects);
 
   return (
-    <ScaledRect rect={boundingBox} className={styles.SuspenseRectsBoundary}>
+    <ScaledRect
+      rect={boundingBox}
+      className={styles.SuspenseRectsBoundary}
+      visible={visible}>
       <ViewBox.Provider value={boundingBox}>
-        {suspense.rects !== null &&
+        {visible &&
+          suspense.rects !== null &&
           suspense.rects.map((rect, index) => {
             return (
               <ScaledRect
@@ -128,6 +157,7 @@ function SuspenseRects({
                 rect={rect}
                 data-highlighted={selected}
                 onClick={handleClick}
+                onDoubleClick={handleDoubleClick}
                 onPointerOver={handlePointerOver}
                 onPointerLeave={handlePointerLeave}
                 // Reach-UI tooltip will go out of bounds of parent scroll container.
@@ -175,6 +205,42 @@ function getBoundingBox(rects: $ReadOnlyArray<Rect> | null): Rect {
   };
 }
 
+function computeBoundingRectRecursively(
+  store: Store,
+  node: SuspenseNode,
+  bounds: {
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  },
+): void {
+  const rects = node.rects;
+  if (rects !== null) {
+    for (let j = 0; j < rects.length; j++) {
+      const rect = rects[j];
+      if (rect.x < bounds.minX) {
+        bounds.minX = rect.x;
+      }
+      if (rect.x + rect.width > bounds.maxX) {
+        bounds.maxX = rect.x + rect.width;
+      }
+      if (rect.y < bounds.minY) {
+        bounds.minY = rect.y;
+      }
+      if (rect.y + rect.height > bounds.maxY) {
+        bounds.maxY = rect.y + rect.height;
+      }
+    }
+  }
+  for (let i = 0; i < node.children.length; i++) {
+    const child = store.getSuspenseByID(node.children[i]);
+    if (child !== null) {
+      computeBoundingRectRecursively(store, child, bounds);
+    }
+  }
+}
+
 function getDocumentBoundingRect(
   store: Store,
   roots: $ReadOnlyArray<SuspenseNode['id']>,
@@ -183,10 +249,12 @@ function getDocumentBoundingRect(
     return {x: 0, y: 0, width: 0, height: 0};
   }
 
-  let minX = Number.POSITIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
+  const bounds = {
+    minX: Number.POSITIVE_INFINITY,
+    minY: Number.POSITIVE_INFINITY,
+    maxX: Number.NEGATIVE_INFINITY,
+    maxY: Number.NEGATIVE_INFINITY,
+  };
 
   for (let i = 0; i < roots.length; i++) {
     const rootID = roots[i];
@@ -194,30 +262,19 @@ function getDocumentBoundingRect(
     if (root === null) {
       continue;
     }
-
-    const rects = root.rects;
-    if (rects === null) {
-      continue;
-    }
-    for (let j = 0; j < rects.length; j++) {
-      const rect = rects[j];
-      minX = Math.min(minX, rect.x);
-      minY = Math.min(minY, rect.y);
-      maxX = Math.max(maxX, rect.x + rect.width);
-      maxY = Math.max(maxY, rect.y + rect.height);
-    }
+    computeBoundingRectRecursively(store, root, bounds);
   }
 
-  if (minX === Number.POSITIVE_INFINITY) {
+  if (bounds.minX === Number.POSITIVE_INFINITY) {
     // No rects found, return empty rect
     return {x: 0, y: 0, width: 0, height: 0};
   }
 
   return {
-    x: minX,
-    y: minY,
-    width: maxX - minX,
-    height: maxY - minY,
+    x: bounds.minX,
+    y: bounds.minY,
+    width: bounds.maxX - bounds.minX,
+    height: bounds.maxY - bounds.minY,
   };
 }
 
@@ -245,6 +302,7 @@ function SuspenseRectsContainer(): React$Node {
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
   const {roots} = useContext(SuspenseTreeStateContext);
 
+  // TODO: bbox does not consider uniqueSuspendersOnly filter
   const boundingBox = getDocumentBoundingRect(store, roots);
 
   const boundingBoxWidth = boundingBox.width;
