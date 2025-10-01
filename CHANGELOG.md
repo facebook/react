@@ -19,7 +19,7 @@ Read the [React 19.2 release post](https://react.dev/blog/2025/10/01/react-19-2)
 - Added resume APIs for partial pre-rendering with Node Streams:
   - [`resumeToPipeableStream`](https://react.dev/reference/react-dom/server/resumeToPipeableStream): to resume a prerender to a stream.
   - [`resumeAndPrerenderToNodeStream`](https://react.dev/reference/react-dom/static/resumeAndPrerenderToNodeStream): to resume a prerender to HTML.
-- Updated [`prerender`](https://react.dev/reference/react-dom/static/prerender) APIs to a `postponed` state that can be passed to the `resume` APIs.
+- Updated [`prerender`](https://react.dev/reference/react-dom/static/prerender) APIs to return a `postponed` state that can be passed to the `resume` APIs.
 
 ### Notable changes
 
