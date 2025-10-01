@@ -15,7 +15,7 @@ import {
 } from './utils';
 
 describe('commit tree', () => {
-  let React;
+  let React = require('react');
   let Scheduler;
   let store: Store;
   let utils;
@@ -188,6 +188,8 @@ describe('commit tree', () => {
         [root]
           ▾ <App>
               <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
       utils.act(() => legacyRender(<App renderChildren={true} />));
       expect(store).toMatchInlineSnapshot(`
@@ -195,6 +197,8 @@ describe('commit tree', () => {
           ▾ <App>
             ▾ <Suspense>
                 <LazyInnerComponent>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
       utils.act(() => legacyRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
@@ -214,7 +218,7 @@ describe('commit tree', () => {
         );
       }
 
-      expect(commitTrees[0].nodes.size).toBe(3); // <Root> + <App> + <Suspense>
+      expect(commitTrees[0].nodes.size).toBe(3);
       expect(commitTrees[1].nodes.size).toBe(4); // <Root> + <App> + <Suspense> + <LazyInnerComponent>
       expect(commitTrees[2].nodes.size).toBe(2); // <Root> + <App>
     });
@@ -228,8 +232,8 @@ describe('commit tree', () => {
         [root]
           ▾ <App>
               <Suspense>
-        [shell]
-          <Suspense name="App>?" rects={null}>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
       utils.act(() => modernRender(<App renderChildren={true} />));
       expect(store).toMatchInlineSnapshot(`
@@ -237,8 +241,8 @@ describe('commit tree', () => {
           ▾ <App>
             ▾ <Suspense>
                 <LazyInnerComponent>
-        [shell]
-          <Suspense name="App>?" rects={null}>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
       utils.act(() => modernRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
@@ -272,6 +276,8 @@ describe('commit tree', () => {
         [root]
           ▾ <App>
               <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
       utils.act(() => legacyRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`
@@ -291,7 +297,7 @@ describe('commit tree', () => {
         );
       }
 
-      expect(commitTrees[0].nodes.size).toBe(3); // <Root> + <App> + <Suspense>
+      expect(commitTrees[0].nodes.size).toBe(3);
       expect(commitTrees[1].nodes.size).toBe(2); // <Root> + <App>
     });
 
@@ -303,8 +309,8 @@ describe('commit tree', () => {
         [root]
           ▾ <App>
               <Suspense>
-        [shell]
-          <Suspense name="App>?" rects={null}>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
       utils.act(() => modernRender(<App renderChildren={false} />));
       expect(store).toMatchInlineSnapshot(`

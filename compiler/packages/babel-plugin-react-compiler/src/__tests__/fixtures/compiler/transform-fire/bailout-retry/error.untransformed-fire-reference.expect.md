@@ -17,7 +17,7 @@ Found 1 error:
 
 Error: [Fire] Untransformed reference to compiler-required feature.
 
- null
+Either remove this `fire` call or ensure it is successfully transformed by the compiler.
 
 error.untransformed-fire-reference.ts:4:12
   2 | import {fire} from 'react';

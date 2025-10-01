@@ -33,20 +33,6 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
-function formatV8Stack(stack) {
-  let v8StyleStack = '';
-  if (stack) {
-    for (let i = 0; i < stack.length; i++) {
-      const [name] = stack[i];
-      if (v8StyleStack !== '') {
-        v8StyleStack += '\n';
-      }
-      v8StyleStack += '    in ' + name + ' (at **)';
-    }
-  }
-  return v8StyleStack;
-}
-
 const repoRoot = path.resolve(__dirname, '../../../../');
 function normalizeReactCodeLocInfo(str) {
   const repoRootForRegexp = repoRoot.replace(/\//g, '\\/');
@@ -65,31 +51,6 @@ function getErrorForJestMatcher(error) {
     message: error.message,
     stack: normalizeReactCodeLocInfo(error.stack),
   };
-}
-
-function normalizeComponentInfo(debugInfo) {
-  if (Array.isArray(debugInfo.stack)) {
-    const {debugTask, debugStack, debugLocation, ...copy} = debugInfo;
-    copy.stack = formatV8Stack(debugInfo.stack);
-    if (debugInfo.owner) {
-      copy.owner = normalizeComponentInfo(debugInfo.owner);
-    }
-    return copy;
-  } else {
-    return debugInfo;
-  }
-}
-
-function getDebugInfo(obj) {
-  const debugInfo = obj._debugInfo;
-  if (debugInfo) {
-    const copy = [];
-    for (let i = 0; i < debugInfo.length; i++) {
-      copy.push(normalizeComponentInfo(debugInfo[i]));
-    }
-    return copy;
-  }
-  return debugInfo;
 }
 
 const finalizationRegistries = [];
@@ -128,6 +89,7 @@ let NoErrorExpected;
 let Scheduler;
 let assertLog;
 let assertConsoleErrorDev;
+let getDebugInfo;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -164,6 +126,11 @@ describe('ReactFlight', () => {
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
     assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
+
+    getDebugInfo = InternalTestUtils.getDebugInfo.bind(null, {
+      useV8Stack: true,
+      ignoreRscStreamInfo: true,
+    });
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -360,8 +327,8 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(root);
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: 12},
@@ -379,7 +346,7 @@ describe('ReactFlight', () => {
             ]
           : undefined,
       );
-      ReactNoop.render(await promise);
+      ReactNoop.render(result);
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
@@ -1411,9 +1378,7 @@ describe('ReactFlight', () => {
             environmentName: 'Server',
           },
         ],
-        findSourceMapURLCalls: [
-          [__filename, 'Server'],
-          [__filename, 'Server'],
+        findSourceMapURLCalls: expect.arrayContaining([
           // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
           ['inspected-page.html:29:11), <anonymous>', 'Server'],
           [
@@ -1422,8 +1387,7 @@ describe('ReactFlight', () => {
           ],
           ['file:///testing.js', 'Server'],
           ['', 'Server'],
-          [__filename, 'Server'],
-        ],
+        ]),
       });
     } else {
       expect(errors.map(getErrorForJestMatcher)).toEqual([
@@ -2818,8 +2782,8 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: gate(flags => flags.enableAsyncDebugInfo) ? 22 : 20},
@@ -2832,18 +2796,17 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
-              {time: gate(flags => flags.enableAsyncDebugInfo) ? 23 : 21},
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 53 : 21},
             ]
           : undefined,
       );
-      const result = await promise;
 
       const thirdPartyChildren = await result.props.children[1];
       // We expect the debug info to be transferred from the inner stream to the outer.
-      expect(getDebugInfo(thirdPartyChildren[0])).toEqual(
+      expect(getDebugInfo(await thirdPartyChildren[0])).toEqual(
         __DEV__
           ? [
-              {time: gate(flags => flags.enableAsyncDebugInfo) ? 24 : 22}, // Clamped to the start
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 54 : 22}, // Clamped to the start
               {
                 name: 'ThirdPartyComponent',
                 env: 'third-party',
@@ -2851,15 +2814,15 @@ describe('ReactFlight', () => {
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: gate(flags => flags.enableAsyncDebugInfo) ? 24 : 22},
-              {time: gate(flags => flags.enableAsyncDebugInfo) ? 25 : 23}, // This last one is when the promise resolved into the first party.
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 54 : 22},
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 55 : 23}, // This last one is when the promise resolved into the first party.
             ]
           : undefined,
       );
       expect(getDebugInfo(thirdPartyChildren[1])).toEqual(
         __DEV__
           ? [
-              {time: gate(flags => flags.enableAsyncDebugInfo) ? 24 : 22}, // Clamped to the start
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 54 : 22}, // Clamped to the start
               {
                 name: 'ThirdPartyLazyComponent',
                 env: 'third-party',
@@ -2867,14 +2830,14 @@ describe('ReactFlight', () => {
                 stack: '    in myLazy (at **)\n    in lazyInitializer (at **)',
                 props: {},
               },
-              {time: gate(flags => flags.enableAsyncDebugInfo) ? 24 : 22},
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 54 : 22},
             ]
           : undefined,
       );
       expect(getDebugInfo(thirdPartyChildren[2])).toEqual(
         __DEV__
           ? [
-              {time: gate(flags => flags.enableAsyncDebugInfo) ? 24 : 22},
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 54 : 22},
               {
                 name: 'ThirdPartyFragmentComponent',
                 env: 'third-party',
@@ -2882,7 +2845,7 @@ describe('ReactFlight', () => {
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: gate(flags => flags.enableAsyncDebugInfo) ? 24 : 22},
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 54 : 22},
             ]
           : undefined,
       );
@@ -2943,8 +2906,8 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: 16},
@@ -2957,29 +2920,15 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
-              {
-                time: 16,
-              },
-              {
-                env: 'third-party',
-                key: null,
-                name: 'ThirdPartyAsyncIterableComponent',
-                props: {},
-                stack: '    in Object.<anonymous> (at **)',
-              },
-              {
-                time: 16,
-              },
-              {time: 17},
+              {time: 31},
             ]
           : undefined,
       );
-      const result = await promise;
       const thirdPartyFragment = await result.props.children;
       expect(getDebugInfo(thirdPartyFragment)).toEqual(
         __DEV__
           ? [
-              {time: 18},
+              {time: 32},
               {
                 name: 'Keyed',
                 env: 'Server',
@@ -2989,20 +2938,7 @@ describe('ReactFlight', () => {
                   children: {},
                 },
               },
-              {
-                time: 19,
-              },
-              {
-                time: 19,
-              },
-              {
-                env: 'third-party',
-                key: null,
-                name: 'ThirdPartyAsyncIterableComponent',
-                props: {},
-                stack: '    in Object.<anonymous> (at **)',
-              },
-              {time: 19},
+              {time: 33},
             ]
           : undefined,
       );
@@ -3010,7 +2946,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyFragment.props.children)).toEqual(
         __DEV__
           ? [
-              {time: 19}, // Clamp to the start
+              {time: 33}, // Clamp to the start
               {
                 name: 'ThirdPartyAsyncIterableComponent',
                 env: 'third-party',
@@ -3018,7 +2954,7 @@ describe('ReactFlight', () => {
                 stack: '    in Object.<anonymous> (at **)',
                 props: {},
               },
-              {time: 19},
+              {time: 33},
             ]
           : undefined,
       );
@@ -3058,8 +2994,8 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: 16},
@@ -3081,11 +3017,10 @@ describe('ReactFlight', () => {
                 props: {},
               },
               {time: 16},
-              {time: 17},
+              {time: gate(flags => flags.enableAsyncDebugInfo) ? 24 : 17},
             ]
           : undefined,
       );
-      const result = await promise;
       ReactNoop.render(result);
     });
 
@@ -3846,5 +3781,107 @@ describe('ReactFlight', () => {
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
+  });
+
+  // @gate !__DEV__ || enableComponentPerformanceTrack
+  it('produces correct parent stacks', async () => {
+    function Container() {
+      return ReactServer.createElement('div', null);
+    }
+    function ContainerParent() {
+      return ReactServer.createElement(Container, null);
+    }
+    function App() {
+      return ReactServer.createElement(
+        'main',
+        null,
+        ReactServer.createElement(ContainerParent, null),
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render({
+      root: ReactServer.createElement(App, null),
+    });
+
+    await act(async () => {
+      const {root} = await ReactNoopFlightClient.read(transport);
+
+      ReactNoop.render(root);
+
+      expect(root.type).toBe('main');
+      if (__DEV__) {
+        const div = root.props.children;
+        expect(getDebugInfo(div)).toEqual([
+          {
+            time: 14,
+          },
+          {
+            env: 'Server',
+            key: null,
+            name: 'ContainerParent',
+            owner: {
+              env: 'Server',
+              key: null,
+              name: 'App',
+              props: {},
+              stack: '    in Object.<anonymous> (at **)',
+            },
+            props: {},
+            stack: '    in App (at **)',
+          },
+          {
+            time: 15,
+          },
+          {
+            env: 'Server',
+            key: null,
+            name: 'Container',
+            owner: {
+              env: 'Server',
+              key: null,
+              name: 'ContainerParent',
+              owner: {
+                env: 'Server',
+                key: null,
+                name: 'App',
+                props: {},
+                stack: '    in Object.<anonymous> (at **)',
+              },
+              props: {},
+              stack: '    in App (at **)',
+            },
+            props: {},
+            stack: '    in ContainerParent (at **)',
+          },
+          {
+            time: 16,
+          },
+        ]);
+        expect(getDebugInfo(root)).toEqual([
+          {
+            time: 12,
+          },
+          {
+            env: 'Server',
+            key: null,
+            name: 'App',
+            props: {},
+            stack: '    in Object.<anonymous> (at **)',
+          },
+          {
+            time: 13,
+          },
+        ]);
+      } else {
+        expect(root._debugInfo).toBe(undefined);
+        expect(root._owner).toBe(undefined);
+      }
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <main>
+        <div />
+      </main>,
+    );
   });
 });

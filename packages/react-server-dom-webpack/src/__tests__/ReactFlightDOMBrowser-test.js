@@ -27,6 +27,7 @@ let webpackMap;
 let webpackServerMap;
 let act;
 let serverAct;
+let getDebugInfo;
 let React;
 let ReactDOM;
 let ReactDOMClient;
@@ -48,6 +49,10 @@ describe('ReactFlightDOMBrowser', () => {
     ReactServerScheduler = require('scheduler');
     patchMessageChannel(ReactServerScheduler);
     serverAct = require('internal-test-utils').serverAct;
+    getDebugInfo = require('internal-test-utils').getDebugInfo.bind(null, {
+      ignoreProps: true,
+      useFixedTime: true,
+    });
 
     // Simulate the condition resolution
 
@@ -64,12 +69,10 @@ describe('ReactFlightDOMBrowser', () => {
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
     ReactServerDOMServer = require('react-server-dom-webpack/server');
-    if (__EXPERIMENTAL__) {
-      jest.mock('react-server-dom-webpack/static', () =>
-        require('react-server-dom-webpack/static.browser'),
-      );
-      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
-    }
+    jest.mock('react-server-dom-webpack/static', () =>
+      require('react-server-dom-webpack/static.browser'),
+    );
+    ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
     __unmockReact();
     jest.resetModules();
@@ -1767,6 +1770,9 @@ describe('ReactFlightDOMBrowser', () => {
         webpackMap,
       ),
     );
+
+    // Snapshot updates change this formatting, so we let prettier ignore it.
+    // prettier-ignore
     const response =
       await ReactServerDOMClient.createFromReadableStream(stream);
 
@@ -2489,7 +2495,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([reason]);
   });
 
-  // @gate experimental
+  // @gate enableHalt || enablePostpone
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2512,7 +2518,7 @@ describe('ReactFlightDOMBrowser', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           <App />,
           webpackMap,
         ),
@@ -2565,7 +2571,7 @@ describe('ReactFlightDOMBrowser', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           <App />,
           webpackMap,
           {
@@ -2905,5 +2911,144 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe(
       '<div><span>Hi</span><span>Sebbie</span></div>',
     );
+  });
+
+  it('should fully resolve debug info when transported through a (slow) debug channel', async () => {
+    function Paragraph({children}) {
+      return ReactServer.createElement('p', null, children);
+    }
+
+    let debugReadableStreamController;
+
+    const debugReadableStream = new ReadableStream({
+      start(controller) {
+        debugReadableStreamController = controller;
+      },
+    });
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          root: ReactServer.createElement(
+            ReactServer.Fragment,
+            null,
+            ReactServer.createElement(Paragraph, null, 'foo'),
+            ReactServer.createElement(Paragraph, null, 'bar'),
+          ),
+        },
+        webpackMap,
+        {
+          debugChannel: {
+            writable: new WritableStream({
+              write(chunk) {
+                debugReadableStreamController.enqueue(chunk);
+              },
+              close() {
+                debugReadableStreamController.close();
+              },
+            }),
+          },
+        },
+      ),
+    );
+
+    function ClientRoot({response}) {
+      const {root} = use(response);
+      return root;
+    }
+
+    const [slowDebugStream1, slowDebugStream2] =
+      createDelayedStream(debugReadableStream).tee();
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      debugChannel: {readable: slowDebugStream1},
+    });
+
+    const container = document.createElement('div');
+    const clientRoot = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      clientRoot.render(<ClientRoot response={response} />);
+    });
+
+    if (__DEV__) {
+      const debugStreamReader = slowDebugStream2.getReader();
+      while (true) {
+        const {done} = await debugStreamReader.read();
+        if (done) {
+          break;
+        }
+        // Allow the client to process each debug chunk as it arrives.
+        await act(() => {});
+      }
+    }
+
+    expect(container.innerHTML).toBe('<p>foo</p><p>bar</p>');
+
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      const result = await response;
+      const firstParagraph = result.root[0];
+
+      expect(getDebugInfo(firstParagraph)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Paragraph",
+            "props": {},
+            "stack": [
+              [
+                "",
+                "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
+                2935,
+                27,
+                2929,
+                34,
+              ],
+              [
+                "serverAct",
+                "/packages/internal-test-utils/internalAct.js",
+                270,
+                19,
+                231,
+                1,
+              ],
+              [
+                "Object.<anonymous>",
+                "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
+                2929,
+                18,
+                2916,
+                89,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "RSC stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
+        ]
+      `);
+    }
   });
 });

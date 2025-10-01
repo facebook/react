@@ -19,14 +19,34 @@ import {
 import parserBabel from 'prettier/plugins/babel';
 import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
-import {memo, ReactNode, useEffect, useState} from 'react';
 import {type Store} from '../../lib/stores';
+import {
+  memo,
+  ReactNode,
+  use,
+  useState,
+  Suspense,
+  unstable_ViewTransition as ViewTransition,
+} from 'react';
+import AccordionWindow from '../AccordionWindow';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
 import {BabelFileResult} from '@babel/core';
+import {
+  CONFIG_PANEL_TRANSITION,
+  TOGGLE_INTERNALS_TRANSITION,
+} from '../../lib/transitionTypes';
+import {LRUCache} from 'lru-cache';
+
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
+
+export const BASIC_OUTPUT_TAB_NAMES = ['Output', 'SourceMap'];
+
+const tabifyCache = new LRUCache<Store, Promise<Map<string, ReactNode>>>({
+  max: 5,
+});
 
 export type PrintedCompilerPipelineValue =
   | {
@@ -64,12 +84,16 @@ type Props = {
 async function tabify(
   source: string,
   compilerOutput: CompilerOutput,
+  showInternals: boolean,
 ): Promise<Map<string, ReactNode>> {
   const tabs = new Map<string, React.ReactNode>();
   const reorderedTabs = new Map<string, React.ReactNode>();
   const concattedResults = new Map<string, string>();
   // Concat all top level function declaration results into a single tab for each pass
   for (const [passName, results] of compilerOutput.results) {
+    if (!showInternals && !BASIC_OUTPUT_TAB_NAMES.includes(passName)) {
+      continue;
+    }
     for (const result of results) {
       switch (result.kind) {
         case 'hir': {
@@ -192,6 +216,25 @@ ${code}
   return reorderedTabs;
 }
 
+function tabifyCached(
+  store: Store,
+  compilerOutput: CompilerOutput,
+): Promise<Map<string, ReactNode>> {
+  const cached = tabifyCache.get(store);
+  if (cached) return cached;
+  const result = tabify(store.source, compilerOutput, store.showInternals);
+  tabifyCache.set(store, result);
+  return result;
+}
+
+function Fallback(): JSX.Element {
+  return (
+    <div className="w-full h-monaco_small sm:h-monaco flex items-center justify-center">
+      Loading...
+    </div>
+  );
+}
+
 function utf16ToUTF8(s: string): string {
   return unescape(encodeURIComponent(s));
 }
@@ -205,12 +248,18 @@ function getSourceMapUrl(code: string, map: string): string | null {
 }
 
 function Output({store, compilerOutput}: Props): JSX.Element {
+  return (
+    <Suspense fallback={<Fallback />}>
+      <OutputContent store={store} compilerOutput={compilerOutput} />
+    </Suspense>
+  );
+}
+
+function OutputContent({store, compilerOutput}: Props): JSX.Element {
   const [tabsOpen, setTabsOpen] = useState<Set<string>>(
     () => new Set(['Output']),
   );
-  const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
-    () => new Map(),
-  );
+  const [activeTab, setActiveTab] = useState<string>('Output');
 
   /*
    * Update the active tab back to the output or errors tab when the compilation state
@@ -222,14 +271,8 @@ function Output({store, compilerOutput}: Props): JSX.Element {
   if (compilerOutput.kind !== previousOutputKind) {
     setPreviousOutputKind(compilerOutput.kind);
     setTabsOpen(new Set(['Output']));
+    setActiveTab('Output');
   }
-
-  useEffect(() => {
-    tabify(store.source, compilerOutput).then(tabs => {
-      setTabs(tabs);
-    });
-  }, [store.source, compilerOutput]);
-
   const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
   let lastResult: string = '';
   for (const [passName, results] of compilerOutput.results) {
@@ -244,17 +287,40 @@ function Output({store, compilerOutput}: Props): JSX.Element {
       lastResult = currResult;
     }
   }
+  const tabs = use(tabifyCached(store, compilerOutput));
+
+  if (!store.showInternals) {
+    return (
+      <ViewTransition
+        update={{
+          [CONFIG_PANEL_TRANSITION]: 'container',
+          [TOGGLE_INTERNALS_TRANSITION]: '',
+          default: 'none',
+        }}>
+        <TabbedWindow
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      </ViewTransition>
+    );
+  }
 
   return (
-    <>
-      <TabbedWindow
-        defaultTab="HIR"
+    <ViewTransition
+      update={{
+        [CONFIG_PANEL_TRANSITION]: 'accordion-container',
+        [TOGGLE_INTERNALS_TRANSITION]: '',
+        default: 'none',
+      }}>
+      <AccordionWindow
+        defaultTab={store.showInternals ? 'HIR' : 'Output'}
         setTabsOpen={setTabsOpen}
         tabsOpen={tabsOpen}
         tabs={tabs}
         changedPasses={changedPasses}
       />
-    </>
+    </ViewTransition>
   );
 }
 
@@ -306,6 +372,7 @@ function TextTabContent({
         <DiffEditor
           original={diff}
           modified={output}
+          loading={''}
           options={{
             ...monacoOptions,
             readOnly: true,
@@ -320,6 +387,8 @@ function TextTabContent({
         <MonacoEditor
           language={language ?? 'javascript'}
           value={output}
+          loading={''}
+          className="monaco-editor-output"
           options={{
             ...monacoOptions,
             readOnly: true,

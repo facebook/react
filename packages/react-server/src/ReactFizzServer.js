@@ -99,6 +99,7 @@ import {
   hoistPreambleState,
   isPreambleReady,
   isPreambleContext,
+  hasSuspenseyContent,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -461,7 +462,7 @@ function isEligibleForOutlining(
   // The larger this limit is, the more we can save on preparing fallbacks in case we end up
   // outlining.
   return (
-    boundary.byteSize > 500 &&
+    (boundary.byteSize > 500 || hasSuspenseyContent(boundary.contentState)) &&
     // For boundaries that can possibly contribute to the preamble we don't want to outline
     // them regardless of their size since the fallbacks should only be emitted if we've
     // errored the boundary.
@@ -5748,8 +5749,13 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else if (
+    // We don't outline when we're emitting partially completed boundaries optimistically
+    // because it doesn't make sense to outline something if its parent is going to be
+    // blocked on something later in the stream anyway.
+    !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
-    flushedByteSize + boundary.byteSize > request.progressiveChunkSize
+    (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
+      hasSuspenseyContent(boundary.contentState))
   ) {
     // Inlining this boundary would make the current sequence being written too large
     // and block the parent for too long. Instead, it will be emitted separately so that we
@@ -5980,6 +5986,8 @@ function flushPartiallyCompletedSegment(
   }
 }
 
+let flushingPartialBoundaries = false;
+
 function flushCompletedQueues(
   request: Request,
   destination: Destination,
@@ -6095,6 +6103,7 @@ function flushCompletedQueues(
 
     // Next we emit any segments of any boundaries that are partially complete
     // but not deeply complete.
+    flushingPartialBoundaries = true;
     const partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
       const boundary = partialBoundaries[i];
@@ -6106,6 +6115,7 @@ function flushCompletedQueues(
       }
     }
     partialBoundaries.splice(0, i);
+    flushingPartialBoundaries = false;
 
     // Next we check the completed boundaries again. This may have had
     // boundaries added to it in case they were too larged to be inlined.
@@ -6123,6 +6133,7 @@ function flushCompletedQueues(
     }
     largeBoundaries.splice(0, i);
   } finally {
+    flushingPartialBoundaries = false;
     if (
       request.allPendingTasks === 0 &&
       request.clientRenderedBoundaries.length === 0 &&

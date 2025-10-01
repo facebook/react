@@ -12,6 +12,7 @@ export {
   CompilerDiagnostic,
   CompilerSuggestionOperation,
   ErrorSeverity,
+  ErrorCategory,
   LintRules,
   type CompilerErrorDetailOptions,
   type CompilerDiagnosticOptions,
@@ -50,6 +51,7 @@ export {
 } from './ReactiveScopes';
 export {parseConfigPragmaForTests} from './Utils/TestUtils';
 declare global {
+  // @internal
   let __DEV__: boolean | null | undefined;
 }
 

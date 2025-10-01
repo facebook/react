@@ -75,7 +75,18 @@ export async function symbolicateSource(
         resourceLine.length,
       );
 
-      const sourceMapURL = new URL(sourceMapAt, sourceURL).toString();
+      // Compute the absolute source map URL. If the base URL is invalid, gracefully bail.
+      let sourceMapURL;
+      try {
+        sourceMapURL = new URL(sourceMapAt, sourceURL).toString();
+      } catch (e) {
+        // Fallback: try if sourceMapAt is already an absolute URL; otherwise give up.
+        try {
+          sourceMapURL = new URL(sourceMapAt).toString();
+        } catch (_e) {
+          return null;
+        }
+      }
       const sourceMap = await fetchFileWithCaching(sourceMapURL).catch(
         () => null,
       );

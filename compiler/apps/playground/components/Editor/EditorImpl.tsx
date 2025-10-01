@@ -13,7 +13,7 @@ import BabelPluginReactCompiler, {
   CompilerErrorDetail,
   CompilerDiagnostic,
   Effect,
-  ErrorSeverity,
+  ErrorCategory,
   parseConfigPragmaForTests,
   ValueKind,
   type Hook,
@@ -22,21 +22,14 @@ import BabelPluginReactCompiler, {
   parsePluginOptions,
   printReactiveFunctionWithOutlined,
   printFunctionWithOutlined,
+  type LoggerEvent,
 } from 'babel-plugin-react-compiler';
-import clsx from 'clsx';
-import invariant from 'invariant';
-import {useSnackbar} from 'notistack';
-import {useDeferredValue, useMemo} from 'react';
-import {useMountEffect} from '../../hooks';
-import {defaultStore} from '../../lib/defaultStore';
 import {
-  createMessage,
-  initStoreFromUrlOrLocalStorage,
-  MessageLevel,
-  MessageSource,
-  type Store,
-} from '../../lib/stores';
-import {useStore, useStoreDispatch} from '../StoreContext';
+  useDeferredValue,
+  useMemo,
+  unstable_ViewTransition as ViewTransition,
+} from 'react';
+import {useStore} from '../StoreContext';
 import ConfigEditor from './ConfigEditor';
 import Input from './Input';
 import {
@@ -46,9 +39,6 @@ import {
   PrintedCompilerPipelineValue,
 } from './Output';
 import {transformFromAstSync} from '@babel/core';
-import {LoggerEvent} from 'babel-plugin-react-compiler/dist/Entrypoint';
-import {useSearchParams} from 'next/navigation';
-import {parseAndFormatConfig} from '../../lib/configUtils';
 
 function parseInput(
   input: string,
@@ -145,10 +135,65 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
+function parseOptions(
+  source: string,
+  mode: 'compiler' | 'linter',
+  configOverrides: string,
+): PluginOptions {
+  // Extract the first line to quickly check for custom test directives
+  const pragma = source.substring(0, source.indexOf('\n'));
+
+  const parsedPragmaOptions = parseConfigPragmaForTests(pragma, {
+    compilationMode: 'infer',
+    environment:
+      mode === 'linter'
+        ? {
+            // enabled in compiler
+            validateRefAccessDuringRender: false,
+            // enabled in linter
+            validateNoSetStateInRender: true,
+            validateNoSetStateInEffects: true,
+            validateNoJSXInTryStatements: true,
+            validateNoImpureFunctionsInRender: true,
+            validateStaticComponents: true,
+            validateNoFreezingKnownMutableFunctions: true,
+            validateNoVoidUseMemo: true,
+          }
+        : {
+            /* use defaults for compiler mode */
+          },
+  });
+
+  // Parse config overrides from config editor
+  let configOverrideOptions: any = {};
+  const configMatch = configOverrides.match(/^\s*import.*?\n\n\((.*)\)/s);
+  if (configOverrides.trim()) {
+    if (configMatch && configMatch[1]) {
+      const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
+      configOverrideOptions = new Function(`return (${configString})`)();
+    } else {
+      throw new Error('Invalid override format');
+    }
+  }
+
+  const opts: PluginOptions = parsePluginOptions({
+    ...parsedPragmaOptions,
+    ...configOverrideOptions,
+    environment: {
+      ...parsedPragmaOptions.environment,
+      ...configOverrideOptions.environment,
+      customHooks: new Map([...COMMON_HOOKS]),
+    },
+  });
+
+  return opts;
+}
+
 function compile(
   source: string,
   mode: 'compiler' | 'linter',
-): [CompilerOutput, 'flow' | 'typescript'] {
+  configOverrides: string,
+): [CompilerOutput, 'flow' | 'typescript', PluginOptions | null] {
   const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
   const otherErrors: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
@@ -167,104 +212,94 @@ function compile(
     language = 'typescript';
   }
   let transformOutput;
+
+  let baseOpts: PluginOptions | null = null;
   try {
-    // Extract the first line to quickly check for custom test directives
-    const pragma = source.substring(0, source.indexOf('\n'));
-    const logIR = (result: CompilerPipelineValue): void => {
-      switch (result.kind) {
-        case 'ast': {
-          break;
-        }
-        case 'hir': {
-          upsert({
-            kind: 'hir',
-            fnName: result.value.id,
-            name: result.name,
-            value: printFunctionWithOutlined(result.value),
-          });
-          break;
-        }
-        case 'reactive': {
-          upsert({
-            kind: 'reactive',
-            fnName: result.value.id,
-            name: result.name,
-            value: printReactiveFunctionWithOutlined(result.value),
-          });
-          break;
-        }
-        case 'debug': {
-          upsert({
-            kind: 'debug',
-            fnName: null,
-            name: result.name,
-            value: result.value,
-          });
-          break;
-        }
-        default: {
-          const _: never = result;
-          throw new Error(`Unhandled result ${result}`);
-        }
-      }
-    };
-    const parsedOptions = parseConfigPragmaForTests(pragma, {
-      compilationMode: 'infer',
-      environment:
-        mode === 'linter'
-          ? {
-              // enabled in compiler
-              validateRefAccessDuringRender: false,
-              // enabled in linter
-              validateNoSetStateInRender: true,
-              validateNoSetStateInEffects: true,
-              validateNoJSXInTryStatements: true,
-              validateNoImpureFunctionsInRender: true,
-              validateStaticComponents: true,
-              validateNoFreezingKnownMutableFunctions: true,
-              validateNoVoidUseMemo: true,
-            }
-          : {
-              /* use defaults for compiler mode */
-            },
-    });
-    const opts: PluginOptions = parsePluginOptions({
-      ...parsedOptions,
-      environment: {
-        ...parsedOptions.environment,
-        customHooks: new Map([...COMMON_HOOKS]),
-      },
-      logger: {
-        debugLogIRs: logIR,
-        logEvent: (_filename: string | null, event: LoggerEvent) => {
-          if (event.kind === 'CompileError') {
-            otherErrors.push(event.detail);
-          }
-        },
-      },
-    });
-    transformOutput = invokeCompiler(source, language, opts);
+    baseOpts = parseOptions(source, mode, configOverrides);
   } catch (err) {
-    /**
-     * error might be an invariant violation or other runtime error
-     * (i.e. object shape that is not CompilerError)
-     */
-    if (err instanceof CompilerError && err.details.length > 0) {
-      error.merge(err);
-    } else {
+    error.details.push(
+      new CompilerErrorDetail({
+        category: ErrorCategory.Config,
+        reason: `Unexpected failure when transforming configs! \n${err}`,
+        loc: null,
+        suggestions: null,
+      }),
+    );
+  }
+  if (baseOpts) {
+    try {
+      const logIR = (result: CompilerPipelineValue): void => {
+        switch (result.kind) {
+          case 'ast': {
+            break;
+          }
+          case 'hir': {
+            upsert({
+              kind: 'hir',
+              fnName: result.value.id,
+              name: result.name,
+              value: printFunctionWithOutlined(result.value),
+            });
+            break;
+          }
+          case 'reactive': {
+            upsert({
+              kind: 'reactive',
+              fnName: result.value.id,
+              name: result.name,
+              value: printReactiveFunctionWithOutlined(result.value),
+            });
+            break;
+          }
+          case 'debug': {
+            upsert({
+              kind: 'debug',
+              fnName: null,
+              name: result.name,
+              value: result.value,
+            });
+            break;
+          }
+          default: {
+            const _: never = result;
+            throw new Error(`Unhandled result ${result}`);
+          }
+        }
+      };
+      // Add logger options to the parsed options
+      const opts = {
+        ...baseOpts,
+        logger: {
+          debugLogIRs: logIR,
+          logEvent: (_filename: string | null, event: LoggerEvent): void => {
+            if (event.kind === 'CompileError') {
+              otherErrors.push(event.detail);
+            }
+          },
+        },
+      };
+      transformOutput = invokeCompiler(source, language, opts);
+    } catch (err) {
       /**
-       * Handle unexpected failures by logging (to get a stack trace)
-       * and reporting
+       * error might be an invariant violation or other runtime error
+       * (i.e. object shape that is not CompilerError)
        */
-      console.error(err);
-      error.details.push(
-        new CompilerErrorDetail({
-          severity: ErrorSeverity.Invariant,
-          reason: `Unexpected failure when transforming input! ${err}`,
-          loc: null,
-          suggestions: null,
-        }),
-      );
+      if (err instanceof CompilerError && err.details.length > 0) {
+        error.merge(err);
+      } else {
+        /**
+         * Handle unexpected failures by logging (to get a stack trace)
+         * and reporting
+         */
+        error.details.push(
+          new CompilerErrorDetail({
+            category: ErrorCategory.Invariant,
+            reason: `Unexpected failure when transforming input! \n${err}`,
+            loc: null,
+            suggestions: null,
+          }),
+        );
+      }
     }
   }
   // Only include logger errors if there weren't other errors
@@ -272,63 +307,26 @@ function compile(
     otherErrors.forEach(e => error.details.push(e));
   }
   if (error.hasErrors()) {
-    return [{kind: 'err', results, error}, language];
+    return [{kind: 'err', results, error}, language, baseOpts];
   }
   return [
     {kind: 'ok', results, transformOutput, errors: error.details},
     language,
+    baseOpts,
   ];
 }
 
 export default function Editor(): JSX.Element {
   const store = useStore();
   const deferredStore = useDeferredValue(store);
-  const dispatchStore = useStoreDispatch();
-  const {enqueueSnackbar} = useSnackbar();
-  const [compilerOutput, language] = useMemo(
-    () => compile(deferredStore.source, 'compiler'),
-    [deferredStore.source],
+  const [compilerOutput, language, appliedOptions] = useMemo(
+    () => compile(deferredStore.source, 'compiler', deferredStore.config),
+    [deferredStore.source, deferredStore.config],
   );
   const [linterOutput] = useMemo(
-    () => compile(deferredStore.source, 'linter'),
-    [deferredStore.source],
+    () => compile(deferredStore.source, 'linter', deferredStore.config),
+    [deferredStore.source, deferredStore.config],
   );
-
-  // TODO: Remove this once the config editor is more stable
-  const searchParams = useSearchParams();
-  const search = searchParams.get('showConfig');
-  const shouldShowConfig = search === 'true';
-
-  useMountEffect(() => {
-    // Initialize store
-    let mountStore: Store;
-    try {
-      mountStore = initStoreFromUrlOrLocalStorage();
-    } catch (e) {
-      invariant(e instanceof Error, 'Only Error may be caught.');
-      enqueueSnackbar(e.message, {
-        variant: 'warning',
-        ...createMessage(
-          'Bad URL - fell back to the default Playground.',
-          MessageLevel.Info,
-          MessageSource.Playground,
-        ),
-      });
-      mountStore = defaultStore;
-    }
-
-    parseAndFormatConfig(mountStore.source).then(config => {
-      dispatchStore({
-        type: 'setStore',
-        payload: {
-          store: {
-            ...mountStore,
-            config,
-          },
-        },
-      });
-    });
-  });
 
   let mergedOutput: CompilerOutput;
   let errors: Array<CompilerErrorDetail | CompilerDiagnostic>;
@@ -344,12 +342,12 @@ export default function Editor(): JSX.Element {
   }
   return (
     <>
-      <div className="relative flex basis top-14">
-        {shouldShowConfig && <ConfigEditor />}
-        <div className={clsx('relative sm:basis-1/4')}>
-          <Input language={language} errors={errors} />
+      <div className="relative flex top-14">
+        <div className="flex-shrink-0">
+          <ConfigEditor appliedOptions={appliedOptions} />
         </div>
-        <div className={clsx('flex sm:flex flex-wrap')}>
+        <div className="flex flex-1 min-w-0">
+          <Input language={language} errors={errors} />
           <Output store={deferredStore} compilerOutput={mergedOutput} />
         </div>
       </div>

@@ -73,6 +73,7 @@ import {
   includesSomeLane,
   isGestureRender,
   GestureLane,
+  UpdateLanes,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -1865,7 +1866,7 @@ function subscribeToStore<T>(
     // read from the store.
     if (checkIfSnapshotChanged(inst)) {
       // Force a re-render.
-      startUpdateTimerByLane(SyncLane, 'updateSyncExternalStore()');
+      startUpdateTimerByLane(SyncLane, 'updateSyncExternalStore()', fiber);
       forceStoreRerender(fiber);
     }
   };
@@ -2983,6 +2984,20 @@ function rerenderDeferredValue<T>(value: T, initialValue?: T): T {
   }
 }
 
+function isRenderingDeferredWork(): boolean {
+  if (!includesSomeLane(renderLanes, DeferredLane)) {
+    // None of the render lanes are deferred lanes.
+    return false;
+  }
+  // At least one of the render lanes are deferred lanes. However, if the
+  // current render is also batched together with an update, then we can't
+  // say that the render is wholly the result of deferred work. We can check
+  // this by checking if the root render lanes contain any "update" lanes, i.e.
+  // lanes that are only assigned to updates, like setState.
+  const rootRenderLanes = getWorkInProgressRootRenderLanes();
+  return !includesSomeLane(rootRenderLanes, UpdateLanes);
+}
+
 function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
   if (
     // When `initialValue` is provided, we defer the initial render even if the
@@ -2991,7 +3006,7 @@ function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
     // However, to avoid waterfalls, we do not defer if this render
     // was itself spawned by an earlier useDeferredValue. Check if DeferredLane
     // is part of the render lanes.
-    !includesSomeLane(renderLanes, DeferredLane)
+    !isRenderingDeferredWork()
   ) {
     // Render with the initial value
     hook.memoizedState = initialValue;
@@ -3038,8 +3053,7 @@ function updateDeferredValueImpl<T>(
     }
 
     const shouldDeferValue =
-      !includesOnlyNonUrgentLanes(renderLanes) &&
-      !includesSomeLane(renderLanes, DeferredLane);
+      !includesOnlyNonUrgentLanes(renderLanes) && !isRenderingDeferredWork();
     if (shouldDeferValue) {
       // This is an urgent update. Since the value has changed, keep using the
       // previous value and spawn a deferred render to update it later.
@@ -3504,7 +3518,7 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T): void {
         const refreshUpdate = createLegacyQueueUpdate(lane);
         const root = enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         if (root !== null) {
-          startUpdateTimerByLane(lane, 'refresh()');
+          startUpdateTimerByLane(lane, 'refresh()', fiber);
           scheduleUpdateOnFiber(root, provider, lane);
           entangleLegacyQueueTransitions(root, provider, lane);
         }
@@ -3573,7 +3587,7 @@ function dispatchReducerAction<S, A>(
   } else {
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
-      startUpdateTimerByLane(lane, 'dispatch()');
+      startUpdateTimerByLane(lane, 'dispatch()', fiber);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitionUpdate(root, queue, lane);
     }
@@ -3607,7 +3621,7 @@ function dispatchSetState<S, A>(
     lane,
   );
   if (didScheduleUpdate) {
-    startUpdateTimerByLane(lane, 'setState()');
+    startUpdateTimerByLane(lane, 'setState()', fiber);
   }
   markUpdateInDevTools(fiber, lane, action);
 }
@@ -3769,7 +3783,7 @@ function dispatchOptimisticSetState<S, A>(
       // will never be attempted before the optimistic update. This currently
       // holds because the optimistic update is always synchronous. If we ever
       // change that, we'll need to account for this.
-      startUpdateTimerByLane(lane, 'setOptimistic()');
+      startUpdateTimerByLane(lane, 'setOptimistic()', fiber);
       scheduleUpdateOnFiber(root, fiber, lane);
       // Optimistic updates are always synchronous, so we don't need to call
       // entangleTransitionUpdate here.

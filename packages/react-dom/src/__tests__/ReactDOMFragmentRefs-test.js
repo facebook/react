@@ -31,7 +31,7 @@ describe('FragmentRefs', () => {
     jest.resetModules();
     React = require('react');
     Fragment = React.Fragment;
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
     ReactDOMClient = require('react-dom/client');
     ReactDOM = require('react-dom');
     createPortal = ReactDOM.createPortal;
@@ -1609,6 +1609,116 @@ describe('FragmentRefs', () => {
           containedBy: false,
           disconnected: true,
           implementationSpecific: false,
+        },
+      );
+    });
+
+    // @gate enableFragmentRefs
+    it('compares a root-level Fragment', async () => {
+      const fragmentRef = React.createRef();
+      const emptyFragmentRef = React.createRef();
+      const childRef = React.createRef();
+      const siblingPrecedingRef = React.createRef();
+      const siblingFollowingRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test() {
+        return (
+          <Fragment>
+            <div ref={siblingPrecedingRef} />
+            <Fragment ref={fragmentRef}>
+              <div ref={childRef} />
+            </Fragment>
+            <Fragment ref={emptyFragmentRef} />
+            <div ref={siblingFollowingRef} />
+          </Fragment>
+        );
+      }
+
+      await act(() => root.render(<Test />));
+
+      const fragmentInstance = fragmentRef.current;
+      if (fragmentInstance == null) {
+        throw new Error('Expected fragment instance to be non-null');
+      }
+      const emptyFragmentInstance = emptyFragmentRef.current;
+      if (emptyFragmentInstance == null) {
+        throw new Error('Expected empty fragment instance to be non-null');
+      }
+
+      expectPosition(
+        fragmentInstance.compareDocumentPosition(childRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: true,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      expectPosition(
+        fragmentInstance.compareDocumentPosition(siblingPrecedingRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      expectPosition(
+        fragmentInstance.compareDocumentPosition(siblingFollowingRef.current),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      expectPosition(
+        emptyFragmentInstance.compareDocumentPosition(childRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+
+      expectPosition(
+        emptyFragmentInstance.compareDocumentPosition(
+          siblingPrecedingRef.current,
+        ),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+
+      expectPosition(
+        emptyFragmentInstance.compareDocumentPosition(
+          siblingFollowingRef.current,
+        ),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
         },
       );
     });

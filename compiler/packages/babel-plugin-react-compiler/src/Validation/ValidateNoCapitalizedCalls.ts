@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, EnvironmentConfig, ErrorSeverity} from '..';
+import {CompilerError, EnvironmentConfig} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {HIRFunction, IdentifierId} from '../HIR';
 import {DEFAULT_GLOBALS} from '../HIR/Globals';
@@ -59,7 +59,7 @@ export function validateNoCapitalizedCalls(
             CompilerError.throwInvalidReact({
               category: ErrorCategory.CapitalizedCalls,
               reason,
-              description: `${calleeName} may be a component.`,
+              description: `${calleeName} may be a component`,
               loc: value.loc,
               suggestions: null,
             });
@@ -82,9 +82,8 @@ export function validateNoCapitalizedCalls(
           if (propertyName != null) {
             errors.push({
               category: ErrorCategory.CapitalizedCalls,
-              severity: ErrorSeverity.InvalidReact,
               reason,
-              description: `${propertyName} may be a component.`,
+              description: `${propertyName} may be a component`,
               loc: value.loc,
               suggestions: null,
             });

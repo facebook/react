@@ -30,7 +30,7 @@ error.todo-repro-named-function-with-shadowed-local-same-name.ts:10:9
    8 |     return hasErrors;
    9 |   }
 > 10 |   return hasErrors();
-     |          ^^^^^^^^^ [InferMutationAliasingEffects] Expected value kind to be initialized
+     |          ^^^^^^^^^ this is uninitialized
   11 | }
   12 |
 ```

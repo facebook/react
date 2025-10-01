@@ -98,6 +98,7 @@ import {
   getHighestPriorityPendingLanes,
   higherPriorityLane,
   getBumpedLaneForHydrationByLane,
+  claimNextRetryLane,
 } from './ReactFiberLane';
 import {
   scheduleRefresh,
@@ -346,7 +347,7 @@ export function createHydrationContainer(
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
   enqueueUpdate(current, update, lane);
-  startUpdateTimerByLane(lane, 'hydrateRoot()');
+  startUpdateTimerByLane(lane, 'hydrateRoot()', null);
   scheduleInitialHydrationOnRoot(root, lane);
 
   return root;
@@ -453,7 +454,7 @@ function updateContainerImpl(
 
   const root = enqueueUpdate(rootFiber, update, lane);
   if (root !== null) {
-    startUpdateTimerByLane(lane, 'root.render()');
+    startUpdateTimerByLane(lane, 'root.render()', null);
     scheduleUpdateOnFiber(root, rootFiber, lane);
     entangleTransitions(root, rootFiber, lane);
   }
@@ -599,6 +600,7 @@ let overrideProps = null;
 let overridePropsDeletePath = null;
 let overridePropsRenamePath = null;
 let scheduleUpdate = null;
+let scheduleRetry = null;
 let setErrorHandler = null;
 let setSuspenseHandler = null;
 
@@ -835,6 +837,14 @@ if (__DEV__) {
     }
   };
 
+  scheduleRetry = (fiber: Fiber) => {
+    const lane = claimNextRetryLane();
+    const root = enqueueConcurrentRenderForLane(fiber, lane);
+    if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane);
+    }
+  };
+
   setErrorHandler = (newShouldErrorImpl: Fiber => ?boolean) => {
     shouldErrorImpl = newShouldErrorImpl;
   };
@@ -886,6 +896,7 @@ export function injectIntoDevTools(): boolean {
     internals.overridePropsDeletePath = overridePropsDeletePath;
     internals.overridePropsRenamePath = overridePropsRenamePath;
     internals.scheduleUpdate = scheduleUpdate;
+    internals.scheduleRetry = scheduleRetry;
     internals.setErrorHandler = setErrorHandler;
     internals.setSuspenseHandler = setSuspenseHandler;
     // React Refresh
