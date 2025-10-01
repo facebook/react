@@ -17,11 +17,15 @@ export default function TabbedWindow({
   tabs,
   activeTab,
   onTabChange,
+  activeTabOverride,
 }: {
   tabs: Map<string, React.ReactNode>;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  activeTabOverride?: string;
 }): React.ReactElement {
+  const currentActiveTab = activeTabOverride ? activeTabOverride : activeTab;
+
   const id = useId();
   const transitionName = `tab-highlight-${id}`;
 
@@ -37,7 +41,7 @@ export default function TabbedWindow({
       <div className="flex flex-col h-full max-w-full">
         <div className="flex p-2 flex-shrink-0">
           {Array.from(tabs.keys()).map(tab => {
-            const isActive = activeTab === tab;
+            const isActive = currentActiveTab === tab;
             return (
               <button
                 key={tab}
@@ -49,6 +53,8 @@ export default function TabbedWindow({
                 {isActive && (
                   <ViewTransition
                     name={transitionName}
+                    enter={{default: 'none'}}
+                    exit={{default: 'none'}}
                     share={{
                       [TOGGLE_TAB_TRANSITION]: 'tab-highlight',
                       default: 'none',
@@ -58,6 +64,8 @@ export default function TabbedWindow({
                   </ViewTransition>
                 )}
                 <ViewTransition
+                  enter={{default: 'none'}}
+                  exit={{default: 'none'}}
                   update={{
                     [TOGGLE_TAB_TRANSITION]: 'tab-text',
                     default: 'none',
@@ -69,7 +77,7 @@ export default function TabbedWindow({
           })}
         </div>
         <div className="flex-1 overflow-hidden w-full h-full">
-          {tabs.get(activeTab)}
+          {tabs.get(currentActiveTab)}
         </div>
       </div>
     </div>

@@ -262,14 +262,8 @@ function OutputContent({store, compilerOutput}: Props): JSX.Element {
    * Update the active tab back to the output or errors tab when the compilation state
    * changes between success/failure.
    */
-  const [previousOutputKind, setPreviousOutputKind] = useState(
-    compilerOutput.kind,
-  );
-  if (compilerOutput.kind !== previousOutputKind) {
-    setPreviousOutputKind(compilerOutput.kind);
-    setTabsOpen(new Set(['Output']));
-    setActiveTab('Output');
-  }
+
+  const isFailure = compilerOutput.kind !== 'ok';
   const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
   let lastResult: string = '';
   for (const [passName, results] of compilerOutput.results) {
@@ -297,6 +291,8 @@ function OutputContent({store, compilerOutput}: Props): JSX.Element {
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          // Display the Output tab on compilation failure
+          activeTabOverride={isFailure ? 'Output' : undefined}
         />
       </ViewTransition>
     );
@@ -314,6 +310,7 @@ function OutputContent({store, compilerOutput}: Props): JSX.Element {
         tabsOpen={tabsOpen}
         tabs={tabs}
         changedPasses={changedPasses}
+        isFailure={isFailure}
       />
     </ViewTransition>
   );
