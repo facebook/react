@@ -24,20 +24,8 @@ let utils;
 let assertLog;
 let waitFor;
 
-// This flag is on in Canary which disables timeline profiler.
-const enableComponentPerformanceTrack = React.version.startsWith('19.2');
-
 describe('Timeline profiler', () => {
-  if (enableComponentPerformanceTrack) {
-    test('no tests', () => {});
-    // Ignore all tests.
-    return;
-  }
-
   describe('User Timing API', () => {
-    if (enableComponentPerformanceTrack) {
-      return;
-    }
     let currentlyNotClearedMarks;
     let registeredMarks;
     let featureDetectionMarkName = null;
@@ -167,6 +155,7 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should return array of lane numbers from bitmask string', () => {
         expect(getLanesFromTransportDecimalBitmask('1')).toEqual([0]);
         expect(getLanesFromTransportDecimalBitmask('512')).toEqual([9]);
@@ -183,6 +172,7 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should return empty array if laneBitmaskString is not a bitmask', () => {
         expect(getLanesFromTransportDecimalBitmask('')).toEqual([]);
         expect(getLanesFromTransportDecimalBitmask('hello')).toEqual([]);
@@ -191,6 +181,7 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should ignore lanes outside REACT_TOTAL_NUM_LANES', () => {
         const REACT_TOTAL_NUM_LANES =
           require('react-devtools-timeline/src/constants').REACT_TOTAL_NUM_LANES;
@@ -316,11 +307,13 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should throw given an empty timeline', async () => {
         await expect(async () => preprocessData([])).rejects.toThrow();
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should throw given a timeline with no Profile event', async () => {
         const randomSample = createUserTimingEntry({
           dur: 100,
@@ -337,6 +330,7 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should throw given a timeline without an explicit profiler version mark nor any other React marks', async () => {
         const cpuProfilerSample = creactCpuProfilerSample();
 
@@ -348,6 +342,7 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should throw given a timeline with React scheduling marks, but without an explicit profiler version mark', async () => {
         const cpuProfilerSample = creactCpuProfilerSample();
         const scheduleRenderSample = createUserTimingEntry({
@@ -362,6 +357,7 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should return empty data given a timeline with no React scheduling profiling marks', async () => {
         const cpuProfilerSample = creactCpuProfilerSample();
         const randomSample = createUserTimingEntry({
@@ -466,6 +462,7 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should process legacy data format (before lane labels were added)', async () => {
         const cpuProfilerSample = creactCpuProfilerSample();
 
@@ -853,6 +850,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
+      // @reactVersion < 19.2
       it('should process a sample createRoot render sequence', async () => {
         function App() {
           const [didMount, setDidMount] = React.useState(false);
@@ -873,11 +871,126 @@ describe('Timeline profiler', () => {
         ]);
         expect(data).toMatchInlineSnapshot(`
           {
-            "batchUIDToMeasuresMap": Map {},
-            "componentMeasures": [],
-            "duration": 0.002,
+            "batchUIDToMeasuresMap": Map {
+              0 => [
+                {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.012,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.008,
+                  "type": "render-idle",
+                },
+                {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.003,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.008,
+                  "type": "render",
+                },
+                {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.008,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.012,
+                  "type": "commit",
+                },
+                {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.004,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.021,
+                  "type": "passive-effects",
+                },
+              ],
+              1 => [
+                {
+                  "batchUID": 1,
+                  "depth": 0,
+                  "duration": 0.012,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.026,
+                  "type": "render-idle",
+                },
+                {
+                  "batchUID": 1,
+                  "depth": 0,
+                  "duration": 0.003,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.026,
+                  "type": "render",
+                },
+                {
+                  "batchUID": 1,
+                  "depth": 0,
+                  "duration": 0.008,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.03,
+                  "type": "commit",
+                },
+                {
+                  "batchUID": 1,
+                  "depth": 0,
+                  "duration": 0.003,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.039,
+                  "type": "passive-effects",
+                },
+              ],
+            },
+            "componentMeasures": [
+              {
+                "componentName": "App",
+                "duration": 0.001,
+                "timestamp": 0.009,
+                "type": "render",
+                "warning": null,
+              },
+              {
+                "componentName": "App",
+                "duration": 0.002,
+                "timestamp": 0.022,
+                "type": "passive-effect-mount",
+                "warning": null,
+              },
+              {
+                "componentName": "App",
+                "duration": 0.001,
+                "timestamp": 0.027,
+                "type": "render",
+                "warning": null,
+              },
+              {
+                "componentName": "App",
+                "duration": 0.001,
+                "timestamp": 0.04,
+                "type": "passive-effect-mount",
+                "warning": null,
+              },
+            ],
+            "duration": 0.042,
             "flamechart": [],
-            "internalModuleSourceToRanges": Map {},
+            "internalModuleSourceToRanges": Map {
+              undefined => [
+                [
+                  {
+                    "columnNumber": 0,
+                    "functionName": "filtered",
+                    "lineNumber": 0,
+                    "source": "  at filtered (<anonymous>:0:0)",
+                  },
+                  {
+                    "columnNumber": 1,
+                    "functionName": "filtered",
+                    "lineNumber": 1,
+                    "source": "  at filtered (<anonymous>:1:1)",
+                  },
+                ],
+              ],
+            },
             "laneToLabelMap": Map {
               0 => "Sync",
               1 => "InputContinuousHydration",
@@ -917,7 +1030,72 @@ describe('Timeline profiler', () => {
               2 => [],
               3 => [],
               4 => [],
-              5 => [],
+              5 => [
+                {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.012,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.008,
+                  "type": "render-idle",
+                },
+                {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.003,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.008,
+                  "type": "render",
+                },
+                {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.008,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.012,
+                  "type": "commit",
+                },
+                {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.004,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.021,
+                  "type": "passive-effects",
+                },
+                {
+                  "batchUID": 1,
+                  "depth": 0,
+                  "duration": 0.012,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.026,
+                  "type": "render-idle",
+                },
+                {
+                  "batchUID": 1,
+                  "depth": 0,
+                  "duration": 0.003,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.026,
+                  "type": "render",
+                },
+                {
+                  "batchUID": 1,
+                  "depth": 0,
+                  "duration": 0.008,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.03,
+                  "type": "commit",
+                },
+                {
+                  "batchUID": 1,
+                  "depth": 0,
+                  "duration": 0.003,
+                  "lanes": "0b0000000000000000000000000000101",
+                  "timestamp": 0.039,
+                  "type": "passive-effects",
+                },
+              ],
               6 => [],
               7 => [],
               8 => [],
@@ -948,7 +1126,21 @@ describe('Timeline profiler', () => {
             "networkMeasures": [],
             "otherUserTimingMarks": [],
             "reactVersion": "<filtered-version>",
-            "schedulingEvents": [],
+            "schedulingEvents": [
+              {
+                "lanes": "0b0000000000000000000000000000101",
+                "timestamp": 0.007,
+                "type": "schedule-render",
+                "warning": null,
+              },
+              {
+                "componentName": "App",
+                "lanes": "0b0000000000000000000000000000101",
+                "timestamp": 0.023,
+                "type": "schedule-state-update",
+                "warning": null,
+              },
+            ],
             "snapshotHeight": 0,
             "snapshots": [],
             "startTime": 4,
@@ -995,6 +1187,7 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should populate other user timing marks', async () => {
         const userTimingData = createUserTimingData([]);
         userTimingData.push(
@@ -1045,6 +1238,7 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion < 19.2
       it('should include a suspended resource "displayName" if one is set', async () => {
         let promise = null;
         let resolvedValue = null;
@@ -1186,6 +1380,7 @@ describe('Timeline profiler', () => {
           });
 
           // @reactVersion >= 18.2
+          // @reactVersion < 19.2
           it('should not warn when React finishes a previously long (async) update with a short (sync) update inside of an event', async () => {
             function Yield({id, value}) {
               Scheduler.log(`${id}:${value}`);
@@ -1248,6 +1443,7 @@ describe('Timeline profiler', () => {
 
         describe('nested updates', () => {
           // @reactVersion >= 18.2
+          // @reactVersion < 19.2
           it('should not warn about short nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
@@ -1279,6 +1475,7 @@ describe('Timeline profiler', () => {
           });
 
           // @reactVersion >= 18.2
+          // @reactVersion < 19.2
           it('should not warn about short (forced) updates during layout effects', async () => {
             class Component extends React.Component {
               _didMount: boolean = false;
@@ -1434,6 +1631,7 @@ describe('Timeline profiler', () => {
           });
 
           // @reactVersion >= 18.2
+          // @reactVersion < 19.2
           it('should not warn about transition updates scheduled during commit phase', async () => {
             function Component() {
               const [value, setValue] = React.useState(0);
@@ -1575,6 +1773,7 @@ describe('Timeline profiler', () => {
 
         describe('errors thrown while rendering', () => {
           // @reactVersion >= 18.0
+          // @reactVersion < 19.2
           it('shoult parse Errors thrown during render', async () => {
             jest.spyOn(console, 'error');
 
@@ -1623,6 +1822,7 @@ describe('Timeline profiler', () => {
           // This also tests an edge case where a component suspends while profiling
           // before the first commit is logged (so the lane-to-labels map will not yet exist).
           // @reactVersion >= 18.2
+          // @reactVersion < 19.2
           it('should warn about suspending during an update', async () => {
             let promise = null;
             let resolvedValue = null;
@@ -1689,6 +1889,7 @@ describe('Timeline profiler', () => {
           });
 
           // @reactVersion >= 18.2
+          // @reactVersion < 19.2
           it('should not warn about suspending during an transition', async () => {
             let promise = null;
             let resolvedValue = null;
@@ -1957,6 +2158,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
+    // @reactVersion < 19.2
     it('should process a sample createRoot render sequence', async () => {
       function App() {
         const [didMount, setDidMount] = React.useState(false);
