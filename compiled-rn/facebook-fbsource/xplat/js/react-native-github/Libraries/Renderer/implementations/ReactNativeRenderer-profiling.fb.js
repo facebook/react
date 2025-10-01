@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7ab99671ffce20d2d516904daa7a565e>>
+ * @generated SignedSource<<63da334a3a02a967a7d6646f23e81996>>
  */
 
 "use strict";
@@ -10638,7 +10638,11 @@ function commitPassiveMountOnFiber(
               finishedWork,
               committedLanes,
               committedTransitions,
-              0 !== (finishedWork.subtreeFlags & 10256),
+              0 !== (finishedWork.subtreeFlags & 10256) ||
+                (enableComponentPerformanceTrack &&
+                  0 !== finishedWork.actualDuration &&
+                  (null === finishedWork.alternate ||
+                    finishedWork.alternate.child !== finishedWork.child)),
               endTime
             ),
             enableComponentPerformanceTrack &&
@@ -10727,7 +10731,12 @@ function recursivelyTraverseReconnectPassiveEffects(
   endTime
 ) {
   includeWorkInProgressEffects =
-    includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 10256);
+    includeWorkInProgressEffects &&
+    (0 !== (parentFiber.subtreeFlags & 10256) ||
+      (enableComponentPerformanceTrack &&
+        0 !== parentFiber.actualDuration &&
+        (null === parentFiber.alternate ||
+          parentFiber.alternate.child !== parentFiber.child)));
   for (parentFiber = parentFiber.child; null !== parentFiber; )
     if (enableComponentPerformanceTrack) {
       var nextSibling = parentFiber.sibling;
@@ -10883,7 +10892,13 @@ function recursivelyTraverseAtomicPassiveEffects(
   committedTransitions,
   endTime
 ) {
-  if (parentFiber.subtreeFlags & 10256)
+  if (
+    parentFiber.subtreeFlags & 10256 ||
+    (enableComponentPerformanceTrack &&
+      0 !== parentFiber.actualDuration &&
+      (null === parentFiber.alternate ||
+        parentFiber.alternate.child !== parentFiber.child))
+  )
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       if (enableComponentPerformanceTrack) {
         var nextSibling = parentFiber.sibling;
@@ -13468,11 +13483,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-7bccdbd7-20251001" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-bbc2d596-20251001" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-7bccdbd7-20251001\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-bbc2d596-20251001\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13522,10 +13537,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1634 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-7bccdbd7-20251001",
+    version: "19.2.0-native-fb-bbc2d596-20251001",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001"
+    reconcilerVersion: "19.2.0-native-fb-bbc2d596-20251001"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1634.rendererConfig = extraDevToolsConfig);

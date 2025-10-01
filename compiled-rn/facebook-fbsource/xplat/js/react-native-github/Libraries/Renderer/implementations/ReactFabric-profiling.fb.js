@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5ce937cf54a143456e27e040d29301c3>>
+ * @generated SignedSource<<c306ffe0f8ab1c2d93a994c76d72916b>>
  */
 
 "use strict";
@@ -10143,7 +10143,11 @@ function commitPassiveMountOnFiber(
               finishedWork,
               committedLanes,
               committedTransitions,
-              0 !== (finishedWork.subtreeFlags & 10256),
+              0 !== (finishedWork.subtreeFlags & 10256) ||
+                (enableComponentPerformanceTrack &&
+                  0 !== finishedWork.actualDuration &&
+                  (null === finishedWork.alternate ||
+                    finishedWork.alternate.child !== finishedWork.child)),
               endTime
             ),
             enableComponentPerformanceTrack &&
@@ -10232,7 +10236,12 @@ function recursivelyTraverseReconnectPassiveEffects(
   endTime
 ) {
   includeWorkInProgressEffects =
-    includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 10256);
+    includeWorkInProgressEffects &&
+    (0 !== (parentFiber.subtreeFlags & 10256) ||
+      (enableComponentPerformanceTrack &&
+        0 !== parentFiber.actualDuration &&
+        (null === parentFiber.alternate ||
+          parentFiber.alternate.child !== parentFiber.child)));
   for (parentFiber = parentFiber.child; null !== parentFiber; )
     if (enableComponentPerformanceTrack) {
       var nextSibling = parentFiber.sibling;
@@ -10388,7 +10397,13 @@ function recursivelyTraverseAtomicPassiveEffects(
   committedTransitions,
   endTime
 ) {
-  if (parentFiber.subtreeFlags & 10256)
+  if (
+    parentFiber.subtreeFlags & 10256 ||
+    (enableComponentPerformanceTrack &&
+      0 !== parentFiber.actualDuration &&
+      (null === parentFiber.alternate ||
+        parentFiber.alternate.child !== parentFiber.child))
+  )
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       if (enableComponentPerformanceTrack) {
         var nextSibling = parentFiber.sibling;
@@ -13305,10 +13320,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1627 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-7bccdbd7-20251001",
+    version: "19.2.0-native-fb-bbc2d596-20251001",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001"
+    reconcilerVersion: "19.2.0-native-fb-bbc2d596-20251001"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1627.rendererConfig = extraDevToolsConfig);

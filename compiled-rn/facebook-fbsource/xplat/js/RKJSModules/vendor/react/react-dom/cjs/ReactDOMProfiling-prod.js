@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6dab31bf9cebb9b65734cadf157b892c>>
+ * @generated SignedSource<<dcd526602c67f768807e30c17641dd1b>>
  */
 
 /*
@@ -11113,7 +11113,7 @@ function commitPassiveMountOnFiber(
               finishedWork,
               committedLanes,
               committedTransitions,
-              0 !== (finishedWork.subtreeFlags & 10256)
+              0 !== (finishedWork.subtreeFlags & 10256) || !1
             ));
       flags & 2048 && commitOffscreenPassiveMountEffects(id, finishedWork);
       break;
@@ -11144,7 +11144,8 @@ function recursivelyTraverseReconnectPassiveEffects(
   includeWorkInProgressEffects
 ) {
   includeWorkInProgressEffects =
-    includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 10256);
+    includeWorkInProgressEffects &&
+    (0 !== (parentFiber.subtreeFlags & 10256) || !1);
   for (parentFiber = parentFiber.child; null !== parentFiber; ) {
     var finishedRoot = finishedRoot$jscomp$0,
       finishedWork = parentFiber,
@@ -17588,14 +17589,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2060 = React.version;
 if (
-  "19.2.0-native-fb-7bccdbd7-20251001" !==
+  "19.2.0-native-fb-bbc2d596-20251001" !==
   isomorphicReactPackageVersion$jscomp$inline_2060
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2060,
-      "19.2.0-native-fb-7bccdbd7-20251001"
+      "19.2.0-native-fb-bbc2d596-20251001"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17617,10 +17618,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2639 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-7bccdbd7-20251001",
+  version: "19.2.0-native-fb-bbc2d596-20251001",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001"
+  reconcilerVersion: "19.2.0-native-fb-bbc2d596-20251001"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2640 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17880,4 +17881,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-native-fb-7bccdbd7-20251001";
+exports.version = "19.2.0-native-fb-bbc2d596-20251001";

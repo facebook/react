@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<44f97cd3cc42a36a9aa7edd9e6fa53dc>>
+ * @generated SignedSource<<74546340f9b0be860a6805e4aa2d6579>>
  */
 
 "use strict";
@@ -13373,7 +13373,11 @@ __DEV__ &&
                   finishedWork,
                   committedLanes,
                   committedTransitions,
-                  0 !== (finishedWork.subtreeFlags & 10256),
+                  0 !== (finishedWork.subtreeFlags & 10256) ||
+                    (enableComponentPerformanceTrack &&
+                      0 !== finishedWork.actualDuration &&
+                      (null === finishedWork.alternate ||
+                        finishedWork.alternate.child !== finishedWork.child)),
                   endTime
                 ),
                 enableComponentPerformanceTrack &&
@@ -13469,7 +13473,11 @@ __DEV__ &&
     ) {
       includeWorkInProgressEffects =
         includeWorkInProgressEffects &&
-        0 !== (parentFiber.subtreeFlags & 10256);
+        (0 !== (parentFiber.subtreeFlags & 10256) ||
+          (enableComponentPerformanceTrack &&
+            0 !== parentFiber.actualDuration &&
+            (null === parentFiber.alternate ||
+              parentFiber.alternate.child !== parentFiber.child)));
       for (parentFiber = parentFiber.child; null !== parentFiber; )
         if (enableComponentPerformanceTrack) {
           var nextSibling = parentFiber.sibling;
@@ -13628,7 +13636,13 @@ __DEV__ &&
       committedTransitions,
       endTime
     ) {
-      if (parentFiber.subtreeFlags & 10256)
+      if (
+        parentFiber.subtreeFlags & 10256 ||
+        (enableComponentPerformanceTrack &&
+          0 !== parentFiber.actualDuration &&
+          (null === parentFiber.alternate ||
+            parentFiber.alternate.child !== parentFiber.child))
+      )
         for (parentFiber = parentFiber.child; null !== parentFiber; )
           if (enableComponentPerformanceTrack) {
             var nextSibling = parentFiber.sibling;
@@ -20278,11 +20292,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-7bccdbd7-20251001" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-bbc2d596-20251001" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-7bccdbd7-20251001\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-bbc2d596-20251001\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -20308,10 +20322,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-7bccdbd7-20251001",
+        version: "19.2.0-native-fb-bbc2d596-20251001",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001"
+        reconcilerVersion: "19.2.0-native-fb-bbc2d596-20251001"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

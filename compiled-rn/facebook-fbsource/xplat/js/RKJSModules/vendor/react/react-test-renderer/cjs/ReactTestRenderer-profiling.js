@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6fd22ffd940fe47473172c1e80c7786b>>
+ * @generated SignedSource<<e4616791d94dc6c4087d4189150e369f>>
  */
 
 "use strict";
@@ -8425,7 +8425,7 @@ function commitPassiveMountOnFiber(
               finishedWork,
               committedLanes,
               committedTransitions,
-              0 !== (finishedWork.subtreeFlags & 10256)
+              0 !== (finishedWork.subtreeFlags & 10256) || !1
             ));
       flags & 2048 && commitOffscreenPassiveMountEffects(id, finishedWork);
       break;
@@ -8457,7 +8457,8 @@ function recursivelyTraverseReconnectPassiveEffects(
   includeWorkInProgressEffects
 ) {
   includeWorkInProgressEffects =
-    includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 10256);
+    includeWorkInProgressEffects &&
+    (0 !== (parentFiber.subtreeFlags & 10256) || !1);
   for (parentFiber = parentFiber.child; null !== parentFiber; ) {
     var finishedRoot = finishedRoot$jscomp$0,
       finishedWork = parentFiber,
@@ -10725,10 +10726,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1274 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-7bccdbd7-20251001",
+  version: "19.2.0-native-fb-bbc2d596-20251001",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001",
+  reconcilerVersion: "19.2.0-native-fb-bbc2d596-20251001",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$146 = 0;
@@ -10879,4 +10880,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-7bccdbd7-20251001";
+exports.version = "19.2.0-native-fb-bbc2d596-20251001";

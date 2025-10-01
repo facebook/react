@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b05dc3bb03889cde52f29f95bd7de23b>>
+ * @generated SignedSource<<96957f2697c88fa28b167de6f1f258cf>>
  */
 
 "use strict";
@@ -9062,7 +9062,7 @@ function commitPassiveMountOnFiber(
               finishedWork,
               committedLanes,
               committedTransitions,
-              0 !== (finishedWork.subtreeFlags & 10256)
+              0 !== (finishedWork.subtreeFlags & 10256) || !1
             ));
       flags & 2048 && commitOffscreenPassiveMountEffects(id, finishedWork);
       break;
@@ -9093,7 +9093,8 @@ function recursivelyTraverseReconnectPassiveEffects(
   includeWorkInProgressEffects
 ) {
   includeWorkInProgressEffects =
-    includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 10256);
+    includeWorkInProgressEffects &&
+    (0 !== (parentFiber.subtreeFlags & 10256) || !1);
   for (parentFiber = parentFiber.child; null !== parentFiber; ) {
     var finishedRoot = finishedRoot$jscomp$0,
       finishedWork = parentFiber,
@@ -11255,10 +11256,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1319 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-7bccdbd7-20251001",
+    version: "19.2.0-native-fb-bbc2d596-20251001",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001"
+    reconcilerVersion: "19.2.0-native-fb-bbc2d596-20251001"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1319.rendererConfig = extraDevToolsConfig);

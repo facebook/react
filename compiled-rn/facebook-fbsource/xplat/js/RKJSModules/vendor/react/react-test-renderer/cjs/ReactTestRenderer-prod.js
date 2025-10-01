@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ec815d6a0f4e87342afb7c550eab9c66>>
+ * @generated SignedSource<<8fc8312aaa29da971b0660c4ca42ef07>>
  */
 
 "use strict";
@@ -7947,7 +7947,7 @@ function commitPassiveMountOnFiber(
               finishedWork,
               committedLanes,
               committedTransitions,
-              0 !== (finishedWork.subtreeFlags & 10256)
+              0 !== (finishedWork.subtreeFlags & 10256) || !1
             ));
       flags & 2048 && commitOffscreenPassiveMountEffects(id, finishedWork);
       break;
@@ -7978,7 +7978,8 @@ function recursivelyTraverseReconnectPassiveEffects(
   includeWorkInProgressEffects
 ) {
   includeWorkInProgressEffects =
-    includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 10256);
+    includeWorkInProgressEffects &&
+    (0 !== (parentFiber.subtreeFlags & 10256) || !1);
   for (parentFiber = parentFiber.child; null !== parentFiber; ) {
     var finishedRoot = finishedRoot$jscomp$0,
       finishedWork = parentFiber,
@@ -10104,10 +10105,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1493 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-7bccdbd7-20251001",
+  version: "19.2.0-native-fb-bbc2d596-20251001",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001"
+  reconcilerVersion: "19.2.0-native-fb-bbc2d596-20251001"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1494 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10243,4 +10244,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.2.0-native-fb-7bccdbd7-20251001";
+exports.version = "19.2.0-native-fb-bbc2d596-20251001";

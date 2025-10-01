@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<29f3affb828e23941e76329ad5b01c96>>
+ * @generated SignedSource<<8ef808305128fc9414e540901280c6bc>>
  */
 
 /*
@@ -16602,7 +16602,11 @@ __DEV__ &&
                   finishedWork,
                   committedLanes,
                   committedTransitions,
-                  0 !== (finishedWork.subtreeFlags & 10256),
+                  0 !== (finishedWork.subtreeFlags & 10256) ||
+                    (enableComponentPerformanceTrack &&
+                      0 !== finishedWork.actualDuration &&
+                      (null === finishedWork.alternate ||
+                        finishedWork.alternate.child !== finishedWork.child)),
                   endTime
                 ),
                 enableComponentPerformanceTrack &&
@@ -16701,7 +16705,11 @@ __DEV__ &&
     ) {
       includeWorkInProgressEffects =
         includeWorkInProgressEffects &&
-        0 !== (parentFiber.subtreeFlags & 10256);
+        (0 !== (parentFiber.subtreeFlags & 10256) ||
+          (enableComponentPerformanceTrack &&
+            0 !== parentFiber.actualDuration &&
+            (null === parentFiber.alternate ||
+              parentFiber.alternate.child !== parentFiber.child)));
       for (parentFiber = parentFiber.child; null !== parentFiber; )
         if (enableComponentPerformanceTrack) {
           var nextSibling = parentFiber.sibling;
@@ -16860,7 +16868,13 @@ __DEV__ &&
       committedTransitions,
       endTime
     ) {
-      if (parentFiber.subtreeFlags & 10256)
+      if (
+        parentFiber.subtreeFlags & 10256 ||
+        (enableComponentPerformanceTrack &&
+          0 !== parentFiber.actualDuration &&
+          (null === parentFiber.alternate ||
+            parentFiber.alternate.child !== parentFiber.child))
+      )
         for (parentFiber = parentFiber.child; null !== parentFiber; )
           if (enableComponentPerformanceTrack) {
             var nextSibling = parentFiber.sibling;
@@ -30103,11 +30117,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.2.0-native-fb-7bccdbd7-20251001" !== isomorphicReactPackageVersion)
+      if ("19.2.0-native-fb-bbc2d596-20251001" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.2.0-native-fb-7bccdbd7-20251001\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.2.0-native-fb-bbc2d596-20251001\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30144,10 +30158,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.2.0-native-fb-7bccdbd7-20251001",
+          version: "19.2.0-native-fb-bbc2d596-20251001",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001"
+          reconcilerVersion: "19.2.0-native-fb-bbc2d596-20251001"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30613,7 +30627,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.2.0-native-fb-7bccdbd7-20251001";
+    exports.version = "19.2.0-native-fb-bbc2d596-20251001";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
