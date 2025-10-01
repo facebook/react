@@ -41,8 +41,9 @@ export const enableObjectFiber: boolean = false;
 export const enablePostpone: boolean = false;
 export const enableReactTestRendererWarning: boolean = false;
 export const enableRetryLaneExpiration: boolean = false;
-export const enableSchedulingProfiler: boolean = __PROFILE__;
-export const enableComponentPerformanceTrack: boolean = false;
+export const enableComponentPerformanceTrack: boolean = true;
+export const enableSchedulingProfiler: boolean =
+  !enableComponentPerformanceTrack && __PROFILE__;
 export const enableScopeAPI: boolean = false;
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 export const enableSuspenseAvoidThisFallback: boolean = false;
