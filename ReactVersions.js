@@ -7,12 +7,12 @@
 //
 // The @latest channel uses the version as-is, e.g.:
 //
-//   19.1.0
+//   19.2.0
 //
 // The @canary channel appends additional information, with the scheme
 // <version>-<label>-<commit_sha>, e.g.:
 //
-//   19.1.0-canary-a1c2d3e4
+//   19.2.0-canary-a1c2d3e4
 //
 // The @experimental channel doesn't include a version, only a date and a sha, e.g.:
 //
