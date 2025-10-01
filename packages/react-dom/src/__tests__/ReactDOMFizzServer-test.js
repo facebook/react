@@ -10833,7 +10833,7 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
     );
   });
 
-  fit('f', async () => {
+  it('f', async () => {
     let prerendering = true;
 
     function SuspendPrerender() {
@@ -10843,21 +10843,12 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
       return null;
     }
 
-    let resolveResumeOuter = () => {};
-    const resumePromiseOuter = new Promise(r => {
-      resolveResumeOuter = r;
+    let resolveResume = () => {};
+    const resumePromise = new Promise(r => {
+      resolveResume = r;
     });
-    function SuspendResumeOuter() {
-      React.use(resumePromiseOuter);
-      return null;
-    }
-
-    let resolveResumeInner = () => {};
-    const resumePromiseInner = new Promise(r => {
-      resolveResumeInner = r;
-    });
-    function SuspendResumeInner() {
-      React.use(resumePromiseInner);
+    function SuspendResume() {
+      React.use(resumePromise);
       return null;
     }
 
@@ -10867,14 +10858,9 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
           <body>
             <SuspendPrerender />
             <Suspense fallback="outer">
-              <Suspense fallback={<SuspendResumeOuter />}>
-                <Suspense fallback="inner">
-                  <Suspense fallback="innermost">
-                    <SuspendResumeInner />
-                    hello world
-                  </Suspense>
-                </Suspense>
-                <SuspendResumeOuter />
+              <Suspense fallback={<SuspendResume />}>
+                hello world
+                <SuspendResume />
               </Suspense>
             </Suspense>
           </body>
@@ -10929,20 +10915,59 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
     // Resolve the final promise
     console.log('-----------------------------');
     await act(() => {
-      resolveResumeInner();
+      resolveResume();
     });
 
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head />
-        <body>outer</body>
+        <body>hello world</body>
       </html>,
     );
+  });
+
+  fit('f', async () => {
+    function SuspendAlways() {
+      React.use(new Promise(() => {}));
+    }
+
+    let resolveResume = () => {};
+    const resumePromise = new Promise(r => {
+      resolveResume = r;
+    });
+    function SuspendResume() {
+      React.use(resumePromise);
+      return null;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="outer">
+              <Suspense fallback={<SuspendAlways />}>
+                hello world
+                <SuspendResume />
+              </Suspense>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    writable.on('data', console.log);
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onError() {},
+      });
+      pipe(writable);
+    });
 
     // Resolve the final promise
     console.log('-----------------------------');
     await act(() => {
-      resolveResumeOuter();
+      resolveResume();
     });
 
     expect(getVisibleChildren(document)).toEqual(
