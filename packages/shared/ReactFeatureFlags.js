@@ -166,7 +166,7 @@ export const renameElementSymbol: boolean = true;
 /**
  * Enables a fix to run insertion effect cleanup on hidden subtrees.
  */
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = false;
+export const enableHiddenSubtreeInsertionEffectCleanup: boolean = true;
 
 /**
  * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
