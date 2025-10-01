@@ -11718,7 +11718,7 @@ function commitPassiveMountOnFiber(
                 finishedWork,
                 committedLanes,
                 committedTransitions,
-                0 !== (finishedWork.subtreeFlags & 10256)
+                0 !== (finishedWork.subtreeFlags & 10256) || !1
               )));
       flags & 2048 &&
         commitOffscreenPassiveMountEffects(
@@ -11782,7 +11782,8 @@ function recursivelyTraverseReconnectPassiveEffects(
   includeWorkInProgressEffects
 ) {
   includeWorkInProgressEffects =
-    includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 10256);
+    includeWorkInProgressEffects &&
+    (0 !== (parentFiber.subtreeFlags & 10256) || !1);
   for (parentFiber = parentFiber.child; null !== parentFiber; ) {
     var finishedRoot = finishedRoot$jscomp$0,
       finishedWork = parentFiber,
@@ -19969,14 +19970,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2128 = React.version;
 if (
-  "19.2.0-www-classic-1bd1f01f-20251001" !==
+  "19.2.0-www-classic-bbc2d596-20251001" !==
   isomorphicReactPackageVersion$jscomp$inline_2128
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2128,
-      "19.2.0-www-classic-1bd1f01f-20251001"
+      "19.2.0-www-classic-bbc2d596-20251001"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19994,10 +19995,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2760 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-1bd1f01f-20251001",
+  version: "19.2.0-www-classic-bbc2d596-20251001",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-1bd1f01f-20251001"
+  reconcilerVersion: "19.2.0-www-classic-bbc2d596-20251001"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2761 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20426,4 +20427,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-classic-1bd1f01f-20251001";
+exports.version = "19.2.0-www-classic-bbc2d596-20251001";

@@ -9137,7 +9137,7 @@ function commitPassiveMountOnFiber(
                 finishedWork,
                 committedLanes,
                 committedTransitions,
-                0 !== (finishedWork.subtreeFlags & 10256)
+                0 !== (finishedWork.subtreeFlags & 10256) || !1
               )));
       flags & 2048 &&
         commitOffscreenPassiveMountEffects(
@@ -9194,7 +9194,8 @@ function recursivelyTraverseReconnectPassiveEffects(
   includeWorkInProgressEffects
 ) {
   includeWorkInProgressEffects =
-    includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 10256);
+    includeWorkInProgressEffects &&
+    (0 !== (parentFiber.subtreeFlags & 10256) || !1);
   for (parentFiber = parentFiber.child; null !== parentFiber; ) {
     var finishedRoot = finishedRoot$jscomp$0,
       finishedWork = parentFiber,
@@ -11433,10 +11434,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1646 = {
   bundleType: 0,
-  version: "19.2.0-www-classic-1bd1f01f-20251001",
+  version: "19.2.0-www-classic-bbc2d596-20251001",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-classic-1bd1f01f-20251001"
+  reconcilerVersion: "19.2.0-www-classic-bbc2d596-20251001"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1647 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11462,4 +11463,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.2.0-www-classic-1bd1f01f-20251001";
+exports.version = "19.2.0-www-classic-bbc2d596-20251001";

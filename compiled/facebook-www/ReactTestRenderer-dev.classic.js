@@ -10912,7 +10912,7 @@ __DEV__ &&
                   finishedWork,
                   committedLanes,
                   committedTransitions,
-                  0 !== (finishedWork.subtreeFlags & 10256)
+                  0 !== (finishedWork.subtreeFlags & 10256) || !1
                 ));
           flags & 2048 &&
             commitOffscreenPassiveMountEffects(_current, finishedWork);
@@ -10946,7 +10946,7 @@ __DEV__ &&
     ) {
       includeWorkInProgressEffects =
         includeWorkInProgressEffects &&
-        0 !== (parentFiber.subtreeFlags & 10256);
+        (0 !== (parentFiber.subtreeFlags & 10256) || !1);
       for (parentFiber = parentFiber.child; null !== parentFiber; )
         reconnectPassiveEffects(
           finishedRoot,
@@ -15705,10 +15705,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-1bd1f01f-20251001",
+        version: "19.2.0-www-classic-bbc2d596-20251001",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-1bd1f01f-20251001"
+        reconcilerVersion: "19.2.0-www-classic-bbc2d596-20251001"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15844,5 +15844,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.2.0-www-classic-1bd1f01f-20251001";
+    exports.version = "19.2.0-www-classic-bbc2d596-20251001";
   })();
