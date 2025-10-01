@@ -24,7 +24,7 @@
   "dependencies": {
     "art": "^0.10.1",
     "create-react-class": "^15.6.2",
-    "scheduler": "^0.26.0"
+    "scheduler": "^0.27.0"
   },
   "peerDependencies": {
     "react": "^19.2.0"
