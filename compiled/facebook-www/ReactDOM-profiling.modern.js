@@ -2614,7 +2614,7 @@ var now = Scheduler.unstable_now,
   blockingUpdateType = 0,
   blockingEventTime = -1.1,
   blockingEventType = null,
-  blockingEventIsRepeat = !1,
+  blockingEventRepeatTime = -1.1,
   blockingSuspendedTime = -1.1,
   transitionClampTime = -0,
   transitionStartTime = -1.1,
@@ -2622,7 +2622,7 @@ var now = Scheduler.unstable_now,
   transitionUpdateType = 0,
   transitionEventTime = -1.1,
   transitionEventType = null,
-  transitionEventIsRepeat = !1,
+  transitionEventRepeatTime = -1.1,
   transitionSuspendedTime = -1.1,
   retryClampTime = -0,
   idleClampTime = -0,
@@ -2638,8 +2638,9 @@ function startUpdateTimerByLane(lane) {
           ((componentEffectSpawnedUpdate = !0), (blockingUpdateType = 1));
         lane = resolveEventTimeStamp();
         var newEventType$30 = resolveEventType();
-        lane !== blockingEventTime || newEventType$30 !== blockingEventType
-          ? (blockingEventIsRepeat = !1)
+        lane !== blockingEventRepeatTime ||
+        newEventType$30 !== blockingEventType
+          ? (blockingEventRepeatTime = -1.1)
           : null !== newEventType$30 && (blockingUpdateType = 1);
         blockingEventTime = lane;
         blockingEventType = newEventType$30;
@@ -2652,10 +2653,10 @@ function startUpdateTimerByLane(lane) {
       lane = resolveEventTimeStamp();
       newEventType$30 = resolveEventType();
       if (
-        lane !== transitionEventTime ||
+        lane !== transitionEventRepeatTime ||
         newEventType$30 !== transitionEventType
       )
-        transitionEventIsRepeat = !1;
+        transitionEventRepeatTime = -1.1;
       transitionEventTime = lane;
       transitionEventType = newEventType$30;
     }
@@ -2667,8 +2668,9 @@ function startHostActionTimer() {
       0 !== (executionContext & 6) && (blockingUpdateType = 1);
       var newEventTime = resolveEventTimeStamp(),
         newEventType = resolveEventType();
-      newEventTime !== blockingEventTime || newEventType !== blockingEventType
-        ? (blockingEventIsRepeat = !1)
+      newEventTime !== blockingEventRepeatTime ||
+      newEventType !== blockingEventType
+        ? (blockingEventRepeatTime = -1.1)
         : null !== newEventType && (blockingUpdateType = 1);
       blockingEventTime = newEventTime;
       blockingEventType = newEventType;
@@ -2680,10 +2682,10 @@ function startHostActionTimer() {
       newEventTime = resolveEventTimeStamp();
       newEventType = resolveEventType();
       if (
-        newEventTime !== transitionEventTime ||
+        newEventTime !== transitionEventRepeatTime ||
         newEventType !== transitionEventType
       )
-        transitionEventIsRepeat = !1;
+        transitionEventRepeatTime = -1.1;
       transitionEventTime = newEventTime;
       transitionEventType = newEventType;
     }
@@ -3145,10 +3147,10 @@ ReactSharedInternals.S = function (transition, returnValue) {
       var newEventTime = resolveEventTimeStamp(),
         newEventType = resolveEventType();
       if (
-        newEventTime !== transitionEventTime ||
+        newEventTime !== transitionEventRepeatTime ||
         newEventType !== transitionEventType
       )
-        transitionEventIsRepeat = !1;
+        transitionEventRepeatTime = -1.1;
       transitionEventTime = newEventTime;
       transitionEventType = newEventType;
     }
@@ -14314,7 +14316,7 @@ function prepareFreshStack(root, lanes) {
           (setCurrentTrackFromLanes(2),
           logAnimatingPhase(blockingClampTime, clampedRenderStartTime$232));
       clampedRenderStartTime$232 = blockingEventType;
-      var eventIsRepeat = blockingEventIsRepeat,
+      var eventIsRepeat = 0 < blockingEventRepeatTime,
         isSpawnedUpdate = 1 === blockingUpdateType,
         isPingedUpdate = 2 === blockingUpdateType,
         renderStartTime$jscomp$0 = renderStartTime;
@@ -14362,7 +14364,8 @@ function prepareFreshStack(root, lanes) {
       blockingUpdateTime = -1.1;
       blockingUpdateType = 0;
       blockingSuspendedTime = -1.1;
-      blockingEventIsRepeat = !0;
+      blockingEventRepeatTime = blockingEventTime;
+      blockingEventTime = -1.1;
       blockingClampTime = now();
     }
     0 !== (lanes & 4194048) &&
@@ -14395,7 +14398,7 @@ function prepareFreshStack(root, lanes) {
           (setCurrentTrackFromLanes(256),
           logAnimatingPhase(transitionClampTime, eventIsRepeat)),
       (eventIsRepeat = transitionEventType),
-      (isSpawnedUpdate = transitionEventIsRepeat),
+      (isSpawnedUpdate = 0 < transitionEventRepeatTime),
       (isPingedUpdate = 2 === transitionUpdateType),
       (renderStartTime$jscomp$0 = renderStartTime),
       supportsUserTiming &&
@@ -14447,7 +14450,8 @@ function prepareFreshStack(root, lanes) {
       (transitionUpdateTime = transitionStartTime = -1.1),
       (transitionUpdateType = 0),
       (transitionSuspendedTime = -1.1),
-      (transitionEventIsRepeat = !0),
+      (transitionEventRepeatTime = transitionEventTime),
+      (transitionEventTime = -1.1),
       (transitionClampTime = now()));
     0 !== (lanes & 62914560) &&
       0 !== (animatingLanes & 62914560) &&
@@ -21996,14 +22000,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2428 = React.version;
 if (
-  "19.2.0-www-modern-cf884083-20250930" !==
+  "19.2.0-www-modern-7bccdbd7-20251001" !==
   isomorphicReactPackageVersion$jscomp$inline_2428
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2428,
-      "19.2.0-www-modern-cf884083-20250930"
+      "19.2.0-www-modern-7bccdbd7-20251001"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22021,10 +22025,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2430 = {
   bundleType: 0,
-  version: "19.2.0-www-modern-cf884083-20250930",
+  version: "19.2.0-www-modern-7bccdbd7-20251001",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-www-modern-cf884083-20250930"
+  reconcilerVersion: "19.2.0-www-modern-7bccdbd7-20251001"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2430.getLaneLabelMap = getLaneLabelMap),
@@ -22457,7 +22461,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.2.0-www-modern-cf884083-20250930";
+exports.version = "19.2.0-www-modern-7bccdbd7-20251001";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -3435,8 +3435,8 @@ __DEV__ &&
               ((componentEffectSpawnedUpdate = !0), (blockingUpdateType = 1)),
             (lane = resolveEventTimeStamp()),
             (method = resolveEventType()),
-            lane !== blockingEventTime || method !== blockingEventType
-              ? (blockingEventIsRepeat = !1)
+            lane !== blockingEventRepeatTime || method !== blockingEventType
+              ? (blockingEventRepeatTime = -1.1)
               : null !== method && (blockingUpdateType = 1),
             (blockingEventTime = lane),
             (blockingEventType = method));
@@ -3452,8 +3452,11 @@ __DEV__ &&
         ) {
           lane = resolveEventTimeStamp();
           method = resolveEventType();
-          if (lane !== transitionEventTime || method !== transitionEventType)
-            transitionEventIsRepeat = !1;
+          if (
+            lane !== transitionEventRepeatTime ||
+            method !== transitionEventType
+          )
+            transitionEventRepeatTime = -1.1;
           transitionEventTime = lane;
           transitionEventType = method;
         }
@@ -3467,9 +3470,9 @@ __DEV__ &&
           isAlreadyRendering() && (blockingUpdateType = 1);
           var newEventTime = resolveEventTimeStamp(),
             newEventType = resolveEventType();
-          newEventTime !== blockingEventTime ||
+          newEventTime !== blockingEventRepeatTime ||
           newEventType !== blockingEventType
-            ? (blockingEventIsRepeat = !1)
+            ? (blockingEventRepeatTime = -1.1)
             : null !== newEventType && (blockingUpdateType = 1);
           blockingEventTime = newEventTime;
           blockingEventType = newEventType;
@@ -3484,10 +3487,10 @@ __DEV__ &&
           fiber = resolveEventTimeStamp();
           newEventTime = resolveEventType();
           if (
-            fiber !== transitionEventTime ||
+            fiber !== transitionEventRepeatTime ||
             newEventTime !== transitionEventType
           )
-            transitionEventIsRepeat = !1;
+            transitionEventRepeatTime = -1.1;
           transitionEventTime = fiber;
           transitionEventType = newEventTime;
         }
@@ -17578,7 +17581,7 @@ __DEV__ &&
           previousRenderStartTime = debugTask;
           var eventTime = endTime,
             eventType = blockingEventType,
-            eventIsRepeat = blockingEventIsRepeat,
+            eventIsRepeat = 0 < blockingEventRepeatTime,
             isSpawnedUpdate = 1 === blockingUpdateType,
             isPingedUpdate = 2 === blockingUpdateType;
           debugTask = renderStartTime;
@@ -17665,7 +17668,8 @@ __DEV__ &&
           blockingUpdateType = 0;
           blockingUpdateComponentName = blockingUpdateMethodName = null;
           blockingSuspendedTime = -1.1;
-          blockingEventIsRepeat = !0;
+          blockingEventRepeatTime = blockingEventTime;
+          blockingEventTime = -1.1;
           blockingClampTime = now();
         }
         0 !== (lanes & 4194048) &&
@@ -17704,7 +17708,7 @@ __DEV__ &&
               logAnimatingPhase(transitionClampTime, color, animatingTask)),
           (isPingedUpdate = endTime),
           (eventTime = transitionEventType),
-          (eventType = transitionEventIsRepeat),
+          (eventType = 0 < transitionEventRepeatTime),
           (eventIsRepeat = 2 === transitionUpdateType),
           (color = renderStartTime),
           (endTime = transitionUpdateTask),
@@ -17801,7 +17805,8 @@ __DEV__ &&
           (transitionUpdateTime = transitionStartTime = -1.1),
           (transitionUpdateType = 0),
           (transitionSuspendedTime = -1.1),
-          (transitionEventIsRepeat = !0),
+          (transitionEventRepeatTime = transitionEventTime),
+          (transitionEventTime = -1.1),
           (transitionClampTime = now()));
         0 !== (lanes & 62914560) &&
           0 !== (animatingLanes & 62914560) &&
@@ -20582,7 +20587,7 @@ __DEV__ &&
       blockingUpdateComponentName = null,
       blockingEventTime = -1.1,
       blockingEventType = null,
-      blockingEventIsRepeat = !1,
+      blockingEventRepeatTime = -1.1,
       blockingSuspendedTime = -1.1,
       transitionClampTime = -0,
       transitionStartTime = -1.1,
@@ -20593,7 +20598,7 @@ __DEV__ &&
       transitionUpdateComponentName = null,
       transitionEventTime = -1.1,
       transitionEventType = null,
-      transitionEventIsRepeat = !1,
+      transitionEventRepeatTime = -1.1,
       transitionSuspendedTime = -1.1,
       retryClampTime = -0,
       idleClampTime = -0,
@@ -20636,10 +20641,10 @@ __DEV__ &&
           var newEventTime = resolveEventTimeStamp(),
             newEventType = resolveEventType();
           if (
-            newEventTime !== transitionEventTime ||
+            newEventTime !== transitionEventRepeatTime ||
             newEventType !== transitionEventType
           )
-            transitionEventIsRepeat = !1;
+            transitionEventRepeatTime = -1.1;
           transitionEventTime = newEventTime;
           transitionEventType = newEventType;
         }
@@ -22939,7 +22944,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-cf884083-20250930"
+        reconcilerVersion: "19.2.0-www-classic-7bccdbd7-20251001"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

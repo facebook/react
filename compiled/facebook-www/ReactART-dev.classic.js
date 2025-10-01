@@ -3194,8 +3194,8 @@ __DEV__ &&
             (executionContext & (RenderContext | CommitContext)) !==
               NoContext &&
               ((componentEffectSpawnedUpdate = !0), (blockingUpdateType = 1));
-            if (-1.1 !== blockingEventTime || null !== blockingEventType)
-              blockingEventIsRepeat = !1;
+            if (-1.1 !== blockingEventRepeatTime || null !== blockingEventType)
+              blockingEventRepeatTime = -1.1;
             blockingEventTime = -1.1;
             blockingEventType = null;
           }
@@ -3209,8 +3209,11 @@ __DEV__ &&
             (transitionUpdateComponentName = getComponentNameFromFiber(fiber)),
           0 > transitionStartTime)
         ) {
-          if (-1.1 !== transitionEventTime || null !== transitionEventType)
-            transitionEventIsRepeat = !1;
+          if (
+            -1.1 !== transitionEventRepeatTime ||
+            null !== transitionEventType
+          )
+            transitionEventRepeatTime = -1.1;
           transitionEventTime = -1.1;
           transitionEventType = null;
         }
@@ -15531,7 +15534,7 @@ __DEV__ &&
           previousRenderStartTime = debugTask;
           var eventTime = endTime,
             eventType = blockingEventType,
-            eventIsRepeat = blockingEventIsRepeat,
+            eventIsRepeat = 0 < blockingEventRepeatTime,
             isSpawnedUpdate = 1 === blockingUpdateType,
             isPingedUpdate = 2 === blockingUpdateType;
           debugTask = renderStartTime;
@@ -15618,7 +15621,8 @@ __DEV__ &&
           blockingUpdateType = 0;
           blockingUpdateComponentName = blockingUpdateMethodName = null;
           blockingSuspendedTime = -1.1;
-          blockingEventIsRepeat = !0;
+          blockingEventRepeatTime = blockingEventTime;
+          blockingEventTime = -1.1;
           blockingClampTime = now();
         }
         0 !== (lanes & 4194048) &&
@@ -15657,7 +15661,7 @@ __DEV__ &&
               logAnimatingPhase(transitionClampTime, color, animatingTask)),
           (isPingedUpdate = endTime),
           (eventTime = transitionEventType),
-          (eventType = transitionEventIsRepeat),
+          (eventType = 0 < transitionEventRepeatTime),
           (eventIsRepeat = 2 === transitionUpdateType),
           (color = renderStartTime),
           (endTime = transitionUpdateTask),
@@ -15754,7 +15758,8 @@ __DEV__ &&
           (transitionUpdateTime = transitionStartTime = -1.1),
           (transitionUpdateType = 0),
           (transitionSuspendedTime = -1.1),
-          (transitionEventIsRepeat = !0),
+          (transitionEventRepeatTime = transitionEventTime),
+          (transitionEventTime = -1.1),
           (transitionClampTime = now()));
         0 !== (lanes & 62914560) &&
           0 !== (animatingLanes & 62914560) &&
@@ -18309,7 +18314,7 @@ __DEV__ &&
       blockingUpdateComponentName = null,
       blockingEventTime = -1.1,
       blockingEventType = null,
-      blockingEventIsRepeat = !1,
+      blockingEventRepeatTime = -1.1,
       blockingSuspendedTime = -1.1,
       transitionClampTime = -0,
       transitionStartTime = -1.1,
@@ -18320,7 +18325,7 @@ __DEV__ &&
       transitionUpdateComponentName = null,
       transitionEventTime = -1.1,
       transitionEventType = null,
-      transitionEventIsRepeat = !1,
+      transitionEventRepeatTime = -1.1,
       transitionSuspendedTime = -1.1,
       retryClampTime = -0,
       idleClampTime = -0,
@@ -18360,8 +18365,11 @@ __DEV__ &&
           0 > transitionUpdateTime
         ) {
           transitionStartTime = now();
-          if (-1.1 !== transitionEventTime || null !== transitionEventType)
-            transitionEventIsRepeat = !1;
+          if (
+            -1.1 !== transitionEventRepeatTime ||
+            null !== transitionEventType
+          )
+            transitionEventRepeatTime = -1.1;
           transitionEventTime = -1.1;
           transitionEventType = null;
         }
@@ -20281,10 +20289,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-www-classic-cf884083-20250930",
+        version: "19.2.0-www-classic-7bccdbd7-20251001",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-www-classic-cf884083-20250930"
+        reconcilerVersion: "19.2.0-www-classic-7bccdbd7-20251001"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20319,7 +20327,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.2.0-www-classic-cf884083-20250930";
+    exports.version = "19.2.0-www-classic-7bccdbd7-20251001";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
