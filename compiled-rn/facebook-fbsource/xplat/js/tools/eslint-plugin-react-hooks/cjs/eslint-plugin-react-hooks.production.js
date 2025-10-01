@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<82e777cf50c9ff0001f4d618d4d0a52a>>
+ * @generated SignedSource<<59888f8e65b7469b480663f28d9e6581>>
  */
 
 'use strict';
@@ -4351,6 +4351,11 @@ function isEffectIdentifier(node, additionalHooks) {
 function isUseEffectEventIdentifier(node) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
 }
+function useEffectEventError(fn, called) {
+    return (`\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+        'Effects and Effect Events in the same component.' +
+        (called ? '' : ' It cannot be assigned to a variable or passed down.'));
+}
 function isUseIdentifier(node) {
     return isReactFunction(node, 'use');
 }
@@ -4665,11 +4670,7 @@ const rule = {
             },
             Identifier(node) {
                 if (lastEffect == null && useEffectEventFunctions.has(node)) {
-                    const message = `\`${getSourceCode().getText(node)}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-                        'the same component.' +
-                        (node.parent.type === 'CallExpression'
-                            ? ''
-                            : ' They cannot be assigned to variables or passed down.');
+                    const message = useEffectEventError(getSourceCode().getText(node), node.parent.type === 'CallExpression');
                     context.report({
                         node,
                         message,
