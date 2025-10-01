@@ -161,7 +161,7 @@ export function startUpdateTimerByLane(
         newEventTime !== blockingEventRepeatTime ||
         newEventType !== blockingEventType
       ) {
-       blockingEventRepeatTime = -1.1;
+        blockingEventRepeatTime = -1.1;
       } else if (newEventType !== null) {
         // If this is a second update in the same event, we treat it as a spawned update.
         // This might be a microtask spawned from useEffect, multiple flushSync or
