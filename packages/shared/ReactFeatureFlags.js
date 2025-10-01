@@ -229,7 +229,7 @@ export const enableProfilerTimer = __PROFILE__;
 // Component rendering tracks to show up in the Performance tab.
 // This flag will be used for both Server Component and Client Component tracks.
 // All calls should also be gated on enableProfilerTimer.
-export const enableComponentPerformanceTrack = __EXPERIMENTAL__;
+export const enableComponentPerformanceTrack: boolean = true;
 
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 // for an experimental timeline tool.
