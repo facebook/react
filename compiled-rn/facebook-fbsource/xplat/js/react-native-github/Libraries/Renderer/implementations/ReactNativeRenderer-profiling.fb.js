@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cfd9ab5b6cbbd5dd273d152e46bde6cf>>
+ * @generated SignedSource<<7ab99671ffce20d2d516904daa7a565e>>
  */
 
 "use strict";
@@ -2927,7 +2927,7 @@ var now = Scheduler.unstable_now,
   blockingUpdateType = 0,
   blockingEventTime = -1.1,
   blockingEventType = null,
-  blockingEventIsRepeat = !1,
+  blockingEventRepeatTime = -1.1,
   blockingSuspendedTime = -1.1,
   transitionClampTime = -0,
   transitionStartTime = -1.1,
@@ -2935,7 +2935,7 @@ var now = Scheduler.unstable_now,
   transitionUpdateType = 0,
   transitionEventTime = -1.1,
   transitionEventType = null,
-  transitionEventIsRepeat = !1,
+  transitionEventRepeatTime = -1.1,
   transitionSuspendedTime = -1.1,
   yieldReason = 0,
   yieldStartTime = -1.1;
@@ -2946,8 +2946,8 @@ function startUpdateTimerByLane(lane) {
         blockingUpdateTime = now();
         0 !== (executionContext & 6) &&
           ((componentEffectSpawnedUpdate = !0), (blockingUpdateType = 1));
-        if (-1.1 !== blockingEventTime || null !== blockingEventType)
-          blockingEventIsRepeat = !1;
+        if (-1.1 !== blockingEventRepeatTime || null !== blockingEventType)
+          blockingEventRepeatTime = -1.1;
         blockingEventTime = -1.1;
         blockingEventType = null;
       }
@@ -2956,8 +2956,8 @@ function startUpdateTimerByLane(lane) {
       0 > transitionUpdateTime &&
       ((transitionUpdateTime = now()), 0 > transitionStartTime)
     ) {
-      if (-1.1 !== transitionEventTime || null !== transitionEventType)
-        transitionEventIsRepeat = !1;
+      if (-1.1 !== transitionEventRepeatTime || null !== transitionEventType)
+        transitionEventRepeatTime = -1.1;
       transitionEventTime = -1.1;
       transitionEventType = null;
     }
@@ -3389,8 +3389,8 @@ ReactSharedInternals.S = function (transition, returnValue) {
       0 > transitionUpdateTime
     ) {
       transitionStartTime = now();
-      if (-1.1 !== transitionEventTime || null !== transitionEventType)
-        transitionEventIsRepeat = !1;
+      if (-1.1 !== transitionEventRepeatTime || null !== transitionEventType)
+        transitionEventRepeatTime = -1.1;
       transitionEventTime = -1.1;
       transitionEventType = null;
     }
@@ -11818,7 +11818,7 @@ function prepareFreshStack(root, lanes) {
           lanes
         ));
       clampedRenderStartTime$169 = blockingEventType;
-      var eventIsRepeat = blockingEventIsRepeat,
+      var eventIsRepeat = 0 < blockingEventRepeatTime,
         isSpawnedUpdate = 1 === blockingUpdateType,
         isPingedUpdate = 2 === blockingUpdateType,
         renderStartTime$jscomp$0 = renderStartTime;
@@ -11866,7 +11866,8 @@ function prepareFreshStack(root, lanes) {
       blockingUpdateTime = -1.1;
       blockingUpdateType = 0;
       blockingSuspendedTime = -1.1;
-      blockingEventIsRepeat = !0;
+      blockingEventRepeatTime = blockingEventTime;
+      blockingEventTime = -1.1;
       blockingClampTime = now();
     }
     0 !== (lanes & 4194048) &&
@@ -11896,7 +11897,7 @@ function prepareFreshStack(root, lanes) {
           lanes
         )),
       (eventIsRepeat = transitionEventType),
-      (isSpawnedUpdate = transitionEventIsRepeat),
+      (isSpawnedUpdate = 0 < transitionEventRepeatTime),
       (isPingedUpdate = 2 === transitionUpdateType),
       (renderStartTime$jscomp$0 = renderStartTime),
       supportsUserTiming &&
@@ -11948,7 +11949,8 @@ function prepareFreshStack(root, lanes) {
       (transitionUpdateTime = transitionStartTime = -1.1),
       (transitionUpdateType = 0),
       (transitionSuspendedTime = -1.1),
-      (transitionEventIsRepeat = !0),
+      (transitionEventRepeatTime = transitionEventTime),
+      (transitionEventTime = -1.1),
       (transitionClampTime = now()));
   }
   previousRenderStartTime = root.timeoutHandle;
@@ -13466,11 +13468,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.2.0-native-fb-cf884083-20250930" !== isomorphicReactPackageVersion)
+if ("19.2.0-native-fb-7bccdbd7-20251001" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.2.0-native-fb-cf884083-20250930\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.2.0-native-fb-7bccdbd7-20251001\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13520,10 +13522,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1634 = {
     bundleType: 0,
-    version: "19.2.0-native-fb-cf884083-20250930",
+    version: "19.2.0-native-fb-7bccdbd7-20251001",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.0-native-fb-cf884083-20250930"
+    reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1634.rendererConfig = extraDevToolsConfig);

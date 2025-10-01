@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f2ce2af86d01e9b6fd4ac1f3b48354ed>>
+ * @generated SignedSource<<44f97cd3cc42a36a9aa7edd9e6fa53dc>>
  */
 
 "use strict";
@@ -3931,8 +3931,8 @@ __DEV__ &&
             (executionContext & (RenderContext | CommitContext)) !==
               NoContext &&
               ((componentEffectSpawnedUpdate = !0), (blockingUpdateType = 1));
-            if (-1.1 !== blockingEventTime || null !== blockingEventType)
-              blockingEventIsRepeat = !1;
+            if (-1.1 !== blockingEventRepeatTime || null !== blockingEventType)
+              blockingEventRepeatTime = -1.1;
             blockingEventTime = -1.1;
             blockingEventType = null;
           }
@@ -3946,8 +3946,11 @@ __DEV__ &&
             (transitionUpdateComponentName = getComponentNameFromFiber(fiber)),
           0 > transitionStartTime)
         ) {
-          if (-1.1 !== transitionEventTime || null !== transitionEventType)
-            transitionEventIsRepeat = !1;
+          if (
+            -1.1 !== transitionEventRepeatTime ||
+            null !== transitionEventType
+          )
+            transitionEventRepeatTime = -1.1;
           transitionEventTime = -1.1;
           transitionEventType = null;
         }
@@ -14742,7 +14745,7 @@ __DEV__ &&
           previousRenderStartTime = debugTask;
           var eventTime = endTime,
             eventType = blockingEventType,
-            eventIsRepeat = blockingEventIsRepeat,
+            eventIsRepeat = 0 < blockingEventRepeatTime,
             isSpawnedUpdate = 1 === blockingUpdateType,
             isPingedUpdate = 2 === blockingUpdateType;
           debugTask = renderStartTime;
@@ -14829,7 +14832,8 @@ __DEV__ &&
           blockingUpdateType = 0;
           blockingUpdateComponentName = blockingUpdateMethodName = null;
           blockingSuspendedTime = -1.1;
-          blockingEventIsRepeat = !0;
+          blockingEventRepeatTime = blockingEventTime;
+          blockingEventTime = -1.1;
           blockingClampTime = now();
         }
         0 !== (lanes & 4194048) &&
@@ -14865,7 +14869,7 @@ __DEV__ &&
             )),
           (isPingedUpdate = endTime),
           (eventTime = transitionEventType),
-          (eventType = transitionEventIsRepeat),
+          (eventType = 0 < transitionEventRepeatTime),
           (eventIsRepeat = 2 === transitionUpdateType),
           (color = renderStartTime),
           (endTime = transitionUpdateTask),
@@ -14962,7 +14966,8 @@ __DEV__ &&
           (transitionUpdateTime = transitionStartTime = -1.1),
           (transitionUpdateType = 0),
           (transitionSuspendedTime = -1.1),
-          (transitionEventIsRepeat = !0),
+          (transitionEventRepeatTime = transitionEventTime),
+          (transitionEventTime = -1.1),
           (transitionClampTime = now()));
       }
       previousRenderStartTime = root.timeoutHandle;
@@ -18484,7 +18489,7 @@ __DEV__ &&
       blockingUpdateComponentName = null,
       blockingEventTime = -1.1,
       blockingEventType = null,
-      blockingEventIsRepeat = !1,
+      blockingEventRepeatTime = -1.1,
       blockingSuspendedTime = -1.1,
       transitionClampTime = -0,
       transitionStartTime = -1.1,
@@ -18495,7 +18500,7 @@ __DEV__ &&
       transitionUpdateComponentName = null,
       transitionEventTime = -1.1,
       transitionEventType = null,
-      transitionEventIsRepeat = !1,
+      transitionEventRepeatTime = -1.1,
       transitionSuspendedTime = -1.1,
       animatingTask = null,
       yieldReason = 0,
@@ -18532,8 +18537,11 @@ __DEV__ &&
           0 > transitionUpdateTime
         ) {
           transitionStartTime = now();
-          if (-1.1 !== transitionEventTime || null !== transitionEventType)
-            transitionEventIsRepeat = !1;
+          if (
+            -1.1 !== transitionEventRepeatTime ||
+            null !== transitionEventType
+          )
+            transitionEventRepeatTime = -1.1;
           transitionEventTime = -1.1;
           transitionEventType = null;
         }
@@ -20270,11 +20278,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.2.0-native-fb-cf884083-20250930" !== isomorphicReactPackageVersion)
+    if ("19.2.0-native-fb-7bccdbd7-20251001" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.2.0-native-fb-cf884083-20250930\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.2.0-native-fb-7bccdbd7-20251001\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -20300,10 +20308,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.2.0-native-fb-cf884083-20250930",
+        version: "19.2.0-native-fb-7bccdbd7-20251001",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.2.0-native-fb-cf884083-20250930"
+        reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

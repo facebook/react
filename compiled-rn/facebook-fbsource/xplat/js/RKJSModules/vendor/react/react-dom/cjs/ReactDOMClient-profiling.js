@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c42e12f1c6a5446eccf5c4290af3aa0f>>
+ * @generated SignedSource<<ec83307888ef0a1fd4dd7609ec8f7d22>>
  */
 
 /*
@@ -3611,7 +3611,7 @@ var now = Scheduler.unstable_now,
   blockingUpdateType = 0,
   blockingEventTime = -1.1,
   blockingEventType = null,
-  blockingEventIsRepeat = !1,
+  blockingEventRepeatTime = -1.1,
   blockingSuspendedTime = -1.1,
   transitionClampTime = -0,
   transitionStartTime = -1.1,
@@ -3619,7 +3619,7 @@ var now = Scheduler.unstable_now,
   transitionUpdateType = 0,
   transitionEventTime = -1.1,
   transitionEventType = null,
-  transitionEventIsRepeat = !1,
+  transitionEventRepeatTime = -1.1,
   transitionSuspendedTime = -1.1,
   yieldReason = 0,
   yieldStartTime = -1.1;
@@ -3632,8 +3632,9 @@ function startUpdateTimerByLane(lane) {
           ((componentEffectSpawnedUpdate = !0), (blockingUpdateType = 1));
         lane = resolveEventTimeStamp();
         var newEventType$34 = resolveEventType();
-        lane !== blockingEventTime || newEventType$34 !== blockingEventType
-          ? (blockingEventIsRepeat = !1)
+        lane !== blockingEventRepeatTime ||
+        newEventType$34 !== blockingEventType
+          ? (blockingEventRepeatTime = -1.1)
           : null !== newEventType$34 && (blockingUpdateType = 1);
         blockingEventTime = lane;
         blockingEventType = newEventType$34;
@@ -3646,10 +3647,10 @@ function startUpdateTimerByLane(lane) {
       lane = resolveEventTimeStamp();
       newEventType$34 = resolveEventType();
       if (
-        lane !== transitionEventTime ||
+        lane !== transitionEventRepeatTime ||
         newEventType$34 !== transitionEventType
       )
-        transitionEventIsRepeat = !1;
+        transitionEventRepeatTime = -1.1;
       transitionEventTime = lane;
       transitionEventType = newEventType$34;
     }
@@ -3661,8 +3662,9 @@ function startHostActionTimer() {
       0 !== (executionContext & 6) && (blockingUpdateType = 1);
       var newEventTime = resolveEventTimeStamp(),
         newEventType = resolveEventType();
-      newEventTime !== blockingEventTime || newEventType !== blockingEventType
-        ? (blockingEventIsRepeat = !1)
+      newEventTime !== blockingEventRepeatTime ||
+      newEventType !== blockingEventType
+        ? (blockingEventRepeatTime = -1.1)
         : null !== newEventType && (blockingUpdateType = 1);
       blockingEventTime = newEventTime;
       blockingEventType = newEventType;
@@ -3674,10 +3676,10 @@ function startHostActionTimer() {
       newEventTime = resolveEventTimeStamp();
       newEventType = resolveEventType();
       if (
-        newEventTime !== transitionEventTime ||
+        newEventTime !== transitionEventRepeatTime ||
         newEventType !== transitionEventType
       )
-        transitionEventIsRepeat = !1;
+        transitionEventRepeatTime = -1.1;
       transitionEventTime = newEventTime;
       transitionEventType = newEventType;
     }
@@ -3878,10 +3880,10 @@ ReactSharedInternals.S = function (transition, returnValue) {
       var newEventTime = resolveEventTimeStamp(),
         newEventType = resolveEventType();
       if (
-        newEventTime !== transitionEventTime ||
+        newEventTime !== transitionEventRepeatTime ||
         newEventType !== transitionEventType
       )
-        transitionEventIsRepeat = !1;
+        transitionEventRepeatTime = -1.1;
       transitionEventTime = newEventTime;
       transitionEventType = newEventType;
     }
@@ -13544,7 +13546,7 @@ function prepareFreshStack(root, lanes) {
           lanes
         ));
       clampedRenderStartTime$217 = blockingEventType;
-      var eventIsRepeat = blockingEventIsRepeat,
+      var eventIsRepeat = 0 < blockingEventRepeatTime,
         isSpawnedUpdate = 1 === blockingUpdateType,
         isPingedUpdate = 2 === blockingUpdateType,
         renderStartTime$jscomp$0 = renderStartTime;
@@ -13592,7 +13594,8 @@ function prepareFreshStack(root, lanes) {
       blockingUpdateTime = -1.1;
       blockingUpdateType = 0;
       blockingSuspendedTime = -1.1;
-      blockingEventIsRepeat = !0;
+      blockingEventRepeatTime = blockingEventTime;
+      blockingEventTime = -1.1;
       blockingClampTime = now();
     }
     0 !== (lanes & 4194048) &&
@@ -13622,7 +13625,7 @@ function prepareFreshStack(root, lanes) {
           lanes
         )),
       (eventIsRepeat = transitionEventType),
-      (isSpawnedUpdate = transitionEventIsRepeat),
+      (isSpawnedUpdate = 0 < transitionEventRepeatTime),
       (isPingedUpdate = 2 === transitionUpdateType),
       (renderStartTime$jscomp$0 = renderStartTime),
       supportsUserTiming &&
@@ -13674,7 +13677,8 @@ function prepareFreshStack(root, lanes) {
       (transitionUpdateTime = transitionStartTime = -1.1),
       (transitionUpdateType = 0),
       (transitionSuspendedTime = -1.1),
-      (transitionEventIsRepeat = !0),
+      (transitionEventRepeatTime = transitionEventTime),
+      (transitionEventTime = -1.1),
       (transitionClampTime = now()));
   }
   previousRenderStartTime = root.timeoutHandle;
@@ -19697,14 +19701,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2374 = React.version;
 if (
-  "19.2.0-native-fb-cf884083-20250930" !==
+  "19.2.0-native-fb-7bccdbd7-20251001" !==
   isomorphicReactPackageVersion$jscomp$inline_2374
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2374,
-      "19.2.0-native-fb-cf884083-20250930"
+      "19.2.0-native-fb-7bccdbd7-20251001"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19726,10 +19730,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2381 = {
   bundleType: 0,
-  version: "19.2.0-native-fb-cf884083-20250930",
+  version: "19.2.0-native-fb-7bccdbd7-20251001",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.2.0-native-fb-cf884083-20250930",
+  reconcilerVersion: "19.2.0-native-fb-7bccdbd7-20251001",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$331 = 0;
@@ -19852,4 +19856,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.2.0-native-fb-cf884083-20250930";
+exports.version = "19.2.0-native-fb-7bccdbd7-20251001";
