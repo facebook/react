@@ -10832,4 +10832,124 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
       </html>,
     );
   });
+
+  fit('f', async () => {
+    let prerendering = true;
+
+    function SuspendPrerender() {
+      if (prerendering) {
+        React.use(new Promise(() => {}));
+      }
+      return null;
+    }
+
+    let resolveResumeOuter = () => {};
+    const resumePromiseOuter = new Promise(r => {
+      resolveResumeOuter = r;
+    });
+    function SuspendResumeOuter() {
+      React.use(resumePromiseOuter);
+      return null;
+    }
+
+    let resolveResumeInner = () => {};
+    const resumePromiseInner = new Promise(r => {
+      resolveResumeInner = r;
+    });
+    function SuspendResumeInner() {
+      React.use(resumePromiseInner);
+      return null;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <SuspendPrerender />
+            <Suspense fallback="outer">
+              <Suspense fallback={<SuspendResumeOuter />}>
+                <Suspense fallback="inner">
+                  <Suspense fallback="innermost">
+                    <SuspendResumeInner />
+                    hello world
+                  </Suspense>
+                </Suspense>
+                <SuspendResumeOuter />
+              </Suspense>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    writable.on('data', console.log);
+
+    let controller = new AbortController();
+
+    let $prerendered;
+    await act(() => {
+      $prerendered = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+        signal: controller.signal,
+        onError() {},
+      });
+    });
+
+    await act(() => {
+      controller.abort('boom');
+    });
+
+    const prerendered = await $prerendered;
+
+    console.log({prerendered});
+
+    prerendering = false;
+
+    console.log('RESUME -----------------------------');
+    const resumed = ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    // Read what we've completed so far
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    // Resolve the final promise
+    console.log('-----------------------------');
+    await act(() => {
+      resolveResumeInner();
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>outer</body>
+      </html>,
+    );
+
+    // Resolve the final promise
+    console.log('-----------------------------');
+    await act(() => {
+      resolveResumeOuter();
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>hello world</body>
+      </html>,
+    );
+  });
 });
