@@ -5,6 +5,7 @@
     "dom",
     "geometry",
     "html",
+    "jsx",
     "node",
     "serviceworkers",
     "streams",
