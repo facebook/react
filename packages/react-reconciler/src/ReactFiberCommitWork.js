@@ -3945,7 +3945,12 @@ function commitPassiveMountOnFiber(
           instance._visibility |= OffscreenPassiveEffectsConnected;
 
           const includeWorkInProgressEffects =
-            (finishedWork.subtreeFlags & PassiveMask) !== NoFlags;
+            (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
+            (enableProfilerTimer &&
+              enableComponentPerformanceTrack &&
+              finishedWork.actualDuration !== 0 &&
+              (finishedWork.alternate === null ||
+                finishedWork.alternate.child !== finishedWork.child));
           recursivelyTraverseReconnectPassiveEffects(
             finishedRoot,
             finishedWork,
@@ -4113,7 +4118,12 @@ function recursivelyTraverseReconnectPassiveEffects(
   // node was reused.
   const childShouldIncludeWorkInProgressEffects =
     includeWorkInProgressEffects &&
-    (parentFiber.subtreeFlags & PassiveMask) !== NoFlags;
+    ((parentFiber.subtreeFlags & PassiveMask) !== NoFlags ||
+      (enableProfilerTimer &&
+        enableComponentPerformanceTrack &&
+        parentFiber.actualDuration !== 0 &&
+        (parentFiber.alternate === null ||
+          parentFiber.alternate.child !== parentFiber.child)));
 
   // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
   let child = parentFiber.child;
@@ -4379,7 +4389,14 @@ function recursivelyTraverseAtomicPassiveEffects(
   // pre-rendering. We call this function when traversing a hidden tree whose
   // regular effects are currently disconnected.
   // TODO: Add special flag for atomic effects
-  if (parentFiber.subtreeFlags & PassiveMask) {
+  if (
+    parentFiber.subtreeFlags & PassiveMask ||
+    (enableProfilerTimer &&
+      enableComponentPerformanceTrack &&
+      parentFiber.actualDuration !== 0 &&
+      (parentFiber.alternate === null ||
+        parentFiber.alternate.child !== parentFiber.child))
+  ) {
     let child = parentFiber.child;
     while (child !== null) {
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
