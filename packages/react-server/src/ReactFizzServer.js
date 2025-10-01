@@ -5951,8 +5951,8 @@ function flushPartiallyCompletedSegment(
   boundary: SuspenseBoundary,
   segment: Segment,
 ): boolean {
-  if (segment.status === FLUSHED) {
-    // We've already flushed this inline.
+  if (segment.status === FLUSHED || segment.status === ABORTED) {
+    // We've already flushed this inline or it is aborted and does not require flushing
     return true;
   }
 

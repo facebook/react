@@ -10833,111 +10833,17 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
     );
   });
 
-  it('f', async () => {
-    let prerendering = true;
-
-    function SuspendPrerender() {
-      if (prerendering) {
-        React.use(new Promise(() => {}));
-      }
-      return null;
-    }
-
-    let resolveResume = () => {};
-    const resumePromise = new Promise(r => {
-      resolveResume = r;
-    });
-    function SuspendResume() {
-      React.use(resumePromise);
-      return null;
-    }
-
-    function App() {
-      return (
-        <html>
-          <body>
-            <SuspendPrerender />
-            <Suspense fallback="outer">
-              <Suspense fallback={<SuspendResume />}>
-                hello world
-                <SuspendResume />
-              </Suspense>
-            </Suspense>
-          </body>
-        </html>
-      );
-    }
-
-    writable.on('data', console.log);
-
-    let controller = new AbortController();
-
-    let $prerendered;
-    await act(() => {
-      $prerendered = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
-        signal: controller.signal,
-        onError() {},
-      });
-    });
-
-    await act(() => {
-      controller.abort('boom');
-    });
-
-    const prerendered = await $prerendered;
-
-    console.log({prerendered});
-
-    prerendering = false;
-
-    console.log('RESUME -----------------------------');
-    const resumed = ReactDOMFizzServer.resumeToPipeableStream(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
-    );
-
-    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
-    const preludeWritable = new Stream.PassThrough();
-    preludeWritable.setEncoding('utf8');
-    preludeWritable.on('data', chunk => {
-      writable.write(chunk);
-    });
-
-    await act(() => {
-      prerendered.prelude.pipe(preludeWritable);
-    });
-
-    // Read what we've completed so far
-    await act(() => {
-      resumed.pipe(writable);
-    });
-
-    // Resolve the final promise
-    console.log('-----------------------------');
-    await act(() => {
-      resolveResume();
-    });
-
-    expect(getVisibleChildren(document)).toEqual(
-      <html>
-        <head />
-        <body>hello world</body>
-      </html>,
-    );
-  });
-
-  fit('f', async () => {
-    function SuspendAlways() {
+  it('not error when a suspended fallback segment directly inside another Suspense is abandoned', async () => {
+    function SuspendForever() {
       React.use(new Promise(() => {}));
     }
 
-    let resolveResume = () => {};
-    const resumePromise = new Promise(r => {
-      resolveResume = r;
+    let resolve = () => {};
+    const suspendPromise = new Promise(r => {
+      resolve = r;
     });
-    function SuspendResume() {
-      React.use(resumePromise);
-      return null;
+    function Suspend() {
+      return React.use(suspendPromise);
     }
 
     function App() {
@@ -10945,9 +10851,11 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
         <html>
           <body>
             <Suspense fallback="outer">
-              <Suspense fallback={<SuspendAlways />}>
-                hello world
-                <SuspendResume />
+              <Suspense fallback={<SuspendForever />}>
+                <span>hello world</span>
+                <span>
+                  <Suspend />
+                </span>
               </Suspense>
             </Suspense>
           </body>
@@ -10955,25 +10863,24 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
       );
     }
 
-    writable.on('data', console.log);
-
-    await act(() => {
+    await act(async () => {
       const {pipe} = renderToPipeableStream(<App />, {
         onError() {},
       });
       pipe(writable);
     });
 
-    // Resolve the final promise
-    console.log('-----------------------------');
     await act(() => {
-      resolveResume();
+      resolve('!');
     });
 
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head />
-        <body>hello world</body>
+        <body>
+          <span>hello world</span>
+          <span>!</span>
+        </body>
       </html>,
     );
   });
