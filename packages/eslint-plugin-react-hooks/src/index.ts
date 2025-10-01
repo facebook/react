@@ -7,7 +7,11 @@
 import type {Linter, Rule} from 'eslint';
 
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
-import {allRules} from './shared/ReactCompiler';
+import {
+  allRules,
+  mapErrorSeverityToESlint,
+  recommendedRules,
+} from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
 
 // All rules
@@ -23,6 +27,15 @@ const rules = {
 const ruleConfigs = {
   'react-hooks/rules-of-hooks': 'error',
   'react-hooks/exhaustive-deps': 'warn',
+  // Compiler rules
+  ...Object.fromEntries(
+    Object.entries(recommendedRules).map(([name, ruleConfig]) => {
+      return [
+        'react-hooks/' + name,
+        mapErrorSeverityToESlint(ruleConfig.severity),
+      ];
+    }),
+  ),
 } satisfies Linter.RulesRecord;
 
 const plugin = {
