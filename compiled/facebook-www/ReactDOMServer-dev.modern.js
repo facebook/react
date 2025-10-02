@@ -7920,6 +7920,7 @@ __DEV__ &&
       var boundary = segment.boundary;
       if (null === boundary)
         return flushSubtree(request, destination, segment, hoistableState);
+      segment.boundary = null;
       boundary.parentFlushed = !0;
       if (boundary.status === CLIENT_RENDERED) {
         var row = boundary.row;
@@ -10233,5 +10234,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-70b52bec-20251002";
+    exports.version = "19.3.0-www-modern-7d9f876c-20251002";
   })();
