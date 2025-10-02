@@ -14,6 +14,8 @@ import {useRef} from 'react';
 
 import styles from './SuspenseScrubber.css';
 
+import Tooltip from '../Components/reach-ui/tooltip';
+
 export default function SuspenseScrubber({
   min,
   max,
@@ -53,24 +55,38 @@ export default function SuspenseScrubber({
   const steps = [];
   for (let index = min; index <= max; index++) {
     steps.push(
-      <div
+      <Tooltip
         key={index}
-        className={
-          styles.SuspenseScrubberStep +
-          (highlight === index
-            ? ' ' + styles.SuspenseScrubberStepHighlight
-            : '')
-        }
-        onPointerDown={handlePress.bind(null, index)}
-        onMouseEnter={onHoverSegment.bind(null, index)}>
+        label={
+          index === min
+            ? // The first step in the timeline is always a Transition (Initial Paint).
+              // TODO: Support multiple environments.
+              'Initial Paint'
+            : // TODO: Consider adding the name of this specific boundary if this step has only one.
+              'Suspense'
+        }>
         <div
           className={
-            index <= value
-              ? styles.SuspenseScrubberBeadSelected
-              : styles.SuspenseScrubberBead
+            styles.SuspenseScrubberStep +
+            (highlight === index
+              ? ' ' + styles.SuspenseScrubberStepHighlight
+              : '')
           }
-        />
-      </div>,
+          onPointerDown={handlePress.bind(null, index)}
+          onMouseEnter={onHoverSegment.bind(null, index)}>
+          <div
+            className={
+              styles.SuspenseScrubberBead +
+              (index === min
+                ? // The first step in the timeline is always a Transition (Initial Paint).
+                  // TODO: Support multiple environments.
+                  ' ' + styles.SuspenseScrubberBeadTransition
+                : '') +
+              (index <= value ? ' ' + styles.SuspenseScrubberBeadSelected : '')
+            }
+          />
+        </div>
+      </Tooltip>,
     );
   }
 
