@@ -1,11 +1,10 @@
 import * as estree from 'estree';
-import { Rule } from 'eslint';
+import { Rule, Linter } from 'eslint';
 
 declare const plugin: {
     meta: {
         name: string;
     };
-    configs: {};
     rules: {
         'exhaustive-deps': {
             meta: {
@@ -72,6 +71,19 @@ declare const plugin: {
                 ArrowFunctionExpression(node: estree.ArrowFunctionExpression & Rule.NodeParentExtension): void;
             };
         };
+    };
+    configs: {
+        "recommended-legacy": {
+            plugins: Array<string>;
+            rules: Linter.RulesRecord;
+        };
+        "recommended-latest-legacy": {
+            plugins: Array<string>;
+            rules: Linter.RulesRecord;
+        };
+        "flat/recommended": Array<Linter.Config>;
+        "recommended-latest": Array<Linter.Config>;
+        recommended: Array<Linter.Config>;
     };
 };
 
