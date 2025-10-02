@@ -858,11 +858,10 @@ export default class Store extends EventEmitter<{
     const lineage: Array<SuspenseNode['id']> = [];
     let next: null | SuspenseNode = this.getSuspenseByID(suspenseID);
     while (next !== null) {
-      // Include Root so that Screen can be inspected.
-      lineage.unshift(next.id);
       if (next.parentID === 0) {
         next = null;
       } else {
+        lineage.unshift(next.id);
         next = this.getSuspenseByID(next.parentID);
       }
     }
@@ -904,7 +903,7 @@ export default class Store extends EventEmitter<{
       if (root === null) {
         continue;
       }
-      // TODO: This includes roots that can't be suspended due to no support from the renderer.
+      // TODO: This includes boundaries that can't be suspended due to no support from the renderer.
 
       const suspense = this.getSuspenseByID(rootID);
       if (suspense !== null) {
@@ -1224,7 +1223,7 @@ export default class Store extends EventEmitter<{
             this._idToElement.set(id, {
               children: [],
               depth: -1,
-              displayName: 'Initial Paint',
+              displayName: null,
               hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
