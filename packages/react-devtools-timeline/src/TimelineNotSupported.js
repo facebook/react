@@ -12,14 +12,57 @@ import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 
 import styles from './TimelineNotSupported.css';
 
-export default function TimelineNotSupported(): React.Node {
+type Props = {
+  isPerformanceTracksSupported: boolean,
+};
+
+function PerformanceTracksSupported() {
+  return (
+    <>
+      Please use{' '}
+      <a
+        className={styles.Link}
+        href="https://react.dev/reference/dev-tools/react-performance-tracks"
+        rel="noopener noreferrer"
+        target="_blank">
+        React Performance tracks
+      </a>{' '}
+      instead of the Timeline profiler.
+    </>
+  );
+}
+
+function UnknownUnsupportedReason() {
+  return (
+    <>
+      Timeline profiler requires a development or profiling build of{' '}
+      <code className={styles.Code}>react-dom@{'>='}18</code>. React 19.2 and
+      above must use{' '}
+      <a
+        className={styles.Link}
+        href="https://react.dev/reference/dev-tools/react-performance-tracks"
+        rel="noopener noreferrer"
+        target="_blank">
+        React Performance tracks
+      </a>{' '}
+      instead.
+    </>
+  );
+}
+
+export default function TimelineNotSupported({
+  isPerformanceTracksSupported,
+}: Props): React.Node {
   return (
     <div className={styles.Column}>
       <div className={styles.Header}>Timeline profiling not supported.</div>
       <p className={styles.Paragraph}>
         <span>
-          Timeline profiler requires a development or profiling build of{' '}
-          <code className={styles.Code}>react-dom@^18</code>.
+          {isPerformanceTracksSupported ? (
+            <PerformanceTracksSupported />
+          ) : (
+            <UnknownUnsupportedReason />
+          )}
         </span>
       </p>
       <div className={styles.LearnMoreRow}>
