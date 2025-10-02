@@ -7,7 +7,6 @@
 
 import {Resizable} from 're-resizable';
 import React, {
-  useCallback,
   useId,
   unstable_ViewTransition as ViewTransition,
   unstable_addTransitionType as addTransitionType,
@@ -66,7 +65,7 @@ function AccordionWindowItem({
 
   const transitionName = `accordion-window-item-${id}`;
 
-  const toggleTabs = () => {
+  const toggleTabs = (): void => {
     startTransition(() => {
       addTransitionType(EXPAND_ACCORDION_TRANSITION);
       const nextState = new Set(tabsOpen);
