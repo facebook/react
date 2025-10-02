@@ -23,6 +23,7 @@ const rules = {
 const ruleConfigs = {
   'react-hooks/rules-of-hooks': 'error',
   'react-hooks/exhaustive-deps': 'warn',
+  'react-hooks/react-compiler': 'error',
 } satisfies Linter.RulesRecord;
 
 const plugin = {
