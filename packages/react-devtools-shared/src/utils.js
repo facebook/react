@@ -262,7 +262,6 @@ export function printOperationsArray(operations: Array<number>) {
           i++; // supportsProfiling
           i++; // supportsStrictMode
           i++; // hasOwnerMetadata
-          i++; // supportsTogglingSuspense
         } else {
           const parentID = ((operations[i]: any): number);
           i++;

@@ -78,6 +78,7 @@ import {
   __DEBUG__,
   PROFILING_FLAG_BASIC_SUPPORT,
   PROFILING_FLAG_TIMELINE_SUPPORT,
+  PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
@@ -1074,6 +1075,7 @@ export function attach(
   const supportsTogglingSuspense =
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
+  const supportsPerformanceTracks = gte(version, '19.2.0');
 
   if (typeof scheduleRefresh === 'function') {
     // When Fast Refresh updates a component, the frontend may need to purge cached information.
@@ -2401,6 +2403,9 @@ export function attach(
         if (typeof injectProfilingHooks === 'function') {
           profilingFlags |= PROFILING_FLAG_TIMELINE_SUPPORT;
         }
+        if (supportsPerformanceTracks) {
+          profilingFlags |= PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT;
+        }
       }
 
       // Set supportsStrictMode to false for production renderer builds
@@ -2415,7 +2420,6 @@ export function attach(
         !isProductionBuildOfRenderer && StrictModeBits !== 0 ? 1 : 0,
       );
       pushOperation(hasOwnerMetadata ? 1 : 0);
-      pushOperation(supportsTogglingSuspense ? 1 : 0);
 
       if (isProfiling) {
         if (displayNamesByRootID !== null) {
@@ -4897,7 +4901,11 @@ export function attach(
       fiberInstance.data = nextFiber;
       if (
         mostRecentlyInspectedElement !== null &&
-        mostRecentlyInspectedElement.id === fiberInstance.id &&
+        (mostRecentlyInspectedElement.id === fiberInstance.id ||
+          // If we're inspecting a Root, we inspect the Screen.
+          // Invalidating any Root invalidates the Screen too.
+          (mostRecentlyInspectedElement.type === ElementTypeRoot &&
+            nextFiber.tag === HostRoot)) &&
         didFiberRender(prevFiber, nextFiber)
       ) {
         // If this Fiber has updated, clear cached inspected data.
@@ -6417,7 +6425,10 @@ export function attach(
       return inspectVirtualInstanceRaw(devtoolsInstance);
     }
     if (devtoolsInstance.kind === FIBER_INSTANCE) {
-      return inspectFiberInstanceRaw(devtoolsInstance);
+      const isRoot = devtoolsInstance.parent === null;
+      return isRoot
+        ? inspectRootsRaw(devtoolsInstance.id)
+        : inspectFiberInstanceRaw(devtoolsInstance);
     }
     (devtoolsInstance: FilteredFiberInstance); // assert exhaustive
     throw new Error('Unsupported instance kind');
@@ -6870,10 +6881,24 @@ export function attach(
   let currentlyInspectedPaths: Object = {};
 
   function isMostRecentlyInspectedElement(id: number): boolean {
-    return (
-      mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElement.id === id
-    );
+    if (mostRecentlyInspectedElement === null) {
+      return false;
+    }
+    if (mostRecentlyInspectedElement.id === id) {
+      return true;
+    }
+
+    if (mostRecentlyInspectedElement.type === ElementTypeRoot) {
+      // we inspected the screen recently. If we're inspecting another root, we're
+      // still inspecting the screen.
+      const instance = idToDevToolsInstanceMap.get(id);
+      return (
+        instance !== undefined &&
+        instance.kind === FIBER_INSTANCE &&
+        instance.parent === null
+      );
+    }
+    return false;
   }
 
   function isMostRecentlyInspectedElementCurrent(id: number): boolean {
@@ -7055,8 +7080,8 @@ export function attach(
       if (!hasElementUpdatedSinceLastInspected) {
         if (path !== null) {
           let secondaryCategory: 'suspendedBy' | 'hooks' | null = null;
-          if (path[0] === 'hooks') {
-            secondaryCategory = 'hooks';
+          if (path[0] === 'hooks' || path[0] === 'suspendedBy') {
+            secondaryCategory = path[0];
           }
 
           // If this element has not been updated since it was last inspected,
@@ -7202,6 +7227,99 @@ export function attach(
       // $FlowFixMe[prop-missing] found when upgrading Flow
       value: cleanedInspectedElement,
     };
+  }
+
+  function inspectRootsRaw(arbitraryRootID: number): InspectedElement | null {
+    const roots = hook.getFiberRoots(rendererID);
+    if (roots.size === 0) {
+      return null;
+    }
+
+    const inspectedRoots: InspectedElement = {
+      // invariants
+      id: arbitraryRootID,
+      type: ElementTypeRoot,
+      // Properties we merge
+      isErrored: false,
+      errors: [],
+      warnings: [],
+      suspendedBy: [],
+      suspendedByRange: null,
+      // TODO: How to merge these?
+      unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
+      // Properties where merging doesn't make sense so we ignore them entirely in the UI
+      rootType: null,
+      plugins: {stylex: null},
+      nativeTag: null,
+      env: null,
+      source: null,
+      stack: null,
+      rendererPackageName: null,
+      rendererVersion: null,
+      // These don't make sense for a Root. They're just bottom values.
+      key: null,
+      canEditFunctionProps: false,
+      canEditHooks: false,
+      canEditFunctionPropsDeletePaths: false,
+      canEditFunctionPropsRenamePaths: false,
+      canEditHooksAndDeletePaths: false,
+      canEditHooksAndRenamePaths: false,
+      canToggleError: false,
+      canToggleSuspense: false,
+      isSuspended: false,
+      hasLegacyContext: false,
+      context: null,
+      hooks: null,
+      props: null,
+      state: null,
+      owners: null,
+    };
+
+    let minSuspendedByRange = Infinity;
+    let maxSuspendedByRange = -Infinity;
+    roots.forEach(root => {
+      const rootInstance = rootToFiberInstanceMap.get(root);
+      if (rootInstance === undefined) {
+        throw new Error(
+          'Expected a root instance to exist for this Fiber root',
+        );
+      }
+      const inspectedRoot = inspectFiberInstanceRaw(rootInstance);
+      if (inspectedRoot === null) {
+        return;
+      }
+
+      if (inspectedRoot.isErrored) {
+        inspectedRoots.isErrored = true;
+      }
+      for (let i = 0; i < inspectedRoot.errors.length; i++) {
+        inspectedRoots.errors.push(inspectedRoot.errors[i]);
+      }
+      for (let i = 0; i < inspectedRoot.warnings.length; i++) {
+        inspectedRoots.warnings.push(inspectedRoot.warnings[i]);
+      }
+      for (let i = 0; i < inspectedRoot.suspendedBy.length; i++) {
+        inspectedRoots.suspendedBy.push(inspectedRoot.suspendedBy[i]);
+      }
+      const suspendedByRange = inspectedRoot.suspendedByRange;
+      if (suspendedByRange !== null) {
+        if (suspendedByRange[0] < minSuspendedByRange) {
+          minSuspendedByRange = suspendedByRange[0];
+        }
+        if (suspendedByRange[1] > maxSuspendedByRange) {
+          maxSuspendedByRange = suspendedByRange[1];
+        }
+      }
+    });
+
+    if (minSuspendedByRange !== Infinity || maxSuspendedByRange !== -Infinity) {
+      inspectedRoots.suspendedByRange = [
+        minSuspendedByRange,
+        maxSuspendedByRange,
+      ];
+    }
+
+    return inspectedRoots;
   }
 
   function logElementToConsole(id: number) {
@@ -7862,13 +7980,9 @@ export function attach(
 
   /**
    * Resets the all other roots of this renderer.
-   * @param rootID The root that contains this milestone
    * @param suspendedSet List of IDs of SuspenseComponent Fibers
    */
-  function overrideSuspenseMilestone(
-    rootID: FiberInstance['id'],
-    suspendedSet: Array<FiberInstance['id']>,
-  ) {
+  function overrideSuspenseMilestone(suspendedSet: Array<FiberInstance['id']>) {
     if (
       typeof setSuspenseHandler !== 'function' ||
       typeof scheduleUpdate !== 'function'
@@ -7877,8 +7991,6 @@ export function attach(
         'Expected overrideSuspenseMilestone() to not get called for earlier React versions.',
       );
     }
-
-    // TODO: Allow overriding the timeline for the specified root.
 
     const unsuspendedSet: Set<Fiber> = new Set(forceFallbackForFibers);
 
