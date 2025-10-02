@@ -32123,7 +32123,7 @@ const EnvironmentConfigSchema = zod.z.object({
     moduleTypeProvider: zod.z.nullable(zod.z.function().args(zod.z.string())).default(null),
     customMacros: zod.z.nullable(zod.z.array(MacroSchema)).default(null),
     enableResetCacheOnSourceFileChanges: zod.z.nullable(zod.z.boolean()).default(null),
-    enablePreserveExistingMemoizationGuarantees: zod.z.boolean().default(false),
+    enablePreserveExistingMemoizationGuarantees: zod.z.boolean().default(true),
     validatePreserveExistingMemoizationGuarantees: zod.z.boolean().default(true),
     enablePreserveExistingManualUseMemo: zod.z.boolean().default(false),
     enableForest: zod.z.boolean().default(false),
