@@ -1,5 +1,6 @@
 .SuspenseRectsContainer {
   padding: .25rem;
+  cursor: pointer;
 }
 
 .SuspenseRectsViewBox {
@@ -28,6 +29,7 @@
   pointer-events: all;
   outline-style: solid;
   outline-width: 1px;
+  cursor: pointer;
 }
 
 .SuspenseRectsScaledRect {
