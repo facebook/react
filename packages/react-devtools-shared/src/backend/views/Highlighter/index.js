@@ -10,6 +10,7 @@
 import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
+import type {HostInstance} from 'react-devtools-shared/src/backend/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {RendererInterface} from '../../types';
 
@@ -26,6 +27,7 @@ export default function setupHighlighter(
 ): void {
   bridge.addListener('clearHostInstanceHighlight', clearHostInstanceHighlight);
   bridge.addListener('highlightHostInstance', highlightHostInstance);
+  bridge.addListener('highlightHostInstances', highlightHostInstances);
   bridge.addListener('scrollToHostInstance', scrollToHostInstance);
   bridge.addListener('shutdown', stopInspectingHost);
   bridge.addListener('startInspectingHost', startInspectingHost);
@@ -155,6 +157,52 @@ export default function setupHighlighter(
     }
 
     hideOverlay(agent);
+  }
+
+  function highlightHostInstances({
+    displayName,
+    hideAfterTimeout,
+    elements,
+    scrollIntoView,
+  }: {
+    displayName: string | null,
+    hideAfterTimeout: boolean,
+    elements: Array<{rendererID: number, id: number}>,
+    scrollIntoView: boolean,
+  }) {
+    const nodes: Array<HostInstance> = [];
+    for (let i = 0; i < elements.length; i++) {
+      const {id, rendererID} = elements[i];
+      const renderer = agent.rendererInterfaces[rendererID];
+      if (renderer == null) {
+        console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+        continue;
+      }
+
+      // In some cases fiber may already be unmounted
+      if (!renderer.hasElementWithId(id)) {
+        continue;
+      }
+
+      const hostInstances = renderer.findHostInstancesForElementID(id);
+      if (hostInstances !== null) {
+        for (let j = 0; j < hostInstances.length; j++) {
+          nodes.push(hostInstances[j]);
+        }
+      }
+    }
+
+    if (nodes.length > 0) {
+      const node = nodes[0];
+      // $FlowFixMe[method-unbinding]
+      if (scrollIntoView && typeof node.scrollIntoView === 'function') {
+        // If the node isn't visible show it before highlighting it.
+        // We may want to reconsider this; it might be a little disruptive.
+        node.scrollIntoView({block: 'nearest', inline: 'nearest'});
+      }
+    }
+
+    showOverlay(nodes, displayName, agent, hideAfterTimeout);
   }
 
   function attemptScrollToHostInstance(
