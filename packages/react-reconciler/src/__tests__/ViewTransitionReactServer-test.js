@@ -23,7 +23,7 @@ describe('ViewTransitionReactServer', () => {
     jest.resetModules();
     jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
-    ViewTransition = ReactServer.unstable_ViewTransition;
+    ViewTransition = ReactServer.ViewTransition;
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
 
     jest.resetModules();
@@ -39,7 +39,7 @@ describe('ViewTransitionReactServer', () => {
     jest.restoreAllMocks();
   });
 
-  // @gate enableViewTransition || fb
+  // @gate enableViewTransition
   it('can be rendered in React Server', async () => {
     function App() {
       return ReactServer.createElement(
