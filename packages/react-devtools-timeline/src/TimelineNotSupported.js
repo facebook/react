@@ -19,15 +19,19 @@ type Props = {
 function PerformanceTracksSupported() {
   return (
     <>
-      Please use{' '}
-      <a
-        className={styles.Link}
-        href="https://react.dev/reference/dev-tools/react-performance-tracks"
-        rel="noopener noreferrer"
-        target="_blank">
-        React Performance tracks
-      </a>{' '}
-      instead of the Timeline profiler.
+      <p className={styles.Paragraph}>
+        <span>
+          Please use{' '}
+          <a
+            className={styles.Link}
+            href="https://react.dev/reference/dev-tools/react-performance-tracks"
+            rel="noopener noreferrer"
+            target="_blank">
+            React Performance tracks
+          </a>{' '}
+          instead of the Timeline profiler.
+        </span>
+      </p>
     </>
   );
 }
@@ -35,35 +39,20 @@ function PerformanceTracksSupported() {
 function UnknownUnsupportedReason() {
   return (
     <>
-      Timeline profiler requires a development or profiling build of{' '}
-      <code className={styles.Code}>react-dom@{'>='}18</code>. React 19.2 and
-      above must use{' '}
-      <a
-        className={styles.Link}
-        href="https://react.dev/reference/dev-tools/react-performance-tracks"
-        rel="noopener noreferrer"
-        target="_blank">
-        React Performance tracks
-      </a>{' '}
-      instead.
-    </>
-  );
-}
-
-export default function TimelineNotSupported({
-  isPerformanceTracksSupported,
-}: Props): React.Node {
-  return (
-    <div className={styles.Column}>
-      <div className={styles.Header}>Timeline profiling not supported.</div>
       <p className={styles.Paragraph}>
-        <span>
-          {isPerformanceTracksSupported ? (
-            <PerformanceTracksSupported />
-          ) : (
-            <UnknownUnsupportedReason />
-          )}
-        </span>
+        Timeline profiler requires a development or profiling build of{' '}
+        <code className={styles.Code}>react-dom@{'>='}18</code>.
+      </p>
+      <p className={styles.Paragraph}>
+        In React 19.2 and above{' '}
+        <a
+          className={styles.Link}
+          href="https://react.dev/reference/dev-tools/react-performance-tracks"
+          rel="noopener noreferrer"
+          target="_blank">
+          React Performance tracks
+        </a>{' '}
+        can be used instead.
       </p>
       <div className={styles.LearnMoreRow}>
         Click{' '}
@@ -76,6 +65,22 @@ export default function TimelineNotSupported({
         </a>{' '}
         to learn more about profiling.
       </div>
+    </>
+  );
+}
+
+export default function TimelineNotSupported({
+  isPerformanceTracksSupported,
+}: Props): React.Node {
+  return (
+    <div className={styles.Column}>
+      <div className={styles.Header}>Timeline profiling not supported.</div>
+
+      {isPerformanceTracksSupported ? (
+        <PerformanceTracksSupported />
+      ) : (
+        <UnknownUnsupportedReason />
+      )}
 
       {isInternalFacebookBuild && (
         <div className={styles.MetaGKRow}>
