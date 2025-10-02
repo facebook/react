@@ -739,7 +739,7 @@ export default class Agent extends EventEmitter<{
     if (renderer !== null) {
       const devRenderer = renderer.bundleType === 1;
       const enableSuspenseTab =
-        devRenderer && gte(renderer.version, '19.2.0-canary');
+        devRenderer && gte(renderer.version, '19.3.0-canary');
       if (enableSuspenseTab) {
         this._bridge.send('enableSuspenseTab');
       }
