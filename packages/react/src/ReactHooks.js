@@ -218,6 +218,11 @@ export function useMemoCache(size: number): Array<mixed> {
 export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   callback: F,
 ): F {
+  if (__DEV__ ) {
+    if (typeof callback !== 'function') {
+      console.warn(`React Hook useEffectEvent expected a function, but received ${typeof callback}`);
+    }
+  }
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useEffectEvent(callback);
