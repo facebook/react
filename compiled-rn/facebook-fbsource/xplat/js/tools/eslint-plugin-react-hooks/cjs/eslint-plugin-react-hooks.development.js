@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<04d8bfbad94326555eaa3b2d3b1e01f7>>
+ * @generated SignedSource<<6d76935ecb0eb4c3d8e0a65bef9ea142>>
  */
 
 'use strict';
@@ -54498,7 +54498,7 @@ const allRules = LintRules.reduce((acc, rule) => {
         severity: ErrorSeverity.Error,
     },
 });
-LintRules.filter(rule => rule.recommended).reduce((acc, rule) => {
+const recommendedRules = LintRules.filter(rule => rule.recommended).reduce((acc, rule) => {
     acc[rule.name] = { rule: makeRule(rule), severity: rule.severity };
     return acc;
 }, {
@@ -54507,6 +54507,23 @@ LintRules.filter(rule => rule.recommended).reduce((acc, rule) => {
         severity: ErrorSeverity.Error,
     },
 });
+function mapErrorSeverityToESlint(severity) {
+    switch (severity) {
+        case ErrorSeverity.Error: {
+            return 'error';
+        }
+        case ErrorSeverity.Warning: {
+            return 'warn';
+        }
+        case ErrorSeverity.Hint:
+        case ErrorSeverity.Off: {
+            return 'off';
+        }
+        default: {
+            assertExhaustive(severity, `Unhandled severity: ${severity}`);
+        }
+    }
+}
 
 var assert_1;
 var hasRequiredAssert;
@@ -57794,10 +57811,12 @@ function last(array) {
 }
 
 const rules = Object.assign({ 'exhaustive-deps': rule$1, 'rules-of-hooks': rule }, Object.fromEntries(Object.entries(allRules).map(([name, config]) => [name, config.rule])));
-const ruleConfigs = {
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn',
-};
+const ruleConfigs = Object.assign({ 'react-hooks/rules-of-hooks': 'error', 'react-hooks/exhaustive-deps': 'warn' }, Object.fromEntries(Object.entries(recommendedRules).map(([name, ruleConfig]) => {
+    return [
+        'react-hooks/' + name,
+        mapErrorSeverityToESlint(ruleConfig.severity),
+    ];
+})));
 const plugin = {
     meta: {
         name: 'eslint-plugin-react-hooks',

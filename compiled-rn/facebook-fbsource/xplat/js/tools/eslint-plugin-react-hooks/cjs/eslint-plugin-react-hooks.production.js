@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<4e4a1e86e0614b95a7debf3a95619ba4>>
+ * @generated SignedSource<<3278f07cee68ad70221de87e35984fb4>>
  */
 
 'use strict';
@@ -54277,7 +54277,7 @@ const allRules = LintRules.reduce((acc, rule) => {
         severity: ErrorSeverity.Error,
     },
 });
-LintRules.filter(rule => rule.recommended).reduce((acc, rule) => {
+const recommendedRules = LintRules.filter(rule => rule.recommended).reduce((acc, rule) => {
     acc[rule.name] = { rule: makeRule(rule), severity: rule.severity };
     return acc;
 }, {
@@ -54286,6 +54286,23 @@ LintRules.filter(rule => rule.recommended).reduce((acc, rule) => {
         severity: ErrorSeverity.Error,
     },
 });
+function mapErrorSeverityToESlint(severity) {
+    switch (severity) {
+        case ErrorSeverity.Error: {
+            return 'error';
+        }
+        case ErrorSeverity.Warning: {
+            return 'warn';
+        }
+        case ErrorSeverity.Hint:
+        case ErrorSeverity.Off: {
+            return 'off';
+        }
+        default: {
+            assertExhaustive(severity, `Unhandled severity: ${severity}`);
+        }
+    }
+}
 
 var assert_1;
 var hasRequiredAssert;
@@ -57573,10 +57590,12 @@ function last(array) {
 }
 
 const rules = Object.assign({ 'exhaustive-deps': rule$1, 'rules-of-hooks': rule }, Object.fromEntries(Object.entries(allRules).map(([name, config]) => [name, config.rule])));
-const ruleConfigs = {
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn',
-};
+const ruleConfigs = Object.assign({ 'react-hooks/rules-of-hooks': 'error', 'react-hooks/exhaustive-deps': 'warn' }, Object.fromEntries(Object.entries(recommendedRules).map(([name, ruleConfig]) => {
+    return [
+        'react-hooks/' + name,
+        mapErrorSeverityToESlint(ruleConfig.severity),
+    ];
+})));
 const plugin = {
     meta: {
         name: 'eslint-plugin-react-hooks',
