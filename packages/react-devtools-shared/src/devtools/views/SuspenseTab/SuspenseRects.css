@@ -1,6 +1,11 @@
 .SuspenseRectsContainer {
   padding: .25rem;
   cursor: pointer;
+  outline: 1px solid var(--color-component-name);
+}
+
+.SuspenseRectsContainer[data-highlighted='true'] {
+  background: var(--color-dimmest);
 }
 
 .SuspenseRectsViewBox {

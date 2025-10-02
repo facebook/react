@@ -295,6 +295,7 @@ const ViewBox = createContext<Rect>((null: any));
 
 function SuspenseRectsContainer(): React$Node {
   const store = useContext(StoreContext);
+  const {inspectedElementID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
@@ -329,8 +330,13 @@ function SuspenseRectsContainer(): React$Node {
     });
   }
 
+  const isRootSelected = roots.includes(inspectedElementID);
+
   return (
-    <div className={styles.SuspenseRectsContainer} onClick={handleClick}>
+    <div
+      className={styles.SuspenseRectsContainer}
+      onClick={handleClick}
+      data-highlighted={isRootSelected}>
       <ViewBox.Provider value={boundingBox}>
         <div
           className={styles.SuspenseRectsViewBox}
