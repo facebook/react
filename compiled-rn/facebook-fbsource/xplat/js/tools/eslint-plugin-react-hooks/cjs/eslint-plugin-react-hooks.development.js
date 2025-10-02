@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<e9e590e6b94762d80c7ee846f5e97f61>>
+ * @generated SignedSource<<d6504d69dfcd4c47e1b10d0956bd780a>>
  */
 
 'use strict';
@@ -54199,20 +54199,6 @@ function getFlowSuppressions(sourceCode) {
     }
     return results;
 }
-function filterUnusedOptOutDirectives(directives) {
-    const results = [];
-    for (const directive of directives) {
-        if (OPT_OUT_DIRECTIVES.has(directive.value.value) &&
-            directive.loc != null) {
-            results.push({
-                loc: directive.loc,
-                directive: directive.value.value,
-                range: [directive.start, directive.end],
-            });
-        }
-    }
-    return results;
-}
 function runReactCompilerImpl({ sourceCode, filename, userOpts, }) {
     var _a, _b;
     const options = parsePluginOptions(Object.assign(Object.assign(Object.assign({}, COMPILER_OPTIONS), userOpts), { environment: Object.assign(Object.assign({}, COMPILER_OPTIONS.environment), userOpts.environment) }));
@@ -54221,7 +54207,6 @@ function runReactCompilerImpl({ sourceCode, filename, userOpts, }) {
         filename,
         userOpts,
         flowSuppressions: [],
-        unusedOptOutDirectives: [],
         events: [],
     };
     const userLogger = options.logger;
@@ -54276,21 +54261,6 @@ function runReactCompilerImpl({ sourceCode, filename, userOpts, }) {
                 configFile: false,
                 babelrc: false,
             });
-            if (results.events.filter(e => e.kind === 'CompileError').length === 0) {
-                core$1.traverse(babelAST, {
-                    FunctionDeclaration(path) {
-                        results.unusedOptOutDirectives.push(...filterUnusedOptOutDirectives(path.node.body.directives));
-                    },
-                    ArrowFunctionExpression(path) {
-                        if (path.node.body.type === 'BlockStatement') {
-                            results.unusedOptOutDirectives.push(...filterUnusedOptOutDirectives(path.node.body.directives));
-                        }
-                    },
-                    FunctionExpression(path) {
-                        results.unusedOptOutDirectives.push(...filterUnusedOptOutDirectives(path.node.body.directives));
-                    },
-                });
-            }
         }
         catch (err) {
         }
@@ -54460,53 +54430,14 @@ function makeRule(rule) {
         create,
     };
 }
-const NoUnusedDirectivesRule = {
-    meta: {
-        type: 'suggestion',
-        docs: {
-            recommended: true,
-        },
-        fixable: 'code',
-        hasSuggestions: true,
-        schema: [{ type: 'object', additionalProperties: true }],
-    },
-    create(context) {
-        const results = getReactCompilerResult(context);
-        for (const directive of results.unusedOptOutDirectives) {
-            context.report({
-                message: `Unused '${directive.directive}' directive`,
-                loc: directive.loc,
-                suggest: [
-                    {
-                        desc: 'Remove the directive',
-                        fix(fixer) {
-                            return fixer.removeRange(directive.range);
-                        },
-                    },
-                ],
-            });
-        }
-        return {};
-    },
-};
 const allRules = LintRules.reduce((acc, rule) => {
     acc[rule.name] = { rule: makeRule(rule), severity: rule.severity };
     return acc;
-}, {
-    'no-unused-directives': {
-        rule: NoUnusedDirectivesRule,
-        severity: ErrorSeverity.Error,
-    },
-});
+}, {});
 const recommendedRules = LintRules.filter(rule => rule.recommended).reduce((acc, rule) => {
     acc[rule.name] = { rule: makeRule(rule), severity: rule.severity };
     return acc;
-}, {
-    'no-unused-directives': {
-        rule: NoUnusedDirectivesRule,
-        severity: ErrorSeverity.Error,
-    },
-});
+}, {});
 function mapErrorSeverityToESlint(severity) {
     switch (severity) {
         case ErrorSeverity.Error: {
