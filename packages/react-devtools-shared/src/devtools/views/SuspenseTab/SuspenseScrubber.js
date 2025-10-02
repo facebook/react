@@ -14,7 +14,7 @@ import {useRef} from 'react';
 
 import styles from './SuspenseScrubber.css';
 
-import Tooltip from '../components/reach-ui/tooltip';
+import Tooltip from '../Components/reach-ui/tooltip';
 
 export default function SuspenseScrubber({
   min,
