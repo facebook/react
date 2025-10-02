@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<bced8273e2970441c51693a9e7794d08>>
+ * @generated SignedSource<<e410ff8d72e7fe80e2b1fbc19a866b6c>>
  */
 
 'use strict';
@@ -45140,6 +45140,29 @@ function collectNonNullsInBlocks(fn, context) {
                     const innerHoistables = assertNonNull(innerHoistableMap.get(innerFn.func.body.entry));
                     for (const entry of innerHoistables.assumedNonNullObjects) {
                         assumedNonNullObjects.add(entry);
+                    }
+                }
+            }
+            else if (fn.env.config.enablePreserveExistingMemoizationGuarantees &&
+                instr.value.kind === 'StartMemoize' &&
+                instr.value.deps != null) {
+                for (const dep of instr.value.deps) {
+                    if (dep.root.kind === 'NamedLocal') {
+                        if (!isImmutableAtInstr(dep.root.value.identifier, instr.id, context)) {
+                            continue;
+                        }
+                        for (let i = 0; i < dep.path.length; i++) {
+                            const pathEntry = dep.path[i];
+                            if (pathEntry.optional) {
+                                break;
+                            }
+                            const depNode = context.registry.getOrCreateProperty({
+                                identifier: dep.root.value.identifier,
+                                path: dep.path.slice(0, i),
+                                reactive: dep.root.value.reactive,
+                            });
+                            assumedNonNullObjects.add(depNode);
+                        }
                     }
                 }
             }
