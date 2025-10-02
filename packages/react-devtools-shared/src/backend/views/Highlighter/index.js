@@ -115,7 +115,7 @@ export default function setupHighlighter(
     const nodes = renderer.findHostInstancesForElementID(id);
     if (nodes != null) {
       for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[0];
+        const node = nodes[i];
         if (node === null) {
           continue;
         }
@@ -164,7 +164,7 @@ export default function setupHighlighter(
     const nodes = renderer.findHostInstancesForElementID(id);
     if (nodes != null) {
       for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[0];
+        const node = nodes[i];
         if (node === null) {
           continue;
         }

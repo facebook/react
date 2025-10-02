@@ -90,12 +90,10 @@ describe('ReactFlightDOMEdge', () => {
 
     ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
-    if (__EXPERIMENTAL__) {
-      jest.mock('react-server-dom-webpack/static', () =>
-        require('react-server-dom-webpack/static.edge'),
-      );
-      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
-    }
+    jest.mock('react-server-dom-webpack/static', () =>
+      require('react-server-dom-webpack/static.edge'),
+    );
+    ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
     jest.resetModules();
     __unmockReact();
@@ -1372,7 +1370,7 @@ describe('ReactFlightDOMEdge', () => {
     ]);
   });
 
-  // @gate experimental
+  // @gate enableHalt || enablePostpone
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -1395,7 +1393,7 @@ describe('ReactFlightDOMEdge', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           <App />,
           webpackMap,
         ),
@@ -1453,7 +1451,7 @@ describe('ReactFlightDOMEdge', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           <App />,
           webpackMap,
           {
@@ -1514,7 +1512,7 @@ describe('ReactFlightDOMEdge', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           {promise: infinitePromise},
           webpackMap,
           {
@@ -1554,12 +1552,12 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe('Connection closed.');
   });
 
-  // @gate experimental
-  it('should be able to handle a rejected promise in unstable_prerender', async () => {
+  // @gate enableHalt || enablePostpone
+  it('should be able to handle a rejected promise in prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
 
-    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+    const {prelude} = await ReactServerDOMStaticServer.prerender(
       Promise.reject(expectedError),
       webpackMap,
       {
@@ -1593,12 +1591,12 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate experimental
-  it('should be able to handle an erroring async iterable in unstable_prerender', async () => {
+  // @gate enableHalt || enablePostpone
+  it('should be able to handle an erroring async iterable in prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
 
-    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+    const {prelude} = await ReactServerDOMStaticServer.prerender(
       {
         async *[Symbol.asyncIterator]() {
           await serverAct(() => {
@@ -1640,12 +1638,12 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate experimental
-  it('should be able to handle an erroring readable stream in unstable_prerender', async () => {
+  // @gate enableHalt || enablePostpone
+  it('should be able to handle an erroring readable stream in prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
 
-    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+    const {prelude} = await ReactServerDOMStaticServer.prerender(
       new ReadableStream({
         async start(controller) {
           await serverAct(() => {
@@ -1688,11 +1686,11 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate experimental
+  // @gate enableHalt || enablePostpone
   it('can prerender an async iterable', async () => {
     const errors = [];
 
-    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+    const {prelude} = await ReactServerDOMStaticServer.prerender(
       {
         async *[Symbol.asyncIterator]() {
           yield 'hello';
@@ -1732,11 +1730,11 @@ describe('ReactFlightDOMEdge', () => {
     expect(text).toBe('hello world');
   });
 
-  // @gate experimental
+  // @gate enableHalt || enablePostpone
   it('can prerender a readable stream', async () => {
     const errors = [];
 
-    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+    const {prelude} = await ReactServerDOMStaticServer.prerender(
       new ReadableStream({
         start(controller) {
           controller.enqueue('hello world');
@@ -1766,7 +1764,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toBe('hello world');
   });
 
-  // @gate experimental
+  // @gate enableHalt || enablePostpone
   it('does not return a prerender prelude early when an error is emitted and there are still pending tasks', async () => {
     let rejectPromise;
     const rejectingPromise = new Promise(
@@ -1775,7 +1773,7 @@ describe('ReactFlightDOMEdge', () => {
     const expectedError = new Error('Boom!');
     const errors = [];
 
-    const {prelude} = await ReactServerDOMStaticServer.unstable_prerender(
+    const {prelude} = await ReactServerDOMStaticServer.prerender(
       [
         rejectingPromise,
         {
@@ -1862,7 +1860,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const serverAbortController = new AbortController();
     const errors = [];
-    const prerenderResult = ReactServerDOMStaticServer.unstable_prerender(
+    const prerenderResult = ReactServerDOMStaticServer.prerender(
       ReactServer.createElement(App, null),
       webpackMap,
       {

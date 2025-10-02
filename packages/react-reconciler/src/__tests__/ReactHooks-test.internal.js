@@ -1589,17 +1589,15 @@ describe('ReactHooks', () => {
       useStateHelper,
     ];
 
-    if (__EXPERIMENTAL__) {
-      const useTransitionHelper = () => React.useTransition();
-      const useDeferredValueHelper = () =>
-        React.useDeferredValue(0, {timeoutMs: 1000});
+    const useTransitionHelper = () => React.useTransition();
+    const useDeferredValueHelper = () =>
+      React.useDeferredValue(0, {timeoutMs: 1000});
 
-      orderedHooks.push(useTransitionHelper);
-      orderedHooks.push(useDeferredValueHelper);
+    orderedHooks.push(useTransitionHelper);
+    orderedHooks.push(useDeferredValueHelper);
 
-      hooksInList.push(useTransitionHelper);
-      hooksInList.push(useDeferredValueHelper);
-    }
+    hooksInList.push(useTransitionHelper);
+    hooksInList.push(useDeferredValueHelper);
 
     const formatHookNamesToMatchErrorMessage = (hookNameA, hookNameB) => {
       return `use${hookNameA}${' '.repeat(24 - hookNameA.length)}${

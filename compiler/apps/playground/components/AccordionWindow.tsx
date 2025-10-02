@@ -23,6 +23,7 @@ export default function AccordionWindow(props: {
   tabsOpen: Set<string>;
   setTabsOpen: (newTab: Set<string>) => void;
   changedPasses: Set<string>;
+  isFailure: boolean;
 }): React.ReactElement {
   return (
     <div className="flex-1 min-w-[550px] sm:min-w-0">
@@ -36,6 +37,7 @@ export default function AccordionWindow(props: {
               tabsOpen={props.tabsOpen}
               setTabsOpen={props.setTabsOpen}
               hasChanged={props.changedPasses.has(name)}
+              isFailure={props.isFailure}
             />
           );
         })}
@@ -50,15 +52,17 @@ function AccordionWindowItem({
   tabsOpen,
   setTabsOpen,
   hasChanged,
+  isFailure,
 }: {
   name: string;
   tabs: TabsRecord;
   tabsOpen: Set<string>;
   setTabsOpen: (newTab: Set<string>) => void;
   hasChanged: boolean;
+  isFailure: boolean;
 }): React.ReactElement {
   const id = useId();
-  const isShow = tabsOpen.has(name);
+  const isShow = isFailure ? name === 'Output' : tabsOpen.has(name);
 
   const transitionName = `accordion-window-item-${id}`;
 

@@ -166,8 +166,17 @@ function isEffectIdentifier(node: Node, additionalHooks?: RegExp): boolean {
 
   return false;
 }
+
 function isUseEffectEventIdentifier(node: Node): boolean {
   return node.type === 'Identifier' && node.name === 'useEffectEvent';
+}
+
+function useEffectEventError(fn: string, called: boolean): string {
+  return (
+    `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+    'Effects and Effect Events in the same component.' +
+    (called ? '' : ' It cannot be assigned to a variable or passed down.')
+  );
 }
 
 function isUseIdentifier(node: Node): boolean {
@@ -769,14 +778,11 @@ const rule = {
         // This identifier resolves to a useEffectEvent function, but isn't being referenced in an
         // effect or another event function. It isn't being called either.
         if (lastEffect == null && useEffectEventFunctions.has(node)) {
-          const message =
-            `\`${getSourceCode().getText(
-              node,
-            )}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-            'the same component.' +
-            (node.parent.type === 'CallExpression'
-              ? ''
-              : ' They cannot be assigned to variables or passed down.');
+          const message = useEffectEventError(
+            getSourceCode().getText(node),
+            node.parent.type === 'CallExpression',
+          );
+
           context.report({
             node,
             message,

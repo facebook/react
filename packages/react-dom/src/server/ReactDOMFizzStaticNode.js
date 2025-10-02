@@ -294,7 +294,7 @@ type ResumeOptions = {
 function resumeAndPrerenderToNodeStream(
   children: ReactNodeList,
   postponedState: PostponedState,
-  options?: ResumeOptions,
+  options?: Omit<ResumeOptions, 'nonce'>,
 ): Promise<StaticResult> {
   return new Promise((resolve, reject) => {
     const onFatalError = reject;
@@ -316,10 +316,7 @@ function resumeAndPrerenderToNodeStream(
     const request = resumeAndPrerenderRequest(
       children,
       postponedState,
-      resumeRenderState(
-        postponedState.resumableState,
-        options ? options.nonce : undefined,
-      ),
+      resumeRenderState(postponedState.resumableState, undefined),
       options ? options.onError : undefined,
       onAllReady,
       undefined,
@@ -346,7 +343,7 @@ function resumeAndPrerenderToNodeStream(
 function resumeAndPrerender(
   children: ReactNodeList,
   postponedState: PostponedState,
-  options?: ResumeOptions,
+  options?: Omit<ResumeOptions, 'nonce'>,
 ): Promise<{
   postponed: null | PostponedState,
   prelude: ReadableStream,
@@ -385,10 +382,7 @@ function resumeAndPrerender(
     const request = resumeAndPrerenderRequest(
       children,
       postponedState,
-      resumeRenderState(
-        postponedState.resumableState,
-        options ? options.nonce : undefined,
-      ),
+      resumeRenderState(postponedState.resumableState, undefined),
       options ? options.onError : undefined,
       onAllReady,
       undefined,

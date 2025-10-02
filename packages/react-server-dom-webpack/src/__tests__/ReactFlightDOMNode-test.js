@@ -49,12 +49,10 @@ describe('ReactFlightDOMNode', () => {
     );
     ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
-    if (__EXPERIMENTAL__) {
-      jest.mock('react-server-dom-webpack/static', () =>
-        require('react-server-dom-webpack/static.node'),
-      );
-      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
-    }
+    jest.mock('react-server-dom-webpack/static', () =>
+      require('react-server-dom-webpack/static.node'),
+    );
+    ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
@@ -489,7 +487,7 @@ describe('ReactFlightDOMNode', () => {
     expect(errors).toEqual([reason]);
   });
 
-  // @gate experimental
+  // @gate enableHalt || enablePostpone
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -512,11 +510,10 @@ describe('ReactFlightDOMNode', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult:
-          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
-            <App />,
-            webpackMap,
-          ),
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          webpackMap,
+        ),
       };
     });
 
@@ -571,17 +568,16 @@ describe('ReactFlightDOMNode', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult:
-          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
-            <App />,
-            webpackMap,
-            {
-              signal: controller.signal,
-              onError(err) {
-                errors.push(err);
-              },
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+            onError(err) {
+              errors.push(err);
             },
-          ),
+          },
+        ),
       };
     });
 
@@ -618,7 +614,7 @@ describe('ReactFlightDOMNode', () => {
     expect(result).toContain('loading...');
   });
 
-  // @gate enableHalt && enableAsyncDebugInfo
+  // @gate enableHalt
   it('includes source locations in component and owner stacks for halted components', async () => {
     async function Component() {
       await new Promise(() => {});
@@ -646,7 +642,7 @@ describe('ReactFlightDOMNode', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           ReactServer.createElement(App, null),
           webpackMap,
           {
@@ -722,7 +718,9 @@ describe('ReactFlightDOMNode', () => {
 
     if (__DEV__) {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
-        '\n    in Component (at **)\n' +
+        '\n' +
+          '    in Component' +
+          (gate(flags => flags.enableAsyncDebugInfo) ? ' (at **)\n' : '\n') +
           '    in Suspense\n' +
           '    in body\n' +
           '    in html\n' +
@@ -739,15 +737,19 @@ describe('ReactFlightDOMNode', () => {
     }
 
     if (__DEV__) {
-      expect(normalizeCodeLocInfo(ownerStack)).toBe(
-        '\n    in Component (at **)\n    in App (at **)',
-      );
+      if (gate(flags => flags.enableAsyncDebugInfo)) {
+        expect(normalizeCodeLocInfo(ownerStack)).toBe(
+          '\n    in Component (at **)\n    in App (at **)',
+        );
+      } else {
+        expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
+      }
     } else {
       expect(ownerStack).toBeNull();
     }
   });
 
-  // @gate enableHalt && enableAsyncDebugInfo
+  // @gate enableHalt
   it('includes deeper location for aborted stacks', async () => {
     async function getData() {
       const signal = ReactServer.cacheSignal();
@@ -792,7 +794,7 @@ describe('ReactFlightDOMNode', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           ReactServer.createElement(App, null),
           webpackMap,
           {
@@ -869,7 +871,9 @@ describe('ReactFlightDOMNode', () => {
 
     if (__DEV__) {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
-        '\n    in Component (at **)\n' +
+        '\n' +
+          '    in Component' +
+          (gate(flags => flags.enableAsyncDebugInfo) ? ' (at **)\n' : '\n') +
           '    in Suspense\n' +
           '    in body\n' +
           '    in html\n' +
@@ -886,17 +890,24 @@ describe('ReactFlightDOMNode', () => {
     }
 
     if (__DEV__) {
-      expect(normalizeCodeLocInfo(ownerStack)).toBe(
-        '\n    in getData (at **)' +
-          '\n    in Component (at **)' +
-          '\n    in App (at **)',
-      );
+      if (gate(flags => flags.enableAsyncDebugInfo)) {
+        expect(normalizeCodeLocInfo(ownerStack)).toBe(
+          '' +
+            '\n    in getData (at **)' +
+            '\n    in Component (at **)' +
+            '\n    in App (at **)',
+        );
+      } else {
+        expect(normalizeCodeLocInfo(ownerStack)).toBe(
+          '' + '\n    in App (at **)',
+        );
+      }
     } else {
       expect(ownerStack).toBeNull();
     }
   });
 
-  // @gate experimental
+  // @gate enableHalt || enablePostpone
   // @gate enableHalt
   it('can handle an empty prelude when prerendering', async () => {
     function App() {
@@ -909,7 +920,7 @@ describe('ReactFlightDOMNode', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+        pendingResult: ReactServerDOMStaticServer.prerender(
           ReactServer.createElement(App, null),
           webpackMap,
           {

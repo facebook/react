@@ -1637,17 +1637,32 @@ const allTests = {
           const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
+          // error message 1
           const onClick2 = () => { onClick() };
+          // error message 2
           const onClick3 = useCallback(() => onClick(), []);
+          // error message 3
+          const onClick4 = onClick;
           return <>
+            {/** error message 4 */}
+            <Child onClick={onClick}></Child>
             <Child onClick={onClick2}></Child>
             <Child onClick={onClick3}></Child>
           </>;
         }
       `,
+      // Explicitly test error messages here for various cases
       errors: [
-        useEffectEventError('onClick', true),
-        useEffectEventError('onClick', true),
+        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+          'Effects and Effect Events in the same component.',
+        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+          'Effects and Effect Events in the same component.',
+        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+          `Effects and Effect Events in the same component. ` +
+          `It cannot be assigned to a variable or passed down.`,
+        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+          `Effects and Effect Events in the same component. ` +
+          `It cannot be assigned to a variable or passed down.`,
       ],
     },
   ],
@@ -1714,7 +1729,8 @@ function useEffectEventError(fn, called) {
   return {
     message:
       `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-      `the same component.${called ? '' : ' They cannot be assigned to variables or passed down.'}`,
+      'Effects and Effect Events in the same component.' +
+      (called ? '' : ' It cannot be assigned to a variable or passed down.'),
   };
 }
 
