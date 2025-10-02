@@ -27,7 +27,7 @@ const createTask =
 
 function getTaskName(type) {
   if (type === REACT_FRAGMENT_TYPE) {
-    return '<>';
+    return "<>";
   }
   if (
     typeof type === 'object' &&
