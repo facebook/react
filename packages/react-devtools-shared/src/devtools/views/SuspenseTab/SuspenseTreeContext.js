@@ -30,6 +30,7 @@ export type SuspenseTreeState = {
   hoveredTimelineIndex: number | -1,
   uniqueSuspendersOnly: boolean,
   playing: boolean,
+  autoSelect: boolean,
 };
 
 type ACTION_SUSPENSE_TREE_MUTATION = {
@@ -123,6 +124,7 @@ function getInitialState(store: Store): SuspenseTreeState {
     hoveredTimelineIndex: -1,
     uniqueSuspendersOnly,
     playing: false,
+    autoSelect: true,
   };
 
   return initialState;
@@ -181,7 +183,10 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedTimelineID === null || nextTimeline.length === 0
                 ? -1
                 : nextTimeline.indexOf(selectedTimelineID);
-            if (nextTimeline.length > 0 && nextTimelineIndex === -1) {
+            if (
+              nextTimeline.length > 0 &&
+              (nextTimelineIndex === -1 || state.autoSelect)
+            ) {
               nextTimelineIndex = nextTimeline.length - 1;
               selectedSuspenseID = nextTimeline[nextTimelineIndex];
             }
@@ -212,6 +217,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               ...state,
               selectedSuspenseID,
               playing: false, // pause
+              autoSelect: false,
             };
           }
           case 'SET_SUSPENSE_LINEAGE': {
@@ -223,6 +229,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               lineage,
               selectedSuspenseID: suspenseID,
               playing: false, // pause
+              autoSelect: false,
             };
           }
           case 'SET_SUSPENSE_TIMELINE': {
@@ -277,6 +284,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
               playing: false, // pause
+              autoSelect: false,
             };
           }
           case 'SUSPENSE_SKIP_TIMELINE_INDEX': {
@@ -299,6 +307,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
               playing: false, // pause
+              autoSelect: false,
             };
           }
           case 'SUSPENSE_PLAY_PAUSE': {
@@ -325,6 +334,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
               playing: mode === 'toggle' ? !state.playing : mode === 'play',
+              autoSelect: false,
             };
           }
           case 'SUSPENSE_PLAY_TICK': {
@@ -381,6 +391,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
               playing: false, // pause
+              autoSelect: false,
             };
           }
           case 'HOVER_TIMELINE_FOR_ID': {
