@@ -322,6 +322,17 @@ export default function InspectedElementSuspendedBy({
     (suspendedBy == null || suspendedBy.length === 0) &&
     inspectedElement.unknownSuspenders === UNKNOWN_SUSPENDERS_NONE
   ) {
+    if (inspectedElement.isSuspended) {
+      // If we're still suspended, show a place holder until the data loads.
+      // We don't know what we're suspended by until it has loaded.
+      return (
+        <div>
+          <div className={styles.HeaderRow}>
+            <div className={styles.Header}>suspended...</div>
+          </div>
+        </div>
+      );
+    }
     return null;
   }
 
