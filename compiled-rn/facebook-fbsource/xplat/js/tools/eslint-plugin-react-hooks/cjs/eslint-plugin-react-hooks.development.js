@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<aa8db4d524cdbb9a536b418c6315d0be>>
+ * @generated SignedSource<<04d8bfbad94326555eaa3b2d3b1e01f7>>
  */
 
 'use strict';
@@ -32124,7 +32124,7 @@ const EnvironmentConfigSchema = zod.z.object({
     moduleTypeProvider: zod.z.nullable(zod.z.function().args(zod.z.string())).default(null),
     customMacros: zod.z.nullable(zod.z.array(MacroSchema)).default(null),
     enableResetCacheOnSourceFileChanges: zod.z.nullable(zod.z.boolean()).default(null),
-    enablePreserveExistingMemoizationGuarantees: zod.z.boolean().default(false),
+    enablePreserveExistingMemoizationGuarantees: zod.z.boolean().default(true),
     validatePreserveExistingMemoizationGuarantees: zod.z.boolean().default(true),
     enablePreserveExistingManualUseMemo: zod.z.boolean().default(false),
     enableForest: zod.z.boolean().default(false),

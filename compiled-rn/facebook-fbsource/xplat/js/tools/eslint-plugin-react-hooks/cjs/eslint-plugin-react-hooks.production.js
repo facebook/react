@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<e410ff8d72e7fe80e2b1fbc19a866b6c>>
+ * @generated SignedSource<<4e4a1e86e0614b95a7debf3a95619ba4>>
  */
 
 'use strict';
@@ -31903,7 +31903,7 @@ const EnvironmentConfigSchema = zod.z.object({
     moduleTypeProvider: zod.z.nullable(zod.z.function().args(zod.z.string())).default(null),
     customMacros: zod.z.nullable(zod.z.array(MacroSchema)).default(null),
     enableResetCacheOnSourceFileChanges: zod.z.nullable(zod.z.boolean()).default(null),
-    enablePreserveExistingMemoizationGuarantees: zod.z.boolean().default(false),
+    enablePreserveExistingMemoizationGuarantees: zod.z.boolean().default(true),
     validatePreserveExistingMemoizationGuarantees: zod.z.boolean().default(true),
     enablePreserveExistingManualUseMemo: zod.z.boolean().default(false),
     enableForest: zod.z.boolean().default(false),
