@@ -57,6 +57,7 @@ export {
 
 export {
   Children,
+  REACT_ACTIVITY_TYPE as Activity,
   REACT_FRAGMENT_TYPE as Fragment,
   REACT_PROFILER_TYPE as Profiler,
   REACT_STRICT_MODE_TYPE as StrictMode,
@@ -82,5 +83,4 @@ export {
   // Experimental
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
-  REACT_ACTIVITY_TYPE as Activity,
 };
