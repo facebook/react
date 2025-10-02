@@ -83,12 +83,6 @@ type ReducerAction =
       };
     }
   | {
-      type: 'updateAppliedConfig';
-      payload: {
-        appliedConfig: string;
-      };
-    }
-  | {
       type: 'toggleInternals';
     };
 
@@ -111,14 +105,6 @@ function storeReducer(store: Store, action: ReducerAction): Store {
       const newStore = {
         ...store,
         config,
-      };
-      return newStore;
-    }
-    case 'updateAppliedConfig': {
-      const appliedConfig = action.payload.appliedConfig;
-      const newStore = {
-        ...store,
-        appliedConfig,
       };
       return newStore;
     }
