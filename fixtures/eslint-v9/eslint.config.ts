@@ -1,8 +1,6 @@
 import {defineConfig} from 'eslint/config';
 import reactHooks from 'eslint-plugin-react-hooks';
 
-console.log(reactHooks.configs['recommended-latest']);
-
 export default defineConfig([
   {
     languageOptions: {
