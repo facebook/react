@@ -78,6 +78,7 @@ import {
   __DEBUG__,
   PROFILING_FLAG_BASIC_SUPPORT,
   PROFILING_FLAG_TIMELINE_SUPPORT,
+  PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
@@ -1074,6 +1075,7 @@ export function attach(
   const supportsTogglingSuspense =
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
+  const supportsPerformanceTracks = gte(version, '19.2.0');
 
   if (typeof scheduleRefresh === 'function') {
     // When Fast Refresh updates a component, the frontend may need to purge cached information.
@@ -2400,6 +2402,9 @@ export function attach(
         profilingFlags = PROFILING_FLAG_BASIC_SUPPORT;
         if (typeof injectProfilingHooks === 'function') {
           profilingFlags |= PROFILING_FLAG_TIMELINE_SUPPORT;
+        }
+        if (supportsPerformanceTracks) {
+          profilingFlags |= PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT;
         }
       }
 

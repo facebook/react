@@ -13,6 +13,7 @@ import {inspect} from 'util';
 import {
   PROFILING_FLAG_BASIC_SUPPORT,
   PROFILING_FLAG_TIMELINE_SUPPORT,
+  PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REMOVE_ROOT,
@@ -86,12 +87,17 @@ export type Config = {
   supportsTraceUpdates?: boolean,
 };
 
+const ADVANCED_PROFILING_NONE = 0;
+const ADVANCED_PROFILING_TIMELINE = 1;
+const ADVANCED_PROFILING_PERFORMANCE_TRACKS = 2;
+type AdvancedProfiling = 0 | 1 | 2;
+
 export type Capabilities = {
   supportsBasicProfiling: boolean,
   hasOwnerMetadata: boolean,
   supportsStrictMode: boolean,
   supportsTogglingSuspense: boolean,
-  supportsTimeline: boolean,
+  supportsAdvancedProfiling: AdvancedProfiling,
 };
 
 /**
@@ -112,6 +118,7 @@ export default class Store extends EventEmitter<{
   roots: [],
   rootSupportsBasicProfiling: [],
   rootSupportsTimelineProfiling: [],
+  rootSupportsPerformanceTracks: [],
   suspenseTreeMutated: [[Map<SuspenseNode['id'], SuspenseNode['id']>]],
   supportsNativeStyleEditor: [],
   supportsReloadAndProfile: [],
@@ -195,6 +202,7 @@ export default class Store extends EventEmitter<{
   // These options default to false but may be updated as roots are added and removed.
   _rootSupportsBasicProfiling: boolean = false;
   _rootSupportsTimelineProfiling: boolean = false;
+  _rootSupportsPerformanceTracks: boolean = false;
 
   _bridgeProtocol: BridgeProtocol | null = null;
   _unsupportedBridgeProtocolDetected: boolean = false;
@@ -472,6 +480,11 @@ export default class Store extends EventEmitter<{
   // At least one of the currently mounted roots support the Timeline profiler.
   get rootSupportsTimelineProfiling(): boolean {
     return this._rootSupportsTimelineProfiling;
+  }
+
+  // At least one of the currently mounted roots support performance tracks.
+  get rootSupportsPerformanceTracks(): boolean {
+    return this._rootSupportsPerformanceTracks;
   }
 
   get supportsInspectMatchingDOMElement(): boolean {
@@ -1161,11 +1174,20 @@ export default class Store extends EventEmitter<{
             const isStrictModeCompliant = operations[i] > 0;
             i++;
 
+            const profilerFlags = operations[i++];
             const supportsBasicProfiling =
-              (operations[i] & PROFILING_FLAG_BASIC_SUPPORT) !== 0;
+              (profilerFlags & PROFILING_FLAG_BASIC_SUPPORT) !== 0;
             const supportsTimeline =
-              (operations[i] & PROFILING_FLAG_TIMELINE_SUPPORT) !== 0;
-            i++;
+              (profilerFlags & PROFILING_FLAG_TIMELINE_SUPPORT) !== 0;
+            const supportsPerformanceTracks =
+              (profilerFlags & PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT) !== 0;
+            let supportsAdvancedProfiling: AdvancedProfiling =
+              ADVANCED_PROFILING_NONE;
+            if (supportsPerformanceTracks) {
+              supportsAdvancedProfiling = ADVANCED_PROFILING_PERFORMANCE_TRACKS;
+            } else if (supportsTimeline) {
+              supportsAdvancedProfiling = ADVANCED_PROFILING_TIMELINE;
+            }
 
             let supportsStrictMode = false;
             let hasOwnerMetadata = false;
@@ -1194,7 +1216,7 @@ export default class Store extends EventEmitter<{
               hasOwnerMetadata,
               supportsStrictMode,
               supportsTogglingSuspense,
-              supportsTimeline,
+              supportsAdvancedProfiling,
             });
 
             // Not all roots support StrictMode;
@@ -1842,20 +1864,32 @@ export default class Store extends EventEmitter<{
       const prevRootSupportsProfiling = this._rootSupportsBasicProfiling;
       const prevRootSupportsTimelineProfiling =
         this._rootSupportsTimelineProfiling;
+      const prevRootSupportsPerformanceTracks =
+        this._rootSupportsPerformanceTracks;
 
       this._hasOwnerMetadata = false;
       this._rootSupportsBasicProfiling = false;
       this._rootSupportsTimelineProfiling = false;
+      this._rootSupportsPerformanceTracks = false;
       this._rootIDToCapabilities.forEach(
-        ({supportsBasicProfiling, hasOwnerMetadata, supportsTimeline}) => {
+        ({
+          supportsBasicProfiling,
+          hasOwnerMetadata,
+          supportsAdvancedProfiling,
+        }) => {
           if (supportsBasicProfiling) {
             this._rootSupportsBasicProfiling = true;
           }
           if (hasOwnerMetadata) {
             this._hasOwnerMetadata = true;
           }
-          if (supportsTimeline) {
+          if (supportsAdvancedProfiling === ADVANCED_PROFILING_TIMELINE) {
             this._rootSupportsTimelineProfiling = true;
+          }
+          if (
+            supportsAdvancedProfiling === ADVANCED_PROFILING_PERFORMANCE_TRACKS
+          ) {
+            this._rootSupportsPerformanceTracks = true;
           }
         },
       );
@@ -1871,6 +1905,12 @@ export default class Store extends EventEmitter<{
         prevRootSupportsTimelineProfiling
       ) {
         this.emit('rootSupportsTimelineProfiling');
+      }
+      if (
+        this._rootSupportsPerformanceTracks !==
+        prevRootSupportsPerformanceTracks
+      ) {
+        this.emit('rootSupportsPerformanceTracks');
       }
     }
 

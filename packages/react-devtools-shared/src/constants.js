@@ -30,8 +30,9 @@ export const SUSPENSE_TREE_OPERATION_REORDER_CHILDREN = 10;
 export const SUSPENSE_TREE_OPERATION_RESIZE = 11;
 export const SUSPENSE_TREE_OPERATION_SUSPENDERS = 12;
 
-export const PROFILING_FLAG_BASIC_SUPPORT = 0b01;
-export const PROFILING_FLAG_TIMELINE_SUPPORT = 0b10;
+export const PROFILING_FLAG_BASIC_SUPPORT /*.             */ = 0b001;
+export const PROFILING_FLAG_TIMELINE_SUPPORT /*           */ = 0b010;
+export const PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT /* */ = 0b100;
 
 export const UNKNOWN_SUSPENDERS_NONE: UnknownSuspendersReason = 0; // If we had at least one debugInfo, then that might have been the reason.
 export const UNKNOWN_SUSPENDERS_REASON_PRODUCTION: UnknownSuspendersReason = 1; // We're running in prod. That might be why we had unknown suspenders.
