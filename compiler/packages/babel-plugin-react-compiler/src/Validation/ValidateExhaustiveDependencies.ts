@@ -6,8 +6,13 @@
  */
 
 import prettyFormat from 'pretty-format';
-import {CompilerDiagnostic, CompilerError, SourceLocation} from '..';
-import {ErrorCategory} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  CompilerSuggestionOperation,
+  SourceLocation,
+} from '..';
+import {CompilerSuggestion, ErrorCategory} from '../CompilerError';
 import {
   areEqualPaths,
   BlockId,
@@ -229,38 +234,52 @@ export function validateExhaustiveDependencies(
       extra.push(dep);
     }
 
-    if (missing.length !== 0) {
-      // Error
-      const diagnostic = CompilerDiagnostic.create({
-        category: ErrorCategory.PreserveManualMemo,
-        reason: 'Found non-exhaustive dependencies',
-        description:
-          'Missing dependencies can cause a value not to update when those inputs change, ' +
-          'resulting in stale UI. This memoization cannot be safely rewritten by the compiler.',
-      });
-      for (const dep of missing) {
+    if (missing.length !== 0 || extra.length !== 0) {
+      let suggestions: Array<CompilerSuggestion> | null = null;
+      if (startMemo.depsLoc != null && typeof startMemo.depsLoc !== 'symbol') {
+        suggestions = [
+          {
+            description: 'Update dependencies',
+            range: [startMemo.depsLoc.start.index, startMemo.depsLoc.end.index],
+            op: CompilerSuggestionOperation.Replace,
+            text: `[${inferred.map(printInferredDependency).join(', ')}]`,
+          },
+        ];
+      }
+      if (missing.length !== 0) {
+        // Error
+        const diagnostic = CompilerDiagnostic.create({
+          category: ErrorCategory.PreserveManualMemo,
+          reason: 'Found non-exhaustive dependencies',
+          description:
+            'Missing dependencies can cause a value not to update when those inputs change, ' +
+            'resulting in stale UI. This memoization cannot be safely rewritten by the compiler.',
+          suggestions,
+        });
+        for (const dep of missing) {
+          diagnostic.withDetails({
+            kind: 'error',
+            message: `Missing dependency \`${printInferredDependency(dep)}\``,
+            loc: dep.loc,
+          });
+        }
+        error.pushDiagnostic(diagnostic);
+      } else if (extra.length !== 0) {
+        const diagnostic = CompilerDiagnostic.create({
+          category: ErrorCategory.PreserveManualMemo,
+          reason: 'Found unnecessary memoization dependencies',
+          description:
+            'Unnecessary dependencies can cause a value to update more often than necessary, ' +
+            'which can cause effects to run more than expected. This memoization cannot be safely ' +
+            'rewritten by the compiler',
+        });
         diagnostic.withDetails({
           kind: 'error',
-          message: `Missing dependency \`${printInferredDependency(dep)}\``,
-          loc: dep.loc,
+          message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
+          loc: value.loc,
         });
+        error.pushDiagnostic(diagnostic);
       }
-      error.pushDiagnostic(diagnostic);
-    } else if (extra.length !== 0) {
-      const diagnostic = CompilerDiagnostic.create({
-        category: ErrorCategory.PreserveManualMemo,
-        reason: 'Found unnecessary memoization dependencies',
-        description:
-          'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-          'which can cause effects to run more than expected. This memoization cannot be safely ' +
-          'rewritten by the compiler',
-      });
-      diagnostic.withDetails({
-        kind: 'error',
-        message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
-        loc: value.loc,
-      });
-      error.pushDiagnostic(diagnostic);
     }
 
     dependencies.clear();
