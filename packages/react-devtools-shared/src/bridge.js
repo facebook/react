@@ -65,12 +65,6 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
   {
     version: 2,
     minNpmVersion: '4.22.0',
-    maxNpmVersion: '6.2.0',
-  },
-  // Version 3 adds supports-toggling-suspense bit to add-root
-  {
-    version: 3,
-    minNpmVersion: '6.2.0',
     maxNpmVersion: null,
   },
 ];
@@ -90,6 +84,12 @@ type HighlightHostInstance = {
   displayName: string | null,
   hideAfterTimeout: boolean,
   openBuiltinElementsPanel: boolean,
+  scrollIntoView: boolean,
+};
+type HighlightHostInstances = {
+  elements: Array<ElementAndRendererID>,
+  displayName: string | null,
+  hideAfterTimeout: boolean,
   scrollIntoView: boolean,
 };
 
@@ -145,8 +145,6 @@ type OverrideSuspense = {
 };
 
 type OverrideSuspenseMilestone = {
-  rendererID: number,
-  rootID: number,
   suspendedSet: Array<number>,
 };
 
@@ -165,6 +163,13 @@ type InspectElementParams = {
   forceFullData: boolean,
   path: Array<number | string> | null,
   requestID: number,
+};
+
+type InspectScreenParams = {
+  requestID: number,
+  id: number,
+  forceFullData: boolean,
+  path: Array<number | string> | null,
 };
 
 type StoreAsGlobalParams = {
@@ -199,6 +204,7 @@ export type BackendEvents = {
   fastRefreshScheduled: [],
   getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
+  inspectedScreen: [InspectedElementPayload],
   isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
@@ -243,7 +249,9 @@ type FrontendEvents = {
   getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
   highlightHostInstance: [HighlightHostInstance],
+  highlightHostInstances: [HighlightHostInstances],
   inspectElement: [InspectElementParams],
+  inspectScreen: [InspectScreenParams],
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],
   overrideSuspense: [OverrideSuspense],

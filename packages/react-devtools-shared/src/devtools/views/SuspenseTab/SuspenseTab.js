@@ -34,13 +34,9 @@ import {
   SuspenseTreeStateContext,
 } from './SuspenseTreeContext';
 import {StoreContext, OptionsContext} from '../context';
-import {TreeDispatcherContext} from '../Components/TreeContext';
 import Button from '../Button';
 import Toggle from '../Toggle';
-import typeof {
-  SyntheticEvent,
-  SyntheticPointerEvent,
-} from 'react-dom-bindings/src/events/SyntheticEvent';
+import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
@@ -71,20 +67,14 @@ function ToggleUniqueSuspenders() {
   const store = useContext(StoreContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
 
-  const {selectedRootID: rootID, uniqueSuspendersOnly} = useContext(
-    SuspenseTreeStateContext,
-  );
+  const {uniqueSuspendersOnly} = useContext(SuspenseTreeStateContext);
 
   function handleToggleUniqueSuspenders() {
     const nextUniqueSuspendersOnly = !uniqueSuspendersOnly;
-    const nextTimeline =
-      rootID === null
-        ? []
-        : // TODO: Handle different timeline modes (e.g. random order)
-          store.getSuspendableDocumentOrderSuspense(
-            rootID,
-            nextUniqueSuspendersOnly,
-          );
+    // TODO: Handle different timeline modes (e.g. random order)
+    const nextTimeline = store.getSuspendableDocumentOrderSuspense(
+      nextUniqueSuspendersOnly,
+    );
     suspenseTreeDispatch({
       type: 'SET_SUSPENSE_TIMELINE',
       payload: [nextTimeline, null, nextUniqueSuspendersOnly],
@@ -98,55 +88,6 @@ function ToggleUniqueSuspenders() {
       title={'Only include boundaries with unique suspenders'}>
       <ButtonIcon type={uniqueSuspendersOnly ? 'filter-on' : 'filter-off'} />
     </Toggle>
-  );
-}
-
-function SelectRoot() {
-  const store = useContext(StoreContext);
-  const {roots, selectedRootID, uniqueSuspendersOnly} = useContext(
-    SuspenseTreeStateContext,
-  );
-  const treeDispatch = useContext(TreeDispatcherContext);
-  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
-
-  function handleChange(event: SyntheticEvent) {
-    const newRootID = +event.currentTarget.value;
-    // TODO: scrollIntoView both suspense rects and host instance.
-    const nextTimeline = store.getSuspendableDocumentOrderSuspense(
-      newRootID,
-      uniqueSuspendersOnly,
-    );
-    suspenseTreeDispatch({
-      type: 'SET_SUSPENSE_TIMELINE',
-      payload: [nextTimeline, newRootID, uniqueSuspendersOnly],
-    });
-    if (nextTimeline.length > 0) {
-      const milestone = nextTimeline[nextTimeline.length - 1];
-      treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: milestone});
-    }
-  }
-  return (
-    roots.length > 0 && (
-      <select
-        aria-label="Select Suspense Root"
-        className={styles.SuspenseTimelineRootSwitcher}
-        onChange={handleChange}
-        value={selectedRootID === null ? -1 : selectedRootID}>
-        <option disabled={true} value={-1}>
-          ----
-        </option>
-        {roots.map(rootID => {
-          // TODO: Use name
-          const name = '#' + rootID;
-          // TODO: Highlight host on hover
-          return (
-            <option key={rootID} value={rootID}>
-              {name}
-            </option>
-          );
-        })}
-      </select>
-    )
   );
 }
 
@@ -427,7 +368,6 @@ function SuspenseTab(_: {}) {
               <div className={styles.SuspenseBreadcrumbs}>
                 <SuspenseBreadcrumbs />
               </div>
-              <SelectRoot />
               <div className={styles.VRule} />
               <ToggleUniqueSuspenders />
               {!hideSettings && <SettingsModalContextToggle />}
