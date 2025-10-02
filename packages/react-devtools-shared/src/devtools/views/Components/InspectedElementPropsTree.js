@@ -20,6 +20,7 @@ import styles from './InspectedElementSharedStyles.css';
 import {
   ElementTypeClass,
   ElementTypeSuspense,
+  ElementTypeActivity,
 } from 'react-devtools-shared/src/frontend/types';
 import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
@@ -50,20 +51,15 @@ export default function InspectedElementPropsTree({
     type,
   } = inspectedElement;
 
-  if (type === ElementTypeSuspense) {
-    // Skip showing the props for Suspense. We want to give more real estate to the
-    // "Suspended by" for Suspense boundaries. We could maybe show it further below
-    // but in practice, the props of Suspense boundaries are not very useful to
-    // inspect because the name shows in the tree already. The children in the tree
-    // will be either the "fallback" or "children" prop which you can already inspect
-    // but resuspending the tree.
-    return null;
-  }
-
   const canDeletePaths =
     type === ElementTypeClass || canEditFunctionPropsDeletePaths;
   const canEditValues =
-    !readOnly && (type === ElementTypeClass || canEditFunctionProps);
+    !readOnly &&
+    (type === ElementTypeClass || canEditFunctionProps) &&
+    // Make it read-only for Suspense to make it a bit cleaner. It's not
+    // useful to edit children anyway.
+    type !== ElementTypeSuspense &&
+    type !== ElementTypeActivity;
   const canRenamePaths =
     type === ElementTypeClass || canEditFunctionPropsRenamePaths;
 

@@ -24,6 +24,10 @@ import InspectedElementSourcePanel from './InspectedElementSourcePanel';
 import StackTraceView from './StackTraceView';
 import OwnerView from './OwnerView';
 import Skeleton from './Skeleton';
+import {
+  ElementTypeSuspense,
+  ElementTypeActivity,
+} from 'react-devtools-shared/src/frontend/types';
 
 import styles from './InspectedElementView.css';
 
@@ -60,6 +64,7 @@ export default function InspectedElementView({
     rootType,
     source,
     nativeTag,
+    type,
   } = inspectedElement;
 
   const bridge = useContext(BridgeContext);
@@ -74,6 +79,17 @@ export default function InspectedElementView({
   const showRenderedBy =
     showStack || showOwnersList || rendererLabel !== null || rootType !== null;
 
+  const propsSection = (
+    <div className={styles.InspectedElementSection}>
+      <InspectedElementPropsTree
+        bridge={bridge}
+        element={element}
+        inspectedElement={inspectedElement}
+        store={store}
+      />
+    </div>
+  );
+
   return (
     <Fragment>
       <div className={styles.InspectedElement}>
@@ -85,14 +101,12 @@ export default function InspectedElementView({
           />
         </div>
 
-        <div className={styles.InspectedElementSection}>
-          <InspectedElementPropsTree
-            bridge={bridge}
-            element={element}
-            inspectedElement={inspectedElement}
-            store={store}
-          />
-        </div>
+        {
+          // For Suspense and Activity we show the props further down.
+          type !== ElementTypeSuspense && type !== ElementTypeActivity
+            ? propsSection
+            : null
+        }
 
         <div className={styles.InspectedElementSection}>
           <InspectedElementStateTree
@@ -156,6 +170,13 @@ export default function InspectedElementView({
             store={store}
           />
         </div>
+
+        {
+          // For Suspense and Activity we show the props below suspended by to give that more priority.
+          type !== ElementTypeSuspense && type !== ElementTypeActivity
+            ? null
+            : propsSection
+        }
 
         {showRenderedBy && (
           <div
