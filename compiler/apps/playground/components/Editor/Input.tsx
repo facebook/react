@@ -29,15 +29,6 @@ import React$Types from '../../node_modules/@types/react/index.d.ts';
 
 loader.config({monaco});
 
-declare global {
-  interface Window {
-    /**
-     * Set to true once the Monaco editor instance has mounted. Used as an imperative signal for any code that needs to defer until Monaco is available.
-     */
-    __MONACO_LOADED__?: true;
-  }
-}
-
 type Props = {
   errors: Array<CompilerErrorDetail | CompilerDiagnostic>;
   language: 'flow' | 'typescript';
