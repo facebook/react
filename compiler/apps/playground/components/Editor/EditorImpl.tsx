@@ -9,7 +9,7 @@ import {
   CompilerErrorDetail,
   CompilerDiagnostic,
 } from 'babel-plugin-react-compiler';
-import {useDeferredValue, useEffect, useMemo} from 'react';
+import {useDeferredValue, useMemo, useState} from 'react';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import ConfigEditor from './ConfigEditor';
 import Input from './Input';
@@ -29,6 +29,7 @@ export default function Editor(): JSX.Element {
     () => compile(deferredStore.source, 'linter', deferredStore.config),
     [deferredStore.source, deferredStore.config],
   );
+  const [formattedAppliedConfig, setFormattedAppliedConfig] = useState('');
 
   let mergedOutput: CompilerOutput;
   let errors: Array<CompilerErrorDetail | CompilerDiagnostic>;
@@ -43,25 +44,21 @@ export default function Editor(): JSX.Element {
     errors = compilerOutput.error.details;
   }
 
-  useEffect(() => {
-    if (appliedOptions) {
-      dispatchStore({
-        type: 'updateAppliedConfig',
-        payload: {
-          appliedConfig: prettyFormat(appliedOptions, {
-            printFunctionName: false,
-            printBasicPrototype: false,
-          }),
-        },
-      });
+  if (appliedOptions) {
+    const formatted = prettyFormat(appliedOptions, {
+      printFunctionName: false,
+      printBasicPrototype: false,
+    });
+    if (formatted !== formattedAppliedConfig) {
+      setFormattedAppliedConfig(formatted);
     }
-  }, [appliedOptions]);
+  }
 
   return (
     <>
       <div className="relative flex top-14">
         <div className="flex-shrink-0">
-          <ConfigEditor appliedOptions={appliedOptions} />
+          <ConfigEditor formattedAppliedConfig={formattedAppliedConfig} />
         </div>
         <div className="flex flex-1 min-w-0">
           <div className="flex-1 min-w-[550px] sm:min-w-0">

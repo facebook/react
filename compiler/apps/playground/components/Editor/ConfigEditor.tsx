@@ -21,9 +21,9 @@ import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
 loader.config({monaco});
 
 export default function ConfigEditor({
-  appliedOptions,
+  formattedAppliedConfig,
 }: {
-  appliedOptions: PluginOptions | null;
+  formattedAppliedConfig: string;
 }): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -36,7 +36,7 @@ export default function ConfigEditor({
         }}>
         <ExpandedEditor
           onToggle={setIsExpanded}
-          appliedOptions={appliedOptions}
+          formattedAppliedConfig={formattedAppliedConfig}
         />
       </div>
       <div
@@ -51,10 +51,10 @@ export default function ConfigEditor({
 
 function ExpandedEditor({
   onToggle,
-  appliedOptions,
+  formattedAppliedConfig,
 }: {
   onToggle: (expanded: boolean) => void;
-  appliedOptions: PluginOptions | null;
+  formattedAppliedConfig: string;
 }): React.ReactElement {
   const store = useStore();
   const dispatchStore = useStoreDispatch();
@@ -152,7 +152,7 @@ function ExpandedEditor({
             <MonacoEditor
               path={'applied-config.js'}
               language={'javascript'}
-              value={store.appliedConfig}
+              value={formattedAppliedConfig}
               loading={''}
               className="monaco-editor-applied-config"
               options={{
