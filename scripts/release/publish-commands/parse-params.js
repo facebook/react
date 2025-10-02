@@ -34,15 +34,16 @@ const paramDefinitions = [
     defaultValue: [],
   },
   {
+    name: 'prerelease',
+    type: String,
+    description:
+      'prerelease to publish (e.g. version 19.2.0-canary-86181134-20251001 has prerelease "86181134-20251001")',
+  },
+  {
     name: 'ci',
     type: Boolean,
     description: 'Run in automated environment, without interactive prompts.',
     defaultValue: false,
-  },
-  {
-    name: 'publishVersion',
-    type: String,
-    description: 'Version to publish',
   },
 ];
 
