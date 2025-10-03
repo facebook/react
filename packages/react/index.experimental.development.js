@@ -37,6 +37,7 @@ export {
   unstable_startGestureTransition,
   unstable_addTransitionType,
   unstable_useCacheRefresh,
+  unstable_TracingMarker,
   useId,
   useCallback,
   useContext,
