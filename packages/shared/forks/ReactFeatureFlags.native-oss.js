@@ -72,7 +72,7 @@ export const enableHydrationChangeEvent: boolean = false;
 export const enableDefaultTransitionIndicator: boolean = false;
 export const ownerStackLimit = 1e4;
 
-export const enableFragmentRefs: boolean = false;
+export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
 
 // Profiling Only
