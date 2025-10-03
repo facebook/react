@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<d6504d69dfcd4c47e1b10d0956bd780a>>
+ * @generated SignedSource<<76e2aa77c885f2792f59a47a66ee7007>>
  */
 
 'use strict';
@@ -26,7 +26,6 @@ var BabelParser = require('@babel/parser');
 var zod = require('zod');
 var zodValidationError = require('zod-validation-error');
 var crypto = require('crypto');
-var PluginProposalPrivateMethods = require('@babel/plugin-proposal-private-methods');
 var HermesParser = require('hermes-parser');
 var util = require('util');
 
@@ -54253,10 +54252,7 @@ function runReactCompilerImpl({ sourceCode, filename, userOpts, }) {
                 filename,
                 highlightCode: false,
                 retainLines: true,
-                plugins: [
-                    [PluginProposalPrivateMethods.default, { loose: true }],
-                    [BabelPluginReactCompiler, options],
-                ],
+                plugins: [[BabelPluginReactCompiler, options]],
                 sourceType: 'module',
                 configFile: false,
                 babelrc: false,

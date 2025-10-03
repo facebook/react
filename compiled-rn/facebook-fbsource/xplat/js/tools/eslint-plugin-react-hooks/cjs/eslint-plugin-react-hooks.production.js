@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<9ac8d6e015d5bc44a9937c7d207117d8>>
+ * @generated SignedSource<<74b0ce806712dd0a9ac5cde51b406921>>
  */
 
 'use strict';
@@ -16,7 +16,6 @@ var BabelParser = require('@babel/parser');
 var zod = require('zod');
 var zodValidationError = require('zod-validation-error');
 var crypto = require('crypto');
-var PluginProposalPrivateMethods = require('@babel/plugin-proposal-private-methods');
 var HermesParser = require('hermes-parser');
 var util = require('util');
 
@@ -54032,10 +54031,7 @@ function runReactCompilerImpl({ sourceCode, filename, userOpts, }) {
                 filename,
                 highlightCode: false,
                 retainLines: true,
-                plugins: [
-                    [PluginProposalPrivateMethods.default, { loose: true }],
-                    [BabelPluginReactCompiler, options],
-                ],
+                plugins: [[BabelPluginReactCompiler, options]],
                 sourceType: 'module',
                 configFile: false,
                 babelrc: false,
