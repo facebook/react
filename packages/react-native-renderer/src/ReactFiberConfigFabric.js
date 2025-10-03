@@ -414,14 +414,19 @@ export function resolveUpdatePriority(): EventPriority {
   return DefaultEventPriority;
 }
 
-export function trackSchedulerEvent(): void {}
+let schedulerEvent: void | Event = undefined;
+export function trackSchedulerEvent(): void {
+  schedulerEvent = window.event;
+}
 
 export function resolveEventType(): null | string {
-  return null;
+  const event = window.event;
+  return event != null && event !== schedulerEvent ? event.type : null;
 }
 
 export function resolveEventTimeStamp(): number {
-  return -1.1;
+  const event = window.event;
+  return event != null && event !== schedulerEvent ? event.timeStamp : -1.1;
 }
 
 export function shouldAttemptEagerTransition(): boolean {
