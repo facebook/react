@@ -207,7 +207,7 @@ function compile(
   } else {
     language = 'typescript';
   }
-  let transformOutput;
+  let transformOutput: CompilerTransformOutput;
 
   let baseOpts: PluginOptions | null = null;
   try {
@@ -302,7 +302,7 @@ function compile(
   if (!error.hasErrors() && otherErrors.length !== 0) {
     otherErrors.forEach(e => error.details.push(e));
   }
-  if (error.hasErrors()) {
+  if (error.hasErrors() || !transformOutput) {
     return [{kind: 'err', results, error}, language, baseOpts];
   }
   return [
