@@ -93,7 +93,7 @@ jobs:
             --tags=${{ inputs.dist_tag }} \
             --skipPackages=${{ inputs.skip_packages }} ${{ (inputs.dry && '') || '\'}}
             ${{ inputs.dry && '--dry' || '' }}
-      - if: '${{ !(inputs.skip_packages && inputs.only_packages) }}'
+      - if: '${{ !inputs.skip_packages && !inputs.only_packages }}'
         name: 'Publish all packages'
         run: |
           scripts/release/publish.js \
