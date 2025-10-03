@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<76e2aa77c885f2792f59a47a66ee7007>>
+ * @generated SignedSource<<bc44c739fd5a99692d74178b8afab7c3>>
  */
 
 'use strict';
@@ -26,7 +26,6 @@ var BabelParser = require('@babel/parser');
 var zod = require('zod');
 var zodValidationError = require('zod-validation-error');
 var crypto = require('crypto');
-var HermesParser = require('hermes-parser');
 var util = require('util');
 
 const SETTINGS_KEY = 'react-hooks';
@@ -54222,28 +54221,14 @@ function runReactCompilerImpl({ sourceCode, filename, userOpts, }) {
         (_b = options.logger) === null || _b === void 0 ? void 0 : _b.logEvent(filename, err);
     }
     let babelAST = null;
-    if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
-        try {
-            babelAST = BabelParser.parse(sourceCode.text, {
-                sourceFilename: filename,
-                sourceType: 'unambiguous',
-                plugins: ['typescript', 'jsx'],
-            });
-        }
-        catch (_c) {
-        }
+    try {
+        babelAST = BabelParser.parse(sourceCode.text, {
+            sourceFilename: filename,
+            sourceType: 'unambiguous',
+            plugins: ['typescript', 'jsx'],
+        });
     }
-    else {
-        try {
-            babelAST = HermesParser.parse(sourceCode.text, {
-                babel: true,
-                enableExperimentalComponentSyntax: true,
-                sourceFilename: filename,
-                sourceType: 'module',
-            });
-        }
-        catch (_d) {
-        }
+    catch (err) {
     }
     if (babelAST != null) {
         results.flowSuppressions = getFlowSuppressions(sourceCode);
