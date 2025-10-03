@@ -159,7 +159,7 @@ export const EnvironmentConfigSchema = z.object({
    * A function that, given the name of a module, can optionally return a description
    * of that module's type signature.
    */
-  moduleTypeProvider: z.nullable(z.function().args(z.string())).default(null),
+  moduleTypeProvider: z.nullable(z.any()).default(null),
 
   /**
    * A list of functions which the application compiles as macros, where
@@ -249,7 +249,7 @@ export const EnvironmentConfigSchema = z.object({
    * Allows specifying a function that can populate HIR with type information from
    * Flow
    */
-  flowTypeProvider: z.nullable(z.function().args(z.string())).default(null),
+  flowTypeProvider: z.nullable(z.any()).default(null),
 
   /**
    * Enables inference of optional dependency chains. Without this flag
@@ -905,6 +905,12 @@ export class Environment {
         this.config.moduleTypeProvider ?? defaultModuleTypeProvider;
       if (moduleTypeProvider == null) {
         return null;
+      }
+      if (typeof moduleTypeProvider !== 'function') {
+        CompilerError.throwInvalidConfig({
+          reason: `Expected a function for \`moduleTypeProvider\``,
+          loc,
+        });
       }
       const unparsedModuleConfig = moduleTypeProvider(moduleName);
       if (unparsedModuleConfig != null) {
