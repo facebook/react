@@ -10,13 +10,7 @@ import {defineConfig} from 'tsup';
 export default defineConfig({
   entry: ['./src/index.ts'],
   outDir: './dist',
-  external: [
-    '@babel/core',
-    '@babel/plugin-proposal-private-methods',
-    'hermes-parser',
-    'zod',
-    'zod-validation-error',
-  ],
+  external: ['@babel/core', 'hermes-parser', 'zod', 'zod-validation-error'],
   splitting: false,
   sourcemap: false,
   dts: false,
