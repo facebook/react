@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d3c7d46457ffddc36e3442e081da7709>>
+ * @generated SignedSource<<92fd3d4d199bfffd87bb07920b9ca08d>>
  */
 
 "use strict";
@@ -1857,6 +1857,13 @@ __DEV__ &&
         child = child.sibling;
       }
       return !1;
+    }
+    function getFragmentParentHostFiber(fiber) {
+      for (fiber = fiber.return; null !== fiber; ) {
+        if (3 === fiber.tag || 5 === fiber.tag) return fiber;
+        fiber = fiber.return;
+      }
+      return null;
     }
     function findNextSibling(child) {
       searchTarget = child;
@@ -19852,18 +19859,7 @@ __DEV__ &&
           );
     };
     FragmentInstance.prototype.compareDocumentPosition = function (otherNode) {
-      var parentHostFiber;
-      a: {
-        for (
-          parentHostFiber = this._fragmentFiber.return;
-          null !== parentHostFiber;
-
-        ) {
-          if (3 === parentHostFiber.tag || 5 === parentHostFiber.tag) break a;
-          parentHostFiber = parentHostFiber.return;
-        }
-        parentHostFiber = null;
-      }
+      var parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
       if (null === parentHostFiber) return Node.DOCUMENT_POSITION_DISCONNECTED;
       var children = [];
       traverseVisibleHostChildren(
@@ -19914,6 +19910,14 @@ __DEV__ &&
         lastResult
         ? Node.DOCUMENT_POSITION_CONTAINED_BY
         : result;
+    };
+    FragmentInstance.prototype.getRootNode = function (getRootNodeOptions) {
+      var parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+      return null === parentHostFiber
+        ? this
+        : getPublicInstanceFromHostFiber(parentHostFiber).getRootNode(
+            getRootNodeOptions
+          );
     };
     var NotPendingTransition = null,
       HostTransitionContext = {
@@ -20000,10 +20004,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-19f65ff1-20251002",
+        version: "19.3.0-native-fb-e866b1d1-20251003",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-19f65ff1-20251002"
+        reconcilerVersion: "19.3.0-native-fb-e866b1d1-20251003"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

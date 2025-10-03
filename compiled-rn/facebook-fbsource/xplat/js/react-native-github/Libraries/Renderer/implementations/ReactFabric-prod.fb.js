@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1903c9830a506f44cfbc978c2833b19e>>
+ * @generated SignedSource<<0f592551ec81cbbe0fec8bab4e80c616>>
  */
 
 "use strict";
@@ -1241,7 +1241,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_283 = {
+var injectedNamesToPlugins$jscomp$inline_282 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1287,32 +1287,32 @@ var injectedNamesToPlugins$jscomp$inline_283 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_284 = !1,
-  pluginName$jscomp$inline_285;
-for (pluginName$jscomp$inline_285 in injectedNamesToPlugins$jscomp$inline_283)
+  isOrderingDirty$jscomp$inline_283 = !1,
+  pluginName$jscomp$inline_284;
+for (pluginName$jscomp$inline_284 in injectedNamesToPlugins$jscomp$inline_282)
   if (
-    injectedNamesToPlugins$jscomp$inline_283.hasOwnProperty(
-      pluginName$jscomp$inline_285
+    injectedNamesToPlugins$jscomp$inline_282.hasOwnProperty(
+      pluginName$jscomp$inline_284
     )
   ) {
-    var pluginModule$jscomp$inline_286 =
-      injectedNamesToPlugins$jscomp$inline_283[pluginName$jscomp$inline_285];
+    var pluginModule$jscomp$inline_285 =
+      injectedNamesToPlugins$jscomp$inline_282[pluginName$jscomp$inline_284];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_285) ||
-      namesToPlugins[pluginName$jscomp$inline_285] !==
-        pluginModule$jscomp$inline_286
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_284) ||
+      namesToPlugins[pluginName$jscomp$inline_284] !==
+        pluginModule$jscomp$inline_285
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_285])
+      if (namesToPlugins[pluginName$jscomp$inline_284])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_285 + "`.")
+            (pluginName$jscomp$inline_284 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_285] =
-        pluginModule$jscomp$inline_286;
-      isOrderingDirty$jscomp$inline_284 = !0;
+      namesToPlugins[pluginName$jscomp$inline_284] =
+        pluginModule$jscomp$inline_285;
+      isOrderingDirty$jscomp$inline_283 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_284 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_283 && recomputePluginOrdering();
 function batchedUpdatesImpl(fn, bookkeeping) {
   return fn(bookkeeping);
 }
@@ -1824,6 +1824,13 @@ function traverseVisibleHostChildren(child, searchWithinHosts, fn, a, b, c) {
     child = child.sibling;
   }
   return !1;
+}
+function getFragmentParentHostFiber(fiber) {
+  for (fiber = fiber.return; null !== fiber; ) {
+    if (3 === fiber.tag || 5 === fiber.tag) return fiber;
+    fiber = fiber.return;
+  }
+  return null;
 }
 var searchTarget = null;
 function findNextSibling(child) {
@@ -11088,24 +11095,8 @@ function unobserveChild(child, observer) {
   return !1;
 }
 FragmentInstance.prototype.compareDocumentPosition = function (otherNode) {
-  var JSCompiler_inline_result;
-  a: {
-    for (
-      JSCompiler_inline_result = this._fragmentFiber.return;
-      null !== JSCompiler_inline_result;
-
-    ) {
-      if (
-        3 === JSCompiler_inline_result.tag ||
-        5 === JSCompiler_inline_result.tag
-      )
-        break a;
-      JSCompiler_inline_result = JSCompiler_inline_result.return;
-    }
-    JSCompiler_inline_result = null;
-  }
-  if (null === JSCompiler_inline_result)
-    return Node.DOCUMENT_POSITION_DISCONNECTED;
+  var parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (null === parentHostFiber) return Node.DOCUMENT_POSITION_DISCONNECTED;
   var children = [];
   traverseVisibleHostChildren(
     this._fragmentFiber.child,
@@ -11116,33 +11107,31 @@ FragmentInstance.prototype.compareDocumentPosition = function (otherNode) {
     void 0
   );
   if (0 === children.length) {
-    JSCompiler_inline_result = getPublicInstanceFromHostFiber(
-      JSCompiler_inline_result
-    );
+    parentHostFiber = getPublicInstanceFromHostFiber(parentHostFiber);
     children = this._fragmentFiber;
-    var parentResult =
-      JSCompiler_inline_result.compareDocumentPosition(otherNode);
+    var parentResult = parentHostFiber.compareDocumentPosition(otherNode);
     var result = parentResult;
-    JSCompiler_inline_result === otherNode
+    parentHostFiber === otherNode
       ? (result = Node.DOCUMENT_POSITION_CONTAINS)
       : parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY &&
         (traverseVisibleHostChildren(children.sibling, !1, findNextSibling),
-        (JSCompiler_inline_result = searchTarget),
+        (parentHostFiber = searchTarget),
         (searchTarget = null),
-        null === JSCompiler_inline_result
+        null === parentHostFiber
           ? (result = Node.DOCUMENT_POSITION_PRECEDING)
-          : ((otherNode = getPublicInstanceFromHostFiber(
-              JSCompiler_inline_result
-            ).compareDocumentPosition(otherNode)),
+          : ((otherNode =
+              getPublicInstanceFromHostFiber(
+                parentHostFiber
+              ).compareDocumentPosition(otherNode)),
             (result =
               0 === otherNode || otherNode & Node.DOCUMENT_POSITION_FOLLOWING
                 ? Node.DOCUMENT_POSITION_FOLLOWING
                 : Node.DOCUMENT_POSITION_PRECEDING)));
     return (result |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
   }
-  JSCompiler_inline_result = getPublicInstanceFromHostFiber(children[0]);
+  parentHostFiber = getPublicInstanceFromHostFiber(children[0]);
   children = getPublicInstanceFromHostFiber(children[children.length - 1]);
-  result = JSCompiler_inline_result.compareDocumentPosition(otherNode);
+  result = parentHostFiber.compareDocumentPosition(otherNode);
   var lastResult = children.compareDocumentPosition(otherNode);
   parentResult =
     result & Node.DOCUMENT_POSITION_CONTAINED_BY ||
@@ -11150,7 +11139,7 @@ FragmentInstance.prototype.compareDocumentPosition = function (otherNode) {
   lastResult =
     result & Node.DOCUMENT_POSITION_FOLLOWING &&
     lastResult & Node.DOCUMENT_POSITION_PRECEDING;
-  return JSCompiler_inline_result === otherNode ||
+  return parentHostFiber === otherNode ||
     children === otherNode ||
     parentResult ||
     lastResult
@@ -11161,6 +11150,14 @@ function collectChildren(child, collection) {
   collection.push(child);
   return !1;
 }
+FragmentInstance.prototype.getRootNode = function (getRootNodeOptions) {
+  var parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  return null === parentHostFiber
+    ? this
+    : getPublicInstanceFromHostFiber(parentHostFiber).getRootNode(
+        getRootNodeOptions
+      );
+};
 function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
   var publicInstance = getPublicInstance(childInstance);
   if (null !== fragmentInstance._observers) {
@@ -11254,26 +11251,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1319 = {
+  internals$jscomp$inline_1315 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-19f65ff1-20251002",
+    version: "19.3.0-native-fb-e866b1d1-20251003",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-19f65ff1-20251002"
+    reconcilerVersion: "19.3.0-native-fb-e866b1d1-20251003"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1319.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1315.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1642 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1638 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1642.isDisabled &&
-    hook$jscomp$inline_1642.supportsFiber
+    !hook$jscomp$inline_1638.isDisabled &&
+    hook$jscomp$inline_1638.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1642.inject(
-        internals$jscomp$inline_1319
+      (rendererID = hook$jscomp$inline_1638.inject(
+        internals$jscomp$inline_1315
       )),
-        (injectedHook = hook$jscomp$inline_1642);
+        (injectedHook = hook$jscomp$inline_1638);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
