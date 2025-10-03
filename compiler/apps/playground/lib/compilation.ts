@@ -270,6 +270,19 @@ export function compile(
         },
       };
       transformOutput = invokeCompiler(source, language, opts);
+
+      // Only include logger errors if there weren't other errors
+      if (!error.hasErrors() && otherErrors.length !== 0) {
+        otherErrors.forEach(e => error.details.push(e));
+      }
+      if (error.hasErrors()) {
+        return [{kind: 'err', results, error}, language, baseOpts];
+      }
+      return [
+        {kind: 'ok', results, transformOutput, errors: error.details},
+        language,
+        baseOpts,
+      ];
     } catch (err) {
       /**
        * error might be an invariant violation or other runtime error
@@ -291,18 +304,8 @@ export function compile(
           }),
         );
       }
+
+      return [{kind: 'err', results, error}, language, baseOpts];
     }
   }
-  // Only include logger errors if there weren't other errors
-  if (!error.hasErrors() && otherErrors.length !== 0) {
-    otherErrors.forEach(e => error.details.push(e));
-  }
-  if (error.hasErrors()) {
-    return [{kind: 'err', results, error}, language, baseOpts];
-  }
-  return [
-    {kind: 'ok', results, transformOutput, errors: error.details},
-    language,
-    baseOpts,
-  ];
 }
