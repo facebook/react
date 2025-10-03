@@ -265,7 +265,7 @@ describe 'ReactCoffeeScriptClass', ->
           React.createElement Foo
 
       test React.createElement(Outer), 'SPAN', 'foo'
-      
+
       assertConsoleErrorDev([
         'Outer uses the legacy childContextTypes API which will soon be removed.
          Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
@@ -501,7 +501,7 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'should warn when misspelling componentWillReceiveProps', ->
     class NamedComponent extends React.Component
-      componentWillRecieveProps: ->
+      componentWillReceiveProps: ->
         false
 
       render: ->
@@ -511,14 +511,14 @@ describe 'ReactCoffeeScriptClass', ->
 
     test React.createElement(NamedComponent), 'SPAN', 'foo'
     assertConsoleErrorDev [
-      'NamedComponent has a method called componentWillRecieveProps().
+      'NamedComponent has a method called componentWillReceiveProps().
        Did you mean componentWillReceiveProps()?\n' +
         '    in NamedComponent (at **)'
     ]
 
   it 'should warn when misspelling UNSAFE_componentWillReceiveProps', ->
     class NamedComponent extends React.Component
-      UNSAFE_componentWillRecieveProps: ->
+      UNSAFE_componentWillReceiveProps: ->
         false
 
       render: ->
@@ -528,7 +528,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     test React.createElement(NamedComponent), 'SPAN', 'foo'
     assertConsoleErrorDev [
-      'NamedComponent has a method called UNSAFE_componentWillRecieveProps().
+      'NamedComponent has a method called UNSAFE_componentWillReceiveProps().
        Did you mean UNSAFE_componentWillReceiveProps()?\n' +
         '    in NamedComponent (at **)'
     ]
