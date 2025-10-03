@@ -87,7 +87,7 @@ If you're using a version earlier than 5.2.0, the legacy config was simply `reco
 
 ### Custom Configuration
 
-If you want more fine-grained configuration, you can instead add a snippet like this to your ESLint configuration file:
+If you want more fine-grained configuration, you can instead choose to enable specific rules. However, we strongly encourage using the recommended presets — see above — so that you will automatically receive new recommended rules as we add them in future versions of the plugin.
 
 #### Flat Config (eslint.config.js|ts)
 
