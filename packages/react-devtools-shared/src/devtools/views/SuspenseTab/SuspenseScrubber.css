@@ -37,7 +37,7 @@
   padding-right: 0;
 }
 
-.SuspenseScrubberBead, .SuspenseScrubberBeadSelected {
+.SuspenseScrubberBead {
   flex: 1;
   height: 0.5rem;
   background: var(--color-background-selected);
@@ -51,9 +51,11 @@
   background: var(--color-background-selected);
 }
 
+.SuspenseScrubberBeadTransition {
+  background: var(--color-component-name);
+}
+
 .SuspenseScrubberStepHighlight > .SuspenseScrubberBead,
-.SuspenseScrubberStepHighlight > .SuspenseScrubberBeadSelected,
-.SuspenseScrubberStep:hover > .SuspenseScrubberBead,
-.SuspenseScrubberStep:hover > .SuspenseScrubberBeadSelected {
+.SuspenseScrubberStep:hover > .SuspenseScrubberBead {
   height: 0.75rem;
 }

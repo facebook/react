@@ -372,12 +372,18 @@ function TextTabContent({
           loading={''}
           options={{
             ...monacoOptions,
+            scrollbar: {
+              vertical: 'hidden',
+            },
+            dimension: {
+              width: 0,
+              height: 0,
+            },
             readOnly: true,
             lineNumbers: 'off',
             glyphMargin: false,
             // Undocumented see https://github.com/Microsoft/vscode/issues/30795#issuecomment-410998882
-            lineDecorationsWidth: 0,
-            lineNumbersMinChars: 0,
+            overviewRulerLanes: 0,
           }}
         />
       ) : (

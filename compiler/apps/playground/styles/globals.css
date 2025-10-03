@@ -124,3 +124,11 @@
 ::view-transition-group(.expand-accordion) {
   overflow: clip;
 }
+
+/**
+ * For some reason, the original Monaco editor is still visible to the
+ * left of the DiffEditor. This is a workaround for better visual clarity.
+ */
+.monaco-diff-editor .editor.original{
+  visibility: hidden !important;
+}

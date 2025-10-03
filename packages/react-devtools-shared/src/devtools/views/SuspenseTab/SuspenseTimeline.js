@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 import {useContext, useEffect, useRef} from 'react';
-import {BridgeContext, StoreContext} from '../context';
+import {BridgeContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance, useScrollToHostInstance} from '../hooks';
 import {
@@ -23,20 +23,15 @@ import ButtonIcon from '../ButtonIcon';
 
 function SuspenseTimelineInput() {
   const bridge = useContext(BridgeContext);
-  const store = useContext(StoreContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
   const scrollToHostInstance = useScrollToHostInstance();
 
-  const {
-    selectedRootID: rootID,
-    timeline,
-    timelineIndex,
-    hoveredTimelineIndex,
-    playing,
-  } = useContext(SuspenseTreeStateContext);
+  const {timeline, timelineIndex, hoveredTimelineIndex, playing} = useContext(
+    SuspenseTreeStateContext,
+  );
 
   const min = 0;
   const max = timeline.length > 0 ? timeline.length - 1 : 0;
@@ -112,24 +107,12 @@ function SuspenseTimelineInput() {
   // For now we just exclude it from deps since we don't lint those anyway.
   function changeTimelineIndex(newIndex: number) {
     // Synchronize timeline index with what is resuspended.
-    if (rootID === null) {
-      return;
-    }
-    const rendererID = store.getRendererIDForElement(rootID);
-    if (rendererID === null) {
-      console.error(
-        `No renderer ID found for root element ${rootID} in suspense timeline.`,
-      );
-      return;
-    }
     // We suspend everything after the current selection. The root isn't showing
     // anything suspended in the root. The step after that should have one less
     // thing suspended. I.e. the first suspense boundary should be unsuspended
     // when it's selected. This also lets you show everything in the last step.
     const suspendedSet = timeline.slice(timelineIndex + 1);
     bridge.send('overrideSuspenseMilestone', {
-      rendererID,
-      rootID,
       suspendedSet,
     });
     if (isInitialMount.current) {
@@ -163,20 +146,6 @@ function SuspenseTimelineInput() {
       clearInterval(timer);
     };
   }, [playing]);
-
-  if (rootID === null) {
-    return (
-      <div className={styles.SuspenseTimelineInput}>No root selected.</div>
-    );
-  }
-
-  if (!store.supportsTogglingSuspense(rootID)) {
-    return (
-      <div className={styles.SuspenseTimelineInput}>
-        Can't step through Suspense in production apps.
-      </div>
-    );
-  }
 
   if (timeline.length === 0) {
     return (
@@ -226,10 +195,9 @@ function SuspenseTimelineInput() {
 }
 
 export default function SuspenseTimeline(): React$Node {
-  const {selectedRootID} = useContext(SuspenseTreeStateContext);
   return (
     <div className={styles.SuspenseTimelineContainer}>
-      <SuspenseTimelineInput key={selectedRootID} />
+      <SuspenseTimelineInput />
     </div>
   );
 }
