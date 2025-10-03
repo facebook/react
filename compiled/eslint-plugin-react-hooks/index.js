@@ -25,7 +25,6 @@ var BabelParser = require('@babel/parser');
 var zod = require('zod');
 var zodValidationError = require('zod-validation-error');
 var crypto = require('crypto');
-var PluginProposalPrivateMethods = require('@babel/plugin-proposal-private-methods');
 var HermesParser = require('hermes-parser');
 var util = require('util');
 
@@ -54252,10 +54251,7 @@ function runReactCompilerImpl({ sourceCode, filename, userOpts, }) {
                 filename,
                 highlightCode: false,
                 retainLines: true,
-                plugins: [
-                    [PluginProposalPrivateMethods.default, { loose: true }],
-                    [BabelPluginReactCompiler, options],
-                ],
+                plugins: [[BabelPluginReactCompiler, options]],
                 sourceType: 'module',
                 configFile: false,
                 babelrc: false,
