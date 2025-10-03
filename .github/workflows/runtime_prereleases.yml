@@ -82,7 +82,6 @@ jobs:
         run: |
           scripts/release/publish.js \
             --ci \
-            --skipTests \
             --tags=${{ inputs.dist_tag }} \
             --onlyPackages=${{ inputs.only_packages }} ${{ (inputs.dry && '') || '\'}}
             ${{ inputs.dry && '--dry' || '' }}
@@ -91,7 +90,6 @@ jobs:
         run: |
           scripts/release/publish.js \
             --ci \
-            --skipTests \
             --tags=${{ inputs.dist_tag }} \
             --skipPackages=${{ inputs.skip_packages }} ${{ (inputs.dry && '') || '\'}}
             ${{ inputs.dry && '--dry' || '' }}
