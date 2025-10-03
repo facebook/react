@@ -1,5 +1,12 @@
 .SuspenseRectsContainer {
   padding: .25rem;
+  cursor: pointer;
+  outline: 1px solid var(--color-component-name);
+  border-radius: 0.25rem;
+}
+
+.SuspenseRectsContainer[data-highlighted='true'] {
+  background: var(--color-dimmest);
 }
 
 .SuspenseRectsViewBox {
@@ -28,6 +35,8 @@
   pointer-events: all;
   outline-style: solid;
   outline-width: 1px;
+  border-radius: 0.125rem;
+  cursor: pointer;
 }
 
 .SuspenseRectsScaledRect {
@@ -42,7 +51,7 @@
 
 /* highlight this boundary */
 .SuspenseRectsBoundary:hover:not(:has(.SuspenseRectsBoundary:hover)) > .SuspenseRectsRect, .SuspenseRectsBoundary[data-highlighted='true'] > .SuspenseRectsRect {
-    background-color: var(--color-background-hover);
+  background-color: var(--color-background-hover);
 }
 
 .SuspenseRectsRect[data-highlighted='true'] {

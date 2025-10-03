@@ -1,8 +1,6 @@
 # `eslint-plugin-react-hooks`
 
-This ESLint plugin enforces the [Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks).
-
-It is a part of the [Hooks API](https://react.dev/reference/react/hooks) for React.
+The official ESLint plugin for [React](https://react.dev) which enforces the [Rules of React](https://react.dev/reference/eslint-plugin-react-hooks) and other best practices.
 
 ## Installation
 
