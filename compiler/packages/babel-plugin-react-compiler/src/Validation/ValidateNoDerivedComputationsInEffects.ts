@@ -20,6 +20,8 @@ import {
   isUseStateType,
   BasicBlock,
   isUseRefType,
+  GeneratedSource,
+  SourceLocation,
 } from '../HIR';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
@@ -36,6 +38,9 @@ type DerivationMetadata = {
 type ValidationContext = {
   readonly functions: Map<IdentifierId, FunctionExpression>;
   readonly derivationCache: Map<IdentifierId, DerivationMetadata>;
+  readonly setStateCache: Map<string | undefined | null, Array<Place>>;
+  readonly effectSetStateCache: Map<string | undefined | null, Array<Place>>;
+  readonly effects: Array<HIRFunction>;
   readonly errors: CompilerError;
 };
 
@@ -69,9 +74,19 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
 
   const errors = new CompilerError();
 
+  const setStateCache: Map<string | undefined | null, Array<Place>> = new Map();
+  const effectSetStateCache: Map<
+    string | undefined | null,
+    Array<Place>
+  > = new Map();
+  const effects: Array<HIRFunction> = [];
+
   const context: ValidationContext = {
     functions,
     derivationCache,
+    setStateCache,
+    effectSetStateCache,
+    effects,
     errors,
   };
 
@@ -107,6 +122,10 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
         recordPhiDerivations(block, context);
       }
     }
+  }
+
+  for (const effect of effects) {
+    validateEffect(effect, context);
   }
 
   if (errors.hasAnyErrors()) {
@@ -228,7 +247,7 @@ function recordInstructionDerivations(
     ) {
       const effectFunction = context.functions.get(value.args[0].identifier.id);
       if (effectFunction != null) {
-        validateEffect(effectFunction.loweredFunc.func, context);
+        context.effects.push(effectFunction.loweredFunc.func);
       }
     } else if (isUseStateType(lvalue.identifier) && value.args.length > 0) {
       const stateValueSource = value.args[0];
@@ -240,6 +259,14 @@ function recordInstructionDerivations(
   }
 
   for (const operand of eachInstructionOperand(instr)) {
+    if (isSetStateType(operand.identifier) && operand.loc !== GeneratedSource) {
+      if (context.setStateCache.has(operand.loc.identifierName)) {
+        context.setStateCache.get(operand.loc.identifierName)!.push(operand);
+      } else {
+        context.setStateCache.set(operand.loc.identifierName, [operand]);
+      }
+    }
+
     const operandMetadata = context.derivationCache.get(operand.identifier.id);
 
     if (operandMetadata === undefined) {
@@ -316,6 +343,7 @@ function validateEffect(
 
   const effectDerivedSetStateCalls: Array<{
     value: CallExpression;
+    loc: SourceLocation;
     sourceIds: Set<IdentifierId>;
   }> = [];
 
@@ -334,6 +362,23 @@ function validateEffect(
         return;
       }
 
+      for (const operand of eachInstructionOperand(instr)) {
+        if (
+          isSetStateType(operand.identifier) &&
+          operand.loc !== GeneratedSource
+        ) {
+          if (context.effectSetStateCache.has(operand.loc.identifierName)) {
+            context.effectSetStateCache
+              .get(operand.loc.identifierName)!
+              .push(operand);
+          } else {
+            context.effectSetStateCache.set(operand.loc.identifierName, [
+              operand,
+            ]);
+          }
+        }
+      }
+
       if (
         instr.value.kind === 'CallExpression' &&
         isSetStateType(instr.value.callee.identifier) &&
@@ -347,6 +392,7 @@ function validateEffect(
         if (argMetadata !== undefined) {
           effectDerivedSetStateCalls.push({
             value: instr.value,
+            loc: instr.value.callee.loc,
             sourceIds: argMetadata.sourcesIds,
           });
         }
@@ -379,13 +425,24 @@ function validateEffect(
   }
 
   for (const derivedSetStateCall of effectDerivedSetStateCalls) {
-    context.errors.push({
-      category: ErrorCategory.EffectDerivationsOfState,
-      reason:
-        'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
-      description: null,
-      loc: derivedSetStateCall.value.callee.loc,
-      suggestions: null,
-    });
+    if (
+      derivedSetStateCall.loc !== GeneratedSource &&
+      context.effectSetStateCache.has(derivedSetStateCall.loc.identifierName) &&
+      context.setStateCache.has(derivedSetStateCall.loc.identifierName) &&
+      context.effectSetStateCache.get(derivedSetStateCall.loc.identifierName)!
+        .length ===
+        context.setStateCache.get(derivedSetStateCall.loc.identifierName)!
+          .length -
+          1
+    ) {
+      context.errors.push({
+        category: ErrorCategory.EffectDerivationsOfState,
+        reason:
+          'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
+        description: null,
+        loc: derivedSetStateCall.value.callee.loc,
+        suggestions: null,
+      });
+    }
   }
 }
