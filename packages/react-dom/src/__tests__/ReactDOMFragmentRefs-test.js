@@ -1960,9 +1960,9 @@ describe('FragmentRefs', () => {
       });
 
       expect(() => {
-        fragmentRef.current.experimental_scrollIntoView({block: 'start'});
+        fragmentRef.current.scrollIntoView({block: 'start'});
       }).toThrowError(
-        'FragmentInstance.experimental_scrollIntoView() does not support ' +
+        'FragmentInstance.scrollIntoView() does not support ' +
           'scrollIntoViewOptions. Use the alignToTop boolean instead.',
       );
     });
@@ -1996,11 +1996,11 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expectLast(logs, 'childA');
         logs = [];
         // alignToTop=true
-        fragmentRef.current.experimental_scrollIntoView(true);
+        fragmentRef.current.scrollIntoView(true);
         expectLast(logs, 'childA');
       });
 
@@ -2027,7 +2027,7 @@ describe('FragmentRefs', () => {
           logs.push('childB');
         });
 
-        fragmentRef.current.experimental_scrollIntoView(false);
+        fragmentRef.current.scrollIntoView(false);
         expectLast(logs, 'childB');
       });
 
@@ -2068,7 +2068,7 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expectLast(logs, 'childA');
       });
 
@@ -2157,7 +2157,7 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expectLast(logs, 'header');
 
         childARef.current.scrollIntoView.mockClear();
@@ -2167,7 +2167,7 @@ describe('FragmentRefs', () => {
         logs = [];
 
         // // alignToTop=false
-        fragmentRef.current.experimental_scrollIntoView(false);
+        fragmentRef.current.scrollIntoView(false);
         expectLast(logs, 'C');
       });
     });
@@ -2195,14 +2195,14 @@ describe('FragmentRefs', () => {
         siblingBRef.current.scrollIntoView = jest.fn();
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
 
         siblingBRef.current.scrollIntoView.mockClear();
 
         // alignToTop=true
-        fragmentRef.current.experimental_scrollIntoView(true);
+        fragmentRef.current.scrollIntoView(true);
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
@@ -2239,7 +2239,7 @@ describe('FragmentRefs', () => {
         siblingBRef.current.scrollIntoView = jest.fn();
 
         // alignToTop=false
-        fragmentRef.current.experimental_scrollIntoView(false);
+        fragmentRef.current.scrollIntoView(false);
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
       });
@@ -2260,7 +2260,7 @@ describe('FragmentRefs', () => {
         });
 
         parentRef.current.scrollIntoView = jest.fn();
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expect(parentRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
     });

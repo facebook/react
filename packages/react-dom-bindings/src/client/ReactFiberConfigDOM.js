@@ -3341,13 +3341,13 @@ function validateDocumentPositionWithFiberTree(
 
 if (enableFragmentRefsScrollIntoView) {
   // $FlowFixMe[prop-missing]
-  FragmentInstance.prototype.experimental_scrollIntoView = function (
+  FragmentInstance.prototype.scrollIntoView = function (
     this: FragmentInstanceType,
     alignToTop?: boolean,
   ): void {
     if (typeof alignToTop === 'object') {
       throw new Error(
-        'FragmentInstance.experimental_scrollIntoView() does not support ' +
+        'FragmentInstance.scrollIntoView() does not support ' +
           'scrollIntoViewOptions. Use the alignToTop boolean instead.',
       );
     }

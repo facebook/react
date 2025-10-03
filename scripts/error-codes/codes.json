@@ -551,5 +551,5 @@
   "563": "This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.",
   "564": "Unknown command. The debugChannel was not wired up properly.",
   "565": "resolveDebugMessage/closeDebugChannel should not be called for a Request that wasn't kept alive. This is a bug in React.",
-  "566": "FragmentInstance.experimental_scrollIntoView() does not support scrollIntoViewOptions. Use the alignToTop boolean instead."
+  "566": "FragmentInstance.scrollIntoView() does not support scrollIntoViewOptions. Use the alignToTop boolean instead."
 }
