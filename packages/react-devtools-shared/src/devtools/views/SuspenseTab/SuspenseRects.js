@@ -330,12 +330,25 @@ function SuspenseRectsContainer(): React$Node {
     });
   }
 
+  function handleDoubleClick(event: SyntheticMouseEvent) {
+    if (event.defaultPrevented) {
+      // Already clicked on an inner rect
+      return;
+    }
+    event.preventDefault();
+    suspenseTreeDispatch({
+      type: 'SUSPENSE_SET_TIMELINE_INDEX',
+      payload: 0,
+    });
+  }
+
   const isRootSelected = roots.includes(inspectedElementID);
 
   return (
     <div
       className={styles.SuspenseRectsContainer}
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       data-highlighted={isRootSelected}>
       <ViewBox.Provider value={boundingBox}>
         <div
