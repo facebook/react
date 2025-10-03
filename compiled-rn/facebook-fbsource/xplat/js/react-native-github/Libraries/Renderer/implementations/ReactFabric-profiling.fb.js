@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3ea7b61b0711bea2aa67ccc63e60b385>>
+ * @generated SignedSource<<54a0c30909f2a5590db480f675581507>>
  */
 
 "use strict";
@@ -13222,6 +13222,23 @@ FragmentInstance.prototype.getRootNode = function (getRootNodeOptions) {
         getRootNodeOptions
       );
 };
+FragmentInstance.prototype.getClientRects = function () {
+  var rects = [];
+  traverseVisibleHostChildren(
+    this._fragmentFiber.child,
+    !1,
+    collectClientRects,
+    rects,
+    void 0,
+    void 0
+  );
+  return rects;
+};
+function collectClientRects(child, rects) {
+  child = getPublicInstanceFromHostFiber(child);
+  rects.push(child.getBoundingClientRect());
+  return !1;
+}
 function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
   var publicInstance = getPublicInstance(childInstance);
   if (null !== fragmentInstance._observers) {
@@ -13315,16 +13332,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1623 = {
+  internals$jscomp$inline_1629 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-e866b1d1-20251003",
+    version: "19.3.0-native-fb-74dee8ef-20251003",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-e866b1d1-20251003"
+    reconcilerVersion: "19.3.0-native-fb-74dee8ef-20251003"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1623.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1623.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1629.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1629.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$174 = 0;
     31 > index$174;
@@ -13336,20 +13353,20 @@ internals$jscomp$inline_1623.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1623.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1629.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1957 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1963 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1957.isDisabled &&
-    hook$jscomp$inline_1957.supportsFiber
+    !hook$jscomp$inline_1963.isDisabled &&
+    hook$jscomp$inline_1963.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1957.inject(
-        internals$jscomp$inline_1623
+      (rendererID = hook$jscomp$inline_1963.inject(
+        internals$jscomp$inline_1629
       )),
-        (injectedHook = hook$jscomp$inline_1957);
+        (injectedHook = hook$jscomp$inline_1963);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

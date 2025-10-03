@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<92fd3d4d199bfffd87bb07920b9ca08d>>
+ * @generated SignedSource<<a4ab2146a7cc74847e71677f57f9dd89>>
  */
 
 "use strict";
@@ -16927,6 +16927,11 @@ __DEV__ &&
       collection.push(child);
       return !1;
     }
+    function collectClientRects(child, rects) {
+      child = getPublicInstanceFromHostFiber(child);
+      rects.push(child.getBoundingClientRect());
+      return !1;
+    }
     function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
       var publicInstance = getPublicInstance(childInstance);
       if (null !== fragmentInstance._observers) {
@@ -19919,6 +19924,18 @@ __DEV__ &&
             getRootNodeOptions
           );
     };
+    FragmentInstance.prototype.getClientRects = function () {
+      var rects = [];
+      traverseVisibleHostChildren(
+        this._fragmentFiber.child,
+        !1,
+        collectClientRects,
+        rects,
+        void 0,
+        void 0
+      );
+      return rects;
+    };
     var NotPendingTransition = null,
       HostTransitionContext = {
         $$typeof: REACT_CONTEXT_TYPE,
@@ -20004,10 +20021,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-e866b1d1-20251003",
+        version: "19.3.0-native-fb-74dee8ef-20251003",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-e866b1d1-20251003"
+        reconcilerVersion: "19.3.0-native-fb-74dee8ef-20251003"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
