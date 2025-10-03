@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<bc44c739fd5a99692d74178b8afab7c3>>
+ * @generated SignedSource<<bc33e6e91faf12be97e84a17cd7b447b>>
  */
 
 'use strict';
@@ -32119,7 +32119,7 @@ const HookSchema = zod.z.object({
 });
 const EnvironmentConfigSchema = zod.z.object({
     customHooks: zod.z.map(zod.z.string(), HookSchema).default(new Map()),
-    moduleTypeProvider: zod.z.nullable(zod.z.function().args(zod.z.string())).default(null),
+    moduleTypeProvider: zod.z.nullable(zod.z.any()).default(null),
     customMacros: zod.z.nullable(zod.z.array(MacroSchema)).default(null),
     enableResetCacheOnSourceFileChanges: zod.z.nullable(zod.z.boolean()).default(null),
     enablePreserveExistingMemoizationGuarantees: zod.z.boolean().default(true),
@@ -32127,7 +32127,7 @@ const EnvironmentConfigSchema = zod.z.object({
     enablePreserveExistingManualUseMemo: zod.z.boolean().default(false),
     enableForest: zod.z.boolean().default(false),
     enableUseTypeAnnotations: zod.z.boolean().default(false),
-    flowTypeProvider: zod.z.nullable(zod.z.function().args(zod.z.string())).default(null),
+    flowTypeProvider: zod.z.nullable(zod.z.any()).default(null),
     enableOptionalDependencies: zod.z.boolean().default(true),
     enableFire: zod.z.boolean().default(false),
     enableNameAnonymousFunctions: zod.z.boolean().default(false),
@@ -32491,6 +32491,12 @@ _Environment_globals = new WeakMap(), _Environment_shapes = new WeakMap(), _Envi
         const moduleTypeProvider = (_a = this.config.moduleTypeProvider) !== null && _a !== void 0 ? _a : defaultModuleTypeProvider;
         if (moduleTypeProvider == null) {
             return null;
+        }
+        if (typeof moduleTypeProvider !== 'function') {
+            CompilerError.throwInvalidConfig({
+                reason: `Expected a function for \`moduleTypeProvider\``,
+                loc,
+            });
         }
         const unparsedModuleConfig = moduleTypeProvider(moduleName);
         if (unparsedModuleConfig != null) {

@@ -1,7 +1,7 @@
 {
   "name": "eslint-plugin-react-hooks",
   "description": "ESLint rules for React Hooks",
-  "version": "0.0.0-experimental-71753ac9-20251003",
+  "version": "0.0.0-experimental-d6eb7359-20251003",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
@@ -41,8 +41,8 @@
   "dependencies": {
     "@babel/core": "^7.24.4",
     "@babel/parser": "^7.24.4",
-    "zod": "^3.22.4",
-    "zod-validation-error": "^3.0.3"
+    "zod": "^3.22.4 || ^4.0.0",
+    "zod-validation-error": "^3.0.3 || ^4.0.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.11.4",
