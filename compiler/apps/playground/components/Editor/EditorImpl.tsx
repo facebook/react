@@ -10,7 +10,7 @@ import {
   CompilerDiagnostic,
 } from 'babel-plugin-react-compiler';
 import {useDeferredValue, useMemo, useState} from 'react';
-import {useStore, useStoreDispatch} from '../StoreContext';
+import {useStore} from '../StoreContext';
 import ConfigEditor from './ConfigEditor';
 import Input from './Input';
 import {CompilerOutput, default as Output} from './Output';
@@ -19,7 +19,6 @@ import prettyFormat from 'pretty-format';
 
 export default function Editor(): JSX.Element {
   const store = useStore();
-  const dispatchStore = useStoreDispatch();
   const deferredStore = useDeferredValue(store);
   const [compilerOutput, language, appliedOptions] = useMemo(
     () => compile(deferredStore.source, 'compiler', deferredStore.config),
