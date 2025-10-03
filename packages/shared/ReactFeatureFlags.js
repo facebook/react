@@ -127,8 +127,6 @@ export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 
 export const alwaysThrottleRetries: boolean = true;
 
-export const passChildrenWhenCloningPersistedNodes: boolean = false;
-
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
 /**
