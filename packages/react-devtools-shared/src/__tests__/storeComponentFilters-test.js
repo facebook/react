@@ -251,7 +251,8 @@ describe('Store component filters', () => {
   });
 
   it('should filter ViewTransition', async () => {
-    const ViewTransition = React.unstable_ViewTransition;
+    const ViewTransition =
+      React.ViewTransition || React.unstable_ViewTransition;
 
     if (ViewTransition != null) {
       await actAsync(async () =>

@@ -45,6 +45,8 @@ export {
   startTransition,
   unstable_LegacyHidden,
   Activity,
+  ViewTransition,
+  addTransitionType,
   unstable_Scope,
   unstable_SuspenseList,
   unstable_TracingMarker,

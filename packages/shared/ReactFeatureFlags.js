@@ -84,7 +84,7 @@ export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableHalt: boolean = true;
 
-export const enableViewTransition = __EXPERIMENTAL__;
+export const enableViewTransition: boolean = true;
 
 export const enableGestureTransition = __EXPERIMENTAL__;
 
