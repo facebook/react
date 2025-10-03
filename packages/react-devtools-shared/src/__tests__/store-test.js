@@ -838,7 +838,7 @@ describe('Store', () => {
             <Suspense name="two" rects={null}>
             <Suspense name="three" rects={null}>
       `);
-      await act(() =>
+      await actAsync(() =>
         agent.overrideSuspense({
           id: store.getElementIDAtIndex(2),
           rendererID,
@@ -974,12 +974,8 @@ describe('Store', () => {
             <Suspense name="three" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
 
-      const rendererID = getRendererID();
-      const rootID = store.getRootIDForElement(store.getElementIDAtIndex(0));
       await actAsync(() => {
         agent.overrideSuspenseMilestone({
-          rendererID,
-          rootID,
           suspendedSet: [
             store.getElementIDAtIndex(4),
             store.getElementIDAtIndex(8),
@@ -1009,8 +1005,6 @@ describe('Store', () => {
 
       await actAsync(() => {
         agent.overrideSuspenseMilestone({
-          rendererID,
-          rootID,
           suspendedSet: [],
         });
       });
@@ -3106,5 +3100,46 @@ describe('Store', () => {
 
     await actAsync(() => render(<span />));
     expect(store).toMatchInlineSnapshot(`[root]`);
+  });
+
+  // @reactVersion >= 19.0
+  it('should reconcile promise-as-a-child', async () => {
+    function Component({children}) {
+      return <div>{children}</div>;
+    }
+
+    await actAsync(() =>
+      render(
+        <React.Suspense>
+          {Promise.resolve(<Component key="A">A</Component>)}
+        </React.Suspense>,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <Component key="A">
+      [suspense-root]  rects={[{x:1,y:2,width:1,height:1}]}
+        <Suspense name="Unknown" rects={[{x:1,y:2,width:1,height:1}]}>
+    `);
+
+    await actAsync(() =>
+      render(
+        <React.Suspense>
+          {Promise.resolve(<Component key="not-A">not A</Component>)}
+        </React.Suspense>,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <Component key="not-A">
+      [suspense-root]  rects={[{x:1,y:2,width:5,height:1}]}
+        <Suspense name="Unknown" rects={[{x:1,y:2,width:5,height:1}]}>
+    `);
+
+    await actAsync(() => render(null));
+    expect(store).toMatchInlineSnapshot(``);
   });
 });

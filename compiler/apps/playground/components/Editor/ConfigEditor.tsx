@@ -9,11 +9,18 @@ import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
 import {PluginOptions} from 'babel-plugin-react-compiler';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import React, {useState, useRef} from 'react';
+import React, {
+  useState,
+  useRef,
+  unstable_ViewTransition as ViewTransition,
+  unstable_addTransitionType as addTransitionType,
+  startTransition,
+} from 'react';
 import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
 import {monacoConfigOptions} from './monacoOptions';
 import {IconChevron} from '../Icons/IconChevron';
+import {CONFIG_PANEL_TRANSITION} from '../../lib/transitionTypes';
 
 // @ts-expect-error - webpack asset/source loader handles .d.ts files as strings
 import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
@@ -35,7 +42,12 @@ export default function ConfigEditor({
           display: isExpanded ? 'block' : 'none',
         }}>
         <ExpandedEditor
-          onToggle={setIsExpanded}
+          onToggle={() => {
+            startTransition(() => {
+              addTransitionType(CONFIG_PANEL_TRANSITION);
+              setIsExpanded(false);
+            });
+          }}
           formattedAppliedConfig={formattedAppliedConfig}
         />
       </div>
@@ -43,7 +55,14 @@ export default function ConfigEditor({
         style={{
           display: !isExpanded ? 'block' : 'none',
         }}>
-        <CollapsedEditor onToggle={setIsExpanded} />
+        <CollapsedEditor
+          onToggle={() => {
+            startTransition(() => {
+              addTransitionType(CONFIG_PANEL_TRANSITION);
+              setIsExpanded(true);
+            });
+          }}
+        />
       </div>
     </>
   );
@@ -103,74 +122,77 @@ function ExpandedEditor({
   };
 
   return (
-    <Resizable
-      minWidth={300}
-      maxWidth={600}
-      defaultSize={{width: 350}}
-      enable={{right: true, bottom: false}}>
-      <div className="bg-blue-10 relative h-full flex flex-col !h-[calc(100vh_-_3.5rem)] border border-gray-300">
-        <div
-          className="absolute w-8 h-16 bg-blue-10 rounded-r-full flex items-center justify-center z-[2] cursor-pointer border border-l-0 border-gray-300"
-          title="Minimize config editor"
-          onClick={() => onToggle(false)}
-          style={{
-            top: '50%',
-            marginTop: '-32px',
-            right: '-32px',
-            borderTopLeftRadius: 0,
-            borderBottomLeftRadius: 0,
-          }}>
-          <IconChevron displayDirection="left" className="text-blue-50" />
-        </div>
+    <ViewTransition
+      update={{[CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none'}}>
+      <Resizable
+        minWidth={300}
+        maxWidth={600}
+        defaultSize={{width: 350}}
+        enable={{right: true, bottom: false}}>
+        <div className="bg-blue-10 relative h-full flex flex-col !h-[calc(100vh_-_3.5rem)] border border-gray-300">
+          <div
+            className="absolute w-8 h-16 bg-blue-10 rounded-r-full flex items-center justify-center z-[2] cursor-pointer border border-l-0 border-gray-300"
+            title="Minimize config editor"
+            onClick={onToggle}
+            style={{
+              top: '50%',
+              marginTop: '-32px',
+              right: '-32px',
+              borderTopLeftRadius: 0,
+              borderBottomLeftRadius: 0,
+            }}>
+            <IconChevron displayDirection="left" className="text-blue-50" />
+          </div>
 
-        <div className="flex-1 flex flex-col m-2 mb-2">
-          <div className="pb-2">
-            <h2 className="inline-block text-blue-50 py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
-              Config Overrides
-            </h2>
+          <div className="flex-1 flex flex-col m-2 mb-2">
+            <div className="pb-2">
+              <h2 className="inline-block text-blue-50 py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
+                Config Overrides
+              </h2>
+            </div>
+            <div className="flex-1 border border-gray-300">
+              <MonacoEditor
+                path={'config.ts'}
+                language={'typescript'}
+                value={store.config}
+                onMount={handleMount}
+                onChange={handleChange}
+                loading={''}
+                className="monaco-editor-config"
+                options={monacoConfigOptions}
+              />
+            </div>
           </div>
-          <div className="flex-1 border border-gray-300">
-            <MonacoEditor
-              path={'config.ts'}
-              language={'typescript'}
-              value={store.config}
-              onMount={handleMount}
-              onChange={handleChange}
-              loading={''}
-              className="monaco-editor-config"
-              options={monacoConfigOptions}
-            />
+          <div className="flex-1 flex flex-col m-2">
+            <div className="pb-2">
+              <h2 className="inline-block text-blue-50 py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
+                Applied Configs
+              </h2>
+            </div>
+            <div className="flex-1 border border-gray-300">
+              <MonacoEditor
+                path={'applied-config.js'}
+                language={'javascript'}
+                value={formattedAppliedConfig}
+                loading={''}
+                className="monaco-editor-applied-config"
+                options={{
+                  ...monacoConfigOptions,
+                  readOnly: true,
+                }}
+              />
+            </div>
           </div>
         </div>
-        <div className="flex-1 flex flex-col m-2">
-          <div className="pb-2">
-            <h2 className="inline-block text-blue-50 py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
-              Applied Configs
-            </h2>
-          </div>
-          <div className="flex-1 border border-gray-300">
-            <MonacoEditor
-              path={'applied-config.js'}
-              language={'javascript'}
-              value={formattedAppliedConfig}
-              loading={''}
-              className="monaco-editor-applied-config"
-              options={{
-                ...monacoConfigOptions,
-                readOnly: true,
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </Resizable>
+      </Resizable>
+    </ViewTransition>
   );
 }
 
 function CollapsedEditor({
   onToggle,
 }: {
-  onToggle: (expanded: boolean) => void;
+  onToggle: () => void;
 }): React.ReactElement {
   return (
     <div
@@ -179,7 +201,7 @@ function CollapsedEditor({
       <div
         className="absolute w-10 h-16 bg-blue-10 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[2] cursor-pointer border border-gray-300"
         title="Expand config editor"
-        onClick={() => onToggle(true)}
+        onClick={onToggle}
         style={{
           top: '50%',
           marginTop: '-32px',

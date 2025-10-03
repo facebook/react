@@ -2279,6 +2279,11 @@ export function startViewTransition(
       spawnedWorkCallback();
     };
     const handleError = (error: mixed) => {
+      // $FlowFixMe[prop-missing]
+      if (ownerDocument.__reactViewTransition === transition) {
+        // $FlowFixMe[prop-missing]
+        ownerDocument.__reactViewTransition = null;
+      }
       try {
         error = customizeViewTransitionError(error, false);
         if (error !== null) {
@@ -2293,6 +2298,9 @@ export function startViewTransition(
         layoutCallback();
         // Skip afterMutationCallback() since we're not animating.
         spawnedWorkCallback();
+        if (enableProfilerTimer) {
+          finishedAnimation();
+        }
       }
     };
     transition.ready.then(readyCallback, handleError);
@@ -2699,6 +2707,11 @@ export function startGestureTransition(
         ? () => requestAnimationFrame(readyCallback)
         : readyCallback;
     const handleError = (error: mixed) => {
+      // $FlowFixMe[prop-missing]
+      if (ownerDocument.__reactViewTransition === transition) {
+        // $FlowFixMe[prop-missing]
+        ownerDocument.__reactViewTransition = null;
+      }
       try {
         error = customizeViewTransitionError(error, true);
         if (error !== null) {
@@ -2713,6 +2726,9 @@ export function startGestureTransition(
         // Skip readyCallback() and go straight to animateCallbck() since we're not animating.
         // animateCallback() is still required to restore states.
         animateCallback();
+        if (enableProfilerTimer) {
+          finishedAnimation();
+        }
       }
     };
     transition.ready.then(readyForAnimations, handleError);

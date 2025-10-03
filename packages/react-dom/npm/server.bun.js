@@ -12,8 +12,6 @@ if (process.env.NODE_ENV === 'production') {
 
 exports.version = b.version;
 exports.renderToReadableStream = b.renderToReadableStream;
-if (b.resume) {
-  exports.resume = b.resume;
-}
+exports.resume = b.resume;
 exports.renderToString = l.renderToString;
 exports.renderToStaticMarkup = l.renderToStaticMarkup;

@@ -20,6 +20,7 @@ import type {
 
 // @ts-expect-error untyped module
 import CodePathAnalyzer from '../code-path-analysis/code-path-analyzer';
+import {getAdditionalEffectHooksFromSettings} from '../shared/Utils';
 
 /**
  * Catch all identifiers that begin with "use" followed by an uppercase Latin
@@ -147,14 +148,35 @@ function getNodeWithoutReactNamespace(
   return node;
 }
 
-function isEffectIdentifier(node: Node): boolean {
-  return node.type === 'Identifier' && (node.name === 'useEffect' || node.name === 'useLayoutEffect' || node.name === 'useInsertionEffect');
-}
-function isUseEffectEventIdentifier(node: Node): boolean {
-  if (__EXPERIMENTAL__) {
-    return node.type === 'Identifier' && node.name === 'useEffectEvent';
+function isEffectIdentifier(node: Node, additionalHooks?: RegExp): boolean {
+  const isBuiltInEffect =
+    node.type === 'Identifier' &&
+    (node.name === 'useEffect' ||
+      node.name === 'useLayoutEffect' ||
+      node.name === 'useInsertionEffect');
+
+  if (isBuiltInEffect) {
+    return true;
   }
+
+  // Check if this matches additional hooks configured by the user
+  if (additionalHooks && node.type === 'Identifier') {
+    return additionalHooks.test(node.name);
+  }
+
   return false;
+}
+
+function isUseEffectEventIdentifier(node: Node): boolean {
+  return node.type === 'Identifier' && node.name === 'useEffectEvent';
+}
+
+function useEffectEventError(fn: string, called: boolean): string {
+  return (
+    `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+    'Effects and Effect Events in the same component.' +
+    (called ? '' : ' It cannot be assigned to a variable or passed down.')
+  );
 }
 
 function isUseIdentifier(node: Node): boolean {
@@ -169,8 +191,24 @@ const rule = {
       recommended: true,
       url: 'https://react.dev/reference/rules/rules-of-hooks',
     },
+    schema: [
+      {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          additionalHooks: {
+            type: 'string',
+          },
+        },
+      },
+    ],
   },
   create(context: Rule.RuleContext) {
+    const settings = context.settings || {};
+
+    const additionalEffectHooks =
+      getAdditionalEffectHooksFromSettings(settings);
+
     let lastEffect: CallExpression | null = null;
     const codePathReactHooksMapStack: Array<
       Map<Rule.CodePathSegment, Array<Node>>
@@ -726,7 +764,7 @@ const rule = {
         // Check all `useEffect` and `React.useEffect`, `useEffectEvent`, and `React.useEffectEvent`
         const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
         if (
-          (isEffectIdentifier(nodeWithoutNamespace) ||
+          (isEffectIdentifier(nodeWithoutNamespace, additionalEffectHooks) ||
             isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
           node.arguments.length > 0
         ) {
@@ -740,14 +778,11 @@ const rule = {
         // This identifier resolves to a useEffectEvent function, but isn't being referenced in an
         // effect or another event function. It isn't being called either.
         if (lastEffect == null && useEffectEventFunctions.has(node)) {
-          const message =
-            `\`${getSourceCode().getText(
-              node,
-            )}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-            'the same component.' +
-            (node.parent.type === 'CallExpression'
-              ? ''
-              : ' They cannot be assigned to variables or passed down.');
+          const message = useEffectEventError(
+            getSourceCode().getText(node),
+            node.parent.type === 'CallExpression',
+          );
+
           context.report({
             node,
             message,

@@ -345,28 +345,52 @@ export function useSubscription<Value>({
 
 export function useHighlightHostInstance(): {
   clearHighlightHostInstance: () => void,
-  highlightHostInstance: (id: number) => void,
+  highlightHostInstance: (id: number, scrollIntoView?: boolean) => void,
 } {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
   const highlightHostInstance = useCallback(
-    (id: number) => {
+    (id: number, scrollIntoView?: boolean = false) => {
       const element = store.getElementByID(id);
-      const rendererID = store.getRendererIDForElement(id);
-      if (element !== null && rendererID !== null) {
+      if (element !== null) {
+        const isRoot = element.parentID === 0;
         let displayName = element.displayName;
         if (displayName !== null && element.nameProp !== null) {
           displayName += ` name="${element.nameProp}"`;
         }
-        bridge.send('highlightHostInstance', {
-          displayName,
-          hideAfterTimeout: false,
-          id,
-          openBuiltinElementsPanel: false,
-          rendererID,
-          scrollIntoView: false,
-        });
+        if (isRoot) {
+          // Inspect screen
+          const elements: Array<{rendererID: number, id: number}> = [];
+
+          for (let i = 0; i < store.roots.length; i++) {
+            const rootID = store.roots[i];
+            const rendererID = store.getRendererIDForElement(rootID);
+            if (rendererID === null) {
+              continue;
+            }
+            elements.push({rendererID, id: rootID});
+          }
+
+          bridge.send('highlightHostInstances', {
+            displayName,
+            hideAfterTimeout: false,
+            elements,
+            scrollIntoView: scrollIntoView,
+          });
+        } else {
+          const rendererID = store.getRendererIDForElement(id);
+          if (rendererID !== null) {
+            bridge.send('highlightHostInstance', {
+              displayName,
+              hideAfterTimeout: false,
+              id,
+              openBuiltinElementsPanel: false,
+              rendererID,
+              scrollIntoView: scrollIntoView,
+            });
+          }
+        }
       }
     },
     [store, bridge],
@@ -380,4 +404,25 @@ export function useHighlightHostInstance(): {
     highlightHostInstance,
     clearHighlightHostInstance,
   };
+}
+
+export function useScrollToHostInstance(): (id: number) => void {
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
+
+  const scrollToHostInstance = useCallback(
+    (id: number) => {
+      const element = store.getElementByID(id);
+      const rendererID = store.getRendererIDForElement(id);
+      if (element !== null && rendererID !== null) {
+        bridge.send('scrollToHostInstance', {
+          id,
+          rendererID,
+        });
+      }
+    },
+    [store, bridge],
+  );
+
+  return scrollToHostInstance;
 }

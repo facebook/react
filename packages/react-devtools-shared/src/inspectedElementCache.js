@@ -32,6 +32,7 @@ import type {
 
 function readRecord<T>(record: Thenable<T>): T {
   if (typeof React.use === 'function') {
+    // eslint-disable-next-line react-hooks-published/rules-of-hooks
     return React.use(record);
   }
   if (record.status === 'fulfilled') {
