@@ -28,7 +28,7 @@ function useCustomHook() {
 }
 
 function HookTreeCase() {
-  const onClick = useCustomHook();
+  const [, , onClick] = useCustomHook();
 
   return <div onClick={onClick} />;
 }
