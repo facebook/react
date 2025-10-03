@@ -9,7 +9,7 @@ const {join, relative} = require('path');
 const {confirm, execRead, printDiff} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, version, ci}, versionsMap) => {
+const run = async (packages, versions, {cwd, prerelease, ci}) => {
   const nodeModulesPath = join(cwd, 'build/node_modules');
 
   // Cache all package JSONs for easy lookup below.
@@ -52,10 +52,16 @@ const run = async ({cwd, packages, version, ci}, versionsMap) => {
             sourceDependencyVersion ===
             sourceDependencyConstraint.replace(/^[\^\~]/, '')
           ) {
+            if (!(dependencyName in versions)) {
+              throw new Error(
+                `No version found for ${dependencyName} in the release.`
+              );
+            }
+
             targetDependencies[dependencyName] =
               sourceDependencyConstraint.replace(
                 sourceDependencyVersion,
-                versionsMap.get(dependencyName)
+                versions[dependencyName]
               );
           } else {
             targetDependencies[dependencyName] = sourceDependencyConstraint;
@@ -73,7 +79,10 @@ const run = async ({cwd, packages, version, ci}, versionsMap) => {
     const packageName = packages[i];
     const packageJSONPath = join(nodeModulesPath, packageName, 'package.json');
     const packageJSON = await readJson(packageJSONPath);
-    packageJSON.version = versionsMap.get(packageName);
+    if (!(packageName in versions)) {
+      throw new Error(`No version found for ${packageName} in the release.`);
+    }
+    packageJSON.version = versions[packageName];
 
     await updateDependencies(packageJSON, 'dependencies');
     await updateDependencies(packageJSON, 'peerDependencies');
@@ -100,9 +109,7 @@ const run = async ({cwd, packages, version, ci}, versionsMap) => {
     const packageJSONPath = join(nodeModulesPath, packageName, 'package.json');
     const packageJSON = await readJson(packageJSONPath);
     console.log(
-      theme`\n{package ${packageName}} {version ${versionsMap.get(
-        packageName
-      )}}`
+      theme`\n{package ${packageName}} {version ${versions[packageName]}}`
     );
     printDependencies(packageJSON.dependencies, 'dependency');
     printDependencies(packageJSON.peerDependencies, 'peer');
@@ -113,51 +120,47 @@ const run = async ({cwd, packages, version, ci}, versionsMap) => {
 
   clear();
 
-  if (packages.includes('react')) {
-    // We print the diff to the console for review,
-    // but it can be large so let's also write it to disk.
-    const diffPath = join(cwd, 'build', 'temp.diff');
-    let diff = '';
-    let numFilesModified = 0;
+  // We print the diff to the console for review,
+  // but it can be large so let's also write it to disk.
+  const diffPath = join(cwd, 'build', 'temp.diff');
+  let diff = '';
+  let numFilesModified = 0;
 
-    // Find-and-replace hardcoded version (in built JS) for renderers.
-    for (let i = 0; i < packages.length; i++) {
-      const packageName = packages[i];
-      const packagePath = join(nodeModulesPath, packageName);
+  // Find-and-replace hardcoded version (in built JS) for renderers.
+  for (let i = 0; i < packages.length; i++) {
+    const packageName = packages[i];
+    if (!(packageName in versions)) {
+      throw new Error(`No version found for ${packageName} in the release.`);
+    }
+    const newStableVersion = versions[packageName];
+    // Replace all "next" version numbers (e.g. header @license).
+    const canaryVersion = `${newStableVersion}-canary-${prerelease}`;
+    const packagePath = join(nodeModulesPath, packageName);
 
-      let files = await execRead(
-        `find ${packagePath} -name '*.js' -exec echo {} \\;`,
-        {cwd}
-      );
-      files = files.split('\n');
-      files.forEach(path => {
-        const newStableVersion = versionsMap.get(packageName);
-        const beforeContents = readFileSync(path, 'utf8', {cwd});
-        let afterContents = beforeContents;
-        // Replace all "next" version numbers (e.g. header @license).
-        while (afterContents.indexOf(version) >= 0) {
-          afterContents = afterContents.replace(version, newStableVersion);
-        }
-        if (beforeContents !== afterContents) {
-          numFilesModified++;
-          // Using a relative path for diff helps with the snapshot test
-          diff += printDiff(relative(cwd, path), beforeContents, afterContents);
-          writeFileSync(path, afterContents, {cwd});
-        }
-      });
-    }
-    writeFileSync(diffPath, diff, {cwd});
-    console.log(theme.header(`\n${numFilesModified} files have been updated.`));
-    console.log(
-      theme`A full diff is available at {path ${relative(cwd, diffPath)}}.`
+    let files = await execRead(
+      `find ${packagePath} -name '*.js' -exec echo {} \\;`,
+      {cwd}
     );
-    if (ci !== true) {
-      await confirm('Do the changes above look correct?');
-    }
-  } else {
-    console.log(
-      theme`Skipping React renderer version update because React is not included in the release.`
-    );
+    files = files.split('\n');
+    files.forEach(path => {
+      const beforeContents = readFileSync(path, 'utf8', {cwd});
+      let afterContents = beforeContents;
+      afterContents = afterContents.replaceAll(canaryVersion, newStableVersion);
+      if (beforeContents !== afterContents) {
+        numFilesModified++;
+        // Using a relative path for diff helps with the snapshot test
+        diff += printDiff(relative(cwd, path), beforeContents, afterContents);
+        writeFileSync(path, afterContents, {cwd});
+      }
+    });
+  }
+  writeFileSync(diffPath, diff, {cwd});
+  console.log(theme.header(`\n${numFilesModified} files have been updated.`));
+  console.log(
+    theme`A full diff is available at {path ${relative(cwd, diffPath)}}.`
+  );
+  if (ci !== true) {
+    await confirm('Do the changes above look correct?');
   }
 
   clear();

@@ -7,13 +7,6 @@ const {splitCommaParams} = require('../utils');
 
 const paramDefinitions = [
   {
-    name: 'local',
-    type: Boolean,
-    description:
-      'Skip NPM and use the build already present in "build/node_modules".',
-    defaultValue: false,
-  },
-  {
     name: 'onlyPackages',
     type: String,
     multiple: true,
@@ -34,15 +27,10 @@ const paramDefinitions = [
     defaultValue: false,
   },
   {
-    name: 'version',
+    name: 'prerelease',
     type: String,
     description:
-      'Version of published "next" release (e.g. 0.0.0-0e526bcec-20210202)',
-  },
-  {
-    name: 'publishVersion',
-    type: String,
-    description: 'Version to publish',
+      'prerelease to publish (e.g. version 19.2.0-canary-86181134-20251001 has prerelease "86181134-20251001")',
   },
   {
     name: 'ci',
