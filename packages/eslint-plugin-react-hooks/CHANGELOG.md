@@ -1,6 +1,17 @@
+## 6.1.1
+
+**Note:** 6.1.0 accidentally allowed use of `recommended` without flat config, causing errors when used with ESLint v9's `defineConfig()` helper. This has been fixed in 6.1.1.
+
+- Fix `recommended` config for flat config compatibility. The `recommended` config has been converted to flat config format. Non-flat config users should use `recommended-legacy` instead. ([@poteto](https://github.com/poteto) in [#34700](https://github.com/facebook/react/pull/34700))
+- Add `recommended-latest` and `recommended-latest-legacy` configs that include React Compiler rules. ([@poteto](https://github.com/poteto) in [#34675](https://github.com/facebook/react/pull/34675))
+- Remove unused `NoUnusedOptOutDirectives` rule. ([@poteto](https://github.com/poteto) in [#34703](https://github.com/facebook/react/pull/34703))
+- Remove `hermes-parser` and dependency. ([@poteto](https://github.com/poteto) in [#34719](https://github.com/facebook/react/pull/34719))
+- Remove `@babel/plugin-proposal-private-methods` dependency. ([@ArnaudBarre](https://github.com/ArnaudBarre) and [@josephsavona](https://github.com/josephsavona) in [#34715](https://github.com/facebook/react/pull/34715))
+- Update for Zod v3/v4 compatibility. ([@kolian](https://github.com/kolvian) and [@josephsavona](https://github.com/josephsavona) in [#34717](https://github.com/facebook/react/pull/34717))
+
 ## 6.1.0
 
-**Note:** Version 6.0.0 was mistakenly released and immediately deprecated and untagged on npm. This is the first official 6.x major release and includes breaking changes. 
+**Note:** Version 6.0.0 was mistakenly released and immediately deprecated and untagged on npm. This is the first official 6.x major release and includes breaking changes.
 
 - **Breaking:** Require Node.js 18 or newer. ([@michaelfaith](https://github.com/michaelfaith) in [#32458](https://github.com/facebook/react/pull/32458))
 - **Breaking:** Flat config is now the default `recommended` preset. Legacy config moved to `recommended-legacy`. ([@michaelfaith](https://github.com/michaelfaith) in [#32457](https://github.com/facebook/react/pull/32457))
