@@ -271,7 +271,7 @@ class MisspelledComponent1 extends React.Component {
 
 // it should warn when misspelling componentWillReceiveProps
 class MisspelledComponent2 extends React.Component {
-  componentWillRecieveProps() {
+  componentWillReceiveProps() {
     return false;
   }
   render() {
@@ -281,7 +281,7 @@ class MisspelledComponent2 extends React.Component {
 
 // it should warn when misspelling UNSAFE_componentWillReceiveProps
 class MisspelledComponent3 extends React.Component {
-  UNSAFE_componentWillRecieveProps() {
+  UNSAFE_componentWillReceiveProps() {
     return false;
   }
   render() {
@@ -675,7 +675,7 @@ describe('ReactTypeScriptClass', function () {
   it('should warn when misspelling componentWillReceiveProps', function () {
     test(React.createElement(MisspelledComponent2), 'SPAN', 'foo');
     assertConsoleErrorDev([
-      'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
+      'MisspelledComponent2 has a method called componentWillReceiveProps(). ' +
         'Did you mean componentWillReceiveProps()?\n' +
         '    in MisspelledComponent2 (at **)',
     ]);
@@ -684,7 +684,7 @@ describe('ReactTypeScriptClass', function () {
   it('should warn when misspelling UNSAFE_componentWillReceiveProps', function () {
     test(React.createElement(MisspelledComponent3), 'SPAN', 'foo');
     assertConsoleErrorDev([
-      'MisspelledComponent3 has a method called UNSAFE_componentWillRecieveProps(). ' +
+      'MisspelledComponent3 has a method called UNSAFE_componentWillReceiveProps(). ' +
         'Did you mean UNSAFE_componentWillReceiveProps()?\n' +
         '    in MisspelledComponent3 (at **)',
     ]);

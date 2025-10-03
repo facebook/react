@@ -165,7 +165,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {
-    const mappedErrows = errorsArr.map(({error, errorInfo}) => {
+    const mappedErrors = errorsArr.map(({error, errorInfo}) => {
       const stack = errorInfo && errorInfo.componentStack;
       const digest = error.digest;
       if (stack) {
@@ -176,9 +176,9 @@ describe('ReactDOMFizzServer', () => {
       return error.message;
     });
     if (__DEV__) {
-      expect(mappedErrows).toEqual(toBeDevArr);
+      expect(mappedErrors).toEqual(toBeDevArr);
     } else {
-      expect(mappedErrows).toEqual(toBeProdArr);
+      expect(mappedErrors).toEqual(toBeProdArr);
     }
   }
 
@@ -234,7 +234,7 @@ describe('ReactDOMFizzServer', () => {
         bufferedContent.startsWith('<html ')
       ) {
         throw new Error(
-          'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
+          'Received <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
         );
       }
 
@@ -3638,7 +3638,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // bugfix: https://github.com/facebook/react/issues/27286
-  it('can render custom elements with children on ther server', async () => {
+  it('can render custom elements with children on their server', async () => {
     await act(() => {
       renderToPipeableStream(
         <html>
@@ -3664,10 +3664,10 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // https://github.com/facebook/react/issues/27540
-  // This test is not actually asserting much because there is possibly a bug in the closeing logic for the
+  // This test is not actually asserting much because there is possibly a bug in the closing logic for the
   // Node implementation of Fizz. The close leads to an abort which sets the destination to null before the Float
   // method has an opportunity to schedule a write. We should fix this probably and once we do this test will start
-  // to fail if the underyling issue of writing after stream completion isn't fixed
+  // to fail if the underlying issue of writing after stream completion isn't fixed
   it('does not try to write to the stream after it has been closed', async () => {
     async function preloadLate() {
       await 1;
@@ -3806,7 +3806,7 @@ describe('ReactDOMFizzServer', () => {
 
     expect(headers).toEqual({
       Link: `
-<non-responsive-preload>; rel=preload; as="image"; fetchpriority="high", 
+<non-responsive-preload>; rel=preload; as="image"; fetchpriority="high",
 <non-responsive-img>; rel=preload; as="image"; fetchpriority="high"
 `
         .replaceAll('\n', '')
@@ -3843,7 +3843,7 @@ describe('ReactDOMFizzServer', () => {
     expect(headers).toEqual({});
   });
 
-  it('stops accumulating new headers once the maxHeadersLength limit is satisifed', async () => {
+  it('stops accumulating new headers once the maxHeadersLength limit is satisfied', async () => {
     let headers = null;
     function onHeaders(x) {
       headers = x;

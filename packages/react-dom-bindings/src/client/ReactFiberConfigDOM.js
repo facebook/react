@@ -643,7 +643,7 @@ export function finalizeHydratedChildren(
   props: Props,
   hostContext: HostContext,
 ): boolean {
-  // TOOD: Consider unifying this with hydrateInstance.
+  // TODO: Consider unifying this with hydrateInstance.
   if (!enableHydrationChangeEvent) {
     return false;
   }
@@ -2560,7 +2560,7 @@ export function startGestureTransition(
           const duration =
             // $FlowFixMe[prop-missing]
             typeof timing.duration === 'number' ? timing.duration : 0;
-          // TODO: Consider interation count higher than 1.
+          // TODO: Consider iteration count higher than 1.
           // $FlowFixMe[prop-missing]
           // $FlowFixMe[unsafe-addition]
           const durationWithDelay = timing.delay + duration;
@@ -2576,7 +2576,7 @@ export function startGestureTransition(
           }
         }
       }
-      const durationToRangeMultipler =
+      const durationToRangeMultiplier =
         (rangeEnd - rangeStart) / longestDuration;
       for (let i = 0; i < animations.length; i++) {
         const anim = animations[i];
@@ -2627,12 +2627,12 @@ export function startGestureTransition(
           let adjustedRangeStart =
             // $FlowFixMe[unsafe-addition]
             // $FlowFixMe[prop-missing]
-            rangeEnd - (duration + timing.delay) * durationToRangeMultipler;
+            rangeEnd - (duration + timing.delay) * durationToRangeMultiplier;
           let adjustedRangeEnd =
             rangeEnd -
             // $FlowFixMe[prop-missing]
             // $FlowFixMe[unsafe-arithmetic]
-            timing.delay * durationToRangeMultipler;
+            timing.delay * durationToRangeMultiplier;
           if (
             timing.direction === 'reverse' ||
             timing.direction === 'alternate-reverse'
@@ -2723,7 +2723,7 @@ export function startGestureTransition(
         // was invoked, then we need to first finish the mutation and layout phases.
         // If they're already invoked it's still safe to call them due the status check.
         mutationCallback();
-        // Skip readyCallback() and go straight to animateCallbck() since we're not animating.
+        // Skip readyCallback() and go straight to animateCallback() since we're not animating.
         // animateCallback() is still required to restore states.
         animateCallback();
         if (enableProfilerTimer) {
@@ -3468,7 +3468,7 @@ function clearContainerSparingly(container: Node) {
         const element: Element = (node: any);
         clearContainerSparingly(element);
         // If these singleton instances had previously been rendered with React they
-        // may still hold on to references to the previous fiber tree. We detatch them
+        // may still hold on to references to the previous fiber tree. We detach them
         // prospectively to reset them to a baseline starting state since we cannot create
         // new instances.
         detachDeletedInstance(element);
@@ -3843,7 +3843,7 @@ export function registerSuspenseInstanceRetry(
     instance.data !== SUSPENSE_PENDING_START_DATA ||
     // The boundary is still in pending status but the document has finished loading
     // before we could register the event handler that would have scheduled the retry
-    // on load so we call teh callback now.
+    // on load so we call the callback now.
     ownerDocument.readyState !== DOCUMENT_READY_STATE_LOADING
   ) {
     callback();
@@ -6118,7 +6118,7 @@ export function suspendResource(
         instance = ownerDocument.createElement('link');
         markNodeAsHoistable(instance);
         const linkInstance: HTMLLinkElement = (instance: any);
-        // This Promise is a loading state used by the Fizz runtime. We need this incase there is a race
+        // This Promise is a loading state used by the Fizz runtime. We need this in case there is a race
         // between this resource being rendered on the client and being rendered with a late completed boundary.
         (linkInstance: any)._p = new Promise((resolve, reject) => {
           linkInstance.onload = resolve;
