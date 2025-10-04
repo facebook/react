@@ -1,4 +1,5 @@
 const React = window.React;
+import PropTypes from 'prop-types';
 
 function csv(string) {
   return string.split(/\s*,\s*/);
@@ -13,14 +14,21 @@ export default function IssueList({issues}) {
     issues = csv(issues);
   }
 
-  let links = issues.reduce((memo, issue, i) => {
-    return memo.concat(
-      i > 0 && i < issues.length ? ', ' : null,
-      <a href={'https://github.com/facebook/react/issues/' + issue} key={issue}>
+  let links = issues.map((issue, i) => (
+    <React.Fragment key={issue}>
+      {i > 0 ? ', ' : ''}
+      <a href={`https://github.com/facebook/react/issues/${issue}`}>
         {issue}
       </a>
-    );
-  }, []);
+    </React.Fragment>
+  ));
 
   return <span>{links}</span>;
 }
+
+IssueList.propTypes = {
+  issues: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.string),
+    PropTypes.string,
+  ]),
+};
