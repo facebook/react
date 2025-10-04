@@ -94,7 +94,7 @@ export function revealCompletedBoundaries(batch) {
 
     suspenseNode.data = SUSPENSE_START_DATA;
     if (suspenseNode['_reactRetry']) {
-      suspenseNode['_reactRetry']();
+      requestAnimationFrame(suspenseNode['_reactRetry']);
     }
   }
   batch.length = 0;
@@ -297,6 +297,8 @@ export function revealCompletedBoundariesWithViewTransitions(
                 rect.top < window.innerHeight &&
                 rect.left < window.innerWidth;
               if (inViewport) {
+                // TODO: Use decode() instead of the load event here once the fix in
+                // https://issues.chromium.org/issues/420748301 has propagated fully.
                 const loadingImage = new Promise(resolve => {
                   suspenseyImage.addEventListener('load', resolve);
                   suspenseyImage.addEventListener('error', resolve);
@@ -420,21 +422,24 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
   if (window['$RB'].length === 2) {
     // This is the first time we've pushed to the batch. We need to schedule a callback
     // to flush the batch. This is delayed by the throttle heuristic.
-    const globalMostRecentFallbackTime =
-      typeof window['$RT'] !== 'number' ? 0 : window['$RT'];
-    const currentTime = performance.now();
-    const msUntilTimeout =
-      // If the throttle would make us miss the target metric, then shorten the throttle.
-      // performance.now()'s zero value is assumed to be the start time of the metric.
-      currentTime < TARGET_VANITY_METRIC &&
-      currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
-        ? TARGET_VANITY_METRIC - currentTime
-        : // Otherwise it's throttled starting from last commit time.
-          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - currentTime;
-    // We always schedule the flush in a timer even if it's very low or negative to allow
-    // for multiple completeBoundary calls that are already queued to have a chance to
-    // make the batch.
-    setTimeout(window['$RV'].bind(null, window['$RB']), msUntilTimeout);
+    if (typeof window['$RT'] !== 'number') {
+      // If we haven't had our rAF callback yet, schedule everything for the first paint.
+      requestAnimationFrame(window['$RV'].bind(null, window['$RB']));
+    } else {
+      const currentTime = performance.now();
+      const msUntilTimeout =
+        // If the throttle would make us miss the target metric, then shorten the throttle.
+        // performance.now()'s zero value is assumed to be the start time of the metric.
+        currentTime < TARGET_VANITY_METRIC &&
+        currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
+          ? TARGET_VANITY_METRIC - currentTime
+          : // Otherwise it's throttled starting from last commit time.
+            window['$RT'] + FALLBACK_THROTTLE_MS - currentTime;
+      // We always schedule the flush in a timer even if it's very low or negative to allow
+      // for multiple completeBoundary calls that are already queued to have a chance to
+      // make the batch.
+      setTimeout(window['$RV'].bind(null, window['$RB']), msUntilTimeout);
+    }
   }
 }
 

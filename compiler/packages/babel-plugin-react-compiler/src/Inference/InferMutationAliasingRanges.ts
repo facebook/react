@@ -27,7 +27,7 @@ import {
 } from '../HIR/visitors';
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
 import {Err, Ok, Result} from '../Utils/Result';
-import {AliasingEffect} from './AliasingEffects';
+import {AliasingEffect, MutationReason} from './AliasingEffects';
 
 /**
  * This pass builds an abstract model of the heap and interprets the effects of the
@@ -101,6 +101,7 @@ export function inferMutationAliasingRanges(
     transitive: boolean;
     kind: MutationKind;
     place: Place;
+    reason: MutationReason | null;
   }> = [];
   const renders: Array<{index: number; place: Place}> = [];
 
@@ -160,6 +161,8 @@ export function inferMutationAliasingRanges(
           state.assign(index++, effect.from, effect.into);
         } else if (effect.kind === 'Alias') {
           state.assign(index++, effect.from, effect.into);
+        } else if (effect.kind === 'MaybeAlias') {
+          state.maybeAlias(index++, effect.from, effect.into);
         } else if (effect.kind === 'Capture') {
           state.capture(index++, effect.from, effect.into);
         } else if (
@@ -174,6 +177,7 @@ export function inferMutationAliasingRanges(
               effect.kind === 'MutateTransitive'
                 ? MutationKind.Definite
                 : MutationKind.Conditional,
+            reason: null,
             place: effect.value,
           });
         } else if (
@@ -188,6 +192,7 @@ export function inferMutationAliasingRanges(
               effect.kind === 'Mutate'
                 ? MutationKind.Definite
                 : MutationKind.Conditional,
+            reason: effect.kind === 'Mutate' ? (effect.reason ?? null) : null,
             place: effect.value,
           });
         } else if (
@@ -195,7 +200,7 @@ export function inferMutationAliasingRanges(
           effect.kind === 'MutateGlobal' ||
           effect.kind === 'Impure'
         ) {
-          errors.push(effect.error);
+          errors.pushDiagnostic(effect.error);
           functionEffects.push(effect);
         } else if (effect.kind === 'Render') {
           renders.push({index: index++, place: effect.place});
@@ -224,7 +229,14 @@ export function inferMutationAliasingRanges(
         } else {
           CompilerError.invariant(effect.kind === 'Freeze', {
             reason: `Unexpected '${effect.kind}' effect for MaybeThrow terminal`,
-            loc: block.terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: block.terminal.loc,
+                message: null,
+              },
+            ],
           });
         }
       }
@@ -239,6 +251,7 @@ export function inferMutationAliasingRanges(
       mutation.transitive,
       mutation.kind,
       mutation.place.loc,
+      mutation.reason,
       errors,
     );
   }
@@ -247,6 +260,7 @@ export function inferMutationAliasingRanges(
   }
   for (const param of [...fn.context, ...fn.params]) {
     const place = param.kind === 'Identifier' ? param : param.place;
+
     const node = state.nodes.get(place.identifier);
     if (node == null) {
       continue;
@@ -264,6 +278,7 @@ export function inferMutationAliasingRanges(
         functionEffects.push({
           kind: 'Mutate',
           value: {...place, loc: node.local.loc},
+          reason: node.mutationReason,
         });
       }
     }
@@ -346,7 +361,8 @@ export function inferMutationAliasingRanges(
           case 'Assign':
           case 'Alias':
           case 'Capture':
-          case 'CreateFrom': {
+          case 'CreateFrom':
+          case 'MaybeAlias': {
             const isMutatedOrReassigned =
               effect.into.identifier.mutableRange.end > instr.id;
             if (isMutatedOrReassigned) {
@@ -369,7 +385,14 @@ export function inferMutationAliasingRanges(
           case 'Apply': {
             CompilerError.invariant(false, {
               reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
-              loc: effect.function.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: effect.function.loc,
+                  message: null,
+                },
+              ],
             });
           }
           case 'MutateTransitive':
@@ -503,6 +526,7 @@ export function inferMutationAliasingRanges(
       true,
       MutationKind.Conditional,
       into.loc,
+      null,
       ignoredErrors,
     );
     for (const from of tracked) {
@@ -515,7 +539,14 @@ export function inferMutationAliasingRanges(
       const fromNode = state.nodes.get(from.identifier);
       CompilerError.invariant(fromNode != null, {
         reason: `Expected a node to exist for all parameters and context variables`,
-        loc: into.loc,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: into.loc,
+            message: null,
+          },
+        ],
       });
       if (fromNode.lastMutated === mutationIndex) {
         if (into.identifier.id === fn.returns.identifier.id) {
@@ -537,7 +568,7 @@ export function inferMutationAliasingRanges(
     }
   }
 
-  if (errors.hasErrors() && !isFunctionExpression) {
+  if (errors.hasAnyErrors() && !isFunctionExpression) {
     return Err(errors);
   }
   return Ok(functionEffects);
@@ -549,7 +580,7 @@ function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
       case 'Impure':
       case 'MutateFrozen':
       case 'MutateGlobal': {
-        errors.push(effect.error);
+        errors.pushDiagnostic(effect.error);
         break;
       }
     }
@@ -567,10 +598,16 @@ type Node = {
   createdFrom: Map<Identifier, number>;
   captures: Map<Identifier, number>;
   aliases: Map<Identifier, number>;
-  edges: Array<{index: number; node: Identifier; kind: 'capture' | 'alias'}>;
+  maybeAliases: Map<Identifier, number>;
+  edges: Array<{
+    index: number;
+    node: Identifier;
+    kind: 'capture' | 'alias' | 'maybeAlias';
+  }>;
   transitive: {kind: MutationKind; loc: SourceLocation} | null;
   local: {kind: MutationKind; loc: SourceLocation} | null;
   lastMutated: number;
+  mutationReason: MutationReason | null;
   value:
     | {kind: 'Object'}
     | {kind: 'Phi'}
@@ -585,10 +622,12 @@ class AliasingState {
       createdFrom: new Map(),
       captures: new Map(),
       aliases: new Map(),
+      maybeAliases: new Map(),
       edges: [],
       transitive: null,
       local: null,
       lastMutated: 0,
+      mutationReason: null,
       value,
     });
   }
@@ -627,6 +666,18 @@ class AliasingState {
     fromNode.edges.push({index, node: into.identifier, kind: 'alias'});
     if (!toNode.aliases.has(from.identifier)) {
       toNode.aliases.set(from.identifier, index);
+    }
+  }
+
+  maybeAlias(index: number, from: Place, into: Place): void {
+    const fromNode = this.nodes.get(from.identifier);
+    const toNode = this.nodes.get(into.identifier);
+    if (fromNode == null || toNode == null) {
+      return;
+    }
+    fromNode.edges.push({index, node: into.identifier, kind: 'maybeAlias'});
+    if (!toNode.maybeAliases.has(from.identifier)) {
+      toNode.maybeAliases.set(from.identifier, index);
     }
   }
 
@@ -673,26 +724,30 @@ class AliasingState {
     // Null is used for simulated mutations
     end: InstructionId | null,
     transitive: boolean,
-    kind: MutationKind,
+    startKind: MutationKind,
     loc: SourceLocation,
+    reason: MutationReason | null,
     errors: CompilerError,
   ): void {
-    const seen = new Set<Identifier>();
+    const seen = new Map<Identifier, MutationKind>();
     const queue: Array<{
       place: Identifier;
       transitive: boolean;
       direction: 'backwards' | 'forwards';
-    }> = [{place: start, transitive, direction: 'backwards'}];
+      kind: MutationKind;
+    }> = [{place: start, transitive, direction: 'backwards', kind: startKind}];
     while (queue.length !== 0) {
-      const {place: current, transitive, direction} = queue.pop()!;
-      if (seen.has(current)) {
+      const {place: current, transitive, direction, kind} = queue.pop()!;
+      const previousKind = seen.get(current);
+      if (previousKind != null && previousKind >= kind) {
         continue;
       }
-      seen.add(current);
+      seen.set(current, kind);
       const node = this.nodes.get(current);
       if (node == null) {
         continue;
       }
+      node.mutationReason ??= reason;
       node.lastMutated = Math.max(node.lastMutated, index);
       if (end != null) {
         node.id.mutableRange.end = makeInstructionId(
@@ -724,13 +779,24 @@ class AliasingState {
         if (edge.index >= index) {
           break;
         }
-        queue.push({place: edge.node, transitive, direction: 'forwards'});
+        queue.push({
+          place: edge.node,
+          transitive,
+          direction: 'forwards',
+          // Traversing a maybeAlias edge always downgrades to conditional mutation
+          kind: edge.kind === 'maybeAlias' ? MutationKind.Conditional : kind,
+        });
       }
       for (const [alias, when] of node.createdFrom) {
         if (when >= index) {
           continue;
         }
-        queue.push({place: alias, transitive: true, direction: 'backwards'});
+        queue.push({
+          place: alias,
+          transitive: true,
+          direction: 'backwards',
+          kind,
+        });
       }
       if (direction === 'backwards' || node.value.kind !== 'Phi') {
         /**
@@ -747,7 +813,30 @@ class AliasingState {
           if (when >= index) {
             continue;
           }
-          queue.push({place: alias, transitive, direction: 'backwards'});
+          queue.push({
+            place: alias,
+            transitive,
+            direction: 'backwards',
+            kind,
+          });
+        }
+        /**
+         * MaybeAlias indicates potential data flow from unknown function calls,
+         * so we downgrade mutations through these aliases to consider them
+         * conditional. This means we'll consider them for mutation *range*
+         * purposes but not report validation errors for mutations, since
+         * we aren't sure that the `from` value could actually be aliased.
+         */
+        for (const [alias, when] of node.maybeAliases) {
+          if (when >= index) {
+            continue;
+          }
+          queue.push({
+            place: alias,
+            transitive,
+            direction: 'backwards',
+            kind: MutationKind.Conditional,
+          });
         }
       }
       /**
@@ -758,7 +847,12 @@ class AliasingState {
           if (when >= index) {
             continue;
           }
-          queue.push({place: capture, transitive, direction: 'backwards'});
+          queue.push({
+            place: capture,
+            transitive,
+            direction: 'backwards',
+            kind,
+          });
         }
       }
     }

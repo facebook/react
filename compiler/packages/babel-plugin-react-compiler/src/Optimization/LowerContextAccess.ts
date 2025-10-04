@@ -237,6 +237,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     terminal: {
       id: makeInstructionId(0),
       kind: 'return',
+      returnVariant: 'Explicit',
       loc: GeneratedSource,
       value: arrayInstr.lvalue,
       effects: null,
@@ -248,13 +249,13 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
   const fn: HIRFunction = {
     loc: GeneratedSource,
     id: null,
+    nameHint: null,
     fnType: 'Other',
     env,
     params: [obj],
     returnTypeAnnotation: null,
     returns: createTemporaryPlace(env, GeneratedSource),
     context: [],
-    effects: null,
     body: {
       entry: block.id,
       blocks: new Map([[block.id, block]]),
@@ -262,6 +263,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     generator: false,
     async: false,
     directives: [],
+    aliasingEffects: [],
   };
 
   reversePostorderBlocks(fn.body);
@@ -274,6 +276,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     value: {
       kind: 'FunctionExpression',
       name: null,
+      nameHint: null,
       loweredFunc: {
         func: fn,
       },

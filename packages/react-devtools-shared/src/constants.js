@@ -24,9 +24,22 @@ export const TREE_OPERATION_UPDATE_TREE_BASE_DURATION = 4;
 export const TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS = 5;
 export const TREE_OPERATION_REMOVE_ROOT = 6;
 export const TREE_OPERATION_SET_SUBTREE_MODE = 7;
+export const SUSPENSE_TREE_OPERATION_ADD = 8;
+export const SUSPENSE_TREE_OPERATION_REMOVE = 9;
+export const SUSPENSE_TREE_OPERATION_REORDER_CHILDREN = 10;
+export const SUSPENSE_TREE_OPERATION_RESIZE = 11;
+export const SUSPENSE_TREE_OPERATION_SUSPENDERS = 12;
 
-export const PROFILING_FLAG_BASIC_SUPPORT = 0b01;
-export const PROFILING_FLAG_TIMELINE_SUPPORT = 0b10;
+export const PROFILING_FLAG_BASIC_SUPPORT /*.             */ = 0b001;
+export const PROFILING_FLAG_TIMELINE_SUPPORT /*           */ = 0b010;
+export const PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT /* */ = 0b100;
+
+export const UNKNOWN_SUSPENDERS_NONE: UnknownSuspendersReason = 0; // If we had at least one debugInfo, then that might have been the reason.
+export const UNKNOWN_SUSPENDERS_REASON_PRODUCTION: UnknownSuspendersReason = 1; // We're running in prod. That might be why we had unknown suspenders.
+export const UNKNOWN_SUSPENDERS_REASON_OLD_VERSION: UnknownSuspendersReason = 2; // We're running an old version of React that doesn't have full coverage. That might be the reason.
+export const UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE: UnknownSuspendersReason = 3; // If we're in dev, didn't detect and debug info and still suspended (other than CSS/image) the only reason is thrown promise.
+
+export opaque type UnknownSuspendersReason = 0 | 1 | 2 | 3;
 
 export const LOCAL_STORAGE_DEFAULT_TAB_KEY = 'React::DevTools::defaultTab';
 export const LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY =
@@ -37,6 +50,8 @@ export const LOCAL_STORAGE_OPEN_IN_EDITOR_URL =
   'React::DevTools::openInEditorUrl';
 export const LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET =
   'React::DevTools::openInEditorUrlPreset';
+export const LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR =
+  'React::DevTools::alwaysOpenInEditor';
 export const LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY =
   'React::DevTools::parseHookNames';
 export const SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =

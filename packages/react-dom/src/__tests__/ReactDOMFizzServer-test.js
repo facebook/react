@@ -94,9 +94,7 @@ describe('ReactDOMFizzServer', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server');
-    if (__EXPERIMENTAL__) {
-      ReactDOMFizzStatic = require('react-dom/static');
-    }
+    ReactDOMFizzStatic = require('react-dom/static');
     Stream = require('stream');
     Suspense = React.Suspense;
     use = React.use;
@@ -6340,6 +6338,63 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('Hi');
   });
 
+  it('should correctly handle different promises in React.use() across lazy components', async () => {
+    let promise1;
+    let promise2;
+    let promiseLazy;
+
+    function Component1() {
+      promise1 ??= new Promise(r => setTimeout(() => r('value1'), 50));
+      const data = React.use(promise1);
+      return (
+        <div>
+          {data}
+          <Component2Lazy />
+        </div>
+      );
+    }
+
+    function Component2() {
+      promise2 ??= new Promise(r => setTimeout(() => r('value2'), 50));
+      const data = React.use(promise2);
+      return <div>{data}</div>;
+    }
+
+    const Component2Lazy = React.lazy(async () => {
+      promiseLazy ??= new Promise(r => setTimeout(r, 50));
+      await promiseLazy;
+      return {default: Component2};
+    });
+
+    function App() {
+      return <Component1 />;
+    }
+
+    await act(async () => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    // Wait for promise to resolve
+    await act(async () => {
+      await promise1;
+    });
+    await act(async () => {
+      await promiseLazy;
+    });
+    await act(async () => {
+      await promise2;
+    });
+
+    // Verify both components received the correct values
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        value1
+        <div>value2</div>
+      </div>,
+    );
+  });
+
   it('useActionState hydrates without a mismatch', async () => {
     // This is testing an implementation detail: useActionState emits comment
     // nodes into the SSR stream, so this checks that they are handled correctly
@@ -6459,7 +6514,7 @@ describe('ReactDOMFizzServer', () => {
       const ref = React.createRef();
       function App() {
         const [count, setCount] = React.useState(0);
-        const onClick = React.experimental_useEffectEvent(() => {
+        const onClick = React.useEffectEvent(() => {
           setCount(c => c + 1);
         });
         return (
@@ -6489,7 +6544,7 @@ describe('ReactDOMFizzServer', () => {
     it('throws if useEffectEvent is called during a server render', async () => {
       const logs = [];
       function App() {
-        const onRender = React.experimental_useEffectEvent(() => {
+        const onRender = React.useEffectEvent(() => {
           logs.push('rendered');
         });
         onRender();
@@ -6520,8 +6575,8 @@ describe('ReactDOMFizzServer', () => {
     // @gate enableUseEffectEventHook
     it('does not guarantee useEffectEvent return values during server rendering are distinct', async () => {
       function App() {
-        const onClick1 = React.experimental_useEffectEvent(() => {});
-        const onClick2 = React.experimental_useEffectEvent(() => {});
+        const onClick1 = React.useEffectEvent(() => {});
+        const onClick2 = React.useEffectEvent(() => {});
         if (onClick1 === onClick2) {
           return <div />;
         } else {
@@ -10637,5 +10692,196 @@ describe('ReactDOMFizzServer', () => {
     });
 
     expect(getVisibleChildren(container)).toEqual(<div>Success!</div>);
+  });
+
+  it('should always flush the boundaries contributing the preamble regardless of their size', async () => {
+    const longDescription =
+      `I need to make this segment somewhat large because it needs to be large enought to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
+
+Unfortunately that previous paragraph wasn't quite long enough so I'll continue with some more prose and maybe throw on some repeated additional strings at the end for good measure.
+
+` + 'a'.repeat(500);
+
+    const randomTag = Math.random().toString(36).slice(2, 10);
+
+    function App() {
+      return (
+        <Suspense fallback={randomTag}>
+          <html lang="en">
+            <body>
+              <main>{longDescription}</main>
+            </body>
+          </html>
+        </Suspense>
+      );
+    }
+
+    let streamedContent = '';
+    writable.on('data', chunk => (streamedContent += chunk));
+
+    await act(() => {
+      renderToPipeableStream(<App />, {progressiveChunkSize: 100}).pipe(
+        writable,
+      );
+    });
+
+    // We don't use the DOM here b/c we execute scripts which hides whether a fallback was shown briefly
+    // Instead we assert that we never emitted the fallback of the Suspense boundary around the body.
+    expect(streamedContent).not.toContain(randomTag);
+  });
+
+  it('should track byte size of shells that may contribute to the preamble when determining if the blocking render exceeds the max size', async () => {
+    const longDescription =
+      `I need to make this segment somewhat large because it needs to be large enought to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
+
+Unfortunately that previous paragraph wasn't quite long enough so I'll continue with some more prose and maybe throw on some repeated additional strings at the end for good measure.
+
+` + 'a'.repeat(500);
+
+    const randomTag = Math.random().toString(36).slice(2, 10);
+
+    function App() {
+      return (
+        <>
+          <Suspense fallback={randomTag}>
+            <html lang="en">
+              <body>
+                <main>{longDescription}</main>
+              </body>
+            </html>
+          </Suspense>
+          <div>Outside Preamble</div>
+        </>
+      );
+    }
+
+    let streamedContent = '';
+    writable.on('data', chunk => (streamedContent += chunk));
+
+    const errors = [];
+    await act(() => {
+      renderToPipeableStream(<App />, {
+        progressiveChunkSize: 5,
+        onError(e) {
+          errors.push(e);
+        },
+      }).pipe(writable);
+    });
+
+    if (gate(flags => flags.enableFizzBlockingRender)) {
+      expect(errors.length).toBe(1);
+      expect(errors[0].message).toContain(
+        // We set the chunk size low enough that the threshold rounds to zero kB
+        'This rendered a large document (>0 kB) without any Suspense boundaries around most of it.',
+      );
+    } else {
+      expect(errors.length).toBe(0);
+    }
+
+    // We don't use the DOM here b/c we execute scripts which hides whether a fallback was shown briefly
+    // Instead we assert that we never emitted the fallback of the Suspense boundary around the body.
+    expect(streamedContent).not.toContain(randomTag);
+  });
+
+  it('should be able to Suspend after aborting in the same component without hanging the render', async () => {
+    const controller = new AbortController();
+
+    const promise1 = new Promise(() => {});
+    function AbortAndSuspend() {
+      controller.abort('boom');
+      return React.use(promise1);
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              {/*
+                The particular code path that was problematic required the Suspend to happen in renderNode
+                rather than retryRenderTask so we render the aborting function inside a host component
+                intentionally here
+              */}
+              <div>
+                <AbortAndSuspend />
+              </div>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    const errors = [];
+    await act(async () => {
+      const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+        signal: controller.signal,
+        onError(e) {
+          errors.push(e);
+        },
+      });
+
+      result.prelude.pipe(writable);
+    });
+
+    expect(errors).toEqual(['boom']);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
+  });
+
+  it('not error when a suspended fallback segment directly inside another Suspense is abandoned', async () => {
+    function SuspendForever() {
+      React.use(new Promise(() => {}));
+    }
+
+    let resolve = () => {};
+    const suspendPromise = new Promise(r => {
+      resolve = r;
+    });
+    function Suspend() {
+      return React.use(suspendPromise);
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="outer">
+              <Suspense fallback={<SuspendForever />}>
+                <span>hello world</span>
+                <span>
+                  <Suspend />
+                </span>
+              </Suspense>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(async () => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onError() {},
+      });
+      pipe(writable);
+    });
+
+    await act(() => {
+      resolve('!');
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <span>hello world</span>
+          <span>!</span>
+        </body>
+      </html>,
+    );
   });
 });

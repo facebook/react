@@ -5,14 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect} from '..';
+import {CompilerDiagnostic, CompilerError, Effect} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {HIRFunction, IdentifierId, Place} from '../HIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
-import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
+import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
 
 /**
  * Validates that local variables cannot be reassigned after render.
@@ -28,16 +29,24 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
     false,
   );
   if (reassignment !== null) {
-    CompilerError.throwInvalidReact({
-      reason:
-        'Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead',
-      description:
-        reassignment.identifier.name !== null &&
-        reassignment.identifier.name.kind === 'named'
-          ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-          : '',
-      loc: reassignment.loc,
-    });
+    const errors = new CompilerError();
+    const variable =
+      reassignment.identifier.name != null &&
+      reassignment.identifier.name.kind === 'named'
+        ? `\`${reassignment.identifier.name.value}\``
+        : 'variable';
+    errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Immutability,
+        reason: 'Cannot reassign variable after render completes',
+        description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead`,
+      }).withDetails({
+        kind: 'error',
+        loc: reassignment.loc,
+        message: `Cannot reassign ${variable} after render completes`,
+      }),
+    );
+    throw errors;
   }
 }
 
@@ -75,16 +84,25 @@ function getContextReassignment(
           // if the function or its depends reassign, propagate that fact on the lvalue
           if (reassignment !== null) {
             if (isAsync || value.loweredFunc.func.async) {
-              CompilerError.throwInvalidReact({
-                reason:
-                  'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
-                description:
-                  reassignment.identifier.name !== null &&
-                  reassignment.identifier.name.kind === 'named'
-                    ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-                    : '',
-                loc: reassignment.loc,
-              });
+              const errors = new CompilerError();
+              const variable =
+                reassignment.identifier.name !== null &&
+                reassignment.identifier.name.kind === 'named'
+                  ? `\`${reassignment.identifier.name.value}\``
+                  : 'variable';
+              errors.pushDiagnostic(
+                CompilerDiagnostic.create({
+                  category: ErrorCategory.Immutability,
+                  reason: 'Cannot reassign variable in async function',
+                  description:
+                    'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
+                }).withDetails({
+                  kind: 'error',
+                  loc: reassignment.loc,
+                  message: `Cannot reassign ${variable}`,
+                }),
+              );
+              throw errors;
             }
             reassigningFunctions.set(lvalue.identifier.id, reassignment);
           }
@@ -173,7 +191,14 @@ function getContextReassignment(
           for (const operand of operands) {
             CompilerError.invariant(operand.effect !== Effect.Unknown, {
               reason: `Expected effects to be inferred prior to ValidateLocalsNotReassignedAfterRender`,
-              loc: operand.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: operand.loc,
+                  message: '',
+                },
+              ],
             });
             const reassignment = reassigningFunctions.get(
               operand.identifier.id,

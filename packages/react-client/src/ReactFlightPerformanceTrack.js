@@ -22,6 +22,8 @@ import {
   addObjectToProperties,
 } from 'shared/ReactPerformanceTrackProperties';
 
+import {getIODescription} from 'shared/ReactIODescription';
+
 const supportsUserTiming =
   enableProfilerTimer &&
   typeof console !== 'undefined' &&
@@ -110,7 +112,7 @@ export function logComponentRender(
       }
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        performance.measure.bind(performance, entryName, {
+        performance.measure.bind(performance, '\u200b' + entryName, {
           start: startTime < 0 ? 0 : startTime,
           end: childrenEndTime,
           detail: {
@@ -125,7 +127,7 @@ export function logComponentRender(
       );
     } else {
       console.timeStamp(
-        entryName,
+        '\u200b' + entryName,
         startTime < 0 ? 0 : startTime,
         childrenEndTime,
         trackNames[trackIdx],
@@ -151,7 +153,7 @@ export function logComponentAborted(
     const entryName =
       isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
     if (__DEV__) {
-      const properties = [
+      const properties: Array<[string, string]> = [
         [
           'Aborted',
           'The stream was aborted before this Component finished rendering.',
@@ -163,7 +165,7 @@ export function logComponentAborted(
       if (componentInfo.props != null) {
         addObjectToProperties(componentInfo.props, properties, 0, '');
       }
-      performance.measure(entryName, {
+      performance.measure('\u200b' + entryName, {
         start: startTime < 0 ? 0 : startTime,
         end: childrenEndTime,
         detail: {
@@ -213,14 +215,14 @@ export function logComponentErrored(
             String(error.message)
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
-      const properties = [['Error', message]];
+      const properties: Array<[string, string]> = [['Error', message]];
       if (componentInfo.key != null) {
         addValueToProperties('key', componentInfo.key, properties, 0, '');
       }
       if (componentInfo.props != null) {
         addObjectToProperties(componentInfo.props, properties, 0, '');
       }
-      performance.measure(entryName, {
+      performance.measure('\u200b' + entryName, {
         start: startTime < 0 ? 0 : startTime,
         end: childrenEndTime,
         detail: {
@@ -300,70 +302,6 @@ function getIOColor(
   }
 }
 
-function getIODescription(value: any): string {
-  if (!__DEV__) {
-    return '';
-  }
-  try {
-    switch (typeof value) {
-      case 'object':
-        // Test the object for a bunch of common property names that are useful identifiers.
-        // While we only have the return value here, it should ideally be a name that
-        // describes the arguments requested.
-        if (value === null) {
-          return '';
-        } else if (value instanceof Error) {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          return String(value.message);
-        } else if (typeof value.url === 'string') {
-          return value.url;
-        } else if (typeof value.command === 'string') {
-          return value.command;
-        } else if (
-          typeof value.request === 'object' &&
-          typeof value.request.url === 'string'
-        ) {
-          return value.request.url;
-        } else if (
-          typeof value.response === 'object' &&
-          typeof value.response.url === 'string'
-        ) {
-          return value.response.url;
-        } else if (
-          typeof value.id === 'string' ||
-          typeof value.id === 'number' ||
-          typeof value.id === 'bigint'
-        ) {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          return String(value.id);
-        } else if (typeof value.name === 'string') {
-          return value.name;
-        } else {
-          const str = value.toString();
-          if (str.startWith('[object ') || str.length < 5 || str.length > 500) {
-            // This is probably not a useful description.
-            return '';
-          }
-          return str;
-        }
-      case 'string':
-        if (value.length < 5 || value.length > 500) {
-          return '';
-        }
-        return value;
-      case 'number':
-      case 'bigint':
-        // eslint-disable-next-line react-internal/safe-string-coercion
-        return String(value);
-      default:
-        // Not useful descriptors.
-        return '';
-    }
-  } catch (x) {
-    return '';
-  }
-}
-
 function getIOLongName(
   ioInfo: ReactIOInfo,
   description: string,
@@ -412,7 +350,13 @@ function getIOShortName(
       const slashIdx = description.lastIndexOf('/', queryIdx - 1);
       if (queryIdx - slashIdx < descMaxLength) {
         // This may now be either the file name or the host.
-        desc = ' (' + description.slice(slashIdx + 1, queryIdx) + ')';
+        // Include the slash to make it more obvious what we trimmed.
+        desc = ' (…' + description.slice(slashIdx, queryIdx) + ')';
+      } else {
+        // cut out the middle to not exceed the max length
+        const start = description.slice(slashIdx, slashIdx + descMaxLength / 2);
+        const end = description.slice(queryIdx - descMaxLength / 2, queryIdx);
+        desc = ' (' + (slashIdx > 0 ? '…' : '') + start + '…' + end + ')';
       }
     }
   }
@@ -546,7 +490,7 @@ export function logComponentAwait(
       if (typeof value === 'object' && value !== null) {
         addObjectToProperties(value, properties, 0, '');
       } else if (value !== undefined) {
-        addValueToProperties('Resolved', value, properties, 0, '');
+        addValueToProperties('awaited value', value, properties, 0, '');
       }
       const tooltipText = getIOLongName(
         asyncInfo.awaited,
@@ -603,12 +547,12 @@ export function logIOInfoErrored(
             String(error.message)
           : // eslint-disable-next-line react-internal/safe-string-coercion
             String(error);
-      const properties = [['Rejected', message]];
+      const properties = [['rejected with', message]];
       const tooltipText =
         getIOLongName(ioInfo, description, ioInfo.env, rootEnv) + ' Rejected';
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        performance.measure.bind(performance, entryName, {
+        performance.measure.bind(performance, '\u200b' + entryName, {
           start: startTime < 0 ? 0 : startTime,
           end: endTime,
           detail: {
@@ -661,7 +605,7 @@ export function logIOInfo(
       );
       debugTask.run(
         // $FlowFixMe[method-unbinding]
-        performance.measure.bind(performance, entryName, {
+        performance.measure.bind(performance, '\u200b' + entryName, {
           start: startTime < 0 ? 0 : startTime,
           end: endTime,
           detail: {

@@ -75,21 +75,21 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
         source: 'react',
         importSpecifierName: 'useEffect',
       },
-      numRequiredArgs: 1,
+      autodepsIndex: 1,
     },
     {
       function: {
         source: 'shared-runtime',
         importSpecifierName: 'useSpecialEffect',
       },
-      numRequiredArgs: 2,
+      autodepsIndex: 2,
     },
     {
       function: {
         source: 'useEffectWrapper',
         importSpecifierName: 'default',
       },
-      numRequiredArgs: 1,
+      autodepsIndex: 1,
     },
   ],
 };
@@ -113,8 +113,13 @@ function* splitPragma(
  */
 function parseConfigPragmaEnvironmentForTest(
   pragma: string,
+  defaultConfig: PartialEnvironmentConfig,
 ): EnvironmentConfig {
-  const maybeConfig: Partial<Record<keyof EnvironmentConfig, unknown>> = {};
+  // throw early if the defaults are invalid
+  EnvironmentConfigSchema.parse(defaultConfig);
+
+  const maybeConfig: Partial<Record<keyof EnvironmentConfig, unknown>> =
+    defaultConfig;
 
   for (const {key, value: val} of splitPragma(pragma)) {
     if (!hasOwnProperty(EnvironmentConfigSchema.shape, key)) {
@@ -159,12 +164,18 @@ function parseConfigPragmaEnvironmentForTest(
   CompilerError.invariant(false, {
     reason: 'Internal error, could not parse config from pragma string',
     description: `${fromZodError(config.error)}`,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
 }
 
-const testComplexPluginOptionDefaults: Partial<PluginOptions> = {
+const testComplexPluginOptionDefaults: PluginOptions = {
   gating: {
     source: 'ReactForgetFeatureFlag',
     importSpecifierName: 'isForgetEnabled_Fixtures',
@@ -174,9 +185,13 @@ export function parseConfigPragmaForTests(
   pragma: string,
   defaults: {
     compilationMode: CompilationMode;
+    environment?: PartialEnvironmentConfig;
   },
 ): PluginOptions {
-  const environment = parseConfigPragmaEnvironmentForTest(pragma);
+  const environment = parseConfigPragmaEnvironmentForTest(
+    pragma,
+    defaults.environment ?? {},
+  );
   const options: Record<keyof PluginOptions, unknown> = {
     ...defaultOptions,
     panicThreshold: 'all_errors',

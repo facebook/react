@@ -17,13 +17,7 @@ declare const __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
 
-declare const globalThis: Object;
-
-declare const queueMicrotask: (fn: Function) => void;
 declare const reportError: (error: mixed) => void;
-declare const AggregateError: Class<Error>;
-
-declare const FinalizationRegistry: any;
 
 declare module 'create-react-class' {
   declare const exports: $FlowFixMe;
@@ -33,6 +27,7 @@ declare interface ConsoleTask {
   run<T>(f: () => T): T;
 }
 
+// $FlowFixMe[libdef-override]
 declare var console: {
   assert(condition: mixed, ...data: Array<any>): void,
   clear(): void,
@@ -87,7 +82,7 @@ declare class ScrollTimeline extends AnimationTimeline {
 
 // Flow hides the props of React$Element, this overrides it to unhide
 // them for React internals.
-// prettier-ignore
+// $FlowFixMe[libdef-override]
 declare opaque type React$Element<
   +ElementType: React$ElementType,
   +P = React$ElementProps<ElementType>,
@@ -146,11 +141,12 @@ declare module 'EventListener' {
 }
 
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
+declare function __webpack_get_script_filename__(id: string): string;
 declare const __webpack_require__: ((id: string) => any) & {
   u: string => string,
 };
 
-declare function __turbopack_load__(id: string): Promise<mixed>;
+declare function __turbopack_load_by_url__(id: string): Promise<mixed>;
 declare const __turbopack_require__: ((id: string) => any) & {
   u: string => string,
 };
@@ -165,98 +161,10 @@ declare var parcelRequire: {
   },
 };
 
-declare module 'fs/promises' {
-  declare const access: (path: string, mode?: number) => Promise<void>;
-  declare const lstat: (
-    path: string,
-    options?: ?{bigint?: boolean},
-  ) => Promise<mixed>;
-  declare const readdir: (
-    path: string,
-    options?:
-      | ?string
-      | {
-          encoding?: ?string,
-          withFileTypes?: ?boolean,
-        },
-  ) => Promise<Buffer>;
-  declare const readFile: (
-    path: string,
-    options?:
-      | ?string
-      | {
-          encoding?: ?string,
-        },
-  ) => Promise<Buffer>;
-  declare const readlink: (
-    path: string,
-    options?:
-      | ?string
-      | {
-          encoding?: ?string,
-        },
-  ) => Promise<mixed>;
-  declare const realpath: (
-    path: string,
-    options?:
-      | ?string
-      | {
-          encoding?: ?string,
-        },
-  ) => Promise<mixed>;
-  declare const stat: (
-    path: string,
-    options?: ?{bigint?: boolean},
-  ) => Promise<mixed>;
-}
 declare module 'pg' {
   declare const Pool: (options: mixed) => {
     query: (query: string, values?: Array<mixed>) => void,
   };
-}
-
-declare module 'util' {
-  declare function debuglog(section: string): (data: any, ...args: any) => void;
-  declare function format(format: string, ...placeholders: any): string;
-  declare function log(string: string): void;
-  declare function inspect(object: any, options?: util$InspectOptions): string;
-  declare function isArray(object: any): boolean;
-  declare function isRegExp(object: any): boolean;
-  declare function isDate(object: any): boolean;
-  declare function isError(object: any): boolean;
-  declare function inherits(
-    constructor: Function,
-    superConstructor: Function,
-  ): void;
-  declare function deprecate(f: Function, string: string): Function;
-  declare function promisify(f: Function): Function;
-  declare function callbackify(f: Function): Function;
-  declare class TextDecoder {
-    constructor(
-      encoding?: string,
-      options?: {
-        fatal?: boolean,
-        ignoreBOM?: boolean,
-        ...
-      },
-    ): void;
-    decode(
-      input?: ArrayBuffer | DataView | $TypedArray,
-      options?: {stream?: boolean, ...},
-    ): string;
-    encoding: string;
-    fatal: boolean;
-    ignoreBOM: boolean;
-  }
-  declare class TextEncoder {
-    constructor(encoding?: string): TextEncoder;
-    encode(buffer: string): Uint8Array;
-    encodeInto(
-      buffer: string,
-      dest: Uint8Array,
-    ): {read: number, written: number};
-    encoding: string;
-  }
 }
 
 declare module 'busboy' {
@@ -393,13 +301,6 @@ declare const async_hooks: {
   createHook(callbacks: any): any,
   executionAsyncId(): number,
 };
-
-declare module 'node:worker_threads' {
-  declare class MessageChannel {
-    port1: MessagePort;
-    port2: MessagePort;
-  }
-}
 
 declare module 'jest-diff' {
   declare type CompareKeys = ((a: string, b: string) => number) | void;

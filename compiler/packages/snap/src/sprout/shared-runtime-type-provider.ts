@@ -198,6 +198,51 @@ export function makeSharedRuntimeTypeProvider({
           },
         },
       };
+    } else if (moduleName === 'ReactCompilerKnownIncompatibleTest') {
+      /**
+       * Fake module used for testing validation of known incompatible
+       * API validation
+       */
+      return {
+        kind: 'object',
+        properties: {
+          useKnownIncompatible: {
+            kind: 'hook',
+            positionalParams: [],
+            restParam: EffectEnum.Read,
+            returnType: {kind: 'type', name: 'Any'},
+            knownIncompatible: `useKnownIncompatible is known to be incompatible`,
+          },
+          useKnownIncompatibleIndirect: {
+            kind: 'hook',
+            positionalParams: [],
+            restParam: EffectEnum.Read,
+            returnType: {
+              kind: 'object',
+              properties: {
+                incompatible: {
+                  kind: 'function',
+                  positionalParams: [],
+                  restParam: EffectEnum.Read,
+                  calleeEffect: EffectEnum.Read,
+                  returnType: {kind: 'type', name: 'Any'},
+                  returnValueKind: ValueKindEnum.Mutable,
+                  knownIncompatible: `useKnownIncompatibleIndirect returns an incompatible() function that is known incompatible`,
+                },
+              },
+            },
+          },
+          knownIncompatible: {
+            kind: 'function',
+            positionalParams: [],
+            restParam: EffectEnum.Read,
+            calleeEffect: EffectEnum.Read,
+            returnType: {kind: 'type', name: 'Any'},
+            returnValueKind: ValueKindEnum.Mutable,
+            knownIncompatible: `useKnownIncompatible is known to be incompatible`,
+          },
+        },
+      };
     } else if (moduleName === 'ReactCompilerTest') {
       /**
        * Fake module used for testing validation that type providers return hook

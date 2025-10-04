@@ -27,7 +27,7 @@ export type BridgeProtocol = {
   // Version supported by the current frontend/backend.
   version: number,
 
-  // NPM version range that also supports this version.
+  // NPM version range of `react-devtools-inline` that also supports this version.
   // Note that 'maxNpmVersion' is only set when the version is bumped.
   minNpmVersion: string,
   maxNpmVersion: string | null,
@@ -86,6 +86,16 @@ type HighlightHostInstance = {
   openBuiltinElementsPanel: boolean,
   scrollIntoView: boolean,
 };
+type HighlightHostInstances = {
+  elements: Array<ElementAndRendererID>,
+  displayName: string | null,
+  hideAfterTimeout: boolean,
+  scrollIntoView: boolean,
+};
+
+type ScrollToHostInstance = {
+  ...ElementAndRendererID,
+};
 
 type OverrideValue = {
   ...ElementAndRendererID,
@@ -134,6 +144,10 @@ type OverrideSuspense = {
   forceFallback: boolean,
 };
 
+type OverrideSuspenseMilestone = {
+  suspendedSet: Array<number>,
+};
+
 type CopyElementPathParams = {
   ...ElementAndRendererID,
   path: Array<string | number>,
@@ -149,6 +163,13 @@ type InspectElementParams = {
   forceFullData: boolean,
   path: Array<number | string> | null,
   requestID: number,
+};
+
+type InspectScreenParams = {
+  requestID: number,
+  id: number,
+  forceFullData: boolean,
+  path: Array<number | string> | null,
 };
 
 type StoreAsGlobalParams = {
@@ -178,10 +199,12 @@ export type BackendEvents = {
   backendInitialized: [],
   backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
+  enableSuspenseTab: [],
   extensionBackendInitialized: [],
   fastRefreshScheduled: [],
   getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
+  inspectedScreen: [InspectedElementPayload],
   isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
@@ -226,10 +249,13 @@ type FrontendEvents = {
   getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
   highlightHostInstance: [HighlightHostInstance],
+  highlightHostInstances: [HighlightHostInstances],
   inspectElement: [InspectElementParams],
+  inspectScreen: [InspectScreenParams],
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],
   overrideSuspense: [OverrideSuspense],
+  overrideSuspenseMilestone: [OverrideSuspenseMilestone],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [ReloadAndProfilingParams],
@@ -240,6 +266,7 @@ type FrontendEvents = {
   startInspectingHost: [],
   startProfiling: [StartProfilingParams],
   stopInspectingHost: [boolean],
+  scrollToHostInstance: [ScrollToHostInstance],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
@@ -313,7 +340,7 @@ class Bridge<
 
   send<EventName: $Keys<OutgoingEvents>>(
     event: EventName,
-    ...payload: $ElementType<OutgoingEvents, EventName>
+    ...payload: OutgoingEvents[EventName]
   ) {
     if (this._isShutdown) {
       console.warn(

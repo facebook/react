@@ -134,7 +134,7 @@ describe('Store component filters', () => {
     `);
   });
 
-  // @reactVersion >= 16.0
+  // @reactVersion >= 16.6
   it('should filter Suspense', async () => {
     const Suspense = React.Suspense;
     await actAsync(async () =>
@@ -156,6 +156,9 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
+      [suspense-root]  rects={[]}
+        <Suspense name="Unknown" rects={[]}>
+        <Suspense name="Unknown" rects={[]}>
     `);
 
     await actAsync(
@@ -171,6 +174,9 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
+      [suspense-root]  rects={[]}
+        <Suspense name="Unknown" rects={[]}>
+        <Suspense name="Unknown" rects={[]}>
     `);
 
     await actAsync(
@@ -186,11 +192,14 @@ describe('Store component filters', () => {
             <div>
         ▾ <Suspense>
             <div>
+      [suspense-root]  rects={[]}
+        <Suspense name="Unknown" rects={[]}>
+        <Suspense name="Unknown" rects={[]}>
     `);
   });
 
   it('should filter Activity', async () => {
-    const Activity = React.unstable_Activity;
+    const Activity = React.Activity || React.unstable_Activity;
 
     if (Activity != null) {
       await actAsync(async () =>
@@ -207,12 +216,11 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Activity>
-            <div>
-        ▾ <Activity>
-            <div>
-    `);
+        [root]
+          ▾ <Activity>
+              <div>
+            <Activity>
+      `);
 
       await actAsync(
         async () =>
@@ -222,10 +230,9 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-          <div>
-          <div>
-    `);
+        [root]
+            <div>
+      `);
 
       await actAsync(
         async () =>
@@ -235,12 +242,11 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Activity>
-            <div>
-        ▾ <Activity>
-            <div>
-    `);
+        [root]
+          ▾ <Activity>
+              <div>
+            <Activity>
+      `);
     }
   });
 
@@ -262,12 +268,12 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ViewTransition>
-            <div>
-        ▾ <ViewTransition>
-            <div>
-    `);
+              [root]
+                ▾ <ViewTransition>
+                    <div>
+                ▾ <ViewTransition>
+                    <div>
+          `);
 
       await actAsync(
         async () =>
@@ -277,12 +283,12 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ViewTransition>
-            <div>
-        ▾ <ViewTransition>
-            <div>
-    `);
+              [root]
+                ▾ <ViewTransition>
+                    <div>
+                ▾ <ViewTransition>
+                    <div>
+          `);
 
       await actAsync(
         async () =>
@@ -292,12 +298,12 @@ describe('Store component filters', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ViewTransition>
-            <div>
-        ▾ <ViewTransition>
-            <div>
-    `);
+              [root]
+                ▾ <ViewTransition>
+                    <div>
+                ▾ <ViewTransition>
+                    <div>
+          `);
     }
   });
 
@@ -509,7 +515,11 @@ describe('Store component filters', () => {
 
     const Component = ({shouldSuspend}) => {
       if (shouldSuspend) {
-        throw promise;
+        if (React.use) {
+          React.use(promise);
+        } else {
+          throw promise;
+        }
       }
       return null;
     };

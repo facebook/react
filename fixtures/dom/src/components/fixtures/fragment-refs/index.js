@@ -5,6 +5,7 @@ import IntersectionObserverCase from './IntersectionObserverCase';
 import ResizeObserverCase from './ResizeObserverCase';
 import FocusCase from './FocusCase';
 import GetClientRectsCase from './GetClientRectsCase';
+import ScrollIntoViewCase from './ScrollIntoViewCase';
 
 const React = window.React;
 
@@ -17,6 +18,7 @@ export default function FragmentRefsPage() {
       <ResizeObserverCase />
       <FocusCase />
       <GetClientRectsCase />
+      <ScrollIntoViewCase />
     </FixtureSet>
   );
 }

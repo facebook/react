@@ -13,6 +13,7 @@ import type {
   Thenable,
   ReactContext,
   ReactDebugInfo,
+  ReactComponentInfo,
   SuspenseListRevealOrder,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
@@ -68,9 +69,9 @@ import {
   SuspenseActionException,
   createThenableState,
   trackUsedThenable,
+  resolveLazy,
 } from './ReactFiberThenable';
 import {readContextDuringReconciliation} from './ReactFiberNewContext';
-import {callLazyInitInDEV} from './ReactFiberCallUserSpace';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
 
@@ -99,6 +100,25 @@ function pushDebugInfo(
     currentDebugInfo = previousDebugInfo.concat(debugInfo);
   }
   return previousDebugInfo;
+}
+
+function getCurrentDebugTask(): null | ConsoleTask {
+  // Get the debug task of the parent Server Component if there is one.
+  if (__DEV__) {
+    const debugInfo = currentDebugInfo;
+    if (debugInfo != null) {
+      for (let i = debugInfo.length - 1; i >= 0; i--) {
+        if (debugInfo[i].name != null) {
+          const componentInfo: ReactComponentInfo = debugInfo[i];
+          const debugTask: ?ConsoleTask = componentInfo.debugTask;
+          if (debugTask != null) {
+            return debugTask;
+          }
+        }
+      }
+    }
+  }
+  return null;
 }
 
 let didWarnAboutMaps;
@@ -274,7 +294,7 @@ function coerceRef(workInProgress: Fiber, element: ReactElement): void {
   workInProgress.ref = refProp !== undefined ? refProp : null;
 }
 
-function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+function throwOnInvalidObjectTypeImpl(returnFiber: Fiber, newChild: Object) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE) {
     throw new Error(
       'A React Element from an older version of React was rendered. ' +
@@ -299,7 +319,18 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   );
 }
 
-function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
+function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+  const debugTask = getCurrentDebugTask();
+  if (__DEV__ && debugTask !== null) {
+    debugTask.run(
+      throwOnInvalidObjectTypeImpl.bind(null, returnFiber, newChild),
+    );
+  } else {
+    throwOnInvalidObjectTypeImpl(returnFiber, newChild);
+  }
+}
+
+function warnOnFunctionTypeImpl(returnFiber: Fiber, invalidChild: Function) {
   if (__DEV__) {
     const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
@@ -336,7 +367,16 @@ function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
   }
 }
 
-function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
+function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
+  const debugTask = getCurrentDebugTask();
+  if (__DEV__ && debugTask !== null) {
+    debugTask.run(warnOnFunctionTypeImpl.bind(null, returnFiber, invalidChild));
+  } else {
+    warnOnFunctionTypeImpl(returnFiber, invalidChild);
+  }
+}
+
+function warnOnSymbolTypeImpl(returnFiber: Fiber, invalidChild: symbol) {
   if (__DEV__) {
     const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
@@ -364,13 +404,13 @@ function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
   }
 }
 
-function resolveLazy(lazyType: any) {
-  if (__DEV__) {
-    return callLazyInitInDEV(lazyType);
+function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
+  const debugTask = getCurrentDebugTask();
+  if (__DEV__ && debugTask !== null) {
+    debugTask.run(warnOnSymbolTypeImpl.bind(null, returnFiber, invalidChild));
+  } else {
+    warnOnSymbolTypeImpl(returnFiber, invalidChild);
   }
-  const payload = lazyType._payload;
-  const init = lazyType._init;
-  return init(payload);
 }
 
 type ChildReconciler = (
@@ -698,14 +738,7 @@ function createChildReconciler(
         }
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((newChild: any));
           const created = createChild(returnFiber, resolvedChild, lanes);
           currentDebugInfo = prevDebugInfo;
           return created;
@@ -830,14 +863,7 @@ function createChildReconciler(
         }
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((newChild: any));
           const updated = updateSlot(
             returnFiber,
             oldFiber,
@@ -962,14 +988,7 @@ function createChildReconciler(
         }
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((newChild: any));
           const updated = updateFromMap(
             existingChildren,
             returnFiber,
@@ -1086,14 +1105,7 @@ function createChildReconciler(
           });
           break;
         case REACT_LAZY_TYPE: {
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV((child: any));
-          } else {
-            const payload = child._payload;
-            const init = (child._init: any);
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((child: any));
           warnOnInvalidKey(
             returnFiber,
             workInProgress,
@@ -1809,14 +1821,7 @@ function createChildReconciler(
           );
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let result;
-          if (__DEV__) {
-            result = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            result = init(payload);
-          }
+          const result = resolveLazy((newChild: any));
           const firstChild = reconcileChildFibersImpl(
             returnFiber,
             currentFirstChild,
@@ -1985,12 +1990,14 @@ function createChildReconciler(
       throwFiber.return = returnFiber;
       if (__DEV__) {
         const debugInfo = (throwFiber._debugInfo = currentDebugInfo);
-        // Conceptually the error's owner/task should ideally be captured when the
-        // Error constructor is called but neither console.createTask does this,
-        // nor do we override them to capture our `owner`. So instead, we use the
-        // nearest parent as the owner/task of the error. This is usually the same
-        // thing when it's thrown from the same async component but not if you await
-        // a promise started from a different component/task.
+        // Conceptually the error's owner should ideally be captured when the
+        // Error constructor is called but we don't override them to capture our
+        // `owner`. So instead, we use the nearest parent as the owner/task of the
+        // error. This is usually the same thing when it's thrown from the same
+        // async component but not if you await a promise started from a different
+        // component/task.
+        // In newer Chrome, Error constructor does capture the Task which is what
+        // is logged by reportError. In that case this debugTask isn't used.
         throwFiber._debugOwner = returnFiber._debugOwner;
         throwFiber._debugTask = returnFiber._debugTask;
         if (debugInfo != null) {

@@ -97,7 +97,13 @@ export function eliminateRedundantPhi(
         CompilerError.invariant(same !== null, {
           reason: 'Expected phis to be non-empty',
           description: null,
-          loc: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
         rewrites.set(phi.place.identifier, same);
@@ -149,12 +155,26 @@ export function eliminateRedundantPhi(
       for (const phi of block.phis) {
         CompilerError.invariant(!rewrites.has(phi.place.identifier), {
           reason: '[EliminateRedundantPhis]: rewrite not complete',
-          loc: phi.place.loc,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: phi.place.loc,
+              message: null,
+            },
+          ],
         });
         for (const [, operand] of phi.operands) {
           CompilerError.invariant(!rewrites.has(operand.identifier), {
             reason: '[EliminateRedundantPhis]: rewrite not complete',
-            loc: phi.place.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: phi.place.loc,
+                message: null,
+              },
+            ],
           });
         }
       }

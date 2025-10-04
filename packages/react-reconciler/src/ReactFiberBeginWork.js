@@ -158,6 +158,7 @@ import {
   DefaultHydrationLane,
   SomeRetryLane,
   includesSomeLane,
+  includesOnlyRetries,
   laneToLanes,
   removeLanes,
   mergeLanes,
@@ -269,6 +270,7 @@ import {
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
+  markRenderDerivedCause,
   getWorkInProgressRoot,
   peekDeferredLane,
 } from './ReactFiberWorkLoop';
@@ -278,6 +280,7 @@ import {
   createCapturedValueFromError,
   createCapturedValueAtFiber,
 } from './ReactCapturedValue';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import {
   createClassErrorUpdate,
   initializeClassErrorUpdate,
@@ -302,11 +305,8 @@ import {
   pushRootMarkerInstance,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
-import {
-  callLazyInitInDEV,
-  callComponentInDEV,
-  callRenderInDEV,
-} from './ReactFiberCallUserSpace';
+import {callComponentInDEV, callRenderInDEV} from './ReactFiberCallUserSpace';
+import {resolveLazy} from './ReactFiberThenable';
 
 // A special exception that's used to unwind the stack when an update flows
 // into a dehydrated boundary.
@@ -621,6 +621,18 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
+  if (current === null && workInProgress.stateNode === null) {
+    // We previously reset the work-in-progress.
+    // We need to create a new Offscreen instance.
+    const primaryChildInstance: OffscreenInstance = {
+      _visibility: OffscreenVisible,
+      _pendingMarkers: null,
+      _retryCache: null,
+      _transitions: null,
+    };
+    workInProgress.stateNode = primaryChildInstance;
+  }
+
   if (
     nextProps.mode === 'hidden' ||
     (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding')
@@ -637,6 +649,7 @@ function updateOffscreenComponent(
           ? mergeLanes(prevState.baseLanes, renderLanes)
           : renderLanes;
 
+      let remainingChildLanes;
       if (current !== null) {
         // Reset to the current children
         let currentChild = (workInProgress.child = current.child);
@@ -654,13 +667,12 @@ function updateOffscreenComponent(
           currentChild = currentChild.sibling;
         }
         const lanesWeJustAttempted = nextBaseLanes;
-        const remainingChildLanes = removeLanes(
+        remainingChildLanes = removeLanes(
           currentChildLanes,
           lanesWeJustAttempted,
         );
-        workInProgress.childLanes = remainingChildLanes;
       } else {
-        workInProgress.childLanes = NoLanes;
+        remainingChildLanes = NoLanes;
         workInProgress.child = null;
       }
 
@@ -669,6 +681,7 @@ function updateOffscreenComponent(
         workInProgress,
         nextBaseLanes,
         renderLanes,
+        remainingChildLanes,
       );
     }
 
@@ -695,8 +708,9 @@ function updateOffscreenComponent(
       // and resume this tree later.
 
       // Schedule this fiber to re-render at Offscreen priority
-      workInProgress.lanes = workInProgress.childLanes =
-        laneToLanes(OffscreenLane);
+
+      const remainingChildLanes = (workInProgress.lanes =
+        laneToLanes(OffscreenLane));
 
       // Include the base lanes from the last render
       const nextBaseLanes =
@@ -709,6 +723,7 @@ function updateOffscreenComponent(
         workInProgress,
         nextBaseLanes,
         renderLanes,
+        remainingChildLanes,
       );
     } else {
       // This is the second render. The surrounding visible content has already
@@ -789,11 +804,32 @@ function updateOffscreenComponent(
   return workInProgress.child;
 }
 
+function bailoutOffscreenComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+): Fiber | null {
+  if (
+    (current === null || current.tag !== OffscreenComponent) &&
+    workInProgress.stateNode === null
+  ) {
+    const primaryChildInstance: OffscreenInstance = {
+      _visibility: OffscreenVisible,
+      _pendingMarkers: null,
+      _retryCache: null,
+      _transitions: null,
+    };
+    workInProgress.stateNode = primaryChildInstance;
+  }
+
+  return workInProgress.sibling;
+}
+
 function deferHiddenOffscreenComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   nextBaseLanes: Lanes,
   renderLanes: Lanes,
+  remainingChildLanes: Lanes,
 ) {
   const nextState: OffscreenState = {
     baseLanes: nextBaseLanes,
@@ -823,6 +859,13 @@ function deferHiddenOffscreenComponent(
       renderLanes,
     );
   }
+
+  // We override the remaining child lanes to be the subset that we computed
+  // on the outside. We need to do this after propagating the context
+  // because propagateParentContextChangesToDeferredTree may schedule
+  // work which bubbles all the way up to the root and updates our child lanes.
+  // We want to dismiss that since we're not going to work on it yet.
+  workInProgress.childLanes = remainingChildLanes;
 
   return null;
 }
@@ -948,6 +991,13 @@ function updateDehydratedActivityComponent(
     // We should never be hydrating at this point because it is the first pass,
     // but after we've already committed once.
     warnIfHydrating();
+
+    if (includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+      // If we're rendering Offscreen and we're entering the activity then it's possible
+      // that the only reason we rendered was because this boundary left work. Provide
+      // it as a cause if another one doesn't already exist.
+      markRenderDerivedCause(workInProgress);
+    }
 
     if (
       // TODO: Factoring is a little weird, since we check this right below, too.
@@ -1089,9 +1139,13 @@ function updateActivityComponent(
       if (nextProps.mode === 'hidden') {
         // SSR doesn't render hidden Activity so it shouldn't hydrate,
         // even at offscreen lane. Defer to a client rendered offscreen lane.
-        mountActivityChildren(workInProgress, nextProps, renderLanes);
+        const primaryChildFragment = mountActivityChildren(
+          workInProgress,
+          nextProps,
+          renderLanes,
+        );
         workInProgress.lanes = laneToLanes(OffscreenLane);
-        return null;
+        return bailoutOffscreenComponent(null, primaryChildFragment);
       } else {
         // We must push the suspense handler context *before* attempting to
         // hydrate, to avoid a mismatch in case it errors.
@@ -1134,6 +1188,16 @@ function updateActivityComponent(
       mode: nextMode,
       children: nextChildren,
     };
+
+    if (
+      includesSomeLane(renderLanes, (OffscreenLane: Lane)) &&
+      includesSomeLane(renderLanes, current.lanes)
+    ) {
+      // If we're rendering Offscreen and we're entering the activity then it's possible
+      // that the only reason we rendered was because this boundary left work. Provide
+      // it as a cause if another one doesn't already exist.
+      markRenderDerivedCause(workInProgress);
+    }
 
     const primaryChildFragment = updateWorkInProgressOffscreenFiber(
       currentChild,
@@ -1743,7 +1807,7 @@ function updateHostRoot(
   }
 
   const nextProps = workInProgress.pendingProps;
-  const prevState = workInProgress.memoizedState;
+  const prevState: RootState = workInProgress.memoizedState;
   const prevChildren = prevState.element;
   cloneUpdateQueue(current, workInProgress);
   processUpdateQueue(workInProgress, nextProps, null, renderLanes);
@@ -2020,14 +2084,7 @@ function mountLazyComponent(
 
   const props = workInProgress.pendingProps;
   const lazyComponent: LazyComponentType<any, any> = elementType;
-  let Component;
-  if (__DEV__) {
-    Component = callLazyInitInDEV(lazyComponent);
-  } else {
-    const payload = lazyComponent._payload;
-    const init = lazyComponent._init;
-    Component = init(payload);
-  }
+  let Component = resolveLazy(lazyComponent);
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
 
@@ -2364,7 +2421,7 @@ function updateSuspenseComponent(
     if (showFallback) {
       pushFallbackTreeSuspenseHandler(workInProgress);
 
-      const fallbackFragment = mountSuspenseFallbackChildren(
+      mountSuspenseFallbackChildren(
         workInProgress,
         nextPrimaryChildren,
         nextFallbackChildren,
@@ -2399,7 +2456,7 @@ function updateSuspenseComponent(
         }
       }
 
-      return fallbackFragment;
+      return bailoutOffscreenComponent(null, primaryChildFragment);
     } else if (
       enableCPUSuspense &&
       typeof nextProps.unstable_expectedLoadTime === 'number'
@@ -2408,7 +2465,7 @@ function updateSuspenseComponent(
       // unblock the surrounding content. Then immediately retry after the
       // initial commit.
       pushFallbackTreeSuspenseHandler(workInProgress);
-      const fallbackFragment = mountSuspenseFallbackChildren(
+      mountSuspenseFallbackChildren(
         workInProgress,
         nextPrimaryChildren,
         nextFallbackChildren,
@@ -2435,7 +2492,7 @@ function updateSuspenseComponent(
       // RetryLane even if it's the one currently rendering since we're leaving
       // it behind on this node.
       workInProgress.lanes = SomeRetryLane;
-      return fallbackFragment;
+      return bailoutOffscreenComponent(null, primaryChildFragment);
     } else {
       pushPrimaryTreeSuspenseHandler(workInProgress);
       return mountSuspensePrimaryChildren(
@@ -2470,7 +2527,7 @@ function updateSuspenseComponent(
 
       const nextFallbackChildren = nextProps.fallback;
       const nextPrimaryChildren = nextProps.children;
-      const fallbackChildFragment = updateSuspenseFallbackChildren(
+      updateSuspenseFallbackChildren(
         current,
         workInProgress,
         nextPrimaryChildren,
@@ -2523,8 +2580,19 @@ function updateSuspenseComponent(
         renderLanes,
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
-      return fallbackChildFragment;
+      return bailoutOffscreenComponent(current.child, primaryChildFragment);
     } else {
+      if (
+        prevState !== null &&
+        includesOnlyRetries(renderLanes) &&
+        includesSomeLane(renderLanes, current.lanes)
+      ) {
+        // If we're rendering Retry lanes and we're entering the primary content then it's possible
+        // that the only reason we rendered was because we left this boundary to be warmed up but
+        // nothing else scheduled an update. If so, use it as the cause of the render.
+        markRenderDerivedCause(workInProgress);
+      }
+
       pushPrimaryTreeSuspenseHandler(workInProgress);
 
       const nextPrimaryChildren = nextProps.children;
@@ -2768,7 +2836,7 @@ function updateSuspenseFallbackChildren(
   primaryChildFragment.sibling = fallbackChildFragment;
   workInProgress.child = primaryChildFragment;
 
-  return fallbackChildFragment;
+  return bailoutOffscreenComponent(null, primaryChildFragment);
 }
 
 function retrySuspenseComponentWithoutHydrating(
@@ -2882,6 +2950,13 @@ function updateDehydratedSuspenseComponent(
     // We should never be hydrating at this point because it is the first pass,
     // but after we've already committed once.
     warnIfHydrating();
+
+    if (includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+      // If we're rendering Offscreen and we're entering the activity then it's possible
+      // that the only reason we rendered was because this boundary left work. Provide
+      // it as a cause if another one doesn't already exist.
+      markRenderDerivedCause(workInProgress);
+    }
 
     if (isSuspenseInstanceFallback(suspenseInstance)) {
       // This boundary is in a permanent fallback state. In this case, we'll never
@@ -3067,14 +3142,13 @@ function updateDehydratedSuspenseComponent(
 
       const nextPrimaryChildren = nextProps.children;
       const nextFallbackChildren = nextProps.fallback;
-      const fallbackChildFragment =
-        mountSuspenseFallbackAfterRetryWithoutHydrating(
-          current,
-          workInProgress,
-          nextPrimaryChildren,
-          nextFallbackChildren,
-          renderLanes,
-        );
+      mountSuspenseFallbackAfterRetryWithoutHydrating(
+        current,
+        workInProgress,
+        nextPrimaryChildren,
+        nextFallbackChildren,
+        renderLanes,
+      );
       const primaryChildFragment: Fiber = (workInProgress.child: any);
       primaryChildFragment.memoizedState =
         mountSuspenseOffscreenState(renderLanes);
@@ -3084,7 +3158,7 @@ function updateDehydratedSuspenseComponent(
         renderLanes,
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
-      return fallbackChildFragment;
+      return bailoutOffscreenComponent(null, primaryChildFragment);
     }
   }
 }

@@ -13,6 +13,7 @@ import {
   useLayoutEffect,
   useReducer,
   useState,
+  useSyncExternalStore,
   useContext,
 } from 'react';
 import {
@@ -162,14 +163,24 @@ export function useLocalStorage<T>(
     }
   }, [initialValue, key]);
 
-  const [storedValue, setStoredValue] = useState<any>(getValueFromLocalStorage);
+  const storedValue = useSyncExternalStore(
+    useCallback(
+      function subscribe(callback) {
+        window.addEventListener(key, callback);
+        return function unsubscribe() {
+          window.removeEventListener(key, callback);
+        };
+      },
+      [key],
+    ),
+    getValueFromLocalStorage,
+  );
 
   const setValue = useCallback(
     (value: $FlowFixMe) => {
       try {
         const valueToStore =
           value instanceof Function ? (value: any)(storedValue) : value;
-        setStoredValue(valueToStore);
         localStorageSetItem(key, JSON.stringify(valueToStore));
 
         // Notify listeners that this setting has changed.
@@ -197,7 +208,6 @@ export function useLocalStorage<T>(
     };
 
     window.addEventListener('storage', onStorage);
-
     return () => {
       window.removeEventListener('storage', onStorage);
     };
@@ -335,24 +345,52 @@ export function useSubscription<Value>({
 
 export function useHighlightHostInstance(): {
   clearHighlightHostInstance: () => void,
-  highlightHostInstance: (id: number) => void,
+  highlightHostInstance: (id: number, scrollIntoView?: boolean) => void,
 } {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
   const highlightHostInstance = useCallback(
-    (id: number) => {
+    (id: number, scrollIntoView?: boolean = false) => {
       const element = store.getElementByID(id);
-      const rendererID = store.getRendererIDForElement(id);
-      if (element !== null && rendererID !== null) {
-        bridge.send('highlightHostInstance', {
-          displayName: element.displayName,
-          hideAfterTimeout: false,
-          id,
-          openBuiltinElementsPanel: false,
-          rendererID,
-          scrollIntoView: false,
-        });
+      if (element !== null) {
+        const isRoot = element.parentID === 0;
+        let displayName = element.displayName;
+        if (displayName !== null && element.nameProp !== null) {
+          displayName += ` name="${element.nameProp}"`;
+        }
+        if (isRoot) {
+          // Inspect screen
+          const elements: Array<{rendererID: number, id: number}> = [];
+
+          for (let i = 0; i < store.roots.length; i++) {
+            const rootID = store.roots[i];
+            const rendererID = store.getRendererIDForElement(rootID);
+            if (rendererID === null) {
+              continue;
+            }
+            elements.push({rendererID, id: rootID});
+          }
+
+          bridge.send('highlightHostInstances', {
+            displayName,
+            hideAfterTimeout: false,
+            elements,
+            scrollIntoView: scrollIntoView,
+          });
+        } else {
+          const rendererID = store.getRendererIDForElement(id);
+          if (rendererID !== null) {
+            bridge.send('highlightHostInstance', {
+              displayName,
+              hideAfterTimeout: false,
+              id,
+              openBuiltinElementsPanel: false,
+              rendererID,
+              scrollIntoView: scrollIntoView,
+            });
+          }
+        }
       }
     },
     [store, bridge],
@@ -366,4 +404,25 @@ export function useHighlightHostInstance(): {
     highlightHostInstance,
     clearHighlightHostInstance,
   };
+}
+
+export function useScrollToHostInstance(): (id: number) => void {
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
+
+  const scrollToHostInstance = useCallback(
+    (id: number) => {
+      const element = store.getElementByID(id);
+      const rendererID = store.getRendererIDForElement(id);
+      if (element !== null && rendererID !== null) {
+        bridge.send('scrollToHostInstance', {
+          id,
+          rendererID,
+        });
+      }
+    },
+    [store, bridge],
+  );
+
+  return scrollToHostInstance;
 }

@@ -1,8 +1,6 @@
 # `eslint-plugin-react-hooks`
 
-This ESLint plugin enforces the [Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks).
-
-It is a part of the [Hooks API](https://react.dev/reference/react/hooks) for React.
+The official ESLint plugin for [React](https://react.dev) which enforces the [Rules of React](https://react.dev/reference/eslint-plugin-react-hooks) and other best practices.
 
 ## Installation
 
@@ -22,15 +20,22 @@ yarn add eslint-plugin-react-hooks --dev
 
 #### >= 6.0.0
 
-For users of 6.0 and beyond, simply add the `recommended` config.
+For users of 6.0 and beyond, add the `recommended` config.
 
 ```js
-import * as reactHooks from 'eslint-plugin-react-hooks';
+// eslint.config.js
+import reactHooks from 'eslint-plugin-react-hooks';
+import { defineConfig } from 'eslint/config';
 
-export default [
-  // ...
-  reactHooks.configs.recommended,
-];
+export default defineConfig([
+  {
+    files: ["src/**/*.{js,jsx,ts,tsx}"],
+    plugins: {
+      'react-hooks': reactHooks,
+    },
+    extends: ['react-hooks/recommended'],
+  },
+]);
 ```
 
 #### 5.2.0
@@ -38,12 +43,18 @@ export default [
 For users of 5.2.0 (the first version with flat config support), add the `recommended-latest` config.
 
 ```js
-import * as reactHooks from 'eslint-plugin-react-hooks';
+import reactHooks from 'eslint-plugin-react-hooks';
+import { defineConfig } from 'eslint/config';
 
-export default [
-  // ...
-  reactHooks.configs['recommended-latest'],
-];
+export default defineConfig([
+  {
+    files: ["src/**/*.{js,jsx,ts,tsx}"],
+    plugins: {
+      'react-hooks': reactHooks,
+    },
+    extends: ['react-hooks/recommended-latest'],
+  },
+]);
 ```
 
 ### Legacy Config (.eslintrc)
@@ -76,7 +87,7 @@ If you're using a version earlier than 5.2.0, the legacy config was simply `reco
 
 ### Custom Configuration
 
-If you want more fine-grained configuration, you can instead add a snippet like this to your ESLint configuration file:
+If you want more fine-grained configuration, you can instead choose to enable specific rules. However, we strongly encourage using the recommended presets — see above — so that you will automatically receive new recommended rules as we add them in future versions of the plugin.
 
 #### Flat Config (eslint.config.js|ts)
 

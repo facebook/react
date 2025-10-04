@@ -16,6 +16,11 @@ import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 
 import styles from './SettingsShared.css';
 
+import CodeEditorOptions from './CodeEditorOptions';
+import CodeEditorByDefault from './CodeEditorByDefault';
+import {LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR} from '../../../constants';
+import {useLocalStorage} from '../hooks';
+
 function getChangeLogUrl(version: ?string): string | null {
   if (!version) {
     return null;
@@ -45,6 +50,11 @@ export default function GeneralSettings(_: {}): React.Node {
   const showBackendVersion =
     backendVersion && backendVersion !== frontendVersion;
 
+  const [alwaysOpenInEditor] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
+    false,
+  );
+
   return (
     <div className={styles.SettingList}>
       {isInternalFacebookBuild && (
@@ -62,6 +72,36 @@ export default function GeneralSettings(_: {}): React.Node {
           <option value="light">Light</option>
           <option value="dark">Dark</option>
         </select>
+      </div>
+
+      <div className={styles.SettingWrapper}>
+        <div className={styles.RadioLabel}>Display density</div>
+        <select
+          value={displayDensity}
+          onChange={({currentTarget}) =>
+            setDisplayDensity(currentTarget.value)
+          }>
+          <option value="compact">Compact</option>
+          <option value="comfortable">Comfortable</option>
+        </select>
+      </div>
+
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
+          <div className={styles.RadioLabel}>Open in Editor URL</div>
+          <CodeEditorOptions />
+        </label>
+      </div>
+
+      <div className={styles.SettingWrapper}>
+        <CodeEditorByDefault />
+        {alwaysOpenInEditor && (__IS_CHROME__ || __IS_EDGE__) ? (
+          <div>
+            To enable link handling in your browser's DevTools settings, look
+            for the option Extension -> Link Handling. Select "React Developer
+            Tools".
+          </div>
+        ) : null}
       </div>
 
       <div className={styles.SettingWrapper}>

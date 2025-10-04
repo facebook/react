@@ -52,7 +52,7 @@ test.describe('Components', () => {
 
   test('Should allow elements to be inspected', async () => {
     // Select the first list item in DevTools.
-    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
+    await devToolsUtils.selectElement(page, 'ListItem', '<List>\n<App>');
 
     // Prop names/values may not be editable based on the React version.
     // If they're not editable, make sure they degrade gracefully
@@ -93,7 +93,9 @@ test.describe('Components', () => {
 
         const name = isEditable.name
           ? existingNameElements[0].value
-          : existingNameElements[0].innerText;
+          : existingNameElements[0].innerText
+              // remove trailing colon
+              .slice(0, -1);
         const value = isEditable.value
           ? existingValueElements[0].value
           : existingValueElements[0].innerText;
@@ -119,7 +121,7 @@ test.describe('Components', () => {
     runOnlyForReactRange('>=16.8');
 
     // Select the first list item in DevTools.
-    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp', true);
+    await devToolsUtils.selectElement(page, 'ListItem', '<List>\n<App>', true);
 
     // Then read the inspected values.
     const sourceText = await page.evaluate(() => {
@@ -142,7 +144,7 @@ test.describe('Components', () => {
     runOnlyForReactRange('>=16.8');
 
     // Select the first list item in DevTools.
-    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
+    await devToolsUtils.selectElement(page, 'ListItem', '<List>\n<App>');
 
     // Then edit the label prop.
     await page.evaluate(() => {
@@ -177,7 +179,7 @@ test.describe('Components', () => {
     runOnlyForReactRange('>=16.8');
 
     // Select the List component DevTools.
-    await devToolsUtils.selectElement(page, 'List', 'App');
+    await devToolsUtils.selectElement(page, 'List', '<App>');
 
     // Then click to load and parse hook names.
     await devToolsUtils.clickButton(page, 'LoadHookNamesButton');

@@ -269,7 +269,14 @@ class PropertyPathRegistry {
       CompilerError.invariant(reactive === rootNode.fullPath.reactive, {
         reason:
           '[HoistablePropertyLoads] Found inconsistencies in `reactive` flag when deduping identifier reads within the same scope',
-        loc: identifier.loc,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: identifier.loc,
+            message: null,
+          },
+        ],
       });
     }
     return rootNode;
@@ -447,6 +454,32 @@ function collectNonNullsInBlocks(
             assumedNonNullObjects.add(entry);
           }
         }
+      } else if (
+        fn.env.config.enablePreserveExistingMemoizationGuarantees &&
+        instr.value.kind === 'StartMemoize' &&
+        instr.value.deps != null
+      ) {
+        for (const dep of instr.value.deps) {
+          if (dep.root.kind === 'NamedLocal') {
+            if (
+              !isImmutableAtInstr(dep.root.value.identifier, instr.id, context)
+            ) {
+              continue;
+            }
+            for (let i = 0; i < dep.path.length; i++) {
+              const pathEntry = dep.path[i]!;
+              if (pathEntry.optional) {
+                break;
+              }
+              const depNode = context.registry.getOrCreateProperty({
+                identifier: dep.root.value.identifier,
+                path: dep.path.slice(0, i),
+                reactive: dep.root.value.reactive,
+              });
+              assumedNonNullObjects.add(depNode);
+            }
+          }
+        }
       }
     }
 
@@ -498,7 +531,14 @@ function propagateNonNull(
     if (node == null) {
       CompilerError.invariant(false, {
         reason: `Bad node ${nodeId}, kind: ${direction}`,
-        loc: GeneratedSource,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: GeneratedSource,
+            message: null,
+          },
+        ],
       });
     }
     const neighbors = Array.from(
@@ -570,7 +610,14 @@ function propagateNonNull(
     CompilerError.invariant(i++ < 100, {
       reason:
         '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 100 loops',
-      loc: GeneratedSource,
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
     });
 
     changed = false;
@@ -602,7 +649,13 @@ export function assertNonNull<T extends NonNullable<U>, U>(
   CompilerError.invariant(value != null, {
     reason: 'Unexpected null',
     description: source != null ? `(from ${source})` : null,
-    loc: GeneratedSource,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
   });
   return value;
 }

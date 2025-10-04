@@ -26,6 +26,7 @@ import {
   ActivityComponent,
   SuspenseComponent,
   OffscreenComponent,
+  Fragment,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 
@@ -405,6 +406,71 @@ export function getFragmentParentHostFiber(fiber: Fiber): null | Fiber {
   return null;
 }
 
+export function fiberIsPortaledIntoHost(fiber: Fiber): boolean {
+  let foundPortalParent = false;
+  let parent = fiber.return;
+  while (parent !== null) {
+    if (parent.tag === HostPortal) {
+      foundPortalParent = true;
+    }
+    if (parent.tag === HostRoot || parent.tag === HostComponent) {
+      break;
+    }
+    parent = parent.return;
+  }
+  return foundPortalParent;
+}
+
+export function getFragmentInstanceSiblings(
+  fiber: Fiber,
+): [Fiber | null, Fiber | null] {
+  const result: [Fiber | null, Fiber | null] = [null, null];
+  const parentHostFiber = getFragmentParentHostFiber(fiber);
+  if (parentHostFiber === null) {
+    return result;
+  }
+
+  findFragmentInstanceSiblings(result, fiber, parentHostFiber.child);
+  return result;
+}
+
+function findFragmentInstanceSiblings(
+  result: [Fiber | null, Fiber | null],
+  self: Fiber,
+  child: null | Fiber,
+  foundSelf: boolean = false,
+): boolean {
+  while (child !== null) {
+    if (child === self) {
+      foundSelf = true;
+      if (child.sibling) {
+        child = child.sibling;
+      } else {
+        return true;
+      }
+    }
+    if (child.tag === HostComponent) {
+      if (foundSelf) {
+        result[1] = child;
+        return true;
+      } else {
+        result[0] = child;
+      }
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip hidden subtrees
+    } else {
+      if (findFragmentInstanceSiblings(result, self, child.child, foundSelf)) {
+        return true;
+      }
+    }
+    child = child.sibling;
+  }
+  return false;
+}
+
 export function getInstanceFromHostFiber<I>(fiber: Fiber): I {
   switch (fiber.tag) {
     case HostComponent:
@@ -443,22 +509,38 @@ function findNextSibling(child: Fiber): boolean {
   return true;
 }
 
-export function isFiberContainedBy(
-  maybeChild: Fiber,
-  maybeParent: Fiber,
+export function isFiberContainedByFragment(
+  fiber: Fiber,
+  fragmentFiber: Fiber,
 ): boolean {
-  let parent = maybeParent.return;
-  if (parent === maybeChild || parent === maybeChild.alternate) {
-    return true;
-  }
-  while (parent !== null && parent !== maybeChild) {
+  let current: Fiber | null = fiber;
+  while (current !== null) {
     if (
-      (parent.tag === HostComponent || parent.tag === HostRoot) &&
-      (parent.return === maybeChild || parent.return === maybeChild.alternate)
+      current.tag === Fragment &&
+      (current === fragmentFiber || current.alternate === fragmentFiber)
     ) {
       return true;
     }
-    parent = parent.return;
+    current = current.return;
+  }
+  return false;
+}
+
+export function isFragmentContainedByFiber(
+  fragmentFiber: Fiber,
+  otherFiber: Fiber,
+): boolean {
+  let current: Fiber | null = fragmentFiber;
+  const fiberHostParent: Fiber | null =
+    getFragmentParentHostFiber(fragmentFiber);
+  while (current !== null) {
+    if (
+      (current.tag === HostComponent || current.tag === HostRoot) &&
+      (current === fiberHostParent || current.alternate === fiberHostParent)
+    ) {
+      return true;
+    }
+    current = current.return;
   }
   return false;
 }

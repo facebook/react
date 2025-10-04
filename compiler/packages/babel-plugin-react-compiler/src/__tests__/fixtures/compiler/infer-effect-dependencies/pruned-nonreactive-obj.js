@@ -1,6 +1,6 @@
 // @inferEffectDependencies
 import {useIdentity, mutate, makeObject} from 'shared-runtime';
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 
 /**
  * When a semantically non-reactive value has a pruned scope (i.e. the object
@@ -44,5 +44,5 @@ function PrunedNonReactive() {
   useIdentity(null);
   mutate(obj);
 
-  useEffect(() => print(obj.value));
+  useEffect(() => print(obj.value), AUTODEPS);
 }

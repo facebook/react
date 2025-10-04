@@ -119,7 +119,13 @@ function parseAliasingSignatureConfig(
     CompilerError.invariant(!lifetimes.has(temp), {
       reason: `Invalid type configuration for module`,
       description: `Expected aliasing signature to have unique names for receiver, params, rest, returns, and temporaries in module '${moduleName}'`,
-      loc,
+      details: [
+        {
+          kind: 'error',
+          loc,
+          message: null,
+        },
+      ],
     });
     const place = signatureArgument(lifetimes.size);
     lifetimes.set(temp, place);
@@ -130,7 +136,13 @@ function parseAliasingSignatureConfig(
     CompilerError.invariant(place != null, {
       reason: `Invalid type configuration for module`,
       description: `Expected aliasing signature effects to reference known names from receiver/params/rest/returns/temporaries, but '${temp}' is not a known name in '${moduleName}'`,
-      loc,
+      details: [
+        {
+          kind: 'error',
+          loc,
+          message: null,
+        },
+      ],
     });
     return place;
   }
@@ -142,6 +154,7 @@ function parseAliasingSignatureConfig(
   const effects = typeConfig.effects.map(
     (effect: AliasingEffectConfig): AliasingEffect => {
       switch (effect.kind) {
+        case 'ImmutableCapture':
         case 'CreateFrom':
         case 'Capture':
         case 'Alias':
@@ -264,7 +277,13 @@ function addShape(
   CompilerError.invariant(!registry.has(id), {
     reason: `[ObjectShape] Could not add shape to registry: name ${id} already exists.`,
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   registry.set(id, shape);
@@ -331,6 +350,7 @@ export type FunctionSignature = {
   mutableOnlyIfOperandsAreMutable?: boolean;
 
   impure?: boolean;
+  knownIncompatible?: string | null | undefined;
 
   canonicalName?: string;
 
@@ -384,6 +404,7 @@ export const BuiltInFireId = 'BuiltInFire';
 export const BuiltInFireFunctionId = 'BuiltInFireFunction';
 export const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
 export const BuiltinEffectEventId = 'BuiltInEffectEventFunction';
+export const BuiltInAutodepsId = 'BuiltInAutoDepsId';
 
 // See getReanimatedModuleType() in Globals.ts — this is part of supporting Reanimated's ref-like types
 export const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
@@ -1209,6 +1230,8 @@ addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
   ['*', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
+
+addObject(BUILTIN_SHAPES, ReanimatedSharedValueId, []);
 
 addFunction(
   BUILTIN_SHAPES,

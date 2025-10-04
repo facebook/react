@@ -37,11 +37,6 @@ import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
-import {
-  isFiberContainedBy,
-  isFiberFollowing,
-  isFiberPreceding,
-} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 export {
   setCurrentUpdatePriority,
@@ -66,10 +61,16 @@ import {
 import {
   traverseFragmentInstance,
   getFragmentParentHostFiber,
-  getNextSiblingHostFiber,
   getInstanceFromHostFiber,
+  isFiberFollowing,
+  isFiberPreceding,
+  getFragmentInstanceSiblings,
   traverseFragmentInstanceDeeply,
+  fiberIsPortaledIntoHost,
+  isFiberContainedByFragment,
+  isFragmentContainedByFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
+import {compareDocumentPositionForEmptyFragment} from 'shared/ReactDOMFragmentRefShared';
 
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -123,6 +124,8 @@ import {
   enableSrcObject,
   enableViewTransition,
   enableHydrationChangeEvent,
+  enableFragmentRefsScrollIntoView,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -141,6 +144,7 @@ import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 export {default as rendererVersion} from 'shared/ReactVersion';
 
 import noop from 'shared/noop';
+import estimateBandwidth from './estimateBandwidth';
 
 export const rendererPackageName = 'react-dom';
 export const extraDevToolsConfig = null;
@@ -242,10 +246,10 @@ export type TransitionStatus = FormStatus;
 
 export type ViewTransitionInstance = {
   name: string,
-  group: Animatable,
-  imagePair: Animatable,
-  old: Animatable,
-  new: Animatable,
+  group: mixin$Animatable,
+  imagePair: mixin$Animatable,
+  old: mixin$Animatable,
+  new: mixin$Animatable,
 };
 
 type SelectionInformation = {
@@ -746,7 +750,7 @@ export const scheduleTimeout: any =
   typeof setTimeout === 'function' ? setTimeout : (undefined: any);
 export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
-export const noTimeout = -1;
+export const noTimeout: -1 = -1;
 const localPromise = typeof Promise === 'function' ? Promise : undefined;
 const localRequestAnimationFrame =
   typeof requestAnimationFrame === 'function'
@@ -1367,14 +1371,23 @@ function warnForBlockInsideInline(instance: HTMLElement) {
         node.nodeType === ELEMENT_NODE &&
         getComputedStyle((node: any)).display === 'block'
       ) {
-        console.error(
-          "You're about to start a <ViewTransition> around a display: inline " +
-            'element <%s>, which itself has a display: block element <%s> inside it. ' +
-            'This might trigger a bug in Safari which causes the View Transition to ' +
-            'be skipped with a duplicate name error.\n' +
-            'https://bugs.webkit.org/show_bug.cgi?id=290923',
-          instance.tagName.toLocaleLowerCase(),
-          (node: any).tagName.toLocaleLowerCase(),
+        const fiber =
+          getInstanceFromNode(node) || getInstanceFromNode(instance);
+        runWithFiberInDEV(
+          fiber,
+          (parentTag: string, childTag: string) => {
+            console.error(
+              "You're about to start a <ViewTransition> around a display: inline " +
+                'element <%s>, which itself has a display: block element <%s> inside it. ' +
+                'This might trigger a bug in Safari which causes the View Transition to ' +
+                'be skipped with a duplicate name error.\n' +
+                'https://bugs.webkit.org/show_bug.cgi?id=290923',
+              parentTag.toLocaleLowerCase(),
+              childTag.toLocaleLowerCase(),
+            );
+          },
+          instance.tagName,
+          (node: any).tagName,
         );
         break;
       }
@@ -1430,7 +1443,10 @@ export function applyViewTransitionName(
     // simple case by converting it automatically to display: inline-block.
     // https://bugs.webkit.org/show_bug.cgi?id=290923
     const rects = instance.getClientRects();
-    if (countClientRects(rects) === 1) {
+    if (
+      // $FlowFixMe[incompatible-call]
+      countClientRects(rects) === 1
+    ) {
       // If the instance has a single client rect, that means that it can be
       // expressed as a display: inline-block or block.
       // This will cause layout thrash but we live with it since inline view transitions
@@ -1535,6 +1551,7 @@ export function cancelViewTransitionName(
   if (documentElement !== null) {
     documentElement.animate(
       {opacity: [0, 0], pointerEvents: ['none', 'none']},
+      // $FlowFixMe[incompatible-call]
       {
         duration: 0,
         fill: 'forwards',
@@ -1571,6 +1588,7 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     documentElement.style.viewTransitionName = 'none';
     documentElement.animate(
       {opacity: [0, 0], pointerEvents: ['none', 'none']},
+      // $FlowFixMe[incompatible-call]
       {
         duration: 0,
         fill: 'forwards',
@@ -1586,6 +1604,7 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     // whatever is below the animation.
     documentElement.animate(
       {width: [0, 0], height: [0, 0]},
+      // $FlowFixMe[incompatible-call]
       {
         duration: 0,
         fill: 'forwards',
@@ -1970,6 +1989,7 @@ export function hasInstanceAffectedParent(
 function cancelAllViewTransitionAnimations(scope: Element) {
   // In Safari, we need to manually cancel all manually start animations
   // or it'll block or interfer with future transitions.
+  // $FlowFixMe[prop-missing]
   const animations = scope.getAnimations({subtree: true});
   for (let i = 0; i < animations.length; i++) {
     const anim = animations[i];
@@ -1991,7 +2011,8 @@ function cancelAllViewTransitionAnimations(scope: Element) {
 // an issue when it's a new load and slow, yet long enough that you have a chance to load
 // it. Otherwise we wait for no reason. The assumption here is that you likely have
 // either cached the font or preloaded it earlier.
-const SUSPENSEY_FONT_TIMEOUT = 500;
+// This timeout is also used for Suspensey Images when they're blocking a View Transition.
+const SUSPENSEY_FONT_AND_IMAGE_TIMEOUT = 500;
 
 function customizeViewTransitionError(
   error: Object,
@@ -2037,23 +2058,16 @@ function customizeViewTransitionError(
           error.message ===
             'Skipping view transition because document visibility state has become hidden.' ||
           error.message ===
-            'Skipping view transition because viewport size changed.'
+            'Skipping view transition because viewport size changed.' ||
+          // Chrome uses a generic error message instead of specific reasons. It will log a
+          // more specific reason in the console but the user might not look there.
+          // Some of these errors are important to surface like duplicate name errors but
+          // it's too noisy for unactionable cases like the document was hidden. Therefore,
+          // we hide all of them and hopefully it surfaces in another browser.
+          error.message === 'Transition was aborted because of invalid state'
         ) {
           // Skip logging this. This is not considered an error.
           return null;
-        }
-        if (__DEV__) {
-          if (
-            error.message === 'Transition was aborted because of invalid state'
-          ) {
-            // Chrome doesn't include the reason in the message but logs it in the console..
-            // Redirect the user to look there.
-            // eslint-disable-next-line react-internal/prod-error-codes
-            return new Error(
-              'A ViewTransition could not start. See the console for more details.',
-              {cause: error},
-            );
-          }
         }
         break;
       }
@@ -2068,7 +2082,15 @@ function forceLayout(ownerDocument: Document) {
   return (ownerDocument.documentElement: any).clientHeight;
 }
 
+function waitForImageToLoad(this: HTMLImageElement, resolve: () => void) {
+  // TODO: Use decode() instead of the load event here once the fix in
+  // https://issues.chromium.org/issues/420748301 has propagated fully.
+  this.addEventListener('load', resolve);
+  this.addEventListener('error', resolve);
+}
+
 export function startViewTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
@@ -2077,6 +2099,8 @@ export function startViewTransition(
   spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
   errorCallback: mixed => void,
+  blockedCallback: string => void, // Profiling-only
+  finishedAnimation: () => void, // Profiling-only
 ): null | RunningViewTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
@@ -2095,6 +2119,7 @@ export function startViewTransition(
         // $FlowFixMe[prop-missing]
         const previousFontLoadingStatus = ownerDocument.fonts.status;
         mutationCallback();
+        const blockingPromises: Array<Promise<any>> = [];
         if (previousFontLoadingStatus === 'loaded') {
           // Force layout calculation to trigger font loading.
           forceLayout(ownerDocument);
@@ -2106,18 +2131,59 @@ export function startViewTransition(
             // This avoids waiting for potentially unrelated fonts that were already loading before.
             // Either in an earlier transition or as part of a sync optimistic state. This doesn't
             // include preloads that happened earlier.
-            const fontsReady = Promise.race([
-              // $FlowFixMe[prop-missing]
-              ownerDocument.fonts.ready,
-              new Promise(resolve =>
-                setTimeout(resolve, SUSPENSEY_FONT_TIMEOUT),
-              ),
-            ]).then(layoutCallback, layoutCallback);
-            const allReady = pendingNavigation
-              ? Promise.allSettled([pendingNavigation.finished, fontsReady])
-              : fontsReady;
-            return allReady.then(afterMutationCallback, afterMutationCallback);
+            blockingPromises.push(ownerDocument.fonts.ready);
           }
+        }
+        const blockingIndexSnapshot = blockingPromises.length;
+        if (suspendedState !== null) {
+          // Suspend on any images that still haven't loaded and are in the viewport.
+          const suspenseyImages = suspendedState.suspenseyImages;
+          let imgBytes = 0;
+          for (let i = 0; i < suspenseyImages.length; i++) {
+            const suspenseyImage = suspenseyImages[i];
+            if (!suspenseyImage.complete) {
+              const rect = suspenseyImage.getBoundingClientRect();
+              const inViewport =
+                rect.bottom > 0 &&
+                rect.right > 0 &&
+                rect.top < ownerWindow.innerHeight &&
+                rect.left < ownerWindow.innerWidth;
+              if (inViewport) {
+                imgBytes += estimateImageBytes(suspenseyImage);
+                if (imgBytes > estimatedBytesWithinLimit) {
+                  // We don't think we'll be able to download all the images within
+                  // the timeout. Give up. Rewind to only block on fonts, if any.
+                  blockingPromises.length = blockingIndexSnapshot;
+                  break;
+                }
+                const loadingImage = new Promise(
+                  waitForImageToLoad.bind(suspenseyImage),
+                );
+                blockingPromises.push(loadingImage);
+              }
+            }
+          }
+        }
+        if (blockingPromises.length > 0) {
+          if (enableProfilerTimer) {
+            const blockedReason =
+              blockingIndexSnapshot > 0
+                ? blockingPromises.length > blockingIndexSnapshot
+                  ? 'Waiting on Fonts and Images'
+                  : 'Waiting on Fonts'
+                : 'Waiting on Images';
+            blockedCallback(blockedReason);
+          }
+          const blockingReady = Promise.race([
+            Promise.all(blockingPromises),
+            new Promise(resolve =>
+              setTimeout(resolve, SUSPENSEY_FONT_AND_IMAGE_TIMEOUT),
+            ),
+          ]).then(layoutCallback, layoutCallback);
+          const allReady = pendingNavigation
+            ? Promise.allSettled([pendingNavigation.finished, blockingReady])
+            : blockingReady;
+          return allReady.then(afterMutationCallback, afterMutationCallback);
         }
         layoutCallback();
         if (pendingNavigation) {
@@ -2137,6 +2203,7 @@ export function startViewTransition(
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
+      // $FlowFixMe[prop-missing]
       const animations = documentElement.getAnimations({subtree: true});
       for (let i = 0; i < animations.length; i++) {
         const animation = animations[i];
@@ -2212,6 +2279,11 @@ export function startViewTransition(
       spawnedWorkCallback();
     };
     const handleError = (error: mixed) => {
+      // $FlowFixMe[prop-missing]
+      if (ownerDocument.__reactViewTransition === transition) {
+        // $FlowFixMe[prop-missing]
+        ownerDocument.__reactViewTransition = null;
+      }
       try {
         error = customizeViewTransitionError(error, false);
         if (error !== null) {
@@ -2226,6 +2298,9 @@ export function startViewTransition(
         layoutCallback();
         // Skip afterMutationCallback() since we're not animating.
         spawnedWorkCallback();
+        if (enableProfilerTimer) {
+          finishedAnimation();
+        }
       }
     };
     transition.ready.then(readyCallback, handleError);
@@ -2235,6 +2310,9 @@ export function startViewTransition(
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
         ownerDocument.__reactViewTransition = null;
+      }
+      if (enableProfilerTimer) {
+        finishedAnimation();
       }
       passiveCallback();
     });
@@ -2250,6 +2328,9 @@ export function startViewTransition(
     mutationCallback();
     layoutCallback();
     // Skip afterMutationCallback(). We don't need it since we're not animating.
+    if (enableProfilerTimer) {
+      finishedAnimation();
+    }
     spawnedWorkCallback();
     // Skip passiveCallback(). Spawned work will schedule a task.
     return null;
@@ -2266,6 +2347,7 @@ function mergeTranslate(translateA: ?string, translateB: ?string): string {
     return translateB || '';
   }
   if (!translateB || translateB === 'none') {
+    // $FlowFixMe[constant-condition]
     return translateA || '';
   }
   const partsA = translateA.split(' ');
@@ -2383,6 +2465,7 @@ function animateGesture(
   const reverse = rangeStart > rangeEnd;
   if (timeline instanceof AnimationTimeline) {
     // Native Timeline
+    // $FlowFixMe[incompatible-call]
     targetElement.animate(keyframes, {
       pseudoElement: pseudoElement,
       // Set the timeline to the current gesture timeline to drive the updates.
@@ -2403,6 +2486,7 @@ function animateGesture(
     });
   } else {
     // Custom Timeline
+    // $FlowFixMe[incompatible-call]
     const animation = targetElement.animate(keyframes, {
       pseudoElement: pseudoElement,
       // We reset all easing functions to linear so that it feels like you
@@ -2427,6 +2511,7 @@ function animateGesture(
 }
 
 export function startGestureTransition(
+  suspendedState: null | SuspendedState,
   rootContainer: Container,
   timeline: GestureTimeline,
   rangeStart: number,
@@ -2435,6 +2520,7 @@ export function startGestureTransition(
   mutationCallback: () => void,
   animateCallback: () => void,
   errorCallback: mixed => void,
+  finishedAnimation: () => void, // Profiling-only
 ): null | RunningViewTransition {
   const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
@@ -2456,6 +2542,7 @@ export function startGestureTransition(
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
+      // $FlowFixMe[prop-missing]
       const animations = documentElement.getAnimations({subtree: true});
       // First do a pass to collect all known group and new items so we can look
       // up if they exist later.
@@ -2471,8 +2558,11 @@ export function startGestureTransition(
         } else if (pseudoElement.startsWith('::view-transition')) {
           const timing = effect.getTiming();
           const duration =
+            // $FlowFixMe[prop-missing]
             typeof timing.duration === 'number' ? timing.duration : 0;
           // TODO: Consider interation count higher than 1.
+          // $FlowFixMe[prop-missing]
+          // $FlowFixMe[unsafe-addition]
           const durationWithDelay = timing.delay + duration;
           if (durationWithDelay > longestDuration) {
             longestDuration = durationWithDelay;
@@ -2532,11 +2622,17 @@ export function startGestureTransition(
           // therefore the timing is from the rangeEnd to the start.
           const timing = effect.getTiming();
           const duration =
+            // $FlowFixMe[prop-missing]
             typeof timing.duration === 'number' ? timing.duration : 0;
           let adjustedRangeStart =
+            // $FlowFixMe[unsafe-addition]
+            // $FlowFixMe[prop-missing]
             rangeEnd - (duration + timing.delay) * durationToRangeMultipler;
           let adjustedRangeEnd =
-            rangeEnd - timing.delay * durationToRangeMultipler;
+            rangeEnd -
+            // $FlowFixMe[prop-missing]
+            // $FlowFixMe[unsafe-arithmetic]
+            timing.delay * durationToRangeMultipler;
           if (
             timing.direction === 'reverse' ||
             timing.direction === 'alternate-reverse'
@@ -2594,6 +2690,7 @@ export function startGestureTransition(
       // you can swipe back again. We can prevent this by adding a paused Animation
       // that never stops. This seems to keep all running Animations alive until
       // we explicitly abort (or something forces the View Transition to cancel).
+      // $FlowFixMe[incompatible-call]
       const blockingAnim = documentElement.animate([{}, {}], {
         pseudoElement: '::view-transition',
         duration: 1,
@@ -2610,6 +2707,11 @@ export function startGestureTransition(
         ? () => requestAnimationFrame(readyCallback)
         : readyCallback;
     const handleError = (error: mixed) => {
+      // $FlowFixMe[prop-missing]
+      if (ownerDocument.__reactViewTransition === transition) {
+        // $FlowFixMe[prop-missing]
+        ownerDocument.__reactViewTransition = null;
+      }
       try {
         error = customizeViewTransitionError(error, true);
         if (error !== null) {
@@ -2624,6 +2726,9 @@ export function startGestureTransition(
         // Skip readyCallback() and go straight to animateCallbck() since we're not animating.
         // animateCallback() is still required to restore states.
         animateCallback();
+        if (enableProfilerTimer) {
+          finishedAnimation();
+        }
       }
     };
     transition.ready.then(readyForAnimations, handleError);
@@ -2638,6 +2743,12 @@ export function startGestureTransition(
         // $FlowFixMe[prop-missing]
         ownerDocument.__reactViewTransition = null;
       }
+      if (enableProfilerTimer) {
+        // Signal that the Transition was unable to continue. We do that here
+        // instead of when we stop the running View Transition to ensure that
+        // we cover cases when something else stops it early.
+        finishedAnimation();
+      }
     });
     return transition;
   } catch (x) {
@@ -2650,6 +2761,9 @@ export function startGestureTransition(
     // Run through the sequence to put state back into a consistent state.
     mutationCallback();
     animateCallback();
+    if (enableProfilerTimer) {
+      finishedAnimation();
+    }
     return null;
   }
 }
@@ -2658,7 +2772,7 @@ export function stopViewTransition(transition: RunningViewTransition) {
   transition.skipTransition();
 }
 
-interface ViewTransitionPseudoElementType extends Animatable {
+interface ViewTransitionPseudoElementType extends mixin$Animatable {
   _scope: HTMLElement;
   _selector: string;
   getComputedStyle(): CSSStyleDeclaration;
@@ -2684,7 +2798,11 @@ ViewTransitionPseudoElement.prototype.animate = function (
       ? {
           duration: options,
         }
-      : Object.assign(({}: KeyframeAnimationOptions), options);
+      : Object.assign(
+          (// $FlowFixMe[prop-missing]
+          {}: KeyframeAnimationOptions),
+          options,
+        );
   opts.pseudoElement = this._selector;
   // TODO: Handle multiple child instances.
   return this._scope.animate(keyframes, opts);
@@ -2696,7 +2814,10 @@ ViewTransitionPseudoElement.prototype.getAnimations = function (
 ): Animation[] {
   const scope = this._scope;
   const selector = this._selector;
-  const animations = scope.getAnimations({subtree: true});
+  const animations = scope.getAnimations(
+    // $FlowFixMe[prop-missing]
+    {subtree: true},
+  );
   const result = [];
   for (let i = 0; i < animations.length; i++) {
     const effect: null | {
@@ -2784,6 +2905,7 @@ export type FragmentInstanceType = {
     composed: boolean,
   }): Document | ShadowRoot | FragmentInstanceType,
   compareDocumentPosition(otherNode: Instance): number,
+  scrollIntoView(alignToTop?: boolean): void,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -2869,6 +2991,38 @@ function removeEventListenerFromChild(
   const instance = getInstanceFromHostFiber<Instance>(child);
   instance.removeEventListener(type, listener, optionsOrUseCapture);
   return false;
+}
+function normalizeListenerOptions(
+  opts: ?EventListenerOptionsOrUseCapture,
+): string {
+  if (opts == null) {
+    return '0';
+  }
+
+  if (typeof opts === 'boolean') {
+    return `c=${opts ? '1' : '0'}`;
+  }
+
+  return `c=${opts.capture ? '1' : '0'}&o=${opts.once ? '1' : '0'}&p=${opts.passive ? '1' : '0'}`;
+}
+function indexOfEventListener(
+  eventListeners: Array<StoredEventListener>,
+  type: string,
+  listener: EventListener,
+  optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
+): number {
+  for (let i = 0; i < eventListeners.length; i++) {
+    const item = eventListeners[i];
+    if (
+      item.type === type &&
+      item.listener === listener &&
+      normalizeListenerOptions(item.optionsOrUseCapture) ===
+        normalizeListenerOptions(optionsOrUseCapture)
+    ) {
+      return i;
+    }
+  }
+  return -1;
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.dispatchEvent = function (
@@ -2991,7 +3145,8 @@ FragmentInstance.prototype.unobserveUsing = function (
   this: FragmentInstanceType,
   observer: IntersectionObserver | ResizeObserver,
 ): void {
-  if (this._observers === null || !this._observers.has(observer)) {
+  const observers = this._observers;
+  if (observers === null || !observers.has(observer)) {
     if (__DEV__) {
       console.error(
         'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
@@ -2999,7 +3154,7 @@ FragmentInstance.prototype.unobserveUsing = function (
       );
     }
   } else {
-    this._observers.delete(observer);
+    observers.delete(observer);
     traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
   }
 };
@@ -3052,58 +3207,71 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   }
   const children: Array<Fiber> = [];
   traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
 
-  let result = Node.DOCUMENT_POSITION_DISCONNECTED;
   if (children.length === 0) {
-    // If the fragment has no children, we can use the parent and
-    // siblings to determine a position.
-    const parentHostInstance =
-      getInstanceFromHostFiber<Instance>(parentHostFiber);
-    const parentResult = parentHostInstance.compareDocumentPosition(otherNode);
-    result = parentResult;
-    if (parentHostInstance === otherNode) {
-      result = Node.DOCUMENT_POSITION_CONTAINS;
-    } else {
-      if (parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY) {
-        // otherNode is one of the fragment's siblings. Use the next
-        // sibling to determine if its preceding or following.
-        const nextSiblingFiber = getNextSiblingHostFiber(this._fragmentFiber);
-        if (nextSiblingFiber === null) {
-          result = Node.DOCUMENT_POSITION_PRECEDING;
-        } else {
-          const nextSiblingInstance =
-            getInstanceFromHostFiber<Instance>(nextSiblingFiber);
-          const nextSiblingResult =
-            nextSiblingInstance.compareDocumentPosition(otherNode);
-          if (
-            nextSiblingResult === 0 ||
-            nextSiblingResult & Node.DOCUMENT_POSITION_FOLLOWING
-          ) {
-            result = Node.DOCUMENT_POSITION_FOLLOWING;
-          } else {
-            result = Node.DOCUMENT_POSITION_PRECEDING;
-          }
-        }
-      }
-    }
-
-    result |= Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
-    return result;
+    return compareDocumentPositionForEmptyFragment(
+      this._fragmentFiber,
+      parentHostInstance,
+      otherNode,
+      getInstanceFromHostFiber,
+    );
   }
 
   const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
   const lastElement = getInstanceFromHostFiber<Instance>(
     children[children.length - 1],
   );
+
+  // If the fragment has been portaled into another host instance, we need to
+  // our best guess is to use the parent of the child instance, rather than
+  // the fiber tree host parent.
+  const firstInstance = getInstanceFromHostFiber<Instance>(children[0]);
+  const parentHostInstanceFromDOM = fiberIsPortaledIntoHost(this._fragmentFiber)
+    ? (firstInstance.parentElement: ?Instance)
+    : parentHostInstance;
+
+  if (parentHostInstanceFromDOM == null) {
+    return Node.DOCUMENT_POSITION_DISCONNECTED;
+  }
+
+  // Check if first and last element are actually in the expected document position
+  // before relying on them as source of truth for other contained elements
+  const firstElementIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(firstElement) &
+    Node.DOCUMENT_POSITION_CONTAINED_BY;
+  const lastElementIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(lastElement) &
+    Node.DOCUMENT_POSITION_CONTAINED_BY;
   const firstResult = firstElement.compareDocumentPosition(otherNode);
   const lastResult = lastElement.compareDocumentPosition(otherNode);
+
+  const otherNodeIsFirstOrLastChild =
+    (firstElementIsContained && firstElement === otherNode) ||
+    (lastElementIsContained && lastElement === otherNode);
+  const otherNodeIsFirstOrLastChildDisconnected =
+    (!firstElementIsContained && firstElement === otherNode) ||
+    (!lastElementIsContained && lastElement === otherNode);
+  const otherNodeIsWithinFirstOrLastChild =
+    firstResult & Node.DOCUMENT_POSITION_CONTAINED_BY ||
+    lastResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
+  const otherNodeIsBetweenFirstAndLastChildren =
+    firstElementIsContained &&
+    lastElementIsContained &&
+    firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
+    lastResult & Node.DOCUMENT_POSITION_PRECEDING;
+
+  let result = Node.DOCUMENT_POSITION_DISCONNECTED;
   if (
-    (firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
-      lastResult & Node.DOCUMENT_POSITION_PRECEDING) ||
-    otherNode === firstElement ||
-    otherNode === lastElement
+    otherNodeIsFirstOrLastChild ||
+    otherNodeIsWithinFirstOrLastChild ||
+    otherNodeIsBetweenFirstAndLastChildren
   ) {
     result = Node.DOCUMENT_POSITION_CONTAINED_BY;
+  } else if (otherNodeIsFirstOrLastChildDisconnected) {
+    // otherNode has been portaled into another container
+    result = Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
   } else {
     result = firstResult;
   }
@@ -3141,7 +3309,9 @@ function validateDocumentPositionWithFiberTree(
 ): boolean {
   const otherFiber = getClosestInstanceFromNode(otherNode);
   if (documentPosition & Node.DOCUMENT_POSITION_CONTAINED_BY) {
-    return !!otherFiber && isFiberContainedBy(fragmentFiber, otherFiber);
+    return (
+      !!otherFiber && isFiberContainedByFragment(otherFiber, fragmentFiber)
+    );
   }
   if (documentPosition & Node.DOCUMENT_POSITION_CONTAINS) {
     if (otherFiber === null) {
@@ -3149,7 +3319,7 @@ function validateDocumentPositionWithFiberTree(
       const ownerDocument = otherNode.ownerDocument;
       return otherNode === ownerDocument || otherNode === ownerDocument.body;
     }
-    return isFiberContainedBy(otherFiber, fragmentFiber);
+    return isFragmentContainedByFiber(fragmentFiber, otherFiber);
   }
   if (documentPosition & Node.DOCUMENT_POSITION_PRECEDING) {
     return (
@@ -3169,38 +3339,55 @@ function validateDocumentPositionWithFiberTree(
   return false;
 }
 
-function normalizeListenerOptions(
-  opts: ?EventListenerOptionsOrUseCapture,
-): string {
-  if (opts == null) {
-    return '0';
-  }
-
-  if (typeof opts === 'boolean') {
-    return `c=${opts ? '1' : '0'}`;
-  }
-
-  return `c=${opts.capture ? '1' : '0'}&o=${opts.once ? '1' : '0'}&p=${opts.passive ? '1' : '0'}`;
-}
-
-function indexOfEventListener(
-  eventListeners: Array<StoredEventListener>,
-  type: string,
-  listener: EventListener,
-  optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
-): number {
-  for (let i = 0; i < eventListeners.length; i++) {
-    const item = eventListeners[i];
-    if (
-      item.type === type &&
-      item.listener === listener &&
-      normalizeListenerOptions(item.optionsOrUseCapture) ===
-        normalizeListenerOptions(optionsOrUseCapture)
-    ) {
-      return i;
+if (enableFragmentRefsScrollIntoView) {
+  // $FlowFixMe[prop-missing]
+  FragmentInstance.prototype.experimental_scrollIntoView = function (
+    this: FragmentInstanceType,
+    alignToTop?: boolean,
+  ): void {
+    if (typeof alignToTop === 'object') {
+      throw new Error(
+        'FragmentInstance.experimental_scrollIntoView() does not support ' +
+          'scrollIntoViewOptions. Use the alignToTop boolean instead.',
+      );
     }
-  }
-  return -1;
+    // First, get the children nodes
+    const children: Array<Fiber> = [];
+    traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+
+    const resolvedAlignToTop = alignToTop !== false;
+
+    // If there are no children, we can use the parent and siblings to determine a position
+    if (children.length === 0) {
+      const hostSiblings = getFragmentInstanceSiblings(this._fragmentFiber);
+      const targetFiber = resolvedAlignToTop
+        ? hostSiblings[1] ||
+          hostSiblings[0] ||
+          getFragmentParentHostFiber(this._fragmentFiber)
+        : hostSiblings[0] || hostSiblings[1];
+
+      if (targetFiber === null) {
+        if (__DEV__) {
+          console.warn(
+            'You are attempting to scroll a FragmentInstance that has no ' +
+              'children, siblings, or parent. No scroll was performed.',
+          );
+        }
+        return;
+      }
+      const target = getInstanceFromHostFiber<Instance>(targetFiber);
+      target.scrollIntoView(alignToTop);
+      return;
+    }
+
+    let i = resolvedAlignToTop ? children.length - 1 : 0;
+    while (i !== (resolvedAlignToTop ? -1 : children.length)) {
+      const child = children[i];
+      const instance = getInstanceFromHostFiber<Instance>(child);
+      instance.scrollIntoView(alignToTop);
+      i += resolvedAlignToTop ? -1 : 1;
+    }
+  };
 }
 
 export function createFragmentInstance(
@@ -3535,7 +3722,14 @@ function canHydrateHydrationBoundary(
   inRootOrSingleton: boolean,
 ): null | SuspenseInstance | ActivityInstance {
   while (instance.nodeType !== COMMENT_NODE) {
-    if (!inRootOrSingleton) {
+    if (
+      instance.nodeType === ELEMENT_NODE &&
+      instance.nodeName === 'INPUT' &&
+      (instance: any).type === 'hidden'
+    ) {
+      // If we have extra hidden inputs, we don't mismatch. This allows us to
+      // embed extra form data in the original form.
+    } else if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -5319,6 +5513,7 @@ function insertStylesheet(
   let prior = last;
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
+    // $FlowFixMe[prop-missing]
     const nodePrecedence = node.dataset.precedence;
     if (nodePrecedence === precedence) {
       prior = node;
@@ -5796,17 +5991,26 @@ export function preloadResource(resource: Resource): boolean {
   return true;
 }
 
-type SuspendedState = {
+export opaque type SuspendedState = {
   stylesheets: null | Map<StylesheetResource, HoistableRoot>,
-  count: number,
+  count: number, // suspensey css and active view transitions
+  imgCount: number, // suspensey images pending to load
+  imgBytes: number, // number of bytes we estimate needing to download
+  suspenseyImages: Array<HTMLImageElement>, // instances of suspensey images (whether loaded or not)
+  waitingForImages: boolean, // false when we're no longer blocking on images
+  waitingForViewTransition: boolean,
   unsuspend: null | (() => void),
 };
-let suspendedState: null | SuspendedState = null;
 
-export function startSuspendingCommit(): void {
-  suspendedState = {
+export function startSuspendingCommit(): SuspendedState {
+  return {
     stylesheets: null,
     count: 0,
+    imgCount: 0,
+    imgBytes: 0,
+    suspenseyImages: [],
+    waitingForImages: true,
+    waitingForViewTransition: false,
     // We use a noop function when we begin suspending because if possible we want the
     // waitfor step to finish synchronously. If it doesn't we'll return a function to
     // provide the actual unsuspend function and that will get completed when the count
@@ -5815,9 +6019,18 @@ export function startSuspendingCommit(): void {
   };
 }
 
-const SUSPENSEY_IMAGE_TIMEOUT = 500;
+function estimateImageBytes(instance: HTMLImageElement): number {
+  const width: number = instance.width || 100;
+  const height: number = instance.height || 100;
+  const pixelRatio: number =
+    typeof devicePixelRatio === 'number' ? devicePixelRatio : 1;
+  const pixelsToDownload = width * height * pixelRatio;
+  const AVERAGE_BYTE_PER_PIXEL = 0.25;
+  return pixelsToDownload * AVERAGE_BYTE_PER_PIXEL;
+}
 
 export function suspendInstance(
+  state: SuspendedState,
   instance: Instance,
   type: Type,
   props: Props,
@@ -5825,41 +6038,33 @@ export function suspendInstance(
   if (!enableSuspenseyImages && !enableViewTransition) {
     return;
   }
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-  const state = suspendedState;
   if (
     // $FlowFixMe[prop-missing]
-    typeof instance.decode === 'function' &&
-    typeof setTimeout === 'function'
+    typeof instance.decode === 'function'
   ) {
     // If this browser supports decode() API, we use it to suspend waiting on the image.
     // The loading should have already started at this point, so it should be enough to
     // just call decode() which should also wait for the data to finish loading.
-    state.count++;
-    const ping = onUnsuspend.bind(state);
-    Promise.race([
-      // $FlowFixMe[prop-missing]
-      instance.decode(),
-      new Promise(resolve => setTimeout(resolve, SUSPENSEY_IMAGE_TIMEOUT)),
-    ]).then(ping, ping);
+    state.imgCount++;
+    // Estimate the byte size that we're about to download based on the width/height
+    // specified in the props. This is best practice to know ahead of time but if it's
+    // unspecified we'll fallback to a guess of 100x100 pixels.
+    if (!(instance: any).complete) {
+      state.imgBytes += estimateImageBytes((instance: any));
+      state.suspenseyImages.push((instance: any));
+    }
+    const ping = onUnsuspendImg.bind(state);
+    // $FlowFixMe[prop-missing]
+    instance.decode().then(ping, ping);
   }
 }
 
 export function suspendResource(
+  state: SuspendedState,
   hoistableRoot: HoistableRoot,
   resource: Resource,
   props: any,
 ): void {
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-  const state = suspendedState;
   if (resource.type === 'stylesheet') {
     if (typeof props.media === 'string') {
       // If we don't currently match media we avoid suspending on this resource
@@ -5939,13 +6144,10 @@ export function suspendResource(
   }
 }
 
-export function suspendOnActiveViewTransition(rootContainer: Container): void {
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
-  const state = suspendedState;
+export function suspendOnActiveViewTransition(
+  state: SuspendedState,
+  rootContainer: Container,
+): void {
   const ownerDocument =
     rootContainer.nodeType === DOCUMENT_NODE
       ? rootContainer
@@ -5956,19 +6158,23 @@ export function suspendOnActiveViewTransition(rootContainer: Container): void {
     return;
   }
   state.count++;
+  state.waitingForViewTransition = true;
   const ping = onUnsuspend.bind(state);
   activeViewTransition.finished.then(ping, ping);
 }
 
-export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
-  if (suspendedState === null) {
-    throw new Error(
-      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
-    );
-  }
+const SUSPENSEY_STYLESHEET_TIMEOUT = 60000;
 
-  const state = suspendedState;
+const SUSPENSEY_IMAGE_TIMEOUT = 800;
 
+const SUSPENSEY_IMAGE_TIME_ESTIMATE = 500;
+
+let estimatedBytesWithinLimit: number = 0;
+
+export function waitForCommitToBeReady(
+  state: SuspendedState,
+  timeoutOffset: number,
+): null | ((() => void) => () => void) {
   if (state.stylesheets && state.count === 0) {
     // We are not currently blocked but we have not inserted all stylesheets.
     // If this insertion happens and loads or errors synchronously then we can
@@ -5978,7 +6184,7 @@ export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
 
   // We need to check the count again because the inserted stylesheets may have led to new
   // tasks to wait on.
-  if (state.count > 0) {
+  if (state.count > 0 || state.imgCount > 0) {
     return commit => {
       // We almost never want to show content before its styles have loaded. But
       // eventually we will give up and allow unstyled content. So this number is
@@ -5995,35 +6201,94 @@ export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
           state.unsuspend = null;
           unsuspend();
         }
-      }, 60000); // one minute
+      }, SUSPENSEY_STYLESHEET_TIMEOUT + timeoutOffset);
+
+      if (state.imgBytes > 0 && estimatedBytesWithinLimit === 0) {
+        // Estimate how many bytes we can download in 500ms.
+        const mbps = estimateBandwidth();
+        estimatedBytesWithinLimit = mbps * 125 * SUSPENSEY_IMAGE_TIME_ESTIMATE;
+      }
+      // If we have more images to download than we expect to fit in the timeout, then
+      // don't wait for images longer than 50ms. The 50ms lets us still do decoding and
+      // hitting caches if it turns out that they're already in the HTTP cache.
+      const imgTimeout =
+        state.imgBytes > estimatedBytesWithinLimit
+          ? 50
+          : SUSPENSEY_IMAGE_TIMEOUT;
+      const imgTimer = setTimeout(() => {
+        // We're no longer blocked on images. If CSS resolves after this we can commit.
+        state.waitingForImages = false;
+        if (state.count === 0) {
+          if (state.stylesheets) {
+            insertSuspendedStylesheets(state, state.stylesheets);
+          }
+          if (state.unsuspend) {
+            const unsuspend = state.unsuspend;
+            state.unsuspend = null;
+            unsuspend();
+          }
+        }
+      }, imgTimeout + timeoutOffset);
 
       state.unsuspend = commit;
 
       return () => {
         state.unsuspend = null;
         clearTimeout(stylesheetTimer);
+        clearTimeout(imgTimer);
       };
     };
   }
   return null;
 }
 
-function onUnsuspend(this: SuspendedState) {
-  this.count--;
-  if (this.count === 0) {
-    if (this.stylesheets) {
+export function getSuspendedCommitReason(
+  state: SuspendedState,
+  rootContainer: Container,
+): null | string {
+  if (state.waitingForViewTransition) {
+    return 'Waiting for the previous Animation';
+  }
+  if (state.count > 0) {
+    if (state.imgCount > 0) {
+      return 'Suspended on CSS and Images';
+    }
+    return 'Suspended on CSS';
+  }
+  if (state.imgCount === 1) {
+    return 'Suspended on an Image';
+  }
+  if (state.imgCount > 0) {
+    return 'Suspended on Images';
+  }
+  return null;
+}
+
+function checkIfFullyUnsuspended(state: SuspendedState) {
+  if (state.count === 0 && (state.imgCount === 0 || !state.waitingForImages)) {
+    if (state.stylesheets) {
       // If we haven't actually inserted the stylesheets yet we need to do so now before starting the commit.
       // The reason we do this after everything else has finished is because we want to have all the stylesheets
       // load synchronously right before mutating. Ideally the new styles will cause a single recalc only on the
       // new tree. When we filled up stylesheets we only inlcuded stylesheets with matching media attributes so we
       // wait for them to load before actually continuing. We expect this to increase the count above zero
-      insertSuspendedStylesheets(this, this.stylesheets);
-    } else if (this.unsuspend) {
-      const unsuspend = this.unsuspend;
-      this.unsuspend = null;
+      insertSuspendedStylesheets(state, state.stylesheets);
+    } else if (state.unsuspend) {
+      const unsuspend = state.unsuspend;
+      state.unsuspend = null;
       unsuspend();
     }
   }
+}
+
+function onUnsuspend(this: SuspendedState) {
+  this.count--;
+  checkIfFullyUnsuspended(this);
+}
+
+function onUnsuspendImg(this: SuspendedState) {
+  this.imgCount--;
+  checkIfFullyUnsuspended(this);
 }
 
 // We use a value that is type distinct from precedence to track which one is last.
@@ -6094,7 +6359,11 @@ function insertStylesheetIntoRoot(
         // and will be hoisted by the Fizz runtime imminently.
         node.getAttribute('media') !== 'not all'
       ) {
-        precedences.set(node.dataset.precedence, node);
+        precedences.set(
+          // $FlowFixMe[prop-missing]
+          node.dataset.precedence,
+          node,
+        );
         last = node;
       }
     }

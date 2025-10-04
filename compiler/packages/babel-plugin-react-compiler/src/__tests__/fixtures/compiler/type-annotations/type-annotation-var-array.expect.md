@@ -25,25 +25,17 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableUseTypeAnnotations
 function Component(props) {
-  const $ = _c(4);
+  const $ = _c(2);
   let t0;
   if ($[0] !== props.id) {
-    t0 = makeArray(props.id);
+    const x = makeArray(props.id);
+    t0 = x.at(0);
     $[0] = props.id;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const x = t0;
-  let t1;
-  if ($[2] !== x) {
-    t1 = x.at(0);
-    $[2] = x;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  const y = t1;
+  const y = t0;
   return y;
 }
 

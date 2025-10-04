@@ -1,11 +1,11 @@
 // @inferEffectDependencies @panicThreshold:"none" @loggerTestOnly
 
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, AUTODEPS} from 'react';
 import {print} from 'shared-runtime';
 
 function Component({arrRef}) {
   // Avoid taking arr.current as a dependency
-  useEffect(() => print(arrRef.current));
+  useEffect(() => print(arrRef.current), AUTODEPS);
   arrRef.current.val = 2;
   return arrRef;
 }
