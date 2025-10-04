@@ -6,7 +6,7 @@ declare module 'minimist' {
     string?: string | Array<string>,
     boolean?: boolean | string | Array<string>,
     alias?: {[arg: string]: string | Array<string>, ...},
-    default?: {[arg: string]: any, ...},
+    default?: {[arg: string]: any, },
     stopEarly?: boolean,
     // TODO: Strings as keys don't work...
     // '--'? boolean,
