@@ -519,7 +519,17 @@ function validateNoRefAccessInRenderImpl(
              */
             if (!didError) {
               const isRefLValue = isUseRefType(instr.lvalue.identifier);
-              for (const operand of eachInstructionValueOperand(instr.value)) {
+              const operands = Array.from(eachInstructionValueOperand(instr.value));
+              const hasNonRefOperand = operands.some(operand => {
+                const type = destructure(env.get(operand.identifier.id));
+                return (
+                  type == null ||
+                  (type.kind !== 'Ref' &&
+                    type.kind !== 'RefValue' &&
+                    !(type.kind === 'Structure' && type.fn?.readRefEffect))
+                );
+              });
+              for (const operand of operands) {
                 /**
                  * By default we check that function call operands are not refs,
                  * ref values, or functions that can access refs.
@@ -561,12 +571,22 @@ function validateNoRefAccessInRenderImpl(
                    */
                   validateNoRefValueAccess(errors, env, operand);
                 } else {
-                  validateNoRefPassedToFunction(
-                    errors,
-                    env,
-                    operand,
-                    operand.loc,
-                  );
+                  const isRefRelated = (() => {
+                    const type = destructure(env.get(operand.identifier.id));
+                    return (
+                      type?.kind === 'Ref' ||
+                      type?.kind === 'RefValue' ||
+                      (type?.kind === 'Structure' && type.fn?.readRefEffect)
+                    );
+                  })();
+                  if (!hasNonRefOperand || !isRefRelated) {
+                    validateNoRefPassedToFunction(
+                      errors,
+                      env,
+                      operand,
+                      operand.loc,
+                    );
+                  }
                 }
               }
             }
