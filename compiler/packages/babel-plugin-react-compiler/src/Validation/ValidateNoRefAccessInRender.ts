@@ -579,7 +579,7 @@ function validateNoRefAccessInRenderImpl(
                       (type?.kind === 'Structure' && type.fn?.readRefEffect)
                     );
                   })();
-                  if (!hasNonRefOperand || !isRefRelated) {
+                  if (isRefRelated && !hasNonRefOperand) {
                     validateNoRefPassedToFunction(
                       errors,
                       env,
