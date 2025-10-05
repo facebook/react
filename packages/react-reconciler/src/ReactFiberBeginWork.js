@@ -649,6 +649,7 @@ function updateOffscreenComponent(
           ? mergeLanes(prevState.baseLanes, renderLanes)
           : renderLanes;
 
+      let remainingChildLanes;
       if (current !== null) {
         // Reset to the current children
         let currentChild = (workInProgress.child = current.child);
@@ -666,13 +667,12 @@ function updateOffscreenComponent(
           currentChild = currentChild.sibling;
         }
         const lanesWeJustAttempted = nextBaseLanes;
-        const remainingChildLanes = removeLanes(
+        remainingChildLanes = removeLanes(
           currentChildLanes,
           lanesWeJustAttempted,
         );
-        workInProgress.childLanes = remainingChildLanes;
       } else {
-        workInProgress.childLanes = NoLanes;
+        remainingChildLanes = NoLanes;
         workInProgress.child = null;
       }
 
@@ -681,6 +681,7 @@ function updateOffscreenComponent(
         workInProgress,
         nextBaseLanes,
         renderLanes,
+        remainingChildLanes,
       );
     }
 
@@ -707,8 +708,9 @@ function updateOffscreenComponent(
       // and resume this tree later.
 
       // Schedule this fiber to re-render at Offscreen priority
-      workInProgress.lanes = workInProgress.childLanes =
-        laneToLanes(OffscreenLane);
+
+      const remainingChildLanes = (workInProgress.lanes =
+        laneToLanes(OffscreenLane));
 
       // Include the base lanes from the last render
       const nextBaseLanes =
@@ -721,6 +723,7 @@ function updateOffscreenComponent(
         workInProgress,
         nextBaseLanes,
         renderLanes,
+        remainingChildLanes,
       );
     } else {
       // This is the second render. The surrounding visible content has already
@@ -826,6 +829,7 @@ function deferHiddenOffscreenComponent(
   workInProgress: Fiber,
   nextBaseLanes: Lanes,
   renderLanes: Lanes,
+  remainingChildLanes: Lanes,
 ) {
   const nextState: OffscreenState = {
     baseLanes: nextBaseLanes,
@@ -855,6 +859,13 @@ function deferHiddenOffscreenComponent(
       renderLanes,
     );
   }
+
+  // We override the remaining child lanes to be the subset that we computed
+  // on the outside. We need to do this after propagating the context
+  // because propagateParentContextChangesToDeferredTree may schedule
+  // work which bubbles all the way up to the root and updates our child lanes.
+  // We want to dismiss that since we're not going to work on it yet.
+  workInProgress.childLanes = remainingChildLanes;
 
   return null;
 }

@@ -782,13 +782,14 @@ const HTML_COLGROUP_MODE = 9;
 
 type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-const NO_SCOPE = /*         */ 0b000000;
-const NOSCRIPT_SCOPE = /*   */ 0b000001;
-const PICTURE_SCOPE = /*    */ 0b000010;
-const FALLBACK_SCOPE = /*   */ 0b000100;
-const EXIT_SCOPE = /*       */ 0b001000; // A direct Instance below a Suspense fallback is the only thing that can "exit"
-const ENTER_SCOPE = /*      */ 0b010000; // A direct Instance below Suspense content is the only thing that can "enter"
-const UPDATE_SCOPE = /*     */ 0b100000; // Inside a scope that applies "update" ViewTransitions if anything mutates here.
+const NO_SCOPE = /*         */ 0b0000000;
+const NOSCRIPT_SCOPE = /*   */ 0b0000001;
+const PICTURE_SCOPE = /*    */ 0b0000010;
+const FALLBACK_SCOPE = /*   */ 0b0000100;
+const EXIT_SCOPE = /*       */ 0b0001000; // A direct Instance below a Suspense fallback is the only thing that can "exit"
+const ENTER_SCOPE = /*      */ 0b0010000; // A direct Instance below Suspense content is the only thing that can "enter"
+const UPDATE_SCOPE = /*     */ 0b0100000; // Inside a scope that applies "update" ViewTransitions if anything mutates here.
+const APPEARING_SCOPE = /*  */ 0b1000000; // Below Suspense content subtree which might appear in an "enter" animation or "shared" animation.
 
 // Everything not listed here are tracked for the whole subtree as opposed to just
 // until the next Instance.
@@ -987,11 +988,20 @@ export function getSuspenseContentFormatContext(
   resumableState: ResumableState,
   parentContext: FormatContext,
 ): FormatContext {
+  const viewTransition = getSuspenseViewTransition(
+    parentContext.viewTransition,
+  );
+  let subtreeScope = parentContext.tagScope | ENTER_SCOPE;
+  if (viewTransition !== null && viewTransition.share !== 'none') {
+    // If we have a ViewTransition wrapping Suspense then the appearing animation
+    // will be applied just like an "enter" below. Mark it as animating.
+    subtreeScope |= APPEARING_SCOPE;
+  }
   return createFormatContext(
     parentContext.insertionMode,
     parentContext.selectedValue,
-    parentContext.tagScope | ENTER_SCOPE,
-    getSuspenseViewTransition(parentContext.viewTransition),
+    subtreeScope,
+    viewTransition,
   );
 }
 
@@ -1062,6 +1072,9 @@ export function getViewTransitionFormatContext(
     subtreeScope |= UPDATE_SCOPE;
   } else {
     subtreeScope &= ~UPDATE_SCOPE;
+  }
+  if (enter !== 'none') {
+    subtreeScope |= APPEARING_SCOPE;
   }
   return createFormatContext(
     parentContext.insertionMode,
@@ -3289,6 +3302,7 @@ function pushImg(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  hoistableState: null | HoistableState,
   formatContext: FormatContext,
 ): null {
   const pictureOrNoScriptTagInScope =
@@ -3321,6 +3335,19 @@ function pushImg(
   ) {
     // We have a suspensey image and ought to preload it to optimize the loading of display blocking
     // resumableState.
+
+    if (hoistableState !== null) {
+      // Mark this boundary's state as having suspensey images.
+      // Only do that if we have a ViewTransition that might trigger a parent Suspense boundary
+      // to animate its appearing. Since that's the only case we'd actually apply suspensey images
+      // for SSR reveals.
+      const isInSuspenseWithEnterViewTransition =
+        formatContext.tagScope & APPEARING_SCOPE;
+      if (isInSuspenseWithEnterViewTransition) {
+        hoistableState.suspenseyImages = true;
+      }
+    }
+
     const sizes = typeof props.sizes === 'string' ? props.sizes : undefined;
     const key = getImageResourceKey(src, srcSet, sizes);
 
@@ -4255,7 +4282,14 @@ export function pushStartInstance(
       return pushStartPreformattedElement(target, props, type, formatContext);
     }
     case 'img': {
-      return pushImg(target, props, resumableState, renderState, formatContext);
+      return pushImg(
+        target,
+        props,
+        resumableState,
+        renderState,
+        hoistableState,
+        formatContext,
+      );
     }
     // Omitted close tags
     case 'base':
@@ -6125,6 +6159,7 @@ type StylesheetResource = {
 export type HoistableState = {
   styles: Set<StyleQueue>,
   stylesheets: Set<StylesheetResource>,
+  suspenseyImages: boolean,
 };
 
 export type StyleQueue = {
@@ -6138,6 +6173,7 @@ export function createHoistableState(): HoistableState {
   return {
     styles: new Set(),
     stylesheets: new Set(),
+    suspenseyImages: false,
   };
 }
 
@@ -6995,6 +7031,18 @@ export function hoistHoistables(
 ): void {
   childState.styles.forEach(hoistStyleQueueDependency, parentState);
   childState.stylesheets.forEach(hoistStylesheetDependency, parentState);
+  if (childState.suspenseyImages) {
+    // If the child has suspensey images, the parent now does too if it's inlined.
+    // Similarly, if a SuspenseList row has a suspensey image then effectively
+    // the next row should be blocked on it as well since the next row can't show
+    // earlier. In practice, since the child will be outlined this transferring
+    // may never matter but is conceptually correct.
+    parentState.suspenseyImages = true;
+  }
+}
+
+export function hasSuspenseyContent(hoistableState: HoistableState): boolean {
+  return hoistableState.stylesheets.size > 0 || hoistableState.suspenseyImages;
 }
 
 // This function is called at various times depending on whether we are rendering

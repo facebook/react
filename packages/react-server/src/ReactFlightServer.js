@@ -49,6 +49,7 @@ import type {
   Hints,
   HintCode,
   HintModel,
+  FormatContext,
 } from './ReactFlightServerConfig';
 import type {ThenableState} from './ReactFlightThenable';
 import type {
@@ -88,6 +89,8 @@ import {
   supportsRequestStorage,
   requestStorage,
   createHints,
+  createRootFormatContext,
+  getChildFormatContext,
   initAsyncDebugInfo,
   markAsyncSequenceRootTask,
   getCurrentAsyncSequence,
@@ -525,6 +528,7 @@ type Task = {
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
   keyPath: null | string, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
+  formatContext: FormatContext, // an approximate parent context from host components
   thenableState: ThenableState | null,
   timed: boolean, // Profiling-only. Whether we need to track the completion time of this task.
   time: number, // Profiling-only. The last time stamp emitted for this task.
@@ -758,6 +762,7 @@ function RequestInstance(
     model,
     null,
     false,
+    createRootFormatContext(),
     abortSet,
     timeOrigin,
     null,
@@ -980,6 +985,7 @@ function serializeThenable(
     (thenable: any), // will be replaced by the value before we retry. used for debug info.
     task.keyPath, // the server component sequence continues through Promise-as-a-child.
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -1102,6 +1108,7 @@ function serializeReadableStream(
     task.model,
     task.keyPath,
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -1197,6 +1204,7 @@ function serializeAsyncIterable(
     task.model,
     task.keyPath,
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -2028,6 +2036,7 @@ function deferTask(request: Request, task: Task): ReactJSONValue {
     task.model, // the currently rendering element
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -2048,6 +2057,7 @@ function outlineTask(request: Request, task: Task): ReactJSONValue {
     task.model, // the currently rendering element
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -2213,6 +2223,22 @@ function renderElement(
           type._store.validated = 1;
         }
       }
+    }
+  } else if (typeof type === 'string') {
+    const parentFormatContext = task.formatContext;
+    const newFormatContext = getChildFormatContext(
+      parentFormatContext,
+      type,
+      props,
+    );
+    if (parentFormatContext !== newFormatContext && props.children != null) {
+      // We've entered a new context. We need to create another Task which has
+      // the new context set up since it's not safe to push/pop in the middle of
+      // a tree. Additionally this means that any deduping within this tree now
+      // assumes the new context even if it's reused outside in a different context.
+      // We'll rely on this to dedupe the value later as we discover it again
+      // inside the returned element's tree.
+      outlineModelWithFormatContext(request, props.children, newFormatContext);
     }
   }
   // For anything else, try it on the client instead.
@@ -2530,6 +2556,7 @@ function createTask(
   model: ReactClientValue,
   keyPath: null | string,
   implicitSlot: boolean,
+  formatContext: FormatContext,
   abortSet: Set<Task>,
   lastTimestamp: number, // Profiling-only
   debugOwner: null | ReactComponentInfo, // DEV-only
@@ -2554,6 +2581,7 @@ function createTask(
     model,
     keyPath,
     implicitSlot,
+    formatContext: formatContext,
     ping: () => pingTask(request, task),
     toJSON: function (
       this:
@@ -2819,11 +2847,26 @@ function serializeDebugClientReference(
 }
 
 function outlineModel(request: Request, value: ReactClientValue): number {
+  return outlineModelWithFormatContext(
+    request,
+    value,
+    // For deduped values we don't know which context it will be reused in
+    // so we have to assume that it's the root context.
+    createRootFormatContext(),
+  );
+}
+
+function outlineModelWithFormatContext(
+  request: Request,
+  value: ReactClientValue,
+  formatContext: FormatContext,
+): number {
   const newTask = createTask(
     request,
     value,
     null, // The way we use outlining is for reusing an object.
     false, // It makes no sense for that use case to be contextual.
+    formatContext, // Except for FormatContext we optimistically use it.
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -3071,6 +3114,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     model,
     null,
     false,
+    createRootFormatContext(),
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -3208,6 +3252,7 @@ function renderModel(
           task.model,
           task.keyPath,
           task.implicitSlot,
+          task.formatContext,
           request.abortableTasks,
           enableProfilerTimer &&
             (enableComponentPerformanceTrack || enableAsyncDebugInfo)

@@ -21,7 +21,7 @@ export const enableLegacyCache: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableTaint: boolean = true;
 export const enablePostpone: boolean = false;
-export const enableHalt: boolean = false;
+export const enableHalt: boolean = true;
 export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const enableScopeAPI: boolean = true;
@@ -34,7 +34,7 @@ export const disableTextareaChildren: boolean = false;
 export const enableSuspenseAvoidThisFallback: boolean = true;
 export const enableCPUSuspense: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
-export const enableUseEffectEventHook: boolean = false;
+export const enableUseEffectEventHook: boolean = true;
 export const enableLegacyFBSupport: boolean = false;
 export const enableMoveBefore: boolean = false;
 export const enableHiddenSubtreeInsertionEffectCleanup: boolean = true;
@@ -54,7 +54,6 @@ export const enableFizzExternalRuntime: boolean = false;
 export const alwaysThrottleRetries: boolean = true;
 
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
-export const enablePersistedModeClonedFlag: boolean = false;
 export const disableClientCache: boolean = true;
 
 export const enableInfiniteRenderLoopDetection: boolean = false;

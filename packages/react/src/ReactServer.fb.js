@@ -12,10 +12,13 @@ export {default as __SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRA
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import {captureOwnerStack as captureOwnerStackImpl} from './ReactOwnerStack';
 import {
+  REACT_ACTIVITY_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 import {
   cloneElement,
@@ -45,6 +48,7 @@ if (__DEV__) {
 
 export {
   Children,
+  REACT_ACTIVITY_TYPE as Activity,
   REACT_FRAGMENT_TYPE as Fragment,
   REACT_PROFILER_TYPE as Profiler,
   REACT_STRICT_MODE_TYPE as StrictMode,
@@ -65,4 +69,7 @@ export {
   useMemo,
   version,
   captureOwnerStack, // DEV-only
+  // Experimental
+  REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
+  REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
 };
