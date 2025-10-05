@@ -560,6 +560,10 @@ function validateNoRefAccessInRenderImpl(
                    * Hooks are independently checked to ensure they don't access refs
                    * during render.
                    */
+                  if (hasNonRefOperand) {
+                    // Skip flagging ref operands if at least one non-ref operand is present
+                    continue;
+                  }
                   validateNoDirectRefValueAccess(errors, operand, env);
                 } else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
                   /**
