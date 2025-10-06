@@ -44,6 +44,11 @@ const allRuleConfigs: Linter.RulesRecord = {
   ...compilerRuleConfigs,
 };
 
+type FlatConfig = {
+  plugins: Record<string, any>;
+  rules: Linter.RulesRecord;
+};
+
 const plugin = {
   meta: {
     name: 'eslint-plugin-react-hooks',
@@ -58,9 +63,9 @@ const plugin = {
       plugins: Array<string>;
       rules: Linter.RulesRecord;
     };
-    'flat/recommended': Array<Linter.Config>;
-    'recommended-latest': Array<Linter.Config>;
-    recommended: Array<Linter.Config>;
+    'flat/recommended': Array<FlatConfig>;
+    'recommended-latest': Array<FlatConfig>;
+    recommended: Array<FlatConfig>;
   },
 };
 

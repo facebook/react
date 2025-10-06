@@ -34,10 +34,6 @@ import {
   SuspenseTreeStateContext,
 } from './SuspenseTreeContext';
 import {StoreContext, OptionsContext} from '../context';
-import {
-  TreeDispatcherContext,
-  TreeStateContext,
-} from '../Components/TreeContext';
 import Button from '../Button';
 import Toggle from '../Toggle';
 import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
@@ -184,18 +180,6 @@ function SuspenseTab(_: {}) {
     treeListHidden,
     treeListHorizontalFraction,
   } = state;
-
-  const {inspectedElementID} = useContext(TreeStateContext);
-  const {timeline} = useContext(SuspenseTreeStateContext);
-  const treeDispatch = useContext(TreeDispatcherContext);
-  useLayoutEffect(() => {
-    // If the inspected element is still null and we've loaded a timeline, we can set the initial selection.
-    // TODO: This tab should use its own source of truth instead so we only show suspense boundaries.
-    if (inspectedElementID === null && timeline.length > 0) {
-      const milestone = timeline[timeline.length - 1];
-      treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: milestone});
-    }
-  }, [timeline, inspectedElementID]);
 
   useLayoutEffect(() => {
     const wrapperElement = wrapperTreeRef.current;
