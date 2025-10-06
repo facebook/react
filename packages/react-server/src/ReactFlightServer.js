@@ -2361,18 +2361,7 @@ function visitAsyncNode(
             // We aborted this render. If this Promise spanned the abort time it was probably the
             // Promise that was aborted. This won't necessarily have I/O associated with it but
             // it's a point of interest.
-            // However, if the Promise and IO node have the same owner, it likely means a sync component
-            // created both the Promise and initiated the I/O. Prefer the IO node for more specific info.
-            if (
-              ioNode !== null &&
-              ioNode.tag === IO_NODE &&
-              node.owner !== null &&
-              ioNode.owner === node.owner
-            ) {
-              match = ioNode;
-            } else {
-              match = node;
-            }
+            match = node;
           }
         } else if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
