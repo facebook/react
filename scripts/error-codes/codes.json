@@ -551,5 +551,11 @@
   "563": "This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.",
   "564": "Unknown command. The debugChannel was not wired up properly.",
   "565": "resolveDebugMessage/closeDebugChannel should not be called for a Request that wasn't kept alive. This is a bug in React.",
-  "566": "FragmentInstance.experimental_scrollIntoView() does not support scrollIntoViewOptions. Use the alignToTop boolean instead."
+  "566": "FragmentInstance.experimental_scrollIntoView() does not support scrollIntoViewOptions. Use the alignToTop boolean instead.",
+  "567": "Internal React Error: suspendedState null when it was expected to exist. Please report this as a React bug.",
+  "568": "The depth must equal at least zero before reaching the root. This is a bug in React.",
+  "569": "This root received an early update, before anything was able to hydrate. Switched the entire root to client rendering.",
+  "570": "acquireResource encountered a resource type it did not expect: \"%s\". This is a bug in React.",
+  "571": "getResource encountered a type it did not expect: \"%s\". This is a bug in React.",
+  "572": "React doesn't accept base64 encoded file uploads because we don't expect form data passed from a browser to ever encode data that way. If that's the wrong assumption, we can easily fix it."
 }

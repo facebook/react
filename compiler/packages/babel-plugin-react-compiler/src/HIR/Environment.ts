@@ -239,7 +239,7 @@ export const EnvironmentConfigSchema = z.object({
 
   /**
    * Enable use of type annotations in the source to drive type inference. By default
-   * Forget attemps to infer types using only information that is guaranteed correct
+   * Forget attempts to infer types using only information that is guaranteed correct
    * given the source, and does not trust user-supplied type annotations. This mode
    * enables trusting user type annotations.
    */
@@ -302,7 +302,7 @@ export const EnvironmentConfigSchema = z.object({
    * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
    * Currently a prod-only optimization, requiring Fast JSX dependencies
    *
-   * The symbol configuration is set for backwards compatability with pre-React 19 transforms
+   * The symbol configuration is set for backwards compatibility with pre-React 19 transforms
    */
   inlineJsxTransform: ReactElementSymbolSchema.nullable().default(null),
 
@@ -542,11 +542,11 @@ export const EnvironmentConfigSchema = z.object({
   throwUnknownException__testonly: z.boolean().default(false),
 
   /**
-   * Enables deps of a function epxression to be treated as conditional. This
+   * Enables deps of a function expression to be treated as conditional. This
    * makes sure we don't load a dep when it's a property (to check if it has
    * changed) and instead check the receiver.
    *
-   * This makes sure we don't end up throwing when the reciver is null. Consider
+   * This makes sure we don't end up throwing when the receiver is null. Consider
    * this code:
    *
    * ```
@@ -592,7 +592,7 @@ export const EnvironmentConfigSchema = z.object({
   enableCustomTypeDefinitionForReanimated: z.boolean().default(false),
 
   /**
-   * If specified, this value is used as a pattern for determing which global values should be
+   * If specified, this value is used as a pattern for determining which global values should be
    * treated as hooks. The pattern should have a single capture group, which will be used as
    * the hook name for the purposes of resolving hook definitions (for builtin hooks)_.
    *
@@ -700,7 +700,7 @@ export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
   #moduleTypes: Map<string, Global | null> = new Map();
-  #nextIdentifer: number = 0;
+  #nextIdentifier: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
   #scope: BabelScope;
@@ -840,7 +840,7 @@ export class Environment {
   }
 
   get nextIdentifierId(): IdentifierId {
-    return makeIdentifierId(this.#nextIdentifer++);
+    return makeIdentifierId(this.#nextIdentifier++);
   }
 
   get nextBlockId(): BlockId {

@@ -564,7 +564,7 @@ module.exports = {
     $ArrayBufferView: 'readonly',
     $Shape: 'readonly',
     CallSite: 'readonly',
-    ConsoleTask: 'readonly', // TOOD: Figure out what the official name of this will be.
+    ConsoleTask: 'readonly', // TODO: Figure out what the official name of this will be.
     ReturnType: 'readonly',
     AnimationFrameID: 'readonly',
     WeakRef: 'readonly',

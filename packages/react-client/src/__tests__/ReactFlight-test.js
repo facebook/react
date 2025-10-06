@@ -157,7 +157,7 @@ describe('ReactFlight', () => {
           );
           expect(this.state.error.digest).toBe('a dev digest');
           expect(this.state.error.environmentName).toBe(
-            this.props.expectedEnviromentName || 'Server',
+            this.props.expectedEnvironmentName || 'Server',
           );
           if (this.props.expectedErrorStack !== undefined) {
             expect(this.state.error.stack).toContain(
@@ -3104,7 +3104,7 @@ describe('ReactFlight', () => {
       ReactNoop.render(
         <ErrorBoundary
           expectedMessage="third-party-error"
-          expectedEnviromentName="third-party"
+          expectedEnvironmentName="third-party"
           expectedErrorStack={expectedErrorStack}>
           {ReactNoopFlightClient.read(transport, {
             findSourceMapURL(url, environmentName) {
@@ -3474,7 +3474,7 @@ describe('ReactFlight', () => {
     jest.resetModules();
     jest.mock('react', () => ReactServer);
     // For this to work the Flight Client needs to be the react-server version.
-    const ReactNoopFlightClienOnTheServer = require('react-noop-renderer/flight-client');
+    const ReactNoopFlightClientOnTheServer = require('react-noop-renderer/flight-client');
     jest.resetModules();
     jest.mock('react', () => React);
 
@@ -3501,7 +3501,7 @@ describe('ReactFlight', () => {
     );
 
     async function fetchThirdParty() {
-      return ReactNoopFlightClienOnTheServer.read(thirdPartyTransport);
+      return ReactNoopFlightClientOnTheServer.read(thirdPartyTransport);
     }
 
     async function FirstPartyComponent() {

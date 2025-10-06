@@ -200,7 +200,7 @@ const reusableComponentOptions: PerformanceMeasureOptions = {
   },
 };
 
-const resuableChangedPropsEntry = ['Changed Props', ''];
+const reusableChangedPropsEntry = ['Changed Props', ''];
 
 const DEEP_EQUALITY_WARNING =
   'This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner.';
@@ -261,7 +261,7 @@ export function logComponentRender(
         alternate.memoizedProps !== props
       ) {
         // If this is an update, we'll diff the props and emit which ones changed.
-        const properties: Array<[string, string]> = [resuableChangedPropsEntry];
+        const properties: Array<[string, string]> = [reusableChangedPropsEntry];
         const isDeeplyEqual = addObjectDiffToProperties(
           alternate.memoizedProps,
           props,

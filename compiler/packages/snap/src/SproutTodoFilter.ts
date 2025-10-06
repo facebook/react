@@ -485,7 +485,7 @@ const skipFilter = new Set([
   'todo.lower-context-access-destructure-multiple',
   'todo.lower-context-access-array-destructuring',
   'lower-context-selector-simple',
-  'lower-context-acess-multiple',
+  'lower-context-access-multiple',
   'bug-separate-memoization-due-to-callback-capturing',
 ]);
 

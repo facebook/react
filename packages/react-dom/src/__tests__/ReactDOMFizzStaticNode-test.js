@@ -66,7 +66,7 @@ describe('ReactDOMFizzStaticNode', () => {
   });
 
   // @gate enableHalt || enablePostpone
-  it('should suppport web streams', async () => {
+  it('should support web streams', async () => {
     const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>);
     const prelude = await readContentWeb(result.prelude);
     expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);

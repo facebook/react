@@ -255,7 +255,7 @@ export function smartStringify(value: any): string {
   return JSON.stringify(value);
 }
 
-const STACK_DELIMETER = /\n\s+at /;
+const STACK_DELIMITER = /\n\s+at /;
 const STACK_SOURCE_LOCATION = /([^\s]+) \((.+):(.+):(.+)\)/;
 
 export function stackToComponentLocations(
@@ -263,7 +263,7 @@ export function stackToComponentLocations(
 ): Array<[string, ?ReactFunctionLocation]> {
   const out: Array<[string, ?ReactFunctionLocation]> = [];
   stack
-    .split(STACK_DELIMETER)
+    .split(STACK_DELIMITER)
     .slice(1)
     .forEach(entry => {
       const match = STACK_SOURCE_LOCATION.exec(entry);
