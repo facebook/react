@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactStackTrace} from 'shared/ReactTypes';
+import type {ReactStackTrace, ReactComponentInfo} from 'shared/ReactTypes';
 
 import type {
   AsyncSequence,
@@ -39,6 +39,28 @@ const pendingOperations: Map<number, AsyncSequence> =
 
 // Keep the last resolved await as a workaround for async functions missing data.
 let lastRanAwait: null | AwaitNode = null;
+
+// These two maps work together to track what async functions are blocked on when aborting:
+//
+// 1. unresolvedPromiseNodesByOwner: Maps owner -> Promise (to find the Promise to link)
+//    When a Promise is created, we track it by its owner. This typically captures async
+//    function return Promises. Sync components may also have Promises tracked here, but
+//    they won't be linked since sync functions can't have awaits with matching owners.
+//
+// 2. internalAwaitNodesByPromise: Maps Promise -> await (stores the actual link)
+//    When an await happens with the same owner as a tracked Promise, we link that Promise
+//    to the await. This shows what the async function is currently blocked on.
+//
+// By storing the links separately from the regular awaited field, we can use this information
+// only during abort scenarios without affecting normal rendering.
+const unresolvedPromiseNodesByOwner: WeakMap<
+  ReactComponentInfo,
+  UnresolvedPromiseNode,
+> = new WeakMap();
+const internalAwaitNodesByPromise: WeakMap<
+  UnresolvedPromiseNode | PromiseNode,
+  UnresolvedAwaitNode | AwaitNode,
+> = new WeakMap();
 
 function resolvePromiseOrAwaitNode(
   unresolvedNode: UnresolvedAwaitNode | UnresolvedPromiseNode,
@@ -114,9 +136,10 @@ export function initAsyncDebugInfo(): void {
               }
             }
             const current = pendingOperations.get(currentAsyncId);
+            const owner = resolveOwner();
             node = ({
               tag: UNRESOLVED_AWAIT_NODE,
-              owner: resolveOwner(),
+              owner: owner,
               stack: stack,
               start: performance.now(),
               end: -1.1, // set when resolved.
@@ -124,6 +147,16 @@ export function initAsyncDebugInfo(): void {
               awaited: trigger, // The thing we're awaiting on. Might get overrriden when we resolve.
               previous: current === undefined ? null : current, // The path that led us here.
             }: UnresolvedAwaitNode);
+            // Link the owner's Promise to this await so we can track what it's blocked on.
+            // This only links when the await and Promise have the same owner (i.e., async functions
+            // awaiting within themselves). Promises from sync components won't match any awaits.
+            // We store this in a separate WeakMap to avoid affecting normal rendering.
+            if (owner !== null) {
+              const ownerPromiseNode = unresolvedPromiseNodesByOwner.get(owner);
+              if (ownerPromiseNode !== undefined) {
+                internalAwaitNodesByPromise.set(ownerPromiseNode, node);
+              }
+            }
           } else {
             const owner = resolveOwner();
             node = ({
@@ -140,6 +173,17 @@ export function initAsyncDebugInfo(): void {
                   : trigger,
               previous: null,
             }: UnresolvedPromiseNode);
+            // Track Promises by owner so awaits with matching owners can link to them.
+            // Only track the first Promise per owner. This typically captures async function
+            // return Promises, but may also track Promises from sync components - those won't
+            // be linked since sync functions can't have awaits with matching owners.
+            if (
+              owner !== null &&
+              trigger === undefined &&
+              !unresolvedPromiseNodesByOwner.has(owner)
+            ) {
+              unresolvedPromiseNodesByOwner.set(owner, node);
+            }
           }
         } else if (
           type !== 'Microtask' &&
@@ -355,4 +399,11 @@ export function getAsyncSequenceFromPromise(
     return null;
   }
   return node;
+}
+
+export function getInternalAwaitNode(
+  promiseNode: UnresolvedPromiseNode | PromiseNode,
+): null | UnresolvedAwaitNode | AwaitNode {
+  const awaitNode = internalAwaitNodesByPromise.get(promiseNode);
+  return awaitNode === undefined ? null : awaitNode;
 }

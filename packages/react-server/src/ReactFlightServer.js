@@ -75,6 +75,7 @@ import type {
   AsyncSequence,
   IONode,
   PromiseNode,
+  UnresolvedAwaitNode,
   UnresolvedPromiseNode,
 } from './ReactFlightAsyncSequence';
 
@@ -95,6 +96,7 @@ import {
   markAsyncSequenceRootTask,
   getCurrentAsyncSequence,
   getAsyncSequenceFromPromise,
+  getInternalAwaitNode,
   parseStackTrace,
   parseStackTracePrivate,
   supportsComponentStorage,
@@ -2359,7 +2361,18 @@ function visitAsyncNode(
             // We aborted this render. If this Promise spanned the abort time it was probably the
             // Promise that was aborted. This won't necessarily have I/O associated with it but
             // it's a point of interest.
-            match = node;
+            // However, if the Promise and IO node have the same owner, it likely means a sync component
+            // created both the Promise and initiated the I/O. Prefer the IO node for more specific info.
+            if (
+              ioNode !== null &&
+              ioNode.tag === IO_NODE &&
+              node.owner !== null &&
+              ioNode.owner === node.owner
+            ) {
+              match = ioNode;
+            } else {
+              match = node;
+            }
           }
         } else if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
@@ -4475,7 +4488,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
 
 function serializeIONode(
   request: Request,
-  ioNode: IONode | PromiseNode | UnresolvedPromiseNode,
+  ioNode: IONode | PromiseNode | UnresolvedPromiseNode | UnresolvedAwaitNode,
   promiseRef: null | WeakRef<Promise<mixed>>,
 ): string {
   const existingRef = request.writtenDebugObjects.get(ioNode);
@@ -5442,26 +5455,29 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
           // See if any of the dependencies are resolved yet.
           node = node.awaited;
         }
+        // For unresolved Promises, check if we have an internal await node that shows what
+        // the async function is currently blocked on. For resolved Promises, the regular
+        // awaited field already contains the necessary information.
         if (node.tag === UNRESOLVED_PROMISE_NODE) {
-          // We don't know what Promise will eventually end up resolving this Promise and if it
-          // was I/O at all. However, we assume that it was some kind of I/O since it didn't
-          // complete in time before aborting.
-          // The best we can do is try to emit the stack of where this Promise was created.
+          const internalAwait = getInternalAwaitNode(node);
+          if (internalAwait !== null) {
+            node = internalAwait;
+          }
+        }
+        if (node.tag === UNRESOLVED_AWAIT_NODE) {
+          // We found the await that's blocking. Use its stack to show where the component is stuck.
           serializeIONode(request, node, null);
           request.pendingChunks++;
           const env = (0, request.environmentName)();
           const asyncInfo: ReactAsyncInfo = {
-            awaited: ((node: any): ReactIOInfo), // This is deduped by this reference.
+            awaited: ((node: any): ReactIOInfo),
             env: env,
           };
-          // We don't have a start time for this await but in case there was no start time emitted
-          // we need to include something. TODO: We should maybe ideally track the time when we
-          // called .then() but without updating the task.time field since that's used for the cutoff.
           advanceTaskTime(request, task, task.time);
           emitDebugChunk(request, task.id, asyncInfo);
         } else {
-          // We have a resolved Promise. Its debug info can include both awaited data and rejected
-          // promises after the abort.
+          // We have a resolved or unresolved Promise. Its debug info can include both awaited
+          // data and rejected promises after the abort.
           emitAsyncSequence(request, task, sequence, debugInfo, null, null);
         }
       }
