@@ -1,6 +1,10 @@
 import * as estree from 'estree';
 import { Rule, Linter } from 'eslint';
 
+type FlatConfig = {
+    plugins: Record<string, any>;
+    rules: Linter.RulesRecord;
+};
 declare const plugin: {
     meta: {
         name: string;
@@ -81,9 +85,9 @@ declare const plugin: {
             plugins: Array<string>;
             rules: Linter.RulesRecord;
         };
-        "flat/recommended": Array<Linter.Config>;
-        "recommended-latest": Array<Linter.Config>;
-        recommended: Array<Linter.Config>;
+        "flat/recommended": Array<FlatConfig>;
+        "recommended-latest": Array<FlatConfig>;
+        recommended: Array<FlatConfig>;
     };
 };
 
