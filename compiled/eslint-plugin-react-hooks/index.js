@@ -25,6 +25,7 @@ var BabelParser = require('@babel/parser');
 var zod = require('zod');
 var zodValidationError = require('zod-validation-error');
 var crypto = require('crypto');
+var HermesParser = require('hermes-parser');
 var util = require('util');
 
 const SETTINGS_KEY = 'react-hooks';
@@ -54226,14 +54227,28 @@ function runReactCompilerImpl({ sourceCode, filename, userOpts, }) {
         (_b = options.logger) === null || _b === void 0 ? void 0 : _b.logEvent(filename, err);
     }
     let babelAST = null;
-    try {
-        babelAST = BabelParser.parse(sourceCode.text, {
-            sourceFilename: filename,
-            sourceType: 'unambiguous',
-            plugins: ['typescript', 'jsx'],
-        });
+    if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
+        try {
+            babelAST = BabelParser.parse(sourceCode.text, {
+                sourceFilename: filename,
+                sourceType: 'unambiguous',
+                plugins: ['typescript', 'jsx'],
+            });
+        }
+        catch (_c) {
+        }
     }
-    catch (err) {
+    else {
+        try {
+            babelAST = HermesParser.parse(sourceCode.text, {
+                babel: true,
+                enableExperimentalComponentSyntax: true,
+                sourceFilename: filename,
+                sourceType: 'module',
+            });
+        }
+        catch (_d) {
+        }
     }
     if (babelAST != null) {
         results.flowSuppressions = getFlowSuppressions(sourceCode);
