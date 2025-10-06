@@ -161,69 +161,21 @@ function makeRule(rule: LintRule): Rule.RuleModule {
   };
 }
 
-export const NoUnusedDirectivesRule: Rule.RuleModule = {
-  meta: {
-    type: 'suggestion',
-    docs: {
-      recommended: true,
-    },
-    fixable: 'code',
-    hasSuggestions: true,
-    // validation is done at runtime with zod
-    schema: [{type: 'object', additionalProperties: true}],
-  },
-  create(context: Rule.RuleContext): Rule.RuleListener {
-    const results = getReactCompilerResult(context);
-
-    for (const directive of results.unusedOptOutDirectives) {
-      context.report({
-        message: `Unused '${directive.directive}' directive`,
-        loc: directive.loc,
-        suggest: [
-          {
-            desc: 'Remove the directive',
-            fix(fixer): Rule.Fix {
-              return fixer.removeRange(directive.range);
-            },
-          },
-        ],
-      });
-    }
-    return {};
-  },
-};
-
 type RulesConfig = {
   [name: string]: {rule: Rule.RuleModule; severity: ErrorSeverity};
 };
 
-export const allRules: RulesConfig = LintRules.reduce(
-  (acc, rule) => {
-    acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
-    return acc;
-  },
-  {
-    'no-unused-directives': {
-      rule: NoUnusedDirectivesRule,
-      severity: ErrorSeverity.Error,
-    },
-  } as RulesConfig,
-);
+export const allRules: RulesConfig = LintRules.reduce((acc, rule) => {
+  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
+  return acc;
+}, {} as RulesConfig);
 
 export const recommendedRules: RulesConfig = LintRules.filter(
   rule => rule.recommended,
-).reduce(
-  (acc, rule) => {
-    acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
-    return acc;
-  },
-  {
-    'no-unused-directives': {
-      rule: NoUnusedDirectivesRule,
-      severity: ErrorSeverity.Error,
-    },
-  } as RulesConfig,
-);
+).reduce((acc, rule) => {
+  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
+  return acc;
+}, {} as RulesConfig);
 
 export function mapErrorSeverityToESlint(
   severity: ErrorSeverity,
