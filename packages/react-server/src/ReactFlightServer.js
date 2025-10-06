@@ -2353,6 +2353,14 @@ function visitAsyncNode(
           // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
           // further aborted nodes.
           return undefined;
+        }
+        if (request.status === ABORTING) {
+          if (node.start < request.abortTime && node.end > request.abortTime) {
+            // We aborted this render. If this Promise spanned the abort time it was probably the
+            // Promise that was aborted. This won't necessarily have I/O associated with it but
+            // it's a point of interest.
+            match = node;
+          }
         } else if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
@@ -2372,18 +2380,6 @@ function visitAsyncNode(
             match = ioNode;
           } else {
             match = node;
-          }
-        } else if (request.status === ABORTING) {
-          if (node.start < request.abortTime && node.end > request.abortTime) {
-            // We aborted this render. If this Promise spanned the abort time it was probably the
-            // Promise that was aborted. This won't necessarily have I/O associated with it but
-            // it's a point of interest.
-            if (
-              node.stack !== null &&
-              hasUnfilteredFrame(request, node.stack)
-            ) {
-              match = node;
-            }
           }
         }
       }
@@ -5399,9 +5395,16 @@ function forwardDebugInfoFromCurrentContext(
     }
   }
   if (enableProfilerTimer && enableAsyncDebugInfo) {
-    const sequence = getCurrentAsyncSequence();
-    if (sequence !== null) {
-      emitAsyncSequence(request, task, sequence, debugInfo, null, null);
+    if (request.status === ABORTING) {
+      // When aborting, skip forwarding debug info here.
+      // forwardDebugInfoFromAbortedTask will handle it more accurately.
+    } else {
+      // For normal resolve/reject, use the current execution context, as it
+      // shows what actually caused the Promise to settle.
+      const sequence = getCurrentAsyncSequence();
+      if (sequence !== null) {
+        emitAsyncSequence(request, task, sequence, debugInfo, null, null);
+      }
     }
   }
 }
