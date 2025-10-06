@@ -3199,7 +3199,6 @@ describe('Store', () => {
             <Activity>
             <Suspense name="outer-suspense">
       [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
-        <Suspense name="inside-activity" rects={[{x:1,y:2,width:15,height:1}]}>
         <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
           <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
     `);
