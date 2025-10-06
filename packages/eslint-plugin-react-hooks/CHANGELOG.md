@@ -1,3 +1,7 @@
+## 7.0.0
+
+- **Breaking:** Slim down presets to just 3 configurations. Removed `recommended-latest-legacy` and `flat/recommended` configs. The plugin now provides `recommended-legacy` (legacy config with all recommended rules), `recommended` (flat config with all recommended rules), and `recommended-experimental` (flat config with all recommended rules plus new bleeding edge experimental compiler rules). ([@poteto](https://github.com/poteto) in [#TODO](https://github.com/facebook/react/pull/TODO))
+
 ## 6.1.1
 
 **Note:** 6.1.0 accidentally allowed use of `recommended` without flat config, causing errors when used with ESLint v9's `defineConfig()` helper. This has been fixed in 6.1.1.

@@ -72,24 +72,10 @@ const plugin = {
 Object.assign(plugin.configs, {
   'recommended-legacy': {
     plugins: ['react-hooks'],
-    rules: basicRuleConfigs,
-  },
-
-  'recommended-latest-legacy': {
-    plugins: ['react-hooks'],
     rules: allRuleConfigs,
   },
 
-  'flat/recommended': [
-    {
-      plugins: {
-        'react-hooks': plugin,
-      },
-      rules: basicRuleConfigs,
-    },
-  ],
-
-  'recommended-latest': [
+  'recommended-experimental': [
     {
       plugins: {
         'react-hooks': plugin,
