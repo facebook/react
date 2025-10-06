@@ -361,15 +361,17 @@ export default function DevTools({
                                         }
                                       />
                                     </div>
-                                    <div
-                                      className={styles.TabContent}
-                                      hidden={tab !== 'suspense'}>
-                                      <SuspenseTab
-                                        portalContainer={
-                                          suspensePortalContainer
-                                        }
-                                      />
-                                    </div>
+                                    {enableSuspenseTab && (
+                                      <div
+                                        className={styles.TabContent}
+                                        hidden={tab !== 'suspense'}>
+                                        <SuspenseTab
+                                          portalContainer={
+                                            suspensePortalContainer
+                                          }
+                                        />
+                                      </div>
+                                    )}
                                   </div>
                                   {editorPortalContainer ? (
                                     <EditorPane
