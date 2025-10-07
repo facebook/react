@@ -292,6 +292,9 @@ import type {Flags} from './ReactFiberFlags';
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
 let offscreenSubtreeIsHidden: boolean = false;
 let offscreenSubtreeWasHidden: boolean = false;
+// Track whether there's a hidden offscreen above with no HostComponent between. If so,
+// it overrides the hiddenness of the HostComponent below.
+let offscreenDirectParentIsHidden: boolean = false;
 
 // Used to track if a form needs to be reset at the end of the mutation phase.
 let needsFormReset = false;
@@ -2141,7 +2144,13 @@ function commitMutationEffectsOnFiber(
       // Fall through
     }
     case HostComponent: {
+      // We've hit a host component, so it's no longer a direct parent.
+      const prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
+      offscreenDirectParentIsHidden = false;
+
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+
+      offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden;
 
       commitReconciliationEffects(finishedWork, lanes);
 
@@ -2422,10 +2431,14 @@ function commitMutationEffectsOnFiber(
         // effects again.
         const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
         const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+        const prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || isHidden;
+        offscreenDirectParentIsHidden =
+          prevOffscreenDirectParentIsHidden || isHidden;
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+        offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
 
         if (
@@ -2504,9 +2517,10 @@ function commitMutationEffectsOnFiber(
         }
 
         if (supportsMutation) {
-          // TODO: This needs to run whenever there's an insertion or update
-          // inside a hidden Offscreen tree.
-          hideOrUnhideAllChildren(finishedWork, isHidden);
+          // If it's trying to unhide but the parent is still hidden, then we should not unhide.
+          if (isHidden || !offscreenDirectParentIsHidden) {
+            hideOrUnhideAllChildren(finishedWork, isHidden);
+          }
         }
       }
 
