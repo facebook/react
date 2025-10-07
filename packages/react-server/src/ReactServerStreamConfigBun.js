@@ -118,7 +118,6 @@ export function closeWithError(destination: Destination, error: mixed): void {
     // case to begin with. It's even less common to run this in an older environment.
     // Even then, this is not where errors are supposed to happen and they get reported
     // to a global callback in addition to this anyway. So it's fine just to close this.
-    // $FlowFixMe[incompatible-call]
     destination.close();
   }
 }
