@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<431d5d3e46507722ad1a5ba87885577d>>
+ * @generated SignedSource<<97adcda82a2622089ef235eeaa9a4129>>
  */
 
 "use strict";
@@ -588,6 +588,7 @@ __DEV__ &&
     function releaseAsyncTransition() {
       ReactSharedInternals.asyncTransitions--;
     }
+    function addTransitionType() {}
     function enqueueTask(task) {
       if (null === enqueueTaskImpl)
         try {
@@ -875,6 +876,7 @@ __DEV__ &&
     exports.PureComponent = PureComponent;
     exports.StrictMode = REACT_STRICT_MODE_TYPE;
     exports.Suspense = REACT_SUSPENSE_TYPE;
+    exports.ViewTransition = REACT_VIEW_TRANSITION_TYPE;
     exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
       ReactSharedInternals;
     exports.__COMPILER_RUNTIME = fnName;
@@ -999,6 +1001,7 @@ __DEV__ &&
         }
       };
     };
+    exports.addTransitionType = addTransitionType;
     exports.c = useMemoCache;
     exports.cache = function (fn) {
       return function () {
@@ -1305,7 +1308,7 @@ __DEV__ &&
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
-    exports.unstable_addTransitionType = function () {};
+    exports.unstable_addTransitionType = addTransitionType;
     exports.unstable_getCacheForType = function (resourceType) {
       var dispatcher = ReactSharedInternals.A;
       return dispatcher
@@ -1400,7 +1403,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.3.0-native-fb-b65e6fc5-20251006";
+    exports.version = "19.3.0-native-fb-6a8c7fb6-20251006";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
