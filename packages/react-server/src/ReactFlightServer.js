@@ -4441,7 +4441,7 @@ function emitIOInfoChunk(
 }
 
 function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
-  if (request.writtenObjects.has(ioInfo)) {
+  if (request.writtenDebugObjects.has(ioInfo)) {
     // Already written
     return;
   }
@@ -4734,12 +4734,19 @@ function renderDebugModel(
       }
     }
 
-    const writtenObjects = request.writtenObjects;
-    const existingReference = writtenObjects.get(value);
-    if (existingReference !== undefined) {
-      // We've already emitted this as a real object, so we can refer to that by its existing reference.
-      // This might be slightly different serialization than what renderDebugModel would've produced.
-      return existingReference;
+    // If there is no debug channel, we can reuse existing references to real
+    // objects in debug models. However, if we do have a debug channel, this is
+    // not safe because it could lead to unresolvable cycles: a referenced
+    // object could be blocked on the exact debug info that has a reference to
+    // the blocked object.
+    if (request.debugDestination === null) {
+      const writtenObjects = request.writtenObjects;
+      const existingReference = writtenObjects.get(value);
+      if (existingReference !== undefined) {
+        // We've already emitted this as a real object, so we can refer to that by its existing reference.
+        // This might be slightly different serialization than what renderDebugModel would've produced.
+        return existingReference;
+      }
     }
 
     if (counter.objectLimit <= 0 && !doNotLimit.has(value)) {

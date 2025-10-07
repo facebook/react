@@ -3051,4 +3051,60 @@ describe('ReactFlightDOMBrowser', () => {
       `);
     }
   });
+
+  it('should resolve a cycle between debug info and the value it produces when using a debug channel', async () => {
+    // Same as `should resolve a cycle between debug info and the value it produces`, but using a debug channel.
+
+    function Inner({style}) {
+      return <div style={style} />;
+    }
+
+    function Component({style}) {
+      return <Inner style={style} />;
+    }
+
+    const style = {};
+    const element = <Component style={style} />;
+    style.element = element;
+
+    let debugReadableStreamController;
+
+    const debugReadableStream = new ReadableStream({
+      start(controller) {
+        debugReadableStreamController = controller;
+      },
+    });
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(element, webpackMap, {
+        debugChannel: {
+          writable: new WritableStream({
+            write(chunk) {
+              debugReadableStreamController.enqueue(chunk);
+            },
+            close() {
+              debugReadableStreamController.close();
+            },
+          }),
+        },
+      }),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      debugChannel: {readable: debugReadableStream},
+    });
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('<div></div>');
+  });
 });
