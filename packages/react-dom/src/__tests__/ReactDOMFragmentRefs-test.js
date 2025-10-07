@@ -1613,6 +1613,116 @@ describe('FragmentRefs', () => {
       );
     });
 
+    // @gate enableFragmentRefs
+    it('compares a root-level Fragment', async () => {
+      const fragmentRef = React.createRef();
+      const emptyFragmentRef = React.createRef();
+      const childRef = React.createRef();
+      const siblingPrecedingRef = React.createRef();
+      const siblingFollowingRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      function Test() {
+        return (
+          <Fragment>
+            <div ref={siblingPrecedingRef} />
+            <Fragment ref={fragmentRef}>
+              <div ref={childRef} />
+            </Fragment>
+            <Fragment ref={emptyFragmentRef} />
+            <div ref={siblingFollowingRef} />
+          </Fragment>
+        );
+      }
+
+      await act(() => root.render(<Test />));
+
+      const fragmentInstance = fragmentRef.current;
+      if (fragmentInstance == null) {
+        throw new Error('Expected fragment instance to be non-null');
+      }
+      const emptyFragmentInstance = emptyFragmentRef.current;
+      if (emptyFragmentInstance == null) {
+        throw new Error('Expected empty fragment instance to be non-null');
+      }
+
+      expectPosition(
+        fragmentInstance.compareDocumentPosition(childRef.current),
+        {
+          preceding: false,
+          following: false,
+          contains: false,
+          containedBy: true,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      expectPosition(
+        fragmentInstance.compareDocumentPosition(siblingPrecedingRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      expectPosition(
+        fragmentInstance.compareDocumentPosition(siblingFollowingRef.current),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: false,
+        },
+      );
+
+      expectPosition(
+        emptyFragmentInstance.compareDocumentPosition(childRef.current),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+
+      expectPosition(
+        emptyFragmentInstance.compareDocumentPosition(
+          siblingPrecedingRef.current,
+        ),
+        {
+          preceding: true,
+          following: false,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+
+      expectPosition(
+        emptyFragmentInstance.compareDocumentPosition(
+          siblingFollowingRef.current,
+        ),
+        {
+          preceding: false,
+          following: true,
+          contains: false,
+          containedBy: false,
+          disconnected: false,
+          implementationSpecific: true,
+        },
+      );
+    });
+
     describe('with portals', () => {
       // @gate enableFragmentRefs
       it('handles portaled elements', async () => {
@@ -1850,9 +1960,9 @@ describe('FragmentRefs', () => {
       });
 
       expect(() => {
-        fragmentRef.current.experimental_scrollIntoView({block: 'start'});
+        fragmentRef.current.scrollIntoView({block: 'start'});
       }).toThrowError(
-        'FragmentInstance.experimental_scrollIntoView() does not support ' +
+        'FragmentInstance.scrollIntoView() does not support ' +
           'scrollIntoViewOptions. Use the alignToTop boolean instead.',
       );
     });
@@ -1886,11 +1996,11 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expectLast(logs, 'childA');
         logs = [];
         // alignToTop=true
-        fragmentRef.current.experimental_scrollIntoView(true);
+        fragmentRef.current.scrollIntoView(true);
         expectLast(logs, 'childA');
       });
 
@@ -1917,7 +2027,7 @@ describe('FragmentRefs', () => {
           logs.push('childB');
         });
 
-        fragmentRef.current.experimental_scrollIntoView(false);
+        fragmentRef.current.scrollIntoView(false);
         expectLast(logs, 'childB');
       });
 
@@ -1958,7 +2068,7 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expectLast(logs, 'childA');
       });
 
@@ -2047,7 +2157,7 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expectLast(logs, 'header');
 
         childARef.current.scrollIntoView.mockClear();
@@ -2057,7 +2167,7 @@ describe('FragmentRefs', () => {
         logs = [];
 
         // // alignToTop=false
-        fragmentRef.current.experimental_scrollIntoView(false);
+        fragmentRef.current.scrollIntoView(false);
         expectLast(logs, 'C');
       });
     });
@@ -2085,14 +2195,14 @@ describe('FragmentRefs', () => {
         siblingBRef.current.scrollIntoView = jest.fn();
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
 
         siblingBRef.current.scrollIntoView.mockClear();
 
         // alignToTop=true
-        fragmentRef.current.experimental_scrollIntoView(true);
+        fragmentRef.current.scrollIntoView(true);
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
@@ -2129,7 +2239,7 @@ describe('FragmentRefs', () => {
         siblingBRef.current.scrollIntoView = jest.fn();
 
         // alignToTop=false
-        fragmentRef.current.experimental_scrollIntoView(false);
+        fragmentRef.current.scrollIntoView(false);
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
       });
@@ -2150,7 +2260,7 @@ describe('FragmentRefs', () => {
         });
 
         parentRef.current.scrollIntoView = jest.fn();
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expect(parentRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
     });

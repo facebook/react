@@ -1,8 +1,6 @@
 # `eslint-plugin-react-hooks`
 
-This ESLint plugin enforces the [Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks).
-
-It is a part of the [Hooks API](https://react.dev/reference/react/hooks) for React.
+The official ESLint plugin for [React](https://react.dev) which enforces the [Rules of React](https://react.dev/reference/eslint-plugin-react-hooks) and other best practices.
 
 ## Installation
 
@@ -89,7 +87,7 @@ If you're using a version earlier than 5.2.0, the legacy config was simply `reco
 
 ### Custom Configuration
 
-If you want more fine-grained configuration, you can instead add a snippet like this to your ESLint configuration file:
+If you want more fine-grained configuration, you can instead choose to enable specific rules. However, we strongly encourage using the recommended presets — see above — so that you will automatically receive new recommended rules as we add them in future versions of the plugin.
 
 #### Flat Config (eslint.config.js|ts)
 

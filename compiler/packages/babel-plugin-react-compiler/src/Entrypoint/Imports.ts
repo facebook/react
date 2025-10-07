@@ -18,7 +18,7 @@ import {
 import {getOrInsertWith} from '../Utils/utils';
 import {ExternalFunction, isHookName} from '../HIR/Environment';
 import {Err, Ok, Result} from '../Utils/Result';
-import {LoggerEvent, PluginOptions} from './Options';
+import {LoggerEvent, ParsedPluginOptions} from './Options';
 import {BabelFn, getReactCompilerRuntimeModule} from './Program';
 import {SuppressionRange} from './Suppression';
 
@@ -56,7 +56,7 @@ export function validateRestrictedImports(
 type ProgramContextOptions = {
   program: NodePath<t.Program>;
   suppressions: Array<SuppressionRange>;
-  opts: PluginOptions;
+  opts: ParsedPluginOptions;
   filename: string | null;
   code: string | null;
   hasModuleScopeOptOut: boolean;
@@ -66,7 +66,7 @@ export class ProgramContext {
    * Program and environment context
    */
   scope: BabelScope;
-  opts: PluginOptions;
+  opts: ParsedPluginOptions;
   filename: string | null;
   code: string | null;
   reactRuntimeModule: string;
@@ -240,7 +240,7 @@ export function addImportsToProgram(
   programContext: ProgramContext,
 ): void {
   const existingImports = getExistingImports(path);
-  const stmts: Array<t.ImportDeclaration> = [];
+  const stmts: Array<t.ImportDeclaration | t.VariableDeclaration> = [];
   const sortedModules = [...programContext.imports.entries()].sort(([a], [b]) =>
     a.localeCompare(b),
   );
@@ -303,9 +303,29 @@ export function addImportsToProgram(
     if (maybeExistingImports != null) {
       maybeExistingImports.pushContainer('specifiers', importSpecifiers);
     } else {
-      stmts.push(
-        t.importDeclaration(importSpecifiers, t.stringLiteral(moduleName)),
-      );
+      if (path.node.sourceType === 'module') {
+        stmts.push(
+          t.importDeclaration(importSpecifiers, t.stringLiteral(moduleName)),
+        );
+      } else {
+        stmts.push(
+          t.variableDeclaration('const', [
+            t.variableDeclarator(
+              t.objectPattern(
+                sortedImport.map(specifier => {
+                  return t.objectProperty(
+                    t.identifier(specifier.imported),
+                    t.identifier(specifier.name),
+                  );
+                }),
+              ),
+              t.callExpression(t.identifier('require'), [
+                t.stringLiteral(moduleName),
+              ]),
+            ),
+          ]),
+        );
+      }
     }
   }
   path.unshiftContainer('body', stmts);

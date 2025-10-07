@@ -1,6 +1,6 @@
 import React, {
-  unstable_addTransitionType as addTransitionType,
-  unstable_ViewTransition as ViewTransition,
+  addTransitionType,
+  ViewTransition,
   Activity,
   useLayoutEffect,
   useEffect,
@@ -50,7 +50,8 @@ function Component() {
       <p>
         <img
           src="https://react.dev/_next/image?url=%2Fimages%2Fteam%2Fsebmarkbage.jpg&w=3840&q=75"
-          width="300"
+          width="400"
+          height="248"
         />
       </p>
     </ViewTransition>
@@ -237,8 +238,8 @@ export default function Page({url, navigate}) {
                   <Suspend />
                 </div>
               </ViewTransition>
+              {show ? <Component /> : null}
             </Suspense>
-            {show ? <Component /> : null}
           </div>
         </ViewTransition>
       </SwipeRecognizer>

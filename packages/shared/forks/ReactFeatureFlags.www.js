@@ -34,6 +34,7 @@ export const {
   enableScrollEndPolyfill,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
+  enableAsyncDebugInfo,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -72,7 +73,7 @@ export const enableTaint: boolean = false;
 
 export const enablePostpone: boolean = false;
 
-export const enableHalt: boolean = false;
+export const enableHalt: boolean = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
@@ -92,9 +93,6 @@ export const enableFizzExternalRuntime: boolean = true;
 
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
-export const enablePersistedModeClonedFlag: boolean = false;
-
-export const enableAsyncDebugInfo: boolean = false;
 export const disableClientCache: boolean = true;
 
 export const enableReactTestRendererWarning: boolean = false;

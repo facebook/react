@@ -134,7 +134,7 @@ describe('Store component filters', () => {
     `);
   });
 
-  // @reactVersion >= 16.0
+  // @reactVersion >= 16.6
   it('should filter Suspense', async () => {
     const Suspense = React.Suspense;
     await actAsync(async () =>
@@ -251,7 +251,8 @@ describe('Store component filters', () => {
   });
 
   it('should filter ViewTransition', async () => {
-    const ViewTransition = React.unstable_ViewTransition;
+    const ViewTransition =
+      React.ViewTransition || React.unstable_ViewTransition;
 
     if (ViewTransition != null) {
       await actAsync(async () =>

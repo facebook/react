@@ -15,13 +15,13 @@ export const enableSchedulingProfiler: boolean = false;
 export const enableProfilerTimer: boolean = __PROFILE__;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
 export const enableProfilerNestedUpdatePhase: boolean = __PROFILE__;
-export const enableComponentPerformanceTrack: boolean = false;
+export const enableComponentPerformanceTrack: boolean = true;
 export const enableUpdaterTracking: boolean = false;
 export const enableLegacyCache: boolean = __EXPERIMENTAL__;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableTaint: boolean = true;
 export const enablePostpone: boolean = false;
-export const enableHalt: boolean = false;
+export const enableHalt: boolean = true;
 export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const enableScopeAPI: boolean = false;
@@ -32,7 +32,7 @@ export const disableTextareaChildren: boolean = false;
 export const enableSuspenseAvoidThisFallback: boolean = false;
 export const enableCPUSuspense: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
-export const enableUseEffectEventHook: boolean = false;
+export const enableUseEffectEventHook: boolean = true;
 export const enableLegacyFBSupport: boolean = false;
 export const enableMoveBefore: boolean = false;
 export const enableHiddenSubtreeInsertionEffectCleanup: boolean = false;
@@ -53,7 +53,6 @@ export const enableFizzExternalRuntime: boolean = true;
 export const alwaysThrottleRetries: boolean = true;
 
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
-export const enablePersistedModeClonedFlag: boolean = false;
 export const disableClientCache: boolean = true;
 
 export const enableInfiniteRenderLoopDetection: boolean = false;
@@ -74,8 +73,8 @@ export const enableHydrationChangeEvent: boolean = false;
 export const enableDefaultTransitionIndicator: boolean = false;
 export const ownerStackLimit = 1e4;
 
-export const enableFragmentRefs: boolean = false;
-export const enableFragmentRefsScrollIntoView: boolean = false;
+export const enableFragmentRefs: boolean = true;
+export const enableFragmentRefsScrollIntoView: boolean = true;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the

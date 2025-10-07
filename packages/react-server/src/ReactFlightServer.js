@@ -49,6 +49,7 @@ import type {
   Hints,
   HintCode,
   HintModel,
+  FormatContext,
 } from './ReactFlightServerConfig';
 import type {ThenableState} from './ReactFlightThenable';
 import type {
@@ -88,6 +89,8 @@ import {
   supportsRequestStorage,
   requestStorage,
   createHints,
+  createRootFormatContext,
+  getChildFormatContext,
   initAsyncDebugInfo,
   markAsyncSequenceRootTask,
   getCurrentAsyncSequence,
@@ -525,6 +528,7 @@ type Task = {
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
   keyPath: null | string, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
+  formatContext: FormatContext, // an approximate parent context from host components
   thenableState: ThenableState | null,
   timed: boolean, // Profiling-only. Whether we need to track the completion time of this task.
   time: number, // Profiling-only. The last time stamp emitted for this task.
@@ -758,6 +762,7 @@ function RequestInstance(
     model,
     null,
     false,
+    createRootFormatContext(),
     abortSet,
     timeOrigin,
     null,
@@ -844,6 +849,49 @@ export function resolveRequest(): null | Request {
   return null;
 }
 
+function isTypedArray(value: any): boolean {
+  if (value instanceof ArrayBuffer) {
+    return true;
+  }
+  if (value instanceof Int8Array) {
+    return true;
+  }
+  if (value instanceof Uint8Array) {
+    return true;
+  }
+  if (value instanceof Uint8ClampedArray) {
+    return true;
+  }
+  if (value instanceof Int16Array) {
+    return true;
+  }
+  if (value instanceof Uint16Array) {
+    return true;
+  }
+  if (value instanceof Int32Array) {
+    return true;
+  }
+  if (value instanceof Uint32Array) {
+    return true;
+  }
+  if (value instanceof Float32Array) {
+    return true;
+  }
+  if (value instanceof Float64Array) {
+    return true;
+  }
+  if (value instanceof BigInt64Array) {
+    return true;
+  }
+  if (value instanceof BigUint64Array) {
+    return true;
+  }
+  if (value instanceof DataView) {
+    return true;
+  }
+  return false;
+}
+
 function serializeDebugThenable(
   request: Request,
   counter: {objectLimit: number},
@@ -897,6 +945,17 @@ function serializeDebugThenable(
       }
       cancelled = true;
       if (request.status === ABORTING) {
+        emitDebugHaltChunk(request, id);
+        enqueueFlush(request);
+        return;
+      }
+      if (
+        (isArray(value) && value.length > 200) ||
+        (isTypedArray(value) && value.byteLength > 1000)
+      ) {
+        // If this should be deferred, but we don't have a debug channel installed
+        // it would get omitted. We can't omit outlined models but we can avoid
+        // resolving the Promise at all by halting it.
         emitDebugHaltChunk(request, id);
         enqueueFlush(request);
         return;
@@ -980,6 +1039,7 @@ function serializeThenable(
     (thenable: any), // will be replaced by the value before we retry. used for debug info.
     task.keyPath, // the server component sequence continues through Promise-as-a-child.
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -1102,6 +1162,7 @@ function serializeReadableStream(
     task.model,
     task.keyPath,
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -1197,6 +1258,7 @@ function serializeAsyncIterable(
     task.model,
     task.keyPath,
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -2028,6 +2090,7 @@ function deferTask(request: Request, task: Task): ReactJSONValue {
     task.model, // the currently rendering element
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -2048,6 +2111,7 @@ function outlineTask(request: Request, task: Task): ReactJSONValue {
     task.model, // the currently rendering element
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
+    task.formatContext,
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -2213,6 +2277,22 @@ function renderElement(
           type._store.validated = 1;
         }
       }
+    }
+  } else if (typeof type === 'string') {
+    const parentFormatContext = task.formatContext;
+    const newFormatContext = getChildFormatContext(
+      parentFormatContext,
+      type,
+      props,
+    );
+    if (parentFormatContext !== newFormatContext && props.children != null) {
+      // We've entered a new context. We need to create another Task which has
+      // the new context set up since it's not safe to push/pop in the middle of
+      // a tree. Additionally this means that any deduping within this tree now
+      // assumes the new context even if it's reused outside in a different context.
+      // We'll rely on this to dedupe the value later as we discover it again
+      // inside the returned element's tree.
+      outlineModelWithFormatContext(request, props.children, newFormatContext);
     }
   }
   // For anything else, try it on the client instead.
@@ -2530,6 +2610,7 @@ function createTask(
   model: ReactClientValue,
   keyPath: null | string,
   implicitSlot: boolean,
+  formatContext: FormatContext,
   abortSet: Set<Task>,
   lastTimestamp: number, // Profiling-only
   debugOwner: null | ReactComponentInfo, // DEV-only
@@ -2554,6 +2635,7 @@ function createTask(
     model,
     keyPath,
     implicitSlot,
+    formatContext: formatContext,
     ping: () => pingTask(request, task),
     toJSON: function (
       this:
@@ -2819,11 +2901,26 @@ function serializeDebugClientReference(
 }
 
 function outlineModel(request: Request, value: ReactClientValue): number {
+  return outlineModelWithFormatContext(
+    request,
+    value,
+    // For deduped values we don't know which context it will be reused in
+    // so we have to assume that it's the root context.
+    createRootFormatContext(),
+  );
+}
+
+function outlineModelWithFormatContext(
+  request: Request,
+  value: ReactClientValue,
+  formatContext: FormatContext,
+): number {
   const newTask = createTask(
     request,
     value,
     null, // The way we use outlining is for reusing an object.
     false, // It makes no sense for that use case to be contextual.
+    formatContext, // Except for FormatContext we optimistically use it.
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -3023,6 +3120,10 @@ function serializeDebugTypedArray(
   tag: string,
   typedArray: $ArrayBufferView,
 ): string {
+  if (typedArray.byteLength > 1000 && !doNotLimit.has(typedArray)) {
+    // Defer large typed arrays.
+    return serializeDeferredObject(request, typedArray);
+  }
   request.pendingDebugChunks++;
   const bufferId = request.nextChunkId++;
   emitTypedArrayChunk(request, bufferId, tag, typedArray, true);
@@ -3071,6 +3172,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     model,
     null,
     false,
+    createRootFormatContext(),
     request.abortableTasks,
     enableProfilerTimer &&
       (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -3208,6 +3310,7 @@ function renderModel(
           task.model,
           task.keyPath,
           task.implicitSlot,
+          task.formatContext,
           request.abortableTasks,
           enableProfilerTimer &&
             (enableComponentPerformanceTrack || enableAsyncDebugInfo)
@@ -4702,6 +4805,70 @@ function renderDebugModel(
           element._store.validated,
         ];
       }
+      case REACT_LAZY_TYPE: {
+        // To avoid actually initializing a lazy causing a side-effect, we make
+        // some assumptions about the structure of the payload even though
+        // that's not really part of the contract. In practice, this is really
+        // just coming from React.lazy helper or Flight.
+        const lazy: LazyComponent<any, any> = (value: any);
+        const payload = lazy._payload;
+
+        if (payload !== null && typeof payload === 'object') {
+          // React.lazy constructor
+          switch (payload._status) {
+            case -1 /* Uninitialized */:
+            case 0 /* Pending */:
+              break;
+            case 1 /* Resolved */: {
+              const id = outlineDebugModel(request, counter, payload._result);
+              return serializeLazyID(id);
+            }
+            case 2 /* Rejected */: {
+              // We don't log these errors since they didn't actually throw into
+              // Flight.
+              const digest = '';
+              const id = request.nextChunkId++;
+              emitErrorChunk(request, id, digest, payload._result, true, null);
+              return serializeLazyID(id);
+            }
+          }
+
+          // React Flight
+          switch (payload.status) {
+            case 'pending':
+            case 'blocked':
+            case 'resolved_model':
+              // The value is an uninitialized model from the Flight client.
+              // It's not very useful to emit that.
+              break;
+            case 'resolved_module':
+              // The value is client reference metadata from the Flight client.
+              // It's likely for SSR, so we choose not to emit it.
+              break;
+            case 'fulfilled': {
+              const id = outlineDebugModel(request, counter, payload.value);
+              return serializeLazyID(id);
+            }
+            case 'rejected': {
+              // We don't log these errors since they didn't actually throw into
+              // Flight.
+              const digest = '';
+              const id = request.nextChunkId++;
+              emitErrorChunk(request, id, digest, payload.reason, true, null);
+              return serializeLazyID(id);
+            }
+          }
+        }
+
+        // We couldn't emit a resolved or rejected value synchronously. For now,
+        // we emit this as a halted chunk. TODO: We could maybe also handle
+        // pending lazy debug models like we do in serializeDebugThenable,
+        // if/when we determine that it's worth the added complexity.
+        request.pendingDebugChunks++;
+        const id = request.nextChunkId++;
+        emitDebugHaltChunk(request, id);
+        return serializeLazyID(id);
+      }
     }
 
     // $FlowFixMe[method-unbinding]
@@ -4711,9 +4878,17 @@ function renderDebugModel(
     }
 
     if (isArray(value)) {
+      if (value.length > 200 && !doNotLimit.has(value)) {
+        // Defer large arrays. They're heavy to serialize.
+        // TODO: Consider doing the same for objects with many properties too.
+        return serializeDeferredObject(request, value);
+      }
       return value;
     }
 
+    if (value instanceof Date) {
+      return serializeDate(value);
+    }
     if (value instanceof Map) {
       return serializeDebugMap(request, counter, value);
     }
@@ -4821,15 +4996,6 @@ function renderDebugModel(
   }
 
   if (typeof value === 'string') {
-    if (value[value.length - 1] === 'Z') {
-      // Possibly a Date, whose toJSON automatically calls toISOString
-      // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
-      // $FlowFixMe[incompatible-use]
-      const originalValue = parent[parentPropertyName];
-      if (originalValue instanceof Date) {
-        return serializeDateFromDateJSON(value);
-      }
-    }
     if (value.length >= 1024) {
       // Large strings are counted towards the object limit.
       if (counter.objectLimit <= 0) {
@@ -4927,10 +5093,6 @@ function renderDebugModel(
     return serializeBigInt(value);
   }
 
-  if (value instanceof Date) {
-    return serializeDate(value);
-  }
-
   return 'unknown type ' + typeof value;
 }
 
@@ -4949,12 +5111,15 @@ function serializeDebugModel(
     value: ReactClientValue,
   ): ReactJSONValue {
     try {
+      // By-pass toJSON and use the original value.
+      // $FlowFixMe[incompatible-use]
+      const originalValue = this[parentPropertyName];
       return renderDebugModel(
         request,
         counter,
         this,
         parentPropertyName,
-        value,
+        originalValue,
       );
     } catch (x) {
       return (
@@ -5005,12 +5170,15 @@ function emitOutlinedDebugModelChunk(
     value: ReactClientValue,
   ): ReactJSONValue {
     try {
+      // By-pass toJSON and use the original value.
+      // $FlowFixMe[incompatible-use]
+      const originalValue = this[parentPropertyName];
       return renderDebugModel(
         request,
         counter,
         this,
         parentPropertyName,
-        value,
+        originalValue,
       );
     } catch (x) {
       return (

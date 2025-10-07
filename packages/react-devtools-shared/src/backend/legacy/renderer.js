@@ -34,6 +34,8 @@ import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
+  SUSPENSE_TREE_OPERATION_ADD,
+  SUSPENSE_TREE_OPERATION_REMOVE,
   UNKNOWN_SUSPENDERS_NONE,
 } from '../../constants';
 import {decorateMany, forceUpdate, restoreMany} from './utils';
@@ -410,7 +412,13 @@ export function attach(
       pushOperation(0); // Profiling flag
       pushOperation(0); // StrictMode supported?
       pushOperation(hasOwnerMetadata ? 1 : 0);
-      pushOperation(supportsTogglingSuspense ? 1 : 0);
+
+      pushOperation(SUSPENSE_TREE_OPERATION_ADD);
+      pushOperation(id);
+      pushOperation(parentID);
+      pushOperation(getStringID(null)); // name
+      // TODO: Measure rect of root
+      pushOperation(-1);
     } else {
       const type = getElementType(internalInstance);
       const {displayName, key} = getData(internalInstance);
@@ -449,7 +457,12 @@ export function attach(
   }
 
   function recordUnmount(internalInstance: InternalInstance, id: number) {
-    pendingUnmountedIDs.push(id);
+    const isRoot = parentIDStack.length === 0;
+    if (isRoot) {
+      pendingUnmountedRootID = id;
+    } else {
+      pendingUnmountedIDs.push(id);
+    }
     idToInternalInstanceMap.delete(id);
   }
 
@@ -519,6 +532,8 @@ export function attach(
         // All unmounts are batched in a single message.
         // [TREE_OPERATION_REMOVE, removedIDLength, ...ids]
         (numUnmountIDs > 0 ? 2 + numUnmountIDs : 0) +
+        // [SUSPENSE_TREE_OPERATION_REMOVE, 1, pendingUnmountedRootID]
+        (pendingUnmountedRootID === null ? 0 : 3) +
         // Mount operations
         pendingOperations.length,
     );
@@ -555,6 +570,10 @@ export function attach(
       if (pendingUnmountedRootID !== null) {
         operations[i] = pendingUnmountedRootID;
         i++;
+
+        operations[i++] = SUSPENSE_TREE_OPERATION_REMOVE;
+        operations[i++] = 1;
+        operations[i++] = pendingUnmountedRootID;
       }
     }
 
@@ -780,6 +799,20 @@ export function attach(
       return null;
     }
 
+    const rootID = internalInstanceToRootIDMap.get(internalInstance);
+    if (rootID === undefined) {
+      throw new Error('Expected to find root ID.');
+    }
+    const isRoot = rootID === id;
+    return isRoot
+      ? inspectRootsRaw(rootID)
+      : inspectInternalInstanceRaw(id, internalInstance);
+  }
+
+  function inspectInternalInstanceRaw(
+    id: number,
+    internalInstance: InternalInstance,
+  ): InspectedElement | null {
     const {key} = getData(internalInstance);
     const type = getElementType(internalInstance);
 
@@ -881,6 +914,98 @@ export function attach(
 
       nativeTag: null,
     };
+  }
+
+  function inspectRootsRaw(arbitraryRootID: number): InspectedElement | null {
+    const roots =
+      renderer.Mount._instancesByReactRootID ||
+      renderer.Mount._instancesByContainerID;
+
+    const inspectedRoots: InspectedElement = {
+      // invariants
+      id: arbitraryRootID,
+      type: ElementTypeRoot,
+      // Properties we merge
+      isErrored: false,
+      errors: [],
+      warnings: [],
+      suspendedBy: [],
+      suspendedByRange: null,
+      // TODO: How to merge these?
+      unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
+      // Properties where merging doesn't make sense so we ignore them entirely in the UI
+      rootType: null,
+      plugins: {stylex: null},
+      nativeTag: null,
+      env: null,
+      source: null,
+      stack: null,
+      // TODO: We could make the Frontend accept an array to display
+      // a list of unique renderers contributing to this Screen.
+      rendererPackageName: null,
+      rendererVersion: null,
+      // These don't make sense for a Root. They're just bottom values.
+      key: null,
+      canEditFunctionProps: false,
+      canEditHooks: false,
+      canEditFunctionPropsDeletePaths: false,
+      canEditFunctionPropsRenamePaths: false,
+      canEditHooksAndDeletePaths: false,
+      canEditHooksAndRenamePaths: false,
+      canToggleError: false,
+      canToggleSuspense: false,
+      isSuspended: false,
+      hasLegacyContext: false,
+      context: null,
+      hooks: null,
+      props: null,
+      state: null,
+      owners: null,
+    };
+
+    let minSuspendedByRange = Infinity;
+    let maxSuspendedByRange = -Infinity;
+
+    for (const rootKey in roots) {
+      const internalInstance = roots[rootKey];
+      const id = getID(internalInstance);
+      const inspectedRoot = inspectInternalInstanceRaw(id, internalInstance);
+
+      if (inspectedRoot === null) {
+        return null;
+      }
+
+      if (inspectedRoot.isErrored) {
+        inspectedRoots.isErrored = true;
+      }
+      for (let i = 0; i < inspectedRoot.errors.length; i++) {
+        inspectedRoots.errors.push(inspectedRoot.errors[i]);
+      }
+      for (let i = 0; i < inspectedRoot.warnings.length; i++) {
+        inspectedRoots.warnings.push(inspectedRoot.warnings[i]);
+      }
+      for (let i = 0; i < inspectedRoot.suspendedBy.length; i++) {
+        inspectedRoots.suspendedBy.push(inspectedRoot.suspendedBy[i]);
+      }
+      const suspendedByRange = inspectedRoot.suspendedByRange;
+      if (suspendedByRange !== null) {
+        if (suspendedByRange[0] < minSuspendedByRange) {
+          minSuspendedByRange = suspendedByRange[0];
+        }
+        if (suspendedByRange[1] > maxSuspendedByRange) {
+          maxSuspendedByRange = suspendedByRange[1];
+        }
+      }
+    }
+
+    if (minSuspendedByRange !== Infinity || maxSuspendedByRange !== -Infinity) {
+      inspectedRoots.suspendedByRange = [
+        minSuspendedByRange,
+        maxSuspendedByRange,
+      ];
+    }
+
+    return inspectedRoots;
   }
 
   function logElementToConsole(id: number): void {
@@ -1147,6 +1272,9 @@ export function attach(
     findHostInstancesForElementID: (id: number) => {
       const hostInstance = findHostInstanceForInternalID(id);
       return hostInstance == null ? null : [hostInstance];
+    },
+    findLastKnownRectsForID() {
+      return null;
     },
     getOwnersList,
     getPathForElement,

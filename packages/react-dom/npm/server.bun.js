@@ -16,8 +16,6 @@ exports.renderToPipeableStream = b.renderToPipeableStream;
 if (b.resumeToPipeableStream) {
   exports.resumeToPipeableStream = b.resumeToPipeableStream;
 }
-if (b.resume) {
-  exports.resume = b.resume;
-}
+exports.resume = b.resume;
 exports.renderToString = l.renderToString;
 exports.renderToStaticMarkup = l.renderToStaticMarkup;

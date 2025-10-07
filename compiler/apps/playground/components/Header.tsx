@@ -10,11 +10,16 @@ import {CheckIcon} from '@heroicons/react/solid';
 import clsx from 'clsx';
 import Link from 'next/link';
 import {useSnackbar} from 'notistack';
-import {useState} from 'react';
+import {
+  useState,
+  startTransition,
+  unstable_addTransitionType as addTransitionType,
+} from 'react';
 import {defaultStore} from '../lib/defaultStore';
 import {IconGitHub} from './Icons/IconGitHub';
 import Logo from './Logo';
 import {useStore, useStoreDispatch} from './StoreContext';
+import {TOGGLE_INTERNALS_TRANSITION} from '../lib/transitionTypes';
 
 export default function Header(): JSX.Element {
   const [showCheck, setShowCheck] = useState(false);
@@ -58,11 +63,16 @@ export default function Header(): JSX.Element {
       </div>
       <div className="flex items-center text-[15px] gap-4">
         <div className="flex items-center gap-2">
-          <label className="relative inline-block w-[34px] h-5">
+          <label className="show-internals relative inline-block w-[34px] h-5">
             <input
               type="checkbox"
               checked={store.showInternals}
-              onChange={() => dispatchStore({type: 'toggleInternals'})}
+              onChange={() =>
+                startTransition(() => {
+                  addTransitionType(TOGGLE_INTERNALS_TRANSITION);
+                  dispatchStore({type: 'toggleInternals'});
+                })
+              }
               className="absolute opacity-0 cursor-pointer h-full w-full m-0"
             />
             <span
