@@ -3066,6 +3066,10 @@ function serializeDebugTypedArray(
   tag: string,
   typedArray: $ArrayBufferView,
 ): string {
+  if (typedArray.byteLength > 1000 && !doNotLimit.has(typedArray)) {
+    // Defer large typed arrays.
+    return serializeDeferredObject(request, typedArray);
+  }
   request.pendingDebugChunks++;
   const bufferId = request.nextChunkId++;
   emitTypedArrayChunk(request, bufferId, tag, typedArray, true);
@@ -4820,6 +4824,11 @@ function renderDebugModel(
     }
 
     if (isArray(value)) {
+      if (value.length > 200 && !doNotLimit.has(value)) {
+        // Defer large arrays. They're heavy to serialize.
+        // TODO: Consider doing the same for objects with many properties too.
+        return serializeDeferredObject(request, value);
+      }
       return value;
     }
 
