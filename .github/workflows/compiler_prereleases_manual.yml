@@ -17,6 +17,9 @@ on:
       tag_version:
         required: false
         type: string
+      dry_run:
+        required: false
+        type: boolean
 
 permissions: {}
 
@@ -33,5 +36,6 @@ jobs:
       dist_tag: ${{ inputs.dist_tag }}
       version_name: ${{ inputs.version_name }}
       tag_version: ${{ inputs.tag_version }}
+      dry_run: ${{ inputs.dry_run }}
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
