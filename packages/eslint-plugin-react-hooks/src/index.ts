@@ -14,7 +14,6 @@ import {
 } from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
 
-// All rules
 const rules = {
   'exhaustive-deps': ExhaustiveDeps,
   'rules-of-hooks': RulesOfHooks,
@@ -23,7 +22,6 @@ const rules = {
   ),
 } satisfies Record<string, Rule.RuleModule>;
 
-// Basic hooks rules (for recommended config)
 const basicRuleConfigs = {
   'react-hooks/rules-of-hooks': 'error',
   'react-hooks/exhaustive-deps': 'warn',
@@ -38,15 +36,40 @@ const compilerRuleConfigs = Object.fromEntries(
   }),
 ) as Record<`react-hooks/${string}`, Linter.RuleEntry>;
 
-// All rules including compiler rules (for recommended-latest config)
 const allRuleConfigs: Linter.RulesRecord = {
   ...basicRuleConfigs,
   ...compilerRuleConfigs,
 };
 
-type FlatConfig = {
+const plugins = ['react-hooks'];
+
+type ReactHooksFlatConfig = {
   plugins: Record<string, any>;
   rules: Linter.RulesRecord;
+};
+
+const configs = {
+  'recommended-legacy': {
+    plugins,
+    rules: basicRuleConfigs,
+  },
+  'recommended-latest-legacy': {
+    plugins,
+    rules: allRuleConfigs,
+  },
+  'flat/recommended': {
+    plugins,
+    rules: basicRuleConfigs,
+  },
+  'recommended-latest': {
+    plugins,
+    rules: allRuleConfigs,
+  },
+  recommended: {
+    plugins,
+    rules: basicRuleConfigs,
+  },
+  flat: {} as Record<string, ReactHooksFlatConfig>,
 };
 
 const plugin = {
@@ -54,58 +77,30 @@ const plugin = {
     name: 'eslint-plugin-react-hooks',
   },
   rules,
-  configs: {} as {
-    'recommended-legacy': {
-      plugins: Array<string>;
-      rules: Linter.RulesRecord;
-    };
-    'recommended-latest-legacy': {
-      plugins: Array<string>;
-      rules: Linter.RulesRecord;
-    };
-    'flat/recommended': Array<FlatConfig>;
-    'recommended-latest': Array<FlatConfig>;
-    recommended: Array<FlatConfig>;
-  },
+  configs,
 };
 
-Object.assign(plugin.configs, {
+Object.assign(configs.flat, {
   'recommended-legacy': {
-    plugins: ['react-hooks'],
-    rules: basicRuleConfigs,
+    plugins: {'react-hooks': plugin},
+    rules: configs['recommended-legacy'].rules,
   },
-
   'recommended-latest-legacy': {
-    plugins: ['react-hooks'],
-    rules: allRuleConfigs,
+    plugins: {'react-hooks': plugin},
+    rules: configs['recommended-latest-legacy'].rules,
   },
-
-  'flat/recommended': [
-    {
-      plugins: {
-        'react-hooks': plugin,
-      },
-      rules: basicRuleConfigs,
-    },
-  ],
-
-  'recommended-latest': [
-    {
-      plugins: {
-        'react-hooks': plugin,
-      },
-      rules: allRuleConfigs,
-    },
-  ],
-
-  recommended: [
-    {
-      plugins: {
-        'react-hooks': plugin,
-      },
-      rules: basicRuleConfigs,
-    },
-  ],
+  'flat/recommended': {
+    plugins: {'react-hooks': plugin},
+    rules: configs['flat/recommended'].rules,
+  },
+  'recommended-latest': {
+    plugins: {'react-hooks': plugin},
+    rules: configs['recommended-latest'].rules,
+  },
+  recommended: {
+    plugins: {'react-hooks': plugin},
+    rules: configs.recommended.rules,
+  },
 });
 
 export default plugin;
