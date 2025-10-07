@@ -59,11 +59,6 @@ const plugin = {
       plugins: Array<string>;
       rules: Linter.RulesRecord;
     };
-    'recommended-latest-legacy': {
-      plugins: Array<string>;
-      rules: Linter.RulesRecord;
-    };
-    'flat/recommended': Array<FlatConfig>;
     'recommended-latest': Array<FlatConfig>;
     recommended: Array<FlatConfig>;
   },
@@ -72,22 +67,8 @@ const plugin = {
 Object.assign(plugin.configs, {
   'recommended-legacy': {
     plugins: ['react-hooks'],
-    rules: basicRuleConfigs,
-  },
-
-  'recommended-latest-legacy': {
-    plugins: ['react-hooks'],
     rules: allRuleConfigs,
   },
-
-  'flat/recommended': [
-    {
-      plugins: {
-        'react-hooks': plugin,
-      },
-      rules: basicRuleConfigs,
-    },
-  ],
 
   'recommended-latest': [
     {
@@ -103,7 +84,7 @@ Object.assign(plugin.configs, {
       plugins: {
         'react-hooks': plugin,
       },
-      rules: basicRuleConfigs,
+      rules: allRuleConfigs,
     },
   ],
 });
