@@ -23,7 +23,7 @@ describe('ViewTransitionReactServer', () => {
     jest.resetModules();
     jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
-    ViewTransition = ReactServer.unstable_ViewTransition;
+    ViewTransition = ReactServer.ViewTransition;
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
 
     jest.resetModules();
