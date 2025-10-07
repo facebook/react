@@ -32889,12 +32889,10 @@ __DEV__ &&
         : Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
     };
     enableFragmentRefsScrollIntoView &&
-      (FragmentInstance.prototype.experimental_scrollIntoView = function (
-        alignToTop
-      ) {
+      (FragmentInstance.prototype.scrollIntoView = function (alignToTop) {
         if ("object" === typeof alignToTop)
           throw Error(
-            "FragmentInstance.experimental_scrollIntoView() does not support scrollIntoViewOptions. Use the alignToTop boolean instead."
+            "FragmentInstance.scrollIntoView() does not support scrollIntoViewOptions. Use the alignToTop boolean instead."
           );
         var children = [];
         traverseVisibleHostChildren(
@@ -33231,11 +33229,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-classic-6a8c7fb6-20251006" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-classic-a4eb2dfa-20251006" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-classic-6a8c7fb6-20251006\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-classic-a4eb2dfa-20251006\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33278,10 +33276,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-classic-6a8c7fb6-20251006",
+          version: "19.3.0-www-classic-a4eb2dfa-20251006",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-classic-6a8c7fb6-20251006"
+          reconcilerVersion: "19.3.0-www-classic-a4eb2dfa-20251006"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -34060,5 +34058,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-classic-6a8c7fb6-20251006";
+    exports.version = "19.3.0-www-classic-a4eb2dfa-20251006";
   })();
