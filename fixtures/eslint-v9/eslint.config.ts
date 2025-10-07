@@ -12,7 +12,7 @@ export default defineConfig([
         },
       },
     },
-    extends: [reactHooks.configs['recommended-latest']],
+    extends: [reactHooks.configs['recommended']],
     rules: {
       'react-hooks/exhaustive-deps': 'error',
     },
