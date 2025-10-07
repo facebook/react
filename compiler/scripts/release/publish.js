@@ -145,10 +145,15 @@ async function main() {
       files: {exclude: ['.DS_Store']},
     });
     const truncatedHash = hash.slice(0, 7);
-    let newVersion =
-      argv.tagVersion == null || argv.tagVersion === ''
-        ? `${argv.versionName}-${argv.tag}`
-        : `${argv.versionName}-${argv.tag}.${argv.tagVersion}`;
+    let newVersion;
+    if (argv.tag === 'latest') {
+      newVersion = argv.versionName;
+    } else {
+      newVersion =
+        argv.tagVersion == null || argv.tagVersion === ''
+          ? `${argv.versionName}-${argv.tag}`
+          : `${argv.versionName}-${argv.tag}.${argv.tagVersion}`;
+    }
     if (argv.tag === 'experimental' || argv.tag === 'beta') {
       newVersion = `${newVersion}-${truncatedHash}-${dateString}`;
     }
