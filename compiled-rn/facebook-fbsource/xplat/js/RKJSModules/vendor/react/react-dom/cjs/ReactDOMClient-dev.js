@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6adb28befe05208cabc4f01bdd5175cb>>
+ * @generated SignedSource<<e280d53b5a8ff5551604499ee38baf02>>
  */
 
 /*
@@ -29654,12 +29654,10 @@ __DEV__ &&
         : Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
     };
     enableFragmentRefsScrollIntoView &&
-      (FragmentInstance.prototype.experimental_scrollIntoView = function (
-        alignToTop
-      ) {
+      (FragmentInstance.prototype.scrollIntoView = function (alignToTop) {
         if ("object" === typeof alignToTop)
           throw Error(
-            "FragmentInstance.experimental_scrollIntoView() does not support scrollIntoViewOptions. Use the alignToTop boolean instead."
+            "FragmentInstance.scrollIntoView() does not support scrollIntoViewOptions. Use the alignToTop boolean instead."
           );
         var children = [];
         traverseVisibleHostChildren(
@@ -30126,11 +30124,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-6a8c7fb6-20251006" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-3025aa39-20251007" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-6a8c7fb6-20251006\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-3025aa39-20251007\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30167,10 +30165,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-6a8c7fb6-20251006",
+          version: "19.3.0-native-fb-3025aa39-20251007",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-6a8c7fb6-20251006"
+          reconcilerVersion: "19.3.0-native-fb-3025aa39-20251007"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30320,5 +30318,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.3.0-native-fb-6a8c7fb6-20251006";
+    exports.version = "19.3.0-native-fb-3025aa39-20251007";
   })();
