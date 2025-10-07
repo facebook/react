@@ -4823,6 +4823,9 @@ function renderDebugModel(
       return value;
     }
 
+    if (value instanceof Date) {
+      return serializeDate(value);
+    }
     if (value instanceof Map) {
       return serializeDebugMap(request, counter, value);
     }
@@ -4930,15 +4933,6 @@ function renderDebugModel(
   }
 
   if (typeof value === 'string') {
-    if (value[value.length - 1] === 'Z') {
-      // Possibly a Date, whose toJSON automatically calls toISOString
-      // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
-      // $FlowFixMe[incompatible-use]
-      const originalValue = parent[parentPropertyName];
-      if (originalValue instanceof Date) {
-        return serializeDateFromDateJSON(value);
-      }
-    }
     if (value.length >= 1024) {
       // Large strings are counted towards the object limit.
       if (counter.objectLimit <= 0) {
@@ -5036,10 +5030,6 @@ function renderDebugModel(
     return serializeBigInt(value);
   }
 
-  if (value instanceof Date) {
-    return serializeDate(value);
-  }
-
   return 'unknown type ' + typeof value;
 }
 
@@ -5058,12 +5048,15 @@ function serializeDebugModel(
     value: ReactClientValue,
   ): ReactJSONValue {
     try {
+      // By-pass toJSON and use the original value.
+      // $FlowFixMe[incompatible-use]
+      const originalValue = this[parentPropertyName];
       return renderDebugModel(
         request,
         counter,
         this,
         parentPropertyName,
-        value,
+        originalValue,
       );
     } catch (x) {
       return (
@@ -5114,12 +5107,15 @@ function emitOutlinedDebugModelChunk(
     value: ReactClientValue,
   ): ReactJSONValue {
     try {
+      // By-pass toJSON and use the original value.
+      // $FlowFixMe[incompatible-use]
+      const originalValue = this[parentPropertyName];
       return renderDebugModel(
         request,
         counter,
         this,
         parentPropertyName,
-        value,
+        originalValue,
       );
     } catch (x) {
       return (
