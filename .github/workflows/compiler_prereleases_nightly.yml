@@ -19,5 +19,6 @@ jobs:
       release_channel: experimental
       dist_tag: experimental
       version_name: '0.0.0'
+      dry_run: false
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
