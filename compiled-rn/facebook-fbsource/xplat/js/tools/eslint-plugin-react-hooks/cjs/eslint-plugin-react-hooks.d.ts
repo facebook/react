@@ -1,7 +1,7 @@
 import * as estree from 'estree';
 import { Rule, Linter } from 'eslint';
 
-type FlatConfig = {
+type ReactHooksFlatConfig = {
     plugins: Record<string, any>;
     rules: Linter.RulesRecord;
 };
@@ -77,17 +77,36 @@ declare const plugin: {
         };
     };
     configs: {
-        "recommended-legacy": {
-            plugins: Array<string>;
+        'recommended-legacy': {
+            plugins: string[];
+            rules: {
+                readonly 'react-hooks/rules-of-hooks': "error";
+                readonly 'react-hooks/exhaustive-deps': "warn";
+            };
+        };
+        'recommended-latest-legacy': {
+            plugins: string[];
             rules: Linter.RulesRecord;
         };
-        "recommended-latest-legacy": {
-            plugins: Array<string>;
+        'flat/recommended': {
+            plugins: string[];
+            rules: {
+                readonly 'react-hooks/rules-of-hooks': "error";
+                readonly 'react-hooks/exhaustive-deps': "warn";
+            };
+        };
+        'recommended-latest': {
+            plugins: string[];
             rules: Linter.RulesRecord;
         };
-        "flat/recommended": Array<FlatConfig>;
-        "recommended-latest": Array<FlatConfig>;
-        recommended: Array<FlatConfig>;
+        recommended: {
+            plugins: string[];
+            rules: {
+                readonly 'react-hooks/rules-of-hooks': "error";
+                readonly 'react-hooks/exhaustive-deps': "warn";
+            };
+        };
+        flat: Record<string, ReactHooksFlatConfig>;
     };
 };
 

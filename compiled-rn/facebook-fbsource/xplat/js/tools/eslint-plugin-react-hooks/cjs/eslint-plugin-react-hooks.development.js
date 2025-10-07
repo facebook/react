@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<c035b0fb16cee4db9964640ed7ee35ea>>
+ * @generated SignedSource<<21b9deff487f39333ec0928ac584a3e0>>
  */
 
 'use strict';
@@ -57755,46 +57755,58 @@ const compilerRuleConfigs = Object.fromEntries(Object.entries(recommendedRules).
     ];
 }));
 const allRuleConfigs = Object.assign(Object.assign({}, basicRuleConfigs), compilerRuleConfigs);
+const plugins = ['react-hooks'];
+const configs = {
+    'recommended-legacy': {
+        plugins,
+        rules: basicRuleConfigs,
+    },
+    'recommended-latest-legacy': {
+        plugins,
+        rules: allRuleConfigs,
+    },
+    'flat/recommended': {
+        plugins,
+        rules: basicRuleConfigs,
+    },
+    'recommended-latest': {
+        plugins,
+        rules: allRuleConfigs,
+    },
+    recommended: {
+        plugins,
+        rules: basicRuleConfigs,
+    },
+    flat: {},
+};
 const plugin = {
     meta: {
         name: 'eslint-plugin-react-hooks',
     },
     rules,
-    configs: {},
+    configs,
 };
-Object.assign(plugin.configs, {
+Object.assign(configs.flat, {
     'recommended-legacy': {
-        plugins: ['react-hooks'],
-        rules: basicRuleConfigs,
+        plugins: { 'react-hooks': plugin },
+        rules: configs['recommended-legacy'].rules,
     },
     'recommended-latest-legacy': {
-        plugins: ['react-hooks'],
-        rules: allRuleConfigs,
+        plugins: { 'react-hooks': plugin },
+        rules: configs['recommended-latest-legacy'].rules,
     },
-    'flat/recommended': [
-        {
-            plugins: {
-                'react-hooks': plugin,
-            },
-            rules: basicRuleConfigs,
-        },
-    ],
-    'recommended-latest': [
-        {
-            plugins: {
-                'react-hooks': plugin,
-            },
-            rules: allRuleConfigs,
-        },
-    ],
-    recommended: [
-        {
-            plugins: {
-                'react-hooks': plugin,
-            },
-            rules: basicRuleConfigs,
-        },
-    ],
+    'flat/recommended': {
+        plugins: { 'react-hooks': plugin },
+        rules: configs['flat/recommended'].rules,
+    },
+    'recommended-latest': {
+        plugins: { 'react-hooks': plugin },
+        rules: configs['recommended-latest'].rules,
+    },
+    recommended: {
+        plugins: { 'react-hooks': plugin },
+        rules: configs.recommended.rules,
+    },
 });
 
 module.exports = plugin;
