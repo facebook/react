@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<08d58889d0be92aa3f3b85824db09b2f>>
+ * @generated SignedSource<<18dc7eeaa901110365c501a7ae69a928>>
  */
 
 'use strict';
@@ -18006,7 +18006,8 @@ function printErrorSummary(category, message) {
         case ErrorCategory.StaticComponents:
         case ErrorCategory.Suppression:
         case ErrorCategory.Syntax:
-        case ErrorCategory.UseMemo: {
+        case ErrorCategory.UseMemo:
+        case ErrorCategory.VoidUseMemo: {
             heading = 'Error';
             break;
         }
@@ -18037,6 +18038,7 @@ var ErrorCategory;
     ErrorCategory["CapitalizedCalls"] = "CapitalizedCalls";
     ErrorCategory["StaticComponents"] = "StaticComponents";
     ErrorCategory["UseMemo"] = "UseMemo";
+    ErrorCategory["VoidUseMemo"] = "VoidUseMemo";
     ErrorCategory["Factories"] = "Factories";
     ErrorCategory["PreserveManualMemo"] = "PreserveManualMemo";
     ErrorCategory["IncompatibleLibrary"] = "IncompatibleLibrary";
@@ -18301,6 +18303,15 @@ function getRuleForCategoryImpl(category) {
                 name: 'use-memo',
                 description: 'Validates usage of the useMemo() hook against common mistakes. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
                 preset: LintRulePreset.Recommended,
+            };
+        }
+        case ErrorCategory.VoidUseMemo: {
+            return {
+                category,
+                severity: ErrorSeverity.Error,
+                name: 'void-use-memo',
+                description: 'Validates that useMemos always return a value. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
+                preset: LintRulePreset.RecommendedLatest,
             };
         }
         case ErrorCategory.IncompatibleLibrary: {
@@ -44583,7 +44594,7 @@ function dropManualMemoization(func) {
                         if (funcToCheck !== undefined && funcToCheck.loweredFunc.func) {
                             if (!hasNonVoidReturn(funcToCheck.loweredFunc.func)) {
                                 errors.pushDiagnostic(CompilerDiagnostic.create({
-                                    category: ErrorCategory.UseMemo,
+                                    category: ErrorCategory.VoidUseMemo,
                                     reason: 'useMemo() callbacks must return a value',
                                     description: `This ${manualMemo.loadInstr.value.kind === 'PropertyLoad'
                                         ? 'React.useMemo'
