@@ -536,7 +536,8 @@ function printErrorSummary(category: ErrorCategory, message: string): string {
     case ErrorCategory.StaticComponents:
     case ErrorCategory.Suppression:
     case ErrorCategory.Syntax:
-    case ErrorCategory.UseMemo: {
+    case ErrorCategory.UseMemo:
+    case ErrorCategory.VoidUseMemo: {
       heading = 'Error';
       break;
     }
@@ -582,6 +583,10 @@ export enum ErrorCategory {
    * Checking for valid usage of manual memoization
    */
   UseMemo = 'UseMemo',
+  /**
+   * Checking that useMemos always return a value
+   */
+  VoidUseMemo = 'VoidUseMemo',
   /**
    * Checking for higher order functions acting as factories for components/hooks
    */
@@ -975,6 +980,16 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         description:
           'Validates usage of the useMemo() hook against common mistakes. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
         preset: LintRulePreset.Recommended,
+      };
+    }
+    case ErrorCategory.VoidUseMemo: {
+      return {
+        category,
+        severity: ErrorSeverity.Error,
+        name: 'void-use-memo',
+        description:
+          'Validates that useMemos always return a value. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
+        preset: LintRulePreset.RecommendedLatest,
       };
     }
     case ErrorCategory.IncompatibleLibrary: {
