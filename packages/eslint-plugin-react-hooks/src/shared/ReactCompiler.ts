@@ -14,6 +14,7 @@ import {
   LintRules,
   type LintRule,
   ErrorSeverity,
+  LintRulePreset,
 } from 'babel-plugin-react-compiler';
 import {type Linter, type Rule} from 'eslint';
 import runReactCompiler, {RunCacheEntry} from './RunReactCompiler';
@@ -149,7 +150,7 @@ function makeRule(rule: LintRule): Rule.RuleModule {
       type: 'problem',
       docs: {
         description: rule.description,
-        recommended: rule.recommended,
+        recommended: rule.preset === LintRulePreset.Recommended,
       },
       fixable: 'code',
       hasSuggestions: true,
@@ -164,23 +165,26 @@ type RulesConfig = {
   [name: string]: {rule: Rule.RuleModule; severity: ErrorSeverity};
 };
 
-export const allRules: RulesConfig = LintRules.reduce(
-  (acc, rule) => {
-    acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
-    return acc;
-  },
-  {} as RulesConfig,
-);
+export const allRules: RulesConfig = LintRules.reduce((acc, rule) => {
+  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
+  return acc;
+}, {} as RulesConfig);
 
 export const recommendedRules: RulesConfig = LintRules.filter(
-  rule => rule.recommended,
-).reduce(
-  (acc, rule) => {
-    acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
-    return acc;
-  },
-  {} as RulesConfig,
-);
+  rule => rule.preset === LintRulePreset.Recommended,
+).reduce((acc, rule) => {
+  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
+  return acc;
+}, {} as RulesConfig);
+
+export const recommendedLatestRules: RulesConfig = LintRules.filter(
+  rule =>
+    rule.preset === LintRulePreset.Recommended ||
+    rule.preset === LintRulePreset.RecommendedLatest,
+).reduce((acc, rule) => {
+  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
+  return acc;
+}, {} as RulesConfig);
 
 export function mapErrorSeverityToESlint(
   severity: ErrorSeverity,

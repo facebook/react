@@ -11,6 +11,7 @@ import {
   allRules,
   mapErrorSeverityToESlint,
   recommendedRules,
+  recommendedLatestRules,
 } from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
 
@@ -27,7 +28,7 @@ const basicRuleConfigs = {
   'react-hooks/exhaustive-deps': 'warn',
 } as const satisfies Linter.RulesRecord;
 
-const compilerRuleConfigs = Object.fromEntries(
+const recommendedCompilerRuleConfigs = Object.fromEntries(
   Object.entries(recommendedRules).map(([name, ruleConfig]) => {
     return [
       `react-hooks/${name}` as const,
@@ -36,9 +37,22 @@ const compilerRuleConfigs = Object.fromEntries(
   }),
 ) as Record<`react-hooks/${string}`, Linter.RuleEntry>;
 
-const allRuleConfigs: Linter.RulesRecord = {
+const recommendedLatestCompilerRuleConfigs = Object.fromEntries(
+  Object.entries(recommendedLatestRules).map(([name, ruleConfig]) => {
+    return [
+      `react-hooks/${name}` as const,
+      mapErrorSeverityToESlint(ruleConfig.severity),
+    ] as const;
+  }),
+) as Record<`react-hooks/${string}`, Linter.RuleEntry>;
+
+const recommendedRuleConfigs: Linter.RulesRecord = {
   ...basicRuleConfigs,
-  ...compilerRuleConfigs,
+  ...recommendedCompilerRuleConfigs,
+};
+const recommendedLatestRuleConfigs: Linter.RulesRecord = {
+  ...basicRuleConfigs,
+  ...recommendedLatestCompilerRuleConfigs,
 };
 
 const plugins = ['react-hooks'];
@@ -51,11 +65,11 @@ type ReactHooksFlatConfig = {
 const configs = {
   recommended: {
     plugins,
-    rules: allRuleConfigs,
+    rules: recommendedRuleConfigs,
   },
   'recommended-latest': {
     plugins,
-    rules: allRuleConfigs,
+    rules: recommendedLatestRuleConfigs,
   },
   flat: {} as Record<string, ReactHooksFlatConfig>,
 };
