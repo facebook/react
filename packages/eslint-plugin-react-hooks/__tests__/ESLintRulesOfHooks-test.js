@@ -739,6 +739,58 @@ const allTests = {
         }
       `,
     },
+    // useMemo()
+    {
+      code: normalizeIndent`
+        // base case 
+        function ComponentWithHook() {
+          useMemo(() => {
+            return 1
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // case: all paths with valued return
+        function ComponentWithHook() {
+          useMemo(() => {
+            if(1 == 1){
+              return 1
+            }
+            return 2
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // case: 1 path with valued return
+        function ComponentWithHook() {
+          useMemo(() => {
+            if(1 == 1){
+              return 1
+            }
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // case: useMemo with no fn
+        function ComponentWithHook() {
+          useMemo();
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // case: useMemo with non-fn arg (ie. doesn't error out)
+        function ComponentWithHook() {
+          useMemo(1);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -1665,6 +1717,78 @@ const allTests = {
           `It cannot be assigned to a variable or passed down.`,
       ],
     },
+    // useMemo()
+    {
+      code: normalizeIndent`
+        // case: no return
+        function ComponentWithHook() {
+          useMemo(() => {});
+        }
+      `,
+      errors: [useMemoHookMissingReturnError('useMemo')],
+    },
+    {
+      code: normalizeIndent`
+        // case: empty return
+        function ComponentWithHook() {
+          useMemo(() => {
+            return  
+          });
+        }
+      `,
+      errors: [useMemoHookMissingReturnError('useMemo')],
+    },
+    {
+      code: normalizeIndent`
+        // case: no return (excludes nested function)
+        function ComponentWithHook() {
+          useMemo(() => {
+            // FunctionDeclaration
+            function A(){
+              return
+            }
+            // FunctionExpression
+            const B = function(){
+              return
+            } 
+            // ArrowFunctionExpression
+            const C = () => {
+              return
+            }  
+          });
+        }
+      `,
+      errors: [useMemoHookMissingReturnError('useMemo')],
+    },
+    {
+      code: normalizeIndent`
+        // case: no return (excludes nested function, .map)
+        function ComponentWithHook() {
+          useMemo(() => {
+            const A = someVar.map(() => {
+              return 1;
+            })  
+          });
+        }
+      `,
+      errors: [useMemoHookMissingReturnError('useMemo')],
+    },
+    {
+      code: normalizeIndent`
+        // case: no return (nested useMemo)
+        function ComponentWithHook() {
+          useMemo(() => {
+            useMemo(() => {
+            })
+            return 1;
+          });
+        }
+      `,
+      errors: [
+        useMemoHookMissingReturnError('useMemo'),
+        'React Hook "useMemo" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function.',
+      ],
+    },
   ],
 };
 
@@ -1743,6 +1867,12 @@ function asyncComponentHookError(fn) {
 function tryCatchUseError(fn) {
   return {
     message: `React Hook "${fn}" cannot be called in a try/catch block.`,
+  };
+}
+
+function useMemoHookMissingReturnError(fn) {
+  return {
+    message: `React Hook "${fn}" must contain at least 1 valued return statement.`,
   };
 }
 

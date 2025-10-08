@@ -21,6 +21,7 @@ import type {
 // @ts-expect-error untyped module
 import CodePathAnalyzer from '../code-path-analysis/code-path-analyzer';
 import {getAdditionalEffectHooksFromSettings} from '../shared/Utils';
+import estraverse from 'estraverse';
 
 /**
  * Catch all identifiers that begin with "use" followed by an uppercase Latin
@@ -179,8 +180,24 @@ function useEffectEventError(fn: string, called: boolean): string {
   );
 }
 
+function isUseMemoIdentifier(node: Node): boolean {
+  return isReactFunction(node, 'useMemo');
+}
+
 function isUseIdentifier(node: Node): boolean {
   return isReactFunction(node, 'use');
+}
+
+function isFunctionDeclaration(node?: Node): boolean {
+  if (!node) {
+    return false;
+  }
+
+  const result =
+    node.type === 'FunctionDeclaration' ||
+    node.type === 'FunctionExpression' ||
+    node.type === 'ArrowFunctionExpression';
+  return result;
 }
 
 const rule = {
@@ -617,6 +634,52 @@ const rule = {
                   hook,
                 )}" cannot be called in a try/catch block.`,
               });
+            }
+
+            if (isUseMemoIdentifier(hook)) {
+              const checkUseMemoHook = () => {
+                const {parent} = hook;
+                if (!parent || parent.type !== 'CallExpression') {
+                  return;
+                }
+
+                const [fnNode] = parent.arguments;
+                if (!fnNode || !isFunctionDeclaration(fnNode)) {
+                  return;
+                }
+
+                let isFnReturnStatementPresent = false;
+                estraverse.traverse(fnNode, {
+                  enter: node => {
+                    if (node === fnNode) {
+                      return;
+                    }
+
+                    if (isFunctionDeclaration(node)) {
+                      // ignore nested functions (ie. check only for return statements for current fn)
+                      return estraverse.VisitorOption.Skip;
+                    }
+
+                    if (node.type === 'ReturnStatement' && !!node.argument) {
+                      isFnReturnStatementPresent = true;
+                      // early return, hook already has at least 1 valued return statement
+                      return estraverse.VisitorOption.Break;
+                    }
+
+                    return;
+                  },
+                });
+
+                if (!isFnReturnStatementPresent) {
+                  context.report({
+                    node: hook,
+                    message: `React Hook "${getSourceCode().getText(
+                      hook,
+                    )}" must contain at least 1 valued return statement.`,
+                  });
+                }
+              };
+              checkUseMemoHook();
             }
 
             // Report an error if a hook may be called more then once.
