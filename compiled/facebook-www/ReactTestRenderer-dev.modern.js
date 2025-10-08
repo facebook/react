@@ -15705,10 +15705,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-modern-3e1b34dc-20251008",
+        version: "19.3.0-www-modern-4b3e662e-20251008",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-3e1b34dc-20251008"
+        reconcilerVersion: "19.3.0-www-modern-4b3e662e-20251008"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15844,5 +15844,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.3.0-www-modern-3e1b34dc-20251008";
+    exports.version = "19.3.0-www-modern-4b3e662e-20251008";
   })();
