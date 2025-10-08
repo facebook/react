@@ -24,19 +24,61 @@ For users of 6.0 and beyond, add the `recommended` config.
 
 ```js
 // eslint.config.js
-import reactHooks from 'eslint-plugin-react-hooks';
-import { defineConfig } from 'eslint/config';
+import reactHooks from "eslint-plugin-react-hooks";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  {
+    files: ["src/**/*.{js,jsx}"],
+    plugins: {
+      "react-hooks": reactHooks,
+    },
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
+    },
+    extends: ["react-hooks/recommended"],
+  },
+]);
+```
+
+If your project uses typescript, you'll also need to install [typescript-eslint](https://typescript-eslint.io) and enable its rules:
+
+```js
+// eslint.config.js
+import reactHooks from "eslint-plugin-react-hooks";
+import { defineConfig } from "eslint/config";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
   {
     files: ["src/**/*.{js,jsx,ts,tsx}"],
     plugins: {
-      'react-hooks': reactHooks,
+      "react-hooks": reactHooks,
     },
-    extends: ['react-hooks/recommended'],
+    extends: [tseslint.configs.recommended, "react-hooks/recommended"],
   },
 ]);
 ```
+
+You can opt into the latest [compiler powered rules](https://react.dev/reference/eslint-plugin-react-hooks#additional-rules) one by one:
+
+```js
+export default defineConfig( [
+  {
+    // ...
+    extends: ["react-hooks/recommended"],
+    rules: {
+      "react-hooks/purity": "error",
+      "react-hooks/immutability": "error",
+      //...
+    },
+  },
+]);
+
+```
+Alternatively, use the `recommended-latest` preset, which enables these rules by default.
 
 #### 5.2.0
 
