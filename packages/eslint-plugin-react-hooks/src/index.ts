@@ -44,14 +44,14 @@ const allRuleConfigs: Linter.RulesRecord = {
 const plugins = ['react-hooks'];
 
 type ReactHooksFlatConfig = {
-  plugins: Record<string, any>;
+  plugins: {react: typeof plugin};
   rules: Linter.RulesRecord;
 };
 
 const configs = {
   'recommended-legacy': {
     plugins,
-    rules: basicRuleConfigs,
+    rules: allRuleConfigs,
   },
   'recommended-latest-legacy': {
     plugins,
@@ -75,6 +75,7 @@ const configs = {
 const plugin = {
   meta: {
     name: 'eslint-plugin-react-hooks',
+    version: '7.0.0',
   },
   rules,
   configs,
