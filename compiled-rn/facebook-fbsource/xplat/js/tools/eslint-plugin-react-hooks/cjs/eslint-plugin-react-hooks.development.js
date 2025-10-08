@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<21b9deff487f39333ec0928ac584a3e0>>
+ * @generated SignedSource<<43aeced29e60a97c05240e2616a41646>>
  */
 
 'use strict';
@@ -57757,48 +57757,25 @@ const compilerRuleConfigs = Object.fromEntries(Object.entries(recommendedRules).
 const allRuleConfigs = Object.assign(Object.assign({}, basicRuleConfigs), compilerRuleConfigs);
 const plugins = ['react-hooks'];
 const configs = {
-    'recommended-legacy': {
-        plugins,
-        rules: basicRuleConfigs,
-    },
-    'recommended-latest-legacy': {
+    recommended: {
         plugins,
         rules: allRuleConfigs,
-    },
-    'flat/recommended': {
-        plugins,
-        rules: basicRuleConfigs,
     },
     'recommended-latest': {
         plugins,
         rules: allRuleConfigs,
-    },
-    recommended: {
-        plugins,
-        rules: basicRuleConfigs,
     },
     flat: {},
 };
 const plugin = {
     meta: {
         name: 'eslint-plugin-react-hooks',
+        version: '7.0.0',
     },
     rules,
     configs,
 };
 Object.assign(configs.flat, {
-    'recommended-legacy': {
-        plugins: { 'react-hooks': plugin },
-        rules: configs['recommended-legacy'].rules,
-    },
-    'recommended-latest-legacy': {
-        plugins: { 'react-hooks': plugin },
-        rules: configs['recommended-latest-legacy'].rules,
-    },
-    'flat/recommended': {
-        plugins: { 'react-hooks': plugin },
-        rules: configs['flat/recommended'].rules,
-    },
     'recommended-latest': {
         plugins: { 'react-hooks': plugin },
         rules: configs['recommended-latest'].rules,

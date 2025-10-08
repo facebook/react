@@ -2,12 +2,15 @@ import * as estree from 'estree';
 import { Rule, Linter } from 'eslint';
 
 type ReactHooksFlatConfig = {
-    plugins: Record<string, any>;
+    plugins: {
+        react: any;
+    };
     rules: Linter.RulesRecord;
 };
 declare const plugin: {
     meta: {
         name: string;
+        version: string;
     };
     rules: {
         'exhaustive-deps': {
@@ -77,34 +80,13 @@ declare const plugin: {
         };
     };
     configs: {
-        'recommended-legacy': {
-            plugins: string[];
-            rules: {
-                readonly 'react-hooks/rules-of-hooks': "error";
-                readonly 'react-hooks/exhaustive-deps': "warn";
-            };
-        };
-        'recommended-latest-legacy': {
+        recommended: {
             plugins: string[];
             rules: Linter.RulesRecord;
-        };
-        'flat/recommended': {
-            plugins: string[];
-            rules: {
-                readonly 'react-hooks/rules-of-hooks': "error";
-                readonly 'react-hooks/exhaustive-deps': "warn";
-            };
         };
         'recommended-latest': {
             plugins: string[];
             rules: Linter.RulesRecord;
-        };
-        recommended: {
-            plugins: string[];
-            rules: {
-                readonly 'react-hooks/rules-of-hooks': "error";
-                readonly 'react-hooks/exhaustive-deps': "warn";
-            };
         };
         flat: Record<string, ReactHooksFlatConfig>;
     };

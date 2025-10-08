@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<c5262576a55132309191f889a6558388>>
+ * @generated SignedSource<<e416ff37c3795d6573ea08868e784b8a>>
  */
 
 'use strict';
@@ -57536,48 +57536,25 @@ const compilerRuleConfigs = Object.fromEntries(Object.entries(recommendedRules).
 const allRuleConfigs = Object.assign(Object.assign({}, basicRuleConfigs), compilerRuleConfigs);
 const plugins = ['react-hooks'];
 const configs = {
-    'recommended-legacy': {
-        plugins,
-        rules: basicRuleConfigs,
-    },
-    'recommended-latest-legacy': {
+    recommended: {
         plugins,
         rules: allRuleConfigs,
-    },
-    'flat/recommended': {
-        plugins,
-        rules: basicRuleConfigs,
     },
     'recommended-latest': {
         plugins,
         rules: allRuleConfigs,
-    },
-    recommended: {
-        plugins,
-        rules: basicRuleConfigs,
     },
     flat: {},
 };
 const plugin = {
     meta: {
         name: 'eslint-plugin-react-hooks',
+        version: '7.0.0',
     },
     rules,
     configs,
 };
 Object.assign(configs.flat, {
-    'recommended-legacy': {
-        plugins: { 'react-hooks': plugin },
-        rules: configs['recommended-legacy'].rules,
-    },
-    'recommended-latest-legacy': {
-        plugins: { 'react-hooks': plugin },
-        rules: configs['recommended-latest-legacy'].rules,
-    },
-    'flat/recommended': {
-        plugins: { 'react-hooks': plugin },
-        rules: configs['flat/recommended'].rules,
-    },
     'recommended-latest': {
         plugins: { 'react-hooks': plugin },
         rules: configs['recommended-latest'].rules,
