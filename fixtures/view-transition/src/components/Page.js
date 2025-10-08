@@ -1,6 +1,6 @@
 import React, {
-  unstable_addTransitionType as addTransitionType,
-  unstable_ViewTransition as ViewTransition,
+  addTransitionType,
+  ViewTransition,
   Activity,
   useLayoutEffect,
   useEffect,
