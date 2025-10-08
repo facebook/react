@@ -1,3 +1,9 @@
+## 7.0.0
+
+This release slims down presets to just 2 configurations (`recommended` and `recommended-latest`), and all compiler rules are enabled by default.
+
+- **Breaking:** Removed `recommended-latest-legacy` and `flat/recommended` configs. The plugin now provides `recommended` (legacy and flat configs with all recommended rules),  and `recommended-latest` (legacy and flat configs with all recommended rules plus new bleeding edge experimental compiler rules). ([@poteto](https://github.com/poteto) in [#34757](https://github.com/facebook/react/pull/34757))
+
 ## 6.1.1
 
 **Note:** 6.1.0 accidentally allowed use of `recommended` without flat config, causing errors when used with ESLint v9's `defineConfig()` helper. This has been fixed in 6.1.1.
