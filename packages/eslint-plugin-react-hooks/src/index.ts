@@ -44,22 +44,14 @@ const allRuleConfigs: Linter.RulesRecord = {
 const plugins = ['react-hooks'];
 
 type ReactHooksFlatConfig = {
-  plugins: Record<string, any>;
+  plugins: {react: any};
   rules: Linter.RulesRecord;
 };
 
 const configs = {
   'recommended-legacy': {
     plugins,
-    rules: basicRuleConfigs,
-  },
-  'recommended-latest-legacy': {
-    plugins,
     rules: allRuleConfigs,
-  },
-  'flat/recommended': {
-    plugins,
-    rules: basicRuleConfigs,
   },
   'recommended-latest': {
     plugins,
@@ -67,7 +59,7 @@ const configs = {
   },
   recommended: {
     plugins,
-    rules: basicRuleConfigs,
+    rules: allRuleConfigs,
   },
   flat: {} as Record<string, ReactHooksFlatConfig>,
 };
@@ -75,6 +67,7 @@ const configs = {
 const plugin = {
   meta: {
     name: 'eslint-plugin-react-hooks',
+    version: '7.0.0',
   },
   rules,
   configs,
@@ -84,14 +77,6 @@ Object.assign(configs.flat, {
   'recommended-legacy': {
     plugins: {'react-hooks': plugin},
     rules: configs['recommended-legacy'].rules,
-  },
-  'recommended-latest-legacy': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['recommended-latest-legacy'].rules,
-  },
-  'flat/recommended': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['flat/recommended'].rules,
   },
   'recommended-latest': {
     plugins: {'react-hooks': plugin},
