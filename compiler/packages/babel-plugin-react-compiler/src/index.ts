@@ -14,6 +14,7 @@ export {
   ErrorSeverity,
   ErrorCategory,
   LintRules,
+  LintRulePreset,
   type CompilerErrorDetailOptions,
   type CompilerDiagnosticOptions,
   type CompilerDiagnosticDetail,
