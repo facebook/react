@@ -57,11 +57,6 @@ const recommendedLatestRuleConfigs: Linter.RulesRecord = {
 
 const plugins = ['react-hooks'];
 
-type ReactHooksFlatConfig = {
-  plugins: {react: any};
-  rules: Linter.RulesRecord;
-};
-
 const configs = {
   recommended: {
     plugins,
@@ -71,7 +66,7 @@ const configs = {
     plugins,
     rules: recommendedLatestRuleConfigs,
   },
-  flat: {} as Record<string, ReactHooksFlatConfig>,
+  flat: {} as typeof flatConfigs,
 };
 
 const plugin = {
@@ -83,15 +78,19 @@ const plugin = {
   configs,
 };
 
-Object.assign(configs.flat, {
+const pluginUnknown: unknown = plugin;
+
+const flatConfigs = {
   'recommended-latest': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['recommended-latest'].rules,
+    plugins: {'react-hooks': pluginUnknown},
+    rules: recommendedLatestRuleConfigs,
   },
   recommended: {
-    plugins: {'react-hooks': plugin},
-    rules: configs.recommended.rules,
+    plugins: {'react-hooks': pluginUnknown},
+    rules: recommendedRuleConfigs,
   },
-});
+};
+
+configs.flat = flatConfigs;
 
 export default plugin;
