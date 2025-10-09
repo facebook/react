@@ -2281,4 +2281,64 @@ describe('ReactDOMForm', () => {
     await submit(formRef.current);
     assertLog(['stringified action']);
   });
+
+  it('form actions should retain status when nested state changes', async () => {
+    const formRef = React.createRef();
+
+    let rerenderUnrelatedStatus;
+    function UnrelatedStatus() {
+      const {pending} = useFormStatus();
+      const [counter, setCounter] = useState(0);
+      rerenderUnrelatedStatus = () => setCounter(n => n + 1);
+      Scheduler.log(`[unrelated form] pending: ${pending}, state: ${counter}`);
+    }
+
+    let rerenderTargetStatus;
+    function TargetStatus() {
+      const {pending} = useFormStatus();
+      const [counter, setCounter] = useState(0);
+      Scheduler.log(`[target form] pending: ${pending}, state: ${counter}`);
+      rerenderTargetStatus = () => setCounter(n => n + 1);
+    }
+
+    function App() {
+      async function action() {
+        return new Promise(resolve => {
+          // never resolves
+        });
+      }
+
+      return (
+        <>
+          <form action={action} ref={formRef}>
+            <input type="submit" />
+            <TargetStatus />
+          </form>
+          <form>
+            <UnrelatedStatus />
+          </form>
+        </>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    assertLog([
+      '[target form] pending: false, state: 0',
+      '[unrelated form] pending: false, state: 0',
+    ]);
+
+    await submit(formRef.current);
+
+    assertLog(['[target form] pending: true, state: 0']);
+
+    await act(() => rerenderTargetStatus());
+
+    assertLog(['[target form] pending: true, state: 1']);
+
+    await act(() => rerenderUnrelatedStatus());
+
+    assertLog(['[unrelated form] pending: false, state: 1']);
+  });
 });
