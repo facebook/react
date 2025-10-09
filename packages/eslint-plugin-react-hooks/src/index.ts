@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import type {Linter, Rule} from 'eslint';
+import type {ESLint, Linter, Rule} from 'eslint';
 
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
 import {
@@ -55,24 +55,21 @@ const recommendedLatestRuleConfigs: Linter.RulesRecord = {
   ...recommendedLatestCompilerRuleConfigs,
 };
 
-const plugins = ['react-hooks'];
-
-type ReactHooksFlatConfig = {
-  plugins: {react: any};
-  rules: Linter.RulesRecord;
+const pluginsLegacy = ['react-hooks'];
+const pluginsFlat = {
+  'react-hooks': {}, // Assign after creating the plugin object
 };
 
-const configs = {
-  recommended: {
-    plugins,
-    rules: recommendedRuleConfigs,
-  },
-  'recommended-latest': {
-    plugins,
-    rules: recommendedLatestRuleConfigs,
-  },
-  flat: {} as Record<string, ReactHooksFlatConfig>,
-};
+interface Plugin extends Omit<ESLint.Plugin, 'configs'> {
+  configs: {
+    recommended: Linter.LegacyConfig;
+    'recommended-latest': Linter.LegacyConfig;
+    flat: {
+      recommended: Linter.Config;
+      'recommended-latest': Linter.Config;
+    };
+  };
+}
 
 const plugin = {
   meta: {
@@ -80,18 +77,28 @@ const plugin = {
     version: '7.0.0',
   },
   rules,
-  configs,
-};
+  configs: {
+    recommended: {
+      plugins: pluginsLegacy,
+      rules: recommendedRuleConfigs,
+    },
+    'recommended-latest': {
+      plugins: pluginsLegacy,
+      rules: recommendedLatestRuleConfigs,
+    },
+    flat: {
+      recommended: {
+        plugins: pluginsFlat,
+        rules: recommendedRuleConfigs,
+      },
+      'recommended-latest': {
+        plugins: pluginsFlat,
+        rules: recommendedLatestRuleConfigs,
+      },
+    },
+  },
+} satisfies Plugin;
 
-Object.assign(configs.flat, {
-  'recommended-latest': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['recommended-latest'].rules,
-  },
-  recommended: {
-    plugins: {'react-hooks': plugin},
-    rules: configs.recommended.rules,
-  },
-});
+pluginsFlat['react-hooks'] = plugin;
 
 export default plugin;
