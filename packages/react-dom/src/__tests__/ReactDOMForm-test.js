@@ -931,6 +931,58 @@ describe('ReactDOMForm', () => {
     assertLog(['Async action finished', 'No pending action']);
   });
 
+  it('formMethod on submit button overrides form method in useFormStatus', async () => {
+    const formRef = React.createRef();
+    const buttonRef = React.createRef();
+
+    function Status() {
+      const {pending, data, action, method} = useFormStatus();
+      if (!pending) {
+        return <Text text="No pending action" />;
+      } else {
+        const foo = data.get('foo');
+        return (
+          <Text
+            text={`Pending action ${action.name}: foo is ${foo}, method is ${method}`}
+          />
+        );
+      }
+    }
+
+    async function myAction() {
+      Scheduler.log('Async action started');
+      await getText('Wait');
+      Scheduler.log('Async action finished');
+    }
+
+    function App() {
+      return (
+        <form action={myAction} ref={formRef}>
+          <input type="text" name="foo" defaultValue="bar" />
+          <button type="submit" formMethod="post" ref={buttonRef} />
+          <Status />
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog(['No pending action']);
+    expect(container.textContent).toBe('No pending action');
+
+    await submit(buttonRef.current);
+    assertLog([
+      'Async action started',
+      'Pending action myAction: foo is bar, method is post',
+    ]);
+    expect(container.textContent).toBe(
+      'Pending action myAction: foo is bar, method is post',
+    );
+
+    await act(() => resolveText('Wait'));
+    assertLog(['Async action finished', 'No pending action']);
+  });
+
   it('should error if submitting a form manually', async () => {
     const ref = React.createRef();
 
@@ -2085,6 +2137,46 @@ describe('ReactDOMForm', () => {
       expect(inputRef.current.value).toBe('Updated again after submission');
     },
   );
+
+  it("submitter's formMethod overrides the form method", async () => {
+    const buttonRef = React.createRef();
+
+    function Status() {
+      const {pending, method} = useFormStatus();
+      return pending ? <Text text={'method is ' + method} /> : null;
+    }
+
+    async function action() {
+      Scheduler.log('action start');
+      await getText('Wait');
+      Scheduler.log('action end');
+    }
+
+    function App() {
+      return (
+        <form action={action} method="dialog">
+          <Status />
+          <button ref={buttonRef} type="submit" formMethod="post" />
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertConsoleErrorDev([
+      'Cannot specify a encType or method for a form that specifies a function as the action. ' +
+        'React provides those automatically. They will get overridden.\n' +
+        '    in form (at **)\n' +
+        '    in App (at **)',
+    ]);
+
+    await submit(buttonRef.current);
+    assertLog(['action start', 'method is post']);
+    expect(container.textContent).toBe('method is post');
+
+    await act(() => resolveText('Wait'));
+    assertLog(['action end']);
+  });
 
   it('useFormStatus is not activated if startTransition is not called', async () => {
     function Output({value}) {
