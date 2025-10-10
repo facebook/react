@@ -40,3 +40,5 @@ locally, by running `yarn` at the install step in the Playground directory to bu
 React Compiler from source and [symlink](https://classic.yarnpkg.com/en/docs/cli/link) it as its dependency.
 This means that Playground is automatically deployed on every push and pull requests will reflect
 the behaviors of React Compiler of that commit.
+
+***Note: A Playground is a safe space where developers can experiment with their code without impacting the main program.***
