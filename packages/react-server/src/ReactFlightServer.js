@@ -2365,8 +2365,9 @@ function visitAsyncNode(
             // we would've returned an IO node. We assume this has the best stack.
             match = ioNode;
           } else if (
-            node.stack === null ||
-            !hasUnfilteredFrame(request, node.stack)
+            (node.stack === null || !hasUnfilteredFrame(request, node.stack)) &&
+            ioNode.stack !== null &&
+            hasUnfilteredFrame(request, ioNode.stack)
           ) {
             // If this Promise was created inside only third party code, then try to use
             // the inner I/O node instead. This could happen if third party calls into first
