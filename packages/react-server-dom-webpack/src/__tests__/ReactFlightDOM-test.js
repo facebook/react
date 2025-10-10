@@ -2087,7 +2087,7 @@ describe('ReactFlightDOM', () => {
             media="(orientation: landscape)"
           />
           <link rel="modulepreload" href="module-resource" />
-          <link rel="preload" as="stylesheet" href="css-resource" />
+          <link rel="preload" as="style" href="css-resource" />
         </head>
         <body>
           <p>hello world</p>

@@ -169,7 +169,7 @@ function processLink(props: Object, formatContext: FormatContext): void {
       return;
     }
     case 'stylesheet': {
-      preload(href, 'stylesheet', {
+      preload(href, 'style', {
         crossOrigin: props.crossOrigin,
         integrity: props.integrity,
         nonce: props.nonce,
