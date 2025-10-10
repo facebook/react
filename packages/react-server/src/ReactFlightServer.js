@@ -5444,9 +5444,8 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
           // See if any of the dependencies are resolved yet.
           node = node.awaited;
         }
-        // For unresolved Promises, check if we have an internal await node that shows what
-        // the async function is currently blocked on. For resolved Promises, the regular
-        // awaited field already contains the necessary information.
+        // For unresolved promise nodes, check if we have an internal await node
+        // that shows what the async function is blocked on.
         if (node.tag === UNRESOLVED_PROMISE_NODE) {
           const internalAwait = getInternalAwaitNode(node);
           if (internalAwait !== null) {
@@ -5454,14 +5453,16 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
           }
         }
         if (node.tag === UNRESOLVED_AWAIT_NODE) {
-          // We found the await that's blocking. Use its stack to show where the component is stuck.
           serializeIONode(request, node, null);
           request.pendingChunks++;
           const env = (0, request.environmentName)();
           const asyncInfo: ReactAsyncInfo = {
-            awaited: ((node: any): ReactIOInfo),
+            awaited: ((node: any): ReactIOInfo), // This is deduped by this reference.
             env: env,
           };
+          // We don't have a start time for this await but in case there was no start time emitted
+          // we need to include something. TODO: We should maybe ideally track the time when we
+          // called .then() but without updating the task.time field since that's used for the cutoff.
           advanceTaskTime(request, task, task.time);
           emitDebugChunk(request, task.id, asyncInfo);
         } else {
