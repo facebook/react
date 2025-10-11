@@ -1913,6 +1913,19 @@ export function attach(
     return false;
   }
 
+  function isUseSyncExternalStoreHook(hookObject: any): boolean {
+    const queue = hookObject.queue;
+    if (!queue) {
+      return false;
+    }
+    const boundHasOwnProperty = hasOwnProperty.bind(queue);
+    return (
+      typeof queue.getSnapshot === 'function' &&
+      boundHasOwnProperty('value') &&
+      boundHasOwnProperty('getSnapshot')
+    );
+  }
+
   function isHookThatCanScheduleUpdate(hookObject: any) {
     const queue = hookObject.queue;
     if (!queue) {
@@ -1929,12 +1942,7 @@ export function attach(
       return true;
     }
 
-    // Detect useSyncExternalStore()
-    return (
-      boundHasOwnProperty('value') &&
-      boundHasOwnProperty('getSnapshot') &&
-      typeof queue.getSnapshot === 'function'
-    );
+    return isUseSyncExternalStoreHook(hookObject);
   }
 
   function didStatefulHookChange(prev: any, next: any): boolean {
@@ -1959,9 +1967,15 @@ export function attach(
       if (didStatefulHookChange(prev, next)) {
         indices.push(index);
       }
+      if (isUseSyncExternalStoreHook(next)) {
+        if (next.next !== null) {
+          next = next.next;
+          prev = prev.next;
+        }
+      }
+      index++;
       next = next.next;
       prev = prev.next;
-      index++;
     }
 
     return indices;
