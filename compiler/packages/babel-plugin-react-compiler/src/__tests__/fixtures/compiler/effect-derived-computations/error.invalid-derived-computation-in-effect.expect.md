@@ -5,9 +5,9 @@
 // @validateNoDerivedComputationsInEffects
 import {useEffect, useState} from 'react';
 
-function BadExample() {
+function Component() {
   const [firstName, setFirstName] = useState('Taylor');
-  const [lastName, setLastName] = useState('Swift');
+  const lastName = 'Swift';
 
   // 🔴 Avoid: redundant state and unnecessary Effect
   const [fullName, setFullName] = useState('');
@@ -17,6 +17,11 @@ function BadExample() {
 
   return <div>{fullName}</div>;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+};
 
 ```
 
@@ -28,7 +33,7 @@ Found 1 error:
 
 Error: You might not need an effect. Derive values in render, not effects.
 
-Derived values (From local state: [firstName, lastName]) should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
+Derived values (From local state: [firstName]) should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
 
 error.invalid-derived-computation-in-effect.ts:11:4
    9 |   const [fullName, setFullName] = useState('');
