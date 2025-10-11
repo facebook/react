@@ -576,7 +576,7 @@ export function renderWithHooks<Props, SecondArg>(
   //
   // We want memoized functions to run twice, too, so account for this, user
   // functions are double invoked during the *first* invocation of the component
-  // function, and are *not* double invoked during the second incovation:
+  // function, and are *not* double invoked during the second invocation:
   //
   // - First execution of component function: user functions are double invoked
   // - Second execution of component function (in Strict Mode, during
@@ -924,7 +924,7 @@ export function bailoutHooks(
 }
 
 export function resetHooksAfterThrow(): void {
-  // This is called immediaetly after a throw. It shouldn't reset the entire
+  // This is called immediately after a throw. It shouldn't reset the entire
   // module state, because the work loop might decide to replay the component
   // again without rewinding.
   //
@@ -2015,7 +2015,7 @@ function rerenderOptimistic<S, A>(
   // the passthrough value changed.
   //
   // So instead of a forked re-render implementation that knows how to handle
-  // render phase udpates, we can use the same implementation as during a
+  // render phase updates, we can use the same implementation as during a
   // regular mount or update.
   const hook = updateWorkInProgressHook();
 
@@ -2528,7 +2528,7 @@ function rerenderActionState<S, P>(
   // the passthrough value changed.
   //
   // So instead of a forked re-render implementation that knows how to handle
-  // render phase udpates, we can use the same implementation as during a
+  // render phase updates, we can use the same implementation as during a
   // regular mount or update.
   const stateHook = updateWorkInProgressHook();
   const currentStateHook = currentHook;
