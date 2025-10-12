@@ -12886,7 +12886,10 @@ __DEV__ &&
         case 26:
         case 27:
         case 5:
+          var prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
+          offscreenDirectParentIsHidden = !1;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+          offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden;
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
@@ -13018,13 +13021,17 @@ __DEV__ &&
           suspenseCallback = null !== finishedWork.memoizedState;
           retryQueue = null !== current && null !== current.memoizedState;
           var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
+            _prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden =
             prevOffscreenSubtreeIsHidden || suspenseCallback;
+          offscreenDirectParentIsHidden =
+            _prevOffscreenDirectParentIsHidden || suspenseCallback;
           offscreenSubtreeWasHidden =
             prevOffscreenSubtreeWasHidden || retryQueue;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+          offscreenDirectParentIsHidden = _prevOffscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           retryQueue &&
             !suspenseCallback &&
@@ -13041,47 +13048,49 @@ __DEV__ &&
               componentEffectEndTime
             );
           commitReconciliationEffects(finishedWork);
-          if (flags & 8192)
-            a: for (
-              root = finishedWork.stateNode,
-                root._visibility = suspenseCallback
-                  ? root._visibility & ~OffscreenVisible
-                  : root._visibility | OffscreenVisible,
-                !suspenseCallback ||
-                  null === current ||
-                  retryQueue ||
-                  offscreenSubtreeIsHidden ||
-                  offscreenSubtreeWasHidden ||
-                  (recursivelyTraverseDisappearLayoutEffects(finishedWork),
-                  enableComponentPerformanceTrack &&
-                    0 !== (finishedWork.mode & 2) &&
-                    0 <= componentEffectStartTime &&
-                    0 <= componentEffectEndTime &&
-                    0.05 < componentEffectEndTime - componentEffectStartTime &&
-                    logComponentTrigger(
-                      finishedWork,
-                      componentEffectStartTime,
-                      componentEffectEndTime,
-                      "Disconnect"
-                    )),
-                current = null,
-                root = finishedWork;
-              ;
-
-            ) {
+          if (
+            flags & 8192 &&
+            ((root = finishedWork.stateNode),
+            (root._visibility = suspenseCallback
+              ? root._visibility & ~OffscreenVisible
+              : root._visibility | OffscreenVisible),
+            !suspenseCallback ||
+              null === current ||
+              retryQueue ||
+              offscreenSubtreeIsHidden ||
+              offscreenSubtreeWasHidden ||
+              (recursivelyTraverseDisappearLayoutEffects(finishedWork),
+              enableComponentPerformanceTrack &&
+                0 !== (finishedWork.mode & 2) &&
+                0 <= componentEffectStartTime &&
+                0 <= componentEffectEndTime &&
+                0.05 < componentEffectEndTime - componentEffectStartTime &&
+                logComponentTrigger(
+                  finishedWork,
+                  componentEffectStartTime,
+                  componentEffectEndTime,
+                  "Disconnect"
+                )),
+            suspenseCallback || !offscreenDirectParentIsHidden)
+          )
+            a: for (current = null, root = finishedWork; ; ) {
               if (5 === root.tag) {
                 if (null === current) {
                   lanes = current = root;
                   try {
-                    var instance = lanes.stateNode;
-                    suspenseCallback
-                      ? runWithFiberInDEV(lanes, hideInstance, instance)
-                      : runWithFiberInDEV(
-                          lanes,
-                          unhideInstance,
-                          lanes.stateNode,
-                          lanes.memoizedProps
-                        );
+                    (prevOffscreenDirectParentIsHidden = lanes.stateNode),
+                      suspenseCallback
+                        ? runWithFiberInDEV(
+                            lanes,
+                            hideInstance,
+                            prevOffscreenDirectParentIsHidden
+                          )
+                        : runWithFiberInDEV(
+                            lanes,
+                            unhideInstance,
+                            lanes.stateNode,
+                            lanes.memoizedProps
+                          );
                   } catch (error) {
                     captureCommitPhaseError(lanes, lanes.return, error);
                   }
@@ -13090,17 +13099,13 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    var instance$jscomp$0 = lanes.stateNode;
+                    var instance = lanes.stateNode;
                     suspenseCallback
-                      ? runWithFiberInDEV(
-                          lanes,
-                          hideTextInstance,
-                          instance$jscomp$0
-                        )
+                      ? runWithFiberInDEV(lanes, hideTextInstance, instance)
                       : runWithFiberInDEV(
                           lanes,
                           unhideTextInstance,
-                          instance$jscomp$0,
+                          instance,
                           lanes.memoizedProps
                         );
                     trackHostMutation();
@@ -13112,12 +13117,12 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    var instance$jscomp$1 = lanes.stateNode;
+                    var instance$jscomp$0 = lanes.stateNode;
                     suspenseCallback
                       ? runWithFiberInDEV(
                           lanes,
                           hideDehydratedBoundary,
-                          instance$jscomp$1
+                          instance$jscomp$0
                         )
                       : runWithFiberInDEV(
                           lanes,
@@ -13173,17 +13178,15 @@ __DEV__ &&
                 null === current ||
                 safelyDetachRef(current, current.return)),
             (flags = pushMutationContext()),
-            (instance = enableViewTransition && (lanes & 335544064) === lanes),
-            (instance$jscomp$0 = finishedWork.memoizedProps),
-            instance &&
+            (prevOffscreenDirectParentIsHidden =
+              enableViewTransition && (lanes & 335544064) === lanes),
+            (instance = finishedWork.memoizedProps),
+            prevOffscreenDirectParentIsHidden &&
               "none" !==
-                getViewTransitionClassName(
-                  instance$jscomp$0.default,
-                  instance$jscomp$0.update
-                ),
+                getViewTransitionClassName(instance.default, instance.update),
             recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork),
-            instance &&
+            prevOffscreenDirectParentIsHidden &&
               null !== current &&
               viewTransitionMutationContext &&
               (finishedWork.flags |= 4),
@@ -19992,6 +19995,7 @@ __DEV__ &&
       didWarnAboutName = {},
       offscreenSubtreeIsHidden = !1,
       offscreenSubtreeWasHidden = !1,
+      offscreenDirectParentIsHidden = !1,
       PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
       nextEffect = null,
       inProgressLanes = null,
@@ -20348,10 +20352,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-classic-4b3e662e-20251008",
+        version: "19.3.0-www-classic-1d68bce1-20251012",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-4b3e662e-20251008"
+        reconcilerVersion: "19.3.0-www-classic-1d68bce1-20251012"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20386,7 +20390,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.3.0-www-classic-4b3e662e-20251008";
+    exports.version = "19.3.0-www-classic-1d68bce1-20251012";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

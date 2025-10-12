@@ -16267,7 +16267,10 @@ __DEV__ &&
             );
           break;
         case 5:
+          hoistableRoot = offscreenDirectParentIsHidden;
+          offscreenDirectParentIsHidden = !1;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+          offscreenDirectParentIsHidden = hoistableRoot;
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
@@ -16419,13 +16422,17 @@ __DEV__ &&
           suspenseCallback = null !== finishedWork.memoizedState;
           retryQueue = null !== current && null !== current.memoizedState;
           var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
+            _prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden =
             prevOffscreenSubtreeIsHidden || suspenseCallback;
+          offscreenDirectParentIsHidden =
+            _prevOffscreenDirectParentIsHidden || suspenseCallback;
           offscreenSubtreeWasHidden =
             prevOffscreenSubtreeWasHidden || retryQueue;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+          offscreenDirectParentIsHidden = _prevOffscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           retryQueue &&
             !suspenseCallback &&
@@ -16442,34 +16449,32 @@ __DEV__ &&
               componentEffectEndTime
             );
           commitReconciliationEffects(finishedWork);
-          if (flags & 8192)
-            a: for (
-              root = finishedWork.stateNode,
-                root._visibility = suspenseCallback
-                  ? root._visibility & ~OffscreenVisible
-                  : root._visibility | OffscreenVisible,
-                !suspenseCallback ||
-                  null === current ||
-                  retryQueue ||
-                  offscreenSubtreeIsHidden ||
-                  offscreenSubtreeWasHidden ||
-                  (recursivelyTraverseDisappearLayoutEffects(finishedWork),
-                  enableComponentPerformanceTrack &&
-                    (finishedWork.mode & ProfileMode) !== NoMode &&
-                    0 <= componentEffectStartTime &&
-                    0 <= componentEffectEndTime &&
-                    0.05 < componentEffectEndTime - componentEffectStartTime &&
-                    logComponentTrigger(
-                      finishedWork,
-                      componentEffectStartTime,
-                      componentEffectEndTime,
-                      "Disconnect"
-                    )),
-                current = null,
-                root = finishedWork;
-              ;
-
-            ) {
+          if (
+            flags & 8192 &&
+            ((root = finishedWork.stateNode),
+            (root._visibility = suspenseCallback
+              ? root._visibility & ~OffscreenVisible
+              : root._visibility | OffscreenVisible),
+            !suspenseCallback ||
+              null === current ||
+              retryQueue ||
+              offscreenSubtreeIsHidden ||
+              offscreenSubtreeWasHidden ||
+              (recursivelyTraverseDisappearLayoutEffects(finishedWork),
+              enableComponentPerformanceTrack &&
+                (finishedWork.mode & ProfileMode) !== NoMode &&
+                0 <= componentEffectStartTime &&
+                0 <= componentEffectEndTime &&
+                0.05 < componentEffectEndTime - componentEffectStartTime &&
+                logComponentTrigger(
+                  finishedWork,
+                  componentEffectStartTime,
+                  componentEffectEndTime,
+                  "Disconnect"
+                )),
+            suspenseCallback || !offscreenDirectParentIsHidden)
+          )
+            a: for (current = null, root = finishedWork; ; ) {
               if (5 === root.tag || 26 === root.tag) {
                 if (null === current) {
                   lanes = current = root;
@@ -31370,6 +31375,7 @@ __DEV__ &&
       didWarnAboutName = {},
       offscreenSubtreeIsHidden = !1,
       offscreenSubtreeWasHidden = !1,
+      offscreenDirectParentIsHidden = !1,
       needsFormReset = !1,
       PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
       nextEffect = null,
@@ -32693,11 +32699,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-modern-4b3e662e-20251008" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-modern-1d68bce1-20251012" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-modern-4b3e662e-20251008\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-modern-1d68bce1-20251012\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -32740,10 +32746,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-modern-4b3e662e-20251008",
+          version: "19.3.0-www-modern-1d68bce1-20251012",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-modern-4b3e662e-20251008"
+          reconcilerVersion: "19.3.0-www-modern-1d68bce1-20251012"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33356,7 +33362,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-modern-4b3e662e-20251008";
+    exports.version = "19.3.0-www-modern-1d68bce1-20251012";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

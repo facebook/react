@@ -7638,6 +7638,7 @@ function restoreEnterOrExitViewTransitions(fiber) {
 }
 var offscreenSubtreeIsHidden = !1,
   offscreenSubtreeWasHidden = !1,
+  offscreenDirectParentIsHidden = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
   nextEffect = null,
   focusedInstanceHandle = null,
@@ -8397,7 +8398,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
     case 26:
     case 27:
     case 5:
+      var prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
+      offscreenDirectParentIsHidden = !1;
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden;
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
         (offscreenSubtreeWasHidden ||
@@ -8466,16 +8470,16 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
-      if (finishedWork.child.flags & 8192) {
-        var isShowingFallback = null !== finishedWork.memoizedState;
-        current = null !== current && null !== current.memoizedState;
+      finishedWork.child.flags & 8192 &&
+        ((prevOffscreenDirectParentIsHidden =
+          null !== finishedWork.memoizedState),
+        (current = null !== current && null !== current.memoizedState),
         alwaysThrottleRetries
-          ? isShowingFallback !== current &&
+          ? prevOffscreenDirectParentIsHidden !== current &&
             (globalMostRecentFallbackTime = now())
-          : isShowingFallback &&
+          : prevOffscreenDirectParentIsHidden &&
             !current &&
-            (globalMostRecentFallbackTime = now());
-      }
+            (globalMostRecentFallbackTime = now()));
       if (flags & 4) {
         try {
           if (null !== finishedWork.memoizedState) {
@@ -8498,37 +8502,42 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       instance = null !== finishedWork.memoizedState;
       suspenseCallback = null !== current && null !== current.memoizedState;
       retryQueue = offscreenSubtreeIsHidden;
-      var prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+      var prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
+        prevOffscreenDirectParentIsHidden$115 = offscreenDirectParentIsHidden;
       offscreenSubtreeIsHidden = retryQueue || instance;
+      offscreenDirectParentIsHidden =
+        prevOffscreenDirectParentIsHidden$115 || instance;
       offscreenSubtreeWasHidden =
         prevOffscreenSubtreeWasHidden || suspenseCallback;
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+      offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden$115;
       offscreenSubtreeIsHidden = retryQueue;
       commitReconciliationEffects(finishedWork);
-      if (flags & 8192)
-        a: for (
-          root = finishedWork.stateNode,
-            root._visibility = instance
-              ? root._visibility & -2
-              : root._visibility | 1,
-            instance &&
-              (null === current ||
-                suspenseCallback ||
-                offscreenSubtreeIsHidden ||
-                offscreenSubtreeWasHidden ||
-                recursivelyTraverseDisappearLayoutEffects(finishedWork)),
-            current = null,
-            root = finishedWork;
-          ;
-
-        ) {
+      if (
+        flags & 8192 &&
+        ((root = finishedWork.stateNode),
+        (root._visibility = instance
+          ? root._visibility & -2
+          : root._visibility | 1),
+        instance &&
+          (null === current ||
+            suspenseCallback ||
+            offscreenSubtreeIsHidden ||
+            offscreenSubtreeWasHidden ||
+            recursivelyTraverseDisappearLayoutEffects(finishedWork)),
+        instance || !offscreenDirectParentIsHidden)
+      )
+        a: for (current = null, root = finishedWork; ; ) {
           if (5 === root.tag) {
             if (null === current) {
               lanes = current = root;
               try {
-                if (((isShowingFallback = lanes.stateNode), instance))
-                  isShowingFallback.hide();
+                if (
+                  ((prevOffscreenDirectParentIsHidden = lanes.stateNode),
+                  instance)
+                )
+                  prevOffscreenDirectParentIsHidden.hide();
                 else {
                   var props = lanes.memoizedProps;
                   (null == props.visible || props.visible) &&
@@ -8601,14 +8610,14 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             null === current ||
             safelyDetachRef(current, current.return)),
         (flags = pushMutationContext()),
-        (isShowingFallback =
+        (prevOffscreenDirectParentIsHidden =
           enableViewTransition && (lanes & 335544064) === lanes),
         (props = finishedWork.memoizedProps),
-        isShowingFallback &&
+        prevOffscreenDirectParentIsHidden &&
           "none" !== getViewTransitionClassName(props.default, props.update),
         recursivelyTraverseMutationEffects(root, finishedWork, lanes),
         commitReconciliationEffects(finishedWork),
-        isShowingFallback &&
+        prevOffscreenDirectParentIsHidden &&
           null !== current &&
           viewTransitionMutationContext &&
           (finishedWork.flags |= 4),
@@ -9102,14 +9111,14 @@ function commitPassiveMountOnFiber(
         );
       break;
     case 22:
-      var instance$118 = finishedWork.stateNode,
-        current$119 = finishedWork.alternate;
+      var instance$119 = finishedWork.stateNode,
+        current$120 = finishedWork.alternate;
       null !== finishedWork.memoizedState
         ? (isViewTransitionEligible &&
-            null !== current$119 &&
-            null === current$119.memoizedState &&
-            restoreEnterOrExitViewTransitions(current$119),
-          instance$118._visibility & 2
+            null !== current$120 &&
+            null === current$120.memoizedState &&
+            restoreEnterOrExitViewTransitions(current$120),
+          instance$119._visibility & 2
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
@@ -9121,17 +9130,17 @@ function commitPassiveMountOnFiber(
                 finishedWork
               ))
         : (isViewTransitionEligible &&
-            null !== current$119 &&
-            null !== current$119.memoizedState &&
+            null !== current$120 &&
+            null !== current$120.memoizedState &&
             restoreEnterOrExitViewTransitions(finishedWork),
-          instance$118._visibility & 2
+          instance$119._visibility & 2
             ? recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
                 committedLanes,
                 committedTransitions
               )
-            : ((instance$118._visibility |= 2),
+            : ((instance$119._visibility |= 2),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -9141,9 +9150,9 @@ function commitPassiveMountOnFiber(
               )));
       flags & 2048 &&
         commitOffscreenPassiveMountEffects(
-          current$119,
+          current$120,
           finishedWork,
-          instance$118
+          instance$119
         );
       break;
     case 24:
@@ -9232,9 +9241,9 @@ function recursivelyTraverseReconnectPassiveEffects(
           );
         break;
       case 22:
-        var instance$121 = finishedWork.stateNode;
+        var instance$122 = finishedWork.stateNode;
         null !== finishedWork.memoizedState
-          ? instance$121._visibility & 2
+          ? instance$122._visibility & 2
             ? recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -9246,7 +9255,7 @@ function recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork
               )
-          : ((instance$121._visibility |= 2),
+          : ((instance$122._visibility |= 2),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
               finishedWork,
@@ -9259,7 +9268,7 @@ function recursivelyTraverseReconnectPassiveEffects(
           commitOffscreenPassiveMountEffects(
             finishedWork.alternate,
             finishedWork,
-            instance$121
+            instance$122
           );
         break;
       case 24:
@@ -10193,8 +10202,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$133) {
-      handleThrow(root, thrownValue$133);
+    } catch (thrownValue$134) {
+      handleThrow(root, thrownValue$134);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10309,8 +10318,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$135) {
-      handleThrow(root, thrownValue$135);
+    } catch (thrownValue$136) {
+      handleThrow(root, thrownValue$136);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -11432,24 +11441,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1646 = {
+var internals$jscomp$inline_1647 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-4b3e662e-20251008",
+  version: "19.3.0-www-classic-1d68bce1-20251012",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-4b3e662e-20251008"
+  reconcilerVersion: "19.3.0-www-classic-1d68bce1-20251012"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1647 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1648 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1647.isDisabled &&
-    hook$jscomp$inline_1647.supportsFiber
+    !hook$jscomp$inline_1648.isDisabled &&
+    hook$jscomp$inline_1648.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1647.inject(
-        internals$jscomp$inline_1646
+      (rendererID = hook$jscomp$inline_1648.inject(
+        internals$jscomp$inline_1647
       )),
-        (injectedHook = hook$jscomp$inline_1647);
+        (injectedHook = hook$jscomp$inline_1648);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11463,4 +11472,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-classic-4b3e662e-20251008";
+exports.version = "19.3.0-www-classic-1d68bce1-20251012";

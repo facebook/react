@@ -14331,7 +14331,10 @@ __DEV__ &&
             break;
           }
         case 5:
+          hoistableRoot = offscreenDirectParentIsHidden;
+          offscreenDirectParentIsHidden = !1;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+          offscreenDirectParentIsHidden = hoistableRoot;
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
@@ -14530,13 +14533,17 @@ __DEV__ &&
           suspenseCallback = null !== finishedWork.memoizedState;
           retryQueue = null !== current && null !== current.memoizedState;
           var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
+            _prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden =
             prevOffscreenSubtreeIsHidden || suspenseCallback;
+          offscreenDirectParentIsHidden =
+            _prevOffscreenDirectParentIsHidden || suspenseCallback;
           offscreenSubtreeWasHidden =
             prevOffscreenSubtreeWasHidden || retryQueue;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+          offscreenDirectParentIsHidden = _prevOffscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           retryQueue &&
             !suspenseCallback &&
@@ -14576,7 +14583,8 @@ __DEV__ &&
                   componentEffectEndTime,
                   "Disconnect"
                 )),
-            supportsMutation)
+            supportsMutation &&
+              (suspenseCallback || !offscreenDirectParentIsHidden))
           )
             a: if (((current = null), supportsMutation))
               for (root = finishedWork; ; ) {
@@ -22106,6 +22114,7 @@ __DEV__ &&
       didWarnAboutName = {},
       offscreenSubtreeIsHidden = !1,
       offscreenSubtreeWasHidden = !1,
+      offscreenDirectParentIsHidden = !1,
       needsFormReset = !1,
       PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
       nextEffect = null,
@@ -22783,7 +22792,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-4b3e662e-20251008"
+        reconcilerVersion: "19.3.0-www-modern-1d68bce1-20251012"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
