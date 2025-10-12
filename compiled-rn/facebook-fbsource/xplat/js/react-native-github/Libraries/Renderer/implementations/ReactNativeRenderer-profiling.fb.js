@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9d049125c9dca9d5688273fff9eea4a3>>
+ * @generated SignedSource<<1d89ac51a3c33c46fd73d732fd078718>>
  */
 
 "use strict";
@@ -1243,7 +1243,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_335 = {
+var injectedNamesToPlugins$jscomp$inline_336 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1289,32 +1289,32 @@ var injectedNamesToPlugins$jscomp$inline_335 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_336 = !1,
-  pluginName$jscomp$inline_337;
-for (pluginName$jscomp$inline_337 in injectedNamesToPlugins$jscomp$inline_335)
+  isOrderingDirty$jscomp$inline_337 = !1,
+  pluginName$jscomp$inline_338;
+for (pluginName$jscomp$inline_338 in injectedNamesToPlugins$jscomp$inline_336)
   if (
-    injectedNamesToPlugins$jscomp$inline_335.hasOwnProperty(
-      pluginName$jscomp$inline_337
+    injectedNamesToPlugins$jscomp$inline_336.hasOwnProperty(
+      pluginName$jscomp$inline_338
     )
   ) {
-    var pluginModule$jscomp$inline_338 =
-      injectedNamesToPlugins$jscomp$inline_335[pluginName$jscomp$inline_337];
+    var pluginModule$jscomp$inline_339 =
+      injectedNamesToPlugins$jscomp$inline_336[pluginName$jscomp$inline_338];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_337) ||
-      namesToPlugins[pluginName$jscomp$inline_337] !==
-        pluginModule$jscomp$inline_338
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_338) ||
+      namesToPlugins[pluginName$jscomp$inline_338] !==
+        pluginModule$jscomp$inline_339
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_337])
+      if (namesToPlugins[pluginName$jscomp$inline_338])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_337 + "`.")
+            (pluginName$jscomp$inline_338 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_337] =
-        pluginModule$jscomp$inline_338;
-      isOrderingDirty$jscomp$inline_336 = !0;
+      namesToPlugins[pluginName$jscomp$inline_338] =
+        pluginModule$jscomp$inline_339;
+      isOrderingDirty$jscomp$inline_337 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_336 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_337 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -9094,6 +9094,7 @@ function insertOrAppendPlacementNode(node, before, parent) {
 }
 var offscreenSubtreeIsHidden = !1,
   offscreenSubtreeWasHidden = !1,
+  offscreenDirectParentIsHidden = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
   nextEffect = null,
   inProgressLanes = null,
@@ -9754,7 +9755,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
     case 26:
     case 27:
     case 5:
+      newHiddenCallbacks = offscreenDirectParentIsHidden;
+      offscreenDirectParentIsHidden = !1;
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      offscreenDirectParentIsHidden = newHiddenCallbacks;
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
         (offscreenSubtreeWasHidden ||
@@ -9880,10 +9884,13 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       finishedWork.mode & 1
         ? ((updatePayload = offscreenSubtreeIsHidden),
           (suspenseCallback = offscreenSubtreeWasHidden),
+          (retryQueue = offscreenDirectParentIsHidden),
           (offscreenSubtreeIsHidden = updatePayload || instance),
+          (offscreenDirectParentIsHidden = retryQueue || instance),
           (offscreenSubtreeWasHidden = suspenseCallback || viewConfig),
           recursivelyTraverseMutationEffects(root, finishedWork, lanes),
           (offscreenSubtreeWasHidden = suspenseCallback),
+          (offscreenDirectParentIsHidden = retryQueue),
           (offscreenSubtreeIsHidden = updatePayload),
           viewConfig &&
             !instance &&
@@ -9901,35 +9908,33 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             ))
         : recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
-      if (flags & 8192)
-        a: for (
-          root = finishedWork.stateNode,
-            root._visibility = instance
-              ? root._visibility & -2
-              : root._visibility | 1,
-            !instance ||
-              null === current ||
-              viewConfig ||
-              offscreenSubtreeIsHidden ||
-              offscreenSubtreeWasHidden ||
-              0 === (finishedWork.mode & 1) ||
-              (recursivelyTraverseDisappearLayoutEffects(finishedWork),
-              enableComponentPerformanceTrack &&
-                0 !== (finishedWork.mode & 2) &&
-                0 <= componentEffectStartTime &&
-                0 <= componentEffectEndTime &&
-                0.05 < componentEffectEndTime - componentEffectStartTime &&
-                logComponentTrigger(
-                  finishedWork,
-                  componentEffectStartTime,
-                  componentEffectEndTime,
-                  "Disconnect"
-                )),
-            current = null,
-            root = finishedWork;
-          ;
-
-        ) {
+      if (
+        flags & 8192 &&
+        ((root = finishedWork.stateNode),
+        (root._visibility = instance
+          ? root._visibility & -2
+          : root._visibility | 1),
+        !instance ||
+          null === current ||
+          viewConfig ||
+          offscreenSubtreeIsHidden ||
+          offscreenSubtreeWasHidden ||
+          0 === (finishedWork.mode & 1) ||
+          (recursivelyTraverseDisappearLayoutEffects(finishedWork),
+          enableComponentPerformanceTrack &&
+            0 !== (finishedWork.mode & 2) &&
+            0 <= componentEffectStartTime &&
+            0 <= componentEffectEndTime &&
+            0.05 < componentEffectEndTime - componentEffectStartTime &&
+            logComponentTrigger(
+              finishedWork,
+              componentEffectStartTime,
+              componentEffectEndTime,
+              "Disconnect"
+            )),
+        instance || !offscreenDirectParentIsHidden)
+      )
+        a: for (current = null, root = finishedWork; ; ) {
           if (5 === root.tag) {
             if (null === current) {
               lanes = current = root;
@@ -11819,7 +11824,7 @@ function prepareFreshStack(root, lanes) {
         0 <= blockingEventTime && blockingEventTime < blockingClampTime
           ? blockingClampTime
           : blockingEventTime;
-      var clampedRenderStartTime$169 =
+      var clampedRenderStartTime$170 =
         0 <= endTime
           ? endTime
           : 0 <= previousRenderStartTime
@@ -11829,10 +11834,10 @@ function prepareFreshStack(root, lanes) {
         (setCurrentTrackFromLanes(2),
         logSuspendedWithDelayPhase(
           blockingSuspendedTime,
-          clampedRenderStartTime$169,
+          clampedRenderStartTime$170,
           lanes
         ));
-      clampedRenderStartTime$169 = blockingEventType;
+      clampedRenderStartTime$170 = blockingEventType;
       var eventIsRepeat = 0 < blockingEventRepeatTime,
         isSpawnedUpdate = 1 === blockingUpdateType,
         isPingedUpdate = 2 === blockingUpdateType,
@@ -11847,12 +11852,12 @@ function prepareFreshStack(root, lanes) {
           ? endTime > previousRenderStartTime &&
             (endTime = previousRenderStartTime)
           : (endTime = previousRenderStartTime),
-        null !== clampedRenderStartTime$169 &&
+        null !== clampedRenderStartTime$170 &&
           previousRenderStartTime > endTime &&
           console.timeStamp(
             eventIsRepeat
               ? "Consecutive"
-              : "Event: " + clampedRenderStartTime$169,
+              : "Event: " + clampedRenderStartTime$170,
             endTime,
             previousRenderStartTime,
             currentTrack,
@@ -11894,13 +11899,13 @@ function prepareFreshStack(root, lanes) {
         0 <= transitionUpdateTime && transitionUpdateTime < transitionClampTime
           ? transitionClampTime
           : transitionUpdateTime),
-      (clampedRenderStartTime$169 =
+      (clampedRenderStartTime$170 =
         0 <= transitionEventTime && transitionEventTime < transitionClampTime
           ? transitionClampTime
           : transitionEventTime),
       (eventIsRepeat =
-        0 <= clampedRenderStartTime$169
-          ? clampedRenderStartTime$169
+        0 <= clampedRenderStartTime$170
+          ? clampedRenderStartTime$170
           : 0 <= endTime
             ? endTime
             : renderStartTime),
@@ -11925,15 +11930,15 @@ function prepareFreshStack(root, lanes) {
           ? previousRenderStartTime > endTime &&
             (previousRenderStartTime = endTime)
           : (previousRenderStartTime = endTime),
-        0 < clampedRenderStartTime$169
-          ? clampedRenderStartTime$169 > previousRenderStartTime &&
-            (clampedRenderStartTime$169 = previousRenderStartTime)
-          : (clampedRenderStartTime$169 = previousRenderStartTime),
-        previousRenderStartTime > clampedRenderStartTime$169 &&
+        0 < clampedRenderStartTime$170
+          ? clampedRenderStartTime$170 > previousRenderStartTime &&
+            (clampedRenderStartTime$170 = previousRenderStartTime)
+          : (clampedRenderStartTime$170 = previousRenderStartTime),
+        previousRenderStartTime > clampedRenderStartTime$170 &&
           null !== eventIsRepeat &&
           console.timeStamp(
             isSpawnedUpdate ? "Consecutive" : "Event: " + eventIsRepeat,
-            clampedRenderStartTime$169,
+            clampedRenderStartTime$170,
             previousRenderStartTime,
             currentTrack,
             "Scheduler \u269b",
@@ -12001,9 +12006,9 @@ function prepareFreshStack(root, lanes) {
   endTime = root.entangledLanes;
   if (0 !== endTime)
     for (root = root.entanglements, endTime &= lanes; 0 < endTime; )
-      (clampedRenderStartTime$169 = 31 - clz32(endTime)),
-        (eventIsRepeat = 1 << clampedRenderStartTime$169),
-        (lanes |= root[clampedRenderStartTime$169]),
+      (clampedRenderStartTime$170 = 31 - clz32(endTime)),
+        (eventIsRepeat = 1 << clampedRenderStartTime$170),
+        (lanes |= root[clampedRenderStartTime$170]),
         (endTime &= ~eventIsRepeat);
   entangledRenderLanes = lanes;
   finishQueueingConcurrentUpdates();
@@ -12147,8 +12152,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       memoizedUpdaters = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$174) {
-      handleThrow(root, thrownValue$174);
+    } catch (thrownValue$175) {
+      handleThrow(root, thrownValue$175);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -12271,8 +12276,8 @@ function renderRootConcurrent(root, lanes) {
         }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$176) {
-      handleThrow(root, thrownValue$176);
+    } catch (thrownValue$177) {
+      handleThrow(root, thrownValue$177);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -13483,11 +13488,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.3.0-native-fb-4b3e662e-20251008" !== isomorphicReactPackageVersion)
+if ("19.3.0-native-fb-1d68bce1-20251012" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.3.0-native-fb-4b3e662e-20251008\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.3.0-native-fb-1d68bce1-20251012\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13535,20 +13540,20 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1634 = {
+  internals$jscomp$inline_1635 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-4b3e662e-20251008",
+    version: "19.3.0-native-fb-1d68bce1-20251012",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-4b3e662e-20251008"
+    reconcilerVersion: "19.3.0-native-fb-1d68bce1-20251012"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1634.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1634.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1635.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1635.getLaneLabelMap = function () {
   for (
-    var map = new Map(), lane = 1, index$181 = 0;
-    31 > index$181;
-    index$181++
+    var map = new Map(), lane = 1, index$182 = 0;
+    31 > index$182;
+    index$182++
   ) {
     var label = getLabelForLane(lane);
     map.set(lane, label);
@@ -13556,20 +13561,20 @@ internals$jscomp$inline_1634.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1634.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1635.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2018 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2019 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2018.isDisabled &&
-    hook$jscomp$inline_2018.supportsFiber
+    !hook$jscomp$inline_2019.isDisabled &&
+    hook$jscomp$inline_2019.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2018.inject(
-        internals$jscomp$inline_1634
+      (rendererID = hook$jscomp$inline_2019.inject(
+        internals$jscomp$inline_1635
       )),
-        (injectedHook = hook$jscomp$inline_2018);
+        (injectedHook = hook$jscomp$inline_2019);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

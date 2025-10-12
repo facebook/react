@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<833378a9e5df45c11a1c50afd4abd0b2>>
+ * @generated SignedSource<<9e6e16434e33f6629f9a642820d6086c>>
  */
 
 "use strict";
@@ -10406,7 +10406,10 @@ __DEV__ &&
         case 26:
         case 27:
         case 5:
+          existingHiddenCallbacks = offscreenDirectParentIsHidden;
+          offscreenDirectParentIsHidden = !1;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+          offscreenDirectParentIsHidden = existingHiddenCallbacks;
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
@@ -10528,34 +10531,37 @@ __DEV__ &&
           var wasHidden = null !== current && null !== current.memoizedState;
           if (finishedWork.mode & 1) {
             var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-              prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+              prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
+              _prevOffscreenDirectParentIsHidden =
+                offscreenDirectParentIsHidden;
             offscreenSubtreeIsHidden =
               prevOffscreenSubtreeIsHidden || existingHiddenCallbacks;
+            offscreenDirectParentIsHidden =
+              _prevOffscreenDirectParentIsHidden || existingHiddenCallbacks;
             offscreenSubtreeWasHidden =
               prevOffscreenSubtreeWasHidden || wasHidden;
             recursivelyTraverseMutationEffects(root, finishedWork, lanes);
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+            offscreenDirectParentIsHidden = _prevOffscreenDirectParentIsHidden;
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           } else recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
-          if (flags & 8192)
-            a: for (
-              root = finishedWork.stateNode,
-                root._visibility = existingHiddenCallbacks
-                  ? root._visibility & ~OffscreenVisible
-                  : root._visibility | OffscreenVisible,
-                existingHiddenCallbacks &&
-                  (null === current ||
-                    wasHidden ||
-                    offscreenSubtreeIsHidden ||
-                    offscreenSubtreeWasHidden ||
-                    (0 !== (finishedWork.mode & 1) &&
-                      recursivelyTraverseDisappearLayoutEffects(finishedWork))),
-                current = null,
-                root = finishedWork;
-              ;
-
-            ) {
+          if (
+            flags & 8192 &&
+            ((root = finishedWork.stateNode),
+            (root._visibility = existingHiddenCallbacks
+              ? root._visibility & ~OffscreenVisible
+              : root._visibility | OffscreenVisible),
+            existingHiddenCallbacks &&
+              (null === current ||
+                wasHidden ||
+                offscreenSubtreeIsHidden ||
+                offscreenSubtreeWasHidden ||
+                (0 !== (finishedWork.mode & 1) &&
+                  recursivelyTraverseDisappearLayoutEffects(finishedWork))),
+            existingHiddenCallbacks || !offscreenDirectParentIsHidden)
+          )
+            a: for (current = null, root = finishedWork; ; ) {
               if (5 === root.tag) {
                 if (null === current) {
                   lanes = current = root;
@@ -15695,6 +15701,7 @@ __DEV__ &&
     var rootMutationContext = !1,
       offscreenSubtreeIsHidden = !1,
       offscreenSubtreeWasHidden = !1,
+      offscreenDirectParentIsHidden = !1,
       PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
       nextEffect = null,
       hostParent = null,
@@ -16015,10 +16022,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-4b3e662e-20251008",
+        version: "19.3.0-native-fb-1d68bce1-20251012",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-4b3e662e-20251008"
+        reconcilerVersion: "19.3.0-native-fb-1d68bce1-20251012"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16164,5 +16171,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.3.0-native-fb-4b3e662e-20251008";
+    exports.version = "19.3.0-native-fb-1d68bce1-20251012";
   })();

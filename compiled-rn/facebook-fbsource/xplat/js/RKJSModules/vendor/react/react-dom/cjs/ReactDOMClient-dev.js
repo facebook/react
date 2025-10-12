@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cd1b5bafd69e3f08b014b0d07e58b38f>>
+ * @generated SignedSource<<de1109bf8744ce614ba20c259a8c1677>>
  */
 
 /*
@@ -15512,146 +15512,131 @@ __DEV__ &&
             (offscreenSubtreeWasHidden ||
               null === current ||
               safelyDetachRef(current, current.return));
-          if (
-            flags & 64 &&
+          flags & 64 &&
             offscreenSubtreeIsHidden &&
             ((flags = finishedWork.updateQueue),
-            null !== flags && ((current = flags.callbacks), null !== current))
-          ) {
-            var existingHiddenCallbacks = flags.shared.hiddenCallbacks;
-            flags.shared.hiddenCallbacks =
-              null === existingHiddenCallbacks
-                ? current
-                : existingHiddenCallbacks.concat(current);
-          }
+            null !== flags &&
+              ((current = flags.callbacks),
+              null !== current &&
+                ((root = flags.shared.hiddenCallbacks),
+                (flags.shared.hiddenCallbacks =
+                  null === root ? current : root.concat(current)))));
           break;
         case 26:
-          existingHiddenCallbacks = currentHoistableRoot;
+          var hoistableRoot = currentHoistableRoot;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
               null === current ||
               safelyDetachRef(current, current.return));
-          if (flags & 4) {
-            var currentResource =
-              null !== current ? current.memoizedState : null;
-            flags = finishedWork.memoizedState;
-            if (null === current)
+          if (flags & 4)
+            if (
+              ((root = null !== current ? current.memoizedState : null),
+              (flags = finishedWork.memoizedState),
+              null === current)
+            )
               if (null === flags)
                 if (null === finishedWork.stateNode) {
                   a: {
                     flags = finishedWork.type;
                     current = finishedWork.memoizedProps;
-                    existingHiddenCallbacks =
-                      existingHiddenCallbacks.ownerDocument ||
-                      existingHiddenCallbacks;
+                    root = hoistableRoot.ownerDocument || hoistableRoot;
                     b: switch (flags) {
                       case "title":
-                        currentResource =
-                          existingHiddenCallbacks.getElementsByTagName(
-                            "title"
-                          )[0];
+                        lanes = root.getElementsByTagName("title")[0];
                         if (
-                          !currentResource ||
-                          currentResource[internalHoistableMarker] ||
-                          currentResource[internalInstanceKey] ||
-                          currentResource.namespaceURI === SVG_NAMESPACE ||
-                          currentResource.hasAttribute("itemprop")
+                          !lanes ||
+                          lanes[internalHoistableMarker] ||
+                          lanes[internalInstanceKey] ||
+                          lanes.namespaceURI === SVG_NAMESPACE ||
+                          lanes.hasAttribute("itemprop")
                         )
-                          (currentResource =
-                            existingHiddenCallbacks.createElement(flags)),
-                            existingHiddenCallbacks.head.insertBefore(
-                              currentResource,
-                              existingHiddenCallbacks.querySelector(
-                                "head > title"
-                              )
+                          (lanes = root.createElement(flags)),
+                            root.head.insertBefore(
+                              lanes,
+                              root.querySelector("head > title")
                             );
-                        setInitialProperties(currentResource, flags, current);
-                        currentResource[internalInstanceKey] = finishedWork;
-                        markNodeAsHoistable(currentResource);
-                        flags = currentResource;
+                        setInitialProperties(lanes, flags, current);
+                        lanes[internalInstanceKey] = finishedWork;
+                        markNodeAsHoistable(lanes);
+                        flags = lanes;
                         break a;
                       case "link":
-                        var maybeNodes = getHydratableHoistableCache(
-                          "link",
-                          "href",
-                          existingHiddenCallbacks
-                        ).get(flags + (current.href || ""));
-                        if (maybeNodes)
-                          for (root = 0; root < maybeNodes.length; root++)
+                        if (
+                          (hoistableRoot = getHydratableHoistableCache(
+                            "link",
+                            "href",
+                            root
+                          ).get(flags + (current.href || "")))
+                        )
+                          for (var i = 0; i < hoistableRoot.length; i++)
                             if (
-                              ((currentResource = maybeNodes[root]),
-                              currentResource.getAttribute("href") ===
+                              ((lanes = hoistableRoot[i]),
+                              lanes.getAttribute("href") ===
                                 (null == current.href || "" === current.href
                                   ? null
                                   : current.href) &&
-                                currentResource.getAttribute("rel") ===
+                                lanes.getAttribute("rel") ===
                                   (null == current.rel ? null : current.rel) &&
-                                currentResource.getAttribute("title") ===
+                                lanes.getAttribute("title") ===
                                   (null == current.title
                                     ? null
                                     : current.title) &&
-                                currentResource.getAttribute("crossorigin") ===
+                                lanes.getAttribute("crossorigin") ===
                                   (null == current.crossOrigin
                                     ? null
                                     : current.crossOrigin))
                             ) {
-                              maybeNodes.splice(root, 1);
+                              hoistableRoot.splice(i, 1);
                               break b;
                             }
-                        currentResource =
-                          existingHiddenCallbacks.createElement(flags);
-                        setInitialProperties(currentResource, flags, current);
-                        existingHiddenCallbacks.head.appendChild(
-                          currentResource
-                        );
+                        lanes = root.createElement(flags);
+                        setInitialProperties(lanes, flags, current);
+                        root.head.appendChild(lanes);
                         break;
                       case "meta":
                         if (
-                          (maybeNodes = getHydratableHoistableCache(
+                          (hoistableRoot = getHydratableHoistableCache(
                             "meta",
                             "content",
-                            existingHiddenCallbacks
+                            root
                           ).get(flags + (current.content || "")))
                         )
-                          for (root = 0; root < maybeNodes.length; root++)
+                          for (i = 0; i < hoistableRoot.length; i++)
                             if (
-                              ((currentResource = maybeNodes[root]),
+                              ((lanes = hoistableRoot[i]),
                               checkAttributeStringCoercion(
                                 current.content,
                                 "content"
                               ),
-                              currentResource.getAttribute("content") ===
+                              lanes.getAttribute("content") ===
                                 (null == current.content
                                   ? null
                                   : "" + current.content) &&
-                                currentResource.getAttribute("name") ===
+                                lanes.getAttribute("name") ===
                                   (null == current.name
                                     ? null
                                     : current.name) &&
-                                currentResource.getAttribute("property") ===
+                                lanes.getAttribute("property") ===
                                   (null == current.property
                                     ? null
                                     : current.property) &&
-                                currentResource.getAttribute("http-equiv") ===
+                                lanes.getAttribute("http-equiv") ===
                                   (null == current.httpEquiv
                                     ? null
                                     : current.httpEquiv) &&
-                                currentResource.getAttribute("charset") ===
+                                lanes.getAttribute("charset") ===
                                   (null == current.charSet
                                     ? null
                                     : current.charSet))
                             ) {
-                              maybeNodes.splice(root, 1);
+                              hoistableRoot.splice(i, 1);
                               break b;
                             }
-                        currentResource =
-                          existingHiddenCallbacks.createElement(flags);
-                        setInitialProperties(currentResource, flags, current);
-                        existingHiddenCallbacks.head.appendChild(
-                          currentResource
-                        );
+                        lanes = root.createElement(flags);
+                        setInitialProperties(lanes, flags, current);
+                        root.head.appendChild(lanes);
                         break;
                       default:
                         throw Error(
@@ -15660,38 +15645,38 @@ __DEV__ &&
                             '". This is a bug in React.'
                         );
                     }
-                    currentResource[internalInstanceKey] = finishedWork;
-                    markNodeAsHoistable(currentResource);
-                    flags = currentResource;
+                    lanes[internalInstanceKey] = finishedWork;
+                    markNodeAsHoistable(lanes);
+                    flags = lanes;
                   }
                   finishedWork.stateNode = flags;
                 } else
                   mountHoistable(
-                    existingHiddenCallbacks,
+                    hoistableRoot,
                     finishedWork.type,
                     finishedWork.stateNode
                   );
               else
                 finishedWork.stateNode = acquireResource(
-                  existingHiddenCallbacks,
+                  hoistableRoot,
                   flags,
                   finishedWork.memoizedProps
                 );
             else
-              currentResource !== flags
-                ? (null === currentResource
+              root !== flags
+                ? (null === root
                     ? null !== current.stateNode &&
                       ((current = current.stateNode),
                       current.parentNode.removeChild(current))
-                    : currentResource.count--,
+                    : root.count--,
                   null === flags
                     ? mountHoistable(
-                        existingHiddenCallbacks,
+                        hoistableRoot,
                         finishedWork.type,
                         finishedWork.stateNode
                       )
                     : acquireResource(
-                        existingHiddenCallbacks,
+                        hoistableRoot,
                         flags,
                         finishedWork.memoizedProps
                       ))
@@ -15702,7 +15687,6 @@ __DEV__ &&
                     finishedWork.memoizedProps,
                     current.memoizedProps
                   );
-          }
           break;
         case 27:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -15720,20 +15704,19 @@ __DEV__ &&
             );
           break;
         case 5:
+          hoistableRoot = offscreenDirectParentIsHidden;
+          offscreenDirectParentIsHidden = !1;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+          offscreenDirectParentIsHidden = hoistableRoot;
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
               null === current ||
               safelyDetachRef(current, current.return));
           if (finishedWork.flags & 32) {
-            existingHiddenCallbacks = finishedWork.stateNode;
+            root = finishedWork.stateNode;
             try {
-              runWithFiberInDEV(
-                finishedWork,
-                resetTextContent,
-                existingHiddenCallbacks
-              ),
+              runWithFiberInDEV(finishedWork, resetTextContent, root),
                 (rootMutationContext = !0);
             } catch (error) {
               captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -15741,11 +15724,11 @@ __DEV__ &&
           }
           flags & 4 &&
             null != finishedWork.stateNode &&
-            ((existingHiddenCallbacks = finishedWork.memoizedProps),
+            ((root = finishedWork.memoizedProps),
             commitHostUpdate(
               finishedWork,
-              existingHiddenCallbacks,
-              null !== current ? current.memoizedProps : existingHiddenCallbacks
+              root,
+              null !== current ? current.memoizedProps : root
             ));
           flags & 1024 &&
             ((needsFormReset = !0),
@@ -15764,12 +15747,12 @@ __DEV__ &&
               );
             flags = finishedWork.memoizedProps;
             current = null !== current ? current.memoizedProps : flags;
-            existingHiddenCallbacks = finishedWork.stateNode;
+            root = finishedWork.stateNode;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitTextUpdate,
-                existingHiddenCallbacks,
+                root,
                 current,
                 flags
               ),
@@ -15780,13 +15763,13 @@ __DEV__ &&
           }
           break;
         case 3:
-          existingHiddenCallbacks = pushNestedEffectDurations();
+          hoistableRoot = pushNestedEffectDurations();
           rootMutationContext = !1;
           tagCaches = null;
-          currentResource = currentHoistableRoot;
+          i = currentHoistableRoot;
           currentHoistableRoot = getHoistableRoot(root.containerInfo);
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-          currentHoistableRoot = currentResource;
+          currentHoistableRoot = i;
           commitReconciliationEffects(finishedWork);
           if (
             flags & 4 &&
@@ -15804,9 +15787,7 @@ __DEV__ &&
             }
           needsFormReset &&
             ((needsFormReset = !1), recursivelyResetForms(finishedWork));
-          root.effectDuration += popNestedEffectDurations(
-            existingHiddenCallbacks
-          );
+          root.effectDuration += popNestedEffectDurations(hoistableRoot);
           rootMutationContext &&
             0 !== (lanes & 34) &&
             ((root.indicatorLanes &= ~currentEventTransitionLane),
@@ -15841,14 +15822,11 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           finishedWork.child.flags & 8192 &&
-            ((existingHiddenCallbacks = null !== finishedWork.memoizedState),
+            ((root = null !== finishedWork.memoizedState),
             (current = null !== current && null !== current.memoizedState),
             alwaysThrottleRetries
-              ? existingHiddenCallbacks !== current &&
-                (globalMostRecentFallbackTime = now$1())
-              : existingHiddenCallbacks &&
-                !current &&
-                (globalMostRecentFallbackTime = now$1()));
+              ? root !== current && (globalMostRecentFallbackTime = now$1())
+              : root && !current && (globalMostRecentFallbackTime = now$1()));
           if (flags & 4) {
             try {
               if (null !== finishedWork.memoizedState) {
@@ -15875,13 +15853,18 @@ __DEV__ &&
           retryQueue = null !== current && null !== current.memoizedState;
           if (finishedWork.mode & ConcurrentMode) {
             var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-              prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+              prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
+              _prevOffscreenDirectParentIsHidden =
+                offscreenDirectParentIsHidden;
             offscreenSubtreeIsHidden =
               prevOffscreenSubtreeIsHidden || suspenseCallback;
+            offscreenDirectParentIsHidden =
+              _prevOffscreenDirectParentIsHidden || suspenseCallback;
             offscreenSubtreeWasHidden =
               prevOffscreenSubtreeWasHidden || retryQueue;
             recursivelyTraverseMutationEffects(root, finishedWork, lanes);
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+            offscreenDirectParentIsHidden = _prevOffscreenDirectParentIsHidden;
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
             retryQueue &&
               !suspenseCallback &&
@@ -15899,46 +15882,40 @@ __DEV__ &&
               );
           } else recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
-          if (flags & 8192)
-            a: for (
-              root = finishedWork.stateNode,
-                root._visibility = suspenseCallback
-                  ? root._visibility & ~OffscreenVisible
-                  : root._visibility | OffscreenVisible,
-                !suspenseCallback ||
-                  null === current ||
-                  retryQueue ||
-                  offscreenSubtreeIsHidden ||
-                  offscreenSubtreeWasHidden ||
-                  (finishedWork.mode & ConcurrentMode) === NoMode ||
-                  (recursivelyTraverseDisappearLayoutEffects(finishedWork),
-                  enableComponentPerformanceTrack &&
-                    (finishedWork.mode & ProfileMode) !== NoMode &&
-                    0 <= componentEffectStartTime &&
-                    0 <= componentEffectEndTime &&
-                    0.05 < componentEffectEndTime - componentEffectStartTime &&
-                    logComponentTrigger(
-                      finishedWork,
-                      componentEffectStartTime,
-                      componentEffectEndTime,
-                      "Disconnect"
-                    )),
-                current = null,
-                root = finishedWork;
-              ;
-
-            ) {
+          if (
+            flags & 8192 &&
+            ((root = finishedWork.stateNode),
+            (root._visibility = suspenseCallback
+              ? root._visibility & ~OffscreenVisible
+              : root._visibility | OffscreenVisible),
+            !suspenseCallback ||
+              null === current ||
+              retryQueue ||
+              offscreenSubtreeIsHidden ||
+              offscreenSubtreeWasHidden ||
+              (finishedWork.mode & ConcurrentMode) === NoMode ||
+              (recursivelyTraverseDisappearLayoutEffects(finishedWork),
+              enableComponentPerformanceTrack &&
+                (finishedWork.mode & ProfileMode) !== NoMode &&
+                0 <= componentEffectStartTime &&
+                0 <= componentEffectEndTime &&
+                0.05 < componentEffectEndTime - componentEffectStartTime &&
+                logComponentTrigger(
+                  finishedWork,
+                  componentEffectStartTime,
+                  componentEffectEndTime,
+                  "Disconnect"
+                )),
+            suspenseCallback || !offscreenDirectParentIsHidden)
+          )
+            a: for (current = null, root = finishedWork; ; ) {
               if (5 === root.tag || 26 === root.tag) {
                 if (null === current) {
                   lanes = current = root;
                   try {
-                    (existingHiddenCallbacks = lanes.stateNode),
+                    (hoistableRoot = lanes.stateNode),
                       suspenseCallback
-                        ? runWithFiberInDEV(
-                            lanes,
-                            hideInstance,
-                            existingHiddenCallbacks
-                          )
+                        ? runWithFiberInDEV(lanes, hideInstance, hoistableRoot)
                         : runWithFiberInDEV(
                             lanes,
                             unhideInstance,
@@ -15953,17 +15930,13 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    (currentResource = lanes.stateNode),
+                    (i = lanes.stateNode),
                       suspenseCallback
-                        ? runWithFiberInDEV(
-                            lanes,
-                            hideTextInstance,
-                            currentResource
-                          )
+                        ? runWithFiberInDEV(lanes, hideTextInstance, i)
                         : runWithFiberInDEV(
                             lanes,
                             unhideTextInstance,
-                            currentResource,
+                            i,
                             lanes.memoizedProps
                           ),
                       (rootMutationContext = !0);
@@ -15975,18 +15948,18 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    (maybeNodes = lanes.stateNode),
-                      suspenseCallback
-                        ? runWithFiberInDEV(
-                            lanes,
-                            hideDehydratedBoundary,
-                            maybeNodes
-                          )
-                        : runWithFiberInDEV(
-                            lanes,
-                            unhideDehydratedBoundary,
-                            lanes.stateNode
-                          );
+                    var instance = lanes.stateNode;
+                    suspenseCallback
+                      ? runWithFiberInDEV(
+                          lanes,
+                          hideDehydratedBoundary,
+                          instance
+                        )
+                      : runWithFiberInDEV(
+                          lanes,
+                          unhideDehydratedBoundary,
+                          lanes.stateNode
+                        );
                   } catch (error) {
                     captureCommitPhaseError(lanes, lanes.return, error);
                   }
@@ -29139,6 +29112,7 @@ __DEV__ &&
     didWarnAboutUndefinedSnapshotBeforeUpdate = new Set();
     var offscreenSubtreeIsHidden = !1,
       offscreenSubtreeWasHidden = !1,
+      offscreenDirectParentIsHidden = !1,
       needsFormReset = !1,
       PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
       nextEffect = null,
@@ -30124,11 +30098,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-4b3e662e-20251008" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-1d68bce1-20251012" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-4b3e662e-20251008\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-1d68bce1-20251012\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30165,10 +30139,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-4b3e662e-20251008",
+          version: "19.3.0-native-fb-1d68bce1-20251012",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-4b3e662e-20251008"
+          reconcilerVersion: "19.3.0-native-fb-1d68bce1-20251012"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30318,5 +30292,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.3.0-native-fb-4b3e662e-20251008";
+    exports.version = "19.3.0-native-fb-1d68bce1-20251012";
   })();

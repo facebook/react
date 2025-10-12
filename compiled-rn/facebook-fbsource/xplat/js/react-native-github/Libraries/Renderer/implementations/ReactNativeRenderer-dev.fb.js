@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9b21544030db378195095a6bdc68a5f0>>
+ * @generated SignedSource<<fd21dbd635c6a437e7ce5e8e245542cb>>
  */
 
 "use strict";
@@ -12517,34 +12517,35 @@ __DEV__ &&
           if (
             flags & 64 &&
             offscreenSubtreeIsHidden &&
-            ((flags = finishedWork.updateQueue), null !== flags)
+            ((flags = finishedWork.updateQueue),
+            null !== flags && ((current = flags.callbacks), null !== current))
           ) {
-            var newHiddenCallbacks = flags.callbacks;
-            if (null !== newHiddenCallbacks) {
-              var existingHiddenCallbacks = flags.shared.hiddenCallbacks;
-              flags.shared.hiddenCallbacks =
-                null === existingHiddenCallbacks
-                  ? newHiddenCallbacks
-                  : existingHiddenCallbacks.concat(newHiddenCallbacks);
-            }
+            var existingHiddenCallbacks = flags.shared.hiddenCallbacks;
+            flags.shared.hiddenCallbacks =
+              null === existingHiddenCallbacks
+                ? current
+                : existingHiddenCallbacks.concat(current);
           }
           break;
         case 26:
         case 27:
         case 5:
+          existingHiddenCallbacks = offscreenDirectParentIsHidden;
+          offscreenDirectParentIsHidden = !1;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+          offscreenDirectParentIsHidden = existingHiddenCallbacks;
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
               null === current ||
               safelyDetachRef(current, current.return));
           if (finishedWork.flags & 32) {
-            newHiddenCallbacks = finishedWork.stateNode;
+            existingHiddenCallbacks = finishedWork.stateNode;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 resetTextContent,
-                newHiddenCallbacks
+                existingHiddenCallbacks
               ),
                 (rootMutationContext = !0);
             } catch (error) {
@@ -12552,17 +12553,19 @@ __DEV__ &&
             }
           }
           if (flags & 4 && null != finishedWork.stateNode) {
-            newHiddenCallbacks = finishedWork.memoizedProps;
-            existingHiddenCallbacks =
-              null !== current ? current.memoizedProps : newHiddenCallbacks;
+            existingHiddenCallbacks = finishedWork.memoizedProps;
+            current =
+              null !== current
+                ? current.memoizedProps
+                : existingHiddenCallbacks;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitUpdate,
                 finishedWork.stateNode,
                 finishedWork.type,
+                current,
                 existingHiddenCallbacks,
-                newHiddenCallbacks,
                 finishedWork
               );
             } catch (error) {
@@ -12584,15 +12587,14 @@ __DEV__ &&
                 "This should have a text node initialized. This error is likely caused by a bug in React. Please file an issue."
               );
             flags = finishedWork.memoizedProps;
-            newHiddenCallbacks =
-              null !== current ? current.memoizedProps : flags;
+            current = null !== current ? current.memoizedProps : flags;
             existingHiddenCallbacks = finishedWork.stateNode;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitTextUpdate,
                 existingHiddenCallbacks,
-                newHiddenCallbacks,
+                current,
                 flags
               ),
                 (rootMutationContext = !0);
@@ -12636,14 +12638,13 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           finishedWork.child.flags & 8192 &&
-            ((newHiddenCallbacks = null !== finishedWork.memoizedState),
-            (existingHiddenCallbacks =
-              null !== current && null !== current.memoizedState),
+            ((existingHiddenCallbacks = null !== finishedWork.memoizedState),
+            (current = null !== current && null !== current.memoizedState),
             alwaysThrottleRetries
-              ? newHiddenCallbacks !== existingHiddenCallbacks &&
+              ? existingHiddenCallbacks !== current &&
                 (globalMostRecentFallbackTime = now$1())
-              : newHiddenCallbacks &&
-                !existingHiddenCallbacks &&
+              : existingHiddenCallbacks &&
+                !current &&
                 (globalMostRecentFallbackTime = now$1()));
           if (flags & 4) {
             try {
@@ -12671,13 +12672,18 @@ __DEV__ &&
           retryQueue = null !== current && null !== current.memoizedState;
           if (finishedWork.mode & 1) {
             var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-              prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+              prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
+              _prevOffscreenDirectParentIsHidden =
+                offscreenDirectParentIsHidden;
             offscreenSubtreeIsHidden =
               prevOffscreenSubtreeIsHidden || suspenseCallback;
+            offscreenDirectParentIsHidden =
+              _prevOffscreenDirectParentIsHidden || suspenseCallback;
             offscreenSubtreeWasHidden =
               prevOffscreenSubtreeWasHidden || retryQueue;
             recursivelyTraverseMutationEffects(root, finishedWork, lanes);
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+            offscreenDirectParentIsHidden = _prevOffscreenDirectParentIsHidden;
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
             retryQueue &&
               !suspenseCallback &&
@@ -12695,45 +12701,43 @@ __DEV__ &&
               );
           } else recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
-          if (flags & 8192)
-            a: for (
-              root = finishedWork.stateNode,
-                root._visibility = suspenseCallback
-                  ? root._visibility & ~OffscreenVisible
-                  : root._visibility | OffscreenVisible,
-                !suspenseCallback ||
-                  null === current ||
-                  retryQueue ||
-                  offscreenSubtreeIsHidden ||
-                  offscreenSubtreeWasHidden ||
-                  0 === (finishedWork.mode & 1) ||
-                  (recursivelyTraverseDisappearLayoutEffects(finishedWork),
-                  enableComponentPerformanceTrack &&
-                    0 !== (finishedWork.mode & 2) &&
-                    0 <= componentEffectStartTime &&
-                    0 <= componentEffectEndTime &&
-                    0.05 < componentEffectEndTime - componentEffectStartTime &&
-                    logComponentTrigger(
-                      finishedWork,
-                      componentEffectStartTime,
-                      componentEffectEndTime,
-                      "Disconnect"
-                    )),
-                current = null,
-                root = finishedWork;
-              ;
-
-            ) {
+          if (
+            flags & 8192 &&
+            ((root = finishedWork.stateNode),
+            (root._visibility = suspenseCallback
+              ? root._visibility & ~OffscreenVisible
+              : root._visibility | OffscreenVisible),
+            !suspenseCallback ||
+              null === current ||
+              retryQueue ||
+              offscreenSubtreeIsHidden ||
+              offscreenSubtreeWasHidden ||
+              0 === (finishedWork.mode & 1) ||
+              (recursivelyTraverseDisappearLayoutEffects(finishedWork),
+              enableComponentPerformanceTrack &&
+                0 !== (finishedWork.mode & 2) &&
+                0 <= componentEffectStartTime &&
+                0 <= componentEffectEndTime &&
+                0.05 < componentEffectEndTime - componentEffectStartTime &&
+                logComponentTrigger(
+                  finishedWork,
+                  componentEffectStartTime,
+                  componentEffectEndTime,
+                  "Disconnect"
+                )),
+            suspenseCallback || !offscreenDirectParentIsHidden)
+          )
+            a: for (current = null, root = finishedWork; ; ) {
               if (5 === root.tag) {
                 if (null === current) {
                   lanes = current = root;
                   try {
-                    (newHiddenCallbacks = lanes.stateNode),
+                    (existingHiddenCallbacks = lanes.stateNode),
                       suspenseCallback
                         ? runWithFiberInDEV(
                             lanes,
                             hideInstance,
-                            newHiddenCallbacks
+                            existingHiddenCallbacks
                           )
                         : runWithFiberInDEV(
                             lanes,
@@ -12749,20 +12753,16 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    (existingHiddenCallbacks = lanes.stateNode),
-                      suspenseCallback
-                        ? runWithFiberInDEV(
-                            lanes,
-                            hideTextInstance,
-                            existingHiddenCallbacks
-                          )
-                        : runWithFiberInDEV(
-                            lanes,
-                            unhideTextInstance,
-                            existingHiddenCallbacks,
-                            lanes.memoizedProps
-                          ),
-                      (rootMutationContext = !0);
+                    var instance = lanes.stateNode;
+                    suspenseCallback
+                      ? runWithFiberInDEV(lanes, hideTextInstance, instance)
+                      : runWithFiberInDEV(
+                          lanes,
+                          unhideTextInstance,
+                          instance,
+                          lanes.memoizedProps
+                        );
+                    rootMutationContext = !0;
                   } catch (error) {
                     captureCommitPhaseError(lanes, lanes.return, error);
                   }
@@ -12771,12 +12771,12 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    var instance = lanes.stateNode;
+                    var instance$jscomp$0 = lanes.stateNode;
                     suspenseCallback
                       ? runWithFiberInDEV(
                           lanes,
                           hideDehydratedBoundary,
-                          instance
+                          instance$jscomp$0
                         )
                       : runWithFiberInDEV(
                           lanes,
@@ -12811,13 +12811,10 @@ __DEV__ &&
           flags & 4 &&
             ((flags = finishedWork.updateQueue),
             null !== flags &&
-              ((newHiddenCallbacks = flags.retryQueue),
-              null !== newHiddenCallbacks &&
+              ((current = flags.retryQueue),
+              null !== current &&
                 ((flags.retryQueue = null),
-                attachSuspenseRetryListeners(
-                  finishedWork,
-                  newHiddenCallbacks
-                ))));
+                attachSuspenseRetryListeners(finishedWork, current))));
           break;
         case 19:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -20130,6 +20127,7 @@ __DEV__ &&
     var rootMutationContext = !1,
       offscreenSubtreeIsHidden = !1,
       offscreenSubtreeWasHidden = !1,
+      offscreenDirectParentIsHidden = !1,
       PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
       nextEffect = null,
       inProgressLanes = null,
@@ -20337,11 +20335,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.3.0-native-fb-4b3e662e-20251008" !== isomorphicReactPackageVersion)
+    if ("19.3.0-native-fb-1d68bce1-20251012" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.3.0-native-fb-4b3e662e-20251008\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.3.0-native-fb-1d68bce1-20251012\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -20367,10 +20365,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-4b3e662e-20251008",
+        version: "19.3.0-native-fb-1d68bce1-20251012",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-4b3e662e-20251008"
+        reconcilerVersion: "19.3.0-native-fb-1d68bce1-20251012"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
