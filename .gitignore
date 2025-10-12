@@ -1,3 +1,4 @@
+.env
 .DS_STORE
 node_modules
 scripts/flow/*/.flowconfig
