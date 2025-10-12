@@ -11,6 +11,7 @@ import {
   allRules,
   mapErrorSeverityToESlint,
   recommendedRules,
+  recommendedLatestRules,
 } from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
 
@@ -27,7 +28,7 @@ const basicRuleConfigs = {
   'react-hooks/exhaustive-deps': 'warn',
 } as const satisfies Linter.RulesRecord;
 
-const compilerRuleConfigs = Object.fromEntries(
+const recommendedCompilerRuleConfigs = Object.fromEntries(
   Object.entries(recommendedRules).map(([name, ruleConfig]) => {
     return [
       `react-hooks/${name}` as const,
@@ -36,38 +37,39 @@ const compilerRuleConfigs = Object.fromEntries(
   }),
 ) as Record<`react-hooks/${string}`, Linter.RuleEntry>;
 
-const allRuleConfigs: Linter.RulesRecord = {
+const recommendedLatestCompilerRuleConfigs = Object.fromEntries(
+  Object.entries(recommendedLatestRules).map(([name, ruleConfig]) => {
+    return [
+      `react-hooks/${name}` as const,
+      mapErrorSeverityToESlint(ruleConfig.severity),
+    ] as const;
+  }),
+) as Record<`react-hooks/${string}`, Linter.RuleEntry>;
+
+const recommendedRuleConfigs: Linter.RulesRecord = {
   ...basicRuleConfigs,
-  ...compilerRuleConfigs,
+  ...recommendedCompilerRuleConfigs,
+};
+const recommendedLatestRuleConfigs: Linter.RulesRecord = {
+  ...basicRuleConfigs,
+  ...recommendedLatestCompilerRuleConfigs,
 };
 
 const plugins = ['react-hooks'];
 
 type ReactHooksFlatConfig = {
-  plugins: Record<string, any>;
+  plugins: {react: any};
   rules: Linter.RulesRecord;
 };
 
 const configs = {
-  'recommended-legacy': {
+  recommended: {
     plugins,
-    rules: basicRuleConfigs,
-  },
-  'recommended-latest-legacy': {
-    plugins,
-    rules: allRuleConfigs,
-  },
-  'flat/recommended': {
-    plugins,
-    rules: basicRuleConfigs,
+    rules: recommendedRuleConfigs,
   },
   'recommended-latest': {
     plugins,
-    rules: allRuleConfigs,
-  },
-  recommended: {
-    plugins,
-    rules: basicRuleConfigs,
+    rules: recommendedLatestRuleConfigs,
   },
   flat: {} as Record<string, ReactHooksFlatConfig>,
 };
@@ -75,24 +77,13 @@ const configs = {
 const plugin = {
   meta: {
     name: 'eslint-plugin-react-hooks',
+    version: '7.0.0',
   },
   rules,
   configs,
 };
 
 Object.assign(configs.flat, {
-  'recommended-legacy': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['recommended-legacy'].rules,
-  },
-  'recommended-latest-legacy': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['recommended-latest-legacy'].rules,
-  },
-  'flat/recommended': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['flat/recommended'].rules,
-  },
   'recommended-latest': {
     plugins: {'react-hooks': plugin},
     rules: configs['recommended-latest'].rules,
