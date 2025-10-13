@@ -496,7 +496,9 @@ function commitBeforeMutationEffectsOnFiber(
   }
 
   switch (finishedWork.tag) {
-    case FunctionComponent: {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent: {
       if (enableUseEffectEventHook) {
         if ((flags & Update) !== NoFlags) {
           const updateQueue: FunctionComponentUpdateQueue | null =
@@ -511,10 +513,6 @@ function commitBeforeMutationEffectsOnFiber(
           }
         }
       }
-      break;
-    }
-    case ForwardRef:
-    case SimpleMemoComponent: {
       break;
     }
     case ClassComponent: {
