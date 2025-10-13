@@ -300,9 +300,31 @@ type Props = {
   store: Store,
 };
 
-function compareTime(a: SerializedAsyncInfo, b: SerializedAsyncInfo): number {
-  const ioA = a.awaited;
-  const ioB = b.awaited;
+function withIndex(
+  value: SerializedAsyncInfo,
+  index: number,
+): {
+  index: number,
+  value: SerializedAsyncInfo,
+} {
+  return {
+    index,
+    value,
+  };
+}
+
+function compareTime(
+  a: {
+    index: number,
+    value: SerializedAsyncInfo,
+  },
+  b: {
+    index: number,
+    value: SerializedAsyncInfo,
+  },
+): number {
+  const ioA = a.value.awaited;
+  const ioB = b.value.awaited;
   if (ioA.start === ioB.start) {
     return ioA.end - ioB.end;
   }
@@ -364,7 +386,8 @@ export default function InspectedElementSuspendedBy({
     minTime = maxTime - 25;
   }
 
-  const sortedSuspendedBy = suspendedBy === null ? [] : suspendedBy.slice(0);
+  const sortedSuspendedBy =
+    suspendedBy === null ? [] : suspendedBy.map(withIndex);
   sortedSuspendedBy.sort(compareTime);
 
   let unknownSuspenders = null;
@@ -407,11 +430,11 @@ export default function InspectedElementSuspendedBy({
           <ButtonIcon type="copy" />
         </Button>
       </div>
-      {sortedSuspendedBy.map((asyncInfo, index) => (
+      {sortedSuspendedBy.map(({value, index}) => (
         <SuspendedByRow
           key={index}
           index={index}
-          asyncInfo={asyncInfo}
+          asyncInfo={value}
           bridge={bridge}
           element={element}
           inspectedElement={inspectedElement}
