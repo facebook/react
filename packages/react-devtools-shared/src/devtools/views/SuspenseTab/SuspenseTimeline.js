@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useContext, useEffect, useRef} from 'react';
+import {useContext, useEffect} from 'react';
 import {BridgeContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useHighlightHostInstance, useScrollToHostInstance} from '../hooks';
@@ -29,9 +29,8 @@ function SuspenseTimelineInput() {
     useHighlightHostInstance();
   const scrollToHostInstance = useScrollToHostInstance();
 
-  const {timeline, timelineIndex, hoveredTimelineIndex, playing} = useContext(
-    SuspenseTreeStateContext,
-  );
+  const {timeline, timelineIndex, hoveredTimelineIndex, playing, autoScroll} =
+    useContext(SuspenseTreeStateContext);
 
   const min = 0;
   const max = timeline.length > 0 ? timeline.length - 1 : 0;
@@ -102,7 +101,6 @@ function SuspenseTimelineInput() {
     });
   }
 
-  const isInitialMount = useRef(true);
   // TODO: useEffectEvent here once it's supported in all versions DevTools supports.
   // For now we just exclude it from deps since we don't lint those anyway.
   function changeTimelineIndex(newIndex: number) {
@@ -115,21 +113,20 @@ function SuspenseTimelineInput() {
     bridge.send('overrideSuspenseMilestone', {
       suspendedSet,
     });
-    if (isInitialMount.current) {
-      // Skip scrolling on initial mount. Only when we're changing the timeline.
-      isInitialMount.current = false;
-    } else {
-      // When we're scrubbing through the timeline, scroll the current boundary
-      // into view as it was just revealed. This is after we override the milestone
-      // to reveal it.
-      const selectedSuspenseID = timeline[timelineIndex];
-      scrollToHostInstance(selectedSuspenseID);
-    }
   }
 
   useEffect(() => {
     changeTimelineIndex(timelineIndex);
   }, [timelineIndex]);
+
+  useEffect(() => {
+    if (autoScroll.id > 0) {
+      const scrollToId = autoScroll.id;
+      // Consume the scroll ref so that we only trigger this scroll once.
+      autoScroll.id = 0;
+      scrollToHostInstance(scrollToId);
+    }
+  }, [autoScroll]);
 
   useEffect(() => {
     if (!playing) {
