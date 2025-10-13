@@ -350,7 +350,7 @@ describe('ReactPerformanceTracks', () => {
   });
 
   // @gate __DEV__ && enableComponentPerformanceTrack
-  it('includes spans for Components with no prop changes', async () => {
+  it('includes console.timeStamp spans for Components with no prop changes', async () => {
     function Left({value}) {
       Scheduler.unstable_advanceTime(5000);
     }
@@ -436,6 +436,7 @@ describe('ReactPerformanceTracks', () => {
     ]);
     expect(getConsoleTimestampEntries()).toEqual([
       ['Render', 16000, 31000, 'Blocking', 'Scheduler ⚛', 'primary-dark'],
+      ['Right', 21000, 31000, 'Components ⚛', undefined, 'error'],
     ]);
     performanceMeasureCalls.length = 0;
   });

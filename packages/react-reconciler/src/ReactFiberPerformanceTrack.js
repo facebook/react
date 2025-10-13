@@ -305,6 +305,30 @@ export function logComponentRender(
           } else {
             performance.measure('\u200b' + name, reusableComponentOptions);
           }
+        } else {
+          if (debugTask != null) {
+            debugTask.run(
+              // $FlowFixMe[method-unbinding]
+              console.timeStamp.bind(
+                console,
+                name,
+                startTime,
+                endTime,
+                COMPONENTS_TRACK,
+                undefined,
+                color,
+              ),
+            );
+          } else {
+            console.timeStamp(
+              name,
+              startTime,
+              endTime,
+              COMPONENTS_TRACK,
+              undefined,
+              color,
+            );
+          }
         }
       } else {
         if (debugTask != null) {
