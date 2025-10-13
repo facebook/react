@@ -31,6 +31,7 @@ export type SuspenseTreeState = {
   uniqueSuspendersOnly: boolean,
   playing: boolean,
   autoSelect: boolean,
+  autoScroll: {id: number}, // Ref that's set to 0 after scrolling once.
 };
 
 type ACTION_SUSPENSE_TREE_MUTATION = {
@@ -125,6 +126,7 @@ function getInitialState(store: Store): SuspenseTreeState {
     uniqueSuspendersOnly,
     playing: false,
     autoSelect: true,
+    autoScroll: {id: 0}, // Don't auto-scroll initially
   };
 
   return initialState;
@@ -218,6 +220,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedSuspenseID,
               playing: false, // pause
               autoSelect: false,
+              autoScroll: {id: selectedSuspenseID}, // scroll
             };
           }
           case 'SET_SUSPENSE_LINEAGE': {
@@ -285,6 +288,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               timelineIndex: nextTimelineIndex,
               playing: false, // pause
               autoSelect: false,
+              autoScroll: {id: nextSelectedSuspenseID}, // scroll
             };
           }
           case 'SUSPENSE_SKIP_TIMELINE_INDEX': {
@@ -308,6 +312,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               timelineIndex: nextTimelineIndex,
               playing: false, // pause
               autoSelect: false,
+              autoScroll: {id: nextSelectedSuspenseID}, // scroll
             };
           }
           case 'SUSPENSE_PLAY_PAUSE': {
@@ -359,6 +364,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               selectedSuspenseID: nextSelectedSuspenseID,
               timelineIndex: nextTimelineIndex,
               playing: nextPlaying,
+              autoScroll: {id: nextSelectedSuspenseID}, // scroll
             };
           }
           case 'TOGGLE_TIMELINE_FOR_ID': {
@@ -392,6 +398,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
               timelineIndex: nextTimelineIndex,
               playing: false, // pause
               autoSelect: false,
+              autoScroll: {id: nextSelectedSuspenseID},
             };
           }
           case 'HOVER_TIMELINE_FOR_ID': {
