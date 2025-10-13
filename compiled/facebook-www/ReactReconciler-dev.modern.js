@@ -13207,6 +13207,8 @@ __DEV__ &&
           beforeActiveInstanceBlur(finishedWork));
         switch (finishedWork.tag) {
           case 0:
+          case 11:
+          case 15:
             if (
               0 !== (flags & 4) &&
               ((finishedWork = finishedWork.updateQueue),
@@ -13221,9 +13223,6 @@ __DEV__ &&
               )
                 (current = finishedWork[isViewTransitionEligible]),
                   (current.ref.impl = current.nextImpl);
-            break;
-          case 11:
-          case 15:
             break;
           case 1:
             0 !== (flags & 1024) &&
@@ -22792,7 +22791,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-1d68bce1-20251012"
+        reconcilerVersion: "19.3.0-www-modern-93d4458f-20251013"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

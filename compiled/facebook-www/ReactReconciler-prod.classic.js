@@ -8528,6 +8528,8 @@ module.exports = function ($$$config) {
         beforeActiveInstanceBlur(fiber));
       switch (fiber.tag) {
         case 0:
+        case 11:
+        case 15:
           if (
             0 !== (flags & 4) &&
             ((current = fiber.updateQueue),
@@ -8541,9 +8543,6 @@ module.exports = function ($$$config) {
             )
               (flags = current[isViewTransitionEligible]),
                 (flags.ref.impl = flags.nextImpl);
-          break;
-        case 11:
-        case 15:
           break;
         case 1:
           if (0 !== (flags & 1024) && null !== current) {
@@ -14254,7 +14253,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-1d68bce1-20251012"
+      reconcilerVersion: "19.3.0-www-classic-93d4458f-20251013"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
