@@ -2771,7 +2771,7 @@ function incrementChunkDebugInfo(
   }
 }
 
-function addDebugInfo(chunk: SomeChunk<any>, debugInfo: ReactDebugInfo): void {
+function addAsyncInfo(chunk: SomeChunk<any>, asyncInfo: ReactAsyncInfo): void {
   const value = resolveLazy(chunk.value);
   if (
     typeof value === 'object' &&
@@ -2783,18 +2783,18 @@ function addDebugInfo(chunk: SomeChunk<any>, debugInfo: ReactDebugInfo): void {
   ) {
     if (isArray(value._debugInfo)) {
       // $FlowFixMe[method-unbinding]
-      value._debugInfo.push.apply(value._debugInfo, debugInfo);
+      value._debugInfo.push(asyncInfo);
     } else {
       Object.defineProperty((value: any), '_debugInfo', {
         configurable: false,
         enumerable: false,
         writable: true,
-        value: debugInfo,
+        value: [asyncInfo],
       });
     }
   } else {
     // $FlowFixMe[method-unbinding]
-    chunk._debugInfo.push.apply(chunk._debugInfo, debugInfo);
+    chunk._debugInfo.push(asyncInfo);
   }
 }
 
@@ -2809,12 +2809,12 @@ function resolveChunkDebugInfo(
     if (response._debugIOStarted) {
       // Add the currently resolving chunk's debug info representing the stream
       // to the Promise that was waiting on the stream, or its underlying value.
-      const debugInfo: ReactDebugInfo = [{awaited: streamState._debugInfo}];
+      const asyncInfo: ReactAsyncInfo = {awaited: streamState._debugInfo};
       if (chunk.status === PENDING || chunk.status === BLOCKED) {
-        const boundAddDebugInfo = addDebugInfo.bind(null, chunk, debugInfo);
-        chunk.then(boundAddDebugInfo, boundAddDebugInfo);
+        const boundAddAsyncInfo = addAsyncInfo.bind(null, chunk, asyncInfo);
+        chunk.then(boundAddAsyncInfo, boundAddAsyncInfo);
       } else {
-        addDebugInfo(chunk, debugInfo);
+        addAsyncInfo(chunk, asyncInfo);
       }
     }
   }
