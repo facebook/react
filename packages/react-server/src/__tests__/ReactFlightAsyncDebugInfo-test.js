@@ -3311,7 +3311,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
   });
 
   it('can track a promise created fully outside first party code', async function internal_test() {
-    function internal_API(text, timeout) {
+    async function internal_API(text, timeout) {
       let resolve;
       const promise = new Promise(r => {
         resolve = r;
@@ -3380,17 +3380,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "end": 0,
               "env": "Server",
-              "name": "",
-              "stack": [
-                [
-                  "new Promise",
-                  "",
-                  0,
-                  0,
-                  0,
-                  0,
-                ],
-              ],
+              "name": "greeting",
               "start": 0,
               "value": {
                 "status": "halted",

@@ -2357,6 +2357,7 @@ function visitAsyncNode(
       }
       const awaited = node.awaited;
       let match: void | null | PromiseNode | IONode = previousIONode;
+      const promise = node.promise.deref();
       if (awaited !== null) {
         const ioNode = visitAsyncNode(request, task, awaited, visited, cutOff);
         if (ioNode === undefined) {
@@ -2371,17 +2372,27 @@ function visitAsyncNode(
           if (ioNode.tag === PROMISE_NODE) {
             // If the ioNode was a Promise, then that means we found one in user space since otherwise
             // we would've returned an IO node. We assume this has the best stack.
+            // Note: This might also be a Promise with a displayName but potentially a worse stack.
+            // We could potentially favor the outer Promise if it has a stack but not the inner.
             match = ioNode;
           } else if (
-            node.stack === null ||
-            !hasUnfilteredFrame(request, node.stack)
+            (node.stack !== null && hasUnfilteredFrame(request, node.stack)) ||
+            (promise !== undefined &&
+              // $FlowFixMe[prop-missing]
+              typeof promise.displayName === 'string' &&
+              (ioNode.stack === null ||
+                !hasUnfilteredFrame(request, ioNode.stack)))
           ) {
+            // If this Promise has a stack trace then we favor that over the I/O node since we're
+            // mainly dealing with Promises as the abstraction.
+            // If it has no stack but at least has a displayName and the io doesn't have a better
+            // stack anyway, then also use this Promise instead since at least it has a name.
+            match = node;
+          } else {
             // If this Promise was created inside only third party code, then try to use
             // the inner I/O node instead. This could happen if third party calls into first
             // party to perform some I/O.
             match = ioNode;
-          } else {
-            match = node;
           }
         } else if (request.status === ABORTING) {
           if (node.start < request.abortTime && node.end > request.abortTime) {
@@ -2389,8 +2400,11 @@ function visitAsyncNode(
             // Promise that was aborted. This won't necessarily have I/O associated with it but
             // it's a point of interest.
             if (
-              node.stack !== null &&
-              hasUnfilteredFrame(request, node.stack)
+              (node.stack !== null &&
+                hasUnfilteredFrame(request, node.stack)) ||
+              (promise !== undefined &&
+                // $FlowFixMe[prop-missing]
+                typeof promise.displayName === 'string')
             ) {
               match = node;
             }
@@ -2399,7 +2413,6 @@ function visitAsyncNode(
       }
       // We need to forward after we visit awaited nodes because what ever I/O we requested that's
       // the thing that generated this node and its virtual children.
-      const promise = node.promise.deref();
       if (promise !== undefined) {
         const debugInfo = promise._debugInfo;
         if (debugInfo != null && !visited.has(debugInfo)) {
