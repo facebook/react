@@ -15,9 +15,20 @@ let act;
 let useEffect;
 
 describe('ReactPerformanceTracks', () => {
+  const performanceMeasureCalls = [];
+
   beforeEach(() => {
+    performanceMeasureCalls.length = 0;
     Object.defineProperty(performance, 'measure', {
-      value: jest.fn(),
+      value: jest.fn((measureName, reusableOptions) => {
+        performanceMeasureCalls.push([
+          measureName,
+          {
+            // React will mutate the options it passes to performance.measure.
+            ...reusableOptions,
+          },
+        ]);
+      }),
       configurable: true,
     });
     console.timeStamp = () => {};
@@ -32,6 +43,19 @@ describe('ReactPerformanceTracks', () => {
     useEffect = React.useEffect;
   });
 
+  function getConsoleTimestampEntries() {
+    try {
+      return console.timeStamp.mock.calls.filter(call => {
+        const [, startTime, endTime] = call;
+
+        const isRegisterTrackCall = startTime !== 0.003 && endTime !== 0.003;
+        return isRegisterTrackCall;
+      });
+    } finally {
+      console.timeStamp.mockClear();
+    }
+  }
+
   // @gate __DEV__ && enableComponentPerformanceTrack
   it('shows a hint if an update is triggered by a deeply equal object', async () => {
     const App = function App({items}) {
@@ -45,7 +69,7 @@ describe('ReactPerformanceTracks', () => {
       ReactNoop.render(<App items={items} />);
     });
 
-    expect(performance.measure.mock.calls).toEqual([
+    expect(performanceMeasureCalls).toEqual([
       [
         'Mount',
         {
@@ -62,14 +86,14 @@ describe('ReactPerformanceTracks', () => {
         },
       ],
     ]);
-    performance.measure.mockClear();
+    performanceMeasureCalls.length = 0;
 
     Scheduler.unstable_advanceTime(10);
     await act(() => {
       ReactNoop.render(<App items={items.concat('4')} />);
     });
 
-    expect(performance.measure.mock.calls).toEqual([
+    expect(performanceMeasureCalls).toEqual([
       [
         '​App',
         {
@@ -105,7 +129,7 @@ describe('ReactPerformanceTracks', () => {
       ReactNoop.render(<App items={items} />);
     });
 
-    expect(performance.measure.mock.calls).toEqual([
+    expect(performanceMeasureCalls).toEqual([
       [
         'Mount',
         {
@@ -122,14 +146,14 @@ describe('ReactPerformanceTracks', () => {
         },
       ],
     ]);
-    performance.measure.mockClear();
+    performanceMeasureCalls.length = 0;
 
     Scheduler.unstable_advanceTime(10);
     await act(() => {
       ReactNoop.render(<App items={items.concat('-1')} />);
     });
 
-    expect(performance.measure.mock.calls).toEqual([
+    expect(performanceMeasureCalls).toEqual([
       [
         '​App',
         {
@@ -171,7 +195,7 @@ describe('ReactPerformanceTracks', () => {
       ReactNoop.render(<App data={{buffer: null}} />);
     });
 
-    expect(performance.measure.mock.calls).toEqual([
+    expect(performanceMeasureCalls).toEqual([
       [
         'Mount',
         {
@@ -188,7 +212,7 @@ describe('ReactPerformanceTracks', () => {
         },
       ],
     ]);
-    performance.measure.mockClear();
+    performanceMeasureCalls.length = 0;
 
     Scheduler.unstable_advanceTime(10);
 
@@ -197,7 +221,7 @@ describe('ReactPerformanceTracks', () => {
       ReactNoop.render(<App data={{buffer: bigData}} />);
     });
 
-    expect(performance.measure.mock.calls).toEqual([
+    expect(performanceMeasureCalls).toEqual([
       [
         '​App',
         {
@@ -323,5 +347,96 @@ describe('ReactPerformanceTracks', () => {
         },
       ],
     ]);
+  });
+
+  // @gate __DEV__ && enableComponentPerformanceTrack
+  it('includes spans for Components with no prop changes', async () => {
+    function Left({value}) {
+      Scheduler.unstable_advanceTime(5000);
+    }
+    function Right() {
+      Scheduler.unstable_advanceTime(10000);
+    }
+
+    await act(() => {
+      ReactNoop.render(
+        <>
+          <Left value={1} />
+          <Right />
+        </>,
+      );
+    });
+
+    expect(performanceMeasureCalls).toEqual([
+      [
+        'Mount',
+        {
+          detail: {
+            devtools: {
+              color: 'warning',
+              properties: null,
+              tooltipText: 'Mount',
+              track: 'Components ⚛',
+            },
+          },
+          end: 5000,
+          start: 0,
+        },
+      ],
+      [
+        'Mount',
+        {
+          detail: {
+            devtools: {
+              color: 'warning',
+              properties: null,
+              tooltipText: 'Mount',
+              track: 'Components ⚛',
+            },
+          },
+          end: 15000,
+          start: 5000,
+        },
+      ],
+    ]);
+    performanceMeasureCalls.length = 0;
+    getConsoleTimestampEntries();
+
+    Scheduler.unstable_advanceTime(1000);
+
+    await act(() => {
+      ReactNoop.render(
+        <>
+          <Left value={2} />
+          <Right />
+        </>,
+      );
+    });
+
+    expect(performanceMeasureCalls).toEqual([
+      [
+        '​Left',
+        {
+          detail: {
+            devtools: {
+              color: 'error',
+              properties: [
+                ['Changed Props', ''],
+                ['– value', '1'],
+                ['+ value', '2'],
+              ],
+              tooltipText: 'Left',
+              track: 'Components ⚛',
+            },
+          },
+          end: 21000,
+          start: 16000,
+        },
+      ],
+    ]);
+    expect(getConsoleTimestampEntries()).toEqual([
+      ['Render', 16000, 31000, 'Blocking', 'Scheduler ⚛', 'primary-dark'],
+    ]);
+    performanceMeasureCalls.length = 0;
   });
 });
