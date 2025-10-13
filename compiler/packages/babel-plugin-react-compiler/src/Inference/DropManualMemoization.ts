@@ -454,7 +454,7 @@ export function dropManualMemoization(
               if (!hasNonVoidReturn(funcToCheck.loweredFunc.func)) {
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
-                    category: ErrorCategory.UseMemo,
+                    category: ErrorCategory.VoidUseMemo,
                     reason: 'useMemo() callbacks must return a value',
                     description: `This ${
                       manualMemo.loadInstr.value.kind === 'PropertyLoad'

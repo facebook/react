@@ -1,7 +1,7 @@
 {
   "name": "eslint-plugin-react-hooks",
   "description": "ESLint rules for React Hooks",
-  "version": "5.2.0",
+  "version": "7.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
@@ -50,7 +50,7 @@
     "@babel/preset-typescript": "^7.26.0",
     "@babel/types": "^7.19.0",
     "@tsconfig/strictest": "^2.0.5",
-    "@types/eslint": "^8.56.12",
+    "@types/eslint": "^9.6.1",
     "@types/estree": "^1.0.6",
     "@types/estree-jsx": "^1.0.5",
     "@types/node": "^20.2.5",

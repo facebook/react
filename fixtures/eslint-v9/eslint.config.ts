@@ -2,6 +2,7 @@ import {defineConfig} from 'eslint/config';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default defineConfig([
+  reactHooks.configs.flat['recommended-latest'],
   {
     languageOptions: {
       ecmaVersion: 'latest',
@@ -12,7 +13,6 @@ export default defineConfig([
         },
       },
     },
-    extends: [reactHooks.configs['recommended-latest']],
     rules: {
       'react-hooks/exhaustive-deps': 'error',
     },
