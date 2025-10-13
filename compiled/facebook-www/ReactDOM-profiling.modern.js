@@ -1918,7 +1918,8 @@ function logComponentTrigger(fiber, startTime, endTime, trigger) {
     (reusableComponentDevToolDetails.color = "warning"),
     (reusableComponentDevToolDetails.tooltipText = trigger),
     (reusableComponentDevToolDetails.properties = null),
-    performance.measure(trigger, reusableComponentOptions));
+    performance.measure(trigger, reusableComponentOptions),
+    performance.clearMeasures(trigger));
 }
 function logComponentReappeared(fiber, startTime, endTime) {
   logComponentTrigger(fiber, startTime, endTime, "Reconnect");
@@ -22023,14 +22024,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2429 = React.version;
 if (
-  "19.3.0-www-modern-47905a79-20251013" !==
+  "19.3.0-www-modern-b9ec735d-20251013" !==
   isomorphicReactPackageVersion$jscomp$inline_2429
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2429,
-      "19.3.0-www-modern-47905a79-20251013"
+      "19.3.0-www-modern-b9ec735d-20251013"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22048,10 +22049,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2431 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-47905a79-20251013",
+  version: "19.3.0-www-modern-b9ec735d-20251013",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-47905a79-20251013"
+  reconcilerVersion: "19.3.0-www-modern-b9ec735d-20251013"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2431.getLaneLabelMap = getLaneLabelMap),
@@ -22484,7 +22485,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-47905a79-20251013";
+exports.version = "19.3.0-www-modern-b9ec735d-20251013";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

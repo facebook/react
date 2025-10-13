@@ -1417,7 +1417,8 @@ __DEV__ &&
                 reusableComponentOptions
               )
             )
-          : performance.measure(trigger, reusableComponentOptions));
+          : performance.measure(trigger, reusableComponentOptions),
+        performance.clearMeasures(trigger));
     }
     function logComponentReappeared(fiber, startTime, endTime) {
       logComponentTrigger(fiber, startTime, endTime, "Reconnect");
@@ -1436,7 +1437,7 @@ __DEV__ &&
         if (null === alternate || alternate.child !== fiber.child)
           for (var child = fiber.child; null !== child; child = child.sibling)
             selfTime -= child.actualDuration;
-        wasHydrated =
+        selfTime =
           0.5 > selfTime
             ? wasHydrated
               ? "tertiary-light"
@@ -1451,11 +1452,11 @@ __DEV__ &&
                   : "primary-dark"
                 : "error";
         var props = fiber.memoizedProps;
-        selfTime = fiber._debugTask;
+        wasHydrated = fiber._debugTask;
         null !== props &&
         null !== alternate &&
         alternate.memoizedProps !== props
-          ? ((child = [resuableChangedPropsEntry]),
+          ? ((child = [reusableChangedPropsEntry]),
             (props = addObjectDiffToProperties(
               alternate.memoizedProps,
               props,
@@ -1472,25 +1473,24 @@ __DEV__ &&
                     (reusableComponentDevToolDetails.color = "warning"),
                     (reusableComponentDevToolDetails.tooltipText =
                       "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."))
-                  : ((reusableComponentDevToolDetails.color = wasHydrated),
+                  : ((reusableComponentDevToolDetails.color = selfTime),
                     (reusableComponentDevToolDetails.tooltipText = name)),
                 (reusableComponentDevToolDetails.properties = child),
                 (reusableComponentOptions.start = startTime),
                 (reusableComponentOptions.end = endTime),
-                null != selfTime
-                  ? selfTime.run(
+                (fiber = "\u200b" + name),
+                null != wasHydrated
+                  ? wasHydrated.run(
                       performance.measure.bind(
                         performance,
-                        "\u200b" + name,
+                        fiber,
                         reusableComponentOptions
                       )
                     )
-                  : performance.measure(
-                      "\u200b" + name,
-                      reusableComponentOptions
-                    ))
-              : null != selfTime
-                ? selfTime.run(
+                  : performance.measure(fiber, reusableComponentOptions),
+                performance.clearMeasures(fiber))
+              : null != wasHydrated
+                ? wasHydrated.run(
                     console.timeStamp.bind(
                       console,
                       name,
@@ -1498,7 +1498,7 @@ __DEV__ &&
                       endTime,
                       "Components \u269b",
                       void 0,
-                      wasHydrated
+                      selfTime
                     )
                   )
                 : console.timeStamp(
@@ -1507,10 +1507,10 @@ __DEV__ &&
                     endTime,
                     "Components \u269b",
                     void 0,
-                    wasHydrated
+                    selfTime
                   ))
-          : null != selfTime
-            ? selfTime.run(
+          : null != wasHydrated
+            ? wasHydrated.run(
                 console.timeStamp.bind(
                   console,
                   name,
@@ -1518,7 +1518,7 @@ __DEV__ &&
                   endTime,
                   "Components \u269b",
                   void 0,
-                  wasHydrated
+                  selfTime
                 )
               )
             : console.timeStamp(
@@ -1527,7 +1527,7 @@ __DEV__ &&
                 endTime,
                 "Components \u269b",
                 void 0,
-                wasHydrated
+                selfTime
               );
       }
     }
@@ -1574,11 +1574,11 @@ __DEV__ &&
               }
             }
           };
+          name = "\u200b" + name;
           debugTask
-            ? debugTask.run(
-                performance.measure.bind(performance, "\u200b" + name, fiber)
-              )
-            : performance.measure("\u200b" + name, fiber);
+            ? debugTask.run(performance.measure.bind(performance, name, fiber))
+            : performance.measure(name, fiber);
+          performance.clearMeasures(name);
         }
       }
     }
@@ -1615,15 +1615,14 @@ __DEV__ &&
                 }
               }
             };
-            (fiber = fiber._debugTask)
+            fiber = fiber._debugTask;
+            endTime = "\u200b" + name;
+            fiber
               ? fiber.run(
-                  performance.measure.bind(
-                    performance,
-                    "\u200b" + name,
-                    startTime
-                  )
+                  performance.measure.bind(performance, endTime, startTime)
                 )
-              : performance.measure("\u200b" + name, startTime);
+              : performance.measure(endTime, startTime);
+            performance.clearMeasures(endTime);
           }
         }
       } else
@@ -1784,6 +1783,7 @@ __DEV__ &&
               performance.measure.bind(performance, "Recovered", startTime)
             )
           : performance.measure("Recovered", startTime);
+        performance.clearMeasures("Recovered");
       }
     }
     function logErroredRenderPhase(startTime, endTime, lanes, debugTask) {
@@ -1867,6 +1867,7 @@ __DEV__ &&
               performance.measure.bind(performance, "Errored", startTime)
             )
           : performance.measure("Errored", startTime);
+        performance.clearMeasures("Errored");
       }
     }
     function logCommitPhase(
@@ -17745,10 +17746,8 @@ __DEV__ &&
                       previousRenderStartTime
                     )
                   )
-                : performance.measure(
-                    isSpawnedUpdate,
-                    previousRenderStartTime
-                  ));
+                : performance.measure(isSpawnedUpdate, previousRenderStartTime),
+              performance.clearMeasures(isSpawnedUpdate));
           }
           blockingUpdateTime = -1.1;
           blockingUpdateType = 0;
@@ -17887,7 +17886,8 @@ __DEV__ &&
                       previousRenderStartTime
                     )
                   )
-                : performance.measure(debugTask, previousRenderStartTime))),
+                : performance.measure(debugTask, previousRenderStartTime),
+              performance.clearMeasures(debugTask))),
           (transitionUpdateTime = transitionStartTime = -1.1),
           (transitionUpdateType = 0),
           (transitionSuspendedTime = -1.1),
@@ -20562,7 +20562,7 @@ __DEV__ &&
         end: -0,
         detail: { devtools: reusableComponentDevToolDetails }
       },
-      resuableChangedPropsEntry = ["Changed Props", ""],
+      reusableChangedPropsEntry = ["Changed Props", ""],
       reusableDeeplyEqualPropsEntry = [
         "Changed Props",
         "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."
@@ -23031,7 +23031,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-47905a79-20251013"
+        reconcilerVersion: "19.3.0-www-classic-b9ec735d-20251013"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
