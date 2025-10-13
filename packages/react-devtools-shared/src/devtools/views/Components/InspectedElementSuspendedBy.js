@@ -13,7 +13,7 @@ import {useState, useTransition} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
-import {serializeDataForCopy} from '../utils';
+import {serializeDataForCopy, pluralize} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
 import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
@@ -391,6 +391,7 @@ function SuspendedByGroup({
       left = 95;
     }
   }
+  const pluralizedName = pluralize(name);
   return (
     <div className={styles.CollapsableRow}>
       <Button
@@ -398,12 +399,12 @@ function SuspendedByGroup({
         onClick={() => {
           setIsOpen(prevIsOpen => !prevIsOpen);
         }}
-        title={name}>
+        title={pluralizedName}>
         <ButtonIcon
           className={styles.CollapsableHeaderIcon}
           type={isOpen ? 'expanded' : 'collapsed'}
         />
-        <span className={styles.CollapsableHeaderTitle}>{name}</span>
+        <span className={styles.CollapsableHeaderTitle}>{pluralizedName}</span>
         <div className={styles.CollapsableHeaderFiller} />
         {isOpen ? null : (
           <div className={styles.TimeBarContainer}>

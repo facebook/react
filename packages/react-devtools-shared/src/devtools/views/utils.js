@@ -198,3 +198,39 @@ export function truncateText(text: string, maxLength: number): string {
     return text;
   }
 }
+
+export function pluralize(word: string): string {
+  if (!/^[a-z]+$/i.test(word)) {
+    // If it's not a single a-z word, give up.
+    return word;
+  }
+
+  switch (word) {
+    case 'man':
+      return 'men';
+    case 'woman':
+      return 'women';
+    case 'child':
+      return 'children';
+    case 'foot':
+      return 'feet';
+    case 'tooth':
+      return 'teeth';
+    case 'mouse':
+      return 'mice';
+    case 'person':
+      return 'people';
+  }
+
+  // Words ending in s, x, z, ch, sh → add "es"
+  if (/(s|x|z|ch|sh)$/i.test(word)) return word + 'es';
+
+  // Words ending in consonant + y → replace y with "ies"
+  if (/[bcdfghjklmnpqrstvwxz]y$/i.test(word)) return word.slice(0, -1) + 'ies';
+
+  // Words ending in f or fe → replace with "ves"
+  if (/(?:f|fe)$/i.test(word)) return word.replace(/(?:f|fe)$/i, 'ves');
+
+  // Default: just add "s"
+  return word + 's';
+}
