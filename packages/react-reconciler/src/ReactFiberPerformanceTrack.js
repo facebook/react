@@ -133,6 +133,7 @@ function logComponentTrigger(
     } else {
       performance.measure(trigger, reusableComponentOptions);
     }
+    performance.clearMeasures(trigger);
   }
 }
 
@@ -200,7 +201,7 @@ const reusableComponentOptions: PerformanceMeasureOptions = {
   },
 };
 
-const resuableChangedPropsEntry = ['Changed Props', ''];
+const reusableChangedPropsEntry = ['Changed Props', ''];
 
 const DEEP_EQUALITY_WARNING =
   'This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner.';
@@ -261,7 +262,7 @@ export function logComponentRender(
         alternate.memoizedProps !== props
       ) {
         // If this is an update, we'll diff the props and emit which ones changed.
-        const properties: Array<[string, string]> = [resuableChangedPropsEntry];
+        const properties: Array<[string, string]> = [reusableChangedPropsEntry];
         const isDeeplyEqual = addObjectDiffToProperties(
           alternate.memoizedProps,
           props,
@@ -293,18 +294,20 @@ export function logComponentRender(
           reusableComponentOptions.start = startTime;
           reusableComponentOptions.end = endTime;
 
+          const measureName = '\u200b' + name;
           if (debugTask != null) {
             debugTask.run(
               // $FlowFixMe[method-unbinding]
               performance.measure.bind(
                 performance,
-                '\u200b' + name,
+                measureName,
                 reusableComponentOptions,
               ),
             );
           } else {
-            performance.measure('\u200b' + name, reusableComponentOptions);
+            performance.measure(measureName, reusableComponentOptions);
           }
+          performance.clearMeasures(measureName);
         } else {
           if (debugTask != null) {
             debugTask.run(
@@ -421,14 +424,17 @@ export function logComponentErrored(
           },
         },
       };
+
+      const measureName = '\u200b' + name;
       if (__DEV__ && debugTask) {
         debugTask.run(
           // $FlowFixMe[method-unbinding]
-          performance.measure.bind(performance, '\u200b' + name, options),
+          performance.measure.bind(performance, measureName, options),
         );
       } else {
-        performance.measure('\u200b' + name, options);
+        performance.measure(measureName, options);
       }
+      performance.clearMeasures(measureName);
     } else {
       console.timeStamp(
         name,
@@ -488,14 +494,16 @@ function logComponentEffectErrored(
         },
       };
       const debugTask = fiber._debugTask;
+      const measureName = '\u200b' + name;
       if (debugTask) {
         debugTask.run(
           // $FlowFixMe[method-unbinding]
-          performance.measure.bind(performance, '\u200b' + name, options),
+          performance.measure.bind(performance, measureName, options),
         );
       } else {
-        performance.measure('\u200b' + name, options);
+        performance.measure(measureName, options);
       }
+      performance.clearMeasures(measureName);
     } else {
       console.timeStamp(
         name,
@@ -762,6 +770,7 @@ export function logBlockingStart(
         } else {
           performance.measure(label, measureOptions);
         }
+        performance.clearMeasures(label);
       } else {
         console.timeStamp(
           label,
@@ -867,6 +876,7 @@ export function logGestureStart(
         } else {
           performance.measure(label, measureOptions);
         }
+        performance.clearMeasures(label);
       } else {
         console.timeStamp(
           label,
@@ -1007,6 +1017,7 @@ export function logTransitionStart(
         } else {
           performance.measure(label, measureOptions);
         }
+        performance.clearMeasures(label);
       } else {
         console.timeStamp(
           label,
@@ -1238,6 +1249,7 @@ export function logRecoveredRenderPhase(
       } else {
         performance.measure('Recovered', options);
       }
+      performance.clearMeasures('Recovered');
     } else {
       console.timeStamp(
         'Recovered',
@@ -1449,6 +1461,7 @@ export function logCommitErrored(
       } else {
         performance.measure('Errored', options);
       }
+      performance.clearMeasures('Errored');
     } else {
       console.timeStamp(
         'Errored',
