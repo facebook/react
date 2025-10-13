@@ -367,6 +367,7 @@ type Response = {
   _debugRootStack?: null | Error, // DEV-only
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugStartTime: number, // DEV-only
+  _debugIOStarted: boolean, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
   _debugChannel?: void | DebugChannel, // DEV-only
   _blockedConsole?: null | SomeChunk<ConsoleEntry>, // DEV-only
@@ -2536,6 +2537,10 @@ function missingCall() {
   );
 }
 
+function markIOStarted(this: Response) {
+  this._debugIOStarted = true;
+}
+
 function ResponseInstance(
   this: $FlowFixMe,
   bundlerConfig: ServerConsumerModuleMap,
@@ -2609,6 +2614,10 @@ function ResponseInstance(
       // where as if you use createFromReadableStream from the body of the fetch
       // then the start time is when the headers resolved.
       this._debugStartTime = performance.now();
+      this._debugIOStarted = false;
+      // We consider everything before the first setTimeout task to be cached data
+      // and is not considered I/O required to load the stream.
+      setTimeout(markIOStarted.bind(this), 0);
     }
     this._debugFindSourceMapURL = findSourceMapURL;
     this._debugChannel = debugChannel;
@@ -2790,18 +2799,23 @@ function addDebugInfo(chunk: SomeChunk<any>, debugInfo: ReactDebugInfo): void {
 }
 
 function resolveChunkDebugInfo(
+  response: Response,
   streamState: StreamState,
   chunk: SomeChunk<any>,
 ): void {
   if (__DEV__ && enableAsyncDebugInfo) {
-    // Add the currently resolving chunk's debug info representing the stream
-    // to the Promise that was waiting on the stream, or its underlying value.
-    const debugInfo: ReactDebugInfo = [{awaited: streamState._debugInfo}];
-    if (chunk.status === PENDING || chunk.status === BLOCKED) {
-      const boundAddDebugInfo = addDebugInfo.bind(null, chunk, debugInfo);
-      chunk.then(boundAddDebugInfo, boundAddDebugInfo);
-    } else {
-      addDebugInfo(chunk, debugInfo);
+    // Only include stream information after a macrotask. Any chunk processed
+    // before that is considered cached data.
+    if (response._debugIOStarted) {
+      // Add the currently resolving chunk's debug info representing the stream
+      // to the Promise that was waiting on the stream, or its underlying value.
+      const debugInfo: ReactDebugInfo = [{awaited: streamState._debugInfo}];
+      if (chunk.status === PENDING || chunk.status === BLOCKED) {
+        const boundAddDebugInfo = addDebugInfo.bind(null, chunk, debugInfo);
+        chunk.then(boundAddDebugInfo, boundAddDebugInfo);
+      } else {
+        addDebugInfo(chunk, debugInfo);
+      }
     }
   }
 }
@@ -2837,12 +2851,12 @@ function resolveModel(
       model,
     );
     if (__DEV__) {
-      resolveChunkDebugInfo(streamState, newChunk);
+      resolveChunkDebugInfo(response, streamState, newChunk);
     }
     chunks.set(id, newChunk);
   } else {
     if (__DEV__) {
-      resolveChunkDebugInfo(streamState, chunk);
+      resolveChunkDebugInfo(response, streamState, chunk);
     }
     resolveModelChunk(response, chunk, model);
   }
@@ -2869,7 +2883,7 @@ function resolveText(
   }
   const newChunk = createInitializedTextChunk(response, text);
   if (__DEV__) {
-    resolveChunkDebugInfo(streamState, newChunk);
+    resolveChunkDebugInfo(response, streamState, newChunk);
   }
   chunks.set(id, newChunk);
 }
@@ -2895,7 +2909,7 @@ function resolveBuffer(
   }
   const newChunk = createInitializedBufferChunk(response, buffer);
   if (__DEV__) {
-    resolveChunkDebugInfo(streamState, newChunk);
+    resolveChunkDebugInfo(response, streamState, newChunk);
   }
   chunks.set(id, newChunk);
 }
@@ -2942,7 +2956,7 @@ function resolveModule(
       blockedChunk.status = BLOCKED;
     }
     if (__DEV__) {
-      resolveChunkDebugInfo(streamState, blockedChunk);
+      resolveChunkDebugInfo(response, streamState, blockedChunk);
     }
     promise.then(
       () => resolveModuleChunk(response, blockedChunk, clientReference),
@@ -2952,12 +2966,12 @@ function resolveModule(
     if (!chunk) {
       const newChunk = createResolvedModuleChunk(response, clientReference);
       if (__DEV__) {
-        resolveChunkDebugInfo(streamState, newChunk);
+        resolveChunkDebugInfo(response, streamState, newChunk);
       }
       chunks.set(id, newChunk);
     } else {
       if (__DEV__) {
-        resolveChunkDebugInfo(streamState, chunk);
+        resolveChunkDebugInfo(response, streamState, chunk);
       }
       // This can't actually happen because we don't have any forward
       // references to modules.
@@ -2978,13 +2992,13 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   if (!chunk) {
     const newChunk = createInitializedStreamChunk(response, stream, controller);
     if (__DEV__) {
-      resolveChunkDebugInfo(streamState, newChunk);
+      resolveChunkDebugInfo(response, streamState, newChunk);
     }
     chunks.set(id, newChunk);
     return;
   }
   if (__DEV__) {
-    resolveChunkDebugInfo(streamState, chunk);
+    resolveChunkDebugInfo(response, streamState, chunk);
   }
   if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
@@ -3433,12 +3447,12 @@ function resolvePostponeDev(
       postponeInstance,
     );
     if (__DEV__) {
-      resolveChunkDebugInfo(streamState, newChunk);
+      resolveChunkDebugInfo(response, streamState, newChunk);
     }
     chunks.set(id, newChunk);
   } else {
     if (__DEV__) {
-      resolveChunkDebugInfo(streamState, chunk);
+      resolveChunkDebugInfo(response, streamState, chunk);
     }
     triggerErrorOnChunk(response, chunk, postponeInstance);
   }
@@ -3467,12 +3481,12 @@ function resolveErrorModel(
       errorWithDigest,
     );
     if (__DEV__) {
-      resolveChunkDebugInfo(streamState, newChunk);
+      resolveChunkDebugInfo(response, streamState, newChunk);
     }
     chunks.set(id, newChunk);
   } else {
     if (__DEV__) {
-      resolveChunkDebugInfo(streamState, chunk);
+      resolveChunkDebugInfo(response, streamState, chunk);
     }
     triggerErrorOnChunk(response, chunk, errorWithDigest);
   }
