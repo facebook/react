@@ -51,6 +51,7 @@ import type {
   ComponentFilter,
   ElementType,
   SuspenseNode,
+  Rect,
 } from 'react-devtools-shared/src/frontend/types';
 import type {
   FrontendBridge,
@@ -98,6 +99,10 @@ export type Capabilities = {
   supportsStrictMode: boolean,
   supportsAdvancedProfiling: AdvancedProfiling,
 };
+
+function isNonZeroRect(rect: Rect) {
+  return rect.width > 0 || rect.height > 0 || rect.x > 0 || rect.y > 0;
+}
 
 /**
  * The store is the single source of truth for updates from the backend.
@@ -918,7 +923,15 @@ export default class Store extends EventEmitter<{
           if (current === undefined) {
             continue;
           }
+          // Ignore any suspense boundaries that has no visual representation as this is not
+          // part of the visible loading sequence.
+          // TODO: Consider making visible meta data and other side-effects get virtual rects.
+          const hasRects =
+            current.rects !== null &&
+            current.rects.length > 0 &&
+            current.rects.some(isNonZeroRect);
           if (
+            hasRects &&
             (!uniqueSuspendersOnly || current.hasUniqueSuspenders) &&
             // Roots are already included as part of the Screen
             current.id !== rootID
