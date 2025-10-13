@@ -4497,17 +4497,33 @@ function serializeIONode(
 
   let stack = null;
   let name = '';
+  if (ioNode.promise !== null) {
+    // Pick an explicit name from the Promise itself if it exists.
+    // Note that we don't use the promiseRef passed in since that's sometimes the awaiting Promise
+    // which is the value observed but it's likely not the one with the name on it.
+    const promise = ioNode.promise.deref();
+    if (
+      promise !== undefined &&
+      // $FlowFixMe[prop-missing]
+      typeof promise.displayName === 'string'
+    ) {
+      name = promise.displayName;
+    }
+  }
   if (ioNode.stack !== null) {
     // The stack can contain some leading internal frames for the construction of the promise that we skip.
     const fullStack = stripLeadingPromiseCreationFrames(ioNode.stack);
     stack = filterStackTrace(request, fullStack);
-    name = findCalledFunctionNameFromStackTrace(request, fullStack);
-    // The name can include the object that this was called on but sometimes that's
-    // just unnecessary context.
-    if (name.startsWith('Window.')) {
-      name = name.slice(7);
-    } else if (name.startsWith('<anonymous>.')) {
-      name = name.slice(7);
+    if (name === '') {
+      // If we didn't have an explicit name, try finding one from the stack.
+      name = findCalledFunctionNameFromStackTrace(request, fullStack);
+      // The name can include the object that this was called on but sometimes that's
+      // just unnecessary context.
+      if (name.startsWith('Window.')) {
+        name = name.slice(7);
+      } else if (name.startsWith('<anonymous>.')) {
+        name = name.slice(7);
+      }
     }
   }
   const owner = ioNode.owner;
