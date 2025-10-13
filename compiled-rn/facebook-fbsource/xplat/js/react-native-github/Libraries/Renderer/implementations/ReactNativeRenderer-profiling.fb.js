@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1d89ac51a3c33c46fd73d732fd078718>>
+ * @generated SignedSource<<fa80f1730617eaa04642c55a0d449c1f>>
  */
 
 "use strict";
@@ -9128,6 +9128,8 @@ function commitBeforeMutationEffects(root, firstChild) {
         firstChild = root.flags;
         switch (root.tag) {
           case 0:
+          case 11:
+          case 15:
             if (
               0 !== (firstChild & 4) &&
               ((firstChild = root.updateQueue),
@@ -9138,9 +9140,6 @@ function commitBeforeMutationEffects(root, firstChild) {
                 var _eventPayloads$ii = firstChild[ii];
                 _eventPayloads$ii.ref.impl = _eventPayloads$ii.nextImpl;
               }
-            break;
-          case 11:
-          case 15:
             break;
           case 1:
             if (0 !== (firstChild & 1024) && null !== current) {
@@ -13488,11 +13487,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.3.0-native-fb-1d68bce1-20251012" !== isomorphicReactPackageVersion)
+if ("19.3.0-native-fb-93d4458f-20251013" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.3.0-native-fb-1d68bce1-20251012\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.3.0-native-fb-93d4458f-20251013\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -13542,10 +13541,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1635 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-1d68bce1-20251012",
+    version: "19.3.0-native-fb-93d4458f-20251013",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-1d68bce1-20251012"
+    reconcilerVersion: "19.3.0-native-fb-93d4458f-20251013"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1635.rendererConfig = extraDevToolsConfig);

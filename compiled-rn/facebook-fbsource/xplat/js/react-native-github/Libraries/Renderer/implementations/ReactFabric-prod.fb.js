@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c7d13a5274cd1654c407c58acad14a25>>
+ * @generated SignedSource<<50864da4ca7a4c5a6b8529b73c720d99>>
  */
 
 "use strict";
@@ -8124,6 +8124,8 @@ function commitBeforeMutationEffects(root, firstChild) {
         firstChild = root.flags;
         switch (root.tag) {
           case 0:
+          case 11:
+          case 15:
             if (
               0 !== (firstChild & 4) &&
               ((firstChild = root.updateQueue),
@@ -8134,9 +8136,6 @@ function commitBeforeMutationEffects(root, firstChild) {
                 var _eventPayloads$ii = firstChild[ii];
                 _eventPayloads$ii.ref.impl = _eventPayloads$ii.nextImpl;
               }
-            break;
-          case 11:
-          case 15:
             break;
           case 1:
             if (0 !== (firstChild & 1024) && null !== current) {
@@ -11270,10 +11269,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1321 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-1d68bce1-20251012",
+    version: "19.3.0-native-fb-93d4458f-20251013",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-1d68bce1-20251012"
+    reconcilerVersion: "19.3.0-native-fb-93d4458f-20251013"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1321.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<98bb58c64957b915af882502312335dd>>
+ * @generated SignedSource<<dd98498183f99da0df4ea49782cde5c8>>
  */
 
 "use strict";
@@ -6925,6 +6925,8 @@ function commitBeforeMutationEffects(root, firstChild) {
         firstChild = root.flags;
         switch (root.tag) {
           case 0:
+          case 11:
+          case 15:
             if (
               0 !== (firstChild & 4) &&
               ((firstChild = root.updateQueue),
@@ -6935,9 +6937,6 @@ function commitBeforeMutationEffects(root, firstChild) {
                 var _eventPayloads$ii = firstChild[ii];
                 _eventPayloads$ii.ref.impl = _eventPayloads$ii.nextImpl;
               }
-            break;
-          case 11:
-          case 15:
             break;
           case 1:
             if (0 !== (firstChild & 1024) && null !== current) {
@@ -10111,10 +10110,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1494 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-1d68bce1-20251012",
+  version: "19.3.0-native-fb-93d4458f-20251013",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-1d68bce1-20251012"
+  reconcilerVersion: "19.3.0-native-fb-93d4458f-20251013"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1495 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10250,4 +10249,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.3.0-native-fb-1d68bce1-20251012";
+exports.version = "19.3.0-native-fb-93d4458f-20251013";

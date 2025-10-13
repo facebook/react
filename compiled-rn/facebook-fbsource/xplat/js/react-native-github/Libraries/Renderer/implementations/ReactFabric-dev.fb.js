@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aa47bd32159808aa7719b5af684ccc41>>
+ * @generated SignedSource<<cdb518ff056bc947ba9ac95554088a3f>>
  */
 
 "use strict";
@@ -11570,6 +11570,8 @@ __DEV__ &&
               flags = firstChild.flags;
             switch (firstChild.tag) {
               case 0:
+              case 11:
+              case 15:
                 if (
                   0 !== (flags & 4) &&
                   ((firstChild = firstChild.updateQueue),
@@ -11579,9 +11581,6 @@ __DEV__ &&
                   for (current = 0; current < firstChild.length; current++)
                     (flags = firstChild[current]),
                       (flags.ref.impl = flags.nextImpl);
-                break;
-              case 11:
-              case 15:
                 break;
               case 1:
                 0 !== (flags & 1024) &&
@@ -20066,10 +20065,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-1d68bce1-20251012",
+        version: "19.3.0-native-fb-93d4458f-20251013",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-1d68bce1-20251012"
+        reconcilerVersion: "19.3.0-native-fb-93d4458f-20251013"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
