@@ -252,7 +252,11 @@ function findCalledFunctionNameFromStackTrace(
     const url = devirtualizeURL(callsite[1]);
     const lineNumber = callsite[2];
     const columnNumber = callsite[3];
-    if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
+    if (
+      filterStackFrame(url, functionName, lineNumber, columnNumber) &&
+      // Don't consider anonymous code first party even if the filter wants to include them in the stack.
+      url !== ''
+    ) {
       if (bestMatch === '') {
         // If we had no good stack frames for internal calls, just use the last
         // first party function name.
@@ -308,7 +312,10 @@ function hasUnfilteredFrame(request: Request, stack: ReactStackTrace): boolean {
     const isAsync = callsite[6];
     if (
       !isAsync &&
-      filterStackFrame(url, functionName, lineNumber, columnNumber)
+      filterStackFrame(url, functionName, lineNumber, columnNumber) &&
+      // Ignore anonymous stack frames like internals. They are also not in first party
+      // code even though it might be useful to include them in the final stack.
+      url !== ''
     ) {
       return true;
     }
@@ -367,7 +374,10 @@ export function isAwaitInUserspace(
     const url = devirtualizeURL(callsite[1]);
     const lineNumber = callsite[2];
     const columnNumber = callsite[3];
-    return filterStackFrame(url, functionName, lineNumber, columnNumber);
+    return (
+      filterStackFrame(url, functionName, lineNumber, columnNumber) &&
+      url !== ''
+    );
   }
   return false;
 }

@@ -3380,7 +3380,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "end": 0,
               "env": "Server",
-              "name": "Promise.then.completed",
+              "name": "",
               "stack": [
                 [
                   "new Promise",
