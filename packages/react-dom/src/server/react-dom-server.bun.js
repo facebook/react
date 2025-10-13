@@ -11,6 +11,7 @@ export * from './ReactDOMFizzServerBun.js';
 export {
   renderToPipeableStream,
   resumeToPipeableStream,
+  resume,
 } from './ReactDOMFizzServerNode.js';
 export {
   prerenderToNodeStream,
