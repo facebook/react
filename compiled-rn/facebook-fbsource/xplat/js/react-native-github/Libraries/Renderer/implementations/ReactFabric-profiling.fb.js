@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b59347e517095559d4d10d8bdb2f6445>>
+ * @generated SignedSource<<0a31d5052e0b7db8901b277d12b531e6>>
  */
 
 "use strict";
@@ -2078,7 +2078,8 @@ function logComponentTrigger(fiber, startTime, endTime, trigger) {
     (reusableComponentDevToolDetails.color = "warning"),
     (reusableComponentDevToolDetails.tooltipText = trigger),
     (reusableComponentDevToolDetails.properties = null),
-    performance.measure(trigger, reusableComponentOptions));
+    performance.measure(trigger, reusableComponentOptions),
+    performance.clearMeasures(trigger));
 }
 function logComponentReappeared(fiber, startTime, endTime) {
   logComponentTrigger(fiber, startTime, endTime, "Reconnect");
@@ -13333,10 +13334,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1629 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-47905a79-20251013",
+    version: "19.3.0-native-fb-b9ec735d-20251013",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-47905a79-20251013"
+    reconcilerVersion: "19.3.0-native-fb-b9ec735d-20251013"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1629.rendererConfig = extraDevToolsConfig);

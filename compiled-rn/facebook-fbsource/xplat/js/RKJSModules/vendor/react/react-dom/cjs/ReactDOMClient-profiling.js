@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bf6542e708d19ec3f2e687bdf95a8bfc>>
+ * @generated SignedSource<<a9cd98f2f496a71cb607b4485abc66b5>>
  */
 
 /*
@@ -2572,7 +2572,8 @@ function logComponentTrigger(fiber, startTime, endTime, trigger) {
     (reusableComponentDevToolDetails.color = "warning"),
     (reusableComponentDevToolDetails.tooltipText = trigger),
     (reusableComponentDevToolDetails.properties = null),
-    performance.measure(trigger, reusableComponentOptions));
+    performance.measure(trigger, reusableComponentOptions),
+    performance.clearMeasures(trigger));
 }
 function logComponentReappeared(fiber, startTime, endTime) {
   logComponentTrigger(fiber, startTime, endTime, "Reconnect");
@@ -19702,14 +19703,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2375 = React.version;
 if (
-  "19.3.0-native-fb-47905a79-20251013" !==
+  "19.3.0-native-fb-b9ec735d-20251013" !==
   isomorphicReactPackageVersion$jscomp$inline_2375
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2375,
-      "19.3.0-native-fb-47905a79-20251013"
+      "19.3.0-native-fb-b9ec735d-20251013"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19731,10 +19732,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2382 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-47905a79-20251013",
+  version: "19.3.0-native-fb-b9ec735d-20251013",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-47905a79-20251013",
+  reconcilerVersion: "19.3.0-native-fb-b9ec735d-20251013",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$332 = 0;
@@ -19857,4 +19858,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.3.0-native-fb-47905a79-20251013";
+exports.version = "19.3.0-native-fb-b9ec735d-20251013";
