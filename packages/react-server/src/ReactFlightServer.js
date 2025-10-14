@@ -4493,6 +4493,12 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
   } else {
     debugStack = ioInfo.stack;
   }
+  let env = ioInfo.env;
+  if (env == null) {
+    // If we're forwarding IO info from this environment, an empty env is effectively the "client" side.
+    // The "client" from the perspective of our client will be this current environment.
+    env = (0, request.environmentName)();
+  }
   emitIOInfoChunk(
     request,
     id,
@@ -4500,7 +4506,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
     ioInfo.start,
     ioInfo.end,
     ioInfo.value,
-    ioInfo.env,
+    env,
     owner,
     debugStack,
   );
@@ -5388,6 +5394,11 @@ function forwardDebugInfo(
           if (info.env != null) {
             // $FlowFixMe[cannot-write]
             debugAsyncInfo.env = info.env;
+          } else {
+            // If we're forwarding IO info from this environment, an empty env is effectively the "client" side.
+            // The "client" from the perspective of our client will be this current environment.
+            // $FlowFixMe[cannot-write]
+            debugAsyncInfo.env = (0, request.environmentName)();
           }
           if (info.owner != null) {
             // $FlowFixMe[cannot-write]
