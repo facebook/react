@@ -501,7 +501,7 @@ function createErrorChunk<T>(
 }
 
 function moveDebugInfoFromChunkToInnerValue<T>(
-  chunk: InitializedChunk<T>,
+  chunk: InitializedChunk<T> | InitializedStreamChunk<any>,
   value: T,
 ): void {
   // Remove the debug info from the initialized chunk, and add it to the inner
@@ -1570,6 +1570,10 @@ function fulfillReference(
     initializedChunk.reason = handler.reason; // Used by streaming chunks
     if (resolveListeners !== null) {
       wakeChunk(resolveListeners, handler.value, initializedChunk);
+    } else {
+      if (__DEV__) {
+        moveDebugInfoFromChunkToInnerValue(initializedChunk, handler.value);
+      }
     }
   }
 }
@@ -1819,6 +1823,10 @@ function loadServerReference<A: Iterable<any>, T>(
       initializedChunk.value = handler.value;
       if (resolveListeners !== null) {
         wakeChunk(resolveListeners, handler.value, initializedChunk);
+      } else {
+        if (__DEV__) {
+          moveDebugInfoFromChunkToInnerValue(initializedChunk, handler.value);
+        }
       }
     }
   }
@@ -3048,6 +3056,10 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   resolvedChunk.reason = controller;
   if (resolveListeners !== null) {
     wakeChunk(resolveListeners, chunk.value, (chunk: any));
+  } else {
+    if (__DEV__) {
+      moveDebugInfoFromChunkToInnerValue(resolvedChunk, stream);
+    }
   }
 }
 
