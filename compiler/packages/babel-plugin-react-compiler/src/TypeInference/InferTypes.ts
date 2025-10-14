@@ -393,7 +393,7 @@ function* generateInstructionTypes(
               shapeId: BuiltInArrayId,
             });
           } else {
-            break;
+            continue;
           }
         }
       } else {
