@@ -25,7 +25,6 @@ import {
   ReactNode,
   use,
   useState,
-  useEffect,
   Suspense,
   unstable_ViewTransition as ViewTransition,
   unstable_addTransitionType as addTransitionType,
