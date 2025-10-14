@@ -3035,18 +3035,6 @@ describe('ReactFlightDOMBrowser', () => {
           {
             "time": 0,
           },
-          {
-            "awaited": {
-              "byteSize": 0,
-              "end": 0,
-              "name": "RSC stream",
-              "owner": null,
-              "start": 0,
-              "value": {
-                "value": "stream",
-              },
-            },
-          },
         ]
       `);
     }
