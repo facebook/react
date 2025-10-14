@@ -3142,4 +3142,105 @@ describe('Store', () => {
     await actAsync(() => render(null));
     expect(store).toMatchInlineSnapshot(``);
   });
+
+  // @reactVersion >= 19
+  it('should keep suspended boundaries in the Suspense tree but not hidden Activity', async () => {
+    const Activity = React.Activity || React.unstable_Activity;
+
+    const never = new Promise(() => {});
+    function Never() {
+      readValue(never);
+      return null;
+    }
+    function Component({children}) {
+      return <div>{children}</div>;
+    }
+
+    function App({hidden}) {
+      return (
+        <>
+          <Activity mode={hidden ? 'hidden' : 'visible'}>
+            <React.Suspense name="inside-activity">
+              <Component key="inside-activity">inside Activity</Component>
+            </React.Suspense>
+          </Activity>
+          <React.Suspense name="outer-suspense">
+            <React.Suspense name="inner-suspense">
+              <Component key="inside-suspense">inside Suspense</Component>
+            </React.Suspense>
+            {hidden ? <Never /> : null}
+          </React.Suspense>
+        </>
+      );
+    }
+
+    await actAsync(() => {
+      render(<App hidden={true} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Activity>
+            <Suspense name="outer-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}]}
+        <Suspense name="outer-suspense" rects={null}>
+    `);
+
+    // mount as visible
+    await actAsync(() => {
+      render(null);
+    });
+    await actAsync(() => {
+      render(<App hidden={false} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Activity>
+            ▾ <Suspense name="inside-activity">
+                <Component key="inside-activity">
+          ▾ <Suspense name="outer-suspense">
+            ▾ <Suspense name="inner-suspense">
+                <Component key="inside-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="inside-activity" rects={[{x:1,y:2,width:15,height:1}]}>
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      render(<App hidden={true} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Activity>
+            <Suspense name="outer-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      render(<App hidden={false} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Activity>
+            ▾ <Suspense name="inside-activity">
+                <Component key="inside-activity">
+          ▾ <Suspense name="outer-suspense">
+            ▾ <Suspense name="inner-suspense">
+                <Component key="inside-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="inside-activity" rects={[{x:1,y:2,width:15,height:1}]}>
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+  });
 });

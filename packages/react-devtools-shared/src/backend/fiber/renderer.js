@@ -3144,12 +3144,30 @@ export function attach(
     }
   }
 
+  /**
+   * Offscreen of suspended Suspense
+   */
+  function isSuspendedOffscreen(fiber: Fiber): boolean {
+    switch (fiber.tag) {
+      case LegacyHiddenComponent:
+      // fallthrough since all published implementations currently implement the same state as Offscreen.
+      case OffscreenComponent:
+        return (
+          fiber.memoizedState !== null &&
+          fiber.return !== null &&
+          fiber.return.tag === SuspenseComponent
+        );
+      default:
+        return false;
+    }
+  }
+
   function unmountRemainingChildren() {
     if (
       reconcilingParent !== null &&
       (reconcilingParent.kind === FIBER_INSTANCE ||
         reconcilingParent.kind === FILTERED_FIBER_INSTANCE) &&
-      isHiddenOffscreen(reconcilingParent.data) &&
+      isSuspendedOffscreen(reconcilingParent.data) &&
       !isInDisconnectedSubtree
     ) {
       // This is a hidden offscreen, we need to execute this in the context of a disconnected subtree.
@@ -4026,7 +4044,7 @@ export function attach(
         trackDebugInfoFromHostComponent(nearestInstance, fiber);
       }
 
-      if (isHiddenOffscreen(fiber)) {
+      if (isSuspendedOffscreen(fiber)) {
         // If an Offscreen component is hidden, mount its children as disconnected.
         const stashedDisconnected = isInDisconnectedSubtree;
         isInDisconnectedSubtree = true;
@@ -4037,6 +4055,9 @@ export function attach(
         } finally {
           isInDisconnectedSubtree = stashedDisconnected;
         }
+      } else if (isHiddenOffscreen(fiber)) {
+        // hidden Activity is noisy.
+        // Including it may show overlapping Suspense rects
       } else if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
         // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
         // Offscreen wrapper itself specially.
@@ -4981,6 +5002,8 @@ export function attach(
 
       const prevWasHidden = isHiddenOffscreen(prevFiber);
       const nextIsHidden = isHiddenOffscreen(nextFiber);
+      const prevWasSuspended = isSuspendedOffscreen(prevFiber);
+      const nextIsSuspended = isSuspendedOffscreen(nextFiber);
 
       if (isLegacySuspense) {
         if (
@@ -5058,8 +5081,8 @@ export function attach(
           );
           updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
-      } else if (nextIsHidden) {
-        if (!prevWasHidden) {
+      } else if (nextIsSuspended) {
+        if (!prevWasSuspended) {
           // We're hiding the children. Disconnect them from the front end but keep state.
           if (fiberInstance !== null && !isInDisconnectedSubtree) {
             disconnectChildrenRecursively(remainingReconcilingChildren);
@@ -5077,7 +5100,7 @@ export function attach(
         } finally {
           isInDisconnectedSubtree = stashedDisconnected;
         }
-      } else if (prevWasHidden && !nextIsHidden) {
+      } else if (prevWasSuspended && !nextIsSuspended) {
         // We're revealing the hidden children. We now need to update them to the latest state.
         // We do this while still in the disconnected state and then we reconnect the new ones.
         // This avoids reconnecting things that are about to be removed anyway.
@@ -5102,6 +5125,13 @@ export function attach(
           reconnectChildrenRecursively(fiberInstance);
           // Children may have reordered while they were hidden.
           updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
+        }
+      } else if (nextIsHidden) {
+        if (prevWasHidden) {
+          // still hidden. Nothing to do.
+        } else {
+          // We're hiding the children. Remove them from the Frontend
+          unmountRemainingChildren();
         }
       } else if (
         nextFiber.tag === SuspenseComponent &&
@@ -5259,7 +5289,7 @@ export function attach(
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
         if (fiberInstance !== null && fiberInstance.kind === FIBER_INSTANCE) {
-          if (!nextIsHidden && !isInDisconnectedSubtree) {
+          if (!nextIsSuspended && !isInDisconnectedSubtree) {
             recordResetChildren(fiberInstance);
           }
 
@@ -5335,7 +5365,7 @@ export function attach(
       if (
         (child.kind === FIBER_INSTANCE ||
           child.kind === FILTERED_FIBER_INSTANCE) &&
-        isHiddenOffscreen(child.data)
+        isSuspendedOffscreen(child.data)
       ) {
         // This instance's children are already disconnected.
       } else {
