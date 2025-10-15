@@ -48172,7 +48172,7 @@ function* generateInstructionTypes(env, names, instr) {
                         });
                     }
                     else {
-                        break;
+                        continue;
                     }
                 }
             }
