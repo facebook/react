@@ -1967,10 +1967,8 @@ export function attach(
 
       // useSyncExternalStore creates 2 internal hooks, but we only count it as 1 user-facing hook
       if (isUseSyncExternalStoreHook(next)) {
-        if (next.next !== null) {
-          next = next.next;
-          prev = prev.next;
-        }
+        next = next.next;
+        prev = prev.next;
       }
 
       next = next.next;
