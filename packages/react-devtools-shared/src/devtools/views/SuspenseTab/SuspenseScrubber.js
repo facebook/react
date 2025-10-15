@@ -31,9 +31,9 @@ export default function SuspenseScrubber({
   max: number,
   value: number,
   highlight: number,
-  onBlur: () => void,
+  onBlur?: () => void,
   onChange: (index: number) => void,
-  onFocus: () => void,
+  onFocus?: () => void,
   onHoverSegment: (index: number) => void,
   onHoverLeave: () => void,
 }): React$Node {
