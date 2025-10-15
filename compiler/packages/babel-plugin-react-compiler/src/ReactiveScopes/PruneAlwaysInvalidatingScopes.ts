@@ -12,6 +12,7 @@ import {
   ReactiveInstruction,
   ReactiveScopeBlock,
   ReactiveStatement,
+  ScopeId,
 } from '../HIR';
 
 /**
@@ -74,6 +75,15 @@ class Transform extends ReactiveFunctionTransform<boolean> {
           this.unmemoizedValues.has(value.place.identifier)
         ) {
           this.unmemoizedValues.add(lvalue.identifier);
+        }
+        break;
+      }
+      case 'FinishMemoize': {
+        if (
+          !withinScope &&
+          this.alwaysInvalidatingValues.has(value.decl.identifier)
+        ) {
+          value.pruned = true;
         }
         break;
       }
