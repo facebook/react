@@ -85,7 +85,9 @@ function ToggleUniqueSuspenders() {
     <Toggle
       isChecked={uniqueSuspendersOnly}
       onChange={handleToggleUniqueSuspenders}
-      title={'Only include boundaries with unique suspenders'}>
+      title={
+        'Filter Suspense which does not suspend, or if the parent also suspend on the same.'
+      }>
       <ButtonIcon type={uniqueSuspendersOnly ? 'filter-on' : 'filter-off'} />
     </Toggle>
   );
