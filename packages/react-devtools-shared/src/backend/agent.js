@@ -458,7 +458,7 @@ export default class Agent extends EventEmitter<{
   getIDForHostInstance(
     target: HostInstance,
     onlySuspenseNodes?: boolean,
-  ): number | null {
+  ): null | {id: number, rendererID: number} {
     if (isReactNativeEnvironment() || typeof target.nodeType !== 'number') {
       // In React Native or non-DOM we simply pick any renderer that has a match.
       for (const rendererID in this._rendererInterfaces) {
@@ -466,11 +466,14 @@ export default class Agent extends EventEmitter<{
           (rendererID: any)
         ]: any): RendererInterface);
         try {
-          const match = onlySuspenseNodes
+          const id = onlySuspenseNodes
             ? renderer.getSuspenseNodeIDForHostInstance(target)
             : renderer.getElementIDForHostInstance(target);
-          if (match != null) {
-            return match;
+          if (id !== null) {
+            return {
+              id: id,
+              rendererID: +rendererID,
+            };
           }
         } catch (error) {
           // Some old React versions might throw if they can't find a match.
@@ -483,6 +486,7 @@ export default class Agent extends EventEmitter<{
       // that is registered if there isn't an exact match.
       let bestMatch: null | Element = null;
       let bestRenderer: null | RendererInterface = null;
+      let bestRendererID: number = 0;
       // Find the nearest ancestor which is mounted by a React.
       for (const rendererID in this._rendererInterfaces) {
         const renderer = ((this._rendererInterfaces[
@@ -496,6 +500,7 @@ export default class Agent extends EventEmitter<{
             // Exact match we can exit early.
             bestMatch = nearestNode;
             bestRenderer = renderer;
+            bestRendererID = +rendererID;
             break;
           }
           if (bestMatch === null || bestMatch.contains(nearestNode)) {
@@ -503,14 +508,21 @@ export default class Agent extends EventEmitter<{
             // so the new match is a deeper and therefore better match.
             bestMatch = nearestNode;
             bestRenderer = renderer;
+            bestRendererID = +rendererID;
           }
         }
       }
       if (bestRenderer != null && bestMatch != null) {
         try {
-          return onlySuspenseNodes
+          const id = onlySuspenseNodes
             ? bestRenderer.getSuspenseNodeIDForHostInstance(bestMatch)
             : bestRenderer.getElementIDForHostInstance(bestMatch);
+          if (id !== null) {
+            return {
+              id,
+              rendererID: bestRendererID,
+            };
+          }
         } catch (error) {
           // Some old React versions might throw if they can't find a match.
           // If so we should ignore it...
@@ -978,9 +990,9 @@ export default class Agent extends EventEmitter<{
   };
 
   selectNode(target: HostInstance): void {
-    const id = this.getIDForHostInstance(target);
-    if (id !== null) {
-      this._bridge.send('selectElement', id);
+    const match = this.getIDForHostInstance(target);
+    if (match !== null) {
+      this._bridge.send('selectElement', match.id);
     }
   }
 

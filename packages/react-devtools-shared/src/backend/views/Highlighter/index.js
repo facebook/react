@@ -365,9 +365,30 @@ export default function setupHighlighter(
       }
     }
 
-    // Don't pass the name explicitly.
-    // It will be inferred from DOM tag and Fiber owner.
-    showOverlay([target], null, agent, false);
+    if (inspectOnlySuspenseNodes) {
+      // For Suspense nodes we want to highlight not the actual target but the nodes
+      // that are the root of the Suspense node.
+      // TODO: Consider if we should just do the same for other elements because the
+      // hovered node might just be one child of many in the Component.
+      const match = agent.getIDForHostInstance(
+        target,
+        inspectOnlySuspenseNodes,
+      );
+      if (match !== null) {
+        highlightHostInstance({
+          displayName: null, // TODO
+          hideAfterTimeout: false,
+          id: match.id,
+          openBuiltinElementsPanel: false,
+          rendererID: match.rendererID,
+          scrollIntoView: false,
+        });
+      }
+    } else {
+      // Don't pass the name explicitly.
+      // It will be inferred from DOM tag and Fiber owner.
+      showOverlay([target], null, agent, false);
+    }
   }
 
   function onPointerUp(event: MouseEvent) {
@@ -376,9 +397,9 @@ export default function setupHighlighter(
   }
 
   const selectElementForNode = (node: HTMLElement) => {
-    const id = agent.getIDForHostInstance(node, inspectOnlySuspenseNodes);
-    if (id !== null) {
-      bridge.send('selectElement', id);
+    const match = agent.getIDForHostInstance(node, inspectOnlySuspenseNodes);
+    if (match !== null) {
+      bridge.send('selectElement', match.id);
     }
   };
 
