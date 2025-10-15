@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<70c645c22ee6793f33ec1e88b1dc251e>>
+ * @generated SignedSource<<70a4e226566511517a103cb0394e5f8d>>
  */
 
 'use strict';
@@ -47952,7 +47952,7 @@ function* generateInstructionTypes(env, names, instr) {
                         });
                     }
                     else {
-                        break;
+                        continue;
                     }
                 }
             }

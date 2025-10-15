@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<18dc7eeaa901110365c501a7ae69a928>>
+ * @generated SignedSource<<f29609662947d29001272647cb97185a>>
  */
 
 'use strict';
@@ -48173,7 +48173,7 @@ function* generateInstructionTypes(env, names, instr) {
                         });
                     }
                     else {
-                        break;
+                        continue;
                     }
                 }
             }
