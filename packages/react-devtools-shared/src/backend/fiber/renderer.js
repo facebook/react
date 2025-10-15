@@ -3262,14 +3262,22 @@ export function attach(
       // We don't update rects inside disconnected subtrees.
       return;
     }
-    const nextRects = measureInstance(suspenseNode.instance);
-    const prevRects = suspenseNode.rects;
-    if (areEqualRects(prevRects, nextRects)) {
-      return; // Unchanged
+    const instance = suspenseNode.instance;
+
+    const isSuspendedSuspenseComponent =
+      (instance.kind === FIBER_INSTANCE ||
+        instance.kind === FILTERED_FIBER_INSTANCE) &&
+      instance.data.tag === SuspenseComponent &&
+      instance.data.memoizedState !== null;
+    if (isSuspendedSuspenseComponent) {
+      // This boundary itself was suspended and we don't measure those since that would measure
+      // the fallback. We want to keep a ghost of the rectangle of the content not currently shown.
+      return;
     }
-    // The rect has changed. While the bailed out root wasn't in a disconnected subtree,
+
+    // While this boundary wasn't suspended and the bailed out root and wasn't in a disconnected subtree,
     // it's possible that this node was in one. So we need to check if we're offscreen.
-    let parent = suspenseNode.instance.parent;
+    let parent = instance.parent;
     while (parent !== null) {
       if (
         (parent.kind === FIBER_INSTANCE ||
@@ -3285,6 +3293,13 @@ export function attach(
       }
       parent = parent.parent;
     }
+
+    const nextRects = measureInstance(suspenseNode.instance);
+    const prevRects = suspenseNode.rects;
+    if (areEqualRects(prevRects, nextRects)) {
+      return; // Unchanged
+    }
+
     // We changed inside a visible tree.
     // Since this boundary changed, it's possible it also affected its children so lets
     // measure them as well.
