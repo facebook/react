@@ -19,11 +19,6 @@
 
 .SuspenseRectsBoundaryChildren {
   pointer-events: none;
-  /**
-   * So that the shadow of Boundaries within is clipped off.
-   * Otherwise it would look like this boundary is further elevated.
-   */
-   overflow: hidden;
 }
 
 .SuspenseRectsScaledRect[data-visible='false'] > .SuspenseRectsBoundaryChildren {
