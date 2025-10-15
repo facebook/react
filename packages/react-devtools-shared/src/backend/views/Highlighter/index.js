@@ -366,8 +366,6 @@ export default function setupHighlighter(
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
     showOverlay([target], null, agent, false);
-
-    selectElementForNode(target);
   }
 
   function onPointerUp(event: MouseEvent) {
