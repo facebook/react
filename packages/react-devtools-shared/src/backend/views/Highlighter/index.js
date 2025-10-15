@@ -20,6 +20,7 @@ import type {RendererInterface} from '../../types';
 // That is done by the React Native Inspector component.
 
 let iframesListeningTo: Set<HTMLIFrameElement> = new Set();
+let inspectOnlySuspenseNodes = false;
 
 export default function setupHighlighter(
   bridge: BackendBridge,
@@ -33,7 +34,8 @@ export default function setupHighlighter(
   bridge.addListener('startInspectingHost', startInspectingHost);
   bridge.addListener('stopInspectingHost', stopInspectingHost);
 
-  function startInspectingHost() {
+  function startInspectingHost(onlySuspenseNodes: boolean) {
+    inspectOnlySuspenseNodes = onlySuspenseNodes;
     registerListenersOnWindow(window);
   }
 

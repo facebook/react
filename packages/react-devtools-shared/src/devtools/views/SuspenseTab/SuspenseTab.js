@@ -372,7 +372,7 @@ function SuspenseTab(_: {}) {
               )}
               {store.supportsClickToInspect && (
                 <Fragment>
-                  <InspectHostNodesToggle />
+                  <InspectHostNodesToggle onlySuspenseNodes={true} />
                   <div className={styles.VRule} />
                 </Fragment>
               )}
