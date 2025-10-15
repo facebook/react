@@ -11,7 +11,6 @@ import {
   CallExpression,
   Effect,
   Environment,
-  FinishMemoize,
   FunctionExpression,
   HIRFunction,
   IdentifierId,
@@ -25,7 +24,6 @@ import {
   Place,
   PropertyLoad,
   SpreadPattern,
-  StartMemoize,
   TInstruction,
   getHookKindForType,
   makeInstructionId,
@@ -184,36 +182,52 @@ function makeManualMemoizationMarkers(
   depsList: Array<ManualMemoDependency> | null,
   memoDecl: Place,
   manualMemoId: number,
-): [TInstruction<StartMemoize>, TInstruction<FinishMemoize>] {
+): [Array<Instruction>, Array<Instruction>] {
+  const temp = createTemporaryPlace(env, memoDecl.loc);
   return [
-    {
-      id: makeInstructionId(0),
-      lvalue: createTemporaryPlace(env, fnExpr.loc),
-      value: {
-        kind: 'StartMemoize',
-        manualMemoId,
-        /*
-         * Use deps list from source instead of inferred deps
-         * as dependencies
-         */
-        deps: depsList,
+    [
+      {
+        id: makeInstructionId(0),
+        lvalue: createTemporaryPlace(env, fnExpr.loc),
+        value: {
+          kind: 'StartMemoize',
+          manualMemoId,
+          /*
+           * Use deps list from source instead of inferred deps
+           * as dependencies
+           */
+          deps: depsList,
+          loc: fnExpr.loc,
+        },
+        effects: null,
         loc: fnExpr.loc,
       },
-      effects: null,
-      loc: fnExpr.loc,
-    },
-    {
-      id: makeInstructionId(0),
-      lvalue: createTemporaryPlace(env, fnExpr.loc),
-      value: {
-        kind: 'FinishMemoize',
-        manualMemoId,
-        decl: {...memoDecl},
-        loc: fnExpr.loc,
+    ],
+    [
+      {
+        id: makeInstructionId(0),
+        lvalue: {...temp},
+        value: {
+          kind: 'LoadLocal',
+          place: {...memoDecl},
+          loc: memoDecl.loc,
+        },
+        effects: null,
+        loc: memoDecl.loc,
       },
-      effects: null,
-      loc: fnExpr.loc,
-    },
+      {
+        id: makeInstructionId(0),
+        lvalue: createTemporaryPlace(env, memoDecl.loc),
+        value: {
+          kind: 'FinishMemoize',
+          manualMemoId,
+          decl: {...temp},
+          loc: memoDecl.loc,
+        },
+        effects: null,
+        loc: memoDecl.loc,
+      },
+    ],
   ];
 }
 
@@ -409,10 +423,7 @@ export function dropManualMemoization(
    *   LoadLocal fnArg
    * - (if validation is enabled) collect manual memoization markers
    */
-  const queuedInserts: Map<
-    InstructionId,
-    TInstruction<StartMemoize> | TInstruction<FinishMemoize>
-  > = new Map();
+  const queuedInserts: Map<InstructionId, Array<Instruction>> = new Map();
   for (const [_, block] of func.body.blocks) {
     for (let i = 0; i < block.instructions.length; i++) {
       const instr = block.instructions[i]!;
@@ -557,11 +568,11 @@ export function dropManualMemoization(
       let nextInstructions: Array<Instruction> | null = null;
       for (let i = 0; i < block.instructions.length; i++) {
         const instr = block.instructions[i];
-        const insertInstr = queuedInserts.get(instr.id);
-        if (insertInstr != null) {
+        const insertInstructions = queuedInserts.get(instr.id);
+        if (insertInstructions != null) {
           nextInstructions = nextInstructions ?? block.instructions.slice(0, i);
           nextInstructions.push(instr);
-          nextInstructions.push(insertInstr);
+          nextInstructions.push(...insertInstructions);
         } else if (nextInstructions != null) {
           nextInstructions.push(instr);
         }
