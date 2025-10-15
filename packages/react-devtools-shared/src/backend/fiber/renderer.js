@@ -2283,6 +2283,9 @@ export function attach(
           return null;
         }
         const range = doc.createRange();
+        if (typeof range.getClientRects !== 'function') {
+          return null;
+        }
         range.selectNodeContents(instance);
         rects = range.getClientRects();
       } else {
