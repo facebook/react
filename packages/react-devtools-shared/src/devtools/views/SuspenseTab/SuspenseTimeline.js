@@ -11,7 +11,7 @@ import * as React from 'react';
 import {useContext, useEffect} from 'react';
 import {BridgeContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
-import {useHighlightHostInstance, useScrollToHostInstance} from '../hooks';
+import {useScrollToHostInstance} from '../hooks';
 import {
   SuspenseTreeDispatcherContext,
   SuspenseTreeStateContext,
@@ -25,8 +25,6 @@ function SuspenseTimelineInput() {
   const bridge = useContext(BridgeContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
-  const {highlightHostInstance, clearHighlightHostInstance} =
-    useHighlightHostInstance();
   const scrollToHostInstance = useScrollToHostInstance();
 
   const {timeline, timelineIndex, hoveredTimelineIndex, playing, autoScroll} =
@@ -37,7 +35,6 @@ function SuspenseTimelineInput() {
 
   function switchSuspenseNode(nextTimelineIndex: number) {
     const nextSelectedSuspenseID = timeline[nextTimelineIndex];
-    highlightHostInstance(nextSelectedSuspenseID);
     treeDispatch({
       type: 'SELECT_ELEMENT_BY_ID',
       payload: nextSelectedSuspenseID,
@@ -52,23 +49,14 @@ function SuspenseTimelineInput() {
     switchSuspenseNode(pendingTimelineIndex);
   }
 
-  function handleBlur() {
-    clearHighlightHostInstance();
-  }
-
   function handleFocus() {
     switchSuspenseNode(timelineIndex);
   }
 
   function handleHoverSegment(hoveredValue: number) {
-    const suspenseID = timeline[hoveredValue];
-    if (suspenseID === undefined) {
-      throw new Error(
-        `Suspense node not found for value ${hoveredValue} in timeline.`,
-      );
-    }
-    highlightHostInstance(suspenseID);
+    // TODO: Consider highlighting the rect instead.
   }
+  function handleUnhoverSegment() {}
 
   function skipPrevious() {
     const nextSelectedSuspenseID = timeline[timelineIndex - 1];
@@ -180,11 +168,10 @@ function SuspenseTimelineInput() {
           max={max}
           value={timelineIndex}
           highlight={hoveredTimelineIndex}
-          onBlur={handleBlur}
           onChange={handleChange}
           onFocus={handleFocus}
           onHoverSegment={handleHoverSegment}
-          onHoverLeave={clearHighlightHostInstance}
+          onHoverLeave={handleUnhoverSegment}
         />
       </div>
     </>

@@ -217,9 +217,14 @@ export type BackendEvents = {
   selectElement: [number],
   shutdown: [],
   stopInspectingHost: [boolean],
-  syncSelectionFromBuiltinElementsPanel: [],
   syncSelectionToBuiltinElementsPanel: [],
   unsupportedRendererVersion: [],
+
+  extensionComponentsPanelShown: [],
+  extensionComponentsPanelHidden: [],
+
+  resumeElementPolling: [],
+  pauseElementPolling: [],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
@@ -240,8 +245,6 @@ type FrontendEvents = {
   clearWarningsForElementID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
-  extensionComponentsPanelShown: [],
-  extensionComponentsPanelHidden: [],
   getBackendVersion: [],
   getBridgeProtocol: [],
   getIfHasUnsupportedRendererVersion: [],
@@ -265,7 +268,7 @@ type FrontendEvents = {
   shutdown: [],
   startInspectingHost: [],
   startProfiling: [StartProfilingParams],
-  stopInspectingHost: [boolean],
+  stopInspectingHost: [],
   scrollToHostInstance: [ScrollToHostInstance],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
@@ -274,6 +277,8 @@ type FrontendEvents = {
   updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
+
+  syncSelectionFromBuiltinElementsPanel: [],
 
   // React Native style editor plug-in.
   NativeStyleEditor_measure: [ElementAndRendererID],
@@ -295,19 +300,13 @@ type FrontendEvents = {
   overrideProps: [OverrideValue],
   overrideState: [OverrideValue],
 
-  resumeElementPolling: [],
-  pauseElementPolling: [],
-
   getHookSettings: [],
 };
 
 class Bridge<
   OutgoingEvents: Object,
   IncomingEvents: Object,
-> extends EventEmitter<{
-  ...IncomingEvents,
-  ...OutgoingEvents,
-}> {
+> extends EventEmitter<IncomingEvents> {
   _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];
   _scheduledFlush: boolean = false;

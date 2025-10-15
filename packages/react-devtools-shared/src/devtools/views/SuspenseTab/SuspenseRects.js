@@ -35,11 +35,13 @@ function ScaledRect({
   className,
   rect,
   visible,
+  suspended,
   ...props
 }: {
   className: string,
   rect: Rect,
   visible: boolean,
+  suspended: boolean,
   ...
 }): React$Node {
   const viewBox = useContext(ViewBox);
@@ -53,6 +55,7 @@ function ScaledRect({
       {...props}
       className={styles.SuspenseRectsScaledRect + ' ' + className}
       data-visible={visible}
+      data-suspended={suspended}
       style={{
         width,
         height,
@@ -145,7 +148,8 @@ function SuspenseRects({
     <ScaledRect
       rect={boundingBox}
       className={styles.SuspenseRectsBoundary}
-      visible={visible}>
+      visible={visible}
+      suspended={suspense.isSuspended}>
       <ViewBox.Provider value={boundingBox}>
         {visible &&
           suspense.rects !== null &&
