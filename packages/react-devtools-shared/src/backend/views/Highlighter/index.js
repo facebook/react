@@ -376,7 +376,7 @@ export default function setupHighlighter(
   }
 
   const selectElementForNode = (node: HTMLElement) => {
-    const id = agent.getIDForHostInstance(node);
+    const id = agent.getIDForHostInstance(node, inspectOnlySuspenseNodes);
     if (id !== null) {
       bridge.send('selectElement', id);
     }

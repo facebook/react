@@ -455,7 +455,10 @@ export default class Agent extends EventEmitter<{
     return renderer.getInstanceAndStyle(id);
   }
 
-  getIDForHostInstance(target: HostInstance): number | null {
+  getIDForHostInstance(
+    target: HostInstance,
+    onlySuspenseNodes?: boolean,
+  ): number | null {
     if (isReactNativeEnvironment() || typeof target.nodeType !== 'number') {
       // In React Native or non-DOM we simply pick any renderer that has a match.
       for (const rendererID in this._rendererInterfaces) {
@@ -463,7 +466,9 @@ export default class Agent extends EventEmitter<{
           (rendererID: any)
         ]: any): RendererInterface);
         try {
-          const match = renderer.getElementIDForHostInstance(target);
+          const match = onlySuspenseNodes
+            ? renderer.getSuspenseNodeIDForHostInstance(target)
+            : renderer.getElementIDForHostInstance(target);
           if (match != null) {
             return match;
           }
@@ -503,7 +508,9 @@ export default class Agent extends EventEmitter<{
       }
       if (bestRenderer != null && bestMatch != null) {
         try {
-          return bestRenderer.getElementIDForHostInstance(bestMatch);
+          return onlySuspenseNodes
+            ? bestRenderer.getSuspenseNodeIDForHostInstance(bestMatch)
+            : bestRenderer.getElementIDForHostInstance(bestMatch);
         } catch (error) {
           // Some old React versions might throw if they can't find a match.
           // If so we should ignore it...
