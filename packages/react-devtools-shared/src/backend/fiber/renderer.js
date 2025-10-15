@@ -1973,9 +1973,9 @@ export function attach(
         }
       }
 
-      index++;
       next = next.next;
       prev = prev.next;
+      index++;
     }
 
     return indices;
