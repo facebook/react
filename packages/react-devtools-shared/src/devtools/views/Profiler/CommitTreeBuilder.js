@@ -378,7 +378,8 @@ function updateTree(
         const fiberID = operations[i + 1];
         const parentID = operations[i + 2];
         const nameStringID = operations[i + 3];
-        const numRects = operations[i + 4];
+        const isSuspended = operations[i + 4];
+        const numRects = operations[i + 5];
         const name = stringTable[nameStringID];
 
         if (__DEBUG__) {
@@ -388,16 +389,16 @@ function updateTree(
           } else {
             rects =
               '[' +
-              operations.slice(i + 5, i + 5 + numRects * 4).join(',') +
+              operations.slice(i + 6, i + 6 + numRects * 4).join(',') +
               ']';
           }
           debug(
             'Add suspense',
-            `node ${fiberID} (name=${JSON.stringify(name)}, rects={${rects}}) under ${parentID}`,
+            `node ${fiberID} (name=${JSON.stringify(name)}, rects={${rects}}) under ${parentID} suspended ${isSuspended}`,
           );
         }
 
-        i += 5 + (numRects === -1 ? 0 : numRects * 4);
+        i += 6 + (numRects === -1 ? 0 : numRects * 4);
         break;
       }
 
@@ -459,12 +460,13 @@ function updateTree(
         for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
           const suspenseNodeId = operations[i++];
           const hasUniqueSuspenders = operations[i++] === 1;
+          const isSuspended = operations[i++] === 1;
           const environmentNamesLength = operations[i++];
           i += environmentNamesLength;
           if (__DEBUG__) {
             debug(
               'Suspender changes',
-              `Suspense node ${suspenseNodeId} unique suspenders set to ${String(hasUniqueSuspenders)} with ${String(environmentNamesLength)} environments`,
+              `Suspense node ${suspenseNodeId} unique suspenders set to ${String(hasUniqueSuspenders)} is suspended set to ${String(isSuspended)} with ${String(environmentNamesLength)} environments`,
             );
           }
         }

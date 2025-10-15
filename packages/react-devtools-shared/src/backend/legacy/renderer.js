@@ -417,6 +417,7 @@ export function attach(
       pushOperation(id);
       pushOperation(parentID);
       pushOperation(getStringID(null)); // name
+      pushOperation(0); // isSuspended
       // TODO: Measure rect of root
       pushOperation(-1);
     } else {
