@@ -26,7 +26,7 @@ export default function InspectHostNodesToggle(): React.Node {
         logEvent({event_name: 'inspect-element-button-clicked'});
         bridge.send('startInspectingHost');
       } else {
-        bridge.send('stopInspectingHost', false);
+        bridge.send('stopInspectingHost');
       }
     },
     [bridge],
