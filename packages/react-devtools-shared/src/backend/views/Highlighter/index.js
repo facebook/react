@@ -375,8 +375,15 @@ export default function setupHighlighter(
         inspectOnlySuspenseNodes,
       );
       if (match !== null) {
+        const renderer = agent.rendererInterfaces[match.rendererID];
+        if (renderer == null) {
+          console.warn(
+            `Invalid renderer id "${match.rendererID}" for element "${match.id}"`,
+          );
+          return;
+        }
         highlightHostInstance({
-          displayName: null, // TODO
+          displayName: renderer.getDisplayNameForElementID(match.id),
           hideAfterTimeout: false,
           id: match.id,
           openBuiltinElementsPanel: false,

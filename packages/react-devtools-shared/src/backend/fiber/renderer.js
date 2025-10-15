@@ -5793,7 +5793,28 @@ export function attach(
       return null;
     }
     if (devtoolsInstance.kind === FIBER_INSTANCE) {
-      return getDisplayNameForFiber(devtoolsInstance.data);
+      const fiber = devtoolsInstance.data;
+      if (fiber.tag === HostRoot) {
+        // The only reason you'd inspect a HostRoot is to show it as a SuspenseNode.
+        return 'Initial Paint';
+      }
+      if (fiber.tag === SuspenseComponent || fiber.tag === ActivityComponent) {
+        // For Suspense and Activity components, we can show a better name
+        // by using the name prop or their owner.
+        const props = fiber.memoizedProps;
+        if (props.name != null) {
+          return props.name;
+        }
+        const owner = getUnfilteredOwner(fiber);
+        if (owner != null) {
+          if (typeof owner.tag === 'number') {
+            return getDisplayNameForFiber((owner: any));
+          } else {
+            return owner.name || '';
+          }
+        }
+      }
+      return getDisplayNameForFiber(fiber);
     } else {
       return devtoolsInstance.data.name || '';
     }
