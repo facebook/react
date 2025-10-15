@@ -2251,7 +2251,10 @@ export function attach(
     if (typeof instance !== 'object' || instance === null) {
       return null;
     }
-    if (typeof instance.getClientRects === 'function') {
+    if (
+      typeof instance.getClientRects === 'function' ||
+      instance.nodeType === 3
+    ) {
       // DOM
       const doc = instance.ownerDocument;
       if (instance === doc.documentElement) {
@@ -2273,7 +2276,21 @@ export function attach(
       const win = doc && doc.defaultView;
       const scrollX = win ? win.scrollX : 0;
       const scrollY = win ? win.scrollY : 0;
-      const rects = instance.getClientRects();
+      let rects;
+      if (instance.nodeType === 3) {
+        // Text nodes cannot be measured directly but we can measure a Range.
+        if (typeof doc.createRange !== 'function') {
+          return null;
+        }
+        const range = doc.createRange();
+        if (typeof range.getClientRects !== 'function') {
+          return null;
+        }
+        range.selectNodeContents(instance);
+        rects = range.getClientRects();
+      } else {
+        rects = instance.getClientRects();
+      }
       for (let i = 0; i < rects.length; i++) {
         const rect = rects[i];
         result.push({
