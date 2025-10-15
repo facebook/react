@@ -44,6 +44,10 @@
   outline-width: 0;
 }
 
+.SuspenseRectsScaledRect[data-suspended='true'] {
+  opacity: 0.3;
+}
+
 /* highlight this boundary */
 .SuspenseRectsBoundary:hover:not(:has(.SuspenseRectsBoundary:hover)) > .SuspenseRectsRect, .SuspenseRectsBoundary[data-highlighted='true'] > .SuspenseRectsRect {
   background-color: var(--color-background-hover);

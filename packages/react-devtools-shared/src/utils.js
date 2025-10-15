@@ -340,9 +340,10 @@ export function printOperationsArray(operations: Array<number>) {
         const fiberID = operations[i + 1];
         const parentID = operations[i + 2];
         const nameStringID = operations[i + 3];
-        const numRects = operations[i + 4];
+        const isSuspended = operations[i + 4];
+        const numRects = operations[i + 5];
 
-        i += 5;
+        i += 6;
 
         const name = stringTable[nameStringID];
         let rects: string;
@@ -368,7 +369,7 @@ export function printOperationsArray(operations: Array<number>) {
         }
 
         logs.push(
-          `Add suspense node ${fiberID} (${String(name)},rects={${rects}}) under ${parentID}`,
+          `Add suspense node ${fiberID} (${String(name)},rects={${rects}}) under ${parentID} suspended ${isSuspended}`,
         );
         break;
       }
@@ -431,10 +432,11 @@ export function printOperationsArray(operations: Array<number>) {
         for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
           const id = operations[i++];
           const hasUniqueSuspenders = operations[i++] === 1;
+          const isSuspended = operations[i++] === 1;
           const environmentNamesLength = operations[i++];
           i += environmentNamesLength;
           logs.push(
-            `Suspense node ${id} unique suspenders set to ${String(hasUniqueSuspenders)} with ${String(environmentNamesLength)} environments`,
+            `Suspense node ${id} unique suspenders set to ${String(hasUniqueSuspenders)} is suspended set to ${String(isSuspended)} with ${String(environmentNamesLength)} environments`,
           );
         }
 

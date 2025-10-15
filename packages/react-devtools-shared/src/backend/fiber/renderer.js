@@ -2139,8 +2139,8 @@ export function attach(
         // Regular operations
         pendingOperations.length +
         // All suspender changes are batched in a single message.
-        // [SUSPENSE_TREE_OPERATION_SUSPENDERS, suspenderChangesLength, ...[id, hasUniqueSuspenders]]
-        (numSuspenderChanges > 0 ? 2 + numSuspenderChanges * 2 : 0),
+        // [SUSPENSE_TREE_OPERATION_SUSPENDERS, suspenderChangesLength, ...[id, hasUniqueSuspenders, isSuspended]]
+        (numSuspenderChanges > 0 ? 2 + numSuspenderChanges * 3 : 0),
     );
 
     // Identify which renderer this update is coming from.
@@ -2225,6 +2225,14 @@ export function attach(
         }
         operations[i++] = fiberIdWithChanges;
         operations[i++] = suspense.hasUniqueSuspenders ? 1 : 0;
+        const instance = suspense.instance;
+        const isSuspended =
+          // TODO: Track if other SuspenseNode like SuspenseList rows are suspended.
+          (instance.kind === FIBER_INSTANCE ||
+            instance.kind === FILTERED_FIBER_INSTANCE) &&
+          instance.data.tag === SuspenseComponent &&
+          instance.data.memoizedState !== null;
+        operations[i++] = isSuspended ? 1 : 0;
         operations[i++] = suspense.environments.size;
         suspense.environments.forEach((count, env) => {
           operations[i++] = getStringID(env);
@@ -2657,8 +2665,14 @@ export function attach(
     const fiber = fiberInstance.data;
     const props = fiber.memoizedProps;
     // TODO: Compute a fallback name based on Owner, key etc.
-    const name = props === null ? null : props.name || null;
+    const name =
+      fiber.tag !== SuspenseComponent || props === null
+        ? null
+        : props.name || null;
     const nameStringID = getStringID(name);
+
+    const isSuspended =
+      fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
 
     if (__DEBUG__) {
       console.log('recordSuspenseMount()', suspenseInstance);
@@ -2670,6 +2684,7 @@ export function attach(
     pushOperation(fiberID);
     pushOperation(parentID);
     pushOperation(nameStringID);
+    pushOperation(isSuspended ? 1 : 0);
 
     const rects = suspenseInstance.rects;
     if (rects === null) {
@@ -5038,15 +5053,24 @@ export function attach(
       const nextIsSuspended = isSuspendedOffscreen(nextFiber);
 
       if (isLegacySuspense) {
-        if (
-          fiberInstance !== null &&
-          fiberInstance.suspenseNode !== null &&
-          (prevFiber.stateNode === null) !== (nextFiber.stateNode === null)
-        ) {
-          trackThrownPromisesFromRetryCache(
-            fiberInstance.suspenseNode,
-            nextFiber.stateNode,
-          );
+        if (fiberInstance !== null && fiberInstance.suspenseNode !== null) {
+          const suspenseNode = fiberInstance.suspenseNode;
+          if (
+            (prevFiber.stateNode === null) !==
+            (nextFiber.stateNode === null)
+          ) {
+            trackThrownPromisesFromRetryCache(
+              suspenseNode,
+              nextFiber.stateNode,
+            );
+          }
+          if (
+            (prevFiber.memoizedState === null) !==
+            (nextFiber.memoizedState === null)
+          ) {
+            // Toggle suspended state.
+            recordSuspenseSuspenders(suspenseNode);
+          }
         }
       }
       // The logic below is inspired by the code paths in updateSuspenseComponent()
@@ -5194,6 +5218,14 @@ export function attach(
             );
           }
 
+          if (
+            (prevFiber.memoizedState === null) !==
+            (nextFiber.memoizedState === null)
+          ) {
+            // Toggle suspended state.
+            recordSuspenseSuspenders(suspenseNode);
+          }
+
           shouldMeasureSuspenseNode = false;
           updateFlags |= updateSuspenseChildrenRecursively(
             nextContentFiber,
@@ -5220,6 +5252,8 @@ export function attach(
           }
 
           trackThrownPromisesFromRetryCache(suspenseNode, nextFiber.stateNode);
+          // Toggle suspended state.
+          recordSuspenseSuspenders(suspenseNode);
 
           mountSuspenseChildrenRecursively(
             nextContentFiber,
