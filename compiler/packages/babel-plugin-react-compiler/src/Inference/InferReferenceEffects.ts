@@ -1422,10 +1422,11 @@ function inferBlock(
         continuation = {kind: 'funeffects'};
         break;
       }
+      case 'NonNullExpression':
       case 'TypeCastExpression': {
         /*
-         * A type cast expression has no effect at runtime, so it's equivalent to a raw
-         * identifier:
+         * A non-null expression or type cast expression has no effect at runtime,
+         * so it's equivalent to a raw identifier:
          * ```
          * x = (y: type)  // is equivalent to...
          * x = y

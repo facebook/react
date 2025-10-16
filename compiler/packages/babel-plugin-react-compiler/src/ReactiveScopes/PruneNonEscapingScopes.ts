@@ -544,6 +544,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
         };
       }
       case 'Await':
+      case 'NonNullExpression':
       case 'TypeCastExpression': {
         return {
           // Indirection for the inner value, memoized if the value is

@@ -2292,6 +2292,12 @@ function codegenInstructionValue(
       );
       break;
     }
+    case 'NonNullExpression': {
+      value = t.tsNonNullExpression(
+        codegenPlaceToExpression(cx, instrValue.value),
+      );
+      break;
+    }
     case 'StartMemoize':
     case 'FinishMemoize':
     case 'Debugger':

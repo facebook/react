@@ -386,6 +386,11 @@ function* generateInstructionTypes(
       break;
     }
 
+    case 'NonNullExpression': {
+      yield equation(left, value.value.identifier.type);
+      break;
+    }
+
     case 'TypeCastExpression': {
       if (env.config.enableUseTypeAnnotations) {
         yield equation(value.type, value.value.identifier.type);
