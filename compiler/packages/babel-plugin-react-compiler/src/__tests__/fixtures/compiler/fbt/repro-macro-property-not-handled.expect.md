@@ -31,7 +31,6 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
 import { useIdentity } from "shared-runtime";
 
@@ -41,23 +40,14 @@ import { useIdentity } from "shared-runtime";
  * `importSpecifier.funcName` (see https://fburl.com/code/72icxwmn)
  */
 function useFoo(t0) {
-  const $ = _c(2);
   const { items } = t0;
-  let t1;
-  if ($[0] !== items) {
-    t1 = [...items];
-    $[0] = items;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
   return fbt._(
     {
       "*": "There are {number of items} items",
       _1: "There is {number of items} items",
     },
     [
-      fbt._plural(useIdentity(t1).length),
+      fbt._plural(useIdentity([...items]).length),
       fbt._param(
         "number of items",
 
