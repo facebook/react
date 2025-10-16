@@ -438,40 +438,6 @@ export function dropManualMemoization(
             continue;
           }
 
-          /**
-           * Bailout on void return useMemos. This is an anti-pattern where code might be using
-           * useMemo like useEffect: running arbirtary side-effects synced to changes in specific
-           * values.
-           */
-          if (
-            func.env.config.validateNoVoidUseMemo &&
-            manualMemo.kind === 'useMemo'
-          ) {
-            const funcToCheck = sidemap.functions.get(
-              fnPlace.identifier.id,
-            )?.value;
-            if (funcToCheck !== undefined && funcToCheck.loweredFunc.func) {
-              if (!hasNonVoidReturn(funcToCheck.loweredFunc.func)) {
-                errors.pushDiagnostic(
-                  CompilerDiagnostic.create({
-                    category: ErrorCategory.VoidUseMemo,
-                    reason: 'useMemo() callbacks must return a value',
-                    description: `This ${
-                      manualMemo.loadInstr.value.kind === 'PropertyLoad'
-                        ? 'React.useMemo()'
-                        : 'useMemo()'
-                    } callback doesn't return a value. useMemo() is for computing and caching values, not for arbitrary side effects`,
-                    suggestions: null,
-                  }).withDetails({
-                    kind: 'error',
-                    loc: instr.value.loc,
-                    message: 'useMemo() callbacks must return a value',
-                  }),
-                );
-              }
-            }
-          }
-
           instr.value = getManualMemoizationReplacement(
             fnPlace,
             instr.value.loc,
@@ -628,18 +594,4 @@ function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
     }
   }
   return optionals;
-}
-
-function hasNonVoidReturn(func: HIRFunction): boolean {
-  for (const [, block] of func.body.blocks) {
-    if (block.terminal.kind === 'return') {
-      if (
-        block.terminal.returnVariant === 'Explicit' ||
-        block.terminal.returnVariant === 'Implicit'
-      ) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
