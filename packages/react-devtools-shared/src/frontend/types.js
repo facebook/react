@@ -201,6 +201,7 @@ export type SuspenseNode = {
   rects: null | Array<Rect>,
   hasUniqueSuspenders: boolean,
   isSuspended: boolean,
+  environments: Array<string>,
 };
 
 // Serialized version of ReactIOInfo
