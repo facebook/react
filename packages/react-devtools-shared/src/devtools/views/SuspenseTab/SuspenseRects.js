@@ -36,12 +36,14 @@ function ScaledRect({
   rect,
   visible,
   suspended,
+  adjust,
   ...props
 }: {
   className: string,
   rect: Rect,
   visible: boolean,
   suspended: boolean,
+  adjust?: boolean,
   ...
 }): React$Node {
   const viewBox = useContext(ViewBox);
@@ -57,8 +59,9 @@ function ScaledRect({
       data-visible={visible}
       data-suspended={suspended}
       style={{
-        width,
-        height,
+        // Shrink one pixel so that the bottom outline will line up with the top outline of the next one.
+        width: adjust ? 'calc(' + width + ' - 1px)' : width,
+        height: adjust ? 'calc(' + height + ' - 1px)' : height,
         top: y,
         left: x,
       }}
@@ -160,6 +163,7 @@ function SuspenseRects({
                 className={styles.SuspenseRectsRect}
                 rect={rect}
                 data-highlighted={selected}
+                adjust={true}
                 onClick={handleClick}
                 onDoubleClick={handleDoubleClick}
                 onPointerOver={handlePointerOver}

@@ -160,9 +160,7 @@ function SuspenseTimelineInput() {
         onClick={skipForward}>
         <ButtonIcon type={'skip-next'} />
       </Button>
-      <div
-        className={styles.SuspenseTimelineInput}
-        title={timelineIndex + '/' + max}>
+      <div className={styles.SuspenseTimelineInput}>
         <SuspenseScrubber
           min={min}
           max={max}

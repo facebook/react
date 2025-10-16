@@ -205,6 +205,27 @@ export function pluralize(word: string): string {
     return word;
   }
 
+  // Bail out if it's already plural.
+  switch (word) {
+    case 'men':
+    case 'women':
+    case 'children':
+    case 'feet':
+    case 'teeth':
+    case 'mice':
+    case 'people':
+      return word;
+  }
+
+  if (
+    /(ches|shes|ses|xes|zes)$/i.test(word) ||
+    /[^s]ies$/i.test(word) ||
+    /ves$/i.test(word) ||
+    /[^s]s$/i.test(word)
+  ) {
+    return word;
+  }
+
   switch (word) {
     case 'man':
       return 'men';
