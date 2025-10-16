@@ -120,7 +120,7 @@ testRule('plugin-recommended', TestRecommendedRules, {
             
         return <Child x={state} />;
         }`,
-      errors: [makeTestCaseError('useMemo() callbacks must return a value')],
+      errors: [makeTestCaseError('Unused useMemo()')],
     },
     {
       name: 'Pipeline errors are reported',

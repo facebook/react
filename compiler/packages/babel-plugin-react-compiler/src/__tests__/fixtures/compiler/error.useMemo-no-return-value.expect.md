@@ -28,7 +28,7 @@ Found 2 errors:
 
 Error: useMemo() callbacks must return a value
 
-This useMemo callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects.
+This useMemo() callback doesn't return a value. useMemo() is for computing and caching values, not for arbitrary side effects.
 
 error.useMemo-no-return-value.ts:3:16
   1 | // @validateNoVoidUseMemo
@@ -45,7 +45,7 @@ error.useMemo-no-return-value.ts:3:16
 
 Error: useMemo() callbacks must return a value
 
-This React.useMemo callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects.
+This React.useMemo() callback doesn't return a value. useMemo() is for computing and caching values, not for arbitrary side effects.
 
 error.useMemo-no-return-value.ts:6:17
    4 |     console.log('computing');

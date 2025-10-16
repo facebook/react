@@ -458,9 +458,9 @@ export function dropManualMemoization(
                     reason: 'useMemo() callbacks must return a value',
                     description: `This ${
                       manualMemo.loadInstr.value.kind === 'PropertyLoad'
-                        ? 'React.useMemo'
-                        : 'useMemo'
-                    } callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects`,
+                        ? 'React.useMemo()'
+                        : 'useMemo()'
+                    } callback doesn't return a value. useMemo() is for computing and caching values, not for arbitrary side effects`,
                     suggestions: null,
                   }).withDetails({
                     kind: 'error',
