@@ -1,12 +1,20 @@
 .SuspenseRectsContainer {
   padding: .25rem;
   cursor: pointer;
-  outline: 1px solid var(--color-component-name);
+  outline-color: #6a51b2ff;
+  outline-style: solid;
+  outline-width: 1px;
   border-radius: 0.25rem;
+  background-color: color-mix(in srgb, var(--color-background) 50%, #6a51b2ff 5%);
+}
+
+.SuspenseRectsContainer:hover:not(:has(.SuspenseRectsBoundary:hover))[data-highlighted='false'] {
+  outline-width: 1px;
 }
 
 .SuspenseRectsContainer[data-highlighted='true'] {
-  background: var(--color-dimmest);
+  outline-style: solid;
+  outline-width: 4px;
 }
 
 .SuspenseRectsViewBox {
@@ -15,6 +23,11 @@
 
 .SuspenseRectsBoundary {
   pointer-events: all;
+  border-radius: 0.125rem;
+}
+
+.SuspenseRectsBoundary[data-visible='false'] {
+  background-color: transparent;
 }
 
 .SuspenseRectsBoundaryChildren {
@@ -28,15 +41,18 @@
 .SuspenseRectsRect {
   box-shadow: var(--elevation-4);
   pointer-events: all;
+  cursor: pointer;
+  border-radius: 0.125rem;
+  background-color: color-mix(in srgb, var(--color-background) 50%, rgba(0, 136, 250, 1) 25%);
+  backdrop-filter: grayscale(100%);
+  transition: background-color 0.2s ease-in;
+  outline-color: #0088fa;
   outline-style: solid;
   outline-width: 1px;
-  border-radius: 0.125rem;
-  cursor: pointer;
 }
 
 .SuspenseRectsScaledRect {
   position: absolute;
-  outline-color: var(--color-background-selected);
 }
 
 .SuspenseRectsScaledRect[data-visible='false'] {
@@ -49,10 +65,18 @@
 }
 
 /* highlight this boundary */
-.SuspenseRectsBoundary:hover:not(:has(.SuspenseRectsBoundary:hover)) > .SuspenseRectsRect, .SuspenseRectsBoundary[data-highlighted='true'] > .SuspenseRectsRect {
-  background-color: var(--color-background-hover);
+.SuspenseRectsBoundary:hover:not(:has(.SuspenseRectsBoundary:hover)) > .SuspenseRectsRect {
+  background-color: color-mix(in srgb, var(--color-background) 50%, rgba(0, 136, 250, 1) 50%);
+  transition: background-color 0.2s ease-out;
 }
 
-.SuspenseRectsRect[data-highlighted='true'] {
-  background-color: var(--color-selected-tree-highlight-active);
+.SuspenseRectsBoundary[data-highlighted='true'] {
+  outline-color: #0088fa;
+  outline-style: solid;
+  outline-width: 4px;
+  box-shadow: var(--elevation-4);
+}
+
+.SuspenseRectsBoundary[data-highlighted='true'] > .SuspenseRectsRect {
+   box-shadow: none;
 }

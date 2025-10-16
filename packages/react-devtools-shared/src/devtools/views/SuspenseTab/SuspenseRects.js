@@ -152,6 +152,7 @@ function SuspenseRects({
       rect={boundingBox}
       className={styles.SuspenseRectsBoundary}
       visible={visible}
+      data-highlighted={selected}
       suspended={suspense.isSuspended}>
       <ViewBox.Provider value={boundingBox}>
         {visible &&
@@ -162,7 +163,6 @@ function SuspenseRects({
                 key={index}
                 className={styles.SuspenseRectsRect}
                 rect={rect}
-                data-highlighted={selected}
                 adjust={true}
                 onClick={handleClick}
                 onDoubleClick={handleDoubleClick}
