@@ -77,6 +77,15 @@ class Transform extends ReactiveFunctionTransform<boolean> {
         }
         break;
       }
+      case 'FinishMemoize': {
+        if (
+          !withinScope &&
+          this.alwaysInvalidatingValues.has(value.decl.identifier)
+        ) {
+          value.pruned = true;
+        }
+        break;
+      }
     }
     return {kind: 'keep'};
   }
