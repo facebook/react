@@ -315,7 +315,7 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any, ...} = {
     '--color-warning-text-color': '#ffffff',
     '--color-warning-text-color-inverted': '#ee1638',
 
-    '--color-suspense': '#0088fa',
+    '--color-suspense': '#61dafb',
     '--color-transition': '#6a51b2',
     '--color-suspense-server': '#62bc6a',
     '--color-transition-server': '#3f7844',
