@@ -1,20 +1,25 @@
 .SuspenseRectsContainer {
   padding: .25rem;
-  cursor: pointer;
-  outline-color: var(--color-transition);
+  outline-color: transparent;
   outline-style: solid;
   outline-width: 1px;
   border-radius: 0.25rem;
-  background-color: color-mix(in srgb, var(--color-transition) 5%, transparent);
-}
-
-.SuspenseRectsContainer[data-hovered='true'] {
-  background-color: color-mix(in srgb, var(--color-transition) 15%, transparent);
 }
 
 .SuspenseRectsContainer[data-highlighted='true'] {
+  outline-color: var(--color-transition);
   outline-style: solid;
   outline-width: 4px;
+}
+
+.SuspenseRectsRoot {
+  cursor: pointer;
+  outline-color: var(--color-transition);
+  background-color: color-mix(in srgb, var(--color-transition) 5%, transparent);
+}
+
+.SuspenseRectsRoot[data-hovered='true'] {
+  background-color: color-mix(in srgb, var(--color-transition) 15%, transparent);
 }
 
 .SuspenseRectsViewBox {

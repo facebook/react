@@ -326,7 +326,9 @@ function SuspenseRectsContainer(): React$Node {
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
-  const {roots, hoveredTimelineIndex} = useContext(SuspenseTreeStateContext);
+  const {roots, hoveredTimelineIndex, uniqueSuspendersOnly} = useContext(
+    SuspenseTreeStateContext,
+  );
 
   // TODO: bbox does not consider uniqueSuspendersOnly filter
   const boundingBox = getDocumentBoundingRect(store, roots);
@@ -372,9 +374,26 @@ function SuspenseRectsContainer(): React$Node {
   const isRootSelected = roots.includes(inspectedElementID);
   const isRootHovered = hoveredTimelineIndex === 0;
 
+  let hasRootSuspenders = false;
+  if (!uniqueSuspendersOnly) {
+    hasRootSuspenders = true;
+  } else {
+    for (let i = 0; i < roots.length; i++) {
+      const rootID = roots[i];
+      const root = store.getSuspenseByID(rootID);
+      if (root !== null && root.hasUniqueSuspenders) {
+        hasRootSuspenders = true;
+        break;
+      }
+    }
+  }
+
   return (
     <div
-      className={styles.SuspenseRectsContainer}
+      className={
+        styles.SuspenseRectsContainer +
+        (hasRootSuspenders ? ' ' + styles.SuspenseRectsRoot : '')
+      }
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       data-highlighted={isRootSelected}
