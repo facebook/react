@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<c921af54e7162b941874ba0ffd2ec2b6>>
+ * @generated SignedSource<<6657e19da8a50d83dcf48cd0b8c03467>>
  */
 
 'use strict';
@@ -23,8 +23,8 @@ if (process.env.NODE_ENV !== "production") {
 
 var core$1 = require('@babel/core');
 var BabelParser = require('@babel/parser');
-var zod = require('zod');
-var zodValidationError = require('zod-validation-error');
+var v4 = require('zod/v4');
+var v4$1 = require('zod-validation-error/v4');
 var crypto = require('crypto');
 var HermesParser = require('hermes-parser');
 var util = require('util');
@@ -18742,7 +18742,7 @@ var ValueKind;
     ValueKind["Mutable"] = "mutable";
     ValueKind["Context"] = "context";
 })(ValueKind || (ValueKind = {}));
-const ValueKindSchema = zod.z.enum([
+const ValueKindSchema = v4.z.enum([
     ValueKind.MaybeFrozen,
     ValueKind.Frozen,
     ValueKind.Primitive,
@@ -18750,7 +18750,7 @@ const ValueKindSchema = zod.z.enum([
     ValueKind.Mutable,
     ValueKind.Context,
 ]);
-const ValueReasonSchema = zod.z.enum([
+const ValueReasonSchema = v4.z.enum([
     ValueReason.Context,
     ValueReason.Effect,
     ValueReason.Global,
@@ -18774,7 +18774,7 @@ var Effect;
     Effect["Mutate"] = "mutate";
     Effect["Store"] = "store";
 })(Effect || (Effect = {}));
-const EffectSchema = zod.z.enum([
+const EffectSchema = v4.z.enum([
     Effect.Read,
     Effect.Mutate,
     Effect.ConditionallyMutate,
@@ -31371,85 +31371,85 @@ function getReanimatedModuleType(registry) {
     return addObject(registry, null, reanimatedType);
 }
 
-const ObjectPropertiesSchema = zod.z
-    .record(zod.z.string(), zod.z.lazy(() => TypeSchema))
+const ObjectPropertiesSchema = v4.z
+    .record(v4.z.string(), v4.z.lazy(() => TypeSchema))
     .refine(record => {
     return Object.keys(record).every(key => key === '*' || key === 'default' || libExports$1.isValidIdentifier(key));
 }, 'Expected all "object" property names to be valid identifier, `*` to match any property, of `default` to define a module default export');
-const ObjectTypeSchema = zod.z.object({
-    kind: zod.z.literal('object'),
+const ObjectTypeSchema = v4.z.object({
+    kind: v4.z.literal('object'),
     properties: ObjectPropertiesSchema.nullable(),
 });
-const LifetimeIdSchema = zod.z.string().refine(id => id.startsWith('@'), {
+const LifetimeIdSchema = v4.z.string().refine(id => id.startsWith('@'), {
     message: "Placeholder names must start with '@'",
 });
-const FreezeEffectSchema = zod.z.object({
-    kind: zod.z.literal('Freeze'),
+const FreezeEffectSchema = v4.z.object({
+    kind: v4.z.literal('Freeze'),
     value: LifetimeIdSchema,
     reason: ValueReasonSchema,
 });
-const MutateEffectSchema = zod.z.object({
-    kind: zod.z.literal('Mutate'),
+const MutateEffectSchema = v4.z.object({
+    kind: v4.z.literal('Mutate'),
     value: LifetimeIdSchema,
 });
-const MutateTransitiveConditionallySchema = zod.z.object({
-    kind: zod.z.literal('MutateTransitiveConditionally'),
+const MutateTransitiveConditionallySchema = v4.z.object({
+    kind: v4.z.literal('MutateTransitiveConditionally'),
     value: LifetimeIdSchema,
 });
-const CreateEffectSchema = zod.z.object({
-    kind: zod.z.literal('Create'),
+const CreateEffectSchema = v4.z.object({
+    kind: v4.z.literal('Create'),
     into: LifetimeIdSchema,
     value: ValueKindSchema,
     reason: ValueReasonSchema,
 });
-const AssignEffectSchema = zod.z.object({
-    kind: zod.z.literal('Assign'),
+const AssignEffectSchema = v4.z.object({
+    kind: v4.z.literal('Assign'),
     from: LifetimeIdSchema,
     into: LifetimeIdSchema,
 });
-const AliasEffectSchema = zod.z.object({
-    kind: zod.z.literal('Alias'),
+const AliasEffectSchema = v4.z.object({
+    kind: v4.z.literal('Alias'),
     from: LifetimeIdSchema,
     into: LifetimeIdSchema,
 });
-const ImmutableCaptureEffectSchema = zod.z.object({
-    kind: zod.z.literal('ImmutableCapture'),
+const ImmutableCaptureEffectSchema = v4.z.object({
+    kind: v4.z.literal('ImmutableCapture'),
     from: LifetimeIdSchema,
     into: LifetimeIdSchema,
 });
-const CaptureEffectSchema = zod.z.object({
-    kind: zod.z.literal('Capture'),
+const CaptureEffectSchema = v4.z.object({
+    kind: v4.z.literal('Capture'),
     from: LifetimeIdSchema,
     into: LifetimeIdSchema,
 });
-const CreateFromEffectSchema = zod.z.object({
-    kind: zod.z.literal('CreateFrom'),
+const CreateFromEffectSchema = v4.z.object({
+    kind: v4.z.literal('CreateFrom'),
     from: LifetimeIdSchema,
     into: LifetimeIdSchema,
 });
-const ApplyArgSchema = zod.z.union([
+const ApplyArgSchema = v4.z.union([
     LifetimeIdSchema,
-    zod.z.object({
-        kind: zod.z.literal('Spread'),
+    v4.z.object({
+        kind: v4.z.literal('Spread'),
         place: LifetimeIdSchema,
     }),
-    zod.z.object({
-        kind: zod.z.literal('Hole'),
+    v4.z.object({
+        kind: v4.z.literal('Hole'),
     }),
 ]);
-const ApplyEffectSchema = zod.z.object({
-    kind: zod.z.literal('Apply'),
+const ApplyEffectSchema = v4.z.object({
+    kind: v4.z.literal('Apply'),
     receiver: LifetimeIdSchema,
     function: LifetimeIdSchema,
-    mutatesFunction: zod.z.boolean(),
-    args: zod.z.array(ApplyArgSchema),
+    mutatesFunction: v4.z.boolean(),
+    args: v4.z.array(ApplyArgSchema),
     into: LifetimeIdSchema,
 });
-const ImpureEffectSchema = zod.z.object({
-    kind: zod.z.literal('Impure'),
+const ImpureEffectSchema = v4.z.object({
+    kind: v4.z.literal('Impure'),
     place: LifetimeIdSchema,
 });
-const AliasingEffectSchema = zod.z.union([
+const AliasingEffectSchema = v4.z.union([
     FreezeEffectSchema,
     CreateEffectSchema,
     CreateFromEffectSchema,
@@ -31462,50 +31462,50 @@ const AliasingEffectSchema = zod.z.union([
     MutateTransitiveConditionallySchema,
     ApplyEffectSchema,
 ]);
-const AliasingSignatureSchema = zod.z.object({
+const AliasingSignatureSchema = v4.z.object({
     receiver: LifetimeIdSchema,
-    params: zod.z.array(LifetimeIdSchema),
+    params: v4.z.array(LifetimeIdSchema),
     rest: LifetimeIdSchema.nullable(),
     returns: LifetimeIdSchema,
-    effects: zod.z.array(AliasingEffectSchema),
-    temporaries: zod.z.array(LifetimeIdSchema),
+    effects: v4.z.array(AliasingEffectSchema),
+    temporaries: v4.z.array(LifetimeIdSchema),
 });
-const FunctionTypeSchema = zod.z.object({
-    kind: zod.z.literal('function'),
-    positionalParams: zod.z.array(EffectSchema),
+const FunctionTypeSchema = v4.z.object({
+    kind: v4.z.literal('function'),
+    positionalParams: v4.z.array(EffectSchema),
     restParam: EffectSchema.nullable(),
     calleeEffect: EffectSchema,
-    returnType: zod.z.lazy(() => TypeSchema),
+    returnType: v4.z.lazy(() => TypeSchema),
     returnValueKind: ValueKindSchema,
-    noAlias: zod.z.boolean().nullable().optional(),
-    mutableOnlyIfOperandsAreMutable: zod.z.boolean().nullable().optional(),
-    impure: zod.z.boolean().nullable().optional(),
-    canonicalName: zod.z.string().nullable().optional(),
+    noAlias: v4.z.boolean().nullable().optional(),
+    mutableOnlyIfOperandsAreMutable: v4.z.boolean().nullable().optional(),
+    impure: v4.z.boolean().nullable().optional(),
+    canonicalName: v4.z.string().nullable().optional(),
     aliasing: AliasingSignatureSchema.nullable().optional(),
-    knownIncompatible: zod.z.string().nullable().optional(),
+    knownIncompatible: v4.z.string().nullable().optional(),
 });
-const HookTypeSchema = zod.z.object({
-    kind: zod.z.literal('hook'),
-    positionalParams: zod.z.array(EffectSchema).nullable().optional(),
+const HookTypeSchema = v4.z.object({
+    kind: v4.z.literal('hook'),
+    positionalParams: v4.z.array(EffectSchema).nullable().optional(),
     restParam: EffectSchema.nullable().optional(),
-    returnType: zod.z.lazy(() => TypeSchema),
+    returnType: v4.z.lazy(() => TypeSchema),
     returnValueKind: ValueKindSchema.nullable().optional(),
-    noAlias: zod.z.boolean().nullable().optional(),
+    noAlias: v4.z.boolean().nullable().optional(),
     aliasing: AliasingSignatureSchema.nullable().optional(),
-    knownIncompatible: zod.z.string().nullable().optional(),
+    knownIncompatible: v4.z.string().nullable().optional(),
 });
-const BuiltInTypeSchema = zod.z.union([
-    zod.z.literal('Any'),
-    zod.z.literal('Ref'),
-    zod.z.literal('Array'),
-    zod.z.literal('Primitive'),
-    zod.z.literal('MixedReadonly'),
+const BuiltInTypeSchema = v4.z.union([
+    v4.z.literal('Any'),
+    v4.z.literal('Ref'),
+    v4.z.literal('Array'),
+    v4.z.literal('Primitive'),
+    v4.z.literal('MixedReadonly'),
 ]);
-const TypeReferenceSchema = zod.z.object({
-    kind: zod.z.literal('type'),
+const TypeReferenceSchema = v4.z.object({
+    kind: v4.z.literal('type'),
     name: BuiltInTypeSchema,
 });
-const TypeSchema = zod.z.union([
+const TypeSchema = v4.z.union([
     ObjectTypeSchema,
     FunctionTypeSchema,
     HookTypeSchema,
@@ -32101,96 +32101,96 @@ function defaultModuleTypeProvider(moduleName) {
 }
 
 var _Environment_instances, _Environment_globals, _Environment_shapes, _Environment_moduleTypes, _Environment_nextIdentifer, _Environment_nextBlock, _Environment_nextScope, _Environment_scope, _Environment_outlinedFunctions, _Environment_contextIdentifiers, _Environment_hoistedIdentifiers, _Environment_flowTypeEnvironment, _Environment_resolveModuleType, _Environment_isKnownReactModule, _Environment_getCustomHookType;
-const ReactElementSymbolSchema = zod.z.object({
-    elementSymbol: zod.z.union([
-        zod.z.literal('react.element'),
-        zod.z.literal('react.transitional.element'),
+const ReactElementSymbolSchema = v4.z.object({
+    elementSymbol: v4.z.union([
+        v4.z.literal('react.element'),
+        v4.z.literal('react.transitional.element'),
     ]),
-    globalDevVar: zod.z.string(),
+    globalDevVar: v4.z.string(),
 });
-const ExternalFunctionSchema = zod.z.object({
-    source: zod.z.string(),
-    importSpecifierName: zod.z.string(),
+const ExternalFunctionSchema = v4.z.object({
+    source: v4.z.string(),
+    importSpecifierName: v4.z.string(),
 });
-const InstrumentationSchema = zod.z
+const InstrumentationSchema = v4.z
     .object({
     fn: ExternalFunctionSchema,
     gating: ExternalFunctionSchema.nullable(),
-    globalGating: zod.z.string().nullable(),
+    globalGating: v4.z.string().nullable(),
 })
     .refine(opts => opts.gating != null || opts.globalGating != null, 'Expected at least one of gating or globalGating');
 const USE_FIRE_FUNCTION_NAME = 'useFire';
 const EMIT_FREEZE_GLOBAL_GATING = 'true';
-const MacroMethodSchema = zod.z.union([
-    zod.z.object({ type: zod.z.literal('wildcard') }),
-    zod.z.object({ type: zod.z.literal('name'), name: zod.z.string() }),
+const MacroMethodSchema = v4.z.union([
+    v4.z.object({ type: v4.z.literal('wildcard') }),
+    v4.z.object({ type: v4.z.literal('name'), name: v4.z.string() }),
 ]);
-const MacroSchema = zod.z.union([
-    zod.z.string(),
-    zod.z.tuple([zod.z.string(), zod.z.array(MacroMethodSchema)]),
+const MacroSchema = v4.z.union([
+    v4.z.string(),
+    v4.z.tuple([v4.z.string(), v4.z.array(MacroMethodSchema)]),
 ]);
-const HookSchema = zod.z.object({
-    effectKind: zod.z.nativeEnum(Effect),
-    valueKind: zod.z.nativeEnum(ValueKind),
-    noAlias: zod.z.boolean().default(false),
-    transitiveMixedData: zod.z.boolean().default(false),
+const HookSchema = v4.z.object({
+    effectKind: v4.z.nativeEnum(Effect),
+    valueKind: v4.z.nativeEnum(ValueKind),
+    noAlias: v4.z.boolean().default(false),
+    transitiveMixedData: v4.z.boolean().default(false),
 });
-const EnvironmentConfigSchema = zod.z.object({
-    customHooks: zod.z.map(zod.z.string(), HookSchema).default(new Map()),
-    moduleTypeProvider: zod.z.nullable(zod.z.any()).default(null),
-    customMacros: zod.z.nullable(zod.z.array(MacroSchema)).default(null),
-    enableResetCacheOnSourceFileChanges: zod.z.nullable(zod.z.boolean()).default(null),
-    enablePreserveExistingMemoizationGuarantees: zod.z.boolean().default(true),
-    validatePreserveExistingMemoizationGuarantees: zod.z.boolean().default(true),
-    enablePreserveExistingManualUseMemo: zod.z.boolean().default(false),
-    enableForest: zod.z.boolean().default(false),
-    enableUseTypeAnnotations: zod.z.boolean().default(false),
-    flowTypeProvider: zod.z.nullable(zod.z.any()).default(null),
-    enableOptionalDependencies: zod.z.boolean().default(true),
-    enableFire: zod.z.boolean().default(false),
-    enableNameAnonymousFunctions: zod.z.boolean().default(false),
-    inferEffectDependencies: zod.z
-        .nullable(zod.z.array(zod.z.object({
+const EnvironmentConfigSchema = v4.z.object({
+    customHooks: v4.z.map(v4.z.string(), HookSchema).default(new Map()),
+    moduleTypeProvider: v4.z.nullable(v4.z.any()).default(null),
+    customMacros: v4.z.nullable(v4.z.array(MacroSchema)).default(null),
+    enableResetCacheOnSourceFileChanges: v4.z.nullable(v4.z.boolean()).default(null),
+    enablePreserveExistingMemoizationGuarantees: v4.z.boolean().default(true),
+    validatePreserveExistingMemoizationGuarantees: v4.z.boolean().default(true),
+    enablePreserveExistingManualUseMemo: v4.z.boolean().default(false),
+    enableForest: v4.z.boolean().default(false),
+    enableUseTypeAnnotations: v4.z.boolean().default(false),
+    flowTypeProvider: v4.z.nullable(v4.z.any()).default(null),
+    enableOptionalDependencies: v4.z.boolean().default(true),
+    enableFire: v4.z.boolean().default(false),
+    enableNameAnonymousFunctions: v4.z.boolean().default(false),
+    inferEffectDependencies: v4.z
+        .nullable(v4.z.array(v4.z.object({
         function: ExternalFunctionSchema,
-        autodepsIndex: zod.z.number().min(1, 'autodepsIndex must be > 0'),
+        autodepsIndex: v4.z.number().min(1, 'autodepsIndex must be > 0'),
     })))
         .default(null),
     inlineJsxTransform: ReactElementSymbolSchema.nullable().default(null),
-    validateHooksUsage: zod.z.boolean().default(true),
-    validateRefAccessDuringRender: zod.z.boolean().default(true),
-    validateNoSetStateInRender: zod.z.boolean().default(true),
-    validateNoSetStateInEffects: zod.z.boolean().default(false),
-    validateNoDerivedComputationsInEffects: zod.z.boolean().default(false),
-    validateNoJSXInTryStatements: zod.z.boolean().default(false),
-    validateStaticComponents: zod.z.boolean().default(false),
-    validateMemoizedEffectDependencies: zod.z.boolean().default(false),
-    validateNoCapitalizedCalls: zod.z.nullable(zod.z.array(zod.z.string())).default(null),
-    validateBlocklistedImports: zod.z.nullable(zod.z.array(zod.z.string())).default(null),
-    validateNoImpureFunctionsInRender: zod.z.boolean().default(false),
-    validateNoFreezingKnownMutableFunctions: zod.z.boolean().default(false),
-    enableAssumeHooksFollowRulesOfReact: zod.z.boolean().default(true),
-    enableTransitivelyFreezeFunctionExpressions: zod.z.boolean().default(true),
+    validateHooksUsage: v4.z.boolean().default(true),
+    validateRefAccessDuringRender: v4.z.boolean().default(true),
+    validateNoSetStateInRender: v4.z.boolean().default(true),
+    validateNoSetStateInEffects: v4.z.boolean().default(false),
+    validateNoDerivedComputationsInEffects: v4.z.boolean().default(false),
+    validateNoJSXInTryStatements: v4.z.boolean().default(false),
+    validateStaticComponents: v4.z.boolean().default(false),
+    validateMemoizedEffectDependencies: v4.z.boolean().default(false),
+    validateNoCapitalizedCalls: v4.z.nullable(v4.z.array(v4.z.string())).default(null),
+    validateBlocklistedImports: v4.z.nullable(v4.z.array(v4.z.string())).default(null),
+    validateNoImpureFunctionsInRender: v4.z.boolean().default(false),
+    validateNoFreezingKnownMutableFunctions: v4.z.boolean().default(false),
+    enableAssumeHooksFollowRulesOfReact: v4.z.boolean().default(true),
+    enableTransitivelyFreezeFunctionExpressions: v4.z.boolean().default(true),
     enableEmitFreeze: ExternalFunctionSchema.nullable().default(null),
     enableEmitHookGuards: ExternalFunctionSchema.nullable().default(null),
-    enableInstructionReordering: zod.z.boolean().default(false),
-    enableFunctionOutlining: zod.z.boolean().default(true),
-    enableJsxOutlining: zod.z.boolean().default(false),
+    enableInstructionReordering: v4.z.boolean().default(false),
+    enableFunctionOutlining: v4.z.boolean().default(true),
+    enableJsxOutlining: v4.z.boolean().default(false),
     enableEmitInstrumentForget: InstrumentationSchema.nullable().default(null),
-    assertValidMutableRanges: zod.z.boolean().default(false),
-    enableChangeVariableCodegen: zod.z.boolean().default(false),
-    enableMemoizationComments: zod.z.boolean().default(false),
-    throwUnknownException__testonly: zod.z.boolean().default(false),
-    enableTreatFunctionDepsAsConditional: zod.z.boolean().default(false),
-    disableMemoizationForDebugging: zod.z.boolean().default(false),
+    assertValidMutableRanges: v4.z.boolean().default(false),
+    enableChangeVariableCodegen: v4.z.boolean().default(false),
+    enableMemoizationComments: v4.z.boolean().default(false),
+    throwUnknownException__testonly: v4.z.boolean().default(false),
+    enableTreatFunctionDepsAsConditional: v4.z.boolean().default(false),
+    disableMemoizationForDebugging: v4.z.boolean().default(false),
     enableChangeDetectionForDebugging: ExternalFunctionSchema.nullable().default(null),
-    enableCustomTypeDefinitionForReanimated: zod.z.boolean().default(false),
-    hookPattern: zod.z.string().nullable().default(null),
-    enableTreatRefLikeIdentifiersAsRefs: zod.z.boolean().default(true),
-    enableTreatSetIdentifiersAsStateSetters: zod.z.boolean().default(false),
+    enableCustomTypeDefinitionForReanimated: v4.z.boolean().default(false),
+    hookPattern: v4.z.string().nullable().default(null),
+    enableTreatRefLikeIdentifiersAsRefs: v4.z.boolean().default(true),
+    enableTreatSetIdentifiersAsStateSetters: v4.z.boolean().default(false),
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
-    validateNoVoidUseMemo: zod.z.boolean().default(false),
-    validateNoDynamicallyCreatedComponentsOrHooks: zod.z.boolean().default(false),
-    enableAllowSetStateFromRefsInEffects: zod.z.boolean().default(true),
+    validateNoVoidUseMemo: v4.z.boolean().default(false),
+    validateNoDynamicallyCreatedComponentsOrHooks: v4.z.boolean().default(false),
+    enableAllowSetStateFromRefsInEffects: v4.z.boolean().default(true),
 });
 class Environment {
     constructor(scope, fnType, compilerMode, config, contextIdentifiers, parentFunction, logger, filename, code, programContext) {
@@ -32567,7 +32567,7 @@ function validateEnvironmentConfig(partialConfig) {
     }
     CompilerError.throwInvalidConfig({
         reason: 'Could not validate environment config. Update React Compiler config to fix the error',
-        description: `${zodValidationError.fromZodError(config.error)}`,
+        description: `${v4$1.fromZodError(config.error)}`,
         loc: null,
         suggestions: null,
     });
@@ -32579,7 +32579,7 @@ function tryParseExternalFunction(maybeExternalFunction) {
     }
     CompilerError.throwInvalidConfig({
         reason: 'Could not parse external function. Update React Compiler config to fix the error',
-        description: `${zodValidationError.fromZodError(externalFunction.error)}`,
+        description: `${v4$1.fromZodError(externalFunction.error)}`,
         loc: null,
         suggestions: null,
     });
@@ -53749,27 +53749,27 @@ function isNonNamespacedImport(importDeclPath) {
         importDeclPath.node.importKind !== 'typeof');
 }
 
-zod.z.enum([
+v4.z.enum([
     'all_errors',
     'critical_errors',
     'none',
 ]);
-const DynamicGatingOptionsSchema = zod.z.object({
-    source: zod.z.string(),
+const DynamicGatingOptionsSchema = v4.z.object({
+    source: v4.z.string(),
 });
-const CustomOptOutDirectiveSchema = zod.z
-    .nullable(zod.z.array(zod.z.string()))
+const CustomOptOutDirectiveSchema = v4.z
+    .nullable(v4.z.array(v4.z.string()))
     .default(null);
-const CompilerReactTargetSchema = zod.z.union([
-    zod.z.literal('17'),
-    zod.z.literal('18'),
-    zod.z.literal('19'),
-    zod.z.object({
-        kind: zod.z.literal('donotuse_meta_internal'),
-        runtimeModule: zod.z.string().default('react'),
+const CompilerReactTargetSchema = v4.z.union([
+    v4.z.literal('17'),
+    v4.z.literal('18'),
+    v4.z.literal('19'),
+    v4.z.object({
+        kind: v4.z.literal('donotuse_meta_internal'),
+        runtimeModule: v4.z.string().default('react'),
     }),
 ]);
-zod.z.enum([
+v4.z.enum([
     'infer',
     'syntax',
     'annotation',
@@ -53842,7 +53842,7 @@ function parsePluginOptions(obj) {
                         else {
                             CompilerError.throwInvalidConfig({
                                 reason: 'Could not parse dynamic gating. Update React Compiler config to fix the error',
-                                description: `${zodValidationError.fromZodError(result.error)}`,
+                                description: `${v4$1.fromZodError(result.error)}`,
                                 loc: null,
                                 suggestions: null,
                             });
@@ -53858,7 +53858,7 @@ function parsePluginOptions(obj) {
                     else {
                         CompilerError.throwInvalidConfig({
                             reason: 'Could not parse custom opt out directives. Update React Compiler config to fix the error',
-                            description: `${zodValidationError.fromZodError(result.error)}`,
+                            description: `${v4$1.fromZodError(result.error)}`,
                             loc: null,
                             suggestions: null,
                         });
@@ -53881,7 +53881,7 @@ function parseTargetConfig(value) {
     else {
         CompilerError.throwInvalidConfig({
             reason: 'Not a valid target',
-            description: `${zodValidationError.fromZodError(parsed.error)}`,
+            description: `${v4$1.fromZodError(parsed.error)}`,
             suggestions: null,
             loc: null,
         });
