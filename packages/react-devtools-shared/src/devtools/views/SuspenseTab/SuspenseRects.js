@@ -37,6 +37,7 @@ function ScaledRect({
   visible,
   suspended,
   selected,
+  hovered,
   adjust,
   ...props
 }: {
@@ -45,6 +46,7 @@ function ScaledRect({
   visible: boolean,
   suspended: boolean,
   selected?: boolean,
+  hovered?: boolean,
   adjust?: boolean,
   ...
 }): React$Node {
@@ -61,6 +63,7 @@ function ScaledRect({
       data-visible={visible}
       data-suspended={suspended}
       data-selected={selected}
+      data-hovered={hovered}
       style={{
         // Shrink one pixel so that the bottom outline will line up with the top outline of the next one.
         width: adjust ? 'calc(' + width + ' - 1px)' : width,
@@ -80,7 +83,9 @@ function SuspenseRects({
   const store = useContext(StoreContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
-  const {uniqueSuspendersOnly} = useContext(SuspenseTreeStateContext);
+  const {uniqueSuspendersOnly, timeline, hoveredTimelineIndex} = useContext(
+    SuspenseTreeStateContext,
+  );
 
   const {inspectedElementID} = useContext(TreeStateContext);
 
@@ -148,6 +153,9 @@ function SuspenseRects({
   // TODO: Use the nearest Suspense boundary
   const selected = inspectedElementID === suspenseID;
 
+  const hovered =
+    hoveredTimelineIndex > -1 && timeline[hoveredTimelineIndex] === suspenseID;
+
   const boundingBox = getBoundingBox(suspense.rects);
 
   return (
@@ -156,7 +164,8 @@ function SuspenseRects({
       className={styles.SuspenseRectsBoundary}
       visible={visible}
       selected={selected}
-      suspended={suspense.isSuspended}>
+      suspended={suspense.isSuspended}
+      hovered={hovered}>
       <ViewBox.Provider value={boundingBox}>
         {visible &&
           suspense.rects !== null &&
@@ -317,7 +326,7 @@ function SuspenseRectsContainer(): React$Node {
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
-  const {roots} = useContext(SuspenseTreeStateContext);
+  const {roots, hoveredTimelineIndex} = useContext(SuspenseTreeStateContext);
 
   // TODO: bbox does not consider uniqueSuspendersOnly filter
   const boundingBox = getDocumentBoundingRect(store, roots);
@@ -361,13 +370,15 @@ function SuspenseRectsContainer(): React$Node {
   }
 
   const isRootSelected = roots.includes(inspectedElementID);
+  const isRootHovered = hoveredTimelineIndex === 0;
 
   return (
     <div
       className={styles.SuspenseRectsContainer}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
-      data-highlighted={isRootSelected}>
+      data-highlighted={isRootSelected}
+      data-hovered={isRootHovered}>
       <ViewBox.Provider value={boundingBox}>
         <div
           className={styles.SuspenseRectsViewBox}

@@ -54,8 +54,7 @@
   background: var(--color-transition);
 }
 
-.SuspenseScrubberStepHighlight > .SuspenseScrubberBead,
-.SuspenseScrubberStep:hover > .SuspenseScrubberBead {
+.SuspenseScrubberStepHighlight > .SuspenseScrubberBead {
   height: 0.75rem;
   transition: all 0.3s ease-out;
 }
