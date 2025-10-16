@@ -64,20 +64,6 @@ function getOwner() {
 // The higher the limit, the slower Error() is when not inspecting with a debugger.
 // When inspecting with a debugger, Error.stackTraceLimit has no impact on Error() performance (in v8).
 const ownerStackTraceLimit = 10;
-let supportsSettingStackTraceLimit = false;
-if (__DEV__) {
-  const descriptor = Object.getOwnPropertyDescriptor(Error, 'stackTraceLimit');
-  if (descriptor !== undefined) {
-    if (typeof descriptor.set === 'function') {
-      const previousStackTraceLimit = Error.stackTraceLimit;
-      Error.stackTraceLimit = 1;
-      Error.stackTraceLimit = previousStackTraceLimit;
-      supportsSettingStackTraceLimit = true;
-    } else {
-      supportsSettingStackTraceLimit = descriptor.writable;
-    }
-  }
-}
 
 /** @noinline */
 function UnknownOwner() {
@@ -377,15 +363,10 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
     let debugStackDEV = false;
     if (__DEV__) {
       if (trackActualOwner) {
-        if (supportsSettingStackTraceLimit) {
-          const previousStackTraceLimit = Error.stackTraceLimit;
-          Error.stackTraceLimit = ownerStackTraceLimit;
-          debugStackDEV = Error('react-stack-top-frame');
-          Error.stackTraceLimit = previousStackTraceLimit;
-        }
-        if (!debugStackDEV) {
-          debugStackDEV = Error('react-stack-top-frame');
-        }
+        const previousStackTraceLimit = Error.stackTraceLimit;
+        Error.stackTraceLimit = ownerStackTraceLimit;
+        debugStackDEV = Error('react-stack-top-frame');
+        Error.stackTraceLimit = previousStackTraceLimit;
       } else {
         debugStackDEV = unknownOwnerDebugStack;
       }
@@ -418,15 +399,10 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
     let debugStackDEV = false;
     if (__DEV__) {
       if (trackActualOwner) {
-        if (supportsSettingStackTraceLimit) {
-          const previousStackTraceLimit = Error.stackTraceLimit;
-          Error.stackTraceLimit = ownerStackTraceLimit;
-          debugStackDEV = Error('react-stack-top-frame');
-          Error.stackTraceLimit = previousStackTraceLimit;
-        }
-        if (!debugStackDEV) {
-          debugStackDEV = Error('react-stack-top-frame');
-        }
+        const previousStackTraceLimit = Error.stackTraceLimit;
+        Error.stackTraceLimit = ownerStackTraceLimit;
+        debugStackDEV = Error('react-stack-top-frame');
+        Error.stackTraceLimit = previousStackTraceLimit;
       } else {
         debugStackDEV = unknownOwnerDebugStack;
       }
@@ -460,15 +436,10 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren) {
   let debugStackDEV = false;
   if (__DEV__) {
     if (trackActualOwner) {
-      if (supportsSettingStackTraceLimit) {
-        const previousStackTraceLimit = Error.stackTraceLimit;
-        Error.stackTraceLimit = ownerStackTraceLimit;
-        debugStackDEV = Error('react-stack-top-frame');
-        Error.stackTraceLimit = previousStackTraceLimit;
-      }
-      if (!debugStackDEV) {
-        debugStackDEV = Error('react-stack-top-frame');
-      }
+      const previousStackTraceLimit = Error.stackTraceLimit;
+      Error.stackTraceLimit = ownerStackTraceLimit;
+      debugStackDEV = Error('react-stack-top-frame');
+      Error.stackTraceLimit = previousStackTraceLimit;
     } else {
       debugStackDEV = unknownOwnerDebugStack;
     }
@@ -732,15 +703,10 @@ export function createElement(type, config, children) {
   let debugStackDEV = false;
   if (__DEV__) {
     if (trackActualOwner) {
-      if (supportsSettingStackTraceLimit) {
-        const previousStackTraceLimit = Error.stackTraceLimit;
-        Error.stackTraceLimit = ownerStackTraceLimit;
-        debugStackDEV = Error('react-stack-top-frame');
-        Error.stackTraceLimit = previousStackTraceLimit;
-      }
-      if (!debugStackDEV) {
-        debugStackDEV = Error('react-stack-top-frame');
-      }
+      const previousStackTraceLimit = Error.stackTraceLimit;
+      Error.stackTraceLimit = ownerStackTraceLimit;
+      debugStackDEV = Error('react-stack-top-frame');
+      Error.stackTraceLimit = previousStackTraceLimit;
     } else {
       debugStackDEV = unknownOwnerDebugStack;
     }
