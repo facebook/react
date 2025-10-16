@@ -79,7 +79,6 @@ function CommitRankedListItem({data, index, style}: Props) {
   );
 }
 
-export default (memo(
-  CommitRankedListItem,
-  areEqual,
-): React.ComponentType<Props>);
+export default (memo(CommitRankedListItem, areEqual): component(
+  ...props: Props
+));

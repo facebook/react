@@ -31,6 +31,7 @@ import {
   BuiltInObjectId,
   BuiltInPropsId,
   BuiltInRefValueId,
+  BuiltInSetStateId,
   BuiltInUseRefId,
 } from '../HIR/ObjectShape';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
@@ -276,9 +277,16 @@ function* generateInstructionTypes(
        * We should change Hook to a subtype of Function or change unifier logic.
        * (see https://github.com/facebook/react-forget/pull/1427)
        */
+      let shapeId: string | null = null;
+      if (env.config.enableTreatSetIdentifiersAsStateSetters) {
+        const name = getName(names, value.callee.identifier.id);
+        if (name.startsWith('set')) {
+          shapeId = BuiltInSetStateId;
+        }
+      }
       yield equation(value.callee.identifier.type, {
         kind: 'Function',
-        shapeId: null,
+        shapeId,
         return: returnType,
         isConstructor: false,
       });
@@ -385,7 +393,7 @@ function* generateInstructionTypes(
               shapeId: BuiltInArrayId,
             });
           } else {
-            break;
+            continue;
           }
         }
       } else {
@@ -616,7 +624,13 @@ class Unifier {
       CompilerError.invariant(type.operands.length > 0, {
         reason: 'there should be at least one operand',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
 
@@ -775,6 +789,15 @@ class Unifier {
 
     if (type.kind === 'Phi') {
       return {kind: 'Phi', operands: type.operands.map(o => this.get(o))};
+    }
+
+    if (type.kind === 'Function') {
+      return {
+        kind: 'Function',
+        isConstructor: type.isConstructor,
+        shapeId: type.shapeId,
+        return: this.get(type.return),
+      };
     }
 
     return type;

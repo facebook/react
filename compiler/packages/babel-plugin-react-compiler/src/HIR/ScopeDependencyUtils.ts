@@ -202,8 +202,14 @@ function writeOptionalDependency(
     CompilerError.invariant(firstOptional !== -1, {
       reason:
         '[ScopeDependencyUtils] Internal invariant broken: expected optional path',
-      loc: dep.identifier.loc,
       description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: dep.identifier.loc,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     if (firstOptional === dep.path.length - 1) {
@@ -239,7 +245,13 @@ function writeOptionalDependency(
     CompilerError.invariant(testIdentifier !== null, {
       reason: 'Satisfy type checker',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
 

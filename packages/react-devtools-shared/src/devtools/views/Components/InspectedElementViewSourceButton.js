@@ -13,12 +13,13 @@ import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
 
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {SourceMappedLocation} from 'react-devtools-shared/src/symbolicateSource';
 
 import useOpenResource from '../useOpenResource';
 
 type Props = {
   source: null | ReactFunctionLocation,
-  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null> | null,
+  symbolicatedSourcePromise: Promise<SourceMappedLocation | null> | null,
 };
 
 function InspectedElementViewSourceButton({
@@ -42,7 +43,7 @@ function InspectedElementViewSourceButton({
 
 type ActualSourceButtonProps = {
   source: null | ReactFunctionLocation,
-  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null> | null,
+  symbolicatedSourcePromise: Promise<SourceMappedLocation | null> | null,
 };
 function ActualSourceButton({
   source,
@@ -55,7 +56,7 @@ function ActualSourceButton({
 
   const [buttonIsEnabled, viewSource] = useOpenResource(
     source,
-    symbolicatedSource,
+    symbolicatedSource == null ? null : symbolicatedSource.location,
   );
   return (
     <Button

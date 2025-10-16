@@ -40,7 +40,6 @@ function useFoo(t0) {
         return identity(a.b.c);
       },
     };
-
     t1 = <Stringify x={x} shouldInvokeFns={true} />;
     $[0] = a;
     $[1] = t1;

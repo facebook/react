@@ -16,11 +16,9 @@ import ElementBadges from './ElementBadges';
 
 import styles from './StackTraceView.css';
 
-import type {
-  ReactStackTrace,
-  ReactCallSite,
-  ReactFunctionLocation,
-} from 'shared/ReactTypes';
+import type {ReactStackTrace, ReactCallSite} from 'shared/ReactTypes';
+
+import type {SourceMappedLocation} from 'react-devtools-shared/src/symbolicateSource';
 
 import FetchFileWithCachingContext from './FetchFileWithCachingContext';
 
@@ -42,7 +40,7 @@ export function CallSiteView({
   const [virtualFunctionName, virtualURL, virtualLine, virtualColumn] =
     callSite;
 
-  const symbolicatedCallSite: null | ReactFunctionLocation =
+  const symbolicatedCallSite: null | SourceMappedLocation =
     fetchFileWithCaching !== null
       ? use(
           symbolicateSourceWithCache(
@@ -56,20 +54,39 @@ export function CallSiteView({
 
   const [linkIsEnabled, viewSource] = useOpenResource(
     callSite,
-    symbolicatedCallSite,
+    symbolicatedCallSite == null ? null : symbolicatedCallSite.location,
   );
   const [functionName, url, line, column] =
-    symbolicatedCallSite !== null ? symbolicatedCallSite : callSite;
+    symbolicatedCallSite !== null ? symbolicatedCallSite.location : callSite;
+  const ignored =
+    symbolicatedCallSite !== null ? symbolicatedCallSite.ignored : false;
+  // TODO: Make an option to be able to toggle the display of ignore listed rows.
+  // Ideally this UI should be higher than a single Stack Trace so that there's not
+  // multiple buttons in a single inspection taking up space.
+
+  const isBuiltIn = url === '' || url.startsWith('<anonymous>'); // This looks like a fake anonymous through eval.
   return (
-    <div className={styles.CallSite}>
+    <div
+      className={
+        ignored
+          ? styles.IgnoredCallSite
+          : isBuiltIn
+            ? styles.BuiltInCallSite
+            : styles.CallSite
+      }>
       {functionName || virtualFunctionName}
-      {' @ '}
-      <span
-        className={linkIsEnabled ? styles.Link : null}
-        onClick={viewSource}
-        title={url + ':' + line}>
-        {formatLocationForDisplay(url, line, column)}
-      </span>
+      {!isBuiltIn && (
+        <>
+          {' @ '}
+          <span
+            className={linkIsEnabled ? styles.Link : null}
+            onClick={viewSource}
+            title={url + ':' + line}>
+            {formatLocationForDisplay(url, line, column)}
+          </span>
+        </>
+      )}
+
       <ElementBadges environmentName={environmentName} />
     </div>
   );

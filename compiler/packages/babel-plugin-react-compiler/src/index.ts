@@ -12,9 +12,13 @@ export {
   CompilerDiagnostic,
   CompilerSuggestionOperation,
   ErrorSeverity,
+  ErrorCategory,
+  LintRules,
+  LintRulePreset,
   type CompilerErrorDetailOptions,
   type CompilerDiagnosticOptions,
   type CompilerDiagnosticDetail,
+  type LintRule,
 } from './CompilerError';
 export {
   compileFn as compile,
@@ -48,6 +52,7 @@ export {
 } from './ReactiveScopes';
 export {parseConfigPragmaForTests} from './Utils/TestUtils';
 declare global {
+  // @internal
   let __DEV__: boolean | null | undefined;
 }
 

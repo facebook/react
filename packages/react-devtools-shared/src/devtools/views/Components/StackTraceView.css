@@ -7,6 +7,14 @@
   padding-left: 1rem;
 }
 
+.IgnoredCallSite, .BuiltInCallSite {
+  display: none;
+}
+
+.CallSite + .BuiltInCallSite {
+  display: block;
+}
+
 .Link {
   color: var(--color-link);
   white-space: pre;

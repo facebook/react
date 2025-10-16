@@ -95,7 +95,7 @@ export function inspectElement(
   id: number,
   path: InspectedElementPath | null,
   rendererID: number,
-  shouldListenToPauseEvents: boolean = false,
+  shouldListenToPauseEvents: boolean,
 ): Promise<InspectedElementPayload> {
   const requestID = requestCounter++;
   const promise = getPromiseForRequestID<InspectedElementPayload>(
@@ -112,6 +112,32 @@ export function inspectElement(
     path,
     rendererID,
     requestID,
+  });
+
+  return promise;
+}
+
+export function inspectScreen(
+  bridge: FrontendBridge,
+  forceFullData: boolean,
+  arbitraryRootID: number,
+  path: InspectedElementPath | null,
+  shouldListenToPauseEvents: boolean,
+): Promise<InspectedElementPayload> {
+  const requestID = requestCounter++;
+  const promise = getPromiseForRequestID<InspectedElementPayload>(
+    requestID,
+    'inspectedScreen',
+    bridge,
+    `Timed out while inspecting screen.`,
+    shouldListenToPauseEvents,
+  );
+
+  bridge.send('inspectScreen', {
+    requestID,
+    id: arbitraryRootID,
+    path,
+    forceFullData,
   });
 
   return promise;
@@ -221,6 +247,7 @@ function backendToFrontendSerializedAsyncInfo(
       description: ioInfo.description,
       start: ioInfo.start,
       end: ioInfo.end,
+      byteSize: ioInfo.byteSize,
       value: ioInfo.value,
       env: ioInfo.env,
       owner:
@@ -272,6 +299,7 @@ export function convertInspectedElementBackendToFrontend(
     warnings,
     suspendedBy,
     suspendedByRange,
+    unknownSuspenders,
     nativeTag,
   } = inspectedElementBackend;
 
@@ -317,6 +345,7 @@ export function convertInspectedElementBackendToFrontend(
         ? []
         : hydratedSuspendedBy.map(backendToFrontendSerializedAsyncInfo),
     suspendedByRange,
+    unknownSuspenders,
     nativeTag,
   };
 

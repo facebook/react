@@ -240,7 +240,7 @@ export function prerender(
   });
 }
 
-let serverManifest = {};
+let serverManifest: ServerManifest = {};
 export function registerServerActions(manifest: ServerManifest) {
   // This function is called by the bundler to register the manifest.
   serverManifest = manifest;

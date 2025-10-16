@@ -52,8 +52,8 @@ function parseStackTraceFromChromeStack(
     if (filename === '<anonymous>') {
       filename = '';
     }
-    const line = +(parsed[3] || parsed[6]);
-    const col = +(parsed[4] || parsed[7]);
+    const line = +(parsed[3] || parsed[6] || 0);
+    const col = +(parsed[4] || parsed[7] || 0);
     parsedFrames.push([name, filename, line, col, 0, 0, isAsync]);
   }
   return parsedFrames;
@@ -235,6 +235,7 @@ function collectStackTrace(
 //     at name (filename:0:0)
 //     at filename:0:0
 //     at async filename:0:0
+//     at Array.map (<anonymous>)
 const chromeFrameRegExp =
   /^ *at (?:(.+) \((?:(.+):(\d+):(\d+)|\<anonymous\>)\)|(?:async )?(.+):(\d+):(\d+)|\<anonymous\>)$/;
 

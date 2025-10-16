@@ -31,7 +31,7 @@ import {
   getNextLanes,
   includesSyncLane,
   markStarvedLanesAsExpired,
-  claimNextTransitionLane,
+  claimNextTransitionUpdateLane,
   getNextLanesToFlushSync,
   checkIfRootIsPrerendering,
   isGestureRender,
@@ -41,6 +41,7 @@ import {
   NoContext,
   RenderContext,
   flushPendingEffects,
+  flushPendingEffectsDelayed,
   getExecutionContext,
   getWorkInProgressRoot,
   getWorkInProgressRootRenderLanes,
@@ -542,7 +543,7 @@ function performWorkOnRootViaSchedulerTask(
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
   const originalCallbackNode = root.callbackNode;
-  const didFlushPassiveEffects = flushPendingEffects(true);
+  const didFlushPassiveEffects = flushPendingEffectsDelayed();
   if (didFlushPassiveEffects) {
     // Something in the passive effect phase may have canceled the current task.
     // Check if the task node for this root was changed.
@@ -716,7 +717,7 @@ export function requestTransitionLane(
         : // We may or may not be inside an async action scope. If we are, this
           // is the first update in that scope. Either way, we need to get a
           // fresh transition lane.
-          claimNextTransitionLane();
+          claimNextTransitionUpdateLane();
   }
   return currentEventTransitionLane;
 }

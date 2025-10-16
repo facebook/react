@@ -44,7 +44,6 @@ function Component(props) {
       t2 = $[3];
     }
     context = t2;
-
     mutate(key);
     $[0] = props.value;
     $[1] = context;

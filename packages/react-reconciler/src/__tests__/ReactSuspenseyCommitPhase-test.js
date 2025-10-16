@@ -23,7 +23,7 @@ describe('ReactSuspenseyCommitPhase', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.unstable_SuspenseList;
     }
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
     useMemo = React.useMemo;
     startTransition = React.startTransition;
     resolveSuspenseyThing = ReactNoop.resolveSuspenseyThing;

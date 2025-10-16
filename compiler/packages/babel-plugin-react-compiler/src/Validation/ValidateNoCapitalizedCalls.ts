@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, EnvironmentConfig, ErrorSeverity} from '..';
+import {CompilerError, EnvironmentConfig} from '..';
+import {ErrorCategory} from '../CompilerError';
 import {HIRFunction, IdentifierId} from '../HIR';
 import {DEFAULT_GLOBALS} from '../HIR/Globals';
 import {Result} from '../Utils/Result';
@@ -56,8 +57,9 @@ export function validateNoCapitalizedCalls(
           const calleeName = capitalLoadGlobals.get(calleeIdentifier);
           if (calleeName != null) {
             CompilerError.throwInvalidReact({
+              category: ErrorCategory.CapitalizedCalls,
               reason,
-              description: `${calleeName} may be a component.`,
+              description: `${calleeName} may be a component`,
               loc: value.loc,
               suggestions: null,
             });
@@ -79,9 +81,9 @@ export function validateNoCapitalizedCalls(
           const propertyName = capitalizedProperties.get(propertyIdentifier);
           if (propertyName != null) {
             errors.push({
-              severity: ErrorSeverity.InvalidReact,
+              category: ErrorCategory.CapitalizedCalls,
               reason,
-              description: `${propertyName} may be a component.`,
+              description: `${propertyName} may be a component`,
               loc: value.loc,
               suggestions: null,
             });

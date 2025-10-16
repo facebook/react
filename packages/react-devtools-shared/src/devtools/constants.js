@@ -163,6 +163,9 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any, ...} = {
     '--color-scroll-track': '#fafafa',
     '--color-tooltip-background': 'rgba(0, 0, 0, 0.9)',
     '--color-tooltip-text': '#ffffff',
+
+    '--elevation-4':
+      '0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12)',
   },
   dark: {
     '--color-attribute-name': '#9d87d2',
@@ -315,6 +318,9 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any, ...} = {
     '--color-scroll-track': '#313640',
     '--color-tooltip-background': 'rgba(255, 255, 255, 0.95)',
     '--color-tooltip-text': '#000000',
+
+    '--elevation-4':
+      '0 2px 8px 0 rgba(0,0,0,0.32),0 4px 12px 0 rgba(0,0,0,0.24),0 1px 10px 0 rgba(0,0,0,0.18)',
   },
   compact: {
     '--font-size-monospace-small': '9px',

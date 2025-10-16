@@ -24,13 +24,13 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Invariant: [Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. Got a `Identifier`
+Invariant: [Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression
 
 error.todo-nested-method-calls-lower-property-load-into-temporary.ts:6:14
   4 | function Component({}) {
   5 |   const items = makeArray(0, 1, 2, null, 4, false, 6);
 > 6 |   const max = Math.max(2, items.push(5), ...other);
-    |               ^^^^^^^^ [Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. Got a `Identifier`
+    |               ^^^^^^^^ Got: 'Identifier'
   7 |   return max;
   8 | }
   9 |

@@ -23,7 +23,7 @@ Found 1 error:
 
 Todo: Support duplicate fbt tags
 
-Support `<fbt>` tags with multiple `<fbt:enum>` values
+Support `<fbt>` tags with multiple `<fbt:enum>` values.
 
 error.todo-fbt-unknown-enum-value.ts:6:7
   4 |   return (

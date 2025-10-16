@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Memoization: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior
+Compilation Skipped: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior
 
 error.validate-memoized-effect-deps-invalidated-dep-value.ts:11:2
    9 |   const y = [x];

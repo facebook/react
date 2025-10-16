@@ -19,6 +19,20 @@ export function createHints(): Hints {
   return null;
 }
 
+export type FormatContext = null;
+
+export function createRootFormatContext(): FormatContext {
+  return null;
+}
+
+export function getChildFormatContext(
+  parentContext: FormatContext,
+  type: string,
+  props: Object,
+): FormatContext {
+  return parentContext;
+}
+
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
