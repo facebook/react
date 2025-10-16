@@ -18309,7 +18309,7 @@ function getRuleForCategoryImpl(category) {
                 category,
                 severity: ErrorSeverity.Error,
                 name: 'void-use-memo',
-                description: 'Validates that useMemos always return a value. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
+                description: 'Validates that useMemos always return a value and that the result of the useMemo is used by the component/hook. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
                 preset: LintRulePreset.RecommendedLatest,
             };
         }
@@ -32187,7 +32187,7 @@ const EnvironmentConfigSchema = v4.z.object({
     enableTreatRefLikeIdentifiersAsRefs: v4.z.boolean().default(true),
     enableTreatSetIdentifiersAsStateSetters: v4.z.boolean().default(false),
     lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
-    validateNoVoidUseMemo: v4.z.boolean().default(false),
+    validateNoVoidUseMemo: v4.z.boolean().default(true),
     validateNoDynamicallyCreatedComponentsOrHooks: v4.z.boolean().default(false),
     enableAllowSetStateFromRefsInEffects: v4.z.boolean().default(true),
 });
@@ -44571,7 +44571,6 @@ function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
     };
 }
 function dropManualMemoization(func) {
-    var _a;
     const errors = new CompilerError();
     const isValidationEnabled = func.env.config.validatePreserveExistingMemoizationGuarantees ||
         func.env.config.validateNoSetStateInRender ||
@@ -44600,26 +44599,6 @@ function dropManualMemoization(func) {
                     const { fnPlace, depsList } = extractManualMemoizationArgs(instr, manualMemo.kind, sidemap, errors);
                     if (fnPlace == null) {
                         continue;
-                    }
-                    if (func.env.config.validateNoVoidUseMemo &&
-                        manualMemo.kind === 'useMemo') {
-                        const funcToCheck = (_a = sidemap.functions.get(fnPlace.identifier.id)) === null || _a === void 0 ? void 0 : _a.value;
-                        if (funcToCheck !== undefined && funcToCheck.loweredFunc.func) {
-                            if (!hasNonVoidReturn(funcToCheck.loweredFunc.func)) {
-                                errors.pushDiagnostic(CompilerDiagnostic.create({
-                                    category: ErrorCategory.VoidUseMemo,
-                                    reason: 'useMemo() callbacks must return a value',
-                                    description: `This ${manualMemo.loadInstr.value.kind === 'PropertyLoad'
-                                        ? 'React.useMemo()'
-                                        : 'useMemo()'} callback doesn't return a value. useMemo() is for computing and caching values, not for arbitrary side effects`,
-                                    suggestions: null,
-                                }).withDetails({
-                                    kind: 'error',
-                                    loc: instr.value.loc,
-                                    message: 'useMemo() callbacks must return a value',
-                                }));
-                            }
-                        }
                     }
                     instr.value = getManualMemoizationReplacement(fnPlace, instr.value.loc, manualMemo.kind);
                     if (isValidationEnabled) {
@@ -44731,17 +44710,6 @@ function findOptionalPlaces(fn) {
         }
     }
     return optionals;
-}
-function hasNonVoidReturn(func) {
-    for (const [, block] of func.body.blocks) {
-        if (block.terminal.kind === 'return') {
-            if (block.terminal.returnVariant === 'Explicit' ||
-                block.terminal.returnVariant === 'Implicit') {
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 class StableSidemap {
@@ -50225,6 +50193,7 @@ function isUnmemoized(operand, scopes) {
 
 function validateUseMemo(fn) {
     const errors = new CompilerError();
+    const voidMemoErrors = new CompilerError();
     const useMemos = new Set();
     const react = new Set();
     const functions = new Map();
@@ -50303,7 +50272,21 @@ function validateUseMemo(fn) {
                     }
                     validateNoContextVariableAssignment(body.loweredFunc.func, errors);
                     if (fn.env.config.validateNoVoidUseMemo) {
-                        unusedUseMemos.set(lvalue.identifier.id, callee.loc);
+                        if (!hasNonVoidReturn(body.loweredFunc.func)) {
+                            voidMemoErrors.pushDiagnostic(CompilerDiagnostic.create({
+                                category: ErrorCategory.VoidUseMemo,
+                                reason: 'useMemo() callbacks must return a value',
+                                description: `This useMemo() callback doesn't return a value. useMemo() is for computing and caching values, not for arbitrary side effects`,
+                                suggestions: null,
+                            }).withDetails({
+                                kind: 'error',
+                                loc: body.loc,
+                                message: 'useMemo() callbacks must return a value',
+                            }));
+                        }
+                        else {
+                            unusedUseMemos.set(lvalue.identifier.id, callee.loc);
+                        }
                     }
                     break;
                 }
@@ -50317,9 +50300,9 @@ function validateUseMemo(fn) {
     }
     if (unusedUseMemos.size !== 0) {
         for (const loc of unusedUseMemos.values()) {
-            errors.pushDiagnostic(CompilerDiagnostic.create({
+            voidMemoErrors.pushDiagnostic(CompilerDiagnostic.create({
                 category: ErrorCategory.VoidUseMemo,
-                reason: 'Unused useMemo()',
+                reason: 'useMemo() result is unused',
                 description: `This useMemo() value is unused. useMemo() is for computing and caching values, not for arbitrary side effects`,
                 suggestions: null,
             }).withDetails({
@@ -50329,6 +50312,7 @@ function validateUseMemo(fn) {
             }));
         }
     }
+    fn.env.logErrors(voidMemoErrors.asResult());
     return errors.asResult();
 }
 function validateNoContextVariableAssignment(fn, errors) {
@@ -50352,6 +50336,17 @@ function validateNoContextVariableAssignment(fn, errors) {
             }
         }
     }
+}
+function hasNonVoidReturn(func) {
+    for (const [, block] of func.body.blocks) {
+        if (block.terminal.kind === 'return') {
+            if (block.terminal.returnVariant === 'Explicit' ||
+                block.terminal.returnVariant === 'Implicit') {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 function validateLocalsNotReassignedAfterRender(fn) {
