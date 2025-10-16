@@ -57,6 +57,14 @@ function getOwner() {
   return null;
 }
 
+// v8 (Chromium, Node.js) defaults to 10
+// SpiderMonkey (Firefox) does not support Error.stackTraceLimit
+// JSC (Safari) defaults to 100
+// The lower the limit, the more likely we'll not reach react_stack_bottom_frame
+// The higher the limit, the slower Error() is when not inspecting with a debugger.
+// When inspecting with a debugger, Error.stackTraceLimit has no impact on Error() performance (in v8).
+const ownerStackTraceLimit = 10;
+
 /** @noinline */
 function UnknownOwner() {
   /** @noinline */
@@ -352,15 +360,24 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
     const trackActualOwner =
       __DEV__ &&
       ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+    let debugStackDEV = false;
+    if (__DEV__) {
+      if (trackActualOwner) {
+        const previousStackTraceLimit = Error.stackTraceLimit;
+        Error.stackTraceLimit = ownerStackTraceLimit;
+        debugStackDEV = Error('react-stack-top-frame');
+        Error.stackTraceLimit = previousStackTraceLimit;
+      } else {
+        debugStackDEV = unknownOwnerDebugStack;
+      }
+    }
+
     return jsxDEVImpl(
       type,
       config,
       maybeKey,
       isStaticChildren,
-      __DEV__ &&
-        (trackActualOwner
-          ? Error('react-stack-top-frame')
-          : unknownOwnerDebugStack),
+      debugStackDEV,
       __DEV__ &&
         (trackActualOwner
           ? createTask(getTaskName(type))
@@ -379,15 +396,23 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
     const trackActualOwner =
       __DEV__ &&
       ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+    let debugStackDEV = false;
+    if (__DEV__) {
+      if (trackActualOwner) {
+        const previousStackTraceLimit = Error.stackTraceLimit;
+        Error.stackTraceLimit = ownerStackTraceLimit;
+        debugStackDEV = Error('react-stack-top-frame');
+        Error.stackTraceLimit = previousStackTraceLimit;
+      } else {
+        debugStackDEV = unknownOwnerDebugStack;
+      }
+    }
     return jsxDEVImpl(
       type,
       config,
       maybeKey,
       isStaticChildren,
-      __DEV__ &&
-        (trackActualOwner
-          ? Error('react-stack-top-frame')
-          : unknownOwnerDebugStack),
+      debugStackDEV,
       __DEV__ &&
         (trackActualOwner
           ? createTask(getTaskName(type))
@@ -408,15 +433,23 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren) {
   const trackActualOwner =
     __DEV__ &&
     ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+  let debugStackDEV = false;
+  if (__DEV__) {
+    if (trackActualOwner) {
+      const previousStackTraceLimit = Error.stackTraceLimit;
+      Error.stackTraceLimit = ownerStackTraceLimit;
+      debugStackDEV = Error('react-stack-top-frame');
+      Error.stackTraceLimit = previousStackTraceLimit;
+    } else {
+      debugStackDEV = unknownOwnerDebugStack;
+    }
+  }
   return jsxDEVImpl(
     type,
     config,
     maybeKey,
     isStaticChildren,
-    __DEV__ &&
-      (trackActualOwner
-        ? Error('react-stack-top-frame')
-        : unknownOwnerDebugStack),
+    debugStackDEV,
     __DEV__ &&
       (trackActualOwner
         ? createTask(getTaskName(type))
@@ -667,15 +700,23 @@ export function createElement(type, config, children) {
   const trackActualOwner =
     __DEV__ &&
     ReactSharedInternals.recentlyCreatedOwnerStacks++ < ownerStackLimit;
+  let debugStackDEV = false;
+  if (__DEV__) {
+    if (trackActualOwner) {
+      const previousStackTraceLimit = Error.stackTraceLimit;
+      Error.stackTraceLimit = ownerStackTraceLimit;
+      debugStackDEV = Error('react-stack-top-frame');
+      Error.stackTraceLimit = previousStackTraceLimit;
+    } else {
+      debugStackDEV = unknownOwnerDebugStack;
+    }
+  }
   return ReactElement(
     type,
     key,
     props,
     getOwner(),
-    __DEV__ &&
-      (trackActualOwner
-        ? Error('react-stack-top-frame')
-        : unknownOwnerDebugStack),
+    debugStackDEV,
     __DEV__ &&
       (trackActualOwner
         ? createTask(getTaskName(type))
