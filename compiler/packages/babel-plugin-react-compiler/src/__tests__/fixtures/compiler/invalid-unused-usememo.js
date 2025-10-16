@@ -1,4 +1,4 @@
-// @validateNoVoidUseMemo
+// @validateNoVoidUseMemo @loggerTestOnly
 function Component() {
   useMemo(() => {
     return [];
