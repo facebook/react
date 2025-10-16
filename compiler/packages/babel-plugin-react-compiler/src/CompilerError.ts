@@ -988,7 +988,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         severity: ErrorSeverity.Error,
         name: 'void-use-memo',
         description:
-          'Validates that useMemos always return a value. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
+          'Validates that useMemos always return a value and that the result of the useMemo is used by the component/hook. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
         preset: LintRulePreset.RecommendedLatest,
       };
     }
