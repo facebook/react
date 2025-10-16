@@ -60,8 +60,8 @@
   outline-width: 0;
 }
 
-.SuspenseRectsScaledRect[data-suspended='true'] {
-  opacity: 0.3;
+.SuspenseRectsBoundary[data-suspended='true'] {
+  opacity: 0.33;
 }
 
 /* highlight this boundary */
