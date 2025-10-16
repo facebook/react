@@ -59,7 +59,13 @@ export function rewriteInstructionKindsBasedOnReassignment(
             {
               reason: `Expected variable not to be defined prior to declaration`,
               description: `${printPlace(lvalue.place)} was already defined`,
-              loc: lvalue.place.loc,
+              details: [
+                {
+                  kind: 'error',
+                  loc: lvalue.place.loc,
+                  message: null,
+                },
+              ],
             },
           );
           declarations.set(lvalue.place.identifier.declarationId, lvalue);
@@ -77,7 +83,13 @@ export function rewriteInstructionKindsBasedOnReassignment(
                 {
                   reason: `Expected variable not to be defined prior to declaration`,
                   description: `${printPlace(lvalue.place)} was already defined`,
-                  loc: lvalue.place.loc,
+                  details: [
+                    {
+                      kind: 'error',
+                      loc: lvalue.place.loc,
+                      message: null,
+                    },
+                  ],
                 },
               );
               declarations.set(lvalue.place.identifier.declarationId, lvalue);
@@ -101,7 +113,13 @@ export function rewriteInstructionKindsBasedOnReassignment(
                   description: `other places were \`${kind}\` but '${printPlace(
                     place,
                   )}' is const`,
-                  loc: place.loc,
+                  details: [
+                    {
+                      kind: 'error',
+                      loc: place.loc,
+                      message: 'Expected consistent kind for destructuring',
+                    },
+                  ],
                   suggestions: null,
                 },
               );
@@ -114,7 +132,13 @@ export function rewriteInstructionKindsBasedOnReassignment(
                 CompilerError.invariant(block.kind !== 'value', {
                   reason: `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
                   description: null,
-                  loc: place.loc,
+                  details: [
+                    {
+                      kind: 'error',
+                      loc: place.loc,
+                      message: null,
+                    },
+                  ],
                   suggestions: null,
                 });
                 declarations.set(place.identifier.declarationId, lvalue);
@@ -125,7 +149,13 @@ export function rewriteInstructionKindsBasedOnReassignment(
                     description: `Other places were \`${kind}\` but '${printPlace(
                       place,
                     )}' is const`,
-                    loc: place.loc,
+                    details: [
+                      {
+                        kind: 'error',
+                        loc: place.loc,
+                        message: 'Expected consistent kind for destructuring',
+                      },
+                    ],
                     suggestions: null,
                   },
                 );
@@ -138,7 +168,13 @@ export function rewriteInstructionKindsBasedOnReassignment(
                     description: `Other places were \`${kind}\` but '${printPlace(
                       place,
                     )}' is reassigned`,
-                    loc: place.loc,
+                    details: [
+                      {
+                        kind: 'error',
+                        loc: place.loc,
+                        message: 'Expected consistent kind for destructuring',
+                      },
+                    ],
                     suggestions: null,
                   },
                 );
@@ -150,7 +186,13 @@ export function rewriteInstructionKindsBasedOnReassignment(
           CompilerError.invariant(kind !== null, {
             reason: 'Expected at least one operand',
             description: null,
-            loc: null,
+            details: [
+              {
+                kind: 'error',
+                loc: null,
+                message: null,
+              },
+            ],
             suggestions: null,
           });
           lvalue.kind = kind;
@@ -163,7 +205,13 @@ export function rewriteInstructionKindsBasedOnReassignment(
           CompilerError.invariant(declaration !== undefined, {
             reason: `Expected variable to have been defined`,
             description: `No declaration for ${printPlace(lvalue)}`,
-            loc: lvalue.loc,
+            details: [
+              {
+                kind: 'error',
+                loc: lvalue.loc,
+                message: null,
+              },
+            ],
           });
           declaration.kind = InstructionKind.Let;
           break;

@@ -364,13 +364,13 @@ function emitOutlinedFn(
   const fn: HIRFunction = {
     loc: GeneratedSource,
     id: null,
+    nameHint: null,
     fnType: 'Other',
     env,
     params: [propsObj],
     returnTypeAnnotation: null,
     returns: createTemporaryPlace(env, GeneratedSource),
     context: [],
-    effects: null,
     body: {
       entry: block.id,
       blocks: new Map([[block.id, block]]),
@@ -378,6 +378,7 @@ function emitOutlinedFn(
     generator: false,
     async: false,
     directives: [],
+    aliasingEffects: [],
   };
   return fn;
 }

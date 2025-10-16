@@ -39,6 +39,7 @@ function Foo() {
       if (cond) {
         thing = makeObject_Primitives();
       }
+
       if (CONST_TRUE) {
         mutate(thing);
       }

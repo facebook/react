@@ -78,10 +78,17 @@ export function instructionReordering(fn: HIRFunction): void {
   }
   CompilerError.invariant(shared.size === 0, {
     reason: `InstructionReordering: expected all reorderable nodes to have been emitted`,
-    loc:
-      [...shared.values()]
-        .map(node => node.instruction?.loc)
-        .filter(loc => loc != null)[0] ?? GeneratedSource,
+    description: null,
+    details: [
+      {
+        kind: 'error',
+        loc:
+          [...shared.values()]
+            .map(node => node.instruction?.loc)
+            .filter(loc => loc != null)[0] ?? GeneratedSource,
+        message: null,
+      },
+    ],
   });
   markInstructionIds(fn.body);
 }
@@ -302,7 +309,13 @@ function reorderBlock(
         node.reorderability === Reorderability.Reorderable,
         {
           reason: `Expected all remaining instructions to be reorderable`,
-          loc: node.instruction?.loc ?? block.terminal.loc,
+          details: [
+            {
+              kind: 'error',
+              loc: node.instruction?.loc ?? block.terminal.loc,
+              message: null,
+            },
+          ],
           description:
             node.instruction != null
               ? `Instruction [${node.instruction.id}] was not emitted yet but is not reorderable`

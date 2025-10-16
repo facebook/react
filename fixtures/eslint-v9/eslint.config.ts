@@ -1,7 +1,8 @@
-import type {Linter} from 'eslint';
-import * as reactHooks from 'eslint-plugin-react-hooks';
+import {defineConfig} from 'eslint/config';
+import reactHooks from 'eslint-plugin-react-hooks';
 
-export default [
+export default defineConfig([
+  reactHooks.configs.flat['recommended-latest'],
   {
     languageOptions: {
       ecmaVersion: 'latest',
@@ -12,11 +13,8 @@ export default [
         },
       },
     },
-  },
-  reactHooks.configs['recommended'],
-  {
     rules: {
       'react-hooks/exhaustive-deps': 'error',
     },
   },
-] satisfies Linter.Config[];
+]);

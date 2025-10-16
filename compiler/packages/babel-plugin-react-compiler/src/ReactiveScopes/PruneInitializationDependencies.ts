@@ -196,7 +196,14 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
   ): void {
     CompilerError.invariant(state !== 'Create', {
       reason: "Visiting a terminal statement with state 'Create'",
-      loc: stmt.terminal.loc,
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: stmt.terminal.loc,
+          message: null,
+        },
+      ],
     });
     super.visitTerminal(stmt, state);
   }

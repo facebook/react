@@ -32,7 +32,7 @@ export function resolveTemporaryReference<T>(
   return temporaryReferences.get(temporaryReference);
 }
 
-const proxyHandlers = {
+const proxyHandlers: Proxy$traps<mixed> = {
   get: function (
     target: Function,
     name: string | symbol,

@@ -86,6 +86,7 @@ export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
+  // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
     // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
     destination.error(error);

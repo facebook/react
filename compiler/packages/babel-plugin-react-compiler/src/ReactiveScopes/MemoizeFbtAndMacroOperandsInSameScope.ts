@@ -7,14 +7,17 @@
 
 import {
   HIRFunction,
+  Identifier,
   IdentifierId,
+  InstructionValue,
   makeInstructionId,
   MutableRange,
   Place,
-  ReactiveValue,
+  ReactiveScope,
 } from '../HIR';
 import {Macro, MacroMethod} from '../HIR/Environment';
-import {eachReactiveValueOperand} from './visitors';
+import {eachInstructionValueOperand} from '../HIR/visitors';
+import {Iterable_some} from '../Utils/utils';
 
 /**
  * This pass supports the `fbt` translation system (https://facebook.github.io/fbt/)
@@ -48,24 +51,49 @@ export function memoizeFbtAndMacroOperandsInSameScope(
     ...Array.from(FBT_TAGS).map((tag): Macro => [tag, []]),
     ...(fn.env.config.customMacros ?? []),
   ]);
-  const fbtValues: Set<IdentifierId> = new Set();
+  /**
+   * Set of all identifiers that load fbt or other macro functions or their nested
+   * properties, as well as values known to be the results of invoking macros
+   */
+  const macroTagsCalls: Set<IdentifierId> = new Set();
+  /**
+   * Mapping of lvalue => list of operands for all expressions where either
+   * the lvalue is a known fbt/macro call and/or the operands transitively
+   * contain fbt/macro calls.
+   *
+   * This is the key data structure that powers the scope merging: we start
+   * at the lvalues and merge operands into the lvalue's scope.
+   */
+  const macroValues: Map<Identifier, Array<Identifier>> = new Map();
+  // Tracks methods loaded from macros, like fbt.param or idx.foo
   const macroMethods = new Map<IdentifierId, Array<Array<MacroMethod>>>();
-  while (true) {
-    let vsize = fbtValues.size;
-    let msize = macroMethods.size;
-    visit(fn, fbtMacroTags, fbtValues, macroMethods);
-    if (vsize === fbtValues.size && msize === macroMethods.size) {
-      break;
+
+  visit(fn, fbtMacroTags, macroTagsCalls, macroMethods, macroValues);
+
+  for (const root of macroValues.keys()) {
+    const scope = root.scope;
+    if (scope == null) {
+      continue;
     }
+    // Merge the operands into the same scope if this is a known macro invocation
+    if (!macroTagsCalls.has(root.id)) {
+      continue;
+    }
+    mergeScopes(root, scope, macroValues, macroTagsCalls);
   }
-  return fbtValues;
+
+  return macroTagsCalls;
 }
 
 export const FBT_TAGS: Set<string> = new Set([
   'fbt',
   'fbt:param',
+  'fbt:enum',
+  'fbt:plural',
   'fbs',
   'fbs:param',
+  'fbs:enum',
+  'fbs:plural',
 ]);
 export const SINGLE_CHILD_FBT_TAGS: Set<string> = new Set([
   'fbt:param',
@@ -75,10 +103,22 @@ export const SINGLE_CHILD_FBT_TAGS: Set<string> = new Set([
 function visit(
   fn: HIRFunction,
   fbtMacroTags: Set<Macro>,
-  fbtValues: Set<IdentifierId>,
+  macroTagsCalls: Set<IdentifierId>,
   macroMethods: Map<IdentifierId, Array<Array<MacroMethod>>>,
+  macroValues: Map<Identifier, Array<Identifier>>,
 ): void {
   for (const [, block] of fn.body.blocks) {
+    for (const phi of block.phis) {
+      const macroOperands: Array<Identifier> = [];
+      for (const operand of phi.operands.values()) {
+        if (macroValues.has(operand.identifier)) {
+          macroOperands.push(operand.identifier);
+        }
+      }
+      if (macroOperands.length !== 0) {
+        macroValues.set(phi.place.identifier, macroOperands);
+      }
+    }
     for (const instruction of block.instructions) {
       const {lvalue, value} = instruction;
       if (lvalue === null) {
@@ -93,13 +133,13 @@ function visit(
          * We don't distinguish between tag names and strings, so record
          * all `fbt` string literals in case they are used as a jsx tag.
          */
-        fbtValues.add(lvalue.identifier.id);
+        macroTagsCalls.add(lvalue.identifier.id);
       } else if (
         value.kind === 'LoadGlobal' &&
         matchesExactTag(value.binding.name, fbtMacroTags)
       ) {
         // Record references to `fbt` as a global
-        fbtValues.add(lvalue.identifier.id);
+        macroTagsCalls.add(lvalue.identifier.id);
       } else if (
         value.kind === 'LoadGlobal' &&
         matchTagRoot(value.binding.name, fbtMacroTags) !== null
@@ -121,81 +161,63 @@ function visit(
             if (method.length > 1) {
               newMethods.push(method.slice(1));
             } else {
-              fbtValues.add(lvalue.identifier.id);
+              macroTagsCalls.add(lvalue.identifier.id);
             }
           }
         }
         if (newMethods.length > 0) {
           macroMethods.set(lvalue.identifier.id, newMethods);
         }
-      } else if (isFbtCallExpression(fbtValues, value)) {
-        const fbtScope = lvalue.identifier.scope;
-        if (fbtScope === null) {
-          continue;
-        }
-
-        /*
-         * if the JSX element's tag was `fbt`, mark all its operands
-         * to ensure that they end up in the same scope as the jsx element
-         * itself.
-         */
-        for (const operand of eachReactiveValueOperand(value)) {
-          operand.identifier.scope = fbtScope;
-
-          // Expand the jsx element's range to account for its operands
-          expandFbtScopeRange(fbtScope.range, operand.identifier.mutableRange);
-          fbtValues.add(operand.identifier.id);
-        }
       } else if (
-        isFbtJsxExpression(fbtMacroTags, fbtValues, value) ||
-        isFbtJsxChild(fbtValues, lvalue, value)
+        value.kind === 'PropertyLoad' &&
+        macroTagsCalls.has(value.object.identifier.id)
       ) {
-        const fbtScope = lvalue.identifier.scope;
-        if (fbtScope === null) {
-          continue;
-        }
-
-        /*
-         * if the JSX element's tag was `fbt`, mark all its operands
-         * to ensure that they end up in the same scope as the jsx element
-         * itself.
-         */
-        for (const operand of eachReactiveValueOperand(value)) {
-          operand.identifier.scope = fbtScope;
-
-          // Expand the jsx element's range to account for its operands
-          expandFbtScopeRange(fbtScope.range, operand.identifier.mutableRange);
-
-          /*
-           * NOTE: we add the operands as fbt values so that they are also
-           * grouped with this expression
-           */
-          fbtValues.add(operand.identifier.id);
-        }
-      } else if (fbtValues.has(lvalue.identifier.id)) {
-        const fbtScope = lvalue.identifier.scope;
-        if (fbtScope === null) {
-          return;
-        }
-
-        for (const operand of eachReactiveValueOperand(value)) {
-          if (
-            operand.identifier.name !== null &&
-            operand.identifier.name.kind === 'named'
-          ) {
-            /*
-             * named identifiers were already locals, we only have to force temporaries
-             * into the same scope
-             */
-            continue;
+        macroTagsCalls.add(lvalue.identifier.id);
+      } else if (
+        isFbtJsxExpression(fbtMacroTags, macroTagsCalls, value) ||
+        isFbtJsxChild(macroTagsCalls, lvalue, value) ||
+        isFbtCallExpression(macroTagsCalls, value)
+      ) {
+        macroTagsCalls.add(lvalue.identifier.id);
+        macroValues.set(
+          lvalue.identifier,
+          Array.from(
+            eachInstructionValueOperand(value),
+            operand => operand.identifier,
+          ),
+        );
+      } else if (
+        Iterable_some(eachInstructionValueOperand(value), operand =>
+          macroValues.has(operand.identifier),
+        )
+      ) {
+        const macroOperands: Array<Identifier> = [];
+        for (const operand of eachInstructionValueOperand(value)) {
+          if (macroValues.has(operand.identifier)) {
+            macroOperands.push(operand.identifier);
           }
-          operand.identifier.scope = fbtScope;
-
-          // Expand the jsx element's range to account for its operands
-          expandFbtScopeRange(fbtScope.range, operand.identifier.mutableRange);
         }
+        macroValues.set(lvalue.identifier, macroOperands);
       }
     }
+  }
+}
+
+function mergeScopes(
+  root: Identifier,
+  scope: ReactiveScope,
+  macroValues: Map<Identifier, Array<Identifier>>,
+  macroTagsCalls: Set<IdentifierId>,
+): void {
+  const operands = macroValues.get(root);
+  if (operands == null) {
+    return;
+  }
+  for (const operand of operands) {
+    operand.scope = scope;
+    expandFbtScopeRange(scope.range, operand.mutableRange);
+    macroTagsCalls.add(operand.id);
+    mergeScopes(operand, scope, macroValues, macroTagsCalls);
   }
 }
 
@@ -229,39 +251,40 @@ function matchTagRoot(
 }
 
 function isFbtCallExpression(
-  fbtValues: Set<IdentifierId>,
-  value: ReactiveValue,
+  macroTagsCalls: Set<IdentifierId>,
+  value: InstructionValue,
 ): boolean {
   return (
     (value.kind === 'CallExpression' &&
-      fbtValues.has(value.callee.identifier.id)) ||
-    (value.kind === 'MethodCall' && fbtValues.has(value.property.identifier.id))
+      macroTagsCalls.has(value.callee.identifier.id)) ||
+    (value.kind === 'MethodCall' &&
+      macroTagsCalls.has(value.property.identifier.id))
   );
 }
 
 function isFbtJsxExpression(
   fbtMacroTags: Set<Macro>,
-  fbtValues: Set<IdentifierId>,
-  value: ReactiveValue,
+  macroTagsCalls: Set<IdentifierId>,
+  value: InstructionValue,
 ): boolean {
   return (
     value.kind === 'JsxExpression' &&
     ((value.tag.kind === 'Identifier' &&
-      fbtValues.has(value.tag.identifier.id)) ||
+      macroTagsCalls.has(value.tag.identifier.id)) ||
       (value.tag.kind === 'BuiltinTag' &&
         matchesExactTag(value.tag.name, fbtMacroTags)))
   );
 }
 
 function isFbtJsxChild(
-  fbtValues: Set<IdentifierId>,
+  macroTagsCalls: Set<IdentifierId>,
   lvalue: Place | null,
-  value: ReactiveValue,
+  value: InstructionValue,
 ): boolean {
   return (
     (value.kind === 'JsxExpression' || value.kind === 'JsxFragment') &&
     lvalue !== null &&
-    fbtValues.has(lvalue.identifier.id)
+    macroTagsCalls.has(lvalue.identifier.id)
   );
 }
 

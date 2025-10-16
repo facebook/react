@@ -15,6 +15,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
+const DevToolsIgnorePlugin = require('devtools-ignore-webpack-plugin');
 const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
 const paths = require('./paths');
 const modules = require('./modules');
@@ -685,6 +686,15 @@ module.exports = function (webpackEnv) {
           },
         }),
       // Fork Start
+      new DevToolsIgnorePlugin({
+        shouldIgnorePath: function (path) {
+          return (
+            path.includes('/node_modules/') ||
+            path.includes('/webpack/') ||
+            path.endsWith('/src/index.js')
+          );
+        },
+      }),
       new ReactFlightWebpackPlugin({
         isServer: false,
         clientReferences: {

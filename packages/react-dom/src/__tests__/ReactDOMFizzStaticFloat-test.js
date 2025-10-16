@@ -40,9 +40,7 @@ describe('ReactDOMFizzStaticFloat', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
-    if (__EXPERIMENTAL__) {
-      ReactDOMFizzStatic = require('react-dom/static.browser');
-    }
+    ReactDOMFizzStatic = require('react-dom/static.browser');
     Suspense = React.Suspense;
     container = document.createElement('div');
     document.body.appendChild(container);

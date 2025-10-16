@@ -75,7 +75,13 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
     CompilerError.invariant(terminal.kind === 'scope', {
       reason: `Expected block to have a scope terminal`,
       description: `Expected block bb${block.id} to end in a scope terminal`,
-      loc: terminal.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: terminal.loc,
+          message: null,
+        },
+      ],
     });
     const body = fn.body.blocks.get(terminal.block)!;
     if (

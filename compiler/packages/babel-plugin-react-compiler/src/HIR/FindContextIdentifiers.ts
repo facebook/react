@@ -184,7 +184,13 @@ function handleAssignment(
           CompilerError.invariant(valuePath.isLVal(), {
             reason: `[FindContextIdentifiers] Expected object property value to be an LVal, got: ${valuePath.type}`,
             description: null,
-            loc: valuePath.node.loc ?? GeneratedSource,
+            details: [
+              {
+                kind: 'error',
+                loc: valuePath.node.loc ?? GeneratedSource,
+                message: null,
+              },
+            ],
             suggestions: null,
           });
           handleAssignment(currentFn, identifiers, valuePath);
@@ -192,7 +198,13 @@ function handleAssignment(
           CompilerError.invariant(property.isRestElement(), {
             reason: `[FindContextIdentifiers] Invalid assumptions for babel types.`,
             description: null,
-            loc: property.node.loc ?? GeneratedSource,
+            details: [
+              {
+                kind: 'error',
+                loc: property.node.loc ?? GeneratedSource,
+                message: null,
+              },
+            ],
             suggestions: null,
           });
           handleAssignment(currentFn, identifiers, property);

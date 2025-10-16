@@ -290,7 +290,14 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
       CompilerError.invariant(lval.identifier.name != null, {
         reason:
           'PromoteInterposedTemporaries: Assignment targets not expected to be temporaries',
-        loc: instruction.loc,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: instruction.loc,
+            message: null,
+          },
+        ],
       });
     }
 
@@ -454,7 +461,13 @@ function promoteIdentifier(identifier: Identifier, state: State): void {
     reason:
       'promoteTemporary: Expected to be called only for temporary variables',
     description: null,
-    loc: GeneratedSource,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   if (state.tags.has(identifier.declarationId)) {

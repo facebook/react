@@ -1,0 +1,36 @@
+.SuspenseBreadcrumbsList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+.SuspenseBreadcrumbsListItem {
+  display: inline;
+}
+
+.SuspenseBreadcrumbsListItem[aria-current="true"] .SuspenseBreadcrumbsButton {
+  color: var(--color-button-active);
+}
+
+.SuspenseBreadcrumbsButton {
+  background: var(--color-button-background);
+  border: none;
+  border-radius: 0.25rem;
+  color: var(--color-button);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  padding: 0.25rem;
+  white-space: nowrap;
+}
+
+.SuspenseBreadcrumbsButton:hover {
+  background-color: var(--color-button-background-hover);
+  color: var(--color-button-hover);
+}
+
+.SuspenseBreadcrumbsButton:focus-visible {
+  background: var(--color-button-background-focus);
+}

@@ -56,6 +56,9 @@ export function printFunction(fn: HIRFunction): string {
   } else {
     definition += '<<anonymous>>';
   }
+  if (fn.nameHint != null) {
+    definition += ` ${fn.nameHint}`;
+  }
   if (fn.params.length !== 0) {
     definition +=
       '(' +
@@ -554,23 +557,11 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       const context = instrValue.loweredFunc.func.context
         .map(dep => printPlace(dep))
         .join(',');
-      const effects =
-        instrValue.loweredFunc.func.effects
-          ?.map(effect => {
-            if (effect.kind === 'ContextMutation') {
-              return `ContextMutation places=[${[...effect.places]
-                .map(place => printPlace(place))
-                .join(', ')}] effect=${effect.effect}`;
-            } else {
-              return `GlobalMutation`;
-            }
-          })
-          .join(', ') ?? '';
       const aliasingEffects =
         instrValue.loweredFunc.func.aliasingEffects
           ?.map(printAliasingEffect)
           ?.join(', ') ?? '';
-      value = `${kind} ${name} @context[${context}] @effects[${effects}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
+      value = `${kind} ${name} @context[${context}] @aliasingEffects=[${aliasingEffects}]\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {
@@ -608,7 +599,13 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         {
           reason: 'Bad assumption about quasi length.',
           description: null,
-          loc: instrValue.loc,
+          details: [
+            {
+              kind: 'error',
+              loc: instrValue.loc,
+              message: null,
+            },
+          ],
           suggestions: null,
         },
       );
@@ -877,8 +874,15 @@ export function printManualMemoDependency(
   } else {
     CompilerError.invariant(val.root.value.identifier.name?.kind === 'named', {
       reason: 'DepsValidation: expected named local variable in depslist',
+      description: null,
       suggestions: null,
-      loc: val.root.value.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: val.root.value.loc,
+          message: null,
+        },
+      ],
     });
     rootStr = nameOnly
       ? val.root.value.identifier.name.value
@@ -892,7 +896,8 @@ export function printType(type: Type): string {
   if (type.kind === 'Object' && type.shapeId != null) {
     return `:T${type.kind}<${type.shapeId}>`;
   } else if (type.kind === 'Function' && type.shapeId != null) {
-    return `:T${type.kind}<${type.shapeId}>`;
+    const returnType = printType(type.return);
+    return `:T${type.kind}<${type.shapeId}>()${returnType !== '' ? `:  ${returnType}` : ''}`;
   } else {
     return `:T${type.kind}`;
   }
@@ -995,16 +1000,16 @@ export function printAliasingEffect(effect: AliasingEffect): string {
     case 'MutateConditionally':
     case 'MutateTransitive':
     case 'MutateTransitiveConditionally': {
-      return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}`;
+      return `${effect.kind} ${printPlaceForAliasEffect(effect.value)}${effect.kind === 'Mutate' && effect.reason?.kind === 'AssignCurrentProperty' ? ' (assign `.current`)' : ''}`;
     }
     case 'MutateFrozen': {
-      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+      return `MutateFrozen ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'MutateGlobal': {
-      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+      return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'Impure': {
-      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.category)}`;
+      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'Render': {
       return `Render ${printPlaceForAliasEffect(effect.place)}`;

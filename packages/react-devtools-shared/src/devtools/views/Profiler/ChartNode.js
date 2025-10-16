@@ -10,16 +10,17 @@
 import * as React from 'react';
 
 import styles from './ChartNode.css';
+import typeof {SyntheticMouseEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 type Props = {
   color: string,
   height: number,
   isDimmed?: boolean,
   label: string,
-  onClick: (event: SyntheticMouseEvent<any>) => mixed,
-  onDoubleClick?: (event: SyntheticMouseEvent<any>) => mixed,
-  onMouseEnter: (event: SyntheticMouseEvent<any>) => mixed,
-  onMouseLeave: (event: SyntheticMouseEvent<any>) => mixed,
+  onClick: (event: SyntheticMouseEvent) => mixed,
+  onDoubleClick?: (event: SyntheticMouseEvent) => mixed,
+  onMouseEnter: (event: SyntheticMouseEvent) => mixed,
+  onMouseLeave: (event: SyntheticMouseEvent) => mixed,
   placeLabelAboveNode?: boolean,
   textStyle?: Object,
   width: number,

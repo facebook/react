@@ -61,7 +61,7 @@ export function defaultOnCaughtError(
   error: mixed,
   errorInfo: {
     +componentStack?: ?string,
-    +errorBoundary?: ?React$Component<any, any>,
+    +errorBoundary?: ?component(...props: any),
   },
 ): void {
   // Overriding this can silence these warnings e.g. for tests.

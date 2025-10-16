@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {SourceMappedLocation} from 'react-devtools-shared/src/symbolicateSource';
+
 import * as React from 'react';
 import {useCallback, useContext, useSyncExternalStore} from 'react';
 import {TreeStateContext} from './TreeContext';
@@ -15,7 +17,10 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Icon from '../Icon';
 import Toggle from '../Toggle';
-import {ElementTypeSuspense} from 'react-devtools-shared/src/frontend/types';
+import {
+  ElementTypeSuspense,
+  ElementTypeRoot,
+} from 'react-devtools-shared/src/frontend/types';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
 import {getAlwaysOpenInEditor} from '../../../utils';
@@ -27,12 +32,13 @@ import InspectedElementViewSourceButton from './InspectedElementViewSourceButton
 import useEditorURL from '../useEditorURL';
 
 import styles from './InspectedElement.css';
-
-import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import Tooltip from './reach-ui/tooltip';
 
 export type Props = {};
 
 // TODO Make edits and deletes also use transition API!
+
+const noSourcePromise = Promise.resolve(null);
 
 export default function InspectedElementWrapper(_: Props): React.Node {
   const {inspectedElementID} = useContext(TreeStateContext);
@@ -59,11 +65,11 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           ? inspectedElement.stack[0]
           : null;
 
-  const symbolicatedSourcePromise: null | Promise<ReactFunctionLocation | null> =
+  const symbolicatedSourcePromise: Promise<SourceMappedLocation | null> =
     React.useMemo(() => {
-      if (fetchFileWithCaching == null) return Promise.resolve(null);
+      if (fetchFileWithCaching == null) return noSourcePromise;
 
-      if (source == null) return Promise.resolve(null);
+      if (source == null) return noSourcePromise;
 
       const [, sourceURL, line, column] = source;
       return symbolicateSourceWithCache(
@@ -113,7 +119,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     element !== null &&
     element.type === ElementTypeSuspense &&
     inspectedElement != null &&
-    inspectedElement.state != null;
+    inspectedElement.isSuspended;
 
   const canToggleError =
     !hideToggleErrorAction &&
@@ -188,17 +194,28 @@ export default function InspectedElementWrapper(_: Props): React.Node {
   }
 
   let strictModeBadge = null;
-  if (element.isStrictModeNonCompliant) {
+  if (element.isStrictModeNonCompliant && element.parentID !== 0) {
     strictModeBadge = (
-      <a
-        className={styles.StrictModeNonCompliant}
-        href="https://react.dev/reference/react/StrictMode"
-        rel="noopener noreferrer"
-        target="_blank"
-        title="This component is not running in StrictMode. Click to learn more.">
-        <Icon type="strict-mode-non-compliant" />
-      </a>
+      <Tooltip label="This component is not running in StrictMode. Click to learn more.">
+        <a
+          className={styles.StrictModeNonCompliant}
+          href="https://react.dev/reference/react/StrictMode"
+          rel="noopener noreferrer"
+          target="_blank">
+          <Icon type="strict-mode-non-compliant" />
+        </a>
+      </Tooltip>
     );
+  }
+
+  let fullName = element.displayName || '';
+  if (element.nameProp !== null) {
+    fullName += ' "' + element.nameProp + '"';
+  }
+  if (element.type === ElementTypeRoot) {
+    // The root only has "suspended by" and it represents the things that block
+    // Initial Paint.
+    fullName = 'Initial Paint';
   }
 
   return (
@@ -220,12 +237,12 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         <div className={styles.SelectedComponentName}>
           <div
             className={
-              element.isStrictModeNonCompliant
+              element.isStrictModeNonCompliant && element.parentID !== 0
                 ? `${styles.ComponentName} ${styles.StrictModeNonCompliantComponentName}`
                 : styles.ComponentName
             }
-            title={element.displayName}>
-            {element.displayName}
+            title={fullName}>
+            {fullName}
           </div>
         </div>
 
@@ -252,18 +269,21 @@ export default function InspectedElementWrapper(_: Props): React.Node {
             <ButtonIcon type="error" />
           </Toggle>
         )}
-        {canToggleSuspense && (
+        {canToggleSuspense || isSuspended ? (
           <Toggle
             isChecked={isSuspended}
+            isDisabled={!canToggleSuspense}
             onChange={toggleSuspended}
             title={
               isSuspended
-                ? 'Unsuspend the selected component'
+                ? canToggleSuspense
+                  ? 'Unsuspend the selected component'
+                  : 'This boundary is still suspended'
                 : 'Suspend the selected component'
             }>
             <ButtonIcon type="suspend" />
           </Toggle>
-        )}
+        ) : null}
         {store.supportsInspectMatchingDOMElement && (
           <Button
             onClick={highlightElement}
@@ -291,7 +311,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         <div className={styles.Loading}>Loading...</div>
       )}
 
-      {inspectedElement !== null && symbolicatedSourcePromise != null && (
+      {inspectedElement !== null && (
         <InspectedElementView
           element={element}
           hookNames={hookNames}

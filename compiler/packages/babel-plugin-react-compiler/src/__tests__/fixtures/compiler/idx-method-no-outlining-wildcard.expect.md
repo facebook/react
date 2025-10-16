@@ -73,7 +73,7 @@ function Component(props) {
   const groupName4 = t3;
   let t4;
   if ($[8] !== props) {
-    t4 = idx.hello_world.b.c(props, _temp3);
+    t4 = idx.hello_world.b.c(props, (__3) => __3.group.label);
     $[8] = props;
     $[9] = t4;
   } else {
@@ -107,9 +107,6 @@ function Component(props) {
     t5 = $[15];
   }
   return t5;
-}
-function _temp3(__3) {
-  return __3.group.label;
 }
 function _temp2(__0) {
   return __0.group.label;
