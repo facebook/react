@@ -16,7 +16,7 @@ import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import type {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
-import {z} from 'zod';
+import {z} from 'zod/v4';
 import type {AliasingEffect} from '../Inference/AliasingEffects';
 import {isReservedWord} from '../Utils/Keyword';
 import {Err, Ok, Result} from '../Utils/Result';

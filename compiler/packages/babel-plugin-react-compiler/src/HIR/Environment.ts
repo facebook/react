@@ -6,8 +6,8 @@
  */
 
 import * as t from '@babel/types';
-import {ZodError, z} from 'zod';
-import {fromZodError} from 'zod-validation-error';
+import {ZodError, z} from 'zod/v4';
+import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerError} from '../CompilerError';
 import {Logger, ProgramContext} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
