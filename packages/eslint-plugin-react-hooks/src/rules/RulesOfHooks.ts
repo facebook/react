@@ -171,7 +171,15 @@ function isUseEffectEventIdentifier(node: Node): boolean {
   return node.type === 'Identifier' && node.name === 'useEffectEvent';
 }
 
-function useEffectEventError(fn: string, called: boolean): string {
+function useEffectEventError(fn: string | null, called: boolean): string {
+  // no function identifier, i.e. it is not assigned to a variable
+  if (fn === null) {
+    return (
+      `React Hook "useEffectEvent" can only be called at the top level of your component.` +
+      ` It cannot be passed down.`
+    );
+  }
+
   return (
     `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
     'Effects and Effect Events in the same component.' +
@@ -771,6 +779,22 @@ const rule = {
           // Denote that we have traversed into a useEffect call, and stash the CallExpr for
           // comparison later when we exit
           lastEffect = node;
+        }
+
+        // Specifically disallow <Child onClick={useEffectEvent(...)} /> because this
+        // case can't be caught by `recordAllUseEffectEventFunctions` as it isn't assigned to a variable
+        if (
+          isUseEffectEventIdentifier(nodeWithoutNamespace) &&
+          node.parent?.type !== 'VariableDeclarator' &&
+          // like in other hooks, calling useEffectEvent at component's top level without assignment is valid
+          node.parent?.type !== 'ExpressionStatement'
+        ) {
+          const message = useEffectEventError(null, false);
+
+          context.report({
+            node,
+            message,
+          });
         }
       },
 
