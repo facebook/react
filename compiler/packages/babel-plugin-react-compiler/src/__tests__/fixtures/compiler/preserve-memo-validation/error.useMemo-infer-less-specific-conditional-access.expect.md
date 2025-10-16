@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees
+// @validatePreserveExistingMemoizationGuarantees @enablePreserveExistingMemoizationGuarantees:false
 import {useMemo} from 'react';
 import {mutate} from 'shared-runtime';
 
@@ -26,7 +26,7 @@ function Component({propA, propB}) {
 ```
 Found 1 error:
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `propB`, but the source dependencies were [propA?.a, propB.x.y]. Inferred less specific property than source.
 

@@ -25,7 +25,7 @@ error.bug-invariant-unexpected-terminal-in-optional.ts:3:16
   1 | const Foo = ({json}) => {
   2 |   try {
 > 3 |     const foo = JSON.parse(json)?.foo;
-    |                 ^^^^ Unexpected terminal in optional
+    |                 ^^^^ Unexpected maybe-throw in optional
   4 |     return <span>{foo}</span>;
   5 |   } catch {
   6 |     return null;

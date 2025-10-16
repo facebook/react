@@ -55,7 +55,7 @@ export const unstable_now = getCurrentTime;
 const yieldInterval = 5;
 let deadline = 0;
 
-let currentPriorityLevel_DEPRECATED = NormalPriority;
+let currentPriorityLevel_DEPRECATED: PriorityLevel = NormalPriority;
 
 // Always yield at the end of the frame.
 export function unstable_shouldYield(): boolean {
@@ -76,7 +76,7 @@ export function unstable_scheduleCallback<T>(
   callback: SchedulerCallback<T>,
   options?: {delay?: number},
 ): CallbackNode {
-  let postTaskPriority;
+  let postTaskPriority: PostTaskPriorityLevel;
   switch (priorityLevel) {
     case ImmediatePriority:
     case UserBlockingPriority:
@@ -196,7 +196,7 @@ export function unstable_getCurrentPriorityLevel(): PriorityLevel {
 }
 
 export function unstable_next<T>(callback: () => T): T {
-  let priorityLevel;
+  let priorityLevel: PriorityLevel;
   switch (currentPriorityLevel_DEPRECATED) {
     case ImmediatePriority:
     case UserBlockingPriority:

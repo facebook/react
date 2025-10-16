@@ -278,6 +278,7 @@ export function createProfilingHooks({
 
     const top = currentReactMeasuresStack.pop();
     // $FlowFixMe[incompatible-type]
+    // $FlowFixMe[incompatible-use]
     if (top.type !== type) {
       console.error(
         'Unexpected type "%s" completed at %sms before "%s" completed.',

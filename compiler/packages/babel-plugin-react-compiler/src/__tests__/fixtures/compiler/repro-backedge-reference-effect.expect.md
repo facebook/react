@@ -43,6 +43,7 @@ function Foo(t0) {
       <Stringify
         fn={() => {
           const arr = [];
+
           for (const selectedUser of userIds) {
             arr.push(selectedUser);
           }

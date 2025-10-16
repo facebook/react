@@ -42,6 +42,7 @@ export type Resource<Input, Key, Value> = {
 let readContext;
 if (typeof React.use === 'function') {
   readContext = function (Context: ReactContext<null>) {
+    // eslint-disable-next-line react-hooks-published/rules-of-hooks
     return React.use(Context);
   };
 } else if (
@@ -141,6 +142,7 @@ export function createResource<Input, Key, Value>(
       const key = hashInput(input);
       const result: Thenable<Value> = accessResult(resource, fetch, input, key);
       if (typeof React.use === 'function') {
+        // eslint-disable-next-line react-hooks-published/rules-of-hooks
         return React.use(result);
       }
 

@@ -28,6 +28,7 @@ function Component(props) {
   let items;
   if ($[0] !== props.items) {
     items = [];
+
     for (let i = 0, length = props.items.length; i < length; i++) {
       items.push(props.items[i]);
     }

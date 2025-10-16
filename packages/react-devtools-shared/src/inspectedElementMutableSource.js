@@ -12,6 +12,7 @@ import {
   convertInspectedElementBackendToFrontend,
   hydrateHelper,
   inspectElement as inspectElementAPI,
+  inspectScreen as inspectScreenAPI,
 } from 'react-devtools-shared/src/backendAPI';
 import {fillInPath} from 'react-devtools-shared/src/hydration';
 
@@ -57,21 +58,31 @@ export function inspectElement(
   rendererID: number,
   shouldListenToPauseEvents: boolean = false,
 ): Promise<InspectElementReturnType> {
-  const {id} = element;
+  const {id, parentID} = element;
 
   // This could indicate that the DevTools UI has been closed and reopened.
   // The in-memory cache will be clear but the backend still thinks we have cached data.
   // In this case, we need to tell it to resend the full data.
   const forceFullData = !inspectedElementCache.has(id);
+  const isRoot = parentID === 0;
+  const promisedElement = isRoot
+    ? inspectScreenAPI(
+        bridge,
+        forceFullData,
+        id,
+        path,
+        shouldListenToPauseEvents,
+      )
+    : inspectElementAPI(
+        bridge,
+        forceFullData,
+        id,
+        path,
+        rendererID,
+        shouldListenToPauseEvents,
+      );
 
-  return inspectElementAPI(
-    bridge,
-    forceFullData,
-    id,
-    path,
-    rendererID,
-    shouldListenToPauseEvents,
-  ).then((data: any) => {
+  return promisedElement.then((data: any) => {
     const {type} = data;
 
     let inspectedElement;

@@ -33,7 +33,7 @@ Found 1 error:
 
 Error: [Fire] Untransformed reference to compiler-required feature.
 
- Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:4)
+Either remove this `fire` call or ensure it is successfully transformed by the compiler Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (11:4).
 
 error.todo-syntax.ts:18:4
   16 |   };

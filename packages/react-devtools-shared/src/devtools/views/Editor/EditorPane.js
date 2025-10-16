@@ -115,4 +115,4 @@ function EditorPane({selectedSource}: Props) {
     </div>
   );
 }
-export default (portaledContent(EditorPane): React$ComponentType<{}>);
+export default (portaledContent(EditorPane): component());

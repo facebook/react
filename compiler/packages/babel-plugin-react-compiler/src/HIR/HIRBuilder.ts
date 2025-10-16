@@ -7,7 +7,7 @@
 
 import {Binding, NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
-import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {CompilerError, ErrorCategory} from '../CompilerError';
 import {Environment} from './Environment';
 import {
   BasicBlock,
@@ -309,14 +309,29 @@ export default class HIRBuilder {
   resolveBinding(node: t.Identifier): Identifier {
     if (node.name === 'fbt') {
       CompilerError.throwDiagnostic({
-        severity: ErrorSeverity.Todo,
-        category: 'Support local variables named `fbt`',
+        category: ErrorCategory.Todo,
+        reason: 'Support local variables named `fbt`',
         description:
           'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
         details: [
           {
             kind: 'error',
             message: 'Rename to avoid conflict with fbt plugin',
+            loc: node.loc ?? GeneratedSource,
+          },
+        ],
+      });
+    }
+    if (node.name === 'this') {
+      CompilerError.throwDiagnostic({
+        category: ErrorCategory.UnsupportedSyntax,
+        reason: '`this` is not supported syntax',
+        description:
+          'React Compiler does not support compiling functions that use `this`',
+        details: [
+          {
+            kind: 'error',
+            message: '`this` was used here',
             loc: node.loc ?? GeneratedSource,
           },
         ],
@@ -492,7 +507,13 @@ export default class HIRBuilder {
       {
         reason: 'Mismatched label',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );
@@ -515,7 +536,13 @@ export default class HIRBuilder {
       {
         reason: 'Mismatched label',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );
@@ -551,7 +578,13 @@ export default class HIRBuilder {
       {
         reason: 'Mismatched loops',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );
@@ -576,7 +609,13 @@ export default class HIRBuilder {
     CompilerError.invariant(false, {
       reason: 'Expected a loop or switch to be in scope',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
@@ -597,7 +636,13 @@ export default class HIRBuilder {
         CompilerError.invariant(false, {
           reason: 'Continue may only refer to a labeled loop',
           description: null,
-          loc: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
       }
@@ -605,7 +650,13 @@ export default class HIRBuilder {
     CompilerError.invariant(false, {
       reason: 'Expected a loop to be in scope',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }
@@ -628,7 +679,13 @@ function _shrink(func: HIR): void {
     CompilerError.invariant(block != null, {
       reason: `expected block ${blockId} to exist`,
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     target = getTargetIfIndirection(block);
@@ -760,7 +817,13 @@ function getReversePostorderedBlocks(func: HIR): HIR['blocks'] {
     CompilerError.invariant(block != null, {
       reason: '[HIRBuilder] Unexpected null block',
       description: `expected block ${blockId} to exist`,
-      loc: GeneratedSource,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
     });
     const successors = [...eachTerminalSuccessor(block.terminal)].reverse();
     const fallthrough = terminalFallthrough(block.terminal);
@@ -816,7 +879,13 @@ export function markInstructionIds(func: HIR): void {
       CompilerError.invariant(!visited.has(instr), {
         reason: `${printInstruction(instr)} already visited!`,
         description: null,
-        loc: instr.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: instr.loc,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       visited.add(instr);
@@ -839,7 +908,13 @@ export function markPredecessors(func: HIR): void {
     CompilerError.invariant(block != null, {
       reason: 'unexpected missing block',
       description: `block ${blockId}`,
-      loc: GeneratedSource,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
     });
     if (prevBlock) {
       block.preds.add(prevBlock.id);

@@ -54,22 +54,21 @@ export function printElement(
   }${key}${name}>${hocs}${suffix}`;
 }
 
-function printSuspense(
-  suspense: SuspenseNode,
-  includeWeight: boolean = false,
-): string {
+function printRects(rects: SuspenseNode['rects']): string {
+  if (rects === null) {
+    return ' rects={null}';
+  } else {
+    return ` rects={[${rects.map(rect => `{x:${rect.x},y:${rect.y},width:${rect.width},height:${rect.height}}`).join(', ')}]}`;
+  }
+}
+
+function printSuspense(suspense: SuspenseNode): string {
   let name = '';
   if (suspense.name !== null) {
     name = ` name="${suspense.name}"`;
   }
 
-  let printedRects = '';
-  const rects = suspense.rects;
-  if (rects === null) {
-    printedRects = ' rects={null}';
-  } else {
-    printedRects = ` rects={[${rects.map(rect => `{x:${rect.x},y:${rect.y},width:${rect.width},height:${rect.height}}`).join(', ')}]}`;
-  }
+  const printedRects = printRects(suspense.rects);
 
   return `<Suspense${name}${printedRects}>`;
 }
@@ -178,13 +177,13 @@ export function printStore(
       rootWeight += weight;
 
       if (includeSuspense) {
-        const shell = store.getSuspenseByID(rootID);
+        const root = store.getSuspenseByID(rootID);
         // Roots from legacy renderers don't have a separate Suspense tree
-        if (shell !== null) {
-          if (shell.children.length > 0) {
-            snapshotLines.push('[shell]');
-            for (let i = 0; i < shell.children.length; i++) {
-              const childID = shell.children[i];
+        if (root !== null) {
+          if (root.children.length > 0) {
+            snapshotLines.push('[suspense-root] ' + printRects(root.rects));
+            for (let i = 0; i < root.children.length; i++) {
+              const childID = root.children[i];
               const child = store.getSuspenseByID(childID);
               if (child === null) {
                 throw new Error(

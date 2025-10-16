@@ -191,7 +191,14 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
       case 'Primitive': {
         CompilerError.invariant(value.kind === 'Primitive', {
           reason: 'value kind expected to be Primitive',
-          loc: null,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
 
@@ -204,7 +211,14 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
       case 'LoadGlobal': {
         CompilerError.invariant(value.kind === 'LoadGlobal', {
           reason: 'value kind expected to be LoadGlobal',
-          loc: null,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
 

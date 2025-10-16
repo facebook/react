@@ -152,7 +152,13 @@ export function makeLinearId(id: number): LinearId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected LinearId id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as LinearId;
@@ -167,7 +173,13 @@ export function makeTypeParameterId(id: number): TypeParameterId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected TypeParameterId to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as TypeParameterId;
@@ -191,7 +203,13 @@ export function makeVariableId(id: number): VariableId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected VariableId id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as VariableId;
@@ -399,7 +417,14 @@ function convertFlowType(flowType: FlowType, loc: string): ResolvedType {
               } else {
                 CompilerError.invariant(false, {
                   reason: `Unsupported property kind ${prop.kind}`,
-                  loc: GeneratedSource,
+                  description: null,
+                  details: [
+                    {
+                      kind: 'error',
+                      loc: GeneratedSource,
+                      message: null,
+                    },
+                  ],
                 });
               }
             }
@@ -468,7 +493,14 @@ function convertFlowType(flowType: FlowType, loc: string): ResolvedType {
               } else {
                 CompilerError.invariant(false, {
                   reason: `Unsupported property kind ${prop.kind}`,
-                  loc: GeneratedSource,
+                  description: null,
+                  details: [
+                    {
+                      kind: 'error',
+                      loc: GeneratedSource,
+                      message: null,
+                    },
+                  ],
                 });
               }
             }
@@ -487,7 +519,14 @@ function convertFlowType(flowType: FlowType, loc: string): ResolvedType {
                 } else {
                   CompilerError.invariant(false, {
                     reason: `Unsupported property kind ${prop.kind}`,
-                    loc: GeneratedSource,
+                    description: null,
+                    details: [
+                      {
+                        kind: 'error',
+                        loc: GeneratedSource,
+                        message: null,
+                      },
+                    ],
                   });
                 }
               }
@@ -500,7 +539,14 @@ function convertFlowType(flowType: FlowType, loc: string): ResolvedType {
             }
             CompilerError.invariant(false, {
               reason: `Unsupported class instance type ${flowType.def.type.kind}`,
-              loc: GeneratedSource,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: GeneratedSource,
+                  message: null,
+                },
+              ],
             });
           }
           case 'Fun':
@@ -559,7 +605,14 @@ function convertFlowType(flowType: FlowType, loc: string): ResolvedType {
             } else {
               CompilerError.invariant(false, {
                 reason: `Unsupported component props type ${propsType.type.kind}`,
-                loc: GeneratedSource,
+                description: null,
+                details: [
+                  {
+                    kind: 'error',
+                    loc: GeneratedSource,
+                    message: null,
+                  },
+                ],
               });
             }
 
@@ -712,7 +765,14 @@ export class FlowTypeEnv implements ITypeEnv {
     // TODO: use flow-js only for web environments (e.g. playground)
     CompilerError.invariant(env.config.flowTypeProvider != null, {
       reason: 'Expected flowDumpTypes to be defined in environment config',
-      loc: GeneratedSource,
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
     });
     let stdout: any;
     if (source === lastFlowSource) {

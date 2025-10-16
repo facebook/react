@@ -99,6 +99,7 @@ import {
   hoistPreambleState,
   isPreambleReady,
   isPreambleContext,
+  hasSuspenseyContent,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -341,7 +342,7 @@ type Segment = {
   // The context that this segment was created in.
   parentFormatContext: FormatContext,
   // If this segment represents a fallback, this is the content that will replace that fallback.
-  +boundary: null | SuspenseBoundary,
+  boundary: null | SuspenseBoundary,
   // used to discern when text separator boundaries are needed
   lastPushedText: boolean,
   textEmbedded: boolean,
@@ -461,7 +462,7 @@ function isEligibleForOutlining(
   // The larger this limit is, the more we can save on preparing fallbacks in case we end up
   // outlining.
   return (
-    boundary.byteSize > 500 &&
+    (boundary.byteSize > 500 || hasSuspenseyContent(boundary.contentState)) &&
     // For boundaries that can possibly contribute to the preamble we don't want to outline
     // them regardless of their size since the fallbacks should only be emitted if we've
     // errored the boundary.
@@ -1375,7 +1376,11 @@ function renderSuspenseBoundary(
     // where we try to skip rendering the fallback if the content itself can render synchronously
     const trackedPostpones = request.trackedPostpones;
 
-    const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+    const fallbackKeyPath: KeyNode = [
+      keyPath[0],
+      'Suspense Fallback',
+      keyPath[2],
+    ];
     const fallbackReplayNode: ReplayNode = [
       fallbackKeyPath[1],
       fallbackKeyPath[2],
@@ -1575,7 +1580,11 @@ function renderSuspenseBoundary(
       task.row = prevRow;
     }
 
-    const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+    const fallbackKeyPath: KeyNode = [
+      keyPath[0],
+      'Suspense Fallback',
+      keyPath[2],
+    ];
     // We create suspended task for the fallback because we don't want to actually work
     // on it yet in case we finish the main content, so we queue for later.
     const suspendedFallbackTask = createRenderTask(
@@ -1744,7 +1753,11 @@ function replaySuspenseBoundary(
     task.row = prevRow;
   }
 
-  const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+  const fallbackKeyPath: KeyNode = [
+    keyPath[0],
+    'Suspense Fallback',
+    keyPath[2],
+  ];
 
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
@@ -5668,6 +5681,10 @@ function flushSegment(
     return flushSubtree(request, destination, segment, hoistableState);
   }
 
+  // We're going to write the boundary. We don't need to maintain this reference since
+  // we might reflush this segment at a later time (if it aborts and we inlined) but
+  // we don't want to reflush the boundary
+  segment.boundary = null;
   boundary.parentFlushed = true;
   // This segment is a Suspense boundary. We need to decide whether to
   // emit the content or the fallback now.
@@ -5736,8 +5753,13 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else if (
+    // We don't outline when we're emitting partially completed boundaries optimistically
+    // because it doesn't make sense to outline something if its parent is going to be
+    // blocked on something later in the stream anyway.
+    !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
-    flushedByteSize + boundary.byteSize > request.progressiveChunkSize
+    (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
+      hasSuspenseyContent(boundary.contentState))
   ) {
     // Inlining this boundary would make the current sequence being written too large
     // and block the parent for too long. Instead, it will be emitted separately so that we
@@ -5934,7 +5956,7 @@ function flushPartiallyCompletedSegment(
   segment: Segment,
 ): boolean {
   if (segment.status === FLUSHED) {
-    // We've already flushed this inline.
+    // We've already flushed this inline
     return true;
   }
 
@@ -5967,6 +5989,8 @@ function flushPartiallyCompletedSegment(
     );
   }
 }
+
+let flushingPartialBoundaries = false;
 
 function flushCompletedQueues(
   request: Request,
@@ -6083,6 +6107,7 @@ function flushCompletedQueues(
 
     // Next we emit any segments of any boundaries that are partially complete
     // but not deeply complete.
+    flushingPartialBoundaries = true;
     const partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
       const boundary = partialBoundaries[i];
@@ -6094,6 +6119,7 @@ function flushCompletedQueues(
       }
     }
     partialBoundaries.splice(0, i);
+    flushingPartialBoundaries = false;
 
     // Next we check the completed boundaries again. This may have had
     // boundaries added to it in case they were too larged to be inlined.
@@ -6111,6 +6137,7 @@ function flushCompletedQueues(
     }
     largeBoundaries.splice(0, i);
   } finally {
+    flushingPartialBoundaries = false;
     if (
       request.allPendingTasks === 0 &&
       request.clientRenderedBoundaries.length === 0 &&

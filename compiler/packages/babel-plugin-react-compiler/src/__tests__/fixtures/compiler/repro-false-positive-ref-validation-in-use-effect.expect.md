@@ -49,7 +49,6 @@ function Component() {
   if ($[0] !== params) {
     t0 = (partialParams) => {
       const nextParams = { ...params, ...partialParams };
-
       nextParams.param = "value";
       console.log(nextParams);
     };

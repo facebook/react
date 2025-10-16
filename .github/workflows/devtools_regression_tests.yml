@@ -92,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: react-devtools
-          path: build/devtools.tgz
+          path: build/devtools
           if-no-files-found: error
       # Simplifies getting the extension for local testing
       - name: Archive chrome extension
@@ -201,5 +201,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: screenshots
-          path: ./tmp/screenshots
+          path: ./tmp/playwright-artifacts
           if-no-files-found: warn

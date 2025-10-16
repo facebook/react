@@ -38,6 +38,8 @@ error.invalid-mutate-context-in-callback.ts:12:4
   13 |   };
   14 |   return <div onClick={onClick} />;
   15 | }
+
+Hint: If this value is a Ref (value returned by `useRef()`), rename the variable to end in "Ref".
 ```
           
       
