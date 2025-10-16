@@ -10,7 +10,16 @@ import {
   CompilerError,
   ErrorCategory,
 } from '../CompilerError';
-import {FunctionExpression, HIRFunction, IdentifierId} from '../HIR';
+import {
+  FunctionExpression,
+  HIRFunction,
+  IdentifierId,
+  SourceLocation,
+} from '../HIR';
+import {
+  eachInstructionValueOperand,
+  eachTerminalOperand,
+} from '../HIR/visitors';
 import {Result} from '../Utils/Result';
 
 export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
@@ -18,8 +27,19 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
   const useMemos = new Set<IdentifierId>();
   const react = new Set<IdentifierId>();
   const functions = new Map<IdentifierId, FunctionExpression>();
+  const unusedUseMemos = new Map<IdentifierId, SourceLocation>();
   for (const [, block] of fn.body.blocks) {
     for (const {lvalue, value} of block.instructions) {
+      if (unusedUseMemos.size !== 0) {
+        /**
+         * Most of the time useMemo results are referenced immediately. Don't bother
+         * scanning instruction operands for useMemos unless there is an as-yet-unused
+         * useMemo.
+         */
+        for (const operand of eachInstructionValueOperand(value)) {
+          unusedUseMemos.delete(operand.identifier.id);
+        }
+      }
       switch (value.kind) {
         case 'LoadGlobal': {
           if (value.binding.name === 'useMemo') {
@@ -45,10 +65,8 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
         case 'CallExpression': {
           // Is the function being called useMemo, with at least 1 argument?
           const callee =
-            value.kind === 'CallExpression'
-              ? value.callee.identifier.id
-              : value.property.identifier.id;
-          const isUseMemo = useMemos.has(callee);
+            value.kind === 'CallExpression' ? value.callee : value.property;
+          const isUseMemo = useMemos.has(callee.identifier.id);
           if (!isUseMemo || value.args.length === 0) {
             continue;
           }
@@ -104,10 +122,73 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
             );
           }
 
+          validateNoContextVariableAssignment(body.loweredFunc.func, errors);
+
+          if (fn.env.config.validateNoVoidUseMemo) {
+            unusedUseMemos.set(lvalue.identifier.id, callee.loc);
+          }
+          break;
+        }
+      }
+    }
+    if (unusedUseMemos.size !== 0) {
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        unusedUseMemos.delete(operand.identifier.id);
+      }
+    }
+  }
+  if (unusedUseMemos.size !== 0) {
+    /**
+     * Basic check for unused memos, where the result of the call is never referenced. This runs
+     * before DCE so it's more of an AST-level check that something, _anything_, cares about the value.
+     *
+     * This is easy to defeat with e.g. `const _ = useMemo(...)` but it at least gives us something to teach.
+     * Even a DCE-based version could be bypassed with `noop(useMemo(...))`.
+     */
+    for (const loc of unusedUseMemos.values()) {
+      errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          category: ErrorCategory.VoidUseMemo,
+          reason: 'Unused useMemo()',
+          description: `This useMemo() value is unused. useMemo() is for computing and caching values, not for arbitrary side effects`,
+          suggestions: null,
+        }).withDetails({
+          kind: 'error',
+          loc,
+          message: 'useMemo() result is unused',
+        }),
+      );
+    }
+  }
+  return errors.asResult();
+}
+
+function validateNoContextVariableAssignment(
+  fn: HIRFunction,
+  errors: CompilerError,
+): void {
+  for (const block of fn.body.blocks.values()) {
+    for (const instr of block.instructions) {
+      const value = instr.value;
+      switch (value.kind) {
+        case 'StoreContext': {
+          errors.pushDiagnostic(
+            CompilerDiagnostic.create({
+              category: ErrorCategory.UseMemo,
+              reason:
+                'useMemo() callbacks may not reassign variables declared outside of the callback',
+              description:
+                'useMemo() callbacks must be pure functions and cannot reassign variables defined outside of the callback function',
+              suggestions: null,
+            }).withDetails({
+              kind: 'error',
+              loc: value.lvalue.place.loc,
+              message: 'Cannot reassign variable',
+            }),
+          );
           break;
         }
       }
     }
   }
-  return errors.asResult();
 }
