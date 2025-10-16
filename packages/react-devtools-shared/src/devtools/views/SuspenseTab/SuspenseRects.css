@@ -70,13 +70,18 @@
   transition: background-color 0.2s ease-out;
 }
 
-.SuspenseRectsBoundary[data-highlighted='true'] {
-  outline-color: #0088fa;
-  outline-style: solid;
-  outline-width: 4px;
+.SuspenseRectsBoundary[data-selected='true'] {
   box-shadow: var(--elevation-4);
 }
 
-.SuspenseRectsBoundary[data-highlighted='true'] > .SuspenseRectsRect {
+.SuspenseRectOutline {
+  outline-color: #0088fa;
+  outline-style: solid;
+  outline-width: 4px;
+  border-radius: 0.125rem;
+  pointer-events: none;
+}
+
+.SuspenseRectsBoundary[data-selected='true'] > .SuspenseRectsRect {
    box-shadow: none;
 }
