@@ -60,23 +60,25 @@ import { Stringify } from "shared-runtime";
  */
 function Component(t0) {
   "use memo";
-  const $ = _c(5);
+  const $ = _c(6);
   const { firstname, lastname } = t0;
   let t1;
   if ($[0] !== firstname || $[1] !== lastname) {
+    let t2;
+    if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+      t2 = fbt._("(inner fbt)", null, { hk: "36qNwF" });
+      $[3] = t2;
+    } else {
+      t2 = $[3];
+    }
     t1 = fbt._(
       "Name: {firstname}, {lastname}",
       [
-        fbt._param(
-          "firstname",
-
-          <Stringify key={0} name={firstname} />,
-        ),
+        fbt._param("firstname", <Stringify key={0} name={firstname} />),
         fbt._param(
           "lastname",
-
           <Stringify key={0} name={lastname}>
-            {fbt._("(inner fbt)", null, { hk: "36qNwF" })}
+            {t2}
           </Stringify>,
         ),
       ],
@@ -89,12 +91,12 @@ function Component(t0) {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== t1) {
+  if ($[4] !== t1) {
     t2 = <Stringify>{t1}</Stringify>;
-    $[3] = t1;
-    $[4] = t2;
+    $[4] = t1;
+    $[5] = t2;
   } else {
-    t2 = $[4];
+    t2 = $[5];
   }
   return t2;
 }
