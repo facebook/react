@@ -60,16 +60,22 @@ export function CallSiteView({
     symbolicatedCallSite !== null ? symbolicatedCallSite.location : callSite;
   const ignored =
     symbolicatedCallSite !== null ? symbolicatedCallSite.ignored : false;
-  if (ignored) {
-    // TODO: Make an option to be able to toggle the display of ignore listed rows.
-    // Ideally this UI should be higher than a single Stack Trace so that there's not
-    // multiple buttons in a single inspection taking up space.
-    return null;
-  }
+  // TODO: Make an option to be able to toggle the display of ignore listed rows.
+  // Ideally this UI should be higher than a single Stack Trace so that there's not
+  // multiple buttons in a single inspection taking up space.
+
+  const isBuiltIn = url === '' || url.startsWith('<anonymous>'); // This looks like a fake anonymous through eval.
   return (
-    <div className={ignored ? styles.IgnoredCallSite : styles.CallSite}>
+    <div
+      className={
+        ignored
+          ? styles.IgnoredCallSite
+          : isBuiltIn
+            ? styles.BuiltInCallSite
+            : styles.CallSite
+      }>
       {functionName || virtualFunctionName}
-      {url !== '' && (
+      {!isBuiltIn && (
         <>
           {' @ '}
           <span

@@ -125,8 +125,8 @@ export {
   // enableTransitionTracing
   REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
   // enableViewTransition
-  REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
-  addTransitionType as unstable_addTransitionType,
+  REACT_VIEW_TRANSITION_TYPE as ViewTransition,
+  addTransitionType as addTransitionType,
   // enableGestureTransition
   startGestureTransition as unstable_startGestureTransition,
   // DEV-only

@@ -941,7 +941,7 @@ describe('ReactLazy', () => {
 
   // @gate enableViewTransition
   it('throws with a useful error when wrapping ViewTransition with lazy()', async () => {
-    const BadLazy = lazy(() => fakeImport(React.unstable_ViewTransition));
+    const BadLazy = lazy(() => fakeImport(React.ViewTransition));
 
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -954,7 +954,7 @@ describe('ReactLazy', () => {
 
     await waitForAll(['Loading...']);
 
-    await resolveFakeImport(React.unstable_ViewTransition);
+    await resolveFakeImport(React.ViewTransition);
     root.update(
       <Suspense fallback={<Text text="Loading..." />}>
         <BadLazy />

@@ -20,7 +20,7 @@ describe('parseConfigPragma()', () => {
         validateHooksUsage: 1,
       } as any);
     }).toThrowErrorMatchingInlineSnapshot(
-      `"Error: Could not validate environment config. Update React Compiler config to fix the error. Validation error: Expected boolean, received number at "validateHooksUsage"."`,
+      `"Error: Could not validate environment config. Update React Compiler config to fix the error. Validation error: Invalid input: expected boolean, received number at "validateHooksUsage"."`,
     );
   });
 
@@ -38,7 +38,7 @@ describe('parseConfigPragma()', () => {
         ],
       } as any);
     }).toThrowErrorMatchingInlineSnapshot(
-      `"Error: Could not validate environment config. Update React Compiler config to fix the error. Validation error: autodepsIndex must be > 0 at "inferEffectDependencies[0].autodepsIndex"."`,
+      `"Error: Could not validate environment config. Update React Compiler config to fix the error. Validation error: AutodepsIndex must be > 0 at "inferEffectDependencies[0].autodepsIndex"."`,
     );
   });
 

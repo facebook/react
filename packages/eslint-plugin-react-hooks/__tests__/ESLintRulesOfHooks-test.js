@@ -1557,6 +1557,17 @@ const allTests = {
     },
     {
       code: normalizeIndent`
+        // Invalid because useEffectEvent is being passed down
+        function MyComponent({ theme }) {
+          return <Child onClick={useEffectEvent(() => {
+            showNotification(theme);
+          })} />;
+        }
+      `,
+      errors: [{...useEffectEventError(null, false), line: 4}],
+    },
+    {
+      code: normalizeIndent`
         // This should error even though it shares an identifier name with the below
         function MyComponent({theme}) {
           const onClick = useEffectEvent(() => {
@@ -1726,6 +1737,14 @@ function classError(hook) {
 }
 
 function useEffectEventError(fn, called) {
+  if (fn === null) {
+    return {
+      message:
+        `React Hook "useEffectEvent" can only be called at the top level of your component.` +
+        ` It cannot be passed down.`,
+    };
+  }
+
   return {
     message:
       `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +

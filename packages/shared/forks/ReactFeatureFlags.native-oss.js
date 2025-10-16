@@ -62,7 +62,7 @@ export const enableHydrationLaneScheduling: boolean = true;
 export const enableYieldingBeforePassive: boolean = false;
 
 export const enableThrottledScheduling: boolean = false;
-export const enableViewTransition: boolean = false;
+export const enableViewTransition: boolean = true;
 export const enableGestureTransition: boolean = false;
 export const enableScrollEndPolyfill: boolean = true;
 export const enableSuspenseyImages: boolean = false;
@@ -72,7 +72,7 @@ export const enableHydrationChangeEvent: boolean = false;
 export const enableDefaultTransitionIndicator: boolean = false;
 export const ownerStackLimit = 1e4;
 
-export const enableFragmentRefs: boolean = false;
+export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
 
 // Profiling Only

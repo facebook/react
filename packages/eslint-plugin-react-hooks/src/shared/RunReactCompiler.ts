@@ -9,8 +9,6 @@
 import {transformFromAstSync} from '@babel/core';
 import {parse as babelParse} from '@babel/parser';
 import {File} from '@babel/types';
-// @ts-expect-error: no types available
-import PluginProposalPrivateMethods from '@babel/plugin-proposal-private-methods';
 import BabelPluginReactCompiler, {
   parsePluginOptions,
   validateEnvironmentConfig,
@@ -80,7 +78,6 @@ function getFlowSuppressions(
   return results;
 }
 
-
 function runReactCompilerImpl({
   sourceCode,
   filename,
@@ -117,6 +114,7 @@ function runReactCompilerImpl({
   }
 
   let babelAST: ParseResult<File> | null = null;
+
   if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
     try {
       babelAST = babelParse(sourceCode.text, {
@@ -147,10 +145,7 @@ function runReactCompilerImpl({
         filename,
         highlightCode: false,
         retainLines: true,
-        plugins: [
-          [PluginProposalPrivateMethods, {loose: true}],
-          [BabelPluginReactCompiler, options],
-        ],
+        plugins: [[BabelPluginReactCompiler, options]],
         sourceType: 'module',
         configFile: false,
         babelrc: false,

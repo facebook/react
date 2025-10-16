@@ -6,7 +6,7 @@
  */
 
 import * as t from '@babel/types';
-import {z} from 'zod';
+import {z} from 'zod/v4';
 import {
   CompilerDiagnostic,
   CompilerError,
@@ -20,7 +20,7 @@ import {
   tryParseExternalFunction,
 } from '../HIR/Environment';
 import {hasOwnProperty} from '../Utils/utils';
-import {fromZodError} from 'zod-validation-error';
+import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerPipelineValue} from './Pipeline';
 
 const PanicThresholdOptionsSchema = z.enum([

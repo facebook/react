@@ -16,6 +16,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 import {
   cloneElement,
@@ -46,6 +47,7 @@ export {
   REACT_PROFILER_TYPE as Profiler,
   REACT_STRICT_MODE_TYPE as StrictMode,
   REACT_SUSPENSE_TYPE as Suspense,
+  REACT_VIEW_TRANSITION_TYPE as ViewTransition,
   cloneElement,
   createElement,
   createRef,

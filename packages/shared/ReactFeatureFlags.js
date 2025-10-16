@@ -84,7 +84,7 @@ export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableHalt: boolean = true;
 
-export const enableViewTransition = __EXPERIMENTAL__;
+export const enableViewTransition: boolean = true;
 
 export const enableGestureTransition = __EXPERIMENTAL__;
 
@@ -145,8 +145,8 @@ export const transitionLaneExpirationMs = 5000;
  */
 export const enableInfiniteRenderLoopDetection: boolean = false;
 
-export const enableFragmentRefs = __EXPERIMENTAL__;
-export const enableFragmentRefsScrollIntoView = __EXPERIMENTAL__;
+export const enableFragmentRefs: boolean = true;
+export const enableFragmentRefsScrollIntoView: boolean = true;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.

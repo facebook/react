@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {fromZodError} from 'zod-validation-error';
+import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerError} from '../CompilerError';
 import {
   CompilationMode,

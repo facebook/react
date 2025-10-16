@@ -9,7 +9,7 @@ Read the [React 19.2 release post](https://react.dev/blog/2025/10/01/react-19-2)
 - [`<Activity>`](https://react.dev/reference/react/Activity): A new API to hide and restore the UI and internal state of its children.
 - [`useEffectEvent`](https://react.dev/reference/react/useEffectEvent) is a React Hook that lets you extract non-reactive logic into an [Effect Event](https://react.dev/learn/separating-events-from-effects#declaring-an-effect-event).
 - [`cacheSignal`](https://react.dev/reference/react/cacheSignal) (for RSCs) lets your know when the `cache()` lifetime is over.
-- [React Performance tracks](https://react.dev/reference/developer-tooling/react-performance-tracks) appear on the Performance panel’s timeline in your browser developer tools
+- [React Performance tracks](https://react.dev/reference/dev-tools/react-performance-tracks) appear on the Performance panel’s timeline in your browser developer tools
 
 ### New React DOM Features
 

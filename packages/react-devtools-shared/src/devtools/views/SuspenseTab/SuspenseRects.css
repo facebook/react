@@ -19,11 +19,6 @@
 
 .SuspenseRectsBoundaryChildren {
   pointer-events: none;
-  /**
-   * So that the shadow of Boundaries within is clipped off.
-   * Otherwise it would look like this boundary is further elevated.
-   */
-   overflow: hidden;
 }
 
 .SuspenseRectsScaledRect[data-visible='false'] > .SuspenseRectsBoundaryChildren {
@@ -47,6 +42,10 @@
 .SuspenseRectsScaledRect[data-visible='false'] {
   pointer-events: none;
   outline-width: 0;
+}
+
+.SuspenseRectsScaledRect[data-suspended='true'] {
+  opacity: 0.3;
 }
 
 /* highlight this boundary */

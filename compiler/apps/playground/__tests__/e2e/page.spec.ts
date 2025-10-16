@@ -314,6 +314,36 @@ test('disableMemoizationForDebugging flag works as expected', async ({
   expect(output).toMatchSnapshot('disableMemoizationForDebugging-output.txt');
 });
 
+test('error is displayed when source has syntax error', async ({page}) => {
+  const syntaxErrorSource = `function TestComponent(props) {
+  const oops = props.
+  return (
+    <>{oops}</>
+  );
+}`;
+  const store: Store = {
+    source: syntaxErrorSource,
+    config: defaultConfig,
+    showInternals: false,
+  };
+  const hash = encodeStore(store);
+  await page.goto(`/#${hash}`);
+  await page.waitForFunction(isMonacoLoaded);
+  await expandConfigs(page);
+  await page.screenshot({
+    fullPage: true,
+    path: 'test-results/08-source-syntax-error.png',
+  });
+
+  const text =
+    (await page.locator('.monaco-editor-output').allInnerTexts()) ?? [];
+  const output = text.join('');
+
+  expect(output.replace(/\s+/g, ' ')).toContain(
+    'Expected identifier to be defined before being used',
+  );
+});
+
 TEST_CASE_INPUTS.forEach((t, idx) =>
   test(`playground compiles: ${t.name}`, async ({page}) => {
     const store: Store = {

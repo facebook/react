@@ -14,6 +14,7 @@ let waitForPaint;
 let waitFor;
 let assertLog;
 let assertConsoleErrorDev;
+let Suspense;
 
 describe('Activity', () => {
   beforeEach(() => {
@@ -25,6 +26,7 @@ describe('Activity', () => {
     act = require('internal-test-utils').act;
     LegacyHidden = React.unstable_LegacyHidden;
     Activity = React.Activity;
+    Suspense = React.Suspense;
     useState = React.useState;
     useInsertionEffect = React.useInsertionEffect;
     useLayoutEffect = React.useLayoutEffect;
@@ -1422,6 +1424,72 @@ describe('Activity', () => {
         </div>
       </div>,
     );
+  });
+
+  // @gate enableActivity
+  it('reveal an inner Activity boundary without revealing an outer one on the same host child', async () => {
+    // This ensures that no update is scheduled, which would cover up the bug if the parent
+    // then re-hides the child on the way up.
+    const memoizedElement = <div />;
+    function App({showOuter, showInner}) {
+      return (
+        <Activity mode={showOuter ? 'visible' : 'hidden'} name="Outer">
+          <Activity mode={showInner ? 'visible' : 'hidden'} name="Inner">
+            {memoizedElement}
+          </Activity>
+        </Activity>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Prerender the whole tree.
+    await act(() => {
+      root.render(<App showOuter={false} showInner={false} />);
+    });
+    expect(root).toMatchRenderedOutput(<div hidden={true} />);
+
+    await act(() => {
+      root.render(<App showOuter={false} showInner={true} />);
+    });
+    expect(root).toMatchRenderedOutput(<div hidden={true} />);
+  });
+
+  // @gate enableActivity
+  it('reveal an inner Suspense boundary without revealing an outer Activity on the same host child', async () => {
+    // This ensures that no update is scheduled, which would cover up the bug if the parent
+    // then re-hides the child on the way up.
+    const memoizedElement = <div />;
+    const promise = new Promise(() => {});
+    function App({showOuter, showInner}) {
+      return (
+        <Activity mode={showOuter ? 'visible' : 'hidden'} name="Outer">
+          <Suspense name="Inner">
+            {memoizedElement}
+            {showInner ? null : promise}
+          </Suspense>
+        </Activity>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Prerender the whole tree.
+    await act(() => {
+      root.render(<App showOuter={false} showInner={true} />);
+    });
+    expect(root).toMatchRenderedOutput(<div hidden={true} />);
+
+    // Resuspend the inner.
+    await act(() => {
+      root.render(<App showOuter={false} showInner={false} />);
+    });
+    expect(root).toMatchRenderedOutput(<div hidden={true} />);
+
+    await act(() => {
+      root.render(<App showOuter={false} showInner={true} />);
+    });
+    expect(root).toMatchRenderedOutput(<div hidden={true} />);
   });
 
   // @gate enableActivity

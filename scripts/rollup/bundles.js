@@ -1253,10 +1253,11 @@ const bundles = [
     preferBuiltins: true,
     externals: [
       '@babel/core',
-      '@babel/plugin-proposal-private-methods',
       'hermes-parser',
       'zod',
+      'zod/v4',
       'zod-validation-error',
+      'zod-validation-error/v4',
       'crypto',
       'util',
     ],
