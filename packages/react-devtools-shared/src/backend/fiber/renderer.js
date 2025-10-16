@@ -2693,10 +2693,10 @@ export function attach(
       pushOperation(rects.length);
       for (let i = 0; i < rects.length; ++i) {
         const rect = rects[i];
-        pushOperation(Math.round(rect.x));
-        pushOperation(Math.round(rect.y));
-        pushOperation(Math.round(rect.width));
-        pushOperation(Math.round(rect.height));
+        pushOperation(Math.round(rect.x * 1000));
+        pushOperation(Math.round(rect.y * 1000));
+        pushOperation(Math.round(rect.width * 1000));
+        pushOperation(Math.round(rect.height * 1000));
       }
     }
   }
@@ -2765,10 +2765,10 @@ export function attach(
       pushOperation(rects.length);
       for (let i = 0; i < rects.length; ++i) {
         const rect = rects[i];
-        pushOperation(Math.round(rect.x));
-        pushOperation(Math.round(rect.y));
-        pushOperation(Math.round(rect.width));
-        pushOperation(Math.round(rect.height));
+        pushOperation(Math.round(rect.x * 1000));
+        pushOperation(Math.round(rect.y * 1000));
+        pushOperation(Math.round(rect.width * 1000));
+        pushOperation(Math.round(rect.height * 1000));
       }
     }
   }

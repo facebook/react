@@ -1587,10 +1587,10 @@ export default class Store extends EventEmitter<{
           } else {
             rects = [];
             for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
-              const x = operations[i + 0];
-              const y = operations[i + 1];
-              const width = operations[i + 2];
-              const height = operations[i + 3];
+              const x = operations[i + 0] / 1000;
+              const y = operations[i + 1] / 1000;
+              const width = operations[i + 2] / 1000;
+              const height = operations[i + 3] / 1000;
               rects.push({x, y, width, height});
               i += 4;
             }
@@ -1763,10 +1763,10 @@ export default class Store extends EventEmitter<{
           } else {
             nextRects = [];
             for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
-              const x = operations[i + 0];
-              const y = operations[i + 1];
-              const width = operations[i + 2];
-              const height = operations[i + 3];
+              const x = operations[i + 0] / 1000;
+              const y = operations[i + 1] / 1000;
+              const width = operations[i + 2] / 1000;
+              const height = operations[i + 3] / 1000;
 
               nextRects.push({x, y, width, height});
 
