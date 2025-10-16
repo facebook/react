@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<9079307abbe1c09d1a87c55c574480ba>>
+ * @generated SignedSource<<d4fe0b27996de86c78cb144a8746ba81>>
  */
 
 'use strict';
@@ -44390,8 +44390,8 @@ function dropManualMemoization(func) {
                                     category: ErrorCategory.VoidUseMemo,
                                     reason: 'useMemo() callbacks must return a value',
                                     description: `This ${manualMemo.loadInstr.value.kind === 'PropertyLoad'
-                                        ? 'React.useMemo'
-                                        : 'useMemo'} callback doesn't return a value. useMemo is for computing and caching values, not for arbitrary side effects`,
+                                        ? 'React.useMemo()'
+                                        : 'useMemo()'} callback doesn't return a value. useMemo() is for computing and caching values, not for arbitrary side effects`,
                                     suggestions: null,
                                 }).withDetails({
                                     kind: 'error',
@@ -50008,8 +50008,14 @@ function validateUseMemo(fn) {
     const useMemos = new Set();
     const react = new Set();
     const functions = new Map();
+    const unusedUseMemos = new Map();
     for (const [, block] of fn.body.blocks) {
         for (const { lvalue, value } of block.instructions) {
+            if (unusedUseMemos.size !== 0) {
+                for (const operand of eachInstructionValueOperand(value)) {
+                    unusedUseMemos.delete(operand.identifier.id);
+                }
+            }
             switch (value.kind) {
                 case 'LoadGlobal': {
                     if (value.binding.name === 'useMemo') {
@@ -50034,10 +50040,8 @@ function validateUseMemo(fn) {
                 }
                 case 'MethodCall':
                 case 'CallExpression': {
-                    const callee = value.kind === 'CallExpression'
-                        ? value.callee.identifier.id
-                        : value.property.identifier.id;
-                    const isUseMemo = useMemos.has(callee);
+                    const callee = value.kind === 'CallExpression' ? value.callee : value.property;
+                    const isUseMemo = useMemos.has(callee.identifier.id);
                     if (!isUseMemo || value.args.length === 0) {
                         continue;
                     }
@@ -50077,12 +50081,57 @@ function validateUseMemo(fn) {
                             message: 'Async and generator functions are not supported',
                         }));
                     }
+                    validateNoContextVariableAssignment(body.loweredFunc.func, errors);
+                    if (fn.env.config.validateNoVoidUseMemo) {
+                        unusedUseMemos.set(lvalue.identifier.id, callee.loc);
+                    }
+                    break;
+                }
+            }
+        }
+        if (unusedUseMemos.size !== 0) {
+            for (const operand of eachTerminalOperand(block.terminal)) {
+                unusedUseMemos.delete(operand.identifier.id);
+            }
+        }
+    }
+    if (unusedUseMemos.size !== 0) {
+        for (const loc of unusedUseMemos.values()) {
+            errors.pushDiagnostic(CompilerDiagnostic.create({
+                category: ErrorCategory.VoidUseMemo,
+                reason: 'Unused useMemo()',
+                description: `This useMemo() value is unused. useMemo() is for computing and caching values, not for arbitrary side effects`,
+                suggestions: null,
+            }).withDetails({
+                kind: 'error',
+                loc,
+                message: 'useMemo() result is unused',
+            }));
+        }
+    }
+    return errors.asResult();
+}
+function validateNoContextVariableAssignment(fn, errors) {
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            const value = instr.value;
+            switch (value.kind) {
+                case 'StoreContext': {
+                    errors.pushDiagnostic(CompilerDiagnostic.create({
+                        category: ErrorCategory.UseMemo,
+                        reason: 'useMemo() callbacks may not reassign variables declared outside of the callback',
+                        description: 'useMemo() callbacks must be pure functions and cannot reassign variables defined outside of the callback function',
+                        suggestions: null,
+                    }).withDetails({
+                        kind: 'error',
+                        loc: value.lvalue.place.loc,
+                        message: 'Cannot reassign variable',
+                    }));
                     break;
                 }
             }
         }
     }
-    return errors.asResult();
 }
 
 function validateLocalsNotReassignedAfterRender(fn) {
