@@ -659,7 +659,7 @@ export const EnvironmentConfigSchema = z.object({
    * Invalid:
    *   useMemo(() => { ... }, [...]);
    */
-  validateNoVoidUseMemo: z.boolean().default(false),
+  validateNoVoidUseMemo: z.boolean().default(true),
 
   /**
    * Validates that Components/Hooks are always defined at module level. This prevents scope

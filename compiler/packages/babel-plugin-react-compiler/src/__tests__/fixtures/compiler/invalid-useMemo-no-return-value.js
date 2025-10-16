@@ -1,4 +1,4 @@
-// @validateNoVoidUseMemo
+// @validateNoVoidUseMemo @loggerTestOnly
 function Component() {
   const value = useMemo(() => {
     console.log('computing');

@@ -24,6 +24,7 @@ import {Result} from '../Utils/Result';
 
 export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
   const errors = new CompilerError();
+  const voidMemoErrors = new CompilerError();
   const useMemos = new Set<IdentifierId>();
   const react = new Set<IdentifierId>();
   const functions = new Map<IdentifierId, FunctionExpression>();
@@ -125,7 +126,22 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
           validateNoContextVariableAssignment(body.loweredFunc.func, errors);
 
           if (fn.env.config.validateNoVoidUseMemo) {
-            unusedUseMemos.set(lvalue.identifier.id, callee.loc);
+            if (!hasNonVoidReturn(body.loweredFunc.func)) {
+              voidMemoErrors.pushDiagnostic(
+                CompilerDiagnostic.create({
+                  category: ErrorCategory.VoidUseMemo,
+                  reason: 'useMemo() callbacks must return a value',
+                  description: `This useMemo() callback doesn't return a value. useMemo() is for computing and caching values, not for arbitrary side effects`,
+                  suggestions: null,
+                }).withDetails({
+                  kind: 'error',
+                  loc: body.loc,
+                  message: 'useMemo() callbacks must return a value',
+                }),
+              );
+            } else {
+              unusedUseMemos.set(lvalue.identifier.id, callee.loc);
+            }
           }
           break;
         }
@@ -146,10 +162,10 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
      * Even a DCE-based version could be bypassed with `noop(useMemo(...))`.
      */
     for (const loc of unusedUseMemos.values()) {
-      errors.pushDiagnostic(
+      voidMemoErrors.pushDiagnostic(
         CompilerDiagnostic.create({
           category: ErrorCategory.VoidUseMemo,
-          reason: 'Unused useMemo()',
+          reason: 'useMemo() result is unused',
           description: `This useMemo() value is unused. useMemo() is for computing and caching values, not for arbitrary side effects`,
           suggestions: null,
         }).withDetails({
@@ -160,6 +176,7 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
       );
     }
   }
+  fn.env.logErrors(voidMemoErrors.asResult());
   return errors.asResult();
 }
 
@@ -191,4 +208,18 @@ function validateNoContextVariableAssignment(
       }
     }
   }
+}
+
+function hasNonVoidReturn(func: HIRFunction): boolean {
+  for (const [, block] of func.body.blocks) {
+    if (block.terminal.kind === 'return') {
+      if (
+        block.terminal.returnVariant === 'Explicit' ||
+        block.terminal.returnVariant === 'Implicit'
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
 }

@@ -120,7 +120,15 @@ testRule('plugin-recommended', TestRecommendedRules, {
             
         return <Child x={state} />;
         }`,
-      errors: [makeTestCaseError('Unused useMemo()')],
+      errors: [
+        makeTestCaseError('useMemo() callbacks must return a value'),
+        makeTestCaseError(
+          'Calling setState from useMemo may trigger an infinite loop',
+        ),
+        makeTestCaseError(
+          'Calling setState from useMemo may trigger an infinite loop',
+        ),
+      ],
     },
     {
       name: 'Pipeline errors are reported',
