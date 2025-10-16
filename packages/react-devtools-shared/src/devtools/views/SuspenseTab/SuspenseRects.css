@@ -1,11 +1,11 @@
 .SuspenseRectsContainer {
   padding: .25rem;
   cursor: pointer;
-  outline-color: #6a51b2ff;
+  outline-color: var(--color-transition);
   outline-style: solid;
   outline-width: 1px;
   border-radius: 0.25rem;
-  background-color: color-mix(in srgb, var(--color-background) 50%, #6a51b2ff 5%);
+  background-color: color-mix(in srgb, var(--color-transition) 5%, transparent);
 }
 
 .SuspenseRectsContainer:hover:not(:has(.SuspenseRectsBoundary:hover))[data-highlighted='false'] {
@@ -43,10 +43,10 @@
   pointer-events: all;
   cursor: pointer;
   border-radius: 0.125rem;
-  background-color: color-mix(in srgb, var(--color-background) 50%, rgba(0, 136, 250, 1) 25%);
+  background-color: color-mix(in srgb, var(--color-background) 50%, var(--color-suspense) 25%);
   backdrop-filter: grayscale(100%);
   transition: background-color 0.2s ease-in;
-  outline-color: #0088fa;
+  outline-color: var(--color-suspense);
   outline-style: solid;
   outline-width: 1px;
 }
@@ -66,7 +66,7 @@
 
 /* highlight this boundary */
 .SuspenseRectsBoundary:hover:not(:has(.SuspenseRectsBoundary:hover)) > .SuspenseRectsRect {
-  background-color: color-mix(in srgb, var(--color-background) 50%, rgba(0, 136, 250, 1) 50%);
+  background-color: color-mix(in srgb, var(--color-background) 50%, var(--color-suspense) 50%);
   transition: background-color 0.2s ease-out;
 }
 
@@ -75,7 +75,7 @@
 }
 
 .SuspenseRectOutline {
-  outline-color: #0088fa;
+  outline-color: var(--color-suspense);
   outline-style: solid;
   outline-width: 4px;
   border-radius: 0.125rem;
