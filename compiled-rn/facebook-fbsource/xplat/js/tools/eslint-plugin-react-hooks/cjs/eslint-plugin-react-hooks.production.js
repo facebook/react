@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<7b33439ead54919661a5d316b265430a>>
+ * @generated SignedSource<<9079307abbe1c09d1a87c55c574480ba>>
  */
 
 'use strict';
@@ -57174,6 +57174,10 @@ function isUseEffectEventIdentifier(node) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
 }
 function useEffectEventError(fn, called) {
+    if (fn === null) {
+        return (`React Hook "useEffectEvent" can only be called at the top level of your component.` +
+            ` It cannot be passed down.`);
+    }
     return (`\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
         'Effects and Effect Events in the same component.' +
         (called ? '' : ' It cannot be assigned to a variable or passed down.'));
@@ -57473,6 +57477,7 @@ const rule = {
                 analyzer.leaveNode(node);
             },
             CallExpression(node) {
+                var _a, _b;
                 if (isHook(node.callee)) {
                     const reactHooksMap = last(codePathReactHooksMapStack);
                     const codePathSegment = last(codePathSegmentStack);
@@ -57488,6 +57493,15 @@ const rule = {
                     isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
                     node.arguments.length > 0) {
                     lastEffect = node;
+                }
+                if (isUseEffectEventIdentifier(nodeWithoutNamespace) &&
+                    ((_a = node.parent) === null || _a === void 0 ? void 0 : _a.type) !== 'VariableDeclarator' &&
+                    ((_b = node.parent) === null || _b === void 0 ? void 0 : _b.type) !== 'ExpressionStatement') {
+                    const message = useEffectEventError(null, false);
+                    context.report({
+                        node,
+                        message,
+                    });
                 }
             },
             Identifier(node) {
