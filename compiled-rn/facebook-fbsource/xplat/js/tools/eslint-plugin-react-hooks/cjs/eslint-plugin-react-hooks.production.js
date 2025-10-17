@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<543bc41d5916dece86ff363e8b4c157d>>
+ * @generated SignedSource<<4b7afef4843d548ffe6858856d15f3c9>>
  */
 
 'use strict';
@@ -40325,7 +40325,7 @@ function inferMutationAliasingEffects(fn, { isFunctionExpression } = {
     }
     queue(fn.body.entry, initialState);
     const hoistedContextDeclarations = findHoistedContextDeclarations(fn);
-    const context = new Context$1(isFunctionExpression, fn, hoistedContextDeclarations);
+    const context = new Context$1(isFunctionExpression, fn, hoistedContextDeclarations, findNonMutatedDestructureSpreads(fn));
     let iterationCount = 0;
     while (queuedStates.size !== 0) {
         iterationCount++;
@@ -40389,7 +40389,7 @@ function findHoistedContextDeclarations(fn) {
     return hoisted;
 }
 let Context$1 = class Context {
-    constructor(isFunctionExpression, fn, hoistedContextDeclarations) {
+    constructor(isFunctionExpression, fn, hoistedContextDeclarations, nonMutatingSpreads) {
         this.internedEffects = new Map();
         this.instructionSignatureCache = new Map();
         this.effectInstructionValueCache = new Map();
@@ -40399,6 +40399,7 @@ let Context$1 = class Context {
         this.isFuctionExpression = isFunctionExpression;
         this.fn = fn;
         this.hoistedContextDeclarations = hoistedContextDeclarations;
+        this.nonMutatingSpreads = nonMutatingSpreads;
     }
     cacheApplySignature(signature, effect, f) {
         const inner = getOrInsertDefault(this.applySignatureCache, signature, new Map());
@@ -40414,6 +40415,114 @@ let Context$1 = class Context {
         return interned;
     }
 };
+function findNonMutatedDestructureSpreads(fn) {
+    const knownFrozen = new Set();
+    if (fn.fnType === 'Component') {
+        const [props] = fn.params;
+        if (props != null && props.kind === 'Identifier') {
+            knownFrozen.add(props.identifier.id);
+        }
+    }
+    else {
+        for (const param of fn.params) {
+            if (param.kind === 'Identifier') {
+                knownFrozen.add(param.identifier.id);
+            }
+        }
+    }
+    const candidateNonMutatingSpreads = new Map();
+    for (const block of fn.body.blocks.values()) {
+        if (candidateNonMutatingSpreads.size !== 0) {
+            for (const phi of block.phis) {
+                for (const operand of phi.operands.values()) {
+                    const spread = candidateNonMutatingSpreads.get(operand.identifier.id);
+                    if (spread != null) {
+                        candidateNonMutatingSpreads.delete(spread);
+                    }
+                }
+            }
+        }
+        for (const instr of block.instructions) {
+            const { lvalue, value } = instr;
+            switch (value.kind) {
+                case 'Destructure': {
+                    if (!knownFrozen.has(value.value.identifier.id) ||
+                        !(value.lvalue.kind === InstructionKind.Let ||
+                            value.lvalue.kind === InstructionKind.Const) ||
+                        value.lvalue.pattern.kind !== 'ObjectPattern') {
+                        continue;
+                    }
+                    for (const item of value.lvalue.pattern.properties) {
+                        if (item.kind !== 'Spread') {
+                            continue;
+                        }
+                        candidateNonMutatingSpreads.set(item.place.identifier.id, item.place.identifier.id);
+                    }
+                    break;
+                }
+                case 'LoadLocal': {
+                    const spread = candidateNonMutatingSpreads.get(value.place.identifier.id);
+                    if (spread != null) {
+                        candidateNonMutatingSpreads.set(lvalue.identifier.id, spread);
+                    }
+                    break;
+                }
+                case 'StoreLocal': {
+                    const spread = candidateNonMutatingSpreads.get(value.value.identifier.id);
+                    if (spread != null) {
+                        candidateNonMutatingSpreads.set(lvalue.identifier.id, spread);
+                        candidateNonMutatingSpreads.set(value.lvalue.place.identifier.id, spread);
+                    }
+                    break;
+                }
+                case 'JsxFragment':
+                case 'JsxExpression': {
+                    break;
+                }
+                case 'PropertyLoad': {
+                    break;
+                }
+                case 'CallExpression':
+                case 'MethodCall': {
+                    const callee = value.kind === 'CallExpression' ? value.callee : value.property;
+                    if (getHookKind(fn.env, callee.identifier) != null) {
+                        if (!isRefOrRefValue(lvalue.identifier)) {
+                            knownFrozen.add(lvalue.identifier.id);
+                        }
+                    }
+                    else {
+                        if (candidateNonMutatingSpreads.size !== 0) {
+                            for (const operand of eachInstructionValueOperand(value)) {
+                                const spread = candidateNonMutatingSpreads.get(operand.identifier.id);
+                                if (spread != null) {
+                                    candidateNonMutatingSpreads.delete(spread);
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    if (candidateNonMutatingSpreads.size !== 0) {
+                        for (const operand of eachInstructionValueOperand(value)) {
+                            const spread = candidateNonMutatingSpreads.get(operand.identifier.id);
+                            if (spread != null) {
+                                candidateNonMutatingSpreads.delete(spread);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    const nonMutatingSpreads = new Set();
+    for (const [key, value] of candidateNonMutatingSpreads) {
+        if (key === value) {
+            nonMutatingSpreads.add(key);
+        }
+    }
+    return nonMutatingSpreads;
+}
 function inferParam(param, initialState, paramKind) {
     const place = param.kind === 'Identifier' ? param : param.place;
     const value = {
@@ -41668,7 +41777,9 @@ function computeSignatureForInstruction(context, env, instr) {
                         kind: 'Create',
                         into: place,
                         reason: ValueReason.Other,
-                        value: ValueKind.Mutable,
+                        value: context.nonMutatingSpreads.has(place.identifier.id)
+                            ? ValueKind.Frozen
+                            : ValueKind.Mutable,
                     });
                     effects.push({
                         kind: 'Capture',
