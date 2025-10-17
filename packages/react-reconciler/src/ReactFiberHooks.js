@@ -545,7 +545,7 @@ export function renderWithHooks<Props, SecondArg>(
   // Non-stateful hooks (e.g. context) don't get added to memoizedState,
   // so memoizedState would be null during updates and mounts.
   if (__DEV__) {
-    if (current !== null && current.memoizedState !== null) {
+    if (current !== null) {
       ReactSharedInternals.H = HooksDispatcherOnUpdateInDEV;
     } else if (hookTypesDev !== null) {
       // This dispatcher handles an edge case where a component is updating,
@@ -559,9 +559,7 @@ export function renderWithHooks<Props, SecondArg>(
     }
   } else {
     ReactSharedInternals.H =
-      current === null || current.memoizedState === null
-        ? HooksDispatcherOnMount
-        : HooksDispatcherOnUpdate;
+      current === null ? HooksDispatcherOnMount : HooksDispatcherOnUpdate;
   }
 
   // In Strict Mode, during development, user functions are double invoked to
