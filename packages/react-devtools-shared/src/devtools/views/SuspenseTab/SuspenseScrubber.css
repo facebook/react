@@ -40,22 +40,22 @@
 .SuspenseScrubberBead {
   flex: 1;
   height: 0.5rem;
-  background: var(--color-background-selected);
   border-radius: 0.5rem;
-  background: var(--color-selected-tree-highlight-active);
-  transition: all 0.3s ease-in-out;
+  background: color-mix(in srgb, var(--color-suspense) 10%, transparent);
+  transition: all 0.3s ease-in;
 }
 
 .SuspenseScrubberBeadSelected {
   height: 1rem;
-  background: var(--color-background-selected);
+  background: var(--color-suspense);
 }
 
 .SuspenseScrubberBeadTransition {
-  background: var(--color-component-name);
+  background: var(--color-transition);
 }
 
 .SuspenseScrubberStepHighlight > .SuspenseScrubberBead,
 .SuspenseScrubberStep:hover > .SuspenseScrubberBead {
   height: 0.75rem;
+  transition: all 0.3s ease-out;
 }

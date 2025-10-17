@@ -36,6 +36,7 @@ function ScaledRect({
   rect,
   visible,
   suspended,
+  selected,
   adjust,
   ...props
 }: {
@@ -43,6 +44,7 @@ function ScaledRect({
   rect: Rect,
   visible: boolean,
   suspended: boolean,
+  selected?: boolean,
   adjust?: boolean,
   ...
 }): React$Node {
@@ -58,6 +60,7 @@ function ScaledRect({
       className={styles.SuspenseRectsScaledRect + ' ' + className}
       data-visible={visible}
       data-suspended={suspended}
+      data-selected={selected}
       style={{
         // Shrink one pixel so that the bottom outline will line up with the top outline of the next one.
         width: adjust ? 'calc(' + width + ' - 1px)' : width,
@@ -152,6 +155,7 @@ function SuspenseRects({
       rect={boundingBox}
       className={styles.SuspenseRectsBoundary}
       visible={visible}
+      selected={selected}
       suspended={suspense.isSuspended}>
       <ViewBox.Provider value={boundingBox}>
         {visible &&
@@ -162,7 +166,6 @@ function SuspenseRects({
                 key={index}
                 className={styles.SuspenseRectsRect}
                 rect={rect}
-                data-highlighted={selected}
                 adjust={true}
                 onClick={handleClick}
                 onDoubleClick={handleDoubleClick}
@@ -182,6 +185,13 @@ function SuspenseRects({
             })}
           </ScaledRect>
         )}
+        {selected ? (
+          <ScaledRect
+            className={styles.SuspenseRectOutline}
+            rect={boundingBox}
+            adjust={true}
+          />
+        ) : null}
       </ViewBox.Provider>
     </ScaledRect>
   );
