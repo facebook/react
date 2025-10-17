@@ -606,4 +606,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.3.0-www-modern-1324e1bb-20251016";
+exports.version = "19.3.0-www-modern-adbc32de-20251017";
