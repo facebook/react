@@ -1305,3 +1305,18 @@ export function onReloadAndProfileFlagsReset(): void {
   sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
   sessionStorageRemoveItem(SESSION_STORAGE_RECORD_TIMELINE_KEY);
 }
+
+export function unionOfTwoArrays<T>(a: Array<T>, b: Array<T>): Array<T> {
+  let result = a;
+  for (let i = 0; i < b.length; i++) {
+    const value = b[i];
+    if (a.indexOf(value) === -1) {
+      if (result === a) {
+        // Lazily copy
+        result = a.slice(0);
+      }
+      result.push(value);
+    }
+  }
+  return result;
+}

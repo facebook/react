@@ -34,6 +34,7 @@ import {
   shallowDiffers,
   utfDecodeStringWithRanges,
   parseElementDisplayNameFromBackend,
+  unionOfTwoArrays,
 } from '../utils';
 import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
@@ -956,9 +957,17 @@ export default class Store extends EventEmitter<{
         child.rects !== null &&
         child.rects.length > 0 &&
         child.rects.some(isNonZeroRect);
-      const environments = child.environments;
+      const childEnvironments = child.environments;
+      // Since children are blocked on the parent, they're also blocked by the parent environments.
+      // Only if we discover a novel environment do we add that and it becomes the name we use.
+      const unionEnvironments = unionOfTwoArrays(
+        parentEnvironments,
+        childEnvironments,
+      );
       const environmentName =
-        environments.length > 0 ? environments[environments.length - 1] : null;
+        unionEnvironments.length > 0
+          ? unionEnvironments[unionEnvironments.length - 1]
+          : null;
       if (hasRects && (!uniqueSuspendersOnly || child.hasUniqueSuspenders)) {
         target.push({
           id: child.id,
@@ -969,7 +978,7 @@ export default class Store extends EventEmitter<{
         child.children,
         target,
         uniqueSuspendersOnly,
-        environments,
+        unionEnvironments,
       );
     }
   }
