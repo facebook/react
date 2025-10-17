@@ -135,16 +135,7 @@ function parseConfigPragmaEnvironmentForTest(
     } else if (val) {
       const parsedVal = tryParseTestPragmaValue(val).unwrap();
       if (key === 'customMacros' && typeof parsedVal === 'string') {
-        const valSplit = parsedVal.split('.');
-        const props = [];
-        for (const elt of valSplit.slice(1)) {
-          if (elt === '*') {
-            props.push({type: 'wildcard'});
-          } else if (elt.length > 0) {
-            props.push({type: 'name', name: elt});
-          }
-        }
-        maybeConfig[key] = [[valSplit[0], props]];
+        maybeConfig[key] = [parsedVal.split('.')[0]];
         continue;
       }
       maybeConfig[key] = parsedVal;
