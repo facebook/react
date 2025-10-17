@@ -897,12 +897,9 @@ export default class Store extends EventEmitter<{
   getSuspendableDocumentOrderSuspense(
     uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseTimelineStep> {
+    const target: Array<SuspenseTimelineStep> = [];
     const roots = this.roots;
-    if (roots.length === 0) {
-      return [];
-    }
-
-    const list: SuspenseTimelineStep[] = [];
+    let rootStep: null | SuspenseTimelineStep = null;
     for (let i = 0; i < roots.length; i++) {
       const rootID = roots[i];
       const root = this.getElementByID(rootID);
@@ -913,50 +910,68 @@ export default class Store extends EventEmitter<{
 
       const suspense = this.getSuspenseByID(rootID);
       if (suspense !== null) {
-        if (list.length === 0) {
-          // start with an arbitrary root that will allow inspection of the Screen
-          list.push({
+        const environments = suspense.environments;
+        const environmentName =
+          environments.length > 0
+            ? environments[environments.length - 1]
+            : null;
+        if (rootStep === null) {
+          // Arbitrarily use the first root as the root step id.
+          rootStep = {
             id: suspense.id,
-            environment: null,
-          });
+            environment: environmentName,
+          };
+          target.push(rootStep);
+        } else if (rootStep.environment === null) {
+          // If any root has an environment name, then let's use it.
+          rootStep.environment = environmentName;
         }
-
-        const stack = [suspense];
-        while (stack.length > 0) {
-          const current = stack.pop();
-          if (current === undefined) {
-            continue;
-          }
-          // Ignore any suspense boundaries that has no visual representation as this is not
-          // part of the visible loading sequence.
-          // TODO: Consider making visible meta data and other side-effects get virtual rects.
-          const hasRects =
-            current.rects !== null &&
-            current.rects.length > 0 &&
-            current.rects.some(isNonZeroRect);
-          if (
-            hasRects &&
-            (!uniqueSuspendersOnly || current.hasUniqueSuspenders) &&
-            // Roots are already included as part of the Screen
-            current.id !== rootID
-          ) {
-            list.push({
-              id: current.id,
-              environment: null,
-            });
-          }
-          // Add children in reverse order to maintain document order
-          for (let j = current.children.length - 1; j >= 0; j--) {
-            const childSuspense = this.getSuspenseByID(current.children[j]);
-            if (childSuspense !== null) {
-              stack.push(childSuspense);
-            }
-          }
-        }
+        this.pushTimelineStepsInDocumentOrder(
+          suspense.children,
+          target,
+          uniqueSuspendersOnly,
+          environments,
+        );
       }
     }
 
-    return list;
+    return target;
+  }
+
+  pushTimelineStepsInDocumentOrder(
+    children: Array<SuspenseNode['id']>,
+    target: Array<SuspenseTimelineStep>,
+    uniqueSuspendersOnly: boolean,
+    parentEnvironments: Array<string>,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const child = this.getSuspenseByID(children[i]);
+      if (child === null) {
+        continue;
+      }
+      // Ignore any suspense boundaries that has no visual representation as this is not
+      // part of the visible loading sequence.
+      // TODO: Consider making visible meta data and other side-effects get virtual rects.
+      const hasRects =
+        child.rects !== null &&
+        child.rects.length > 0 &&
+        child.rects.some(isNonZeroRect);
+      const environments = child.environments;
+      const environmentName =
+        environments.length > 0 ? environments[environments.length - 1] : null;
+      if (hasRects && (!uniqueSuspendersOnly || child.hasUniqueSuspenders)) {
+        target.push({
+          id: child.id,
+          environment: environmentName,
+        });
+      }
+      this.pushTimelineStepsInDocumentOrder(
+        child.children,
+        target,
+        uniqueSuspendersOnly,
+        environments,
+      );
+    }
   }
 
   getRendererIDForElement(id: number): number | null {
