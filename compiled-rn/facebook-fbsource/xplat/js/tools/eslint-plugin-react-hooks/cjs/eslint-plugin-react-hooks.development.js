@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<1b779dd525f86179d27b09cf6d2a001b>>
+ * @generated SignedSource<<b67c60681572c82cf74d71e216973788>>
  */
 
 'use strict';
@@ -21192,25 +21192,25 @@ function assertValidBlockNesting(fn) {
 function assertValidMutableRanges(fn) {
     for (const [, block] of fn.body.blocks) {
         for (const phi of block.phis) {
-            visit$2(phi.place, `phi for block bb${block.id}`);
+            visit$1(phi.place, `phi for block bb${block.id}`);
             for (const [pred, operand] of phi.operands) {
-                visit$2(operand, `phi predecessor bb${pred} for block bb${block.id}`);
+                visit$1(operand, `phi predecessor bb${pred} for block bb${block.id}`);
             }
         }
         for (const instr of block.instructions) {
             for (const operand of eachInstructionLValue(instr)) {
-                visit$2(operand, `instruction [${instr.id}]`);
+                visit$1(operand, `instruction [${instr.id}]`);
             }
             for (const operand of eachInstructionOperand(instr)) {
-                visit$2(operand, `instruction [${instr.id}]`);
+                visit$1(operand, `instruction [${instr.id}]`);
             }
         }
         for (const operand of eachTerminalOperand(block.terminal)) {
-            visit$2(operand, `terminal [${block.terminal.id}]`);
+            visit$1(operand, `terminal [${block.terminal.id}]`);
         }
     }
 }
-function visit$2(place, description) {
+function visit$1(place, description) {
     validateMutableRange(place, place.identifier.mutableRange, description);
     if (place.identifier.scope !== null) {
         validateMutableRange(place, place.identifier.scope.range, description);
@@ -32121,14 +32121,7 @@ const InstrumentationSchema = v4.z
     .refine(opts => opts.gating != null || opts.globalGating != null, 'Expected at least one of gating or globalGating');
 const USE_FIRE_FUNCTION_NAME = 'useFire';
 const EMIT_FREEZE_GLOBAL_GATING = 'true';
-const MacroMethodSchema = v4.z.union([
-    v4.z.object({ type: v4.z.literal('wildcard') }),
-    v4.z.object({ type: v4.z.literal('name'), name: v4.z.string() }),
-]);
-const MacroSchema = v4.z.union([
-    v4.z.string(),
-    v4.z.tuple([v4.z.string(), v4.z.array(MacroMethodSchema)]),
-]);
+const MacroSchema = v4.z.string();
 const HookSchema = v4.z.object({
     effectKind: v4.z.nativeEnum(Effect),
     valueKind: v4.z.nativeEnum(ValueKind),
@@ -37173,172 +37166,187 @@ var GuardKind;
     GuardKind[GuardKind["DisallowHook"] = 3] = "DisallowHook";
 })(GuardKind || (GuardKind = {}));
 
+var InlineLevel;
+(function (InlineLevel) {
+    InlineLevel["Transitive"] = "Transitive";
+    InlineLevel["Shallow"] = "Shallow";
+})(InlineLevel || (InlineLevel = {}));
+const SHALLOW_MACRO = {
+    level: InlineLevel.Shallow,
+    properties: null,
+};
+const TRANSITIVE_MACRO = {
+    level: InlineLevel.Transitive,
+    properties: null,
+};
+const FBT_MACRO = {
+    level: InlineLevel.Transitive,
+    properties: new Map([['*', SHALLOW_MACRO]]),
+};
+FBT_MACRO.properties.set('enum', FBT_MACRO);
 function memoizeFbtAndMacroOperandsInSameScope(fn) {
     var _a;
-    const fbtMacroTags = new Set([
-        ...Array.from(FBT_TAGS).map((tag) => [tag, []]),
-        ...((_a = fn.env.config.customMacros) !== null && _a !== void 0 ? _a : []),
+    const macroKinds = new Map([
+        ...Array.from(FBT_TAGS.entries()),
+        ...((_a = fn.env.config.customMacros) !== null && _a !== void 0 ? _a : []).map(name => [name, TRANSITIVE_MACRO]),
     ]);
-    const macroTagsCalls = new Set();
-    const macroValues = new Map();
-    const macroMethods = new Map();
-    visit$1(fn, fbtMacroTags, macroTagsCalls, macroMethods, macroValues);
-    for (const root of macroValues.keys()) {
-        const scope = root.scope;
-        if (scope == null) {
-            continue;
-        }
-        if (!macroTagsCalls.has(root.id)) {
-            continue;
-        }
-        mergeScopes(root, scope, macroValues, macroTagsCalls);
-    }
-    return macroTagsCalls;
+    const macroTags = populateMacroTags(fn, macroKinds);
+    const macroValues = mergeMacroArguments(fn, macroTags, macroKinds);
+    return macroValues;
 }
-const FBT_TAGS = new Set([
-    'fbt',
-    'fbt:param',
-    'fbt:enum',
-    'fbt:plural',
-    'fbs',
-    'fbs:param',
-    'fbs:enum',
-    'fbs:plural',
+const FBT_TAGS = new Map([
+    ['fbt', FBT_MACRO],
+    ['fbt:param', SHALLOW_MACRO],
+    ['fbt:enum', FBT_MACRO],
+    ['fbt:plural', SHALLOW_MACRO],
+    ['fbs', FBT_MACRO],
+    ['fbs:param', SHALLOW_MACRO],
+    ['fbs:enum', FBT_MACRO],
+    ['fbs:plural', SHALLOW_MACRO],
 ]);
 const SINGLE_CHILD_FBT_TAGS = new Set([
     'fbt:param',
     'fbs:param',
 ]);
-function visit$1(fn, fbtMacroTags, macroTagsCalls, macroMethods, macroValues) {
-    for (const [, block] of fn.body.blocks) {
-        for (const phi of block.phis) {
-            const macroOperands = [];
-            for (const operand of phi.operands.values()) {
-                if (macroValues.has(operand.identifier)) {
-                    macroOperands.push(operand.identifier);
+function populateMacroTags(fn, macroKinds) {
+    var _a;
+    const macroTags = new Map();
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            const { lvalue, value } = instr;
+            switch (value.kind) {
+                case 'Primitive': {
+                    if (typeof value.value === 'string') {
+                        const macroDefinition = macroKinds.get(value.value);
+                        if (macroDefinition != null) {
+                            macroTags.set(lvalue.identifier.id, macroDefinition);
+                        }
+                    }
+                    break;
+                }
+                case 'LoadGlobal': {
+                    let macroDefinition = macroKinds.get(value.binding.name);
+                    if (macroDefinition != null) {
+                        macroTags.set(lvalue.identifier.id, macroDefinition);
+                    }
+                    break;
+                }
+                case 'PropertyLoad': {
+                    if (typeof value.property === 'string') {
+                        const macroDefinition = macroTags.get(value.object.identifier.id);
+                        if (macroDefinition != null) {
+                            const propertyDefinition = macroDefinition.properties != null
+                                ? ((_a = macroDefinition.properties.get(value.property)) !== null && _a !== void 0 ? _a : macroDefinition.properties.get('*'))
+                                : null;
+                            const propertyMacro = propertyDefinition !== null && propertyDefinition !== void 0 ? propertyDefinition : macroDefinition;
+                            macroTags.set(lvalue.identifier.id, propertyMacro);
+                        }
+                    }
+                    break;
                 }
             }
-            if (macroOperands.length !== 0) {
-                macroValues.set(phi.place.identifier, macroOperands);
+        }
+    }
+    return macroTags;
+}
+function mergeMacroArguments(fn, macroTags, macroKinds) {
+    var _a;
+    const macroValues = new Set(macroTags.keys());
+    for (const block of Array.from(fn.body.blocks.values()).reverse()) {
+        for (let i = block.instructions.length - 1; i >= 0; i--) {
+            const instr = block.instructions[i];
+            const { lvalue, value } = instr;
+            switch (value.kind) {
+                case 'DeclareContext':
+                case 'DeclareLocal':
+                case 'Destructure':
+                case 'LoadContext':
+                case 'LoadLocal':
+                case 'PostfixUpdate':
+                case 'PrefixUpdate':
+                case 'StoreContext':
+                case 'StoreLocal': {
+                    break;
+                }
+                case 'CallExpression':
+                case 'MethodCall': {
+                    const scope = lvalue.identifier.scope;
+                    if (scope == null) {
+                        continue;
+                    }
+                    const callee = value.kind === 'CallExpression' ? value.callee : value.property;
+                    const macroDefinition = (_a = macroTags.get(callee.identifier.id)) !== null && _a !== void 0 ? _a : macroTags.get(lvalue.identifier.id);
+                    if (macroDefinition != null) {
+                        visitOperands(macroDefinition, scope, lvalue, value, macroValues, macroTags);
+                    }
+                    break;
+                }
+                case 'JsxExpression': {
+                    const scope = lvalue.identifier.scope;
+                    if (scope == null) {
+                        continue;
+                    }
+                    let macroDefinition;
+                    if (value.tag.kind === 'Identifier') {
+                        macroDefinition = macroTags.get(value.tag.identifier.id);
+                    }
+                    else {
+                        macroDefinition = macroKinds.get(value.tag.name);
+                    }
+                    macroDefinition !== null && macroDefinition !== void 0 ? macroDefinition : (macroDefinition = macroTags.get(lvalue.identifier.id));
+                    if (macroDefinition != null) {
+                        visitOperands(macroDefinition, scope, lvalue, value, macroValues, macroTags);
+                    }
+                    break;
+                }
+                default: {
+                    const scope = lvalue.identifier.scope;
+                    if (scope == null) {
+                        continue;
+                    }
+                    const macroDefinition = macroTags.get(lvalue.identifier.id);
+                    if (macroDefinition != null) {
+                        visitOperands(macroDefinition, scope, lvalue, value, macroValues, macroTags);
+                    }
+                    break;
+                }
             }
         }
-        for (const instruction of block.instructions) {
-            const { lvalue, value } = instruction;
-            if (lvalue === null) {
+        for (const phi of block.phis) {
+            const scope = phi.place.identifier.scope;
+            if (scope == null) {
                 continue;
             }
-            if (value.kind === 'Primitive' &&
-                typeof value.value === 'string' &&
-                matchesExactTag(value.value, fbtMacroTags)) {
-                macroTagsCalls.add(lvalue.identifier.id);
+            const macroDefinition = macroTags.get(phi.place.identifier.id);
+            if (macroDefinition == null ||
+                macroDefinition.level === InlineLevel.Shallow) {
+                continue;
             }
-            else if (value.kind === 'LoadGlobal' &&
-                matchesExactTag(value.binding.name, fbtMacroTags)) {
-                macroTagsCalls.add(lvalue.identifier.id);
-            }
-            else if (value.kind === 'LoadGlobal' &&
-                matchTagRoot(value.binding.name, fbtMacroTags) !== null) {
-                const methods = matchTagRoot(value.binding.name, fbtMacroTags);
-                macroMethods.set(lvalue.identifier.id, methods);
-            }
-            else if (value.kind === 'PropertyLoad' &&
-                macroMethods.has(value.object.identifier.id)) {
-                const methods = macroMethods.get(value.object.identifier.id);
-                const newMethods = [];
-                for (const method of methods) {
-                    if (method.length > 0 &&
-                        (method[0].type === 'wildcard' ||
-                            (method[0].type === 'name' && method[0].name === value.property))) {
-                        if (method.length > 1) {
-                            newMethods.push(method.slice(1));
-                        }
-                        else {
-                            macroTagsCalls.add(lvalue.identifier.id);
-                        }
-                    }
-                }
-                if (newMethods.length > 0) {
-                    macroMethods.set(lvalue.identifier.id, newMethods);
-                }
-            }
-            else if (value.kind === 'PropertyLoad' &&
-                macroTagsCalls.has(value.object.identifier.id)) {
-                macroTagsCalls.add(lvalue.identifier.id);
-            }
-            else if (isFbtJsxExpression(fbtMacroTags, macroTagsCalls, value) ||
-                isFbtJsxChild(macroTagsCalls, lvalue, value) ||
-                isFbtCallExpression(macroTagsCalls, value)) {
-                macroTagsCalls.add(lvalue.identifier.id);
-                macroValues.set(lvalue.identifier, Array.from(eachInstructionValueOperand(value), operand => operand.identifier));
-            }
-            else if (Iterable_some(eachInstructionValueOperand(value), operand => macroValues.has(operand.identifier))) {
-                const macroOperands = [];
-                for (const operand of eachInstructionValueOperand(value)) {
-                    if (macroValues.has(operand.identifier)) {
-                        macroOperands.push(operand.identifier);
-                    }
-                }
-                macroValues.set(lvalue.identifier, macroOperands);
+            macroValues.add(phi.place.identifier.id);
+            for (const operand of phi.operands.values()) {
+                operand.identifier.scope = scope;
+                expandFbtScopeRange(scope.range, operand.identifier.mutableRange);
+                macroTags.set(operand.identifier.id, macroDefinition);
+                macroValues.add(operand.identifier.id);
             }
         }
     }
-}
-function mergeScopes(root, scope, macroValues, macroTagsCalls) {
-    const operands = macroValues.get(root);
-    if (operands == null) {
-        return;
-    }
-    for (const operand of operands) {
-        operand.scope = scope;
-        expandFbtScopeRange(scope.range, operand.mutableRange);
-        macroTagsCalls.add(operand.id);
-        mergeScopes(operand, scope, macroValues, macroTagsCalls);
-    }
-}
-function matchesExactTag(s, tags) {
-    return Array.from(tags).some(macro => typeof macro === 'string'
-        ? s === macro
-        : macro[1].length === 0 && macro[0] === s);
-}
-function matchTagRoot(s, tags) {
-    const methods = [];
-    for (const macro of tags) {
-        if (typeof macro === 'string') {
-            continue;
-        }
-        const [tag, rest] = macro;
-        if (tag === s && rest.length > 0) {
-            methods.push(rest);
-        }
-    }
-    if (methods.length > 0) {
-        return methods;
-    }
-    else {
-        return null;
-    }
-}
-function isFbtCallExpression(macroTagsCalls, value) {
-    return ((value.kind === 'CallExpression' &&
-        macroTagsCalls.has(value.callee.identifier.id)) ||
-        (value.kind === 'MethodCall' &&
-            macroTagsCalls.has(value.property.identifier.id)));
-}
-function isFbtJsxExpression(fbtMacroTags, macroTagsCalls, value) {
-    return (value.kind === 'JsxExpression' &&
-        ((value.tag.kind === 'Identifier' &&
-            macroTagsCalls.has(value.tag.identifier.id)) ||
-            (value.tag.kind === 'BuiltinTag' &&
-                matchesExactTag(value.tag.name, fbtMacroTags))));
-}
-function isFbtJsxChild(macroTagsCalls, lvalue, value) {
-    return ((value.kind === 'JsxExpression' || value.kind === 'JsxFragment') &&
-        lvalue !== null &&
-        macroTagsCalls.has(lvalue.identifier.id));
+    return macroValues;
 }
 function expandFbtScopeRange(fbtRange, extendWith) {
     if (extendWith.start !== 0) {
         fbtRange.start = makeInstructionId(Math.min(fbtRange.start, extendWith.start));
+    }
+}
+function visitOperands(macroDefinition, scope, lvalue, value, macroValues, macroTags) {
+    macroValues.add(lvalue.identifier.id);
+    for (const operand of eachInstructionValueOperand(value)) {
+        if (macroDefinition.level === InlineLevel.Transitive) {
+            operand.identifier.scope = scope;
+            expandFbtScopeRange(scope.range, operand.identifier.mutableRange);
+            macroTags.set(operand.identifier.id, macroDefinition);
+        }
+        macroValues.add(operand.identifier.id);
     }
 }
 
