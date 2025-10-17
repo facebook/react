@@ -154,7 +154,8 @@ function SuspenseRects({
   const selected = inspectedElementID === suspenseID;
 
   const hovered =
-    hoveredTimelineIndex > -1 && timeline[hoveredTimelineIndex] === suspenseID;
+    hoveredTimelineIndex > -1 &&
+    timeline[hoveredTimelineIndex].id === suspenseID;
 
   const boundingBox = getBoundingBox(suspense.rects);
 

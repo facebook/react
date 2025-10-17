@@ -51,6 +51,7 @@ import type {
   ComponentFilter,
   ElementType,
   SuspenseNode,
+  SuspenseTimelineStep,
   Rect,
 } from 'react-devtools-shared/src/frontend/types';
 import type {
@@ -895,13 +896,13 @@ export default class Store extends EventEmitter<{
    */
   getSuspendableDocumentOrderSuspense(
     uniqueSuspendersOnly: boolean,
-  ): $ReadOnlyArray<SuspenseNode['id']> {
+  ): $ReadOnlyArray<SuspenseTimelineStep> {
     const roots = this.roots;
     if (roots.length === 0) {
       return [];
     }
 
-    const list: SuspenseNode['id'][] = [];
+    const list: SuspenseTimelineStep[] = [];
     for (let i = 0; i < roots.length; i++) {
       const rootID = roots[i];
       const root = this.getElementByID(rootID);
@@ -914,7 +915,10 @@ export default class Store extends EventEmitter<{
       if (suspense !== null) {
         if (list.length === 0) {
           // start with an arbitrary root that will allow inspection of the Screen
-          list.push(suspense.id);
+          list.push({
+            id: suspense.id,
+            environment: null,
+          });
         }
 
         const stack = [suspense];
@@ -936,7 +940,10 @@ export default class Store extends EventEmitter<{
             // Roots are already included as part of the Screen
             current.id !== rootID
           ) {
-            list.push(current.id);
+            list.push({
+              id: current.id,
+              environment: null,
+            });
           }
           // Add children in reverse order to maintain document order
           for (let j = current.children.length - 1; j >= 0; j--) {
