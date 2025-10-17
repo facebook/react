@@ -53,10 +53,19 @@ function SuspenseTimelineInput() {
     switchSuspenseNode(timelineIndex);
   }
 
-  function handleHoverSegment(hoveredValue: number) {
-    // TODO: Consider highlighting the rect instead.
+  function handleHoverSegment(hoveredIndex: number) {
+    const nextSelectedSuspenseID = timeline[hoveredIndex];
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: nextSelectedSuspenseID,
+    });
   }
-  function handleUnhoverSegment() {}
+  function handleUnhoverSegment() {
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: -1,
+    });
+  }
 
   function skipPrevious() {
     const nextSelectedSuspenseID = timeline[timelineIndex - 1];

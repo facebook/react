@@ -8,8 +8,8 @@
   background-color: color-mix(in srgb, var(--color-transition) 5%, transparent);
 }
 
-.SuspenseRectsContainer:hover:not(:has(.SuspenseRectsBoundary:hover))[data-highlighted='false'] {
-  outline-width: 1px;
+.SuspenseRectsContainer[data-hovered='true'] {
+  background-color: color-mix(in srgb, var(--color-transition) 15%, transparent);
 }
 
 .SuspenseRectsContainer[data-highlighted='true'] {
@@ -65,7 +65,7 @@
 }
 
 /* highlight this boundary */
-.SuspenseRectsBoundary:hover:not(:has(.SuspenseRectsBoundary:hover)) > .SuspenseRectsRect {
+.SuspenseRectsBoundary[data-hovered='true'] > .SuspenseRectsRect {
   background-color: color-mix(in srgb, var(--color-background) 50%, var(--color-suspense) 50%);
   transition: background-color 0.2s ease-out;
 }
