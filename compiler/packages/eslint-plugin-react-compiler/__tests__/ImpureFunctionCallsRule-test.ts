@@ -5,22 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  ErrorCategory,
-  getRuleForCategory,
-} from 'babel-plugin-react-compiler/src/CompilerError';
 import {normalizeIndent, testRule, makeTestCaseError} from './shared-utils';
-import {allRules} from '../src/rules/ReactCompilerRule';
+import ReactCompilerRule from '../src/rules/ReactCompilerRule';
 
-testRule(
-  'no impure function calls rule',
-  allRules[getRuleForCategory(ErrorCategory.Purity).name].rule,
-  {
-    valid: [],
-    invalid: [
-      {
-        name: 'Known impure function calls are caught',
-        code: normalizeIndent`
+testRule('no impure function calls rule', ReactCompilerRule, {
+  valid: [],
+  invalid: [
+    {
+      name: 'Known impure function calls are caught',
+      code: normalizeIndent`
       function Component() {
         const date = Date.now();
         const now = performance.now();
@@ -28,12 +21,11 @@ testRule(
         return <Foo date={date} now={now} rand={rand} />;
       }
     `,
-        errors: [
-          makeTestCaseError('Cannot call impure function during render'),
-          makeTestCaseError('Cannot call impure function during render'),
-          makeTestCaseError('Cannot call impure function during render'),
-        ],
-      },
-    ],
-  },
-);
+      errors: [
+        makeTestCaseError('Cannot call impure function during render'),
+        makeTestCaseError('Cannot call impure function during render'),
+        makeTestCaseError('Cannot call impure function during render'),
+      ],
+    },
+  ],
+});

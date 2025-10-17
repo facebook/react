@@ -1,8 +1,5 @@
 import {RuleTester as ESLintTester, Rule} from 'eslint';
-import {type ErrorCategory} from 'babel-plugin-react-compiler/src/CompilerError';
 import escape from 'regexp.escape';
-import {configs} from '../src/index';
-import {allRules} from '../src/rules/ReactCompilerRule';
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
@@ -45,32 +42,5 @@ export function testRule(
 
   eslintTester.run(name, rule, tests);
 }
-
-/**
- * Aggregates all recommended rules from the plugin.
- */
-export const TestRecommendedRules: Rule.RuleModule = {
-  meta: {
-    type: 'problem',
-    docs: {
-      description: 'Disallow capitalized function calls',
-      category: 'Possible Errors',
-      recommended: true,
-    },
-    // validation is done at runtime with zod
-    schema: [{type: 'object', additionalProperties: true}],
-  },
-  create(context) {
-    for (const ruleConfig of Object.values(
-      configs.recommended.plugins['react-compiler'].rules,
-    )) {
-      const listener = ruleConfig.rule.create(context);
-      if (Object.entries(listener).length !== 0) {
-        throw new Error('TODO: handle rules that return listeners to eslint');
-      }
-    }
-    return {};
-  },
-};
 
 test('no test', () => {});

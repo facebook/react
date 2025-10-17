@@ -5,30 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  ErrorCategory,
-  getRuleForCategory,
-} from 'babel-plugin-react-compiler/src/CompilerError';
 import {normalizeIndent, makeTestCaseError, testRule} from './shared-utils';
-import {allRules} from '../src/rules/ReactCompilerRule';
+import {AllRules} from '../src/rules/ReactCompilerRule';
 
-testRule(
-  'rules-of-hooks',
-  allRules[getRuleForCategory(ErrorCategory.Hooks).name].rule,
-  {
-    valid: [
-      {
-        name: 'Basic example',
-        code: normalizeIndent`
+testRule('rules-of-hooks', AllRules, {
+  valid: [
+    {
+      name: 'Basic example',
+      code: normalizeIndent`
         function Component() {
           useHook();
           return <div>Hello world</div>;
         }
       `,
-      },
-      {
-        name: 'Violation with Flow suppression',
-        code: `
+    },
+    {
+      name: 'Violation with Flow suppression',
+      code: `
       // Valid since error already suppressed with flow.
       function useHook() {
         if (cond) {
@@ -37,11 +30,11 @@ testRule(
         }
       }
     `,
-      },
-      {
-        // OK because invariants are only meant for the compiler team's consumption
-        name: '[Invariant] Defined after use',
-        code: normalizeIndent`
+    },
+    {
+      // OK because invariants are only meant for the compiler team's consumption
+      name: '[Invariant] Defined after use',
+      code: normalizeIndent`
         function Component(props) {
           let y = function () {
             m(x);
@@ -52,49 +45,42 @@ testRule(
           return y;
         }
       `,
-      },
-      {
-        name: "Classes don't throw",
-        code: normalizeIndent`
+    },
+    {
+      name: "Classes don't throw",
+      code: normalizeIndent`
         class Foo {
           #bar() {}
         }
       `,
-      },
-    ],
-    invalid: [
-      {
-        name: 'Simple violation',
-        code: normalizeIndent`
+    },
+  ],
+  invalid: [
+    {
+      name: 'Simple violation',
+      code: normalizeIndent`
       function useConditional() {
         if (cond) {
           useConditionalHook();
         }
       }
     `,
-        errors: [
-          makeTestCaseError(
-            'Hooks must always be called in a consistent order',
-          ),
-        ],
-      },
-      {
-        name: 'Multiple diagnostics within the same function are surfaced',
-        code: normalizeIndent`
+      errors: [
+        makeTestCaseError('Hooks must always be called in a consistent order'),
+      ],
+    },
+    {
+      name: 'Multiple diagnostics within the same function are surfaced',
+      code: normalizeIndent`
         function useConditional() {
           cond ?? useConditionalHook();
           props.cond && useConditionalHook();
           return <div>Hello world</div>;
         }`,
-        errors: [
-          makeTestCaseError(
-            'Hooks must always be called in a consistent order',
-          ),
-          makeTestCaseError(
-            'Hooks must always be called in a consistent order',
-          ),
-        ],
-      },
-    ],
-  },
-);
+      errors: [
+        makeTestCaseError('Hooks must always be called in a consistent order'),
+        makeTestCaseError('Hooks must always be called in a consistent order'),
+      ],
+    },
+  ],
+});

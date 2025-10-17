@@ -6,11 +6,8 @@
  */
 
 import {RuleTester} from 'eslint';
-import {
-  CompilerTestCases,
-  normalizeIndent,
-  TestRecommendedRules,
-} from './shared-utils';
+import {CompilerTestCases, normalizeIndent} from './shared-utils';
+import ReactCompilerRule from '../src/rules/ReactCompilerRule';
 
 const tests: CompilerTestCases = {
   valid: [
@@ -62,4 +59,4 @@ const eslintTester = new RuleTester({
   // @ts-ignore[2353] - outdated types
   parser: require.resolve('@typescript-eslint/parser'),
 });
-eslintTester.run('react-compiler', TestRecommendedRules, tests);
+eslintTester.run('react-compiler', ReactCompilerRule, tests);
