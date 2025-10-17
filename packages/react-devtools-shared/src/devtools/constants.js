@@ -154,8 +154,8 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any, ...} = {
     '--color-warning-text-color': '#ffffff',
     '--color-warning-text-color-inverted': '#fd4d69',
 
-    '--color-suspense': '#0088fa',
-    '--color-transition': '#6a51b2',
+    '--color-suspense-default': '#0088fa',
+    '--color-transition-default': '#6a51b2',
     '--color-suspense-server': '#62bc6a',
     '--color-transition-server': '#3f7844',
     '--color-suspense-other': '#f3ce49',
@@ -315,8 +315,8 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any, ...} = {
     '--color-warning-text-color': '#ffffff',
     '--color-warning-text-color-inverted': '#ee1638',
 
-    '--color-suspense': '#61dafb',
-    '--color-transition': '#6a51b2',
+    '--color-suspense-default': '#61dafb',
+    '--color-transition-default': '#6a51b2',
     '--color-suspense-server': '#62bc6a',
     '--color-transition-server': '#3f7844',
     '--color-suspense-other': '#f3ce49',

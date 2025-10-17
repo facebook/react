@@ -22,6 +22,8 @@ import OwnerView from './OwnerView';
 import {meta} from '../../../hydration';
 import useInferredName from '../useInferredName';
 
+import {getClassNameForEnvironment} from '../SuspenseTab/SuspenseEnvironmentColors.js';
+
 import type {
   InspectedElement,
   SerializedAsyncInfo,
@@ -181,7 +183,12 @@ function SuspendedByRow({
           </>
         )}
         <div className={styles.CollapsableHeaderFiller} />
-        <div className={styles.TimeBarContainer}>
+        <div
+          className={
+            styles.TimeBarContainer +
+            ' ' +
+            getClassNameForEnvironment(ioInfo.env)
+          }>
           <div
             className={
               !isRejected ? styles.TimeBarSpan : styles.TimeBarSpanErrored
@@ -407,7 +414,10 @@ function SuspendedByGroup({
         <span className={styles.CollapsableHeaderTitle}>{pluralizedName}</span>
         <div className={styles.CollapsableHeaderFiller} />
         {isOpen ? null : (
-          <div className={styles.TimeBarContainer}>
+          <div
+            className={
+              styles.TimeBarContainer + ' ' + getClassNameForEnvironment(null)
+            }>
             <div
               className={
                 !isRejected ? styles.TimeBarSpan : styles.TimeBarSpanErrored

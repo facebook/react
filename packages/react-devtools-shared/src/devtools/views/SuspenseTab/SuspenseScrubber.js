@@ -16,6 +16,8 @@ import {useRef} from 'react';
 
 import styles from './SuspenseScrubber.css';
 
+import {getClassNameForEnvironment} from './SuspenseEnvironmentColors.js';
+
 import Tooltip from '../Components/reach-ui/tooltip';
 
 export default function SuspenseScrubber({
@@ -84,9 +86,10 @@ export default function SuspenseScrubber({
               styles.SuspenseScrubberBead +
               (index === min
                 ? // The first step in the timeline is always a Transition (Initial Paint).
-                  // TODO: Support multiple environments.
                   ' ' + styles.SuspenseScrubberBeadTransition
                 : '') +
+              ' ' +
+              getClassNameForEnvironment(environment) +
               (index <= value ? ' ' + styles.SuspenseScrubberBeadSelected : '')
             }
           />
