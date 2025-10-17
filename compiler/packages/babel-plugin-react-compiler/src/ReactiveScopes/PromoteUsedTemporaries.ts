@@ -177,6 +177,7 @@ type State = {
     DeclarationId,
     {activeScopes: Array<ScopeId>; usedOutsideScope: boolean}
   >; // true if referenced within another scope, false if only accessed outside of scopes
+  fbtOperands: Set<IdentifierId>;
 };
 
 /**
@@ -270,7 +271,8 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
       if (
         needsPromotion &&
         identifier.name === null &&
-        !this.#consts.has(identifier.id)
+        !this.#consts.has(identifier.id) &&
+        !this.#promotable.fbtOperands.has(place.identifier.id)
       ) {
         /*
          * If the identifier hasn't been promoted but is marked as needing
@@ -429,11 +431,15 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
   }
 }
 
-export function promoteUsedTemporaries(fn: ReactiveFunction): void {
+export function promoteUsedTemporaries(
+  fn: ReactiveFunction,
+  fbtOperands: Set<IdentifierId>,
+): void {
   const state: State = {
     tags: new Set(),
     promoted: new Set(),
     pruned: new Map(),
+    fbtOperands,
   };
   visitReactiveFunction(fn, new CollectPromotableTemporaries(), state);
   for (const operand of fn.params) {

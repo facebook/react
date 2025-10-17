@@ -499,7 +499,7 @@ function runWithEnvironment(
     value: reactiveFunction,
   });
 
-  promoteUsedTemporaries(reactiveFunction);
+  promoteUsedTemporaries(reactiveFunction, fbtOperands);
   log({
     kind: 'reactive',
     name: 'PromoteUsedTemporaries',
