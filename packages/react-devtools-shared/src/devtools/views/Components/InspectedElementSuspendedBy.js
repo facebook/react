@@ -169,7 +169,7 @@ function SuspendedByRow({
           type={isOpen ? 'expanded' : 'collapsed'}
         />
         <span className={styles.CollapsableHeaderTitle}>
-          {skipName ? shortDescription : name}
+          {skipName && shortDescription !== '' ? shortDescription : name}
         </span>
         {skipName || shortDescription === '' ? null : (
           <>
