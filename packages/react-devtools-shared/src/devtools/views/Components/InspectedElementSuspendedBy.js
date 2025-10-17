@@ -348,6 +348,7 @@ type GroupProps = {
   inspectedElement: InspectedElement,
   store: Store,
   name: string,
+  environment: null | string,
   suspendedBy: Array<{
     index: number,
     value: SerializedAsyncInfo,
@@ -362,6 +363,7 @@ function SuspendedByGroup({
   inspectedElement,
   store,
   name,
+  environment,
   suspendedBy,
   minTime,
   maxTime,
@@ -416,7 +418,9 @@ function SuspendedByGroup({
         {isOpen ? null : (
           <div
             className={
-              styles.TimeBarContainer + ' ' + getClassNameForEnvironment(null)
+              styles.TimeBarContainer +
+              ' ' +
+              getClassNameForEnvironment(environment)
             }>
             <div
               className={
@@ -512,17 +516,21 @@ export default function InspectedElementSuspendedBy({
   const groups = [];
   let currentGroup = null;
   let currentGroupName = null;
+  let currentGroupEnv = null;
   for (let i = 0; i < sortedSuspendedBy.length; i++) {
     const entry = sortedSuspendedBy[i];
     const name = entry.value.awaited.name;
+    const env = entry.value.awaited.env;
     if (
       currentGroupName !== name ||
+      currentGroupEnv !== env ||
       !name ||
       name === 'Promise' ||
       currentGroup === null
     ) {
       // Create a new group.
       currentGroupName = name;
+      currentGroupEnv = env;
       currentGroup = [];
       groups.push(currentGroup);
     }
@@ -601,6 +609,7 @@ export default function InspectedElementSuspendedBy({
               <SuspendedByGroup
                 key={entries[0].index}
                 name={entries[0].value.awaited.name}
+                environment={entries[0].value.awaited.env}
                 suspendedBy={entries}
                 bridge={bridge}
                 element={element}
