@@ -3297,7 +3297,7 @@ describe('Store', () => {
                 <Suspense>
       [suspense-root]  rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}
         <Suspense name="Outer" rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}>
-          <Suspense name="Unknown" rects={[{x:1,y:2,width:6,height:1}]}>
+          <Suspense name="Inner" rects={[{x:1,y:2,width:6,height:1}]}>
     `);
   });
 });
