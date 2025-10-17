@@ -34,7 +34,7 @@ function SuspenseTimelineInput() {
   const max = timeline.length > 0 ? timeline.length - 1 : 0;
 
   function switchSuspenseNode(nextTimelineIndex: number) {
-    const nextSelectedSuspenseID = timeline[nextTimelineIndex];
+    const nextSelectedSuspenseID = timeline[nextTimelineIndex].id;
     treeDispatch({
       type: 'SELECT_ELEMENT_BY_ID',
       payload: nextSelectedSuspenseID,
@@ -53,13 +53,22 @@ function SuspenseTimelineInput() {
     switchSuspenseNode(timelineIndex);
   }
 
-  function handleHoverSegment(hoveredValue: number) {
-    // TODO: Consider highlighting the rect instead.
+  function handleHoverSegment(hoveredIndex: number) {
+    const nextSelectedSuspenseID = timeline[hoveredIndex].id;
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: nextSelectedSuspenseID,
+    });
   }
-  function handleUnhoverSegment() {}
+  function handleUnhoverSegment() {
+    suspenseTreeDispatch({
+      type: 'HOVER_TIMELINE_FOR_ID',
+      payload: -1,
+    });
+  }
 
   function skipPrevious() {
-    const nextSelectedSuspenseID = timeline[timelineIndex - 1];
+    const nextSelectedSuspenseID = timeline[timelineIndex - 1].id;
     treeDispatch({
       type: 'SELECT_ELEMENT_BY_ID',
       payload: nextSelectedSuspenseID,
@@ -71,7 +80,7 @@ function SuspenseTimelineInput() {
   }
 
   function skipForward() {
-    const nextSelectedSuspenseID = timeline[timelineIndex + 1];
+    const nextSelectedSuspenseID = timeline[timelineIndex + 1].id;
     treeDispatch({
       type: 'SELECT_ELEMENT_BY_ID',
       payload: nextSelectedSuspenseID,
@@ -97,7 +106,7 @@ function SuspenseTimelineInput() {
     // anything suspended in the root. The step after that should have one less
     // thing suspended. I.e. the first suspense boundary should be unsuspended
     // when it's selected. This also lets you show everything in the last step.
-    const suspendedSet = timeline.slice(timelineIndex + 1);
+    const suspendedSet = timeline.slice(timelineIndex + 1).map(step => step.id);
     bridge.send('overrideSuspenseMilestone', {
       suspendedSet,
     });
@@ -164,6 +173,7 @@ function SuspenseTimelineInput() {
         <SuspenseScrubber
           min={min}
           max={max}
+          timeline={timeline}
           value={timelineIndex}
           highlight={hoveredTimelineIndex}
           onChange={handleChange}

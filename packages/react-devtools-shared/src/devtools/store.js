@@ -34,6 +34,7 @@ import {
   shallowDiffers,
   utfDecodeStringWithRanges,
   parseElementDisplayNameFromBackend,
+  unionOfTwoArrays,
 } from '../utils';
 import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
@@ -51,6 +52,7 @@ import type {
   ComponentFilter,
   ElementType,
   SuspenseNode,
+  SuspenseTimelineStep,
   Rect,
 } from 'react-devtools-shared/src/frontend/types';
 import type {
@@ -895,13 +897,10 @@ export default class Store extends EventEmitter<{
    */
   getSuspendableDocumentOrderSuspense(
     uniqueSuspendersOnly: boolean,
-  ): $ReadOnlyArray<SuspenseNode['id']> {
+  ): $ReadOnlyArray<SuspenseTimelineStep> {
+    const target: Array<SuspenseTimelineStep> = [];
     const roots = this.roots;
-    if (roots.length === 0) {
-      return [];
-    }
-
-    const list: SuspenseNode['id'][] = [];
+    let rootStep: null | SuspenseTimelineStep = null;
     for (let i = 0; i < roots.length; i++) {
       const rootID = roots[i];
       const root = this.getElementByID(rootID);
@@ -912,44 +911,76 @@ export default class Store extends EventEmitter<{
 
       const suspense = this.getSuspenseByID(rootID);
       if (suspense !== null) {
-        if (list.length === 0) {
-          // start with an arbitrary root that will allow inspection of the Screen
-          list.push(suspense.id);
+        const environments = suspense.environments;
+        const environmentName =
+          environments.length > 0
+            ? environments[environments.length - 1]
+            : null;
+        if (rootStep === null) {
+          // Arbitrarily use the first root as the root step id.
+          rootStep = {
+            id: suspense.id,
+            environment: environmentName,
+          };
+          target.push(rootStep);
+        } else if (rootStep.environment === null) {
+          // If any root has an environment name, then let's use it.
+          rootStep.environment = environmentName;
         }
-
-        const stack = [suspense];
-        while (stack.length > 0) {
-          const current = stack.pop();
-          if (current === undefined) {
-            continue;
-          }
-          // Ignore any suspense boundaries that has no visual representation as this is not
-          // part of the visible loading sequence.
-          // TODO: Consider making visible meta data and other side-effects get virtual rects.
-          const hasRects =
-            current.rects !== null &&
-            current.rects.length > 0 &&
-            current.rects.some(isNonZeroRect);
-          if (
-            hasRects &&
-            (!uniqueSuspendersOnly || current.hasUniqueSuspenders) &&
-            // Roots are already included as part of the Screen
-            current.id !== rootID
-          ) {
-            list.push(current.id);
-          }
-          // Add children in reverse order to maintain document order
-          for (let j = current.children.length - 1; j >= 0; j--) {
-            const childSuspense = this.getSuspenseByID(current.children[j]);
-            if (childSuspense !== null) {
-              stack.push(childSuspense);
-            }
-          }
-        }
+        this.pushTimelineStepsInDocumentOrder(
+          suspense.children,
+          target,
+          uniqueSuspendersOnly,
+          environments,
+        );
       }
     }
 
-    return list;
+    return target;
+  }
+
+  pushTimelineStepsInDocumentOrder(
+    children: Array<SuspenseNode['id']>,
+    target: Array<SuspenseTimelineStep>,
+    uniqueSuspendersOnly: boolean,
+    parentEnvironments: Array<string>,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const child = this.getSuspenseByID(children[i]);
+      if (child === null) {
+        continue;
+      }
+      // Ignore any suspense boundaries that has no visual representation as this is not
+      // part of the visible loading sequence.
+      // TODO: Consider making visible meta data and other side-effects get virtual rects.
+      const hasRects =
+        child.rects !== null &&
+        child.rects.length > 0 &&
+        child.rects.some(isNonZeroRect);
+      const childEnvironments = child.environments;
+      // Since children are blocked on the parent, they're also blocked by the parent environments.
+      // Only if we discover a novel environment do we add that and it becomes the name we use.
+      const unionEnvironments = unionOfTwoArrays(
+        parentEnvironments,
+        childEnvironments,
+      );
+      const environmentName =
+        unionEnvironments.length > 0
+          ? unionEnvironments[unionEnvironments.length - 1]
+          : null;
+      if (hasRects && (!uniqueSuspendersOnly || child.hasUniqueSuspenders)) {
+        target.push({
+          id: child.id,
+          environment: environmentName,
+        });
+      }
+      this.pushTimelineStepsInDocumentOrder(
+        child.children,
+        target,
+        uniqueSuspendersOnly,
+        unionEnvironments,
+      );
+    }
   }
 
   getRendererIDForElement(id: number): number | null {
@@ -1627,6 +1658,7 @@ export default class Store extends EventEmitter<{
             rects,
             hasUniqueSuspenders: false,
             isSuspended: isSuspended,
+            environments: [],
           });
 
           hasSuspenseTreeChanged = true;
@@ -1812,7 +1844,10 @@ export default class Store extends EventEmitter<{
               envIndex++
             ) {
               const environmentNameStringID = operations[i++];
-              environmentNames.push(stringTable[environmentNameStringID]);
+              const environmentName = stringTable[environmentNameStringID];
+              if (environmentName != null) {
+                environmentNames.push(environmentName);
+              }
             }
             const suspense = this._idToSuspense.get(id);
 
@@ -1836,7 +1871,7 @@ export default class Store extends EventEmitter<{
 
             suspense.hasUniqueSuspenders = hasUniqueSuspenders;
             suspense.isSuspended = isSuspended;
-            // TODO: Recompute the environment names.
+            suspense.environments = environmentNames;
           }
 
           hasSuspenseTreeChanged = true;
