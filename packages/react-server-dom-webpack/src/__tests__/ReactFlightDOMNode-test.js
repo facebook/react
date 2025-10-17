@@ -10,6 +10,8 @@
 
 'use strict';
 
+const path = require('path');
+
 import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
 
 global.ReadableStream =
@@ -75,23 +77,60 @@ describe('ReactFlightDOMNode', () => {
     use = React.use;
   });
 
-  function filterStackFrame(filename, functionName) {
-    return (
-      filename !== '' &&
-      !filename.startsWith('node:') &&
-      !filename.includes('node_modules') &&
-      // Filter out our own internal source code since it'll typically be in node_modules
-      (!filename.includes('/packages/') || filename.includes('/__tests__/')) &&
-      !filename.includes('/build/')
+  function getLineNumber() {
+    const error = new Error();
+    Error.captureStackTrace(error, getLineNumber);
+    const firstStackFrame = error.stack.split('\n')[1];
+
+    const lineNumber = firstStackFrame.slice(
+      firstStackFrame.indexOf(':') + 1,
+      firstStackFrame.lastIndexOf(':'),
     );
+
+    return parseInt(lineNumber, 10);
   }
 
-  function normalizeCodeLocInfo(str) {
+  function createFilterStackFrame(
+    userSpaceStart: number,
+    userSpaceEnd: number,
+  ) {
+    return (filename: string, functionName: string, lineNumber: number) => {
+      if (filename === __filename) {
+        return lineNumber >= userSpaceStart && lineNumber <= userSpaceEnd;
+      }
+
+      return (
+        filename !== '' &&
+        !filename.startsWith('node:') &&
+        !filename.includes('node_modules') &&
+        // Filter out our own internal source code since it'll typically be in
+        // node_modules. This also includes the current test file. Only user space
+        // code that has been marked explicitly is included (see above).
+        !filename.includes('/packages/') &&
+        !filename.includes('/build/')
+      );
+    };
+  }
+
+  const repoRoot = path.resolve(__dirname, '../../../../');
+
+  function normalizeCodeLocInfo(str, {preserveLocation = false} = {}) {
     return (
       str &&
-      str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
-        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
-      })
+      str.replace(
+        /^ +(?:at|in) ([\S]+) ([^\n]*)/gm,
+        function (m, name, location) {
+          return (
+            '    in ' +
+            name +
+            (/\d/.test(m)
+              ? preserveLocation
+                ? ' ' + location.replace(repoRoot, '')
+                : ' (at **)'
+              : '')
+          );
+        },
+      )
     );
   }
 
@@ -751,6 +790,8 @@ describe('ReactFlightDOMNode', () => {
 
   // @gate enableHalt
   it('includes deeper location for aborted stacks', async () => {
+    const userSpaceStart = getLineNumber();
+
     async function getData() {
       const signal = ReactServer.cacheSignal();
       await new Promise((resolve, reject) => {
@@ -789,6 +830,8 @@ describe('ReactFlightDOMNode', () => {
       );
     }
 
+    const userSpaceEnd = getLineNumber();
+
     const errors = [];
     const serverAbortController = new AbortController();
     const {pendingResult} = await serverAct(async () => {
@@ -802,7 +845,10 @@ describe('ReactFlightDOMNode', () => {
             onError(error) {
               errors.push(error);
             },
-            filterStackFrame,
+            filterStackFrame: createFilterStackFrame(
+              userSpaceStart,
+              userSpaceEnd,
+            ),
           },
         ),
       };
@@ -906,6 +952,558 @@ describe('ReactFlightDOMNode', () => {
       expect(ownerStack).toBeNull();
     }
   });
+
+  // @gate enableHalt
+  describe.each(['setImmediate', 'setTimeout'])(
+    'when scheduling prerendering and aborting in successive tasks using %s',
+    timerFunctionName => {
+      let scheduleTask;
+
+      beforeEach(() => {
+        // These tests rely on tasks resolving exactly as they would in a real
+        // environment, which is not the case when using fake timers and
+        // serverAct.
+        jest.useRealTimers();
+        scheduleTask = globalThis[timerFunctionName];
+      });
+
+      afterEach(() => {
+        jest.useFakeTimers();
+      });
+
+      function createHangingPromise(signal) {
+        const promise = new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(signal.reason));
+        });
+        promise.displayName = 'hanging';
+        return promise;
+      }
+
+      function ClientRoot({response}) {
+        return use(response);
+      }
+
+      it('includes deeper location for hanging promises', async () => {
+        const userSpaceStart = getLineNumber();
+
+        async function Component({promise}) {
+          await promise;
+          return null;
+        }
+
+        function App({promise}) {
+          return ReactServer.createElement(
+            'html',
+            null,
+            ReactServer.createElement(
+              'body',
+              null,
+              ReactServer.createElement(Component, {promise}),
+            ),
+          );
+        }
+
+        const userSpaceEnd = getLineNumber();
+
+        const serverRenderAbortController = new AbortController();
+        const serverCleanupAbortController = new AbortController();
+        const errors = [];
+
+        const promise = createHangingPromise(
+          serverCleanupAbortController.signal,
+        );
+
+        // destructure trick to avoid the act scope from awaiting the returned value
+        const {prelude} = await new Promise((resolve, reject) => {
+          let result;
+
+          scheduleTask(() => {
+            result = ReactServerDOMStaticServer.prerender(
+              ReactServer.createElement(App, {promise}),
+              webpackMap,
+              {
+                signal: serverRenderAbortController.signal,
+                onError(error) {
+                  errors.push(error);
+                },
+                filterStackFrame: createFilterStackFrame(
+                  userSpaceStart,
+                  userSpaceEnd,
+                ),
+              },
+            );
+
+            serverRenderAbortController.signal.addEventListener('abort', () => {
+              serverCleanupAbortController.abort();
+            });
+          });
+
+          scheduleTask(() => {
+            serverRenderAbortController.abort();
+            resolve(result);
+          });
+        });
+
+        expect(errors).toEqual([]);
+
+        const prerenderResponse = ReactServerDOMClient.createFromReadableStream(
+          await createBufferedUnclosingStream(prelude),
+          {serverConsumerManifest: {moduleMap: null, moduleLoading: null}},
+        );
+
+        let componentStack;
+        let ownerStack;
+
+        const clientAbortController = new AbortController();
+
+        const fizzPrerenderStream = await new Promise(resolve => {
+          let result;
+
+          scheduleTask(() => {
+            result = ReactDOMFizzStatic.prerender(
+              React.createElement(ClientRoot, {response: prerenderResponse}),
+              {
+                signal: clientAbortController.signal,
+                onError(error, errorInfo) {
+                  componentStack = errorInfo.componentStack;
+                  ownerStack = React.captureOwnerStack
+                    ? React.captureOwnerStack()
+                    : null;
+                },
+              },
+            );
+          });
+
+          scheduleTask(() => {
+            clientAbortController.abort();
+            resolve(result);
+          });
+        });
+
+        const prerenderHTML = await readWebResult(fizzPrerenderStream.prelude);
+
+        expect(prerenderHTML).toBe('');
+
+        const normalizedComponentStack = normalizeCodeLocInfo(componentStack, {
+          preserveLocation: true,
+        });
+
+        if (__DEV__) {
+          if (gate(flags => flags.enableAsyncDebugInfo)) {
+            expect(normalizedComponentStack).toMatchInlineSnapshot(`
+              "
+                  in Component (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:990:11)
+                  in body
+                  in html
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1001:27)
+                  in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)"
+            `);
+          } else {
+            expect(normalizedComponentStack).toMatchInlineSnapshot(`
+              "
+                  in Component
+                  in body
+                  in html
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1001:27)
+                  in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)"
+            `);
+          }
+        } else {
+          expect(normalizedComponentStack).toMatchInlineSnapshot(`
+            "
+                in body
+                in html
+                in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)"
+          `);
+        }
+
+        const normalizedOwnerStack = normalizeCodeLocInfo(ownerStack, {
+          preserveLocation: true,
+        });
+
+        if (__DEV__) {
+          if (gate(flags => flags.enableAsyncDebugInfo)) {
+            expect(normalizedOwnerStack).toMatchInlineSnapshot(`
+              "
+                  in Component (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:990:11)
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1001:27)"
+            `);
+          } else {
+            expect(normalizedOwnerStack).toMatchInlineSnapshot(`
+              "
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1001:27)"
+            `);
+          }
+        } else {
+          expect(normalizedOwnerStack).toBeNull();
+        }
+      });
+
+      it('includes deeper location for hanging promises in ignore-listed components', async () => {
+        async function IgnoreListedComponent({signal}) {
+          return createHangingPromise(signal);
+        }
+
+        const userSpaceStart = getLineNumber();
+
+        function App({signal}) {
+          return ReactServer.createElement(
+            'html',
+            null,
+            ReactServer.createElement(
+              'body',
+              null,
+              ReactServer.createElement(IgnoreListedComponent, {signal}),
+            ),
+          );
+        }
+
+        const userSpaceEnd = getLineNumber();
+
+        const serverRenderAbortController = new AbortController();
+        const serverCleanupAbortController = new AbortController();
+        const errors = [];
+
+        // destructure trick to avoid the act scope from awaiting the returned value
+        const {prelude} = await new Promise((resolve, reject) => {
+          let result;
+
+          scheduleTask(() => {
+            result = ReactServerDOMStaticServer.prerender(
+              ReactServer.createElement(App, {
+                signal: serverCleanupAbortController.signal,
+              }),
+              webpackMap,
+              {
+                signal: serverRenderAbortController.signal,
+                onError(error) {
+                  errors.push(error);
+                },
+                filterStackFrame: createFilterStackFrame(
+                  userSpaceStart,
+                  userSpaceEnd,
+                ),
+              },
+            );
+
+            serverRenderAbortController.signal.addEventListener('abort', () => {
+              serverCleanupAbortController.abort();
+            });
+          });
+
+          scheduleTask(() => {
+            serverRenderAbortController.abort();
+            resolve(result);
+          });
+        });
+
+        expect(errors).toEqual([]);
+
+        const prerenderResponse = ReactServerDOMClient.createFromReadableStream(
+          await createBufferedUnclosingStream(prelude),
+          {serverConsumerManifest: {moduleMap: null, moduleLoading: null}},
+        );
+
+        let componentStack;
+        let ownerStack;
+
+        const clientAbortController = new AbortController();
+
+        const fizzPrerenderStream = await new Promise(resolve => {
+          let result;
+
+          scheduleTask(() => {
+            result = ReactDOMFizzStatic.prerender(
+              React.createElement(ClientRoot, {response: prerenderResponse}),
+              {
+                signal: clientAbortController.signal,
+                onError(error, errorInfo) {
+                  componentStack = errorInfo.componentStack;
+                  ownerStack = React.captureOwnerStack
+                    ? React.captureOwnerStack()
+                    : null;
+                },
+              },
+            );
+          });
+
+          scheduleTask(() => {
+            clientAbortController.abort();
+            resolve(result);
+          });
+        });
+
+        const prerenderHTML = await readWebResult(fizzPrerenderStream.prelude);
+
+        expect(prerenderHTML).toBe('');
+
+        const normalizedComponentStack = normalizeCodeLocInfo(componentStack, {
+          preserveLocation: true,
+        });
+
+        if (__DEV__) {
+          expect(normalizedComponentStack).toMatchInlineSnapshot(`
+            "
+                in IgnoreListedComponent
+                in body
+                in html
+                in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1156:27)
+                in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)"
+          `);
+        } else {
+          expect(normalizedComponentStack).toMatchInlineSnapshot(`
+            "
+                in body
+                in html
+                in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)"
+          `);
+        }
+
+        const normalizedOwnerStack = normalizeCodeLocInfo(ownerStack, {
+          preserveLocation: true,
+        });
+
+        if (__DEV__) {
+          expect(normalizedOwnerStack).toMatchInlineSnapshot(`
+            "
+                in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1156:27)"
+          `);
+        } else {
+          expect(normalizedOwnerStack).toBeNull();
+        }
+      });
+
+      it('includes deeper location for unresolved I/O', async () => {
+        const userSpaceStart = getLineNumber();
+
+        async function ComponentA() {
+          await Promise.resolve();
+          await new Promise(r => setTimeout(r));
+          return null;
+        }
+
+        async function ComponentB() {
+          await new Promise(r => setTimeout(r));
+          return null;
+        }
+
+        async function ComponentC({promise}) {
+          await promise;
+          return null;
+        }
+
+        function ComponentD() {
+          const promise = new Promise(r => setTimeout(r, 10));
+          return ReactServer.createElement(ComponentC, {promise});
+        }
+
+        function App() {
+          return ReactServer.createElement(
+            'html',
+            null,
+            ReactServer.createElement(
+              'body',
+              null,
+              ReactServer.createElement(ComponentA),
+              ReactServer.createElement(ComponentB),
+              ReactServer.createElement(ComponentD),
+            ),
+          );
+        }
+
+        const userSpaceEnd = getLineNumber();
+
+        const serverRenderAbortController = new AbortController();
+        const errors = [];
+
+        // destructure trick to avoid the act scope from awaiting the returned value
+        const {prelude} = await new Promise((resolve, reject) => {
+          let result;
+
+          scheduleTask(() => {
+            result = ReactServerDOMStaticServer.prerender(
+              ReactServer.createElement(App),
+              webpackMap,
+              {
+                signal: serverRenderAbortController.signal,
+                onError(error) {
+                  errors.push(error);
+                },
+                filterStackFrame: createFilterStackFrame(
+                  userSpaceStart,
+                  userSpaceEnd,
+                ),
+              },
+            );
+          });
+
+          scheduleTask(() => {
+            serverRenderAbortController.abort();
+            resolve(result);
+          });
+        });
+
+        expect(errors).toEqual([]);
+
+        const prerenderResponse = ReactServerDOMClient.createFromReadableStream(
+          await createBufferedUnclosingStream(prelude),
+          {serverConsumerManifest: {moduleMap: null, moduleLoading: null}},
+        );
+
+        const componentStacks = [];
+        const ownerStacks = [];
+
+        const clientAbortController = new AbortController();
+
+        const fizzPrerenderStream = await new Promise(resolve => {
+          let result;
+
+          scheduleTask(() => {
+            result = ReactDOMFizzStatic.prerender(
+              React.createElement(ClientRoot, {response: prerenderResponse}),
+              {
+                signal: clientAbortController.signal,
+                onError(error, errorInfo) {
+                  componentStacks.push(errorInfo.componentStack);
+                  if (React.captureOwnerStack) {
+                    ownerStacks.push(React.captureOwnerStack());
+                  }
+                },
+              },
+            );
+          });
+
+          scheduleTask(() => {
+            clientAbortController.abort();
+            resolve(result);
+          });
+        });
+
+        const prerenderHTML = await readWebResult(fizzPrerenderStream.prelude);
+
+        expect(prerenderHTML).toBe('');
+
+        const normalizedComponentStacks = componentStacks.map(stack =>
+          normalizeCodeLocInfo(stack, {
+            preserveLocation: true,
+          }),
+        );
+
+        if (__DEV__) {
+          // TODO: The location for App is not quite right. It's the "implied
+          // location of the owner" that always points at where the first child
+          // is created (see initializeFakeStack in ReactFlightClient). This
+          // frame is not that important thought, so we accept that for now.
+
+          if (gate(flags => flags.enableAsyncDebugInfo)) {
+            expect(normalizedComponentStacks).toMatchInlineSnapshot(`
+              [
+                "
+                  in ComponentA (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1281:17)
+                  in body
+                  in html
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1307:27)
+                  in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)",
+                "
+                  in ComponentB (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1286:17)
+                  in body
+                  in html
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1307:27)
+                  in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)",
+                "
+                  in ComponentC (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1291:11)
+                  in ComponentD (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1297:30)
+                  in body
+                  in html
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1307:27)
+                  in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)",
+              ]
+            `);
+          } else {
+            expect(normalizedComponentStacks).toMatchInlineSnapshot(`
+              [
+                "
+                  in ComponentA
+                  in body
+                  in html
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1307:27)
+                  in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)",
+                "
+                  in ComponentB
+                  in body
+                  in html
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1307:27)
+                  in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)",
+                "
+                  in ComponentC
+                  in ComponentD (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1297:30)
+                  in body
+                  in html
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1307:27)
+                  in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)",
+              ]
+            `);
+          }
+        } else {
+          expect(normalizedComponentStacks).toMatchInlineSnapshot(`
+            [
+              "
+                in body
+                in html
+                in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)",
+              "
+                in body
+                in html
+                in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)",
+              "
+                in body
+                in html
+                in ClientRoot (/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:982:56)",
+            ]
+          `);
+        }
+
+        const normalizedOwnerStacks = ownerStacks.map(stack =>
+          normalizeCodeLocInfo(stack, {
+            preserveLocation: true,
+          }),
+        );
+
+        if (__DEV__) {
+          if (gate(flags => flags.enableAsyncDebugInfo)) {
+            expect(normalizedOwnerStacks).toMatchInlineSnapshot(`
+              [
+                "
+                  in ComponentA (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1281:17)
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1307:27)",
+                "
+                  in ComponentB (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1286:17)
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1308:27)",
+                "
+                  in ComponentC (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1291:11)
+                  in ComponentD (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1297:30)
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1309:27)",
+              ]
+            `);
+          } else {
+            expect(normalizedOwnerStacks).toMatchInlineSnapshot(`
+              [
+                "
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1307:27)",
+                "
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1308:27)",
+                "
+                  in ComponentD (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1297:30)
+                  in App (file:///packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMNode-test.js:1309:27)",
+              ]
+            `);
+          }
+        } else {
+          expect(normalizedOwnerStacks).toEqual([]);
+        }
+      });
+    },
+  );
 
   // @gate enableHalt || enablePostpone
   // @gate enableHalt

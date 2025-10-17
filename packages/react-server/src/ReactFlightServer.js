@@ -75,6 +75,7 @@ import type {
   AsyncSequence,
   IONode,
   PromiseNode,
+  UnresolvedAwaitNode,
   UnresolvedPromiseNode,
 } from './ReactFlightAsyncSequence';
 
@@ -95,6 +96,7 @@ import {
   markAsyncSequenceRootTask,
   getCurrentAsyncSequence,
   getAsyncSequenceFromPromise,
+  getInternalAwaitNode,
   parseStackTrace,
   parseStackTracePrivate,
   supportsComponentStorage,
@@ -4511,7 +4513,7 @@ function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
 
 function serializeIONode(
   request: Request,
-  ioNode: IONode | PromiseNode | UnresolvedPromiseNode,
+  ioNode: IONode | PromiseNode | UnresolvedPromiseNode | UnresolvedAwaitNode,
   promiseRef: null | WeakRef<Promise<mixed>>,
 ): string {
   const existingRef = request.writtenDebugObjects.get(ioNode);
@@ -5452,9 +5454,16 @@ function forwardDebugInfoFromCurrentContext(
     }
   }
   if (enableProfilerTimer && enableAsyncDebugInfo) {
-    const sequence = getCurrentAsyncSequence();
-    if (sequence !== null) {
-      emitAsyncSequence(request, task, sequence, debugInfo, null, null);
+    if (request.status === ABORTING) {
+      // When aborting, skip forwarding debug info here.
+      // forwardDebugInfoFromAbortedTask will handle it more accurately.
+    } else {
+      // For normal resolve/reject, use the current execution context, as it
+      // shows what actually caused the Promise to settle.
+      const sequence = getCurrentAsyncSequence();
+      if (sequence !== null) {
+        emitAsyncSequence(request, task, sequence, debugInfo, null, null);
+      }
     }
   }
 }
@@ -5492,11 +5501,18 @@ function forwardDebugInfoFromAbortedTask(request: Request, task: Task): void {
           // See if any of the dependencies are resolved yet.
           node = node.awaited;
         }
+        // For unresolved promise nodes, check if we have an internal await node
+        // that shows what the async function is blocked on.
         if (node.tag === UNRESOLVED_PROMISE_NODE) {
-          // We don't know what Promise will eventually end up resolving this Promise and if it
-          // was I/O at all. However, we assume that it was some kind of I/O since it didn't
-          // complete in time before aborting.
-          // The best we can do is try to emit the stack of where this Promise was created.
+          const internalAwait = getInternalAwaitNode(node);
+          if (internalAwait !== null) {
+            node = internalAwait;
+          }
+        }
+        if (
+          node.tag === UNRESOLVED_PROMISE_NODE ||
+          node.tag === UNRESOLVED_AWAIT_NODE
+        ) {
           serializeIONode(request, node, null);
           request.pendingChunks++;
           const env = (0, request.environmentName)();
