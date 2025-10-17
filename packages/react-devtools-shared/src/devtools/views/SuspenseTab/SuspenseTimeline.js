@@ -173,6 +173,7 @@ function SuspenseTimelineInput() {
         <SuspenseScrubber
           min={min}
           max={max}
+          timeline={timeline}
           value={timelineIndex}
           highlight={hoveredTimelineIndex}
           onChange={handleChange}

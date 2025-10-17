@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {SuspenseTimelineStep} from 'react-devtools-shared/src/frontend/types';
+
 import typeof {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
@@ -14,11 +16,14 @@ import {useRef} from 'react';
 
 import styles from './SuspenseScrubber.css';
 
+import {getClassNameForEnvironment} from './SuspenseEnvironmentColors.js';
+
 import Tooltip from '../Components/reach-ui/tooltip';
 
 export default function SuspenseScrubber({
   min,
   max,
+  timeline,
   value,
   highlight,
   onBlur,
@@ -29,6 +34,7 @@ export default function SuspenseScrubber({
 }: {
   min: number,
   max: number,
+  timeline: $ReadOnlyArray<SuspenseTimelineStep>,
   value: number,
   highlight: number,
   onBlur?: () => void,
@@ -54,17 +60,18 @@ export default function SuspenseScrubber({
   }
   const steps = [];
   for (let index = min; index <= max; index++) {
+    const environment = timeline[index].environment;
+    const label =
+      index === min
+        ? // The first step in the timeline is always a Transition (Initial Paint).
+          'Initial Paint' +
+          (environment === null ? '' : ' (' + environment + ')')
+        : // TODO: Consider adding the name of this specific boundary if this step has only one.
+          environment === null
+          ? 'Suspense'
+          : environment;
     steps.push(
-      <Tooltip
-        key={index}
-        label={
-          index === min
-            ? // The first step in the timeline is always a Transition (Initial Paint).
-              // TODO: Support multiple environments.
-              'Initial Paint'
-            : // TODO: Consider adding the name of this specific boundary if this step has only one.
-              'Suspense'
-        }>
+      <Tooltip key={index} label={label}>
         <div
           className={
             styles.SuspenseScrubberStep +
@@ -79,9 +86,10 @@ export default function SuspenseScrubber({
               styles.SuspenseScrubberBead +
               (index === min
                 ? // The first step in the timeline is always a Transition (Initial Paint).
-                  // TODO: Support multiple environments.
                   ' ' + styles.SuspenseScrubberBeadTransition
                 : '') +
+              ' ' +
+              getClassNameForEnvironment(environment) +
               (index <= value ? ' ' + styles.SuspenseScrubberBeadSelected : '')
             }
           />

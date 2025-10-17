@@ -30,6 +30,7 @@ import {
   SuspenseTreeStateContext,
   SuspenseTreeDispatcherContext,
 } from './SuspenseTreeContext';
+import {getClassNameForEnvironment} from './SuspenseEnvironmentColors.js';
 
 function ScaledRect({
   className,
@@ -157,12 +158,25 @@ function SuspenseRects({
     hoveredTimelineIndex > -1 &&
     timeline[hoveredTimelineIndex].id === suspenseID;
 
+  let environment: null | string = null;
+  for (let i = 0; i < timeline.length; i++) {
+    const timelineStep = timeline[i];
+    if (timelineStep.id === suspenseID) {
+      environment = timelineStep.environment;
+      break;
+    }
+  }
+
   const boundingBox = getBoundingBox(suspense.rects);
 
   return (
     <ScaledRect
       rect={boundingBox}
-      className={styles.SuspenseRectsBoundary}
+      className={
+        styles.SuspenseRectsBoundary +
+        ' ' +
+        getClassNameForEnvironment(environment)
+      }
       visible={visible}
       selected={selected}
       suspended={suspense.isSuspended}
@@ -327,9 +341,8 @@ function SuspenseRectsContainer(): React$Node {
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
-  const {roots, hoveredTimelineIndex, uniqueSuspendersOnly} = useContext(
-    SuspenseTreeStateContext,
-  );
+  const {roots, timeline, hoveredTimelineIndex, uniqueSuspendersOnly} =
+    useContext(SuspenseTreeStateContext);
 
   // TODO: bbox does not consider uniqueSuspendersOnly filter
   const boundingBox = getDocumentBoundingRect(store, roots);
@@ -389,11 +402,16 @@ function SuspenseRectsContainer(): React$Node {
     }
   }
 
+  const rootEnvironment =
+    timeline.length === 0 ? null : timeline[0].environment;
+
   return (
     <div
       className={
         styles.SuspenseRectsContainer +
-        (hasRootSuspenders ? ' ' + styles.SuspenseRectsRoot : '')
+        (hasRootSuspenders ? ' ' + styles.SuspenseRectsRoot : '') +
+        ' ' +
+        getClassNameForEnvironment(rootEnvironment)
       }
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
