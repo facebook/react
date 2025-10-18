@@ -13,6 +13,8 @@ export function getIODescription(value: mixed): string {
   }
   try {
     switch (typeof value) {
+      case 'function':
+        return value.name || '';
       case 'object':
         // Test the object for a bunch of common property names that are useful identifiers.
         // While we only have the return value here, it should ideally be a name that
