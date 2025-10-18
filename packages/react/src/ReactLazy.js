@@ -20,6 +20,8 @@ import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
+import noop from 'shared/noop';
+
 const Uninitialized = -1;
 const Pending = 0;
 const Resolved = 1;
@@ -140,6 +142,9 @@ function lazyInitializer<T>(payload: Payload<T>): T {
               // Mark the end time of when we rejected.
               // $FlowFixMe[cannot-write]
               ioInfo.end = performance.now();
+              // Hide unhandled rejections.
+              // $FlowFixMe
+              ioInfo.value.then(noop, noop);
               rejectDebugValue(error);
               // $FlowFixMe
               ioInfo.value.status = 'rejected';
