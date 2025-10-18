@@ -110,6 +110,10 @@ type ManualMemoBlockState = {
    */
   depsFromSource: Array<ManualMemoDependency> | null;
   manualMemoId: number;
+  /**
+   * The type of manual memoization hook (useCallback or useMemo)
+   */
+  memoType: 'useCallback' | 'useMemo';
 };
 
 type VisitorState = {
@@ -513,6 +517,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         depsFromSource,
         manualMemoId: value.manualMemoId,
         reassignments: new Map(),
+        memoType: value.memoType,
       };
 
       /**
@@ -575,6 +580,8 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         },
       );
       const reassignments = state.manualMemoState.reassignments;
+      const hadEmptyDeps = state.manualMemoState.depsFromSource?.length === 0;
+      const wasUseCallback = state.manualMemoState.memoType === 'useCallback';
       state.manualMemoState = null;
       if (!value.pruned) {
         for (const {identifier, loc} of eachInstructionValueOperand(
@@ -592,7 +599,18 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           }
 
           for (const identifier of decls) {
-            if (isUnmemoized(identifier, this.scopes)) {
+            /**
+             * Allow self-references in useCallback with empty deps (e.g. recursive animations)
+             */
+            const isSelfReferenceInUseCallback =
+              wasUseCallback &&
+              hadEmptyDeps &&
+              value.decl.identifier.declarationId === identifier.declarationId;
+
+            if (
+              !isSelfReferenceInUseCallback &&
+              isUnmemoized(identifier, this.scopes)
+            ) {
               state.errors.pushDiagnostic(
                 CompilerDiagnostic.create({
                   category: ErrorCategory.PreserveManualMemo,
