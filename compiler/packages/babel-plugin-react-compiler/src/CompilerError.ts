@@ -282,6 +282,30 @@ export class CompilerError extends Error {
   disabledDetails: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
   printedMessage: string | null = null;
 
+  static simpleInvariant(
+    condition: unknown,
+    options: {
+      reason: CompilerDiagnosticOptions['reason'];
+      description?: CompilerDiagnosticOptions['description'];
+      loc: SourceLocation;
+    },
+  ): asserts condition {
+    if (!condition) {
+      const errors = new CompilerError();
+      errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          reason: options.reason,
+          description: options.description ?? null,
+          category: ErrorCategory.Invariant,
+        }).withDetails({
+          kind: 'error',
+          loc: options.loc,
+          message: options.reason,
+        }),
+      );
+      throw errors;
+    }
+  }
   static invariant(
     condition: unknown,
     options: Omit<CompilerDiagnosticOptions, 'category'>,
