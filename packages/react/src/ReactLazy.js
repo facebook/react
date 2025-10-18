@@ -67,12 +67,20 @@ export type LazyComponent<T, P> = {
 
 function lazyInitializer<T>(payload: Payload<T>): T {
   if (payload._status === Uninitialized) {
+    let resolveDebugValue: (void | T) => void = (null: any);
+    let rejectDebugValue: mixed => void = (null: any);
     if (__DEV__ && enableAsyncDebugInfo) {
       const ioInfo = payload._ioInfo;
       if (ioInfo != null) {
         // Mark when we first kicked off the lazy request.
         // $FlowFixMe[cannot-write]
         ioInfo.start = ioInfo.end = performance.now();
+        // Stash a Promise for introspection of the value later.
+        // $FlowFixMe[cannot-write]
+        ioInfo.value = new Promise((resolve, reject) => {
+          resolveDebugValue = resolve;
+          rejectDebugValue = reject;
+        });
       }
     }
     const ctor = payload._result;
@@ -98,6 +106,14 @@ function lazyInitializer<T>(payload: Payload<T>): T {
               // Mark the end time of when we resolved.
               // $FlowFixMe[cannot-write]
               ioInfo.end = performance.now();
+              // Surface the default export as the resolved "value" for debug purposes.
+              const debugValue =
+                moduleObject == null ? undefined : moduleObject.default;
+              resolveDebugValue(debugValue);
+              // $FlowFixMe
+              ioInfo.value.status = 'fulfilled';
+              // $FlowFixMe
+              ioInfo.value.value = debugValue;
             }
             // Make the thenable introspectable
             if (thenable.status === undefined) {
@@ -124,6 +140,11 @@ function lazyInitializer<T>(payload: Payload<T>): T {
               // Mark the end time of when we rejected.
               // $FlowFixMe[cannot-write]
               ioInfo.end = performance.now();
+              rejectDebugValue(error);
+              // $FlowFixMe
+              ioInfo.value.status = 'rejected';
+              // $FlowFixMe
+              ioInfo.value.reason = error;
             }
             // Make the thenable introspectable
             if (thenable.status === undefined) {
@@ -139,9 +160,6 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     if (__DEV__ && enableAsyncDebugInfo) {
       const ioInfo = payload._ioInfo;
       if (ioInfo != null) {
-        // Stash the thenable for introspection of the value later.
-        // $FlowFixMe[cannot-write]
-        ioInfo.value = thenable;
         const displayName = thenable.displayName;
         if (typeof displayName === 'string') {
           // $FlowFixMe[cannot-write]
