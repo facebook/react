@@ -1646,10 +1646,6 @@ export default class Store extends EventEmitter<{
             parentSuspense.children.push(id);
           }
 
-          if (name === null) {
-            name = 'Unknown';
-          }
-
           this._idToSuspense.set(id, {
             id,
             parentID,
@@ -2170,13 +2166,12 @@ export default class Store extends EventEmitter<{
     throw error;
   }
 
-  _guessSuspenseName(element: Element): string {
+  _guessSuspenseName(element: Element): string | null {
     const owner = this._idToElement.get(element.ownerID);
-    let name = 'Unknown';
     if (owner !== undefined && owner.displayName !== null) {
-      name = owner.displayName;
+      return owner.displayName;
     }
 
-    return name;
+    return null;
   }
 }

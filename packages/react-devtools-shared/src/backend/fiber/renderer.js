@@ -2664,7 +2664,7 @@ export function attach(
 
     const fiber = fiberInstance.data;
     const props = fiber.memoizedProps;
-    // TODO: Compute a fallback name based on Owner, key etc.
+    // The frontend will guess a name based on heuristics (e.g. owner) if no explicit name is given.
     const name =
       fiber.tag !== SuspenseComponent || props === null
         ? null

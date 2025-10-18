@@ -72,7 +72,7 @@ export default function SuspenseBreadcrumbs(): React$Node {
                 className={styles.SuspenseBreadcrumbsButton}
                 onClick={handleClick.bind(null, id)}
                 type="button">
-                {node === null ? 'Unknown' : node.name}
+                {node === null ? 'Unknown' : node.name || 'Unknown'}
               </button>
             </li>
           );

@@ -196,7 +196,7 @@ function SuspenseRects({
                 onPointerOver={handlePointerOver}
                 onPointerLeave={handlePointerLeave}
                 // Reach-UI tooltip will go out of bounds of parent scroll container.
-                title={suspense.name}
+                title={suspense.name || 'Unknown'}
               />
             );
           })}
