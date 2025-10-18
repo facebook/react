@@ -303,7 +303,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   5,
                 ],
                 [
-                  "Component",
+                  "async Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
                   118,
                   20,
@@ -343,7 +343,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 5,
               ],
               [
-                "Component",
+                "async Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
                 118,
                 20,
@@ -1392,7 +1392,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   5,
                 ],
                 [
-                  "ThirdPartyComponent",
+                  "async ThirdPartyComponent",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
                   1158,
                   18,
@@ -1440,7 +1440,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 5,
               ],
               [
-                "ThirdPartyComponent",
+                "async ThirdPartyComponent",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
                 1158,
                 18,
