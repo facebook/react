@@ -5,22 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  ErrorCategory,
-  getRuleForCategory,
-} from 'babel-plugin-react-compiler/src/CompilerError';
 import {normalizeIndent, testRule, makeTestCaseError} from './shared-utils';
-import {allRules} from '../src/rules/ReactCompilerRule';
+import ReactCompilerRule from '../src/rules/ReactCompilerRule';
 
-testRule(
-  'no ambiguous JSX rule',
-  allRules[getRuleForCategory(ErrorCategory.ErrorBoundaries).name].rule,
-  {
-    valid: [],
-    invalid: [
-      {
-        name: 'JSX in try blocks are warned against',
-        code: normalizeIndent`
+testRule('no ambiguous JSX rule', ReactCompilerRule, {
+  valid: [],
+  invalid: [
+    {
+      name: 'JSX in try blocks are warned against',
+      code: normalizeIndent`
       function Component(props) {
         let el;
         try {
@@ -31,8 +24,7 @@ testRule(
         return el;
       }
     `,
-        errors: [makeTestCaseError('Avoid constructing JSX within try/catch')],
-      },
-    ],
-  },
-);
+      errors: [makeTestCaseError('Avoid constructing JSX within try/catch')],
+    },
+  ],
+});

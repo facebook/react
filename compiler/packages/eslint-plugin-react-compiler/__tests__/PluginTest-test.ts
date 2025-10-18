@@ -5,19 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  ErrorCategory,
-  getRuleForCategory,
-} from 'babel-plugin-react-compiler/src/CompilerError';
-import {
-  normalizeIndent,
-  testRule,
-  makeTestCaseError,
-  TestRecommendedRules,
-} from './shared-utils';
-import {allRules} from '../src/rules/ReactCompilerRule';
+import {normalizeIndent, testRule, makeTestCaseError} from './shared-utils';
+import {AllRules} from '../src/rules/ReactCompilerRule';
 
-testRule('plugin-recommended', TestRecommendedRules, {
+testRule('plugin-recommended', AllRules, {
   valid: [
     {
       name: 'Basic example with component syntax',
