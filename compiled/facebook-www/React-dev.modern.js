@@ -536,23 +536,40 @@ __DEV__ &&
     }
     function lazyInitializer(payload) {
       if (-1 === payload._status) {
+        var resolveDebugValue = null,
+          rejectDebugValue = null;
         if (enableAsyncDebugInfo) {
           var ioInfo = payload._ioInfo;
-          null != ioInfo && (ioInfo.start = ioInfo.end = performance.now());
+          null != ioInfo &&
+            ((ioInfo.start = ioInfo.end = performance.now()),
+            (ioInfo.value = new Promise(function (resolve, reject) {
+              resolveDebugValue = resolve;
+              rejectDebugValue = reject;
+            })));
         }
         ioInfo = payload._result;
         var thenable = ioInfo();
         thenable.then(
           function (moduleObject) {
-            if (0 === payload._status || -1 === payload._status) {
-              payload._status = 1;
-              payload._result = moduleObject;
-              var _ioInfo = payload._ioInfo;
-              null != _ioInfo && (_ioInfo.end = performance.now());
-              void 0 === thenable.status &&
-                ((thenable.status = "fulfilled"),
-                (thenable.value = moduleObject));
-            }
+            if (0 === payload._status || -1 === payload._status)
+              if (
+                ((payload._status = 1),
+                (payload._result = moduleObject),
+                enableAsyncDebugInfo)
+              ) {
+                var _ioInfo = payload._ioInfo;
+                if (null != _ioInfo) {
+                  _ioInfo.end = performance.now();
+                  var debugValue =
+                    null == moduleObject ? void 0 : moduleObject.default;
+                  resolveDebugValue(debugValue);
+                  _ioInfo.value.status = "fulfilled";
+                  _ioInfo.value.value = debugValue;
+                }
+                void 0 === thenable.status &&
+                  ((thenable.status = "fulfilled"),
+                  (thenable.value = moduleObject));
+              }
           },
           function (error) {
             if (0 === payload._status || -1 === payload._status)
@@ -562,7 +579,12 @@ __DEV__ &&
                 enableAsyncDebugInfo)
               ) {
                 var _ioInfo2 = payload._ioInfo;
-                null != _ioInfo2 && (_ioInfo2.end = performance.now());
+                null != _ioInfo2 &&
+                  ((_ioInfo2.end = performance.now()),
+                  _ioInfo2.value.then(noop, noop),
+                  rejectDebugValue(error),
+                  (_ioInfo2.value.status = "rejected"),
+                  (_ioInfo2.value.reason = error));
                 void 0 === thenable.status &&
                   ((thenable.status = "rejected"), (thenable.reason = error));
               }
@@ -572,7 +594,6 @@ __DEV__ &&
           enableAsyncDebugInfo &&
           ((ioInfo = payload._ioInfo), null != ioInfo)
         ) {
-          ioInfo.value = thenable;
           var displayName = thenable.displayName;
           "string" === typeof displayName && (ioInfo.name = displayName);
         }
@@ -1478,7 +1499,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.3.0-www-modern-c35f6a30-20251017";
+    exports.version = "19.3.0-www-modern-ec7d9a72-20251019";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
