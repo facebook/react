@@ -54,7 +54,7 @@ import {
   renamePathInObject,
   setInObject,
   utfEncodeString,
-  filterOutLocationComponentFilters,
+  persistableComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {
   formatConsoleArgumentsToSingleString,
@@ -1510,11 +1510,9 @@ export function attach(
   // because they are stored in localStorage within the context of the extension.
   // Instead it relies on the extension to pass filters through.
   if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
-    const componentFiltersWithoutLocationBasedOnes =
-      filterOutLocationComponentFilters(
-        window.__REACT_DEVTOOLS_COMPONENT_FILTERS__,
-      );
-    applyComponentFilters(componentFiltersWithoutLocationBasedOnes);
+    const restoredComponentFilters: Array<ComponentFilter> =
+      persistableComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
+    applyComponentFilters(restoredComponentFilters);
   } else {
     // Unfortunately this feature is not expected to work for React Native for now.
     // It would be annoying for us to spam YellowBox warnings with unactionable stuff,
