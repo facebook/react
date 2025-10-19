@@ -102,7 +102,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
           const resolved: ResolvedPayload<T> = (payload: any);
           resolved._status = Resolved;
           resolved._result = moduleObject;
-          if (__DEV__) {
+          if (__DEV__ && enableAsyncDebugInfo) {
             const ioInfo = payload._ioInfo;
             if (ioInfo != null) {
               // Mark the end time of when we resolved.
