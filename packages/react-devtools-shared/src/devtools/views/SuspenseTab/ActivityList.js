@@ -27,10 +27,12 @@ import {
 import {useHighlightHostInstance} from '../hooks';
 import {StoreContext} from '../context';
 
-export function useChangeActivitySliceAction(): (id: Element['id']) => void {
+export function useChangeActivitySliceAction(): (
+  id: Element['id'] | null,
+) => void {
   const store = useContext(StoreContext);
 
-  function changeActivitySliceAction(activityID: Element['id']) {
+  function changeActivitySliceAction(activityID: Element['id'] | null) {
     const nextFilters: ComponentFilter[] = [];
     // Remove any existing activity slice filter
     for (let i = 0; i < store.componentFilters.length; i++) {
@@ -39,14 +41,16 @@ export function useChangeActivitySliceAction(): (id: Element['id']) => void {
         nextFilters.push(filter);
       }
     }
-    const activityFilter: ActivitySliceFilter = {
-      type: 6,
-      activityID: activityID,
-      isValid: true,
-      isEnabled: true,
-    };
-    nextFilters.push(activityFilter);
 
+    if (activityID !== null) {
+      const activityFilter: ActivitySliceFilter = {
+        type: 6,
+        activityID: activityID,
+        isValid: true,
+        isEnabled: true,
+      };
+      nextFilters.push(activityFilter);
+    }
     store.componentFilters = nextFilters;
   }
 

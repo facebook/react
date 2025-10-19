@@ -33,6 +33,7 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
@@ -442,6 +443,16 @@ export function printOperationsArray(operations: Array<number>) {
           );
         }
 
+        break;
+      }
+      case TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE: {
+        i++;
+        const activitySliceIDChange = operations[i + 1];
+        logs.push(
+          activitySliceIDChange === 0
+            ? 'Reset applied activity slice'
+            : 'Applied activity slice change to ' + activitySliceIDChange,
+        );
         break;
       }
       default:
