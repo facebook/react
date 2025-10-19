@@ -27,7 +27,7 @@ import {
   SUSPENSE_TREE_OPERATION_RESIZE,
   SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from '../constants';
-import {ElementTypeActivity, ElementTypeRoot} from '../frontend/types';
+import {ElementTypeRoot} from '../frontend/types';
 import {
   getSavedComponentFilters,
   setSavedComponentFilters,

@@ -6,7 +6,11 @@
  *
  * @flow
  */
-import type {Element} from 'react-devtools-shared/src/frontend/types';
+import type {
+  Element,
+  ActivitySliceFilter,
+  ComponentFilter,
+} from 'react-devtools-shared/src/frontend/types';
 import typeof {
   SyntheticMouseEvent,
   SyntheticKeyboardEvent,
@@ -22,10 +26,6 @@ import {
 } from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
 import {StoreContext} from '../context';
-import type {
-  ActivitySliceFilter,
-  ComponentFilter,
-} from '../../../frontend/types';
 
 export function useChangeActivitySliceAction(): (id: Element['id']) => void {
   const store = useContext(StoreContext);
