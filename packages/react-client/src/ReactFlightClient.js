@@ -2561,6 +2561,7 @@ function ResponseInstance(
   findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
+  debugStartTime: void | number, // DEV-only
   debugChannel: void | DebugChannel, // DEV-only
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
@@ -2621,7 +2622,8 @@ function ResponseInstance(
       // Note: createFromFetch allows this to be marked at the start of the fetch
       // where as if you use createFromReadableStream from the body of the fetch
       // then the start time is when the headers resolved.
-      this._debugStartTime = performance.now();
+      this._debugStartTime =
+        debugStartTime == null ? performance.now() : debugStartTime;
       this._debugIOStarted = false;
       // We consider everything before the first setTimeout task to be cached data
       // and is not considered I/O required to load the stream.
@@ -2669,6 +2671,7 @@ export function createResponse(
   findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
+  debugStartTime: void | number, // DEV-only
   debugChannel: void | DebugChannel, // DEV-only
 ): WeakResponse {
   return getWeakResponse(
@@ -2684,6 +2687,7 @@ export function createResponse(
       findSourceMapURL,
       replayConsole,
       environmentName,
+      debugStartTime,
       debugChannel,
     ),
   );

@@ -102,6 +102,7 @@ function createResponseFromOptions(options: void | Options) {
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    undefined,
     debugChannel,
   );
 }

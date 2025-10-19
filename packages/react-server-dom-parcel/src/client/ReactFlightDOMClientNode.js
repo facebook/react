@@ -103,6 +103,7 @@ export function createFromNodeStream<T>(
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    undefined,
     debugChannel,
   );
 
