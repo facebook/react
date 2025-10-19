@@ -86,6 +86,7 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
@@ -1566,6 +1567,12 @@ export function attach(
       currentRoot = (null: any);
     });
 
+    if (nextActivitySlice !== activitySlice) {
+      // Set the applied slice to 0 for now.
+      // When we find the applied instance during mount we will send the actual ID.
+      pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
+      pushOperation(0);
+    }
     applyComponentFilters(componentFilters, nextActivitySlice);
 
     // Reset pseudo counters so that new path selections will be persisted.
@@ -4018,6 +4025,8 @@ export function attach(
       newInstance = recordMount(fiber, reconcilingParent);
       if (isActivitySliceEntry) {
         activitySliceID = newInstance.id;
+        pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
+        pushOperation(newInstance.id);
       }
       if (fiber.tag === SuspenseComponent || fiber.tag === HostRoot) {
         newSuspenseNode = createSuspenseNode(newInstance);
