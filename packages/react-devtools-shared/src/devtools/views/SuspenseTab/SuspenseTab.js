@@ -6,12 +6,14 @@
  *
  * @flow
  */
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 import * as React from 'react';
 import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useReducer,
   useRef,
   Fragment,
@@ -25,12 +27,13 @@ import ButtonIcon, {type IconType} from '../ButtonIcon';
 import InspectHostNodesToggle from '../Components/InspectHostNodesToggle';
 import InspectedElementErrorBoundary from '../Components/InspectedElementErrorBoundary';
 import InspectedElement from '../Components/InspectedElement';
+import {TreeStateContext} from '../Components/TreeContext';
 import portaledContent from '../portaledContent';
 import styles from './SuspenseTab.css';
 import SuspenseBreadcrumbs from './SuspenseBreadcrumbs';
 import SuspenseRects from './SuspenseRects';
 import SuspenseTimeline from './SuspenseTimeline';
-import SuspenseTreeList from './SuspenseTreeList';
+import ActivityList from './ActivityList';
 import {
   SuspenseTreeDispatcherContext,
   SuspenseTreeStateContext,
@@ -42,6 +45,7 @@ import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/Synthe
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
+import {ElementTypeActivity} from 'react-devtools-shared/src/frontend/types';
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -270,6 +274,29 @@ function SynchronizedScrollContainer({
   );
 }
 
+// TODO: Get this from the store directly.
+// The backend needs to keep a separate tree so that resuspending keeps Activity around.
+function useActivities(): $ReadOnlyArray<Element> {
+  const {numElements} = useContext(TreeStateContext);
+  const store = useContext(StoreContext);
+
+  const activities = useMemo(() => {
+    const items = [];
+    for (let i = 0; i < numElements; i++) {
+      const element = store.getElementAtIndex(i);
+      if (element === null) {
+        continue;
+      }
+      if (element.type === ElementTypeActivity && element.nameProp !== null) {
+        items.push(element);
+      }
+    }
+    return items;
+  }, [numElements]);
+
+  return activities;
+}
+
 function SuspenseTab(_: {}) {
   const store = useContext(StoreContext);
   const {hideSettings} = useContext(OptionsContext);
@@ -279,10 +306,11 @@ function SuspenseTab(_: {}) {
     initLayoutState,
   );
 
+  const activities = useActivities();
   // If there are no named Activity boundaries, we don't have any tree list and we should hide
   // both the panel and the button to toggle it. Since we currently don't support it yet, it's
   // always disabled.
-  const treeListDisabled = true;
+  const treeListDisabled = activities.length === 0;
 
   const wrapperTreeRef = useRef<null | HTMLElement>(null);
   const resizeTreeRef = useRef<null | HTMLElement>(null);
@@ -462,10 +490,10 @@ function SuspenseTab(_: {}) {
         <div className={styles.TreeWrapper} ref={resizeTreeRef}>
           {treeListDisabled ? null : (
             <div
-              className={styles.TreeList}
+              className={styles.ActivityList}
               hidden={treeListHidden}
               ref={resizeTreeListRef}>
-              <SuspenseTreeList />
+              <ActivityList activities={activities} />
             </div>
           )}
           {treeListDisabled ? null : (

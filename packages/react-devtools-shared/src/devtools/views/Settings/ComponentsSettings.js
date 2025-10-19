@@ -29,6 +29,7 @@ import {
   ComponentFilterHOC,
   ComponentFilterLocation,
   ComponentFilterEnvironmentName,
+  ComponentFilterActivitySlice,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeFunction,
@@ -171,6 +172,8 @@ export default function ComponentsSettings({
               isValid: true,
               value: 'Client',
             };
+          } else if (type === ComponentFilterActivitySlice) {
+            // TODO: Allow changing type
           }
         }
         return cloned;
@@ -371,6 +374,9 @@ export default function ComponentsSettings({
                       : styles.InvalidRegExp
                   }
                   isChecked={componentFilter.isEnabled}
+                  isDisabled={
+                    componentFilter.type === ComponentFilterActivitySlice
+                  }
                   onChange={isEnabled =>
                     toggleFilterIsEnabled(componentFilter, isEnabled)
                   }
@@ -392,6 +398,9 @@ export default function ComponentsSettings({
               </td>
               <td className={styles.TableCell}>
                 <select
+                  disabled={
+                    componentFilter.type === ComponentFilterActivitySlice
+                  }
                   value={componentFilter.type}
                   onChange={({currentTarget}) =>
                     changeFilterType(
@@ -413,6 +422,7 @@ export default function ComponentsSettings({
                       environment
                     </option>
                   )}
+                  <option value={ComponentFilterActivitySlice}>activity</option>
                 </select>
               </td>
               <td className={styles.TableCell}>
@@ -486,6 +496,9 @@ export default function ComponentsSettings({
                       </option>
                     ))}
                   </select>
+                )}
+                {componentFilter.type === ComponentFilterActivitySlice && (
+                  <span>Activity Slice</span>
                 )}
               </td>
               <td className={styles.TableCell}>
