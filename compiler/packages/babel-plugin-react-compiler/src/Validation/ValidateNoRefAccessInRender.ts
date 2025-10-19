@@ -402,14 +402,26 @@ function validateNoRefAccessInRenderImpl(
             }
             const objType = env.get(instr.value.object.identifier.id);
             let lookupType: null | RefAccessType = null;
-            if (objType?.kind === 'Structure') {
-              lookupType = objType.value;
-            } else if (objType?.kind === 'Ref') {
-              lookupType = {
-                kind: 'RefValue',
-                loc: instr.loc,
-                refId: objType.refId,
-              };
+            if (objType?.kind === 'Ref') {
+              // Only loading .current from a ref should be treated as a ref value access
+              if (
+                instr.value.kind === 'PropertyLoad' &&
+                instr.value.property === 'current'
+              ) {
+                lookupType = {
+                  kind: 'RefValue',
+                  loc: instr.loc,
+                  refId: objType.refId,
+                };
+              }
+            } else if (objType?.kind === 'Structure') {
+              // For structures (like props objects or objects containing refs),
+              // we should not automatically propagate the ref type to all properties.
+              // Only propagate if we're destructuring the entire object or if the
+              // specific property is known to be a ref.
+              // This prevents false positives where props.className is flagged as a ref
+              // just because props also contains props.ref.
+              lookupType = null;
             }
             env.set(
               instr.lvalue.identifier.id,
