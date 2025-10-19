@@ -8,27 +8,36 @@
 import {HIRFunction, IdentifierId} from '../HIR';
 
 /**
- * Checks if a function has any references to variables from outer scopes
- * (beyond the explicitly tracked context array). This includes LoadContext
- * instructions which indicate the function is accessing variables that are
- * not passed as parameters or declared locally.
+ * Checks if a function accesses context variables that are not explicitly
+ * tracked in its context array. Context variables are those that are both
+ * accessed within a function expression and reassigned somewhere in the
+ * outer scope.
  */
-function hasUnaccountedOuterScopeReferences(fn: HIRFunction): boolean {
+function accessesOuterContextVariables(fn: HIRFunction): boolean {
+  const contextIdentifiers = new Set(
+    fn.context.map(place => place.identifier.id),
+  );
+
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      // Check if this instruction loads from outer scope context
-      if (instr.value.kind === 'LoadContext') {
-        // LoadContext means we're accessing a variable from an outer scope
-        // that's not in the context array. This function cannot be safely outlined.
-        return true;
+      if (
+        instr.value.kind === 'LoadContext' ||
+        instr.value.kind === 'StoreContext'
+      ) {
+        const place =
+          instr.value.kind === 'LoadContext'
+            ? instr.value.place
+            : instr.value.lvalue.place;
+        if (!contextIdentifiers.has(place.identifier.id)) {
+          return true;
+        }
       }
 
-      // Recursively check nested functions
       if (
         instr.value.kind === 'FunctionExpression' ||
         instr.value.kind === 'ObjectMethod'
       ) {
-        if (hasUnaccountedOuterScopeReferences(instr.value.loweredFunc.func)) {
+        if (accessesOuterContextVariables(instr.value.loweredFunc.func)) {
           return true;
         }
       }
@@ -58,10 +67,7 @@ export function outlineFunctions(
         // TODO: handle outlining named functions
         value.loweredFunc.func.id === null &&
         !fbtOperands.has(lvalue.identifier.id) &&
-        // FIXED: Also check that the function doesn't have any LoadContext instructions
-        // which would indicate it's accessing variables from outer scopes not tracked
-        // in the context array. See https://github.com/facebook/react/issues/34901
-        !hasUnaccountedOuterScopeReferences(value.loweredFunc.func)
+        !accessesOuterContextVariables(value.loweredFunc.func)
       ) {
         const loweredFunc = value.loweredFunc.func;
 
