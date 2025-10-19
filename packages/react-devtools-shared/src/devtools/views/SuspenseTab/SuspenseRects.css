@@ -39,6 +39,16 @@
   pointer-events: none;
 }
 
+.SuspenseRectsTitle {
+  pointer-events: none;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--font-size-sans-small);
+  line-height: var(--font-size-sans-small);
+  padding: .25rem;
+}
+
 .SuspenseRectsScaledRect[data-visible='false'] > .SuspenseRectsBoundaryChildren {
   overflow: initial;
 }
