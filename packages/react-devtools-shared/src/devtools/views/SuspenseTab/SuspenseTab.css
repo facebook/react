@@ -127,6 +127,8 @@
    * OwnerStack has more constraints that make it easier so it won't be a 1:1 port.
    */
   overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .SuspenseTreeViewFooter {
