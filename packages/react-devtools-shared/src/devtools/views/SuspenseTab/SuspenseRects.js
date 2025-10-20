@@ -234,7 +234,7 @@ function SuspenseRects({
         )}
         {titleBox && suspense.name && visible ? (
           <ScaledRect className={styles.SuspenseRectsTitle} rect={titleBox}>
-            {suspense.name}
+            <span>{suspense.name}</span>
           </ScaledRect>
         ) : null}
         {selected && visible ? (

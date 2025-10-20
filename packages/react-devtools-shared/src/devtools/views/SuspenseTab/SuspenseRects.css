@@ -47,6 +47,14 @@
   font-size: var(--font-size-sans-small);
   line-height: var(--font-size-sans-small);
   padding: .25rem;
+  container-type: size;
+  container-name: title;
+}
+
+@container title (width < 30px) or (height < 12px) {
+  .SuspenseRectsTitle > span {
+    display: none;
+  }
 }
 
 .SuspenseRectsScaledRect[data-visible='false'] > .SuspenseRectsBoundaryChildren {
