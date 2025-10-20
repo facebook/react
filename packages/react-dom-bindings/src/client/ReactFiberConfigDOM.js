@@ -214,6 +214,10 @@ export type Container =
 export type Instance = Element;
 export type TextInstance = Text;
 
+type InstanceWithObservingFragmentHandles = Instance & {
+  _reactObservingFragments?: Set<FragmentInstanceType>,
+};
+
 declare class ActivityInterface extends Comment {}
 declare class SuspenseInterface extends Comment {
   _reactRetry: void | (() => void);
@@ -3130,14 +3134,20 @@ FragmentInstance.prototype.observeUsing = function (
     this._observers = new Set();
   }
   this._observers.add(observer);
-  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
+  traverseFragmentInstance(this._fragmentFiber, observeChild, this, observer);
 };
 function observeChild(
   child: Fiber,
+  fragmentInstance: FragmentInstanceType,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  const instance = getInstanceFromHostFiber<Instance>(child);
+  const instance =
+    getInstanceFromHostFiber<InstanceWithObservingFragmentHandles>(child);
   observer.observe(instance);
+  if (instance._reactObservingFragments == null) {
+    instance._reactObservingFragments = new Set();
+  }
+  instance._reactObservingFragments.add(fragmentInstance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -3155,15 +3165,25 @@ FragmentInstance.prototype.unobserveUsing = function (
     }
   } else {
     observers.delete(observer);
-    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
+    traverseFragmentInstance(
+      this._fragmentFiber,
+      unobserveChild,
+      this,
+      observer,
+    );
   }
 };
 function unobserveChild(
   child: Fiber,
+  fragmentInstance: FragmentInstanceType,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  const instance = getInstanceFromHostFiber<Instance>(child);
+  const instance =
+    getInstanceFromHostFiber<InstanceWithObservingFragmentHandles>(child);
   observer.unobserve(instance);
+  if (instance._reactObservingFragments != null) {
+    instance._reactObservingFragments.delete(fragmentInstance);
+  }
   return false;
 }
 // $FlowFixMe[prop-missing]

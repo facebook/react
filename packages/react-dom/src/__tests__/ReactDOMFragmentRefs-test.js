@@ -1045,6 +1045,127 @@ describe('FragmentRefs', () => {
         {withoutStack: true},
       );
     });
+
+    // @gate enableFragmentRefs
+    it('attaches handles to observed elements to allow caching of observers', async () => {
+      const targetToCallbackMap = new WeakMap();
+      let cachedObserver = null;
+      function createObserverIfNeeded(fragmentInstance, onIntersection) {
+        const callbacks = targetToCallbackMap.get(fragmentInstance);
+        targetToCallbackMap.set(
+          fragmentInstance,
+          callbacks ? [...callbacks, onIntersection] : [onIntersection],
+        );
+        if (cachedObserver !== null) {
+          return cachedObserver;
+        }
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            const fragmentInstances = entry.target._reactObservingFragments;
+            if (!fragmentInstances) {
+              return;
+            }
+            Array.from(fragmentInstances).forEach(fInstance => {
+              const cbs = targetToCallbackMap.get(fInstance) || [];
+              cbs.forEach(callback => {
+                callback(entry);
+              });
+            });
+
+            targetToCallbackMap.get(entry.target)?.forEach(callback => {
+              callback(entry);
+            });
+          });
+        });
+        cachedObserver = observer;
+        return observer;
+      }
+
+      function IntersectionObserverFragment({onIntersection, children}) {
+        const fragmentRef = React.useRef(null);
+        React.useLayoutEffect(() => {
+          const observer = createObserverIfNeeded(
+            fragmentRef.current,
+            onIntersection,
+          );
+          fragmentRef.current.observeUsing(observer);
+          const lastRefValue = fragmentRef.current;
+          return () => {
+            lastRefValue.unobserveUsing(observer);
+          };
+        }, []);
+        return <React.Fragment ref={fragmentRef}>{children}</React.Fragment>;
+      }
+
+      let logs = [];
+      function logIntersection(id) {
+        logs.push(`observe: ${id}`);
+      }
+
+      function ChildWithManualIO({id}) {
+        const divRef = React.useRef(null);
+        React.useLayoutEffect(() => {
+          const observer = createObserverIfNeeded(divRef.current, entry => {
+            logIntersection(id);
+          });
+          observer.observe(divRef.current);
+          return () => {
+            observer.unobserve(divRef.current);
+          };
+        }, []);
+        return (
+          <div id={id} ref={divRef}>
+            {id}
+          </div>
+        );
+      }
+
+      function Test() {
+        return (
+          <>
+            <IntersectionObserverFragment
+              onIntersection={() => logIntersection('grandparent')}>
+              <IntersectionObserverFragment
+                onIntersection={() => logIntersection('parentA')}>
+                <div id="childA">A</div>
+              </IntersectionObserverFragment>
+            </IntersectionObserverFragment>
+            <IntersectionObserverFragment
+              onIntersection={() => logIntersection('parentB')}>
+              <div id="childB">B</div>
+              <ChildWithManualIO id="childC" />
+            </IntersectionObserverFragment>
+          </>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => root.render(<Test />));
+
+      simulateIntersection([
+        container.querySelector('#childA'),
+        {y: 0, x: 0, width: 1, height: 1},
+        1,
+      ]);
+      expect(logs).toEqual(['observe: parentA', 'observe: grandparent']);
+
+      logs = [];
+
+      simulateIntersection([
+        container.querySelector('#childB'),
+        {y: 0, x: 0, width: 1, height: 1},
+        1,
+      ]);
+      expect(logs).toEqual(['observe: parentB']);
+
+      logs = [];
+      simulateIntersection([
+        container.querySelector('#childC'),
+        {y: 0, x: 0, width: 1, height: 1},
+        1,
+      ]);
+      expect(logs).toEqual(['observe: parentB', 'observe: childC']);
+    });
   });
 
   describe('getClientRects', () => {
