@@ -6168,7 +6168,10 @@ export function attach(
             }
           }
           const newIO = asyncInfo.awaited;
-          if (newIO.name === 'RSC stream' && newIO.value != null) {
+          if (
+            (newIO.name === 'RSC stream' || newIO.name === 'rsc stream') &&
+            newIO.value != null
+          ) {
             const streamPromise = newIO.value;
             // Special case RSC stream entries to pick the last entry keyed by the stream.
             const existingEntry = streamEntries.get(streamPromise);
@@ -6227,7 +6230,10 @@ export function attach(
         continue;
       }
       foundIOEntries.add(ioInfo);
-      if (ioInfo.name === 'RSC stream' && ioInfo.value != null) {
+      if (
+        (ioInfo.name === 'RSC stream' || ioInfo.name === 'rsc stream') &&
+        ioInfo.value != null
+      ) {
         const streamPromise = ioInfo.value;
         // Special case RSC stream entries to pick the last entry keyed by the stream.
         const existingEntry = streamEntries.get(streamPromise);

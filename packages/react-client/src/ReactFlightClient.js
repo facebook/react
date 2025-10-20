@@ -2721,7 +2721,7 @@ export function createStreamState(
     (debugValuePromise: any).status = 'fulfilled';
     (debugValuePromise: any).value = streamDebugValue;
     streamState._debugInfo = {
-      name: 'RSC stream',
+      name: 'rsc stream',
       start: response._debugStartTime,
       end: response._debugStartTime, // will be updated once we finish a chunk
       byteSize: 0, // will be updated as we resolve a data chunk
