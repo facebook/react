@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<364893f3e1bcc3fdaf43cfcd9ec236e7>>
+ * @generated SignedSource<<35ec1fd6a3d01e833a6605612e193a33>>
  */
 
 'use strict';
@@ -24152,7 +24152,7 @@ function lowerObjectMethod(builder, property) {
     };
 }
 function lowerObjectPropertyKey(builder, property) {
-    var _a, _b;
+    var _a;
     const key = property.get('key');
     if (key.isStringLiteral()) {
         return {
@@ -24161,15 +24161,6 @@ function lowerObjectPropertyKey(builder, property) {
         };
     }
     else if (property.node.computed && key.isExpression()) {
-        if (!key.isIdentifier() && !key.isMemberExpression()) {
-            builder.errors.push({
-                reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
-                category: ErrorCategory.Todo,
-                loc: (_a = key.node.loc) !== null && _a !== void 0 ? _a : null,
-                suggestions: null,
-            });
-            return null;
-        }
         const place = lowerExpressionToTemporary(builder, key);
         return {
             kind: 'computed',
@@ -24191,7 +24182,7 @@ function lowerObjectPropertyKey(builder, property) {
     builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
         category: ErrorCategory.Todo,
-        loc: (_b = key.node.loc) !== null && _b !== void 0 ? _b : null,
+        loc: (_a = key.node.loc) !== null && _a !== void 0 ? _a : null,
         suggestions: null,
     });
     return null;

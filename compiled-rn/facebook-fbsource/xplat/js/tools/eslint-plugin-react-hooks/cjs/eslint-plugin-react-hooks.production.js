@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<3d26a67e8d087dcff57fc172273b961d>>
+ * @generated SignedSource<<57930da880e2b1e7014b8eaa8c3ccbc6>>
  */
 
 'use strict';
@@ -24137,7 +24137,7 @@ function lowerObjectMethod(builder, property) {
     };
 }
 function lowerObjectPropertyKey(builder, property) {
-    var _a, _b;
+    var _a;
     const key = property.get('key');
     if (key.isStringLiteral()) {
         return {
@@ -24146,15 +24146,6 @@ function lowerObjectPropertyKey(builder, property) {
         };
     }
     else if (property.node.computed && key.isExpression()) {
-        if (!key.isIdentifier() && !key.isMemberExpression()) {
-            builder.errors.push({
-                reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
-                category: ErrorCategory.Todo,
-                loc: (_a = key.node.loc) !== null && _a !== void 0 ? _a : null,
-                suggestions: null,
-            });
-            return null;
-        }
         const place = lowerExpressionToTemporary(builder, key);
         return {
             kind: 'computed',
@@ -24176,7 +24167,7 @@ function lowerObjectPropertyKey(builder, property) {
     builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
         category: ErrorCategory.Todo,
-        loc: (_b = key.node.loc) !== null && _b !== void 0 ? _b : null,
+        loc: (_a = key.node.loc) !== null && _a !== void 0 ? _a : null,
         suggestions: null,
     });
     return null;
