@@ -3,8 +3,9 @@
 }
 
 .CallSite, .BuiltInCallSite {
-  display: block;
+  display: flex;
   padding-left: 1rem;
+  white-space-collapse: preserve;
 }
 
 .IgnoredCallSite, .BuiltInCallSite {
@@ -20,13 +21,15 @@
   white-space: pre;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
   cursor: pointer;
   border-radius: 0.125rem;
-  padding: 0px 2px;
 }
 
 .Link:hover {
   background-color: var(--color-background-hover);
+}
+
+.ElementBadges {
+  margin-left: 0.25rem;
 }
 
