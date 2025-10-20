@@ -1492,8 +1492,8 @@ export function attach(
             isInActivitySlice = false;
           } else {
             // We're not filtering by activity slice after all.
-            // TODO: This is not sent to the frontend.
-            componentFilter.isEnabled = false;
+            // Don't mark the filter as disabled here.
+            // Otherwise updateComponentFilters() will think no enabled filter was changed.
           }
           break;
         default:
@@ -1546,6 +1546,7 @@ export function attach(
       const filter = componentFilters[i];
       if (filter.type === ComponentFilterActivitySlice && filter.isEnabled) {
         const instance = idToDevToolsInstanceMap.get(filter.activityID);
+        console.log({filter, instance});
         if (instance !== undefined && instance.kind === FIBER_INSTANCE) {
           nextActivitySlice = instance.data;
         }

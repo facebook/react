@@ -910,14 +910,21 @@ describe('Store component filters', () => {
 
     expect(store).toMatchInlineSnapshot(`
       [root]
-        ▾ <Activity name="/">
-          ▾ <Suspense>
-              <h1>
-            ▾ <main>
-              ▾ <Layout>
-                  <Activity name="/blog">
+        ▾ <Root>
+          ▾ <Activity name="/">
+            ▾ <Suspense>
+                <h1>
+              ▾ <main>
+                ▾ <Layout>
+                  ▾ <Activity name="/blog">
+                      <h2>
+                    ▾ <section>
+                      ▾ <Page>
+                        ▾ <Suspense>
+                            <div>
       [suspense-root]  rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:13,height:1}]}
-        <Suspense name="Unknown" rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:13,height:1}]}>
+        <Suspense name="Root" rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:13,height:1}]}>
+          <Suspense name="Page" rects={[{x:1,y:2,width:9,height:1}]}>
     `);
   });
 });
