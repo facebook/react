@@ -459,7 +459,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -867,7 +867,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -985,7 +985,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -1460,7 +1460,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
               "byteSize": 0,
               "end": 0,
               "env": "Server",
-              "name": "RSC stream",
+              "name": "rsc stream",
               "start": 0,
               "value": {
                 "value": "stream",
@@ -1475,7 +1475,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -1789,7 +1789,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -2083,7 +2083,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -2499,7 +2499,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -2665,7 +2665,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -2845,7 +2845,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -3130,7 +3130,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
@@ -3275,7 +3275,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "byteSize": 0,
               "end": 0,
-              "name": "RSC stream",
+              "name": "rsc stream",
               "owner": null,
               "start": 0,
               "value": {
