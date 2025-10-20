@@ -79,8 +79,10 @@ function ScaledRect({
 
 function SuspenseRects({
   suspenseID,
+  parentRects,
 }: {
   suspenseID: SuspenseNode['id'],
+  parentRects: null | Array<Rect>,
 }): React$Node {
   const store = useContext(StoreContext);
   const treeDispatch = useContext(TreeDispatcherContext);
@@ -175,7 +177,14 @@ function SuspenseRects({
   // other rects.
   // TODO: This should probably be memoized based on if any changes to the rtree has been made.
   const titleBox: null | Rect =
-    rects === null ? null : findTitleBox(store._rtree, rects);
+    rects === null ? null : findTitleBox(store._rtree, rects, parentRects);
+
+  const nextRects =
+    rects === null || rects.length === 0
+      ? parentRects
+      : parentRects === null || parentRects.length === 0
+        ? rects
+        : parentRects.concat(rects);
 
   return (
     <ScaledRect
@@ -213,7 +222,13 @@ function SuspenseRects({
             className={styles.SuspenseRectsBoundaryChildren}
             rect={boundingBox}>
             {suspense.children.map(childID => {
-              return <SuspenseRects key={childID} suspenseID={childID} />;
+              return (
+                <SuspenseRects
+                  key={childID}
+                  suspenseID={childID}
+                  parentRects={nextRects}
+                />
+              );
             })}
           </ScaledRect>
         )}
@@ -333,7 +348,11 @@ function getDocumentBoundingRect(
   };
 }
 
-function findTitleBox(rtree: RBush<Rect>, rects: Array<Rect>): null | Rect {
+function findTitleBox(
+  rtree: RBush<Rect>,
+  rects: Array<Rect>,
+  parentRects: null | Array<Rect>,
+): null | Rect {
   for (let i = 0; i < rects.length; i++) {
     const rect = rects[i];
     if (rect.width < 50 || rect.height < 10) {
@@ -369,6 +388,14 @@ function findTitleBox(rtree: RBush<Rect>, rects: Array<Rect>): null | Rect {
       const x = overlappingRect.x;
       const y = overlappingRect.y;
       if (y < maxY && x < maxX) {
+        if (
+          parentRects !== null &&
+          parentRects.indexOf(overlappingRect) !== -1
+        ) {
+          // This rect overlaps but it's part of a parent boundary. We let
+          // title content render if it's on top and not a sibling.
+          continue;
+        }
         // This rect cuts into the remaining space. Let's figure out if we're
         // better off cutting on the x or y axis to maximize remaining space.
         const remainderX = x - minX;
@@ -401,7 +428,9 @@ function SuspenseRectsRoot({rootID}: {rootID: SuspenseNode['id']}): React$Node {
   }
 
   return root.children.map(childID => {
-    return <SuspenseRects key={childID} suspenseID={childID} />;
+    return (
+      <SuspenseRects key={childID} suspenseID={childID} parentRects={null} />
+    );
   });
 }
 
