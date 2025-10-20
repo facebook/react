@@ -811,11 +811,11 @@ describe('Store component filters', () => {
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Suspense>
-            <div key="loading">
+            <div key="suspense-content">
         ▾ <ErrorBoundary>
             <div key="did-error">
       [suspense-root]  rects={[]}
-        <Suspense name="Unknown" rects={null}>
+        <Suspense name="Unknown" rects={[]}>
     `);
   });
 });
