@@ -36,6 +36,7 @@
   },
   "scripts": {
     "build": "yarn run compile",
+    "build:compiler": "yarn workspace babel-plugin-react-compiler build --dts",
     "compile": "rimraf dist && concurrently -n server,client \"scripts/build.mjs -t server\" \"scripts/build.mjs -t client\"",
     "dev": "yarn run package && yarn run install-ext",
     "install-ext": "code --install-extension react-forgive-0.0.0.vsix",
