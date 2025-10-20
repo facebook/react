@@ -367,34 +367,33 @@ export default function ComponentsSettings({
           {componentFilters.map((componentFilter, index) => (
             <tr className={styles.TableRow} key={index}>
               <td className={styles.TableCell}>
-                <Toggle
-                  className={
-                    componentFilter.isValid !== false
-                      ? ''
-                      : styles.InvalidRegExp
-                  }
-                  isChecked={componentFilter.isEnabled}
-                  isDisabled={
-                    componentFilter.type === ComponentFilterActivitySlice
-                  }
-                  onChange={isEnabled =>
-                    toggleFilterIsEnabled(componentFilter, isEnabled)
-                  }
-                  title={
-                    componentFilter.isValid === false
-                      ? 'Filter invalid'
-                      : componentFilter.isEnabled
-                        ? 'Filter enabled'
-                        : 'Filter disabled'
-                  }>
-                  <ToggleIcon
-                    isEnabled={componentFilter.isEnabled}
-                    isValid={
-                      componentFilter.isValid == null ||
-                      componentFilter.isValid === true
+                {componentFilter.type !== ComponentFilterActivitySlice && (
+                  <Toggle
+                    className={
+                      componentFilter.isValid !== false
+                        ? ''
+                        : styles.InvalidRegExp
                     }
-                  />
-                </Toggle>
+                    isChecked={componentFilter.isEnabled}
+                    onChange={isEnabled =>
+                      toggleFilterIsEnabled(componentFilter, isEnabled)
+                    }
+                    title={
+                      componentFilter.isValid === false
+                        ? 'Filter invalid'
+                        : componentFilter.isEnabled
+                          ? 'Filter enabled'
+                          : 'Filter disabled'
+                    }>
+                    <ToggleIcon
+                      isEnabled={componentFilter.isEnabled}
+                      isValid={
+                        componentFilter.isValid == null ||
+                        componentFilter.isValid === true
+                      }
+                    />
+                  </Toggle>
+                )}
               </td>
               <td className={styles.TableCell}>
                 <select
@@ -422,7 +421,11 @@ export default function ComponentsSettings({
                       environment
                     </option>
                   )}
-                  <option value={ComponentFilterActivitySlice}>activity</option>
+                  {componentFilter.type === ComponentFilterActivitySlice && (
+                    <option value={ComponentFilterActivitySlice}>
+                      component
+                    </option>
+                  )}
                 </select>
               </td>
               <td className={styles.TableCell}>
@@ -432,6 +435,8 @@ export default function ComponentsSettings({
                 {(componentFilter.type === ComponentFilterLocation ||
                   componentFilter.type === ComponentFilterDisplayName) &&
                   'matches'}
+                {componentFilter.type === ComponentFilterActivitySlice &&
+                  'within'}
               </td>
               <td className={styles.TableCell}>
                 {componentFilter.type === ComponentFilterElementType && (
