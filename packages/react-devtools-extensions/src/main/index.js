@@ -33,7 +33,7 @@ import {
 import {viewAttributeSource} from './sourceSelection';
 
 import {startReactPolling} from './reactPolling';
-import cloneStyleTags from './cloneStyleTags';
+import {cloneStyleTags} from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
 import injectBackendManager from './injectBackendManager';
 import registerEventsLogger from './registerEventsLogger';
