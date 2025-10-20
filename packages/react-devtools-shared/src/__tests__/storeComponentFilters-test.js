@@ -813,7 +813,7 @@ describe('Store component filters', () => {
         ▾ <Suspense>
             <div key="suspense-content">
         ▾ <ErrorBoundary>
-            <div key="did-error">
+            <div key="error-content">
       [suspense-root]  rects={[]}
         <Suspense name="Unknown" rects={[]}>
     `);

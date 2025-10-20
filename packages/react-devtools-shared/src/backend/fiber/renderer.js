@@ -1548,9 +1548,17 @@ export function attach(
           }
         }
       }
-      if (previousForcedErrors !== null) {
+      if (
+        previousForcedErrors !== null &&
+        typeof setErrorHandler === 'function'
+      ) {
+        // Unlike for Suspense, disabling the forced error state requires setting
+        // the status to false first. `shouldErrorFiberAccordingToMap` will clear
+        // the Fibers later.
+        setErrorHandler(shouldErrorFiberAccordingToMap);
         // eslint-disable-next-line no-for-of-loops/no-for-of-loops
         for (const [fiber, shouldError] of previousForcedErrors) {
+          forceErrorForFibers.set(fiber, false);
           if (shouldError) {
             if (typeof scheduleRetry === 'function') {
               scheduleRetry(fiber);
