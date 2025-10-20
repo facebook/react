@@ -41,17 +41,18 @@
 
 .SuspenseRectsTitle {
   pointer-events: none;
-  color: var(--color-text);
+  color: color-mix(in srgb, var(--color-suspense) 50%, var(--color-text));
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: var(--font-family-sans);
   font-size: var(--font-size-sans-small);
-  line-height: var(--font-size-sans-small);
-  padding: .25rem;
+  line-height: var(--line-height-data);
+  padding: 0 .25rem;
   container-type: size;
   container-name: title;
 }
 
-@container title (width < 30px) or (height < 12px) {
+@container title (width < 30px) or (height < 18px) {
   .SuspenseRectsTitle > span {
     display: none;
   }
