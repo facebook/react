@@ -1494,8 +1494,8 @@ export function attach(
             isInActivitySlice = false;
           } else {
             // We're not filtering by activity slice after all.
-            // TODO: This is not sent to the frontend.
-            componentFilter.isEnabled = false;
+            // Don't mark the filter as disabled here.
+            // Otherwise updateComponentFilters() will think no enabled filter was changed.
           }
           break;
         default:
