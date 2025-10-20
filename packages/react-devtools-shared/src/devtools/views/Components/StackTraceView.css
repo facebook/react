@@ -2,7 +2,7 @@
   padding: 0.25rem;
 }
 
-.CallSite {
+.CallSite, .BuiltInCallSite {
   display: block;
   padding-left: 1rem;
 }
