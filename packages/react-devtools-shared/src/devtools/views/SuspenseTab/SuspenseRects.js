@@ -178,7 +178,6 @@ function SuspenseRects({
   // TODO: This should probably be memoized based on if any changes to the rtree has been made.
   const titleBox: null | Rect =
     rects === null ? null : findTitleBox(store._rtree, rects, parentRects);
-
   const nextRects =
     rects === null || rects.length === 0
       ? parentRects
@@ -355,7 +354,7 @@ function findTitleBox(
 ): null | Rect {
   for (let i = 0; i < rects.length; i++) {
     const rect = rects[i];
-    if (rect.width < 50 || rect.height < 10) {
+    if (rect.width < 20 || rect.height < 10) {
       // Skip small rects. They're likely not able to be contain anything useful anyway.
       continue;
     }
