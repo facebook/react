@@ -29,10 +29,13 @@ export {
   ProgramContext,
   tryFindDirectiveEnablingMemoization as findDirectiveEnablingMemoization,
   findDirectiveDisablingMemoization,
+  defaultOptions,
   type CompilerPipelineValue,
   type Logger,
   type LoggerEvent,
   type PluginOptions,
+  type AutoDepsDecorationsEvent,
+  type CompileSuccessEvent,
 } from './Entrypoint';
 export {
   Effect,
