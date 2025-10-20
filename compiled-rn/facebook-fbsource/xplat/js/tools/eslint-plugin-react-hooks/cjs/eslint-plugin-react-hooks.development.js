@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<4cb35afe5dd6363b131a4311ef9603b1>>
+ * @generated SignedSource<<364893f3e1bcc3fdaf43cfcd9ec236e7>>
  */
 
 'use strict';
@@ -50436,21 +50436,24 @@ function validateUseMemo(fn) {
     return errors.asResult();
 }
 function validateNoContextVariableAssignment(fn, errors) {
+    const context = new Set(fn.context.map(place => place.identifier.id));
     for (const block of fn.body.blocks.values()) {
         for (const instr of block.instructions) {
             const value = instr.value;
             switch (value.kind) {
                 case 'StoreContext': {
-                    errors.pushDiagnostic(CompilerDiagnostic.create({
-                        category: ErrorCategory.UseMemo,
-                        reason: 'useMemo() callbacks may not reassign variables declared outside of the callback',
-                        description: 'useMemo() callbacks must be pure functions and cannot reassign variables defined outside of the callback function',
-                        suggestions: null,
-                    }).withDetails({
-                        kind: 'error',
-                        loc: value.lvalue.place.loc,
-                        message: 'Cannot reassign variable',
-                    }));
+                    if (context.has(value.lvalue.place.identifier.id)) {
+                        errors.pushDiagnostic(CompilerDiagnostic.create({
+                            category: ErrorCategory.UseMemo,
+                            reason: 'useMemo() callbacks may not reassign variables declared outside of the callback',
+                            description: 'useMemo() callbacks must be pure functions and cannot reassign variables defined outside of the callback function',
+                            suggestions: null,
+                        }).withDetails({
+                            kind: 'error',
+                            loc: value.lvalue.place.loc,
+                            message: 'Cannot reassign variable',
+                        }));
+                    }
                     break;
                 }
             }

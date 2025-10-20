@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<4b7afef4843d548ffe6858856d15f3c9>>
+ * @generated SignedSource<<3d26a67e8d087dcff57fc172273b961d>>
  */
 
 'use strict';
@@ -50215,21 +50215,24 @@ function validateUseMemo(fn) {
     return errors.asResult();
 }
 function validateNoContextVariableAssignment(fn, errors) {
+    const context = new Set(fn.context.map(place => place.identifier.id));
     for (const block of fn.body.blocks.values()) {
         for (const instr of block.instructions) {
             const value = instr.value;
             switch (value.kind) {
                 case 'StoreContext': {
-                    errors.pushDiagnostic(CompilerDiagnostic.create({
-                        category: ErrorCategory.UseMemo,
-                        reason: 'useMemo() callbacks may not reassign variables declared outside of the callback',
-                        description: 'useMemo() callbacks must be pure functions and cannot reassign variables defined outside of the callback function',
-                        suggestions: null,
-                    }).withDetails({
-                        kind: 'error',
-                        loc: value.lvalue.place.loc,
-                        message: 'Cannot reassign variable',
-                    }));
+                    if (context.has(value.lvalue.place.identifier.id)) {
+                        errors.pushDiagnostic(CompilerDiagnostic.create({
+                            category: ErrorCategory.UseMemo,
+                            reason: 'useMemo() callbacks may not reassign variables declared outside of the callback',
+                            description: 'useMemo() callbacks must be pure functions and cannot reassign variables defined outside of the callback function',
+                            suggestions: null,
+                        }).withDetails({
+                            kind: 'error',
+                            loc: value.lvalue.place.loc,
+                            message: 'Cannot reassign variable',
+                        }));
+                    }
                     break;
                 }
             }
