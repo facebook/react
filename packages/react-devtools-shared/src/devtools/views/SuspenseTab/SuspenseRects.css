@@ -93,7 +93,7 @@
   transition: background-color 0.2s ease-out;
 }
 
-.SuspenseRectsBoundary[data-selected='true'] {
+.SuspenseRectsBoundary[data-selected='true'][data-visible='true'] {
   box-shadow: var(--elevation-4);
 }
 
