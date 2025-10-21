@@ -198,6 +198,7 @@ export type Hook = {
   baseQueue: Update<any, any> | null,
   queue: any,
   next: Hook | null,
+  type: HookType | null,
 };
 
 // The effect "instance" is a shared object that remains the same for the entire
@@ -977,7 +978,7 @@ export function resetHooksOnUnwind(workInProgress: Fiber): void {
   thenableState = null;
 }
 
-function mountWorkInProgressHook(): Hook {
+function mountWorkInProgressHook(type: HookType | null): Hook {
   const hook: Hook = {
     memoizedState: null,
 
@@ -986,6 +987,7 @@ function mountWorkInProgressHook(): Hook {
     queue: null,
 
     next: null,
+    type,
   };
 
   if (workInProgressHook === null) {
@@ -1259,7 +1261,7 @@ function mountReducer<S, I, A>(
   initialArg: I,
   init?: I => S,
 ): [S, Dispatch<A>] {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useReducer');
   let initialState;
   if (init !== undefined) {
     initialState = init(initialArg);
@@ -1637,7 +1639,7 @@ function mountSyncExternalStore<T>(
   getServerSnapshot?: () => T,
 ): T {
   const fiber = currentlyRenderingFiber;
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useSyncExternalStore');
 
   let nextSnapshot;
   const isHydrating = getIsHydrating();
@@ -1892,8 +1894,11 @@ function forceStoreRerender(fiber: Fiber) {
   }
 }
 
-function mountStateImpl<S>(initialState: (() => S) | S): Hook {
-  const hook = mountWorkInProgressHook();
+function mountStateImpl<S>(
+  initialState: (() => S) | S,
+  type: HookType | null,
+): Hook {
+  const hook = mountWorkInProgressHook(type);
   if (typeof initialState === 'function') {
     const initialStateInitializer = initialState;
     // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
@@ -1923,7 +1928,7 @@ function mountStateImpl<S>(initialState: (() => S) | S): Hook {
 function mountState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
-  const hook = mountStateImpl(initialState);
+  const hook = mountStateImpl(initialState, 'useState');
   const queue = hook.queue;
   const dispatch: Dispatch<BasicStateAction<S>> = (dispatchSetState.bind(
     null,
@@ -1950,7 +1955,7 @@ function mountOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useOptimistic');
   hook.memoizedState = hook.baseState = passthrough;
   const queue: UpdateQueue<S, A> = {
     pending: null,
@@ -2377,7 +2382,7 @@ function mountActionState<S, P>(
 
   // State hook. The state is stored in a thenable which is then unwrapped by
   // the `use` algorithm during render.
-  const stateHook = mountWorkInProgressHook();
+  const stateHook = mountWorkInProgressHook('useActionState');
   stateHook.memoizedState = stateHook.baseState = initialState;
   // TODO: Typing this "correctly" results in recursion limit errors
   // const stateQueue: UpdateQueue<S | Awaited<S>, S | Awaited<S>> = {
@@ -2398,7 +2403,10 @@ function mountActionState<S, P>(
 
   // Pending state. This is used to store the pending state of the action.
   // Tracked optimistically, like a transition pending state.
-  const pendingStateHook = mountStateImpl((false: Thenable<boolean> | boolean));
+  const pendingStateHook = mountStateImpl(
+    (false: Thenable<boolean> | boolean),
+    null,
+  );
   const setPendingState: boolean => void = (dispatchOptimisticSetState.bind(
     null,
     currentlyRenderingFiber,
@@ -2413,7 +2421,7 @@ function mountActionState<S, P>(
   // shared between all instances of the hook. Similar to a regular state queue,
   // but different because the actions are run sequentially, and they run in
   // an event instead of during render.
-  const actionQueueHook = mountWorkInProgressHook();
+  const actionQueueHook = mountWorkInProgressHook(null);
   const actionQueue: ActionStateQueue<S, P> = {
     state: initialState,
     dispatch: (null: any), // circular
@@ -2601,7 +2609,7 @@ function createEffectInstance(): EffectInstance {
 }
 
 function mountRef<T>(initialValue: T): {current: T} {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useRef');
   const ref = {current: initialValue};
   hook.memoizedState = ref;
   return ref;
@@ -2617,8 +2625,9 @@ function mountEffectImpl(
   hookFlags: HookFlags,
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
+  type: HookType | null,
 ): void {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook(type);
   const nextDeps = deps === undefined ? null : deps;
   currentlyRenderingFiber.flags |= fiberFlags;
   hook.memoizedState = pushSimpleEffect(
@@ -2682,6 +2691,7 @@ function mountEffect(
       HookPassive,
       create,
       deps,
+      'useEffect',
     );
   } else {
     mountEffectImpl(
@@ -2689,6 +2699,7 @@ function mountEffect(
       HookPassive,
       create,
       deps,
+      'useEffect',
     );
   }
 }
@@ -2723,7 +2734,7 @@ function useEffectEventImpl<Args, Return, F: (...Array<Args>) => Return>(
 function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): F {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useEffectEvent');
   const ref = {impl: callback};
   hook.memoizedState = ref;
   // $FlowIgnore[incompatible-return]
@@ -2758,7 +2769,13 @@ function mountInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  mountEffectImpl(UpdateEffect, HookInsertion, create, deps);
+  mountEffectImpl(
+    UpdateEffect,
+    HookInsertion,
+    create,
+    deps,
+    'useInsertionEffect',
+  );
 }
 
 function updateInsertionEffect(
@@ -2779,7 +2796,13 @@ function mountLayoutEffect(
   ) {
     fiberFlags |= MountLayoutDevEffect;
   }
-  return mountEffectImpl(fiberFlags, HookLayout, create, deps);
+  return mountEffectImpl(
+    fiberFlags,
+    HookLayout,
+    create,
+    deps,
+    'useLayoutEffect',
+  );
 }
 
 function updateLayoutEffect(
@@ -2855,6 +2878,7 @@ function mountImperativeHandle<T>(
     HookLayout,
     imperativeHandleEffect.bind(null, create, ref),
     effectDeps,
+    'useImperativeHandle',
   );
 }
 
@@ -2894,7 +2918,7 @@ function mountDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
 const updateDebugValue = mountDebugValue;
 
 function mountCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useCallback');
   const nextDeps = deps === undefined ? null : deps;
   hook.memoizedState = [callback, nextDeps];
   return callback;
@@ -2918,7 +2942,7 @@ function mountMemo<T>(
   nextCreate: () => T,
   deps: Array<mixed> | void | null,
 ): T {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useMemo');
   const nextDeps = deps === undefined ? null : deps;
   const nextValue = nextCreate();
   if (shouldDoubleInvokeUserFnsInHooksDEV) {
@@ -2961,7 +2985,7 @@ function updateMemo<T>(
 }
 
 function mountDeferredValue<T>(value: T, initialValue?: T): T {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useDeferredValue');
   return mountDeferredValueImpl(hook, value, initialValue);
 }
 
@@ -3399,7 +3423,10 @@ function mountTransition(): [
   boolean,
   (callback: () => void, options?: StartTransitionOptions) => void,
 ] {
-  const stateHook = mountStateImpl((false: Thenable<boolean> | boolean));
+  const stateHook = mountStateImpl(
+    (false: Thenable<boolean> | boolean),
+    'useTransition',
+  );
   // The `start` method never changes.
   const start = startTransition.bind(
     null,
@@ -3408,7 +3435,7 @@ function mountTransition(): [
     true,
     false,
   );
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook(null);
   hook.memoizedState = start;
   return [false, start];
 }
@@ -3448,7 +3475,7 @@ function useHostTransitionStatus(): TransitionStatus {
 }
 
 function mountId(): string {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useId');
 
   const root = ((getWorkInProgressRoot(): any): FiberRoot);
   // TODO: In Fizz, id generation is specific to each server config. Maybe we
@@ -3491,7 +3518,7 @@ function updateId(): string {
 }
 
 function mountRefresh(): any {
-  const hook = mountWorkInProgressHook();
+  const hook = mountWorkInProgressHook('useCacheRefresh');
   const refresh = (hook.memoizedState = refreshCache.bind(
     null,
     currentlyRenderingFiber,
