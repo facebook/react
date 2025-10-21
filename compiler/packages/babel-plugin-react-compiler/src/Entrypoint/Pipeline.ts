@@ -9,6 +9,7 @@ import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
 import prettyFormat from 'pretty-format';
 import {Logger, ProgramContext} from '.';
+import {CompilerError} from '../CompilerError';
 import {
   HIRFunction,
   ReactiveFunction,
@@ -164,7 +165,15 @@ function runWithEnvironment(
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
   validateContextVariableLValues(hir);
-  validateUseMemo(hir).unwrap();
+
+  // Collect all validation errors instead of throwing on first error
+  const allValidationErrors = new CompilerError();
+
+  // Validate UseMemo and collect errors
+  const useMemoResult = validateUseMemo(hir);
+  if (useMemoResult.isErr()) {
+    allValidationErrors.merge(useMemoResult.unwrapErr());
+  }
 
   if (
     env.isInferredMemoEnabled &&
@@ -205,10 +214,16 @@ function runWithEnvironment(
 
   if (env.isInferredMemoEnabled) {
     if (env.config.validateHooksUsage) {
-      validateHooksUsage(hir).unwrap();
+      const hooksUsageResult = validateHooksUsage(hir);
+      if (hooksUsageResult.isErr()) {
+        allValidationErrors.merge(hooksUsageResult.unwrapErr());
+      }
     }
     if (env.config.validateNoCapitalizedCalls) {
-      validateNoCapitalizedCalls(hir).unwrap();
+      const capitalizedCallsResult = validateNoCapitalizedCalls(hir);
+      if (capitalizedCallsResult.isErr()) {
+        allValidationErrors.merge(capitalizedCallsResult.unwrapErr());
+      }
     }
   }
 
@@ -255,7 +270,13 @@ function runWithEnvironment(
     if (mutabilityAliasingRangeErrors.isErr()) {
       throw mutabilityAliasingRangeErrors.unwrapErr();
     }
-    validateLocalsNotReassignedAfterRender(hir);
+    const localsNotReassignedAfterRenderResult =
+      validateLocalsNotReassignedAfterRender(hir);
+    if (localsNotReassignedAfterRenderResult.isErr()) {
+      allValidationErrors.merge(
+        localsNotReassignedAfterRenderResult.unwrapErr(),
+      );
+    }
   }
 
   if (env.isInferredMemoEnabled) {
@@ -264,30 +285,54 @@ function runWithEnvironment(
     }
 
     if (env.config.validateRefAccessDuringRender) {
-      validateNoRefAccessInRender(hir).unwrap();
+      const refAccessResult = validateNoRefAccessInRender(hir);
+      if (refAccessResult.isErr()) {
+        allValidationErrors.merge(refAccessResult.unwrapErr());
+      }
     }
 
     if (env.config.validateNoSetStateInRender) {
-      validateNoSetStateInRender(hir).unwrap();
+      const setStateInRenderResult = validateNoSetStateInRender(hir);
+      if (setStateInRenderResult.isErr()) {
+        allValidationErrors.merge(setStateInRenderResult.unwrapErr());
+      }
     }
 
     if (env.config.validateNoDerivedComputationsInEffects) {
-      validateNoDerivedComputationsInEffects(hir);
+      const noDerivedComputationsInEffectsResult =
+        validateNoDerivedComputationsInEffects(hir);
+      if (noDerivedComputationsInEffectsResult.isErr()) {
+        allValidationErrors.merge(
+          noDerivedComputationsInEffectsResult.unwrapErr(),
+        );
+      }
     }
 
     if (env.config.validateNoSetStateInEffects) {
-      env.logErrors(validateNoSetStateInEffects(hir, env));
+      const noSetStateInEffectsResult = validateNoSetStateInEffects(hir, env);
+      if (noSetStateInEffectsResult.isErr()) {
+        allValidationErrors.merge(noSetStateInEffectsResult.unwrapErr());
+      }
     }
 
     if (env.config.validateNoJSXInTryStatements) {
-      env.logErrors(validateNoJSXInTryStatement(hir));
+      const noJSXInTryStatementsResult = validateNoJSXInTryStatement(hir);
+      if (noJSXInTryStatementsResult.isErr()) {
+        allValidationErrors.merge(noJSXInTryStatementsResult.unwrapErr());
+      }
     }
 
     if (env.config.validateNoImpureFunctionsInRender) {
-      validateNoImpureFunctionsInRender(hir).unwrap();
+      const impureFunctionsResult = validateNoImpureFunctionsInRender(hir);
+      if (impureFunctionsResult.isErr()) {
+        allValidationErrors.merge(impureFunctionsResult.unwrapErr());
+      }
     }
 
-    validateNoFreezingKnownMutableFunctions(hir).unwrap();
+    const freezingResult = validateNoFreezingKnownMutableFunctions(hir);
+    if (freezingResult.isErr()) {
+      allValidationErrors.merge(freezingResult.unwrapErr());
+    }
   }
 
   inferReactivePlaces(hir);
@@ -302,7 +347,10 @@ function runWithEnvironment(
 
   if (env.isInferredMemoEnabled) {
     if (env.config.validateStaticComponents) {
-      env.logErrors(validateStaticComponents(hir));
+      const staticComponentsResult = validateStaticComponents(hir);
+      if (staticComponentsResult.isErr()) {
+        allValidationErrors.merge(staticComponentsResult.unwrapErr());
+      }
     }
 
     /**
@@ -535,14 +583,22 @@ function runWithEnvironment(
   });
 
   if (env.config.validateMemoizedEffectDependencies) {
-    validateMemoizedEffectDependencies(reactiveFunction).unwrap();
+    const memoizedEffectResult =
+      validateMemoizedEffectDependencies(reactiveFunction);
+    if (memoizedEffectResult.isErr()) {
+      allValidationErrors.merge(memoizedEffectResult.unwrapErr());
+    }
   }
 
   if (
     env.config.enablePreserveExistingMemoizationGuarantees ||
     env.config.validatePreserveExistingMemoizationGuarantees
   ) {
-    validatePreservedManualMemoization(reactiveFunction).unwrap();
+    const preservedMemoizationResult =
+      validatePreservedManualMemoization(reactiveFunction);
+    if (preservedMemoizationResult.isErr()) {
+      allValidationErrors.merge(preservedMemoizationResult.unwrapErr());
+    }
   }
 
   const ast = codegenFunction(reactiveFunction, {
@@ -561,6 +617,12 @@ function runWithEnvironment(
    */
   if (env.config.throwUnknownException__testonly) {
     throw new Error('unexpected error');
+  }
+
+  // If we have collected validation errors, we need to handle them
+  // For ESLint integration, we should log the errors instead of throwing
+  if (allValidationErrors.hasAnyErrors()) {
+    allValidationErrors.asResult().unwrap();
   }
 
   return ast;

@@ -20,6 +20,7 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
+import {Ok, Result} from '../Utils/Result';
 
 /**
  * Validates that useEffect is not used for derived computations which could/should
@@ -44,7 +45,9 @@ import {
  * const fullName = firstName + ' ' + lastName;
  * ```
  */
-export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
+export function validateNoDerivedComputationsInEffects(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
   const candidateDependencies: Map<IdentifierId, ArrayExpression> = new Map();
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
   const locals: Map<IdentifierId, IdentifierId> = new Map();
@@ -105,8 +108,9 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
     }
   }
   if (errors.hasAnyErrors()) {
-    throw errors;
+    return errors.asResult();
   }
+  return Ok(void 0);
 }
 
 function validateEffect(

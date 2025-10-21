@@ -14,13 +14,17 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
+import {Ok, Result} from '../Utils/Result';
 
 /**
  * Validates that local variables cannot be reassigned after render.
  * This prevents a category of bugs in which a closure captures a
  * binding from one render but does not update
  */
-export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
+export function validateLocalsNotReassignedAfterRender(
+  fn: HIRFunction,
+): Result<void, CompilerError> {
+  const errors = new CompilerError();
   const contextVariables = new Set<IdentifierId>();
   const reassignment = getContextReassignment(
     fn,
@@ -46,8 +50,9 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
         message: `Cannot reassign ${variable} after render completes`,
       }),
     );
-    throw errors;
+    return errors.asResult();
   }
+  return Ok(void 0);
 }
 
 function getContextReassignment(
