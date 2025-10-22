@@ -94,9 +94,7 @@ describe('ReactDOMFizzServer', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server');
-    if (__EXPERIMENTAL__) {
-      ReactDOMFizzStatic = require('react-dom/static');
-    }
+    ReactDOMFizzStatic = require('react-dom/static');
     Stream = require('stream');
     Suspense = React.Suspense;
     use = React.use;
@@ -6516,7 +6514,7 @@ describe('ReactDOMFizzServer', () => {
       const ref = React.createRef();
       function App() {
         const [count, setCount] = React.useState(0);
-        const onClick = React.experimental_useEffectEvent(() => {
+        const onClick = React.useEffectEvent(() => {
           setCount(c => c + 1);
         });
         return (
@@ -6546,7 +6544,7 @@ describe('ReactDOMFizzServer', () => {
     it('throws if useEffectEvent is called during a server render', async () => {
       const logs = [];
       function App() {
-        const onRender = React.experimental_useEffectEvent(() => {
+        const onRender = React.useEffectEvent(() => {
           logs.push('rendered');
         });
         onRender();
@@ -6577,8 +6575,8 @@ describe('ReactDOMFizzServer', () => {
     // @gate enableUseEffectEventHook
     it('does not guarantee useEffectEvent return values during server rendering are distinct', async () => {
       function App() {
-        const onClick1 = React.experimental_useEffectEvent(() => {});
-        const onClick2 = React.experimental_useEffectEvent(() => {});
+        const onClick1 = React.useEffectEvent(() => {});
+        const onClick2 = React.useEffectEvent(() => {});
         if (onClick1 === onClick2) {
           return <div />;
         } else {
@@ -10783,5 +10781,107 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
     // We don't use the DOM here b/c we execute scripts which hides whether a fallback was shown briefly
     // Instead we assert that we never emitted the fallback of the Suspense boundary around the body.
     expect(streamedContent).not.toContain(randomTag);
+  });
+
+  it('should be able to Suspend after aborting in the same component without hanging the render', async () => {
+    const controller = new AbortController();
+
+    const promise1 = new Promise(() => {});
+    function AbortAndSuspend() {
+      controller.abort('boom');
+      return React.use(promise1);
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              {/*
+                The particular code path that was problematic required the Suspend to happen in renderNode
+                rather than retryRenderTask so we render the aborting function inside a host component
+                intentionally here
+              */}
+              <div>
+                <AbortAndSuspend />
+              </div>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    const errors = [];
+    await act(async () => {
+      const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+        signal: controller.signal,
+        onError(e) {
+          errors.push(e);
+        },
+      });
+
+      result.prelude.pipe(writable);
+    });
+
+    expect(errors).toEqual(['boom']);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
+  });
+
+  it('not error when a suspended fallback segment directly inside another Suspense is abandoned', async () => {
+    function SuspendForever() {
+      React.use(new Promise(() => {}));
+    }
+
+    let resolve = () => {};
+    const suspendPromise = new Promise(r => {
+      resolve = r;
+    });
+    function Suspend() {
+      return React.use(suspendPromise);
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="outer">
+              <Suspense fallback={<SuspendForever />}>
+                <span>hello world</span>
+                <span>
+                  <Suspend />
+                </span>
+              </Suspense>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(async () => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onError() {},
+      });
+      pipe(writable);
+    });
+
+    await act(() => {
+      resolve('!');
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <span>hello world</span>
+          <span>!</span>
+        </body>
+      </html>,
+    );
   });
 });

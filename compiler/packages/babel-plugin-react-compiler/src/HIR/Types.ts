@@ -87,7 +87,13 @@ export function makeTypeId(id: number): TypeId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected instruction id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as TypeId;

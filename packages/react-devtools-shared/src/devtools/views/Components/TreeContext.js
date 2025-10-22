@@ -954,7 +954,7 @@ function TreeContextController({
       Array<number>,
       Map<number, number>,
     ]) => {
-      transitionDispatch({
+      dispatch({
         type: 'HANDLE_STORE_MUTATION',
         payload: [addedElementIDs, removedElementIDs],
       });
@@ -965,7 +965,7 @@ function TreeContextController({
       // At the moment, we can treat this as a mutation.
       // We don't know which Elements were newly added/removed, but that should be okay in this case.
       // It would only impact the search state, which is unlikely to exist yet at this point.
-      transitionDispatch({
+      dispatch({
         type: 'HANDLE_STORE_MUTATION',
         payload: [[], new Map()],
       });
@@ -995,7 +995,14 @@ function recursivelySearchTree(
     return;
   }
 
-  const {children, displayName, hocDisplayNames, compiledWithForget} = element;
+  const {
+    children,
+    displayName,
+    hocDisplayNames,
+    compiledWithForget,
+    key,
+    nameProp,
+  } = element;
   if (displayName != null && regExp.test(displayName) === true) {
     searchResults.push(elementID);
   } else if (
@@ -1005,6 +1012,10 @@ function recursivelySearchTree(
   ) {
     searchResults.push(elementID);
   } else if (compiledWithForget && regExp.test('Forget')) {
+    searchResults.push(elementID);
+  } else if (typeof key === 'string' && regExp.test(key)) {
+    searchResults.push(elementID);
+  } else if (typeof nameProp === 'string' && regExp.test(nameProp)) {
     searchResults.push(elementID);
   }
 

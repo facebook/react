@@ -17,6 +17,7 @@ import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/wit
 
 import useOpenResource from '../useOpenResource';
 
+import type {SourceMappedLocation} from 'react-devtools-shared/src/symbolicateSource';
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
 import styles from './InspectedElementSourcePanel.css';
 
@@ -24,7 +25,7 @@ import formatLocationForDisplay from './formatLocationForDisplay';
 
 type Props = {
   source: ReactFunctionLocation,
-  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null>,
+  symbolicatedSourcePromise: Promise<SourceMappedLocation | null>,
 };
 
 function InspectedElementSourcePanel({
@@ -36,7 +37,12 @@ function InspectedElementSourcePanel({
       <div className={styles.SourceHeaderRow}>
         <div className={styles.SourceHeader}>source</div>
 
-        <React.Suspense fallback={<Skeleton height={16} width={16} />}>
+        <React.Suspense
+          fallback={
+            <Button disabled={true} title="Loading source maps...">
+              <ButtonIcon type="copy" />
+            </Button>
+          }>
           <CopySourceButton
             source={source}
             symbolicatedSourcePromise={symbolicatedSourcePromise}
@@ -75,7 +81,7 @@ function CopySourceButton({source, symbolicatedSourcePromise}: Props) {
     );
   }
 
-  const [, sourceURL, line, column] = symbolicatedSource;
+  const [, sourceURL, line, column] = symbolicatedSource.location;
   const handleCopy = withPermissionsCheck(
     {permissions: ['clipboardWrite']},
     () => copy(`${sourceURL}:${line}:${column}`),
@@ -93,11 +99,11 @@ function FormattedSourceString({source, symbolicatedSourcePromise}: Props) {
 
   const [linkIsEnabled, viewSource] = useOpenResource(
     source,
-    symbolicatedSource,
+    symbolicatedSource == null ? null : symbolicatedSource.location,
   );
 
   const [, sourceURL, line, column] =
-    symbolicatedSource == null ? source : symbolicatedSource;
+    symbolicatedSource == null ? source : symbolicatedSource.location;
 
   return (
     <div

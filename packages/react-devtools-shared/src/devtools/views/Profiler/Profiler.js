@@ -190,4 +190,4 @@ const tabsWithTimeline = [
   },
 ];
 
-export default (portaledContent(Profiler): React.ComponentType<{}>);
+export default (portaledContent(Profiler): component());

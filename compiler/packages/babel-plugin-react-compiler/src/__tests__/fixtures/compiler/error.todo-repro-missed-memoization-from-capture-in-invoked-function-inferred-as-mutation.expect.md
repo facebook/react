@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @flow @validatePreserveExistingMemoizationGuarantees
+// @flow @validatePreserveExistingMemoizationGuarantees @enablePreserveExistingMemoizationGuarantees:false
 import {useMemo} from 'react';
 import {logValue, useFragment, useHook, typedLog} from 'shared-runtime';
 
@@ -44,7 +44,7 @@ component Component() {
 ```
 Found 1 error:
 
-Memoization: Compilation skipped because existing memoization could not be preserved
+Compilation Skipped: Existing memoization could not be preserved
 
 React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
 

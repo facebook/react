@@ -32,6 +32,7 @@ function Component(props) {
     const onChange = (e) => {
       maybeMutate(x, e.target.value);
     };
+
     if (props.cond) {
     }
 

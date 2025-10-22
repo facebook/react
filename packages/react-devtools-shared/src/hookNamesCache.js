@@ -30,6 +30,7 @@ const TIMEOUT = 30000;
 function readRecord<T>(record: Thenable<T>): T | null {
   if (typeof React.use === 'function') {
     try {
+      // eslint-disable-next-line react-hooks-published/rules-of-hooks
       return React.use(record);
     } catch (x) {
       if (record.status === 'rejected') {
@@ -103,7 +104,7 @@ export function loadHookNames(
 
     let timeoutID: $FlowFixMe | null;
     let didTimeout = false;
-    let status = 'unknown';
+    let status: 'success' | 'error' | 'timeout' | 'unknown' = 'unknown';
     let resolvedHookNames: HookNames | null = null;
 
     const wake = () => {

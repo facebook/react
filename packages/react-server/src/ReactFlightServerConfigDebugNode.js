@@ -142,10 +142,28 @@ export function initAsyncDebugInfo(): void {
             }: UnresolvedPromiseNode);
           }
         } else if (
-          type !== 'Microtask' &&
-          type !== 'TickObject' &&
-          type !== 'Immediate'
+          // bound-anonymous-fn is the default name for snapshots and .bind() without a name.
+          // This isn't I/O by itself but likely just a continuation. If the bound function
+          // has a name, we might treat it as I/O but we can't tell the difference.
+          type === 'bound-anonymous-fn' ||
+          // queueMicroTask, process.nextTick and setImmediate aren't considered new I/O
+          // for our purposes but just continuation of existing I/O.
+          type === 'Microtask' ||
+          type === 'TickObject' ||
+          type === 'Immediate'
         ) {
+          // Treat the trigger as the node to carry along the sequence.
+          // For "bound-anonymous-fn" this will be the callsite of the .bind() which may not
+          // be the best if the callsite of the .run() call is within I/O which should be
+          // tracked. It might be better to track the execution context of "before()" as the
+          // execution context for anything spawned from within the run(). Basically as if
+          // it wasn't an AsyncResource at all.
+          if (trigger === undefined) {
+            return;
+          }
+          node = trigger;
+        } else {
+          // New I/O
           if (trigger === undefined) {
             // We have begun a new I/O sequence.
             const owner = resolveOwner();
@@ -181,13 +199,6 @@ export function initAsyncDebugInfo(): void {
             // Otherwise, this is just a continuation of the same I/O sequence.
             node = trigger;
           }
-        } else {
-          // Ignore nextTick and microtasks as they're not considered I/O operations.
-          // we just treat the trigger as the node to carry along the sequence.
-          if (trigger === undefined) {
-            return;
-          }
-          node = trigger;
         }
         pendingOperations.set(asyncId, node);
       },

@@ -19,6 +19,7 @@ import type {
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
 import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
+import type {UnknownSuspendersReason} from '../constants';
 
 export type BrowserTheme = 'dark' | 'light';
 
@@ -157,6 +158,7 @@ export type Element = {
   type: ElementType,
   displayName: string | null,
   key: number | string | null,
+  nameProp: null | string,
 
   hocDisplayNames: null | Array<string>,
 
@@ -184,12 +186,36 @@ export type Element = {
   compiledWithForget: boolean,
 };
 
+export type Rect = {
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+};
+
+export type SuspenseTimelineStep = {
+  id: SuspenseNode['id'], // TODO: Will become a group.
+  environment: null | string,
+};
+
+export type SuspenseNode = {
+  id: Element['id'],
+  parentID: SuspenseNode['id'] | 0,
+  children: Array<SuspenseNode['id']>,
+  name: string | null,
+  rects: null | Array<Rect>,
+  hasUniqueSuspenders: boolean,
+  isSuspended: boolean,
+  environments: Array<string>,
+};
+
 // Serialized version of ReactIOInfo
 export type SerializedIOInfo = {
   name: string,
   description: string,
   start: number,
   end: number,
+  byteSize: null | number,
   value: null | Promise<mixed>,
   env: null | string,
   owner: null | SerializedElement,
@@ -208,6 +234,8 @@ export type SerializedElement = {
   displayName: string | null,
   id: number,
   key: number | string | null,
+  env: null | string,
+  stack: null | ReactStackTrace,
   hocDisplayNames: Array<string> | null,
   compiledWithForget: boolean,
   type: ElementType,
@@ -246,6 +274,8 @@ export type InspectedElement = {
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
+  // If this Element is suspended. Currently only set on Suspense boundaries.
+  isSuspended: boolean | null,
 
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
@@ -261,12 +291,21 @@ export type InspectedElement = {
 
   // Things that suspended this Instances
   suspendedBy: Object,
+  // Minimum start time to maximum end time + a potential (not actual) throttle, within the nearest boundary.
+  suspendedByRange: null | [number, number],
+  unknownSuspenders: UnknownSuspendersReason,
 
   // List of owners
   owners: Array<SerializedElement> | null,
 
+  // Environment name that this component executed in or null for the client
+  env: string | null,
+
   // Location of component in source code.
   source: ReactFunctionLocation | null,
+
+  // The location of the JSX creation.
+  stack: ReactStackTrace | null,
 
   type: ElementType,
 

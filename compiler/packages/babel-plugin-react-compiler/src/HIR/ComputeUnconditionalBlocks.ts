@@ -24,7 +24,14 @@ export function computeUnconditionalBlocks(fn: HIRFunction): Set<BlockId> {
     CompilerError.invariant(!unconditionalBlocks.has(current), {
       reason:
         'Internal error: non-terminating loop in ComputeUnconditionalBlocks',
-      loc: null,
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     unconditionalBlocks.add(current);

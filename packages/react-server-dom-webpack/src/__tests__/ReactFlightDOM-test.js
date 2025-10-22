@@ -47,6 +47,9 @@ describe('ReactFlightDOM', () => {
     // condition
     jest.resetModules();
 
+    // Some of the tests pollute the head.
+    document.head.innerHTML = '';
+
     JSDOM = require('jsdom').JSDOM;
 
     patchSetImmediate();
@@ -60,11 +63,9 @@ describe('ReactFlightDOM', () => {
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node.unbundled'),
     );
-    if (__EXPERIMENTAL__) {
-      jest.mock('react-server-dom-webpack/static', () =>
-        require('react-server-dom-webpack/static.node.unbundled'),
-      );
-    }
+    jest.mock('react-server-dom-webpack/static', () =>
+      require('react-server-dom-webpack/static.node.unbundled'),
+    );
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     clientExportsESM = WebpackMock.clientExportsESM;
@@ -72,9 +73,7 @@ describe('ReactFlightDOM', () => {
     webpackMap = WebpackMock.webpackMap;
 
     ReactServerDOMServer = require('react-server-dom-webpack/server');
-    if (__EXPERIMENTAL__) {
-      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
-    }
+    ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
     // This reset is to load modules for the SSR/Browser scope.
     jest.unmock('react-server-dom-webpack/server');
@@ -1998,6 +1997,105 @@ describe('ReactFlightDOM', () => {
     expect(hintRows.length).toEqual(6);
   });
 
+  it('preloads resources without needing to render them', async () => {
+    function NoScriptComponent() {
+      return (
+        <p>
+          <img src="image-do-not-load" />
+          <link rel="stylesheet" href="css-do-not-load" />
+        </p>
+      );
+    }
+
+    function Component() {
+      return (
+        <div>
+          <img src="image-resource" />
+          <img
+            src="image-do-not-load"
+            srcSet="image-preload-src-set"
+            sizes="image-sizes"
+          />
+          <img src="image-do-not-load" loading="lazy" />
+          <link
+            rel="preload"
+            href="video-resource"
+            as="video"
+            media="(orientation: landscape)"
+          />
+          <link rel="modulepreload" href="module-resource" />
+          <picture>
+            <source
+              srcSet="image-not-yet-preloaded"
+              media="(orientation: portrait)"
+            />
+            <img src="image-do-not-load" />
+          </picture>
+          <noscript>
+            <NoScriptComponent />
+          </noscript>
+          <link rel="stylesheet" href="css-resource" />
+        </div>
+      );
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<Component />, webpackMap),
+    );
+    pipe(writable);
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(readable);
+      }
+      return response;
+    }
+
+    function App() {
+      // Not rendered but use for its side-effects.
+      getResponse();
+      return (
+        <html>
+          <body>
+            <p>hello world</p>
+          </body>
+        </html>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(document);
+    await act(() => {
+      root.render(<App />);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="image" href="image-resource" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="image-preload-src-set"
+            imagesizes="image-sizes"
+          />
+          <link
+            rel="preload"
+            as="video"
+            href="video-resource"
+            media="(orientation: landscape)"
+          />
+          <link rel="modulepreload" href="module-resource" />
+          <link rel="preload" as="style" href="css-resource" />
+        </head>
+        <body>
+          <p>hello world</p>
+        </body>
+      </html>,
+    );
+  });
+
   it('should be able to include a client reference in printed errors', async () => {
     const reportedErrors = [];
 
@@ -2772,7 +2870,7 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  // @gate experimental
+  // @gate enableHalt || enablePostpone
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2795,11 +2893,10 @@ describe('ReactFlightDOM', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult:
-          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
-            <App />,
-            webpackMap,
-          ),
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          webpackMap,
+        ),
       };
     });
 
@@ -2862,17 +2959,16 @@ describe('ReactFlightDOM', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult:
-          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
-            <App />,
-            webpackMap,
-            {
-              signal: controller.signal,
-              onError(err) {
-                errors.push(err);
-              },
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+            onError(err) {
+              errors.push(err);
             },
-          ),
+          },
+        ),
       };
     });
 
@@ -2919,7 +3015,8 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<div>loading...</div>);
   });
 
-  // @gate enableHalt
+  // This could be a bug. Discovered while making enableAsyncDebugInfo dynamic for www.
+  // @gate enableHalt || enablePostpone || (enableAsyncDebugInfo && __DEV__)
   it('will leave async iterables in an incomplete state when halting', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
@@ -2937,19 +3034,18 @@ describe('ReactFlightDOM', () => {
     const controller = new AbortController();
     const {pendingResult} = await serverAct(() => {
       return {
-        pendingResult:
-          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
-            {
-              multiShotIterable,
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          {
+            multiShotIterable,
+          },
+          {},
+          {
+            onError(x) {
+              errors.push(x);
             },
-            {},
-            {
-              onError(x) {
-                errors.push(x);
-              },
-              signal: controller.signal,
-            },
-          ),
+            signal: controller.signal,
+          },
+        ),
       };
     });
 
@@ -3021,17 +3117,16 @@ describe('ReactFlightDOM', () => {
     const errors = [];
     const {pendingResult} = await serverAct(() => {
       return {
-        pendingResult:
-          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
-            <App />,
-            {},
-            {
-              onError(x) {
-                errors.push(x);
-              },
-              signal: controller.signal,
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          {},
+          {
+            onError(x) {
+              errors.push(x);
             },
-          ),
+            signal: controller.signal,
+          },
+        ),
       };
     });
 

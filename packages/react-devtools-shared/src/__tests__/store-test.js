@@ -24,6 +24,45 @@ describe('Store', () => {
   let store;
   let withErrorsOrWarningsIgnored;
 
+  function readValue(promise) {
+    if (typeof React.use === 'function') {
+      return React.use(promise);
+    }
+
+    // Support for React < 19.0
+    switch (promise.status) {
+      case 'fulfilled':
+        return promise.value;
+      case 'rejected':
+        throw promise.reason;
+      case 'pending':
+        throw promise;
+      default:
+        promise.status = 'pending';
+        promise.then(
+          value => {
+            promise.status = 'fulfilled';
+            promise.value = value;
+          },
+          reason => {
+            promise.status = 'rejected';
+            promise.reason = reason;
+          },
+        );
+        throw promise;
+    }
+  }
+
+  beforeAll(() => {
+    // JSDDOM doesn't implement getClientRects so we're just faking one for testing purposes
+    Element.prototype.getClientRects = function (this: Element) {
+      const textContent = this.textContent;
+      return [
+        new DOMRect(1, 2, textContent.length, textContent.split('\n').length),
+      ];
+    };
+  });
+
   beforeEach(() => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -97,11 +136,7 @@ describe('Store', () => {
     let Dynamic = null;
     const Owner = () => {
       Dynamic = <Child />;
-      if (React.use) {
-        React.use(promise);
-      } else {
-        throw promise;
-      }
+      readValue(promise);
     };
     const Parent = () => {
       return Dynamic;
@@ -123,6 +158,8 @@ describe('Store', () => {
           <Suspense>
         ▾ <Parent>
             <Child>
+      [suspense-root]  rects={null}
+        <Suspense name="Unknown" rects={null}>
     `);
   });
 
@@ -450,12 +487,9 @@ describe('Store', () => {
     // @reactVersion >= 18.0
     it('should display Suspense nodes properly in various states', async () => {
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const SuspendingComponent = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
       const Component = () => {
         return <div>Hello</div>;
@@ -480,6 +514,8 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Loading>
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="Wrapper" rects={null}>
       `);
 
       await act(() => {
@@ -491,6 +527,8 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Component key="Inside">
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
+          <Suspense name="Wrapper" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
 
@@ -498,12 +536,9 @@ describe('Store', () => {
     it('should support nested Suspense nodes', async () => {
       const Component = () => null;
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const Never = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
 
       const Wrapper = ({
@@ -513,23 +548,31 @@ describe('Store', () => {
       }) => (
         <React.Fragment>
           <Component key="Outside" />
-          <React.Suspense fallback={<Loading key="Parent Fallback" />}>
+          <React.Suspense
+            name="parent"
+            fallback={<Loading key="Parent Fallback" />}>
             <Component key="Unrelated at Start" />
-            <React.Suspense fallback={<Loading key="Suspense 1 Fallback" />}>
+            <React.Suspense
+              name="one"
+              fallback={<Loading key="Suspense 1 Fallback" />}>
               {suspendFirst ? (
                 <Never />
               ) : (
                 <Component key="Suspense 1 Content" />
               )}
             </React.Suspense>
-            <React.Suspense fallback={<Loading key="Suspense 2 Fallback" />}>
+            <React.Suspense
+              name="two"
+              fallback={<Loading key="Suspense 2 Fallback" />}>
               {suspendSecond ? (
                 <Never />
               ) : (
                 <Component key="Suspense 2 Content" />
               )}
             </React.Suspense>
-            <React.Suspense fallback={<Loading key="Suspense 3 Fallback" />}>
+            <React.Suspense
+              name="three"
+              fallback={<Loading key="Suspense 3 Fallback" />}>
               <Never />
             </React.Suspense>
             {suspendParent && <Never />}
@@ -538,7 +581,7 @@ describe('Store', () => {
         </React.Fragment>
       );
 
-      await act(() =>
+      await actAsync(() =>
         render(
           <Wrapper
             suspendParent={false}
@@ -551,15 +594,20 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Component key="Suspense 1 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Component key="Suspense 2 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -574,15 +622,20 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Loading key="Suspense 1 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Component key="Suspense 2 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -597,15 +650,20 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Component key="Suspense 1 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Loading key="Suspense 2 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -620,15 +678,20 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Loading key="Suspense 1 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Component key="Suspense 2 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -643,8 +706,13 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Loading key="Parent Fallback">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -659,15 +727,20 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Loading key="Suspense 1 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Loading key="Suspense 2 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -682,15 +755,20 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Component key="Suspense 1 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Component key="Suspense 2 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
 
       const rendererID = getRendererID();
@@ -705,15 +783,20 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Loading key="Suspense 1 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Component key="Suspense 2 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         agent.overrideSuspense({
@@ -726,8 +809,13 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Loading key="Parent Fallback">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -742,10 +830,15 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Loading key="Parent Fallback">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
-      await act(() =>
+      await actAsync(() =>
         agent.overrideSuspense({
           id: store.getElementIDAtIndex(2),
           rendererID,
@@ -756,15 +849,20 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Loading key="Suspense 1 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Loading key="Suspense 2 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         agent.overrideSuspense({
@@ -777,15 +875,20 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Loading key="Suspense 1 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Loading key="Suspense 2 Fallback">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
       `);
       await act(() =>
         render(
@@ -800,26 +903,138 @@ describe('Store', () => {
         [root]
           ▾ <Wrapper>
               <Component key="Outside">
-            ▾ <Suspense>
+            ▾ <Suspense name="parent">
                 <Component key="Unrelated at Start">
-              ▾ <Suspense>
+              ▾ <Suspense name="one">
                   <Component key="Suspense 1 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="two">
                   <Component key="Suspense 2 Content">
-              ▾ <Suspense>
+              ▾ <Suspense name="three">
                   <Loading key="Suspense 3 Fallback">
                 <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:10,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:10,height:1}]}>
+            <Suspense name="one" rects={null}>
+            <Suspense name="two" rects={null}>
+            <Suspense name="three" rects={null}>
+      `);
+    });
+
+    // @reactVersion >= 18.0
+    it('can override multiple Suspense simultaneously', async () => {
+      const Component = () => {
+        return <div>Hello</div>;
+      };
+      const App = () => (
+        <React.Fragment>
+          <Component key="Outside" />
+          <React.Suspense
+            name="parent"
+            fallback={<Component key="Parent Fallback" />}>
+            <Component key="Unrelated at Start" />
+            <React.Suspense
+              name="one"
+              fallback={<Component key="Suspense 1 Fallback" />}>
+              <Component key="Suspense 1 Content" />
+            </React.Suspense>
+            <React.Suspense
+              name="two"
+              fallback={<Component key="Suspense 2 Fallback" />}>
+              <Component key="Suspense 2 Content" />
+            </React.Suspense>
+            <React.Suspense
+              name="three"
+              fallback={<Component key="Suspense 3 Fallback" />}>
+              <Component key="Suspense 3 Content" />
+            </React.Suspense>
+            <Component key="Unrelated at End" />
+          </React.Suspense>
+        </React.Fragment>
+      );
+
+      await actAsync(() => render(<App />));
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <App>
+              <Component key="Outside">
+            ▾ <Suspense name="parent">
+                <Component key="Unrelated at Start">
+              ▾ <Suspense name="one">
+                  <Component key="Suspense 1 Content">
+              ▾ <Suspense name="two">
+                  <Component key="Suspense 2 Content">
+              ▾ <Suspense name="three">
+                  <Component key="Suspense 3 Content">
+                <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}>
+            <Suspense name="one" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="two" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="three" rects={[{x:1,y:2,width:5,height:1}]}>
+      `);
+
+      await actAsync(() => {
+        agent.overrideSuspenseMilestone({
+          suspendedSet: [
+            store.getElementIDAtIndex(4),
+            store.getElementIDAtIndex(8),
+          ],
+        });
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <App>
+              <Component key="Outside">
+            ▾ <Suspense name="parent">
+                <Component key="Unrelated at Start">
+              ▾ <Suspense name="one">
+                  <Component key="Suspense 1 Fallback">
+              ▾ <Suspense name="two">
+                  <Component key="Suspense 2 Content">
+              ▾ <Suspense name="three">
+                  <Component key="Suspense 3 Fallback">
+                <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}>
+            <Suspense name="one" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="two" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="three" rects={[{x:1,y:2,width:5,height:1}]}>
+      `);
+
+      await actAsync(() => {
+        agent.overrideSuspenseMilestone({
+          suspendedSet: [],
+        });
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <App>
+              <Component key="Outside">
+            ▾ <Suspense name="parent">
+                <Component key="Unrelated at Start">
+              ▾ <Suspense name="one">
+                  <Component key="Suspense 1 Content">
+              ▾ <Suspense name="two">
+                  <Component key="Suspense 2 Content">
+              ▾ <Suspense name="three">
+                  <Component key="Suspense 3 Content">
+                <Component key="Unrelated at End">
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
+          <Suspense name="parent" rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}>
+            <Suspense name="one" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="two" rects={[{x:1,y:2,width:5,height:1}]}>
+            <Suspense name="three" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
 
     it('should display a partially rendered SuspenseList', async () => {
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const SuspendingComponent = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
       const Component = () => {
         return <div>Hello</div>;
@@ -848,6 +1063,8 @@ describe('Store', () => {
                 <Component key="A">
               ▾ <Suspense>
                   <Loading>
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="Wrapper" rects={null}>
       `);
 
       await act(() => {
@@ -861,6 +1078,8 @@ describe('Store', () => {
               ▾ <Suspense>
                   <Component key="B">
                 <Component key="C">
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
+          <Suspense name="Wrapper" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
 
@@ -1170,12 +1389,9 @@ describe('Store', () => {
     // @reactVersion >= 18.0
     it('should display Suspense nodes properly in various states', async () => {
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const SuspendingComponent = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
       const Component = () => {
         return <div>Hello</div>;
@@ -1197,6 +1413,8 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▸ <Wrapper>
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="Wrapper" rects={null}>
       `);
 
       // This test isn't meaningful unless we expand the suspended tree
@@ -1212,6 +1430,8 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Loading>
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:10,height:1}]}
+          <Suspense name="Wrapper" rects={null}>
       `);
 
       await act(() => {
@@ -1223,6 +1443,8 @@ describe('Store', () => {
               <Component key="Outside">
             ▾ <Suspense>
                 <Component key="Inside">
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}, {x:1,y:2,width:5,height:1}]}
+          <Suspense name="Wrapper" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
     });
 
@@ -1324,7 +1546,7 @@ describe('Store', () => {
           ▸ <Wrapper>
       `);
 
-      const deepestedNodeID = agent.getIDForHostInstance(ref.current);
+      const deepestedNodeID = agent.getIDForHostInstance(ref.current).id;
 
       await act(() => store.toggleIsCollapsed(deepestedNodeID, false));
       expect(store).toMatchInlineSnapshot(`
@@ -1447,6 +1669,8 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▸ <SuspenseTree>
+        [suspense-root]  rects={null}
+          <Suspense name="SuspenseTree" rects={null}>
       `);
 
       await act(() =>
@@ -1460,6 +1684,8 @@ describe('Store', () => {
           ▾ <SuspenseTree>
             ▾ <Suspense>
               ▸ <Parent>
+        [suspense-root]  rects={null}
+          <Suspense name="SuspenseTree" rects={null}>
       `);
 
       const rendererID = getRendererID();
@@ -1477,6 +1703,8 @@ describe('Store', () => {
           ▾ <SuspenseTree>
             ▾ <Suspense>
                 <Fallback>
+        [suspense-root]  rects={null}
+          <Suspense name="SuspenseTree" rects={null}>
       `);
 
       await act(() =>
@@ -1491,6 +1719,8 @@ describe('Store', () => {
           ▾ <SuspenseTree>
             ▾ <Suspense>
               ▸ <Parent>
+        [suspense-root]  rects={null}
+          <Suspense name="SuspenseTree" rects={null}>
       `);
     });
   });
@@ -1794,6 +2024,8 @@ describe('Store', () => {
         [root]
           ▾ <App>
               <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
 
       await Promise.resolve();
@@ -1806,6 +2038,8 @@ describe('Store', () => {
           ▾ <App>
             ▾ <Suspense>
                 <LazyInnerComponent>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
 
       // Render again to unmount it
@@ -1854,6 +2088,8 @@ describe('Store', () => {
         [root]
           ▾ <App>
               <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
 
       // Render again to unmount it before it finishes loading
@@ -2262,7 +2498,7 @@ describe('Store', () => {
       withErrorsOrWarningsIgnored(['test-only:'], async () => {
         await act(() => render(<React.Fragment />));
       });
-      expect(store).toMatchInlineSnapshot(`[root]`);
+      expect(store).toMatchInlineSnapshot(``);
       expect(store.componentWithErrorCount).toBe(0);
       expect(store.componentWithWarningCount).toBe(0);
     });
@@ -2291,20 +2527,24 @@ describe('Store', () => {
       await actAsync(() => render(<App renderA={true} />));
 
       expect(store).toMatchInlineSnapshot(`
-          [root]
-            ▾ <App>
-              ▾ <Suspense>
-                  <ChildA>
-        `);
+        [root]
+          ▾ <App>
+            ▾ <Suspense>
+                <ChildA>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
+      `);
 
       await actAsync(() => render(<App renderA={false} />));
 
       expect(store).toMatchInlineSnapshot(`
-          [root]
-            ▾ <App>
-              ▾ <Suspense>
-                  <ChildB>
-        `);
+        [root]
+          ▾ <App>
+            ▾ <Suspense>
+                <ChildB>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
+      `);
     });
   });
 
@@ -2580,5 +2820,484 @@ describe('Store', () => {
           ▾ <ServerComponent key="D"> [Server]
               <ClientComponent key="D">
       `);
+  });
+
+  // @reactVersion >= 17.0
+  it('can reconcile Suspense in fallback positions', async () => {
+    let resolveFallback;
+    const fallbackPromise = new Promise(resolve => {
+      resolveFallback = resolve;
+    });
+    let resolveContent;
+    const contentPromise = new Promise(resolve => {
+      resolveContent = resolve;
+    });
+
+    function Component({children, promise}) {
+      if (promise) {
+        readValue(promise);
+      }
+      return <div>{children}</div>;
+    }
+
+    await actAsync(() =>
+      render(
+        <React.Suspense
+          name="content"
+          fallback={
+            <React.Suspense
+              name="fallback"
+              fallback={
+                <Component key="fallback-fallback">
+                  Loading fallback...
+                </Component>
+              }>
+              <Component key="fallback-content" promise={fallbackPromise}>
+                Loading...
+              </Component>
+            </React.Suspense>
+          }>
+          <Component key="content" promise={contentPromise}>
+            done
+          </Component>
+        </React.Suspense>,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+          ▾ <Suspense name="fallback">
+              <Component key="fallback-fallback">
+      [suspense-root]  rects={[{x:1,y:2,width:19,height:1}]}
+        <Suspense name="content" rects={null}>
+        <Suspense name="fallback" rects={null}>
+    `);
+
+    await actAsync(() => {
+      resolveFallback();
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+          ▾ <Suspense name="fallback">
+              <Component key="fallback-content">
+      [suspense-root]  rects={[{x:1,y:2,width:10,height:1}]}
+        <Suspense name="content" rects={null}>
+        <Suspense name="fallback" rects={[{x:1,y:2,width:10,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      resolveContent();
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="content">
+            <Component key="content">
+      [suspense-root]  rects={[{x:1,y:2,width:4,height:1}]}
+        <Suspense name="content" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+  });
+
+  // @reactVersion >= 17.0
+  it('can reconcile resuspended Suspense with Suspense in fallback positions', async () => {
+    let resolveHeadFallback;
+    let resolveHeadContent;
+    let resolveMainFallback;
+    let resolveMainContent;
+
+    function Component({children, promise}) {
+      if (promise) {
+        readValue(promise);
+      }
+      return <div>{children}</div>;
+    }
+
+    function WithSuspenseInFallback({fallbackPromise, contentPromise, name}) {
+      return (
+        <React.Suspense
+          name={name}
+          fallback={
+            <React.Suspense
+              name={`${name}-fallback`}
+              fallback={
+                <Component key={`${name}-fallback-fallback`}>
+                  Loading fallback...
+                </Component>
+              }>
+              <Component
+                key={`${name}-fallback-content`}
+                promise={fallbackPromise}>
+                Loading...
+              </Component>
+            </React.Suspense>
+          }>
+          <Component key={`${name}-content`} promise={contentPromise}>
+            done
+          </Component>
+        </React.Suspense>
+      );
+    }
+
+    function App({
+      headFallbackPromise,
+      headContentPromise,
+      mainContentPromise,
+      mainFallbackPromise,
+      tailContentPromise,
+      tailFallbackPromise,
+    }) {
+      return (
+        <>
+          <WithSuspenseInFallback
+            fallbackPromise={headFallbackPromise}
+            contentPromise={headContentPromise}
+            name="head"
+          />
+          <WithSuspenseInFallback
+            fallbackPromise={mainFallbackPromise}
+            contentPromise={mainContentPromise}
+            name="main"
+          />
+        </>
+      );
+    }
+
+    const initialHeadContentPromise = new Promise(resolve => {
+      resolveHeadContent = resolve;
+    });
+    const initialHeadFallbackPromise = new Promise(resolve => {
+      resolveHeadFallback = resolve;
+    });
+    const initialMainContentPromise = new Promise(resolve => {
+      resolveMainContent = resolve;
+    });
+    const initialMainFallbackPromise = new Promise(resolve => {
+      resolveMainFallback = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={initialHeadFallbackPromise}
+          headContentPromise={initialHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+              ▾ <Suspense name="head-fallback">
+                  <Component key="head-fallback-fallback">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+              ▾ <Suspense name="main-fallback">
+                  <Component key="main-fallback-fallback">
+      [suspense-root]  rects={[{x:1,y:2,width:19,height:1}, {x:1,y:2,width:19,height:1}]}
+        <Suspense name="head" rects={null}>
+        <Suspense name="head-fallback" rects={null}>
+        <Suspense name="main" rects={null}>
+        <Suspense name="main-fallback" rects={null}>
+    `);
+
+    await actAsync(() => {
+      resolveHeadFallback();
+      resolveMainFallback();
+      resolveHeadContent();
+      resolveMainContent();
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+                <Component key="head-content">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+                <Component key="main-content">
+      [suspense-root]  rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:4,height:1}]}
+        <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
+        <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+
+    // Resuspend head content
+    const nextHeadContentPromise = new Promise(resolve => {
+      resolveHeadContent = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={initialHeadFallbackPromise}
+          headContentPromise={nextHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+              ▾ <Suspense name="head-fallback">
+                  <Component key="head-fallback-content">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+                <Component key="main-content">
+      [suspense-root]  rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:4,height:1}]}
+        <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
+        <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
+        <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+
+    // Resuspend head fallback
+    const nextHeadFallbackPromise = new Promise(resolve => {
+      resolveHeadFallback = resolve;
+    });
+    await actAsync(() =>
+      render(
+        <App
+          headFallbackPromise={nextHeadFallbackPromise}
+          headContentPromise={nextHeadContentPromise}
+          mainContentPromise={initialMainContentPromise}
+          mainFallbackPromise={initialMainFallbackPromise}
+        />,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="head">
+              ▾ <Suspense name="head-fallback">
+                  <Component key="head-fallback-fallback">
+          ▾ <WithSuspenseInFallback>
+            ▾ <Suspense name="main">
+                <Component key="main-content">
+      [suspense-root]  rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:10,height:1}, {x:1,y:2,width:19,height:1}, {x:1,y:2,width:4,height:1}]}
+        <Suspense name="head" rects={[{x:1,y:2,width:4,height:1}]}>
+        <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
+        <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
+    `);
+
+    await actAsync(() => render(null));
+
+    expect(store).toMatchInlineSnapshot(``);
+  });
+
+  it('should handle an empty root', async () => {
+    await actAsync(() => render(null));
+    expect(store).toMatchInlineSnapshot(``);
+
+    await actAsync(() => render(<span />));
+    expect(store).toMatchInlineSnapshot(`[root]`);
+  });
+
+  // @reactVersion >= 19.0
+  it('should reconcile promise-as-a-child', async () => {
+    function Component({children}) {
+      return <div>{children}</div>;
+    }
+
+    await actAsync(() =>
+      render(
+        <React.Suspense>
+          {Promise.resolve(<Component key="A">A</Component>)}
+        </React.Suspense>,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <Component key="A">
+      [suspense-root]  rects={[{x:1,y:2,width:1,height:1}]}
+        <Suspense name="Unknown" rects={[{x:1,y:2,width:1,height:1}]}>
+    `);
+
+    await actAsync(() =>
+      render(
+        <React.Suspense>
+          {Promise.resolve(<Component key="not-A">not A</Component>)}
+        </React.Suspense>,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <Component key="not-A">
+      [suspense-root]  rects={[{x:1,y:2,width:5,height:1}]}
+        <Suspense name="Unknown" rects={[{x:1,y:2,width:5,height:1}]}>
+    `);
+
+    await actAsync(() => render(null));
+    expect(store).toMatchInlineSnapshot(``);
+  });
+
+  // @reactVersion >= 19
+  it('should keep suspended boundaries in the Suspense tree but not hidden Activity', async () => {
+    const Activity = React.Activity || React.unstable_Activity;
+
+    const never = new Promise(() => {});
+    function Never() {
+      readValue(never);
+      return null;
+    }
+    function Component({children}) {
+      return <div>{children}</div>;
+    }
+
+    function App({hidden}) {
+      return (
+        <>
+          <Activity mode={hidden ? 'hidden' : 'visible'}>
+            <React.Suspense name="inside-activity">
+              <Component key="inside-activity">inside Activity</Component>
+            </React.Suspense>
+          </Activity>
+          <React.Suspense name="outer-suspense">
+            <React.Suspense name="inner-suspense">
+              <Component key="inside-suspense">inside Suspense</Component>
+            </React.Suspense>
+            {hidden ? <Never /> : null}
+          </React.Suspense>
+        </>
+      );
+    }
+
+    await actAsync(() => {
+      render(<App hidden={true} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Activity>
+            <Suspense name="outer-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}]}
+        <Suspense name="outer-suspense" rects={null}>
+    `);
+
+    // mount as visible
+    await actAsync(() => {
+      render(null);
+    });
+    await actAsync(() => {
+      render(<App hidden={false} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Activity>
+            ▾ <Suspense name="inside-activity">
+                <Component key="inside-activity">
+          ▾ <Suspense name="outer-suspense">
+            ▾ <Suspense name="inner-suspense">
+                <Component key="inside-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="inside-activity" rects={[{x:1,y:2,width:15,height:1}]}>
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      render(<App hidden={true} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Activity>
+            <Suspense name="outer-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      render(<App hidden={false} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Activity>
+            ▾ <Suspense name="inside-activity">
+                <Component key="inside-activity">
+          ▾ <Suspense name="outer-suspense">
+            ▾ <Suspense name="inner-suspense">
+                <Component key="inside-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="inside-activity" rects={[{x:1,y:2,width:15,height:1}]}>
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+  });
+
+  // @reactVersion >= 19.0
+  it('guesses a Suspense name based on the owner', async () => {
+    let resolve;
+    const promise = new Promise(_resolve => {
+      resolve = _resolve;
+    });
+    function Inner() {
+      return (
+        <React.Suspense fallback={<p>Loading inner</p>}>
+          <p>{promise}</p>
+        </React.Suspense>
+      );
+    }
+
+    function Outer({children}) {
+      return (
+        <React.Suspense fallback={<p>Loading outer</p>}>
+          <p>{promise}</p>
+          {children}
+        </React.Suspense>
+      );
+    }
+
+    await actAsync(() => {
+      render(
+        <Outer>
+          <Inner />
+        </Outer>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Outer>
+            <Suspense>
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}]}
+        <Suspense name="Outer" rects={null}>
+    `);
+
+    console.log('...........................');
+
+    await actAsync(() => {
+      resolve('loaded');
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Outer>
+          ▾ <Suspense>
+            ▾ <Inner>
+                <Suspense>
+      [suspense-root]  rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}
+        <Suspense name="Outer" rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}>
+          <Suspense name="Inner" rects={[{x:1,y:2,width:6,height:1}]}>
+    `);
   });
 });

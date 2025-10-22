@@ -34,6 +34,7 @@ import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {ReactFunctionLocation, ReactStackTrace} from 'shared/ReactTypes';
 import type Agent from './agent';
+import type {UnknownSuspendersReason} from '../constants';
 
 type BundleType =
   | 0 // PROD
@@ -100,6 +101,16 @@ export type FindHostInstancesForElementID = (
   id: number,
 ) => null | $ReadOnlyArray<HostInstance>;
 
+type Rect = {
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  ...
+};
+export type FindLastKnownRectsForID = (
+  id: number,
+) => null | $ReadOnlyArray<Rect>;
 export type ReactProviderType<T> = {
   $$typeof: symbol | number,
   _context: ReactContext<T>,
@@ -154,6 +165,8 @@ export type ReactRenderer = {
   ) => void,
   // 16.9+
   scheduleUpdate?: ?(fiber: Object) => void,
+  // 19.2+
+  scheduleRetry?: ?(fiber: Object) => void,
   setSuspenseHandler?: ?(shouldSuspend: (fiber: Object) => boolean) => void,
   // Only injected by React v16.8+ in order to support hooks inspection.
   currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
@@ -238,6 +251,7 @@ export type SerializedIOInfo = {
   description: string,
   start: number,
   end: number,
+  byteSize: null | number,
   value: null | Promise<mixed>,
   env: null | string,
   owner: null | SerializedElement,
@@ -256,6 +270,8 @@ export type SerializedElement = {
   displayName: string | null,
   id: number,
   key: number | string | null,
+  env: null | string,
+  stack: null | ReactStackTrace,
   type: ElementType,
 };
 
@@ -283,6 +299,8 @@ export type InspectedElement = {
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
+  // If this Element is suspended. Currently only set on Suspense boundaries.
+  isSuspended: boolean | null,
 
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
@@ -298,10 +316,19 @@ export type InspectedElement = {
 
   // Things that suspended this Instances
   suspendedBy: Object, // DehydratedData or Array<SerializedAsyncInfo>
+  suspendedByRange: null | [number, number],
+  unknownSuspenders: UnknownSuspendersReason,
 
   // List of owners
   owners: Array<SerializedElement> | null,
+
+  // Environment name that this component executed in or null for the client
+  env: string | null,
+
   source: ReactFunctionLocation | null,
+
+  // The location of the JSX creation.
+  stack: ReactStackTrace | null,
 
   type: ElementType,
 
@@ -394,11 +421,13 @@ export type RendererInterface = {
     path: Array<string | number>,
   ) => void,
   findHostInstancesForElementID: FindHostInstancesForElementID,
+  findLastKnownRectsForID: FindLastKnownRectsForID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
   getComponentStack?: GetComponentStack,
   getNearestMountedDOMNode: (component: Element) => Element | null,
   getElementIDForHostInstance: GetElementIDForHostInstance,
+  getSuspenseNodeIDForHostInstance: GetElementIDForHostInstance,
   getDisplayNameForElementID: GetDisplayNameForElementID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
@@ -422,6 +451,7 @@ export type RendererInterface = {
   onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
+  overrideSuspenseMilestone: (suspendedSet: Array<number>) => void,
   overrideValueAtPath: (
     type: Type,
     id: number,
@@ -454,6 +484,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     count: number,
   ) => void,
+  supportsTogglingSuspense: boolean,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
   getEnvironmentNames: () => Array<string>,
 

@@ -223,7 +223,10 @@ function HookView({
   const hookDisplayName = hookName ? (
     <>
       {name}
-      {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+      {
+        // $FlowFixMe[constant-condition]
+        !!hookName && <span className={styles.HookName}>({hookName})</span>
+      }
     </>
   ) : (
     name
@@ -386,6 +389,6 @@ function HookView({
   }
 }
 
-export default (React.memo(
-  InspectedElementHooksTree,
-): React.ComponentType<HookViewProps>);
+export default (React.memo(InspectedElementHooksTree): component(
+  ...props: HookViewProps
+));

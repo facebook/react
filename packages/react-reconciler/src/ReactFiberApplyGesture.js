@@ -77,6 +77,12 @@ import {
   getViewTransitionClassName,
 } from './ReactFiberViewTransitionComponent';
 
+import {
+  enableProfilerTimer,
+  enableComponentPerformanceTrack,
+} from 'shared/ReactFeatureFlags';
+import {trackAnimatingTask} from './ReactProfilerTimer';
+
 let didWarnForRootClone = false;
 
 // Used during the apply phase to track whether a parent ViewTransition component
@@ -101,6 +107,7 @@ function applyViewTransitionToClones(
   name: string,
   className: ?string,
   clones: Array<Instance>,
+  fiber: Fiber,
 ): void {
   // This gets called when we have found a pair, but after the clone in created. The clone is
   // created by the insertion side. If the insertion side if found before the deletion side
@@ -116,6 +123,11 @@ function applyViewTransitionToClones(
           name + '_' + i,
       className,
     );
+  }
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (fiber._debugTask != null) {
+      trackAnimatingTask(fiber._debugTask);
+    }
   }
 }
 
@@ -171,7 +183,7 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
                 // If we have clones that means that we've already visited this
                 // ViewTransition boundary before and we can now apply the name
                 // to those clones. Otherwise, we have to wait until we clone it.
-                applyViewTransitionToClones(name, className, clones);
+                applyViewTransitionToClones(name, className, clones, child);
               }
             }
             if (pairs.size === 0) {
@@ -221,7 +233,7 @@ function trackEnterViewTransitions(deletion: Fiber): void {
           // If we have clones that means that we've already visited this
           // ViewTransition boundary before and we can now apply the name
           // to those clones. Otherwise, we have to wait until we clone it.
-          applyViewTransitionToClones(name, className, clones);
+          applyViewTransitionToClones(name, className, clones, deletion);
         }
       }
     }
@@ -266,7 +278,7 @@ function applyAppearingPairViewTransition(child: Fiber): void {
         // If there are no clones at this point, that should mean that there are no
         // HostComponent children in this ViewTransition.
         if (clones !== null) {
-          applyViewTransitionToClones(name, className, clones);
+          applyViewTransitionToClones(name, className, clones, child);
         }
       }
     }
@@ -296,7 +308,7 @@ function applyExitViewTransition(placement: Fiber): void {
     // If there are no clones at this point, that should mean that there are no
     // HostComponent children in this ViewTransition.
     if (clones !== null) {
-      applyViewTransitionToClones(name, className, clones);
+      applyViewTransitionToClones(name, className, clones, placement);
     }
   }
 }
@@ -314,7 +326,7 @@ function applyNestedViewTransition(child: Fiber): void {
     // If there are no clones at this point, that should mean that there are no
     // HostComponent children in this ViewTransition.
     if (clones !== null) {
-      applyViewTransitionToClones(name, className, clones);
+      applyViewTransitionToClones(name, className, clones, child);
     }
   }
 }
@@ -346,7 +358,7 @@ function applyUpdateViewTransition(current: Fiber, finishedWork: Fiber): void {
   // If there are no clones at this point, that should mean that there are no
   // HostComponent children in this ViewTransition.
   if (clones !== null) {
-    applyViewTransitionToClones(oldName, className, clones);
+    applyViewTransitionToClones(oldName, className, clones, finishedWork);
   }
 }
 
@@ -488,7 +500,7 @@ function recursivelyInsertNewFiber(
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
-      let nextPhase;
+      let nextPhase: VisitPhase;
       if (visitPhase === INSERT_EXIT) {
         // This was an Enter of a ViewTransition. We now move onto inserting the inner
         // HostComponents and finding inner pairs.
@@ -637,7 +649,7 @@ function recursivelyInsertClonesFromExistingTree(
         // So we need it to be cleared before we do that.
         // TODO: Use some other temporary state to track this.
         child.flags &= ~Update;
-        let nextPhase;
+        let nextPhase: VisitPhase;
         if (visitPhase === CLONE_EXIT) {
           // This was an Enter of a ViewTransition. We now move onto unhiding the inner
           // HostComponents and finding inner pairs.
@@ -894,7 +906,7 @@ function insertDestinationClonesOfFiber(
         // Only insert clones if this tree is going to be visible. No need to
         // clone invisible content.
         // TODO: If this is visible but detached it should still be cloned.
-        let nextPhase;
+        let nextPhase: VisitPhase;
         if (visitPhase === CLONE_UPDATE && (flags & Visibility) !== NoFlags) {
           // This is the root of an appear. We need to trigger Enter transitions.
           nextPhase = CLONE_EXIT;
@@ -922,7 +934,7 @@ function insertDestinationClonesOfFiber(
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
-      let nextPhase;
+      let nextPhase: VisitPhase;
       if (visitPhase === CLONE_EXIT) {
         // This was an Enter of a ViewTransition. We now move onto unhiding the inner
         // HostComponents and finding inner pairs.

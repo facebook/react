@@ -11,15 +11,15 @@ import * as React from 'react';
 
 import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
-import Skeleton from './Skeleton';
 
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {SourceMappedLocation} from 'react-devtools-shared/src/symbolicateSource';
 
 import useOpenResource from '../useOpenResource';
 
 type Props = {
   source: null | ReactFunctionLocation,
-  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null> | null,
+  symbolicatedSourcePromise: Promise<SourceMappedLocation | null> | null,
 };
 
 function InspectedElementViewSourceButton({
@@ -27,7 +27,12 @@ function InspectedElementViewSourceButton({
   symbolicatedSourcePromise,
 }: Props): React.Node {
   return (
-    <React.Suspense fallback={<Skeleton height={16} width={24} />}>
+    <React.Suspense
+      fallback={
+        <Button disabled={true} title="Loading source maps...">
+          <ButtonIcon type="view-source" />
+        </Button>
+      }>
       <ActualSourceButton
         source={source}
         symbolicatedSourcePromise={symbolicatedSourcePromise}
@@ -38,7 +43,7 @@ function InspectedElementViewSourceButton({
 
 type ActualSourceButtonProps = {
   source: null | ReactFunctionLocation,
-  symbolicatedSourcePromise: Promise<ReactFunctionLocation | null> | null,
+  symbolicatedSourcePromise: Promise<SourceMappedLocation | null> | null,
 };
 function ActualSourceButton({
   source,
@@ -51,7 +56,7 @@ function ActualSourceButton({
 
   const [buttonIsEnabled, viewSource] = useOpenResource(
     source,
-    symbolicatedSource,
+    symbolicatedSource == null ? null : symbolicatedSource.location,
   );
   return (
     <Button

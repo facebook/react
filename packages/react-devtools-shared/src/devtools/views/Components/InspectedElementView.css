@@ -24,3 +24,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.RenderedBySkeleton {
+  padding-left: 1.25rem;
+}

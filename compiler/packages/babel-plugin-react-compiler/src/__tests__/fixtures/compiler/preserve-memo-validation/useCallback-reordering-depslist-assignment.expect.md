@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enablePreserveExistingMemoizationGuarantees:false
 import {useCallback} from 'react';
 import {Stringify} from 'shared-runtime';
 
@@ -30,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false
 import { useCallback } from "react";
 import { Stringify } from "shared-runtime";
 
@@ -50,7 +51,6 @@ function useFoo(arr1, arr2) {
   if ($[2] !== arr2 || $[3] !== x) {
     let y;
     t1 = () => ({ y });
-
     (y = x.concat(arr2)), y;
     $[2] = arr2;
     $[3] = x;

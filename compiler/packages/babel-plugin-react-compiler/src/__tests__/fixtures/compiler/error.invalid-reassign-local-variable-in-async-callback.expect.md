@@ -29,7 +29,7 @@ Found 1 error:
 
 Error: Cannot reassign variable in async function
 
-Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead
+Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead.
 
 error.invalid-reassign-local-variable-in-async-callback.ts:8:6
    6 |       // after render, so this should error regardless of where this ends up

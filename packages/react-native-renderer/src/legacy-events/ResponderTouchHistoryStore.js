@@ -207,6 +207,7 @@ const ResponderTouchHistoryStore = {
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
         touchHistory.indexOfSingleActiveTouch =
+          // $FlowFixMe[incompatible-type] might be null according to type
           nativeEvent.touches[0].identifier;
       }
     } else if (isEndish(topLevelType)) {
