@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<829a703f74325e3ef8d64eef69524fd5>>
+ * @generated SignedSource<<1db75498630fe203e03ef10d54d1d178>>
  */
 
 'use strict';
@@ -15,3 +15,13 @@ if (process.env.NODE_ENV === 'production') {
 } else {
   module.exports = require('./cjs/eslint-plugin-react-hooks.development.js');
 }
+
+// Hint to Node’s cjs-module-lexer to make named imports work
+// https://github.com/facebook/react/issues/34801#issuecomment-3433478810
+// eslint-disable-next-line ft-flow/no-unused-expressions
+0 &&
+  (module.exports = {
+    meta: true,
+    rules: true,
+    configs: true,
+  });
