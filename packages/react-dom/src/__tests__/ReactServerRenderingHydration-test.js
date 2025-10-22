@@ -333,6 +333,35 @@ describe('ReactDOMServerHydration', () => {
     ]);
   });
 
+  it('should not warn when class differs only by whitespace/order/duplicates', async () => {
+    const element = document.createElement('div');
+    element.innerHTML = ReactDOMServer.renderToString(
+      <div className="foo   bar  bar" />,
+    );
+
+    await act(() => {
+      ReactDOMClient.hydrateRoot(element, <div className="bar foo" />);
+    });
+
+    assertConsoleErrorDev([]);
+  });
+
+  it('should not warn for class with CRLF (Windows line endings)', async () => {
+    const element = document.createElement('div');
+    element.innerHTML = ReactDOMServer.renderToString(
+      <div className={'flex\r\nitems-center'} />,
+    );
+
+    await act(() => {
+      ReactDOMClient.hydrateRoot(
+        element,
+        <div className="flex items-center" />,
+      );
+    });
+
+    assertConsoleErrorDev([]);
+  });
+
   it('should throw rendering portals on the server', () => {
     const div = document.createElement('div');
     expect(() => {
