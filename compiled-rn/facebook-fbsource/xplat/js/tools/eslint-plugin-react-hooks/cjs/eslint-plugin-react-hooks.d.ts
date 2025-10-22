@@ -88,7 +88,10 @@ declare const plugin: {
             plugins: string[];
             rules: Linter.RulesRecord;
         };
-        flat: Record<string, ReactHooksFlatConfig>;
+        flat: {
+            recommended: ReactHooksFlatConfig;
+            "recommended-latest": ReactHooksFlatConfig;
+        };
     };
 };
 
