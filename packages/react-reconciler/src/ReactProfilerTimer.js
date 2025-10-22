@@ -24,7 +24,11 @@ import {
   NoLanes,
 } from './ReactFiberLane';
 
-import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
+import {
+  resolveEventType,
+  resolveEventTimeStamp,
+  createTask as createTaskFromFiberConfig,
+} from './ReactFiberConfig';
 
 import {
   enableProfilerCommitHooks,
@@ -43,10 +47,8 @@ import * as Scheduler from 'scheduler';
 const {unstable_now: now} = Scheduler;
 
 const createTask =
-  // eslint-disable-next-line react-internal/no-production-logging
-  __DEV__ && console.createTask
-    ? // eslint-disable-next-line react-internal/no-production-logging
-      console.createTask
+  __DEV__ && createTaskFromFiberConfig
+    ? createTaskFromFiberConfig
     : (name: string) => null;
 
 export const REGULAR_UPDATE: UpdateType = 0;

@@ -402,6 +402,11 @@ export function resolveEventTimeStamp(): number {
   return -1.1;
 }
 
+// Async Stack Tagging API.
+// Chromium-only: https://developer.chrome.com/docs/devtools/console/api#createtask
+// eslint-disable-next-line react-internal/no-production-logging
+export const createTask = console.createTask;
+
 export function shouldAttemptEagerTransition() {
   return false;
 }

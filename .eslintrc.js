@@ -462,6 +462,7 @@ module.exports = {
       globals: {
         nativeFabricUIManager: 'readonly',
         RN$enableMicrotasksInReact: 'readonly',
+        RN$unstable_createTask: 'readonly',
       },
     },
     {

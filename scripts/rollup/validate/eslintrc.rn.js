@@ -48,6 +48,8 @@ module.exports = {
     nativeFabricUIManager: 'readonly',
     // RN flag to enable microtasks
     RN$enableMicrotasksInReact: 'readonly',
+    // RN's temporary Async Stack Tagging API.
+    RN$unstable_createTask: 'readonly',
     // Trusted Types
     trustedTypes: 'readonly',
     // RN supports this

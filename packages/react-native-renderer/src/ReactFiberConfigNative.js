@@ -366,6 +366,8 @@ export function resolveEventTimeStamp(): number {
   return -1.1;
 }
 
+export const createTask: typeof console.createTask | void = undefined;
+
 export function shouldAttemptEagerTransition(): boolean {
   return false;
 }

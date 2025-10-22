@@ -85,6 +85,7 @@ export const resolveUpdatePriority = $$$config.resolveUpdatePriority;
 export const trackSchedulerEvent = $$$config.trackSchedulerEvent;
 export const resolveEventType = $$$config.resolveEventType;
 export const resolveEventTimeStamp = $$$config.resolveEventTimeStamp;
+export const createTask = $$$config.createTask;
 export const shouldAttemptEagerTransition =
   $$$config.shouldAttemptEagerTransition;
 export const detachDeletedInstance = $$$config.detachDeletedInstance;

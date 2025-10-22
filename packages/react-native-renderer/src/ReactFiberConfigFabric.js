@@ -424,6 +424,13 @@ export function resolveEventTimeStamp(): number {
   return -1.1;
 }
 
+// This matches Chrome's console.createTask in terms of signature.
+// This doesn't match Chrome's console.createTask in terms of behavior and implementation.
+export const createTask: typeof console.createTask | void =
+  typeof RN$unstable_createTask === 'function'
+    ? RN$unstable_createTask
+    : undefined;
+
 export function shouldAttemptEagerTransition(): boolean {
   return false;
 }

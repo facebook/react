@@ -303,3 +303,6 @@ declare const nativeFabricUIManager: {
   unstable_getCurrentEventPriority: () => number,
   ...
 };
+
+// eslint-disable-next-line no-unused-vars
+declare const RN$unstable_createTask: typeof console.createTask;

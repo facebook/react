@@ -741,6 +741,11 @@ export function resolveEventTimeStamp(): number {
   return event && event !== schedulerEvent ? event.timeStamp : -1.1;
 }
 
+// Async Stack Tagging API.
+// Chromium-only: https://developer.chrome.com/docs/devtools/console/api#createtask
+// eslint-disable-next-line react-internal/no-production-logging
+export const createTask: typeof console.createTask | void = console.createTask;
+
 export const isPrimaryRenderer = true;
 export const warnsIfNotActing = true;
 // This initialization code may run even on server environments
