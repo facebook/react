@@ -4,7 +4,7 @@ module.exports = require('./src/index.ts');
 // https://github.com/facebook/react/issues/34801#issuecomment-3433478810
 0 &&
   (module.exports = {
-    meta,
-    rules,
-    configs
+    meta: true,
+    rules: true,
+    configs: true,
   });
