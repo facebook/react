@@ -14,6 +14,7 @@ import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_addTransitionType as addTransitionType,
   startTransition,
+  Activity,
 } from 'react';
 import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
@@ -34,12 +35,8 @@ export default function ConfigEditor({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    // TODO: Use <Activity> when it is compatible with Monaco: https://github.com/suren-atoyan/monaco-react/issues/753
     <>
-      <div
-        style={{
-          display: isExpanded ? 'block' : 'none',
-        }}>
+      <Activity mode={isExpanded ? 'visible' : 'hidden'}>
         <ExpandedEditor
           onToggle={() => {
             startTransition(() => {
@@ -49,11 +46,8 @@ export default function ConfigEditor({
           }}
           formattedAppliedConfig={formattedAppliedConfig}
         />
-      </div>
-      <div
-        style={{
-          display: !isExpanded ? 'block' : 'none',
-        }}>
+      </Activity>
+      <Activity mode={isExpanded ? 'hidden' : 'visible'}>
         <CollapsedEditor
           onToggle={() => {
             startTransition(() => {
@@ -62,7 +56,7 @@ export default function ConfigEditor({
             });
           }}
         />
-      </div>
+      </Activity>
     </>
   );
 }
@@ -122,7 +116,8 @@ function ExpandedEditor({
 
   return (
     <ViewTransition
-      update={{[CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none'}}>
+      enter={{[CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none'}}
+      exit={{[CONFIG_PANEL_TRANSITION]: 'slide-out', default: 'none'}}>
       <Resizable
         minWidth={300}
         maxWidth={600}
