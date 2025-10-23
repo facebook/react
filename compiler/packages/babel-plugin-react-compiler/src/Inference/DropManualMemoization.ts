@@ -42,7 +42,7 @@ type IdentifierSidemap = {
   functions: Map<IdentifierId, TInstruction<FunctionExpression>>;
   manualMemos: Map<IdentifierId, ManualMemoCallee>;
   react: Set<IdentifierId>;
-  maybeDepsLists: Map<IdentifierId, Array<Place>>;
+  maybeDepsLists: Map<IdentifierId, {loc: SourceLocation; deps: Array<Place>}>;
   maybeDeps: Map<IdentifierId, ManualMemoDependency>;
   optionals: Set<IdentifierId>;
 };
@@ -159,10 +159,10 @@ function collectTemporaries(
     }
     case 'ArrayExpression': {
       if (value.elements.every(e => e.kind === 'Identifier')) {
-        sidemap.maybeDepsLists.set(
-          instr.lvalue.identifier.id,
-          value.elements as Array<Place>,
-        );
+        sidemap.maybeDepsLists.set(instr.lvalue.identifier.id, {
+          loc: value.loc,
+          deps: value.elements as Array<Place>,
+        });
       }
       break;
     }
@@ -182,6 +182,7 @@ function makeManualMemoizationMarkers(
   fnExpr: Place,
   env: Environment,
   depsList: Array<ManualMemoDependency> | null,
+  depsLoc: SourceLocation | null,
   memoDecl: Place,
   manualMemoId: number,
 ): [TInstruction<StartMemoize>, TInstruction<FinishMemoize>] {
@@ -197,6 +198,7 @@ function makeManualMemoizationMarkers(
          * as dependencies
          */
         deps: depsList,
+        depsLoc,
         loc: fnExpr.loc,
       },
       effects: null,
@@ -287,86 +289,85 @@ function extractManualMemoizationArgs(
   sidemap: IdentifierSidemap,
   errors: CompilerError,
 ): {
-  fnPlace: Place | null;
+  fnPlace: Place;
   depsList: Array<ManualMemoDependency> | null;
-} {
+  depsLoc: SourceLocation | null;
+} | null {
   const [fnPlace, depsListPlace] = instr.value.args as Array<
     Place | SpreadPattern | undefined
   >;
-  if (fnPlace == null) {
+  if (fnPlace == null || fnPlace.kind !== 'Identifier') {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
         reason: `Expected a callback function to be passed to ${kind}`,
-        description: `Expected a callback function to be passed to ${kind}`,
+        description:
+          kind === 'useCallback'
+            ? 'The first argument to useCallback() must be a function to cache'
+            : 'The first argument to useMemo() must be a function that calculates a result to cache',
         suggestions: null,
       }).withDetails({
         kind: 'error',
         loc: instr.value.loc,
-        message: `Expected a callback function to be passed to ${kind}`,
+        message:
+          kind === 'useCallback'
+            ? `Expected a callback function`
+            : `Expected a memoization function`,
       }),
     );
-    return {fnPlace: null, depsList: null};
+    return null;
   }
-  if (fnPlace.kind === 'Spread' || depsListPlace?.kind === 'Spread') {
+  if (depsListPlace == null) {
+    return {
+      fnPlace,
+      depsList: null,
+      depsLoc: null,
+    };
+  }
+  const maybeDepsList =
+    depsListPlace.kind === 'Identifier'
+      ? sidemap.maybeDepsLists.get(depsListPlace.identifier.id)
+      : null;
+  if (maybeDepsList == null) {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
-        reason: `Unexpected spread argument to ${kind}`,
-        description: `Unexpected spread argument to ${kind}`,
+        reason: `Expected the dependency list for ${kind} to be an array literal`,
+        description: `Expected the dependency list for ${kind} to be an array literal`,
         suggestions: null,
       }).withDetails({
         kind: 'error',
-        loc: instr.value.loc,
-        message: `Unexpected spread argument to ${kind}`,
+        loc:
+          depsListPlace?.kind === 'Identifier' ? depsListPlace.loc : instr.loc,
+        message: `Expected the dependency list for ${kind} to be an array literal`,
       }),
     );
-    return {fnPlace: null, depsList: null};
+    return null;
   }
-  let depsList: Array<ManualMemoDependency> | null = null;
-  if (depsListPlace != null) {
-    const maybeDepsList = sidemap.maybeDepsLists.get(
-      depsListPlace.identifier.id,
-    );
-    if (maybeDepsList == null) {
+  const depsList: Array<ManualMemoDependency> = [];
+  for (const dep of maybeDepsList.deps) {
+    const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
+    if (maybeDep == null) {
       errors.pushDiagnostic(
         CompilerDiagnostic.create({
           category: ErrorCategory.UseMemo,
-          reason: `Expected the dependency list for ${kind} to be an array literal`,
-          description: `Expected the dependency list for ${kind} to be an array literal`,
+          reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+          description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
           suggestions: null,
         }).withDetails({
           kind: 'error',
-          loc: depsListPlace.loc,
-          message: `Expected the dependency list for ${kind} to be an array literal`,
+          loc: dep.loc,
+          message: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
         }),
       );
-      return {fnPlace, depsList: null};
-    }
-    depsList = [];
-    for (const dep of maybeDepsList) {
-      const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
-      if (maybeDep == null) {
-        errors.pushDiagnostic(
-          CompilerDiagnostic.create({
-            category: ErrorCategory.UseMemo,
-            reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
-            description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
-            suggestions: null,
-          }).withDetails({
-            kind: 'error',
-            loc: dep.loc,
-            message: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
-          }),
-        );
-      } else {
-        depsList.push(maybeDep);
-      }
+    } else {
+      depsList.push(maybeDep);
     }
   }
   return {
     fnPlace,
     depsList,
+    depsLoc: maybeDepsList.loc,
   };
 }
 
@@ -427,16 +428,17 @@ export function dropManualMemoization(
 
         const manualMemo = sidemap.manualMemos.get(id);
         if (manualMemo != null) {
-          const {fnPlace, depsList} = extractManualMemoizationArgs(
+          const memoDetails = extractManualMemoizationArgs(
             instr as TInstruction<CallExpression> | TInstruction<MethodCall>,
             manualMemo.kind,
             sidemap,
             errors,
           );
 
-          if (fnPlace == null) {
+          if (memoDetails == null) {
             continue;
           }
+          const {fnPlace, depsList, depsLoc} = memoDetails;
 
           instr.value = getManualMemoizationReplacement(
             fnPlace,
@@ -487,6 +489,7 @@ export function dropManualMemoization(
               fnPlace,
               func.env,
               depsList,
+              depsLoc,
               memoDecl,
               nextManualMemoId++,
             );
