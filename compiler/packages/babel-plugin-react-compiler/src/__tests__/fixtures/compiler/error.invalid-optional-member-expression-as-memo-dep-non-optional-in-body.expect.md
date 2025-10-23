@@ -29,12 +29,7 @@ error.invalid-optional-member-expression-as-memo-dep-non-optional-in-body.ts:3:2
    2 | function Component(props) {
 >  3 |   const data = useMemo(() => {
      |                        ^^^^^^^
->  4 |     // actual code is non-optional
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->  5 |     return props.items.edges.nodes ?? [];
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->  6 |     // deps are optional
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>    …
 >  7 |   }, [props.items?.edges?.nodes]);
      | ^^^^ Could not preserve existing manual memoization
    8 |   return <Foo data={data} />;

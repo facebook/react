@@ -101,14 +101,7 @@ error.todo-kitchensink.ts:5:2
    4 |
 >  5 |   class Bar {
      |   ^^^^^^^^^^^
->  6 |     #secretSauce = 42;
-     | ^^^^^^^^^^^^^^^^^^^^^^
->  7 |     constructor() {
-     | ^^^^^^^^^^^^^^^^^^^^^^
->  8 |       console.log(this.#secretSauce);
-     | ^^^^^^^^^^^^^^^^^^^^^^
->  9 |     }
-     | ^^^^^^^^^^^^^^^^^^^^^^
+>    …
 > 10 |   }
      | ^^^^ Inline `class` declarations are not supported
   11 |

@@ -28,12 +28,7 @@ error.todo-invalid-jsx-in-try-with-finally.ts:4:2
    3 |   let el;
 >  4 |   try {
      |   ^^^^^
->  5 |     el = <div />;
-     | ^^^^^^^^^^^^^^^^^
->  6 |   } finally {
-     | ^^^^^^^^^^^^^^^^^
->  7 |     console.log(el);
-     | ^^^^^^^^^^^^^^^^^
+>    …
 >  8 |   }
      | ^^^^ (BuildHIR::lowerStatement) Handle TryStatement without a catch clause
    9 |   return el;

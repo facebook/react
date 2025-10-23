@@ -35,22 +35,7 @@ error.todo-invalid-jsx-in-catch-in-outer-try-with-finally.ts:6:2
    5 |   let el;
 >  6 |   try {
      |   ^^^^^
->  7 |     let value;
-     | ^^^^^^^^^^^^^^
->  8 |     try {
-     | ^^^^^^^^^^^^^^
->  9 |       value = identity(props.foo);
-     | ^^^^^^^^^^^^^^
-> 10 |     } catch {
-     | ^^^^^^^^^^^^^^
-> 11 |       el = <div value={value} />;
-     | ^^^^^^^^^^^^^^
-> 12 |     }
-     | ^^^^^^^^^^^^^^
-> 13 |   } finally {
-     | ^^^^^^^^^^^^^^
-> 14 |     console.log(el);
-     | ^^^^^^^^^^^^^^
+>    …
 > 15 |   }
      | ^^^^ (BuildHIR::lowerStatement) Handle TryStatement without a catch clause
   16 |   return el;

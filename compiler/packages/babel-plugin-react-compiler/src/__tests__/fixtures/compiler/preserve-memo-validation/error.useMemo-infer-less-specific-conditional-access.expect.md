@@ -35,19 +35,7 @@ error.useMemo-infer-less-specific-conditional-access.ts:6:17
    5 | function Component({propA, propB}) {
 >  6 |   return useMemo(() => {
      |                  ^^^^^^^
->  7 |     const x = {};
-     | ^^^^^^^^^^^^^^^^^
->  8 |     if (propA?.a) {
-     | ^^^^^^^^^^^^^^^^^
->  9 |       mutate(x);
-     | ^^^^^^^^^^^^^^^^^
-> 10 |       return {
-     | ^^^^^^^^^^^^^^^^^
-> 11 |         value: propB.x.y,
-     | ^^^^^^^^^^^^^^^^^
-> 12 |       };
-     | ^^^^^^^^^^^^^^^^^
-> 13 |     }
+>    …
      | ^^^^^^^^^^^^^^^^^
 > 14 |   }, [propA?.a, propB.x.y]);
      | ^^^^ Could not preserve existing manual memoization
