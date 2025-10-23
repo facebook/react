@@ -331,11 +331,24 @@ function recordInstructionDerivations(
       case Effect.ConditionallyMutateIterator:
       case Effect.Mutate: {
         if (isMutable(instr, operand)) {
-          context.derivationCache.addDerivationEntry(
-            operand,
-            sources,
-            typeOfValue,
-          );
+          if (context.derivationCache.cache.has(operand.identifier.id)) {
+            const operandMetadata = context.derivationCache.cache.get(
+              operand.identifier.id,
+            );
+
+            if (operandMetadata !== undefined) {
+              operandMetadata.typeOfValue = joinValue(
+                typeOfValue,
+                operandMetadata.typeOfValue,
+              );
+            }
+          } else {
+            context.derivationCache.addDerivationEntry(
+              operand,
+              sources,
+              typeOfValue,
+            );
+          }
         }
         break;
       }
