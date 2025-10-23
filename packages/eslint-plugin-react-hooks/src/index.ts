@@ -71,7 +71,10 @@ const configs = {
     plugins,
     rules: recommendedLatestRuleConfigs,
   },
-  flat: {} as Record<string, ReactHooksFlatConfig>,
+  flat: {} as {
+    recommended: ReactHooksFlatConfig;
+    'recommended-latest': ReactHooksFlatConfig;
+  },
 };
 
 const plugin = {
