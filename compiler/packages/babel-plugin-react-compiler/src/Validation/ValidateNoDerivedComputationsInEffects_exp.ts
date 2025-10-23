@@ -54,7 +54,7 @@ class DerivationCache {
     return hasChanges;
   }
 
-  addDerivationEntry(
+  updateDerivationEntry(
     derivedVar: Place,
     sourcesIds: Set<IdentifierId>,
     typeOfValue: TypeOfValue,
@@ -93,11 +93,18 @@ class DerivationCache {
     }
 
     const existingValue = this.cache.get(derivedVar.identifier.id);
-    if (
-      existingValue === undefined ||
-      !this.isDerivationEqual(existingValue, newValue)
-    ) {
+    if (existingValue === undefined) {
       this.cache.set(derivedVar.identifier.id, newValue);
+      this.hasChanges = true;
+    } else if (!this.isDerivationEqual(existingValue, newValue)) {
+      this.cache.set(derivedVar.identifier.id, {
+        place: newValue.place,
+        sourcesIds: new Set([
+          ...existingValue.sourcesIds,
+          ...newValue.sourcesIds,
+        ]),
+        typeOfValue: joinValue(existingValue.typeOfValue, newValue.typeOfValue),
+      });
       this.hasChanges = true;
     }
   }
@@ -232,7 +239,7 @@ function recordPhiDerivations(
     }
 
     if (typeOfValue !== 'ignored') {
-      context.derivationCache.addDerivationEntry(
+      context.derivationCache.updateDerivationEntry(
         phi.place,
         sourcesIds,
         typeOfValue,
@@ -320,7 +327,7 @@ function recordInstructionDerivations(
   }
 
   for (const lvalue of eachInstructionLValue(instr)) {
-    context.derivationCache.addDerivationEntry(lvalue, sources, typeOfValue);
+    context.derivationCache.updateDerivationEntry(lvalue, sources, typeOfValue);
   }
 
   for (const operand of eachInstructionOperand(instr)) {
@@ -331,7 +338,7 @@ function recordInstructionDerivations(
       case Effect.ConditionallyMutateIterator:
       case Effect.Mutate: {
         if (isMutable(instr, operand)) {
-          context.derivationCache.addDerivationEntry(
+          context.derivationCache.updateDerivationEntry(
             operand,
             sources,
             typeOfValue,
