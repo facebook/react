@@ -79,6 +79,7 @@ export type Options = {
   temporaryReferences?: TemporaryReferenceSet,
   replayConsoleLogs?: boolean,
   environmentName?: string,
+  startTime?: number,
   // For the Edge client we only support a single-direction debug channel.
   debugChannel?: {readable?: ReadableStream, ...},
 };
@@ -106,6 +107,9 @@ function createResponseFromOptions(options?: Options) {
     __DEV__ && options ? options.replayConsoleLogs === true : false, // defaults to false
     __DEV__ && options && options.environmentName
       ? options.environmentName
+      : undefined,
+    __DEV__ && options && options.startTime != null
+      ? options.startTime
       : undefined,
     debugChannel,
   );

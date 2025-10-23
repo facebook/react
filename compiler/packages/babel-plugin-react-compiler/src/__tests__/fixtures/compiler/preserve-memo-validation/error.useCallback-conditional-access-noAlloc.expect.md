@@ -36,14 +36,7 @@ error.useCallback-conditional-access-noAlloc.ts:5:21
    4 | function Component({propA, propB}) {
 >  5 |   return useCallback(() => {
      |                      ^^^^^^^
->  6 |     return {
-     | ^^^^^^^^^^^^
->  7 |       value: propB?.x.y,
-     | ^^^^^^^^^^^^
->  8 |       other: propA,
-     | ^^^^^^^^^^^^
->  9 |     };
-     | ^^^^^^^^^^^^
+>    …
 > 10 |   }, [propA, propB.x.y]);
      | ^^^^ Could not preserve existing manual memoization
   11 | }

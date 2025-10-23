@@ -1913,6 +1913,20 @@ export function attach(
     return false;
   }
 
+  function isUseSyncExternalStoreHook(hookObject: any): boolean {
+    const queue = hookObject.queue;
+    if (!queue) {
+      return false;
+    }
+
+    const boundHasOwnProperty = hasOwnProperty.bind(queue);
+    return (
+      boundHasOwnProperty('value') &&
+      boundHasOwnProperty('getSnapshot') &&
+      typeof queue.getSnapshot === 'function'
+    );
+  }
+
   function isHookThatCanScheduleUpdate(hookObject: any) {
     const queue = hookObject.queue;
     if (!queue) {
@@ -1929,12 +1943,7 @@ export function attach(
       return true;
     }
 
-    // Detect useSyncExternalStore()
-    return (
-      boundHasOwnProperty('value') &&
-      boundHasOwnProperty('getSnapshot') &&
-      typeof queue.getSnapshot === 'function'
-    );
+    return isUseSyncExternalStoreHook(hookObject);
   }
 
   function didStatefulHookChange(prev: any, next: any): boolean {
@@ -1955,10 +1964,18 @@ export function attach(
 
     const indices = [];
     let index = 0;
+
     while (next !== null) {
       if (didStatefulHookChange(prev, next)) {
         indices.push(index);
       }
+
+      // useSyncExternalStore creates 2 internal hooks, but we only count it as 1 user-facing hook
+      if (isUseSyncExternalStoreHook(next)) {
+        next = next.next;
+        prev = prev.next;
+      }
+
       next = next.next;
       prev = prev.next;
       index++;
@@ -2664,7 +2681,7 @@ export function attach(
 
     const fiber = fiberInstance.data;
     const props = fiber.memoizedProps;
-    // TODO: Compute a fallback name based on Owner, key etc.
+    // The frontend will guess a name based on heuristics (e.g. owner) if no explicit name is given.
     const name =
       fiber.tag !== SuspenseComponent || props === null
         ? null
@@ -2862,7 +2879,10 @@ export function attach(
     let parentInstance = reconcilingParent;
     while (
       parentInstance.kind === FILTERED_FIBER_INSTANCE &&
-      parentInstance.parent !== null
+      parentInstance.parent !== null &&
+      // We can't move past the parent Suspense node.
+      // The Suspense node holding async info must be a parent of the devtools instance (or the instance itself)
+      parentInstance !== parentSuspenseNode.instance
     ) {
       parentInstance = parentInstance.parent;
     }
@@ -6168,7 +6188,10 @@ export function attach(
             }
           }
           const newIO = asyncInfo.awaited;
-          if (newIO.name === 'RSC stream' && newIO.value != null) {
+          if (
+            (newIO.name === 'RSC stream' || newIO.name === 'rsc stream') &&
+            newIO.value != null
+          ) {
             const streamPromise = newIO.value;
             // Special case RSC stream entries to pick the last entry keyed by the stream.
             const existingEntry = streamEntries.get(streamPromise);
@@ -6227,7 +6250,10 @@ export function attach(
         continue;
       }
       foundIOEntries.add(ioInfo);
-      if (ioInfo.name === 'RSC stream' && ioInfo.value != null) {
+      if (
+        (ioInfo.name === 'RSC stream' || ioInfo.name === 'rsc stream') &&
+        ioInfo.value != null
+      ) {
         const streamPromise = ioInfo.value;
         // Special case RSC stream entries to pick the last entry keyed by the stream.
         const existingEntry = streamEntries.get(streamPromise);

@@ -39,12 +39,7 @@ error.preserve-use-memo-ref-missing-reactive.ts:9:21
    8 |
 >  9 |   return useCallback(() => {
      |                      ^^^^^^^
-> 10 |     if (ref != null) {
-     | ^^^^^^^^^^^^^^^^^^^^^^
-> 11 |       ref.current();
-     | ^^^^^^^^^^^^^^^^^^^^^^
-> 12 |     }
-     | ^^^^^^^^^^^^^^^^^^^^^^
+>    …
 > 13 |   }, []);
      | ^^^^ Could not preserve existing manual memoization
   14 | }

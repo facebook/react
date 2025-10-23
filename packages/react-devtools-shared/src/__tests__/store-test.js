@@ -3243,4 +3243,61 @@ describe('Store', () => {
           <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
     `);
   });
+
+  // @reactVersion >= 19.0
+  it('guesses a Suspense name based on the owner', async () => {
+    let resolve;
+    const promise = new Promise(_resolve => {
+      resolve = _resolve;
+    });
+    function Inner() {
+      return (
+        <React.Suspense fallback={<p>Loading inner</p>}>
+          <p>{promise}</p>
+        </React.Suspense>
+      );
+    }
+
+    function Outer({children}) {
+      return (
+        <React.Suspense fallback={<p>Loading outer</p>}>
+          <p>{promise}</p>
+          {children}
+        </React.Suspense>
+      );
+    }
+
+    await actAsync(() => {
+      render(
+        <Outer>
+          <Inner />
+        </Outer>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Outer>
+            <Suspense>
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}]}
+        <Suspense name="Outer" rects={null}>
+    `);
+
+    console.log('...........................');
+
+    await actAsync(() => {
+      resolve('loaded');
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Outer>
+          ▾ <Suspense>
+            ▾ <Inner>
+                <Suspense>
+      [suspense-root]  rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}
+        <Suspense name="Outer" rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}>
+          <Suspense name="Inner" rects={[{x:1,y:2,width:6,height:1}]}>
+    `);
+  });
 });

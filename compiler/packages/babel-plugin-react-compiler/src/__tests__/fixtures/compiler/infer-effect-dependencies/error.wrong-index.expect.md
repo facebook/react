@@ -33,15 +33,7 @@ error.wrong-index.ts:6:2
    5 | function Component({foo}) {
 >  6 |   useEffectWrapper(
      |   ^^^^^^^^^^^^^^^^^
->  7 |     () => {
-     | ^^^^^^^^^^^
->  8 |       console.log(foo);
-     | ^^^^^^^^^^^
->  9 |     },
-     | ^^^^^^^^^^^
-> 10 |     [foo],
-     | ^^^^^^^^^^^
-> 11 |     AUTODEPS
+>    …
      | ^^^^^^^^^^^
 > 12 |   );
      | ^^^^ Cannot infer dependencies
