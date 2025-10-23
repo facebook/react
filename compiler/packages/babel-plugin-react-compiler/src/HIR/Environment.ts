@@ -325,6 +325,12 @@ export const EnvironmentConfigSchema = z.object({
   validateNoDerivedComputationsInEffects: z.boolean().default(false),
 
   /**
+   * Experimental: Validates that effects are not used to calculate derived data which could instead be computed
+   * during render. Generates a custom error message for each type of violation.
+   */
+  validateNoDerivedComputationsInEffects_exp: z.boolean().default(false),
+
+  /**
    * Validates against creating JSX within a try block and recommends using an error boundary
    * instead.
    */
