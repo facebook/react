@@ -37,16 +37,7 @@ error.hoist-useCallback-conditional-access-own-scope.ts:5:21
    4 | function Component({propA, propB}) {
 >  5 |   return useCallback(() => {
      |                      ^^^^^^^
->  6 |     if (propA) {
-     | ^^^^^^^^^^^^^^^^
->  7 |       return {
-     | ^^^^^^^^^^^^^^^^
->  8 |         value: propB.x.y,
-     | ^^^^^^^^^^^^^^^^
->  9 |       };
-     | ^^^^^^^^^^^^^^^^
-> 10 |     }
-     | ^^^^^^^^^^^^^^^^
+>    …
 > 11 |   }, [propA, propB.x.y]);
      | ^^^^ Could not preserve existing manual memoization
   12 | }

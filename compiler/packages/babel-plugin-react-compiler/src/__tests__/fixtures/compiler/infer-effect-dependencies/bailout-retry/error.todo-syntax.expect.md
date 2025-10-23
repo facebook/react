@@ -43,24 +43,7 @@ error.todo-syntax.ts:11:2
   10 |   'use memo';
 > 11 |   useSpecialEffect(
      |   ^^^^^^^^^^^^^^^^^
-> 12 |     () => {
-     | ^^^^^^^^^^^
-> 13 |       try {
-     | ^^^^^^^^^^^
-> 14 |         console.log(prop1);
-     | ^^^^^^^^^^^
-> 15 |       } finally {
-     | ^^^^^^^^^^^
-> 16 |         console.log('exiting');
-     | ^^^^^^^^^^^
-> 17 |       }
-     | ^^^^^^^^^^^
-> 18 |     },
-     | ^^^^^^^^^^^
-> 19 |     [prop1],
-     | ^^^^^^^^^^^
-> 20 |     AUTODEPS
-     | ^^^^^^^^^^^
+>    …
 > 21 |   );
      | ^^^^ Cannot infer dependencies
   22 |   return <div>{prop1}</div>;

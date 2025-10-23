@@ -30,11 +30,7 @@ error.useMemo-property-call-chained-object.ts:5:17
    4 | function Component({propA}) {
 >  5 |   return useMemo(() => {
      |                  ^^^^^^^
->  6 |     return {
-     | ^^^^^^^^^^^^
->  7 |       value: propA.x().y,
-     | ^^^^^^^^^^^^
->  8 |     };
+>    …
      | ^^^^^^^^^^^^
 >  9 |   }, [propA.x]);
      | ^^^^ Could not preserve existing manual memoization

@@ -45,10 +45,7 @@ error.repro-preserve-memoization-inner-destructured-value-mistaken-as-dependency
   18 | function useInputValue(input) {
 > 19 |   const object = React.useMemo(() => {
      |                  ^^^^^^^^^^^^^^^^^^^^^
-> 20 |     const {value} = transform(input);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 21 |     return {value};
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>    …
 > 22 |   }, [input]);
      | ^^^^^^^^^^^^^^ Could not preserve existing memoization
   23 |   mutate(object);

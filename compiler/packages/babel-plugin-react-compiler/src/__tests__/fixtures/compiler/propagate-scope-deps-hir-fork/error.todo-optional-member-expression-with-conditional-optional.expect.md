@@ -35,18 +35,7 @@ error.todo-optional-member-expression-with-conditional-optional.ts:4:23
    3 | function Component(props) {
 >  4 |   const data = useMemo(() => {
      |                        ^^^^^^^
->  5 |     const x = [];
-     | ^^^^^^^^^^^^^^^^^
->  6 |     x.push(props?.items);
-     | ^^^^^^^^^^^^^^^^^
->  7 |     if (props.cond) {
-     | ^^^^^^^^^^^^^^^^^
->  8 |       x.push(props?.items);
-     | ^^^^^^^^^^^^^^^^^
->  9 |     }
-     | ^^^^^^^^^^^^^^^^^
-> 10 |     return x;
-     | ^^^^^^^^^^^^^^^^^
+>    …
 > 11 |   }, [props?.items, props.cond]);
      | ^^^^ Could not preserve existing manual memoization
   12 |   return (
