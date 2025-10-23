@@ -24,6 +24,7 @@ export const resolveClientReference: any = null;
 export const resolveServerReference: any = null;
 export const preloadModule: any = null;
 export const requireModule: any = null;
+export const getModuleDebugInfo: any = null;
 export const dispatchHint: any = null;
 export const prepareDestinationForModule: any = null;
 export const usedWithSSR = true;

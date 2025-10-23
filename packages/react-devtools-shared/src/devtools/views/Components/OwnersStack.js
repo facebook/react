@@ -220,6 +220,7 @@ function ElementsDropdown({owners, selectOwner}: ElementsDropdownProps) {
 
         <ElementBadges
           hocDisplayNames={owner.hocDisplayNames}
+          environmentName={owner.env}
           compiledWithForget={owner.compiledWithForget}
           className={styles.BadgesBlock}
         />
@@ -268,6 +269,7 @@ function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
 
       <ElementBadges
         hocDisplayNames={hocDisplayNames}
+        environmentName={owner.env}
         compiledWithForget={compiledWithForget}
         className={styles.BadgesBlock}
       />

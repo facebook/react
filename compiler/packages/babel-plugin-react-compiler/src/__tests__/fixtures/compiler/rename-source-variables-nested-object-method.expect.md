@@ -59,7 +59,6 @@ function useFoo(props) {
         return b;
       },
     };
-
     t1 = a.foo().bar();
     $0[0] = props;
     $0[1] = t1;

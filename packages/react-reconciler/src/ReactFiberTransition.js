@@ -28,6 +28,7 @@ import {createCursor, push, pop} from './ReactFiberStack';
 import {
   getWorkInProgressRoot,
   getWorkInProgressTransitions,
+  markTransitionStarted,
 } from './ReactFiberWorkLoop';
 import {
   createCache,
@@ -79,6 +80,7 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
   transition: Transition,
   returnValue: mixed,
 ) {
+  markTransitionStarted();
   if (
     typeof returnValue === 'object' &&
     returnValue !== null &&

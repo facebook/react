@@ -50,7 +50,7 @@ export type AliasingEffect =
   /**
    * Mutate the value and any direct aliases (not captures). Errors if the value is not mutable.
    */
-  | {kind: 'Mutate'; value: Place}
+  | {kind: 'Mutate'; value: Place; reason?: MutationReason | null}
   /**
    * Mutate the value and any direct aliases (not captures), but only if the value is known mutable.
    * This should be rare.
@@ -90,6 +90,23 @@ export type AliasingEffect =
    * c could be mutating a.
    */
   | {kind: 'Alias'; from: Place; into: Place}
+
+  /**
+   * Indicates the potential for information flow from `from` to `into`. This is used for a specific
+   * case: functions with unknown signatures. If the compiler sees a call such as `foo(x)`, it has to
+   * consider several possibilities (which may depend on the arguments):
+   * - foo(x) returns a new mutable value that does not capture any information from x.
+   * - foo(x) returns a new mutable value that *does* capture information from x.
+   * - foo(x) returns x itself, ie foo is the identity function
+   *
+   * The same is true of functions that take multiple arguments: `cond(a, b, c)` could conditionally
+   * return b or c depending on the value of a.
+   *
+   * To represent this case, MaybeAlias represents the fact that an aliasing relationship could exist.
+   * Any mutations that flow through this relationship automatically become conditional.
+   */
+  | {kind: 'MaybeAlias'; from: Place; into: Place}
+
   /**
    * Records direct assignment: `into = from`.
    */
@@ -157,6 +174,8 @@ export type AliasingEffect =
       place: Place;
     };
 
+export type MutationReason = {kind: 'AssignCurrentProperty'};
+
 export function hashEffect(effect: AliasingEffect): string {
   switch (effect.kind) {
     case 'Apply': {
@@ -183,7 +202,8 @@ export function hashEffect(effect: AliasingEffect): string {
     case 'ImmutableCapture':
     case 'Assign':
     case 'Alias':
-    case 'Capture': {
+    case 'Capture':
+    case 'MaybeAlias': {
       return [
         effect.kind,
         effect.from.identifier.id,
@@ -211,7 +231,7 @@ export function hashEffect(effect: AliasingEffect): string {
         effect.kind,
         effect.place.identifier.id,
         effect.error.severity,
-        effect.error.category,
+        effect.error.reason,
         effect.error.description,
         printSourceLocation(effect.error.primaryLocation() ?? GeneratedSource),
       ].join(':');

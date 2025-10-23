@@ -45,6 +45,7 @@ function ComponentA(props) {
     if (b) {
       a.push(props.p0);
     }
+
     if (props.p1) {
       b.push(props.p2);
     }
@@ -69,6 +70,7 @@ function ComponentB(props) {
     if (mayMutate(b)) {
       a.push(props.p0);
     }
+
     if (props.p1) {
       b.push(props.p2);
     }

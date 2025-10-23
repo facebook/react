@@ -289,9 +289,13 @@ describe('InspectedElementContext', () => {
             "preview_long": {boolean: true, number: 123, string: "abc"},
           },
         },
-        "react_element": Dehydrated {
-          "preview_short": <span />,
-          "preview_long": <span />,
+        "react_element": {
+          "key": null,
+          "props": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {},
+          },
+          "ref": null,
         },
         "regexp": Dehydrated {
           "preview_short": /abc/giu,

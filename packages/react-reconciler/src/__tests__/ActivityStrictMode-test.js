@@ -10,7 +10,7 @@ describe('Activity StrictMode', () => {
     log = [];
 
     React = require('react');
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
     ReactNoop = require('react-noop-renderer');
     act = require('internal-test-utils').act;
   });

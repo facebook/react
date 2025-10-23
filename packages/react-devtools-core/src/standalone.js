@@ -26,7 +26,7 @@ import {
 import {localStorageSetItem} from 'react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {ReactFunctionLocation, ReactCallSite} from 'shared/ReactTypes';
 
 export type StatusTypes = 'server-connected' | 'devtools-connected' | 'error';
 export type StatusListener = (message: string, status: StatusTypes) => void;
@@ -144,8 +144,8 @@ async function fetchFileWithCaching(url: string) {
 }
 
 function canViewElementSourceFunction(
-  _source: ReactFunctionLocation,
-  symbolicatedSource: ReactFunctionLocation | null,
+  _source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ): boolean {
   if (symbolicatedSource == null) {
     return false;
@@ -156,8 +156,8 @@ function canViewElementSourceFunction(
 }
 
 function viewElementSourceFunction(
-  _source: ReactFunctionLocation,
-  symbolicatedSource: ReactFunctionLocation | null,
+  _source: ReactFunctionLocation | ReactCallSite,
+  symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ): void {
   if (symbolicatedSource == null) {
     return;

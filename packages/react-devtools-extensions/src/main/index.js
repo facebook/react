@@ -18,7 +18,13 @@ import {
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {logEvent} from 'react-devtools-shared/src/Logger';
-import {normalizeUrlIfValid} from 'react-devtools-shared/src/utils';
+import {
+  getAlwaysOpenInEditor,
+  getOpenInEditorURL,
+  normalizeUrlIfValid,
+} from 'react-devtools-shared/src/utils';
+import {checkConditions} from 'react-devtools-shared/src/devtools/views/Editor/utils';
+import * as parseHookNames from 'react-devtools-shared/src/hooks/parseHookNames';
 
 import {
   setBrowserSelectionFromReact,
@@ -27,13 +33,19 @@ import {
 import {viewAttributeSource} from './sourceSelection';
 
 import {startReactPolling} from './reactPolling';
-import cloneStyleTags from './cloneStyleTags';
+import {cloneStyleTags} from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
 import injectBackendManager from './injectBackendManager';
 import registerEventsLogger from './registerEventsLogger';
 import getProfilingFlags from './getProfilingFlags';
 import debounce from './debounce';
 import './requestAnimationFramePolyfill';
+
+const resolvedParseHookNames = Promise.resolve(parseHookNames);
+// DevTools assumes this is a dynamically imported module. Since we outline
+// workers in this bundle, we can sync require the module since it's just a thin
+// wrapper around calling the worker.
+const hookNamesModuleLoaderFunction = () => resolvedParseHookNames;
 
 function createBridge() {
   bridge = new Bridge({
@@ -146,6 +158,10 @@ function createBridgeAndStore() {
     supportsClickToInspect: true,
   });
 
+  store.addListener('enableSuspenseTab', () => {
+    createSuspensePanel();
+  });
+
   store.addListener('settingsUpdated', settings => {
     chrome.storage.local.set(settings);
   });
@@ -179,12 +195,6 @@ function createBridgeAndStore() {
     );
   };
 
-  // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
-  const hookNamesModuleLoaderFunction = () =>
-    import(
-      /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
-    );
-
   root = createRoot(document.createElement('div'));
 
   render = (overrideTab = mostRecentOverrideTab) => {
@@ -204,6 +214,7 @@ function createBridgeAndStore() {
         overrideTab,
         showTabBar: false,
         store,
+        suspensePortalContainer,
         warnIfUnsupportedVersionDetected: true,
         viewAttributeSourceFunction,
         // Firefox doesn't support chrome.devtools.panels.openResource yet
@@ -326,7 +337,7 @@ function createSourcesEditorPanel() {
     editorPane = createdPane;
 
     createdPane.setPage('panel.html');
-    createdPane.setHeight('42px');
+    createdPane.setHeight('75px');
 
     createdPane.onShown.addListener(portal => {
       editorPortalContainer = portal.container;
@@ -349,6 +360,42 @@ function createSourcesEditorPanel() {
   });
 }
 
+function createSuspensePanel() {
+  if (suspensePortalContainer) {
+    // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(suspensePortalContainer);
+    render('suspense');
+
+    return;
+  }
+
+  if (suspensePanel) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
+    return;
+  }
+
+  chrome.devtools.panels.create(
+    __IS_CHROME__ || __IS_EDGE__ ? 'Suspense ⚛' : 'Suspense',
+    __IS_EDGE__ ? 'icons/production.svg' : '',
+    'panel.html',
+    createdPanel => {
+      suspensePanel = createdPanel;
+
+      createdPanel.onShown.addListener(portal => {
+        suspensePortalContainer = portal.container;
+        if (suspensePortalContainer != null && render) {
+          ensureInitialHTMLIsCleared(suspensePortalContainer);
+
+          render('suspense');
+          portal.injectStyles(cloneStyleTags);
+
+          logEvent({event_name: 'selected-suspense-tab'});
+        }
+      });
+    },
+  );
+}
+
 function performInTabNavigationCleanup() {
   // Potentially, if react hasn't loaded yet and user performs in-tab navigation
   clearReactPollingInstance();
@@ -360,7 +407,12 @@ function performInTabNavigationCleanup() {
 
   // If panels were already created, and we have already mounted React root to display
   // tabs (Components or Profiler), we should unmount root first and render them again
-  if ((componentsPortalContainer || profilerPortalContainer) && root) {
+  if (
+    (componentsPortalContainer ||
+      profilerPortalContainer ||
+      suspensePortalContainer) &&
+    root
+  ) {
     // It's easiest to recreate the DevTools panel (to clean up potential stale state).
     // We can revisit this in the future as a small optimization.
     // This should also emit bridge.shutdown, but only if this root was mounted
@@ -390,7 +442,12 @@ function performFullCleanup() {
   // Potentially, if react hasn't loaded yet and user closed the browser DevTools
   clearReactPollingInstance();
 
-  if ((componentsPortalContainer || profilerPortalContainer) && root) {
+  if (
+    (componentsPortalContainer ||
+      profilerPortalContainer ||
+      suspensePortalContainer) &&
+    root
+  ) {
     // This should also emit bridge.shutdown, but only if this root was mounted
     flushSync(() => root.unmount());
   } else {
@@ -399,6 +456,7 @@ function performFullCleanup() {
 
   componentsPortalContainer = null;
   profilerPortalContainer = null;
+  suspensePortalContainer = null;
   root = null;
 
   mostRecentOverrideTab = null;
@@ -449,6 +507,8 @@ function mountReactDevTools() {
   createComponentsPanel();
   createProfilerPanel();
   createSourcesEditorPanel();
+  // Suspense Tab is created via the hook
+  // TODO(enableSuspenseTab): Create eagerly once Suspense tab is stable
 }
 
 let reactPollingInstance = null;
@@ -469,6 +529,12 @@ function showNoReactDisclaimer() {
       '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
     delete profilerPortalContainer._hasInitialHTMLBeenCleared;
   }
+
+  if (suspensePortalContainer) {
+    suspensePortalContainer.innerHTML =
+      '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
+    delete suspensePortalContainer._hasInitialHTMLBeenCleared;
+  }
 }
 
 function mountReactDevToolsWhenReactHasLoaded() {
@@ -487,9 +553,11 @@ let profilingData = null;
 
 let componentsPanel = null;
 let profilerPanel = null;
+let suspensePanel = null;
 let editorPane = null;
 let componentsPortalContainer = null;
 let profilerPortalContainer = null;
+let suspensePortalContainer = null;
 let editorPortalContainer = null;
 
 let mostRecentOverrideTab = null;
@@ -530,3 +598,45 @@ if (__IS_FIREFOX__) {
 connectExtensionPort();
 
 mountReactDevToolsWhenReactHasLoaded();
+
+function onThemeChanged(themeName) {
+  // Rerender with the new theme
+  render();
+}
+
+if (chrome.devtools.panels.setThemeChangeHandler) {
+  // Chrome
+  chrome.devtools.panels.setThemeChangeHandler(onThemeChanged);
+} else if (chrome.devtools.panels.onThemeChanged) {
+  // Firefox
+  chrome.devtools.panels.onThemeChanged.addListener(onThemeChanged);
+}
+
+// Firefox doesn't support resources handlers yet.
+if (chrome.devtools.panels.setOpenResourceHandler) {
+  chrome.devtools.panels.setOpenResourceHandler(
+    (
+      resource,
+      lineNumber = 1,
+      // The column is a new feature so we have to specify a default if it doesn't exist
+      columnNumber = 1,
+    ) => {
+      const alwaysOpenInEditor = getAlwaysOpenInEditor();
+      const editorURL = getOpenInEditorURL();
+      if (alwaysOpenInEditor && editorURL) {
+        const location = ['', resource.url, lineNumber, columnNumber];
+        const {url, shouldDisableButton} = checkConditions(editorURL, location);
+        if (!shouldDisableButton) {
+          window.open(url);
+          return;
+        }
+      }
+      // Otherwise fallback to the built-in behavior.
+      chrome.devtools.panels.openResource(
+        resource.url,
+        lineNumber - 1,
+        columnNumber - 1,
+      );
+    },
+  );
+}

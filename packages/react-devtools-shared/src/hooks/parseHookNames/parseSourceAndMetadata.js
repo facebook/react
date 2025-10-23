@@ -15,7 +15,7 @@ import LRU from 'lru-cache';
 import {getHookName} from '../astUtils';
 import {areSourceMapsAppliedToErrors} from '../ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
-import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
+import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookSourceLocation';
 import {SourceMapMetadataConsumer} from '../SourceMapMetadataConsumer';
 import {
   withAsyncPerfMeasurements,

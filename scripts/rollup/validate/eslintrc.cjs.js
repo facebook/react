@@ -62,6 +62,7 @@ module.exports = {
 
     // Flight Webpack
     __webpack_chunk_load__: 'readonly',
+    __webpack_get_script_filename__: 'readonly',
     __webpack_require__: 'readonly',
 
     // Flight Turbopack

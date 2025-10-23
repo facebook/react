@@ -56,7 +56,7 @@ it('logs failed compilation', () => {
   expect(event.kind).toEqual('CompileError');
   invariant(event.kind === 'CompileError', 'typescript be smarter');
 
-  expect(event.detail.severity).toEqual('InvalidReact');
+  expect(event.detail.severity).toEqual('Error');
   //@ts-ignore
   const {start, end, identifierName} =
     event.detail.primaryLocation() as t.SourceLocation;

@@ -24,7 +24,7 @@ import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import Icon from '../Icon';
 import {SettingsContext} from '../Settings/SettingsContext';
 import {BridgeContext, StoreContext, OptionsContext} from '../context';
-import Element from './Element';
+import ComponentsTreeElement from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
 import ComponentSearchInput from './ComponentSearchInput';
@@ -93,8 +93,47 @@ export default function Tree(): React.Node {
 
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
-  const listRef = useRef(null);
-  const listDOMElementRef = useRef(null);
+  const listDOMElementRef = useRef<Element | null>(null);
+  const setListDOMElementRef = useCallback((listDOMElement: Element) => {
+    listDOMElementRef.current = listDOMElement;
+
+    // Controls the initial horizontal offset of the Tree if the element was pre-selected. For example, via Elements panel in browser DevTools.
+    // Initial vertical offset is controlled via initialScrollOffset prop of the FixedSizeList component.
+    if (
+      !componentsPanelVisible ||
+      inspectedElementIndex == null ||
+      listDOMElement == null
+    ) {
+      return;
+    }
+
+    const element = store.getElementAtIndex(inspectedElementIndex);
+    if (element == null) {
+      return;
+    }
+
+    const viewportLeft = listDOMElement.scrollLeft;
+    const viewportRight = viewportLeft + listDOMElement.clientWidth;
+    const elementLeft = calculateElementOffset(element.depth);
+    // Because of virtualization, this element might not be rendered yet; we can't look up its width.
+    // Assuming that it may take up to the half of the viewport.
+    const elementRight = elementLeft + listDOMElement.clientWidth / 2;
+
+    const isElementFullyVisible =
+      elementLeft >= viewportLeft && elementRight <= viewportRight;
+
+    if (!isElementFullyVisible) {
+      const horizontalDelta =
+        Math.min(0, elementLeft - viewportLeft) +
+        Math.max(0, elementRight - viewportRight);
+
+      // $FlowExpectedError[incompatible-call] Flow doesn't support instant as an option for behavior.
+      listDOMElement.scrollBy({
+        left: horizontalDelta,
+        behavior: 'instant',
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!componentsPanelVisible || inspectedElementIndex == null) {
@@ -118,7 +157,7 @@ export default function Tree(): React.Node {
     }
     const elementLeft = calculateElementOffset(element.depth);
     // Because of virtualization, this element might not be rendered yet; we can't look up its width.
-    // Assuming that it may take up to the half of the vieport.
+    // Assuming that it may take up to the half of the viewport.
     const elementRight = elementLeft + listDOMElement.clientWidth / 2;
     const elementTop = inspectedElementIndex * lineHeight;
     const elementBottom = elementTop + lineHeight;
@@ -137,6 +176,7 @@ export default function Tree(): React.Node {
         Math.min(0, elementLeft - viewportLeft) +
         Math.max(0, elementRight - viewportRight);
 
+      // $FlowExpectedError[incompatible-call] Flow doesn't support instant as an option for behavior.
       listDOMElement.scrollBy({
         top: verticalDelta,
         left: horizontalDelta,
@@ -471,11 +511,10 @@ export default function Tree(): React.Node {
                   itemData={itemData}
                   itemKey={itemKey}
                   itemSize={lineHeight}
-                  ref={listRef}
-                  outerRef={listDOMElementRef}
+                  outerRef={setListDOMElementRef}
                   overscanCount={10}
                   width={width}>
-                  {Element}
+                  {ComponentsTreeElement}
                 </FixedSizeList>
               )}
             </AutoSizer>

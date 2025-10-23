@@ -166,7 +166,7 @@ type ResumeOptions = {
 function resumeAndPrerender(
   children: ReactNodeList,
   postponedState: PostponedState,
-  options?: ResumeOptions,
+  options?: Omit<ResumeOptions, 'nonce'>,
 ): Promise<StaticResult> {
   return new Promise((resolve, reject) => {
     const onFatalError = reject;
@@ -197,10 +197,7 @@ function resumeAndPrerender(
     const request = resumeAndPrerenderRequest(
       children,
       postponedState,
-      resumeRenderState(
-        postponedState.resumableState,
-        options ? options.nonce : undefined,
-      ),
+      resumeRenderState(postponedState.resumableState, undefined),
       options ? options.onError : undefined,
       onAllReady,
       undefined,

@@ -8,7 +8,7 @@
 import {
   CompilerDiagnostic,
   CompilerError,
-  ErrorSeverity,
+  ErrorCategory,
 } from '../CompilerError';
 import {HIRFunction, IdentifierId, isSetStateType} from '../HIR';
 import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
@@ -102,7 +102,14 @@ function validateNoSetStateInRenderImpl(
         case 'StartMemoize': {
           CompilerError.invariant(activeManualMemoId === null, {
             reason: 'Unexpected nested StartMemoize instructions',
-            loc: instr.value.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: instr.value.loc,
+                message: null,
+              },
+            ],
           });
           activeManualMemoId = instr.value.manualMemoId;
           break;
@@ -113,7 +120,14 @@ function validateNoSetStateInRenderImpl(
             {
               reason:
                 'Expected FinishMemoize to align with previous StartMemoize instruction',
-              loc: instr.value.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: instr.value.loc,
+                  message: null,
+                },
+              ],
             },
           );
           activeManualMemoId = null;
@@ -128,13 +142,13 @@ function validateNoSetStateInRenderImpl(
             if (activeManualMemoId !== null) {
               errors.pushDiagnostic(
                 CompilerDiagnostic.create({
-                  category:
+                  category: ErrorCategory.RenderSetState,
+                  reason:
                     'Calling setState from useMemo may trigger an infinite loop',
                   description:
                     'Each time the memo callback is evaluated it will change state. This can cause a memoization dependency to change, running the memo function again and causing an infinite loop. Instead of setting state in useMemo(), prefer deriving the value during render. (https://react.dev/reference/react/useState)',
-                  severity: ErrorSeverity.InvalidReact,
                   suggestions: null,
-                }).withDetail({
+                }).withDetails({
                   kind: 'error',
                   loc: callee.loc,
                   message: 'Found setState() within useMemo()',
@@ -143,16 +157,16 @@ function validateNoSetStateInRenderImpl(
             } else if (unconditionalBlocks.has(block.id)) {
               errors.pushDiagnostic(
                 CompilerDiagnostic.create({
-                  category:
+                  category: ErrorCategory.RenderSetState,
+                  reason:
                     'Calling setState during render may trigger an infinite loop',
                   description:
                     'Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)',
-                  severity: ErrorSeverity.InvalidReact,
                   suggestions: null,
-                }).withDetail({
+                }).withDetails({
                   kind: 'error',
                   loc: callee.loc,
-                  message: 'Found setState() within useMemo()',
+                  message: 'Found setState() in render',
                 }),
               );
             }

@@ -8,19 +8,26 @@
 import {
   CompilerDiagnostic,
   CompilerError,
-  ErrorSeverity,
+  ErrorCategory,
 } from '../CompilerError';
 import {
+  Environment,
   HIRFunction,
   IdentifierId,
   isSetStateType,
   isUseEffectHookType,
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
+  isUseRefType,
+  isRefValueType,
   Place,
 } from '../HIR';
-import {eachInstructionValueOperand} from '../HIR/visitors';
+import {
+  eachInstructionLValue,
+  eachInstructionValueOperand,
+} from '../HIR/visitors';
 import {Result} from '../Utils/Result';
+import {Iterable_some} from '../Utils/utils';
 
 /**
  * Validates against calling setState in the body of an effect (useEffect and friends),
@@ -32,6 +39,7 @@ import {Result} from '../Utils/Result';
  */
 export function validateNoSetStateInEffects(
   fn: HIRFunction,
+  env: Environment,
 ): Result<void, CompilerError> {
   const setStateFunctions: Map<IdentifierId, Place> = new Map();
   const errors = new CompilerError();
@@ -72,6 +80,7 @@ export function validateNoSetStateInEffects(
             const callee = getSetStateCall(
               instr.value.loweredFunc.func,
               setStateFunctions,
+              env,
             );
             if (callee !== null) {
               setStateFunctions.set(instr.lvalue.identifier.id, callee);
@@ -96,17 +105,22 @@ export function validateNoSetStateInEffects(
               if (setState !== undefined) {
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
-                    category:
-                      'Calling setState within an effect can trigger cascading renders',
+                    category: ErrorCategory.EffectSetState,
+                    reason:
+                      'Calling setState synchronously within an effect can trigger cascading renders',
                     description:
-                      'Calling setState directly within a useEffect causes cascading renders that can hurt performance, and is not recommended. Consider alternatives to useEffect. (https://react.dev/learn/you-might-not-need-an-effect)',
-                    severity: ErrorSeverity.InvalidReact,
+                      'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +
+                      'In general, the body of an effect should do one or both of the following:\n' +
+                      '* Update external systems with the latest state from React.\n' +
+                      '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
+                      'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
+                      '(https://react.dev/learn/you-might-not-need-an-effect)',
                     suggestions: null,
-                  }).withDetail({
+                  }).withDetails({
                     kind: 'error',
                     loc: setState.loc,
                     message:
-                      'Avoid calling setState() in the top-level of an effect',
+                      'Avoid calling setState() directly within an effect',
                   }),
                 );
               }
@@ -124,9 +138,42 @@ export function validateNoSetStateInEffects(
 function getSetStateCall(
   fn: HIRFunction,
   setStateFunctions: Map<IdentifierId, Place>,
+  env: Environment,
 ): Place | null {
+  const refDerivedValues: Set<IdentifierId> = new Set();
+
+  const isDerivedFromRef = (place: Place): boolean => {
+    return (
+      refDerivedValues.has(place.identifier.id) ||
+      isUseRefType(place.identifier) ||
+      isRefValueType(place.identifier)
+    );
+  };
+
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
+      if (env.config.enableAllowSetStateFromRefsInEffects) {
+        const hasRefOperand = Iterable_some(
+          eachInstructionValueOperand(instr.value),
+          isDerivedFromRef,
+        );
+
+        if (hasRefOperand) {
+          for (const lvalue of eachInstructionLValue(instr)) {
+            refDerivedValues.add(lvalue.identifier.id);
+          }
+        }
+
+        if (
+          instr.value.kind === 'PropertyLoad' &&
+          instr.value.property === 'current' &&
+          (isUseRefType(instr.value.object.identifier) ||
+            isRefValueType(instr.value.object.identifier))
+        ) {
+          refDerivedValues.add(instr.lvalue.identifier.id);
+        }
+      }
+
       switch (instr.value.kind) {
         case 'LoadLocal': {
           if (setStateFunctions.has(instr.value.place.identifier.id)) {
@@ -156,6 +203,21 @@ function getSetStateCall(
             isSetStateType(callee.identifier) ||
             setStateFunctions.has(callee.identifier.id)
           ) {
+            if (env.config.enableAllowSetStateFromRefsInEffects) {
+              const arg = instr.value.args.at(0);
+              if (
+                arg !== undefined &&
+                arg.kind === 'Identifier' &&
+                refDerivedValues.has(arg.identifier.id)
+              ) {
+                /**
+                 * The one special case where we allow setStates in effects is in the very specific
+                 * scenario where the value being set is derived from a ref. For example this may
+                 * be needed when initial layout measurements from refs need to be stored in state.
+                 */
+                return null;
+              }
+            }
             /*
              * TODO: once we support multiple locations per error, we should link to the
              * original Place in the case that setStateFunction.has(callee)

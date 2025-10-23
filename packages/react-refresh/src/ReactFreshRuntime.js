@@ -671,8 +671,10 @@ export function isLikelyComponentType(type: any): boolean {
             // This looks like a class.
             return false;
           }
-          // eslint-disable-next-line no-proto
-          if (type.prototype.__proto__ !== Object.prototype) {
+          if (
+            // $FlowFixMe[prop-missing]
+            type.prototype.__proto__ !== Object.prototype // eslint-disable-line no-proto
+          ) {
             // It has a superclass.
             return false;
           }

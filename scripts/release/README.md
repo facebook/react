@@ -37,7 +37,7 @@ The high level process of creating releases is [documented below](#process). Ind
 If your code lands in the main branch, it will be automatically published to the prerelease channels within the next weekday. However, if you want to immediately publish a prerelease, you can trigger the job to run immediately via the GitHub UI:
 
 1. Wait for the commit you want to release to finish its [(Runtime) Build and Test workflow](https://github.com/facebook/react/actions/workflows/runtime_build_and_test.yml), as the prerelease script needs to download the build from that workflow.
-2. Copy the git sha of whichever commit you are trying to release
+2. Copy the full git sha of whichever commit you are trying to release
 3. Go to https://github.com/facebook/react/actions/workflows/runtime_prereleases_manual.yml
 4. Paste the git sha into the "Run workflow" dropdown
 5. Let the job finish and it will be released on npm

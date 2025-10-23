@@ -36,6 +36,7 @@ let ReactNoopFlightServer;
 let Scheduler;
 let advanceTimersByTime;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -64,6 +65,7 @@ describe('ReactFlight', () => {
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   afterEach(() => {
@@ -174,5 +176,27 @@ describe('ReactFlight', () => {
       stackOne: '\n    in App (at **)',
       stackTwo: '\n    in OwnerStackDelayed (at **)' + '\n    in App (at **)',
     });
+  });
+
+  it('logs an error when prod elements are rendered', async () => {
+    const element = ReactServer.createElement('span', {
+      key: 'one',
+      children: 'Free!',
+    });
+    ReactNoopFlightServer.render(
+      // bad clone
+      {...element},
+    );
+
+    assertConsoleErrorDev([
+      [
+        'Attempted to render <span key="one"> without development properties. This is not supported. It can happen if:' +
+          '\n- The element is created with a production version of React but rendered in development.' +
+          '\n- The element was cloned with a custom function instead of `React.cloneElement`.\n' +
+          "The props of this element may help locate this element: { children: 'Free!', [key]: [Getter] }",
+        {withoutStack: true},
+      ],
+      "TypeError: Cannot read properties of undefined (reading 'stack')",
+    ]);
   });
 });

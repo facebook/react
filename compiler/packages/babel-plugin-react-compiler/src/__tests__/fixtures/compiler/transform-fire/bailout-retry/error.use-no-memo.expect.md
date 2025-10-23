@@ -34,7 +34,7 @@ Found 1 error:
 
 Error: [Fire] Untransformed reference to compiler-required feature.
 
- null
+Either remove this `fire` call or ensure it is successfully transformed by the compiler.
 
 error.use-no-memo.ts:15:4
   13 |   };
