@@ -103,6 +103,7 @@ import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoF
 import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
 import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRanges';
 import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
+import {validateNoDerivedComputationsInEffects_exp} from '../Validation/ValidateNoDerivedComputationsInEffects_exp';
 import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
 
 export type CompilerPipelineValue =
@@ -273,6 +274,10 @@ function runWithEnvironment(
 
     if (env.config.validateNoDerivedComputationsInEffects) {
       validateNoDerivedComputationsInEffects(hir);
+    }
+
+    if (env.config.validateNoDerivedComputationsInEffects_exp) {
+      validateNoDerivedComputationsInEffects_exp(hir);
     }
 
     if (env.config.validateNoSetStateInEffects) {
