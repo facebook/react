@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<6c5d60fcee25d3edc89e3843d28e01d0>>
+ * @generated SignedSource<<23983e7be8972a9bff35258a78f2fc7f>>
  */
 
 'use strict';
@@ -17640,6 +17640,10 @@ function hasOwnProperty$1(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
+const CODEFRAME_LINES_ABOVE = 2;
+const CODEFRAME_LINES_BELOW = 3;
+const CODEFRAME_MAX_LINES = 10;
+const CODEFRAME_ABBREVIATED_SOURCE_LINES = 5;
 var ErrorSeverity;
 (function (ErrorSeverity) {
     ErrorSeverity["Error"] = "Error";
@@ -17956,7 +17960,7 @@ class CompilerError extends Error {
     }
 }
 function printCodeFrame(source, loc, message) {
-    return libExports.codeFrameColumns(source, {
+    const printed = libExports.codeFrameColumns(source, {
         start: {
             line: loc.start.line,
             column: loc.start.column + 1,
@@ -17967,7 +17971,19 @@ function printCodeFrame(source, loc, message) {
         },
     }, {
         message,
+        linesAbove: CODEFRAME_LINES_ABOVE,
+        linesBelow: CODEFRAME_LINES_BELOW,
     });
+    const lines = printed.split(/\r?\n/);
+    if (loc.end.line - loc.start.line < CODEFRAME_MAX_LINES) {
+        return printed;
+    }
+    const pipeIndex = lines[0].indexOf('|');
+    return [
+        ...lines.slice(0, CODEFRAME_LINES_ABOVE + CODEFRAME_ABBREVIATED_SOURCE_LINES),
+        ' '.repeat(pipeIndex) + '…',
+        ...lines.slice(-(CODEFRAME_LINES_BELOW + CODEFRAME_ABBREVIATED_SOURCE_LINES)),
+    ].join('\n');
 }
 function printErrorSummary(category, message) {
     let heading;
