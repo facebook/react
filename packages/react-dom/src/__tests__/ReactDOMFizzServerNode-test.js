@@ -115,7 +115,7 @@ describe('ReactDOMFizzServerNode', () => {
     // with Float, we emit empty heads if they are elided when rendering <html>
     if (gate(flags => flags.enableFizzBlockingRender)) {
       expect(output.result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head><link rel="expect" href="#_R_" blocking="render"/></head><body>hello world<template id="_R_"></template></body></html>"`,
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
       );
     } else {
       expect(output.result).toMatchInlineSnapshot(
