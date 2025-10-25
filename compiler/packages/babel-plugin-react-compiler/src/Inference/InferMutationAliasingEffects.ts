@@ -621,38 +621,48 @@ function applySignature(
         const value = state.kind(effect.value);
         switch (value.kind) {
           case ValueKind.Frozen: {
-            const reason = getWriteErrorReason({
-              kind: value.kind,
-              reason: value.reason,
-            });
-            const variable =
-              effect.value.identifier.name !== null &&
-              effect.value.identifier.name.kind === 'named'
-                ? `\`${effect.value.identifier.name.value}\``
-                : 'value';
-            const diagnostic = CompilerDiagnostic.create({
-              category: ErrorCategory.Immutability,
-              reason: 'This value cannot be modified',
-              description: reason,
-            }).withDetails({
-              kind: 'error',
-              loc: effect.value.loc,
-              message: `${variable} cannot be modified`,
-            });
-            if (
+            // Special case: assigning to ref.current is allowed even if ref is an argument
+            // This is the intended use of refs and should not be flagged as an error
+            const isLegitimateRefAssignment =
               effect.kind === 'Mutate' &&
-              effect.reason?.kind === 'AssignCurrentProperty'
-            ) {
-              diagnostic.withDetails({
-                kind: 'hint',
-                message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+              effect.reason?.kind === 'AssignCurrentProperty' &&
+              isRefOrRefValue(effect.value.identifier);
+
+            if (!isLegitimateRefAssignment) {
+              const reason = getWriteErrorReason({
+                kind: value.kind,
+                reason: value.reason,
+              });
+              const variable =
+                effect.value.identifier.name !== null &&
+                effect.value.identifier.name.kind === 'named'
+                  ? `\`${effect.value.identifier.name.value}\``
+                  : 'value';
+              const diagnostic = CompilerDiagnostic.create({
+                category: ErrorCategory.Immutability,
+                reason: 'This value cannot be modified',
+                description: reason,
+              }).withDetails({
+                kind: 'error',
+                loc: effect.value.loc,
+                message: `${variable} cannot be modified`,
+              });
+              if (
+                effect.kind === 'Mutate' &&
+                effect.reason?.kind === 'AssignCurrentProperty'
+              ) {
+                diagnostic.withDetails({
+                  kind: 'hint',
+                  message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+                });
+              }
+              effects.push({
+                kind: 'MutateFrozen',
+                place: effect.value,
+                error: diagnostic,
               });
             }
-            effects.push({
-              kind: 'MutateFrozen',
-              place: effect.value,
-              error: diagnostic,
-            });
+            break;
           }
         }
       }
@@ -1303,47 +1313,56 @@ function applyEffect(
             effects,
           );
         } else {
-          const reason = getWriteErrorReason({
-            kind: value.kind,
-            reason: value.reason,
-          });
-          const variable =
-            effect.value.identifier.name !== null &&
-            effect.value.identifier.name.kind === 'named'
-              ? `\`${effect.value.identifier.name.value}\``
-              : 'value';
-          const diagnostic = CompilerDiagnostic.create({
-            category: ErrorCategory.Immutability,
-            reason: 'This value cannot be modified',
-            description: reason,
-          }).withDetails({
-            kind: 'error',
-            loc: effect.value.loc,
-            message: `${variable} cannot be modified`,
-          });
-          if (
+          // Special case: assigning to ref.current is allowed even if ref is an argument
+          // This is the intended use of refs and should not be flagged as an error
+          const isLegitimateRefAssignment =
             effect.kind === 'Mutate' &&
-            effect.reason?.kind === 'AssignCurrentProperty'
-          ) {
-            diagnostic.withDetails({
-              kind: 'hint',
-              message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+            effect.reason?.kind === 'AssignCurrentProperty' &&
+            isRefOrRefValue(effect.value.identifier);
+
+          if (!isLegitimateRefAssignment) {
+            const reason = getWriteErrorReason({
+              kind: value.kind,
+              reason: value.reason,
             });
+            const variable =
+              effect.value.identifier.name !== null &&
+              effect.value.identifier.name.kind === 'named'
+                ? `\`${effect.value.identifier.name.value}\``
+                : 'value';
+            const diagnostic = CompilerDiagnostic.create({
+              category: ErrorCategory.Immutability,
+              reason: 'This value cannot be modified',
+              description: reason,
+            }).withDetails({
+              kind: 'error',
+              loc: effect.value.loc,
+              message: `${variable} cannot be modified`,
+            });
+            if (
+              effect.kind === 'Mutate' &&
+              effect.reason?.kind === 'AssignCurrentProperty'
+            ) {
+              diagnostic.withDetails({
+                kind: 'hint',
+                message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
+              });
+            }
+            applyEffect(
+              context,
+              state,
+              {
+                kind:
+                  value.kind === ValueKind.Frozen
+                    ? 'MutateFrozen'
+                    : 'MutateGlobal',
+                place: effect.value,
+                error: diagnostic,
+              },
+              initialized,
+              effects,
+            );
           }
-          applyEffect(
-            context,
-            state,
-            {
-              kind:
-                value.kind === ValueKind.Frozen
-                  ? 'MutateFrozen'
-                  : 'MutateGlobal',
-              place: effect.value,
-              error: diagnostic,
-            },
-            initialized,
-            effects,
-          );
         }
       }
       break;
