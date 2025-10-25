@@ -3630,9 +3630,6 @@ describe('ReactDOMFizzServer', () => {
         '</script><script async="" src="foo"></script>' +
         (gate(flags => flags.shouldUseFizzExternalRuntime)
           ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
-          : '') +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#_R_" blocking="render">'
           : ''),
     );
   });
@@ -4566,15 +4563,7 @@ describe('ReactDOMFizzServer', () => {
 
     // the html should be as-is
     expect(document.documentElement.innerHTML).toEqual(
-      '<head><script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>' +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#_R_" blocking="render">'
-          : '') +
-        '</head><body><p>hello world!</p>' +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="_R_"></template>'
-          : '') +
-        '</body>',
+      '<head><script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script></head><body><p>hello world!</p></body>',
     );
   });
 
@@ -6618,14 +6607,7 @@ describe('ReactDOMFizzServer', () => {
         (gate(flags => flags.shouldUseFizzExternalRuntime)
           ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
           : '') +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#_R_" blocking="render">'
-          : '') +
-        '</head><body><script>try { foo() } catch (e) {} ;</script>' +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="_R_"></template>'
-          : '') +
-        '</body></html>',
+        '</head><body><script>try { foo() } catch (e) {} ;</script></body></html>',
     );
   });
 
