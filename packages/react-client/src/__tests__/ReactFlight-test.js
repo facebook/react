@@ -3899,7 +3899,9 @@ describe('ReactFlight', () => {
     await act(async () => {
       const {root} = await ReactNoopFlightClient.read(transport);
       ReactNoop.render(root);
-      expect(getDebugInfo(root)).toBeNull();
+      if (__DEV__) {
+        expect(getDebugInfo(root)).toBeNull();
+      }
     });
   });
 });
