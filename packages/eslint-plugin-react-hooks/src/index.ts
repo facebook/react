@@ -58,7 +58,7 @@ const recommendedLatestRuleConfigs: Linter.RulesRecord = {
 const plugins = ['react-hooks'];
 
 type ReactHooksFlatConfig = {
-  plugins: {react: any};
+  plugins: {'react-hooks': any};
   rules: Linter.RulesRecord;
 };
 
