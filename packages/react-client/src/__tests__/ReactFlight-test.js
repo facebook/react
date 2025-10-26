@@ -3884,4 +3884,22 @@ describe('ReactFlight', () => {
       </main>,
     );
   });
+
+  it('does not crash when exporting a JSX element as a client reference', async () => {
+    const ClientReference = clientReference(React.createElement('div'));
+
+    function App() {
+      return ClientReference;
+    }
+
+    const transport = ReactNoopFlightServer.render({
+      root: ReactServer.createElement(App),
+    });
+
+    await act(async () => {
+      const {root} = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(root);
+      expect(getDebugInfo(root)).toBeNull();
+    });
+  });
 });
