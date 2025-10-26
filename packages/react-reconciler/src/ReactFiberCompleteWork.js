@@ -99,6 +99,7 @@ import {
   Cloned,
   ViewTransitionStatic,
   Hydrate,
+  HoistableStatic,
 } from './ReactFiberFlags';
 
 import {
@@ -1177,6 +1178,10 @@ function completeWork(
           // @TODO refactor this block to create the instance here in complete
           // phase if we are not hydrating.
           markUpdate(workInProgress);
+          // Mark this fiber as containing a hoistable. This flag will bubble up
+          // through subtreeFlags, allowing us to skip traversals in subtrees that
+          // don't contain any hoistables during Activity visibility transitions.
+          workInProgress.flags |= HoistableStatic;
           if (nextResource !== null) {
             // This is a Hoistable Resource
 
@@ -1205,6 +1210,8 @@ function completeWork(
           }
         } else {
           // This is an update.
+          // Mark this fiber as containing a hoistable.
+          workInProgress.flags |= HoistableStatic;
           if (nextResource) {
             // This is a Resource
             if (nextResource !== current.memoizedState) {

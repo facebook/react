@@ -116,6 +116,7 @@ import {
   ForceClientRender,
   DidCapture,
   AffectedParentLayout,
+  HoistableStatic,
   ViewTransitionNamedStatic,
 } from './ReactFiberFlags';
 import {
@@ -1412,6 +1413,71 @@ function commitDeletionEffects(
   detachFiberMutation(deletedFiber);
 }
 
+// Helper function to recursively mount hoistables when an Activity becomes visible
+function recursivelyMountHoistablesInSubtree(
+  hoistableRoot: HoistableRoot,
+  fiber: Fiber,
+): void {
+  if (supportsResources) {
+    // Traverse the fiber tree and mount any hoistables
+    let child = fiber.child;
+    while (child !== null) {
+      if (child.tag === HostHoistable) {
+        // This is a hoistable element
+        if (child.memoizedState === null && child.stateNode !== null) {
+          // This is a Hoistable Instance (not a Resource)
+          // Mount it to the document head
+          mountHoistable(hoistableRoot, child.type, child.stateNode);
+        }
+      } else if (
+        child.tag !== OffscreenComponent &&
+        child.tag !== ActivityComponent
+      ) {
+        // Don't traverse into nested Offscreen/Activity boundaries
+        // They manage their own hoistables
+
+        // Check if this subtree contains any hoistables before traversing.
+        // The HoistableStatic flag is set during the complete phase and bubbled up
+        // through subtreeFlags, allowing us to skip entire subtrees that don't
+        // contain any hoistables.
+        if ((child.subtreeFlags & HoistableStatic) !== NoFlags) {
+          recursivelyMountHoistablesInSubtree(hoistableRoot, child);
+        }
+      }
+      child = child.sibling;
+    }
+  }
+}
+
+// Helper function to recursively unmount hoistables when an Activity becomes hidden
+function recursivelyUnmountHoistablesInSubtree(fiber: Fiber): void {
+  if (supportsResources) {
+    // Traverse the fiber tree and unmount any hoistables
+    let child = fiber.child;
+    while (child !== null) {
+      if (child.tag === HostHoistable) {
+        // This is a hoistable element
+        if (child.memoizedState === null && child.stateNode !== null) {
+          // This is a Hoistable Instance (not a Resource)
+          // Only unmount if it was actually mounted to the document
+          const instance = child.stateNode;
+          if (instance.parentNode) {
+            unmountHoistable(instance);
+          }
+        }
+      } else if (
+        child.tag !== OffscreenComponent &&
+        child.tag !== ActivityComponent
+      ) {
+        if ((child.subtreeFlags & HoistableStatic) !== NoFlags) {
+          recursivelyUnmountHoistablesInSubtree(child);
+        }
+      }
+      child = child.sibling;
+    }
+  }
+}
+
 function recursivelyTraverseDeletionEffects(
   finishedRoot: FiberRoot,
   nearestMountedAncestor: Fiber,
@@ -1455,7 +1521,12 @@ function commitDeletionEffectsOnFiber(
         if (deletedFiber.memoizedState) {
           releaseResource(deletedFiber.memoizedState);
         } else if (deletedFiber.stateNode) {
-          unmountHoistable(deletedFiber.stateNode);
+          // Only unmount if the hoistable was actually mounted to the document
+          // Hoistables in hidden Activity boundaries are never mounted
+          const instance = deletedFiber.stateNode;
+          if (instance.parentNode) {
+            unmountHoistable(instance);
+          }
         }
         break;
       }
@@ -2076,11 +2147,15 @@ function commitMutationEffectsOnFiber(
                   finishedWork,
                 );
               } else {
-                mountHoistable(
-                  hoistableRoot,
-                  finishedWork.type,
-                  finishedWork.stateNode,
-                );
+                // Only mount the hoistable if we're not in a hidden offscreen subtree
+                // Hidden Activity boundaries should not hoist their metadata to the document
+                if (!offscreenSubtreeIsHidden) {
+                  mountHoistable(
+                    hoistableRoot,
+                    finishedWork.type,
+                    finishedWork.stateNode,
+                  );
+                }
               }
             } else {
               finishedWork.stateNode = acquireResource(
@@ -2099,11 +2174,14 @@ function commitMutationEffectsOnFiber(
               releaseResource(currentResource);
             }
             if (newResource === null) {
-              mountHoistable(
-                hoistableRoot,
-                finishedWork.type,
-                finishedWork.stateNode,
-              );
+              // Only mount the hoistable if we're not in a hidden offscreen subtree
+              if (!offscreenSubtreeIsHidden) {
+                mountHoistable(
+                  hoistableRoot,
+                  finishedWork.type,
+                  finishedWork.stateNode,
+                );
+              }
             } else {
               acquireResource(
                 hoistableRoot,
@@ -2510,6 +2588,33 @@ function commitMutationEffectsOnFiber(
                   componentEffectEndTime,
                 );
               }
+            }
+
+            // Unmount hoistables when transitioning from visible to hidden
+            // This ensures that metadata like <title> is removed from the document
+            // when an Activity becomes hidden
+            if (supportsResources) {
+              recursivelyUnmountHoistablesInSubtree(finishedWork);
+            }
+          }
+        } else {
+          // Becoming visible
+          // Only mount hoistables if:
+          //   - This is an update (not first mount, which is handled elsewhere)
+          //   - This Offscreen was hidden before
+          //   - No ancestor Offscreen is hidden
+          if (
+            isUpdate &&
+            wasHidden &&
+            !offscreenSubtreeIsHidden &&
+            !offscreenSubtreeWasHidden
+          ) {
+            // Mount hoistables when transitioning from hidden to visible
+            // This ensures that metadata like <title> is added to the document
+            // when an Activity becomes visible
+            if (supportsResources) {
+              const hoistableRoot: HoistableRoot = (currentHoistableRoot: any);
+              recursivelyMountHoistablesInSubtree(hoistableRoot, finishedWork);
             }
           }
         }
