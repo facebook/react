@@ -1,7 +1,7 @@
 /**
  * This file is purely being used for local jest runs, and doesn't participate in the build process.
  */
-'use strict';
+'use strict'; 
 
 module.exports = {
   plugins: [
