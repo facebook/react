@@ -152,7 +152,7 @@
     "download-build-in-codesandbox-ci": "yarn build --type=node react/index react.react-server react-dom/index react-dom/client react-dom/src/server react-dom/test-utils react-dom.react-server scheduler/index react/jsx-runtime react/jsx-dev-runtime react-server-dom-webpack",
     "check-release-dependencies": "node ./scripts/release/check-release-dependencies",
     "generate-inline-fizz-runtime": "node ./scripts/rollup/generate-inline-fizz-runtime.js",
-    "generate-changelog": "node ./scripts/tasks/generate-changelog.js",
+    "generate-changelog": "node ./scripts/tasks/generate-changelog/index.js",
     "flags": "node ./scripts/flags/flags.js"
   },
   "resolutions": {
