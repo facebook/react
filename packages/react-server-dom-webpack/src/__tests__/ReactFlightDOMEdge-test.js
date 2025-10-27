@@ -2196,4 +2196,29 @@ describe('ReactFlightDOMEdge', () => {
       'Switched to client rendering because the server rendering errored:\n\nssr-throw',
     );
   });
+
+  it('should properly resolve with deduped objects', async () => {
+    const obj = {foo: 'hi'};
+
+    function Test(props) {
+      return props.obj.foo;
+    }
+
+    const root = {
+      obj: obj,
+      node: <Test obj={obj} />,
+    };
+
+    const stream = ReactServerDOMServer.renderToReadableStream(root);
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    const result = await response;
+    expect(result).toEqual({obj: obj, node: 'hi'});
+  });
 });
