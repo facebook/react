@@ -60,9 +60,16 @@ function createFormDataWithSubmitter(
   const temp = submitter.ownerDocument.createElement('input');
   temp.name = submitter.name;
   temp.value = submitter.value;
-  if (form.id) {
-    temp.setAttribute('form', form.id);
+
+  // Use the form element's *id attribute*. A named control like <input name="id">
+  // can clobber the `form.id` property to point to that control instead of the
+  // element's id attribute.
+  const formId =
+    typeof form.getAttribute === 'function' ? form.getAttribute('id') : null;
+  if (formId) {
+    temp.setAttribute('form', formId);
   }
+
   (submitter.parentNode: any).insertBefore(temp, submitter);
   const formData = new FormData(form);
   (temp.parentNode: any).removeChild(temp);
