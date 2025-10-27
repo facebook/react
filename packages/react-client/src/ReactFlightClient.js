@@ -625,11 +625,21 @@ function wakeChunkIfInitialized<T>(
               }
             }
             // The status might have changed after fulfilling the reference.
-            return wakeChunkIfInitialized(
-              chunk,
-              resolveListeners,
-              rejectListeners,
-            );
+            switch ((chunk: SomeChunk<T>).status) {
+              case INITIALIZED:
+                const initializedChunk: InitializedChunk<T> = (chunk: any);
+                wakeChunk(
+                  resolveListeners,
+                  initializedChunk.value,
+                  initializedChunk,
+                );
+                return;
+              case ERRORED:
+                if (rejectListeners !== null) {
+                  rejectChunk(rejectListeners, chunk.reason);
+                }
+                return;
+            }
           }
         }
       }
