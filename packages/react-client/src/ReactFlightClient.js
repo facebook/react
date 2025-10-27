@@ -624,6 +624,12 @@ function wakeChunkIfInitialized<T>(
                 rejectListeners.splice(rejectionIdx, 1);
               }
             }
+            // The status might have changed after fulfilling the reference.
+            return wakeChunkIfInitialized(
+              chunk,
+              resolveListeners,
+              rejectListeners,
+            );
           }
         }
       }
