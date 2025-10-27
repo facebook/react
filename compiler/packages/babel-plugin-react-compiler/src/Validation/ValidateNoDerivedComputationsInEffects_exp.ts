@@ -23,6 +23,7 @@ import {
   GeneratedSource,
   SourceLocation,
 } from '../HIR';
+import {printInstruction} from '../HIR/PrintHIR';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {assertExhaustive} from '../Utils/utils';
@@ -102,31 +103,24 @@ class DerivationCache {
       typeOfValue: typeOfValue ?? 'ignored',
     };
 
-    if (sourcesIds !== undefined) {
-      for (const id of sourcesIds) {
-        const sourcePlace = this.cache.get(id)?.place;
-
-        if (sourcePlace === undefined) {
-          continue;
-        }
-
-        /*
-         * If the identifier of the source is a promoted identifier, then
-         *  we should set the target as the source.
-         */
-        if (
-          sourcePlace.identifier.name === null ||
-          sourcePlace.identifier.name?.kind === 'promoted'
-        ) {
-          newValue.sourcesIds.add(derivedVar.identifier.id);
-        } else {
-          newValue.sourcesIds.add(sourcePlace.identifier.id);
-        }
-      }
+    if (isNamedIdentifier(derivedVar)) {
+      newValue.sourcesIds.add(derivedVar.identifier.id);
     }
 
-    if (newValue.sourcesIds.size === 0) {
-      newValue.sourcesIds.add(derivedVar.identifier.id);
+    for (const id of sourcesIds) {
+      const sourceMetadata = this.cache.get(id);
+
+      if (sourceMetadata === undefined) {
+        continue;
+      }
+
+      if (isNamedIdentifier(sourceMetadata.place)) {
+        newValue.sourcesIds.add(sourceMetadata.place.identifier.id);
+      } else {
+        for (const sourcesSourceId of sourceMetadata.sourcesIds) {
+          newValue.sourcesIds.add(sourcesSourceId);
+        }
+      }
     }
 
     this.cache.set(derivedVar.identifier.id, newValue);
@@ -149,6 +143,12 @@ class DerivationCache {
     }
     return true;
   }
+}
+
+function isNamedIdentifier(place: Place): Boolean {
+  return (
+    place.identifier.name !== null && place.identifier.name?.kind === 'named'
+  );
 }
 
 /**
@@ -202,7 +202,9 @@ export function validateNoDerivedComputationsInEffects_exp(
       if (param.kind === 'Identifier') {
         context.derivationCache.cache.set(param.identifier.id, {
           place: param,
-          sourcesIds: new Set([param.identifier.id]),
+          sourcesIds: new Set(
+            isNamedIdentifier(param) ? [param.identifier.id] : [],
+          ),
           typeOfValue: 'fromProps',
         });
       }
@@ -212,7 +214,9 @@ export function validateNoDerivedComputationsInEffects_exp(
     if (props != null && props.kind === 'Identifier') {
       context.derivationCache.cache.set(props.identifier.id, {
         place: props,
-        sourcesIds: new Set([props.identifier.id]),
+        sourcesIds: new Set(
+          isNamedIdentifier(props) ? [props.identifier.id] : [],
+        ),
         typeOfValue: 'fromProps',
       });
     }
@@ -223,10 +227,10 @@ export function validateNoDerivedComputationsInEffects_exp(
     context.derivationCache.takeSnapshot();
 
     for (const block of fn.body.blocks.values()) {
+      recordPhiDerivations(block, context);
       for (const instr of block.instructions) {
         recordInstructionDerivations(instr, context, isFirstPass);
       }
-      recordPhiDerivations(block, context);
     }
 
     context.derivationCache.checkForChanges();
@@ -237,6 +241,7 @@ export function validateNoDerivedComputationsInEffects_exp(
     validateEffect(effect, context);
   }
 
+  console.log(derivationCache.cache);
   if (errors.hasAnyErrors()) {
     throw errors;
   }
@@ -293,6 +298,7 @@ function recordInstructionDerivations(
   if (value.kind === 'FunctionExpression') {
     context.functions.set(lvalue.identifier.id, value);
     for (const [, block] of value.loweredFunc.func.body.blocks) {
+      recordPhiDerivations(block, context);
       for (const instr of block.instructions) {
         recordInstructionDerivations(instr, context, isFirstPass);
       }
@@ -341,9 +347,7 @@ function recordInstructionDerivations(
     }
 
     typeOfValue = joinValue(typeOfValue, operandMetadata.typeOfValue);
-    for (const id of operandMetadata.sourcesIds) {
-      sources.add(id);
-    }
+    sources.add(operand.identifier.id);
   }
 
   if (typeOfValue === 'ignored') {
@@ -404,6 +408,60 @@ function recordInstructionDerivations(
       }
     }
   }
+}
+
+function buildDataFlowTree(
+  sourceId: IdentifierId,
+  indent: string = '',
+  isLast: boolean = true,
+  context: ValidationContext,
+): string {
+  const sourceMetadata = context.derivationCache.cache.get(sourceId);
+  if (!sourceMetadata || !sourceMetadata.place.identifier.name?.value) {
+    return '';
+  }
+
+  const sourceName = sourceMetadata.place.identifier.name.value;
+  const prefix = indent + (isLast ? '└── ' : '├── ');
+  const childIndent = indent + (isLast ? '    ' : '│   ');
+
+  const childSourceIds = Array.from(sourceMetadata.sourcesIds).filter(
+    id => id !== sourceId,
+  );
+
+  const isOriginal = childSourceIds.length === 0;
+
+  let result = `${prefix}${sourceName}`;
+
+  if (isOriginal) {
+    let typeLabel: string;
+    if (sourceMetadata.typeOfValue === 'fromProps') {
+      typeLabel = 'Prop';
+    } else if (sourceMetadata.typeOfValue === 'fromState') {
+      typeLabel = 'State';
+    } else {
+      typeLabel = 'Prop and State';
+    }
+    result += ` (${typeLabel})`;
+  }
+
+  if (childSourceIds.length > 0) {
+    result += '\n';
+    childSourceIds.forEach((childId, index) => {
+      const childTree = buildDataFlowTree(
+        childId,
+        childIndent,
+        index === childSourceIds.length - 1,
+        context,
+      );
+      if (childTree) {
+        result += childTree + '\n';
+      }
+    });
+    result = result.slice(0, -1);
+  }
+
+  return result;
 }
 
 function validateEffect(
@@ -508,27 +566,63 @@ function validateEffect(
           .length -
           1
     ) {
-      const derivedDepsStr = Array.from(derivedSetStateCall.sourceIds)
-        .map(sourceId => {
-          const sourceMetadata = context.derivationCache.cache.get(sourceId);
-          return sourceMetadata?.place.identifier.name?.value;
-        })
-        .filter(Boolean)
-        .join(', ');
+      const allSourceIds = Array.from(derivedSetStateCall.sourceIds);
+      const trees = allSourceIds
+        .map((id, index) =>
+          buildDataFlowTree(id, '', index === allSourceIds.length - 1, context),
+        )
+        .filter(Boolean);
 
-      let description;
+      const propsSet = new Set<string>();
+      const stateSet = new Set<string>();
 
-      if (derivedSetStateCall.typeOfValue === 'fromProps') {
-        description = `From props: [${derivedDepsStr}]`;
-      } else if (derivedSetStateCall.typeOfValue === 'fromState') {
-        description = `From local state: [${derivedDepsStr}]`;
-      } else {
-        description = `From props and local state: [${derivedDepsStr}]`;
+      for (const sourceId of derivedSetStateCall.sourceIds) {
+        const sourceMetadata = context.derivationCache.cache.get(sourceId);
+        if (
+          sourceMetadata &&
+          sourceMetadata.place.identifier.name?.value &&
+          (sourceMetadata.sourcesIds.size === 0 ||
+            (sourceMetadata.sourcesIds.size === 1 &&
+              sourceMetadata.sourcesIds.has(sourceId)))
+        ) {
+          const name = sourceMetadata.place.identifier.name.value;
+          if (sourceMetadata.typeOfValue === 'fromProps') {
+            propsSet.add(name);
+          } else if (sourceMetadata.typeOfValue === 'fromState') {
+            stateSet.add(name);
+          } else if (sourceMetadata.typeOfValue === 'fromPropsAndState') {
+            propsSet.add(name);
+            stateSet.add(name);
+          }
+        }
       }
+
+      const propsArr = Array.from(propsSet);
+      const stateArr = Array.from(stateSet);
+
+      let rootSources = '';
+      if (propsArr.length > 0) {
+        rootSources += `Props: [${propsArr.join(', ')}]`;
+      }
+      if (stateArr.length > 0) {
+        if (rootSources) rootSources += '\n';
+        rootSources += `State: [${stateArr.join(', ')}]`;
+      }
+
+      const description = `Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user
+
+This setState call is setting a derived value that depends on the following reactive sources:
+
+${rootSources}
+
+Data Flow Tree:
+${trees.join('\n')}
+
+See: https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state`;
 
       context.errors.pushDiagnostic(
         CompilerDiagnostic.create({
-          description: `Derived values (${description}) should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user`,
+          description: description,
           category: ErrorCategory.EffectDerivationsOfState,
           reason:
             'You might not need an effect. Derive values in render, not effects.',
