@@ -36,6 +36,11 @@ type DerivationMetadata = {
   sourcesIds: Set<IdentifierId>;
 };
 
+// type setStateKey = {
+//   id: IdentifierId;
+//   usageType: 'all' | 'effect';
+// };
+
 type ValidationContext = {
   readonly functions: Map<IdentifierId, FunctionExpression>;
   readonly errors: CompilerError;
@@ -43,6 +48,9 @@ type ValidationContext = {
   readonly effects: Set<HIRFunction>;
   readonly setStateCache: Map<string | undefined | null, Array<Place>>;
   readonly effectSetStateCache: Map<string | undefined | null, Array<Place>>;
+  // These should replace the setStateCache and effectSetStateCache once we have
+  readonly setStateLoads: Map<IdentifierId, IdentifierId | null>;
+  readonly setStateUsages: Map<IdentifierId, SourceLocation>;
 };
 
 class DerivationCache {
@@ -188,6 +196,9 @@ export function validateNoDerivedComputationsInEffects_exp(
     Array<Place>
   > = new Map();
 
+  const setStateLoads: Map<IdentifierId, IdentifierId> = new Map();
+  const setStateUsages: Map<IdentifierId, SourceLocation> = new Map();
+
   const context: ValidationContext = {
     functions,
     errors,
@@ -195,6 +206,8 @@ export function validateNoDerivedComputationsInEffects_exp(
     effects,
     setStateCache,
     effectSetStateCache,
+    setStateLoads,
+    setStateUsages,
   };
 
   if (fn.fnType === 'Hook') {
@@ -241,10 +254,8 @@ export function validateNoDerivedComputationsInEffects_exp(
     validateEffect(effect, context);
   }
 
-  console.log(derivationCache.cache);
-  if (errors.hasAnyErrors()) {
-    throw errors;
-  }
+  console.log('SetStateLoads', context.setStateLoads);
+  return errors.asResult();
 }
 
 function recordPhiDerivations(
@@ -287,11 +298,29 @@ function joinValue(
   return 'fromPropsAndState';
 }
 
+function maybeRecordSetState(instr: Instruction, context: ValidationContext) {
+  for (const operand of eachInstructionLValue(instr)) {
+    if (isSetStateType(operand.identifier)) {
+      if (instr.value.kind === 'LoadLocal') {
+        context.setStateLoads.set(
+          operand.identifier.id,
+          instr.value.place.identifier.id,
+        );
+      } else {
+        context.setStateLoads.set(operand.identifier.id, null);
+      }
+    }
+  }
+}
+
 function recordInstructionDerivations(
   instr: Instruction,
   context: ValidationContext,
   isFirstPass: boolean,
 ): void {
+  // WIP
+  maybeRecordSetState(instr, context);
+
   let typeOfValue: TypeOfValue = 'ignored';
   const sources: Set<IdentifierId> = new Set();
   const {lvalue, value} = instr;
