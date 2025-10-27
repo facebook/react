@@ -119,6 +119,9 @@ export type TextInstance = {
 };
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
+type PublicInstanceWithObservingFragmentHandles = PublicInstance & {
+  _reactObservingFragments?: Set<FragmentInstanceType>,
+};
 export type Container = {
   containerTag: number,
   publicInstance: PublicRootInstance | null,
@@ -665,12 +668,22 @@ FragmentInstance.prototype.observeUsing = function (
     this._observers = new Set();
   }
   this._observers.add(observer);
-  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
+  traverseFragmentInstance(this._fragmentFiber, observeChild, this, observer);
 };
-function observeChild(child: Fiber, observer: IntersectionObserver) {
-  const publicInstance = getPublicInstanceFromHostFiber(child);
+function observeChild(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+  observer: IntersectionObserver,
+) {
+  const publicInstance = ((getPublicInstanceFromHostFiber(
+    child,
+  ): any): PublicInstanceWithObservingFragmentHandles);
   // $FlowFixMe[incompatible-call] DOM types expect Element
   observer.observe(publicInstance);
+  if (publicInstance._reactObservingFragments == null) {
+    publicInstance._reactObservingFragments = new Set();
+  }
+  publicInstance._reactObservingFragments.add(fragmentInstance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -688,13 +701,27 @@ FragmentInstance.prototype.unobserveUsing = function (
     }
   } else {
     observers.delete(observer);
-    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
+    traverseFragmentInstance(
+      this._fragmentFiber,
+      unobserveChild,
+      this,
+      observer,
+    );
   }
 };
-function unobserveChild(child: Fiber, observer: IntersectionObserver) {
-  const publicInstance = getPublicInstanceFromHostFiber(child);
+function unobserveChild(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+  observer: IntersectionObserver,
+) {
+  const publicInstance = ((getPublicInstanceFromHostFiber(
+    child,
+  ): any): PublicInstanceWithObservingFragmentHandles);
   // $FlowFixMe[incompatible-call] DOM types expect Element
   observer.unobserve(publicInstance);
+  if (publicInstance._reactObservingFragments != null) {
+    publicInstance._reactObservingFragments.delete(fragmentInstance);
+  }
   return false;
 }
 
