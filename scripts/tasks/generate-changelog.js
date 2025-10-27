@@ -23,7 +23,7 @@ const repoRoot = path.resolve(__dirname, '..', '..');
 function parseArgs(argv) {
   const parser = yargs(argv)
     .usage(
-      'Usage: yarn generate-changelog [--codex|--claude] [--debug] [<pkg@version> ...]'
+      'Usage: yarn generate-changelog [--codex|--claude] [--debug] [--format <text|csv|json>] [<pkg@version> ...]'
     )
     .example(
       '$0 --codex eslint-plugin-react-hooks@7.0.1',
@@ -50,6 +50,12 @@ function parseArgs(argv) {
       describe: 'Enable verbose debug logging.',
       default: false,
     })
+    .option('format', {
+      type: 'string',
+      describe: 'Output format for the generated changelog.',
+      choices: ['text', 'csv', 'json'],
+      default: 'text',
+    })
     .help('help')
     .alias('h', 'help')
     .version(false)
@@ -61,6 +67,7 @@ function parseArgs(argv) {
   const args = parser.scriptName('generate-changelog').parse();
   const packageSpecs = [];
   const debug = !!args.debug;
+  const format = args.format || 'text';
   let summarizer = null;
   if (args.codex && args.claude) {
     throw new Error('Choose either --codex or --claude, not both.');
@@ -123,6 +130,7 @@ function parseArgs(argv) {
 
   return {
     debug,
+    format,
     summarizer,
     packageSpecs,
   };
@@ -484,6 +492,22 @@ async function summarizePackageCommits({
 
 function noopLogger() {}
 
+function escapeCsvValue(value) {
+  if (value == null) {
+    return '';
+  }
+
+  const stringValue = String(value).replace(/\r?\n|\r/g, ' ');
+  if (stringValue.includes('"') || stringValue.includes(',')) {
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+  return stringValue;
+}
+
+function toCsvRow(values) {
+  return values.map(escapeCsvValue).join(',');
+}
+
 async function runSummarizer(command, prompt) {
   const options = {cwd: repoRoot, maxBuffer: 5 * 1024 * 1024};
 
@@ -634,7 +658,9 @@ async function fetchPullRequestMetadata(prNumber, {log}) {
 }
 
 async function main() {
-  const {packageSpecs, summarizer, debug} = parseArgs(process.argv.slice(2));
+  const {packageSpecs, summarizer, debug, format} = parseArgs(
+    process.argv.slice(2)
+  );
   const log = debug
     ? (...args) => console.log('[generate-changelog]', ...args)
     : noopLogger;
@@ -754,60 +780,214 @@ async function main() {
     log,
   });
 
-  const outputLines = [];
+  const noChangesMessage = 'No changes since the last release.';
+  const changelogEntries = [];
   for (let i = 0; i < packageSpecs.length; i++) {
     const spec = packageSpecs[i];
-    outputLines.push(`## ${spec.name}@${spec.displayVersion || spec.version}`);
+    const versionText = spec.displayVersion || spec.version;
     const commitsForPackage = commitsByPackage.get(spec.name) || [];
+    const entry = {
+      package: spec.name,
+      version: versionText,
+      hasChanges: commitsForPackage.length > 0,
+      commits: [],
+      note: null,
+    };
 
-    if (commitsForPackage.length === 0) {
-      outputLines.push('* No changes since the last release.');
-      outputLines.push('');
+    if (!entry.hasChanges) {
+      entry.note = noChangesMessage;
+      changelogEntries.push(entry);
       continue;
     }
 
-    commitsForPackage.forEach(commit => {
+    const summaryMap = summariesByPackage.get(spec.name) || new Map();
+    entry.commits = commitsForPackage.map(commit => {
       if (commit.prNumber && prMetadata.has(commit.prNumber)) {
-        commit.authorLogin = prMetadata.get(commit.prNumber).authorLogin;
+        const metadata = prMetadata.get(commit.prNumber);
+        if (metadata && metadata.authorLogin) {
+          commit.authorLogin = metadata.authorLogin;
+        }
       }
 
-      const prFragment = commit.prNumber
-        ? `[#${commit.prNumber}](https://github.com/facebook/react/pull/${commit.prNumber})`
-        : `commit ${commit.sha.slice(0, 7)}`;
-
-      let authorFragment = commit.authorLogin
-        ? `[@${commit.authorLogin}](https://github.com/${commit.authorLogin})`
-        : commit.authorName || 'unknown author';
-
-      if (
-        !commit.authorLogin &&
-        commit.authorName &&
-        commit.authorName.startsWith('@')
-      ) {
-        const username = commit.authorName.slice(1);
-        authorFragment = `[@${username}](https://github.com/${username})`;
-      }
-
-      const summaryMap = summariesByPackage.get(spec.name) || new Map();
       let summary = summaryMap.get(commit.sha) || commit.subject;
-
       if (commit.prNumber) {
         const prPattern = new RegExp(`\\s*\\(#${commit.prNumber}\\)$`);
         summary = summary.replace(prPattern, '').trim();
       }
 
-      outputLines.push(`* ${summary} (${prFragment} by ${authorFragment})`);
+      const prNumber = commit.prNumber || null;
+      const prUrl = prNumber
+        ? `https://github.com/facebook/react/pull/${prNumber}`
+        : null;
+      const commitSha = commit.sha;
+      const commitUrl = `https://github.com/facebook/react/commit/${commitSha}`;
+
+      const authorLogin = commit.authorLogin || null;
+      const authorName = commit.authorName || null;
+      const authorEmail = commit.authorEmail || null;
+
+      let authorUrl = null;
+      let authorDisplay = authorName || 'unknown author';
+
+      if (authorLogin) {
+        authorUrl = `https://github.com/${authorLogin}`;
+        authorDisplay = `[@${authorLogin}](${authorUrl})`;
+      } else if (authorName && authorName.startsWith('@')) {
+        const username = authorName.slice(1);
+        authorUrl = `https://github.com/${username}`;
+        authorDisplay = `[@${username}](${authorUrl})`;
+      }
+
+      const referenceDisplay = prNumber
+        ? `[#${prNumber}](${prUrl})`
+        : `commit ${commitSha.slice(0, 7)}`;
+      const referenceType = prNumber ? 'pr' : 'commit';
+      const referenceId = prNumber ? `#${prNumber}` : commitSha.slice(0, 7);
+      const referenceUrl = prNumber ? prUrl : commitUrl;
+
+      return {
+        summary,
+        prNumber,
+        prUrl,
+        commitSha,
+        commitUrl,
+        authorLogin,
+        authorName,
+        authorEmail,
+        authorUrl,
+        authorDisplay,
+        referenceDisplay,
+        referenceType,
+        referenceId,
+        referenceUrl,
+      };
     });
 
-    outputLines.push('');
-  }
-
-  while (outputLines.length && outputLines[outputLines.length - 1] === '') {
-    outputLines.pop();
+    changelogEntries.push(entry);
   }
 
   log('Generated changelog sections.');
-  console.log(outputLines.join('\n'));
+  if (format === 'text') {
+    const outputLines = [];
+    for (let i = 0; i < changelogEntries.length; i++) {
+      const entry = changelogEntries[i];
+      outputLines.push(`## ${entry.package}@${entry.version}`);
+      if (!entry.hasChanges) {
+        outputLines.push(`* ${entry.note}`);
+        outputLines.push('');
+        continue;
+      }
+
+      entry.commits.forEach(commit => {
+        outputLines.push(
+          `* ${commit.summary} (${commit.referenceDisplay} by ${commit.authorDisplay})`
+        );
+      });
+      outputLines.push('');
+    }
+
+    while (outputLines.length && outputLines[outputLines.length - 1] === '') {
+      outputLines.pop();
+    }
+
+    console.log(outputLines.join('\n'));
+    return;
+  }
+
+  if (format === 'csv') {
+    const header = [
+      'package',
+      'version',
+      'summary',
+      'reference_type',
+      'reference_id',
+      'reference_url',
+      'author_name',
+      'author_login',
+      'author_url',
+      'author_email',
+      'commit_sha',
+      'commit_url',
+    ];
+    const rows = [header];
+    changelogEntries.forEach(entry => {
+      if (!entry.hasChanges) {
+        rows.push([
+          entry.package,
+          entry.version,
+          entry.note,
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+        ]);
+        return;
+      }
+
+      entry.commits.forEach(commit => {
+        const authorName =
+          commit.authorName ||
+          (commit.authorLogin ? `@${commit.authorLogin}` : 'unknown author');
+        rows.push([
+          entry.package,
+          entry.version,
+          commit.summary,
+          commit.referenceType,
+          commit.referenceId,
+          commit.referenceUrl,
+          authorName,
+          commit.authorLogin || '',
+          commit.authorUrl || '',
+          commit.authorEmail || '',
+          commit.commitSha,
+          commit.commitUrl,
+        ]);
+      });
+    });
+
+    const csvLines = rows.map(toCsvRow);
+    console.log(csvLines.join('\n'));
+    return;
+  }
+
+  if (format === 'json') {
+    const payload = changelogEntries.map(entry => ({
+      package: entry.package,
+      version: entry.version,
+      hasChanges: entry.hasChanges,
+      note: entry.hasChanges ? undefined : entry.note,
+      commits: entry.commits.map(commit => ({
+        summary: commit.summary,
+        prNumber: commit.prNumber,
+        prUrl: commit.prUrl,
+        commitSha: commit.commitSha,
+        commitUrl: commit.commitUrl,
+        author: {
+          login: commit.authorLogin,
+          name: commit.authorName,
+          email: commit.authorEmail,
+          url: commit.authorUrl,
+          display: commit.authorDisplay,
+        },
+        reference: {
+          type: commit.referenceType,
+          id: commit.referenceId,
+          url: commit.referenceUrl,
+          label: commit.referenceDisplay,
+        },
+      })),
+    }));
+
+    console.log(JSON.stringify(payload, null, 2));
+    return;
+  }
+
+  throw new Error(`Unsupported format: ${format}`);
 }
 
 main().catch(error => {
