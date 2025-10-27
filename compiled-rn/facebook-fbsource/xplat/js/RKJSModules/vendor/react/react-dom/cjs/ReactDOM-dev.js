@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<23f1b6bb3ad4f31d9d503b389ee2e4ff>>
+ * @generated SignedSource<<c017be7f331c9766262986fc7e8adc2d>>
  */
 
 "use strict";
@@ -126,10 +126,20 @@ __DEV__ &&
         throw Error("Target container is not a DOM element.");
       return createPortal$1(children, container, null, key);
     };
-    exports.flushSync = function () {
-      throw Error(
-        "Expected this build of React to not support legacy mode but it does. This is a bug in React."
-      );
+    exports.flushSync = function (fn) {
+      var previousTransition = ReactSharedInternals.T,
+        previousUpdatePriority = Internals.p;
+      try {
+        if (((ReactSharedInternals.T = null), (Internals.p = 2), fn))
+          return fn();
+      } finally {
+        (ReactSharedInternals.T = previousTransition),
+          (Internals.p = previousUpdatePriority),
+          Internals.d.f() &&
+            console.error(
+              "flushSync was called from inside a lifecycle method. React cannot flush when React is already rendering. Consider moving this call to a scheduler task or micro task."
+            );
+      }
     };
     exports.preconnect = function (href, options) {
       "string" === typeof href && href
@@ -404,5 +414,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-native-fb-90817f88-20251027";
+    exports.version = "19.3.0-native-fb-dd53a946-20251027";
   })();
