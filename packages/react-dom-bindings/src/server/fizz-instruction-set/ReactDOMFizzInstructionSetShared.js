@@ -598,7 +598,7 @@ export function completeSegment(containerID, placeholderID) {
   while (segmentContainer.firstChild) {
     placeholderParent.insertBefore(
       segmentContainer.firstChild,
-      placeholderNode
+      placeholderNode,
     );
   }
 
