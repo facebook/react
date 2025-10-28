@@ -42,11 +42,11 @@ export default defineConfig([
 
 ### Legacy Config (.eslintrc)
 
-If you are still using ESLint below 9.0.0, the `legacy-recommended` preset can also be used to enable all recommended rules.
+If you are still using ESLint below 9.0.0, the `recommended-legacy` preset can also be used to enable all recommended rules.
 
 ```js
 {
-  "extends": ["plugin:react-hooks/legacy-recommended"],
+  "extends": ["plugin:react-hooks/recommended-legacy"],
   // ...
 }
 

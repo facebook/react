@@ -62,11 +62,11 @@ const plugin = {
   },
   rules,
   configs: {
-    'legacy-recommended': {
+    'recommended-legacy': {
       plugins: ['react-hooks'],
       rules: recommendedRuleConfigs,
     },
-    'legacy-recommended-latest': {
+    'recommended-latest-legacy': {
       plugins: ['react-hooks'],
       rules: recommendedLatestRuleConfigs,
     },
