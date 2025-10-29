@@ -925,7 +925,7 @@ export default class Store extends EventEmitter<{
    */
   getSuspendableDocumentOrderSuspense(
     uniqueSuspendersOnly: boolean,
-  ): $ReadOnlyArray<SuspenseTimelineStep> {
+  ): Array<SuspenseTimelineStep> {
     const target: Array<SuspenseTimelineStep> = [];
     const roots = this.roots;
     let rootStep: null | SuspenseTimelineStep = null;
@@ -949,17 +949,25 @@ export default class Store extends EventEmitter<{
           rootStep = {
             id: suspense.id,
             environment: environmentName,
+            endTime: suspense.endTime,
           };
           target.push(rootStep);
-        } else if (rootStep.environment === null) {
-          // If any root has an environment name, then let's use it.
-          rootStep.environment = environmentName;
+        } else {
+          if (rootStep.environment === null) {
+            // If any root has an environment name, then let's use it.
+            rootStep.environment = environmentName;
+          }
+          if (suspense.endTime > rootStep.endTime) {
+            // If any root has a higher end time, let's use that.
+            rootStep.endTime = suspense.endTime;
+          }
         }
         this.pushTimelineStepsInDocumentOrder(
           suspense.children,
           target,
           uniqueSuspendersOnly,
           environments,
+          0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
         );
       }
     }
@@ -972,6 +980,7 @@ export default class Store extends EventEmitter<{
     target: Array<SuspenseTimelineStep>,
     uniqueSuspendersOnly: boolean,
     parentEnvironments: Array<string>,
+    parentEndTime: number,
   ): void {
     for (let i = 0; i < children.length; i++) {
       const child = this.getSuspenseByID(children[i]);
@@ -996,10 +1005,15 @@ export default class Store extends EventEmitter<{
         unionEnvironments.length > 0
           ? unionEnvironments[unionEnvironments.length - 1]
           : null;
+      // The end time of a child boundary can in effect never be earlier than its parent even if
+      // everything unsuspended before that.
+      const maxEndTime =
+        parentEndTime > child.endTime ? parentEndTime : child.endTime;
       if (hasRects && (!uniqueSuspendersOnly || child.hasUniqueSuspenders)) {
         target.push({
           id: child.id,
           environment: environmentName,
+          endTime: maxEndTime,
         });
       }
       this.pushTimelineStepsInDocumentOrder(
@@ -1007,8 +1021,26 @@ export default class Store extends EventEmitter<{
         target,
         uniqueSuspendersOnly,
         unionEnvironments,
+        maxEndTime,
       );
     }
+  }
+
+  getEndTimeOrDocumentOrderSuspense(
+    uniqueSuspendersOnly: boolean,
+  ): $ReadOnlyArray<SuspenseTimelineStep> {
+    const timeline =
+      this.getSuspendableDocumentOrderSuspense(uniqueSuspendersOnly);
+    if (timeline.length === 0) {
+      return timeline;
+    }
+    const root = timeline[0];
+    // We mutate in place since we assume we've got a fresh array.
+    timeline.sort((a, b) => {
+      // Root is always first
+      return a === root ? -1 : b === root ? 1 : a.endTime - b.endTime;
+    });
+    return timeline;
   }
 
   getRendererIDForElement(id: number): number | null {
@@ -1688,6 +1720,7 @@ export default class Store extends EventEmitter<{
             hasUniqueSuspenders: false,
             isSuspended: isSuspended,
             environments: [],
+            endTime: 0,
           });
 
           hasSuspenseTreeChanged = true;
@@ -1884,6 +1917,7 @@ export default class Store extends EventEmitter<{
           for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
             const id = operations[i++];
             const hasUniqueSuspenders = operations[i++] === 1;
+            const endTime = operations[i++] / 1000;
             const isSuspended = operations[i++] === 1;
             const environmentNamesLength = operations[i++];
             const environmentNames = [];
@@ -1919,6 +1953,7 @@ export default class Store extends EventEmitter<{
             }
 
             suspense.hasUniqueSuspenders = hasUniqueSuspenders;
+            suspense.endTime = endTime;
             suspense.isSuspended = isSuspended;
             suspense.environments = environmentNames;
           }
