@@ -460,13 +460,14 @@ function updateTree(
         for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
           const suspenseNodeId = operations[i++];
           const hasUniqueSuspenders = operations[i++] === 1;
+          const endTime = operations[i++] / 1000;
           const isSuspended = operations[i++] === 1;
           const environmentNamesLength = operations[i++];
           i += environmentNamesLength;
           if (__DEBUG__) {
             debug(
               'Suspender changes',
-              `Suspense node ${suspenseNodeId} unique suspenders set to ${String(hasUniqueSuspenders)} is suspended set to ${String(isSuspended)} with ${String(environmentNamesLength)} environments`,
+              `Suspense node ${suspenseNodeId} unique suspenders set to ${String(hasUniqueSuspenders)} ending at ${String(endTime)} is suspended set to ${String(isSuspended)} with ${String(environmentNamesLength)} environments`,
             );
           }
         }

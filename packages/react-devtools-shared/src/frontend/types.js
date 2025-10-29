@@ -207,6 +207,7 @@ export type SuspenseNode = {
   hasUniqueSuspenders: boolean,
   isSuspended: boolean,
   environments: Array<string>,
+  endTime: number,
 };
 
 // Serialized version of ReactIOInfo

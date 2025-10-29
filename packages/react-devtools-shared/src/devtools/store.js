@@ -1688,6 +1688,7 @@ export default class Store extends EventEmitter<{
             hasUniqueSuspenders: false,
             isSuspended: isSuspended,
             environments: [],
+            endTime: 0,
           });
 
           hasSuspenseTreeChanged = true;
@@ -1884,6 +1885,7 @@ export default class Store extends EventEmitter<{
           for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
             const id = operations[i++];
             const hasUniqueSuspenders = operations[i++] === 1;
+            const endTime = operations[i++] / 1000;
             const isSuspended = operations[i++] === 1;
             const environmentNamesLength = operations[i++];
             const environmentNames = [];
@@ -1919,6 +1921,7 @@ export default class Store extends EventEmitter<{
             }
 
             suspense.hasUniqueSuspenders = hasUniqueSuspenders;
+            suspense.endTime = endTime;
             suspense.isSuspended = isSuspended;
             suspense.environments = environmentNames;
           }
