@@ -301,6 +301,7 @@ type SuspenseNode = {
   rects: null | Array<Rect>, // The bounding rects of content children.
   suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
   environments: Map<string, number>, // Tracks the Flight environment names that suspended this. I.e. if the server blocked this.
+  endTime: number, // Track a short cut to the maximum end time value within the suspendedBy set.
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
   hasUniqueSuspenders: boolean,
@@ -330,6 +331,7 @@ function createSuspenseNode(
     rects: null,
     suspendedBy: new Map(),
     environments: new Map(),
+    endTime: 0,
     hasUniqueSuspenders: false,
     hasUnknownSuspenders: false,
   });
@@ -2918,6 +2920,12 @@ export function attach(
       ) {
         // This didn't exist in the parent before, so let's mark this boundary as having a unique suspender.
         parentSuspenseNode.hasUniqueSuspenders = true;
+        if (parentSuspenseNode.endTime < ioInfo.end) {
+          parentSuspenseNode.endTime = ioInfo.end;
+        }
+        recordSuspenseSuspenders(parentSuspenseNode);
+      } else if (parentSuspenseNode.endTime < ioInfo.end) {
+        parentSuspenseNode.endTime = ioInfo.end;
         recordSuspenseSuspenders(parentSuspenseNode);
       }
     }
@@ -2979,6 +2987,16 @@ export function attach(
     }
   }
 
+  function computeEndTime(suspenseNode: SuspenseNode) {
+    let maxEndTime = 0;
+    suspenseNode.suspendedBy.forEach((set, ioInfo) => {
+      if (ioInfo.end > maxEndTime) {
+        maxEndTime = ioInfo.end;
+      }
+    });
+    return maxEndTime;
+  }
+
   function removePreviousSuspendedBy(
     instance: DevToolsInstance,
     previousSuspendedBy: null | Array<ReactAsyncInfo>,
@@ -2996,6 +3014,7 @@ export function attach(
     if (previousSuspendedBy !== null && suspenseNode !== null) {
       const nextSuspendedBy = instance.suspendedBy;
       let changedEnvironment = false;
+      let mayHaveChangedEndTime = false;
       for (let i = 0; i < previousSuspendedBy.length; i++) {
         const asyncInfo = previousSuspendedBy[i];
         if (
@@ -3008,6 +3027,11 @@ export function attach(
           // Let's remove it from the parent SuspenseNode.
           const ioInfo = asyncInfo.awaited;
           const suspendedBySet = suspenseNode.suspendedBy.get(ioInfo);
+
+          if (suspenseNode.endTime === ioInfo.end) {
+            // This may be the only remaining entry at this end time. Recompute the end time.
+            mayHaveChangedEndTime = true;
+          }
 
           if (
             suspendedBySet === undefined ||
@@ -3066,7 +3090,11 @@ export function attach(
           }
         }
       }
-      if (changedEnvironment) {
+      const newEndTime = mayHaveChangedEndTime
+        ? computeEndTime(suspenseNode)
+        : suspenseNode.endTime;
+      if (changedEnvironment || newEndTime !== suspenseNode.endTime) {
+        suspenseNode.endTime = newEndTime;
         recordSuspenseSuspenders(suspenseNode);
       }
     }
