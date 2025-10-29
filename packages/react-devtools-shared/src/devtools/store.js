@@ -925,7 +925,7 @@ export default class Store extends EventEmitter<{
    */
   getSuspendableDocumentOrderSuspense(
     uniqueSuspendersOnly: boolean,
-  ): $ReadOnlyArray<SuspenseTimelineStep> {
+  ): Array<SuspenseTimelineStep> {
     const target: Array<SuspenseTimelineStep> = [];
     const roots = this.roots;
     let rootStep: null | SuspenseTimelineStep = null;
@@ -1024,6 +1024,23 @@ export default class Store extends EventEmitter<{
         maxEndTime,
       );
     }
+  }
+
+  getEndTimeOrDocumentOrderSuspense(
+    uniqueSuspendersOnly: boolean,
+  ): $ReadOnlyArray<SuspenseTimelineStep> {
+    const timeline =
+      this.getSuspendableDocumentOrderSuspense(uniqueSuspendersOnly);
+    if (timeline.length === 0) {
+      return timeline;
+    }
+    const root = timeline[0];
+    // We mutate in place since we assume we've got a fresh array.
+    timeline.sort((a, b) => {
+      // Root is always first
+      return a === root ? -1 : b === root ? 1 : a.endTime - b.endTime;
+    });
+    return timeline;
   }
 
   getRendererIDForElement(id: number): number | null {

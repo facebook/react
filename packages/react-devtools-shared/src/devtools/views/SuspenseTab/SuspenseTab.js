@@ -74,7 +74,7 @@ function ToggleUniqueSuspenders() {
   function handleToggleUniqueSuspenders() {
     const nextUniqueSuspendersOnly = !uniqueSuspendersOnly;
     // TODO: Handle different timeline modes (e.g. random order)
-    const nextTimeline = store.getSuspendableDocumentOrderSuspense(
+    const nextTimeline = store.getEndTimeOrDocumentOrderSuspense(
       nextUniqueSuspendersOnly,
     );
     suspenseTreeDispatch({
