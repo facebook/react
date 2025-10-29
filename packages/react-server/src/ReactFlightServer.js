@@ -2316,15 +2316,37 @@ function visitAsyncNode(
   request: Request,
   task: Task,
   node: AsyncSequence,
-  visited: Set<AsyncSequence | ReactDebugInfo>,
+  visited: Map<
+    AsyncSequence | ReactDebugInfo,
+    void | null | PromiseNode | IONode,
+  >,
   cutOff: number,
 ): void | null | PromiseNode | IONode {
   if (visited.has(node)) {
     // It's possible to visit them same node twice when it's part of both an "awaited" path
     // and a "previous" path. This also gracefully handles cycles which would be a bug.
-    return null;
+    return visited.get(node);
   }
-  visited.add(node);
+  // Set it as visited early in case we see ourselves before returning.
+  visited.set(node, null);
+  const result = visitAsyncNodeImpl(request, task, node, visited, cutOff);
+  if (result !== null) {
+    // If we ended up with a value, let's use that value for future visits.
+    visited.set(node, result);
+  }
+  return result;
+}
+
+function visitAsyncNodeImpl(
+  request: Request,
+  task: Task,
+  node: AsyncSequence,
+  visited: Map<
+    AsyncSequence | ReactDebugInfo,
+    void | null | PromiseNode | IONode,
+  >,
+  cutOff: number,
+): void | null | PromiseNode | IONode {
   if (node.end >= 0 && node.end <= request.timeOrigin) {
     // This was already resolved when we started this render. It must have been either something
     // that's part of a start up sequence or externally cached data. We exclude that information.
@@ -2416,7 +2438,7 @@ function visitAsyncNode(
       if (promise !== undefined) {
         const debugInfo = promise._debugInfo;
         if (debugInfo != null && !visited.has(debugInfo)) {
-          visited.add(debugInfo);
+          visited.set(debugInfo, null);
           forwardDebugInfo(request, task, debugInfo);
         }
       }
@@ -2521,7 +2543,7 @@ function visitAsyncNode(
       if (promise !== undefined) {
         const debugInfo = promise._debugInfo;
         if (debugInfo != null && !visited.has(debugInfo)) {
-          visited.add(debugInfo);
+          visited.set(debugInfo, null);
           forwardDebugInfo(request, task, debugInfo);
         }
       }
@@ -2542,9 +2564,12 @@ function emitAsyncSequence(
   owner: null | ReactComponentInfo,
   stack: null | Error,
 ): void {
-  const visited: Set<AsyncSequence | ReactDebugInfo> = new Set();
+  const visited: Map<
+    AsyncSequence | ReactDebugInfo,
+    void | null | PromiseNode | IONode,
+  > = new Map();
   if (__DEV__ && alreadyForwardedDebugInfo) {
-    visited.add(alreadyForwardedDebugInfo);
+    visited.set(alreadyForwardedDebugInfo, null);
   }
   const awaitedNode = visitAsyncNode(request, task, node, visited, task.time);
   if (awaitedNode === undefined) {
