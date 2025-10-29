@@ -2505,6 +2505,10 @@ function visitAsyncNodeImpl(
               // Promise that was ultimately awaited by the user space await.
               serializeIONode(request, ioNode, awaited.promise);
 
+              // If we ever visit this I/O node again, skip it because we already emitted this
+              // exact entry and we don't need two awaits on the same thing.
+              visited.set(ioNode, null);
+
               // Ensure the owner is already outlined.
               if (node.owner != null) {
                 outlineComponentInfo(request, node.owner);
