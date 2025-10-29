@@ -949,17 +949,25 @@ export default class Store extends EventEmitter<{
           rootStep = {
             id: suspense.id,
             environment: environmentName,
+            endTime: suspense.endTime,
           };
           target.push(rootStep);
-        } else if (rootStep.environment === null) {
-          // If any root has an environment name, then let's use it.
-          rootStep.environment = environmentName;
+        } else {
+          if (rootStep.environment === null) {
+            // If any root has an environment name, then let's use it.
+            rootStep.environment = environmentName;
+          }
+          if (suspense.endTime > rootStep.endTime) {
+            // If any root has a higher end time, let's use that.
+            rootStep.endTime = suspense.endTime;
+          }
         }
         this.pushTimelineStepsInDocumentOrder(
           suspense.children,
           target,
           uniqueSuspendersOnly,
           environments,
+          0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
         );
       }
     }
@@ -972,6 +980,7 @@ export default class Store extends EventEmitter<{
     target: Array<SuspenseTimelineStep>,
     uniqueSuspendersOnly: boolean,
     parentEnvironments: Array<string>,
+    parentEndTime: number,
   ): void {
     for (let i = 0; i < children.length; i++) {
       const child = this.getSuspenseByID(children[i]);
@@ -996,10 +1005,15 @@ export default class Store extends EventEmitter<{
         unionEnvironments.length > 0
           ? unionEnvironments[unionEnvironments.length - 1]
           : null;
+      // The end time of a child boundary can in effect never be earlier than its parent even if
+      // everything unsuspended before that.
+      const maxEndTime =
+        parentEndTime > child.endTime ? parentEndTime : child.endTime;
       if (hasRects && (!uniqueSuspendersOnly || child.hasUniqueSuspenders)) {
         target.push({
           id: child.id,
           environment: environmentName,
+          endTime: maxEndTime,
         });
       }
       this.pushTimelineStepsInDocumentOrder(
@@ -1007,6 +1021,7 @@ export default class Store extends EventEmitter<{
         target,
         uniqueSuspendersOnly,
         unionEnvironments,
+        maxEndTime,
       );
     }
   }

@@ -196,6 +196,7 @@ export type Rect = {
 export type SuspenseTimelineStep = {
   id: SuspenseNode['id'], // TODO: Will become a group.
   environment: null | string,
+  endTime: number,
 };
 
 export type SuspenseNode = {
