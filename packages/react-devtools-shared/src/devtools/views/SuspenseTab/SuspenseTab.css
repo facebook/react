@@ -91,10 +91,9 @@
   }
 }
 
-.TreeList {
+.ActivityList {
   flex: 0 0 var(--horizontal-resize-tree-list-percentage);
   border-right: 1px solid var(--color-border);
-  padding: 0.25rem;
   overflow: auto;
 }
 

@@ -21,6 +21,7 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
@@ -144,7 +145,13 @@ export default class Store extends EventEmitter<{
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
   hostInstanceSelected: [Element['id']],
   settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
-  mutated: [[Array<Element['id']>, Map<Element['id'], Element['id']>]],
+  mutated: [
+    [
+      Array<Element['id']>,
+      Map<Element['id'], Element['id']>,
+      Element['id'] | null,
+    ],
+  ],
   recordChangeDescriptions: [],
   roots: [],
   rootSupportsBasicProfiling: [],
@@ -1156,7 +1163,7 @@ export default class Store extends EventEmitter<{
         // The Tree context's search reducer expects an explicit list of ids for nodes that were added or removed.
         // In this  case, we can pass it empty arrays since nodes in a collapsed tree are still there (just hidden).
         // Updating the selected search index later may require auto-expanding a collapsed subtree though.
-        this.emit('mutated', [[], new Map()]);
+        this.emit('mutated', [[], new Map(), null]);
       }
     }
   }
@@ -1225,10 +1232,11 @@ export default class Store extends EventEmitter<{
 
     const addedElementIDs: Array<number> = [];
     // This is a mapping of removed ID -> parent ID:
+    // We'll use the parent ID to adjust selection if it gets deleted.
     const removedElementIDs: Map<number, number> = new Map();
     const removedSuspenseIDs: Map<SuspenseNode['id'], SuspenseNode['id']> =
       new Map();
-    // We'll use the parent ID to adjust selection if it gets deleted.
+    let nextActivitySliceID = null;
 
     let i = 2;
 
@@ -1962,6 +1970,11 @@ export default class Store extends EventEmitter<{
 
           break;
         }
+        case TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE: {
+          i++;
+          nextActivitySliceID = operations[i++];
+          break;
+        }
         default:
           this._throwAndEmitError(
             new UnsupportedBridgeOperationError(
@@ -2060,7 +2073,11 @@ export default class Store extends EventEmitter<{
       console.groupEnd();
     }
 
-    this.emit('mutated', [addedElementIDs, removedElementIDs]);
+    this.emit('mutated', [
+      addedElementIDs,
+      removedElementIDs,
+      nextActivitySliceID,
+    ]);
   };
 
   // Certain backends save filters on a per-domain basis.
@@ -2228,7 +2245,7 @@ export default class Store extends EventEmitter<{
 
     if (previousStatus !== status) {
       // Propagate to subscribers, although tree state has not changed
-      this.emit('mutated', [[], new Map()]);
+      this.emit('mutated', [[], new Map(), null]);
     }
   }
 

@@ -3283,8 +3283,6 @@ describe('Store', () => {
         <Suspense name="Outer" rects={null}>
     `);
 
-    console.log('...........................');
-
     await actAsync(() => {
       resolve('loaded');
     });

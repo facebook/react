@@ -26,6 +26,7 @@ import {
   ComponentFilterHOC,
   ComponentFilterLocation,
   ComponentFilterEnvironmentName,
+  ComponentFilterActivitySlice,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeFunction,
@@ -53,7 +54,7 @@ import {
   renamePathInObject,
   setInObject,
   utfEncodeString,
-  filterOutLocationComponentFilters,
+  persistableComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {
   formatConsoleArgumentsToSingleString,
@@ -85,6 +86,7 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
@@ -1435,16 +1437,26 @@ export function attach(
   const hideElementsWithPaths: Set<RegExp> = new Set();
   const hideElementsWithTypes: Set<ElementType> = new Set();
   const hideElementsWithEnvs: Set<string> = new Set();
+  let activitySliceID: null | FiberInstance['id'] = null;
+  let activitySlice: null | Fiber = null;
+  let isInActivitySlice: boolean = true;
 
   // Highlight updates
   let traceUpdatesEnabled: boolean = false;
   const traceUpdatesForNodes: Set<HostInstance> = new Set();
 
-  function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
+  function applyComponentFilters(
+    componentFilters: Array<ComponentFilter>,
+    nextActivitySlice: null | Fiber = null,
+  ) {
     hideElementsWithTypes.clear();
     hideElementsWithDisplayNames.clear();
     hideElementsWithPaths.clear();
     hideElementsWithEnvs.clear();
+    // Consider everything in the slice by default
+    activitySliceID = null;
+    activitySlice = null;
+    isInActivitySlice = true;
 
     componentFilters.forEach(componentFilter => {
       if (!componentFilter.isEnabled) {
@@ -1473,6 +1485,19 @@ export function attach(
         case ComponentFilterEnvironmentName:
           hideElementsWithEnvs.add(componentFilter.value);
           break;
+        case ComponentFilterActivitySlice:
+          if (
+            nextActivitySlice !== null &&
+            nextActivitySlice.tag === ActivityComponent
+          ) {
+            activitySlice = nextActivitySlice;
+            isInActivitySlice = false;
+          } else {
+            // We're not filtering by activity slice after all.
+            // Don't mark the filter as disabled here.
+            // Otherwise updateComponentFilters() will think no enabled filter was changed.
+          }
+          break;
         default:
           console.warn(
             `Invalid component filter type "${componentFilter.type}"`,
@@ -1486,11 +1511,9 @@ export function attach(
   // because they are stored in localStorage within the context of the extension.
   // Instead it relies on the extension to pass filters through.
   if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
-    const componentFiltersWithoutLocationBasedOnes =
-      filterOutLocationComponentFilters(
-        window.__REACT_DEVTOOLS_COMPONENT_FILTERS__,
-      );
-    applyComponentFilters(componentFiltersWithoutLocationBasedOnes);
+    const restoredComponentFilters: Array<ComponentFilter> =
+      persistableComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
+    applyComponentFilters(restoredComponentFilters);
   } else {
     // Unfortunately this feature is not expected to work for React Native for now.
     // It would be annoying for us to spam YellowBox warnings with unactionable stuff,
@@ -1512,6 +1535,26 @@ export function attach(
       throw Error('Cannot modify filter preferences while profiling');
     }
 
+    const previousForcedFallbacks =
+      forceFallbackForFibers.size > 0 ? new Set(forceFallbackForFibers) : null;
+    const previousForcedErrors =
+      forceErrorForFibers.size > 0 ? new Map(forceErrorForFibers) : null;
+
+    // The ID will be based on the old tree. We need to find the Fiber based on
+    // that ID before we unmount everything. We set the activity slice ID once
+    // we mount it again.
+    let nextActivitySlice: null | Fiber = null;
+    for (let i = 0; i < componentFilters.length; i++) {
+      const filter = componentFilters[i];
+      if (filter.type === ComponentFilterActivitySlice && filter.isEnabled) {
+        const instance = idToDevToolsInstanceMap.get(filter.activityID);
+        console.log({filter, instance});
+        if (instance !== undefined && instance.kind === FIBER_INSTANCE) {
+          nextActivitySlice = instance.data;
+        }
+      }
+    }
+
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
       const rootInstance = rootToFiberInstanceMap.get(root);
@@ -1527,10 +1570,51 @@ export function attach(
       currentRoot = (null: any);
     });
 
-    applyComponentFilters(componentFilters);
+    if (nextActivitySlice !== activitySlice) {
+      // Set the applied slice to 0 for now.
+      // When we find the applied instance during mount we will send the actual ID.
+      pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
+      pushOperation(0);
+    }
+    applyComponentFilters(componentFilters, nextActivitySlice);
 
     // Reset pseudo counters so that new path selections will be persisted.
     rootDisplayNameCounter.clear();
+
+    // We just cleared all the forced states. Schedule updates on the affected Fibers
+    // so that we get their initial states again according to the new filters.
+    if (typeof scheduleUpdate === 'function') {
+      if (previousForcedFallbacks !== null) {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const fiber of previousForcedFallbacks) {
+          if (typeof scheduleRetry === 'function') {
+            scheduleRetry(fiber);
+          } else {
+            scheduleUpdate(fiber);
+          }
+        }
+      }
+      if (
+        previousForcedErrors !== null &&
+        typeof setErrorHandler === 'function'
+      ) {
+        // Unlike for Suspense, disabling the forced error state requires setting
+        // the status to false first. `shouldErrorFiberAccordingToMap` will clear
+        // the Fibers later.
+        setErrorHandler(shouldErrorFiberAccordingToMap);
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const [fiber, shouldError] of previousForcedErrors) {
+          forceErrorForFibers.set(fiber, false);
+          if (shouldError) {
+            if (typeof scheduleRetry === 'function') {
+              scheduleRetry(fiber);
+            } else {
+              scheduleUpdate(fiber);
+            }
+          }
+        }
+      }
+    }
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
@@ -1615,6 +1699,11 @@ export function attach(
   // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
     const {tag, type, key} = fiber;
+
+    // It is never valid to filter the root element.
+    if (tag !== HostRoot && !isInActivitySlice) {
+      return true;
+    }
 
     switch (tag) {
       case DehydratedSuspenseComponent:
@@ -3980,11 +4069,23 @@ export function attach(
     fiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): void {
+    const isActivitySliceEntry =
+      activitySlice !== null &&
+      (fiber === activitySlice || fiber.alternate === activitySlice);
+    if (isActivitySliceEntry) {
+      isInActivitySlice = true;
+    }
+
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     let newInstance = null;
     let newSuspenseNode = null;
     if (shouldIncludeInTree) {
       newInstance = recordMount(fiber, reconcilingParent);
+      if (isActivitySliceEntry) {
+        activitySliceID = newInstance.id;
+        pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
+        pushOperation(newInstance.id);
+      }
       if (fiber.tag === SuspenseComponent || fiber.tag === HostRoot) {
         newSuspenseNode = createSuspenseNode(newInstance);
         // Measure this Suspense node. In general we shouldn't do this until we have
@@ -4100,6 +4201,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const stashedIsInActivitySlice = isInActivitySlice;
     if (newInstance !== null) {
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = newInstance;
@@ -4112,6 +4214,13 @@ export function attach(
       previouslyReconciledSiblingSuspenseNode = null;
       remainingReconcilingChildrenSuspenseNodes = null;
       shouldPopSuspenseNode = true;
+    }
+    if (
+      !isActivitySliceEntry &&
+      activitySlice !== null &&
+      fiber.tag === ActivityComponent
+    ) {
+      isInActivitySlice = false;
     }
     try {
       if (traceUpdatesEnabled) {
@@ -4240,6 +4349,7 @@ export function attach(
         }
       }
     } finally {
+      isInActivitySlice = stashedIsInActivitySlice;
       if (newInstance !== null) {
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
@@ -4271,6 +4381,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const stashedIsInActivitySlice = isInActivitySlice;
     const previousSuspendedBy = instance.suspendedBy;
     // Push a new DevTools instance parent while reconciling this subtree.
     reconcilingParent = instance;
@@ -4287,6 +4398,18 @@ export function attach(
         instance.suspenseNode.firstChild;
 
       shouldPopSuspenseNode = true;
+    }
+
+    if (activitySlice !== null) {
+      if (instance.id === activitySliceID) {
+        isInActivitySlice = true;
+      } else if (
+        instance.kind === FIBER_INSTANCE &&
+        instance.data !== null &&
+        instance.data.tag === ActivityComponent
+      ) {
+        isInActivitySlice = false;
+      }
     }
 
     try {
@@ -4339,6 +4462,7 @@ export function attach(
         previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
         remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
       }
+      isInActivitySlice = stashedIsInActivitySlice;
     }
     if (instance.kind === FIBER_INSTANCE) {
       recordUnmount(instance);
@@ -5019,6 +5143,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const stashedIsInActivitySlice = isInActivitySlice;
     let updateFlags = NoUpdate;
     let shouldMeasureSuspenseNode = false;
     let shouldPopSuspenseNode = false;
@@ -5057,6 +5182,15 @@ export function attach(
         suspenseNode.firstChild = null;
         shouldMeasureSuspenseNode = true;
         shouldPopSuspenseNode = true;
+      }
+
+      if (activitySlice !== null) {
+        if (fiberInstance.id === activitySliceID) {
+          isInActivitySlice = true;
+        } else if (nextFiber.tag === ActivityComponent) {
+          // Reached the next Activity so we're exiting the slice.
+          isInActivitySlice = false;
+        }
       }
     }
     try {
@@ -5482,6 +5616,7 @@ export function attach(
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
         }
+        isInActivitySlice = stashedIsInActivitySlice;
       }
     }
   }
