@@ -2915,18 +2915,19 @@ export function attach(
     // like owner instances to link down into the tree.
     if (!suspendedBySet.has(parentInstance)) {
       suspendedBySet.add(parentInstance);
+      const virtualEndTime = getVirtualEndTime(ioInfo);
       if (
         !parentSuspenseNode.hasUniqueSuspenders &&
         !ioExistsInSuspenseAncestor(parentSuspenseNode, ioInfo)
       ) {
         // This didn't exist in the parent before, so let's mark this boundary as having a unique suspender.
         parentSuspenseNode.hasUniqueSuspenders = true;
-        if (parentSuspenseNode.endTime < ioInfo.end) {
-          parentSuspenseNode.endTime = ioInfo.end;
+        if (parentSuspenseNode.endTime < virtualEndTime) {
+          parentSuspenseNode.endTime = virtualEndTime;
         }
         recordSuspenseSuspenders(parentSuspenseNode);
-      } else if (parentSuspenseNode.endTime < ioInfo.end) {
-        parentSuspenseNode.endTime = ioInfo.end;
+      } else if (parentSuspenseNode.endTime < virtualEndTime) {
+        parentSuspenseNode.endTime = virtualEndTime;
         recordSuspenseSuspenders(parentSuspenseNode);
       }
     }
@@ -2988,11 +2989,21 @@ export function attach(
     }
   }
 
+  function getVirtualEndTime(ioInfo: ReactIOInfo): number {
+    if (ioInfo.env != null) {
+      // Sort client side content first so that scripts and streams don't
+      // cover up the effect of server time.
+      return ioInfo.end + 1000000;
+    }
+    return ioInfo.end;
+  }
+
   function computeEndTime(suspenseNode: SuspenseNode) {
     let maxEndTime = 0;
     suspenseNode.suspendedBy.forEach((set, ioInfo) => {
-      if (ioInfo.end > maxEndTime) {
-        maxEndTime = ioInfo.end;
+      const virtualEndTime = getVirtualEndTime(ioInfo);
+      if (virtualEndTime > maxEndTime) {
+        maxEndTime = virtualEndTime;
       }
     });
     return maxEndTime;
@@ -3029,7 +3040,7 @@ export function attach(
           const ioInfo = asyncInfo.awaited;
           const suspendedBySet = suspenseNode.suspendedBy.get(ioInfo);
 
-          if (suspenseNode.endTime === ioInfo.end) {
+          if (suspenseNode.endTime === getVirtualEndTime(ioInfo)) {
             // This may be the only remaining entry at this end time. Recompute the end time.
             mayHaveChangedEndTime = true;
           }
