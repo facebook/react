@@ -106,10 +106,23 @@
   overflow: auto;
 }
 
-.Rects {
-  padding: 0.25rem;
+.RectsBox {
+  position: relative;
   flex-grow: 1;
+  background: var(--color-border);
+}
+
+.Rects {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  margin: auto;
+  position: absolute;
+  inset: 0;
+  padding: 0.25rem;
   overflow: auto;
+  background-color: var(--color-background);
 }
 
 .SuspenseTreeViewHeader {

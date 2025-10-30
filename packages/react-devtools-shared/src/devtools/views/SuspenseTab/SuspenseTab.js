@@ -186,6 +186,9 @@ function SynchronizedScrollContainer({
     if (element === null) {
       return;
     }
+    // Mirror the viewport aspect ratio of the real window.
+    const viewportAspectRatio = (right - left) / (bottom - top);
+    element.style.aspectRatio = viewportAspectRatio;
     const scale = scaleRef.current / element.clientWidth;
     const targetLeft = Math.round(left / scale);
     const targetTop = Math.round(top / scale);
@@ -503,11 +506,13 @@ function SuspenseTab(_: {}) {
                 orientation="horizontal"
               />
             </header>
-            <SynchronizedScrollContainer
-              className={styles.Rects}
-              scaleRef={scaleRef}>
-              <SuspenseRects scaleRef={scaleRef} />
-            </SynchronizedScrollContainer>
+            <div className={styles.RectsBox}>
+              <SynchronizedScrollContainer
+                className={styles.Rects}
+                scaleRef={scaleRef}>
+                <SuspenseRects scaleRef={scaleRef} />
+              </SynchronizedScrollContainer>
+            </div>
             <footer className={styles.SuspenseTreeViewFooter}>
               <SuspenseTimeline />
               <div className={styles.SuspenseTreeViewFooterButtons}>
