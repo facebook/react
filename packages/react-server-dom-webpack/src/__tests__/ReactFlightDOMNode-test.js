@@ -86,12 +86,25 @@ describe('ReactFlightDOMNode', () => {
     );
   }
 
-  function normalizeCodeLocInfo(str) {
+  const relativeFilename = path.relative(__dirname, __filename);
+
+  function normalizeCodeLocInfo(str, {preserveLocation = false} = {}) {
     return (
       str &&
-      str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
-        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
-      })
+      str.replace(
+        /^ +(?:at|in) ([\S]+) ([^\n]*)/gm,
+        function (m, name, location) {
+          return (
+            '    in ' +
+            name +
+            (/\d/.test(m)
+              ? preserveLocation
+                ? ' ' + location.replace(__filename, relativeFilename)
+                : ' (at **)'
+              : '')
+          );
+        },
+      )
     );
   }
 
@@ -1168,5 +1181,199 @@ describe('ReactFlightDOMNode', () => {
 
     // Must not throw an error.
     await readable.pipeTo(writable);
+  });
+
+  describe('with real timers', () => {
+    // These tests schedule their rendering in a way that requires real timers
+    // to be used to accurately represent how this interacts with React's
+    // internal scheduling.
+
+    beforeEach(() => {
+      jest.useRealTimers();
+    });
+
+    afterEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('should use late-arriving I/O debug info to enhance component and owner stacks when aborting a prerender', async () => {
+      let resolveDynamicData;
+
+      async function getCachedData() {
+        // Cached data resolves in microtasks.
+        return Promise.resolve('Hi');
+      }
+
+      async function getDynamicData() {
+        return new Promise(resolve => {
+          resolveDynamicData = resolve;
+        });
+      }
+
+      async function Dynamic() {
+        const cachedData = await getCachedData();
+        const dynamicData = await getDynamicData();
+
+        return (
+          <p>
+            {cachedData} {dynamicData}
+          </p>
+        );
+      }
+
+      function App() {
+        return ReactServer.createElement(
+          'html',
+          null,
+          ReactServer.createElement(
+            'body',
+            null,
+            ReactServer.createElement(Dynamic),
+          ),
+        );
+      }
+
+      const stream = await ReactServerDOMServer.renderToPipeableStream(
+        ReactServer.createElement(App),
+        webpackMap,
+        {filterStackFrame},
+      );
+
+      const staticChunks = [];
+      const dynamicChunks = [];
+      let isStatic = true;
+
+      const passThrough = new Stream.PassThrough(streamOptions);
+      stream.pipe(passThrough);
+
+      // Split chunks into static and dynamic chunks.
+      passThrough.on('data', chunk => {
+        if (isStatic) {
+          staticChunks.push(chunk);
+        } else {
+          dynamicChunks.push(chunk);
+        }
+      });
+
+      await new Promise(resolve => {
+        setTimeout(() => {
+          isStatic = false;
+          resolveDynamicData('Josh');
+          resolve();
+        });
+      });
+
+      await new Promise(resolve => {
+        passThrough.on('end', resolve);
+      });
+
+      // Create a new Readable and push all static chunks immediately.
+      const readable = new Stream.Readable({...streamOptions, read() {}});
+      for (let i = 0; i < staticChunks.length; i++) {
+        readable.push(staticChunks[i]);
+      }
+
+      const abortController = new AbortController();
+
+      // When prerendering is aborted, push all dynamic chunks.
+      abortController.signal.addEventListener(
+        'abort',
+        () => {
+          for (let i = 0; i < dynamicChunks.length; i++) {
+            readable.push(dynamicChunks[i]);
+          }
+        },
+        {once: true},
+      );
+
+      const response = ReactServerDOMClient.createFromNodeStream(readable, {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      });
+
+      function ClientRoot() {
+        return use(response);
+      }
+
+      let componentStack;
+      let ownerStack;
+
+      const {prelude} = await new Promise(resolve => {
+        let result;
+
+        setTimeout(() => {
+          result = ReactDOMFizzStatic.prerenderToNodeStream(
+            React.createElement(ClientRoot),
+            {
+              signal: abortController.signal,
+              onError(error, errorInfo) {
+                componentStack = errorInfo.componentStack;
+                ownerStack = React.captureOwnerStack
+                  ? React.captureOwnerStack()
+                  : null;
+              },
+            },
+          );
+        });
+
+        setTimeout(() => {
+          abortController.abort();
+          resolve(result);
+        });
+      });
+
+      const prerenderHTML = await readResult(prelude);
+
+      expect(prerenderHTML).toContain('');
+
+      if (__DEV__) {
+        expect(
+          normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
+        ).toBe(
+          '\n' +
+            '    in Dynamic' +
+            (gate(flags => flags.enableAsyncDebugInfo)
+              ? ' (file://ReactFlightDOMNode-test.js:1215:33)\n'
+              : '\n') +
+            '    in body\n' +
+            '    in html\n' +
+            '    in App (file://ReactFlightDOMNode-test.js:1231:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1297:16)',
+        );
+      } else {
+        expect(
+          normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
+        ).toBe(
+          '\n' +
+            '    in body\n' +
+            '    in html\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1297:16)',
+        );
+      }
+
+      if (__DEV__) {
+        if (gate(flags => flags.enableAsyncDebugInfo)) {
+          expect(
+            normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
+          ).toBe(
+            '\n' +
+              '    in Dynamic (file://ReactFlightDOMNode-test.js:1215:33)\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1231:25)',
+          );
+        } else {
+          expect(
+            normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
+          ).toBe(
+            '' +
+              '\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1231:25)',
+          );
+        }
+      } else {
+        expect(ownerStack).toBeNull();
+      }
+    });
   });
 });
