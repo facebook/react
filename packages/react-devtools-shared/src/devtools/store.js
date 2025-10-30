@@ -62,6 +62,31 @@ import type {
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
 import type {DevToolsHookSettings} from '../backend/types';
 
+import RBush from 'rbush';
+
+// Custom version which works with our Rect data structure.
+class RectRBush extends RBush<Rect> {
+  toBBox(rect: Rect): {
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  } {
+    return {
+      minX: rect.x,
+      minY: rect.y,
+      maxX: rect.x + rect.width,
+      maxY: rect.y + rect.height,
+    };
+  }
+  compareMinX(a: Rect, b: Rect): number {
+    return a.x - b.x;
+  }
+  compareMinY(a: Rect, b: Rect): number {
+    return a.y - b.y;
+  }
+}
+
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
     console.log(
@@ -193,6 +218,9 @@ export default class Store extends EventEmitter<{
 
   // Renderer ID is needed to support inspection fiber props, state, and hooks.
   _rootIDToRendererID: Map<Element['id'], number> = new Map();
+
+  // Stores all the SuspenseNode rects in an R-tree to make it fast to find overlaps.
+  _rtree: RBush<Rect> = new RectRBush();
 
   // These options may be initially set by a configuration option when constructing the Store.
   _supportsInspectMatchingDOMElement: boolean = false;
@@ -897,7 +925,7 @@ export default class Store extends EventEmitter<{
    */
   getSuspendableDocumentOrderSuspense(
     uniqueSuspendersOnly: boolean,
-  ): $ReadOnlyArray<SuspenseTimelineStep> {
+  ): Array<SuspenseTimelineStep> {
     const target: Array<SuspenseTimelineStep> = [];
     const roots = this.roots;
     let rootStep: null | SuspenseTimelineStep = null;
@@ -921,17 +949,25 @@ export default class Store extends EventEmitter<{
           rootStep = {
             id: suspense.id,
             environment: environmentName,
+            endTime: suspense.endTime,
           };
           target.push(rootStep);
-        } else if (rootStep.environment === null) {
-          // If any root has an environment name, then let's use it.
-          rootStep.environment = environmentName;
+        } else {
+          if (rootStep.environment === null) {
+            // If any root has an environment name, then let's use it.
+            rootStep.environment = environmentName;
+          }
+          if (suspense.endTime > rootStep.endTime) {
+            // If any root has a higher end time, let's use that.
+            rootStep.endTime = suspense.endTime;
+          }
         }
         this.pushTimelineStepsInDocumentOrder(
           suspense.children,
           target,
           uniqueSuspendersOnly,
           environments,
+          0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
         );
       }
     }
@@ -944,6 +980,7 @@ export default class Store extends EventEmitter<{
     target: Array<SuspenseTimelineStep>,
     uniqueSuspendersOnly: boolean,
     parentEnvironments: Array<string>,
+    parentEndTime: number,
   ): void {
     for (let i = 0; i < children.length; i++) {
       const child = this.getSuspenseByID(children[i]);
@@ -968,10 +1005,15 @@ export default class Store extends EventEmitter<{
         unionEnvironments.length > 0
           ? unionEnvironments[unionEnvironments.length - 1]
           : null;
+      // The end time of a child boundary can in effect never be earlier than its parent even if
+      // everything unsuspended before that.
+      const maxEndTime =
+        parentEndTime > child.endTime ? parentEndTime : child.endTime;
       if (hasRects && (!uniqueSuspendersOnly || child.hasUniqueSuspenders)) {
         target.push({
           id: child.id,
           environment: environmentName,
+          endTime: maxEndTime,
         });
       }
       this.pushTimelineStepsInDocumentOrder(
@@ -979,8 +1021,26 @@ export default class Store extends EventEmitter<{
         target,
         uniqueSuspendersOnly,
         unionEnvironments,
+        maxEndTime,
       );
     }
+  }
+
+  getEndTimeOrDocumentOrderSuspense(
+    uniqueSuspendersOnly: boolean,
+  ): $ReadOnlyArray<SuspenseTimelineStep> {
+    const timeline =
+      this.getSuspendableDocumentOrderSuspense(uniqueSuspendersOnly);
+    if (timeline.length === 0) {
+      return timeline;
+    }
+    const root = timeline[0];
+    // We mutate in place since we assume we've got a fresh array.
+    timeline.sort((a, b) => {
+      // Root is always first
+      return a === root ? -1 : b === root ? 1 : a.endTime - b.endTime;
+    });
+    return timeline;
   }
 
   getRendererIDForElement(id: number): number | null {
@@ -1622,7 +1682,12 @@ export default class Store extends EventEmitter<{
               const y = operations[i + 1] / 1000;
               const width = operations[i + 2] / 1000;
               const height = operations[i + 3] / 1000;
-              rects.push({x, y, width, height});
+              const rect = {x, y, width, height};
+              if (parentID !== 0) {
+                // Track all rects except the root.
+                this._rtree.insert(rect);
+              }
+              rects.push(rect);
               i += 4;
             }
           }
@@ -1655,6 +1720,7 @@ export default class Store extends EventEmitter<{
             hasUniqueSuspenders: false,
             isSuspended: isSuspended,
             environments: [],
+            endTime: 0,
           });
 
           hasSuspenseTreeChanged = true;
@@ -1680,11 +1746,18 @@ export default class Store extends EventEmitter<{
 
             i += 1;
 
-            const {children, parentID} = suspense;
+            const {children, parentID, rects} = suspense;
             if (children.length > 0) {
               this._throwAndEmitError(
                 Error(`Suspense node "${id}" was removed before its children.`),
               );
+            }
+
+            if (rects !== null && parentID !== 0) {
+              // Delete all the existing rects from the R-tree
+              for (let j = 0; j < rects.length; j++) {
+                this._rtree.remove(rects[j]);
+              }
             }
 
             this._idToSuspense.delete(id);
@@ -1785,6 +1858,14 @@ export default class Store extends EventEmitter<{
             break;
           }
 
+          const prevRects = suspense.rects;
+          if (prevRects !== null && suspense.parentID !== 0) {
+            // Delete all the existing rects from the R-tree
+            for (let j = 0; j < prevRects.length; j++) {
+              this._rtree.remove(prevRects[j]);
+            }
+          }
+
           let nextRects: SuspenseNode['rects'];
           if (numRects === -1) {
             nextRects = null;
@@ -1796,7 +1877,12 @@ export default class Store extends EventEmitter<{
               const width = operations[i + 2] / 1000;
               const height = operations[i + 3] / 1000;
 
-              nextRects.push({x, y, width, height});
+              const rect = {x, y, width, height};
+              if (suspense.parentID !== 0) {
+                // Track all rects except the root.
+                this._rtree.insert(rect);
+              }
+              nextRects.push(rect);
 
               i += 4;
             }
@@ -1831,6 +1917,7 @@ export default class Store extends EventEmitter<{
           for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
             const id = operations[i++];
             const hasUniqueSuspenders = operations[i++] === 1;
+            const endTime = operations[i++] / 1000;
             const isSuspended = operations[i++] === 1;
             const environmentNamesLength = operations[i++];
             const environmentNames = [];
@@ -1866,6 +1953,7 @@ export default class Store extends EventEmitter<{
             }
 
             suspense.hasUniqueSuspenders = hasUniqueSuspenders;
+            suspense.endTime = endTime;
             suspense.isSuspended = isSuspended;
             suspense.environments = environmentNames;
           }

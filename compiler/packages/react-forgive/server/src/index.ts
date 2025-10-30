@@ -20,13 +20,12 @@ import {
   TextDocumentSyncKind,
 } from 'vscode-languageserver/node';
 import {compile, lastResult} from './compiler';
-import {type PluginOptions} from 'babel-plugin-react-compiler/src';
-import {resolveReactConfig} from './compiler/options';
 import {
   type CompileSuccessEvent,
   type LoggerEvent,
+  type PluginOptions,
   defaultOptions,
-} from 'babel-plugin-react-compiler/src/Entrypoint/Options';
+} from 'babel-plugin-react-compiler';
 import {babelLocationToRange, getRangeFirstCharacter} from './compiler/compat';
 import {
   type AutoDepsDecorationsLSPEvent,
@@ -64,8 +63,7 @@ type CodeActionLSPEvent = {
 };
 
 connection.onInitialize((_params: InitializeParams) => {
-  // TODO(@poteto) get config fr
-  compilerOptions = resolveReactConfig('.') ?? defaultOptions;
+  compilerOptions = defaultOptions;
   compilerOptions = {
     ...compilerOptions,
     environment: {
@@ -76,21 +74,21 @@ connection.onInitialize((_params: InitializeParams) => {
             importSpecifierName: 'useEffect',
             source: 'react',
           },
-          numRequiredArgs: 1,
+          autodepsIndex: 1,
         },
         {
           function: {
             importSpecifierName: 'useSpecialEffect',
             source: 'shared-runtime',
           },
-          numRequiredArgs: 2,
+          autodepsIndex: 2,
         },
         {
           function: {
             importSpecifierName: 'default',
             source: 'useEffectWrapper',
           },
-          numRequiredArgs: 1,
+          autodepsIndex: 1,
         },
       ],
     },

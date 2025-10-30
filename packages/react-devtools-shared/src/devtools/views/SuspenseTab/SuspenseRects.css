@@ -6,12 +6,6 @@
   border-radius: 0.25rem;
 }
 
-.SuspenseRectsContainer[data-highlighted='true'] {
-  outline-color: var(--color-transition);
-  outline-style: solid;
-  outline-width: 4px;
-}
-
 .SuspenseRectsRoot {
   cursor: pointer;
   outline-color: var(--color-transition);
@@ -37,6 +31,25 @@
 
 .SuspenseRectsBoundaryChildren {
   pointer-events: none;
+}
+
+.SuspenseRectsTitle {
+  pointer-events: none;
+  color: color-mix(in srgb, var(--color-suspense) 50%, var(--color-text));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sans-small);
+  line-height: var(--line-height-data);
+  padding: 0 .25rem;
+  container-type: size;
+  container-name: title;
+}
+
+@container title (width < 30px) or (height < 18px) {
+  .SuspenseRectsTitle > span {
+    display: none;
+  }
 }
 
 .SuspenseRectsScaledRect[data-visible='false'] > .SuspenseRectsBoundaryChildren {
@@ -75,7 +88,7 @@
   transition: background-color 0.2s ease-out;
 }
 
-.SuspenseRectsBoundary[data-selected='true'] {
+.SuspenseRectsBoundary[data-selected='true'][data-visible='true'] {
   box-shadow: var(--elevation-4);
 }
 
@@ -85,6 +98,10 @@
   outline-width: 4px;
   border-radius: 0.125rem;
   pointer-events: none;
+}
+
+.SuspenseRectOutlineRoot {
+  outline-color: var(--color-transition);
 }
 
 .SuspenseRectsBoundary[data-selected='true'] > .SuspenseRectsRect {

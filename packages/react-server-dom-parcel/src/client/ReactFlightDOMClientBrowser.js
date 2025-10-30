@@ -129,6 +129,9 @@ function createResponseFromOptions(options: void | Options) {
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    __DEV__ && options && options.startTime != null
+      ? options.startTime
+      : undefined,
     debugChannel,
   );
 }
@@ -205,6 +208,7 @@ export type Options = {
   temporaryReferences?: TemporaryReferenceSet,
   replayConsoleLogs?: boolean,
   environmentName?: string,
+  startTime?: number,
 };
 
 export function createFromReadableStream<T>(

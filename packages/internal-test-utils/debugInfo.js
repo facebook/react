@@ -64,7 +64,7 @@ function normalizeIOInfo(config: DebugInfoConfig, ioInfo) {
   if (promise) {
     promise.then(); // init
     if (promise.status === 'fulfilled') {
-      if (ioInfo.name === 'RSC stream') {
+      if (ioInfo.name === 'rsc stream') {
         copy.byteSize = 0;
         copy.value = {
           value: 'stream',
@@ -117,7 +117,7 @@ export function getDebugInfo(config: DebugInfoConfig, obj) {
     for (let i = 0; i < debugInfo.length; i++) {
       if (
         debugInfo[i].awaited &&
-        debugInfo[i].awaited.name === 'RSC stream' &&
+        debugInfo[i].awaited.name === 'rsc stream' &&
         config.ignoreRscStreamInfo
       ) {
         // Ignore RSC stream I/O info.

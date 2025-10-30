@@ -64,20 +64,7 @@ error.todo-preserve-memo-deps-mixed-optional-nonoptional-property-chain.ts:7:25
 >  8 |     return identity({
      | ^^^^^^^^^^^^^^^^^^^^^
 >  9 |       callback: () => {
-     | ^^^^^^^^^^^^^^^^^^^^^
-> 10 |         // This is a bug in our dependency inference: we stop capturing dependencies
-     | ^^^^^^^^^^^^^^^^^^^^^
-> 11 |         // after x.a.b?.c. But what this dependency is telling us is that if `x.a.b`
-     | ^^^^^^^^^^^^^^^^^^^^^
-> 12 |         // was non-nullish, then we can access `.c.d?.e`. Thus we should take the
-     | ^^^^^^^^^^^^^^^^^^^^^
-> 13 |         // full property chain, exactly as-is with optionals/non-optionals, as a
-     | ^^^^^^^^^^^^^^^^^^^^^
-> 14 |         // dependency
-     | ^^^^^^^^^^^^^^^^^^^^^
-> 15 |         return identity(x.a.b?.c.d?.e);
-     | ^^^^^^^^^^^^^^^^^^^^^
-> 16 |       },
+     …
      | ^^^^^^^^^^^^^^^^^^^^^
 > 17 |     });
      | ^^^^^^^^^^^^^^^^^^^^^

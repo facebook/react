@@ -301,6 +301,7 @@ type SuspenseNode = {
   rects: null | Array<Rect>, // The bounding rects of content children.
   suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
   environments: Map<string, number>, // Tracks the Flight environment names that suspended this. I.e. if the server blocked this.
+  endTime: number, // Track a short cut to the maximum end time value within the suspendedBy set.
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
   hasUniqueSuspenders: boolean,
@@ -330,6 +331,7 @@ function createSuspenseNode(
     rects: null,
     suspendedBy: new Map(),
     environments: new Map(),
+    endTime: 0,
     hasUniqueSuspenders: false,
     hasUnknownSuspenders: false,
   });
@@ -1913,6 +1915,20 @@ export function attach(
     return false;
   }
 
+  function isUseSyncExternalStoreHook(hookObject: any): boolean {
+    const queue = hookObject.queue;
+    if (!queue) {
+      return false;
+    }
+
+    const boundHasOwnProperty = hasOwnProperty.bind(queue);
+    return (
+      boundHasOwnProperty('value') &&
+      boundHasOwnProperty('getSnapshot') &&
+      typeof queue.getSnapshot === 'function'
+    );
+  }
+
   function isHookThatCanScheduleUpdate(hookObject: any) {
     const queue = hookObject.queue;
     if (!queue) {
@@ -1929,12 +1945,7 @@ export function attach(
       return true;
     }
 
-    // Detect useSyncExternalStore()
-    return (
-      boundHasOwnProperty('value') &&
-      boundHasOwnProperty('getSnapshot') &&
-      typeof queue.getSnapshot === 'function'
-    );
+    return isUseSyncExternalStoreHook(hookObject);
   }
 
   function didStatefulHookChange(prev: any, next: any): boolean {
@@ -1955,10 +1966,18 @@ export function attach(
 
     const indices = [];
     let index = 0;
+
     while (next !== null) {
       if (didStatefulHookChange(prev, next)) {
         indices.push(index);
       }
+
+      // useSyncExternalStore creates 2 internal hooks, but we only count it as 1 user-facing hook
+      if (isUseSyncExternalStoreHook(next)) {
+        next = next.next;
+        prev = prev.next;
+      }
+
       next = next.next;
       prev = prev.next;
       index++;
@@ -2139,8 +2158,8 @@ export function attach(
         // Regular operations
         pendingOperations.length +
         // All suspender changes are batched in a single message.
-        // [SUSPENSE_TREE_OPERATION_SUSPENDERS, suspenderChangesLength, ...[id, hasUniqueSuspenders, isSuspended]]
-        (numSuspenderChanges > 0 ? 2 + numSuspenderChanges * 3 : 0),
+        // [SUSPENSE_TREE_OPERATION_SUSPENDERS, suspenderChangesLength, ...[id, hasUniqueSuspenders, endTime, isSuspended]]
+        (numSuspenderChanges > 0 ? 2 + numSuspenderChanges * 4 : 0),
     );
 
     // Identify which renderer this update is coming from.
@@ -2225,6 +2244,7 @@ export function attach(
         }
         operations[i++] = fiberIdWithChanges;
         operations[i++] = suspense.hasUniqueSuspenders ? 1 : 0;
+        operations[i++] = Math.round(suspense.endTime * 1000);
         const instance = suspense.instance;
         const isSuspended =
           // TODO: Track if other SuspenseNode like SuspenseList rows are suspended.
@@ -2862,7 +2882,10 @@ export function attach(
     let parentInstance = reconcilingParent;
     while (
       parentInstance.kind === FILTERED_FIBER_INSTANCE &&
-      parentInstance.parent !== null
+      parentInstance.parent !== null &&
+      // We can't move past the parent Suspense node.
+      // The Suspense node holding async info must be a parent of the devtools instance (or the instance itself)
+      parentInstance !== parentSuspenseNode.instance
     ) {
       parentInstance = parentInstance.parent;
     }
@@ -2892,12 +2915,19 @@ export function attach(
     // like owner instances to link down into the tree.
     if (!suspendedBySet.has(parentInstance)) {
       suspendedBySet.add(parentInstance);
+      const virtualEndTime = getVirtualEndTime(ioInfo);
       if (
         !parentSuspenseNode.hasUniqueSuspenders &&
         !ioExistsInSuspenseAncestor(parentSuspenseNode, ioInfo)
       ) {
         // This didn't exist in the parent before, so let's mark this boundary as having a unique suspender.
         parentSuspenseNode.hasUniqueSuspenders = true;
+        if (parentSuspenseNode.endTime < virtualEndTime) {
+          parentSuspenseNode.endTime = virtualEndTime;
+        }
+        recordSuspenseSuspenders(parentSuspenseNode);
+      } else if (parentSuspenseNode.endTime < virtualEndTime) {
+        parentSuspenseNode.endTime = virtualEndTime;
         recordSuspenseSuspenders(parentSuspenseNode);
       }
     }
@@ -2959,6 +2989,26 @@ export function attach(
     }
   }
 
+  function getVirtualEndTime(ioInfo: ReactIOInfo): number {
+    if (ioInfo.env != null) {
+      // Sort client side content first so that scripts and streams don't
+      // cover up the effect of server time.
+      return ioInfo.end + 1000000;
+    }
+    return ioInfo.end;
+  }
+
+  function computeEndTime(suspenseNode: SuspenseNode) {
+    let maxEndTime = 0;
+    suspenseNode.suspendedBy.forEach((set, ioInfo) => {
+      const virtualEndTime = getVirtualEndTime(ioInfo);
+      if (virtualEndTime > maxEndTime) {
+        maxEndTime = virtualEndTime;
+      }
+    });
+    return maxEndTime;
+  }
+
   function removePreviousSuspendedBy(
     instance: DevToolsInstance,
     previousSuspendedBy: null | Array<ReactAsyncInfo>,
@@ -2976,6 +3026,7 @@ export function attach(
     if (previousSuspendedBy !== null && suspenseNode !== null) {
       const nextSuspendedBy = instance.suspendedBy;
       let changedEnvironment = false;
+      let mayHaveChangedEndTime = false;
       for (let i = 0; i < previousSuspendedBy.length; i++) {
         const asyncInfo = previousSuspendedBy[i];
         if (
@@ -2988,6 +3039,11 @@ export function attach(
           // Let's remove it from the parent SuspenseNode.
           const ioInfo = asyncInfo.awaited;
           const suspendedBySet = suspenseNode.suspendedBy.get(ioInfo);
+
+          if (suspenseNode.endTime === getVirtualEndTime(ioInfo)) {
+            // This may be the only remaining entry at this end time. Recompute the end time.
+            mayHaveChangedEndTime = true;
+          }
 
           if (
             suspendedBySet === undefined ||
@@ -3046,7 +3102,11 @@ export function attach(
           }
         }
       }
-      if (changedEnvironment) {
+      const newEndTime = mayHaveChangedEndTime
+        ? computeEndTime(suspenseNode)
+        : suspenseNode.endTime;
+      if (changedEnvironment || newEndTime !== suspenseNode.endTime) {
+        suspenseNode.endTime = newEndTime;
         recordSuspenseSuspenders(suspenseNode);
       }
     }
@@ -6168,7 +6228,10 @@ export function attach(
             }
           }
           const newIO = asyncInfo.awaited;
-          if (newIO.name === 'RSC stream' && newIO.value != null) {
+          if (
+            (newIO.name === 'RSC stream' || newIO.name === 'rsc stream') &&
+            newIO.value != null
+          ) {
             const streamPromise = newIO.value;
             // Special case RSC stream entries to pick the last entry keyed by the stream.
             const existingEntry = streamEntries.get(streamPromise);
@@ -6227,7 +6290,10 @@ export function attach(
         continue;
       }
       foundIOEntries.add(ioInfo);
-      if (ioInfo.name === 'RSC stream' && ioInfo.value != null) {
+      if (
+        (ioInfo.name === 'RSC stream' || ioInfo.name === 'rsc stream') &&
+        ioInfo.value != null
+      ) {
         const streamPromise = ioInfo.value;
         // Special case RSC stream entries to pick the last entry keyed by the stream.
         const existingEntry = streamEntries.get(streamPromise);

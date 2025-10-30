@@ -40,6 +40,7 @@ describe('created with ReactFabric called with ReactNative', () => {
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').getNativeTagFromPublicInstance;
   });
 
+  // @gate !disableLegacyMode
   it('find Fabric instances with the RN renderer', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
@@ -60,6 +61,7 @@ describe('created with ReactFabric called with ReactNative', () => {
     expect(getNativeTagFromPublicInstance(instance)).toBe(2);
   });
 
+  // @gate !disableLegacyMode
   it('find Fabric nodes with the RN renderer', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
@@ -80,6 +82,7 @@ describe('created with ReactFabric called with ReactNative', () => {
     expect(handle).toBe(2);
   });
 
+  // @gate !disableLegacyMode
   it('dispatches commands on Fabric nodes with the RN renderer', () => {
     nativeFabricUIManager.dispatchCommand.mockClear();
     const View = createReactNativeComponentClass('RCTView', () => ({
@@ -101,6 +104,7 @@ describe('created with ReactFabric called with ReactNative', () => {
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
   });
 
+  // @gate !disableLegacyMode
   it('dispatches sendAccessibilityEvent on Fabric nodes with the RN renderer', () => {
     nativeFabricUIManager.sendAccessibilityEvent.mockClear();
     const View = createReactNativeComponentClass('RCTView', () => ({
@@ -143,6 +147,7 @@ describe('created with ReactNative called with ReactFabric', () => {
         .ReactNativeViewConfigRegistry.register;
   });
 
+  // @gate !disableLegacyMode
   it('find Paper instances with the Fabric renderer', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
@@ -163,6 +168,7 @@ describe('created with ReactNative called with ReactFabric', () => {
     expect(instance._nativeTag).toBe(3);
   });
 
+  // @gate !disableLegacyMode
   it('find Paper nodes with the Fabric renderer', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
@@ -183,6 +189,7 @@ describe('created with ReactNative called with ReactFabric', () => {
     expect(handle).toBe(3);
   });
 
+  // @gate !disableLegacyMode
   it('dispatches commands on Paper nodes with the Fabric renderer', () => {
     UIManager.dispatchViewManagerCommand.mockReset();
     const View = createReactNativeComponentClass('RCTView', () => ({
@@ -205,6 +212,7 @@ describe('created with ReactNative called with ReactFabric', () => {
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
   });
 
+  // @gate !disableLegacyMode
   it('dispatches sendAccessibilityEvent on Paper nodes with the Fabric renderer', () => {
     ReactNativePrivateInterface.legacySendAccessibilityEvent.mockReset();
     const View = createReactNativeComponentClass('RCTView', () => ({

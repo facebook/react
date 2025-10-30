@@ -12,6 +12,28 @@ import {Err, Ok, Result} from './Utils/Result';
 import {assertExhaustive} from './Utils/utils';
 import invariant from 'invariant';
 
+// Number of context lines to display above the source of an error
+const CODEFRAME_LINES_ABOVE = 2;
+// Number of context lines to display below the source of an error
+const CODEFRAME_LINES_BELOW = 3;
+/*
+ * Max number of lines for the _source_ of an error, before we abbreviate
+ * the display of the source portion
+ */
+const CODEFRAME_MAX_LINES = 10;
+/*
+ * When the error source exceeds the above threshold, how many lines of
+ * the source should be displayed? We show:
+ * - CODEFRAME_LINES_ABOVE context lines
+ * - CODEFRAME_ABBREVIATED_SOURCE_LINES of the error
+ * - '...' ellipsis
+ * - CODEFRAME_ABBREVIATED_SOURCE_LINES of the error
+ * - CODEFRAME_LINES_BELOW context lines
+ *
+ * This value must be at least 2 or else we'll cut off important parts of the error message
+ */
+const CODEFRAME_ABBREVIATED_SOURCE_LINES = 5;
+
 export enum ErrorSeverity {
   /**
    * An actionable error that the developer can fix. For example, product code errors should be
@@ -496,7 +518,7 @@ function printCodeFrame(
   loc: t.SourceLocation,
   message: string,
 ): string {
-  return codeFrameColumns(
+  const printed = codeFrameColumns(
     source,
     {
       start: {
@@ -510,8 +532,25 @@ function printCodeFrame(
     },
     {
       message,
+      linesAbove: CODEFRAME_LINES_ABOVE,
+      linesBelow: CODEFRAME_LINES_BELOW,
     },
   );
+  const lines = printed.split(/\r?\n/);
+  if (loc.end.line - loc.start.line < CODEFRAME_MAX_LINES) {
+    return printed;
+  }
+  const pipeIndex = lines[0].indexOf('|');
+  return [
+    ...lines.slice(
+      0,
+      CODEFRAME_LINES_ABOVE + CODEFRAME_ABBREVIATED_SOURCE_LINES,
+    ),
+    ' '.repeat(pipeIndex) + '…',
+    ...lines.slice(
+      -(CODEFRAME_LINES_BELOW + CODEFRAME_ABBREVIATED_SOURCE_LINES),
+    ),
+  ].join('\n');
 }
 
 function printErrorSummary(category: ErrorCategory, message: string): string {
