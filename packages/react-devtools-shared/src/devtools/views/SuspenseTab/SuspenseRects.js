@@ -18,7 +18,7 @@ import typeof {
 } from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
-import {createContext, useContext} from 'react';
+import {createContext, useContext, useLayoutEffect} from 'react';
 import {
   TreeDispatcherContext,
   TreeStateContext,
@@ -435,7 +435,11 @@ function SuspenseRectsRoot({rootID}: {rootID: SuspenseNode['id']}): React$Node {
 
 const ViewBox = createContext<Rect>((null: any));
 
-function SuspenseRectsContainer(): React$Node {
+function SuspenseRectsContainer({
+  scaleRef,
+}: {
+  scaleRef: {current: number},
+}): React$Node {
   const store = useContext(StoreContext);
   const {inspectedElementID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
@@ -504,6 +508,11 @@ function SuspenseRectsContainer(): React$Node {
 
   const rootEnvironment =
     timeline.length === 0 ? null : timeline[0].environment;
+
+  useLayoutEffect(() => {
+    // 100% of the width represents this many pixels in the real document.
+    scaleRef.current = boundingBoxWidth;
+  }, [boundingBoxWidth]);
 
   return (
     <div
