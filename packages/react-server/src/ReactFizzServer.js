@@ -4649,32 +4649,30 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     if (node !== null && typeof node === 'object') {
       // Push a fake component stack frame that represents the await.
       let debugInfo = node._debugInfo;
-      if (debugInfo == null || debugInfo.length === 0) {
-        // If there's no debug info, try resolving lazy components to find debug
-        // info that has been transferred to the inner value.
-        while (
-          typeof node === 'object' &&
-          node !== null &&
-          node.$$typeof === REACT_LAZY_TYPE
-        ) {
-          const payload = node._payload;
-          if (payload.status === 'fulfilled') {
-            node = payload.value;
-            continue;
-          }
-          break;
+      // First resolve lazy nodes to find debug info that has been transferred
+      // to the inner value.
+      while (
+        typeof node === 'object' &&
+        node !== null &&
+        node.$$typeof === REACT_LAZY_TYPE
+      ) {
+        const payload = node._payload;
+        if (payload.status === 'fulfilled') {
+          node = payload.value;
+          continue;
         }
-        if (
-          typeof node === 'object' &&
-          node !== null &&
-          (isArray(node) ||
-            typeof node[ASYNC_ITERATOR] === 'function' ||
-            node.$$typeof === REACT_ELEMENT_TYPE ||
-            node.$$typeof === REACT_LAZY_TYPE) &&
-          isArray(node._debugInfo)
-        ) {
-          debugInfo = node._debugInfo;
-        }
+        break;
+      }
+      if (
+        typeof node === 'object' &&
+        node !== null &&
+        (isArray(node) ||
+          typeof node[ASYNC_ITERATOR] === 'function' ||
+          node.$$typeof === REACT_ELEMENT_TYPE ||
+          node.$$typeof === REACT_LAZY_TYPE) &&
+        isArray(node._debugInfo)
+      ) {
+        debugInfo = node._debugInfo;
       }
       pushHaltedAwaitOnComponentStack(task, debugInfo);
       /*
