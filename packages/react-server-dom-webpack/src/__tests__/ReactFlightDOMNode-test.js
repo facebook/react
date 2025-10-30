@@ -1326,7 +1326,7 @@ describe('ReactFlightDOMNode', () => {
 
       const prerenderHTML = await readResult(prelude);
 
-      expect(prerenderHTML).toContain('');
+      expect(prerenderHTML).toBe('');
 
       if (__DEV__) {
         expect(
