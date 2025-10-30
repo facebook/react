@@ -111,7 +111,7 @@ type Props = {
 function getInitialState(store: Store): SuspenseTreeState {
   const uniqueSuspendersOnly = true;
   const timeline =
-    store.getSuspendableDocumentOrderSuspense(uniqueSuspendersOnly);
+    store.getEndTimeOrDocumentOrderSuspense(uniqueSuspendersOnly);
   const timelineIndex = timeline.length - 1;
   const selectedSuspenseID =
     timelineIndex === -1 ? null : timeline[timelineIndex].id;
@@ -182,7 +182,7 @@ function SuspenseTreeContextController({children}: Props): React.Node {
             }
 
             // TODO: Handle different timeline modes (e.g. random order)
-            const nextTimeline = store.getSuspendableDocumentOrderSuspense(
+            const nextTimeline = store.getEndTimeOrDocumentOrderSuspense(
               state.uniqueSuspendersOnly,
             );
 

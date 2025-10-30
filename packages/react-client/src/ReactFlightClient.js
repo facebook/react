@@ -624,6 +624,22 @@ function wakeChunkIfInitialized<T>(
                 rejectListeners.splice(rejectionIdx, 1);
               }
             }
+            // The status might have changed after fulfilling the reference.
+            switch ((chunk: SomeChunk<T>).status) {
+              case INITIALIZED:
+                const initializedChunk: InitializedChunk<T> = (chunk: any);
+                wakeChunk(
+                  resolveListeners,
+                  initializedChunk.value,
+                  initializedChunk,
+                );
+                return;
+              case ERRORED:
+                if (rejectListeners !== null) {
+                  rejectChunk(rejectListeners, chunk.reason);
+                }
+                return;
+            }
           }
         }
       }
