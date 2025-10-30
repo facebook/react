@@ -134,7 +134,7 @@ describe('ReactDOMFizzSuspenseList', () => {
   }
 
   // @gate enableSuspenseList
-  it('shows content independently by default', async () => {
+  it('shows content forwards by default', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -157,31 +157,38 @@ describe('ReactDOMFizzSuspenseList', () => {
       );
     }
 
-    await A.resolve();
+    await C.resolve();
 
     await serverAct(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
       pipe(writable);
     });
 
-    assertLog(['A', 'Suspend! [B]', 'Suspend! [C]', 'Loading B', 'Loading C']);
+    assertLog([
+      'Suspend! [A]',
+      'Suspend! [B]', // TODO: Defer rendering the content after fallback if previous suspended,
+      'C',
+      'Loading A',
+      'Loading B',
+      'Loading C',
+    ]);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </div>,
+    );
+
+    await serverAct(() => A.resolve());
+    assertLog(['A']);
 
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </div>,
-    );
-
-    await serverAct(() => C.resolve());
-    assertLog(['C']);
-
-    expect(getVisibleChildren(container)).toEqual(
-      <div>
-        <span>A</span>
-        <span>Loading B</span>
-        <span>C</span>
       </div>,
     );
 
