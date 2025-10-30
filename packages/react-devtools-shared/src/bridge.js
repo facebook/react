@@ -217,7 +217,7 @@ export type BackendEvents = {
   selectElement: [number],
   shutdown: [],
   stopInspectingHost: [boolean],
-  scrollTo: [{x: number, y: number}],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
   syncSelectionToBuiltinElementsPanel: [],
   unsupportedRendererVersion: [],
 
@@ -271,7 +271,7 @@ type FrontendEvents = {
   startProfiling: [StartProfilingParams],
   stopInspectingHost: [],
   scrollToHostInstance: [ScrollToHostInstance],
-  scrollTo: [{x: number, y: number}],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
   requestScrollPosition: [],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],

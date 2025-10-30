@@ -38,25 +38,29 @@ export default function setupHighlighter(
 
   let applyingScroll = false;
 
-  function scrollDocumentTo({x, y}: {x: number, y: number}) {
-    const element = document.documentElement;
-    if (element === null) {
+  function scrollDocumentTo({
+    left,
+    top,
+    right,
+    bottom,
+  }: {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+  }) {
+    if (
+      left === Math.round(window.scrollX) &&
+      top === Math.round(window.scrollY)
+    ) {
       return;
     }
-    const left = x * (element.scrollWidth - element.clientWidth);
-    const top = y * (element.scrollHeight - element.clientHeight);
-    if (
-      left !== Math.round(window.scrollX) ||
-      top !== Math.round(window.scrollY)
-    ) {
-      // Disable scroll events until we've applied the new scroll position.
-      applyingScroll = true;
-      window.scrollTo({
-        top: top,
-        left: left,
-        behavior: 'smooth',
-      });
-    }
+    applyingScroll = true;
+    window.scrollTo({
+      top: top,
+      left: left,
+      behavior: 'smooth',
+    });
   }
 
   let scrollTimer = null;
@@ -68,16 +72,11 @@ export default function setupHighlighter(
     if (applyingScroll) {
       return;
     }
-    // We send in fraction of scrollable area.
-    const element = document.documentElement;
-    if (element === null) {
-      return;
-    }
-    const w = element.scrollWidth - element.clientWidth;
-    const x = w === 0 ? 0 : window.scrollX / w;
-    const h = element.scrollHeight - element.clientHeight;
-    const y = h === 0 ? 0 : window.scrollY / h;
-    bridge.send('scrollTo', {x, y});
+    const left = window.scrollX;
+    const top = window.scrollY;
+    const right = left + window.innerWidth;
+    const bottom = top + window.innerHeight;
+    bridge.send('scrollTo', {left, top, right, bottom});
   }
 
   function scrollEnd() {

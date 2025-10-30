@@ -160,31 +160,44 @@ function ToggleInspectedElement({
 function SynchronizedScrollContainer({
   className,
   children,
+  scaleRef,
 }: {
   className?: string,
   children?: React.Node,
+  scaleRef: {current: number},
 }) {
   const bridge = useContext(BridgeContext);
   const ref = useRef(null);
   const applyingScrollRef = useRef(false);
 
   // TODO: useEffectEvent
-  function scrollContainerTo({x, y}: {x: number, y: number}): void {
+  function scrollContainerTo({
+    left,
+    top,
+    right,
+    bottom,
+  }: {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+  }): void {
     const element = ref.current;
     if (element === null) {
       return;
     }
-    const left = Math.round(x * (element.scrollWidth - element.clientWidth));
-    const top = Math.round(y * (element.scrollHeight - element.clientHeight));
+    const scale = scaleRef.current / element.clientWidth;
+    const targetLeft = Math.round(left / scale);
+    const targetTop = Math.round(top / scale);
     if (
-      left !== Math.round(element.scrollLeft) ||
-      top !== Math.round(element.scrollTop)
+      targetLeft !== Math.round(element.scrollLeft) ||
+      targetTop !== Math.round(element.scrollTop)
     ) {
       // Disable scroll events until we've applied the new scroll position.
       applyingScrollRef.current = true;
       element.scrollTo({
-        left,
-        top,
+        left: targetLeft,
+        top: targetTop,
         behavior: 'smooth',
       });
     }
@@ -213,11 +226,12 @@ function SynchronizedScrollContainer({
     if (element === null) {
       return;
     }
-    const w = element.scrollWidth - element.clientWidth;
-    const x = w === 0 ? 0 : element.scrollLeft / w;
-    const h = element.scrollHeight - element.clientHeight;
-    const y = h === 0 ? 0 : element.scrollTop / h;
-    bridge.send('scrollTo', {x, y});
+    const scale = scaleRef.current / element.clientWidth;
+    const left = element.scrollLeft * scale;
+    const top = element.scrollTop * scale;
+    const right = left + element.clientWidth * scale;
+    const bottom = top + element.clientHeight * scale;
+    bridge.send('scrollTo', {left, top, right, bottom});
   }
 
   // TODO: useEffectEvent
@@ -440,6 +454,8 @@ function SuspenseTab(_: {}) {
     }
   };
 
+  const scaleRef = useRef(0);
+
   return (
     <SettingsModalContextController>
       <div className={styles.SuspenseTab} ref={wrapperTreeRef}>
@@ -487,8 +503,10 @@ function SuspenseTab(_: {}) {
                 orientation="horizontal"
               />
             </header>
-            <SynchronizedScrollContainer className={styles.Rects}>
-              <SuspenseRects />
+            <SynchronizedScrollContainer
+              className={styles.Rects}
+              scaleRef={scaleRef}>
+              <SuspenseRects scaleRef={scaleRef} />
             </SynchronizedScrollContainer>
             <footer className={styles.SuspenseTreeViewFooter}>
               <SuspenseTimeline />
