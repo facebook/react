@@ -462,6 +462,7 @@ function buildDataFlowTree(
   context: ValidationContext,
   propsSet: Set<string>,
   stateSet: Set<string>,
+  allSetStateDeps: Set<IdentifierId>,
 ): string {
   const sourceMetadata = context.derivationCache.cache.get(sourceId);
   if (!sourceMetadata || !sourceMetadata.place.identifier.name?.value) {
@@ -479,6 +480,8 @@ function buildDataFlowTree(
   const isOriginal = childSourceIds.length === 0;
 
   let result = `${prefix}${sourceName}`;
+
+  allSetStateDeps.add(sourceMetadata.place.identifier.id);
 
   if (isOriginal) {
     let typeLabel: string;
@@ -506,6 +509,7 @@ function buildDataFlowTree(
         context,
         propsSet,
         stateSet,
+        allSetStateDeps,
       );
       if (childTree) {
         result += childTree + '\n';
@@ -515,6 +519,23 @@ function buildDataFlowTree(
   }
 
   return result;
+}
+
+function getFnGlobalDeps(
+  fn: FunctionExpression | undefined,
+  deps: Set<IdentifierId>,
+) {
+  if (!fn) {
+    return;
+  }
+
+  for (const [, block] of fn.loweredFunc.func.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'LoadLocal') {
+        deps.add(instr.value.place.identifier.id);
+      }
+    }
+  }
 }
 
 function validateEffect(
@@ -535,8 +556,24 @@ function validateEffect(
     Set<SourceLocation>
   > = new Map();
 
+  const cleanUpFunctionDeps: Set<IdentifierId> = new Set();
+
   const globals: Set<IdentifierId> = new Set();
   for (const block of effectFunction.body.blocks.values()) {
+    /*
+     * if the block is in an effect and is of type return then its an effect's cleanup function
+     * if the cleanup function depends on a value from which effect-set state is derived then
+     * we can't validate
+     */
+    if (
+      block.terminal.kind === 'return' &&
+      block.terminal.returnVariant === 'Explicit'
+    ) {
+      getFnGlobalDeps(
+        context.functions.get(block.terminal.value.identifier.id),
+        cleanUpFunctionDeps,
+      );
+    }
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
         // skip if block has a back edge
@@ -626,6 +663,7 @@ function validateEffect(
       const allSourceIds = Array.from(derivedSetStateCall.sourceIds);
       const propsSet = new Set<string>();
       const stateSet = new Set<string>();
+      const allSetStateDeps = new Set<IdentifierId>();
 
       const trees = allSourceIds
         .map((id, index) =>
@@ -636,9 +674,16 @@ function validateEffect(
             context,
             propsSet,
             stateSet,
+            allSetStateDeps,
           ),
         )
         .filter(Boolean);
+
+      for (const dep of allSetStateDeps) {
+        if (cleanUpFunctionDeps.has(dep)) {
+          return;
+        }
+      }
 
       const propsArr = Array.from(propsSet);
       const stateArr = Array.from(stateSet);
