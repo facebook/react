@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<821f95ac5ef407e95b861c6b9595dffc>>
+ * @generated SignedSource<<2d42c97d29596048af898652966ab862>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1177() {
+    function JSCompiler_object_inline_createNodeMock_1172() {
       return null;
     }
     function findHook(fiber, id) {
@@ -7642,6 +7642,16 @@ __DEV__ &&
         propagationRoot
       );
     }
+    function findLastContentRow(firstChild) {
+      for (var lastContentRow = null; null !== firstChild; ) {
+        var currentRow = firstChild.alternate;
+        null !== currentRow &&
+          null === findFirstSuspended(currentRow) &&
+          (lastContentRow = firstChild);
+        firstChild = firstChild.sibling;
+      }
+      return lastContentRow;
+    }
     function initSuspenseListRenderState(
       workInProgress,
       isBackwards,
@@ -7669,6 +7679,15 @@ __DEV__ &&
           (renderState.tailMode = tailMode),
           (renderState.treeForkCount = treeForkCount));
     }
+    function reverseChildren(fiber) {
+      var row = fiber.child;
+      for (fiber.child = null; null !== row; ) {
+        var nextRow = row.sibling;
+        row.sibling = fiber.child;
+        fiber.child = row;
+        row = nextRow;
+      }
+    }
     function updateSuspenseListComponent(current, workInProgress, renderLanes) {
       var nextProps = workInProgress.pendingProps,
         revealOrder = nextProps.revealOrder,
@@ -7687,6 +7706,7 @@ __DEV__ &&
       if (
         null != revealOrder &&
         "forwards" !== revealOrder &&
+        "backwards" !== revealOrder &&
         "unstable_legacy-backwards" !== revealOrder &&
         "together" !== revealOrder &&
         "independent" !== revealOrder &&
@@ -7694,12 +7714,8 @@ __DEV__ &&
       )
         if (
           ((didWarnAboutRevealOrder[suspenseContext] = !0),
-          "backwards" === revealOrder)
+          "string" === typeof revealOrder)
         )
-          console.error(
-            'The rendering order of <SuspenseList revealOrder="backwards"> is changing. To be future compatible you must specify revealOrder="legacy_unstable-backwards" instead.'
-          );
-        else if ("string" === typeof revealOrder)
           switch (revealOrder.toLowerCase()) {
             case "together":
             case "forwards":
@@ -7791,7 +7807,11 @@ __DEV__ &&
             'A single row was passed to a <SuspenseList revealOrder="%s" />. This is not useful since it needs multiple rows. Did you mean to pass multiple children or an array?',
             revealOrder
           );
-      reconcileChildren(current, workInProgress, nextProps, renderLanes);
+      "backwards" === revealOrder && null !== current
+        ? (reverseChildren(current),
+          reconcileChildren(current, workInProgress, nextProps, renderLanes),
+          reverseChildren(current))
+        : reconcileChildren(current, workInProgress, nextProps, renderLanes);
       if (
         !shouldForceFallback &&
         null !== current &&
@@ -7821,6 +7841,22 @@ __DEV__ &&
       else
         switch (revealOrder) {
           case "backwards":
+            renderLanes = findLastContentRow(workInProgress.child);
+            null === renderLanes
+              ? ((revealOrder = workInProgress.child),
+                (workInProgress.child = null))
+              : ((revealOrder = renderLanes.sibling),
+                (renderLanes.sibling = null),
+                reverseChildren(workInProgress));
+            initSuspenseListRenderState(
+              workInProgress,
+              !0,
+              revealOrder,
+              null,
+              tailMode,
+              0
+            );
+            break;
           case "unstable_legacy-backwards":
             renderLanes = null;
             revealOrder = workInProgress.child;
@@ -7858,27 +7894,20 @@ __DEV__ &&
             workInProgress.memoizedState = null;
             break;
           default:
-            renderLanes = workInProgress.child;
-            for (revealOrder = null; null !== renderLanes; )
-              (current = renderLanes.alternate),
-                null !== current &&
-                  null === findFirstSuspended(current) &&
-                  (revealOrder = renderLanes),
-                (renderLanes = renderLanes.sibling);
-            renderLanes = revealOrder;
-            null === renderLanes
-              ? ((revealOrder = workInProgress.child),
-                (workInProgress.child = null))
-              : ((revealOrder = renderLanes.sibling),
-                (renderLanes.sibling = null));
-            initSuspenseListRenderState(
-              workInProgress,
-              !1,
-              revealOrder,
-              renderLanes,
-              tailMode,
-              0
-            );
+            (renderLanes = findLastContentRow(workInProgress.child)),
+              null === renderLanes
+                ? ((revealOrder = workInProgress.child),
+                  (workInProgress.child = null))
+                : ((revealOrder = renderLanes.sibling),
+                  (renderLanes.sibling = null)),
+              initSuspenseListRenderState(
+                workInProgress,
+                !1,
+                revealOrder,
+                renderLanes,
+                tailMode,
+                0
+              );
         }
       return workInProgress.child;
     }
@@ -16014,10 +16043,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-26cf2804-20251031",
+        version: "19.3.0-native-fb-488d88b0-20251031",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-26cf2804-20251031"
+        reconcilerVersion: "19.3.0-native-fb-488d88b0-20251031"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16040,7 +16069,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1177,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1172,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -16163,5 +16192,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.3.0-native-fb-26cf2804-20251031";
+    exports.version = "19.3.0-native-fb-488d88b0-20251031";
   })();
