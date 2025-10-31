@@ -313,6 +313,7 @@ export type SuspenseProps = {
 
   unstable_avoidThisFallback?: boolean,
   unstable_expectedLoadTime?: number,
+  defer?: boolean,
   name?: string,
 };
 

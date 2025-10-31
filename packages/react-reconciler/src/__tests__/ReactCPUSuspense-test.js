@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-boolean-value */
+
 let React;
 let ReactNoop;
 let Scheduler;
@@ -11,6 +13,7 @@ let resolveText;
 // let rejectText;
 
 let assertLog;
+let assertConsoleErrorDev;
 let waitForPaint;
 
 describe('ReactSuspenseWithNoopRenderer', () => {
@@ -26,6 +29,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     waitForPaint = InternalTestUtils.waitForPaint;
 
     textCache = new Map();
@@ -116,15 +120,58 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   }
 
   // @gate enableCPUSuspense
-  it('skips CPU-bound trees on initial mount', async () => {
+  it('warns for the old name is used', async () => {
     function App() {
       return (
         <>
           <Text text="Outer" />
           <div>
             <Suspense
-              unstable_expectedLoadTime={2000}
+              unstable_expectedLoadTime={1000}
               fallback={<Text text="Loading..." />}>
+              <Text text="Inner" />
+            </Suspense>
+          </div>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+      await waitForPaint(['Outer', 'Loading...']);
+      assertConsoleErrorDev([
+        '<Suspense unstable_expectedLoadTime={...}> is deprecated. ' +
+          'Use <Suspense defer={true}> instead.' +
+          '\n    in Suspense (at **)' +
+          '\n    in App (at **)',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          Outer
+          <div>Loading...</div>
+        </>,
+      );
+    });
+
+    // Inner contents finish in separate commit from outer
+    assertLog(['Inner']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        Outer
+        <div>Inner</div>
+      </>,
+    );
+  });
+
+  // @gate enableCPUSuspense
+  it('skips CPU-bound trees on initial mount', async () => {
+    function App() {
+      return (
+        <>
+          <Text text="Outer" />
+          <div>
+            <Suspense defer fallback={<Text text="Loading..." />}>
               <Text text="Inner" />
             </Suspense>
           </div>
@@ -164,9 +211,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <>
           <Text text="Outer" />
           <div>
-            <Suspense
-              unstable_expectedLoadTime={2000}
-              fallback={<Text text="Loading..." />}>
+            <Suspense defer fallback={<Text text="Loading..." />}>
               <Text text={`Inner [${count}]`} />
             </Suspense>
           </div>
@@ -209,9 +254,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <>
           <Text text="Outer" />
           <div>
-            <Suspense
-              unstable_expectedLoadTime={2000}
-              fallback={<Text text="Loading..." />}>
+            <Suspense defer fallback={<Text text="Loading..." />}>
               <AsyncText text="Inner" />
             </Suspense>
           </div>
@@ -263,14 +306,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <>
           <Text text="A" />
           <div>
-            <Suspense
-              unstable_expectedLoadTime={2000}
-              fallback={<Text text="Loading B..." />}>
+            <Suspense defer fallback={<Text text="Loading B..." />}>
               <Text text="B" />
               <div>
-                <Suspense
-                  unstable_expectedLoadTime={2000}
-                  fallback={<Text text="Loading C..." />}>
+                <Suspense defer fallback={<Text text="Loading C..." />}>
                   <Text text="C" />
                 </Suspense>
               </div>
