@@ -3968,10 +3968,7 @@ function findFirstSuspended(row) {
         return node;
     } else if (
       19 === node.tag &&
-      ("forwards" === node.memoizedProps.revealOrder ||
-        "backwards" === node.memoizedProps.revealOrder ||
-        "unstable_legacy-backwards" === node.memoizedProps.revealOrder ||
-        "together" === node.memoizedProps.revealOrder)
+      "independent" !== node.memoizedProps.revealOrder
     ) {
       if (0 !== (node.flags & 128)) return node;
     } else if (null !== node.child) {
@@ -7207,27 +7204,6 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
       current = current.sibling;
     }
   switch (revealOrder) {
-    case "forwards":
-      renderLanes = workInProgress.child;
-      for (revealOrder = null; null !== renderLanes; )
-        (current = renderLanes.alternate),
-          null !== current &&
-            null === findFirstSuspended(current) &&
-            (revealOrder = renderLanes),
-          (renderLanes = renderLanes.sibling);
-      renderLanes = revealOrder;
-      null === renderLanes
-        ? ((revealOrder = workInProgress.child), (workInProgress.child = null))
-        : ((revealOrder = renderLanes.sibling), (renderLanes.sibling = null));
-      initSuspenseListRenderState(
-        workInProgress,
-        !1,
-        revealOrder,
-        renderLanes,
-        tailMode,
-        nextProps
-      );
-      break;
     case "backwards":
     case "unstable_legacy-backwards":
       renderLanes = null;
@@ -7262,8 +7238,29 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
         nextProps
       );
       break;
-    default:
+    case "independent":
       workInProgress.memoizedState = null;
+      break;
+    default:
+      renderLanes = workInProgress.child;
+      for (revealOrder = null; null !== renderLanes; )
+        (current = renderLanes.alternate),
+          null !== current &&
+            null === findFirstSuspended(current) &&
+            (revealOrder = renderLanes),
+          (renderLanes = renderLanes.sibling);
+      renderLanes = revealOrder;
+      null === renderLanes
+        ? ((revealOrder = workInProgress.child), (workInProgress.child = null))
+        : ((revealOrder = renderLanes.sibling), (renderLanes.sibling = null));
+      initSuspenseListRenderState(
+        workInProgress,
+        !1,
+        revealOrder,
+        renderLanes,
+        tailMode,
+        nextProps
+      );
   }
   return workInProgress.child;
 }
@@ -8115,26 +8112,31 @@ function scheduleRetryEffect(workInProgress, retryQueue) {
 function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
   if (!isHydrating)
     switch (renderState.tailMode) {
-      case "hidden":
-        hasRenderedATailFallback = renderState.tail;
-        for (var lastTailNode = null; null !== hasRenderedATailFallback; )
-          null !== hasRenderedATailFallback.alternate &&
-            (lastTailNode = hasRenderedATailFallback),
-            (hasRenderedATailFallback = hasRenderedATailFallback.sibling);
-        null === lastTailNode
-          ? (renderState.tail = null)
-          : (lastTailNode.sibling = null);
+      case "visible":
         break;
       case "collapsed":
-        lastTailNode = renderState.tail;
-        for (var lastTailNode$119 = null; null !== lastTailNode; )
-          null !== lastTailNode.alternate && (lastTailNode$119 = lastTailNode),
-            (lastTailNode = lastTailNode.sibling);
-        null === lastTailNode$119
+        for (
+          var tailNode = renderState.tail, lastTailNode = null;
+          null !== tailNode;
+
+        )
+          null !== tailNode.alternate && (lastTailNode = tailNode),
+            (tailNode = tailNode.sibling);
+        null === lastTailNode
           ? hasRenderedATailFallback || null === renderState.tail
             ? (renderState.tail = null)
             : (renderState.tail.sibling = null)
-          : (lastTailNode$119.sibling = null);
+          : (lastTailNode.sibling = null);
+        break;
+      default:
+        hasRenderedATailFallback = renderState.tail;
+        for (tailNode = null; null !== hasRenderedATailFallback; )
+          null !== hasRenderedATailFallback.alternate &&
+            (tailNode = hasRenderedATailFallback),
+            (hasRenderedATailFallback = hasRenderedATailFallback.sibling);
+        null === tailNode
+          ? (renderState.tail = null)
+          : (tailNode.sibling = null);
     }
 }
 function bubbleProperties(completedWork) {
@@ -8604,7 +8606,8 @@ function completeWork(current, workInProgress, renderLanes) {
               scheduleRetryEffect(workInProgress, current),
               cutOffTailIfNeeded(newProps, !0),
               null === newProps.tail &&
-                "hidden" === newProps.tailMode &&
+                "collapsed" !== newProps.tailMode &&
+                "visible" !== newProps.tailMode &&
                 !nextResource.alternate &&
                 !isHydrating)
             )
@@ -19975,14 +19978,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2129 = React.version;
 if (
-  "19.3.0-www-classic-408b38ef-20251023" !==
+  "19.3.0-www-classic-26cf2804-20251031" !==
   isomorphicReactPackageVersion$jscomp$inline_2129
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2129,
-      "19.3.0-www-classic-408b38ef-20251023"
+      "19.3.0-www-classic-26cf2804-20251031"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20000,10 +20003,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2761 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-408b38ef-20251023",
+  version: "19.3.0-www-classic-26cf2804-20251031",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-408b38ef-20251023"
+  reconcilerVersion: "19.3.0-www-classic-26cf2804-20251031"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2762 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20432,4 +20435,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-408b38ef-20251023";
+exports.version = "19.3.0-www-classic-26cf2804-20251031";

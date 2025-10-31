@@ -4704,11 +4704,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
         a: {
           var children$jscomp$0 = props.children,
             revealOrder = props.revealOrder;
-          if (
-            "forwards" === revealOrder ||
-            "backwards" === revealOrder ||
-            "unstable_legacy-backwards" === revealOrder
-          ) {
+          if ("independent" !== revealOrder && "together" !== revealOrder) {
             if (isArrayImpl(children$jscomp$0)) {
               renderSuspenseListRows(
                 request,
@@ -6996,4 +6992,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.3.0-www-classic-408b38ef-20251023";
+exports.version = "19.3.0-www-classic-26cf2804-20251031";

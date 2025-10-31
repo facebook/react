@@ -3019,10 +3019,7 @@ function findFirstSuspended(row) {
         return node;
     } else if (
       19 === node.tag &&
-      ("forwards" === node.memoizedProps.revealOrder ||
-        "backwards" === node.memoizedProps.revealOrder ||
-        "unstable_legacy-backwards" === node.memoizedProps.revealOrder ||
-        "together" === node.memoizedProps.revealOrder)
+      "independent" !== node.memoizedProps.revealOrder
     ) {
       if (0 !== (node.flags & 128)) return node;
     } else if (null !== node.child) {
@@ -5895,27 +5892,6 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
       current = current.sibling;
     }
   switch (revealOrder) {
-    case "forwards":
-      renderLanes = workInProgress.child;
-      for (revealOrder = null; null !== renderLanes; )
-        (current = renderLanes.alternate),
-          null !== current &&
-            null === findFirstSuspended(current) &&
-            (revealOrder = renderLanes),
-          (renderLanes = renderLanes.sibling);
-      renderLanes = revealOrder;
-      null === renderLanes
-        ? ((revealOrder = workInProgress.child), (workInProgress.child = null))
-        : ((revealOrder = renderLanes.sibling), (renderLanes.sibling = null));
-      initSuspenseListRenderState(
-        workInProgress,
-        !1,
-        revealOrder,
-        renderLanes,
-        tailMode,
-        0
-      );
-      break;
     case "backwards":
     case "unstable_legacy-backwards":
       renderLanes = null;
@@ -5943,8 +5919,29 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
     case "together":
       initSuspenseListRenderState(workInProgress, !1, null, null, void 0, 0);
       break;
-    default:
+    case "independent":
       workInProgress.memoizedState = null;
+      break;
+    default:
+      renderLanes = workInProgress.child;
+      for (revealOrder = null; null !== renderLanes; )
+        (current = renderLanes.alternate),
+          null !== current &&
+            null === findFirstSuspended(current) &&
+            (revealOrder = renderLanes),
+          (renderLanes = renderLanes.sibling);
+      renderLanes = revealOrder;
+      null === renderLanes
+        ? ((revealOrder = workInProgress.child), (workInProgress.child = null))
+        : ((revealOrder = renderLanes.sibling), (renderLanes.sibling = null));
+      initSuspenseListRenderState(
+        workInProgress,
+        !1,
+        revealOrder,
+        renderLanes,
+        tailMode,
+        0
+      );
   }
   return workInProgress.child;
 }
@@ -6662,26 +6659,29 @@ function scheduleRetryEffect(workInProgress, retryQueue) {
 }
 function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
   switch (renderState.tailMode) {
-    case "hidden":
-      hasRenderedATailFallback = renderState.tail;
-      for (var lastTailNode = null; null !== hasRenderedATailFallback; )
-        null !== hasRenderedATailFallback.alternate &&
-          (lastTailNode = hasRenderedATailFallback),
-          (hasRenderedATailFallback = hasRenderedATailFallback.sibling);
-      null === lastTailNode
-        ? (renderState.tail = null)
-        : (lastTailNode.sibling = null);
+    case "visible":
       break;
     case "collapsed":
-      lastTailNode = renderState.tail;
-      for (var lastTailNode$80 = null; null !== lastTailNode; )
-        null !== lastTailNode.alternate && (lastTailNode$80 = lastTailNode),
-          (lastTailNode = lastTailNode.sibling);
-      null === lastTailNode$80
+      for (
+        var tailNode = renderState.tail, lastTailNode = null;
+        null !== tailNode;
+
+      )
+        null !== tailNode.alternate && (lastTailNode = tailNode),
+          (tailNode = tailNode.sibling);
+      null === lastTailNode
         ? hasRenderedATailFallback || null === renderState.tail
           ? (renderState.tail = null)
           : (renderState.tail.sibling = null)
-        : (lastTailNode$80.sibling = null);
+        : (lastTailNode.sibling = null);
+      break;
+    default:
+      hasRenderedATailFallback = renderState.tail;
+      for (tailNode = null; null !== hasRenderedATailFallback; )
+        null !== hasRenderedATailFallback.alternate &&
+          (tailNode = hasRenderedATailFallback),
+          (hasRenderedATailFallback = hasRenderedATailFallback.sibling);
+      null === tailNode ? (renderState.tail = null) : (tailNode.sibling = null);
   }
 }
 function bubbleProperties(completedWork) {
@@ -6986,7 +6986,8 @@ function completeWork(current, workInProgress, renderLanes) {
               scheduleRetryEffect(workInProgress, current),
               cutOffTailIfNeeded(instance, !0),
               null === instance.tail &&
-                "hidden" === instance.tailMode &&
+                "collapsed" !== instance.tailMode &&
+                "visible" !== instance.tailMode &&
                 !cache$88.alternate)
             )
               return bubbleProperties(workInProgress), null;
@@ -11442,10 +11443,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1647 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-408b38ef-20251023",
+  version: "19.3.0-www-classic-26cf2804-20251031",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-408b38ef-20251023"
+  reconcilerVersion: "19.3.0-www-classic-26cf2804-20251031"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1648 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11471,4 +11472,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-classic-408b38ef-20251023";
+exports.version = "19.3.0-www-classic-26cf2804-20251031";

@@ -7578,10 +7578,7 @@ __DEV__ &&
             return node;
         } else if (
           19 === node.tag &&
-          ("forwards" === node.memoizedProps.revealOrder ||
-            "backwards" === node.memoizedProps.revealOrder ||
-            "unstable_legacy-backwards" === node.memoizedProps.revealOrder ||
-            "together" === node.memoizedProps.revealOrder)
+          "independent" !== node.memoizedProps.revealOrder
         ) {
           if (0 !== (node.flags & 128)) return node;
         } else if (null !== node.child) {
@@ -11661,6 +11658,7 @@ __DEV__ &&
       push(suspenseStackCursor, suspenseContext, workInProgress);
       suspenseContext = null == revealOrder ? "null" : revealOrder;
       if (
+        null != revealOrder &&
         "forwards" !== revealOrder &&
         "unstable_legacy-backwards" !== revealOrder &&
         "together" !== revealOrder &&
@@ -11668,12 +11666,9 @@ __DEV__ &&
         !didWarnAboutRevealOrder[suspenseContext]
       )
         if (
-          ((didWarnAboutRevealOrder[suspenseContext] = !0), null == revealOrder)
+          ((didWarnAboutRevealOrder[suspenseContext] = !0),
+          "backwards" === revealOrder)
         )
-          console.error(
-            'The default for the <SuspenseList revealOrder="..."> prop is changing. To be future compatible you must explictly specify either "independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".'
-          );
-        else if ("backwards" === revealOrder)
           console.error(
             'The rendering order of <SuspenseList revealOrder="backwards"> is changing. To be future compatible you must specify revealOrder="legacy_unstable-backwards" instead.'
           );
@@ -11709,36 +11704,28 @@ __DEV__ &&
             revealOrder
           );
       suspenseContext = null == tailMode ? "null" : tailMode;
-      if (!didWarnAboutTailOptions[suspenseContext])
-        if (null == tailMode) {
-          if (
-            "forwards" === revealOrder ||
-            "backwards" === revealOrder ||
-            "unstable_legacy-backwards" === revealOrder
-          )
-            (didWarnAboutTailOptions[suspenseContext] = !0),
-              console.error(
-                'The default for the <SuspenseList tail="..."> prop is changing. To be future compatible you must explictly specify either "visible" (the current default), "collapsed" or "hidden".'
-              );
-        } else
-          "visible" !== tailMode &&
-          "collapsed" !== tailMode &&
-          "hidden" !== tailMode
-            ? ((didWarnAboutTailOptions[suspenseContext] = !0),
-              console.error(
-                '"%s" is not a supported value for tail on <SuspenseList />. Did you mean "visible", "collapsed" or "hidden"?',
-                tailMode
-              ))
-            : "forwards" !== revealOrder &&
-              "backwards" !== revealOrder &&
-              "unstable_legacy-backwards" !== revealOrder &&
-              ((didWarnAboutTailOptions[suspenseContext] = !0),
-              console.error(
-                '<SuspenseList tail="%s" /> is only valid if revealOrder is "forwards" or "backwards". Did you mean to specify revealOrder="forwards"?',
-                tailMode
-              ));
+      didWarnAboutTailOptions[suspenseContext] ||
+        null == tailMode ||
+        ("visible" !== tailMode &&
+        "collapsed" !== tailMode &&
+        "hidden" !== tailMode
+          ? ((didWarnAboutTailOptions[suspenseContext] = !0),
+            console.error(
+              '"%s" is not a supported value for tail on <SuspenseList />. Did you mean "visible", "collapsed" or "hidden"?',
+              tailMode
+            ))
+          : null != revealOrder &&
+            "forwards" !== revealOrder &&
+            "backwards" !== revealOrder &&
+            "unstable_legacy-backwards" !== revealOrder &&
+            ((didWarnAboutTailOptions[suspenseContext] = !0),
+            console.error(
+              '<SuspenseList tail="%s" /> is only valid if revealOrder is "forwards" (default) or "backwards". Did you mean to specify revealOrder="forwards"?',
+              tailMode
+            )));
       a: if (
-        ("forwards" === revealOrder ||
+        (null == revealOrder ||
+          "forwards" === revealOrder ||
           "backwards" === revealOrder ||
           "unstable_legacy-backwards" === revealOrder) &&
         void 0 !== newChildren &&
@@ -11803,29 +11790,6 @@ __DEV__ &&
           current = current.sibling;
         }
       switch (revealOrder) {
-        case "forwards":
-          renderLanes = workInProgress.child;
-          for (revealOrder = null; null !== renderLanes; )
-            (current = renderLanes.alternate),
-              null !== current &&
-                null === findFirstSuspended(current) &&
-                (revealOrder = renderLanes),
-              (renderLanes = renderLanes.sibling);
-          renderLanes = revealOrder;
-          null === renderLanes
-            ? ((revealOrder = workInProgress.child),
-              (workInProgress.child = null))
-            : ((revealOrder = renderLanes.sibling),
-              (renderLanes.sibling = null));
-          initSuspenseListRenderState(
-            workInProgress,
-            !1,
-            revealOrder,
-            renderLanes,
-            tailMode,
-            newChildren
-          );
-          break;
         case "backwards":
         case "unstable_legacy-backwards":
           renderLanes = null;
@@ -11860,8 +11824,31 @@ __DEV__ &&
             newChildren
           );
           break;
-        default:
+        case "independent":
           workInProgress.memoizedState = null;
+          break;
+        default:
+          renderLanes = workInProgress.child;
+          for (revealOrder = null; null !== renderLanes; )
+            (current = renderLanes.alternate),
+              null !== current &&
+                null === findFirstSuspended(current) &&
+                (revealOrder = renderLanes),
+              (renderLanes = renderLanes.sibling);
+          renderLanes = revealOrder;
+          null === renderLanes
+            ? ((revealOrder = workInProgress.child),
+              (workInProgress.child = null))
+            : ((revealOrder = renderLanes.sibling),
+              (renderLanes.sibling = null));
+          initSuspenseListRenderState(
+            workInProgress,
+            !1,
+            revealOrder,
+            renderLanes,
+            tailMode,
+            newChildren
+          );
       }
       return workInProgress.child;
     }
@@ -12987,26 +12974,31 @@ __DEV__ &&
     function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       if (!isHydrating)
         switch (renderState.tailMode) {
-          case "hidden":
-            hasRenderedATailFallback = renderState.tail;
-            for (var lastTailNode = null; null !== hasRenderedATailFallback; )
-              null !== hasRenderedATailFallback.alternate &&
-                (lastTailNode = hasRenderedATailFallback),
-                (hasRenderedATailFallback = hasRenderedATailFallback.sibling);
-            null === lastTailNode
-              ? (renderState.tail = null)
-              : (lastTailNode.sibling = null);
+          case "visible":
             break;
           case "collapsed":
-            lastTailNode = renderState.tail;
-            for (var _lastTailNode = null; null !== lastTailNode; )
-              null !== lastTailNode.alternate && (_lastTailNode = lastTailNode),
-                (lastTailNode = lastTailNode.sibling);
-            null === _lastTailNode
+            for (
+              var tailNode = renderState.tail, lastTailNode = null;
+              null !== tailNode;
+
+            )
+              null !== tailNode.alternate && (lastTailNode = tailNode),
+                (tailNode = tailNode.sibling);
+            null === lastTailNode
               ? hasRenderedATailFallback || null === renderState.tail
                 ? (renderState.tail = null)
                 : (renderState.tail.sibling = null)
-              : (_lastTailNode.sibling = null);
+              : (lastTailNode.sibling = null);
+            break;
+          default:
+            hasRenderedATailFallback = renderState.tail;
+            for (tailNode = null; null !== hasRenderedATailFallback; )
+              null !== hasRenderedATailFallback.alternate &&
+                (tailNode = hasRenderedATailFallback),
+                (hasRenderedATailFallback = hasRenderedATailFallback.sibling);
+            null === tailNode
+              ? (renderState.tail = null)
+              : (tailNode.sibling = null);
         }
     }
     function bubbleProperties(completedWork) {
@@ -13656,7 +13648,8 @@ __DEV__ &&
                   scheduleRetryEffect(workInProgress, current),
                   cutOffTailIfNeeded(newProps, !0),
                   null === newProps.tail &&
-                    "hidden" === newProps.tailMode &&
+                    "collapsed" !== newProps.tailMode &&
+                    "visible" !== newProps.tailMode &&
                     !nextResource.alternate &&
                     !isHydrating)
                 )
@@ -33254,11 +33247,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-classic-408b38ef-20251023" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-classic-26cf2804-20251031" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-classic-408b38ef-20251023\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-classic-26cf2804-20251031\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33301,10 +33294,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-classic-408b38ef-20251023",
+          version: "19.3.0-www-classic-26cf2804-20251031",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-classic-408b38ef-20251023"
+          reconcilerVersion: "19.3.0-www-classic-26cf2804-20251031"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -34083,5 +34076,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-classic-408b38ef-20251023";
+    exports.version = "19.3.0-www-classic-26cf2804-20251031";
   })();

@@ -4499,11 +4499,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
         a: {
           var children$jscomp$0 = props.children,
             revealOrder = props.revealOrder;
-          if (
-            "forwards" === revealOrder ||
-            "backwards" === revealOrder ||
-            "unstable_legacy-backwards" === revealOrder
-          ) {
+          if ("independent" !== revealOrder && "together" !== revealOrder) {
             if (isArrayImpl(children$jscomp$0)) {
               renderSuspenseListRows(
                 request,

@@ -2943,10 +2943,7 @@ module.exports = function ($$$config) {
           return node;
       } else if (
         19 === node.tag &&
-        ("forwards" === node.memoizedProps.revealOrder ||
-          "backwards" === node.memoizedProps.revealOrder ||
-          "unstable_legacy-backwards" === node.memoizedProps.revealOrder ||
-          "together" === node.memoizedProps.revealOrder)
+        "independent" !== node.memoizedProps.revealOrder
       ) {
         if (0 !== (node.flags & 128)) return node;
       } else if (null !== node.child) {
@@ -5812,28 +5809,6 @@ module.exports = function ($$$config) {
         current = current.sibling;
       }
     switch (revealOrder) {
-      case "forwards":
-        renderLanes = workInProgress.child;
-        for (revealOrder = null; null !== renderLanes; )
-          (current = renderLanes.alternate),
-            null !== current &&
-              null === findFirstSuspended(current) &&
-              (revealOrder = renderLanes),
-            (renderLanes = renderLanes.sibling);
-        renderLanes = revealOrder;
-        null === renderLanes
-          ? ((revealOrder = workInProgress.child),
-            (workInProgress.child = null))
-          : ((revealOrder = renderLanes.sibling), (renderLanes.sibling = null));
-        initSuspenseListRenderState(
-          workInProgress,
-          !1,
-          revealOrder,
-          renderLanes,
-          tailMode,
-          nextProps
-        );
-        break;
       case "backwards":
       case "unstable_legacy-backwards":
         renderLanes = null;
@@ -5868,8 +5843,30 @@ module.exports = function ($$$config) {
           nextProps
         );
         break;
-      default:
+      case "independent":
         workInProgress.memoizedState = null;
+        break;
+      default:
+        renderLanes = workInProgress.child;
+        for (revealOrder = null; null !== renderLanes; )
+          (current = renderLanes.alternate),
+            null !== current &&
+              null === findFirstSuspended(current) &&
+              (revealOrder = renderLanes),
+            (renderLanes = renderLanes.sibling);
+        renderLanes = revealOrder;
+        null === renderLanes
+          ? ((revealOrder = workInProgress.child),
+            (workInProgress.child = null))
+          : ((revealOrder = renderLanes.sibling), (renderLanes.sibling = null));
+        initSuspenseListRenderState(
+          workInProgress,
+          !1,
+          revealOrder,
+          renderLanes,
+          tailMode,
+          nextProps
+        );
     }
     return workInProgress.child;
   }
@@ -6938,27 +6935,31 @@ module.exports = function ($$$config) {
   function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
     if (!isHydrating)
       switch (renderState.tailMode) {
-        case "hidden":
-          hasRenderedATailFallback = renderState.tail;
-          for (var lastTailNode = null; null !== hasRenderedATailFallback; )
-            null !== hasRenderedATailFallback.alternate &&
-              (lastTailNode = hasRenderedATailFallback),
-              (hasRenderedATailFallback = hasRenderedATailFallback.sibling);
-          null === lastTailNode
-            ? (renderState.tail = null)
-            : (lastTailNode.sibling = null);
+        case "visible":
           break;
         case "collapsed":
-          lastTailNode = renderState.tail;
-          for (var lastTailNode$101 = null; null !== lastTailNode; )
-            null !== lastTailNode.alternate &&
-              (lastTailNode$101 = lastTailNode),
-              (lastTailNode = lastTailNode.sibling);
-          null === lastTailNode$101
+          for (
+            var tailNode = renderState.tail, lastTailNode = null;
+            null !== tailNode;
+
+          )
+            null !== tailNode.alternate && (lastTailNode = tailNode),
+              (tailNode = tailNode.sibling);
+          null === lastTailNode
             ? hasRenderedATailFallback || null === renderState.tail
               ? (renderState.tail = null)
               : (renderState.tail.sibling = null)
-            : (lastTailNode$101.sibling = null);
+            : (lastTailNode.sibling = null);
+          break;
+        default:
+          hasRenderedATailFallback = renderState.tail;
+          for (tailNode = null; null !== hasRenderedATailFallback; )
+            null !== hasRenderedATailFallback.alternate &&
+              (tailNode = hasRenderedATailFallback),
+              (hasRenderedATailFallback = hasRenderedATailFallback.sibling);
+          null === tailNode
+            ? (renderState.tail = null)
+            : (tailNode.sibling = null);
       }
   }
   function bubbleProperties(completedWork) {
@@ -7399,7 +7400,8 @@ module.exports = function ($$$config) {
                 scheduleRetryEffect(workInProgress, current),
                 cutOffTailIfNeeded(newProps, !0),
                 null === newProps.tail &&
-                  "hidden" === newProps.tailMode &&
+                  "collapsed" !== newProps.tailMode &&
+                  "visible" !== newProps.tailMode &&
                   !nextResource.alternate &&
                   !isHydrating)
               )
@@ -14253,7 +14255,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-408b38ef-20251023"
+      reconcilerVersion: "19.3.0-www-classic-26cf2804-20251031"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
