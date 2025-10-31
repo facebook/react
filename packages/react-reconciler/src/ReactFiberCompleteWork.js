@@ -1838,10 +1838,6 @@ function completeWork(
           }
         }
         if (renderState.isBackwards) {
-          // The effect list of the backwards tail will have been added
-          // to the end. This breaks the guarantee that life-cycles fire in
-          // sibling order but that isn't a strong guarantee promised by React.
-          // Especially since these might also just pop in during future commits.
           // Append to the beginning of the list.
           renderedTail.sibling = workInProgress.child;
           workInProgress.child = renderedTail;
