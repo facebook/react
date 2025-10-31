@@ -2017,7 +2017,11 @@ function renderSuspenseListRows(
       const parentSegment = task.blockedSegment;
       const childIndex = parentSegment.children.length;
       const insertionIndex = parentSegment.chunks.length;
-      for (let i = totalChildren - 1; i >= 0; i--) {
+      for (let n = 0; n < totalChildren; n++) {
+        const i =
+          revealOrder === 'unstable_legacy-backwards'
+            ? totalChildren - 1 - n
+            : n;
         const node = rows[i];
         task.row = previousSuspenseListRow = createSuspenseListRow(
           previousSuspenseListRow,

@@ -3247,18 +3247,14 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
     if (
       revealOrder != null &&
       revealOrder !== 'forwards' &&
+      revealOrder !== 'backwards' &&
       revealOrder !== 'unstable_legacy-backwards' &&
       revealOrder !== 'together' &&
       revealOrder !== 'independent' &&
       !didWarnAboutRevealOrder[cacheKey]
     ) {
       didWarnAboutRevealOrder[cacheKey] = true;
-      if (revealOrder === 'backwards') {
-        console.error(
-          'The rendering order of <SuspenseList revealOrder="backwards"> is changing. ' +
-            'To be future compatible you must specify revealOrder="legacy_unstable-backwards" instead.',
-        );
-      } else if (typeof revealOrder === 'string') {
+      if (typeof revealOrder === 'string') {
         switch (revealOrder.toLowerCase()) {
           case 'together':
           case 'forwards':
@@ -3371,6 +3367,17 @@ function initSuspenseListRenderState(
   }
 }
 
+function reverseChildren(fiber: Fiber): void {
+  let row = fiber.child;
+  fiber.child = null;
+  while (row !== null) {
+    const nextRow = row.sibling;
+    row.sibling = fiber.child;
+    fiber.child = row;
+    row = nextRow;
+  }
+}
+
 // This can end up rendering this component multiple passes.
 // The first pass splits the children fibers into two sets. A head and tail.
 // We first render the head. If anything is in fallback state, we do another
@@ -3409,7 +3416,16 @@ function updateSuspenseListComponent(
   validateTailOptions(tailMode, revealOrder);
   validateSuspenseListChildren(newChildren, revealOrder);
 
-  reconcileChildren(current, workInProgress, newChildren, renderLanes);
+  if (revealOrder === 'backwards' && current !== null) {
+    // For backwards the current mounted set will be backwards. Reconciling against it
+    // will lead to mismatches and reorders. We need to swap the original set first
+    // and then restore it afterwards.
+    reverseChildren(current);
+    reconcileChildren(current, workInProgress, newChildren, renderLanes);
+    reverseChildren(current);
+  } else {
+    reconcileChildren(current, workInProgress, newChildren, renderLanes);
+  }
   // Read how many children forks this set pushed so we can push it every time we retry.
   const treeForkCount = getIsHydrating() ? getForksAtLevel(workInProgress) : 0;
 
@@ -3434,7 +3450,37 @@ function updateSuspenseListComponent(
     workInProgress.memoizedState = null;
   } else {
     switch (revealOrder) {
-      case 'backwards':
+      case 'backwards': {
+        // We're going to find the first row that has existing content.
+        // We are also going to reverse the order of anything in the existing content
+        // since we want to actually render them backwards from the reconciled set.
+        // The tail is left in order, because it'll be added to the front as we
+        // complete each item.
+        const lastContentRow = findLastContentRow(workInProgress.child);
+        let tail;
+        if (lastContentRow === null) {
+          // The whole list is part of the tail.
+          tail = workInProgress.child;
+          workInProgress.child = null;
+        } else {
+          // Disconnect the tail rows after the content row.
+          // We're going to render them separately later in reverse order.
+          tail = lastContentRow.sibling;
+          lastContentRow.sibling = null;
+          // We have to now reverse the main content so it renders backwards too.
+          reverseChildren(workInProgress);
+        }
+        // TODO: If workInProgress.child is null, we can continue on the tail immediately.
+        initSuspenseListRenderState(
+          workInProgress,
+          true, // isBackwards
+          tail,
+          null, // last
+          tailMode,
+          treeForkCount,
+        );
+        break;
+      }
       case 'unstable_legacy-backwards': {
         // We're going to find the first row that has existing content.
         // At the same time we're going to reverse the list of everything

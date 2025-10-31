@@ -1022,7 +1022,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('warns if revealOrder="backwards" is specified', async () => {
+  it('displays each items in "backwards" order', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -1030,14 +1030,14 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <SuspenseList revealOrder="backwards" tail="visible">
-          <Suspense fallback={<Text text="Loading A" />}>
-            <A />
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
           </Suspense>
           <Suspense fallback={<Text text="Loading B" />}>
             <B />
           </Suspense>
-          <Suspense fallback={<Text text="Loading C" />}>
-            <C />
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
           </Suspense>
         </SuspenseList>
       );
@@ -1054,14 +1054,6 @@ describe('ReactSuspenseList', () => {
       'Loading A',
       // pre-warming
       'Suspend! [C]',
-    ]);
-
-    assertConsoleErrorDev([
-      'The rendering order of <SuspenseList revealOrder="backwards"> is changing. ' +
-        'To be future compatible you must specify ' +
-        'revealOrder="legacy_unstable-backwards" instead.' +
-        '\n    in SuspenseList (at **)' +
-        '\n    in Foo (at **)',
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1101,7 +1093,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('displays each items in "backwards" order', async () => {
+  it('displays each items in "backwards" order (legacy)', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
