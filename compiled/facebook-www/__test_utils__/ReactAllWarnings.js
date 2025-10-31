@@ -300,7 +300,6 @@ export default [
   "The provided `%s` option is an unsupported type %s. This value must be coerced to a string before using it here.",
   "The provided `%s` prop is an unsupported type %s. This value must be coerced to a string before using it here.",
   "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.",
-  "The rendering order of <SuspenseList revealOrder=\"backwards\"> is changing. To be future compatible you must specify revealOrder=\"legacy_unstable-backwards\" instead.",
   "The result of getServerSnapshot should be cached to avoid an infinite loop",
   "The result of getSnapshot should be cached to avoid an infinite loop",
   "The seed argument is not enabled outside experimental channels.",

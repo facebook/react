@@ -9494,6 +9494,16 @@ __DEV__ &&
         propagationRoot
       );
     }
+    function findLastContentRow(firstChild) {
+      for (var lastContentRow = null; null !== firstChild; ) {
+        var currentRow = firstChild.alternate;
+        null !== currentRow &&
+          null === findFirstSuspended(currentRow) &&
+          (lastContentRow = firstChild);
+        firstChild = firstChild.sibling;
+      }
+      return lastContentRow;
+    }
     function initSuspenseListRenderState(
       workInProgress,
       isBackwards,
@@ -9521,6 +9531,15 @@ __DEV__ &&
           (renderState.tailMode = tailMode),
           (renderState.treeForkCount = treeForkCount));
     }
+    function reverseChildren(fiber) {
+      var row = fiber.child;
+      for (fiber.child = null; null !== row; ) {
+        var nextRow = row.sibling;
+        row.sibling = fiber.child;
+        fiber.child = row;
+        row = nextRow;
+      }
+    }
     function updateSuspenseListComponent(current, workInProgress, renderLanes) {
       var nextProps = workInProgress.pendingProps,
         revealOrder = nextProps.revealOrder,
@@ -9538,6 +9557,7 @@ __DEV__ &&
       if (
         null != revealOrder &&
         "forwards" !== revealOrder &&
+        "backwards" !== revealOrder &&
         "unstable_legacy-backwards" !== revealOrder &&
         "together" !== revealOrder &&
         "independent" !== revealOrder &&
@@ -9545,12 +9565,8 @@ __DEV__ &&
       )
         if (
           ((didWarnAboutRevealOrder[suspenseContext] = !0),
-          "backwards" === revealOrder)
+          "string" === typeof revealOrder)
         )
-          console.error(
-            'The rendering order of <SuspenseList revealOrder="backwards"> is changing. To be future compatible you must specify revealOrder="legacy_unstable-backwards" instead.'
-          );
-        else if ("string" === typeof revealOrder)
           switch (revealOrder.toLowerCase()) {
             case "together":
             case "forwards":
@@ -9642,7 +9658,11 @@ __DEV__ &&
             'A single row was passed to a <SuspenseList revealOrder="%s" />. This is not useful since it needs multiple rows. Did you mean to pass multiple children or an array?',
             revealOrder
           );
-      reconcileChildren(current, workInProgress, newChildren, renderLanes);
+      "backwards" === revealOrder && null !== current
+        ? (reverseChildren(current),
+          reconcileChildren(current, workInProgress, newChildren, renderLanes),
+          reverseChildren(current))
+        : reconcileChildren(current, workInProgress, newChildren, renderLanes);
       isHydrating
         ? (warnIfNotHydrating(), (newChildren = treeForkCount))
         : (newChildren = 0);
@@ -9669,6 +9689,22 @@ __DEV__ &&
         }
       switch (revealOrder) {
         case "backwards":
+          renderLanes = findLastContentRow(workInProgress.child);
+          null === renderLanes
+            ? ((revealOrder = workInProgress.child),
+              (workInProgress.child = null))
+            : ((revealOrder = renderLanes.sibling),
+              (renderLanes.sibling = null),
+              reverseChildren(workInProgress));
+          initSuspenseListRenderState(
+            workInProgress,
+            !0,
+            revealOrder,
+            null,
+            tailMode,
+            newChildren
+          );
+          break;
         case "unstable_legacy-backwards":
           renderLanes = null;
           revealOrder = workInProgress.child;
@@ -9706,27 +9742,20 @@ __DEV__ &&
           workInProgress.memoizedState = null;
           break;
         default:
-          renderLanes = workInProgress.child;
-          for (revealOrder = null; null !== renderLanes; )
-            (current = renderLanes.alternate),
-              null !== current &&
-                null === findFirstSuspended(current) &&
-                (revealOrder = renderLanes),
-              (renderLanes = renderLanes.sibling);
-          renderLanes = revealOrder;
-          null === renderLanes
-            ? ((revealOrder = workInProgress.child),
-              (workInProgress.child = null))
-            : ((revealOrder = renderLanes.sibling),
-              (renderLanes.sibling = null));
-          initSuspenseListRenderState(
-            workInProgress,
-            !1,
-            revealOrder,
-            renderLanes,
-            tailMode,
-            newChildren
-          );
+          (renderLanes = findLastContentRow(workInProgress.child)),
+            null === renderLanes
+              ? ((revealOrder = workInProgress.child),
+                (workInProgress.child = null))
+              : ((revealOrder = renderLanes.sibling),
+                (renderLanes.sibling = null)),
+            initSuspenseListRenderState(
+              workInProgress,
+              !1,
+              revealOrder,
+              renderLanes,
+              tailMode,
+              newChildren
+            );
       }
       return workInProgress.child;
     }
@@ -22804,7 +22833,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-26cf2804-20251031"
+        reconcilerVersion: "19.3.0-www-modern-488d88b0-20251031"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

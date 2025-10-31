@@ -5186,47 +5186,54 @@ __DEV__ &&
             0 === --previousSuspenseListRow.pendingTasks &&
               finishSuspenseListRow(request, previousSuspenseListRow);
       else {
-        revealOrder = task.blockedSegment;
-        resumeSlots = revealOrder.children.length;
-        n = revealOrder.chunks.length;
-        for (i = keyPath - 1; 0 <= i; i--) {
-          node = rows[i];
+        resumeSlots = task.blockedSegment;
+        n = resumeSlots.children.length;
+        i = resumeSlots.chunks.length;
+        for (node = 0; node < keyPath; node++) {
+          resumeSegmentID =
+            "unstable_legacy-backwards" === revealOrder
+              ? keyPath - 1 - node
+              : node;
+          var _node3 = rows[resumeSegmentID];
           task.row = previousSuspenseListRow = createSuspenseListRow(
             previousSuspenseListRow
           );
-          task.treeContext = pushTreeContext(prevTreeContext, keyPath, i);
-          resumeSegmentID = createPendingSegment(
+          task.treeContext = pushTreeContext(
+            prevTreeContext,
+            keyPath,
+            resumeSegmentID
+          );
+          var newSegment = createPendingSegment(
             request,
-            n,
+            i,
             null,
             task.formatContext,
-            0 === i ? revealOrder.lastPushedText : !0,
+            0 === resumeSegmentID ? resumeSlots.lastPushedText : !0,
             !0
           );
-          revealOrder.children.splice(resumeSlots, 0, resumeSegmentID);
-          task.blockedSegment = resumeSegmentID;
-          warnForMissingKey(request, task, node);
+          resumeSlots.children.splice(n, 0, newSegment);
+          task.blockedSegment = newSegment;
+          warnForMissingKey(request, task, _node3);
           try {
-            renderNode(request, task, node, i),
+            renderNode(request, task, _node3, resumeSegmentID),
               pushSegmentFinale(
-                resumeSegmentID.chunks,
+                newSegment.chunks,
                 request.renderState,
-                resumeSegmentID.lastPushedText,
-                resumeSegmentID.textEmbedded
+                newSegment.lastPushedText,
+                newSegment.textEmbedded
               ),
-              (resumeSegmentID.status = COMPLETED),
+              (newSegment.status = COMPLETED),
               0 === --previousSuspenseListRow.pendingTasks &&
                 finishSuspenseListRow(request, previousSuspenseListRow);
           } catch (thrownValue) {
             throw (
-              ((resumeSegmentID.status =
-                12 === request.status ? ABORTED : ERRORED),
+              ((newSegment.status = 12 === request.status ? ABORTED : ERRORED),
               thrownValue)
             );
           }
         }
-        task.blockedSegment = revealOrder;
-        revealOrder.lastPushedText = !1;
+        task.blockedSegment = resumeSlots;
+        resumeSlots.lastPushedText = !1;
       }
       null !== prevRow &&
         null !== previousSuspenseListRow &&
@@ -10230,5 +10237,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-26cf2804-20251031";
+    exports.version = "19.3.0-www-modern-488d88b0-20251031";
   })();
