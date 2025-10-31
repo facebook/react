@@ -2804,7 +2804,39 @@ function incrementChunkDebugInfo(
   }
 }
 
-function addAsyncInfo(chunk: SomeChunk<any>, asyncInfo: ReactAsyncInfo): void {
+function filterDebugInfo(
+  response: Response,
+  value: {_debugInfo: ReactDebugInfo, ...},
+) {
+  if (response._debugEndTime === null) {
+    // No end time was defined, so we keep all debug info entries.
+    return;
+  }
+
+  // Remove any debug info entries that arrived after the defined end time.
+  const relativeEndTime =
+    response._debugEndTime -
+    // $FlowFixMe[prop-missing]
+    performance.timeOrigin;
+  const debugInfo = [];
+  for (let i = 0; i < value._debugInfo.length; i++) {
+    const info = value._debugInfo[i];
+    if (typeof info.time === 'number' && info.time > relativeEndTime) {
+      break;
+    }
+    if (info.awaited != null && info.awaited.end > relativeEndTime) {
+      break;
+    }
+    debugInfo.push(info);
+  }
+  value._debugInfo = debugInfo;
+}
+
+function finalizeDebugInfo(
+  response: Response,
+  chunk: SomeChunk<any>,
+  asyncInfo: ReactAsyncInfo,
+): void {
   const value = resolveLazy(chunk.value);
   if (
     typeof value === 'object' &&
@@ -2815,8 +2847,11 @@ function addAsyncInfo(chunk: SomeChunk<any>, asyncInfo: ReactAsyncInfo): void {
       value.$$typeof === REACT_LAZY_TYPE)
   ) {
     if (isArray(value._debugInfo)) {
+      const valueWithDebugInfo: {_debugInfo: ReactDebugInfo, ...} =
+        (value: any);
+      filterDebugInfo(response, valueWithDebugInfo);
       // $FlowFixMe[method-unbinding]
-      value._debugInfo.push(asyncInfo);
+      valueWithDebugInfo._debugInfo.push(asyncInfo);
     } else {
       Object.defineProperty((value: any), '_debugInfo', {
         configurable: false,
@@ -2826,6 +2861,7 @@ function addAsyncInfo(chunk: SomeChunk<any>, asyncInfo: ReactAsyncInfo): void {
       });
     }
   } else {
+    filterDebugInfo(response, chunk);
     // $FlowFixMe[method-unbinding]
     chunk._debugInfo.push(asyncInfo);
   }
@@ -2844,10 +2880,15 @@ function resolveChunkDebugInfo(
       // to the Promise that was waiting on the stream, or its underlying value.
       const asyncInfo: ReactAsyncInfo = {awaited: streamState._debugInfo};
       if (chunk.status === PENDING || chunk.status === BLOCKED) {
-        const boundAddAsyncInfo = addAsyncInfo.bind(null, chunk, asyncInfo);
-        chunk.then(boundAddAsyncInfo, boundAddAsyncInfo);
+        const boundFinalizeDebugInfo = finalizeDebugInfo.bind(
+          null,
+          response,
+          chunk,
+          asyncInfo,
+        );
+        chunk.then(boundFinalizeDebugInfo, boundFinalizeDebugInfo);
       } else {
-        addAsyncInfo(chunk, asyncInfo);
+        finalizeDebugInfo(response, chunk, asyncInfo);
       }
     }
   }
