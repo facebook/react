@@ -1377,29 +1377,32 @@ function renderSuspenseBoundary(
   // no parent segment so there's nothing to wait on.
   contentRootSegment.parentFlushed = true;
 
-  if (request.trackedPostpones !== null) {
+  const trackedPostpones = request.trackedPostpones;
+  if (trackedPostpones !== null || defer) {
+    // This is a prerender or deferred boundary. In this mode we want to render the fallback synchronously
+    // and schedule the content to render later. This is the opposite of what we do during a normal render
+    // where we try to skip rendering the fallback if the content itself can render synchronously
+
     // Stash the original stack frame.
     const suspenseComponentStack = task.componentStack;
-    // This is a prerender. In this mode we want to render the fallback synchronously and schedule
-    // the content to render later. This is the opposite of what we do during a normal render
-    // where we try to skip rendering the fallback if the content itself can render synchronously
-    const trackedPostpones = request.trackedPostpones;
 
     const fallbackKeyPath: KeyNode = [
       keyPath[0],
       'Suspense Fallback',
       keyPath[2],
     ];
-    const fallbackReplayNode: ReplayNode = [
-      fallbackKeyPath[1],
-      fallbackKeyPath[2],
-      ([]: Array<ReplayNode>),
-      null,
-    ];
-    trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
-    // We are rendering the fallback before the boundary content so we keep track of
-    // the fallback replay node until we determine if the primary content suspends
-    newBoundary.trackedFallbackNode = fallbackReplayNode;
+    if (trackedPostpones !== null) {
+      const fallbackReplayNode: ReplayNode = [
+        fallbackKeyPath[1],
+        fallbackKeyPath[2],
+        ([]: Array<ReplayNode>),
+        null,
+      ];
+      trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
+      // We are rendering the fallback before the boundary content so we keep track of
+      // the fallback replay node until we determine if the primary content suspends
+      newBoundary.trackedFallbackNode = fallbackReplayNode;
+    }
 
     task.blockedSegment = boundarySegment;
     task.blockedPreamble = newBoundary.fallbackPreamble;
