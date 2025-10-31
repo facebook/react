@@ -183,6 +183,7 @@ import {
   enableViewTransition,
   enableFizzBlockingRender,
   enableAsyncDebugInfo,
+  enableCPUSuspense,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -253,6 +254,7 @@ type SuspenseBoundary = {
   row: null | SuspenseListRow, // the row that this boundary blocks from completing.
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
+  defer: boolean, // never inline deferred boundaries
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
   contentState: HoistableState,
   fallbackState: HoistableState,
@@ -462,7 +464,9 @@ function isEligibleForOutlining(
   // The larger this limit is, the more we can save on preparing fallbacks in case we end up
   // outlining.
   return (
-    (boundary.byteSize > 500 || hasSuspenseyContent(boundary.contentState)) &&
+    (boundary.byteSize > 500 ||
+      hasSuspenseyContent(boundary.contentState) ||
+      boundary.defer) &&
     // For boundaries that can possibly contribute to the preamble we don't want to outline
     // them regardless of their size since the fallbacks should only be emitted if we've
     // errored the boundary.
@@ -798,6 +802,7 @@ function createSuspenseBoundary(
   fallbackAbortableTasks: Set<Task>,
   contentPreamble: null | Preamble,
   fallbackPreamble: null | Preamble,
+  defer: boolean,
 ): SuspenseBoundary {
   const boundary: SuspenseBoundary = {
     status: PENDING,
@@ -807,6 +812,7 @@ function createSuspenseBoundary(
     row: row,
     completedSegments: [],
     byteSize: 0,
+    defer: defer,
     fallbackAbortableTasks,
     errorDigest: null,
     contentState: createHoistableState(),
@@ -1315,6 +1321,7 @@ function renderSuspenseBoundary(
   // in case it ends up generating a large subtree of content.
   const fallback: ReactNodeList = props.fallback;
   const content: ReactNodeList = props.children;
+  const defer: boolean = enableCPUSuspense && props.defer === true;
 
   const fallbackAbortSet: Set<Task> = new Set();
   let newBoundary: SuspenseBoundary;
@@ -1325,6 +1332,7 @@ function renderSuspenseBoundary(
       fallbackAbortSet,
       createPreambleState(),
       createPreambleState(),
+      defer,
     );
   } else {
     newBoundary = createSuspenseBoundary(
@@ -1333,6 +1341,7 @@ function renderSuspenseBoundary(
       fallbackAbortSet,
       null,
       null,
+      defer,
     );
   }
   if (request.trackedPostpones !== null) {
@@ -1639,6 +1648,7 @@ function replaySuspenseBoundary(
 
   const content: ReactNodeList = props.children;
   const fallback: ReactNodeList = props.fallback;
+  const defer: boolean = enableCPUSuspense && props.defer === true;
 
   const fallbackAbortSet: Set<Task> = new Set();
   let resumedBoundary: SuspenseBoundary;
@@ -1649,6 +1659,7 @@ function replaySuspenseBoundary(
       fallbackAbortSet,
       createPreambleState(),
       createPreambleState(),
+      defer,
     );
   } else {
     resumedBoundary = createSuspenseBoundary(
@@ -1657,6 +1668,7 @@ function replaySuspenseBoundary(
       fallbackAbortSet,
       null,
       null,
+      defer,
     );
   }
   resumedBoundary.parentFlushed = true;
@@ -4552,6 +4564,7 @@ function abortRemainingSuspenseBoundary(
     new Set(),
     null,
     null,
+    false,
   );
   resumedBoundary.parentFlushed = true;
   // We restore the same id of this boundary as was used during prerender.
@@ -5759,7 +5772,8 @@ function flushSegment(
     !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
     (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
-      hasSuspenseyContent(boundary.contentState))
+      hasSuspenseyContent(boundary.contentState) ||
+      boundary.defer)
   ) {
     // Inlining this boundary would make the current sequence being written too large
     // and block the parent for too long. Instead, it will be emitted separately so that we
