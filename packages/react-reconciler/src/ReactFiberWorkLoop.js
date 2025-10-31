@@ -34,6 +34,7 @@ import {
   type ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
+import type {PriorityLevel} from 'scheduler/src/SchedulerPriorities';
 
 import {
   enableCreateEventHandleAPI,
@@ -5235,7 +5236,7 @@ export function restorePendingUpdaters(root: FiberRoot, lanes: Lanes): void {
 
 const fakeActCallbackNode = {};
 // $FlowFixMe[missing-local-annot]
-function scheduleCallback(priorityLevel: any, callback) {
+function scheduleCallback(priorityLevel: PriorityLevel, callback) {
   if (__DEV__) {
     // If we're currently inside an `act` scope, bypass Scheduler and push to
     // the `act` queue instead.
