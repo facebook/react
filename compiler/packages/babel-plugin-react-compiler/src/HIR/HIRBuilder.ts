@@ -988,7 +988,7 @@ export function createTemporaryPlace(
     identifier: makeTemporaryIdentifier(env.nextIdentifierId, loc),
     reactive: false,
     effect: Effect.Unknown,
-    loc: GeneratedSource,
+    loc,
   };
 }
 
