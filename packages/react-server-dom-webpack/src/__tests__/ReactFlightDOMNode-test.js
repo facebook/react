@@ -1197,11 +1197,20 @@ describe('ReactFlightDOMNode', () => {
     });
 
     it('should use late-arriving I/O debug info to enhance component and owner stacks when aborting a prerender', async () => {
+      // This test is constructing a scenario where a framework might separate
+      // I/O into different phases, e.g. runtime I/O and dynamic I/O. The
+      // framework might choose to define an end time for the Flight client,
+      // indicating that all I/O info (or any debug info for that matter) that
+      // arrives after that time should be ignored. When rendering in Fizz is
+      // then aborted, the late-arriving debug info that's used to enhance the
+      // owner stack only includes I/O info up to that end time.
+      let resolveRuntimeData;
       let resolveDynamicData;
 
-      async function getCachedData() {
-        // Cached data resolves in microtasks.
-        return Promise.resolve('Hi');
+      async function getRuntimeData() {
+        return new Promise(resolve => {
+          resolveRuntimeData = resolve;
+        });
       }
 
       async function getDynamicData() {
@@ -1211,12 +1220,12 @@ describe('ReactFlightDOMNode', () => {
       }
 
       async function Dynamic() {
-        const cachedData = await getCachedData();
+        const runtimeData = await getRuntimeData();
         const dynamicData = await getDynamicData();
 
         return (
           <p>
-            {cachedData} {dynamicData}
+            {runtimeData} {dynamicData}
           </p>
         );
       }
@@ -1239,25 +1248,30 @@ describe('ReactFlightDOMNode', () => {
         {filterStackFrame},
       );
 
-      const staticChunks = [];
+      const initialChunks = [];
       const dynamicChunks = [];
-      let isStatic = true;
+      let isDynamic = false;
 
       const passThrough = new Stream.PassThrough(streamOptions);
       stream.pipe(passThrough);
 
-      // Split chunks into static and dynamic chunks.
       passThrough.on('data', chunk => {
-        if (isStatic) {
-          staticChunks.push(chunk);
-        } else {
+        if (isDynamic) {
           dynamicChunks.push(chunk);
+        } else {
+          initialChunks.push(chunk);
         }
       });
 
+      let endTime;
+
       await new Promise(resolve => {
         setTimeout(() => {
-          isStatic = false;
+          resolveRuntimeData('Hi');
+        });
+        setTimeout(() => {
+          isDynamic = true;
+          endTime = performance.now() + performance.timeOrigin;
           resolveDynamicData('Josh');
           resolve();
         });
@@ -1267,15 +1281,16 @@ describe('ReactFlightDOMNode', () => {
         passThrough.on('end', resolve);
       });
 
-      // Create a new Readable and push all static chunks immediately.
+      // Create a new Readable and push all initial chunks immediately.
       const readable = new Stream.Readable({...streamOptions, read() {}});
-      for (let i = 0; i < staticChunks.length; i++) {
-        readable.push(staticChunks[i]);
+      for (let i = 0; i < initialChunks.length; i++) {
+        readable.push(initialChunks[i]);
       }
 
       const abortController = new AbortController();
 
-      // When prerendering is aborted, push all dynamic chunks.
+      // When prerendering is aborted, push all dynamic chunks. They won't be
+      // considered for rendering, but they include debug info we want to use.
       abortController.signal.addEventListener(
         'abort',
         () => {
@@ -1286,12 +1301,20 @@ describe('ReactFlightDOMNode', () => {
         {once: true},
       );
 
-      const response = ReactServerDOMClient.createFromNodeStream(readable, {
-        serverConsumerManifest: {
-          moduleMap: null,
-          moduleLoading: null,
+      const response = ReactServerDOMClient.createFromNodeStream(
+        readable,
+        {
+          serverConsumerManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
         },
-      });
+        {
+          // Debug info arriving after this end time will be ignored, e.g. the
+          // I/O info for the dynamic data.
+          endTime,
+        },
+      );
 
       function ClientRoot() {
         return use(response);
@@ -1335,12 +1358,12 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in Dynamic' +
             (gate(flags => flags.enableAsyncDebugInfo)
-              ? ' (file://ReactFlightDOMNode-test.js:1215:33)\n'
+              ? ' (file://ReactFlightDOMNode-test.js:1223:33)\n'
               : '\n') +
             '    in body\n' +
             '    in html\n' +
-            '    in App (file://ReactFlightDOMNode-test.js:1231:25)\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1297:16)',
+            '    in App (file://ReactFlightDOMNode-test.js:1240:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1320:16)',
         );
       } else {
         expect(
@@ -1349,7 +1372,7 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1297:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1320:16)',
         );
       }
 
@@ -1359,8 +1382,8 @@ describe('ReactFlightDOMNode', () => {
             normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
           ).toBe(
             '\n' +
-              '    in Dynamic (file://ReactFlightDOMNode-test.js:1215:33)\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1231:25)',
+              '    in Dynamic (file://ReactFlightDOMNode-test.js:1223:33)\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1240:25)',
           );
         } else {
           expect(
@@ -1368,7 +1391,7 @@ describe('ReactFlightDOMNode', () => {
           ).toBe(
             '' +
               '\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1231:25)',
+              '    in App (file://ReactFlightDOMNode-test.js:1240:25)',
           );
         }
       } else {
