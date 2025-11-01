@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoDerivedComputationsInEffects_exp
+// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 import {useEffect, useState} from 'react';
 
 function Component({initialName}) {
@@ -29,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputationsInEffects_exp
+import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 import { useEffect, useState } from "react";
 
 function Component(t0) {
@@ -78,6 +78,12 @@ export const FIXTURE_ENTRYPOINT = {
   params: [{ initialName: "John" }],
 };
 
+```
+
+## Logs
+
+```
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":107},"end":{"line":16,"column":1,"index":359},"filename":"derived-state-from-prop-setter-call-outside-effect-no-error.ts"},"fnName":"Component","memoSlots":6,"memoBlocks":3,"memoValues":4,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

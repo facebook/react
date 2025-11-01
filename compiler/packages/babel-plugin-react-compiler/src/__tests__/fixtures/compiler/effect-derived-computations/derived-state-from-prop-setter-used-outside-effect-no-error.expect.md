@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoDerivedComputationsInEffects_exp
+// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 import {useEffect, useState} from 'react';
 
 function MockComponent({onSet}) {
@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputationsInEffects_exp
+import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 import { useEffect, useState } from "react";
 
 function MockComponent(t0) {
@@ -79,6 +79,13 @@ export const FIXTURE_ENTRYPOINT = {
   params: [{ propValue: "test" }],
 };
 
+```
+
+## Logs
+
+```
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":107},"end":{"line":6,"column":1,"index":211},"filename":"derived-state-from-prop-setter-used-outside-effect-no-error.ts"},"fnName":"MockComponent","memoSlots":2,"memoBlocks":1,"memoValues":1,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":8,"column":0,"index":213},"end":{"line":15,"column":1,"index":402},"filename":"derived-state-from-prop-setter-used-outside-effect-no-error.ts"},"fnName":"Component","memoSlots":4,"memoBlocks":2,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output
