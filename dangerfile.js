@@ -31,9 +31,7 @@ const {markdown, danger, warn} = require('danger');
 const {promisify} = require('util');
 const glob = promisify(require('glob'));
 const gzipSize = require('gzip-size');
-const {writeFileSync} = require('fs');
-
-const {readFileSync, statSync} = require('fs');
+const {writeFileSync, readFileSync, statSync, existsSync} = require('fs');
 
 const BASE_DIR = 'base-build';
 const HEAD_DIR = 'build';
@@ -100,6 +98,66 @@ function row(result, baseSha, headSha) {
   return rowArr.join(' | ');
 }
 
+function getArtifactStats(dir, artifactPath) {
+  const fullPath = `${dir}/${artifactPath}`;
+  if (!existsSync(fullPath)) {
+    return null;
+  }
+  return {
+    size: statSync(fullPath).size,
+    gzipSize: gzipSize.fileSync(fullPath),
+  };
+}
+
+function createResult(artifactPath, baseStats, headStats) {
+  const baseSize = baseStats?.size ?? 0;
+  const baseSizeGzip = baseStats?.gzipSize ?? 0;
+  const headSize = headStats?.size ?? 0;
+  const headSizeGzip = headStats?.gzipSize ?? 0;
+
+  let change, changeGzip;
+  if (!baseStats && headStats) {
+    // New file
+    change = Infinity;
+    changeGzip = Infinity;
+  } else if (baseStats && !headStats) {
+    // Deleted file
+    change = -1;
+    changeGzip = -1;
+  } else {
+    // Modified file
+    change = baseSize === 0 ? 0 : (headSize - baseSize) / baseSize;
+    changeGzip =
+      baseSizeGzip === 0 ? 0 : (headSizeGzip - baseSizeGzip) / baseSizeGzip;
+  }
+
+  return {
+    path: artifactPath,
+    headSize,
+    headSizeGzip,
+    baseSize,
+    baseSizeGzip,
+    change,
+    changeGzip,
+  };
+}
+
+function isSignificantChange(result) {
+  return (
+    Math.abs(result.change) > SIGNIFICANCE_THRESHOLD ||
+    result.change === Infinity ||
+    result.change === -1
+  );
+}
+
+function isCriticalChange(result) {
+  return (
+    Math.abs(result.change) > CRITICAL_THRESHOLD ||
+    result.change === Infinity ||
+    result.change === -1
+  );
+}
+
 (async function () {
   // Use git locally to grab the commit which represents the place
   // where the branches differ
@@ -132,72 +190,40 @@ function row(result, baseSha, headSha) {
   ];
   if (
     commitFiles.every(filename => filename.includes('packages/react-devtools'))
-  )
+  ) {
     return;
+  }
 
   const resultsMap = new Map();
 
-  // Find all the head (current) artifacts paths.
-  const headArtifactPaths = await glob('**/*.js', {cwd: 'build'});
-  for (const artifactPath of headArtifactPaths) {
-    try {
-      // This will throw if there's no matching base artifact
-      const baseSize = statSync(BASE_DIR + '/' + artifactPath).size;
-      const baseSizeGzip = gzipSize.fileSync(BASE_DIR + '/' + artifactPath);
+  // Find all artifact paths from both base and head builds
+  const [headArtifactPaths, baseArtifactPaths] = await Promise.all([
+    glob('**/*.js', {cwd: HEAD_DIR}),
+    glob('**/*.js', {cwd: BASE_DIR}),
+  ]);
 
-      const headSize = statSync(HEAD_DIR + '/' + artifactPath).size;
-      const headSizeGzip = gzipSize.fileSync(HEAD_DIR + '/' + artifactPath);
-      resultsMap.set(artifactPath, {
-        path: artifactPath,
-        headSize,
-        headSizeGzip,
-        baseSize,
-        baseSizeGzip,
-        change: (headSize - baseSize) / baseSize,
-        changeGzip: (headSizeGzip - baseSizeGzip) / baseSizeGzip,
-      });
-    } catch {
-      // There's no matching base artifact. This is a new file.
-      const baseSize = 0;
-      const baseSizeGzip = 0;
-      const headSize = statSync(HEAD_DIR + '/' + artifactPath).size;
-      const headSizeGzip = gzipSize.fileSync(HEAD_DIR + '/' + artifactPath);
-      resultsMap.set(artifactPath, {
-        path: artifactPath,
-        headSize,
-        headSizeGzip,
-        baseSize,
-        baseSizeGzip,
-        change: Infinity,
-        changeGzip: Infinity,
-      });
-    }
-  }
+  // Create a set of all unique artifact paths
+  const allArtifactPaths = new Set([
+    ...headArtifactPaths,
+    ...baseArtifactPaths,
+  ]);
 
-  // Check for base artifacts that were deleted in the head.
-  const baseArtifactPaths = await glob('**/*.js', {cwd: 'base-build'});
-  for (const artifactPath of baseArtifactPaths) {
-    if (!resultsMap.has(artifactPath)) {
-      const baseSize = statSync(BASE_DIR + '/' + artifactPath).size;
-      const baseSizeGzip = gzipSize.fileSync(BASE_DIR + '/' + artifactPath);
-      const headSize = 0;
-      const headSizeGzip = 0;
-      resultsMap.set(artifactPath, {
-        path: artifactPath,
-        headSize,
-        headSizeGzip,
-        baseSize,
-        baseSizeGzip,
-        change: -1,
-        changeGzip: -1,
-      });
-    }
+  // Process all artifacts in a single pass
+  for (const artifactPath of allArtifactPaths) {
+    const baseStats = getArtifactStats(BASE_DIR, artifactPath);
+    const headStats = getArtifactStats(HEAD_DIR, artifactPath);
+    
+    const result = createResult(artifactPath, baseStats, headStats);
+    resultsMap.set(artifactPath, result);
   }
 
   const results = Array.from(resultsMap.values());
   results.sort((a, b) => b.change - a.change);
 
-  let criticalResults = [];
+  const criticalResults = [];
+  const significantResults = [];
+
+  // Process critical artifacts first (in fixed order)
   for (const artifactPath of CRITICAL_ARTIFACT_PATHS) {
     const result = resultsMap.get(artifactPath);
     if (result === undefined) {
@@ -208,33 +234,25 @@ function row(result, baseSha, headSha) {
       );
     }
     criticalResults.push(row(result, baseSha, headSha));
+    
+    // Also add to significant results if it meets the threshold
+    if (isSignificantChange(result)) {
+      significantResults.push(row(result, baseSha, headSha));
+    }
   }
 
-  let significantResults = [];
+  // Process remaining results
   for (const result of results) {
-    // If result exceeds critical threshold, add to top section.
-    if (
-      (result.change > CRITICAL_THRESHOLD ||
-        0 - result.change > CRITICAL_THRESHOLD ||
-        // New file
-        result.change === Infinity ||
-        // Deleted file
-        result.change === -1) &&
-      // Skip critical artifacts. We added those earlier, in a fixed order.
-      !CRITICAL_ARTIFACT_PATHS.has(result.path)
-    ) {
+    // Skip critical artifacts as they were already processed
+    if (CRITICAL_ARTIFACT_PATHS.has(result.path)) {
+      continue;
+    }
+
+    if (isCriticalChange(result)) {
       criticalResults.push(row(result, baseSha, headSha));
     }
 
-    // Do the same for results that exceed the significant threshold. These
-    // will go into the bottom, collapsed section. Intentionally including
-    // critical artifacts in this section, too.
-    if (
-      result.change > SIGNIFICANCE_THRESHOLD ||
-      0 - result.change > SIGNIFICANCE_THRESHOLD ||
-      result.change === Infinity ||
-      result.change === -1
-    ) {
+    if (isSignificantChange(result)) {
       significantResults.push(row(result, baseSha, headSha));
     }
   }
