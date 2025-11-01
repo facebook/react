@@ -247,13 +247,10 @@ declare const nativeFabricUIManager: {
   cloneNodeWithNewProps: (node: Object, newProps: ?Object) => Object,
   cloneNodeWithNewChildrenAndProps: (
     node: Object,
-    newPropsOrChildren: ?Object | $ReadOnlyArray<Object>,
+    newChildren: $ReadOnlyArray<Object>,
     newProps?: ?Object,
   ) => Object,
   appendChild: (node: Object, childNode: Object) => void,
-
-  createChildSet: () => Object,
-  appendChildToSet: (childSet: Object, childNode: Object) => void,
   completeRoot: (rootTag: number, childSet: Object) => void,
   registerEventHandler: (
     callback: (
