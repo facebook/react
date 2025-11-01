@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {Result} from '../Utils/Result';
 import {CompilerDiagnostic, CompilerError, Effect} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
@@ -20,7 +21,6 @@ import {
   isUseStateType,
   BasicBlock,
   isUseRefType,
-  GeneratedSource,
   SourceLocation,
 } from '../HIR';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
@@ -40,13 +40,50 @@ type ValidationContext = {
   readonly errors: CompilerError;
   readonly derivationCache: DerivationCache;
   readonly effects: Set<HIRFunction>;
-  readonly setStateCache: Map<string | undefined | null, Array<Place>>;
-  readonly effectSetStateCache: Map<string | undefined | null, Array<Place>>;
+  readonly setStateLoads: Map<IdentifierId, IdentifierId | null>;
+  readonly setStateUsages: Map<IdentifierId, Set<SourceLocation>>;
 };
 
 class DerivationCache {
   hasChanges: boolean = false;
   cache: Map<IdentifierId, DerivationMetadata> = new Map();
+  private previousCache: Map<IdentifierId, DerivationMetadata> | null = null;
+
+  takeSnapshot(): void {
+    this.previousCache = new Map();
+    for (const [key, value] of this.cache.entries()) {
+      this.previousCache.set(key, {
+        place: value.place,
+        sourcesIds: new Set(value.sourcesIds),
+        typeOfValue: value.typeOfValue,
+      });
+    }
+  }
+
+  checkForChanges(): void {
+    if (this.previousCache === null) {
+      this.hasChanges = true;
+      return;
+    }
+
+    for (const [key, value] of this.cache.entries()) {
+      const previousValue = this.previousCache.get(key);
+      if (
+        previousValue === undefined ||
+        !this.isDerivationEqual(previousValue, value)
+      ) {
+        this.hasChanges = true;
+        return;
+      }
+    }
+
+    if (this.cache.size !== this.previousCache.size) {
+      this.hasChanges = true;
+      return;
+    }
+
+    this.hasChanges = false;
+  }
 
   snapshot(): boolean {
     const hasChanges = this.hasChanges;
@@ -65,41 +102,27 @@ class DerivationCache {
       typeOfValue: typeOfValue ?? 'ignored',
     };
 
-    if (sourcesIds !== undefined) {
-      for (const id of sourcesIds) {
-        const sourcePlace = this.cache.get(id)?.place;
+    if (isNamedIdentifier(derivedVar)) {
+      newValue.sourcesIds.add(derivedVar.identifier.id);
+    }
 
-        if (sourcePlace === undefined) {
-          continue;
-        }
+    for (const id of sourcesIds) {
+      const sourceMetadata = this.cache.get(id);
 
-        /*
-         * If the identifier of the source is a promoted identifier, then
-         *  we should set the target as the source.
-         */
-        if (
-          sourcePlace.identifier.name === null ||
-          sourcePlace.identifier.name?.kind === 'promoted'
-        ) {
-          newValue.sourcesIds.add(derivedVar.identifier.id);
-        } else {
-          newValue.sourcesIds.add(sourcePlace.identifier.id);
+      if (sourceMetadata === undefined) {
+        continue;
+      }
+
+      if (isNamedIdentifier(sourceMetadata.place)) {
+        newValue.sourcesIds.add(sourceMetadata.place.identifier.id);
+      } else {
+        for (const sourcesSourceId of sourceMetadata.sourcesIds) {
+          newValue.sourcesIds.add(sourcesSourceId);
         }
       }
     }
 
-    if (newValue.sourcesIds.size === 0) {
-      newValue.sourcesIds.add(derivedVar.identifier.id);
-    }
-
-    const existingValue = this.cache.get(derivedVar.identifier.id);
-    if (
-      existingValue === undefined ||
-      !this.isDerivationEqual(existingValue, newValue)
-    ) {
-      this.cache.set(derivedVar.identifier.id, newValue);
-      this.hasChanges = true;
-    }
+    this.cache.set(derivedVar.identifier.id, newValue);
   }
 
   private isDerivationEqual(
@@ -119,6 +142,12 @@ class DerivationCache {
     }
     return true;
   }
+}
+
+function isNamedIdentifier(place: Place): boolean {
+  return (
+    place.identifier.name !== null && place.identifier.name?.kind === 'named'
+  );
 }
 
 /**
@@ -146,25 +175,22 @@ class DerivationCache {
  */
 export function validateNoDerivedComputationsInEffects_exp(
   fn: HIRFunction,
-): void {
+): Result<void, CompilerError> {
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
   const derivationCache = new DerivationCache();
   const errors = new CompilerError();
   const effects: Set<HIRFunction> = new Set();
 
-  const setStateCache: Map<string | undefined | null, Array<Place>> = new Map();
-  const effectSetStateCache: Map<
-    string | undefined | null,
-    Array<Place>
-  > = new Map();
+  const setStateLoads: Map<IdentifierId, IdentifierId> = new Map();
+  const setStateUsages: Map<IdentifierId, Set<SourceLocation>> = new Map();
 
   const context: ValidationContext = {
     functions,
     errors,
     derivationCache,
     effects,
-    setStateCache,
-    effectSetStateCache,
+    setStateLoads,
+    setStateUsages,
   };
 
   if (fn.fnType === 'Hook') {
@@ -172,10 +198,11 @@ export function validateNoDerivedComputationsInEffects_exp(
       if (param.kind === 'Identifier') {
         context.derivationCache.cache.set(param.identifier.id, {
           place: param,
-          sourcesIds: new Set([param.identifier.id]),
+          sourcesIds: new Set(
+            isNamedIdentifier(param) ? [param.identifier.id] : [],
+          ),
           typeOfValue: 'fromProps',
         });
-        context.derivationCache.hasChanges = true;
       }
     }
   } else if (fn.fnType === 'Component') {
@@ -183,15 +210,18 @@ export function validateNoDerivedComputationsInEffects_exp(
     if (props != null && props.kind === 'Identifier') {
       context.derivationCache.cache.set(props.identifier.id, {
         place: props,
-        sourcesIds: new Set([props.identifier.id]),
+        sourcesIds: new Set(
+          isNamedIdentifier(props) ? [props.identifier.id] : [],
+        ),
         typeOfValue: 'fromProps',
       });
-      context.derivationCache.hasChanges = true;
     }
   }
 
   let isFirstPass = true;
   do {
+    context.derivationCache.takeSnapshot();
+
     for (const block of fn.body.blocks.values()) {
       recordPhiDerivations(block, context);
       for (const instr of block.instructions) {
@@ -199,6 +229,7 @@ export function validateNoDerivedComputationsInEffects_exp(
       }
     }
 
+    context.derivationCache.checkForChanges();
     isFirstPass = false;
   } while (context.derivationCache.snapshot());
 
@@ -206,9 +237,7 @@ export function validateNoDerivedComputationsInEffects_exp(
     validateEffect(effect, context);
   }
 
-  if (errors.hasAnyErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }
 
 function recordPhiDerivations(
@@ -251,17 +280,67 @@ function joinValue(
   return 'fromPropsAndState';
 }
 
+function getRootSetState(
+  key: IdentifierId,
+  loads: Map<IdentifierId, IdentifierId | null>,
+  visited: Set<IdentifierId> = new Set(),
+): IdentifierId | null {
+  if (visited.has(key)) {
+    return null;
+  }
+  visited.add(key);
+
+  const parentId = loads.get(key);
+
+  if (parentId === undefined) {
+    return null;
+  }
+
+  if (parentId === null) {
+    return key;
+  }
+
+  return getRootSetState(parentId, loads, visited);
+}
+
+function maybeRecordSetState(
+  instr: Instruction,
+  loads: Map<IdentifierId, IdentifierId | null>,
+  usages: Map<IdentifierId, Set<SourceLocation>>,
+): void {
+  for (const operand of eachInstructionLValue(instr)) {
+    if (isSetStateType(operand.identifier)) {
+      if (instr.value.kind === 'LoadLocal') {
+        loads.set(operand.identifier.id, instr.value.place.identifier.id);
+      } else {
+        // this is a root setState
+        loads.set(operand.identifier.id, null);
+      }
+
+      const rootSetState = getRootSetState(operand.identifier.id, loads);
+      if (rootSetState !== null && usages.get(rootSetState) === undefined) {
+        usages.set(rootSetState, new Set([operand.loc]));
+      }
+    }
+  }
+}
+
 function recordInstructionDerivations(
   instr: Instruction,
   context: ValidationContext,
   isFirstPass: boolean,
 ): void {
+  if (isFirstPass) {
+    maybeRecordSetState(instr, context.setStateLoads, context.setStateUsages);
+  }
+
   let typeOfValue: TypeOfValue = 'ignored';
   const sources: Set<IdentifierId> = new Set();
   const {lvalue, value} = instr;
   if (value.kind === 'FunctionExpression') {
     context.functions.set(lvalue.identifier.id, value);
     for (const [, block] of value.loweredFunc.func.body.blocks) {
+      recordPhiDerivations(block, context);
       for (const instr of block.instructions) {
         recordInstructionDerivations(instr, context, isFirstPass);
       }
@@ -289,15 +368,13 @@ function recordInstructionDerivations(
   }
 
   for (const operand of eachInstructionOperand(instr)) {
-    if (
-      isSetStateType(operand.identifier) &&
-      operand.loc !== GeneratedSource &&
-      isFirstPass
-    ) {
-      if (context.setStateCache.has(operand.loc.identifierName)) {
-        context.setStateCache.get(operand.loc.identifierName)!.push(operand);
-      } else {
-        context.setStateCache.set(operand.loc.identifierName, [operand]);
+    if (isSetStateType(operand.identifier) && isFirstPass) {
+      const rootSetStateId = getRootSetState(
+        operand.identifier.id,
+        context.setStateLoads,
+      );
+      if (rootSetStateId !== null) {
+        context.setStateUsages.get(rootSetStateId)?.add(operand.loc);
       }
     }
 
@@ -310,9 +387,7 @@ function recordInstructionDerivations(
     }
 
     typeOfValue = joinValue(typeOfValue, operandMetadata.typeOfValue);
-    for (const id of operandMetadata.sourcesIds) {
-      sources.add(id);
-    }
+    sources.add(operand.identifier.id);
   }
 
   if (typeOfValue === 'ignored') {
@@ -331,11 +406,24 @@ function recordInstructionDerivations(
       case Effect.ConditionallyMutateIterator:
       case Effect.Mutate: {
         if (isMutable(instr, operand)) {
-          context.derivationCache.addDerivationEntry(
-            operand,
-            sources,
-            typeOfValue,
-          );
+          if (context.derivationCache.cache.has(operand.identifier.id)) {
+            const operandMetadata = context.derivationCache.cache.get(
+              operand.identifier.id,
+            );
+
+            if (operandMetadata !== undefined) {
+              operandMetadata.typeOfValue = joinValue(
+                typeOfValue,
+                operandMetadata.typeOfValue,
+              );
+            }
+          } else {
+            context.derivationCache.addDerivationEntry(
+              operand,
+              sources,
+              typeOfValue,
+            );
+          }
         }
         break;
       }
@@ -367,6 +455,89 @@ function recordInstructionDerivations(
   }
 }
 
+function buildDataFlowTree(
+  sourceId: IdentifierId,
+  indent: string = '',
+  isLast: boolean = true,
+  context: ValidationContext,
+  propsSet: Set<string>,
+  stateSet: Set<string>,
+  allSetStateDeps: Set<IdentifierId>,
+): string {
+  const sourceMetadata = context.derivationCache.cache.get(sourceId);
+  if (!sourceMetadata || !sourceMetadata.place.identifier.name?.value) {
+    return '';
+  }
+
+  const sourceName = sourceMetadata.place.identifier.name.value;
+  const prefix = indent + (isLast ? '└── ' : '├── ');
+  const childIndent = indent + (isLast ? '    ' : '│   ');
+
+  const childSourceIds = Array.from(sourceMetadata.sourcesIds).filter(
+    id => id !== sourceId,
+  );
+
+  const isOriginal = childSourceIds.length === 0;
+
+  let result = `${prefix}${sourceName}`;
+
+  allSetStateDeps.add(sourceMetadata.place.identifier.id);
+
+  if (isOriginal) {
+    let typeLabel: string;
+    if (sourceMetadata.typeOfValue === 'fromProps') {
+      propsSet.add(sourceMetadata.place.identifier.name?.value);
+      typeLabel = 'Prop';
+    } else if (sourceMetadata.typeOfValue === 'fromState') {
+      stateSet.add(sourceMetadata.place.identifier.name?.value);
+      typeLabel = 'State';
+    } else {
+      propsSet.add(sourceMetadata.place.identifier.name?.value);
+      stateSet.add(sourceMetadata.place.identifier.name?.value);
+      typeLabel = 'Prop and State';
+    }
+    result += ` (${typeLabel})`;
+  }
+
+  if (childSourceIds.length > 0) {
+    result += '\n';
+    childSourceIds.forEach((childId, index) => {
+      const childTree = buildDataFlowTree(
+        childId,
+        childIndent,
+        index === childSourceIds.length - 1,
+        context,
+        propsSet,
+        stateSet,
+        allSetStateDeps,
+      );
+      if (childTree) {
+        result += childTree + '\n';
+      }
+    });
+    result = result.slice(0, -1);
+  }
+
+  return result;
+}
+
+function getFnGlobalDeps(
+  fn: FunctionExpression | undefined,
+  deps: Set<IdentifierId>,
+) {
+  if (!fn) {
+    return;
+  }
+
+  for (const [, block] of fn.loweredFunc.func.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'LoadLocal') {
+        deps.add(instr.value.place.identifier.id);
+      }
+    }
+  }
+}
+
 function validateEffect(
   effectFunction: HIRFunction,
   context: ValidationContext,
@@ -375,13 +546,34 @@ function validateEffect(
 
   const effectDerivedSetStateCalls: Array<{
     value: CallExpression;
-    loc: SourceLocation;
+    id: IdentifierId;
     sourceIds: Set<IdentifierId>;
     typeOfValue: TypeOfValue;
   }> = [];
 
+  const effectSetStateUsages: Map<
+    IdentifierId,
+    Set<SourceLocation>
+  > = new Map();
+
+  const cleanUpFunctionDeps: Set<IdentifierId> = new Set();
+
   const globals: Set<IdentifierId> = new Set();
   for (const block of effectFunction.body.blocks.values()) {
+    /*
+     * if the block is in an effect and is of type return then its an effect's cleanup function
+     * if the cleanup function depends on a value from which effect-set state is derived then
+     * we can't validate
+     */
+    if (
+      block.terminal.kind === 'return' &&
+      block.terminal.returnVariant === 'Explicit'
+    ) {
+      getFnGlobalDeps(
+        context.functions.get(block.terminal.value.identifier.id),
+        cleanUpFunctionDeps,
+      );
+    }
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
         // skip if block has a back edge
@@ -395,19 +587,16 @@ function validateEffect(
         return;
       }
 
+      maybeRecordSetState(instr, context.setStateLoads, effectSetStateUsages);
+
       for (const operand of eachInstructionOperand(instr)) {
-        if (
-          isSetStateType(operand.identifier) &&
-          operand.loc !== GeneratedSource
-        ) {
-          if (context.effectSetStateCache.has(operand.loc.identifierName)) {
-            context.effectSetStateCache
-              .get(operand.loc.identifierName)!
-              .push(operand);
-          } else {
-            context.effectSetStateCache.set(operand.loc.identifierName, [
-              operand,
-            ]);
+        if (isSetStateType(operand.identifier)) {
+          const rootSetStateId = getRootSetState(
+            operand.identifier.id,
+            context.setStateLoads,
+          );
+          if (rootSetStateId !== null) {
+            effectSetStateUsages.get(rootSetStateId)?.add(operand.loc);
           }
         }
       }
@@ -425,7 +614,7 @@ function validateEffect(
         if (argMetadata !== undefined) {
           effectDerivedSetStateCalls.push({
             value: instr.value,
-            loc: instr.value.callee.loc,
+            id: instr.value.callee.identifier.id,
             sourceIds: argMetadata.sourcesIds,
             typeOfValue: argMetadata.typeOfValue,
           });
@@ -459,37 +648,69 @@ function validateEffect(
   }
 
   for (const derivedSetStateCall of effectDerivedSetStateCalls) {
+    const rootSetStateCall = getRootSetState(
+      derivedSetStateCall.id,
+      context.setStateLoads,
+    );
+
     if (
-      derivedSetStateCall.loc !== GeneratedSource &&
-      context.effectSetStateCache.has(derivedSetStateCall.loc.identifierName) &&
-      context.setStateCache.has(derivedSetStateCall.loc.identifierName) &&
-      context.effectSetStateCache.get(derivedSetStateCall.loc.identifierName)!
-        .length ===
-        context.setStateCache.get(derivedSetStateCall.loc.identifierName)!
-          .length -
-          1
+      rootSetStateCall !== null &&
+      effectSetStateUsages.has(rootSetStateCall) &&
+      context.setStateUsages.has(rootSetStateCall) &&
+      effectSetStateUsages.get(rootSetStateCall)!.size ===
+        context.setStateUsages.get(rootSetStateCall)!.size - 1
     ) {
-      const derivedDepsStr = Array.from(derivedSetStateCall.sourceIds)
-        .map(sourceId => {
-          const sourceMetadata = context.derivationCache.cache.get(sourceId);
-          return sourceMetadata?.place.identifier.name?.value;
-        })
-        .filter(Boolean)
-        .join(', ');
+      const allSourceIds = Array.from(derivedSetStateCall.sourceIds);
+      const propsSet = new Set<string>();
+      const stateSet = new Set<string>();
+      const allSetStateDeps = new Set<IdentifierId>();
 
-      let description;
+      const trees = allSourceIds
+        .map((id, index) =>
+          buildDataFlowTree(
+            id,
+            '',
+            index === allSourceIds.length - 1,
+            context,
+            propsSet,
+            stateSet,
+            allSetStateDeps,
+          ),
+        )
+        .filter(Boolean);
 
-      if (derivedSetStateCall.typeOfValue === 'fromProps') {
-        description = `From props: [${derivedDepsStr}]`;
-      } else if (derivedSetStateCall.typeOfValue === 'fromState') {
-        description = `From local state: [${derivedDepsStr}]`;
-      } else {
-        description = `From props and local state: [${derivedDepsStr}]`;
+      for (const dep of allSetStateDeps) {
+        if (cleanUpFunctionDeps.has(dep)) {
+          return;
+        }
       }
+
+      const propsArr = Array.from(propsSet);
+      const stateArr = Array.from(stateSet);
+
+      let rootSources = '';
+      if (propsArr.length > 0) {
+        rootSources += `Props: [${propsArr.join(', ')}]`;
+      }
+      if (stateArr.length > 0) {
+        if (rootSources) rootSources += '\n';
+        rootSources += `State: [${stateArr.join(', ')}]`;
+      }
+
+      const description = `Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user
+
+This setState call is setting a derived value that depends on the following reactive sources:
+
+${rootSources}
+
+Data Flow Tree:
+${trees.join('\n')}
+
+See: https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state`;
 
       context.errors.pushDiagnostic(
         CompilerDiagnostic.create({
-          description: `Derived values (${description}) should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user`,
+          description: description,
           category: ErrorCategory.EffectDerivationsOfState,
           reason:
             'You might not need an effect. Derive values in render, not effects.',
