@@ -1,4 +1,4 @@
-// @validateNoDerivedComputationsInEffects_exp
+// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 import {useEffect, useState, useRef} from 'react';
 
 export default function Component({test}) {

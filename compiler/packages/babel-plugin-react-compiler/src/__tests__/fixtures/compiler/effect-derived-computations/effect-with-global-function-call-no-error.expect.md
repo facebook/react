@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoDerivedComputationsInEffects_exp
+// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 import {useEffect, useState} from 'react';
 
 function Component({propValue}) {
@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputationsInEffects_exp
+import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 import { useEffect, useState } from "react";
 
 function Component(t0) {
@@ -64,6 +64,12 @@ export const FIXTURE_ENTRYPOINT = {
   params: [{ propValue: "test" }],
 };
 
+```
+
+## Logs
+
+```
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":107},"end":{"line":12,"column":1,"index":298},"filename":"effect-with-global-function-call-no-error.ts"},"fnName":"Component","memoSlots":5,"memoBlocks":2,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output
