@@ -4658,8 +4658,6 @@ __DEV__ &&
       if (null != debugInfo)
         for (var i = debugInfo.length - 1; 0 <= i; i--) {
           var info = debugInfo[i];
-          if ("string" === typeof info.name) break;
-          if ("number" === typeof info.time) break;
           if (null != info.awaited) {
             var bestStack = null == info.debugStack ? info.awaited : info;
             if (void 0 !== bestStack.debugStack) {
@@ -7087,9 +7085,28 @@ __DEV__ &&
       var errorInfo = getThrownInfo(task.componentStack);
       if (enableAsyncDebugInfo) {
         var node = task.node;
-        null !== node &&
+        if (null !== node && "object" === typeof node) {
+          for (
+            var debugInfo = node._debugInfo;
+            "object" === typeof node &&
+            null !== node &&
+            node.$$typeof === REACT_LAZY_TYPE;
+
+          ) {
+            var payload = node._payload;
+            if ("fulfilled" === payload.status) node = payload.value;
+            else break;
+          }
           "object" === typeof node &&
-          pushHaltedAwaitOnComponentStack(task, node._debugInfo);
+            null !== node &&
+            (isArrayImpl(node) ||
+              "function" === typeof node[ASYNC_ITERATOR] ||
+              node.$$typeof === REACT_ELEMENT_TYPE ||
+              node.$$typeof === REACT_LAZY_TYPE) &&
+            isArrayImpl(node._debugInfo) &&
+            (debugInfo = node._debugInfo);
+          pushHaltedAwaitOnComponentStack(task, debugInfo);
+        }
       }
       if (null === boundary) {
         if (13 !== request.status && 14 !== request.status) {
@@ -8199,6 +8216,7 @@ __DEV__ &&
       REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
+      ASYNC_ITERATOR = Symbol.asyncIterator,
       isArrayImpl = Array.isArray,
       jsxPropsParents = new WeakMap(),
       jsxChildrenParents = new WeakMap(),

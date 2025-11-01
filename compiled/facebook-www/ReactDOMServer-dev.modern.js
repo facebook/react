@@ -4909,8 +4909,6 @@ __DEV__ &&
       if (null != debugInfo)
         for (var i = debugInfo.length - 1; 0 <= i; i--) {
           var info = debugInfo[i];
-          if ("string" === typeof info.name) break;
-          if ("number" === typeof info.time) break;
           if (null != info.awaited) {
             var bestStack = null == info.debugStack ? info.awaited : info;
             if (void 0 !== bestStack.debugStack) {
@@ -7272,9 +7270,28 @@ __DEV__ &&
       var errorInfo = getThrownInfo(task.componentStack);
       if (enableAsyncDebugInfo) {
         var node = task.node;
-        null !== node &&
+        if (null !== node && "object" === typeof node) {
+          for (
+            var debugInfo = node._debugInfo;
+            "object" === typeof node &&
+            null !== node &&
+            node.$$typeof === REACT_LAZY_TYPE;
+
+          ) {
+            var payload = node._payload;
+            if ("fulfilled" === payload.status) node = payload.value;
+            else break;
+          }
           "object" === typeof node &&
-          pushHaltedAwaitOnComponentStack(task, node._debugInfo);
+            null !== node &&
+            (isArrayImpl(node) ||
+              "function" === typeof node[ASYNC_ITERATOR] ||
+              node.$$typeof === REACT_ELEMENT_TYPE ||
+              node.$$typeof === REACT_LAZY_TYPE) &&
+            isArrayImpl(node._debugInfo) &&
+            (debugInfo = node._debugInfo);
+          pushHaltedAwaitOnComponentStack(task, debugInfo);
+        }
       }
       if (null === boundary) {
         if (13 !== request.status && request.status !== CLOSED) {
@@ -8767,6 +8784,7 @@ __DEV__ &&
       REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
+      ASYNC_ITERATOR = Symbol.asyncIterator,
       isArrayImpl = Array.isArray,
       jsxPropsParents = new WeakMap(),
       jsxChildrenParents = new WeakMap(),
@@ -10237,5 +10255,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-488d88b0-20251031";
+    exports.version = "19.3.0-www-modern-561ee24d-20251101";
   })();
