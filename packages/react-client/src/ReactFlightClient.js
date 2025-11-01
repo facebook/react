@@ -501,6 +501,34 @@ function createErrorChunk<T>(
   return new ReactPromise(ERRORED, null, error);
 }
 
+function filterDebugInfo(
+  response: Response,
+  value: {_debugInfo: ReactDebugInfo, ...},
+) {
+  if (response._debugEndTime === null) {
+    // No end time was defined, so we keep all debug info entries.
+    return;
+  }
+
+  // Remove any debug info entries that arrived after the defined end time.
+  const relativeEndTime =
+    response._debugEndTime -
+    // $FlowFixMe[prop-missing]
+    performance.timeOrigin;
+  const debugInfo = [];
+  for (let i = 0; i < value._debugInfo.length; i++) {
+    const info = value._debugInfo[i];
+    if (typeof info.time === 'number' && info.time > relativeEndTime) {
+      break;
+    }
+    if (info.awaited != null && info.awaited.end > relativeEndTime) {
+      break;
+    }
+    debugInfo.push(info);
+  }
+  value._debugInfo = debugInfo;
+}
+
 function moveDebugInfoFromChunkToInnerValue<T>(
   chunk: InitializedChunk<T> | InitializedStreamChunk<any>,
   value: T,
@@ -535,7 +563,17 @@ function moveDebugInfoFromChunkToInnerValue<T>(
   }
 }
 
+function processChunkDebugInfo<T>(
+  response: Response,
+  chunk: InitializedChunk<T> | InitializedStreamChunk<any>,
+  value: T,
+): void {
+  filterDebugInfo(response, chunk);
+  moveDebugInfoFromChunkToInnerValue(chunk, value);
+}
+
 function wakeChunk<T>(
+  response: Response,
   listeners: Array<InitializationReference | (T => mixed)>,
   value: T,
   chunk: InitializedChunk<T>,
@@ -550,7 +588,7 @@ function wakeChunk<T>(
   }
 
   if (__DEV__) {
-    moveDebugInfoFromChunkToInnerValue(chunk, value);
+    processChunkDebugInfo(response, chunk, value);
   }
 }
 
@@ -596,13 +634,14 @@ function resolveBlockedCycle<T>(
 }
 
 function wakeChunkIfInitialized<T>(
+  response: Response,
   chunk: SomeChunk<T>,
   resolveListeners: Array<InitializationReference | (T => mixed)>,
   rejectListeners: null | Array<InitializationReference | (mixed => mixed)>,
 ): void {
   switch (chunk.status) {
     case INITIALIZED:
-      wakeChunk(resolveListeners, chunk.value, chunk);
+      wakeChunk(response, resolveListeners, chunk.value, chunk);
       break;
     case BLOCKED:
       // It is possible that we're blocked on our own chunk if it's a cycle.
@@ -630,6 +669,7 @@ function wakeChunkIfInitialized<T>(
               case INITIALIZED:
                 const initializedChunk: InitializedChunk<T> = (chunk: any);
                 wakeChunk(
+                  response,
                   resolveListeners,
                   initializedChunk.value,
                   initializedChunk,
@@ -833,7 +873,7 @@ function resolveModelChunk<T>(
     // longer be rendered or might not be the highest pri.
     initializeModelChunk(resolvedChunk);
     // The status might have changed after initialization.
-    wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+    wakeChunkIfInitialized(response, chunk, resolveListeners, rejectListeners);
   }
 }
 
@@ -862,7 +902,7 @@ function resolveModuleChunk<T>(
   }
   if (resolveListeners !== null) {
     initializeModuleChunk(resolvedChunk);
-    wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+    wakeChunkIfInitialized(response, chunk, resolveListeners, rejectListeners);
   }
 }
 
@@ -1027,7 +1067,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     initializedChunk.value = value;
 
     if (__DEV__) {
-      moveDebugInfoFromChunkToInnerValue(initializedChunk, value);
+      processChunkDebugInfo(response, initializedChunk, value);
     }
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
@@ -1586,10 +1626,10 @@ function fulfillReference(
     initializedChunk.value = handler.value;
     initializedChunk.reason = handler.reason; // Used by streaming chunks
     if (resolveListeners !== null) {
-      wakeChunk(resolveListeners, handler.value, initializedChunk);
+      wakeChunk(response, resolveListeners, handler.value, initializedChunk);
     } else {
       if (__DEV__) {
-        moveDebugInfoFromChunkToInnerValue(initializedChunk, handler.value);
+        processChunkDebugInfo(response, initializedChunk, handler.value);
       }
     }
   }
@@ -1839,10 +1879,10 @@ function loadServerReference<A: Iterable<any>, T>(
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
       if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, handler.value, initializedChunk);
+        wakeChunk(response, resolveListeners, handler.value, initializedChunk);
       } else {
         if (__DEV__) {
-          moveDebugInfoFromChunkToInnerValue(initializedChunk, handler.value);
+          processChunkDebugInfo(response, initializedChunk, handler.value);
         }
       }
     }
@@ -3080,10 +3120,10 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   resolvedChunk.value = stream;
   resolvedChunk.reason = controller;
   if (resolveListeners !== null) {
-    wakeChunk(resolveListeners, chunk.value, (chunk: any));
+    wakeChunk(response, resolveListeners, chunk.value, (chunk: any));
   } else {
     if (__DEV__) {
-      moveDebugInfoFromChunkToInnerValue(resolvedChunk, stream);
+      processChunkDebugInfo(response, resolvedChunk, stream);
     }
   }
 }
@@ -3223,7 +3263,12 @@ function startAsyncIterable<T>(
         initializedChunk.status = INITIALIZED;
         initializedChunk.value = {done: false, value: value};
         if (resolveListeners !== null) {
-          wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+          wakeChunkIfInitialized(
+            response,
+            chunk,
+            resolveListeners,
+            rejectListeners,
+          );
         }
       }
       nextWriteIndex++;
