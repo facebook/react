@@ -12,7 +12,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }): JSX.Element {
-  'use no memo';
   return (
     <html lang="en">
       <head>
@@ -23,7 +22,7 @@ export default function RootLayout({
         </title>
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"></meta>
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="manifest" href="/site.webmanifest" />
         <link
