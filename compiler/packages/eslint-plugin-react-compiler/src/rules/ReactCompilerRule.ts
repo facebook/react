@@ -14,7 +14,7 @@ import {
 import type {Linter, Rule} from 'eslint';
 import runReactCompiler, {RunCacheEntry} from '../shared/RunReactCompiler';
 import {
-  ErrorSeverity,
+  ErrorCategory,
   LintRulePreset,
   LintRules,
   type LintRule,
@@ -108,14 +108,15 @@ function hasFlowSuppression(
   return false;
 }
 
-function makeRule(rule: LintRule): Rule.RuleModule {
+function makeRule(rules: Array<LintRule>): Rule.RuleModule {
+  const categories = new Set(rules.map(rule => rule.category));
   const create = (context: Rule.RuleContext): Rule.RuleListener => {
     const result = getReactCompilerResult(context);
 
     for (const event of result.events) {
       if (event.kind === 'CompileError') {
         const detail = event.detail;
-        if (detail.category === rule.category) {
+        if (categories.has(detail.category)) {
           const loc = detail.primaryLocation();
           if (loc == null || typeof loc === 'symbol') {
             continue;
@@ -150,8 +151,8 @@ function makeRule(rule: LintRule): Rule.RuleModule {
     meta: {
       type: 'problem',
       docs: {
-        description: rule.description,
-        recommended: rule.preset === LintRulePreset.Recommended,
+        description: 'React Compiler diagnostics',
+        recommended: true,
       },
       fixable: 'code',
       hasSuggestions: true,
@@ -162,47 +163,13 @@ function makeRule(rule: LintRule): Rule.RuleModule {
   };
 }
 
-type RulesConfig = {
-  [name: string]: {rule: Rule.RuleModule; severity: ErrorSeverity};
-};
+export default makeRule(
+  LintRules.filter(
+    rule =>
+      rule.preset === LintRulePreset.Recommended ||
+      rule.preset === LintRulePreset.RecommendedLatest ||
+      rule.category === ErrorCategory.CapitalizedCalls,
+  ),
+);
 
-export const allRules: RulesConfig = LintRules.reduce((acc, rule) => {
-  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
-  return acc;
-}, {} as RulesConfig);
-
-export const recommendedRules: RulesConfig = LintRules.filter(
-  rule => rule.preset === LintRulePreset.Recommended,
-).reduce((acc, rule) => {
-  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
-  return acc;
-}, {} as RulesConfig);
-
-export const recommendedLatestRules: RulesConfig = LintRules.filter(
-  rule =>
-    rule.preset === LintRulePreset.Recommended ||
-    rule.preset === LintRulePreset.RecommendedLatest,
-).reduce((acc, rule) => {
-  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
-  return acc;
-}, {} as RulesConfig);
-
-export function mapErrorSeverityToESlint(
-  severity: ErrorSeverity,
-): Linter.StringSeverity {
-  switch (severity) {
-    case ErrorSeverity.Error: {
-      return 'error';
-    }
-    case ErrorSeverity.Warning: {
-      return 'warn';
-    }
-    case ErrorSeverity.Hint:
-    case ErrorSeverity.Off: {
-      return 'off';
-    }
-    default: {
-      assertExhaustive(severity, `Unhandled severity: ${severity}`);
-    }
-  }
-}
+export const AllRules = makeRule(LintRules);
