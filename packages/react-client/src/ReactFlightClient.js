@@ -583,7 +583,7 @@ function wakeChunk<T>(
     if (typeof listener === 'function') {
       listener(value);
     } else {
-      fulfillReference(listener, value, chunk);
+      fulfillReference(response, listener, value, chunk);
     }
   }
 
@@ -593,6 +593,7 @@ function wakeChunk<T>(
 }
 
 function rejectChunk(
+  response: Response,
   listeners: Array<InitializationReference | (mixed => mixed)>,
   error: mixed,
 ): void {
@@ -601,7 +602,7 @@ function rejectChunk(
     if (typeof listener === 'function') {
       listener(error);
     } else {
-      rejectReference(listener, error);
+      rejectReference(response, listener.handler, error);
     }
   }
 }
@@ -655,7 +656,7 @@ function wakeChunkIfInitialized<T>(
           if (cyclicHandler !== null) {
             // This reference points back to this chunk. We can resolve the cycle by
             // using the value from that handler.
-            fulfillReference(reference, cyclicHandler.value, chunk);
+            fulfillReference(response, reference, cyclicHandler.value, chunk);
             resolveListeners.splice(i, 1);
             i--;
             if (rejectListeners !== null) {
@@ -677,7 +678,7 @@ function wakeChunkIfInitialized<T>(
                 return;
               case ERRORED:
                 if (rejectListeners !== null) {
-                  rejectChunk(rejectListeners, chunk.reason);
+                  rejectChunk(response, rejectListeners, chunk.reason);
                 }
                 return;
             }
@@ -707,7 +708,7 @@ function wakeChunkIfInitialized<T>(
       break;
     case ERRORED:
       if (rejectListeners) {
-        rejectChunk(rejectListeners, chunk.reason);
+        rejectChunk(response, rejectListeners, chunk.reason);
       }
       break;
   }
@@ -765,7 +766,7 @@ function triggerErrorOnChunk<T>(
   erroredChunk.status = ERRORED;
   erroredChunk.reason = error;
   if (listeners !== null) {
-    rejectChunk(listeners, error);
+    rejectChunk(response, listeners, error);
   }
 }
 
@@ -907,7 +908,6 @@ function resolveModuleChunk<T>(
 }
 
 type InitializationReference = {
-  response: Response, // TODO: Remove Response from here and pass it through instead.
   handler: InitializationHandler,
   parentObject: Object,
   key: string,
@@ -1046,7 +1046,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
         if (typeof listener === 'function') {
           listener(value);
         } else {
-          fulfillReference(listener, value, cyclicChunk);
+          fulfillReference(response, listener, value, cyclicChunk);
         }
       }
     }
@@ -1454,11 +1454,12 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
 }
 
 function fulfillReference(
+  response: Response,
   reference: InitializationReference,
   value: any,
   fulfilledChunk: SomeChunk<any>,
 ): void {
-  const {response, handler, parentObject, key, map, path} = reference;
+  const {handler, parentObject, key, map, path} = reference;
 
   for (let i = 1; i < path.length; i++) {
     while (
@@ -1528,7 +1529,11 @@ function fulfillReference(
             return;
           }
           default: {
-            rejectReference(reference, referencedChunk.reason);
+            rejectReference(
+              response,
+              reference.handler,
+              referencedChunk.reason,
+            );
             return;
           }
         }
@@ -1636,11 +1641,10 @@ function fulfillReference(
 }
 
 function rejectReference(
-  reference: InitializationReference,
+  response: Response,
+  handler: InitializationHandler,
   error: mixed,
 ): void {
-  const {handler, response} = reference;
-
   if (handler.errored) {
     // We've already errored. We could instead build up an AggregateError
     // but if there are multiple errors we just take the first one like
@@ -1731,7 +1735,6 @@ function waitForReference<T>(
   }
 
   const reference: InitializationReference = {
-    response,
     handler,
     parentObject,
     key,
