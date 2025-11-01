@@ -367,6 +367,7 @@ type Response = {
   _debugRootStack?: null | Error, // DEV-only
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugStartTime: number, // DEV-only
+  _debugEndTime?: number, // DEV-only
   _debugIOStarted: boolean, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
   _debugChannel?: void | DebugChannel, // DEV-only
@@ -2578,6 +2579,7 @@ function ResponseInstance(
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
   debugStartTime: void | number, // DEV-only
+  debugEndTime: void | number, // DEV-only
   debugChannel: void | DebugChannel, // DEV-only
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
@@ -2645,6 +2647,7 @@ function ResponseInstance(
       // and is not considered I/O required to load the stream.
       setTimeout(markIOStarted.bind(this), 0);
     }
+    this._debugEndTime = debugEndTime == null ? null : debugEndTime;
     this._debugFindSourceMapURL = findSourceMapURL;
     this._debugChannel = debugChannel;
     this._blockedConsole = null;
@@ -2688,6 +2691,7 @@ export function createResponse(
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
   debugStartTime: void | number, // DEV-only
+  debugEndTime: void | number, // DEV-only
   debugChannel: void | DebugChannel, // DEV-only
 ): WeakResponse {
   return getWeakResponse(
@@ -2704,6 +2708,7 @@ export function createResponse(
       replayConsole,
       environmentName,
       debugStartTime,
+      debugEndTime,
       debugChannel,
     ),
   );
