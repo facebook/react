@@ -53,6 +53,7 @@ export type Options = {
   replayConsoleLogs?: boolean,
   environmentName?: string,
   startTime?: number,
+  endTime?: number,
   // For the Node.js client we only support a single-direction debug channel.
   debugChannel?: Readable,
 };
@@ -107,6 +108,7 @@ export function createFromNodeStream<T>(
     __DEV__ && options && options.startTime != null
       ? options.startTime
       : undefined,
+    __DEV__ && options && options.endTime != null ? options.endTime : undefined,
     debugChannel,
   );
 
