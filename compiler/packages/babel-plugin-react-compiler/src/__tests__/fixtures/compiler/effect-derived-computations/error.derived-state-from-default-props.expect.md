@@ -31,7 +31,16 @@ Found 1 error:
 
 Error: You might not need an effect. Derive values in render, not effects.
 
-Derived values (From props: [input]) should be computed during render, rather than in effects. Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user.
+Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user
+
+This setState call is setting a derived value that depends on the following reactive sources:
+
+Props: [input]
+
+Data Flow Tree:
+└── input (Prop)
+
+See: https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state.
 
 error.derived-state-from-default-props.ts:9:4
    7 |

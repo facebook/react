@@ -3,23 +3,16 @@
 
 ```javascript
 // @validateNoDerivedComputationsInEffects_exp
-import {useEffect, useState} from 'react';
 
 function Component({value}) {
-  const [localValue, setLocalValue] = useState('');
+  const [checked, setChecked] = useState('');
 
   useEffect(() => {
-    setLocalValue(value);
-    document.title = `Value: ${value}`;
+    setChecked(value === '' ? [] : value.split(','));
   }, [value]);
 
-  return <div>{localValue}</div>;
+  return <div>{checked}</div>;
 }
-
-export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
-  params: [{value: 'test'}],
-};
 
 ```
 
@@ -42,14 +35,14 @@ Data Flow Tree:
 
 See: https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state.
 
-error.derived-state-from-prop-with-side-effect.ts:8:4
-   6 |
-   7 |   useEffect(() => {
->  8 |     setLocalValue(value);
-     |     ^^^^^^^^^^^^^ This should be computed during render, not in an effect
-   9 |     document.title = `Value: ${value}`;
-  10 |   }, [value]);
-  11 |
+error.derived-state-from-prop-setter-ternary.ts:7:4
+   5 |
+   6 |   useEffect(() => {
+>  7 |     setChecked(value === '' ? [] : value.split(','));
+     |     ^^^^^^^^^^ This should be computed during render, not in an effect
+   8 |   }, [value]);
+   9 |
+  10 |   return <div>{checked}</div>;
 ```
           
       
