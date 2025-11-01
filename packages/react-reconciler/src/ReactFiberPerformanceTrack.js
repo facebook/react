@@ -203,6 +203,15 @@ const reusableComponentOptions: PerformanceMeasureOptions = {
 
 const reusableChangedPropsEntry = ['Changed Props', ''];
 
+const reusableCascadingUpdateIssue = {
+  name: 'React: Cascading Update',
+  severity: 'warning',
+  description:
+    'A cascading update is a update that is triggered by a previous update. This can lead to performance issues and should be avoided.',
+  learnMoreUrl:
+    'https://react.dev/reference/dev-tools/react-performance-tracks#cascading-updates',
+};
+
 const DEEP_EQUALITY_WARNING =
   'This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner.';
 
@@ -761,6 +770,10 @@ export function logBlockingStart(
             },
           },
         };
+        if (isSpawnedUpdate) {
+          // $FlowFixMe[prop-missing] - detail is untyped
+          measureOptions.detail.rnPerfIssue = reusableCascadingUpdateIssue;
+        }
 
         if (debugTask) {
           debugTask.run(
