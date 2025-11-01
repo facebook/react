@@ -9424,5 +9424,188 @@ background-color: green;
         <title data-foo="bar">another title</title>,
       );
     });
+
+    // @gate enableActivity
+    it('does not hoist title tags inside hidden Activity boundaries', async () => {
+      const Activity = React.Activity;
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <div>
+            <Activity mode="visible">
+              <title>Visible Title</title>
+            </Activity>
+            <Activity mode="hidden">
+              <title>Hidden Title</title>
+            </Activity>
+          </div>,
+        );
+      });
+      await waitForAll([]);
+
+      // Only the visible Activity's title should be hoisted
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <title>Visible Title</title>,
+      );
+    });
+
+    // @gate enableActivity
+    it('removes title tags when Activity transitions from visible to hidden', async () => {
+      const Activity = React.Activity;
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <div>
+            <Activity mode="visible">
+              <title>Activity Title</title>
+            </Activity>
+          </div>,
+        );
+      });
+      await waitForAll([]);
+
+      // Title should be hoisted
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <title>Activity Title</title>,
+      );
+
+      // Hide the Activity
+      await act(() => {
+        root.render(
+          <div>
+            <Activity mode="hidden">
+              <title>Activity Title</title>
+            </Activity>
+          </div>,
+        );
+      });
+      await waitForAll([]);
+
+      // Title should be removed from document head
+      expect(getMeaningfulChildren(document.head)).toEqual(undefined);
+    });
+
+    // @gate enableActivity
+    it('adds title tags when Activity transitions from hidden to visible', async () => {
+      const Activity = React.Activity;
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <div>
+            <Activity mode="hidden">
+              <title>Activity Title</title>
+            </Activity>
+          </div>,
+        );
+      });
+      await waitForAll([]);
+
+      // Title should not be hoisted
+      expect(getMeaningfulChildren(document.head)).toEqual(undefined);
+
+      // Show the Activity
+      await act(() => {
+        root.render(
+          <div>
+            <Activity mode="visible">
+              <title>Activity Title</title>
+            </Activity>
+          </div>,
+        );
+      });
+      await waitForAll([]);
+
+      // Title should now be hoisted
+      // Note: The title may have a style attribute from being previously hidden
+      const titleElement = getMeaningfulChildren(document.head);
+      expect(titleElement).toBeTruthy();
+      expect(titleElement.type).toBe('title');
+      expect(titleElement.props.children).toBe('Activity Title');
+    });
+
+    // @gate enableActivity
+    it('handles multiple Activity boundaries with different visibility states', async () => {
+      const Activity = React.Activity;
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <div>
+            <Activity mode="visible">
+              <title>First Title</title>
+            </Activity>
+            <Activity mode="hidden">
+              <title>Second Title</title>
+            </Activity>
+            <Activity mode="visible">
+              <title>Third Title</title>
+            </Activity>
+          </div>,
+        );
+      });
+      await waitForAll([]);
+
+      // Only visible Activities' titles should be hoisted
+      // Both visible titles are hoisted, but the last one in tree order wins
+      const titles = getMeaningfulChildren(document.head);
+      expect(Array.isArray(titles)).toBe(true);
+      expect(titles.length).toBe(2);
+      expect(titles[0].props.children).toBe('Third Title');
+      expect(titles[1].props.children).toBe('First Title');
+    });
+
+    // @gate enableActivity
+    it('handles nested Activity boundaries correctly', async () => {
+      const Activity = React.Activity;
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <div>
+            <Activity mode="visible">
+              <title>Outer Title</title>
+              <Activity mode="hidden">
+                <title>Inner Hidden Title</title>
+              </Activity>
+            </Activity>
+          </div>,
+        );
+      });
+      await waitForAll([]);
+
+      // Only the outer visible Activity's title should be hoisted
+      // The inner hidden Activity's title should not be hoisted
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <title>Outer Title</title>,
+      );
+    });
+
+    // @gate enableActivity
+    it('handles meta tags inside hidden Activity boundaries', async () => {
+      const Activity = React.Activity;
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <div>
+            <Activity mode="visible">
+              <meta name="visible" content="visible-content" />
+            </Activity>
+            <Activity mode="hidden">
+              <meta name="hidden" content="hidden-content" />
+            </Activity>
+          </div>,
+        );
+      });
+      await waitForAll([]);
+
+      // Only the visible Activity's meta should be hoisted
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <meta name="visible" content="visible-content" />,
+      );
+    });
   });
 });
