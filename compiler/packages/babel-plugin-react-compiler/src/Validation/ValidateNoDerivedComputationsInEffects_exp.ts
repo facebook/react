@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {Result} from '../Utils/Result';
 import {CompilerDiagnostic, CompilerError, Effect} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
@@ -173,7 +174,7 @@ function isNamedIdentifier(place: Place): place is Place & {
  */
 export function validateNoDerivedComputationsInEffects_exp(
   fn: HIRFunction,
-): void {
+): Result<void, CompilerError> {
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
   const derivationCache = new DerivationCache();
   const errors = new CompilerError();
@@ -236,9 +237,7 @@ export function validateNoDerivedComputationsInEffects_exp(
     validateEffect(effect, context);
   }
 
-  if (errors.hasAnyErrors()) {
-    throw errors;
-  }
+  return errors.asResult();
 }
 
 function recordPhiDerivations(
