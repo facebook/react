@@ -214,8 +214,8 @@ export type Container =
 export type Instance = Element;
 export type TextInstance = Text;
 
-type InstanceWithObservingFragmentHandles = Instance & {
-  _reactObservingFragments?: Set<FragmentInstanceType>,
+type InstanceWithFragmentHandles = Instance & {
+  fragments?: Set<FragmentInstanceType>,
 };
 
 declare class ActivityInterface extends Comment {}
@@ -3134,20 +3134,14 @@ FragmentInstance.prototype.observeUsing = function (
     this._observers = new Set();
   }
   this._observers.add(observer);
-  traverseFragmentInstance(this._fragmentFiber, observeChild, this, observer);
+  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
 function observeChild(
   child: Fiber,
-  fragmentInstance: FragmentInstanceType,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  const instance =
-    getInstanceFromHostFiber<InstanceWithObservingFragmentHandles>(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   observer.observe(instance);
-  if (instance._reactObservingFragments == null) {
-    instance._reactObservingFragments = new Set();
-  }
-  instance._reactObservingFragments.add(fragmentInstance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -3165,25 +3159,15 @@ FragmentInstance.prototype.unobserveUsing = function (
     }
   } else {
     observers.delete(observer);
-    traverseFragmentInstance(
-      this._fragmentFiber,
-      unobserveChild,
-      this,
-      observer,
-    );
+    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
   }
 };
 function unobserveChild(
   child: Fiber,
-  fragmentInstance: FragmentInstanceType,
   observer: IntersectionObserver | ResizeObserver,
 ) {
-  const instance =
-    getInstanceFromHostFiber<InstanceWithObservingFragmentHandles>(child);
+  const instance = getInstanceFromHostFiber<Instance>(child);
   observer.unobserve(instance);
-  if (instance._reactObservingFragments != null) {
-    instance._reactObservingFragments.delete(fragmentInstance);
-  }
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -3410,10 +3394,37 @@ if (enableFragmentRefsScrollIntoView) {
   };
 }
 
+function addFragmentHandleToFiber(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+): boolean {
+  const instance = getInstanceFromHostFiber<InstanceWithFragmentHandles>(child);
+  if (instance != null) {
+    addFragmentHandleToInstance(instance, fragmentInstance);
+  }
+  return false;
+}
+
+function addFragmentHandleToInstance(
+  instance: InstanceWithFragmentHandles,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  if (instance.fragments == null) {
+    instance.fragments = new Set();
+  }
+  instance.fragments.add(fragmentInstance);
+}
+
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
-  return new (FragmentInstance: any)(fragmentFiber);
+  const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
+  traverseFragmentInstance(
+    fragmentFiber,
+    addFragmentHandleToFiber,
+    fragmentInstance,
+  );
+  return fragmentInstance;
 }
 
 export function updateFragmentInstanceFiber(
@@ -3424,7 +3435,7 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childInstance: Instance,
+  childInstance: InstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
@@ -3439,18 +3450,22 @@ export function commitNewChildToFragmentInstance(
       observer.observe(childInstance);
     });
   }
+  addFragmentHandleToInstance(childInstance, fragmentInstance);
 }
 
 export function deleteChildFromFragmentInstance(
-  childElement: Instance,
+  childInstance: InstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childElement.removeEventListener(type, listener, optionsOrUseCapture);
+      childInstance.removeEventListener(type, listener, optionsOrUseCapture);
     }
+  }
+  if (childInstance.fragments != null) {
+    childInstance.fragments.delete(fragmentInstance);
   }
 }
 

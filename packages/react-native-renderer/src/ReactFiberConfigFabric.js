@@ -119,8 +119,8 @@ export type TextInstance = {
 };
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
-type PublicInstanceWithObservingFragmentHandles = PublicInstance & {
-  _reactObservingFragments?: Set<FragmentInstanceType>,
+type PublicInstanceWithFragmentHandles = PublicInstance & {
+  fragments?: Set<FragmentInstanceType>,
 };
 export type Container = {
   containerTag: number,
@@ -668,22 +668,12 @@ FragmentInstance.prototype.observeUsing = function (
     this._observers = new Set();
   }
   this._observers.add(observer);
-  traverseFragmentInstance(this._fragmentFiber, observeChild, this, observer);
+  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
-function observeChild(
-  child: Fiber,
-  fragmentInstance: FragmentInstanceType,
-  observer: IntersectionObserver,
-) {
-  const publicInstance = ((getPublicInstanceFromHostFiber(
-    child,
-  ): any): PublicInstanceWithObservingFragmentHandles);
+function observeChild(child: Fiber, observer: IntersectionObserver) {
+  const publicInstance = getPublicInstanceFromHostFiber(child);
   // $FlowFixMe[incompatible-call] DOM types expect Element
   observer.observe(publicInstance);
-  if (publicInstance._reactObservingFragments == null) {
-    publicInstance._reactObservingFragments = new Set();
-  }
-  publicInstance._reactObservingFragments.add(fragmentInstance);
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -701,27 +691,13 @@ FragmentInstance.prototype.unobserveUsing = function (
     }
   } else {
     observers.delete(observer);
-    traverseFragmentInstance(
-      this._fragmentFiber,
-      unobserveChild,
-      this,
-      observer,
-    );
+    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
   }
 };
-function unobserveChild(
-  child: Fiber,
-  fragmentInstance: FragmentInstanceType,
-  observer: IntersectionObserver,
-) {
-  const publicInstance = ((getPublicInstanceFromHostFiber(
-    child,
-  ): any): PublicInstanceWithObservingFragmentHandles);
+function unobserveChild(child: Fiber, observer: IntersectionObserver) {
+  const publicInstance = getPublicInstanceFromHostFiber(child);
   // $FlowFixMe[incompatible-call] DOM types expect Element
   observer.unobserve(publicInstance);
-  if (publicInstance._reactObservingFragments != null) {
-    publicInstance._reactObservingFragments.delete(fragmentInstance);
-  }
   return false;
 }
 
@@ -821,10 +797,39 @@ function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
   return false;
 }
 
+function addFragmentHandleToFiber(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+): boolean {
+  const instance = ((getPublicInstanceFromHostFiber(
+    child,
+  ): any): PublicInstanceWithFragmentHandles);
+  if (instance != null) {
+    addFragmentHandleToInstance(instance, fragmentInstance);
+  }
+  return false;
+}
+
+function addFragmentHandleToInstance(
+  instance: PublicInstanceWithFragmentHandles,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  if (instance.fragments == null) {
+    instance.fragments = new Set();
+  }
+  instance.fragments.add(fragmentInstance);
+}
+
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
-  return new (FragmentInstance: any)(fragmentFiber);
+  const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
+  traverseFragmentInstance(
+    fragmentFiber,
+    addFragmentHandleToFiber,
+    fragmentInstance,
+  );
+  return fragmentInstance;
 }
 
 export function updateFragmentInstanceFiber(
@@ -848,13 +853,22 @@ export function commitNewChildToFragmentInstance(
       observer.observe(publicInstance);
     });
   }
+  addFragmentHandleToInstance(
+    ((publicInstance: any): PublicInstanceWithFragmentHandles),
+    fragmentInstance,
+  );
 }
 
 export function deleteChildFromFragmentInstance(
-  child: Instance,
+  childInstance: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  // Noop
+  const publicInstance = ((getPublicInstance(
+    childInstance,
+  ): any): PublicInstanceWithFragmentHandles);
+  if (publicInstance.fragments != null) {
+    publicInstance.fragments.delete(fragmentInstance);
+  }
 }
 
 export const NotPendingTransition: TransitionStatus = null;

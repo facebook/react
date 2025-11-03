@@ -110,6 +110,45 @@ describe('FragmentRefs', () => {
     await act(() => root.render(<Test />));
   });
 
+  // @gate enableFragmentRefs
+  it('attaches fragment handles to nodes', async () => {
+    const fragmentParentRef = React.createRef();
+    const fragmentRef = React.createRef();
+
+    function Test({show}) {
+      return (
+        <Fragment ref={fragmentParentRef}>
+          <Fragment ref={fragmentRef}>
+            <div id="childA">A</div>
+            <div id="childB">B</div>
+          </Fragment>
+          <div id="childC">C</div>
+          {show && <div id="childD">D</div>}
+        </Fragment>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<Test show={false} />));
+
+    const childA = document.querySelector('#childA');
+    const childB = document.querySelector('#childB');
+    const childC = document.querySelector('#childC');
+
+    expect(childA.fragments.has(fragmentRef.current)).toBe(true);
+    expect(childB.fragments.has(fragmentRef.current)).toBe(true);
+    expect(childC.fragments.has(fragmentRef.current)).toBe(false);
+    expect(childA.fragments.has(fragmentParentRef.current)).toBe(true);
+    expect(childB.fragments.has(fragmentParentRef.current)).toBe(true);
+    expect(childC.fragments.has(fragmentParentRef.current)).toBe(true);
+
+    await act(() => root.render(<Test show={true} />));
+
+    const childD = document.querySelector('#childD');
+    expect(childD.fragments.has(fragmentRef.current)).toBe(false);
+    expect(childD.fragments.has(fragmentParentRef.current)).toBe(true);
+  });
+
   describe('focus methods', () => {
     describe('focus()', () => {
       // @gate enableFragmentRefs
@@ -1061,16 +1100,15 @@ describe('FragmentRefs', () => {
         }
         const observer = new IntersectionObserver(entries => {
           entries.forEach(entry => {
-            const fragmentInstances = entry.target._reactObservingFragments;
-            if (!fragmentInstances) {
-              return;
-            }
-            Array.from(fragmentInstances).forEach(fInstance => {
-              const cbs = targetToCallbackMap.get(fInstance) || [];
-              cbs.forEach(callback => {
-                callback(entry);
+            const fragmentInstances = entry.target.fragments;
+            if (fragmentInstances) {
+              Array.from(fragmentInstances).forEach(fInstance => {
+                const cbs = targetToCallbackMap.get(fInstance) || [];
+                cbs.forEach(callback => {
+                  callback(entry);
+                });
               });
-            });
+            }
 
             targetToCallbackMap.get(entry.target)?.forEach(callback => {
               callback(entry);
@@ -1147,7 +1185,7 @@ describe('FragmentRefs', () => {
         {y: 0, x: 0, width: 1, height: 1},
         1,
       ]);
-      expect(logs).toEqual(['observe: parentA', 'observe: grandparent']);
+      expect(logs).toEqual(['observe: grandparent', 'observe: parentA']);
 
       logs = [];
 
