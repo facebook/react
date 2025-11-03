@@ -229,6 +229,9 @@ export function validateNoDerivedComputationsInEffects_exp(
     isFirstPass = false;
   } while (context.derivationCache.snapshot());
 
+  console.log('here');
+  console.log(context.derivationCache.cache);
+
   for (const effect of effects) {
     validateEffect(effect, context);
   }
@@ -467,53 +470,41 @@ type TreeNode = {
 function buildTreeNode(
   sourceId: IdentifierId,
   context: ValidationContext,
-): TreeNode | null {
+): Array<TreeNode> {
   const sourceMetadata = context.derivationCache.cache.get(sourceId);
   if (!sourceMetadata) {
-    return null;
+    return [];
   }
 
-  const childSourceIds = Array.from(sourceMetadata.sourcesIds).filter(
-    id => id !== sourceId,
-  );
+  const children: Array<TreeNode> = [];
 
-  if (!isNamedIdentifier(sourceMetadata.place)) {
-    const childrenMap = new Map<string, TreeNode>();
-    for (const childId of childSourceIds) {
-      const childNode = buildTreeNode(childId, context);
-      if (childNode) {
-        if (!childrenMap.has(childNode.name)) {
-          childrenMap.set(childNode.name, childNode);
+  const namedSiblings: Set<string> = new Set();
+  for (const childId of sourceMetadata.sourcesIds) {
+    const childNodes = buildTreeNode(childId, context);
+    if (childNodes) {
+      for (const childNode of childNodes) {
+        if (!namedSiblings.has(childNode.name)) {
+          children.push(childNode);
+          namedSiblings.add(childNode.name);
         }
       }
     }
-    const children = Array.from(childrenMap.values());
-
-    if (children.length === 1) {
-      return children[0];
-    } else if (children.length > 1) {
-      return null;
-    }
-    return null;
   }
 
-  const childrenMap = new Map<string, TreeNode>();
-  for (const childId of childSourceIds) {
-    const childNode = buildTreeNode(childId, context);
-    if (childNode) {
-      if (!childrenMap.has(childNode.name)) {
-        childrenMap.set(childNode.name, childNode);
-      }
-    }
+  if (isNamedIdentifier(sourceMetadata.place)) {
+    console.log('created node:', sourceMetadata.place.identifier.name.value);
+    console.log('children', JSON.stringify(children));
+    return [
+      {
+        name: sourceMetadata.place.identifier.name.value,
+        typeOfValue: sourceMetadata.typeOfValue,
+        isSource: sourceMetadata.isStateSource,
+        children: children,
+      },
+    ];
   }
-  const children = Array.from(childrenMap.values());
 
-  return {
-    name: sourceMetadata.place.identifier.name.value,
-    typeOfValue: sourceMetadata.typeOfValue,
-    isSource: sourceMetadata.isStateSource,
-    children,
-  };
+  return children;
 }
 
 function renderTree(
@@ -549,9 +540,6 @@ function renderTree(
     node.children.forEach((child, index) => {
       const isLastChild = index === node.children.length - 1;
       result += renderTree(child, childIndent, isLastChild, propsSet, stateSet);
-      if (index < node.children.length - 1) {
-        result += '\n';
-      }
     });
   }
 
@@ -685,6 +673,7 @@ function validateEffect(
   }
 
   for (const derivedSetStateCall of effectDerivedSetStateCalls) {
+    console.log(derivedSetStateCall);
     const rootSetStateCall = getRootSetState(
       derivedSetStateCall.id,
       context.setStateLoads,
@@ -702,20 +691,16 @@ function validateEffect(
       const stateSet = new Set<string>();
       const allSetStateDeps = new Set<IdentifierId>();
 
-      const treeNodesMap = new Map<string, TreeNode>();
+      const rootNodes: Array<TreeNode> = [];
       for (const id of allSourceIds) {
-        const node = buildTreeNode(id, context);
-        if (node && !treeNodesMap.has(node.name)) {
-          treeNodesMap.set(node.name, node);
-        }
+        rootNodes.push(...buildTreeNode(id, context));
       }
-      const treeNodes = Array.from(treeNodesMap.values());
 
-      const trees = treeNodes.map((node, index) =>
+      const trees = rootNodes.map((node, index) =>
         renderTree(
           node,
           '',
-          index === treeNodes.length - 1,
+          index === rootNodes.length - 1,
           propsSet,
           stateSet,
         ),
