@@ -138,6 +138,7 @@ import {
   popSuspenseListContext,
   popSuspenseHandler,
   pushSuspenseListContext,
+  pushSuspenseListCatch,
   setShallowSuspenseListContext,
   ForceSuspenseFallback,
   setDefaultShallowSuspenseListContext,
@@ -1874,7 +1875,26 @@ function completeWork(
           suspenseContext =
             setDefaultShallowSuspenseListContext(suspenseContext);
         }
-        pushSuspenseListContext(workInProgress, suspenseContext);
+        if (
+          next.alternate !== null ||
+          renderState.tailMode === 'visible' ||
+          renderState.tailMode === 'collapsed' ||
+          // TODO: While hydrating, we still let it suspend the parent. Tail mode hidden has broken
+          // hydration anyway right now but this preserves the previous semantics out of caution.
+          // Once proper hydration is implemented, this special case should be removed as it should
+          // never be needed.
+          getIsHydrating()
+        ) {
+          pushSuspenseListContext(workInProgress, suspenseContext);
+        } else {
+          // If we are rendering in 'hidden' (default) tail mode, then we if we suspend in the
+          // tail itself, we can delete it rather than suspend the parent. So we act as a catch in that
+          // case. For 'collapsed' we need to render at least one in suspended state, after which we'll
+          // have cut off the rest to never attempt it so it never hits this case.
+          // If this is an updated node, we cannot delete it from the tail so it's effectively visible.
+          // As a consequence, if it resuspends it actually suspends the parent by taking the other path.
+          pushSuspenseListCatch(workInProgress, suspenseContext);
+        }
         // Do a pass over the next row.
         if (getIsHydrating()) {
           // Re-apply tree fork since we popped the tree fork context in the beginning of this function.

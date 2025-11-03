@@ -3397,6 +3397,13 @@ function updateSuspenseListComponent(
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
+  if (workInProgress.flags & DidCapture) {
+    // This is the second pass after having suspended in a row. Proceed directly
+    // to the complete phase.
+    pushSuspenseListContext(workInProgress, suspenseContext);
+    return null;
+  }
+
   const shouldForceFallback = hasSuspenseListContext(
     suspenseContext,
     (ForceSuspenseFallback: SuspenseContext),
@@ -4011,6 +4018,14 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       break;
     }
     case SuspenseListComponent: {
+      if (workInProgress.flags & DidCapture) {
+        // Second pass caught.
+        return updateSuspenseListComponent(
+          current,
+          workInProgress,
+          renderLanes,
+        );
+      }
       const didSuspendBefore = (current.flags & DidCapture) !== NoFlags;
 
       let hasChildWork = includesSomeLane(

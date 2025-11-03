@@ -27,6 +27,7 @@ import {
   ActivityComponent,
   SuspenseComponent,
   OffscreenComponent,
+  SuspenseListComponent,
 } from './ReactWorkTags';
 import {
   DidCapture,
@@ -400,7 +401,8 @@ function throwException(
       if (suspenseBoundary !== null) {
         switch (suspenseBoundary.tag) {
           case ActivityComponent:
-          case SuspenseComponent: {
+          case SuspenseComponent:
+          case SuspenseListComponent: {
             // If this suspense/activity boundary is not already showing a fallback, mark
             // the in-progress render as suspended. We try to perform this logic
             // as soon as soon as possible during the render phase, so the work
@@ -561,6 +563,13 @@ function throwException(
     // Instead of surfacing the error, find the nearest Suspense boundary
     // and render it again without hydration.
     if (hydrationBoundary !== null) {
+      if (__DEV__) {
+        if (hydrationBoundary.tag === SuspenseListComponent) {
+          console.error(
+            'SuspenseList should never catch while hydrating. This is a bug in React.',
+          );
+        }
+      }
       if ((hydrationBoundary.flags & ShouldCapture) === NoFlags) {
         // Set a flag to indicate that we should try rendering the normal
         // children again, not the fallback.

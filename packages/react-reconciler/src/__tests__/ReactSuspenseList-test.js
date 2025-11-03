@@ -2347,6 +2347,149 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
+  it('reveals "hidden" rows one by one without suspense boundaries', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards" tail="hidden">
+          <div>
+            <A />
+          </div>
+          <B />
+          <C />
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(
+      <Suspense fallback="Loading root">
+        <Foo />
+      </Suspense>,
+    );
+
+    await waitForAll(['Suspend! [A]']);
+
+    // We can commit without any rows at all leaving empty.
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    await act(() => A.resolve());
+    assertLog(['A', 'Suspend! [B]']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>A</span>
+      </div>,
+    );
+
+    await act(() => B.resolve());
+    assertLog(['B', 'Suspend! [C]']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>
+          <span>A</span>
+        </div>
+        <span>B</span>
+      </>,
+    );
+
+    await act(() => C.resolve());
+    assertLog(['C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>
+          <span>A</span>
+        </div>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('reveals "collapsed" rows one by one after the first without boundaries', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards" tail="collapsed">
+          <A />
+          <Suspense fallback={<Text text="Loading B" />}>
+            <B />
+          </Suspense>
+          <C />
+        </SuspenseList>
+      );
+    }
+
+    await act(async () => {
+      ReactNoop.render(
+        <Suspense fallback="Loading root">
+          <Foo />
+        </Suspense>,
+      );
+      await waitForAll(['Suspend! [A]', 'Suspend! [A]']);
+    });
+
+    // The root is still blocked on the first row.
+    expect(ReactNoop).toMatchRenderedOutput('Loading root');
+
+    await A.resolve();
+
+    await waitForAll(['A', 'Suspend! [B]', 'Loading B']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    // Because we have a Suspense boundary that can commit we can now unblock the rest.
+    // If it wasn't a boundary then we couldn't make progress because it would commit
+    // without any loading state.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+      </>,
+    );
+
+    await act(() => B.resolve());
+    assertLog(['B', 'Suspend! [C]', 'B', 'Suspend! [C]']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    // Surprisingly unsuspending B actually causes the parent to resuspend
+    // because C is now unblocked which resuspends the parent for some reason.
+    // TODO: Why isn't this an async update which should be delayed commit?
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span hidden={true}>A</span>
+        <span hidden={true}>Loading B</span>
+        Loading root
+      </>,
+    );
+
+    await act(() => C.resolve());
+    assertLog(['B', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  // @gate enableSuspenseList
   it('eventually resolves a nested forwards suspense list', async () => {
     const B = createAsyncText('B');
 
