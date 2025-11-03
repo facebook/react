@@ -21,7 +21,6 @@ import {
   isUseStateType,
   BasicBlock,
   isUseRefType,
-  GeneratedSource,
   SourceLocation,
 } from '../HIR';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
@@ -42,8 +41,8 @@ type ValidationContext = {
   readonly errors: CompilerError;
   readonly derivationCache: DerivationCache;
   readonly effects: Set<HIRFunction>;
-  readonly setStateCache: Map<string | undefined | null, Array<Place>>;
-  readonly effectSetStateCache: Map<string | undefined | null, Array<Place>>;
+  readonly setStateLoads: Map<IdentifierId, IdentifierId | null>;
+  readonly setStateUsages: Map<IdentifierId, Set<SourceLocation>>;
 };
 
 class DerivationCache {
@@ -180,19 +179,16 @@ export function validateNoDerivedComputationsInEffects_exp(
   const errors = new CompilerError();
   const effects: Set<HIRFunction> = new Set();
 
-  const setStateCache: Map<string | undefined | null, Array<Place>> = new Map();
-  const effectSetStateCache: Map<
-    string | undefined | null,
-    Array<Place>
-  > = new Map();
+  const setStateLoads: Map<IdentifierId, IdentifierId> = new Map();
+  const setStateUsages: Map<IdentifierId, Set<SourceLocation>> = new Map();
 
   const context: ValidationContext = {
     functions,
     errors,
     derivationCache,
     effects,
-    setStateCache,
-    effectSetStateCache,
+    setStateLoads,
+    setStateUsages,
   };
 
   if (fn.fnType === 'Hook') {
@@ -281,11 +277,61 @@ function joinValue(
   return 'fromPropsAndState';
 }
 
+function getRootSetState(
+  key: IdentifierId,
+  loads: Map<IdentifierId, IdentifierId | null>,
+  visited: Set<IdentifierId> = new Set(),
+): IdentifierId | null {
+  if (visited.has(key)) {
+    return null;
+  }
+  visited.add(key);
+
+  const parentId = loads.get(key);
+
+  if (parentId === undefined) {
+    return null;
+  }
+
+  if (parentId === null) {
+    return key;
+  }
+
+  return getRootSetState(parentId, loads, visited);
+}
+
+function maybeRecordSetState(
+  instr: Instruction,
+  loads: Map<IdentifierId, IdentifierId | null>,
+  usages: Map<IdentifierId, Set<SourceLocation>>,
+): void {
+  for (const operand of eachInstructionLValue(instr)) {
+    if (
+      instr.value.kind === 'LoadLocal' &&
+      loads.has(instr.value.place.identifier.id)
+    ) {
+      loads.set(operand.identifier.id, instr.value.place.identifier.id);
+    } else {
+      if (isSetStateType(operand.identifier)) {
+        // this is a root setState
+        loads.set(operand.identifier.id, null);
+      }
+    }
+
+    const rootSetState = getRootSetState(operand.identifier.id, loads);
+    if (rootSetState !== null && usages.get(rootSetState) === undefined) {
+      usages.set(rootSetState, new Set([operand.loc]));
+    }
+  }
+}
+
 function recordInstructionDerivations(
   instr: Instruction,
   context: ValidationContext,
   isFirstPass: boolean,
 ): void {
+  maybeRecordSetState(instr, context.setStateLoads, context.setStateUsages);
+
   let typeOfValue: TypeOfValue = 'ignored';
   let isSource: boolean = false;
   const sources: Set<IdentifierId> = new Set();
@@ -318,15 +364,13 @@ function recordInstructionDerivations(
   }
 
   for (const operand of eachInstructionOperand(instr)) {
-    if (
-      isSetStateType(operand.identifier) &&
-      operand.loc !== GeneratedSource &&
-      isFirstPass
-    ) {
-      if (context.setStateCache.has(operand.loc.identifierName)) {
-        context.setStateCache.get(operand.loc.identifierName)!.push(operand);
-      } else {
-        context.setStateCache.set(operand.loc.identifierName, [operand]);
+    if (context.setStateLoads.has(operand.identifier.id)) {
+      const rootSetStateId = getRootSetState(
+        operand.identifier.id,
+        context.setStateLoads,
+      );
+      if (rootSetStateId !== null) {
+        context.setStateUsages.get(rootSetStateId)?.add(operand.loc);
       }
     }
 
@@ -522,10 +566,15 @@ function validateEffect(
 
   const effectDerivedSetStateCalls: Array<{
     value: CallExpression;
-    loc: SourceLocation;
+    id: IdentifierId;
     sourceIds: Set<IdentifierId>;
     typeOfValue: TypeOfValue;
   }> = [];
+
+  const effectSetStateUsages: Map<
+    IdentifierId,
+    Set<SourceLocation>
+  > = new Map();
 
   const globals: Set<IdentifierId> = new Set();
   for (const block of effectFunction.body.blocks.values()) {
@@ -542,19 +591,16 @@ function validateEffect(
         return;
       }
 
+      maybeRecordSetState(instr, context.setStateLoads, effectSetStateUsages);
+
       for (const operand of eachInstructionOperand(instr)) {
-        if (
-          isSetStateType(operand.identifier) &&
-          operand.loc !== GeneratedSource
-        ) {
-          if (context.effectSetStateCache.has(operand.loc.identifierName)) {
-            context.effectSetStateCache
-              .get(operand.loc.identifierName)!
-              .push(operand);
-          } else {
-            context.effectSetStateCache.set(operand.loc.identifierName, [
-              operand,
-            ]);
+        if (context.setStateLoads.has(operand.identifier.id)) {
+          const rootSetStateId = getRootSetState(
+            operand.identifier.id,
+            context.setStateLoads,
+          );
+          if (rootSetStateId !== null) {
+            effectSetStateUsages.get(rootSetStateId)?.add(operand.loc);
           }
         }
       }
@@ -572,7 +618,7 @@ function validateEffect(
         if (argMetadata !== undefined) {
           effectDerivedSetStateCalls.push({
             value: instr.value,
-            loc: instr.value.callee.loc,
+            id: instr.value.callee.identifier.id,
             sourceIds: argMetadata.sourcesIds,
             typeOfValue: argMetadata.typeOfValue,
           });
@@ -606,15 +652,17 @@ function validateEffect(
   }
 
   for (const derivedSetStateCall of effectDerivedSetStateCalls) {
+    const rootSetStateCall = getRootSetState(
+      derivedSetStateCall.id,
+      context.setStateLoads,
+    );
+
     if (
-      derivedSetStateCall.loc !== GeneratedSource &&
-      context.effectSetStateCache.has(derivedSetStateCall.loc.identifierName) &&
-      context.setStateCache.has(derivedSetStateCall.loc.identifierName) &&
-      context.effectSetStateCache.get(derivedSetStateCall.loc.identifierName)!
-        .length ===
-        context.setStateCache.get(derivedSetStateCall.loc.identifierName)!
-          .length -
-          1
+      rootSetStateCall !== null &&
+      effectSetStateUsages.has(rootSetStateCall) &&
+      context.setStateUsages.has(rootSetStateCall) &&
+      effectSetStateUsages.get(rootSetStateCall)!.size ===
+        context.setStateUsages.get(rootSetStateCall)!.size - 1
     ) {
       const allSourceIds = Array.from(derivedSetStateCall.sourceIds);
       const propsSet = new Set<string>();
