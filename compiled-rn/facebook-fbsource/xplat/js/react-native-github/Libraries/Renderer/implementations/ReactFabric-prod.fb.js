@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9eb442b3d636cdd7bbd154bc27192b22>>
+ * @generated SignedSource<<bc516c96c2c8ae26a51f16e3f75b7a75>>
  */
 
 "use strict";
@@ -29,6 +29,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   renameElementSymbol = dynamicFlagsUntyped.renameElementSymbol,
   enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
+  enableFragmentRefsInstanceHandles =
+    dynamicFlagsUntyped.enableFragmentRefsInstanceHandles,
   assign = Object.assign,
   prefix,
   suffix;
@@ -7925,8 +7927,19 @@ function safelyAttachRef(current, nearestMountedAncestor) {
           break;
         case 7:
           if (enableFragmentRefs) {
-            null === current.stateNode &&
-              (current.stateNode = new FragmentInstance(current));
+            if (null === current.stateNode) {
+              var fragmentInstance = new FragmentInstance(current);
+              enableFragmentRefsInstanceHandles &&
+                traverseVisibleHostChildren(
+                  current.child,
+                  !1,
+                  addFragmentHandleToFiber,
+                  fragmentInstance,
+                  void 0,
+                  void 0
+                );
+              current.stateNode = fragmentInstance;
+            }
             instanceToUse = current.stateNode;
             break;
           }
@@ -7972,6 +7985,25 @@ function commitHostMount(finishedWork) {
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
+}
+function commitFragmentInstanceDeletionEffects(fiber) {
+  for (var parent = fiber.return; null !== parent; ) {
+    if (isFragmentInstanceParent(parent)) {
+      var fragmentInstance = parent.stateNode,
+        publicInstance = getPublicInstance(fiber.stateNode);
+      enableFragmentRefsInstanceHandles &&
+        null != publicInstance.unstable_reactFragments &&
+        publicInstance.unstable_reactFragments.delete(fragmentInstance);
+    }
+    if (isHostParent(parent)) break;
+    parent = parent.return;
+  }
+}
+function isHostParent(fiber) {
+  return 5 === fiber.tag || 3 === fiber.tag || 4 === fiber.tag;
+}
+function isFragmentInstanceParent(fiber) {
+  return fiber && 7 === fiber.tag && null !== fiber.stateNode;
 }
 function commitImmutablePlacementNodeToFragmentInstances(
   finishedWork,
@@ -8260,7 +8292,10 @@ function commitDeletionEffectsOnFiber(
     case 27:
     case 5:
       offscreenSubtreeWasHidden ||
-        safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        safelyDetachRef(deletedFiber, nearestMountedAncestor),
+        enableFragmentRefs &&
+          5 === deletedFiber.tag &&
+          commitFragmentInstanceDeletionEffects(deletedFiber);
     case 6:
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -8589,23 +8624,13 @@ function commitReconciliationEffects(finishedWork) {
         null !== parentFiber;
 
       ) {
-        if (
-          enableFragmentRefs &&
-          parentFiber &&
-          7 === parentFiber.tag &&
-          null !== parentFiber.stateNode
-        ) {
+        if (enableFragmentRefs && isFragmentInstanceParent(parentFiber)) {
           var fragmentInstance = parentFiber.stateNode;
           null === parentFragmentInstances
             ? (parentFragmentInstances = [fragmentInstance])
             : parentFragmentInstances.push(fragmentInstance);
         }
-        if (
-          5 === parentFiber.tag ||
-          3 === parentFiber.tag ||
-          4 === parentFiber.tag
-        )
-          break;
+        if (isHostParent(parentFiber)) break;
         parentFiber = parentFiber.return;
       }
       enableFragmentRefs &&
@@ -8652,6 +8677,9 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
       case 26:
       case 5:
         safelyDetachRef(finishedWork, finishedWork.return);
+        enableFragmentRefs &&
+          5 === finishedWork.tag &&
+          commitFragmentInstanceDeletionEffects(finishedWork);
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
         break;
       case 22:
@@ -8735,14 +8763,12 @@ function recursivelyTraverseReappearLayoutEffects(
         if (enableFragmentRefs && 5 === finishedWork.tag) {
           instance = finishedWork;
           for (var parent = instance.return; null !== parent; ) {
-            parent &&
-              7 === parent.tag &&
-              null !== parent.stateNode &&
+            isFragmentInstanceParent(parent) &&
               commitNewChildToFragmentInstance(
                 instance.stateNode,
                 parent.stateNode
               );
-            if (5 === parent.tag || 3 === parent.tag || 4 === parent.tag) break;
+            if (isHostParent(parent)) break;
             parent = parent.return;
           }
         }
@@ -10977,22 +11003,25 @@ FragmentInstance.prototype.compareDocumentPosition = function (otherNode) {
     void 0
   );
   if (0 === children.length) {
-    parentHostFiber = getPublicInstanceFromHostFiber(parentHostFiber);
-    children = this._fragmentFiber;
-    var parentResult = parentHostFiber.compareDocumentPosition(otherNode);
+    children = getPublicInstanceFromHostFiber(parentHostFiber);
+    var fragmentFiber = this._fragmentFiber;
+    parentHostFiber = getPublicInstanceFromHostFiber;
+    var parentResult = children.compareDocumentPosition(otherNode);
     var result = parentResult;
-    parentHostFiber === otherNode
+    children === otherNode
       ? (result = Node.DOCUMENT_POSITION_CONTAINS)
       : parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY &&
-        (traverseVisibleHostChildren(children.sibling, !1, findNextSibling),
-        (parentHostFiber = searchTarget),
+        (traverseVisibleHostChildren(
+          fragmentFiber.sibling,
+          !1,
+          findNextSibling
+        ),
+        (children = searchTarget),
         (searchTarget = null),
-        null === parentHostFiber
+        null === children
           ? (result = Node.DOCUMENT_POSITION_PRECEDING)
           : ((otherNode =
-              getPublicInstanceFromHostFiber(
-                parentHostFiber
-              ).compareDocumentPosition(otherNode)),
+              parentHostFiber(children).compareDocumentPosition(otherNode)),
             (result =
               0 === otherNode || otherNode & Node.DOCUMENT_POSITION_FOLLOWING
                 ? Node.DOCUMENT_POSITION_FOLLOWING
@@ -11001,20 +11030,20 @@ FragmentInstance.prototype.compareDocumentPosition = function (otherNode) {
   }
   parentHostFiber = getPublicInstanceFromHostFiber(children[0]);
   children = getPublicInstanceFromHostFiber(children[children.length - 1]);
-  result = parentHostFiber.compareDocumentPosition(otherNode);
-  var lastResult = children.compareDocumentPosition(otherNode);
+  fragmentFiber = parentHostFiber.compareDocumentPosition(otherNode);
+  parentResult = children.compareDocumentPosition(otherNode);
+  result =
+    fragmentFiber & Node.DOCUMENT_POSITION_CONTAINED_BY ||
+    parentResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
   parentResult =
-    result & Node.DOCUMENT_POSITION_CONTAINED_BY ||
-    lastResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
-  lastResult =
-    result & Node.DOCUMENT_POSITION_FOLLOWING &&
-    lastResult & Node.DOCUMENT_POSITION_PRECEDING;
+    fragmentFiber & Node.DOCUMENT_POSITION_FOLLOWING &&
+    parentResult & Node.DOCUMENT_POSITION_PRECEDING;
   return parentHostFiber === otherNode ||
     children === otherNode ||
-    parentResult ||
-    lastResult
+    result ||
+    parentResult
     ? Node.DOCUMENT_POSITION_CONTAINED_BY
-    : result;
+    : fragmentFiber;
 };
 function collectChildren(child, collection) {
   collection.push(child);
@@ -11045,6 +11074,18 @@ function collectClientRects(child, rects) {
   rects.push(child.getBoundingClientRect());
   return !1;
 }
+function addFragmentHandleToFiber(child, fragmentInstance) {
+  enableFragmentRefsInstanceHandles &&
+    ((child = getPublicInstanceFromHostFiber(child)),
+    null != child && addFragmentHandleToInstance(child, fragmentInstance));
+  return !1;
+}
+function addFragmentHandleToInstance(instance, fragmentInstance) {
+  enableFragmentRefsInstanceHandles &&
+    (null == instance.unstable_reactFragments &&
+      (instance.unstable_reactFragments = new Set()),
+    instance.unstable_reactFragments.add(fragmentInstance));
+}
 function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
   var publicInstance = getPublicInstance(childInstance);
   if (null !== fragmentInstance._observers) {
@@ -11054,6 +11095,8 @@ function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
       observer.observe(publicInstance);
     });
   }
+  enableFragmentRefsInstanceHandles &&
+    addFragmentHandleToInstance(publicInstance, fragmentInstance);
 }
 var HostTransitionContext = {
     $$typeof: REACT_CONTEXT_TYPE,
@@ -11129,26 +11172,26 @@ batchedUpdatesImpl = function (fn, a) {
   return fn(a);
 };
 var roots = new Map(),
-  internals$jscomp$inline_1298 = {
+  internals$jscomp$inline_1308 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-488d88b0-20251031",
+    version: "19.3.0-native-fb-edd05f18-20251103",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-488d88b0-20251031"
+    reconcilerVersion: "19.3.0-native-fb-edd05f18-20251103"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1298.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1308.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1638 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1652 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1638.isDisabled &&
-    hook$jscomp$inline_1638.supportsFiber
+    !hook$jscomp$inline_1652.isDisabled &&
+    hook$jscomp$inline_1652.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1638.inject(
-        internals$jscomp$inline_1298
+      (rendererID = hook$jscomp$inline_1652.inject(
+        internals$jscomp$inline_1308
       )),
-        (injectedHook = hook$jscomp$inline_1638);
+        (injectedHook = hook$jscomp$inline_1652);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
