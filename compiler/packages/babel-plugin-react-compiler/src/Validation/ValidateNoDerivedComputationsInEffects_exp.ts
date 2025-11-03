@@ -558,6 +558,23 @@ function renderTree(
   return result;
 }
 
+function getFnGlobalDeps(
+  fn: FunctionExpression | undefined,
+  deps: Set<IdentifierId>,
+) {
+  if (!fn) {
+    return;
+  }
+
+  for (const [, block] of fn.loweredFunc.func.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'LoadLocal') {
+        deps.add(instr.value.place.identifier.id);
+      }
+    }
+  }
+}
+
 function validateEffect(
   effectFunction: HIRFunction,
   context: ValidationContext,
@@ -576,8 +593,24 @@ function validateEffect(
     Set<SourceLocation>
   > = new Map();
 
+  const cleanUpFunctionDeps: Set<IdentifierId> = new Set();
+
   const globals: Set<IdentifierId> = new Set();
   for (const block of effectFunction.body.blocks.values()) {
+    /*
+     * if the block is in an effect and is of type return then its an effect's cleanup function
+     * if the cleanup function depends on a value from which effect-set state is derived then
+     * we can't validate
+     */
+    if (
+      block.terminal.kind === 'return' &&
+      block.terminal.returnVariant === 'Explicit'
+    ) {
+      getFnGlobalDeps(
+        context.functions.get(block.terminal.value.identifier.id),
+        cleanUpFunctionDeps,
+      );
+    }
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
         // skip if block has a back edge
@@ -667,6 +700,7 @@ function validateEffect(
       const allSourceIds = Array.from(derivedSetStateCall.sourceIds);
       const propsSet = new Set<string>();
       const stateSet = new Set<string>();
+      const allSetStateDeps = new Set<IdentifierId>();
 
       const treeNodesMap = new Map<string, TreeNode>();
       for (const id of allSourceIds) {
@@ -686,6 +720,12 @@ function validateEffect(
           stateSet,
         ),
       );
+
+      for (const dep of allSetStateDeps) {
+        if (cleanUpFunctionDeps.has(dep)) {
+          return;
+        }
+      }
 
       const propsArr = Array.from(propsSet);
       const stateArr = Array.from(stateSet);
