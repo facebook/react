@@ -277,7 +277,7 @@ function runWithEnvironment(
     }
 
     if (env.config.validateNoDerivedComputationsInEffects_exp) {
-      validateNoDerivedComputationsInEffects_exp(hir);
+      env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
     }
 
     if (env.config.validateNoSetStateInEffects) {
