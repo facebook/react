@@ -110,7 +110,7 @@ describe('FragmentRefs', () => {
     await act(() => root.render(<Test />));
   });
 
-  // @gate enableFragmentRefs
+  // @gate enableFragmentRefs && enableFragmentRefsInstanceHandles
   it('attaches fragment handles to nodes', async () => {
     const fragmentParentRef = React.createRef();
     const fragmentRef = React.createRef();
@@ -135,18 +135,26 @@ describe('FragmentRefs', () => {
     const childB = document.querySelector('#childB');
     const childC = document.querySelector('#childC');
 
-    expect(childA.fragments.has(fragmentRef.current)).toBe(true);
-    expect(childB.fragments.has(fragmentRef.current)).toBe(true);
-    expect(childC.fragments.has(fragmentRef.current)).toBe(false);
-    expect(childA.fragments.has(fragmentParentRef.current)).toBe(true);
-    expect(childB.fragments.has(fragmentParentRef.current)).toBe(true);
-    expect(childC.fragments.has(fragmentParentRef.current)).toBe(true);
+    expect(childA.unstable_reactFragments.has(fragmentRef.current)).toBe(true);
+    expect(childB.unstable_reactFragments.has(fragmentRef.current)).toBe(true);
+    expect(childC.unstable_reactFragments.has(fragmentRef.current)).toBe(false);
+    expect(childA.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
+      true,
+    );
+    expect(childB.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
+      true,
+    );
+    expect(childC.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
+      true,
+    );
 
     await act(() => root.render(<Test show={true} />));
 
     const childD = document.querySelector('#childD');
-    expect(childD.fragments.has(fragmentRef.current)).toBe(false);
-    expect(childD.fragments.has(fragmentParentRef.current)).toBe(true);
+    expect(childD.unstable_reactFragments.has(fragmentRef.current)).toBe(false);
+    expect(childD.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
+      true,
+    );
   });
 
   describe('focus methods', () => {
@@ -1085,7 +1093,7 @@ describe('FragmentRefs', () => {
       );
     });
 
-    // @gate enableFragmentRefs
+    // @gate enableFragmentRefs && enableFragmentRefsInstanceHandles
     it('attaches handles to observed elements to allow caching of observers', async () => {
       const targetToCallbackMap = new WeakMap();
       let cachedObserver = null;
@@ -1100,7 +1108,7 @@ describe('FragmentRefs', () => {
         }
         const observer = new IntersectionObserver(entries => {
           entries.forEach(entry => {
-            const fragmentInstances = entry.target.fragments;
+            const fragmentInstances = entry.target.unstable_reactFragments;
             if (fragmentInstances) {
               Array.from(fragmentInstances).forEach(fInstance => {
                 const cbs = targetToCallbackMap.get(fInstance) || [];

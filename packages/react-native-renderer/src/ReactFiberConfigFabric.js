@@ -40,6 +40,7 @@ import {
   type PublicTextInstance,
   type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {enableFragmentRefsInstanceHandles} from 'shared/ReactFeatureFlags';
 
 const {
   createNode,
@@ -120,7 +121,7 @@ export type TextInstance = {
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
 type PublicInstanceWithFragmentHandles = PublicInstance & {
-  fragments?: Set<FragmentInstanceType>,
+  unstable_reactFragments?: Set<FragmentInstanceType>,
 };
 export type Container = {
   containerTag: number,
@@ -814,21 +815,23 @@ function addFragmentHandleToInstance(
   instance: PublicInstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  if (instance.fragments == null) {
-    instance.fragments = new Set();
+  if (instance.unstable_reactFragments == null) {
+    instance.unstable_reactFragments = new Set();
   }
-  instance.fragments.add(fragmentInstance);
+  instance.unstable_reactFragments.add(fragmentInstance);
 }
 
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
   const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
-  traverseFragmentInstance(
-    fragmentFiber,
-    addFragmentHandleToFiber,
-    fragmentInstance,
-  );
+  if (enableFragmentRefsInstanceHandles) {
+    traverseFragmentInstance(
+      fragmentFiber,
+      addFragmentHandleToFiber,
+      fragmentInstance,
+    );
+  }
   return fragmentInstance;
 }
 
@@ -853,10 +856,12 @@ export function commitNewChildToFragmentInstance(
       observer.observe(publicInstance);
     });
   }
-  addFragmentHandleToInstance(
-    ((publicInstance: any): PublicInstanceWithFragmentHandles),
-    fragmentInstance,
-  );
+  if (enableFragmentRefsInstanceHandles) {
+    addFragmentHandleToInstance(
+      ((publicInstance: any): PublicInstanceWithFragmentHandles),
+      fragmentInstance,
+    );
+  }
 }
 
 export function deleteChildFromFragmentInstance(
@@ -866,8 +871,10 @@ export function deleteChildFromFragmentInstance(
   const publicInstance = ((getPublicInstance(
     childInstance,
   ): any): PublicInstanceWithFragmentHandles);
-  if (publicInstance.fragments != null) {
-    publicInstance.fragments.delete(fragmentInstance);
+  if (enableFragmentRefsInstanceHandles) {
+    if (publicInstance.unstable_reactFragments != null) {
+      publicInstance.unstable_reactFragments.delete(fragmentInstance);
+    }
   }
 }
 

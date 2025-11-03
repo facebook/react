@@ -126,6 +126,7 @@ import {
   enableHydrationChangeEvent,
   enableFragmentRefsScrollIntoView,
   enableProfilerTimer,
+  enableFragmentRefsInstanceHandles,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -215,7 +216,7 @@ export type Instance = Element;
 export type TextInstance = Text;
 
 type InstanceWithFragmentHandles = Instance & {
-  fragments?: Set<FragmentInstanceType>,
+  unstable_reactFragments?: Set<FragmentInstanceType>,
 };
 
 declare class ActivityInterface extends Comment {}
@@ -3409,21 +3410,23 @@ function addFragmentHandleToInstance(
   instance: InstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  if (instance.fragments == null) {
-    instance.fragments = new Set();
+  if (instance.unstable_reactFragments == null) {
+    instance.unstable_reactFragments = new Set();
   }
-  instance.fragments.add(fragmentInstance);
+  instance.unstable_reactFragments.add(fragmentInstance);
 }
 
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
   const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
-  traverseFragmentInstance(
-    fragmentFiber,
-    addFragmentHandleToFiber,
-    fragmentInstance,
-  );
+  if (enableFragmentRefsInstanceHandles) {
+    traverseFragmentInstance(
+      fragmentFiber,
+      addFragmentHandleToFiber,
+      fragmentInstance,
+    );
+  }
   return fragmentInstance;
 }
 
@@ -3450,7 +3453,9 @@ export function commitNewChildToFragmentInstance(
       observer.observe(childInstance);
     });
   }
-  addFragmentHandleToInstance(childInstance, fragmentInstance);
+  if (enableFragmentRefsInstanceHandles) {
+    addFragmentHandleToInstance(childInstance, fragmentInstance);
+  }
 }
 
 export function deleteChildFromFragmentInstance(
@@ -3464,8 +3469,10 @@ export function deleteChildFromFragmentInstance(
       childInstance.removeEventListener(type, listener, optionsOrUseCapture);
     }
   }
-  if (childInstance.fragments != null) {
-    childInstance.fragments.delete(fragmentInstance);
+  if (enableFragmentRefsInstanceHandles) {
+    if (childInstance.unstable_reactFragments != null) {
+      childInstance.unstable_reactFragments.delete(fragmentInstance);
+    }
   }
 }
 
