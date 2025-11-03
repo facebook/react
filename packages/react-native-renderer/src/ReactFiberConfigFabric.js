@@ -802,11 +802,13 @@ function addFragmentHandleToFiber(
   child: Fiber,
   fragmentInstance: FragmentInstanceType,
 ): boolean {
-  const instance = ((getPublicInstanceFromHostFiber(
-    child,
-  ): any): PublicInstanceWithFragmentHandles);
-  if (instance != null) {
-    addFragmentHandleToInstance(instance, fragmentInstance);
+  if (enableFragmentRefsInstanceHandles) {
+    const instance = ((getPublicInstanceFromHostFiber(
+      child,
+    ): any): PublicInstanceWithFragmentHandles);
+    if (instance != null) {
+      addFragmentHandleToInstance(instance, fragmentInstance);
+    }
   }
   return false;
 }
@@ -815,10 +817,12 @@ function addFragmentHandleToInstance(
   instance: PublicInstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  if (instance.unstable_reactFragments == null) {
-    instance.unstable_reactFragments = new Set();
+  if (enableFragmentRefsInstanceHandles) {
+    if (instance.unstable_reactFragments == null) {
+      instance.unstable_reactFragments = new Set();
+    }
+    instance.unstable_reactFragments.add(fragmentInstance);
   }
-  instance.unstable_reactFragments.add(fragmentInstance);
 }
 
 export function createFragmentInstance(
