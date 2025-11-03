@@ -147,6 +147,7 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
 
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
+export const enableFragmentRefsInstanceHandles: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.

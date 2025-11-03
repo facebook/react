@@ -74,6 +74,7 @@ export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
+export const enableFragmentRefsInstanceHandles: boolean = false;
 
 // Profiling Only
 export const enableProfilerTimer: boolean = __PROFILE__;

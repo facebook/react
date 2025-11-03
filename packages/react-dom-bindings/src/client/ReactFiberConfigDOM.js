@@ -126,6 +126,7 @@ import {
   enableHydrationChangeEvent,
   enableFragmentRefsScrollIntoView,
   enableProfilerTimer,
+  enableFragmentRefsInstanceHandles,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -213,6 +214,10 @@ export type Container =
   | interface extends DocumentFragment {_reactRootContainer?: FiberRoot};
 export type Instance = Element;
 export type TextInstance = Text;
+
+type InstanceWithFragmentHandles = Instance & {
+  unstable_reactFragments?: Set<FragmentInstanceType>,
+};
 
 declare class ActivityInterface extends Comment {}
 declare class SuspenseInterface extends Comment {
@@ -3390,10 +3395,44 @@ if (enableFragmentRefsScrollIntoView) {
   };
 }
 
+function addFragmentHandleToFiber(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+): boolean {
+  if (enableFragmentRefsInstanceHandles) {
+    const instance =
+      getInstanceFromHostFiber<InstanceWithFragmentHandles>(child);
+    if (instance != null) {
+      addFragmentHandleToInstance(instance, fragmentInstance);
+    }
+  }
+  return false;
+}
+
+function addFragmentHandleToInstance(
+  instance: InstanceWithFragmentHandles,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  if (enableFragmentRefsInstanceHandles) {
+    if (instance.unstable_reactFragments == null) {
+      instance.unstable_reactFragments = new Set();
+    }
+    instance.unstable_reactFragments.add(fragmentInstance);
+  }
+}
+
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
-  return new (FragmentInstance: any)(fragmentFiber);
+  const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
+  if (enableFragmentRefsInstanceHandles) {
+    traverseFragmentInstance(
+      fragmentFiber,
+      addFragmentHandleToFiber,
+      fragmentInstance,
+    );
+  }
+  return fragmentInstance;
 }
 
 export function updateFragmentInstanceFiber(
@@ -3404,7 +3443,7 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childInstance: Instance,
+  childInstance: InstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
@@ -3419,17 +3458,25 @@ export function commitNewChildToFragmentInstance(
       observer.observe(childInstance);
     });
   }
+  if (enableFragmentRefsInstanceHandles) {
+    addFragmentHandleToInstance(childInstance, fragmentInstance);
+  }
 }
 
 export function deleteChildFromFragmentInstance(
-  childElement: Instance,
+  childInstance: InstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childElement.removeEventListener(type, listener, optionsOrUseCapture);
+      childInstance.removeEventListener(type, listener, optionsOrUseCapture);
+    }
+  }
+  if (enableFragmentRefsInstanceHandles) {
+    if (childInstance.unstable_reactFragments != null) {
+      childInstance.unstable_reactFragments.delete(fragmentInstance);
     }
   }
 }
