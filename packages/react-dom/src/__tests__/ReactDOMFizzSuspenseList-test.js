@@ -134,7 +134,7 @@ describe('ReactDOMFizzSuspenseList', () => {
   }
 
   // @gate enableSuspenseList
-  it('shows content forwards by default', async () => {
+  it('shows content forwards but hidden tail by default', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -173,13 +173,7 @@ describe('ReactDOMFizzSuspenseList', () => {
       'Loading C',
     ]);
 
-    expect(getVisibleChildren(container)).toEqual(
-      <div>
-        <span>Loading A</span>
-        <span>Loading B</span>
-        <span>Loading C</span>
-      </div>,
-    );
+    expect(getVisibleChildren(container)).toEqual(<div />);
 
     await serverAct(() => A.resolve());
     assertLog(['A']);
@@ -187,8 +181,6 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>A</span>
-        <span>Loading B</span>
-        <span>Loading C</span>
       </div>,
     );
 
@@ -985,5 +977,122 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(errors).toEqual(['hi']);
     expect(hasErrored).toBe(false);
     expect(hasCompleted).toBe(true);
+  });
+
+  // @gate enableSuspenseList
+  it('can stream in "forwards" with tail "hidden" with boundaries', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <C />
+            </Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await C.resolve();
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'Suspend! [B]', // TODO: Defer rendering the content after fallback if previous suspended,
+      'C',
+      'Loading A',
+      'Loading B',
+      'Loading C',
+    ]);
+
+    expect(getVisibleChildren(container)).toEqual(<div />);
+
+    await serverAct(() => A.resolve());
+    assertLog(['A']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+      </div>,
+    );
+
+    await serverAct(() => B.resolve());
+    assertLog(['B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </div>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('can stream in "forwards" with tail "hidden" without boundaries', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards" tail="hidden">
+            <A />
+            <B />
+            <C />
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await C.resolve();
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'Suspend! [B]', // TODO: Defer rendering the content after fallback if previous suspended,
+      'C',
+    ]);
+
+    expect(getVisibleChildren(container)).toEqual(<div />);
+
+    await serverAct(() => A.resolve());
+    assertLog(['A']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+      </div>,
+    );
+
+    await serverAct(() => B.resolve());
+    assertLog(['B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </div>,
+    );
   });
 });
