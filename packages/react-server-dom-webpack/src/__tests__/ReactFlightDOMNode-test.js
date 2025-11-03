@@ -1235,9 +1235,7 @@ describe('ReactFlightDOMNode', () => {
         );
       }
 
-      let passThrough;
       let staticEndTime = -1;
-
       const initialChunks = [];
       const dynamicChunks = [];
 
@@ -1249,7 +1247,7 @@ describe('ReactFlightDOMNode', () => {
             {filterStackFrame},
           );
 
-          passThrough = new Stream.PassThrough(streamOptions);
+          const passThrough = new Stream.PassThrough(streamOptions);
           stream.pipe(passThrough);
 
           passThrough.on('data', chunk => {
@@ -1353,7 +1351,7 @@ describe('ReactFlightDOMNode', () => {
             '    in body\n' +
             '    in html\n' +
             '    in App (file://ReactFlightDOMNode-test.js:1233:25)\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1310:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1308:16)',
         );
       } else {
         expect(
@@ -1362,7 +1360,7 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1310:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1308:16)',
         );
       }
 
