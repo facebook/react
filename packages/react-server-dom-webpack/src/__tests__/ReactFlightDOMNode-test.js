@@ -86,12 +86,25 @@ describe('ReactFlightDOMNode', () => {
     );
   }
 
-  function normalizeCodeLocInfo(str) {
+  const relativeFilename = path.relative(__dirname, __filename);
+
+  function normalizeCodeLocInfo(str, {preserveLocation = false} = {}) {
     return (
       str &&
-      str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
-        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
-      })
+      str.replace(
+        /^ +(?:at|in) ([\S]+) ([^\n]*)/gm,
+        function (m, name, location) {
+          return (
+            '    in ' +
+            name +
+            (/\d/.test(m)
+              ? preserveLocation
+                ? ' ' + location.replace(__filename, relativeFilename)
+                : ' (at **)'
+              : '')
+          );
+        },
+      )
     );
   }
 
@@ -1168,5 +1181,222 @@ describe('ReactFlightDOMNode', () => {
 
     // Must not throw an error.
     await readable.pipeTo(writable);
+  });
+
+  describe('with real timers', () => {
+    // These tests schedule their rendering in a way that requires real timers
+    // to be used to accurately represent how this interacts with React's
+    // internal scheduling.
+
+    beforeEach(() => {
+      jest.useRealTimers();
+    });
+
+    afterEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('should use late-arriving I/O debug info to enhance component and owner stacks when aborting a prerender', async () => {
+      // This test is constructing a scenario where a framework might separate
+      // I/O into different phases, e.g. runtime I/O and dynamic I/O. The
+      // framework might choose to define an end time for the Flight client,
+      // indicating that all I/O info (or any debug info for that matter) that
+      // arrives after that time should be ignored. When rendering in Fizz is
+      // then aborted, the late-arriving debug info that's used to enhance the
+      // owner stack only includes I/O info up to that end time.
+      let resolveRuntimeData;
+      let resolveDynamicData;
+
+      async function getRuntimeData() {
+        return new Promise(resolve => {
+          resolveRuntimeData = resolve;
+        });
+      }
+
+      async function getDynamicData() {
+        return new Promise(resolve => {
+          resolveDynamicData = resolve;
+        });
+      }
+
+      async function Dynamic() {
+        const runtimeData = await getRuntimeData();
+        const dynamicData = await getDynamicData();
+
+        return (
+          <p>
+            {runtimeData} {dynamicData}
+          </p>
+        );
+      }
+
+      function App() {
+        return ReactServer.createElement(
+          'html',
+          null,
+          ReactServer.createElement(
+            'body',
+            null,
+            ReactServer.createElement(Dynamic),
+          ),
+        );
+      }
+
+      const stream = await ReactServerDOMServer.renderToPipeableStream(
+        ReactServer.createElement(App),
+        webpackMap,
+        {filterStackFrame},
+      );
+
+      const initialChunks = [];
+      const dynamicChunks = [];
+      let isDynamic = false;
+
+      const passThrough = new Stream.PassThrough(streamOptions);
+      stream.pipe(passThrough);
+
+      passThrough.on('data', chunk => {
+        if (isDynamic) {
+          dynamicChunks.push(chunk);
+        } else {
+          initialChunks.push(chunk);
+        }
+      });
+
+      let endTime;
+
+      await new Promise(resolve => {
+        setTimeout(() => {
+          resolveRuntimeData('Hi');
+        });
+        setTimeout(() => {
+          isDynamic = true;
+          endTime = performance.now() + performance.timeOrigin;
+          resolveDynamicData('Josh');
+          resolve();
+        });
+      });
+
+      await new Promise(resolve => {
+        passThrough.on('end', resolve);
+      });
+
+      // Create a new Readable and push all initial chunks immediately.
+      const readable = new Stream.Readable({...streamOptions, read() {}});
+      for (let i = 0; i < initialChunks.length; i++) {
+        readable.push(initialChunks[i]);
+      }
+
+      const abortController = new AbortController();
+
+      // When prerendering is aborted, push all dynamic chunks. They won't be
+      // considered for rendering, but they include debug info we want to use.
+      abortController.signal.addEventListener(
+        'abort',
+        () => {
+          for (let i = 0; i < dynamicChunks.length; i++) {
+            readable.push(dynamicChunks[i]);
+          }
+        },
+        {once: true},
+      );
+
+      const response = ReactServerDOMClient.createFromNodeStream(
+        readable,
+        {
+          serverConsumerManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+        {
+          // Debug info arriving after this end time will be ignored, e.g. the
+          // I/O info for the dynamic data.
+          endTime,
+        },
+      );
+
+      function ClientRoot() {
+        return use(response);
+      }
+
+      let componentStack;
+      let ownerStack;
+
+      const {prelude} = await new Promise(resolve => {
+        let result;
+
+        setTimeout(() => {
+          result = ReactDOMFizzStatic.prerenderToNodeStream(
+            React.createElement(ClientRoot),
+            {
+              signal: abortController.signal,
+              onError(error, errorInfo) {
+                componentStack = errorInfo.componentStack;
+                ownerStack = React.captureOwnerStack
+                  ? React.captureOwnerStack()
+                  : null;
+              },
+            },
+          );
+        });
+
+        setTimeout(() => {
+          abortController.abort();
+          resolve(result);
+        });
+      });
+
+      const prerenderHTML = await readResult(prelude);
+
+      expect(prerenderHTML).toBe('');
+
+      if (__DEV__) {
+        expect(
+          normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
+        ).toBe(
+          '\n' +
+            '    in Dynamic' +
+            (gate(flags => flags.enableAsyncDebugInfo)
+              ? ' (file://ReactFlightDOMNode-test.js:1223:33)\n'
+              : '\n') +
+            '    in body\n' +
+            '    in html\n' +
+            '    in App (file://ReactFlightDOMNode-test.js:1240:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1320:16)',
+        );
+      } else {
+        expect(
+          normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
+        ).toBe(
+          '\n' +
+            '    in body\n' +
+            '    in html\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1320:16)',
+        );
+      }
+
+      if (__DEV__) {
+        if (gate(flags => flags.enableAsyncDebugInfo)) {
+          expect(
+            normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
+          ).toBe(
+            '\n' +
+              '    in Dynamic (file://ReactFlightDOMNode-test.js:1223:33)\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1240:25)',
+          );
+        } else {
+          expect(
+            normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
+          ).toBe(
+            '' +
+              '\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1240:25)',
+          );
+        }
+      } else {
+        expect(ownerStack).toBeNull();
+      }
+    });
   });
 });

@@ -1512,6 +1512,11 @@ export function attach(
       throw Error('Cannot modify filter preferences while profiling');
     }
 
+    const previousForcedFallbacks =
+      forceFallbackForFibers.size > 0 ? new Set(forceFallbackForFibers) : null;
+    const previousForcedErrors =
+      forceErrorForFibers.size > 0 ? new Map(forceErrorForFibers) : null;
+
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
       const rootInstance = rootToFiberInstanceMap.get(root);
@@ -1531,6 +1536,41 @@ export function attach(
 
     // Reset pseudo counters so that new path selections will be persisted.
     rootDisplayNameCounter.clear();
+
+    // We just cleared all the forced states. Schedule updates on the affected Fibers
+    // so that we get their initial states again according to the new filters.
+    if (typeof scheduleUpdate === 'function') {
+      if (previousForcedFallbacks !== null) {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const fiber of previousForcedFallbacks) {
+          if (typeof scheduleRetry === 'function') {
+            scheduleRetry(fiber);
+          } else {
+            scheduleUpdate(fiber);
+          }
+        }
+      }
+      if (
+        previousForcedErrors !== null &&
+        typeof setErrorHandler === 'function'
+      ) {
+        // Unlike for Suspense, disabling the forced error state requires setting
+        // the status to false first. `shouldErrorFiberAccordingToMap` will clear
+        // the Fibers later.
+        setErrorHandler(shouldErrorFiberAccordingToMap);
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const [fiber, shouldError] of previousForcedErrors) {
+          forceErrorForFibers.set(fiber, false);
+          if (shouldError) {
+            if (typeof scheduleRetry === 'function') {
+              scheduleRetry(fiber);
+            } else {
+              scheduleUpdate(fiber);
+            }
+          }
+        }
+      }
+    }
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {

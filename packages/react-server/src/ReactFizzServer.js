@@ -1004,14 +1004,6 @@ function pushHaltedAwaitOnComponentStack(
   if (debugInfo != null) {
     for (let i = debugInfo.length - 1; i >= 0; i--) {
       const info = debugInfo[i];
-      if (typeof info.name === 'string') {
-        // This is a Server Component. Any awaits in previous Server Components already resolved.
-        break;
-      }
-      if (typeof info.time === 'number') {
-        // This had an end time. Any awaits before this must have already resolved.
-        break;
-      }
       if (info.awaited != null) {
         const asyncInfo: ReactAsyncInfo = (info: any);
         const bestStack =
@@ -1913,7 +1905,7 @@ function renderSuspenseListRows(
   task: Task,
   keyPath: KeyNode,
   rows: Array<ReactNodeList>,
-  revealOrder: 'forwards' | 'backwards' | 'unstable_legacy-backwards',
+  revealOrder: void | 'forwards' | 'backwards' | 'unstable_legacy-backwards',
 ): void {
   // This is a fork of renderChildrenArray that's aware of tracking rows.
   const prevKeyPath = task.keyPath;
@@ -2017,7 +2009,11 @@ function renderSuspenseListRows(
       const parentSegment = task.blockedSegment;
       const childIndex = parentSegment.children.length;
       const insertionIndex = parentSegment.chunks.length;
-      for (let i = totalChildren - 1; i >= 0; i--) {
+      for (let n = 0; n < totalChildren; n++) {
+        const i =
+          revealOrder === 'unstable_legacy-backwards'
+            ? totalChildren - 1 - n
+            : n;
         const node = rows[i];
         task.row = previousSuspenseListRow = createSuspenseListRow(
           previousSuspenseListRow,
@@ -2098,11 +2094,7 @@ function renderSuspenseList(
   const revealOrder: SuspenseListRevealOrder = props.revealOrder;
   // TODO: Support tail hidden/collapsed modes.
   // const tailMode: SuspenseListTailMode = props.tail;
-  if (
-    revealOrder === 'forwards' ||
-    revealOrder === 'backwards' ||
-    revealOrder === 'unstable_legacy-backwards'
-  ) {
+  if (revealOrder !== 'independent' && revealOrder !== 'together') {
     // For ordered reveal, we need to produce rows from the children.
     if (isArray(children)) {
       renderSuspenseListRows(request, task, keyPath, children, revealOrder);
@@ -4653,10 +4645,36 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     // If the task is not rendering, then this is an async abort. Conceptually it's as if
     // the abort happened inside the async gap. The abort reason's stack frame won't have that
     // on the stack so instead we use the owner stack and debug task of any halted async debug info.
-    const node: any = task.node;
+    let node: any = task.node;
     if (node !== null && typeof node === 'object') {
       // Push a fake component stack frame that represents the await.
-      pushHaltedAwaitOnComponentStack(task, node._debugInfo);
+      let debugInfo = node._debugInfo;
+      // First resolve lazy nodes to find debug info that has been transferred
+      // to the inner value.
+      while (
+        typeof node === 'object' &&
+        node !== null &&
+        node.$$typeof === REACT_LAZY_TYPE
+      ) {
+        const payload = node._payload;
+        if (payload.status === 'fulfilled') {
+          node = payload.value;
+          continue;
+        }
+        break;
+      }
+      if (
+        typeof node === 'object' &&
+        node !== null &&
+        (isArray(node) ||
+          typeof node[ASYNC_ITERATOR] === 'function' ||
+          node.$$typeof === REACT_ELEMENT_TYPE ||
+          node.$$typeof === REACT_LAZY_TYPE) &&
+        isArray(node._debugInfo)
+      ) {
+        debugInfo = node._debugInfo;
+      }
+      pushHaltedAwaitOnComponentStack(task, debugInfo);
       /*
       if (task.thenableState !== null) {
         // TODO: If we were stalled inside use() of a Client Component then we should
