@@ -9094,8 +9094,18 @@ function safelyAttachRef(current, nearestMountedAncestor) {
           break;
         case 7:
           if (enableFragmentRefs) {
-            null === current.stateNode &&
-              (current.stateNode = new FragmentInstance(current));
+            if (null === current.stateNode) {
+              var fragmentInstance = new FragmentInstance(current);
+              traverseVisibleHostChildren(
+                current.child,
+                !1,
+                addFragmentHandleToFiber,
+                fragmentInstance,
+                void 0,
+                void 0
+              );
+              current.stateNode = fragmentInstance;
+            }
             instanceToUse = current.stateNode;
             break;
           }
@@ -9198,17 +9208,20 @@ function commitNewChildToFragmentInstances(fiber, parentFragmentInstances) {
 function commitFragmentInstanceDeletionEffects(fiber) {
   for (var parent = fiber.return; null !== parent; ) {
     if (isFragmentInstanceParent(parent)) {
-      var childElement = fiber.stateNode,
-        eventListeners = parent.stateNode._eventListeners;
+      var fragmentInstance = parent.stateNode,
+        childInstance = fiber.stateNode,
+        eventListeners = fragmentInstance._eventListeners;
       if (null !== eventListeners)
         for (var i = 0; i < eventListeners.length; i++) {
           var _eventListeners$i4 = eventListeners[i];
-          childElement.removeEventListener(
+          childInstance.removeEventListener(
             _eventListeners$i4.type,
             _eventListeners$i4.listener,
             _eventListeners$i4.optionsOrUseCapture
           );
         }
+      null != childInstance.unstable_reactFragments &&
+        childInstance.unstable_reactFragments.delete(fragmentInstance);
     }
     if (isHostParent(parent)) break;
     parent = parent.return;
@@ -18475,6 +18488,16 @@ enableFragmentRefsScrollIntoView &&
         getInstanceFromHostFiber(children[result]).scrollIntoView(alignToTop),
           (result += resolvedAlignToTop ? -1 : 1);
   });
+function addFragmentHandleToFiber(child, fragmentInstance) {
+  child = getInstanceFromHostFiber(child);
+  null != child && addFragmentHandleToInstance(child, fragmentInstance);
+  return !1;
+}
+function addFragmentHandleToInstance(instance, fragmentInstance) {
+  null == instance.unstable_reactFragments &&
+    (instance.unstable_reactFragments = new Set());
+  instance.unstable_reactFragments.add(fragmentInstance);
+}
 function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
   var eventListeners = fragmentInstance._eventListeners;
   if (null !== eventListeners)
@@ -18490,6 +18513,7 @@ function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
     fragmentInstance._observers.forEach(function (observer) {
       observer.observe(childInstance);
     });
+  addFragmentHandleToInstance(childInstance, fragmentInstance);
 }
 function clearContainerSparingly(container) {
   var nextNode = container.firstChild;
@@ -20324,16 +20348,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2154 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2160 = React.version;
 if (
-  "19.3.0-www-classic-561ee24d-20251101" !==
-  isomorphicReactPackageVersion$jscomp$inline_2154
+  "19.3.0-www-classic-edd05f18-20251103" !==
+  isomorphicReactPackageVersion$jscomp$inline_2160
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2154,
-      "19.3.0-www-classic-561ee24d-20251101"
+      isomorphicReactPackageVersion$jscomp$inline_2160,
+      "19.3.0-www-classic-edd05f18-20251103"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20349,24 +20373,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2791 = {
+var internals$jscomp$inline_2801 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-561ee24d-20251101",
+  version: "19.3.0-www-classic-edd05f18-20251103",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-561ee24d-20251101"
+  reconcilerVersion: "19.3.0-www-classic-edd05f18-20251103"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2792 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2802 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2792.isDisabled &&
-    hook$jscomp$inline_2792.supportsFiber
+    !hook$jscomp$inline_2802.isDisabled &&
+    hook$jscomp$inline_2802.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2792.inject(
-        internals$jscomp$inline_2791
+      (rendererID = hook$jscomp$inline_2802.inject(
+        internals$jscomp$inline_2801
       )),
-        (injectedHook = hook$jscomp$inline_2792);
+        (injectedHook = hook$jscomp$inline_2802);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -20934,4 +20958,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-561ee24d-20251101";
+exports.version = "19.3.0-www-classic-edd05f18-20251103";
