@@ -510,7 +510,9 @@ function filterDebugInfo(
     return;
   }
 
-  // Remove any debug info entries that arrived after the defined end time.
+  // Remove any debug info entries after the defined end time. For async info
+  // that means we're including anything that was awaited before the end time,
+  // but it doesn't need to be resolved before the end time.
   const relativeEndTime =
     response._debugEndTime -
     // $FlowFixMe[prop-missing]
@@ -519,9 +521,6 @@ function filterDebugInfo(
   for (let i = 0; i < value._debugInfo.length; i++) {
     const info = value._debugInfo[i];
     if (typeof info.time === 'number' && info.time > relativeEndTime) {
-      break;
-    }
-    if (info.awaited != null && info.awaited.end > relativeEndTime) {
       break;
     }
     debugInfo.push(info);
