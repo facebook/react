@@ -80,7 +80,7 @@ export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
 
-export const enablePostpone = false; // Probably won't ship in this form.
+export const enablePostpone: boolean = false; // Probably won't ship in this form.
 
 export const enableHalt: boolean = true;
 
