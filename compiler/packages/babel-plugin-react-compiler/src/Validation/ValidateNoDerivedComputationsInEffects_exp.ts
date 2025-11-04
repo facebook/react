@@ -467,53 +467,52 @@ type TreeNode = {
 function buildTreeNode(
   sourceId: IdentifierId,
   context: ValidationContext,
-): TreeNode | null {
+  visited: Set<string> = new Set(),
+): Array<TreeNode> {
   const sourceMetadata = context.derivationCache.cache.get(sourceId);
   if (!sourceMetadata) {
-    return null;
+    return [];
   }
 
-  const childSourceIds = Array.from(sourceMetadata.sourcesIds).filter(
-    id => id !== sourceId,
-  );
+  const children: Array<TreeNode> = [];
 
-  if (!isNamedIdentifier(sourceMetadata.place)) {
-    const childrenMap = new Map<string, TreeNode>();
-    for (const childId of childSourceIds) {
-      const childNode = buildTreeNode(childId, context);
-      if (childNode) {
-        if (!childrenMap.has(childNode.name)) {
-          childrenMap.set(childNode.name, childNode);
+  const namedSiblings: Set<string> = new Set();
+  for (const childId of sourceMetadata.sourcesIds) {
+    const childNodes = buildTreeNode(
+      childId,
+      context,
+      new Set([
+        ...visited,
+        ...(isNamedIdentifier(sourceMetadata.place)
+          ? [sourceMetadata.place.identifier.name.value]
+          : []),
+      ]),
+    );
+    if (childNodes) {
+      for (const childNode of childNodes) {
+        if (!namedSiblings.has(childNode.name)) {
+          children.push(childNode);
+          namedSiblings.add(childNode.name);
         }
       }
     }
-    const children = Array.from(childrenMap.values());
-
-    if (children.length === 1) {
-      return children[0];
-    } else if (children.length > 1) {
-      return null;
-    }
-    return null;
   }
 
-  const childrenMap = new Map<string, TreeNode>();
-  for (const childId of childSourceIds) {
-    const childNode = buildTreeNode(childId, context);
-    if (childNode) {
-      if (!childrenMap.has(childNode.name)) {
-        childrenMap.set(childNode.name, childNode);
-      }
-    }
+  if (
+    isNamedIdentifier(sourceMetadata.place) &&
+    !visited.has(sourceMetadata.place.identifier.name.value)
+  ) {
+    return [
+      {
+        name: sourceMetadata.place.identifier.name.value,
+        typeOfValue: sourceMetadata.typeOfValue,
+        isSource: sourceMetadata.isStateSource,
+        children: children,
+      },
+    ];
   }
-  const children = Array.from(childrenMap.values());
 
-  return {
-    name: sourceMetadata.place.identifier.name.value,
-    typeOfValue: sourceMetadata.typeOfValue,
-    isSource: sourceMetadata.isStateSource,
-    children,
-  };
+  return children;
 }
 
 function renderTree(
@@ -558,6 +557,24 @@ function renderTree(
   return result;
 }
 
+function getFnGlobalDeps(
+  fn: FunctionExpression | undefined,
+  deps: Set<IdentifierId>,
+): void {
+  if (!fn) {
+    return;
+  }
+
+  console.log(fn);
+  for (const [, block] of fn.loweredFunc.func.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'LoadLocal') {
+        deps.add(instr.value.place.identifier.id);
+      }
+    }
+  }
+}
+
 function validateEffect(
   effectFunction: HIRFunction,
   context: ValidationContext,
@@ -576,8 +593,24 @@ function validateEffect(
     Set<SourceLocation>
   > = new Map();
 
+  const cleanUpFunctionDeps: Set<IdentifierId> = new Set();
+
   const globals: Set<IdentifierId> = new Set();
   for (const block of effectFunction.body.blocks.values()) {
+    /*
+     * if the block is in an effect and is of type return then its an effect's cleanup function
+     * if the cleanup function depends on a value from which effect-set state is derived then
+     * we can't validate
+     */
+    if (
+      block.terminal.kind === 'return' &&
+      block.terminal.returnVariant === 'Explicit'
+    ) {
+      getFnGlobalDeps(
+        context.functions.get(block.terminal.value.identifier.id),
+        cleanUpFunctionDeps,
+      );
+    }
     for (const pred of block.preds) {
       if (!seenBlocks.has(pred)) {
         // skip if block has a back edge
@@ -664,28 +697,35 @@ function validateEffect(
       effectSetStateUsages.get(rootSetStateCall)!.size ===
         context.setStateUsages.get(rootSetStateCall)!.size - 1
     ) {
-      const allSourceIds = Array.from(derivedSetStateCall.sourceIds);
       const propsSet = new Set<string>();
       const stateSet = new Set<string>();
 
-      const treeNodesMap = new Map<string, TreeNode>();
-      for (const id of allSourceIds) {
-        const node = buildTreeNode(id, context);
-        if (node && !treeNodesMap.has(node.name)) {
-          treeNodesMap.set(node.name, node);
+      const rootNodesMap = new Map<string, TreeNode>();
+      for (const id of derivedSetStateCall.sourceIds) {
+        const nodes = buildTreeNode(id, context);
+        for (const node of nodes) {
+          if (!rootNodesMap.has(node.name)) {
+            rootNodesMap.set(node.name, node);
+          }
         }
       }
-      const treeNodes = Array.from(treeNodesMap.values());
+      const rootNodes = Array.from(rootNodesMap.values());
 
-      const trees = treeNodes.map((node, index) =>
-        renderTree(
+      const trees = rootNodes.map((node, index) => {
+        return renderTree(
           node,
           '',
-          index === treeNodes.length - 1,
+          index === rootNodes.length - 1,
           propsSet,
           stateSet,
-        ),
-      );
+        );
+      });
+
+      for (const dep of derivedSetStateCall.sourceIds) {
+        if (cleanUpFunctionDeps.has(dep)) {
+          return;
+        }
+      }
 
       const propsArr = Array.from(propsSet);
       const stateArr = Array.from(stateSet);
