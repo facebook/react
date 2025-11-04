@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoDerivedComputationsInEffects_exp
+// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 import {useEffect, useState} from 'react';
 
 function Component({propValue, onChange}) {
@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputationsInEffects_exp
+import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 import { useEffect, useState } from "react";
 
 function Component(t0) {
@@ -69,6 +69,13 @@ export const FIXTURE_ENTRYPOINT = {
   params: [{ propValue: "test", onChange: () => {} }],
 };
 
+```
+
+## Logs
+
+```
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":107},"end":{"line":12,"column":1,"index":306},"filename":"effect-contains-prop-function-call-no-error.ts"},"fnName":"Component","memoSlots":7,"memoBlocks":3,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":16,"column":41,"index":402},"end":{"line":16,"column":49,"index":410},"filename":"effect-contains-prop-function-call-no-error.ts"},"fnName":null,"memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output
