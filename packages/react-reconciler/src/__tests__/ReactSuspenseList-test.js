@@ -2467,13 +2467,14 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     // Surprisingly unsuspending B actually causes the parent to resuspend
-    // because C is now unblocked which resuspends the parent for some reason.
-    // TODO: Why isn't this an async update which should be delayed commit?
+    // because C is now unblocked which resuspends the parent. Preventing the
+    // Retry from committing. That's because we don't want to commit into a
+    // state that doesn't have any loading indicators at all. That's what
+    // "collapsed" is for. To ensure there's always a loading indicator.
     expect(ReactNoop).toMatchRenderedOutput(
       <>
-        <span hidden={true}>A</span>
-        <span hidden={true}>Loading B</span>
-        Loading root
+        <span>A</span>
+        <span>Loading B</span>
       </>,
     );
 
