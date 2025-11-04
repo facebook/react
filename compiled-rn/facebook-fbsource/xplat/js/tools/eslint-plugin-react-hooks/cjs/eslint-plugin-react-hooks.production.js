@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<23983e7be8972a9bff35258a78f2fc7f>>
+ * @generated SignedSource<<5a376a49c846761f6f5dff09177ca48d>>
  */
 
 'use strict';
@@ -58037,6 +58037,12 @@ const rule = {
                 if (isInsideComponentOrHook(node)) {
                     recordAllUseEffectEventFunctions(getScope(node));
                 }
+            },
+            ComponentDeclaration(node) {
+                recordAllUseEffectEventFunctions(getScope(node));
+            },
+            HookDeclaration(node) {
+                recordAllUseEffectEventFunctions(getScope(node));
             },
         };
     },

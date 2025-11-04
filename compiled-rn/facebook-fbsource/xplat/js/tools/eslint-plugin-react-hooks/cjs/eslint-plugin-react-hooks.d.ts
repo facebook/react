@@ -76,6 +76,8 @@ declare const plugin: {
                 'CallExpression:exit'(node: estree.CallExpression & Rule.NodeParentExtension): void;
                 FunctionDeclaration(node: estree.FunctionDeclaration & Rule.NodeParentExtension): void;
                 ArrowFunctionExpression(node: estree.ArrowFunctionExpression & Rule.NodeParentExtension): void;
+                ComponentDeclaration(node: any): void;
+                HookDeclaration(node: any): void;
             };
         };
     };

@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<e5dc5d589a514d01f676ec1db6311f30>>
+ * @generated SignedSource<<d698b4c1d785a61a67b07b82bb41730e>>
  */
 
 'use strict';
@@ -58258,6 +58258,12 @@ const rule = {
                 if (isInsideComponentOrHook(node)) {
                     recordAllUseEffectEventFunctions(getScope(node));
                 }
+            },
+            ComponentDeclaration(node) {
+                recordAllUseEffectEventFunctions(getScope(node));
+            },
+            HookDeclaration(node) {
+                recordAllUseEffectEventFunctions(getScope(node));
             },
         };
     },
