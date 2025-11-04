@@ -93,10 +93,7 @@ function createFromNodeStream<T>(
 ): Thenable<T> {
   const debugChannel: void | DebugChannel =
     __DEV__ && options && options.debugChannel !== undefined
-      ? {
-          hasReadable: options.debugChannel.readable !== undefined,
-          callback: null,
-        }
+      ? {hasReadable: true, callback: null}
       : undefined;
 
   const response: Response = createResponse(
