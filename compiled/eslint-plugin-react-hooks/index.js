@@ -58258,6 +58258,12 @@ const rule = {
                     recordAllUseEffectEventFunctions(getScope(node));
                 }
             },
+            ComponentDeclaration(node) {
+                recordAllUseEffectEventFunctions(getScope(node));
+            },
+            HookDeclaration(node) {
+                recordAllUseEffectEventFunctions(getScope(node));
+            },
         };
     },
 };
