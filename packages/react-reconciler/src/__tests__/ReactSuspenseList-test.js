@@ -218,7 +218,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('warns if no revealOrder is specified', async () => {
+  it('behaves as revealOrder=forwards by default', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -239,54 +239,36 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    await A.resolve();
-
     ReactNoop.render(<Foo />);
 
-    await waitForAll([
-      'A',
-      'Suspend! [B]',
-      'Loading B',
-      'Suspend! [C]',
-      'Loading C',
-      // pre-warming
-      'Suspend! [B]',
-      'Suspend! [C]',
-    ]);
+    await waitForAll(['Suspend! [A]', 'Loading A']);
 
-    assertConsoleErrorDev([
-      'The default for the <SuspenseList revealOrder="..."> prop is changing. ' +
-        'To be future compatible you must explictly specify either ' +
-        '"independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".' +
-        '\n    in SuspenseList (at **)' +
-        '\n    in Foo (at **)',
-    ]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    await A.resolve();
+
+    await waitForAll(['A', 'Suspend! [B]', 'Loading B']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
+
+    await act(() => B.resolve());
+    assertLog(['B', 'Suspend! [C]', 'Loading C']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
         <span>A</span>
-        <span>Loading B</span>
-        <span>Loading C</span>
+        <span>B</span>
       </>,
     );
 
     await act(() => C.resolve());
-    assertLog(
-      gate('alwaysThrottleRetries')
-        ? ['Suspend! [B]', 'C', 'Suspend! [B]']
-        : ['C'],
-    );
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>A</span>
-        <span>Loading B</span>
-        <span>C</span>
-      </>,
-    );
-
-    await act(() => B.resolve());
-    assertLog(['B']);
+    assertLog(['C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -1040,7 +1022,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('warns if revealOrder="backwards" is specified', async () => {
+  it('displays each items in "backwards" order', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -1048,14 +1030,14 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <SuspenseList revealOrder="backwards" tail="visible">
-          <Suspense fallback={<Text text="Loading A" />}>
-            <A />
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
           </Suspense>
           <Suspense fallback={<Text text="Loading B" />}>
             <B />
           </Suspense>
-          <Suspense fallback={<Text text="Loading C" />}>
-            <C />
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
           </Suspense>
         </SuspenseList>
       );
@@ -1072,14 +1054,6 @@ describe('ReactSuspenseList', () => {
       'Loading A',
       // pre-warming
       'Suspend! [C]',
-    ]);
-
-    assertConsoleErrorDev([
-      'The rendering order of <SuspenseList revealOrder="backwards"> is changing. ' +
-        'To be future compatible you must specify ' +
-        'revealOrder="legacy_unstable-backwards" instead.' +
-        '\n    in SuspenseList (at **)' +
-        '\n    in Foo (at **)',
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1119,7 +1093,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('displays each items in "backwards" order', async () => {
+  it('displays each items in "backwards" order (legacy)', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');
@@ -1699,26 +1673,65 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
-  it('warns if no tail option is specified', async () => {
+  it('behaves as tail=hidden if no tail option is specified', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
     function Foo() {
       return (
         <SuspenseList revealOrder="forwards">
-          <Suspense fallback="Loading">A</Suspense>
-          <Suspense fallback="Loading">B</Suspense>
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <B />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
+          </Suspense>
         </SuspenseList>
       );
     }
 
-    await act(() => {
-      ReactNoop.render(<Foo />);
-    });
-    assertConsoleErrorDev([
-      'The default for the <SuspenseList tail="..."> prop is changing. ' +
-        'To be future compatible you must explictly specify either ' +
-        '"visible" (the current default), "collapsed" or "hidden".' +
-        '\n    in SuspenseList (at **)' +
-        '\n    in Foo (at **)',
-    ]);
+    ReactNoop.render(<Foo />);
+
+    await waitForAll(['Suspend! [A]', 'Loading A']);
+
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    await A.resolve();
+
+    await waitForAll(['A', 'Suspend! [B]', 'Loading B']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
+
+    await act(() => B.resolve());
+    assertLog(['B', 'Suspend! [C]', 'Loading C']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+
+    await act(() => C.resolve());
+    assertLog(['C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
   });
 
   // @gate enableSuspenseList
@@ -1758,7 +1771,7 @@ describe('ReactSuspenseList', () => {
     });
     assertConsoleErrorDev([
       '<SuspenseList tail="collapsed" /> is only valid if ' +
-        'revealOrder is "forwards" or "backwards". ' +
+        'revealOrder is "forwards" (default) or "backwards". ' +
         'Did you mean to specify revealOrder="forwards"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',

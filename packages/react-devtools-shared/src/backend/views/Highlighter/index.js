@@ -10,6 +10,7 @@
 import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
+import type {HostInstance} from 'react-devtools-shared/src/backend/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {RendererInterface} from '../../types';
 
@@ -19,6 +20,7 @@ import type {RendererInterface} from '../../types';
 // That is done by the React Native Inspector component.
 
 let iframesListeningTo: Set<HTMLIFrameElement> = new Set();
+let inspectOnlySuspenseNodes = false;
 
 export default function setupHighlighter(
   bridge: BackendBridge,
@@ -26,12 +28,74 @@ export default function setupHighlighter(
 ): void {
   bridge.addListener('clearHostInstanceHighlight', clearHostInstanceHighlight);
   bridge.addListener('highlightHostInstance', highlightHostInstance);
+  bridge.addListener('highlightHostInstances', highlightHostInstances);
   bridge.addListener('scrollToHostInstance', scrollToHostInstance);
   bridge.addListener('shutdown', stopInspectingHost);
   bridge.addListener('startInspectingHost', startInspectingHost);
   bridge.addListener('stopInspectingHost', stopInspectingHost);
+  bridge.addListener('scrollTo', scrollDocumentTo);
+  bridge.addListener('requestScrollPosition', sendScroll);
 
-  function startInspectingHost() {
+  let applyingScroll = false;
+
+  function scrollDocumentTo({
+    left,
+    top,
+    right,
+    bottom,
+  }: {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+  }) {
+    if (
+      left === Math.round(window.scrollX) &&
+      top === Math.round(window.scrollY)
+    ) {
+      return;
+    }
+    applyingScroll = true;
+    window.scrollTo({
+      top: top,
+      left: left,
+      behavior: 'smooth',
+    });
+  }
+
+  let scrollTimer = null;
+  function sendScroll() {
+    if (scrollTimer) {
+      clearTimeout(scrollTimer);
+      scrollTimer = null;
+    }
+    if (applyingScroll) {
+      return;
+    }
+    const left = window.scrollX;
+    const top = window.scrollY;
+    const right = left + window.innerWidth;
+    const bottom = top + window.innerHeight;
+    bridge.send('scrollTo', {left, top, right, bottom});
+  }
+
+  function scrollEnd() {
+    // Upon scrollend send it immediately.
+    sendScroll();
+    applyingScroll = false;
+  }
+
+  document.addEventListener('scroll', () => {
+    if (!scrollTimer) {
+      // Periodically synchronize the scroll while scrolling.
+      scrollTimer = setTimeout(sendScroll, 400);
+    }
+  });
+
+  document.addEventListener('scrollend', scrollEnd);
+
+  function startInspectingHost(onlySuspenseNodes: boolean) {
+    inspectOnlySuspenseNodes = onlySuspenseNodes;
     registerListenersOnWindow(window);
   }
 
@@ -155,6 +219,52 @@ export default function setupHighlighter(
     }
 
     hideOverlay(agent);
+  }
+
+  function highlightHostInstances({
+    displayName,
+    hideAfterTimeout,
+    elements,
+    scrollIntoView,
+  }: {
+    displayName: string | null,
+    hideAfterTimeout: boolean,
+    elements: Array<{rendererID: number, id: number}>,
+    scrollIntoView: boolean,
+  }) {
+    const nodes: Array<HostInstance> = [];
+    for (let i = 0; i < elements.length; i++) {
+      const {id, rendererID} = elements[i];
+      const renderer = agent.rendererInterfaces[rendererID];
+      if (renderer == null) {
+        console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+        continue;
+      }
+
+      // In some cases fiber may already be unmounted
+      if (!renderer.hasElementWithId(id)) {
+        continue;
+      }
+
+      const hostInstances = renderer.findHostInstancesForElementID(id);
+      if (hostInstances !== null) {
+        for (let j = 0; j < hostInstances.length; j++) {
+          nodes.push(hostInstances[j]);
+        }
+      }
+    }
+
+    if (nodes.length > 0) {
+      const node = nodes[0];
+      // $FlowFixMe[method-unbinding]
+      if (scrollIntoView && typeof node.scrollIntoView === 'function') {
+        // If the node isn't visible show it before highlighting it.
+        // We may want to reconsider this; it might be a little disruptive.
+        node.scrollIntoView({block: 'nearest', inline: 'nearest'});
+      }
+    }
+
+    showOverlay(nodes, displayName, agent, hideAfterTimeout);
   }
 
   function attemptScrollToHostInstance(
@@ -315,11 +425,37 @@ export default function setupHighlighter(
       }
     }
 
-    // Don't pass the name explicitly.
-    // It will be inferred from DOM tag and Fiber owner.
-    showOverlay([target], null, agent, false);
-
-    selectElementForNode(target);
+    if (inspectOnlySuspenseNodes) {
+      // For Suspense nodes we want to highlight not the actual target but the nodes
+      // that are the root of the Suspense node.
+      // TODO: Consider if we should just do the same for other elements because the
+      // hovered node might just be one child of many in the Component.
+      const match = agent.getIDForHostInstance(
+        target,
+        inspectOnlySuspenseNodes,
+      );
+      if (match !== null) {
+        const renderer = agent.rendererInterfaces[match.rendererID];
+        if (renderer == null) {
+          console.warn(
+            `Invalid renderer id "${match.rendererID}" for element "${match.id}"`,
+          );
+          return;
+        }
+        highlightHostInstance({
+          displayName: renderer.getDisplayNameForElementID(match.id),
+          hideAfterTimeout: false,
+          id: match.id,
+          openBuiltinElementsPanel: false,
+          rendererID: match.rendererID,
+          scrollIntoView: false,
+        });
+      }
+    } else {
+      // Don't pass the name explicitly.
+      // It will be inferred from DOM tag and Fiber owner.
+      showOverlay([target], null, agent, false);
+    }
   }
 
   function onPointerUp(event: MouseEvent) {
@@ -328,9 +464,9 @@ export default function setupHighlighter(
   }
 
   const selectElementForNode = (node: HTMLElement) => {
-    const id = agent.getIDForHostInstance(node);
-    if (id !== null) {
-      bridge.send('selectElement', id);
+    const match = agent.getIDForHostInstance(node, inspectOnlySuspenseNodes);
+    if (match !== null) {
+      bridge.send('selectElement', match.id);
     }
   };
 

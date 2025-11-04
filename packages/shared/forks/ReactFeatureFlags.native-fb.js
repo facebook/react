@@ -27,6 +27,7 @@ export const {
   renameElementSymbol,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
+  enableFragmentRefsInstanceHandles,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -35,7 +36,7 @@ export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const disableLegacyContext: boolean = false;
 export const disableLegacyContextForFunctionComponents: boolean = false;
-export const disableLegacyMode: boolean = false;
+export const disableLegacyMode: boolean = true;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
 export const enableAsyncDebugInfo: boolean = false;

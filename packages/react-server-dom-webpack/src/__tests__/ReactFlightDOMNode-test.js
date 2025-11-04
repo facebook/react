@@ -10,10 +10,10 @@
 
 'use strict';
 
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
-
-global.ReadableStream =
-  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 
 let clientExports;
 let webpackMap;
@@ -86,12 +86,25 @@ describe('ReactFlightDOMNode', () => {
     );
   }
 
-  function normalizeCodeLocInfo(str) {
+  const relativeFilename = path.relative(__dirname, __filename);
+
+  function normalizeCodeLocInfo(str, {preserveLocation = false} = {}) {
     return (
       str &&
-      str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
-        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
-      })
+      str.replace(
+        /^ +(?:at|in) ([\S]+) ([^\n]*)/gm,
+        function (m, name, location) {
+          return (
+            '    in ' +
+            name +
+            (/\d/.test(m)
+              ? preserveLocation
+                ? ' ' + location.replace(__filename, relativeFilename)
+                : ' (at **)'
+              : '')
+          );
+        },
+      )
     );
   }
 
@@ -1135,5 +1148,243 @@ describe('ReactFlightDOMNode', () => {
     expect(result).toContain(
       'Switched to client rendering because the server rendering errored:\n\nssr-throw',
     );
+  });
+
+  // This is a regression test for a specific issue where byte Web Streams are
+  // detaching ArrayBuffers, which caused downstream issues (e.g. "Cannot
+  // perform Construct on a detached ArrayBuffer") for chunks that are using
+  // Node's internal Buffer pool.
+  it('should not corrupt the Node.js Buffer pool by detaching ArrayBuffers when using Web Streams', async () => {
+    // Create a temp file smaller than 4KB to ensure it uses the Buffer pool.
+    const file = path.join(os.tmpdir(), 'test.bin');
+    fs.writeFileSync(file, Buffer.alloc(4095));
+    const fileChunk = fs.readFileSync(file);
+    fs.unlinkSync(file);
+
+    // Verify this chunk uses the Buffer pool (8192 bytes for files < 4KB).
+    expect(fileChunk.buffer.byteLength).toBe(8192);
+
+    const readable = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(fileChunk, webpackMap),
+    );
+
+    // Create a Web Streams WritableStream that tries to use Buffer operations.
+    const writable = new WritableStream({
+      write(chunk) {
+        // Only write one byte to ensure Node.js is not creating a new Buffer
+        // pool. Typically, library code (e.g. a compression middleware) would
+        // call Buffer.from(chunk) or similar, instead of allocating a new
+        // Buffer directly. With that, the test file could only be ~2600 bytes.
+        Buffer.allocUnsafe(1);
+      },
+    });
+
+    // Must not throw an error.
+    await readable.pipeTo(writable);
+  });
+
+  describe('with real timers', () => {
+    // These tests schedule their rendering in a way that requires real timers
+    // to be used to accurately represent how this interacts with React's
+    // internal scheduling.
+
+    beforeEach(() => {
+      jest.useRealTimers();
+    });
+
+    afterEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('should use late-arriving I/O debug info to enhance component and owner stacks when aborting a prerender', async () => {
+      let resolveDynamicData1;
+      let resolveDynamicData2;
+
+      async function getDynamicData1() {
+        return new Promise(resolve => {
+          resolveDynamicData1 = resolve;
+        });
+      }
+
+      async function getDynamicData2() {
+        return new Promise(resolve => {
+          resolveDynamicData2 = resolve;
+        });
+      }
+
+      async function Dynamic() {
+        const data1 = await getDynamicData1();
+        const data2 = await getDynamicData2();
+
+        return (
+          <p>
+            {data1} {data2}
+          </p>
+        );
+      }
+
+      function App() {
+        return ReactServer.createElement(
+          'html',
+          null,
+          ReactServer.createElement(
+            'body',
+            null,
+            ReactServer.createElement(Dynamic),
+          ),
+        );
+      }
+
+      let staticEndTime = -1;
+      const initialChunks = [];
+      const dynamicChunks = [];
+
+      await new Promise(resolve => {
+        setTimeout(async () => {
+          const stream = ReactServerDOMServer.renderToPipeableStream(
+            ReactServer.createElement(App),
+            webpackMap,
+            {filterStackFrame},
+          );
+
+          const passThrough = new Stream.PassThrough(streamOptions);
+          stream.pipe(passThrough);
+
+          passThrough.on('data', chunk => {
+            if (staticEndTime < 0) {
+              initialChunks.push(chunk);
+            } else {
+              dynamicChunks.push(chunk);
+            }
+          });
+
+          passThrough.on('end', resolve);
+        });
+        setTimeout(() => {
+          staticEndTime = performance.now() + performance.timeOrigin;
+          resolveDynamicData1('Hi');
+          setTimeout(() => {
+            resolveDynamicData2('Josh');
+          });
+        });
+      });
+
+      // Create a new Readable and push all initial chunks immediately.
+      const readable = new Stream.Readable({...streamOptions, read() {}});
+      for (let i = 0; i < initialChunks.length; i++) {
+        readable.push(initialChunks[i]);
+      }
+
+      const abortController = new AbortController();
+
+      // When prerendering is aborted, push all dynamic chunks. They won't be
+      // considered for rendering, but they include debug info we want to use.
+      abortController.signal.addEventListener(
+        'abort',
+        () => {
+          for (let i = 0; i < dynamicChunks.length; i++) {
+            readable.push(dynamicChunks[i]);
+          }
+        },
+        {once: true},
+      );
+
+      const response = ReactServerDOMClient.createFromNodeStream(
+        readable,
+        {
+          serverConsumerManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+        {
+          // Debug info arriving after this end time will be ignored, e.g. the
+          // I/O info for the second dynamic data.
+          endTime: staticEndTime,
+        },
+      );
+
+      function ClientRoot() {
+        return use(response);
+      }
+
+      let componentStack;
+      let ownerStack;
+
+      const {prelude} = await new Promise(resolve => {
+        let result;
+
+        setTimeout(() => {
+          result = ReactDOMFizzStatic.prerenderToNodeStream(
+            React.createElement(ClientRoot),
+            {
+              signal: abortController.signal,
+              onError(error, errorInfo) {
+                componentStack = errorInfo.componentStack;
+                ownerStack = React.captureOwnerStack
+                  ? React.captureOwnerStack()
+                  : null;
+              },
+            },
+          );
+        });
+
+        setTimeout(() => {
+          abortController.abort();
+          resolve(result);
+        });
+      });
+
+      const prerenderHTML = await readResult(prelude);
+
+      expect(prerenderHTML).toBe('');
+
+      if (__DEV__) {
+        expect(
+          normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
+        ).toBe(
+          '\n' +
+            '    in Dynamic' +
+            (gate(flags => flags.enableAsyncDebugInfo)
+              ? ' (file://ReactFlightDOMNode-test.js:1216:27)\n'
+              : '\n') +
+            '    in body\n' +
+            '    in html\n' +
+            '    in App (file://ReactFlightDOMNode-test.js:1233:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1308:16)',
+        );
+      } else {
+        expect(
+          normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
+        ).toBe(
+          '\n' +
+            '    in body\n' +
+            '    in html\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1308:16)',
+        );
+      }
+
+      if (__DEV__) {
+        if (gate(flags => flags.enableAsyncDebugInfo)) {
+          expect(
+            normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
+          ).toBe(
+            '\n' +
+              '    in Dynamic (file://ReactFlightDOMNode-test.js:1216:27)\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1233:25)',
+          );
+        } else {
+          expect(
+            normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
+          ).toBe(
+            '' +
+              '\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1233:25)',
+          );
+        }
+      } else {
+        expect(ownerStack).toBeNull();
+      }
+    });
   });
 });

@@ -19,6 +19,7 @@ import {
   Environment,
   FunctionExpression,
   GeneratedSource,
+  getHookKind,
   HIRFunction,
   Hole,
   IdentifierId,
@@ -198,6 +199,7 @@ export function inferMutationAliasingEffects(
     isFunctionExpression,
     fn,
     hoistedContextDeclarations,
+    findNonMutatedDestructureSpreads(fn),
   );
 
   let iterationCount = 0;
@@ -287,15 +289,18 @@ class Context {
   isFuctionExpression: boolean;
   fn: HIRFunction;
   hoistedContextDeclarations: Map<DeclarationId, Place | null>;
+  nonMutatingSpreads: Set<IdentifierId>;
 
   constructor(
     isFunctionExpression: boolean,
     fn: HIRFunction,
     hoistedContextDeclarations: Map<DeclarationId, Place | null>,
+    nonMutatingSpreads: Set<IdentifierId>,
   ) {
     this.isFuctionExpression = isFunctionExpression;
     this.fn = fn;
     this.hoistedContextDeclarations = hoistedContextDeclarations;
+    this.nonMutatingSpreads = nonMutatingSpreads;
   }
 
   cacheApplySignature(
@@ -320,6 +325,161 @@ class Context {
     }
     return interned;
   }
+}
+
+/**
+ * Finds objects created via ObjectPattern spread destructuring
+ * (`const {x, ...spread} = ...`) where a) the rvalue is known frozen and
+ * b) the spread value cannot possibly be directly mutated. The idea is that
+ * for this set of values, we can treat the spread object as frozen.
+ *
+ * The primary use case for this is props spreading:
+ *
+ * ```
+ * function Component({prop, ...otherProps}) {
+ *   const transformedProp = transform(prop, otherProps.foo);
+ *   // pass `otherProps` down:
+ *   return <Foo {...otherProps} prop={transformedProp} />;
+ * }
+ * ```
+ *
+ * Here we know that since `otherProps` cannot be mutated, we don't have to treat
+ * it as mutable: `otherProps.foo` only reads a value that must be frozen, so it
+ * can be treated as frozen too.
+ */
+function findNonMutatedDestructureSpreads(fn: HIRFunction): Set<IdentifierId> {
+  const knownFrozen = new Set<IdentifierId>();
+  if (fn.fnType === 'Component') {
+    const [props] = fn.params;
+    if (props != null && props.kind === 'Identifier') {
+      knownFrozen.add(props.identifier.id);
+    }
+  } else {
+    for (const param of fn.params) {
+      if (param.kind === 'Identifier') {
+        knownFrozen.add(param.identifier.id);
+      }
+    }
+  }
+
+  // Map of temporaries to identifiers for spread objects
+  const candidateNonMutatingSpreads = new Map<IdentifierId, IdentifierId>();
+  for (const block of fn.body.blocks.values()) {
+    if (candidateNonMutatingSpreads.size !== 0) {
+      for (const phi of block.phis) {
+        for (const operand of phi.operands.values()) {
+          const spread = candidateNonMutatingSpreads.get(operand.identifier.id);
+          if (spread != null) {
+            candidateNonMutatingSpreads.delete(spread);
+          }
+        }
+      }
+    }
+    for (const instr of block.instructions) {
+      const {lvalue, value} = instr;
+      switch (value.kind) {
+        case 'Destructure': {
+          if (
+            !knownFrozen.has(value.value.identifier.id) ||
+            !(
+              value.lvalue.kind === InstructionKind.Let ||
+              value.lvalue.kind === InstructionKind.Const
+            ) ||
+            value.lvalue.pattern.kind !== 'ObjectPattern'
+          ) {
+            continue;
+          }
+          for (const item of value.lvalue.pattern.properties) {
+            if (item.kind !== 'Spread') {
+              continue;
+            }
+            candidateNonMutatingSpreads.set(
+              item.place.identifier.id,
+              item.place.identifier.id,
+            );
+          }
+          break;
+        }
+        case 'LoadLocal': {
+          const spread = candidateNonMutatingSpreads.get(
+            value.place.identifier.id,
+          );
+          if (spread != null) {
+            candidateNonMutatingSpreads.set(lvalue.identifier.id, spread);
+          }
+          break;
+        }
+        case 'StoreLocal': {
+          const spread = candidateNonMutatingSpreads.get(
+            value.value.identifier.id,
+          );
+          if (spread != null) {
+            candidateNonMutatingSpreads.set(lvalue.identifier.id, spread);
+            candidateNonMutatingSpreads.set(
+              value.lvalue.place.identifier.id,
+              spread,
+            );
+          }
+          break;
+        }
+        case 'JsxFragment':
+        case 'JsxExpression': {
+          // Passing objects created with spread to jsx can't mutate them
+          break;
+        }
+        case 'PropertyLoad': {
+          // Properties must be frozen since the original value was frozen
+          break;
+        }
+        case 'CallExpression':
+        case 'MethodCall': {
+          const callee =
+            value.kind === 'CallExpression' ? value.callee : value.property;
+          if (getHookKind(fn.env, callee.identifier) != null) {
+            // Hook calls have frozen arguments, and non-ref returns are frozen
+            if (!isRefOrRefValue(lvalue.identifier)) {
+              knownFrozen.add(lvalue.identifier.id);
+            }
+          } else {
+            // Non-hook calls check their operands, since they are potentially mutable
+            if (candidateNonMutatingSpreads.size !== 0) {
+              // Otherwise any reference to the spread object itself may mutate
+              for (const operand of eachInstructionValueOperand(value)) {
+                const spread = candidateNonMutatingSpreads.get(
+                  operand.identifier.id,
+                );
+                if (spread != null) {
+                  candidateNonMutatingSpreads.delete(spread);
+                }
+              }
+            }
+          }
+          break;
+        }
+        default: {
+          if (candidateNonMutatingSpreads.size !== 0) {
+            // Otherwise any reference to the spread object itself may mutate
+            for (const operand of eachInstructionValueOperand(value)) {
+              const spread = candidateNonMutatingSpreads.get(
+                operand.identifier.id,
+              );
+              if (spread != null) {
+                candidateNonMutatingSpreads.delete(spread);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const nonMutatingSpreads = new Set<IdentifierId>();
+  for (const [key, value] of candidateNonMutatingSpreads) {
+    if (key === value) {
+      nonMutatingSpreads.add(key);
+    }
+  }
+  return nonMutatingSpreads;
 }
 
 function inferParam(
@@ -2054,7 +2214,9 @@ function computeSignatureForInstruction(
             kind: 'Create',
             into: place,
             reason: ValueReason.Other,
-            value: ValueKind.Mutable,
+            value: context.nonMutatingSpreads.has(place.identifier.id)
+              ? ValueKind.Frozen
+              : ValueKind.Mutable,
           });
           effects.push({
             kind: 'Capture',

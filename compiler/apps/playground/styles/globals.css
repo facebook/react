@@ -79,6 +79,15 @@
 ::view-transition-group(.slide-in) {
   z-index: 1;
 }
+::view-transition-old(.slide-out) {
+  animation-name: slideOutLeft;
+}
+::view-transition-new(.slide-out) {
+  animation-name: slideInLeft;
+}
+::view-transition-group(.slide-out) {
+  z-index: 1;
+}
 
 @keyframes slideOutLeft {
   from {
@@ -123,4 +132,12 @@
 }
 ::view-transition-group(.expand-accordion) {
   overflow: clip;
+}
+
+/**
+ * For some reason, the original Monaco editor is still visible to the
+ * left of the DiffEditor. This is a workaround for better visual clarity.
+ */
+.monaco-diff-editor .editor.original{
+  visibility: hidden !important;
 }

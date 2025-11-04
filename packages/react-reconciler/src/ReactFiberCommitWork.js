@@ -292,6 +292,9 @@ import type {Flags} from './ReactFiberFlags';
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
 let offscreenSubtreeIsHidden: boolean = false;
 let offscreenSubtreeWasHidden: boolean = false;
+// Track whether there's a hidden offscreen above with no HostComponent between. If so,
+// it overrides the hiddenness of the HostComponent below.
+let offscreenDirectParentIsHidden: boolean = false;
 
 // Used to track if a form needs to be reset at the end of the mutation phase.
 let needsFormReset = false;
@@ -493,7 +496,9 @@ function commitBeforeMutationEffectsOnFiber(
   }
 
   switch (finishedWork.tag) {
-    case FunctionComponent: {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent: {
       if (enableUseEffectEventHook) {
         if ((flags & Update) !== NoFlags) {
           const updateQueue: FunctionComponentUpdateQueue | null =
@@ -508,10 +513,6 @@ function commitBeforeMutationEffectsOnFiber(
           }
         }
       }
-      break;
-    }
-    case ForwardRef:
-    case SimpleMemoComponent: {
       break;
     }
     case ClassComponent: {
@@ -2141,7 +2142,13 @@ function commitMutationEffectsOnFiber(
       // Fall through
     }
     case HostComponent: {
+      // We've hit a host component, so it's no longer a direct parent.
+      const prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
+      offscreenDirectParentIsHidden = false;
+
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+
+      offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden;
 
       commitReconciliationEffects(finishedWork, lanes);
 
@@ -2422,10 +2429,14 @@ function commitMutationEffectsOnFiber(
         // effects again.
         const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
         const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+        const prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || isHidden;
+        offscreenDirectParentIsHidden =
+          prevOffscreenDirectParentIsHidden || isHidden;
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+        offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
 
         if (
@@ -2504,9 +2515,10 @@ function commitMutationEffectsOnFiber(
         }
 
         if (supportsMutation) {
-          // TODO: This needs to run whenever there's an insertion or update
-          // inside a hidden Offscreen tree.
-          hideOrUnhideAllChildren(finishedWork, isHidden);
+          // If it's trying to unhide but the parent is still hidden, then we should not unhide.
+          if (isHidden || !offscreenDirectParentIsHidden) {
+            hideOrUnhideAllChildren(finishedWork, isHidden);
+          }
         }
       }
 
@@ -3945,7 +3957,12 @@ function commitPassiveMountOnFiber(
           instance._visibility |= OffscreenPassiveEffectsConnected;
 
           const includeWorkInProgressEffects =
-            (finishedWork.subtreeFlags & PassiveMask) !== NoFlags;
+            (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
+            (enableProfilerTimer &&
+              enableComponentPerformanceTrack &&
+              finishedWork.actualDuration !== 0 &&
+              (finishedWork.alternate === null ||
+                finishedWork.alternate.child !== finishedWork.child));
           recursivelyTraverseReconnectPassiveEffects(
             finishedRoot,
             finishedWork,
@@ -4113,7 +4130,12 @@ function recursivelyTraverseReconnectPassiveEffects(
   // node was reused.
   const childShouldIncludeWorkInProgressEffects =
     includeWorkInProgressEffects &&
-    (parentFiber.subtreeFlags & PassiveMask) !== NoFlags;
+    ((parentFiber.subtreeFlags & PassiveMask) !== NoFlags ||
+      (enableProfilerTimer &&
+        enableComponentPerformanceTrack &&
+        parentFiber.actualDuration !== 0 &&
+        (parentFiber.alternate === null ||
+          parentFiber.alternate.child !== parentFiber.child)));
 
   // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
   let child = parentFiber.child;
@@ -4379,7 +4401,14 @@ function recursivelyTraverseAtomicPassiveEffects(
   // pre-rendering. We call this function when traversing a hidden tree whose
   // regular effects are currently disconnected.
   // TODO: Add special flag for atomic effects
-  if (parentFiber.subtreeFlags & PassiveMask) {
+  if (
+    parentFiber.subtreeFlags & PassiveMask ||
+    (enableProfilerTimer &&
+      enableComponentPerformanceTrack &&
+      parentFiber.actualDuration !== 0 &&
+      (parentFiber.alternate === null ||
+        parentFiber.alternate.child !== parentFiber.child))
+  ) {
     let child = parentFiber.child;
     while (child !== null) {
       if (enableProfilerTimer && enableComponentPerformanceTrack) {

@@ -84,7 +84,7 @@ export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableHalt: boolean = true;
 
-export const enableViewTransition = __EXPERIMENTAL__;
+export const enableViewTransition: boolean = true;
 
 export const enableGestureTransition = __EXPERIMENTAL__;
 
@@ -145,8 +145,9 @@ export const transitionLaneExpirationMs = 5000;
  */
 export const enableInfiniteRenderLoopDetection: boolean = false;
 
-export const enableFragmentRefs = __EXPERIMENTAL__;
-export const enableFragmentRefsScrollIntoView = __EXPERIMENTAL__;
+export const enableFragmentRefs: boolean = true;
+export const enableFragmentRefsScrollIntoView: boolean = true;
+export const enableFragmentRefsInstanceHandles: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -166,7 +167,7 @@ export const renameElementSymbol: boolean = true;
 /**
  * Enables a fix to run insertion effect cleanup on hidden subtrees.
  */
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = false;
+export const enableHiddenSubtreeInsertionEffectCleanup: boolean = true;
 
 /**
  * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.

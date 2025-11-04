@@ -14,6 +14,7 @@ import {
   useLayoutEffect,
   useReducer,
   useRef,
+  Fragment,
 } from 'react';
 
 import {
@@ -21,6 +22,7 @@ import {
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
 import ButtonIcon, {type IconType} from '../ButtonIcon';
+import InspectHostNodesToggle from '../Components/InspectHostNodesToggle';
 import InspectedElementErrorBoundary from '../Components/InspectedElementErrorBoundary';
 import InspectedElement from '../Components/InspectedElement';
 import portaledContent from '../portaledContent';
@@ -33,14 +35,10 @@ import {
   SuspenseTreeDispatcherContext,
   SuspenseTreeStateContext,
 } from './SuspenseTreeContext';
-import {StoreContext, OptionsContext} from '../context';
-import {TreeDispatcherContext} from '../Components/TreeContext';
+import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Button from '../Button';
 import Toggle from '../Toggle';
-import typeof {
-  SyntheticEvent,
-  SyntheticPointerEvent,
-} from 'react-dom-bindings/src/events/SyntheticEvent';
+import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
@@ -71,20 +69,14 @@ function ToggleUniqueSuspenders() {
   const store = useContext(StoreContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
 
-  const {selectedRootID: rootID, uniqueSuspendersOnly} = useContext(
-    SuspenseTreeStateContext,
-  );
+  const {uniqueSuspendersOnly} = useContext(SuspenseTreeStateContext);
 
   function handleToggleUniqueSuspenders() {
     const nextUniqueSuspendersOnly = !uniqueSuspendersOnly;
-    const nextTimeline =
-      rootID === null
-        ? []
-        : // TODO: Handle different timeline modes (e.g. random order)
-          store.getSuspendableDocumentOrderSuspense(
-            rootID,
-            nextUniqueSuspendersOnly,
-          );
+    // TODO: Handle different timeline modes (e.g. random order)
+    const nextTimeline = store.getEndTimeOrDocumentOrderSuspense(
+      nextUniqueSuspendersOnly,
+    );
     suspenseTreeDispatch({
       type: 'SET_SUSPENSE_TIMELINE',
       payload: [nextTimeline, null, nextUniqueSuspendersOnly],
@@ -95,58 +87,11 @@ function ToggleUniqueSuspenders() {
     <Toggle
       isChecked={uniqueSuspendersOnly}
       onChange={handleToggleUniqueSuspenders}
-      title={'Only include boundaries with unique suspenders'}>
+      title={
+        'Filter Suspense which does not suspend, or if the parent also suspend on the same.'
+      }>
       <ButtonIcon type={uniqueSuspendersOnly ? 'filter-on' : 'filter-off'} />
     </Toggle>
-  );
-}
-
-function SelectRoot() {
-  const store = useContext(StoreContext);
-  const {roots, selectedRootID, uniqueSuspendersOnly} = useContext(
-    SuspenseTreeStateContext,
-  );
-  const treeDispatch = useContext(TreeDispatcherContext);
-  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
-
-  function handleChange(event: SyntheticEvent) {
-    const newRootID = +event.currentTarget.value;
-    // TODO: scrollIntoView both suspense rects and host instance.
-    const nextTimeline = store.getSuspendableDocumentOrderSuspense(
-      newRootID,
-      uniqueSuspendersOnly,
-    );
-    suspenseTreeDispatch({
-      type: 'SET_SUSPENSE_TIMELINE',
-      payload: [nextTimeline, newRootID, uniqueSuspendersOnly],
-    });
-    if (nextTimeline.length > 0) {
-      const milestone = nextTimeline[nextTimeline.length - 1];
-      treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: milestone});
-    }
-  }
-  return (
-    roots.length > 0 && (
-      <select
-        aria-label="Select Suspense Root"
-        className={styles.SuspenseTimelineRootSwitcher}
-        onChange={handleChange}
-        value={selectedRootID === null ? -1 : selectedRootID}>
-        <option disabled={true} value={-1}>
-          ----
-        </option>
-        {roots.map(rootID => {
-          // TODO: Use name
-          const name = '#' + rootID;
-          // TODO: Highlight host on hover
-          return (
-            <option key={rootID} value={rootID}>
-              {name}
-            </option>
-          );
-        })}
-      </select>
-    )
   );
 }
 
@@ -212,7 +157,121 @@ function ToggleInspectedElement({
   );
 }
 
+function SynchronizedScrollContainer({
+  className,
+  children,
+  scaleRef,
+}: {
+  className?: string,
+  children?: React.Node,
+  scaleRef: {current: number},
+}) {
+  const bridge = useContext(BridgeContext);
+  const ref = useRef(null);
+  const applyingScrollRef = useRef(false);
+
+  // TODO: useEffectEvent
+  function scrollContainerTo({
+    left,
+    top,
+    right,
+    bottom,
+  }: {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+  }): void {
+    const element = ref.current;
+    if (element === null) {
+      return;
+    }
+    const scale = scaleRef.current / element.clientWidth;
+    const targetLeft = Math.round(left / scale);
+    const targetTop = Math.round(top / scale);
+    if (
+      targetLeft !== Math.round(element.scrollLeft) ||
+      targetTop !== Math.round(element.scrollTop)
+    ) {
+      // Disable scroll events until we've applied the new scroll position.
+      applyingScrollRef.current = true;
+      element.scrollTo({
+        left: targetLeft,
+        top: targetTop,
+        behavior: 'smooth',
+      });
+    }
+  }
+
+  useEffect(() => {
+    const callback = scrollContainerTo;
+    bridge.addListener('scrollTo', callback);
+    // Ask for the current scroll position when we mount so we can attach ourselves to it.
+    bridge.send('requestScrollPosition');
+    return () => bridge.removeListener('scrollTo', callback);
+  }, [bridge]);
+
+  const scrollTimer = useRef<null | TimeoutID>(null);
+
+  // TODO: useEffectEvent
+  function sendScroll() {
+    if (scrollTimer.current) {
+      clearTimeout(scrollTimer.current);
+      scrollTimer.current = null;
+    }
+    if (applyingScrollRef.current) {
+      return;
+    }
+    const element = ref.current;
+    if (element === null) {
+      return;
+    }
+    const scale = scaleRef.current / element.clientWidth;
+    const left = element.scrollLeft * scale;
+    const top = element.scrollTop * scale;
+    const right = left + element.clientWidth * scale;
+    const bottom = top + element.clientHeight * scale;
+    bridge.send('scrollTo', {left, top, right, bottom});
+  }
+
+  // TODO: useEffectEvent
+  function throttleScroll() {
+    if (!scrollTimer.current) {
+      // Periodically synchronize the scroll while scrolling.
+      scrollTimer.current = setTimeout(sendScroll, 400);
+    }
+  }
+
+  function scrollEnd() {
+    // Upon scrollend send it immediately.
+    sendScroll();
+    applyingScrollRef.current = false;
+  }
+
+  useEffect(() => {
+    const element = ref.current;
+    if (element === null) {
+      return;
+    }
+    const scrollCallback = throttleScroll;
+    const scrollEndCallback = scrollEnd;
+    element.addEventListener('scroll', scrollCallback);
+    element.addEventListener('scrollend', scrollEndCallback);
+    return () => {
+      element.removeEventListener('scroll', scrollCallback);
+      element.removeEventListener('scrollend', scrollEndCallback);
+    };
+  }, [ref]);
+
+  return (
+    <div className={className} ref={ref}>
+      {children}
+    </div>
+  );
+}
+
 function SuspenseTab(_: {}) {
+  const store = useContext(StoreContext);
   const {hideSettings} = useContext(OptionsContext);
   const [state, dispatch] = useReducer<LayoutState, null, LayoutAction>(
     layoutReducer,
@@ -395,6 +454,8 @@ function SuspenseTab(_: {}) {
     }
   };
 
+  const scaleRef = useRef(0);
+
   return (
     <SettingsModalContextController>
       <div className={styles.SuspenseTab} ref={wrapperTreeRef}>
@@ -424,10 +485,15 @@ function SuspenseTab(_: {}) {
               ) : (
                 <ToggleTreeList dispatch={dispatch} state={state} />
               )}
+              {store.supportsClickToInspect && (
+                <Fragment>
+                  <InspectHostNodesToggle onlySuspenseNodes={true} />
+                  <div className={styles.VRule} />
+                </Fragment>
+              )}
               <div className={styles.SuspenseBreadcrumbs}>
                 <SuspenseBreadcrumbs />
               </div>
-              <SelectRoot />
               <div className={styles.VRule} />
               <ToggleUniqueSuspenders />
               {!hideSettings && <SettingsModalContextToggle />}
@@ -437,9 +503,11 @@ function SuspenseTab(_: {}) {
                 orientation="horizontal"
               />
             </header>
-            <div className={styles.Rects}>
-              <SuspenseRects />
-            </div>
+            <SynchronizedScrollContainer
+              className={styles.Rects}
+              scaleRef={scaleRef}>
+              <SuspenseRects scaleRef={scaleRef} />
+            </SynchronizedScrollContainer>
             <footer className={styles.SuspenseTreeViewFooter}>
               <SuspenseTimeline />
               <div className={styles.SuspenseTreeViewFooterButtons}>

@@ -427,6 +427,7 @@ export type RendererInterface = {
   getComponentStack?: GetComponentStack,
   getNearestMountedDOMNode: (component: Element) => Element | null,
   getElementIDForHostInstance: GetElementIDForHostInstance,
+  getSuspenseNodeIDForHostInstance: GetElementIDForHostInstance,
   getDisplayNameForElementID: GetDisplayNameForElementID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
@@ -450,10 +451,7 @@ export type RendererInterface = {
   onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
-  overrideSuspenseMilestone: (
-    rootID: number,
-    suspendedSet: Array<number>,
-  ) => void,
+  overrideSuspenseMilestone: (suspendedSet: Array<number>) => void,
   overrideValueAtPath: (
     type: Type,
     id: number,

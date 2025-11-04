@@ -18,9 +18,13 @@ const EMPTY_ARRAY = 0;
 const COMPLEX_ARRAY = 1;
 const PRIMITIVE_ARRAY = 2; // Primitive values only
 const ENTRIES_ARRAY = 3; // Tuple arrays of string and value (like Headers, Map, etc)
+
+// Showing wider objects in the devtools is not useful.
+const OBJECT_WIDTH_LIMIT = 100;
+
 function getArrayKind(array: Object): 0 | 1 | 2 | 3 {
   let kind: 0 | 1 | 2 | 3 = EMPTY_ARRAY;
-  for (let i = 0; i < array.length; i++) {
+  for (let i = 0; i < array.length && i < OBJECT_WIDTH_LIMIT; i++) {
     const value = array[i];
     if (typeof value === 'object' && value !== null) {
       if (
@@ -55,10 +59,23 @@ export function addObjectToProperties(
   indent: number,
   prefix: string,
 ): void {
+  let addedProperties = 0;
   for (const key in object) {
     if (hasOwnProperty.call(object, key) && key[0] !== '_') {
+      addedProperties++;
       const value = object[key];
       addValueToProperties(key, value, properties, indent, prefix);
+      if (addedProperties >= OBJECT_WIDTH_LIMIT) {
+        properties.push([
+          prefix +
+            '\xa0\xa0'.repeat(indent) +
+            'Only ' +
+            OBJECT_WIDTH_LIMIT +
+            ' properties are shown. React will not log more properties of this object.',
+          '',
+        ]);
+        break;
+      }
     }
   }
 }
@@ -103,7 +120,9 @@ export function addValueToProperties(
             addValueToProperties('key', key, properties, indent + 1, prefix);
           }
           let hasChildren = false;
+          let addedProperties = 0;
           for (const propKey in props) {
+            addedProperties++;
             if (propKey === 'children') {
               if (
                 props.children != null &&
@@ -123,6 +142,10 @@ export function addValueToProperties(
                 prefix,
               );
             }
+
+            if (addedProperties >= OBJECT_WIDTH_LIMIT) {
+              break;
+            }
           }
           properties.push([
             '',
@@ -135,20 +158,34 @@ export function addValueToProperties(
         let objectName = objectToString.slice(8, objectToString.length - 1);
         if (objectName === 'Array') {
           const array: Array<any> = (value: any);
+          const didTruncate = array.length > OBJECT_WIDTH_LIMIT;
           const kind = getArrayKind(array);
           if (kind === PRIMITIVE_ARRAY || kind === EMPTY_ARRAY) {
-            desc = JSON.stringify(array);
+            desc = JSON.stringify(
+              didTruncate
+                ? array.slice(0, OBJECT_WIDTH_LIMIT).concat('…')
+                : array,
+            );
             break;
           } else if (kind === ENTRIES_ARRAY) {
             properties.push([
               prefix + '\xa0\xa0'.repeat(indent) + propertyName,
               '',
             ]);
-            for (let i = 0; i < array.length; i++) {
+            for (let i = 0; i < array.length && i < OBJECT_WIDTH_LIMIT; i++) {
               const entry = array[i];
               addValueToProperties(
                 entry[0],
                 entry[1],
+                properties,
+                indent + 1,
+                prefix,
+              );
+            }
+            if (didTruncate) {
+              addValueToProperties(
+                OBJECT_WIDTH_LIMIT.toString(),
+                '…',
                 properties,
                 indent + 1,
                 prefix,
@@ -254,13 +291,39 @@ export function addObjectDiffToProperties(
   // If a property is added or removed, we just emit the property name and omit the value it had.
   // Mainly for performance. We need to minimize to only relevant information.
   let isDeeplyEqual = true;
+  let prevPropertiesChecked = 0;
   for (const key in prev) {
+    if (prevPropertiesChecked > OBJECT_WIDTH_LIMIT) {
+      properties.push([
+        'Previous object has more than ' +
+          OBJECT_WIDTH_LIMIT +
+          ' properties. React will not attempt to diff objects with too many properties.',
+        '',
+      ]);
+      isDeeplyEqual = false;
+      break;
+    }
+
     if (!(key in next)) {
       properties.push([REMOVED + '\xa0\xa0'.repeat(indent) + key, '\u2026']);
       isDeeplyEqual = false;
     }
+    prevPropertiesChecked++;
   }
+
+  let nextPropertiesChecked = 0;
   for (const key in next) {
+    if (nextPropertiesChecked > OBJECT_WIDTH_LIMIT) {
+      properties.push([
+        'Next object has more than ' +
+          OBJECT_WIDTH_LIMIT +
+          ' properties. React will not attempt to diff objects with too many properties.',
+        '',
+      ]);
+      isDeeplyEqual = false;
+      break;
+    }
+
     if (key in prev) {
       const prevValue = prev[key];
       const nextValue = next[key];
@@ -368,6 +431,8 @@ export function addObjectDiffToProperties(
       properties.push([ADDED + '\xa0\xa0'.repeat(indent) + key, '\u2026']);
       isDeeplyEqual = false;
     }
+
+    nextPropertiesChecked++;
   }
   return isDeeplyEqual;
 }

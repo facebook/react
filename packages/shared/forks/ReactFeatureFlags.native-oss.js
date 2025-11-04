@@ -21,7 +21,7 @@ export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const disableLegacyContext: boolean = true;
 export const disableLegacyContextForFunctionComponents: boolean = true;
-export const disableLegacyMode: boolean = false;
+export const disableLegacyMode: boolean = true;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
 export const enableAsyncDebugInfo: boolean = false;
@@ -62,7 +62,7 @@ export const enableHydrationLaneScheduling: boolean = true;
 export const enableYieldingBeforePassive: boolean = false;
 
 export const enableThrottledScheduling: boolean = false;
-export const enableViewTransition: boolean = false;
+export const enableViewTransition: boolean = true;
 export const enableGestureTransition: boolean = false;
 export const enableScrollEndPolyfill: boolean = true;
 export const enableSuspenseyImages: boolean = false;
@@ -72,8 +72,9 @@ export const enableHydrationChangeEvent: boolean = false;
 export const enableDefaultTransitionIndicator: boolean = false;
 export const ownerStackLimit = 1e4;
 
-export const enableFragmentRefs: boolean = false;
+export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
+export const enableFragmentRefsInstanceHandles: boolean = false;
 
 // Profiling Only
 export const enableProfilerTimer: boolean = __PROFILE__;

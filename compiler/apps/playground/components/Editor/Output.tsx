@@ -27,6 +27,8 @@ import {
   useState,
   Suspense,
   unstable_ViewTransition as ViewTransition,
+  unstable_addTransitionType as addTransitionType,
+  startTransition,
 } from 'react';
 import AccordionWindow from '../AccordionWindow';
 import TabbedWindow from '../TabbedWindow';
@@ -35,6 +37,7 @@ import {BabelFileResult} from '@babel/core';
 import {
   CONFIG_PANEL_TRANSITION,
   TOGGLE_INTERNALS_TRANSITION,
+  EXPAND_ACCORDION_TRANSITION,
 } from '../../lib/transitionTypes';
 import {LRUCache} from 'lru-cache';
 
@@ -268,11 +271,19 @@ function OutputContent({store, compilerOutput}: Props): JSX.Element {
   const [previousOutputKind, setPreviousOutputKind] = useState(
     compilerOutput.kind,
   );
+  const isFailure = compilerOutput.kind !== 'ok';
+
   if (compilerOutput.kind !== previousOutputKind) {
     setPreviousOutputKind(compilerOutput.kind);
-    setTabsOpen(new Set(['Output']));
-    setActiveTab('Output');
+    if (isFailure) {
+      startTransition(() => {
+        addTransitionType(EXPAND_ACCORDION_TRANSITION);
+        setTabsOpen(prev => new Set(prev).add('Output'));
+        setActiveTab('Output');
+      });
+    }
   }
+
   const changedPasses: Set<string> = new Set(['Output', 'HIR']); // Initial and final passes should always be bold
   let lastResult: string = '';
   for (const [passName, results] of compilerOutput.results) {
@@ -375,12 +386,18 @@ function TextTabContent({
           loading={''}
           options={{
             ...monacoOptions,
+            scrollbar: {
+              vertical: 'hidden',
+            },
+            dimension: {
+              width: 0,
+              height: 0,
+            },
             readOnly: true,
             lineNumbers: 'off',
             glyphMargin: false,
             // Undocumented see https://github.com/Microsoft/vscode/issues/30795#issuecomment-410998882
-            lineDecorationsWidth: 0,
-            lineNumbersMinChars: 0,
+            overviewRulerLanes: 0,
           }}
         />
       ) : (

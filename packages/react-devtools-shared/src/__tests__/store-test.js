@@ -974,12 +974,8 @@ describe('Store', () => {
             <Suspense name="three" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
 
-      const rendererID = getRendererID();
-      const rootID = store.getRootIDForElement(store.getElementIDAtIndex(0));
       await actAsync(() => {
         agent.overrideSuspenseMilestone({
-          rendererID,
-          rootID,
           suspendedSet: [
             store.getElementIDAtIndex(4),
             store.getElementIDAtIndex(8),
@@ -1009,8 +1005,6 @@ describe('Store', () => {
 
       await actAsync(() => {
         agent.overrideSuspenseMilestone({
-          rendererID,
-          rootID,
           suspendedSet: [],
         });
       });
@@ -1552,7 +1546,7 @@ describe('Store', () => {
           ▸ <Wrapper>
       `);
 
-      const deepestedNodeID = agent.getIDForHostInstance(ref.current);
+      const deepestedNodeID = agent.getIDForHostInstance(ref.current).id;
 
       await act(() => store.toggleIsCollapsed(deepestedNodeID, false));
       expect(store).toMatchInlineSnapshot(`
@@ -3147,5 +3141,163 @@ describe('Store', () => {
 
     await actAsync(() => render(null));
     expect(store).toMatchInlineSnapshot(``);
+  });
+
+  // @reactVersion >= 19
+  it('should keep suspended boundaries in the Suspense tree but not hidden Activity', async () => {
+    const Activity = React.Activity || React.unstable_Activity;
+
+    const never = new Promise(() => {});
+    function Never() {
+      readValue(never);
+      return null;
+    }
+    function Component({children}) {
+      return <div>{children}</div>;
+    }
+
+    function App({hidden}) {
+      return (
+        <>
+          <Activity mode={hidden ? 'hidden' : 'visible'}>
+            <React.Suspense name="inside-activity">
+              <Component key="inside-activity">inside Activity</Component>
+            </React.Suspense>
+          </Activity>
+          <React.Suspense name="outer-suspense">
+            <React.Suspense name="inner-suspense">
+              <Component key="inside-suspense">inside Suspense</Component>
+            </React.Suspense>
+            {hidden ? <Never /> : null}
+          </React.Suspense>
+        </>
+      );
+    }
+
+    await actAsync(() => {
+      render(<App hidden={true} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Activity>
+            <Suspense name="outer-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}]}
+        <Suspense name="outer-suspense" rects={null}>
+    `);
+
+    // mount as visible
+    await actAsync(() => {
+      render(null);
+    });
+    await actAsync(() => {
+      render(<App hidden={false} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Activity>
+            ▾ <Suspense name="inside-activity">
+                <Component key="inside-activity">
+          ▾ <Suspense name="outer-suspense">
+            ▾ <Suspense name="inner-suspense">
+                <Component key="inside-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="inside-activity" rects={[{x:1,y:2,width:15,height:1}]}>
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      render(<App hidden={true} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Activity>
+            <Suspense name="outer-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      render(<App hidden={false} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Activity>
+            ▾ <Suspense name="inside-activity">
+                <Component key="inside-activity">
+          ▾ <Suspense name="outer-suspense">
+            ▾ <Suspense name="inner-suspense">
+                <Component key="inside-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="inside-activity" rects={[{x:1,y:2,width:15,height:1}]}>
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+  });
+
+  // @reactVersion >= 19.0
+  it('guesses a Suspense name based on the owner', async () => {
+    let resolve;
+    const promise = new Promise(_resolve => {
+      resolve = _resolve;
+    });
+    function Inner() {
+      return (
+        <React.Suspense fallback={<p>Loading inner</p>}>
+          <p>{promise}</p>
+        </React.Suspense>
+      );
+    }
+
+    function Outer({children}) {
+      return (
+        <React.Suspense fallback={<p>Loading outer</p>}>
+          <p>{promise}</p>
+          {children}
+        </React.Suspense>
+      );
+    }
+
+    await actAsync(() => {
+      render(
+        <Outer>
+          <Inner />
+        </Outer>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Outer>
+            <Suspense>
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}]}
+        <Suspense name="Outer" rects={null}>
+    `);
+
+    console.log('...........................');
+
+    await actAsync(() => {
+      resolve('loaded');
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Outer>
+          ▾ <Suspense>
+            ▾ <Inner>
+                <Suspense>
+      [suspense-root]  rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}
+        <Suspense name="Outer" rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}>
+          <Suspense name="Inner" rects={[{x:1,y:2,width:6,height:1}]}>
+    `);
   });
 });

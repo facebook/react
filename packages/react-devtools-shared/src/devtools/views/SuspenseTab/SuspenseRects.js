@@ -18,7 +18,7 @@ import typeof {
 } from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
-import {createContext, useContext} from 'react';
+import {createContext, useContext, useLayoutEffect} from 'react';
 import {
   TreeDispatcherContext,
   TreeStateContext,
@@ -30,16 +30,26 @@ import {
   SuspenseTreeStateContext,
   SuspenseTreeDispatcherContext,
 } from './SuspenseTreeContext';
+import {getClassNameForEnvironment} from './SuspenseEnvironmentColors.js';
+import type RBush from 'rbush';
 
 function ScaledRect({
   className,
   rect,
   visible,
+  suspended,
+  selected,
+  hovered,
+  adjust,
   ...props
 }: {
   className: string,
   rect: Rect,
   visible: boolean,
+  suspended: boolean,
+  selected?: boolean,
+  hovered?: boolean,
+  adjust?: boolean,
   ...
 }): React$Node {
   const viewBox = useContext(ViewBox);
@@ -53,9 +63,13 @@ function ScaledRect({
       {...props}
       className={styles.SuspenseRectsScaledRect + ' ' + className}
       data-visible={visible}
+      data-suspended={suspended}
+      data-selected={selected}
+      data-hovered={hovered}
       style={{
-        width,
-        height,
+        // Shrink one pixel so that the bottom outline will line up with the top outline of the next one.
+        width: adjust ? 'calc(' + width + ' - 1px)' : width,
+        height: adjust ? 'calc(' + height + ' - 1px)' : height,
         top: y,
         left: x,
       }}
@@ -65,13 +79,17 @@ function ScaledRect({
 
 function SuspenseRects({
   suspenseID,
+  parentRects,
 }: {
   suspenseID: SuspenseNode['id'],
+  parentRects: null | Array<Rect>,
 }): React$Node {
   const store = useContext(StoreContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
-  const {uniqueSuspendersOnly} = useContext(SuspenseTreeStateContext);
+  const {uniqueSuspendersOnly, timeline, hoveredTimelineIndex} = useContext(
+    SuspenseTreeStateContext,
+  );
 
   const {inspectedElementID} = useContext(TreeStateContext);
 
@@ -139,13 +157,46 @@ function SuspenseRects({
   // TODO: Use the nearest Suspense boundary
   const selected = inspectedElementID === suspenseID;
 
-  const boundingBox = getBoundingBox(suspense.rects);
+  const hovered =
+    hoveredTimelineIndex > -1 &&
+    timeline[hoveredTimelineIndex].id === suspenseID;
+
+  let environment: null | string = null;
+  for (let i = 0; i < timeline.length; i++) {
+    const timelineStep = timeline[i];
+    if (timelineStep.id === suspenseID) {
+      environment = timelineStep.environment;
+      break;
+    }
+  }
+
+  const rects = suspense.rects;
+  const boundingBox = getBoundingBox(rects);
+
+  // Next we'll try to find a rect within one of our rects that isn't intersecting with
+  // other rects.
+  // TODO: This should probably be memoized based on if any changes to the rtree has been made.
+  const titleBox: null | Rect =
+    rects === null ? null : findTitleBox(store._rtree, rects, parentRects);
+  const nextRects =
+    rects === null || rects.length === 0
+      ? parentRects
+      : parentRects === null || parentRects.length === 0
+        ? rects
+        : parentRects.concat(rects);
 
   return (
     <ScaledRect
       rect={boundingBox}
-      className={styles.SuspenseRectsBoundary}
-      visible={visible}>
+      className={
+        styles.SuspenseRectsBoundary +
+        ' ' +
+        getClassNameForEnvironment(environment)
+      }
+      visible={visible}
+      selected={selected}
+      suspended={suspense.isSuspended}
+      hovered={hovered}>
       <ViewBox.Provider value={boundingBox}>
         {visible &&
           suspense.rects !== null &&
@@ -155,13 +206,13 @@ function SuspenseRects({
                 key={index}
                 className={styles.SuspenseRectsRect}
                 rect={rect}
-                data-highlighted={selected}
+                adjust={true}
                 onClick={handleClick}
                 onDoubleClick={handleDoubleClick}
                 onPointerOver={handlePointerOver}
                 onPointerLeave={handlePointerLeave}
                 // Reach-UI tooltip will go out of bounds of parent scroll container.
-                title={suspense.name}
+                title={suspense.name || 'Unknown'}
               />
             );
           })}
@@ -170,10 +221,21 @@ function SuspenseRects({
             className={styles.SuspenseRectsBoundaryChildren}
             rect={boundingBox}>
             {suspense.children.map(childID => {
-              return <SuspenseRects key={childID} suspenseID={childID} />;
+              return (
+                <SuspenseRects
+                  key={childID}
+                  suspenseID={childID}
+                  parentRects={nextRects}
+                />
+              );
             })}
           </ScaledRect>
         )}
+        {titleBox && suspense.name && visible ? (
+          <ScaledRect className={styles.SuspenseRectsTitle} rect={titleBox}>
+            <span>{suspense.name}</span>
+          </ScaledRect>
+        ) : null}
       </ViewBox.Provider>
     </ScaledRect>
   );
@@ -278,11 +340,78 @@ function getDocumentBoundingRect(
   };
 }
 
-function SuspenseRectsShell({
-  rootID,
-}: {
-  rootID: SuspenseNode['id'],
-}): React$Node {
+function findTitleBox(
+  rtree: RBush<Rect>,
+  rects: Array<Rect>,
+  parentRects: null | Array<Rect>,
+): null | Rect {
+  for (let i = 0; i < rects.length; i++) {
+    const rect = rects[i];
+    if (rect.width < 20 || rect.height < 10) {
+      // Skip small rects. They're likely not able to be contain anything useful anyway.
+      continue;
+    }
+    // Find all overlapping rects elsewhere in the tree to limit our rect.
+    const overlappingRects = rtree.search({
+      minX: rect.x,
+      minY: rect.y,
+      maxX: rect.x + rect.width,
+      maxY: rect.y + rect.height,
+    });
+    if (
+      overlappingRects.length === 0 ||
+      (overlappingRects.length === 1 && overlappingRects[0] === rect)
+    ) {
+      // There are no overlapping rects that isn't our own rect, so we can just use
+      // the full space of the rect.
+      return rect;
+    }
+    // We have some overlapping rects but they might not overlap everything. Let's
+    // shrink it up toward the top left corner until it has no more overlap.
+    const minX = rect.x;
+    const minY = rect.y;
+    let maxX = rect.x + rect.width;
+    let maxY = rect.y + rect.height;
+    for (let j = 0; j < overlappingRects.length; j++) {
+      const overlappingRect = overlappingRects[j];
+      if (overlappingRect === rect) {
+        continue;
+      }
+      const x = overlappingRect.x;
+      const y = overlappingRect.y;
+      if (y < maxY && x < maxX) {
+        if (
+          parentRects !== null &&
+          parentRects.indexOf(overlappingRect) !== -1
+        ) {
+          // This rect overlaps but it's part of a parent boundary. We let
+          // title content render if it's on top and not a sibling.
+          continue;
+        }
+        // This rect cuts into the remaining space. Let's figure out if we're
+        // better off cutting on the x or y axis to maximize remaining space.
+        const remainderX = x - minX;
+        const remainderY = y - minY;
+        if (remainderX > remainderY) {
+          maxX = x;
+        } else {
+          maxY = y;
+        }
+      }
+    }
+    if (maxX > minX && maxY > minY) {
+      return {
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+      };
+    }
+  }
+  return null;
+}
+
+function SuspenseRectsRoot({rootID}: {rootID: SuspenseNode['id']}): React$Node {
   const store = useContext(StoreContext);
   const root = store.getSuspenseByID(rootID);
   if (root === null) {
@@ -291,16 +420,26 @@ function SuspenseRectsShell({
   }
 
   return root.children.map(childID => {
-    return <SuspenseRects key={childID} suspenseID={childID} />;
+    return (
+      <SuspenseRects key={childID} suspenseID={childID} parentRects={null} />
+    );
   });
 }
 
 const ViewBox = createContext<Rect>((null: any));
 
-function SuspenseRectsContainer(): React$Node {
+function SuspenseRectsContainer({
+  scaleRef,
+}: {
+  scaleRef: {current: number},
+}): React$Node {
   const store = useContext(StoreContext);
+  const {inspectedElementID} = useContext(TreeStateContext);
+  const treeDispatch = useContext(TreeDispatcherContext);
+  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
-  const {roots} = useContext(SuspenseTreeStateContext);
+  const {roots, timeline, hoveredTimelineIndex, uniqueSuspendersOnly} =
+    useContext(SuspenseTreeStateContext);
 
   // TODO: bbox does not consider uniqueSuspendersOnly filter
   const boundingBox = getDocumentBoundingRect(store, roots);
@@ -312,15 +451,114 @@ function SuspenseRectsContainer(): React$Node {
   const width = '100%';
   const aspectRatio = `1 / ${heightScale}`;
 
+  function handleClick(event: SyntheticMouseEvent) {
+    if (event.defaultPrevented) {
+      // Already clicked on an inner rect
+      return;
+    }
+    if (roots.length === 0) {
+      // Nothing to select
+      return;
+    }
+    const arbitraryRootID = roots[0];
+
+    event.preventDefault();
+    treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: arbitraryRootID});
+    suspenseTreeDispatch({
+      type: 'SET_SUSPENSE_LINEAGE',
+      payload: arbitraryRootID,
+    });
+  }
+
+  function handleDoubleClick(event: SyntheticMouseEvent) {
+    if (event.defaultPrevented) {
+      // Already clicked on an inner rect
+      return;
+    }
+    event.preventDefault();
+    suspenseTreeDispatch({
+      type: 'SUSPENSE_SET_TIMELINE_INDEX',
+      payload: 0,
+    });
+  }
+
+  const isRootSelected = roots.includes(inspectedElementID);
+  const isRootHovered = hoveredTimelineIndex === 0;
+
+  let hasRootSuspenders = false;
+  if (!uniqueSuspendersOnly) {
+    hasRootSuspenders = true;
+  } else {
+    for (let i = 0; i < roots.length; i++) {
+      const rootID = roots[i];
+      const root = store.getSuspenseByID(rootID);
+      if (root !== null && root.hasUniqueSuspenders) {
+        hasRootSuspenders = true;
+        break;
+      }
+    }
+  }
+
+  const rootEnvironment =
+    timeline.length === 0 ? null : timeline[0].environment;
+
+  useLayoutEffect(() => {
+    // 100% of the width represents this many pixels in the real document.
+    scaleRef.current = boundingBoxWidth;
+  }, [boundingBoxWidth]);
+
+  let selectedBoundingBox = null;
+  let selectedEnvironment = null;
+  if (isRootSelected) {
+    selectedBoundingBox = boundingBox;
+    selectedEnvironment = rootEnvironment;
+  } else if (inspectedElementID !== null) {
+    const selectedSuspenseNode = store.getSuspenseByID(inspectedElementID);
+    if (
+      selectedSuspenseNode !== null &&
+      (selectedSuspenseNode.hasUniqueSuspenders || !uniqueSuspendersOnly)
+    ) {
+      selectedBoundingBox = getBoundingBox(selectedSuspenseNode.rects);
+      for (let i = 0; i < timeline.length; i++) {
+        const timelineStep = timeline[i];
+        if (timelineStep.id === inspectedElementID) {
+          selectedEnvironment = timelineStep.environment;
+          break;
+        }
+      }
+    }
+  }
+
   return (
-    <div className={styles.SuspenseRectsContainer}>
+    <div
+      className={
+        styles.SuspenseRectsContainer +
+        (hasRootSuspenders ? ' ' + styles.SuspenseRectsRoot : '') +
+        ' ' +
+        getClassNameForEnvironment(rootEnvironment)
+      }
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+      data-hovered={isRootHovered}>
       <ViewBox.Provider value={boundingBox}>
         <div
           className={styles.SuspenseRectsViewBox}
           style={{aspectRatio, width}}>
           {roots.map(rootID => {
-            return <SuspenseRectsShell key={rootID} rootID={rootID} />;
+            return <SuspenseRectsRoot key={rootID} rootID={rootID} />;
           })}
+          {selectedBoundingBox !== null ? (
+            <ScaledRect
+              className={
+                styles.SuspenseRectOutline +
+                (isRootSelected ? ' ' + styles.SuspenseRectOutlineRoot : '') +
+                ' ' +
+                getClassNameForEnvironment(selectedEnvironment)
+              }
+              rect={selectedBoundingBox}
+              adjust={true}
+            />
+          ) : null}
         </div>
       </ViewBox.Provider>
     </div>

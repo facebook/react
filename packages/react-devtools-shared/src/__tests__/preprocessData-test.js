@@ -850,6 +850,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
+      // @reactVersion >= 19.1
       // @reactVersion < 19.2
       it('should process a sample createRoot render sequence', async () => {
         function App() {
@@ -2158,6 +2159,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
+    // @reactVersion >= 19.1
     // @reactVersion < 19.2
     it('should process a sample createRoot render sequence', async () => {
       function App() {

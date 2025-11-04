@@ -6,8 +6,8 @@
  */
 
 import * as t from '@babel/types';
-import {ZodError, z} from 'zod';
-import {fromZodError} from 'zod-validation-error';
+import {ZodError, z} from 'zod/v4';
+import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerError} from '../CompilerError';
 import {Logger, ProgramContext} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
@@ -83,21 +83,11 @@ export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
 export const USE_FIRE_FUNCTION_NAME = 'useFire';
 export const EMIT_FREEZE_GLOBAL_GATING = '__DEV__';
 
-export const MacroMethodSchema = z.union([
-  z.object({type: z.literal('wildcard')}),
-  z.object({type: z.literal('name'), name: z.string()}),
-]);
-
-// Would like to change this to drop the string option, but breaks compatibility with existing configs
-export const MacroSchema = z.union([
-  z.string(),
-  z.tuple([z.string(), z.array(MacroMethodSchema)]),
-]);
+export const MacroSchema = z.string();
 
 export type CompilerMode = 'all_features' | 'no_inferred_memo';
 
 export type Macro = z.infer<typeof MacroSchema>;
-export type MacroMethod = z.infer<typeof MacroMethodSchema>;
 
 const HookSchema = z.object({
   /*
@@ -159,7 +149,7 @@ export const EnvironmentConfigSchema = z.object({
    * A function that, given the name of a module, can optionally return a description
    * of that module's type signature.
    */
-  moduleTypeProvider: z.nullable(z.function().args(z.string())).default(null),
+  moduleTypeProvider: z.nullable(z.any()).default(null),
 
   /**
    * A list of functions which the application compiles as macros, where
@@ -210,7 +200,7 @@ export const EnvironmentConfigSchema = z.object({
    * that if a useEffect or useCallback references a function value, that function value will be
    * considered frozen, and in turn all of its referenced variables will be considered frozen as well.
    */
-  enablePreserveExistingMemoizationGuarantees: z.boolean().default(false),
+  enablePreserveExistingMemoizationGuarantees: z.boolean().default(true),
 
   /**
    * Validates that all useMemo/useCallback values are also memoized by Forget. This mode can be
@@ -249,7 +239,7 @@ export const EnvironmentConfigSchema = z.object({
    * Allows specifying a function that can populate HIR with type information from
    * Flow
    */
-  flowTypeProvider: z.nullable(z.function().args(z.string())).default(null),
+  flowTypeProvider: z.nullable(z.any()).default(null),
 
   /**
    * Enables inference of optional dependency chains. Without this flag
@@ -333,6 +323,12 @@ export const EnvironmentConfigSchema = z.object({
    * during render.
    */
   validateNoDerivedComputationsInEffects: z.boolean().default(false),
+
+  /**
+   * Experimental: Validates that effects are not used to calculate derived data which could instead be computed
+   * during render. Generates a custom error message for each type of violation.
+   */
+  validateNoDerivedComputationsInEffects_exp: z.boolean().default(false),
 
   /**
    * Validates against creating JSX within a try block and recommends using an error boundary
@@ -659,7 +655,7 @@ export const EnvironmentConfigSchema = z.object({
    * Invalid:
    *   useMemo(() => { ... }, [...]);
    */
-  validateNoVoidUseMemo: z.boolean().default(false),
+  validateNoVoidUseMemo: z.boolean().default(true),
 
   /**
    * Validates that Components/Hooks are always defined at module level. This prevents scope
@@ -905,6 +901,12 @@ export class Environment {
         this.config.moduleTypeProvider ?? defaultModuleTypeProvider;
       if (moduleTypeProvider == null) {
         return null;
+      }
+      if (typeof moduleTypeProvider !== 'function') {
+        CompilerError.throwInvalidConfig({
+          reason: `Expected a function for \`moduleTypeProvider\``,
+          loc,
+        });
       }
       const unparsedModuleConfig = moduleTypeProvider(moduleName);
       if (unparsedModuleConfig != null) {

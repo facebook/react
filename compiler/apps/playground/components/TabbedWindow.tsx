@@ -49,6 +49,8 @@ export default function TabbedWindow({
                 {isActive && (
                   <ViewTransition
                     name={transitionName}
+                    enter={{default: 'none'}}
+                    exit={{default: 'none'}}
                     share={{
                       [TOGGLE_TAB_TRANSITION]: 'tab-highlight',
                       default: 'none',
@@ -58,6 +60,8 @@ export default function TabbedWindow({
                   </ViewTransition>
                 )}
                 <ViewTransition
+                  enter={{default: 'none'}}
+                  exit={{default: 'none'}}
                   update={{
                     [TOGGLE_TAB_TRANSITION]: 'tab-text',
                     default: 'none',

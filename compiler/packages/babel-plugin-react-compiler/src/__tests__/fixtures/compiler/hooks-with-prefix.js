@@ -1,4 +1,4 @@
-// @hookPattern:".*\b(use[^$]+)$"
+// @hookPattern:".*\b(use[^$]+)$" @enablePreserveExistingMemoizationGuarantees:false
 
 import * as React from 'react';
 import {makeArray, useHook} from 'shared-runtime';

@@ -18,6 +18,8 @@ export {
   PureComponent,
   StrictMode,
   Suspense,
+  ViewTransition,
+  addTransitionType,
   cloneElement,
   createContext,
   createElement,

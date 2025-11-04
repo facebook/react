@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {type AutoDepsDecorationsEvent} from 'babel-plugin-react-compiler/src/Entrypoint';
+import {type AutoDepsDecorationsEvent} from 'babel-plugin-react-compiler';
 import {type Position} from 'vscode-languageserver-textdocument';
 import {RequestType} from 'vscode-languageserver/node';
 import {type Range, sourceLocationToRange} from '../utils/range';

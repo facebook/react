@@ -850,4 +850,82 @@ describe('useEffectEvent', () => {
     );
     assertLog(['Add to cart', 'url: /shop/2, numberOfItems: 1']);
   });
+
+  it('reads the latest context value in memo Components', async () => {
+    const MyContext = createContext('default');
+
+    let logContextValue;
+    const ContextReader = React.memo(function ContextReader() {
+      const value = useContext(MyContext);
+      Scheduler.log('ContextReader: ' + value);
+      const fireLogContextValue = useEffectEvent(() => {
+        Scheduler.log('ContextReader (Effect event): ' + value);
+      });
+      useEffect(() => {
+        logContextValue = fireLogContextValue;
+      }, []);
+      return null;
+    });
+
+    function App({value}) {
+      return (
+        <MyContext.Provider value={value}>
+          <ContextReader />
+        </MyContext.Provider>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App value="first" />));
+    assertLog(['ContextReader: first']);
+
+    logContextValue();
+
+    assertLog(['ContextReader (Effect event): first']);
+
+    await act(() => root.render(<App value="second" />));
+    assertLog(['ContextReader: second']);
+
+    logContextValue();
+    assertLog(['ContextReader (Effect event): second']);
+  });
+
+  it('reads the latest context value in forwardRef Components', async () => {
+    const MyContext = createContext('default');
+
+    let logContextValue;
+    const ContextReader = React.forwardRef(function ContextReader(props, ref) {
+      const value = useContext(MyContext);
+      Scheduler.log('ContextReader: ' + value);
+      const fireLogContextValue = useEffectEvent(() => {
+        Scheduler.log('ContextReader (Effect event): ' + value);
+      });
+      useEffect(() => {
+        logContextValue = fireLogContextValue;
+      }, []);
+      return null;
+    });
+
+    function App({value}) {
+      return (
+        <MyContext.Provider value={value}>
+          <ContextReader />
+        </MyContext.Provider>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App value="first" />));
+    assertLog(['ContextReader: first']);
+
+    logContextValue();
+
+    assertLog(['ContextReader (Effect event): first']);
+
+    await act(() => root.render(<App value="second" />));
+    assertLog(['ContextReader: second']);
+
+    logContextValue();
+    assertLog(['ContextReader (Effect event): second']);
+  });
 });
