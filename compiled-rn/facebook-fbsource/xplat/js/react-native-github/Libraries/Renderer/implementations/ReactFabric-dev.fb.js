@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7f61429a9bece2e8f438d36cf3bb7fb3>>
+ * @generated SignedSource<<9ea947ad72cda6bd32f9820b237a618c>>
  */
 
 "use strict";
@@ -14153,19 +14153,19 @@ __DEV__ &&
           previousRenderStartTime = debugTask;
           var eventTime = endTime,
             eventType = blockingEventType,
-            eventIsRepeat = 0 < blockingEventRepeatTime,
-            isSpawnedUpdate = 1 === blockingUpdateType,
-            isPingedUpdate = 2 === blockingUpdateType;
-          debugTask = renderStartTime;
-          endTime = blockingUpdateTask;
-          color = blockingUpdateMethodName;
-          label = blockingUpdateComponentName;
+            eventIsRepeat = 0 < blockingEventRepeatTime;
+          endTime = 1 === blockingUpdateType;
+          var isPingedUpdate = 2 === blockingUpdateType;
+          color = renderStartTime;
+          debugTask = blockingUpdateTask;
+          label = blockingUpdateMethodName;
+          var updateComponentName = blockingUpdateComponentName;
           if (supportsUserTiming) {
             currentTrack = "Blocking";
             0 < previousRenderStartTime
-              ? previousRenderStartTime > debugTask &&
-                (previousRenderStartTime = debugTask)
-              : (previousRenderStartTime = debugTask);
+              ? previousRenderStartTime > color &&
+                (previousRenderStartTime = color)
+              : (previousRenderStartTime = color);
             0 < eventTime
               ? eventTime > previousRenderStartTime &&
                 (eventTime = previousRenderStartTime)
@@ -14174,8 +14174,8 @@ __DEV__ &&
               var color$jscomp$0 = eventIsRepeat
                 ? "secondary-light"
                 : "warning";
-              endTime
-                ? endTime.run(
+              debugTask
+                ? debugTask.run(
                     console.timeStamp.bind(
                       console,
                       eventIsRepeat ? "Consecutive" : "Event: " + eventType,
@@ -14195,44 +14195,49 @@ __DEV__ &&
                     color$jscomp$0
                   );
             }
-            debugTask > previousRenderStartTime &&
-              ((eventTime = isSpawnedUpdate
+            color > previousRenderStartTime &&
+              ((eventTime = endTime
                 ? "error"
                 : (lanes & 738197653) === lanes
                   ? "tertiary-light"
                   : "primary-light"),
-              (isSpawnedUpdate = isPingedUpdate
+              (isPingedUpdate = isPingedUpdate
                 ? "Promise Resolved"
-                : isSpawnedUpdate
+                : endTime
                   ? "Cascading Update"
-                  : 5 < debugTask - previousRenderStartTime
+                  : 5 < color - previousRenderStartTime
                     ? "Update Blocked"
                     : "Update"),
-              (isPingedUpdate = []),
-              null != label && isPingedUpdate.push(["Component name", label]),
-              null != color && isPingedUpdate.push(["Method name", color]),
+              (eventType = []),
+              null != updateComponentName &&
+                eventType.push(["Component name", updateComponentName]),
+              null != label && eventType.push(["Method name", label]),
               (previousRenderStartTime = {
                 start: previousRenderStartTime,
-                end: debugTask,
+                end: color,
                 detail: {
                   devtools: {
-                    properties: isPingedUpdate,
+                    properties: eventType,
                     track: currentTrack,
                     trackGroup: "Scheduler \u269b",
                     color: eventTime
                   }
                 }
               }),
-              endTime
-                ? endTime.run(
+              enablePerformanceIssueReporting &&
+                endTime &&
+                (previousRenderStartTime.detail.devtools.performanceIssue =
+                  reusableCascadingUpdateIssue),
+              debugTask
+                ? debugTask.run(
                     performance.measure.bind(
                       performance,
-                      isSpawnedUpdate,
+                      isPingedUpdate,
                       previousRenderStartTime
                     )
                   )
-                : performance.measure(isSpawnedUpdate, previousRenderStartTime),
-              performance.clearMeasures(isSpawnedUpdate));
+                : performance.measure(isPingedUpdate, previousRenderStartTime),
+              performance.clearMeasures(isPingedUpdate));
           }
           blockingUpdateTime = -1.1;
           blockingUpdateType = 0;
@@ -14280,7 +14285,7 @@ __DEV__ &&
           (color = renderStartTime),
           (endTime = transitionUpdateTask),
           (label = transitionUpdateMethodName),
-          (isSpawnedUpdate = transitionUpdateComponentName),
+          (updateComponentName = transitionUpdateComponentName),
           supportsUserTiming &&
             ((currentTrack = "Transition"),
             0 < previousRenderStartTime
@@ -14345,8 +14350,8 @@ __DEV__ &&
                   ? "Update Blocked"
                   : "Update"),
               (isPingedUpdate = []),
-              null != isSpawnedUpdate &&
-                isPingedUpdate.push(["Component name", isSpawnedUpdate]),
+              null != updateComponentName &&
+                isPingedUpdate.push(["Component name", updateComponentName]),
               null != label && isPingedUpdate.push(["Method name", label]),
               (previousRenderStartTime = {
                 start: previousRenderStartTime,
@@ -16851,6 +16856,7 @@ __DEV__ &&
         dynamicFlagsUntyped.enableFragmentRefsInstanceHandles,
       enableComponentPerformanceTrack =
         dynamicFlagsUntyped.enableComponentPerformanceTrack,
+      enablePerformanceIssueReporting = enableComponentPerformanceTrack,
       assign = Object.assign,
       disabledDepth = 0,
       prevLog,
@@ -17627,6 +17633,14 @@ __DEV__ &&
         detail: { devtools: reusableComponentDevToolDetails }
       },
       reusableChangedPropsEntry = ["Changed Props", ""],
+      reusableCascadingUpdateIssue = {
+        name: "React: Cascading Update",
+        severity: "warning",
+        description:
+          "A cascading update is an update that is triggered during an ongoing render. This can lead to performance issues.",
+        learnMoreUrl:
+          "https://react.dev/reference/dev-tools/react-performance-tracks#cascading-updates"
+      },
       reusableDeeplyEqualPropsEntry = [
         "Changed Props",
         "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."
@@ -19838,10 +19852,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-edd05f18-20251103",
+        version: "19.3.0-native-fb-d000261e-20251104",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-edd05f18-20251103"
+        reconcilerVersion: "19.3.0-native-fb-d000261e-20251104"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
