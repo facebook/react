@@ -232,6 +232,11 @@ export const enableProfilerTimer = __PROFILE__;
 // All calls should also be gated on enableProfilerTimer.
 export const enableComponentPerformanceTrack: boolean = true;
 
+// Enables annotating of React performance track events with `performanceIssue`
+// metadata, to more prominently highlight performance issues to users
+// (initially, an experimental feature in React Native).
+export const enablePerformanceIssueReporting: boolean = false;
+
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 // for an experimental timeline tool.
 export const enableSchedulingProfiler: boolean =

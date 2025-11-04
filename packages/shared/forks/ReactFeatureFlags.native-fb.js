@@ -83,6 +83,8 @@ export const enableDefaultTransitionIndicator: boolean = true;
 export const ownerStackLimit = 1e4;
 export const enableComponentPerformanceTrack: boolean =
   __PROFILE__ && dynamicFlags.enableComponentPerformanceTrack;
+export const enablePerformanceIssueReporting: boolean =
+  enableComponentPerformanceTrack;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

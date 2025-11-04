@@ -42,6 +42,7 @@ export const enablePostpone: boolean = false;
 export const enableReactTestRendererWarning: boolean = false;
 export const enableRetryLaneExpiration: boolean = false;
 export const enableComponentPerformanceTrack: boolean = true;
+export const enablePerformanceIssueReporting: boolean = false;
 export const enableSchedulingProfiler: boolean =
   !enableComponentPerformanceTrack && __PROFILE__;
 export const enableScopeAPI: boolean = false;

@@ -41,6 +41,7 @@ export const enableReactTestRendererWarning = false;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
+export const enablePerformanceIssueReporting = false;
 export const enableScopeAPI = false;
 export const enableEagerAlternateStateNodeCleanup = true;
 export const enableSuspenseAvoidThisFallback = false;
