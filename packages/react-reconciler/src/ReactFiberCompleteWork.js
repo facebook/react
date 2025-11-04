@@ -766,6 +766,17 @@ function cutOffTailIfNeeded(
   }
 }
 
+function isOnlyNewMounts(tail: Fiber): boolean {
+  let fiber: null | Fiber = tail;
+  while (fiber !== null) {
+    if (fiber.alternate !== null) {
+      return false;
+    }
+    fiber = fiber.sibling;
+  }
+  return true;
+}
+
 function bubbleProperties(completedWork: Fiber) {
   const didBailout =
     completedWork.alternate !== null &&
@@ -1856,7 +1867,10 @@ function completeWork(
       if (renderState.tail !== null) {
         // We still have tail rows to render.
         // Pop a row.
+        // TODO: Consider storing the first of the new mount tail in the state so
+        // that we don't have to recompute this for every row in the list.
         const next = renderState.tail;
+        const onlyNewMounts = isOnlyNewMounts(next);
         renderState.rendering = next;
         renderState.tail = next.sibling;
         renderState.renderingStartTime = now();
@@ -1876,9 +1890,9 @@ function completeWork(
             setDefaultShallowSuspenseListContext(suspenseContext);
         }
         if (
-          next.alternate !== null ||
           renderState.tailMode === 'visible' ||
           renderState.tailMode === 'collapsed' ||
+          !onlyNewMounts ||
           // TODO: While hydrating, we still let it suspend the parent. Tail mode hidden has broken
           // hydration anyway right now but this preserves the previous semantics out of caution.
           // Once proper hydration is implemented, this special case should be removed as it should

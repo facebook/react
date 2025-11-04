@@ -195,9 +195,9 @@ function unwindWork(
           workInProgress.memoizedState;
         if (renderState !== null) {
           // Cut off any remaining tail work and don't commit the rendering one.
+          // This assumes that we have already confirmed that none of these are
+          // already mounted.
           renderState.rendering = null;
-          // TODO: This cuts off current Fibers and effectively unmount them
-          // which is not consistent with our other semantics.
           renderState.tail = null;
         }
         // Schedule the commit phase to attach retry listeners.

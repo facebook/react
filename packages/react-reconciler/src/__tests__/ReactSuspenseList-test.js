@@ -2414,6 +2414,83 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableSuspenseList
+  it('preserves already mounted rows when a new hidden on is inserted in the tail', async () => {
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    let count = 0;
+    function MountCount({children}) {
+      // This component should only mount once.
+      React.useLayoutEffect(() => {
+        count++;
+      }, []);
+      return children;
+    }
+
+    function Foo({insert}) {
+      return (
+        <SuspenseList
+          revealOrder="forwards"
+          tail={insert ? 'hidden' : 'visible'}>
+          <Text text="A" />
+          {insert ? <B /> : null}
+          <MountCount>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <C />
+            </Suspense>
+          </MountCount>
+        </SuspenseList>
+      );
+    }
+
+    await act(() => {
+      ReactNoop.render(<Foo insert={false} />);
+    });
+    assertLog(['A', 'Suspend! [C]', 'Loading C', 'Suspend! [C]']);
+
+    expect(count).toBe(1);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    await act(() => {
+      ReactNoop.render(<Foo insert={true} />);
+    });
+
+    assertLog(['A', 'Suspend! [B]', 'A', 'Suspend! [B]']);
+
+    expect(count).toBe(1);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    await act(async () => {
+      await B.resolve();
+      await C.resolve();
+    });
+
+    assertLog(['A', 'B', 'C']);
+
+    expect(count).toBe(1);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  // @gate enableSuspenseList
   it('reveals "collapsed" rows one by one after the first without boundaries', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
