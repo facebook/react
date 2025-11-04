@@ -217,9 +217,17 @@ export function pushSuspenseListCatch(
   // This is used for rows that are allowed to be hidden anyway.
   push(suspenseHandlerStackCursor, fiber, fiber);
   push(suspenseStackCursor, newContext, fiber);
+  if (shellBoundary === null) {
+    // We can contain the effects to hiding the current row.
+    shellBoundary = fiber;
+  }
 }
 
 export function popSuspenseListContext(fiber: Fiber): void {
   pop(suspenseStackCursor, fiber);
   pop(suspenseHandlerStackCursor, fiber);
+  if (shellBoundary === fiber) {
+    // Popping back into the shell.
+    shellBoundary = null;
+  }
 }
