@@ -325,7 +325,6 @@ export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
 let didWarnAboutClassNameOnViewTransition;
-let didWarnAboutExpectedLoadTime = false;
 
 if (__DEV__) {
   didWarnAboutBadClass = ({}: {[string]: boolean});
@@ -2457,22 +2456,7 @@ function updateSuspenseComponent(
       }
 
       return bailoutOffscreenComponent(null, primaryChildFragment);
-    } else if (
-      enableCPUSuspense &&
-      (typeof nextProps.unstable_expectedLoadTime === 'number' ||
-        nextProps.defer === true)
-    ) {
-      if (__DEV__) {
-        if (typeof nextProps.unstable_expectedLoadTime === 'number') {
-          if (!didWarnAboutExpectedLoadTime) {
-            didWarnAboutExpectedLoadTime = true;
-            console.error(
-              '<Suspense unstable_expectedLoadTime={...}> is deprecated. ' +
-                'Use <Suspense defer={true}> instead.',
-            );
-          }
-        }
-      }
+    } else if (enableCPUSuspense && nextProps.defer === true) {
       // This is a CPU-bound tree. Skip this tree and show a placeholder to
       // unblock the surrounding content. Then immediately retry after the
       // initial commit.
