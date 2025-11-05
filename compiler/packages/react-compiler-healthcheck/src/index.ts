@@ -15,8 +15,8 @@ import strictModeCheck from './checks/strictMode';
 
 async function main() {
   const argv = yargs(process.argv.slice(2))
-    .scriptName('healthcheck')
-    .usage('$ npx healthcheck <src>')
+    .scriptName('react-compiler-healthcheck')
+    .usage('$ npx react-compiler-healthcheck --src="<src>"')
     .option('src', {
       description: 'glob expression matching src files to compile',
       type: 'string',
