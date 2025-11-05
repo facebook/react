@@ -1069,7 +1069,21 @@ export function performWorkOnRoot(
   forceSync: boolean,
 ): void {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // We're being called re-entrantly. This can happen in Firefox (and some
+    // older browsers) when a breakpoint or alert() pauses the main thread,
+    // causing MessageChannel callbacks to fire immediately upon resuming.
+    // Instead of throwing an error, schedule the work to run after the
+    // current work completes.
+    // See: https://github.com/facebook/react/issues/17355
+    if (__DEV__) {
+      console.error(
+        'performWorkOnRoot was called recursively. This is likely due to ' +
+          'a browser pause (e.g., breakpoint or alert). The work will be ' +
+          'rescheduled.',
+      );
+    }
+    ensureRootIsScheduled(root);
+    return;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -3443,7 +3457,21 @@ function commitRoot(
   flushRenderPhaseStrictModeWarningsInDEV();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // We're being called re-entrantly. This can happen in Firefox (and some
+    // older browsers) when a breakpoint or alert() pauses the main thread,
+    // causing MessageChannel callbacks to fire immediately upon resuming.
+    // Instead of throwing an error, schedule the work to run after the
+    // current work completes.
+    // See: https://github.com/facebook/react/issues/17355
+    if (__DEV__) {
+      console.error(
+        'commitRoot was called recursively. This is likely due to ' +
+          'a browser pause (e.g., breakpoint or alert). The work will be ' +
+          'rescheduled.',
+      );
+    }
+    ensureRootIsScheduled(root);
+    return;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
