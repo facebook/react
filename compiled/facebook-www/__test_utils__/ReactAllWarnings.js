@@ -275,6 +275,7 @@ export default [
   "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect().",
   "String refs are no longer supported.",
   "Style property values shouldn't contain a semicolon. Try \"%s: %s\" instead.",
+  "SuspenseList should never catch while hydrating. This is a bug in React.",
   "Symbols are not valid as a React child.\n  %s",
   "Symbols are not valid as a React child.\n  <%s>%s</%s>",
   "Symbols are not valid as a React child.\n  root.render(%s)",

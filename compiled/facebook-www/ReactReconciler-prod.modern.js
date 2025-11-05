@@ -2781,7 +2781,7 @@ module.exports = function ($$$config) {
       ? (push(suspenseStackCursor, suspenseStackCursor.current),
         push(suspenseHandlerStackCursor, fiber),
         null === shellBoundary && (shellBoundary = fiber))
-      : reuseSuspenseHandlerOnStack(fiber);
+      : reuseSuspenseHandlerOnStack();
   }
   function reuseSuspenseHandlerOnStack() {
     push(suspenseStackCursor, suspenseStackCursor.current);
@@ -2791,6 +2791,15 @@ module.exports = function ($$$config) {
     pop(suspenseHandlerStackCursor);
     shellBoundary === fiber && (shellBoundary = null);
     pop(suspenseStackCursor);
+  }
+  function pushSuspenseListContext(fiber, newContext) {
+    push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
+    push(suspenseStackCursor, newContext);
+  }
+  function popSuspenseListContext(fiber) {
+    pop(suspenseStackCursor);
+    pop(suspenseHandlerStackCursor);
+    shellBoundary === fiber && (shellBoundary = null);
   }
   function findFirstSuspended(row) {
     for (var node = row; null !== node; ) {
@@ -4103,6 +4112,7 @@ module.exports = function ($$$config) {
         switch (sourceFiber.tag) {
           case 31:
           case 13:
+          case 19:
             return (
               null === shellBoundary
                 ? renderDidSuspendDelayIfPossible()
@@ -4590,12 +4600,12 @@ module.exports = function ($$$config) {
       }
       pushTransition(workInProgress, nextProps, transitions);
       pushHiddenContext(workInProgress, prevState);
-      reuseSuspenseHandlerOnStack(workInProgress);
+      reuseSuspenseHandlerOnStack();
       workInProgress.memoizedState = null;
     } else
       null !== current && pushTransition(workInProgress, null, null),
         reuseHiddenContextOnStack(),
-        reuseSuspenseHandlerOnStack(workInProgress);
+        reuseSuspenseHandlerOnStack();
     reconcileChildren(current, workInProgress, nextChildren, renderLanes);
     return workInProgress.child;
   }
@@ -5149,7 +5159,7 @@ module.exports = function ($$$config) {
       if (isHydrating) {
         showFallback
           ? pushPrimaryTreeSuspenseHandler(workInProgress)
-          : reuseSuspenseHandlerOnStack(workInProgress);
+          : reuseSuspenseHandlerOnStack();
         (current = nextHydratableInstance)
           ? ((current = canHydrateSuspenseInstance(
               current,
@@ -5181,7 +5191,7 @@ module.exports = function ($$$config) {
         nextFallbackChildren = nextProps.fallback;
       if (showFallback)
         return (
-          reuseSuspenseHandlerOnStack(workInProgress),
+          reuseSuspenseHandlerOnStack(),
           mountSuspenseFallbackChildren(
             workInProgress,
             nextPrimaryChildren,
@@ -5217,7 +5227,7 @@ module.exports = function ($$$config) {
         );
       if ("number" === typeof nextProps.unstable_expectedLoadTime)
         return (
-          reuseSuspenseHandlerOnStack(workInProgress),
+          reuseSuspenseHandlerOnStack(),
           mountSuspenseFallbackChildren(
             workInProgress,
             nextPrimaryChildren,
@@ -5254,11 +5264,11 @@ module.exports = function ($$$config) {
               renderLanes
             )))
           : null !== workInProgress.memoizedState
-            ? (reuseSuspenseHandlerOnStack(workInProgress),
+            ? (reuseSuspenseHandlerOnStack(),
               (workInProgress.child = current.child),
               (workInProgress.flags |= 128),
               (workInProgress = null))
-            : (reuseSuspenseHandlerOnStack(workInProgress),
+            : (reuseSuspenseHandlerOnStack(),
               (nextPrimaryChildren = nextProps.fallback),
               (showFallback = workInProgress.mode),
               (nextProps = mountWorkInProgressOffscreenFiber(
@@ -5366,7 +5376,7 @@ module.exports = function ($$$config) {
     }
     if (showFallback)
       return (
-        reuseSuspenseHandlerOnStack(workInProgress),
+        reuseSuspenseHandlerOnStack(),
         (nextPrimaryChildren = nextProps.fallback),
         (showFallback = workInProgress.mode),
         (nextFallbackChildren = current.child),
@@ -5573,13 +5583,15 @@ module.exports = function ($$$config) {
       revealOrder = nextProps.revealOrder,
       tailMode = nextProps.tail;
     nextProps = nextProps.children;
-    var suspenseContext = suspenseStackCursor.current,
-      shouldForceFallback = 0 !== (suspenseContext & 2);
+    var suspenseContext = suspenseStackCursor.current;
+    if (workInProgress.flags & 128)
+      return pushSuspenseListContext(workInProgress, suspenseContext), null;
+    var shouldForceFallback = 0 !== (suspenseContext & 2);
     shouldForceFallback
       ? ((suspenseContext = (suspenseContext & 1) | 2),
         (workInProgress.flags |= 128))
       : (suspenseContext &= 1);
-    push(suspenseStackCursor, suspenseContext);
+    pushSuspenseListContext(workInProgress, suspenseContext);
     "backwards" === revealOrder && null !== current
       ? (reverseChildren(current),
         reconcileChildren(current, workInProgress, nextProps, renderLanes),
@@ -5783,6 +5795,12 @@ module.exports = function ($$$config) {
         pushPrimaryTreeSuspenseHandler(workInProgress);
         break;
       case 19:
+        if (workInProgress.flags & 128)
+          return updateSuspenseListComponent(
+            current,
+            workInProgress,
+            renderLanes
+          );
         var didSuspendBefore = 0 !== (current.flags & 128);
         state$95 = 0 !== (renderLanes & workInProgress.childLanes);
         state$95 ||
@@ -5807,7 +5825,7 @@ module.exports = function ($$$config) {
           ((didSuspendBefore.rendering = null),
           (didSuspendBefore.tail = null),
           (didSuspendBefore.lastEffect = null));
-        push(suspenseStackCursor, suspenseStackCursor.current);
+        pushSuspenseListContext(workInProgress, suspenseStackCursor.current);
         if (state$95) break;
         else return null;
       case 22:
@@ -7142,7 +7160,7 @@ module.exports = function ($$$config) {
           null
         );
       case 19:
-        pop(suspenseStackCursor);
+        popSuspenseListContext(workInProgress);
         newProps = workInProgress.memoizedState;
         if (null === newProps) return bubbleProperties(workInProgress), null;
         type = 0 !== (workInProgress.flags & 128);
@@ -7171,8 +7189,8 @@ module.exports = function ($$$config) {
                   )
                     resetWorkInProgress(renderLanes, current),
                       (renderLanes = renderLanes.sibling);
-                  push(
-                    suspenseStackCursor,
+                  pushSuspenseListContext(
+                    workInProgress,
                     (suspenseStackCursor.current & 1) | 2
                   );
                   isHydrating &&
@@ -7224,21 +7242,36 @@ module.exports = function ($$$config) {
                 : (workInProgress.child = nextResource),
               (newProps.last = nextResource));
         }
-        if (null !== newProps.tail)
-          return (
-            (current = newProps.tail),
-            (newProps.rendering = current),
-            (newProps.tail = current.sibling),
-            (newProps.renderingStartTime = now()),
-            (current.sibling = null),
-            (renderLanes = suspenseStackCursor.current),
-            push(
-              suspenseStackCursor,
-              type ? (renderLanes & 1) | 2 : renderLanes & 1
-            ),
-            isHydrating && pushTreeFork(workInProgress, newProps.treeForkCount),
-            current
-          );
+        if (null !== newProps.tail) {
+          current = newProps.tail;
+          a: {
+            for (renderLanes = current; null !== renderLanes; ) {
+              if (null !== renderLanes.alternate) {
+                renderLanes = !1;
+                break a;
+              }
+              renderLanes = renderLanes.sibling;
+            }
+            renderLanes = !0;
+          }
+          newProps.rendering = current;
+          newProps.tail = current.sibling;
+          newProps.renderingStartTime = now();
+          current.sibling = null;
+          nextResource = suspenseStackCursor.current;
+          nextResource = type ? (nextResource & 1) | 2 : nextResource & 1;
+          "visible" === newProps.tailMode ||
+          "collapsed" === newProps.tailMode ||
+          !renderLanes ||
+          isHydrating
+            ? pushSuspenseListContext(workInProgress, nextResource)
+            : ((renderLanes = nextResource),
+              push(suspenseHandlerStackCursor, workInProgress),
+              push(suspenseStackCursor, renderLanes),
+              null === shellBoundary && (shellBoundary = workInProgress));
+          isHydrating && pushTreeFork(workInProgress, newProps.treeForkCount);
+          return current;
+        }
         bubbleProperties(workInProgress);
         return null;
       case 21:
@@ -7373,7 +7406,18 @@ module.exports = function ($$$config) {
           ? ((workInProgress.flags = (current & -65537) | 128), workInProgress)
           : null;
       case 19:
-        return pop(suspenseStackCursor), null;
+        return (
+          popSuspenseListContext(workInProgress),
+          (current = workInProgress.flags),
+          current & 65536
+            ? ((workInProgress.flags = (current & -65537) | 128),
+              (current = workInProgress.memoizedState),
+              null !== current &&
+                ((current.rendering = null), (current.tail = null)),
+              (workInProgress.flags |= 4),
+              workInProgress)
+            : null
+        );
       case 4:
         return popHostContainer(), null;
       case 10:
@@ -7431,7 +7475,7 @@ module.exports = function ($$$config) {
         popSuspenseHandler(interruptedWork);
         break;
       case 19:
-        pop(suspenseStackCursor);
+        popSuspenseListContext(interruptedWork);
         break;
       case 10:
         popProvider(interruptedWork.type);
@@ -7595,8 +7639,8 @@ module.exports = function ($$$config) {
       else if ("function" === typeof ref)
         try {
           ref(null);
-        } catch (error$140) {
-          captureCommitPhaseError(current, nearestMountedAncestor, error$140);
+        } catch (error$141) {
+          captureCommitPhaseError(current, nearestMountedAncestor, error$141);
         }
       else ref.current = null;
   }
@@ -8432,11 +8476,11 @@ module.exports = function ($$$config) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$138) {
+            } catch (error$139) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$138
+                error$139
               );
             }
           }
@@ -9383,15 +9427,15 @@ module.exports = function ($$$config) {
         retryQueue = null !== current && null !== current.memoizedState;
         var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
           prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
-          prevOffscreenDirectParentIsHidden$154 = offscreenDirectParentIsHidden;
+          prevOffscreenDirectParentIsHidden$155 = offscreenDirectParentIsHidden;
         offscreenSubtreeIsHidden =
           prevOffscreenSubtreeIsHidden || suspenseCallback;
         offscreenDirectParentIsHidden =
-          prevOffscreenDirectParentIsHidden$154 || suspenseCallback;
+          prevOffscreenDirectParentIsHidden$155 || suspenseCallback;
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || retryQueue;
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
-        offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden$154;
+        offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden$155;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
         commitReconciliationEffects(finishedWork);
         if (
@@ -9572,25 +9616,25 @@ module.exports = function ($$$config) {
                 break;
               }
             case 5:
-              var parent$141 = hostParentFiber.stateNode;
+              var parent$142 = hostParentFiber.stateNode;
               hostParentFiber.flags & 32 &&
-                (resetTextContent(parent$141), (hostParentFiber.flags &= -33));
-              var before$142 = getHostSibling(finishedWork);
+                (resetTextContent(parent$142), (hostParentFiber.flags &= -33));
+              var before$143 = getHostSibling(finishedWork);
               insertOrAppendPlacementNode(
                 finishedWork,
-                before$142,
-                parent$141,
+                before$143,
+                parent$142,
                 parentFragmentInstances
               );
               break;
             case 3:
             case 4:
-              var parent$143 = hostParentFiber.stateNode.containerInfo,
-                before$144 = getHostSibling(finishedWork);
+              var parent$144 = hostParentFiber.stateNode.containerInfo,
+                before$145 = getHostSibling(finishedWork);
               insertOrAppendPlacementNodeIntoContainer(
                 finishedWork,
-                before$144,
-                parent$143,
+                before$145,
+                parent$144,
                 parentFragmentInstances
               );
               break;
@@ -10164,14 +10208,14 @@ module.exports = function ($$$config) {
           );
         break;
       case 22:
-        var instance$159 = finishedWork.stateNode,
-          current$160 = finishedWork.alternate;
+        var instance$160 = finishedWork.stateNode,
+          current$161 = finishedWork.alternate;
         null !== finishedWork.memoizedState
           ? (isViewTransitionEligible &&
-              null !== current$160 &&
-              null === current$160.memoizedState &&
-              restoreEnterOrExitViewTransitions(current$160),
-            instance$159._visibility & 2
+              null !== current$161 &&
+              null === current$161.memoizedState &&
+              restoreEnterOrExitViewTransitions(current$161),
+            instance$160._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -10183,17 +10227,17 @@ module.exports = function ($$$config) {
                   finishedWork
                 ))
           : (isViewTransitionEligible &&
-              null !== current$160 &&
-              null !== current$160.memoizedState &&
+              null !== current$161 &&
+              null !== current$161.memoizedState &&
               restoreEnterOrExitViewTransitions(finishedWork),
-            instance$159._visibility & 2
+            instance$160._visibility & 2
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
                   committedLanes,
                   committedTransitions
                 )
-              : ((instance$159._visibility |= 2),
+              : ((instance$160._visibility |= 2),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10203,9 +10247,9 @@ module.exports = function ($$$config) {
                 )));
         flags & 2048 &&
           commitOffscreenPassiveMountEffects(
-            current$160,
+            current$161,
             finishedWork,
-            instance$159
+            instance$160
           );
         break;
       case 24:
@@ -10301,9 +10345,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$163 = finishedWork.stateNode;
+          var instance$164 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$163._visibility & 2
+            ? instance$164._visibility & 2
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -10315,7 +10359,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$163._visibility |= 2),
+            : ((instance$164._visibility |= 2),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -10328,7 +10372,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$163
+              instance$164
             );
           break;
         case 24:
@@ -11104,7 +11148,8 @@ module.exports = function ($$$config) {
             case 1:
               throw Error(formatProdErrorMessage(345));
             case 4:
-              if ((lanes & 4194048) !== lanes) break;
+              if ((lanes & 4194048) !== lanes && (lanes & 62914560) !== lanes)
+                break;
             case 6:
               markRootSuspended(
                 shouldTimeSlice,
@@ -11514,8 +11559,8 @@ module.exports = function ($$$config) {
         workLoopSync();
         exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$180) {
-        handleThrow(root, thrownValue$180);
+      } catch (thrownValue$181) {
+        handleThrow(root, thrownValue$181);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -11636,8 +11681,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrentByScheduler();
         break;
-      } catch (thrownValue$182) {
-        handleThrow(root, thrownValue$182);
+      } catch (thrownValue$183) {
+        handleThrow(root, thrownValue$183);
       }
     while (1);
     lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -14005,7 +14050,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-8f8b3367-20251104"
+      reconcilerVersion: "19.3.0-www-modern-986323f8-20251104"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
