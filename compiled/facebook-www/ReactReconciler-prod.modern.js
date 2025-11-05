@@ -5225,10 +5225,7 @@ module.exports = function ($$$config) {
                   (renderLanes.markerInstances = current)))),
           bailoutOffscreenComponent(null, nextProps)
         );
-      if (
-        "number" === typeof nextProps.unstable_expectedLoadTime ||
-        !0 === nextProps.defer
-      )
+      if (!0 === nextProps.defer)
         return (
           reuseSuspenseHandlerOnStack(),
           mountSuspenseFallbackChildren(
@@ -14053,7 +14050,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-0ba2f01f-20251105"
+      reconcilerVersion: "19.3.0-www-modern-fa767dad-20251105"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

@@ -9339,17 +9339,8 @@ __DEV__ &&
                     (renderLanes.markerInstances = current)))),
             bailoutOffscreenComponent(null, nextProps)
           );
-        if (
-          "number" === typeof nextProps.unstable_expectedLoadTime ||
-          !0 === nextProps.defer
-        )
+        if (!0 === nextProps.defer)
           return (
-            "number" !== typeof nextProps.unstable_expectedLoadTime ||
-              didWarnAboutExpectedLoadTime ||
-              ((didWarnAboutExpectedLoadTime = !0),
-              console.error(
-                "<Suspense unstable_expectedLoadTime={...}> is deprecated. Use <Suspense defer={true}> instead."
-              )),
             reuseSuspenseHandlerOnStack(workInProgress),
             mountSuspenseFallbackChildren(
               workInProgress,
@@ -22408,8 +22399,7 @@ __DEV__ &&
       SelectiveHydrationException = Error(
         "This is not a real error. It's an implementation detail of React's selective hydration feature. If this leaks into userspace, it's a bug in React. Please file an issue."
       ),
-      didReceiveUpdate = !1,
-      didWarnAboutExpectedLoadTime = !1;
+      didReceiveUpdate = !1;
     var didWarnAboutBadClass = {};
     var didWarnAboutContextTypeOnFunctionComponent = {};
     var didWarnAboutContextTypes = {};
@@ -23116,7 +23106,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-0ba2f01f-20251105"
+        reconcilerVersion: "19.3.0-www-classic-fa767dad-20251105"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
