@@ -352,6 +352,7 @@ function emitOutlinedFn(
     terminal: {
       id: makeInstructionId(0),
       kind: 'return',
+      returnVariant: 'Explicit',
       loc: GeneratedSource,
       value: instructions.at(-1)!.lvalue,
       effects: null,
@@ -363,13 +364,13 @@ function emitOutlinedFn(
   const fn: HIRFunction = {
     loc: GeneratedSource,
     id: null,
+    nameHint: null,
     fnType: 'Other',
     env,
     params: [propsObj],
     returnTypeAnnotation: null,
     returns: createTemporaryPlace(env, GeneratedSource),
     context: [],
-    effects: null,
     body: {
       entry: block.id,
       blocks: new Map([[block.id, block]]),
@@ -377,6 +378,7 @@ function emitOutlinedFn(
     generator: false,
     async: false,
     directives: [],
+    aliasingEffects: [],
   };
   return fn;
 }

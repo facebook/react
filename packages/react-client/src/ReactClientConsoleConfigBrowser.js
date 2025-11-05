@@ -8,7 +8,7 @@
  */
 
 // Keep in sync with ReactServerConsoleConfig
-const badgeFormat = '%c%s%c ';
+const badgeFormat = '%c%s%c';
 // Same badge styling as DevTools.
 const badgeStyle =
   // We use a fixed background if light-dark is not supported, otherwise
@@ -49,7 +49,7 @@ export function bindToConsole(
     newArgs.splice(
       offset,
       1,
-      badgeFormat + newArgs[offset],
+      badgeFormat + ' ' + newArgs[offset],
       badgeStyle,
       pad + badgeName + pad,
       resetStyle,

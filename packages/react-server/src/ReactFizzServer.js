@@ -99,6 +99,7 @@ import {
   hoistPreambleState,
   isPreambleReady,
   isPreambleContext,
+  hasSuspenseyContent,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -167,7 +168,6 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_CONSUMER_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_POSTPONE_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
   REACT_ACTIVITY_TYPE,
 } from 'shared/ReactSymbols';
@@ -176,7 +176,6 @@ import {
   disableLegacyContext,
   disableLegacyContextForFunctionComponents,
   enableScopeAPI,
-  enablePostpone,
   enableHalt,
   enableAsyncIterableChildren,
   enableViewTransition,
@@ -189,7 +188,6 @@ import noop from 'shared/noop';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
 import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
-import type {Postpone} from 'react/src/ReactPostpone';
 
 // Linked list representing the identity of a component given the component/tag name and key.
 // The name might be minified but we assume that it's going to be the same generated name. Typically
@@ -341,7 +339,7 @@ type Segment = {
   // The context that this segment was created in.
   parentFormatContext: FormatContext,
   // If this segment represents a fallback, this is the content that will replace that fallback.
-  +boundary: null | SuspenseBoundary,
+  boundary: null | SuspenseBoundary,
   // used to discern when text separator boundaries are needed
   lastPushedText: boolean,
   textEmbedded: boolean,
@@ -390,9 +388,6 @@ export opaque type Request = {
   // emit a different response to the stream instead.
   onShellError: (error: mixed) => void,
   onFatalError: (error: mixed) => void,
-  // onPostpone is called when postpone() is called anywhere in the tree, which will defer
-  // rendering - e.g. to the client. This is considered intentional and not an error.
-  onPostpone: (reason: string, postponeInfo: ThrownInfo) => void,
   // Form state that was the result of an MPA submission, if it was provided.
   formState: null | ReactFormState<any, any>,
   // DEV-only, warning dedupe
@@ -460,7 +455,13 @@ function isEligibleForOutlining(
   // For very small boundaries, don't bother producing a fallback for outlining.
   // The larger this limit is, the more we can save on preparing fallbacks in case we end up
   // outlining.
-  return boundary.byteSize > 500;
+  return (
+    (boundary.byteSize > 500 || hasSuspenseyContent(boundary.contentState)) &&
+    // For boundaries that can possibly contribute to the preamble we don't want to outline
+    // them regardless of their size since the fallbacks should only be emitted if we've
+    // errored the boundary.
+    boundary.contentPreamble === null
+  );
 }
 
 function defaultErrorHandler(error: mixed) {
@@ -489,7 +490,6 @@ function RequestInstance(
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
   formState: void | null | ReactFormState<any, any>,
 ) {
   const pingedTasks: Array<Task> = [];
@@ -518,7 +518,6 @@ function RequestInstance(
   this.partialBoundaries = ([]: Array<SuspenseBoundary>);
   this.trackedPostpones = null;
   this.onError = onError === undefined ? defaultErrorHandler : onError;
-  this.onPostpone = onPostpone === undefined ? noop : onPostpone;
   this.onAllReady = onAllReady === undefined ? noop : onAllReady;
   this.onShellReady = onShellReady === undefined ? noop : onShellReady;
   this.onShellError = onShellError === undefined ? noop : onShellError;
@@ -540,7 +539,6 @@ export function createRequest(
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
   formState: void | null | ReactFormState<any, any>,
 ): Request {
   if (__DEV__) {
@@ -558,7 +556,6 @@ export function createRequest(
     onShellReady,
     onShellError,
     onFatalError,
-    onPostpone,
     formState,
   );
 
@@ -609,7 +606,6 @@ export function createPrerenderRequest(
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
 ): Request {
   const request = createRequest(
     children,
@@ -622,7 +618,6 @@ export function createPrerenderRequest(
     onShellReady,
     onShellError,
     onFatalError,
-    onPostpone,
     undefined,
   );
   // Start tracking postponed holes during this render.
@@ -643,7 +638,6 @@ export function resumeRequest(
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
 ): Request {
   if (__DEV__) {
     resetOwnerStackLimit();
@@ -660,7 +654,6 @@ export function resumeRequest(
     onShellReady,
     onShellError,
     onFatalError,
-    onPostpone,
     null,
   );
   request.nextSegmentId = postponedState.nextSegmentId;
@@ -739,7 +732,6 @@ export function resumeAndPrerenderRequest(
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
 ): Request {
   const request = resumeRequest(
     children,
@@ -750,7 +742,6 @@ export function resumeAndPrerenderRequest(
     onShellReady,
     onShellError,
     onFatalError,
-    onPostpone,
   );
   // Start tracking postponed holes during this render.
   request.trackedPostpones = {
@@ -997,14 +988,6 @@ function pushHaltedAwaitOnComponentStack(
   if (debugInfo != null) {
     for (let i = debugInfo.length - 1; i >= 0; i--) {
       const info = debugInfo[i];
-      if (typeof info.name === 'string') {
-        // This is a Server Component. Any awaits in previous Server Components already resolved.
-        break;
-      }
-      if (typeof info.time === 'number') {
-        // This had an end time. Any awaits before this must have already resolved.
-        break;
-      }
       if (info.awaited != null) {
         const asyncInfo: ReactAsyncInfo = (info: any);
         const bestStack =
@@ -1138,7 +1121,6 @@ type ThrownInfo = {
   componentStack?: string,
 };
 export type ErrorInfo = ThrownInfo;
-export type PostponeInfo = ThrownInfo;
 
 function getThrownInfo(node: null | ComponentStackNode): ThrownInfo {
   const errorInfo: ThrownInfo = {};
@@ -1189,22 +1171,6 @@ function encodeErrorForBoundary(
     boundary.errorMessage = prefix + message;
     boundary.errorStack = stack !== null ? prefix + stack : null;
     boundary.errorComponentStack = thrownInfo.componentStack;
-  }
-}
-
-function logPostpone(
-  request: Request,
-  reason: string,
-  postponeInfo: ThrownInfo,
-  debugTask: null | ConsoleTask,
-): void {
-  // If this callback errors, we intentionally let that error bubble up to become a fatal error
-  // so that someone fixes the error reporting instead of hiding it.
-  const onPostpone = request.onPostpone;
-  if (__DEV__ && debugTask) {
-    debugTask.run(onPostpone.bind(null, reason, postponeInfo));
-  } else {
-    onPostpone(reason, postponeInfo);
   }
 }
 
@@ -1369,7 +1335,11 @@ function renderSuspenseBoundary(
     // where we try to skip rendering the fallback if the content itself can render synchronously
     const trackedPostpones = request.trackedPostpones;
 
-    const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+    const fallbackKeyPath: KeyNode = [
+      keyPath[0],
+      'Suspense Fallback',
+      keyPath[2],
+    ];
     const fallbackReplayNode: ReplayNode = [
       fallbackKeyPath[1],
       fallbackKeyPath[2],
@@ -1522,30 +1492,12 @@ function renderSuspenseBoundary(
       }
 
       const thrownInfo = getThrownInfo(task.componentStack);
-      let errorDigest;
-      if (
-        enablePostpone &&
-        typeof error === 'object' &&
-        error !== null &&
-        error.$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (error: any);
-        logPostpone(
-          request,
-          postponeInstance.message,
-          thrownInfo,
-          __DEV__ ? task.debugTask : null,
-        );
-        // TODO: Figure out a better signal than a magic digest value.
-        errorDigest = 'POSTPONE';
-      } else {
-        errorDigest = logRecoverableError(
-          request,
-          error,
-          thrownInfo,
-          __DEV__ ? task.debugTask : null,
-        );
-      }
+      const errorDigest = logRecoverableError(
+        request,
+        error,
+        thrownInfo,
+        __DEV__ ? task.debugTask : null,
+      );
       encodeErrorForBoundary(
         newBoundary,
         errorDigest,
@@ -1569,7 +1521,11 @@ function renderSuspenseBoundary(
       task.row = prevRow;
     }
 
-    const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+    const fallbackKeyPath: KeyNode = [
+      keyPath[0],
+      'Suspense Fallback',
+      keyPath[2],
+    ];
     // We create suspended task for the fallback because we don't want to actually work
     // on it yet in case we finish the main content, so we queue for later.
     const suspendedFallbackTask = createRenderTask(
@@ -1689,30 +1645,12 @@ function replaySuspenseBoundary(
   } catch (error: mixed) {
     resumedBoundary.status = CLIENT_RENDERED;
     const thrownInfo = getThrownInfo(task.componentStack);
-    let errorDigest;
-    if (
-      enablePostpone &&
-      typeof error === 'object' &&
-      error !== null &&
-      error.$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      const postponeInstance: Postpone = (error: any);
-      logPostpone(
-        request,
-        postponeInstance.message,
-        thrownInfo,
-        __DEV__ ? task.debugTask : null,
-      );
-      // TODO: Figure out a better signal than a magic digest value.
-      errorDigest = 'POSTPONE';
-    } else {
-      errorDigest = logRecoverableError(
-        request,
-        error,
-        thrownInfo,
-        __DEV__ ? task.debugTask : null,
-      );
-    }
+    const errorDigest = logRecoverableError(
+      request,
+      error,
+      thrownInfo,
+      __DEV__ ? task.debugTask : null,
+    );
     encodeErrorForBoundary(
       resumedBoundary,
       errorDigest,
@@ -1738,7 +1676,11 @@ function replaySuspenseBoundary(
     task.row = prevRow;
   }
 
-  const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+  const fallbackKeyPath: KeyNode = [
+    keyPath[0],
+    'Suspense Fallback',
+    keyPath[2],
+  ];
 
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
@@ -1894,7 +1836,7 @@ function renderSuspenseListRows(
   task: Task,
   keyPath: KeyNode,
   rows: Array<ReactNodeList>,
-  revealOrder: 'forwards' | 'backwards' | 'unstable_legacy-backwards',
+  revealOrder: void | 'forwards' | 'backwards' | 'unstable_legacy-backwards',
 ): void {
   // This is a fork of renderChildrenArray that's aware of tracking rows.
   const prevKeyPath = task.keyPath;
@@ -1998,7 +1940,11 @@ function renderSuspenseListRows(
       const parentSegment = task.blockedSegment;
       const childIndex = parentSegment.children.length;
       const insertionIndex = parentSegment.chunks.length;
-      for (let i = totalChildren - 1; i >= 0; i--) {
+      for (let n = 0; n < totalChildren; n++) {
+        const i =
+          revealOrder === 'unstable_legacy-backwards'
+            ? totalChildren - 1 - n
+            : n;
         const node = rows[i];
         task.row = previousSuspenseListRow = createSuspenseListRow(
           previousSuspenseListRow,
@@ -2079,11 +2025,7 @@ function renderSuspenseList(
   const revealOrder: SuspenseListRevealOrder = props.revealOrder;
   // TODO: Support tail hidden/collapsed modes.
   // const tailMode: SuspenseListTailMode = props.tail;
-  if (
-    revealOrder === 'forwards' ||
-    revealOrder === 'backwards' ||
-    revealOrder === 'unstable_legacy-backwards'
-  ) {
+  if (revealOrder !== 'independent' && revealOrder !== 'together') {
     // For ordered reveal, we need to produce rows from the children.
     if (isArray(children)) {
       renderSuspenseListRows(request, task, keyPath, children, revealOrder);
@@ -4014,32 +3956,6 @@ function untrackBoundary(request: Request, boundary: SuspenseBoundary) {
   // we don't replay the path to it.
 }
 
-function injectPostponedHole(
-  request: Request,
-  task: RenderTask,
-  reason: string,
-  thrownInfo: ThrownInfo,
-): Segment {
-  logPostpone(request, reason, thrownInfo, __DEV__ ? task.debugTask : null);
-  // Something suspended, we'll need to create a new segment and resolve it later.
-  const segment = task.blockedSegment;
-  const insertionIndex = segment.chunks.length;
-  const newSegment = createPendingSegment(
-    request,
-    insertionIndex,
-    null,
-    task.formatContext,
-    // Adopt the parent segment's leading text embed
-    segment.lastPushedText,
-    // Assume we are text embedded at the trailing edge
-    true,
-  );
-  segment.children.push(newSegment);
-  // Reset lastPushedText for current Segment since the new Segment "consumed" it
-  segment.lastPushedText = false;
-  return newSegment;
-}
-
 function spawnNewSuspendedReplayTask(
   request: Request,
   task: ReplayTask,
@@ -4149,11 +4065,16 @@ function renderNode(
             getSuspendedThenable()
           : thrownValue;
 
-      if (typeof x === 'object' && x !== null) {
+      if (request.status === ABORTING) {
+        // We are aborting so we can just bubble up to the task by falling through
+      } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
             // $FlowFixMe: Refined.
@@ -4186,7 +4107,10 @@ function renderNode(
           // performance but it can lead to stack overflows in extremely deep trees.
           // We do have the ability to create a trampoile if this happens which makes
           // this kind of zero-cost.
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
             // $FlowFixMe: Refined.
@@ -4242,11 +4166,16 @@ function renderNode(
             getSuspendedThenable()
           : thrownValue;
 
-      if (typeof x === 'object' && x !== null) {
+      if (request.status === ABORTING) {
+        // We are aborting so we can just bubble up to the task by falling through
+      } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
             // $FlowFixMe: Refined.
@@ -4273,51 +4202,15 @@ function renderNode(
           switchContext(previousContext);
           return;
         }
-        if (
-          enablePostpone &&
-          x.$$typeof === REACT_POSTPONE_TYPE &&
-          request.trackedPostpones !== null &&
-          task.blockedBoundary !== null // bubble if we're postponing in the shell
-        ) {
-          // If we're tracking postpones, we inject a hole here and continue rendering
-          // sibling. Similar to suspending. If we're not tracking, we treat it more like
-          // an error. Notably this doesn't spawn a new task since nothing will fill it
-          // in during this prerender.
-          const trackedPostpones = request.trackedPostpones;
-
-          const postponeInstance: Postpone = (x: any);
-          const thrownInfo = getThrownInfo(task.componentStack);
-          const postponedSegment = injectPostponedHole(
-            request,
-            ((task: any): RenderTask), // We don't use ReplayTasks in prerenders.
-            postponeInstance.message,
-            thrownInfo,
-          );
-          trackPostpone(request, trackedPostpones, task, postponedSegment);
-
-          // Restore the context. We assume that this will be restored by the inner
-          // functions in case nothing throws so we don't use "finally" here.
-          task.formatContext = previousFormatContext;
-          if (!disableLegacyContext) {
-            task.legacyContext = previousLegacyContext;
-          }
-          task.context = previousContext;
-          task.keyPath = previousKeyPath;
-          task.treeContext = previousTreeContext;
-          task.componentStack = previousComponentStack;
-          if (__DEV__) {
-            task.debugTask = previousDebugTask;
-          }
-          // Restore all active ReactContexts to what they were before.
-          switchContext(previousContext);
-          return;
-        }
         if (x.message === 'Maximum call stack size exceeded') {
           // This was a stack overflow. We do a lot of recursion in React by default for
           // performance but it can lead to stack overflows in extremely deep trees.
           // We do have the ability to create a trampoile if this happens which makes
           // this kind of zero-cost.
-          const thenableState = getThenableStateAfterSuspending();
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
             // $FlowFixMe: Refined.
@@ -4384,20 +4277,7 @@ function erroredReplay(
   // that doesn't error the parent Suspense boundary.
   // This might be a bit strange that the error in a parent gets thrown at a child.
   // We log it only once and reuse the digest.
-  let errorDigest;
-  if (
-    enablePostpone &&
-    typeof error === 'object' &&
-    error !== null &&
-    error.$$typeof === REACT_POSTPONE_TYPE
-  ) {
-    const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message, errorInfo, debugTask);
-    // TODO: Figure out a better signal than a magic digest value.
-    errorDigest = 'POSTPONE';
-  } else {
-    errorDigest = logRecoverableError(request, error, errorInfo, debugTask);
-  }
+  const errorDigest = logRecoverableError(request, error, errorInfo, debugTask);
   abortRemainingReplayNodes(
     request,
     boundary,
@@ -4427,23 +4307,10 @@ function erroredTask(
   request.allPendingTasks--;
 
   // Report the error to a global handler.
-  let errorDigest;
   // We don't handle halts here because we only halt when prerendering and
   // when prerendering we should be finishing tasks not erroring them when
   // they halt or postpone
-  if (
-    enablePostpone &&
-    typeof error === 'object' &&
-    error !== null &&
-    error.$$typeof === REACT_POSTPONE_TYPE
-  ) {
-    const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message, errorInfo, debugTask);
-    // TODO: Figure out a better signal than a magic digest value.
-    errorDigest = 'POSTPONE';
-  } else {
-    errorDigest = logRecoverableError(request, error, errorInfo, debugTask);
-  }
+  const errorDigest = logRecoverableError(request, error, errorInfo, debugTask);
   if (boundary === null) {
     fatalError(request, error, errorInfo, debugTask);
   } else {
@@ -4618,10 +4485,36 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     // If the task is not rendering, then this is an async abort. Conceptually it's as if
     // the abort happened inside the async gap. The abort reason's stack frame won't have that
     // on the stack so instead we use the owner stack and debug task of any halted async debug info.
-    const node: any = task.node;
+    let node: any = task.node;
     if (node !== null && typeof node === 'object') {
       // Push a fake component stack frame that represents the await.
-      pushHaltedAwaitOnComponentStack(task, node._debugInfo);
+      let debugInfo = node._debugInfo;
+      // First resolve lazy nodes to find debug info that has been transferred
+      // to the inner value.
+      while (
+        typeof node === 'object' &&
+        node !== null &&
+        node.$$typeof === REACT_LAZY_TYPE
+      ) {
+        const payload = node._payload;
+        if (payload.status === 'fulfilled') {
+          node = payload.value;
+          continue;
+        }
+        break;
+      }
+      if (
+        typeof node === 'object' &&
+        node !== null &&
+        (isArray(node) ||
+          typeof node[ASYNC_ITERATOR] === 'function' ||
+          node.$$typeof === REACT_ELEMENT_TYPE ||
+          node.$$typeof === REACT_LAZY_TYPE) &&
+        isArray(node._debugInfo)
+      ) {
+        debugInfo = node._debugInfo;
+      }
+      pushHaltedAwaitOnComponentStack(task, debugInfo);
       /*
       if (task.thenableState !== null) {
         // TODO: If we were stalled inside use() of a Client Component then we should
@@ -4638,34 +4531,6 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         // We didn't complete the root so we have nothing to show. We can close
         // the request;
         if (
-          enablePostpone &&
-          typeof error === 'object' &&
-          error !== null &&
-          error.$$typeof === REACT_POSTPONE_TYPE
-        ) {
-          const postponeInstance: Postpone = (error: any);
-          const trackedPostpones = request.trackedPostpones;
-
-          if (trackedPostpones !== null && segment !== null) {
-            // We are prerendering. We don't want to fatal when the shell postpones
-            // we just need to mark it as postponed.
-            logPostpone(
-              request,
-              postponeInstance.message,
-              errorInfo,
-              task.debugTask,
-            );
-            trackPostpone(request, trackedPostpones, task, segment);
-            finishedTask(request, null, task.row, segment);
-          } else {
-            const fatal = new Error(
-              'The render was aborted with postpone when the shell is incomplete. Reason: ' +
-                postponeInstance.message,
-            );
-            logRecoverableError(request, fatal, errorInfo, task.debugTask);
-            fatalError(request, fatal, errorInfo, task.debugTask);
-          }
-        } else if (
           enableHalt &&
           request.trackedPostpones !== null &&
           segment !== null
@@ -4687,25 +4552,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         // the ReplaySet.
         replay.pendingTasks--;
         if (replay.pendingTasks === 0 && replay.nodes.length > 0) {
-          let errorDigest;
-          if (
-            enablePostpone &&
-            typeof error === 'object' &&
-            error !== null &&
-            error.$$typeof === REACT_POSTPONE_TYPE
-          ) {
-            const postponeInstance: Postpone = (error: any);
-            logPostpone(
-              request,
-              postponeInstance.message,
-              errorInfo,
-              task.debugTask,
-            );
-            // TODO: Figure out a better signal than a magic digest value.
-            errorDigest = 'POSTPONE';
-          } else {
-            errorDigest = logRecoverableError(request, error, errorInfo, null);
-          }
+          const errorDigest = logRecoverableError(
+            request,
+            error,
+            errorInfo,
+            null,
+          );
           abortRemainingReplayNodes(
             request,
             null,
@@ -4730,25 +4582,9 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     if (boundary.status !== CLIENT_RENDERED) {
       if (enableHalt) {
         if (trackedPostpones !== null && segment !== null) {
-          // We are aborting a prerender
-          if (
-            enablePostpone &&
-            typeof error === 'object' &&
-            error !== null &&
-            error.$$typeof === REACT_POSTPONE_TYPE
-          ) {
-            const postponeInstance: Postpone = (error: any);
-            logPostpone(
-              request,
-              postponeInstance.message,
-              errorInfo,
-              task.debugTask,
-            );
-          } else {
-            // We are aborting a prerender and must halt this boundary.
-            // We treat this like other postpones during prerendering
-            logRecoverableError(request, error, errorInfo, task.debugTask);
-          }
+          // We are aborting a prerender and must halt this boundary.
+          // We treat this like other postpones during prerendering
+          logRecoverableError(request, error, errorInfo, task.debugTask);
           trackPostpone(request, trackedPostpones, task, segment);
           // If this boundary was still pending then we haven't already cancelled its fallbacks.
           // We'll need to abort the fallbacks, which will also error that parent boundary.
@@ -4762,42 +4598,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       boundary.status = CLIENT_RENDERED;
       // We are aborting a render or resume which should put boundaries
       // into an explicitly client rendered state
-      let errorDigest;
-      if (
-        enablePostpone &&
-        typeof error === 'object' &&
-        error !== null &&
-        error.$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (error: any);
-        logPostpone(
-          request,
-          postponeInstance.message,
-          errorInfo,
-          task.debugTask,
-        );
-        if (request.trackedPostpones !== null && segment !== null) {
-          trackPostpone(request, request.trackedPostpones, task, segment);
-          finishedTask(request, task.blockedBoundary, task.row, segment);
-
-          // If this boundary was still pending then we haven't already cancelled its fallbacks.
-          // We'll need to abort the fallbacks, which will also error that parent boundary.
-          boundary.fallbackAbortableTasks.forEach(fallbackTask =>
-            abortTask(fallbackTask, request, error),
-          );
-          boundary.fallbackAbortableTasks.clear();
-          return;
-        }
-        // TODO: Figure out a better signal than a magic digest value.
-        errorDigest = 'POSTPONE';
-      } else {
-        errorDigest = logRecoverableError(
-          request,
-          error,
-          errorInfo,
-          task.debugTask,
-        );
-      }
+      const errorDigest = logRecoverableError(
+        request,
+        error,
+        errorInfo,
+        task.debugTask,
+      );
       boundary.status = CLIENT_RENDERED;
       encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, true);
 
@@ -5201,27 +5007,12 @@ function retryRenderTask(
       const thrownInfo = getThrownInfo(task.componentStack);
       task.abortSet.delete(task);
 
-      if (
-        enablePostpone &&
-        typeof x === 'object' &&
-        x !== null &&
-        x.$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (x: any);
-        logPostpone(
-          request,
-          postponeInstance.message,
-          thrownInfo,
-          __DEV__ ? task.debugTask : null,
-        );
-      } else {
-        logRecoverableError(
-          request,
-          x,
-          thrownInfo,
-          __DEV__ ? task.debugTask : null,
-        );
-      }
+      logRecoverableError(
+        request,
+        x,
+        thrownInfo,
+        __DEV__ ? task.debugTask : null,
+      );
 
       trackPostpone(request, trackedPostpones, task, segment);
       finishedTask(request, task.blockedBoundary, task.row, segment);
@@ -5233,32 +5024,13 @@ function retryRenderTask(
       if (typeof x.then === 'function') {
         // Something suspended again, let's pick it back up later.
         segment.status = PENDING;
-        task.thenableState = getThenableStateAfterSuspending();
+        task.thenableState =
+          thrownValue === SuspenseException
+            ? getThenableStateAfterSuspending()
+            : null;
         const ping = task.ping;
         // We've asserted that x is a thenable above
         (x: any).then(ping, ping);
-        return;
-      } else if (
-        enablePostpone &&
-        request.trackedPostpones !== null &&
-        x.$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        // If we're tracking postpones, we mark this segment as postponed and finish
-        // the task without filling it in. If we're not tracking, we treat it more like
-        // an error.
-        const trackedPostpones = request.trackedPostpones;
-        task.abortSet.delete(task);
-        const postponeInstance: Postpone = (x: any);
-
-        const postponeInfo = getThrownInfo(task.componentStack);
-        logPostpone(
-          request,
-          postponeInstance.message,
-          postponeInfo,
-          __DEV__ ? task.debugTask : null,
-        );
-        trackPostpone(request, trackedPostpones, task, segment);
-        finishedTask(request, task.blockedBoundary, task.row, segment);
         return;
       }
     }
@@ -5338,7 +5110,10 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
         // Something suspended again, let's pick it back up later.
         const ping = task.ping;
         x.then(ping, ping);
-        task.thenableState = getThenableStateAfterSuspending();
+        task.thenableState =
+          thrownValue === SuspenseException
+            ? getThenableStateAfterSuspending()
+            : null;
         return;
       }
     }
@@ -5480,6 +5255,9 @@ function preparePreambleFromSegment(
       // This boundary is complete. It might have inner boundaries which are pending
       // and able to provide a preamble so we have to check it's children
       hoistPreambleState(request.renderState, preamble);
+      // We track this boundary's byteSize on the request since it will always flush with
+      // the request since it may contribute to the preamble
+      request.byteSize += boundary.byteSize;
       const boundaryRootSegment = boundary.completedSegments[0];
       if (!boundaryRootSegment) {
         // Using the same error from flushSegment to avoid making a new one since conceptually the problem is still the same
@@ -5526,6 +5304,7 @@ function preparePreamble(request: Request) {
     request.completedPreambleSegments === null
   ) {
     const collectedPreambleSegments: Array<Array<Segment>> = [];
+    const originalRequestByteSize = request.byteSize;
     const hasPendingPreambles = preparePreambleFromSegment(
       request,
       request.completedRootSegment,
@@ -5533,6 +5312,10 @@ function preparePreamble(request: Request) {
     );
     if (isPreambleReady(request.renderState, hasPendingPreambles)) {
       request.completedPreambleSegments = collectedPreambleSegments;
+    } else {
+      // We restore the original size since the preamble is not ready
+      // and we will prepare it again.
+      request.byteSize = originalRequestByteSize;
     }
   }
 }
@@ -5632,6 +5415,10 @@ function flushSegment(
     return flushSubtree(request, destination, segment, hoistableState);
   }
 
+  // We're going to write the boundary. We don't need to maintain this reference since
+  // we might reflush this segment at a later time (if it aborts and we inlined) but
+  // we don't want to reflush the boundary
+  segment.boundary = null;
   boundary.parentFlushed = true;
   // This segment is a Suspense boundary. We need to decide whether to
   // emit the content or the fallback now.
@@ -5700,8 +5487,13 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else if (
+    // We don't outline when we're emitting partially completed boundaries optimistically
+    // because it doesn't make sense to outline something if its parent is going to be
+    // blocked on something later in the stream anyway.
+    !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
-    flushedByteSize + boundary.byteSize > request.progressiveChunkSize
+    (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
+      hasSuspenseyContent(boundary.contentState))
   ) {
     // Inlining this boundary would make the current sequence being written too large
     // and block the parent for too long. Instead, it will be emitted separately so that we
@@ -5898,7 +5690,7 @@ function flushPartiallyCompletedSegment(
   segment: Segment,
 ): boolean {
   if (segment.status === FLUSHED) {
-    // We've already flushed this inline.
+    // We've already flushed this inline
     return true;
   }
 
@@ -5931,6 +5723,8 @@ function flushPartiallyCompletedSegment(
     );
   }
 }
+
+let flushingPartialBoundaries = false;
 
 function flushCompletedQueues(
   request: Request,
@@ -6047,6 +5841,7 @@ function flushCompletedQueues(
 
     // Next we emit any segments of any boundaries that are partially complete
     // but not deeply complete.
+    flushingPartialBoundaries = true;
     const partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
       const boundary = partialBoundaries[i];
@@ -6058,6 +5853,7 @@ function flushCompletedQueues(
       }
     }
     partialBoundaries.splice(0, i);
+    flushingPartialBoundaries = false;
 
     // Next we check the completed boundaries again. This may have had
     // boundaries added to it in case they were too larged to be inlined.
@@ -6075,6 +5871,7 @@ function flushCompletedQueues(
     }
     largeBoundaries.splice(0, i);
   } finally {
+    flushingPartialBoundaries = false;
     if (
       request.allPendingTasks === 0 &&
       request.clientRenderedBoundaries.length === 0 &&
@@ -6085,9 +5882,7 @@ function flushCompletedQueues(
       request.flushScheduled = false;
       // We write the trailing tags but only if don't have any data to resume.
       // If we need to resume we'll write the postamble in the resume instead.
-      if (!enablePostpone || request.trackedPostpones === null) {
-        writePostamble(destination, request.resumableState);
-      }
+      writePostamble(destination, request.resumableState);
       completeWriting(destination);
       flushBuffered(destination);
       if (__DEV__) {

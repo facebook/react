@@ -1,5 +1,5 @@
 // @inferEffectDependencies @panicThreshold:"none"
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 
 /**
  * Error on non-inlined effect functions:
@@ -17,5 +17,5 @@ function Component({foo}) {
   }
 
   // No inferred dep array, the argument is not a lambda
-  useEffect(f);
+  useEffect(f, AUTODEPS);
 }

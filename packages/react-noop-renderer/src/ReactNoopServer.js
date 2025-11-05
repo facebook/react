@@ -324,6 +324,9 @@ const ReactNoopServer = ReactFizzServer({
   writeHoistablesForBoundary() {},
   writePostamble() {},
   hoistHoistables(parent: HoistableState, child: HoistableState) {},
+  hasSuspenseyContent(hoistableState: HoistableState): boolean {
+    return false;
+  },
   createHoistableState(): HoistableState {
     return null;
   },

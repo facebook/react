@@ -9,7 +9,11 @@
 
 import JSON5 from 'json5';
 
-import type {Element} from 'react-devtools-shared/src/frontend/types';
+import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {
+  Element,
+  SuspenseNode,
+} from 'react-devtools-shared/src/frontend/types';
 import type {StateContext} from './views/Components/TreeContext';
 import type Store from './store';
 
@@ -27,6 +31,11 @@ export function printElement(
     key = ` key="${element.key}"`;
   }
 
+  let name = '';
+  if (element.nameProp !== null) {
+    name = ` name="${element.nameProp}"`;
+  }
+
   let hocDisplayNames = null;
   if (element.hocDisplayNames !== null) {
     hocDisplayNames = [...element.hocDisplayNames];
@@ -42,7 +51,40 @@ export function printElement(
 
   return `${'  '.repeat(element.depth + 1)}${prefix} <${
     element.displayName || 'null'
-  }${key}>${hocs}${suffix}`;
+  }${key}${name}>${hocs}${suffix}`;
+}
+
+function printRects(rects: SuspenseNode['rects']): string {
+  if (rects === null) {
+    return ' rects={null}';
+  } else {
+    return ` rects={[${rects.map(rect => `{x:${rect.x},y:${rect.y},width:${rect.width},height:${rect.height}}`).join(', ')}]}`;
+  }
+}
+
+function printSuspense(suspense: SuspenseNode): string {
+  const name = ` name="${suspense.name || 'Unknown'}"`;
+  const printedRects = printRects(suspense.rects);
+
+  return `<Suspense${name}${printedRects}>`;
+}
+
+function printSuspenseWithChildren(
+  store: Store,
+  suspense: SuspenseNode,
+  depth: number,
+): Array<string> {
+  const lines = ['  '.repeat(depth) + printSuspense(suspense)];
+  for (let i = 0; i < suspense.children.length; i++) {
+    const childID = suspense.children[i];
+    const child = store.getSuspenseByID(childID);
+    if (child === null) {
+      throw new Error(`Could not find Suspense node with ID "${childID}".`);
+    }
+    lines.push(...printSuspenseWithChildren(store, child, depth + 1));
+  }
+
+  return lines;
 }
 
 export function printOwnersList(
@@ -58,6 +100,7 @@ export function printStore(
   store: Store,
   includeWeight: boolean = false,
   state: StateContext | null = null,
+  includeSuspense: boolean = true,
 ): string {
   const snapshotLines = [];
 
@@ -128,6 +171,26 @@ export function printStore(
       }
 
       rootWeight += weight;
+
+      if (includeSuspense) {
+        const root = store.getSuspenseByID(rootID);
+        // Roots from legacy renderers don't have a separate Suspense tree
+        if (root !== null) {
+          if (root.children.length > 0) {
+            snapshotLines.push('[suspense-root] ' + printRects(root.rects));
+            for (let i = 0; i < root.children.length; i++) {
+              const childID = root.children[i];
+              const child = store.getSuspenseByID(childID);
+              if (child === null) {
+                throw new Error(
+                  `Could not find Suspense node with ID "${childID}".`,
+                );
+              }
+              snapshotLines.push(...printSuspenseWithChildren(store, child, 1));
+            }
+          }
+        }
+      }
     });
 
     // Make sure the pretty-printed test align with the Store's reported number of total rows.
@@ -188,16 +251,13 @@ export function smartStringify(value: any): string {
   return JSON.stringify(value);
 }
 
-// [url, row, column]
-export type Stack = [string, number, number];
-
 const STACK_DELIMETER = /\n\s+at /;
 const STACK_SOURCE_LOCATION = /([^\s]+) \((.+):(.+):(.+)\)/;
 
-export function stackToComponentSources(
+export function stackToComponentLocations(
   stack: string,
-): Array<[string, ?Stack]> {
-  const out: Array<[string, ?Stack]> = [];
+): Array<[string, ?ReactFunctionLocation]> {
+  const out: Array<[string, ?ReactFunctionLocation]> = [];
   stack
     .split(STACK_DELIMETER)
     .slice(1)
@@ -205,7 +265,10 @@ export function stackToComponentSources(
       const match = STACK_SOURCE_LOCATION.exec(entry);
       if (match) {
         const [, component, url, row, column] = match;
-        out.push([component, [url, parseInt(row, 10), parseInt(column, 10)]]);
+        out.push([
+          component,
+          [component, url, parseInt(row, 10), parseInt(column, 10)],
+        ]);
       } else {
         out.push([entry, null]);
       }

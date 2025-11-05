@@ -11,6 +11,7 @@ import type {
   Thenable,
   FulfilledThenable,
   RejectedThenable,
+  ReactDebugInfo,
 } from 'shared/ReactTypes';
 
 import type {
@@ -28,7 +29,10 @@ import {
 
 import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
 
-import {loadChunk} from 'react-client/src/ReactFlightClientConfig';
+import {
+  loadChunk,
+  addChunkDebugInfo,
+} from 'react-client/src/ReactFlightClientConfig';
 
 export type ServerConsumerModuleMap = null | {
   [clientId: string]: {
@@ -128,7 +132,19 @@ export function resolveServerReference<T>(
       );
     }
   }
-  // TODO: This needs to return async: true if it's an async module.
+  if (resolvedModuleData.async) {
+    // If the module is marked as async in a Client Reference, we don't actually care.
+    // What matters is whether the consumer wants to unwrap it or not.
+    // For Server References, it is different because the consumer is completely internal
+    // to the bundler. So instead of passing it to each reference we can mark it in the
+    // manifest.
+    return [
+      resolvedModuleData.id,
+      resolvedModuleData.chunks,
+      name,
+      1 /* async */,
+    ];
+  }
   return [resolvedModuleData.id, resolvedModuleData.chunks, name];
 }
 
@@ -230,4 +246,20 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
     return moduleExports.__esModule ? moduleExports.default : moduleExports;
   }
   return moduleExports[metadata[NAME]];
+}
+
+export function getModuleDebugInfo<T>(
+  metadata: ClientReference<T>,
+): null | ReactDebugInfo {
+  if (!__DEV__) {
+    return null;
+  }
+  const chunks = metadata[CHUNKS];
+  const debugInfo: ReactDebugInfo = [];
+  let i = 0;
+  while (i < chunks.length) {
+    const chunkFilename = chunks[i++];
+    addChunkDebugInfo(debugInfo, chunkFilename);
+  }
+  return debugInfo;
 }

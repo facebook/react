@@ -261,74 +261,74 @@ function scheduleFibersWithFamiliesRecursively(
   staleFamilies: Set<Family>,
 ): void {
   if (__DEV__) {
-    const {alternate, child, sibling, tag, type} = fiber;
+    do {
+      const {alternate, child, sibling, tag, type} = fiber;
 
-    let candidateType = null;
-    switch (tag) {
-      case FunctionComponent:
-      case SimpleMemoComponent:
-      case ClassComponent:
-        candidateType = type;
-        break;
-      case ForwardRef:
-        candidateType = type.render;
-        break;
-      default:
-        break;
-    }
+      let candidateType = null;
+      switch (tag) {
+        case FunctionComponent:
+        case SimpleMemoComponent:
+        case ClassComponent:
+          candidateType = type;
+          break;
+        case ForwardRef:
+          candidateType = type.render;
+          break;
+        default:
+          break;
+      }
 
-    if (resolveFamily === null) {
-      throw new Error('Expected resolveFamily to be set during hot reload.');
-    }
+      if (resolveFamily === null) {
+        throw new Error('Expected resolveFamily to be set during hot reload.');
+      }
 
-    let needsRender = false;
-    let needsRemount = false;
-    if (candidateType !== null) {
-      const family = resolveFamily(candidateType);
-      if (family !== undefined) {
-        if (staleFamilies.has(family)) {
-          needsRemount = true;
-        } else if (updatedFamilies.has(family)) {
-          if (tag === ClassComponent) {
+      let needsRender = false;
+      let needsRemount = false;
+      if (candidateType !== null) {
+        const family = resolveFamily(candidateType);
+        if (family !== undefined) {
+          if (staleFamilies.has(family)) {
             needsRemount = true;
-          } else {
-            needsRender = true;
+          } else if (updatedFamilies.has(family)) {
+            if (tag === ClassComponent) {
+              needsRemount = true;
+            } else {
+              needsRender = true;
+            }
           }
         }
       }
-    }
-    if (failedBoundaries !== null) {
-      if (
-        failedBoundaries.has(fiber) ||
-        // $FlowFixMe[incompatible-use] found when upgrading Flow
-        (alternate !== null && failedBoundaries.has(alternate))
-      ) {
-        needsRemount = true;
+      if (failedBoundaries !== null) {
+        if (
+          failedBoundaries.has(fiber) ||
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
+          (alternate !== null && failedBoundaries.has(alternate))
+        ) {
+          needsRemount = true;
+        }
       }
-    }
 
-    if (needsRemount) {
-      fiber._debugNeedsRemount = true;
-    }
-    if (needsRemount || needsRender) {
-      const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
-      if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane);
+      if (needsRemount) {
+        fiber._debugNeedsRemount = true;
       }
-    }
-    if (child !== null && !needsRemount) {
-      scheduleFibersWithFamiliesRecursively(
-        child,
-        updatedFamilies,
-        staleFamilies,
-      );
-    }
-    if (sibling !== null) {
-      scheduleFibersWithFamiliesRecursively(
-        sibling,
-        updatedFamilies,
-        staleFamilies,
-      );
-    }
+      if (needsRemount || needsRender) {
+        const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+        if (root !== null) {
+          scheduleUpdateOnFiber(root, fiber, SyncLane);
+        }
+      }
+      if (child !== null && !needsRemount) {
+        scheduleFibersWithFamiliesRecursively(
+          child,
+          updatedFamilies,
+          staleFamilies,
+        );
+      }
+
+      if (sibling === null) {
+        break;
+      }
+      fiber = sibling;
+    } while (true);
   }
 }

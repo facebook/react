@@ -62,6 +62,12 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
   );
 }
 
+export function getModuleDebugInfo<T>(metadata: ClientReference<T>): null {
+  throw new Error(
+    'renderToHTML should not have emitted Client References. This is a bug in React.',
+  );
+}
+
 export const usedWithSSR = true;
 
 type HintCode = string;

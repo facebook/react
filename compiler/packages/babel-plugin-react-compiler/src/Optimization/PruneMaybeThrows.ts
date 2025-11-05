@@ -52,7 +52,13 @@ export function pruneMaybeThrows(fn: HIRFunction): void {
             const mappedTerminal = terminalMapping.get(predecessor);
             CompilerError.invariant(mappedTerminal != null, {
               reason: `Expected non-existing phi operand's predecessor to have been mapped to a new terminal`,
-              loc: GeneratedSource,
+              details: [
+                {
+                  kind: 'error',
+                  loc: GeneratedSource,
+                  message: null,
+                },
+              ],
               description: `Could not find mapping for predecessor bb${predecessor} in block bb${
                 block.id
               } for phi ${printPlace(phi.place)}`,

@@ -22,10 +22,17 @@ function Component({bar, baz}) {
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot compile `fire`
+
+fire() can only take in a single call expression as an argument but received multiple arguments.
+
+error.invalid-multiple-args.ts:9:4
    7 |   };
    8 |   useEffect(() => {
 >  9 |     fire(foo(bar), baz);
-     |     ^^^^^^^^^^^^^^^^^^^ InvalidReact: Cannot compile `fire`. fire() can only take in a single call expression as an argument but received multiple arguments (9:9)
+     |     ^^^^^^^^^^^^^^^^^^^ Cannot compile `fire`
   10 |   });
   11 |
   12 |   return null;

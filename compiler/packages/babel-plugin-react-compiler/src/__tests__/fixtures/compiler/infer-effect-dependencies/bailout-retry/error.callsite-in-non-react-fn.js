@@ -1,6 +1,6 @@
 // @inferEffectDependencies @compilationMode:"infer" @panicThreshold:"none"
-import {useEffect} from 'react';
+import {useEffect, AUTODEPS} from 'react';
 
 function nonReactFn(arg) {
-  useEffect(() => [1, 2, arg]);
+  useEffect(() => [1, 2, arg], AUTODEPS);
 }

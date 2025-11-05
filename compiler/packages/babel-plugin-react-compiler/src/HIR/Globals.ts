@@ -114,6 +114,99 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           returnValueKind: ValueKind.Mutable,
         }),
       ],
+      [
+        'entries',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.Capture],
+          restParam: null,
+          returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+          aliasing: {
+            receiver: '@receiver',
+            params: ['@object'],
+            rest: null,
+            returns: '@returns',
+            temporaries: [],
+            effects: [
+              {
+                kind: 'Create',
+                into: '@returns',
+                reason: ValueReason.KnownReturnSignature,
+                value: ValueKind.Mutable,
+              },
+              // Object values are captured into the return
+              {
+                kind: 'Capture',
+                from: '@object',
+                into: '@returns',
+              },
+            ],
+          },
+        }),
+      ],
+      [
+        'keys',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.Read],
+          restParam: null,
+          returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+          aliasing: {
+            receiver: '@receiver',
+            params: ['@object'],
+            rest: null,
+            returns: '@returns',
+            temporaries: [],
+            effects: [
+              {
+                kind: 'Create',
+                into: '@returns',
+                reason: ValueReason.KnownReturnSignature,
+                value: ValueKind.Mutable,
+              },
+              // Only keys are captured, and keys are immutable
+              {
+                kind: 'ImmutableCapture',
+                from: '@object',
+                into: '@returns',
+              },
+            ],
+          },
+        }),
+      ],
+      [
+        'values',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.Capture],
+          restParam: null,
+          returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+          aliasing: {
+            receiver: '@receiver',
+            params: ['@object'],
+            rest: null,
+            returns: '@returns',
+            temporaries: [],
+            effects: [
+              {
+                kind: 'Create',
+                into: '@returns',
+                reason: ValueReason.KnownReturnSignature,
+                value: ValueKind.Mutable,
+              },
+              // Object values are captured into the return
+              {
+                kind: 'Capture',
+                from: '@object',
+                into: '@returns',
+              },
+            ],
+          },
+        }),
+      ],
     ]),
   ],
   [
@@ -908,6 +1001,7 @@ export function installTypeConfig(
         mutableOnlyIfOperandsAreMutable:
           typeConfig.mutableOnlyIfOperandsAreMutable === true,
         aliasing: typeConfig.aliasing,
+        knownIncompatible: typeConfig.knownIncompatible ?? null,
       });
     }
     case 'hook': {
@@ -926,6 +1020,7 @@ export function installTypeConfig(
         returnValueKind: typeConfig.returnValueKind ?? ValueKind.Frozen,
         noAlias: typeConfig.noAlias === true,
         aliasing: typeConfig.aliasing,
+        knownIncompatible: typeConfig.knownIncompatible ?? null,
       });
     }
     case 'object': {

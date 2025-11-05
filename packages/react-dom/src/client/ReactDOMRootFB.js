@@ -106,7 +106,7 @@ function wwwOnCaughtError(
   error: mixed,
   errorInfo: {
     +componentStack?: ?string,
-    +errorBoundary?: ?React$Component<any, any>,
+    +errorBoundary?: ?component(),
   },
 ): void {
   const errorBoundary = errorInfo.errorBoundary;
@@ -126,6 +126,7 @@ function wwwOnCaughtError(
 
   defaultOnCaughtError(error, errorInfo);
 }
+const noopOnDefaultTransitionIndicator = noop;
 
 export function createRoot(
   container: Element | Document | DocumentFragment,
@@ -137,6 +138,7 @@ export function createRoot(
       ({
         onUncaughtError: wwwOnUncaughtError,
         onCaughtError: wwwOnCaughtError,
+        onDefaultTransitionIndicator: noopOnDefaultTransitionIndicator,
       }: any),
       options,
     ),
@@ -155,6 +157,7 @@ export function hydrateRoot(
       ({
         onUncaughtError: wwwOnUncaughtError,
         onCaughtError: wwwOnCaughtError,
+        onDefaultTransitionIndicator: noopOnDefaultTransitionIndicator,
       }: any),
       options,
     ),
@@ -211,12 +214,11 @@ function getReactRootElementInContainer(container: any) {
 // This isn't reachable because onRecoverableError isn't called in the
 // legacy API.
 const noopOnRecoverableError = noop;
-const noopOnDefaultTransitionIndicator = noop;
 
 function legacyCreateRootFromDOMContainer(
   container: Container,
   initialChildren: ReactNodeList,
-  parentComponent: ?React$Component<any, any>,
+  parentComponent: ?component(...props: any),
   callback: ?Function,
   isHydrationContainer: boolean,
 ): FiberRoot {
@@ -314,12 +316,12 @@ function warnOnInvalidCallback(callback: mixed): void {
 }
 
 function legacyRenderSubtreeIntoContainer(
-  parentComponent: ?React$Component<any, any>,
+  parentComponent: ?component(...props: any),
   children: ReactNodeList,
   container: Container,
   forceHydrate: boolean,
   callback: ?Function,
-): React$Component<any, any> | PublicInstance | null {
+): component(...props: any) | PublicInstance | null {
   if (__DEV__) {
     topLevelUpdateWarnings(container);
     warnOnInvalidCallback(callback === undefined ? null : callback);
@@ -352,7 +354,7 @@ function legacyRenderSubtreeIntoContainer(
 }
 
 export function findDOMNode(
-  componentOrElement: Element | ?React$Component<any, any>,
+  componentOrElement: Element | ?component(...props: any),
 ): null | Element | Text {
   if (__DEV__) {
     const owner = currentOwner;
@@ -387,7 +389,7 @@ export function render(
   element: React$Element<any>,
   container: Container,
   callback: ?Function,
-): React$Component<any, any> | PublicInstance | null {
+): component(...props: any) | PublicInstance | null {
   if (disableLegacyMode) {
     if (__DEV__) {
       console.error(

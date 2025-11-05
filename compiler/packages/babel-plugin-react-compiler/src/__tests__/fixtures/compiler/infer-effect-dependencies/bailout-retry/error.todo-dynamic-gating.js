@@ -1,6 +1,7 @@
 // @dynamicGating:{"source":"shared-runtime"} @inferEffectDependencies @panicThreshold:"none"
 
 import useEffectWrapper from 'useEffectWrapper';
+import {AUTODEPS} from 'react';
 
 /**
  * TODO: run the non-forget enabled version through the effect inference
@@ -9,7 +10,7 @@ import useEffectWrapper from 'useEffectWrapper';
 function Component({foo}) {
   'use memo if(getTrue)';
   const arr = [];
-  useEffectWrapper(() => arr.push(foo));
+  useEffectWrapper(() => arr.push(foo), AUTODEPS);
   arr.push(2);
   return arr;
 }

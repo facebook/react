@@ -18,10 +18,15 @@ function component(a, b) {
 ## Error
 
 ```
+Found 1 error:
+
+Todo: (BuildHIR::lowerExpression) Handle YieldExpression expressions
+
+error.useMemo-callback-generator.ts:6:4
   4 |   // add support for generators in the future.
   5 |   let x = useMemo(function* () {
 > 6 |     yield a;
-    |     ^^^^^^^ Todo: (BuildHIR::lowerExpression) Handle YieldExpression expressions (6:6)
+    |     ^^^^^^^ (BuildHIR::lowerExpression) Handle YieldExpression expressions
   7 |   }, []);
   8 |   return x;
   9 | }

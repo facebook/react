@@ -38,6 +38,7 @@
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
   line-height: var(--line-height-data);
+  user-select: none;
 }
 
 .VRule {

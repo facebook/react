@@ -47,7 +47,7 @@ import {
 type ReactMarkupNodeList =
   // This is the intersection of ReactNodeList and ReactClientValue minus
   // Client/ServerReferences.
-  | React$Element<React$ComponentType<any>>
+  | component(...props: any)
   | LazyComponent<ReactMarkupNodeList, any>
   | React$Element<string>
   | string
@@ -81,7 +81,21 @@ export function experimental_renderToHTML(
   options?: MarkupOptions,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    const streamState = createFlightStreamState();
+    const flightResponse = createFlightResponse(
+      null,
+      null,
+      null,
+      noServerCallOrFormAction,
+      noServerCallOrFormAction,
+      undefined,
+      undefined,
+      undefined,
+      false,
+      undefined,
+      undefined,
+      undefined,
+    );
+    const streamState = createFlightStreamState(flightResponse, null);
     const flightDestination = {
       push(chunk: string | null): boolean {
         if (chunk !== null) {
@@ -170,19 +184,7 @@ export function experimental_renderToHTML(
       handleFlightError,
       options ? options.identifierPrefix : undefined,
       undefined,
-      undefined,
       'Markup',
-      undefined,
-      false,
-    );
-    const flightResponse = createFlightResponse(
-      null,
-      null,
-      null,
-      noServerCallOrFormAction,
-      noServerCallOrFormAction,
-      undefined,
-      undefined,
       undefined,
       false,
     );
@@ -206,7 +208,6 @@ export function experimental_renderToHTML(
       createRootFormatContext(),
       Infinity,
       handleError,
-      undefined,
       undefined,
       undefined,
       undefined,

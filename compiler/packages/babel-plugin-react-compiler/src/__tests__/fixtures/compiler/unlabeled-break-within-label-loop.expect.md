@@ -35,6 +35,7 @@ function useHook(end) {
     log = [];
     for (let i = 0; i < end + 1; i++) {
       log.push(`${i} @A`);
+
       if (i === end) {
         break;
       }

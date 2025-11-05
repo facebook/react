@@ -345,6 +345,51 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
   }
 }
 
+export function* eachPatternItem(
+  pattern: Pattern,
+): Iterable<Place | SpreadPattern> {
+  switch (pattern.kind) {
+    case 'ArrayPattern': {
+      for (const item of pattern.items) {
+        if (item.kind === 'Identifier') {
+          yield item;
+        } else if (item.kind === 'Spread') {
+          yield item;
+        } else if (item.kind === 'Hole') {
+          continue;
+        } else {
+          assertExhaustive(
+            item,
+            `Unexpected item kind \`${(item as any).kind}\``,
+          );
+        }
+      }
+      break;
+    }
+    case 'ObjectPattern': {
+      for (const property of pattern.properties) {
+        if (property.kind === 'ObjectProperty') {
+          yield property.place;
+        } else if (property.kind === 'Spread') {
+          yield property;
+        } else {
+          assertExhaustive(
+            property,
+            `Unexpected item kind \`${(property as any).kind}\``,
+          );
+        }
+      }
+      break;
+    }
+    default: {
+      assertExhaustive(
+        pattern,
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
+      );
+    }
+  }
+}
+
 export function mapInstructionLValues(
   instr: Instruction,
   fn: (place: Place) => Place,
@@ -732,6 +777,7 @@ export function mapTerminalSuccessors(
     case 'return': {
       return {
         kind: 'return',
+        returnVariant: terminal.returnVariant,
         loc: terminal.loc,
         value: terminal.value,
         id: makeInstructionId(0),
@@ -1187,7 +1233,14 @@ export class ScopeBlockTraversal {
       CompilerError.invariant(blockInfo.scope.id === top, {
         reason:
           'Expected traversed block fallthrough to match top-most active scope',
-        loc: block.instructions[0]?.loc ?? block.terminal.id,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: block.instructions[0]?.loc ?? block.terminal.id,
+            message: null,
+          },
+        ],
       });
       this.#activeScopes.pop();
     }
@@ -1201,7 +1254,14 @@ export class ScopeBlockTraversal {
           !this.blockInfos.has(block.terminal.fallthrough),
         {
           reason: 'Expected unique scope blocks and fallthroughs',
-          loc: block.terminal.loc,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: block.terminal.loc,
+              message: null,
+            },
+          ],
         },
       );
       this.blockInfos.set(block.terminal.block, {

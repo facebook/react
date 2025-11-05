@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {fromZodError} from 'zod-validation-error';
+import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerError} from '../CompilerError';
 import {
   CompilationMode,
@@ -75,21 +75,21 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
         source: 'react',
         importSpecifierName: 'useEffect',
       },
-      numRequiredArgs: 1,
+      autodepsIndex: 1,
     },
     {
       function: {
         source: 'shared-runtime',
         importSpecifierName: 'useSpecialEffect',
       },
-      numRequiredArgs: 2,
+      autodepsIndex: 2,
     },
     {
       function: {
         source: 'useEffectWrapper',
         importSpecifierName: 'default',
       },
-      numRequiredArgs: 1,
+      autodepsIndex: 1,
     },
   ],
 };
@@ -113,8 +113,13 @@ function* splitPragma(
  */
 function parseConfigPragmaEnvironmentForTest(
   pragma: string,
+  defaultConfig: PartialEnvironmentConfig,
 ): EnvironmentConfig {
-  const maybeConfig: Partial<Record<keyof EnvironmentConfig, unknown>> = {};
+  // throw early if the defaults are invalid
+  EnvironmentConfigSchema.parse(defaultConfig);
+
+  const maybeConfig: Partial<Record<keyof EnvironmentConfig, unknown>> =
+    defaultConfig;
 
   for (const {key, value: val} of splitPragma(pragma)) {
     if (!hasOwnProperty(EnvironmentConfigSchema.shape, key)) {
@@ -130,16 +135,7 @@ function parseConfigPragmaEnvironmentForTest(
     } else if (val) {
       const parsedVal = tryParseTestPragmaValue(val).unwrap();
       if (key === 'customMacros' && typeof parsedVal === 'string') {
-        const valSplit = parsedVal.split('.');
-        const props = [];
-        for (const elt of valSplit.slice(1)) {
-          if (elt === '*') {
-            props.push({type: 'wildcard'});
-          } else if (elt.length > 0) {
-            props.push({type: 'name', name: elt});
-          }
-        }
-        maybeConfig[key] = [[valSplit[0], props]];
+        maybeConfig[key] = [parsedVal.split('.')[0]];
         continue;
       }
       maybeConfig[key] = parsedVal;
@@ -159,12 +155,18 @@ function parseConfigPragmaEnvironmentForTest(
   CompilerError.invariant(false, {
     reason: 'Internal error, could not parse config from pragma string',
     description: `${fromZodError(config.error)}`,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
 }
 
-const testComplexPluginOptionDefaults: Partial<PluginOptions> = {
+const testComplexPluginOptionDefaults: PluginOptions = {
   gating: {
     source: 'ReactForgetFeatureFlag',
     importSpecifierName: 'isForgetEnabled_Fixtures',
@@ -174,9 +176,13 @@ export function parseConfigPragmaForTests(
   pragma: string,
   defaults: {
     compilationMode: CompilationMode;
+    environment?: PartialEnvironmentConfig;
   },
 ): PluginOptions {
-  const environment = parseConfigPragmaEnvironmentForTest(pragma);
+  const environment = parseConfigPragmaEnvironmentForTest(
+    pragma,
+    defaults.environment ?? {},
+  );
   const options: Record<keyof PluginOptions, unknown> = {
     ...defaultOptions,
     panicThreshold: 'all_errors',

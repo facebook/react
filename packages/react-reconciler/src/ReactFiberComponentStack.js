@@ -177,7 +177,7 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
       if (typeof owner.tag === 'number') {
         const fiber: Fiber = (owner: any);
         owner = fiber._debugOwner;
-        let debugStack = fiber._debugStack;
+        const debugStack = fiber._debugStack;
         // If we don't actually print the stack if there is no owner of this JSX element.
         // In a real app it's typically not useful since the root app is always controlled
         // by the framework. These also tend to have noisy stacks because they're not rooted
@@ -185,12 +185,9 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
         // if the element was created in module scope. E.g. hoisted. We could add a a single
         // stack frame for context for example but it doesn't say much if that's a wrapper.
         if (owner && debugStack) {
-          if (typeof debugStack !== 'string') {
-            // Stash the formatted stack so that we can avoid redoing the filtering.
-            fiber._debugStack = debugStack = formatOwnerStack(debugStack);
-          }
-          if (debugStack !== '') {
-            info += '\n' + debugStack;
+          const formattedStack = formatOwnerStack(debugStack);
+          if (formattedStack !== '') {
+            info += '\n' + formattedStack;
           }
         }
       } else if (owner.debugStack != null) {

@@ -8,7 +8,7 @@
  */
 
 // Keep in sync with ReactClientConsoleConfig
-const badgeFormat = '[%s] ';
+const badgeFormat = '[%s]';
 const padLength = 1;
 const pad = ' ';
 
@@ -45,7 +45,12 @@ export function unbadgeConsole(
     badge.endsWith(pad)
   ) {
     // Remove our badging from the arguments.
-    args.splice(offset, 2, format.slice(badgeFormat.length));
+    let unbadgedFormat = format.slice(badgeFormat.length);
+    if (unbadgedFormat[0] === ' ') {
+      // Spacing added on the Client if the original argument was a string.
+      unbadgedFormat = unbadgedFormat.slice(1);
+    }
+    args.splice(offset, 4, unbadgedFormat);
     return badge.slice(padLength, badge.length - padLength);
   }
   return null;

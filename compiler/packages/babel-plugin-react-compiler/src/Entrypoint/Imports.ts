@@ -9,7 +9,7 @@ import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
 import {Scope as BabelScope} from '@babel/traverse';
 
-import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {CompilerError, ErrorCategory} from '../CompilerError';
 import {
   EnvironmentConfig,
   GeneratedSource,
@@ -18,7 +18,7 @@ import {
 import {getOrInsertWith} from '../Utils/utils';
 import {ExternalFunction, isHookName} from '../HIR/Environment';
 import {Err, Ok, Result} from '../Utils/Result';
-import {LoggerEvent, PluginOptions} from './Options';
+import {LoggerEvent, ParsedPluginOptions} from './Options';
 import {BabelFn, getReactCompilerRuntimeModule} from './Program';
 import {SuppressionRange} from './Suppression';
 
@@ -38,7 +38,7 @@ export function validateRestrictedImports(
     ImportDeclaration(importDeclPath) {
       if (restrictedImports.has(importDeclPath.node.source.value)) {
         error.push({
-          severity: ErrorSeverity.Todo,
+          category: ErrorCategory.Todo,
           reason: 'Bailing out due to blocklisted import',
           description: `Import from module ${importDeclPath.node.source.value}`,
           loc: importDeclPath.node.loc ?? null,
@@ -46,7 +46,7 @@ export function validateRestrictedImports(
       }
     },
   });
-  if (error.hasErrors()) {
+  if (error.hasAnyErrors()) {
     return error;
   } else {
     return null;
@@ -56,7 +56,7 @@ export function validateRestrictedImports(
 type ProgramContextOptions = {
   program: NodePath<t.Program>;
   suppressions: Array<SuppressionRange>;
-  opts: PluginOptions;
+  opts: ParsedPluginOptions;
   filename: string | null;
   code: string | null;
   hasModuleScopeOptOut: boolean;
@@ -66,7 +66,7 @@ export class ProgramContext {
    * Program and environment context
    */
   scope: BabelScope;
-  opts: PluginOptions;
+  opts: ParsedPluginOptions;
   filename: string | null;
   code: string | null;
   reactRuntimeModule: string;
@@ -205,7 +205,7 @@ export class ProgramContext {
     }
     const error = new CompilerError();
     error.push({
-      severity: ErrorSeverity.Todo,
+      category: ErrorCategory.Todo,
       reason: 'Encountered conflicting global in generated program',
       description: `Conflict from local binding ${name}`,
       loc: scope.getBinding(name)?.path.node.loc ?? null,
@@ -240,7 +240,7 @@ export function addImportsToProgram(
   programContext: ProgramContext,
 ): void {
   const existingImports = getExistingImports(path);
-  const stmts: Array<t.ImportDeclaration> = [];
+  const stmts: Array<t.ImportDeclaration | t.VariableDeclaration> = [];
   const sortedModules = [...programContext.imports.entries()].sort(([a], [b]) =>
     a.localeCompare(b),
   );
@@ -256,8 +256,14 @@ export function addImportsToProgram(
         {
           reason:
             'Encountered conflicting import specifiers in generated program',
-          description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name}).`,
-          loc: GeneratedSource,
+          description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name})`,
+          details: [
+            {
+              kind: 'error',
+              loc: GeneratedSource,
+              message: null,
+            },
+          ],
           suggestions: null,
         },
       );
@@ -268,7 +274,13 @@ export function addImportsToProgram(
           reason:
             'Found inconsistent import specifier. This is an internal bug.',
           description: `Expected import ${moduleName}:${specifierName} but found ${loweredImport.module}:${loweredImport.imported}`,
-          loc: GeneratedSource,
+          details: [
+            {
+              kind: 'error',
+              loc: GeneratedSource,
+              message: null,
+            },
+          ],
         },
       );
     }
@@ -291,9 +303,29 @@ export function addImportsToProgram(
     if (maybeExistingImports != null) {
       maybeExistingImports.pushContainer('specifiers', importSpecifiers);
     } else {
-      stmts.push(
-        t.importDeclaration(importSpecifiers, t.stringLiteral(moduleName)),
-      );
+      if (path.node.sourceType === 'module') {
+        stmts.push(
+          t.importDeclaration(importSpecifiers, t.stringLiteral(moduleName)),
+        );
+      } else {
+        stmts.push(
+          t.variableDeclaration('const', [
+            t.variableDeclarator(
+              t.objectPattern(
+                sortedImport.map(specifier => {
+                  return t.objectProperty(
+                    t.identifier(specifier.imported),
+                    t.identifier(specifier.name),
+                  );
+                }),
+              ),
+              t.callExpression(t.identifier('require'), [
+                t.stringLiteral(moduleName),
+              ]),
+            ),
+          ]),
+        );
+      }
     }
   }
   path.unshiftContainer('body', stmts);

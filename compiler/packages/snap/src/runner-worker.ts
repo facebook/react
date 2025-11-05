@@ -145,29 +145,6 @@ async function compile(
       console.error(e.stack);
     }
     error = e.message.replace(/\u001b[^m]*m/g, '');
-    const loc = e.details?.[0]?.loc;
-    if (loc != null) {
-      try {
-        error = codeFrameColumns(
-          input,
-          {
-            start: {
-              line: loc.start.line,
-              column: loc.start.column + 1,
-            },
-            end: {
-              line: loc.end.line,
-              column: loc.end.column + 1,
-            },
-          },
-          {
-            message: e.message,
-          },
-        );
-      } catch {
-        // In case the location data isn't valid, skip printing a code frame.
-      }
-    }
   }
 
   // Promote console errors so they can be recorded in fixture output
