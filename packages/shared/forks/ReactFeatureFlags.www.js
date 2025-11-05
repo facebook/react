@@ -73,8 +73,6 @@ export const enableAsyncIterableChildren: boolean = false;
 
 export const enableTaint: boolean = false;
 
-export const enablePostpone: boolean = false;
-
 export const enableHalt: boolean = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.

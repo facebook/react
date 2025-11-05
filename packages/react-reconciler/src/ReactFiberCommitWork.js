@@ -3767,7 +3767,7 @@ function commitPassiveMountOnFiber(
             inHydratedSubtree = false;
             const hydrationErrors = prevState.hydrationErrors;
             // If there were no hydration errors, that suggests that this was an intentional client
-            // rendered boundary. Such as postpone.
+            // rendered boundary.
             if (hydrationErrors !== null) {
               const startTime: number = (finishedWork.actualStartTime: any);
               logComponentErrored(
@@ -3825,7 +3825,7 @@ function commitPassiveMountOnFiber(
             inHydratedSubtree = false;
             const hydrationErrors = prevState.hydrationErrors;
             // If there were no hydration errors, that suggests that this was an intentional client
-            // rendered boundary. Such as postpone.
+            // rendered boundary.
             if (hydrationErrors !== null) {
               const startTime: number = (finishedWork.actualStartTime: any);
               logComponentErrored(

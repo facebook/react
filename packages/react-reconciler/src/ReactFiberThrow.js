@@ -42,7 +42,6 @@ import {
 import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
   enableUpdaterTracking,
-  enablePostpone,
   disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValueAtFiber} from './ReactCapturedValue';
@@ -85,7 +84,6 @@ import {
 } from './ReactFiberHydrationContext';
 import {ConcurrentRoot} from './ReactRootTags';
 import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
-import {REACT_POSTPONE_TYPE} from 'shared/ReactSymbols';
 import {runWithFiberInDEV} from './ReactCurrentFiber';
 import {callComponentDidCatchInDEV} from './ReactFiberCallUserSpace';
 
@@ -378,10 +376,6 @@ function throwException(
   }
 
   if (value !== null && typeof value === 'object') {
-    if (enablePostpone && value.$$typeof === REACT_POSTPONE_TYPE) {
-      // Act as if this is an infinitely suspending promise.
-      value = {then: function () {}};
-    }
     if (typeof value.then === 'function') {
       // This is a wakeable. The component suspended.
       const wakeable: Wakeable = (value: any);

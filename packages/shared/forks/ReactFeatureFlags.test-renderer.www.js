@@ -21,7 +21,6 @@ export const enableUpdaterTracking: boolean = false;
 export const enableLegacyCache: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableTaint: boolean = true;
-export const enablePostpone: boolean = false;
 export const enableHalt: boolean = true;
 export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;

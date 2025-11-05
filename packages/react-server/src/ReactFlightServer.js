@@ -9,12 +9,9 @@
 
 import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
 
-import type {Postpone} from 'react/src/ReactPostpone';
-
 import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences';
 
 import {
-  enablePostpone,
   enableHalt,
   enableTaint,
   enableProfilerTimer,
@@ -138,7 +135,6 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
-  REACT_POSTPONE_TYPE,
   ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
 
@@ -593,7 +589,6 @@ export type Request = {
   identifierCount: number,
   taintCleanupQueue: Array<string | bigint>,
   onError: (error: mixed) => ?string,
-  onPostpone: (reason: string) => void,
   onAllReady: () => void,
   onFatalError: mixed => void,
   // Profiling-only
@@ -649,15 +644,12 @@ function defaultErrorHandler(error: mixed) {
   // Don't transform to our wrapper
 }
 
-const defaultPostponeHandler: (reason: string) => void = noop;
-
 function RequestInstance(
   this: $FlowFixMe,
   type: 20 | 21,
   model: ReactClientValue,
   bundlerConfig: ClientManifest,
   onError: void | ((error: mixed) => ?string),
-  onPostpone: void | ((reason: string) => void),
   onAllReady: () => void,
   onFatalError: (error: mixed) => void,
   identifierPrefix?: string,
@@ -715,8 +707,6 @@ function RequestInstance(
   this.identifierCount = 1;
   this.taintCleanupQueue = cleanupQueue;
   this.onError = onError === undefined ? defaultErrorHandler : onError;
-  this.onPostpone =
-    onPostpone === undefined ? defaultPostponeHandler : onPostpone;
   this.onAllReady = onAllReady;
   this.onFatalError = onFatalError;
 
@@ -787,7 +777,6 @@ export function createRequest(
   bundlerConfig: ClientManifest,
   onError: void | ((error: mixed) => ?string),
   identifierPrefix: void | string,
-  onPostpone: void | ((reason: string) => void),
   temporaryReferences: void | TemporaryReferenceSet,
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
@@ -803,7 +792,6 @@ export function createRequest(
     model,
     bundlerConfig,
     onError,
-    onPostpone,
     noop,
     noop,
     identifierPrefix,
@@ -821,7 +809,6 @@ export function createPrerenderRequest(
   onFatalError: () => void,
   onError: void | ((error: mixed) => ?string),
   identifierPrefix: void | string,
-  onPostpone: void | ((reason: string) => void),
   temporaryReferences: void | TemporaryReferenceSet,
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
@@ -837,7 +824,6 @@ export function createPrerenderRequest(
     model,
     bundlerConfig,
     onError,
-    onPostpone,
     onAllReady,
     onFatalError,
     identifierPrefix,
@@ -3392,28 +3378,15 @@ function renderModel(
     // Something errored. We'll still send everything we have up until this point.
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
-    if (
-      enablePostpone &&
-      typeof x === 'object' &&
-      x !== null &&
-      x.$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      // Something postponed. We'll still send everything we have up until this point.
-      // We'll replace this element with a lazy reference that postpones on the client.
-      const postponeInstance: Postpone = (x: any);
-      logPostpone(request, postponeInstance.message, task);
-      emitPostponeChunk(request, errorId, postponeInstance);
-    } else {
-      const digest = logRecoverableError(request, x, task);
-      emitErrorChunk(
-        request,
-        errorId,
-        digest,
-        x,
-        false,
-        __DEV__ ? task.debugOwner : null,
-      );
-    }
+    const digest = logRecoverableError(request, x, task);
+    emitErrorChunk(
+      request,
+      errorId,
+      digest,
+      x,
+      false,
+      __DEV__ ? task.debugOwner : null,
+    );
     if (wasReactNode) {
       // We'll replace this element with a lazy reference that throws on the client
       // once it gets rendered.
@@ -4030,41 +4003,6 @@ function renderModelDestructive(
   );
 }
 
-function logPostpone(
-  request: Request,
-  reason: string,
-  task: Task | null, // DEV-only
-): void {
-  const prevRequest = currentRequest;
-  // We clear the request context so that console.logs inside the callback doesn't
-  // get forwarded to the client.
-  currentRequest = null;
-  try {
-    const onPostpone = request.onPostpone;
-    if (__DEV__ && task !== null) {
-      if (supportsRequestStorage) {
-        requestStorage.run(
-          undefined,
-          callWithDebugContextInDEV,
-          request,
-          task,
-          onPostpone,
-          reason,
-        );
-      } else {
-        callWithDebugContextInDEV(request, task, onPostpone, reason);
-      }
-    } else if (supportsRequestStorage) {
-      // Exit the request context while running callbacks.
-      requestStorage.run(undefined, onPostpone, reason);
-    } else {
-      onPostpone(reason);
-    }
-  } finally {
-    currentRequest = prevRequest;
-  }
-}
-
 function logRecoverableError(
   request: Request,
   error: mixed,
@@ -4129,32 +4067,6 @@ function fatalError(request: Request, error: mixed): void {
     },
   );
   request.cacheController.abort(abortReason);
-}
-
-function emitPostponeChunk(
-  request: Request,
-  id: number,
-  postponeInstance: Postpone,
-): void {
-  let row;
-  if (__DEV__) {
-    let reason = '';
-    let stack: ReactStackTrace;
-    const env = request.environmentName();
-    try {
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      reason = String(postponeInstance.message);
-      stack = filterStackTrace(request, parseStackTrace(postponeInstance, 0));
-    } catch (x) {
-      stack = [];
-    }
-    row = serializeRowHeader('P', id) + stringify({reason, stack, env}) + '\n';
-  } else {
-    // No reason included in prod.
-    row = serializeRowHeader('P', id) + '\n';
-  }
-  const processedChunk = stringToChunk(row);
-  request.completedErrorChunks.push(processedChunk);
 }
 
 function serializeErrorValue(request: Request, error: Error): string {
@@ -5716,26 +5628,15 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
     }
   }
   task.status = ERRORED;
-  if (
-    enablePostpone &&
-    typeof error === 'object' &&
-    error !== null &&
-    error.$$typeof === REACT_POSTPONE_TYPE
-  ) {
-    const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message, task);
-    emitPostponeChunk(request, task.id, postponeInstance);
-  } else {
-    const digest = logRecoverableError(request, error, task);
-    emitErrorChunk(
-      request,
-      task.id,
-      digest,
-      error,
-      false,
-      __DEV__ ? task.debugOwner : null,
-    );
-  }
+  const digest = logRecoverableError(request, error, task);
+  emitErrorChunk(
+    request,
+    task.id,
+    digest,
+    error,
+    false,
+    __DEV__ ? task.debugOwner : null,
+  );
   request.abortableTasks.delete(task);
   callOnAllReadyIfReady(request);
 }
@@ -6274,22 +6175,6 @@ export function abort(request: Request, reason: mixed): void {
         // and leave the reference unfulfilled.
         abortableTasks.forEach(task => haltTask(task, request));
         scheduleWork(() => finishHalt(request, abortableTasks));
-      } else if (
-        enablePostpone &&
-        typeof reason === 'object' &&
-        reason !== null &&
-        (reason: any).$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (reason: any);
-        logPostpone(request, postponeInstance.message, null);
-        // When rendering we produce a shared postpone chunk and then
-        // fulfill each task with a reference to that chunk.
-        const errorId = request.nextChunkId++;
-        request.fatalError = errorId;
-        request.pendingChunks++;
-        emitPostponeChunk(request, errorId, postponeInstance);
-        abortableTasks.forEach(task => abortTask(task, request, errorId));
-        scheduleWork(() => finishAbort(request, abortableTasks, errorId));
       } else {
         const error =
           reason === undefined

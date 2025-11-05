@@ -500,7 +500,7 @@ describe('ReactFlightDOMNode', () => {
     expect(errors).toEqual([reason]);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -920,7 +920,7 @@ describe('ReactFlightDOMNode', () => {
     }
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   // @gate enableHalt
   it('can handle an empty prelude when prerendering', async () => {
     function App() {
