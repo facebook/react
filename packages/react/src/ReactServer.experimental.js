@@ -38,7 +38,6 @@ import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
 import {cache, cacheSignal} from './ReactCacheServer';
 import {startTransition} from './ReactStartTransition';
-import {postpone} from './ReactPostpone';
 import version from 'shared/ReactVersion';
 
 const Children = {
@@ -75,7 +74,6 @@ export {
   cacheSignal,
   startTransition,
   getCacheForType as unstable_getCacheForType,
-  postpone as unstable_postpone,
   useId,
   useCallback,
   useDebugValue,
