@@ -138,6 +138,7 @@ import {
   popSuspenseListContext,
   popSuspenseHandler,
   pushSuspenseListContext,
+  pushSuspenseListCatch,
   setShallowSuspenseListContext,
   ForceSuspenseFallback,
   setDefaultShallowSuspenseListContext,
@@ -698,30 +699,8 @@ function cutOffTailIfNeeded(
     return;
   }
   switch (renderState.tailMode) {
-    case 'hidden': {
-      // Any insertions at the end of the tail list after this point
-      // should be invisible. If there are already mounted boundaries
-      // anything before them are not considered for collapsing.
-      // Therefore we need to go through the whole tail to find if
-      // there are any.
-      let tailNode = renderState.tail;
-      let lastTailNode = null;
-      while (tailNode !== null) {
-        if (tailNode.alternate !== null) {
-          lastTailNode = tailNode;
-        }
-        tailNode = tailNode.sibling;
-      }
-      // Next we're simply going to delete all insertions after the
-      // last rendered item.
-      if (lastTailNode === null) {
-        // All remaining items in the tail are insertions.
-        renderState.tail = null;
-      } else {
-        // Detach the insertion after the last node that was already
-        // inserted.
-        lastTailNode.sibling = null;
-      }
+    case 'visible': {
+      // Everything should remain as it was.
       break;
     }
     case 'collapsed': {
@@ -756,7 +735,46 @@ function cutOffTailIfNeeded(
       }
       break;
     }
+    // Hidden is now the default.
+    case 'hidden':
+    default: {
+      // Any insertions at the end of the tail list after this point
+      // should be invisible. If there are already mounted boundaries
+      // anything before them are not considered for collapsing.
+      // Therefore we need to go through the whole tail to find if
+      // there are any.
+      let tailNode = renderState.tail;
+      let lastTailNode = null;
+      while (tailNode !== null) {
+        if (tailNode.alternate !== null) {
+          lastTailNode = tailNode;
+        }
+        tailNode = tailNode.sibling;
+      }
+      // Next we're simply going to delete all insertions after the
+      // last rendered item.
+      if (lastTailNode === null) {
+        // All remaining items in the tail are insertions.
+        renderState.tail = null;
+      } else {
+        // Detach the insertion after the last node that was already
+        // inserted.
+        lastTailNode.sibling = null;
+      }
+      break;
+    }
   }
+}
+
+function isOnlyNewMounts(tail: Fiber): boolean {
+  let fiber: null | Fiber = tail;
+  while (fiber !== null) {
+    if (fiber.alternate !== null) {
+      return false;
+    }
+    fiber = fiber.sibling;
+  }
+  return true;
 }
 
 function bubbleProperties(completedWork: Fiber) {
@@ -1795,7 +1813,8 @@ function completeWork(
             // This might have been modified.
             if (
               renderState.tail === null &&
-              renderState.tailMode === 'hidden' &&
+              renderState.tailMode !== 'collapsed' &&
+              renderState.tailMode !== 'visible' &&
               !renderedTail.alternate &&
               !getIsHydrating() // We don't cut it if we're hydrating.
             ) {
@@ -1831,10 +1850,6 @@ function completeWork(
           }
         }
         if (renderState.isBackwards) {
-          // The effect list of the backwards tail will have been added
-          // to the end. This breaks the guarantee that life-cycles fire in
-          // sibling order but that isn't a strong guarantee promised by React.
-          // Especially since these might also just pop in during future commits.
           // Append to the beginning of the list.
           renderedTail.sibling = workInProgress.child;
           workInProgress.child = renderedTail;
@@ -1852,7 +1867,10 @@ function completeWork(
       if (renderState.tail !== null) {
         // We still have tail rows to render.
         // Pop a row.
+        // TODO: Consider storing the first of the new mount tail in the state so
+        // that we don't have to recompute this for every row in the list.
         const next = renderState.tail;
+        const onlyNewMounts = isOnlyNewMounts(next);
         renderState.rendering = next;
         renderState.tail = next.sibling;
         renderState.renderingStartTime = now();
@@ -1871,7 +1889,26 @@ function completeWork(
           suspenseContext =
             setDefaultShallowSuspenseListContext(suspenseContext);
         }
-        pushSuspenseListContext(workInProgress, suspenseContext);
+        if (
+          renderState.tailMode === 'visible' ||
+          renderState.tailMode === 'collapsed' ||
+          !onlyNewMounts ||
+          // TODO: While hydrating, we still let it suspend the parent. Tail mode hidden has broken
+          // hydration anyway right now but this preserves the previous semantics out of caution.
+          // Once proper hydration is implemented, this special case should be removed as it should
+          // never be needed.
+          getIsHydrating()
+        ) {
+          pushSuspenseListContext(workInProgress, suspenseContext);
+        } else {
+          // If we are rendering in 'hidden' (default) tail mode, then we if we suspend in the
+          // tail itself, we can delete it rather than suspend the parent. So we act as a catch in that
+          // case. For 'collapsed' we need to render at least one in suspended state, after which we'll
+          // have cut off the rest to never attempt it so it never hits this case.
+          // If this is an updated node, we cannot delete it from the tail so it's effectively visible.
+          // As a consequence, if it resuspends it actually suspends the parent by taking the other path.
+          pushSuspenseListCatch(workInProgress, suspenseContext);
+        }
         // Do a pass over the next row.
         if (getIsHydrating()) {
           // Re-apply tree fork since we popped the tree fork context in the beginning of this function.

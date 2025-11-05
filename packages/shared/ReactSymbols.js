@@ -44,8 +44,6 @@ export const REACT_MEMO_CACHE_SENTINEL: symbol = Symbol.for(
   'react.memo_cache_sentinel',
 );
 
-export const REACT_POSTPONE_TYPE: symbol = Symbol.for('react.postpone');
-
 export const REACT_VIEW_TRANSITION_TYPE: symbol = Symbol.for(
   'react.view_transition',
 );

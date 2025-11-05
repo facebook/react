@@ -18,12 +18,14 @@ import {
 describe('Store component filters', () => {
   let React;
   let Types;
+  let agent;
   let bridge: FrontendBridge;
   let store: Store;
   let utils;
   let actAsync;
 
   beforeEach(() => {
+    agent = global.agent;
     bridge = global.bridge;
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -739,5 +741,81 @@ describe('Store component filters', () => {
             <ComponentWithWarningAndError> ✕⚠
       `);
     });
+  });
+
+  // @reactVersion >= 16.6
+  it('resets forced error and fallback states when filters are changed', async () => {
+    store.componentFilters = [];
+    class ErrorBoundary extends React.Component {
+      state = {hasError: false};
+
+      static getDerivedStateFromError() {
+        return {hasError: true};
+      }
+
+      render() {
+        if (this.state.hasError) {
+          return <div key="did-error" />;
+        }
+        return this.props.children;
+      }
+    }
+
+    function App() {
+      return (
+        <>
+          <React.Suspense fallback={<div key="loading" />}>
+            <div key="suspense-content" />
+          </React.Suspense>
+          <ErrorBoundary>
+            <div key="error-content" />
+          </ErrorBoundary>
+        </>
+      );
+    }
+
+    await actAsync(async () => {
+      render(<App />);
+    });
+    const rendererID = utils.getRendererID();
+    await actAsync(() => {
+      agent.overrideSuspense({
+        id: store.getElementIDAtIndex(2),
+        rendererID,
+        forceFallback: true,
+      });
+      agent.overrideError({
+        id: store.getElementIDAtIndex(4),
+        rendererID,
+        forceError: true,
+      });
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense>
+              <div key="loading">
+          ▾ <ErrorBoundary>
+              <div key="did-error">
+      [suspense-root]  rects={[]}
+        <Suspense name="App" rects={[]}>
+    `);
+
+    await actAsync(() => {
+      store.componentFilters = [
+        utils.createElementTypeFilter(Types.ElementTypeFunction, true),
+      ];
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <div key="suspense-content">
+        ▾ <ErrorBoundary>
+            <div key="error-content">
+      [suspense-root]  rects={[]}
+        <Suspense name="Unknown" rects={[]}>
+    `);
   });
 });

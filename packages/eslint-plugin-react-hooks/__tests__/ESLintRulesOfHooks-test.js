@@ -592,6 +592,29 @@ const allTests = {
             onClick();
           });
           useServerEffect(() => {
+            onClick();
+          });
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalEffectHooks: '(useMyEffect|useServerEffect)',
+        },
+      },
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Valid: useEffectEvent can be called in custom effect hooks configured via ESLint settings
+        component MyComponent(theme: any) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useMyEffect(() => {
+            onClick();
+          });
+          useServerEffect(() => {
             onClick();  
           });
         }
@@ -606,6 +629,24 @@ const allTests = {
       code: normalizeIndent`
         // Valid because functions created with useEffectEvent can be called in a useEffect.
         function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onClick();
+          });
+          React.useEffect(() => {
+            onClick();
+          });
+        }
+      `,
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Valid because functions created with useEffectEvent can be called in a useEffect.
+        component MyComponent(theme: any) {
           const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
@@ -645,6 +686,34 @@ const allTests = {
       `,
     },
     {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Valid because functions created with useEffectEvent can be passed by reference in useEffect
+        // and useEffectEvent.
+        component MyComponent(theme: any) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          const onClick2 = useEffectEvent(() => {
+            debounce(onClick);
+            debounce(() => onClick());
+            debounce(() => { onClick() });
+            deboucne(() => debounce(onClick));
+          });
+          useEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          React.useEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          return null;
+        }
+      `,
+    },
+    {
       code: normalizeIndent`
         function MyComponent({ theme }) {
           useEffect(() => {
@@ -657,8 +726,41 @@ const allTests = {
       `,
     },
     {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        component MyComponent(theme: any) {
+          useEffect(() => {
+            onClick();
+          });
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+        }
+      `,
+    },
+    {
       code: normalizeIndent`
         function MyComponent({ theme }) {
+          // Can receive arguments
+          const onEvent = useEffectEvent((text) => {
+            console.log(text);
+          });
+
+          useEffect(() => {
+            onEvent('Hello world');
+          });
+          React.useEffect(() => {
+            onEvent('Hello world');
+          });
+        }
+      `,
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        component MyComponent(theme: any) {
           // Can receive arguments
           const onEvent = useEffectEvent((text) => {
             console.log(text);
@@ -690,9 +792,45 @@ const allTests = {
       `,
     },
     {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Valid because functions created with useEffectEvent can be called in useLayoutEffect.
+        component MyComponent(theme: any) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useLayoutEffect(() => {
+            onClick();
+          });
+          React.useLayoutEffect(() => {
+            onClick();
+          });
+        }
+      `,
+    },
+    {
       code: normalizeIndent`
         // Valid because functions created with useEffectEvent can be called in useInsertionEffect.
         function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useInsertionEffect(() => {
+            onClick();
+          });
+          React.useInsertionEffect(() => {
+            onClick();
+          });
+        }
+      `,
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Valid because functions created with useEffectEvent can be called in useInsertionEffect.
+        component MyComponent(theme) {
           const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
@@ -710,6 +848,42 @@ const allTests = {
         // Valid because functions created with useEffectEvent can be passed by reference in useLayoutEffect 
         // and useInsertionEffect.
         function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          const onClick2 = useEffectEvent(() => {
+            debounce(onClick);
+            debounce(() => onClick());
+            debounce(() => { onClick() });
+            deboucne(() => debounce(onClick));
+          });
+          useLayoutEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          React.useLayoutEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          useInsertionEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          React.useInsertionEffect(() => {
+            let id = setInterval(() => onClick(), 100);
+            return () => clearInterval(onClick);
+          }, []);
+          return null;
+        }
+      `,
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Valid because functions created with useEffectEvent can be passed by reference in useLayoutEffect.
+        // and useInsertionEffect.
+        component MyComponent(theme: any) {
           const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
@@ -1526,9 +1700,46 @@ const allTests = {
       errors: [useEffectEventError('onClick', true)],
     },
     {
+      syntax: 'flow',
+      code: normalizeIndent`
+      // Component syntax version
+      // Invalid: useEffectEvent should not be callable in regular custom hooks without additional configuration
+      component MyComponent() {
+        const onClick = useEffectEvent(() => {
+          showNotification(theme);
+        });
+        useCustomHook(() => {
+          onClick();
+        });
+      }
+      `,
+      errors: [useEffectEventError('onClick', true)],
+    },
+    {
       code: normalizeIndent`
         // Invalid: useEffectEvent should not be callable in hooks not matching the settings regex
         function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useWrongHook(() => {
+            onClick();
+          });
+        }
+      `,
+      settings: {
+        'react-hooks': {
+          additionalEffectHooks: 'useMyEffect',
+        },
+      },
+      errors: [useEffectEventError('onClick', true)],
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Invalid: useEffectEvent should not be callable in hooks not matching the settings regex
+        component MyComponent(theme: any) {
           const onClick = useEffectEvent(() => {
             showNotification(theme);
           });
@@ -1556,6 +1767,19 @@ const allTests = {
       errors: [useEffectEventError('onClick', false)],
     },
     {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        component MyComponent(theme: any) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          return <Child onClick={onClick}></Child>;
+        }
+      `,
+      errors: [useEffectEventError('onClick', false)],
+    },
+    {
       code: normalizeIndent`
         // Invalid because useEffectEvent is being passed down
         function MyComponent({ theme }) {
@@ -1565,6 +1789,19 @@ const allTests = {
         }
       `,
       errors: [{...useEffectEventError(null, false), line: 4}],
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Invalid because useEffectEvent is being passed down
+        component MyComponent(theme: any) {
+          return <Child onClick={useEffectEvent(() => {
+            showNotification(theme);
+          })} />;
+        }
+      `,
+      errors: [{...useEffectEventError(null, false), line: 5}],
     },
     {
       code: normalizeIndent`
@@ -1602,6 +1839,43 @@ const allTests = {
       ],
     },
     {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // This should error even though it shares an identifier name with the below
+        component MyComponent(theme: any) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme)
+          });
+          return <Child onClick={onClick} />
+        }
+
+        // The useEffectEvent function shares an identifier name with the above
+        component MyOtherComponent(theme: any) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme)
+          });
+          return <Child onClick={() => onClick()} />
+        }
+
+        // The useEffectEvent function shares an identifier name with the above
+        component MyLastComponent(theme: any) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme)
+          });
+          useEffect(() => {
+            onClick(); // No error here, errors on all other uses
+            onClick;
+          })
+          return <Child />
+        }
+      `,
+      errors: [
+        {...useEffectEventError('onClick', false), line: 8},
+        {...useEffectEventError('onClick', true), line: 16},
+      ],
+    },
+    {
       code: normalizeIndent`
         const MyComponent = ({ theme }) => {
           const onClick = useEffectEvent(() => {
@@ -1626,6 +1900,21 @@ const allTests = {
       errors: [{...useEffectEventError('onClick', false), line: 7}],
     },
     {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Invalid because onClick is being aliased to foo but not invoked
+        component MyComponent(theme: any) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          let foo = onClick;
+          return <Bar onClick={foo} />
+        }
+      `,
+      errors: [{...useEffectEventError('onClick', false), line: 8}],
+    },
+    {
       code: normalizeIndent`
         // Should error because it's being passed down to JSX, although it's been referenced once
         // in an effect
@@ -1642,9 +1931,64 @@ const allTests = {
       errors: [useEffectEventError('onClick', false)],
     },
     {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Component syntax version
+        // Should error because it's being passed down to JSX, although it's been referenced once
+        // in an effect
+        component MyComponent(theme: any) {
+          const onClick = useEffectEvent(() => {
+            showNotification(them);
+          });
+          useEffect(() => {
+            setTimeout(onClick, 100);
+          });
+          return <Child onClick={onClick} />
+        }
+      `,
+      errors: [useEffectEventError('onClick', false)],
+    },
+    {
       code: normalizeIndent`
         // Invalid because functions created with useEffectEvent cannot be called in arbitrary closures.
         function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          // error message 1
+          const onClick2 = () => { onClick() };
+          // error message 2
+          const onClick3 = useCallback(() => onClick(), []);
+          // error message 3
+          const onClick4 = onClick;
+          return <>
+            {/** error message 4 */}
+            <Child onClick={onClick}></Child>
+            <Child onClick={onClick2}></Child>
+            <Child onClick={onClick3}></Child>
+          </>;
+        }
+      `,
+      // Explicitly test error messages here for various cases
+      errors: [
+        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+          'Effects and Effect Events in the same component.',
+        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+          'Effects and Effect Events in the same component.',
+        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+          `Effects and Effect Events in the same component. ` +
+          `It cannot be assigned to a variable or passed down.`,
+        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+          `Effects and Effect Events in the same component. ` +
+          `It cannot be assigned to a variable or passed down.`,
+      ],
+    },
+    {
+      syntax: 'flow',
+      code: normalizeIndent`
+        // Hook syntax version
+        // Invalid because functions created with useEffectEvent cannot be called in arbitrary closures.
+        hook useMyHook(theme: any) {
           const onClick = useEffectEvent(() => {
             showNotification(theme);
           });

@@ -6,12 +6,6 @@
   border-radius: 0.25rem;
 }
 
-.SuspenseRectsContainer[data-highlighted='true'] {
-  outline-color: var(--color-transition);
-  outline-style: solid;
-  outline-width: 4px;
-}
-
 .SuspenseRectsRoot {
   cursor: pointer;
   outline-color: var(--color-transition);
@@ -104,6 +98,10 @@
   outline-width: 4px;
   border-radius: 0.125rem;
   pointer-events: none;
+}
+
+.SuspenseRectOutlineRoot {
+  outline-color: var(--color-transition);
 }
 
 .SuspenseRectsBoundary[data-selected='true'] > .SuspenseRectsRect {

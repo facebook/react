@@ -52,6 +52,7 @@ export type Options = {
   replayConsoleLogs?: boolean,
   environmentName?: string,
   startTime?: number,
+  endTime?: number,
 };
 
 function createDebugCallbackFromWritableStream(
@@ -106,6 +107,7 @@ function createResponseFromOptions(options: void | Options) {
     __DEV__ && options && options.startTime != null
       ? options.startTime
       : undefined,
+    __DEV__ && options && options.endTime != null ? options.endTime : undefined,
     debugChannel,
   );
 }

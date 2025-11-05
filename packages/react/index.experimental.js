@@ -31,7 +31,6 @@ export {
   startTransition,
   Activity,
   Activity as unstable_Activity,
-  unstable_postpone,
   unstable_getCacheForType,
   unstable_SuspenseList,
   ViewTransition,

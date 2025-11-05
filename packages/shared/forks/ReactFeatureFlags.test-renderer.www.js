@@ -16,11 +16,11 @@ export const enableProfilerTimer: boolean = __PROFILE__;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
 export const enableProfilerNestedUpdatePhase: boolean = __PROFILE__;
 export const enableComponentPerformanceTrack: boolean = false;
+export const enablePerformanceIssueReporting: boolean = false;
 export const enableUpdaterTracking: boolean = false;
 export const enableLegacyCache: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableTaint: boolean = true;
-export const enablePostpone: boolean = false;
 export const enableHalt: boolean = true;
 export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
@@ -82,6 +82,7 @@ export const enableDefaultTransitionIndicator: boolean = true;
 
 export const enableFragmentRefs: boolean = false;
 export const enableFragmentRefsScrollIntoView: boolean = false;
+export const enableFragmentRefsInstanceHandles: boolean = false;
 export const ownerStackLimit = 1e4;
 
 // Flow magic to verify the exports of this file match the original version.
