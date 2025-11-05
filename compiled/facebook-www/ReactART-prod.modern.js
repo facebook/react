@@ -5338,7 +5338,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
                 (renderLanes.markerInstances = current)))),
         bailoutOffscreenComponent(null, nextProps)
       );
-    if ("number" === typeof nextProps.unstable_expectedLoadTime)
+    if (
+      "number" === typeof nextProps.unstable_expectedLoadTime ||
+      !0 === nextProps.defer
+    )
       return (
         reuseSuspenseHandlerOnStack(),
         mountSuspenseFallbackChildren(
@@ -11234,10 +11237,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1590 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-dd048c3b-20251105",
+  version: "19.3.0-www-modern-0ba2f01f-20251105",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-dd048c3b-20251105"
+  reconcilerVersion: "19.3.0-www-modern-0ba2f01f-20251105"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1591 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11263,4 +11266,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-modern-dd048c3b-20251105";
+exports.version = "19.3.0-www-modern-0ba2f01f-20251105";

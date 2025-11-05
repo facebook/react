@@ -11205,9 +11205,17 @@ __DEV__ &&
           );
         if (
           "number" ===
-          typeof JSCompiler_object_inline_stack_3090.unstable_expectedLoadTime
+            typeof JSCompiler_object_inline_stack_3090.unstable_expectedLoadTime ||
+          !0 === JSCompiler_object_inline_stack_3090.defer
         )
           return (
+            "number" !==
+              typeof JSCompiler_object_inline_stack_3090.unstable_expectedLoadTime ||
+              didWarnAboutExpectedLoadTime ||
+              ((didWarnAboutExpectedLoadTime = !0),
+              console.error(
+                "<Suspense unstable_expectedLoadTime={...}> is deprecated. Use <Suspense defer={true}> instead."
+              )),
             reuseSuspenseHandlerOnStack(workInProgress),
             mountSuspenseFallbackChildren(
               workInProgress,
@@ -31679,7 +31687,8 @@ __DEV__ &&
       SelectiveHydrationException = Error(
         "This is not a real error. It's an implementation detail of React's selective hydration feature. If this leaks into userspace, it's a bug in React. Please file an issue."
       ),
-      didReceiveUpdate = !1;
+      didReceiveUpdate = !1,
+      didWarnAboutExpectedLoadTime = !1;
     var didWarnAboutBadClass = {};
     var didWarnAboutContextTypeOnFunctionComponent = {};
     var didWarnAboutContextTypes = {};
@@ -33031,11 +33040,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-classic-dd048c3b-20251105" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-classic-0ba2f01f-20251105" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-classic-dd048c3b-20251105\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-classic-0ba2f01f-20251105\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33078,10 +33087,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-classic-dd048c3b-20251105",
+          version: "19.3.0-www-classic-0ba2f01f-20251105",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-classic-dd048c3b-20251105"
+          reconcilerVersion: "19.3.0-www-classic-0ba2f01f-20251105"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33694,7 +33703,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-classic-dd048c3b-20251105";
+    exports.version = "19.3.0-www-classic-0ba2f01f-20251105";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
