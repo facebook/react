@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f09a9101e8c8ede319b13814e8cf53ce>>
+ * @generated SignedSource<<a7fbb18901c24da21458d09825e340fa>>
  */
 
 "use strict";
@@ -5365,7 +5365,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (workInProgress.memoizedState = SUSPENDED_MARKER),
         bailoutOffscreenComponent(null, nextProps)
       );
-    if ("number" === typeof nextProps.unstable_expectedLoadTime)
+    if (
+      "number" === typeof nextProps.unstable_expectedLoadTime ||
+      !0 === nextProps.defer
+    )
       return (
         reuseSuspenseHandlerOnStack(),
         mountSuspenseFallbackChildren(
@@ -10812,10 +10815,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1247 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-986323f8-20251104",
+  version: "19.3.0-native-fb-0ba2f01f-20251105",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-986323f8-20251104",
+  reconcilerVersion: "19.3.0-native-fb-0ba2f01f-20251105",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$150 = 0;
@@ -10966,4 +10969,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.3.0-native-fb-986323f8-20251104";
+exports.version = "19.3.0-native-fb-0ba2f01f-20251105";

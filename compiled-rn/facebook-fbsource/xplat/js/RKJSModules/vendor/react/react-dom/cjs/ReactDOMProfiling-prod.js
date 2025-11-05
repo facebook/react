@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<79acb5c9990ac9e6abee2d26f261e3fe>>
+ * @generated SignedSource<<e835a0971c920a9f979f1f7b51fd6932>>
  */
 
 /*
@@ -7230,7 +7230,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (workInProgress.memoizedState = SUSPENDED_MARKER),
         bailoutOffscreenComponent(null, nextProps)
       );
-    if ("number" === typeof nextProps.unstable_expectedLoadTime)
+    if (
+      "number" === typeof nextProps.unstable_expectedLoadTime ||
+      !0 === nextProps.defer
+    )
       return (
         reuseSuspenseHandlerOnStack(),
         mountSuspenseFallbackChildren(
@@ -17496,14 +17499,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2037 = React.version;
 if (
-  "19.3.0-native-fb-986323f8-20251104" !==
+  "19.3.0-native-fb-0ba2f01f-20251105" !==
   isomorphicReactPackageVersion$jscomp$inline_2037
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2037,
-      "19.3.0-native-fb-986323f8-20251104"
+      "19.3.0-native-fb-0ba2f01f-20251105"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17525,10 +17528,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2644 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-986323f8-20251104",
+  version: "19.3.0-native-fb-0ba2f01f-20251105",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-986323f8-20251104"
+  reconcilerVersion: "19.3.0-native-fb-0ba2f01f-20251105"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2645 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17795,4 +17798,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-native-fb-986323f8-20251104";
+exports.version = "19.3.0-native-fb-0ba2f01f-20251105";

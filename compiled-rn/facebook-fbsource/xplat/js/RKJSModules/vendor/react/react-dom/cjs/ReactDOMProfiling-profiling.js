@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3e9db7e7359529315c4b9f67bbef36bd>>
+ * @generated SignedSource<<6ad227f9c18970a3f911fe494f387765>>
  */
 
 /*
@@ -7723,7 +7723,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (workInProgress.memoizedState = SUSPENDED_MARKER),
         bailoutOffscreenComponent(null, nextProps)
       );
-    if ("number" === typeof nextProps.unstable_expectedLoadTime)
+    if (
+      "number" === typeof nextProps.unstable_expectedLoadTime ||
+      !0 === nextProps.defer
+    )
       return (
         reuseSuspenseHandlerOnStack(),
         mountSuspenseFallbackChildren(
@@ -19604,14 +19607,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2352 = React.version;
 if (
-  "19.3.0-native-fb-986323f8-20251104" !==
+  "19.3.0-native-fb-0ba2f01f-20251105" !==
   isomorphicReactPackageVersion$jscomp$inline_2352
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2352,
-      "19.3.0-native-fb-986323f8-20251104"
+      "19.3.0-native-fb-0ba2f01f-20251105"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19633,10 +19636,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2359 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-986323f8-20251104",
+  version: "19.3.0-native-fb-0ba2f01f-20251105",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-986323f8-20251104",
+  reconcilerVersion: "19.3.0-native-fb-0ba2f01f-20251105",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$326 = 0;
@@ -19919,7 +19922,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-native-fb-986323f8-20251104";
+exports.version = "19.3.0-native-fb-0ba2f01f-20251105";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

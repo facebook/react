@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<faeebc4c3469c27738c9db8c2a552616>>
+ * @generated SignedSource<<fc7ec82b95c2f5e7e97994959e879e31>>
  */
 
 "use strict";
@@ -6634,7 +6634,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (workInProgress.memoizedState = SUSPENDED_MARKER),
         bailoutOffscreenComponent(null, nextProps)
       );
-    if ("number" === typeof nextProps.unstable_expectedLoadTime)
+    if (
+      "number" === typeof nextProps.unstable_expectedLoadTime ||
+      !0 === nextProps.defer
+    )
       return (
         reuseSuspenseHandlerOnStack(),
         mountSuspenseFallbackChildren(
@@ -13270,10 +13273,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1592 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-986323f8-20251104",
+    version: "19.3.0-native-fb-0ba2f01f-20251105",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-986323f8-20251104"
+    reconcilerVersion: "19.3.0-native-fb-0ba2f01f-20251105"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1592.rendererConfig = extraDevToolsConfig);

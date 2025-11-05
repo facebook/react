@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3efd8d349e343518b94f3c0a1addb0a9>>
+ * @generated SignedSource<<e402b2851964453948378bc863afb791>>
  */
 
 /*
@@ -7719,7 +7719,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (workInProgress.memoizedState = SUSPENDED_MARKER),
         bailoutOffscreenComponent(null, nextProps)
       );
-    if ("number" === typeof nextProps.unstable_expectedLoadTime)
+    if (
+      "number" === typeof nextProps.unstable_expectedLoadTime ||
+      !0 === nextProps.defer
+    )
       return (
         reuseSuspenseHandlerOnStack(),
         mountSuspenseFallbackChildren(
@@ -19589,14 +19592,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2351 = React.version;
 if (
-  "19.3.0-native-fb-986323f8-20251104" !==
+  "19.3.0-native-fb-0ba2f01f-20251105" !==
   isomorphicReactPackageVersion$jscomp$inline_2351
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2351,
-      "19.3.0-native-fb-986323f8-20251104"
+      "19.3.0-native-fb-0ba2f01f-20251105"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19618,10 +19621,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2358 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-986323f8-20251104",
+  version: "19.3.0-native-fb-0ba2f01f-20251105",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-986323f8-20251104",
+  reconcilerVersion: "19.3.0-native-fb-0ba2f01f-20251105",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$326 = 0;
@@ -19744,4 +19747,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.3.0-native-fb-986323f8-20251104";
+exports.version = "19.3.0-native-fb-0ba2f01f-20251105";

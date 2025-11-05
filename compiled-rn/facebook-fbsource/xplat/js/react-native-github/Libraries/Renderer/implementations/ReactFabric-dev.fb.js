@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3dec262174f4e8c601bd1fd9c26e49a3>>
+ * @generated SignedSource<<6cfe533196abad6d1ca1e0c29220bcdd>>
  */
 
 "use strict";
@@ -8825,8 +8825,17 @@ __DEV__ &&
             (workInProgress.memoizedState = SUSPENDED_MARKER),
             bailoutOffscreenComponent(null, nextProps)
           );
-        if ("number" === typeof nextProps.unstable_expectedLoadTime)
+        if (
+          "number" === typeof nextProps.unstable_expectedLoadTime ||
+          !0 === nextProps.defer
+        )
           return (
+            "number" !== typeof nextProps.unstable_expectedLoadTime ||
+              didWarnAboutExpectedLoadTime ||
+              ((didWarnAboutExpectedLoadTime = !0),
+              console.error(
+                "<Suspense unstable_expectedLoadTime={...}> is deprecated. Use <Suspense defer={true}> instead."
+              )),
             reuseSuspenseHandlerOnStack(workInProgress),
             mountSuspenseFallbackChildren(
               workInProgress,
@@ -19322,7 +19331,8 @@ __DEV__ &&
       SelectiveHydrationException = Error(
         "This is not a real error. It's an implementation detail of React's selective hydration feature. If this leaks into userspace, it's a bug in React. Please file an issue."
       ),
-      didReceiveUpdate = !1;
+      didReceiveUpdate = !1,
+      didWarnAboutExpectedLoadTime = !1;
     var didWarnAboutBadClass = {};
     var didWarnAboutContextTypeOnFunctionComponent = {};
     var didWarnAboutContextTypes = {};
@@ -19899,10 +19909,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-986323f8-20251104",
+        version: "19.3.0-native-fb-0ba2f01f-20251105",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-986323f8-20251104"
+        reconcilerVersion: "19.3.0-native-fb-0ba2f01f-20251105"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
