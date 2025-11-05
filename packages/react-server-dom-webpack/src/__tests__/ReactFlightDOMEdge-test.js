@@ -1365,7 +1365,7 @@ describe('ReactFlightDOMEdge', () => {
     ]);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -1547,7 +1547,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe('Connection closed.');
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should be able to handle a rejected promise in prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
@@ -1586,7 +1586,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should be able to handle an erroring async iterable in prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
@@ -1633,7 +1633,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should be able to handle an erroring readable stream in prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
@@ -1681,7 +1681,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('can prerender an async iterable', async () => {
     const errors = [];
 
@@ -1725,7 +1725,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(text).toBe('hello world');
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('can prerender a readable stream', async () => {
     const errors = [];
 
@@ -1759,7 +1759,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toBe('hello world');
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('does not return a prerender prelude early when an error is emitted and there are still pending tasks', async () => {
     let rejectPromise;
     const rejectingPromise = new Promise(
