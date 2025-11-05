@@ -51,7 +51,6 @@ export const enableLegacyCache: boolean = false;
 export const enableLegacyFBSupport: boolean = false;
 export const enableLegacyHidden: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
-export const enablePostpone: boolean = false;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
 export const enableProfilerNestedUpdatePhase: boolean = __PROFILE__;
 export const enableProfilerTimer: boolean = __PROFILE__;

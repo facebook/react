@@ -39,12 +39,9 @@ import type {
   EncodeFormActionCallback,
 } from './ReactFlightReplyClient';
 
-import type {Postpone} from 'react/src/ReactPostpone';
-
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
-  enablePostpone,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
   enableAsyncDebugInfo,
@@ -89,7 +86,6 @@ import {
 import {
   REACT_LAZY_TYPE,
   REACT_ELEMENT_TYPE,
-  REACT_POSTPONE_TYPE,
   ASYNC_ITERATOR,
   REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
@@ -3460,88 +3456,6 @@ function resolveErrorDev(
   return error;
 }
 
-function resolvePostponeProd(
-  response: Response,
-  id: number,
-  streamState: StreamState,
-): void {
-  if (__DEV__) {
-    // These errors should never make it into a build so we don't need to encode them in codes.json
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'resolvePostponeProd should never be called in development mode. Use resolvePostponeDev instead. This is a bug in React.',
-    );
-  }
-  const error = new Error(
-    'A Server Component was postponed. The reason is omitted in production' +
-      ' builds to avoid leaking sensitive details.',
-  );
-  const postponeInstance: Postpone = (error: any);
-  postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
-  postponeInstance.stack = 'Error: ' + error.message;
-  const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    const newChunk: ErroredChunk<any> = createErrorChunk(
-      response,
-      postponeInstance,
-    );
-    chunks.set(id, newChunk);
-  } else {
-    triggerErrorOnChunk(response, chunk, postponeInstance);
-  }
-}
-
-function resolvePostponeDev(
-  response: Response,
-  id: number,
-  reason: string,
-  stack: ReactStackTrace,
-  env: string,
-  streamState: StreamState,
-): void {
-  if (!__DEV__) {
-    // These errors should never make it into a build so we don't need to encode them in codes.json
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'resolvePostponeDev should never be called in production mode. Use resolvePostponeProd instead. This is a bug in React.',
-    );
-  }
-  let postponeInstance: Postpone;
-  const callStack = buildFakeCallStack(
-    response,
-    stack,
-    env,
-    false,
-    // $FlowFixMe[incompatible-use]
-    Error.bind(null, reason || ''),
-  );
-  const rootTask = response._debugRootTask;
-  if (rootTask != null) {
-    postponeInstance = rootTask.run(callStack);
-  } else {
-    postponeInstance = callStack();
-  }
-  postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
-  const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    const newChunk: ErroredChunk<any> = createErrorChunk(
-      response,
-      postponeInstance,
-    );
-    if (__DEV__) {
-      resolveChunkDebugInfo(response, streamState, newChunk);
-    }
-    chunks.set(id, newChunk);
-  } else {
-    if (__DEV__) {
-      resolveChunkDebugInfo(response, streamState, chunk);
-    }
-    triggerErrorOnChunk(response, chunk, postponeInstance);
-  }
-}
-
 function resolveErrorModel(
   response: Response,
   id: number,
@@ -4891,25 +4805,6 @@ function processFullStringRow(
     case 67 /* "C" */: {
       stopStream(response, id, row);
       return;
-    }
-    // Fallthrough
-    case 80 /* "P" */: {
-      if (enablePostpone) {
-        if (__DEV__) {
-          const postponeInfo = JSON.parse(row);
-          resolvePostponeDev(
-            response,
-            id,
-            postponeInfo.reason,
-            postponeInfo.stack,
-            postponeInfo.env,
-            streamState,
-          );
-        } else {
-          resolvePostponeProd(response, id, streamState);
-        }
-        return;
-      }
     }
     // Fallthrough
     default: /* """ "{" "[" "t" "f" "n" "0" - "9" */ {

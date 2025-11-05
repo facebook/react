@@ -1934,52 +1934,6 @@ describe('ReactFlightDOMBrowser', () => {
     );
   });
 
-  // @gate enablePostpone
-  it('supports postpone in Server Components', async () => {
-    function Server() {
-      React.unstable_postpone('testing postpone');
-      return 'Not shown';
-    }
-
-    let postponed = null;
-
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
-        <Suspense fallback="Loading...">
-          <Server />
-        </Suspense>,
-        null,
-        {
-          onPostpone(reason) {
-            postponed = reason;
-          },
-        },
-      ),
-    );
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
-      root.render(
-        <div>
-          Shell: <Client />
-        </div>,
-      );
-    });
-    // We should have reserved the shell already. Which means that the Server
-    // Component should've been a lazy component.
-    expect(container.innerHTML).toContain('Shell:');
-    expect(container.innerHTML).toContain('Loading...');
-    expect(container.innerHTML).not.toContain('Not shown');
-
-    expect(postponed).toBe('testing postpone');
-  });
-
   it('should not continue rendering after the reader cancels', async () => {
     let hasLoaded = false;
     let resolve;
@@ -2029,66 +1983,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
     ]);
-  });
-
-  // @gate enablePostpone
-  it('postpones when abort passes a postpone signal', async () => {
-    const infinitePromise = new Promise(() => {});
-    function Server() {
-      return infinitePromise;
-    }
-
-    let postponed = null;
-    let error = null;
-
-    const controller = new AbortController();
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
-        <Suspense fallback="Loading...">
-          <Server />
-        </Suspense>,
-        null,
-        {
-          onError(x) {
-            error = x;
-          },
-          onPostpone(reason) {
-            postponed = reason;
-          },
-          signal: controller.signal,
-        },
-      ),
-    );
-
-    try {
-      React.unstable_postpone('testing postpone');
-    } catch (reason) {
-      controller.abort(reason);
-    }
-
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(
-        <div>
-          Shell: <Client />
-        </div>,
-      );
-    });
-    // We should have reserved the shell already. Which means that the Server
-    // Component should've been a lazy component.
-    expect(container.innerHTML).toContain('Shell:');
-    expect(container.innerHTML).toContain('Loading...');
-    expect(container.innerHTML).not.toContain('Not shown');
-
-    expect(postponed).toBe('testing postpone');
-    expect(error).toBe(null);
   });
 
   function passThrough(stream) {
@@ -2495,7 +2389,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([reason]);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -3009,9 +2903,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2935,
+                2829,
                 27,
-                2929,
+                2823,
                 34,
               ],
               [
@@ -3025,9 +2919,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2929,
+                2823,
                 18,
-                2916,
+                2810,
                 89,
               ],
             ],
