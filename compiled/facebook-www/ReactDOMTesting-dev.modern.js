@@ -26330,27 +26330,24 @@ __DEV__ &&
       }
     }
     function applyViewTransitionName(instance, name, className) {
+      name =
+        CSS.escape(name) !== name ? "r-" + btoa(name).replace(/=/g, "") : name;
       instance.style.viewTransitionName = name;
       null != className && (instance.style.viewTransitionClass = className);
-      name = getComputedStyle(instance);
-      if ("inline" === name.display) {
-        className = instance.getClientRects();
-        if (1 === className.length) var JSCompiler_inline_result = 1;
+      className = getComputedStyle(instance);
+      if ("inline" === className.display) {
+        name = instance.getClientRects();
+        if (1 === name.length) var JSCompiler_inline_result = 1;
         else
-          for (
-            var i = (JSCompiler_inline_result = 0);
-            i < className.length;
-            i++
-          ) {
-            var rect = className[i];
+          for (var i = (JSCompiler_inline_result = 0); i < name.length; i++) {
+            var rect = name[i];
             0 < rect.width && 0 < rect.height && JSCompiler_inline_result++;
           }
         1 === JSCompiler_inline_result
           ? ((instance = instance.style),
-            (instance.display =
-              1 === className.length ? "inline-block" : "block"),
-            (instance.marginTop = "-" + name.paddingTop),
-            (instance.marginBottom = "-" + name.paddingBottom))
+            (instance.display = 1 === name.length ? "inline-block" : "block"),
+            (instance.marginTop = "-" + className.paddingTop),
+            (instance.marginBottom = "-" + className.paddingBottom))
           : warnForBlockInsideInline(instance);
       }
     }
@@ -33134,11 +33131,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-modern-fa767dad-20251105" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-modern-1a31a814-20251106" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-modern-fa767dad-20251105\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-modern-1a31a814-20251106\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33181,10 +33178,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-modern-fa767dad-20251105",
+          version: "19.3.0-www-modern-1a31a814-20251106",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-modern-fa767dad-20251105"
+          reconcilerVersion: "19.3.0-www-modern-1a31a814-20251106"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33963,5 +33960,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-modern-fa767dad-20251105";
+    exports.version = "19.3.0-www-modern-1a31a814-20251106";
   })();

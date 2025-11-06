@@ -76,6 +76,10 @@
           (classAttributeName.viewTransitionClass = className),
         (element = element.getAttribute("vt-name")) ||
           (element = "_T_" + autoNameIdx++ + "_"),
+        (element =
+          CSS.escape(element) !== element
+            ? "r-" + btoa(element).replace(/=/g, "")
+            : element),
         (classAttributeName.viewTransitionName = element),
         (shouldStartViewTransition = !0));
     }

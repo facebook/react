@@ -19666,22 +19666,23 @@ function hideOrUnhideDehydratedBoundary(suspenseInstance, isHidden) {
   } while (node);
 }
 function applyViewTransitionName(instance, name, className) {
+  name = CSS.escape(name) !== name ? "r-" + btoa(name).replace(/=/g, "") : name;
   instance.style.viewTransitionName = name;
   null != className && (instance.style.viewTransitionClass = className);
-  name = getComputedStyle(instance);
-  if ("inline" === name.display) {
-    className = instance.getClientRects();
-    if (1 === className.length) var JSCompiler_inline_result = 1;
+  className = getComputedStyle(instance);
+  if ("inline" === className.display) {
+    name = instance.getClientRects();
+    if (1 === name.length) var JSCompiler_inline_result = 1;
     else
-      for (var i = (JSCompiler_inline_result = 0); i < className.length; i++) {
-        var rect = className[i];
+      for (var i = (JSCompiler_inline_result = 0); i < name.length; i++) {
+        var rect = name[i];
         0 < rect.width && 0 < rect.height && JSCompiler_inline_result++;
       }
     1 === JSCompiler_inline_result &&
       ((instance = instance.style),
-      (instance.display = 1 === className.length ? "inline-block" : "block"),
-      (instance.marginTop = "-" + name.paddingTop),
-      (instance.marginBottom = "-" + name.paddingBottom));
+      (instance.display = 1 === name.length ? "inline-block" : "block"),
+      (instance.marginTop = "-" + className.paddingTop),
+      (instance.marginBottom = "-" + className.paddingBottom));
   }
 }
 function restoreViewTransitionName(instance, props) {
@@ -22334,14 +22335,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2417 = React.version;
 if (
-  "19.3.0-www-classic-fa767dad-20251105" !==
+  "19.3.0-www-classic-1a31a814-20251106" !==
   isomorphicReactPackageVersion$jscomp$inline_2417
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2417,
-      "19.3.0-www-classic-fa767dad-20251105"
+      "19.3.0-www-classic-1a31a814-20251106"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22359,10 +22360,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2419 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-fa767dad-20251105",
+  version: "19.3.0-www-classic-1a31a814-20251106",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-fa767dad-20251105"
+  reconcilerVersion: "19.3.0-www-classic-1a31a814-20251106"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2419.getLaneLabelMap = getLaneLabelMap),
@@ -22795,7 +22796,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-fa767dad-20251105";
+exports.version = "19.3.0-www-classic-1a31a814-20251106";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
