@@ -1435,8 +1435,13 @@ export function applyViewTransitionName(
   className: ?string,
 ): void {
   instance = ((instance: any): HTMLElement);
+  // If the name isn't valid CSS identifier, base64 encode the name instead.
+  // This doesn't let you select it in custom CSS selectors but it does work in current
+  // browsers.
+  const escapedName =
+    CSS.escape(name) !== name ? 'r-' + btoa(name).replace(/=/g, '') : name;
   // $FlowFixMe[prop-missing]
-  instance.style.viewTransitionName = name;
+  instance.style.viewTransitionName = escapedName;
   if (className != null) {
     // $FlowFixMe[prop-missing]
     instance.style.viewTransitionClass = className;
