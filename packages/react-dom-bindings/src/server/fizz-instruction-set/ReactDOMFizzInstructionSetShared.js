@@ -130,7 +130,7 @@ export function revealCompletedBoundariesWithViewTransitions(
       const idPrefix = '';
       name = '_' + idPrefix + 'T_' + autoNameIdx++ + '_';
     }
-    elementStyle['viewTransitionName'] = name;
+    elementStyle['viewTransitionName'] = CSS.escape(name);
     shouldStartViewTransition = true;
   }
   try {

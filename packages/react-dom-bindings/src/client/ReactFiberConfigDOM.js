@@ -1436,7 +1436,7 @@ export function applyViewTransitionName(
 ): void {
   instance = ((instance: any): HTMLElement);
   // $FlowFixMe[prop-missing]
-  instance.style.viewTransitionName = name;
+  instance.style.viewTransitionName = CSS.escape(name);
   if (className != null) {
     // $FlowFixMe[prop-missing]
     instance.style.viewTransitionClass = className;
