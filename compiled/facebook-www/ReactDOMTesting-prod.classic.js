@@ -9509,7 +9509,7 @@ function restoreViewTransitionOnHostInstances(
 function commitAppearingPairViewTransitions(placement) {
   if (0 !== (placement.subtreeFlags & 18874368))
     for (placement = placement.child; null !== placement; ) {
-      if (22 !== placement.tag || null !== placement.memoizedState)
+      if (22 !== placement.tag || null === placement.memoizedState)
         if (
           (commitAppearingPairViewTransitions(placement),
           30 === placement.tag &&
@@ -9565,7 +9565,7 @@ function commitDeletedPairViewTransitions(deletion) {
     var pairs = appearingViewTransitions;
     if (0 !== (deletion.subtreeFlags & 18874368))
       for (deletion = deletion.child; null !== deletion; ) {
-        if (22 !== deletion.tag || null !== deletion.memoizedState) {
+        if (22 !== deletion.tag || null === deletion.memoizedState) {
           if (30 === deletion.tag && 0 !== (deletion.flags & 18874368)) {
             var props = deletion.memoizedProps,
               name = props.name;
@@ -9655,7 +9655,7 @@ function commitNestedViewTransitions(changedParent) {
 function restorePairedViewTransitions(parent) {
   if (0 !== (parent.subtreeFlags & 18874368))
     for (parent = parent.child; null !== parent; ) {
-      if (22 !== parent.tag || null !== parent.memoizedState) {
+      if (22 !== parent.tag || null === parent.memoizedState) {
         if (30 === parent.tag && 0 !== (parent.flags & 18874368)) {
           var instance = parent.stateNode;
           null !== instance.paired &&
@@ -20396,14 +20396,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2136 = React.version;
 if (
-  "19.3.0-www-classic-1a31a814-20251106" !==
+  "19.3.0-www-classic-37b089a5-20251106" !==
   isomorphicReactPackageVersion$jscomp$inline_2136
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2136,
-      "19.3.0-www-classic-1a31a814-20251106"
+      "19.3.0-www-classic-37b089a5-20251106"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20421,10 +20421,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2775 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-1a31a814-20251106",
+  version: "19.3.0-www-classic-37b089a5-20251106",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-1a31a814-20251106"
+  reconcilerVersion: "19.3.0-www-classic-37b089a5-20251106"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2776 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -21004,4 +21004,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-1a31a814-20251106";
+exports.version = "19.3.0-www-classic-37b089a5-20251106";

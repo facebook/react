@@ -14656,7 +14656,7 @@ __DEV__ &&
     function commitAppearingPairViewTransitions(placement) {
       if (0 !== (placement.subtreeFlags & 18874368))
         for (placement = placement.child; null !== placement; ) {
-          if (22 !== placement.tag || null !== placement.memoizedState)
+          if (22 !== placement.tag || null === placement.memoizedState)
             if (
               (commitAppearingPairViewTransitions(placement),
               30 === placement.tag &&
@@ -14720,7 +14720,7 @@ __DEV__ &&
         var pairs = appearingViewTransitions;
         if (0 !== (deletion.subtreeFlags & 18874368))
           for (deletion = deletion.child; null !== deletion; ) {
-            if (22 !== deletion.tag || null !== deletion.memoizedState) {
+            if (22 !== deletion.tag || null === deletion.memoizedState) {
               if (30 === deletion.tag && 0 !== (deletion.flags & 18874368)) {
                 var props = deletion.memoizedProps,
                   name = props.name;
@@ -14819,7 +14819,7 @@ __DEV__ &&
     function restorePairedViewTransitions(parent) {
       if (0 !== (parent.subtreeFlags & 18874368))
         for (parent = parent.child; null !== parent; ) {
-          if (22 !== parent.tag || null !== parent.memoizedState) {
+          if (22 !== parent.tag || null === parent.memoizedState) {
             if (30 === parent.tag && 0 !== (parent.flags & 18874368)) {
               var instance = parent.stateNode;
               null !== instance.paired &&
@@ -33131,11 +33131,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-modern-1a31a814-20251106" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-modern-37b089a5-20251106" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-modern-1a31a814-20251106\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-modern-37b089a5-20251106\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33178,10 +33178,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-modern-1a31a814-20251106",
+          version: "19.3.0-www-modern-37b089a5-20251106",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-modern-1a31a814-20251106"
+          reconcilerVersion: "19.3.0-www-modern-37b089a5-20251106"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33960,5 +33960,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-modern-1a31a814-20251106";
+    exports.version = "19.3.0-www-modern-37b089a5-20251106";
   })();
