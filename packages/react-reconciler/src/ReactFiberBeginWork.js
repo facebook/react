@@ -2456,10 +2456,7 @@ function updateSuspenseComponent(
       }
 
       return bailoutOffscreenComponent(null, primaryChildFragment);
-    } else if (
-      enableCPUSuspense &&
-      typeof nextProps.unstable_expectedLoadTime === 'number'
-    ) {
+    } else if (enableCPUSuspense && nextProps.defer === true) {
       // This is a CPU-bound tree. Skip this tree and show a placeholder to
       // unblock the surrounding content. Then immediately retry after the
       // initial commit.

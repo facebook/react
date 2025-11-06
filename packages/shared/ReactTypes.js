@@ -312,7 +312,7 @@ export type SuspenseProps = {
   suspenseCallback?: (Set<Wakeable> | null) => mixed,
 
   unstable_avoidThisFallback?: boolean,
-  unstable_expectedLoadTime?: number,
+  defer?: boolean,
   name?: string,
 };
 

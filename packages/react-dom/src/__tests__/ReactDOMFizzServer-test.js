@@ -9433,4 +9433,34 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
       </html>,
     );
   });
+
+  // @gate enableCPUSuspense
+  it('outlines deferred Suspense boundaries', async () => {
+    function Log({text}) {
+      Scheduler.log(text);
+      return text;
+    }
+
+    await act(async () => {
+      renderToPipeableStream(
+        <div>
+          <Suspense defer={true} fallback={<Log text="Waiting" />}>
+            <span>{<Log text="hello" />}</span>
+          </Suspense>
+        </div>,
+      ).pipe(writable);
+      await jest.runAllTimers();
+      const temp = document.createElement('body');
+      temp.innerHTML = buffer;
+      expect(getVisibleChildren(temp)).toEqual(<div>Waiting</div>);
+    });
+
+    assertLog(['Waiting', 'hello']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>hello</span>
+      </div>,
+    );
+  });
 });
