@@ -76,6 +76,8 @@ export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
 export const enableFragmentRefsInstanceHandles: boolean = false;
 
+export const enableInternalInstanceMap: boolean = false;
+
 // Profiling Only
 export const enableProfilerTimer: boolean = __PROFILE__;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
