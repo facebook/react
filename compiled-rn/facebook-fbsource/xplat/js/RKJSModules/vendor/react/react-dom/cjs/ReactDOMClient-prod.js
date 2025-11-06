@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e1846e494d619269a4384a0f13198471>>
+ * @generated SignedSource<<91c4270acbc3574c9ad2fa8c35cbfede>>
  */
 
 /*
@@ -1032,8 +1032,8 @@ function detachDeletedInstance(node) {
   delete node[internalEventHandlesSetKey];
 }
 function getClosestInstanceFromNode(targetNode) {
-  var targetInst = targetNode[internalInstanceKey];
-  if (targetInst) return targetInst;
+  var targetInst;
+  if ((targetInst = targetNode[internalInstanceKey])) return targetInst;
   for (var parentNode = targetNode.parentNode; parentNode; ) {
     if (
       (targetInst =
@@ -17485,14 +17485,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2037 = React.version;
 if (
-  "19.3.0-native-fb-1a31a814-20251106" !==
+  "19.3.0-native-fb-a44e750e-20251106" !==
   isomorphicReactPackageVersion$jscomp$inline_2037
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2037,
-      "19.3.0-native-fb-1a31a814-20251106"
+      "19.3.0-native-fb-a44e750e-20251106"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17514,10 +17514,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2642 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-1a31a814-20251106",
+  version: "19.3.0-native-fb-a44e750e-20251106",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-1a31a814-20251106"
+  reconcilerVersion: "19.3.0-native-fb-a44e750e-20251106"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2643 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17624,4 +17624,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.3.0-native-fb-1a31a814-20251106";
+exports.version = "19.3.0-native-fb-a44e750e-20251106";
