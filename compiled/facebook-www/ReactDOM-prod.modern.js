@@ -54,7 +54,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableScrollEndPolyfill = dynamicFeatureFlags.enableScrollEndPolyfill,
   enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
   enableFragmentRefsScrollIntoView =
-    dynamicFeatureFlags.enableFragmentRefsScrollIntoView;
+    dynamicFeatureFlags.enableFragmentRefsScrollIntoView,
+  enableInternalInstanceMap = dynamicFeatureFlags.enableInternalInstanceMap;
 function getNearestMountedFiber(fiber) {
   var node = fiber,
     nearestMounted = fiber;
@@ -1825,8 +1826,8 @@ function prepareToHydrateHostInstance(fiber) {
   var instance = fiber.stateNode,
     type = fiber.type,
     props = fiber.memoizedProps;
-  instance[internalInstanceKey] = fiber;
-  instance[internalPropsKey] = props;
+  precacheFiberNode(fiber, instance);
+  updateFiberProps(instance, props);
   switch (type) {
     case "dialog":
       listenToNonDelegatedEvent("cancel", instance);
@@ -7455,8 +7456,8 @@ function beginWork(current, workInProgress, renderLanes) {
               (props = getOwnerDocumentFromRootContainer(
                 rootInstanceStackCursor.current
               ).createElement(renderLanes)),
-              (props[internalInstanceKey] = workInProgress),
-              (props[internalPropsKey] = current),
+              precacheFiberNode(workInProgress, props),
+              updateFiberProps(props, current),
               setInitialProperties(props, renderLanes, current),
               markNodeAsHoistable(props),
               (workInProgress.stateNode = props))
@@ -8154,8 +8155,8 @@ function completeWork(current, workInProgress, renderLanes) {
                       : ownerDocument.createElement(type);
               }
           }
-          nextResource[internalInstanceKey] = workInProgress;
-          nextResource[internalPropsKey] = newProps;
+          precacheFiberNode(workInProgress, nextResource);
+          updateFiberProps(nextResource, newProps);
           a: for (
             ownerDocument = workInProgress.child;
             null !== ownerDocument;
@@ -8231,7 +8232,7 @@ function completeWork(current, workInProgress, renderLanes) {
               case 5:
                 newProps = type.memoizedProps;
             }
-          current[internalInstanceKey] = workInProgress;
+          precacheFiberNode(workInProgress, current);
           current =
             current.nodeValue === renderLanes ||
             (null !== newProps && !0 === newProps.suppressHydrationWarning) ||
@@ -8244,7 +8245,7 @@ function completeWork(current, workInProgress, renderLanes) {
             getOwnerDocumentFromRootContainer(current).createTextNode(
               newProps
             )),
-            (current[internalInstanceKey] = workInProgress),
+            precacheFiberNode(workInProgress, current),
             (workInProgress.stateNode = current);
       }
       bubbleProperties(workInProgress);
@@ -8259,7 +8260,7 @@ function completeWork(current, workInProgress, renderLanes) {
             current = workInProgress.memoizedState;
             current = null !== current ? current.dehydrated : null;
             if (!current) throw Error(formatProdErrorMessage(557));
-            current[internalInstanceKey] = workInProgress;
+            precacheFiberNode(workInProgress, current);
           } else
             resetHydrationState(),
               0 === (workInProgress.flags & 128) &&
@@ -8298,7 +8299,7 @@ function completeWork(current, workInProgress, renderLanes) {
             type = workInProgress.memoizedState;
             type = null !== type ? type.dehydrated : null;
             if (!type) throw Error(formatProdErrorMessage(317));
-            type[internalInstanceKey] = workInProgress;
+            precacheFiberNode(workInProgress, type);
           } else
             resetHydrationState(),
               0 === (workInProgress.flags & 128) &&
@@ -8478,7 +8479,7 @@ function completeWork(current, workInProgress, renderLanes) {
             getChildContextValues: getChildContextValues
           }),
           (workInProgress.stateNode = current),
-          (current[internalInstanceKey] = workInProgress)),
+          precacheFiberNode(workInProgress, current)),
         null !== workInProgress.ref && markUpdate(workInProgress),
         bubbleProperties(workInProgress),
         null
@@ -8891,7 +8892,7 @@ function commitHostUpdate(finishedWork, newProps, oldProps) {
   try {
     var domElement = finishedWork.stateNode;
     updateProperties(domElement, finishedWork.type, oldProps, newProps);
-    domElement[internalPropsKey] = newProps;
+    updateFiberProps(domElement, newProps);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -9075,8 +9076,8 @@ function commitHostSingletonAcquisition(finishedWork) {
     )
       singleton.removeAttributeNode(attributes[0]);
     setInitialProperties(singleton, type, props);
-    singleton[internalInstanceKey] = finishedWork;
-    singleton[internalPropsKey] = props;
+    precacheFiberNode(finishedWork, singleton);
+    updateFiberProps(singleton, props);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -10456,8 +10457,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                     lanes = root.getElementsByTagName("title")[0];
                     if (
                       !lanes ||
-                      lanes[internalHoistableMarker] ||
-                      lanes[internalInstanceKey] ||
+                      isOwnedInstance(lanes) ||
                       "http://www.w3.org/2000/svg" === lanes.namespaceURI ||
                       lanes.hasAttribute("itemprop")
                     )
@@ -10467,7 +10467,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                           root.querySelector("head > title")
                         );
                     setInitialProperties(lanes, current, flags);
-                    lanes[internalInstanceKey] = finishedWork;
+                    precacheFiberNode(finishedWork, lanes);
                     markNodeAsHoistable(lanes);
                     current = lanes;
                     break a;
@@ -10540,7 +10540,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                   default:
                     throw Error(formatProdErrorMessage(468, current));
                 }
-                lanes[internalInstanceKey] = finishedWork;
+                precacheFiberNode(finishedWork, lanes);
                 markNodeAsHoistable(lanes);
                 current = lanes;
               }
@@ -10869,7 +10869,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           safelyDetachRef(finishedWork, finishedWork.return),
         offscreenSubtreeIsHidden ||
           safelyAttachRef(finishedWork, finishedWork.return));
-      flags & 4 && (finishedWork.stateNode[internalInstanceKey] = finishedWork);
+      flags & 4 && precacheFiberNode(finishedWork, finishedWork.stateNode);
       break;
     case 7:
       enableFragmentRefs &&
@@ -12088,7 +12088,7 @@ function schedulePostPaintCallback(callback) {
       callbacks = [];
     }));
 }
-var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
+var PossiblyWeakMap$1 = "function" === typeof WeakMap ? WeakMap : Map,
   executionContext = 0,
   workInProgressRoot = null,
   workInProgress = null,
@@ -13571,7 +13571,7 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
 function attachPingListener(root, wakeable, lanes) {
   var pingCache = root.pingCache;
   if (null === pingCache) {
-    pingCache = root.pingCache = new PossiblyWeakMap();
+    pingCache = root.pingCache = new PossiblyWeakMap$1();
     var threadIDs = new Set();
     pingCache.set(wakeable, threadIDs);
   } else
@@ -17061,7 +17061,9 @@ var scheduleTimeout = "function" === typeof setTimeout ? setTimeout : void 0,
       ? requestAnimationFrame
       : scheduleTimeout;
 function getInstanceFromScope(scopeInstance) {
-  scopeInstance = scopeInstance[internalInstanceKey] || null;
+  scopeInstance = enableInternalInstanceMap
+    ? internalInstanceMap.get(scopeInstance) || null
+    : scopeInstance[internalInstanceKey] || null;
   return scopeInstance;
 }
 var scheduleMicrotask =
@@ -18815,11 +18817,8 @@ function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
   for (caches = 0; caches < ownerDocument.length; caches++) {
     var node = ownerDocument[caches];
     if (
-      !(
-        node[internalHoistableMarker] ||
-        node[internalInstanceKey] ||
-        ("link" === type && "stylesheet" === node.getAttribute("rel"))
-      ) &&
+      !isOwnedInstance(node) &&
+      ("link" !== type || "stylesheet" !== node.getAttribute("rel")) &&
       "http://www.w3.org/2000/svg" !== node.namespaceURI
     ) {
       var nodeKey = node.getAttribute(keyAttribute) || "";
@@ -19093,22 +19092,44 @@ var HostTransitionContext = {
   internalEventHandlesSetKey = "__reactHandles$" + randomKey,
   internalRootNodeResourcesKey = "__reactResources$" + randomKey,
   internalHoistableMarker = "__reactMarker$" + randomKey,
-  internalScrollTimer = "__reactScroll$" + randomKey;
+  internalScrollTimer = "__reactScroll$" + randomKey,
+  PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
+  internalInstanceMap = new PossiblyWeakMap(),
+  internalPropsMap = new PossiblyWeakMap();
 function detachDeletedInstance(node) {
-  delete node[internalInstanceKey];
-  delete node[internalPropsKey];
-  delete node[internalEventHandlersKey];
-  delete node[internalEventHandlerListenersKey];
-  delete node[internalEventHandlesSetKey];
+  enableInternalInstanceMap
+    ? (internalInstanceMap.delete(node),
+      internalPropsMap.delete(node),
+      delete node[internalEventHandlersKey],
+      delete node[internalEventHandlerListenersKey],
+      delete node[internalEventHandlesSetKey],
+      delete node[internalRootNodeResourcesKey])
+    : (delete node[internalInstanceKey],
+      delete node[internalPropsKey],
+      delete node[internalEventHandlersKey],
+      delete node[internalEventHandlerListenersKey],
+      delete node[internalEventHandlesSetKey]);
+}
+function precacheFiberNode(hostInst, node) {
+  enableInternalInstanceMap
+    ? internalInstanceMap.set(node, hostInst)
+    : (node[internalInstanceKey] = hostInst);
 }
 function getClosestInstanceFromNode(targetNode) {
-  var targetInst = targetNode[internalInstanceKey];
-  if (targetInst) return targetInst;
+  var targetInst;
+  if (
+    (targetInst = enableInternalInstanceMap
+      ? internalInstanceMap.get(targetNode)
+      : targetNode[internalInstanceKey])
+  )
+    return targetInst;
   for (var parentNode = targetNode.parentNode; parentNode; ) {
     if (
-      (targetInst =
-        parentNode[internalContainerInstanceKey] ||
-        parentNode[internalInstanceKey])
+      (targetInst = enableInternalInstanceMap
+        ? parentNode[internalContainerInstanceKey] ||
+          internalInstanceMap.get(parentNode)
+        : parentNode[internalContainerInstanceKey] ||
+          parentNode[internalInstanceKey])
     ) {
       parentNode = targetInst.alternate;
       if (
@@ -19120,7 +19141,12 @@ function getClosestInstanceFromNode(targetNode) {
           null !== targetNode;
 
         ) {
-          if ((parentNode = targetNode[internalInstanceKey])) return parentNode;
+          if (
+            (parentNode = enableInternalInstanceMap
+              ? internalInstanceMap.get(targetNode)
+              : targetNode[internalInstanceKey])
+          )
+            return parentNode;
           targetNode = getParentHydrationBoundary(targetNode);
         }
       return targetInst;
@@ -19132,7 +19158,9 @@ function getClosestInstanceFromNode(targetNode) {
 }
 function getInstanceFromNode(node) {
   if (
-    (node = node[internalInstanceKey] || node[internalContainerInstanceKey])
+    (node = enableInternalInstanceMap
+      ? internalInstanceMap.get(node) || node[internalContainerInstanceKey]
+      : node[internalInstanceKey] || node[internalContainerInstanceKey])
   ) {
     var tag = node.tag;
     if (
@@ -19154,7 +19182,14 @@ function getNodeFromInstance(inst) {
   throw Error(formatProdErrorMessage(33));
 }
 function getFiberCurrentPropsFromNode(node) {
-  return node[internalPropsKey] || null;
+  return enableInternalInstanceMap
+    ? internalPropsMap.get(node) || null
+    : node[internalPropsKey] || null;
+}
+function updateFiberProps(node, props) {
+  enableInternalInstanceMap
+    ? internalPropsMap.set(node, props)
+    : (node[internalPropsKey] = props);
 }
 function getEventListenerSet(node) {
   var elementListenerSet = node[internalEventHandlersKey];
@@ -19181,6 +19216,11 @@ function getResourcesFromRoot(root) {
 }
 function markNodeAsHoistable(node) {
   node[internalHoistableMarker] = !0;
+}
+function isOwnedInstance(node) {
+  return enableInternalInstanceMap
+    ? !(!node[internalHoistableMarker] && !internalInstanceMap.has(node))
+    : !(!node[internalHoistableMarker] && !node[internalInstanceKey]);
 }
 var hasScheduledReplayAttempt = !1,
   queuedFocus = null,
@@ -19807,16 +19847,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2097 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2049 = React.version;
 if (
-  "19.3.0-www-modern-37b089a5-20251106" !==
-  isomorphicReactPackageVersion$jscomp$inline_2097
+  "19.3.0-www-modern-a44e750e-20251106" !==
+  isomorphicReactPackageVersion$jscomp$inline_2049
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2097,
-      "19.3.0-www-modern-37b089a5-20251106"
+      isomorphicReactPackageVersion$jscomp$inline_2049,
+      "19.3.0-www-modern-a44e750e-20251106"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19832,24 +19872,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2723 = {
+var internals$jscomp$inline_2632 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-37b089a5-20251106",
+  version: "19.3.0-www-modern-a44e750e-20251106",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-37b089a5-20251106"
+  reconcilerVersion: "19.3.0-www-modern-a44e750e-20251106"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2724 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2633 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2724.isDisabled &&
-    hook$jscomp$inline_2724.supportsFiber
+    !hook$jscomp$inline_2633.isDisabled &&
+    hook$jscomp$inline_2633.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2724.inject(
-        internals$jscomp$inline_2723
+      (rendererID = hook$jscomp$inline_2633.inject(
+        internals$jscomp$inline_2632
       )),
-        (injectedHook = hook$jscomp$inline_2724);
+        (injectedHook = hook$jscomp$inline_2633);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -20266,4 +20306,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-37b089a5-20251106";
+exports.version = "19.3.0-www-modern-a44e750e-20251106";
