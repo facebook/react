@@ -354,6 +354,7 @@ function validateNoRefAccessInRenderImpl(
   }
 
   const interpolatedAsJsx = new Set<IdentifierId>();
+  const usedAsEventHandlerProp = new Set<IdentifierId>();
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
       const {value} = instr;
@@ -361,6 +362,27 @@ function validateNoRefAccessInRenderImpl(
         if (value.children != null) {
           for (const child of value.children) {
             interpolatedAsJsx.add(child.identifier.id);
+          }
+        }
+        if (value.kind === 'JsxExpression') {
+          /*
+           * Track identifiers used as event handler props on built-in DOM elements.
+           * We only allow this optimization for native DOM elements because their
+           * event handlers are guaranteed by React to only execute in response to
+           * events, never during render. Custom components could technically call
+           * their onFoo props during render, which would violate ref access rules.
+           */
+          if (value.tag.kind === 'BuiltinTag') {
+            for (const prop of value.props) {
+              if (
+                prop.kind === 'JsxAttribute' &&
+                prop.name.startsWith('on') &&
+                prop.name.length > 2 &&
+                prop.name[2] === prop.name[2].toUpperCase()
+              ) {
+                usedAsEventHandlerProp.add(prop.place.identifier.id);
+              }
+            }
           }
         }
       }
@@ -519,6 +541,9 @@ function validateNoRefAccessInRenderImpl(
              */
             if (!didError) {
               const isRefLValue = isUseRefType(instr.lvalue.identifier);
+              const isUsedAsEventHandler = usedAsEventHandlerProp.has(
+                instr.lvalue.identifier.id,
+              );
               for (const operand of eachInstructionValueOperand(instr.value)) {
                 /**
                  * By default we check that function call operands are not refs,
@@ -560,6 +585,25 @@ function validateNoRefAccessInRenderImpl(
                    * render function which attempts to obey the rules.
                    */
                   validateNoRefValueAccess(errors, env, operand);
+                } else if (isUsedAsEventHandler) {
+                  /**
+                   * Special case: the lvalue is used as an event handler prop
+                   * on a built-in DOM element
+                   *
+                   * For example `<form onSubmit={handleSubmit(onSubmit)}>`. Here
+                   * handleSubmit is wrapping onSubmit to create an event handler.
+                   * Functions passed to event handler wrappers can safely access
+                   * refs because built-in DOM event handlers are guaranteed by React
+                   * to only execute in response to actual events, never during render.
+                   *
+                   * We only allow this for built-in DOM elements (not custom components)
+                   * because custom components could technically call their onFoo props
+                   * during render, which would violate ref access rules.
+                   *
+                   * We allow passing functions with ref access to these wrappers,
+                   * but still validate that direct ref values aren't passed.
+                   */
+                  validateNoDirectRefValueAccess(errors, operand, env);
                 } else {
                   validateNoRefPassedToFunction(
                     errors,

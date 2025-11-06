@@ -20,6 +20,10 @@ function normalizeSourceLoc(tree) {
       node.hookSource.lineNumber = 0;
       node.hookSource.columnNumber = 0;
     }
+    // Normalize Promise objects to hide internal symbols
+    if (node.value instanceof Promise) {
+      node.value = Object.create(Promise.prototype);
+    }
     normalizeSourceLoc(node.subHooks);
   });
   return tree;
