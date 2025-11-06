@@ -1435,8 +1435,28 @@ export function applyViewTransitionName(
   className: ?string,
 ): void {
   instance = ((instance: any): HTMLElement);
+  const escapedName = CSS.escape(name);
   // $FlowFixMe[prop-missing]
-  instance.style.viewTransitionName = CSS.escape(name);
+  instance.style.viewTransitionName = escapedName;
+  if (__DEV__) {
+    if (escapedName !== name) {
+      const fiber =
+        getInstanceFromNode(instance) || getInstanceFromNode(instance);
+      runWithFiberInDEV(
+        fiber,
+        invalidName => {
+          console.warn(
+            '<ViewTransition name=%s> is an invalid CSS identity. It has invalid CSS characters in it. ' +
+              'React has escaped it for you but there is currently a bug in Chrome which means that this ' +
+              'is not going to trigger a matched animation. Avoid this characters in the ViewTransition ' +
+              'name prop until this is fixed.',
+            JSON.stringify(invalidName),
+          );
+        },
+        name,
+      );
+    }
+  }
   if (className != null) {
     // $FlowFixMe[prop-missing]
     instance.style.viewTransitionClass = className;
