@@ -1664,6 +1664,10 @@ export function attach(
     data: ReactComponentInfo,
     secondaryEnv: null | string,
   ): boolean {
+    if (!isInFocusedActivity) {
+      return true;
+    }
+
     // For purposes of filtering Server Components are always Function Components.
     // Environment will be used to filter Server vs Client.
     // Technically they can be forwardRef and memo too but those filters will go away
