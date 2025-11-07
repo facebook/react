@@ -13,6 +13,7 @@ import type {
   PrecomputedChunk,
 } from './ReactServerStreamConfig';
 import type {
+  ReactKey,
   ReactNodeList,
   ReactContext,
   ReactConsumerType,
@@ -27,7 +28,7 @@ import type {
   SuspenseProps,
   SuspenseListProps,
   SuspenseListRevealOrder,
-  ReactKey,
+  SuspenseListTailMode,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -1826,10 +1827,10 @@ function tryToResolveTogetherRow(
   }
 }
 
-function createSuspenseList(mode: SuspenseListRevealOrder): SuspenseList {
+function createSuspenseList(forwards: boolean): SuspenseList {
   return {
     id: -1,
-    forwards: mode !== 'backwards' && mode !== 'unstable_legacy-backwards',
+    forwards: forwards,
     completedRows: 0,
   };
 }
@@ -1861,6 +1862,7 @@ function renderSuspenseListRows(
   keyPath: KeyNode,
   rows: Array<ReactNodeList>,
   revealOrder: void | 'forwards' | 'backwards' | 'unstable_legacy-backwards',
+  tailMode: void | 'visible' | 'collapsed' | 'hidden',
 ): void {
   // This is a fork of renderChildrenArray that's aware of tracking rows.
   const prevKeyPath = task.keyPath;
@@ -1938,10 +1940,22 @@ function renderSuspenseListRows(
     }
   } else {
     task = ((task: any): RenderTask); // Refined
-    if (
+
+    const parentSegment = task.blockedSegment;
+
+    const forwards =
       revealOrder !== 'backwards' &&
-      revealOrder !== 'unstable_legacy-backwards'
-    ) {
+      revealOrder !== 'unstable_legacy-backwards';
+
+    let suspenseList: null | SuspenseList = null;
+    if (tailMode !== 'visible') {
+      // For hidden tails, we need to create an instance to keep track of adding rows to
+      // the end. For visible tails, there's no need to represent the list itself.
+      suspenseList = createSuspenseList(forwards);
+      pushStartSuspenseListBoundary(parentSegment.chunks, request.renderState);
+    }
+
+    if (forwards) {
       // Forwards direction
       for (let i = 0; i < totalChildren; i++) {
         const node = rows[i];
@@ -1961,7 +1975,6 @@ function renderSuspenseListRows(
       // For backwards direction we need to do things a bit differently.
       // We give each row its own segment so that we can render the content in
       // reverse order but still emit it in the right order when we flush.
-      const parentSegment = task.blockedSegment;
       const childIndex = parentSegment.children.length;
       const insertionIndex = parentSegment.chunks.length;
       for (let n = 0; n < totalChildren; n++) {
@@ -2015,6 +2028,10 @@ function renderSuspenseListRows(
       // Reset lastPushedText for current Segment since the new Segments "consumed" it
       parentSegment.lastPushedText = false;
     }
+
+    if (suspenseList !== null) {
+      pushEndSuspenseListBoundary(parentSegment.chunks, request.renderState);
+    }
   }
 
   if (
@@ -2047,12 +2064,18 @@ function renderSuspenseList(
 ): void {
   const children: any = props.children;
   const revealOrder: SuspenseListRevealOrder = props.revealOrder;
-  // TODO: Support tail hidden/collapsed modes.
-  // const tailMode: SuspenseListTailMode = props.tail;
   if (revealOrder !== 'independent' && revealOrder !== 'together') {
     // For ordered reveal, we need to produce rows from the children.
+    const tailMode: SuspenseListTailMode = props.tail;
     if (isArray(children)) {
-      renderSuspenseListRows(request, task, keyPath, children, revealOrder);
+      renderSuspenseListRows(
+        request,
+        task,
+        keyPath,
+        children,
+        revealOrder,
+        tailMode,
+      );
       return;
     }
     const iteratorFn = getIteratorFn(children);
@@ -2073,7 +2096,14 @@ function renderSuspenseList(
             rows.push(step.value);
             step = iterator.next();
           } while (!step.done);
-          renderSuspenseListRows(request, task, keyPath, children, revealOrder);
+          renderSuspenseListRows(
+            request,
+            task,
+            keyPath,
+            children,
+            revealOrder,
+            tailMode,
+          );
         }
         return;
       }
@@ -2131,7 +2161,14 @@ function renderSuspenseList(
             step = unwrapThenable(iterator.next());
           }
         }
-        renderSuspenseListRows(request, task, keyPath, rows, revealOrder);
+        renderSuspenseListRows(
+          request,
+          task,
+          keyPath,
+          rows,
+          revealOrder,
+          tailMode,
+        );
         return;
       }
     }
