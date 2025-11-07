@@ -1,3 +1,9 @@
+## Unreleased
+
+## babel-plugin-react-compiler
+
+* Improve diagnostic for preserved manual memoization when a callback references a later-declared memoized value; the message now includes the dependency name (when available), clarifies declaration order, and suggests moving the declaration earlier.
+
 ## 19.1.0-rc.2 (May 14, 2025)
 
 ## babel-plugin-react-compiler
