@@ -257,8 +257,10 @@ type SuspenseBoundary = {
   fallbackState: HoistableState,
   contentPreamble: null | Preamble,
   fallbackPreamble: null | Preamble,
-  trackedContentKeyPath: null | KeyNode, // used to track the path for replay nodes
-  trackedFallbackNode: null | ReplayNode, // used to track the fallback for replay nodes
+  tracked: null | {
+    contentKeyPath: null | KeyNode, // used to track the path for replay nodes
+    fallbackNode: null | ReplayNode, // used to track the fallback for replay nodes
+  },
   errorDigest: ?string, // the error hash if it errors
   // DEV-only fields
   errorMessage?: null | string, // the error string if it errors
@@ -803,8 +805,7 @@ function createSuspenseBoundary(
     fallbackState: createHoistableState(),
     contentPreamble,
     fallbackPreamble,
-    trackedContentKeyPath: null,
-    trackedFallbackNode: null,
+    tracked: null,
   };
   if (__DEV__) {
     // DEV-only fields for hidden class
@@ -1303,9 +1304,6 @@ function renderSuspenseBoundary(
       defer,
     );
   }
-  if (request.trackedPostpones !== null) {
-    newBoundary.trackedContentKeyPath = keyPath;
-  }
 
   const insertionIndex = parentSegment.chunks.length;
   // The children of the boundary segment is actually the fallback.
@@ -1358,9 +1356,12 @@ function renderSuspenseBoundary(
         null,
       ];
       trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
-      // We are rendering the fallback before the boundary content so we keep track of
-      // the fallback replay node until we determine if the primary content suspends
-      newBoundary.trackedFallbackNode = fallbackReplayNode;
+      newBoundary.tracked = {
+        contentKeyPath: keyPath,
+        // We are rendering the fallback before the boundary content so we keep track of
+        // the fallback replay node until we determine if the primary content suspends
+        fallbackNode: fallbackReplayNode,
+      };
     }
 
     task.blockedSegment = boundarySegment;
@@ -3793,14 +3794,21 @@ function trackPostponedBoundary(
   // it before flushing and we know that we can't inline it.
   boundary.rootSegmentID = request.nextSegmentId++;
 
-  const boundaryKeyPath = boundary.trackedContentKeyPath;
+  const tracked = boundary.tracked;
+  if (tracked === null) {
+    throw new Error(
+      'It should not be possible to postpone at the root. This is a bug in React.',
+    );
+  }
+
+  const boundaryKeyPath = tracked.contentKeyPath;
   if (boundaryKeyPath === null) {
     throw new Error(
       'It should not be possible to postpone at the root. This is a bug in React.',
     );
   }
 
-  const fallbackReplayNode = boundary.trackedFallbackNode;
+  const fallbackReplayNode = tracked.fallbackNode;
 
   const children: Array<ReplayNode> = [];
   const boundaryNode: void | ReplayNode =
@@ -3853,7 +3861,11 @@ function trackPostpone(
       trackedPostpones,
       boundary,
     );
-    if (boundary.trackedContentKeyPath === keyPath && task.childIndex === -1) {
+    if (
+      boundary.tracked !== null &&
+      boundary.tracked.contentKeyPath === keyPath &&
+      task.childIndex === -1
+    ) {
       // Assign ID
       if (segment.id === -1) {
         if (segment.parentFlushed) {
@@ -3950,7 +3962,11 @@ function untrackBoundary(request: Request, boundary: SuspenseBoundary) {
   if (trackedPostpones === null) {
     return;
   }
-  const boundaryKeyPath = boundary.trackedContentKeyPath;
+  const tracked = boundary.tracked;
+  if (tracked === null) {
+    return;
+  }
+  const boundaryKeyPath = tracked.contentKeyPath;
   if (boundaryKeyPath === null) {
     return;
   }
