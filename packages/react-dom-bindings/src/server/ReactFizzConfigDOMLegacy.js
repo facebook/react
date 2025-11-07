@@ -24,6 +24,8 @@ import {
   pushSegmentFinale as pushSegmentFinaleImpl,
   pushStartActivityBoundary as pushStartActivityBoundaryImpl,
   pushEndActivityBoundary as pushEndActivityBoundaryImpl,
+  pushStartSuspenseListBoundary as pushStartSuspenseListBoundaryImpl,
+  pushEndSuspenseListBoundary as pushEndSuspenseListBoundaryImpl,
   writeStartCompletedSuspenseBoundary as writeStartCompletedSuspenseBoundaryImpl,
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
@@ -257,6 +259,28 @@ export function pushEndActivityBoundary(
     return;
   }
   pushEndActivityBoundaryImpl(target, renderState);
+}
+
+export function pushStartSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    // A completed boundary is done and doesn't need a representation in the HTML
+    // if we're not going to be hydrating it.
+    return;
+  }
+  pushStartSuspenseListBoundaryImpl(target, renderState);
+}
+
+export function pushEndSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    return;
+  }
+  pushEndSuspenseListBoundaryImpl(target, renderState);
 }
 
 export function writeStartCompletedSuspenseBoundary(
