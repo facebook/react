@@ -5879,15 +5879,15 @@ function throwException(
           !1
         );
       case 1:
+        returnFiber = sourceFiber.type;
+        wrapperError = sourceFiber.stateNode;
         if (
-          ((returnFiber = sourceFiber.type),
-          (wrapperError = sourceFiber.stateNode),
           0 === (sourceFiber.flags & 128) &&
-            ("function" === typeof returnFiber.getDerivedStateFromError ||
-              (null !== wrapperError &&
-                "function" === typeof wrapperError.componentDidCatch &&
-                (null === legacyErrorBoundariesThatAlreadyFailed ||
-                  !legacyErrorBoundariesThatAlreadyFailed.has(wrapperError)))))
+          ("function" === typeof returnFiber.getDerivedStateFromError ||
+            (null !== wrapperError &&
+              "function" === typeof wrapperError.componentDidCatch &&
+              (null === legacyErrorBoundariesThatAlreadyFailed ||
+                !legacyErrorBoundariesThatAlreadyFailed.has(wrapperError))))
         )
           return (
             (sourceFiber.flags |= 65536),
@@ -5903,6 +5903,10 @@ function throwException(
             enqueueCapturedUpdate(sourceFiber, rootRenderLanes),
             !1
           );
+        break;
+      case 22:
+        if (null !== sourceFiber.memoizedState)
+          return (sourceFiber.flags |= 65536), !1;
     }
     sourceFiber = sourceFiber.return;
   } while (null !== sourceFiber);
@@ -20436,14 +20440,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2088 = React.version;
 if (
-  "19.3.0-www-classic-fa50caf5-20251107" !==
+  "19.3.0-www-classic-717e7084-20251107" !==
   isomorphicReactPackageVersion$jscomp$inline_2088
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2088,
-      "19.3.0-www-classic-fa50caf5-20251107"
+      "19.3.0-www-classic-717e7084-20251107"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20461,10 +20465,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2684 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-fa50caf5-20251107",
+  version: "19.3.0-www-classic-717e7084-20251107",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-fa50caf5-20251107"
+  reconcilerVersion: "19.3.0-www-classic-717e7084-20251107"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2685 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -21044,4 +21048,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-fa50caf5-20251107";
+exports.version = "19.3.0-www-classic-717e7084-20251107";

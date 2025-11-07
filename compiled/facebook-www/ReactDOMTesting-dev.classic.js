@@ -9757,15 +9757,15 @@ __DEV__ &&
               !1
             );
           case 1:
+            returnFiber = sourceFiber.type;
+            error = sourceFiber.stateNode;
             if (
-              ((returnFiber = sourceFiber.type),
-              (error = sourceFiber.stateNode),
               0 === (sourceFiber.flags & 128) &&
-                ("function" === typeof returnFiber.getDerivedStateFromError ||
-                  (null !== error &&
-                    "function" === typeof error.componentDidCatch &&
-                    (null === legacyErrorBoundariesThatAlreadyFailed ||
-                      !legacyErrorBoundariesThatAlreadyFailed.has(error)))))
+              ("function" === typeof returnFiber.getDerivedStateFromError ||
+                (null !== error &&
+                  "function" === typeof error.componentDidCatch &&
+                  (null === legacyErrorBoundariesThatAlreadyFailed ||
+                    !legacyErrorBoundariesThatAlreadyFailed.has(error))))
             )
               return (
                 (sourceFiber.flags |= 65536),
@@ -9781,6 +9781,10 @@ __DEV__ &&
                 enqueueCapturedUpdate(sourceFiber, rootRenderLanes),
                 !1
               );
+            break;
+          case 22:
+            if (null !== sourceFiber.memoizedState)
+              return (sourceFiber.flags |= 65536), !1;
         }
         sourceFiber = sourceFiber.return;
       } while (null !== sourceFiber);
@@ -33384,11 +33388,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-classic-fa50caf5-20251107" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-classic-717e7084-20251107" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-classic-fa50caf5-20251107\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-classic-717e7084-20251107\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33431,10 +33435,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-classic-fa50caf5-20251107",
+          version: "19.3.0-www-classic-717e7084-20251107",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-classic-fa50caf5-20251107"
+          reconcilerVersion: "19.3.0-www-classic-717e7084-20251107"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -34213,5 +34217,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-classic-fa50caf5-20251107";
+    exports.version = "19.3.0-www-classic-717e7084-20251107";
   })();

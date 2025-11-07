@@ -6117,15 +6117,15 @@ __DEV__ &&
               !1
             );
           case 1:
+            sourceFiber = returnFiber.type;
+            error = returnFiber.stateNode;
             if (
-              ((sourceFiber = returnFiber.type),
-              (error = returnFiber.stateNode),
               0 === (returnFiber.flags & 128) &&
-                ("function" === typeof sourceFiber.getDerivedStateFromError ||
-                  (null !== error &&
-                    "function" === typeof error.componentDidCatch &&
-                    (null === legacyErrorBoundariesThatAlreadyFailed ||
-                      !legacyErrorBoundariesThatAlreadyFailed.has(error)))))
+              ("function" === typeof sourceFiber.getDerivedStateFromError ||
+                (null !== error &&
+                  "function" === typeof error.componentDidCatch &&
+                  (null === legacyErrorBoundariesThatAlreadyFailed ||
+                    !legacyErrorBoundariesThatAlreadyFailed.has(error))))
             )
               return (
                 (returnFiber.flags |= 65536),
@@ -6141,6 +6141,10 @@ __DEV__ &&
                 enqueueCapturedUpdate(returnFiber, rootRenderLanes),
                 !1
               );
+            break;
+          case 22:
+            if (null !== returnFiber.memoizedState)
+              return (returnFiber.flags |= 65536), !1;
         }
         returnFiber = returnFiber.return;
       } while (null !== returnFiber);
@@ -15780,10 +15784,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-modern-fa50caf5-20251107",
+        version: "19.3.0-www-modern-717e7084-20251107",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-fa50caf5-20251107"
+        reconcilerVersion: "19.3.0-www-modern-717e7084-20251107"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15919,5 +15923,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.3.0-www-modern-fa50caf5-20251107";
+    exports.version = "19.3.0-www-modern-717e7084-20251107";
   })();

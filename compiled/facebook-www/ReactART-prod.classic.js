@@ -4648,15 +4648,15 @@ function throwException(
           !1
         );
       case 1:
+        sourceFiber = returnFiber.type;
+        wrapperError = returnFiber.stateNode;
         if (
-          ((sourceFiber = returnFiber.type),
-          (wrapperError = returnFiber.stateNode),
           0 === (returnFiber.flags & 128) &&
-            ("function" === typeof sourceFiber.getDerivedStateFromError ||
-              (null !== wrapperError &&
-                "function" === typeof wrapperError.componentDidCatch &&
-                (null === legacyErrorBoundariesThatAlreadyFailed ||
-                  !legacyErrorBoundariesThatAlreadyFailed.has(wrapperError)))))
+          ("function" === typeof sourceFiber.getDerivedStateFromError ||
+            (null !== wrapperError &&
+              "function" === typeof wrapperError.componentDidCatch &&
+              (null === legacyErrorBoundariesThatAlreadyFailed ||
+                !legacyErrorBoundariesThatAlreadyFailed.has(wrapperError))))
         )
           return (
             (returnFiber.flags |= 65536),
@@ -4672,6 +4672,10 @@ function throwException(
             enqueueCapturedUpdate(returnFiber, rootRenderLanes),
             !1
           );
+        break;
+      case 22:
+        if (null !== returnFiber.memoizedState)
+          return (returnFiber.flags |= 65536), !1;
     }
     returnFiber = returnFiber.return;
   } while (null !== returnFiber);
@@ -11522,10 +11526,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1617 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-fa50caf5-20251107",
+  version: "19.3.0-www-classic-717e7084-20251107",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-fa50caf5-20251107"
+  reconcilerVersion: "19.3.0-www-classic-717e7084-20251107"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1618 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11551,4 +11555,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-classic-fa50caf5-20251107";
+exports.version = "19.3.0-www-classic-717e7084-20251107";
