@@ -3821,8 +3821,7 @@ function describeComponentStackByType(type) {
 }
 function isEligibleForOutlining(request, boundary) {
   return (
-    (500 < boundary.byteSize || boundary.defer) &&
-    null === boundary.contentPreamble
+    (500 < boundary.byteSize || boundary.defer) && null === boundary.preamble
   );
 }
 function defaultErrorHandler(error) {
@@ -3951,8 +3950,7 @@ function createSuspenseBoundary(
   request,
   row,
   fallbackAbortableTasks,
-  contentPreamble,
-  fallbackPreamble,
+  preamble,
   defer
 ) {
   fallbackAbortableTasks = {
@@ -3968,17 +3966,16 @@ function createSuspenseBoundary(
     errorDigest: null,
     contentState: createHoistableState(),
     fallbackState: createHoistableState(),
-    contentPreamble: contentPreamble,
-    fallbackPreamble: fallbackPreamble,
+    preamble: preamble,
     tracked: null
   };
   null !== row &&
     (row.pendingTasks++,
-    (contentPreamble = row.boundaries),
-    null !== contentPreamble &&
+    (preamble = row.boundaries),
+    null !== preamble &&
       (request.allPendingTasks++,
       fallbackAbortableTasks.pendingTasks++,
-      contentPreamble.push(fallbackAbortableTasks)),
+      preamble.push(fallbackAbortableTasks)),
     (request = row.inheritedHoistables),
     null !== request &&
       hoistHoistables(fallbackAbortableTasks.contentState, request));
@@ -4772,7 +4769,6 @@ function renderElement(request, task, keyPath, type, props, ref) {
             task.row,
             fallbackAbortSet,
             null,
-            null,
             defer
           );
           var boundarySegment = createPendingSegment(
@@ -4815,7 +4811,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
               };
             }
             task.blockedSegment = boundarySegment;
-            task.blockedPreamble = newBoundary.fallbackPreamble;
+            task.blockedPreamble =
+              null === newBoundary.preamble
+                ? null
+                : newBoundary.preamble.fallback;
             task.keyPath = fallbackKeyPath;
             task.formatContext = getSuspenseFallbackFormatContext(
               request.resumableState,
@@ -4853,7 +4852,9 @@ function renderElement(request, task, keyPath, type, props, ref) {
               -1,
               newBoundary,
               contentRootSegment,
-              newBoundary.contentPreamble,
+              null === newBoundary.preamble
+                ? null
+                : newBoundary.preamble.content,
               newBoundary.contentState,
               task.abortSet,
               keyPath,
@@ -4870,7 +4871,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
             request.pingedTasks.push(suspendedPrimaryTask);
           } else {
             task.blockedBoundary = newBoundary;
-            task.blockedPreamble = newBoundary.contentPreamble;
+            task.blockedPreamble =
+              null === newBoundary.preamble
+                ? null
+                : newBoundary.preamble.content;
             task.hoistableState = newBoundary.contentState;
             task.blockedSegment = contentRootSegment;
             task.keyPath = keyPath;
@@ -4935,7 +4939,9 @@ function renderElement(request, task, keyPath, type, props, ref) {
               -1,
               parentBoundary,
               boundarySegment,
-              newBoundary.fallbackPreamble,
+              null === newBoundary.preamble
+                ? null
+                : newBoundary.preamble.fallback,
               newBoundary.fallbackState,
               fallbackAbortSet,
               [keyPath[0], "Suspense Fallback", keyPath[2]],
@@ -5172,7 +5178,6 @@ function retryNode(request, task) {
                         request,
                         task.row,
                         props,
-                        null,
                         null,
                         resumedBoundary
                       );
@@ -5701,7 +5706,6 @@ function abortRemainingReplayNodes(
           null,
           new Set(),
           null,
-          null,
           !1
         );
       resumedBoundary.parentFlushed = !0;
@@ -5928,7 +5932,7 @@ function finishedTask(request, boundary, row, segment) {
               finishSuspenseListRow(request, row)),
           0 === request.pendingRootTasks &&
             null === request.trackedPostpones &&
-            null !== boundary.contentPreamble &&
+            null !== boundary.preamble &&
             preparePreamble(request);
       else {
         if (
@@ -6145,7 +6149,7 @@ function performWork(request$jscomp$1) {
                   request.clientRenderedBoundaries.push(boundary$jscomp$0);
                 0 === request.pendingRootTasks &&
                   null === request.trackedPostpones &&
-                  null !== boundary$jscomp$0.contentPreamble &&
+                  null !== boundary$jscomp$0.preamble &&
                   preparePreamble(request);
               }
               0 === request.allPendingTasks && completeAll(request);
@@ -6197,12 +6201,11 @@ function preparePreambleFromSegment(
       segment,
       collectedPreambleSegments
     );
-  var preamble = boundary.contentPreamble,
-    fallbackPreamble = boundary.fallbackPreamble;
-  if (null === preamble || null === fallbackPreamble) return !1;
+  var preamble = boundary.preamble;
+  if (null === preamble) return !1;
   switch (boundary.status) {
     case 1:
-      hoistPreambleState(request.renderState, preamble);
+      hoistPreambleState(request.renderState, preamble.content);
       request.byteSize += boundary.byteSize;
       segment = boundary.completedSegments[0];
       if (!segment) throw Error(formatProdErrorMessage(391));
@@ -6216,7 +6219,7 @@ function preparePreambleFromSegment(
     case 4:
       if (1 === segment.status)
         return (
-          hoistPreambleState(request.renderState, fallbackPreamble),
+          hoistPreambleState(request.renderState, preamble.fallback),
           preparePreambleFromSubtree(
             request,
             segment,
@@ -6932,4 +6935,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.3.0-www-modern-1e986f51-20251107";
+exports.version = "19.3.0-www-modern-fa50caf5-20251107";

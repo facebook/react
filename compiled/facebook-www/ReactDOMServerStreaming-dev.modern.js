@@ -4373,7 +4373,7 @@ __DEV__ &&
         (500 < boundary.byteSize ||
           hasSuspenseyContent(boundary.contentState) ||
           boundary.defer) &&
-        null === boundary.contentPreamble
+        null === boundary.preamble
       );
     }
     function defaultErrorHandler(error) {
@@ -4455,8 +4455,7 @@ __DEV__ &&
       request,
       row,
       fallbackAbortableTasks,
-      contentPreamble,
-      fallbackPreamble,
+      preamble,
       defer
     ) {
       fallbackAbortableTasks = {
@@ -4472,8 +4471,7 @@ __DEV__ &&
         errorDigest: null,
         contentState: createHoistableState(),
         fallbackState: createHoistableState(),
-        contentPreamble: contentPreamble,
-        fallbackPreamble: fallbackPreamble,
+        preamble: preamble,
         tracked: null,
         errorMessage: null,
         errorStack: null,
@@ -4481,11 +4479,11 @@ __DEV__ &&
       };
       null !== row &&
         (row.pendingTasks++,
-        (contentPreamble = row.boundaries),
-        null !== contentPreamble &&
+        (preamble = row.boundaries),
+        null !== preamble &&
           (request.allPendingTasks++,
           fallbackAbortableTasks.pendingTasks++,
-          contentPreamble.push(fallbackAbortableTasks)),
+          preamble.push(fallbackAbortableTasks)),
         (request = row.inheritedHoistables),
         null !== request &&
           hoistHoistables(fallbackAbortableTasks.contentState, request));
@@ -5831,15 +5829,16 @@ __DEV__ &&
                       request,
                       task.row,
                       fallbackAbortSet,
-                      createPreambleState(),
-                      createPreambleState(),
+                      {
+                        content: createPreambleState(),
+                        fallback: createPreambleState()
+                      },
                       defer
                     )
                   : createSuspenseBoundary(
                       request,
                       task.row,
                       fallbackAbortSet,
-                      null,
                       null,
                       defer
                     );
@@ -5887,7 +5886,10 @@ __DEV__ &&
                   };
                 }
                 task.blockedSegment = boundarySegment;
-                task.blockedPreamble = newBoundary.fallbackPreamble;
+                task.blockedPreamble =
+                  null === newBoundary.preamble
+                    ? null
+                    : newBoundary.preamble.fallback;
                 task.keyPath = fallbackKeyPath;
                 task.formatContext = getSuspenseFallbackFormatContext(
                   request.resumableState,
@@ -5925,7 +5927,9 @@ __DEV__ &&
                   -1,
                   newBoundary,
                   contentRootSegment,
-                  newBoundary.contentPreamble,
+                  null === newBoundary.preamble
+                    ? null
+                    : newBoundary.preamble.content,
                   newBoundary.contentState,
                   task.abortSet,
                   keyPath,
@@ -5944,7 +5948,10 @@ __DEV__ &&
                 request.pingedTasks.push(suspendedPrimaryTask);
               } else {
                 task.blockedBoundary = newBoundary;
-                task.blockedPreamble = newBoundary.contentPreamble;
+                task.blockedPreamble =
+                  null === newBoundary.preamble
+                    ? null
+                    : newBoundary.preamble.content;
                 task.hoistableState = newBoundary.contentState;
                 task.blockedSegment = contentRootSegment;
                 task.keyPath = keyPath;
@@ -6021,7 +6028,9 @@ __DEV__ &&
                   -1,
                   parentBoundary,
                   boundarySegment,
-                  newBoundary.fallbackPreamble,
+                  null === newBoundary.preamble
+                    ? null
+                    : newBoundary.preamble.fallback,
                   newBoundary.fallbackState,
                   fallbackAbortSet,
                   [keyPath[0], "Suspense Fallback", keyPath[2]],
@@ -6290,15 +6299,16 @@ __DEV__ &&
                       replay,
                       task.row,
                       props,
-                      createPreambleState(),
-                      createPreambleState(),
+                      {
+                        content: createPreambleState(),
+                        fallback: createPreambleState()
+                      },
                       resumedBoundary
                     )
                   : createSuspenseBoundary(
                       replay,
                       task.row,
                       props,
-                      null,
                       null,
                       resumedBoundary
                     );
@@ -7067,7 +7077,6 @@ __DEV__ &&
               null,
               new Set(),
               null,
-              null,
               !1
             );
           resumedBoundary.parentFlushed = !0;
@@ -7353,7 +7362,7 @@ __DEV__ &&
                   finishSuspenseListRow(request, row)),
               0 === request.pendingRootTasks &&
                 null === request.trackedPostpones &&
-                null !== boundary.contentPreamble &&
+                null !== boundary.preamble &&
                 preparePreamble(request);
           else {
             if (
@@ -7423,12 +7432,11 @@ __DEV__ &&
           segment,
           collectedPreambleSegments
         );
-      var preamble = boundary.contentPreamble,
-        fallbackPreamble = boundary.fallbackPreamble;
-      if (null === preamble || null === fallbackPreamble) return !1;
+      var preamble = boundary.preamble;
+      if (null === preamble) return !1;
       switch (boundary.status) {
         case 1:
-          hoistPreambleState(request.renderState, preamble);
+          hoistPreambleState(request.renderState, preamble.content);
           request.byteSize += boundary.byteSize;
           segment = boundary.completedSegments[0];
           if (!segment)
@@ -7445,7 +7453,7 @@ __DEV__ &&
         case 4:
           if (1 === segment.status)
             return (
-              hoistPreambleState(request.renderState, fallbackPreamble),
+              hoistPreambleState(request.renderState, preamble.fallback),
               preparePreambleFromSubtree(
                 request,
                 segment,
@@ -9840,7 +9848,7 @@ __DEV__ &&
                         );
                       0 === request$jscomp$0.pendingRootTasks &&
                         null === request$jscomp$0.trackedPostpones &&
-                        null !== boundary$jscomp$0.contentPreamble &&
+                        null !== boundary$jscomp$0.preamble &&
                         preparePreamble(request$jscomp$0);
                     }
                     0 === request$jscomp$0.allPendingTasks &&
