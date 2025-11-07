@@ -901,9 +901,10 @@ describe('Store component filters', () => {
               <h1>
             ▾ <main>
               ▾ <Layout>
-                  <Activity name="/blog">
+                ▸ <Activity name="/blog">
       [suspense-root]  rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:13,height:1}]}
         <Suspense name="Unknown" rects={[{x:1,y:2,width:4,height:1}, {x:1,y:2,width:13,height:1}]}>
+          <Suspense name="Page" rects={[{x:1,y:2,width:9,height:1}]}>
     `);
 
     await actAsync(async () => (store.componentFilters = []));

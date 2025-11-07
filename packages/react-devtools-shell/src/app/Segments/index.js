@@ -39,33 +39,39 @@ function Page(): React.Node {
 
 function InnerSegment({children}: {children: React.Node}): React.Node {
   return (
-    <React.Suspense name="InnerSegment" fallback={<p>Loading...</p>}>
+    <>
       <h3>Inner Segment</h3>
-      <section>{children}</section>
-      <p>After inner</p>
-    </React.Suspense>
+      <React.Suspense name="InnerSegment" fallback={<p>Loading...</p>}>
+        <section>{children}</section>
+        <p>After inner</p>
+      </React.Suspense>
+    </>
   );
 }
 
 const cookies = deferred(200, 'Cookies: 🍪🍪🍪', 'cookies');
 function OuterSegment({children}: {children: React.Node}): React.Node {
   return (
-    <React.Suspense name="OuterSegment" fallback={<p>Loading outer</p>}>
+    <>
       <h2>Outer Segment</h2>
-      <p>{cookies}</p>
-      <div>{children}</div>
-      <p>After outer</p>
-    </React.Suspense>
+      <React.Suspense name="OuterSegment" fallback={<p>Loading outer</p>}>
+        <p>{cookies}</p>
+        <div>{children}</div>
+        <p>After outer</p>
+      </React.Suspense>
+    </>
   );
 }
 
 function Root({children}: {children: React.Node}): React.Node {
   return (
-    <React.Suspense name="Root" fallback={<p>Loading root</p>}>
+    <>
       <h1>Root Segment</h1>
-      <main>{children}</main>
-      <footer>After root</footer>
-    </React.Suspense>
+      <React.Suspense name="Root" fallback={<p>Loading root</p>}>
+        <main>{children}</main>
+        <footer>After root</footer>
+      </React.Suspense>
+    </>
   );
 }
 

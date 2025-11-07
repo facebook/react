@@ -28,7 +28,7 @@ import {
   SUSPENSE_TREE_OPERATION_RESIZE,
   SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from '../constants';
-import {ElementTypeRoot} from '../frontend/types';
+import {ElementTypeRoot, ElementTypeActivity} from '../frontend/types';
 import {
   getSavedComponentFilters,
   setSavedComponentFilters,
@@ -2073,12 +2073,67 @@ export default class Store extends EventEmitter<{
       console.groupEnd();
     }
 
+    if (nextActivitySliceID !== null && nextActivitySliceID !== 0) {
+      let didCollapse = false;
+      // The backend filtered everything above the Activity slice.
+      // We need to hide everything below the Activity slice by collapsing
+      // the Activities that are descendants of the next Activity slice.
+      const nextActivitySlice = this._idToElement.get(nextActivitySliceID);
+      if (nextActivitySlice === undefined) {
+        throw new Error('Next Activity slice not found in Store.');
+      }
+
+      for (let j = 0; j < nextActivitySlice.children.length; j++) {
+        didCollapse ||= this._collapseActivitiesRecursively(
+          nextActivitySlice.children[j],
+        );
+      }
+
+      if (didCollapse) {
+        let weightAcrossRoots = 0;
+        this._roots.forEach(rootID => {
+          const {weight} = ((this.getElementByID(rootID): any): Element);
+          weightAcrossRoots += weight;
+        });
+        this._weightAcrossRoots = weightAcrossRoots;
+      }
+    }
+
     this.emit('mutated', [
       addedElementIDs,
       removedElementIDs,
       nextActivitySliceID,
     ]);
   };
+
+  _collapseActivitiesRecursively(elementID: number): boolean {
+    let didMutate = false;
+    const element = this._idToElement.get(elementID);
+    if (element === undefined) {
+      throw new Error('Element not found in Store.');
+    }
+
+    if (element.type === ElementTypeActivity) {
+      if (!element.isCollapsed) {
+        element.isCollapsed = true;
+
+        const weightDelta = 1 - element.weight;
+
+        let parentElement = this._idToElement.get(element.parentID);
+        while (parentElement !== undefined) {
+          parentElement.weight += weightDelta;
+          parentElement = this._idToElement.get(parentElement.parentID);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    for (let i = 0; i < element.children.length; i++) {
+      didMutate ||= this._collapseActivitiesRecursively(element.children[i]);
+    }
+    return didMutate;
+  }
 
   // Certain backends save filters on a per-domain basis.
   // In order to prevent filter preferences and applied filters from being out of sync,

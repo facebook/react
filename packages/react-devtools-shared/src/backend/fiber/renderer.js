@@ -1437,9 +1437,9 @@ export function attach(
   const hideElementsWithPaths: Set<RegExp> = new Set();
   const hideElementsWithTypes: Set<ElementType> = new Set();
   const hideElementsWithEnvs: Set<string> = new Set();
-  let activitySliceID: null | FiberInstance['id'] = null;
-  let activitySlice: null | Fiber = null;
-  let isInActivitySlice: boolean = true;
+  let focusedActivityID: null | FiberInstance['id'] = null;
+  let focusedActivity: null | Fiber = null;
+  let isInFocusedActivity: boolean = true;
 
   // Highlight updates
   let traceUpdatesEnabled: boolean = false;
@@ -1454,9 +1454,9 @@ export function attach(
     hideElementsWithPaths.clear();
     hideElementsWithEnvs.clear();
     // Consider everything in the slice by default
-    activitySliceID = null;
-    activitySlice = null;
-    isInActivitySlice = true;
+    focusedActivityID = null;
+    focusedActivity = null;
+    isInFocusedActivity = true;
 
     componentFilters.forEach(componentFilter => {
       if (!componentFilter.isEnabled) {
@@ -1490,8 +1490,8 @@ export function attach(
             nextActivitySlice !== null &&
             nextActivitySlice.tag === ActivityComponent
           ) {
-            activitySlice = nextActivitySlice;
-            isInActivitySlice = false;
+            focusedActivity = nextActivitySlice;
+            isInFocusedActivity = false;
           } else {
             // We're not filtering by activity slice after all.
             // Don't mark the filter as disabled here.
@@ -1543,13 +1543,13 @@ export function attach(
     // The ID will be based on the old tree. We need to find the Fiber based on
     // that ID before we unmount everything. We set the activity slice ID once
     // we mount it again.
-    let nextActivitySlice: null | Fiber = null;
+    let nextFocusedActivity: null | Fiber = null;
     for (let i = 0; i < componentFilters.length; i++) {
       const filter = componentFilters[i];
       if (filter.type === ComponentFilterActivitySlice && filter.isEnabled) {
         const instance = idToDevToolsInstanceMap.get(filter.activityID);
         if (instance !== undefined && instance.kind === FIBER_INSTANCE) {
-          nextActivitySlice = instance.data;
+          nextFocusedActivity = instance.data;
         }
       }
     }
@@ -1569,13 +1569,13 @@ export function attach(
       currentRoot = (null: any);
     });
 
-    if (nextActivitySlice !== activitySlice) {
-      // Set the applied slice to 0 for now.
+    if (nextFocusedActivity !== focusedActivity) {
       // When we find the applied instance during mount we will send the actual ID.
+      // Otherwise 0 will indicate that we unfocused the activity slice.
       pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
       pushOperation(0);
     }
-    applyComponentFilters(componentFilters, nextActivitySlice);
+    applyComponentFilters(componentFilters, nextFocusedActivity);
 
     // Reset pseudo counters so that new path selections will be persisted.
     rootDisplayNameCounter.clear();
@@ -1700,7 +1700,7 @@ export function attach(
     const {tag, type, key} = fiber;
 
     // It is never valid to filter the root element.
-    if (tag !== HostRoot && !isInActivitySlice) {
+    if (tag !== HostRoot && !isInFocusedActivity) {
       return true;
     }
 
@@ -4068,11 +4068,11 @@ export function attach(
     fiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): void {
-    const isActivitySliceEntry =
-      activitySlice !== null &&
-      (fiber === activitySlice || fiber.alternate === activitySlice);
-    if (isActivitySliceEntry) {
-      isInActivitySlice = true;
+    const isFocusedActivityEntry =
+      focusedActivity !== null &&
+      (fiber === focusedActivity || fiber.alternate === focusedActivity);
+    if (isFocusedActivityEntry) {
+      isInFocusedActivity = true;
     }
 
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
@@ -4080,8 +4080,8 @@ export function attach(
     let newSuspenseNode = null;
     if (shouldIncludeInTree) {
       newInstance = recordMount(fiber, reconcilingParent);
-      if (isActivitySliceEntry) {
-        activitySliceID = newInstance.id;
+      if (isFocusedActivityEntry) {
+        focusedActivityID = newInstance.id;
         pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
         pushOperation(newInstance.id);
       }
@@ -4200,7 +4200,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
-    const stashedIsInActivitySlice = isInActivitySlice;
+    const stashedIsInActivitySlice = isInFocusedActivity;
     if (newInstance !== null) {
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = newInstance;
@@ -4215,11 +4215,15 @@ export function attach(
       shouldPopSuspenseNode = true;
     }
     if (
-      !isActivitySliceEntry &&
-      activitySlice !== null &&
+      !isFocusedActivityEntry &&
+      focusedActivity !== null &&
       fiber.tag === ActivityComponent
     ) {
-      isInActivitySlice = false;
+      // We're not filtering how Activity within the focused activity.
+      // We cut of the bottom in the Frontend if we want to just show the
+      // Activity slice instead of all Activity descendants.
+      // The filtering in the backend only happens because filtering out
+      // everything above the focused Activity is hard to implement in the frontend.
     }
     try {
       if (traceUpdatesEnabled) {
@@ -4348,7 +4352,7 @@ export function attach(
         }
       }
     } finally {
-      isInActivitySlice = stashedIsInActivitySlice;
+      isInFocusedActivity = stashedIsInActivitySlice;
       if (newInstance !== null) {
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
@@ -4380,7 +4384,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
-    const stashedIsInActivitySlice = isInActivitySlice;
+    const stashedIsInActivitySlice = isInFocusedActivity;
     const previousSuspendedBy = instance.suspendedBy;
     // Push a new DevTools instance parent while reconciling this subtree.
     reconcilingParent = instance;
@@ -4399,15 +4403,16 @@ export function attach(
       shouldPopSuspenseNode = true;
     }
 
-    if (activitySlice !== null) {
-      if (instance.id === activitySliceID) {
-        isInActivitySlice = true;
+    if (focusedActivity !== null) {
+      if (instance.id === focusedActivityID) {
+        isInFocusedActivity = true;
       } else if (
         instance.kind === FIBER_INSTANCE &&
         instance.data !== null &&
         instance.data.tag === ActivityComponent
       ) {
-        isInActivitySlice = false;
+        // Filtering nested Activity components inside the focused activity
+        // is done in the frontend.
       }
     }
 
@@ -4461,7 +4466,7 @@ export function attach(
         previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
         remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
       }
-      isInActivitySlice = stashedIsInActivitySlice;
+      isInFocusedActivity = stashedIsInActivitySlice;
     }
     if (instance.kind === FIBER_INSTANCE) {
       recordUnmount(instance);
@@ -5142,7 +5147,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
-    const stashedIsInActivitySlice = isInActivitySlice;
+    const stashedIsInActivitySlice = isInFocusedActivity;
     let updateFlags = NoUpdate;
     let shouldMeasureSuspenseNode = false;
     let shouldPopSuspenseNode = false;
@@ -5183,12 +5188,12 @@ export function attach(
         shouldPopSuspenseNode = true;
       }
 
-      if (activitySlice !== null) {
-        if (fiberInstance.id === activitySliceID) {
-          isInActivitySlice = true;
+      if (focusedActivity !== null) {
+        if (fiberInstance.id === focusedActivityID) {
+          isInFocusedActivity = true;
         } else if (nextFiber.tag === ActivityComponent) {
-          // Reached the next Activity so we're exiting the slice.
-          isInActivitySlice = false;
+          // Filtering nested Activity components inside the focused activity
+          // is done in the frontend.
         }
       }
     }
@@ -5615,7 +5620,7 @@ export function attach(
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
         }
-        isInActivitySlice = stashedIsInActivitySlice;
+        isInFocusedActivity = stashedIsInActivitySlice;
       }
     }
   }
