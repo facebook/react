@@ -61,6 +61,8 @@ import {
   writePlaceholder,
   pushStartActivityBoundary,
   pushEndActivityBoundary,
+  pushStartSuspenseListBoundary,
+  pushEndSuspenseListBoundary,
   writeStartCompletedSuspenseBoundary,
   writeStartPendingSuspenseBoundary,
   writeStartClientRenderedSuspenseBoundary,
