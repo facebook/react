@@ -38,6 +38,8 @@ import {getParentHydrationBoundary} from './ReactFiberConfigDOM';
 
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
+import {enableInternalInstanceMap} from 'shared/ReactFeatureFlags';
+
 const randomKey = Math.random().toString(36).slice(2);
 const internalInstanceKey = '__reactFiber$' + randomKey;
 const internalPropsKey = '__reactProps$' + randomKey;
@@ -49,7 +51,32 @@ const internalRootNodeResourcesKey = '__reactResources$' + randomKey;
 const internalHoistableMarker = '__reactMarker$' + randomKey;
 const internalScrollTimer = '__reactScroll$' + randomKey;
 
+type InstanceUnion =
+  | Instance
+  | TextInstance
+  | SuspenseInstance
+  | ActivityInstance
+  | ReactScopeInstance
+  | Container;
+
+const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+const internalInstanceMap:
+  | WeakMap<InstanceUnion, Fiber>
+  | Map<InstanceUnion, Fiber> = new PossiblyWeakMap();
+const internalPropsMap:
+  | WeakMap<InstanceUnion, Props>
+  | Map<InstanceUnion, Props> = new PossiblyWeakMap();
+
 export function detachDeletedInstance(node: Instance): void {
+  if (enableInternalInstanceMap) {
+    internalInstanceMap.delete(node);
+    internalPropsMap.delete(node);
+    delete (node: any)[internalEventHandlersKey];
+    delete (node: any)[internalEventHandlerListenersKey];
+    delete (node: any)[internalEventHandlesSetKey];
+    delete (node: any)[internalRootNodeResourcesKey];
+    return;
+  }
   // TODO: This function is only called on host components. I don't think all of
   // these fields are relevant.
   delete (node: any)[internalInstanceKey];
@@ -68,6 +95,10 @@ export function precacheFiberNode(
     | ActivityInstance
     | ReactScopeInstance,
 ): void {
+  if (enableInternalInstanceMap) {
+    internalInstanceMap.set(node, hostInst);
+    return;
+  }
   (node: any)[internalInstanceKey] = hostInst;
 }
 
@@ -95,7 +126,12 @@ export function isContainerMarkedAsRoot(node: Container): boolean {
 // HostRoot back. To get to the HostRoot, you need to pass a child of it.
 // The same thing applies to Suspense and Activity boundaries.
 export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
-  let targetInst = (targetNode: any)[internalInstanceKey];
+  let targetInst: void | Fiber;
+  if (enableInternalInstanceMap) {
+    targetInst = internalInstanceMap.get(((targetNode: any): InstanceUnion));
+  } else {
+    targetInst = (targetNode: any)[internalInstanceKey];
+  }
   if (targetInst) {
     // Don't return HostRoot, SuspenseComponent or ActivityComponent here.
     return targetInst;
@@ -112,9 +148,15 @@ export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
     // itself because the fibers are conceptually between the container
     // node and the first child. It isn't surrounding the container node.
     // If it's not a container, we check if it's an instance.
-    targetInst =
-      (parentNode: any)[internalContainerInstanceKey] ||
-      (parentNode: any)[internalInstanceKey];
+    if (enableInternalInstanceMap) {
+      targetInst =
+        (parentNode: any)[internalContainerInstanceKey] ||
+        internalInstanceMap.get(((parentNode: any): InstanceUnion));
+    } else {
+      targetInst =
+        (parentNode: any)[internalContainerInstanceKey] ||
+        (parentNode: any)[internalInstanceKey];
+    }
     if (targetInst) {
       // Since this wasn't the direct target of the event, we might have
       // stepped past dehydrated DOM nodes to get here. However they could
@@ -147,8 +189,10 @@ export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
           // have had an internalInstanceKey on it.
           // Let's get the fiber associated with the SuspenseComponent
           // as the deepest instance.
-          // $FlowFixMe[prop-missing]
-          const targetFiber = hydrationInstance[internalInstanceKey];
+          const targetFiber = enableInternalInstanceMap
+            ? internalInstanceMap.get(hydrationInstance)
+            : // $FlowFixMe[prop-missing]
+              hydrationInstance[internalInstanceKey];
           if (targetFiber) {
             return targetFiber;
           }
@@ -175,9 +219,16 @@ export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
  * instance, or null if the node was not rendered by this React.
  */
 export function getInstanceFromNode(node: Node): Fiber | null {
-  const inst =
-    (node: any)[internalInstanceKey] ||
-    (node: any)[internalContainerInstanceKey];
+  let inst: void | null | Fiber;
+  if (enableInternalInstanceMap) {
+    inst =
+      internalInstanceMap.get(((node: any): InstanceUnion)) ||
+      (node: any)[internalContainerInstanceKey];
+  } else {
+    inst =
+      (node: any)[internalInstanceKey] ||
+      (node: any)[internalContainerInstanceKey];
+  }
   if (inst) {
     const tag = inst.tag;
     if (
@@ -226,16 +277,24 @@ export function getFiberCurrentPropsFromNode(
     | TextInstance
     | SuspenseInstance
     | ActivityInstance,
-): Props {
+): Props | null {
+  if (enableInternalInstanceMap) {
+    return internalPropsMap.get(node) || null;
+  }
   return (node: any)[internalPropsKey] || null;
 }
 
 export function updateFiberProps(node: Instance, props: Props): void {
+  if (enableInternalInstanceMap) {
+    internalPropsMap.set(node, props);
+    return;
+  }
   (node: any)[internalPropsKey] = props;
 }
 
 export function getEventListenerSet(node: EventTarget): Set<string> {
-  let elementListenerSet = (node: any)[internalEventHandlersKey];
+  let elementListenerSet: Set<string> | void;
+  elementListenerSet = (node: any)[internalEventHandlersKey];
   if (elementListenerSet === undefined) {
     elementListenerSet = (node: any)[internalEventHandlersKey] = new Set();
   }
@@ -246,6 +305,9 @@ export function getFiberFromScopeInstance(
   scope: ReactScopeInstance,
 ): null | Fiber {
   if (enableScopeAPI) {
+    if (enableInternalInstanceMap) {
+      return internalInstanceMap.get(((scope: any): InstanceUnion)) || null;
+    }
     return (scope: any)[internalInstanceKey] || null;
   }
   return null;
@@ -318,6 +380,12 @@ export function clearScrollEndTimer(node: EventTarget): void {
 }
 
 export function isOwnedInstance(node: Node): boolean {
+  if (enableInternalInstanceMap) {
+    return !!(
+      (node: any)[internalHoistableMarker] ||
+      internalInstanceMap.has((node: any))
+    );
+  }
   return !!(
     (node: any)[internalHoistableMarker] || (node: any)[internalInstanceKey]
   );

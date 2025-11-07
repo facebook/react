@@ -147,6 +147,8 @@ export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
 export const enableFragmentRefsInstanceHandles: boolean = false;
 
+export const enableInternalInstanceMap: boolean = false;
+
 // -----------------------------------------------------------------------------
 // Ready for next major.
 //
