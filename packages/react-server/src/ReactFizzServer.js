@@ -234,6 +234,14 @@ type LegacyContext = {
   [key: string]: any,
 };
 
+// This type is only used for SuspenseLists that may have hidden tail rows and therefore
+// add new segments to the end of the list as it streams.
+type SuspenseList = {
+  id: number,
+  forwards: boolean,
+  completedRows: number,
+};
+
 type SuspenseListRow = {
   pendingTasks: number, // The number of tasks, previous rows and inner suspense boundaries blocking this row.
   boundaries: null | Array<SuspenseBoundary>, // The boundaries in this row waiting to be unblocked by the previous row. (null means this row is not blocked)
@@ -250,6 +258,7 @@ type SuspenseBoundary = {
   rootSegmentID: number,
   parentFlushed: boolean,
   pendingTasks: number, // when it reaches zero we can show this boundary's content
+  list: null | SuspenseList, // if this boundary is an implicit boundary around a row, then this is the suspense list that it's added to.
   row: null | SuspenseListRow, // the row that this boundary blocks from completing.
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
@@ -795,6 +804,7 @@ function pingTask(request: Request, task: Task): void {
 
 function createSuspenseBoundary(
   request: Request,
+  list: null | SuspenseList,
   row: null | SuspenseListRow,
   fallbackAbortableTasks: Set<Task>,
   preamble: null | Preamble,
@@ -805,6 +815,7 @@ function createSuspenseBoundary(
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
+    list: null,
     row: row,
     completedSegments: [],
     byteSize: 0,
@@ -1295,6 +1306,7 @@ function renderSuspenseBoundary(
   const fallbackAbortSet: Set<Task> = new Set();
   const newBoundary = createSuspenseBoundary(
     request,
+    null,
     task.row,
     fallbackAbortSet,
     canHavePreamble(task.formatContext) ? createPreamble() : null,
@@ -1596,6 +1608,7 @@ function replaySuspenseBoundary(
   const fallbackAbortSet: Set<Task> = new Set();
   const resumedBoundary = createSuspenseBoundary(
     request,
+    null,
     task.row,
     fallbackAbortSet,
     canHavePreamble(task.formatContext) ? createPreamble() : null,
@@ -1809,6 +1822,14 @@ function tryToResolveTogetherRow(
   if (allCompleteAndInlinable) {
     unblockSuspenseListRow(request, togetherRow, togetherRow.hoistables);
   }
+}
+
+function createSuspenseList(mode: SuspenseListRevealOrder): SuspenseList {
+  return {
+    id: -1,
+    forwards: mode !== 'backwards' && mode !== 'unstable_legacy-backwards',
+    completedRows: 0,
+  };
 }
 
 function createSuspenseListRow(
@@ -4400,6 +4421,7 @@ function abortRemainingSuspenseBoundary(
 ): void {
   const resumedBoundary = createSuspenseBoundary(
     request,
+    null,
     null,
     new Set(),
     null,
