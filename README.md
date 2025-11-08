@@ -76,3 +76,7 @@ To help you get your feet wet and get you familiar with our contribution process
 ### License
 
 React is [MIT licensed](./LICENSE).
+## বাংলা (Bangla)
+
+React হলো Facebook-এর তৈরি একটি জাভাস্ক্রিপ্ট লাইব্রেরি।
+এখানে বাংলায় শিখতে পারো: https://youtube.com/playlist?list=PLHiZLGpE9O8...
