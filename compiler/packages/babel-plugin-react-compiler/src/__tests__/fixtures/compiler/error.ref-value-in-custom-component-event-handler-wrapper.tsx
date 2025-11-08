@@ -1,4 +1,4 @@
-// @validateRefAccessDuringRender
+// @enableInferEventHandlers
 import {useRef} from 'react';
 
 // Simulates a custom component wrapper

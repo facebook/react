@@ -14,12 +14,14 @@ import {
   BlockId,
   HIRFunction,
   IdentifierId,
+  Identifier,
   Place,
   SourceLocation,
   getHookKindForType,
   isRefValueType,
   isUseRefType,
 } from '../HIR';
+import {BuiltInEventHandlerId} from '../HIR/ObjectShape';
 import {
   eachInstructionOperand,
   eachInstructionValueOperand,
@@ -181,6 +183,11 @@ function refTypeOfType(place: Place): RefAccessType {
   } else {
     return {kind: 'None'};
   }
+}
+
+function isEventHandlerType(identifier: Identifier): boolean {
+  const type = identifier.type;
+  return type.kind === 'Function' && type.shapeId === BuiltInEventHandlerId;
 }
 
 function tyEqual(a: RefAccessType, b: RefAccessType): boolean {
@@ -354,7 +361,6 @@ function validateNoRefAccessInRenderImpl(
   }
 
   const interpolatedAsJsx = new Set<IdentifierId>();
-  const usedAsEventHandlerProp = new Set<IdentifierId>();
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
       const {value} = instr;
@@ -362,27 +368,6 @@ function validateNoRefAccessInRenderImpl(
         if (value.children != null) {
           for (const child of value.children) {
             interpolatedAsJsx.add(child.identifier.id);
-          }
-        }
-        if (value.kind === 'JsxExpression') {
-          /*
-           * Track identifiers used as event handler props on built-in DOM elements.
-           * We only allow this optimization for native DOM elements because their
-           * event handlers are guaranteed by React to only execute in response to
-           * events, never during render. Custom components could technically call
-           * their onFoo props during render, which would violate ref access rules.
-           */
-          if (value.tag.kind === 'BuiltinTag') {
-            for (const prop of value.props) {
-              if (
-                prop.kind === 'JsxAttribute' &&
-                prop.name.startsWith('on') &&
-                prop.name.length > 2 &&
-                prop.name[2] === prop.name[2].toUpperCase()
-              ) {
-                usedAsEventHandlerProp.add(prop.place.identifier.id);
-              }
-            }
           }
         }
       }
@@ -541,8 +526,8 @@ function validateNoRefAccessInRenderImpl(
              */
             if (!didError) {
               const isRefLValue = isUseRefType(instr.lvalue.identifier);
-              const isUsedAsEventHandler = usedAsEventHandlerProp.has(
-                instr.lvalue.identifier.id,
+              const isEventHandlerLValue = isEventHandlerType(
+                instr.lvalue.identifier,
               );
               for (const operand of eachInstructionValueOperand(instr.value)) {
                 /**
@@ -551,29 +536,16 @@ function validateNoRefAccessInRenderImpl(
                  */
                 if (
                   isRefLValue ||
+                  isEventHandlerLValue ||
                   (hookKind != null &&
                     hookKind !== 'useState' &&
                     hookKind !== 'useReducer')
                 ) {
                   /**
-                   * Special cases:
-                   *
-                   * 1. the lvalue is a ref
-                   * In general passing a ref to a function may access that ref
-                   * value during render, so we disallow it.
-                   *
-                   * The main exception is the "mergeRefs" pattern, ie a function
-                   * that accepts multiple refs as arguments (or an array of refs)
-                   * and returns a new, aggregated ref. If the lvalue is a ref,
-                   * we assume that the user is doing this pattern and allow passing
-                   * refs.
-                   *
-                   * Eg `const mergedRef = mergeRefs(ref1, ref2)`
-                   *
-                   * 2. calling hooks
-                   *
-                   * Hooks are independently checked to ensure they don't access refs
-                   * during render.
+                   * Allow passing refs or ref-accessing functions when:
+                   * 1. lvalue is a ref (mergeRefs pattern: `mergeRefs(ref1, ref2)`)
+                   * 2. lvalue is an event handler (DOM events execute outside render)
+                   * 3. calling hooks (independently validated for ref safety)
                    */
                   validateNoDirectRefValueAccess(errors, operand, env);
                 } else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
@@ -585,25 +557,6 @@ function validateNoRefAccessInRenderImpl(
                    * render function which attempts to obey the rules.
                    */
                   validateNoRefValueAccess(errors, env, operand);
-                } else if (isUsedAsEventHandler) {
-                  /**
-                   * Special case: the lvalue is used as an event handler prop
-                   * on a built-in DOM element
-                   *
-                   * For example `<form onSubmit={handleSubmit(onSubmit)}>`. Here
-                   * handleSubmit is wrapping onSubmit to create an event handler.
-                   * Functions passed to event handler wrappers can safely access
-                   * refs because built-in DOM event handlers are guaranteed by React
-                   * to only execute in response to actual events, never during render.
-                   *
-                   * We only allow this for built-in DOM elements (not custom components)
-                   * because custom components could technically call their onFoo props
-                   * during render, which would violate ref access rules.
-                   *
-                   * We allow passing functions with ref access to these wrappers,
-                   * but still validate that direct ref values aren't passed.
-                   */
-                  validateNoDirectRefValueAccess(errors, operand, env);
                 } else {
                   validateNoRefPassedToFunction(
                     errors,

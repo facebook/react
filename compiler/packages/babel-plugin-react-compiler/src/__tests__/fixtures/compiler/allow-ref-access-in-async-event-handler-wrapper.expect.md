@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateRefAccessDuringRender
+// @enableInferEventHandlers
 import {useRef} from 'react';
 
 // Simulates react-hook-form's handleSubmit
@@ -56,7 +56,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender
+import { c as _c } from "react/compiler-runtime"; // @enableInferEventHandlers
 import { useRef } from "react";
 
 // Simulates react-hook-form's handleSubmit

@@ -29,7 +29,7 @@ import {
   BuiltInUseTransitionId,
   BuiltInWeakMapId,
   BuiltInWeakSetId,
-  BuiltinEffectEventId,
+  BuiltInEffectEventId,
   ReanimatedSharedValueId,
   ShapeRegistry,
   addFunction,
@@ -863,7 +863,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         returnType: {
           kind: 'Function',
           return: {kind: 'Poly'},
-          shapeId: BuiltinEffectEventId,
+          shapeId: BuiltInEffectEventId,
           isConstructor: false,
         },
         calleeEffect: Effect.Read,

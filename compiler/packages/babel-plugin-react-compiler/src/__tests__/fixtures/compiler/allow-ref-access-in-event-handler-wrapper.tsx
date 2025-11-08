@@ -1,4 +1,4 @@
-// @validateRefAccessDuringRender
+// @enableInferEventHandlers
 import {useRef} from 'react';
 
 // Simulates react-hook-form's handleSubmit or similar event handler wrappers

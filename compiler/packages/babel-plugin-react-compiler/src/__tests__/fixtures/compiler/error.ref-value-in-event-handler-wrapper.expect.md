@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateRefAccessDuringRender
+// @enableInferEventHandlers
 import {useRef} from 'react';
 
 // Simulates a handler wrapper
