@@ -6,12 +6,14 @@
  *
  * @flow
  */
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 import * as React from 'react';
 import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useReducer,
   useRef,
   Fragment,
@@ -30,7 +32,7 @@ import styles from './SuspenseTab.css';
 import SuspenseBreadcrumbs from './SuspenseBreadcrumbs';
 import SuspenseRects from './SuspenseRects';
 import SuspenseTimeline from './SuspenseTimeline';
-import SuspenseTreeList from './SuspenseTreeList';
+import ActivityList from './ActivityList';
 import {
   SuspenseTreeDispatcherContext,
   SuspenseTreeStateContext,
@@ -270,6 +272,17 @@ function SynchronizedScrollContainer({
   );
 }
 
+// TODO: Get this from the store directly.
+// The backend needs to keep a separate tree so that resuspending keeps Activity around.
+function useActivities(): $ReadOnlyArray<Element> {
+  const activities = useMemo(() => {
+    const items: Array<Element> = [];
+    return items;
+  }, []);
+
+  return activities;
+}
+
 function SuspenseTab(_: {}) {
   const store = useContext(StoreContext);
   const {hideSettings} = useContext(OptionsContext);
@@ -279,10 +292,10 @@ function SuspenseTab(_: {}) {
     initLayoutState,
   );
 
+  const activities = useActivities();
   // If there are no named Activity boundaries, we don't have any tree list and we should hide
-  // both the panel and the button to toggle it. Since we currently don't support it yet, it's
-  // always disabled.
-  const treeListDisabled = true;
+  // both the panel and the button to toggle it.
+  const treeListDisabled = activities.length === 0;
 
   const wrapperTreeRef = useRef<null | HTMLElement>(null);
   const resizeTreeRef = useRef<null | HTMLElement>(null);
@@ -462,10 +475,10 @@ function SuspenseTab(_: {}) {
         <div className={styles.TreeWrapper} ref={resizeTreeRef}>
           {treeListDisabled ? null : (
             <div
-              className={styles.TreeList}
+              className={styles.ActivityList}
               hidden={treeListHidden}
               ref={resizeTreeListRef}>
-              <SuspenseTreeList />
+              <ActivityList activities={activities} />
             </div>
           )}
           {treeListDisabled ? null : (
