@@ -43,9 +43,14 @@ export function useChangeActivitySliceAction(): (
     }
 
     if (activityID !== null) {
+      const rendererID = store.getRendererIDForElement(activityID);
+      if (rendererID === null) {
+        throw new Error('Expected to find renderer.');
+      }
       const activityFilter: ActivitySliceFilter = {
-        type: 6,
-        activityID: activityID,
+        type: ComponentFilterActivitySlice,
+        activityID,
+        rendererID,
         isValid: true,
         isEnabled: true,
       };

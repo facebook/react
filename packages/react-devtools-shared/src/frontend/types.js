@@ -119,6 +119,7 @@ export type EnvironmentNameComponentFilter = {
 export type ActivitySliceFilter = {
   type: 6,
   activityID: Element['id'],
+  rendererID: number,
   isValid: boolean,
   isEnabled: boolean,
 };

@@ -172,6 +172,7 @@ import type {
 } from '../types';
 import type {
   ComponentFilter,
+  ActivitySliceFilter,
   ElementType,
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
@@ -870,6 +871,9 @@ const idToDevToolsInstanceMap: Map<
   FiberInstance | VirtualInstance,
 > = new Map();
 
+let focusedActivityID: null | FiberInstance['id'] = null;
+let focusedActivity: null | Fiber = null;
+
 const idToSuspenseNodeMap: Map<FiberInstance['id'], SuspenseNode> = new Map();
 
 // Map of canonical HostInstances to the nearest parent DevToolsInstance.
@@ -1437,8 +1441,6 @@ export function attach(
   const hideElementsWithPaths: Set<RegExp> = new Set();
   const hideElementsWithTypes: Set<ElementType> = new Set();
   const hideElementsWithEnvs: Set<string> = new Set();
-  let focusedActivityID: null | FiberInstance['id'] = null;
-  let focusedActivity: null | Fiber = null;
   let isInFocusedActivity: boolean = true;
 
   // Highlight updates
@@ -1447,15 +1449,16 @@ export function attach(
 
   function applyComponentFilters(
     componentFilters: Array<ComponentFilter>,
-    nextActivitySlice: null | Fiber = null,
+    nextActivitySlice: null | Fiber,
   ) {
     hideElementsWithTypes.clear();
     hideElementsWithDisplayNames.clear();
     hideElementsWithPaths.clear();
     hideElementsWithEnvs.clear();
-    // Consider everything in the slice by default
+    const previousFocusedActivityID = focusedActivityID;
     focusedActivityID = null;
     focusedActivity = null;
+    // Consider everything in the slice by default
     isInFocusedActivity = true;
 
     componentFilters.forEach(componentFilter => {
@@ -1492,6 +1495,12 @@ export function attach(
           ) {
             focusedActivity = nextActivitySlice;
             isInFocusedActivity = false;
+            if (componentFilter.rendererID !== rendererID) {
+              // We filtered an Activity from another renderer.
+              // We need to restore the instance ID since we won't be mounting it
+              // in this renderer.
+              focusedActivityID = previousFocusedActivityID;
+            }
           } else {
             // We're not filtering by activity slice after all.
             // Don't mark the filter as disabled here.
@@ -1513,7 +1522,7 @@ export function attach(
   if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
     const restoredComponentFilters: Array<ComponentFilter> =
       persistableComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
-    applyComponentFilters(restoredComponentFilters);
+    applyComponentFilters(restoredComponentFilters, null);
   } else {
     // Unfortunately this feature is not expected to work for React Native for now.
     // It would be annoying for us to spam YellowBox warnings with unactionable stuff,
@@ -1521,7 +1530,7 @@ export function attach(
     //console.warn('⚛ DevTools: Could not locate saved component filters');
 
     // Fallback to assuming the default filters in this case.
-    applyComponentFilters(getDefaultComponentFilters());
+    applyComponentFilters(getDefaultComponentFilters(), null);
   }
 
   // If necessary, we can revisit optimizing this operation.
@@ -1544,9 +1553,11 @@ export function attach(
     // that ID before we unmount everything. We set the activity slice ID once
     // we mount it again.
     let nextFocusedActivity: null | Fiber = null;
+    let focusedActivityFilter: null | ActivitySliceFilter = null;
     for (let i = 0; i < componentFilters.length; i++) {
       const filter = componentFilters[i];
       if (filter.type === ComponentFilterActivitySlice && filter.isEnabled) {
+        focusedActivityFilter = filter;
         const instance = idToDevToolsInstanceMap.get(filter.activityID);
         if (instance !== undefined && instance.kind === FIBER_INSTANCE) {
           nextFocusedActivity = instance.data;
@@ -1569,7 +1580,11 @@ export function attach(
       currentRoot = (null: any);
     });
 
-    if (nextFocusedActivity !== focusedActivity) {
+    if (
+      nextFocusedActivity !== focusedActivity &&
+      (focusedActivityFilter === null ||
+        focusedActivityFilter.rendererID === rendererID)
+    ) {
       // When we find the applied instance during mount we will send the actual ID.
       // Otherwise 0 will indicate that we unfocused the activity slice.
       pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
@@ -1634,6 +1649,13 @@ export function attach(
       flushPendingEvents();
       currentRoot = (null: any);
     });
+
+    // We need to write back the new ID for the focused Fiber.
+    // Otherwise subsequent filter applications will try to focus based on the old ID.
+    // This is also relevant to filter across renderers.
+    if (focusedActivityFilter !== null && focusedActivityID !== null) {
+      focusedActivityFilter.activityID = focusedActivityID;
+    }
 
     flushPendingEvents();
 
