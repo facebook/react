@@ -28,7 +28,11 @@ import {
   SUSPENSE_TREE_OPERATION_RESIZE,
   SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from '../constants';
-import {ElementTypeRoot, ElementTypeActivity} from '../frontend/types';
+import {
+  ElementTypeRoot,
+  ElementTypeActivity,
+  ComponentFilterActivitySlice,
+} from '../frontend/types';
 import {
   getSavedComponentFilters,
   setSavedComponentFilters,
@@ -2096,6 +2100,18 @@ export default class Store extends EventEmitter<{
           weightAcrossRoots += weight;
         });
         this._weightAcrossRoots = weightAcrossRoots;
+      }
+    }
+
+    for (let j = 0; j < this._componentFilters.length; j++) {
+      const filter = this._componentFilters[j];
+      // If we're focusing an Activity, IDs may have changed.
+      if (filter.type === ComponentFilterActivitySlice) {
+        if (nextActivitySliceID === null || nextActivitySliceID === 0) {
+          filter.isValid = false;
+        } else {
+          filter.activityID = nextActivitySliceID;
+        }
       }
     }
 
