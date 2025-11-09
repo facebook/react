@@ -12,7 +12,10 @@ import type {Lane, Lanes} from './ReactFiberLane';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactFiberClassUpdateQueue';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
+import type {
+  OffscreenQueue,
+  OffscreenState,
+} from './ReactFiberOffscreenComponent';
 import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -676,6 +679,21 @@ function throwException(
           return false;
         }
         break;
+      case OffscreenComponent: {
+        const offscreenState: OffscreenState | null =
+          (workInProgress.memoizedState: any);
+        if (offscreenState !== null) {
+          // An error was thrown inside a hidden Offscreen boundary. This should
+          // not be allowed to escape into the visible part of the UI. Mark the
+          // boundary with ShouldCapture to abort the ongoing prerendering
+          // attempt. This is the same flag would be set if something were to
+          // suspend. It will be cleared the next time the boundary
+          // is attempted.
+          workInProgress.flags |= ShouldCapture;
+          return false;
+        }
+        break;
+      }
       default:
         break;
     }

@@ -18,6 +18,7 @@ import ToDoList from './ToDoList';
 import Toggle from './Toggle';
 import ErrorBoundaries from './ErrorBoundaries';
 import PartiallyStrictApp from './PartiallyStrictApp';
+import Segments from './Segments';
 import SuspenseTree from './SuspenseTree';
 import TraceUpdatesTest from './TraceUpdatesTest';
 import {ignoreErrors, ignoreLogs, ignoreWarnings} from './console';
@@ -114,6 +115,7 @@ function mountTestApp() {
   mountApp(DeeplyNestedComponents);
   mountApp(Iframe);
   mountApp(TraceUpdatesTest);
+  mountApp(Segments);
 
   if (shouldRenderLegacy) {
     mountLegacyApp(PartiallyStrictApp);

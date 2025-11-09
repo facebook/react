@@ -16,6 +16,7 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
@@ -472,6 +473,20 @@ function updateTree(
           }
         }
 
+        break;
+      }
+
+      case TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE: {
+        i++;
+        const activitySliceIDChange = operations[i++];
+        if (__DEBUG__) {
+          debug(
+            'Applied activity slice change',
+            activitySliceIDChange === 0
+              ? 'Reset applied activity slice'
+              : `Changed to activity slice ID ${activitySliceIDChange}`,
+          );
+        }
         break;
       }
 

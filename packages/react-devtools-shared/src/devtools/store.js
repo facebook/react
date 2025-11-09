@@ -21,13 +21,18 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
   SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from '../constants';
-import {ElementTypeRoot} from '../frontend/types';
+import {
+  ElementTypeRoot,
+  ElementTypeActivity,
+  ComponentFilterActivitySlice,
+} from '../frontend/types';
 import {
   getSavedComponentFilters,
   setSavedComponentFilters,
@@ -144,7 +149,13 @@ export default class Store extends EventEmitter<{
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
   hostInstanceSelected: [Element['id']],
   settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
-  mutated: [[Array<Element['id']>, Map<Element['id'], Element['id']>]],
+  mutated: [
+    [
+      Array<Element['id']>,
+      Map<Element['id'], Element['id']>,
+      Element['id'] | null,
+    ],
+  ],
   recordChangeDescriptions: [],
   roots: [],
   rootSupportsBasicProfiling: [],
@@ -1156,7 +1167,7 @@ export default class Store extends EventEmitter<{
         // The Tree context's search reducer expects an explicit list of ids for nodes that were added or removed.
         // In this  case, we can pass it empty arrays since nodes in a collapsed tree are still there (just hidden).
         // Updating the selected search index later may require auto-expanding a collapsed subtree though.
-        this.emit('mutated', [[], new Map()]);
+        this.emit('mutated', [[], new Map(), null]);
       }
     }
   }
@@ -1225,10 +1236,11 @@ export default class Store extends EventEmitter<{
 
     const addedElementIDs: Array<number> = [];
     // This is a mapping of removed ID -> parent ID:
+    // We'll use the parent ID to adjust selection if it gets deleted.
     const removedElementIDs: Map<number, number> = new Map();
     const removedSuspenseIDs: Map<SuspenseNode['id'], SuspenseNode['id']> =
       new Map();
-    // We'll use the parent ID to adjust selection if it gets deleted.
+    let nextActivitySliceID = null;
 
     let i = 2;
 
@@ -1962,6 +1974,11 @@ export default class Store extends EventEmitter<{
 
           break;
         }
+        case TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE: {
+          i++;
+          nextActivitySliceID = operations[i++];
+          break;
+        }
         default:
           this._throwAndEmitError(
             new UnsupportedBridgeOperationError(
@@ -2060,8 +2077,79 @@ export default class Store extends EventEmitter<{
       console.groupEnd();
     }
 
-    this.emit('mutated', [addedElementIDs, removedElementIDs]);
+    if (nextActivitySliceID !== null && nextActivitySliceID !== 0) {
+      let didCollapse = false;
+      // The backend filtered everything above the Activity slice.
+      // We need to hide everything below the Activity slice by collapsing
+      // the Activities that are descendants of the next Activity slice.
+      const nextActivitySlice = this._idToElement.get(nextActivitySliceID);
+      if (nextActivitySlice === undefined) {
+        throw new Error('Next Activity slice not found in Store.');
+      }
+
+      for (let j = 0; j < nextActivitySlice.children.length; j++) {
+        didCollapse ||= this._collapseActivitiesRecursively(
+          nextActivitySlice.children[j],
+        );
+      }
+
+      if (didCollapse) {
+        let weightAcrossRoots = 0;
+        this._roots.forEach(rootID => {
+          const {weight} = ((this.getElementByID(rootID): any): Element);
+          weightAcrossRoots += weight;
+        });
+        this._weightAcrossRoots = weightAcrossRoots;
+      }
+    }
+
+    for (let j = 0; j < this._componentFilters.length; j++) {
+      const filter = this._componentFilters[j];
+      // If we're focusing an Activity, IDs may have changed.
+      if (filter.type === ComponentFilterActivitySlice) {
+        if (nextActivitySliceID === null || nextActivitySliceID === 0) {
+          filter.isValid = false;
+        } else {
+          filter.activityID = nextActivitySliceID;
+        }
+      }
+    }
+
+    this.emit('mutated', [
+      addedElementIDs,
+      removedElementIDs,
+      nextActivitySliceID,
+    ]);
   };
+
+  _collapseActivitiesRecursively(elementID: number): boolean {
+    let didMutate = false;
+    const element = this._idToElement.get(elementID);
+    if (element === undefined) {
+      throw new Error('Element not found in Store.');
+    }
+
+    if (element.type === ElementTypeActivity) {
+      if (!element.isCollapsed) {
+        element.isCollapsed = true;
+
+        const weightDelta = 1 - element.weight;
+
+        let parentElement = this._idToElement.get(element.parentID);
+        while (parentElement !== undefined) {
+          parentElement.weight += weightDelta;
+          parentElement = this._idToElement.get(parentElement.parentID);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    for (let i = 0; i < element.children.length; i++) {
+      didMutate ||= this._collapseActivitiesRecursively(element.children[i]);
+    }
+    return didMutate;
+  }
 
   // Certain backends save filters on a per-domain basis.
   // In order to prevent filter preferences and applied filters from being out of sync,
@@ -2228,7 +2316,7 @@ export default class Store extends EventEmitter<{
 
     if (previousStatus !== status) {
       // Propagate to subscribers, although tree state has not changed
-      this.emit('mutated', [[], new Map()]);
+      this.emit('mutated', [[], new Map(), null]);
     }
   }
 

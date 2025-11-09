@@ -255,10 +255,11 @@ type SuspenseBoundary = {
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
   contentState: HoistableState,
   fallbackState: HoistableState,
-  contentPreamble: null | Preamble,
-  fallbackPreamble: null | Preamble,
-  trackedContentKeyPath: null | KeyNode, // used to track the path for replay nodes
-  trackedFallbackNode: null | ReplayNode, // used to track the fallback for replay nodes
+  preamble: null | Preamble,
+  tracked: null | {
+    contentKeyPath: null | KeyNode, // used to track the path for replay nodes
+    fallbackNode: null | ReplayNode, // used to track the fallback for replay nodes
+  },
   errorDigest: ?string, // the error hash if it errors
   // DEV-only fields
   errorMessage?: null | string, // the error string if it errors
@@ -273,7 +274,7 @@ type RenderTask = {
   ping: () => void,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
-  blockedPreamble: null | Preamble,
+  blockedPreamble: null | PreambleState,
   hoistableState: null | HoistableState, // Boundary state we'll mutate while rendering. This may not equal the state of the blockedBoundary
   abortSet: Set<Task>, // the abortable set that this task belongs to
   keyPath: Root | KeyNode, // the path of all parent keys currently rendering
@@ -396,7 +397,17 @@ export opaque type Request = {
   didWarnForKey?: null | WeakSet<ComponentStackNode>,
 };
 
-type Preamble = PreambleState;
+type Preamble = {
+  content: PreambleState,
+  fallback: PreambleState,
+};
+
+function createPreamble(): Preamble {
+  return {
+    content: createPreambleState(),
+    fallback: createPreambleState(),
+  };
+}
 
 // This is a default heuristic for how to split up the HTML content into progressive
 // loading. Our goal is to be able to display additional new content about every 500ms.
@@ -464,7 +475,7 @@ function isEligibleForOutlining(
     // For boundaries that can possibly contribute to the preamble we don't want to outline
     // them regardless of their size since the fallbacks should only be emitted if we've
     // errored the boundary.
-    boundary.contentPreamble === null
+    boundary.preamble === null
   );
 }
 
@@ -784,8 +795,7 @@ function createSuspenseBoundary(
   request: Request,
   row: null | SuspenseListRow,
   fallbackAbortableTasks: Set<Task>,
-  contentPreamble: null | Preamble,
-  fallbackPreamble: null | Preamble,
+  preamble: null | Preamble,
   defer: boolean,
 ): SuspenseBoundary {
   const boundary: SuspenseBoundary = {
@@ -801,10 +811,8 @@ function createSuspenseBoundary(
     errorDigest: null,
     contentState: createHoistableState(),
     fallbackState: createHoistableState(),
-    contentPreamble,
-    fallbackPreamble,
-    trackedContentKeyPath: null,
-    trackedFallbackNode: null,
+    preamble,
+    tracked: null,
   };
   if (__DEV__) {
     // DEV-only fields for hidden class
@@ -837,7 +845,7 @@ function createRenderTask(
   childIndex: number,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
-  blockedPreamble: null | Preamble,
+  blockedPreamble: null | PreambleState,
   hoistableState: null | HoistableState,
   abortSet: Set<Task>,
   keyPath: Root | KeyNode,
@@ -1289,8 +1297,7 @@ function renderSuspenseBoundary(
       request,
       task.row,
       fallbackAbortSet,
-      createPreambleState(),
-      createPreambleState(),
+      createPreamble(),
       defer,
     );
   } else {
@@ -1299,12 +1306,8 @@ function renderSuspenseBoundary(
       task.row,
       fallbackAbortSet,
       null,
-      null,
       defer,
     );
-  }
-  if (request.trackedPostpones !== null) {
-    newBoundary.trackedContentKeyPath = keyPath;
   }
 
   const insertionIndex = parentSegment.chunks.length;
@@ -1358,13 +1361,17 @@ function renderSuspenseBoundary(
         null,
       ];
       trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
-      // We are rendering the fallback before the boundary content so we keep track of
-      // the fallback replay node until we determine if the primary content suspends
-      newBoundary.trackedFallbackNode = fallbackReplayNode;
+      newBoundary.tracked = {
+        contentKeyPath: keyPath,
+        // We are rendering the fallback before the boundary content so we keep track of
+        // the fallback replay node until we determine if the primary content suspends
+        fallbackNode: fallbackReplayNode,
+      };
     }
 
     task.blockedSegment = boundarySegment;
-    task.blockedPreamble = newBoundary.fallbackPreamble;
+    task.blockedPreamble =
+      newBoundary.preamble === null ? null : newBoundary.preamble.fallback;
     task.keyPath = fallbackKeyPath;
     task.formatContext = getSuspenseFallbackFormatContext(
       request.resumableState,
@@ -1408,7 +1415,7 @@ function renderSuspenseBoundary(
       -1,
       newBoundary,
       contentRootSegment,
-      newBoundary.contentPreamble,
+      newBoundary.preamble === null ? null : newBoundary.preamble.content,
       newBoundary.contentState,
       task.abortSet,
       keyPath,
@@ -1439,7 +1446,8 @@ function renderSuspenseBoundary(
     // context switching. We just need to temporarily switch which boundary and which segment
     // we're writing to. If something suspends, it'll spawn new suspended task with that context.
     task.blockedBoundary = newBoundary;
-    task.blockedPreamble = newBoundary.contentPreamble;
+    task.blockedPreamble =
+      newBoundary.preamble === null ? null : newBoundary.preamble.content;
     task.hoistableState = newBoundary.contentState;
     task.blockedSegment = contentRootSegment;
     task.keyPath = keyPath;
@@ -1547,7 +1555,7 @@ function renderSuspenseBoundary(
       -1,
       parentBoundary,
       boundarySegment,
-      newBoundary.fallbackPreamble,
+      newBoundary.preamble === null ? null : newBoundary.preamble.fallback,
       newBoundary.fallbackState,
       fallbackAbortSet,
       fallbackKeyPath,
@@ -1601,8 +1609,7 @@ function replaySuspenseBoundary(
       request,
       task.row,
       fallbackAbortSet,
-      createPreambleState(),
-      createPreambleState(),
+      createPreamble(),
       defer,
     );
   } else {
@@ -1610,7 +1617,6 @@ function replaySuspenseBoundary(
       request,
       task.row,
       fallbackAbortSet,
-      null,
       null,
       defer,
     );
@@ -3793,14 +3799,21 @@ function trackPostponedBoundary(
   // it before flushing and we know that we can't inline it.
   boundary.rootSegmentID = request.nextSegmentId++;
 
-  const boundaryKeyPath = boundary.trackedContentKeyPath;
+  const tracked = boundary.tracked;
+  if (tracked === null) {
+    throw new Error(
+      'It should not be possible to postpone at the root. This is a bug in React.',
+    );
+  }
+
+  const boundaryKeyPath = tracked.contentKeyPath;
   if (boundaryKeyPath === null) {
     throw new Error(
       'It should not be possible to postpone at the root. This is a bug in React.',
     );
   }
 
-  const fallbackReplayNode = boundary.trackedFallbackNode;
+  const fallbackReplayNode = tracked.fallbackNode;
 
   const children: Array<ReplayNode> = [];
   const boundaryNode: void | ReplayNode =
@@ -3853,7 +3866,11 @@ function trackPostpone(
       trackedPostpones,
       boundary,
     );
-    if (boundary.trackedContentKeyPath === keyPath && task.childIndex === -1) {
+    if (
+      boundary.tracked !== null &&
+      boundary.tracked.contentKeyPath === keyPath &&
+      task.childIndex === -1
+    ) {
       // Assign ID
       if (segment.id === -1) {
         if (segment.parentFlushed) {
@@ -3950,7 +3967,11 @@ function untrackBoundary(request: Request, boundary: SuspenseBoundary) {
   if (trackedPostpones === null) {
     return;
   }
-  const boundaryKeyPath = boundary.trackedContentKeyPath;
+  const tracked = boundary.tracked;
+  if (tracked === null) {
+    return;
+  }
+  const boundaryKeyPath = tracked.contentKeyPath;
   if (boundaryKeyPath === null) {
     return;
   }
@@ -4356,7 +4377,7 @@ function erroredTask(
       if (
         request.pendingRootTasks === 0 &&
         request.trackedPostpones === null &&
-        boundary.contentPreamble !== null
+        boundary.preamble !== null
       ) {
         // The root is complete and this boundary may contribute part of the preamble.
         // We eagerly attempt to prepare the preamble here because we expect most requests
@@ -4397,7 +4418,6 @@ function abortRemainingSuspenseBoundary(
     request,
     null,
     new Set(),
-    null,
     null,
     false,
   );
@@ -4878,7 +4898,7 @@ function finishedTask(
         if (
           request.pendingRootTasks === 0 &&
           request.trackedPostpones === null &&
-          boundary.contentPreamble !== null
+          boundary.preamble !== null
         ) {
           // The root is complete and this boundary may contribute part of the preamble.
           // We eagerly attempt to prepare the preamble here because we expect most requests
@@ -5255,10 +5275,8 @@ function preparePreambleFromSegment(
     );
   }
 
-  const preamble = boundary.contentPreamble;
-  const fallbackPreamble = boundary.fallbackPreamble;
-
-  if (preamble === null || fallbackPreamble === null) {
+  const preamble = boundary.preamble;
+  if (preamble === null) {
     // This boundary cannot have a preamble so it can't block the flushing of
     // the preamble.
     return false;
@@ -5270,7 +5288,7 @@ function preparePreambleFromSegment(
     case COMPLETED: {
       // This boundary is complete. It might have inner boundaries which are pending
       // and able to provide a preamble so we have to check it's children
-      hoistPreambleState(request.renderState, preamble);
+      hoistPreambleState(request.renderState, preamble.content);
       // We track this boundary's byteSize on the request since it will always flush with
       // the request since it may contribute to the preamble
       request.byteSize += boundary.byteSize;
@@ -5299,7 +5317,7 @@ function preparePreambleFromSegment(
     case CLIENT_RENDERED: {
       if (segment.status === COMPLETED) {
         // This boundary is errored so if it contains a preamble we should include it
-        hoistPreambleState(request.renderState, fallbackPreamble);
+        hoistPreambleState(request.renderState, preamble.fallback);
         return preparePreambleFromSubtree(
           request,
           segment,
