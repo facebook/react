@@ -74,6 +74,10 @@ export const LayoutStatic = /*                 */ 0b0000000010000000000000000000
 export const RefStatic = LayoutStatic;
 export const PassiveStatic = /*                */ 0b0000000100000000000000000000000;
 export const MaySuspendCommit = /*             */ 0b0000001000000000000000000000000;
+// HoistableStatic tracks whether there are any HostHoistable fibers in the subtree.
+// This enables us to skip traversals during Activity visibility transitions when
+// there are no hoistables to mount/unmount.
+export const HoistableStatic = /*              */ 0b0000010000000000000000000000000;
 // ViewTransitionNamedStatic tracks explicitly name ViewTransition components deeply
 // that might need to be visited during clean up. This is similar to SnapshotStatic
 // if there was any other use for it. It also needs to run in the same phase as
@@ -82,7 +86,7 @@ export const ViewTransitionNamedStatic =
   /*    */ SnapshotStatic | MaySuspendCommit;
 // ViewTransitionStatic tracks whether there are an ViewTransition components from
 // the nearest HostComponent down. It resets at every HostComponent level.
-export const ViewTransitionStatic = /*         */ 0b0000010000000000000000000000000;
+export const ViewTransitionStatic = /*         */ 0b0000100000000000000000000000000;
 
 // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
 export const PlacementDEV = /*                 */ 0b0000100000000000000000000000000;
@@ -138,5 +142,6 @@ export const StaticMask =
   PassiveStatic |
   RefStatic |
   MaySuspendCommit |
+  HoistableStatic |
   ViewTransitionStatic |
   ViewTransitionNamedStatic;
