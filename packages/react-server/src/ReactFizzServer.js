@@ -1746,6 +1746,15 @@ function unblockSuspenseListRow(
 ): void {
   // We do this in a loop to avoid stack overflow for very long lists that get unblocked.
   while (unblockedRow !== null) {
+    if (unblockedRow.pendingTasks === 0) {
+      // We already finished this task, perhaps below.
+      if (__DEV__) {
+        console.error(
+          'It should not be possible to unblock a row that has no pending tasks. This is a bug in React.',
+        );
+      }
+      break;
+    }
     if (inheritedHoistables !== null) {
       // Hoist any hoistables from the previous row into the next row so that it can be
       // later transferred to all the rows.
@@ -1758,12 +1767,23 @@ function unblockSuspenseListRow(
     // Unblocking the boundaries will decrement the count of this row but we keep it above
     // zero so they never finish this row recursively.
     const unblockedBoundaries = unblockedRow.boundaries;
-    if (unblockedBoundaries !== null) {
+    if (
+      unblockedBoundaries !== null &&
+      (!unblockedRow.together ||
+        // Together rows are blocked on themselves. This is the last one, which will
+        // unblock the row itself.
+        unblockedRow.pendingTasks === 1)
+    ) {
       unblockedRow.boundaries = null;
       for (let i = 0; i < unblockedBoundaries.length; i++) {
         const unblockedBoundary = unblockedBoundaries[i];
         if (inheritedHoistables !== null) {
           hoistHoistables(unblockedBoundary.contentState, inheritedHoistables);
+        }
+        if (unblockedRow.together && unblockedBoundary.pendingTasks === 1) {
+          // We decrement the task count when we flush each boundary of a together row.
+          // We add it back here before finishing which decrements it again.
+          unblockedRow.pendingTasks++;
         }
         finishedTask(request, unblockedBoundary, null, null);
       }
@@ -1823,6 +1843,8 @@ function tryToResolveTogetherRow(
     }
   }
   if (allCompleteAndInlinable) {
+    // Act as if we've flushed all but one and we're now flushing the last one.
+    togetherRow.pendingTasks -= boundaries.length - 1;
     unblockSuspenseListRow(request, togetherRow, togetherRow.hoistables);
   }
 }
@@ -1947,15 +1969,172 @@ function renderSuspenseListRows(
       revealOrder !== 'backwards' &&
       revealOrder !== 'unstable_legacy-backwards';
 
-    let suspenseList: null | SuspenseList = null;
     if (tailMode !== 'visible') {
       // For hidden tails, we need to create an instance to keep track of adding rows to
       // the end. For visible tails, there's no need to represent the list itself.
-      suspenseList = createSuspenseList(forwards);
+      const suspenseList = createSuspenseList(forwards);
       pushStartSuspenseListBoundary(parentSegment.chunks, request.renderState);
-    }
 
-    if (forwards) {
+      const prevContext = task.formatContext;
+      const parentBoundary = task.blockedBoundary;
+      const parentPreamble = task.blockedPreamble;
+      const parentHoistableState = task.hoistableState;
+
+      const defer = false; // TODO: Should we have an option to defer every row?
+      const abortSet: Set<Task> = new Set(); // There is never any fallbacks to abort but we could abort content rows.
+
+      // This doesn't vary by row so we can apply it only once.
+      task.formatContext = getSuspenseContentFormatContext(
+        request.resumableState,
+        task.formatContext,
+      );
+
+      // We then need to create one segment for each row. Each row gets its own implicit
+      // SuspenseBoundary so that we can hide it. Each new row is nested recursively into
+      // the next boundary so that they can only complete in order.
+      let previousRowBoundary: null | SuspenseBoundary = null;
+      let previousSegment = parentSegment;
+      for (let n = 0; n < totalChildren; n++) {
+        const i =
+          revealOrder === 'unstable_legacy-backwards'
+            ? totalChildren - 1 - n
+            : n;
+        const node = rows[i];
+        const suspenseListRow = createSuspenseListRow(previousSuspenseListRow);
+        // This effectively acts as a together row because we'll block it on its own boundary.
+        // TODO: For "collapsed" this should be different.
+        suspenseListRow.together = true;
+        if (previousSuspenseListRow === null) {
+          // If this is the first row, then it won't be blocked by any previous rows but
+          // for hidden mode, it'll be blocked by its own boundary.
+          // TODO: For "collapsed" this should be different.
+          suspenseListRow.boundaries = [];
+        }
+
+        task.row = suspenseListRow;
+        task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+
+        const rowBoundary = createSuspenseBoundary(
+          request,
+          suspenseList,
+          suspenseListRow, // For "hidden" the boundary blocks itself from completing. TODO: For "collapsed" it's different.
+          abortSet,
+          canHavePreamble(prevContext) ? createPreamble() : null,
+          defer,
+        );
+        rowBoundary.rootSegmentID = request.nextSegmentId++;
+
+        // In backwards mode, the next boundary segment is added before the content of the row.
+        // The first one is added to the end of the parent segment.
+        const insertionIndex =
+          forwards || n === 0 ? previousSegment.chunks.length : 0;
+        const boundarySegment = createPendingSegment(
+          request,
+          insertionIndex,
+          rowBoundary,
+          prevContext,
+          // Assume we are text embedded at the trailing edges
+          i === 0 ? previousSegment.lastPushedText : true,
+          true,
+        );
+        // The implicit boundary is immediately completed since it doesn't have any fallback content.
+        boundarySegment.status = COMPLETED;
+        if (forwards || n === 0) {
+          previousSegment.children.push(boundarySegment);
+        } else {
+          previousSegment.children.splice(0, 0, boundarySegment);
+        }
+
+        if (previousRowBoundary !== null) {
+          // Once we've added the next boundary, we can finish the previous segment.
+          finishedSegment(request, previousRowBoundary, previousSegment);
+          queueCompletedSegment(previousRowBoundary, previousSegment);
+        }
+
+        const rowSegment = createPendingSegment(
+          request,
+          0,
+          null,
+          task.formatContext,
+          // Assume we are text embedded at the trailing edges
+          i === 0 ? previousSegment.lastPushedText : true,
+          true,
+        );
+        // We mark the row segment as having its parent flushed. It's not really flushed but there is
+        // no parent segment so there's nothing to wait on.
+        rowSegment.parentFlushed = true;
+
+        task.blockedBoundary = rowBoundary;
+        task.blockedPreamble =
+          rowBoundary.preamble === null ? null : rowBoundary.preamble.content;
+        task.hoistableState = rowBoundary.contentState;
+        task.blockedSegment = rowSegment;
+        rowSegment.status = RENDERING;
+        try {
+          if (__DEV__) {
+            warnForMissingKey(request, task, node);
+          }
+          renderNode(request, task, node, i);
+          pushSegmentFinale(
+            rowSegment.chunks,
+            request.renderState,
+            rowSegment.lastPushedText,
+            rowSegment.textEmbedded,
+          );
+          rowSegment.status = COMPLETED;
+          if (
+            rowBoundary.pendingTasks === 0 &&
+            rowBoundary.status === PENDING
+          ) {
+            // This must have been the last segment we were waiting on. This boundary is now complete.
+            rowBoundary.status = COMPLETED;
+            if (!isEligibleForOutlining(request, rowBoundary)) {
+              // If we have synchronously completed the boundary and it's not eligible for outlining
+              // then we don't have to wait for it to be flushed before we unblock future rows.
+              // This lets us inline small rows in order.
+              // Unblock the task for the implicit boundary. It will still be blocked by the row itself.
+              if (--suspenseListRow.pendingTasks === 0) {
+                finishSuspenseListRow(request, suspenseListRow);
+              }
+            }
+          }
+          // Unblock the initial task on the row itself.
+          if (--suspenseListRow.pendingTasks === 0) {
+            finishSuspenseListRow(request, suspenseListRow);
+          }
+        } catch (thrownValue: mixed) {
+          task.blockedSegment = parentSegment;
+          task.blockedPreamble = parentPreamble;
+          task.keyPath = prevKeyPath;
+          task.formatContext = prevContext;
+          if (request.status === ABORTING) {
+            rowSegment.status = ABORTED;
+          } else {
+            rowSegment.status = ERRORED;
+          }
+          throw thrownValue;
+        }
+        // We nest each row into the previous row boundary's content.
+        previousSegment = rowSegment;
+        previousRowBoundary = rowBoundary;
+        previousSuspenseListRow = suspenseListRow;
+      }
+      if (previousRowBoundary !== null) {
+        // Once we've added the next boundary, we can finish the previous segment.
+        finishedSegment(request, previousRowBoundary, previousSegment);
+        queueCompletedSegment(previousRowBoundary, previousSegment);
+      }
+      task.blockedBoundary = parentBoundary;
+      task.blockedPreamble = parentPreamble;
+      task.hoistableState = parentHoistableState;
+      task.blockedSegment = parentSegment;
+      task.formatContext = prevContext;
+
+      // Reset lastPushedText for current Segment since the new Segments "consumed" it
+      parentSegment.lastPushedText = false;
+
+      pushEndSuspenseListBoundary(parentSegment.chunks, request.renderState);
+    } else if (forwards) {
       // Forwards direction
       for (let i = 0; i < totalChildren; i++) {
         const node = rows[i];
@@ -2027,10 +2206,6 @@ function renderSuspenseListRows(
       task.blockedSegment = parentSegment;
       // Reset lastPushedText for current Segment since the new Segments "consumed" it
       parentSegment.lastPushedText = false;
-    }
-
-    if (suspenseList !== null) {
-      pushEndSuspenseListBoundary(parentSegment.chunks, request.renderState);
     }
   }
 
@@ -5499,6 +5674,7 @@ function flushSegment(
   // we don't want to reflush the boundary
   segment.boundary = null;
   boundary.parentFlushed = true;
+
   // This segment is a Suspense boundary. We need to decide whether to
   // emit the content or the fallback now.
   if (boundary.status === CLIENT_RENDERED) {
