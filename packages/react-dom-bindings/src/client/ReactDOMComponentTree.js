@@ -293,8 +293,9 @@ export function updateFiberProps(node: Instance, props: Props): void {
 }
 
 export function getEventListenerSet(node: EventTarget): Set<string> {
-  let elementListenerSet: Set<string> | void;
-  elementListenerSet = (node: any)[internalEventHandlersKey];
+  let elementListenerSet: Set<string> | void = (node: any)[
+    internalEventHandlersKey
+  ];
   if (elementListenerSet === undefined) {
     elementListenerSet = (node: any)[internalEventHandlersKey] = new Set();
   }
