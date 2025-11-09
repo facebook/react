@@ -1291,24 +1291,13 @@ function renderSuspenseBoundary(
   const defer: boolean = enableCPUSuspense && props.defer === true;
 
   const fallbackAbortSet: Set<Task> = new Set();
-  let newBoundary: SuspenseBoundary;
-  if (canHavePreamble(task.formatContext)) {
-    newBoundary = createSuspenseBoundary(
-      request,
-      task.row,
-      fallbackAbortSet,
-      createPreamble(),
-      defer,
-    );
-  } else {
-    newBoundary = createSuspenseBoundary(
-      request,
-      task.row,
-      fallbackAbortSet,
-      null,
-      defer,
-    );
-  }
+  const newBoundary = createSuspenseBoundary(
+    request,
+    task.row,
+    fallbackAbortSet,
+    canHavePreamble(task.formatContext) ? createPreamble() : null,
+    defer,
+  );
 
   const insertionIndex = parentSegment.chunks.length;
   // The children of the boundary segment is actually the fallback.
@@ -1603,24 +1592,13 @@ function replaySuspenseBoundary(
   const defer: boolean = enableCPUSuspense && props.defer === true;
 
   const fallbackAbortSet: Set<Task> = new Set();
-  let resumedBoundary: SuspenseBoundary;
-  if (canHavePreamble(task.formatContext)) {
-    resumedBoundary = createSuspenseBoundary(
-      request,
-      task.row,
-      fallbackAbortSet,
-      createPreamble(),
-      defer,
-    );
-  } else {
-    resumedBoundary = createSuspenseBoundary(
-      request,
-      task.row,
-      fallbackAbortSet,
-      null,
-      defer,
-    );
-  }
+  const resumedBoundary = createSuspenseBoundary(
+    request,
+    task.row,
+    fallbackAbortSet,
+    canHavePreamble(task.formatContext) ? createPreamble() : null,
+    defer,
+  );
   resumedBoundary.parentFlushed = true;
   // We restore the same id of this boundary as was used during prerender.
   resumedBoundary.rootSegmentID = id;
