@@ -4667,34 +4667,27 @@ function renderElement(request, task, keyPath, type, props, ref) {
             fallback = props.fallback,
             content = props.children,
             defer = !0 === props.defer,
-            fallbackAbortSet = new Set();
-          var newBoundary =
-            2 > task.formatContext.insertionMode
-              ? createSuspenseBoundary(
-                  request,
-                  task.row,
-                  fallbackAbortSet,
-                  {
+            fallbackAbortSet = new Set(),
+            newBoundary = createSuspenseBoundary(
+              request,
+              task.row,
+              fallbackAbortSet,
+              2 > task.formatContext.insertionMode
+                ? {
                     content: createPreambleState(),
                     fallback: createPreambleState()
-                  },
-                  defer
-                )
-              : createSuspenseBoundary(
-                  request,
-                  task.row,
-                  fallbackAbortSet,
-                  null,
-                  defer
-                );
-          var boundarySegment = createPendingSegment(
-            request,
-            parentSegment.chunks.length,
-            newBoundary,
-            task.formatContext,
-            !1,
-            !1
-          );
+                  }
+                : null,
+              defer
+            ),
+            boundarySegment = createPendingSegment(
+              request,
+              parentSegment.chunks.length,
+              newBoundary,
+              task.formatContext,
+              !1,
+              !1
+            );
           parentSegment.children.push(boundarySegment);
           parentSegment.lastPushedText = !1;
           var contentRootSegment = createPendingSegment(
@@ -5095,32 +5088,25 @@ function retryNode(request, task) {
                         parentBoundary = task.blockedBoundary,
                         parentHoistableState = task.hoistableState,
                         content = props.children,
-                        fallback = props.fallback;
-                      var resumedBoundary = !0 === props.defer;
+                        fallback = props.fallback,
+                        defer = !0 === props.defer;
                       props = new Set();
-                      resumedBoundary =
+                      defer = createSuspenseBoundary(
+                        request,
+                        task.row,
+                        props,
                         2 > task.formatContext.insertionMode
-                          ? createSuspenseBoundary(
-                              request,
-                              task.row,
-                              props,
-                              {
-                                content: createPreambleState(),
-                                fallback: createPreambleState()
-                              },
-                              resumedBoundary
-                            )
-                          : createSuspenseBoundary(
-                              request,
-                              task.row,
-                              props,
-                              null,
-                              resumedBoundary
-                            );
-                      resumedBoundary.parentFlushed = !0;
-                      resumedBoundary.rootSegmentID = replay;
-                      task.blockedBoundary = resumedBoundary;
-                      task.hoistableState = resumedBoundary.contentState;
+                          ? {
+                              content: createPreambleState(),
+                              fallback: createPreambleState()
+                            }
+                          : null,
+                        defer
+                      );
+                      defer.parentFlushed = !0;
+                      defer.rootSegmentID = replay;
+                      task.blockedBoundary = defer;
+                      task.hoistableState = defer.contentState;
                       task.keyPath = key;
                       task.formatContext = getSuspenseContentFormatContext(
                         request.resumableState,
@@ -5142,27 +5128,22 @@ function retryNode(request, task) {
                             "Couldn't find all resumable slots by key/index during replaying. The tree doesn't match so React will fallback to client rendering."
                           );
                         task.replay.pendingTasks--;
-                        if (
-                          0 === resumedBoundary.pendingTasks &&
-                          0 === resumedBoundary.status
-                        ) {
-                          resumedBoundary.status = 1;
-                          request.completedBoundaries.push(resumedBoundary);
+                        if (0 === defer.pendingTasks && 0 === defer.status) {
+                          defer.status = 1;
+                          request.completedBoundaries.push(defer);
                           break b;
                         }
                       } catch (error) {
-                        (resumedBoundary.status = 4),
+                        (defer.status = 4),
                           (childNodes = getThrownInfo(task.componentStack)),
                           (childSlots = logRecoverableError(
                             request,
                             error,
                             childNodes
                           )),
-                          (resumedBoundary.errorDigest = childSlots),
+                          (defer.errorDigest = childSlots),
                           task.replay.pendingTasks--,
-                          request.clientRenderedBoundaries.push(
-                            resumedBoundary
-                          );
+                          request.clientRenderedBoundaries.push(defer);
                       } finally {
                         (task.blockedBoundary = parentBoundary),
                           (task.hoistableState = parentHoistableState),
@@ -5178,7 +5159,7 @@ function retryNode(request, task) {
                         fallback,
                         -1,
                         parentBoundary,
-                        resumedBoundary.fallbackState,
+                        defer.fallbackState,
                         props,
                         [key[0], "Suspense Fallback", key[2]],
                         getSuspenseFallbackFormatContext(
