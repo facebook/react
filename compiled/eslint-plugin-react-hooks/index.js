@@ -52443,8 +52443,9 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
             }
         }
         else if (isUseStateType(lvalue.identifier) && value.args.length > 0) {
-            isSource = true;
-            typeOfValue = joinValue(typeOfValue, 'fromState');
+            typeOfValue = 'fromState';
+            context.derivationCache.addDerivationEntry(lvalue, new Set(), typeOfValue, true);
+            return;
         }
     }
     for (const operand of eachInstructionOperand(instr)) {
