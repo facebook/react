@@ -512,7 +512,11 @@ function SuspenseRectsContainer({
   if (isRootSelected) {
     selectedBoundingBox = boundingBox;
     selectedEnvironment = rootEnvironment;
-  } else if (inspectedElementID !== null) {
+  } else if (
+    inspectedElementID !== null &&
+    // TODO: Separate inspected element and inspected Suspense and use the inspected Suspense ID here.
+    store.containsSuspense(inspectedElementID)
+  ) {
     const selectedSuspenseNode = store.getSuspenseByID(inspectedElementID);
     if (
       selectedSuspenseNode !== null &&
