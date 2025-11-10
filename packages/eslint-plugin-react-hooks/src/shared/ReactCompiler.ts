@@ -162,15 +162,20 @@ function makeRule(rule: LintRule): Rule.RuleModule {
             message =
               '🚨 This hook will NOT be memoized\n\n' +
               'You\'re using an incompatible API AND have eslint-disable in this function.\n' +
-              'React Compiler will skip memoization for safety.\n\n' +
-              '**Impact:**\n' +
-              '• Returns new object references every render\n' +
-              '• Breaks memoization in parent components\n' +
-              '• May cause performance issues\n\n' +
-              '**Solutions:**\n' +
-              '1. Remove eslint-disable and fix dependency issues\n' +
-              '2. Add "use no memo" directive to explicitly opt-out\n' +
-              '3. Use this API directly in components (not in custom hooks)';
+              'React Compiler will skip memoization of this hook.\n\n' +
+              '**Critical: Impact on parent components**\n' +
+              'If this hook is used in a MEMOIZED component, it will break the component\'s\n' +
+              'memoization by returning new object references every render.\n\n' +
+              '**Required action:**\n' +
+              'Add "use no memo" to COMPONENTS that use this hook:\n\n' +
+              'function MyComponent() {\n' +
+              '  "use no memo";  // ← Add this!\n' +
+              '  const { data } = useThisHook({...});\n' +
+              '  return <div>...</div>;\n' +
+              '}\n\n' +
+              '**Alternative solutions:**\n' +
+              '1. Remove eslint-disable from this hook and fix dependency issues\n' +
+              '2. Use this API directly in components (not in custom hooks)';
           }
 
           /*
