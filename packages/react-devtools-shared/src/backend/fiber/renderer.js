@@ -2586,6 +2586,17 @@ export function attach(
         }
       }
     } else {
+      const suspenseNode = fiberInstance.suspenseNode;
+      if (suspenseNode !== null && fiber.memoizedState === null) {
+        // We're reconnecting an unsuspended Suspense. Measure to see if anything changed.
+        const prevRects = suspenseNode.rects;
+        const nextRects = measureInstance(fiberInstance);
+        if (!areEqualRects(prevRects, nextRects)) {
+          suspenseNode.rects = nextRects;
+          recordSuspenseResize(suspenseNode);
+        }
+      }
+
       const {key} = fiber;
       const displayName = getDisplayNameForFiber(fiber);
       const elementType = getElementTypeForFiber(fiber);
