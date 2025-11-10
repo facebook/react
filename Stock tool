@@ -1,0 +1,306 @@
+/*
+Stock Analysis Tool ΓÇö Single-file React component
+- Uses Tailwind for styling
+- Uses Recharts for charts
+- Fetches price data from Finnhub (you must provide REACT_APP_FINNHUB_API_KEY)
+
+Features:
+- Search symbol and load historical daily candles (1 year)
+- Interactive line chart with SMA/EMA overlays
+- Toggle indicators (SMA, EMA)
+- Simple backtest: SMA crossover (buy when short SMA crosses above long SMA)
+- Watchlist saved to localStorage
+- Export currently visible data to CSV
+
+How to use:
+1) Create a React app (Vite or Create React App).
+2) Install dependencies: recharts
+   npm install recharts
+3) Add your Finnhub API key to .env as REACT_APP_FINNHUB_API_KEY=your_key
+4) Drop this component into src/App.jsx and run the app.
+
+Notes:
+- You can swap Finnhub for another API; adjust fetch endpoints accordingly.
+- This is a single-file example intended for iteration and improvement.
+*/
+
+import React, { useEffect, useState, useMemo } from 'react'
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts'
+
+export default function StockAnalysisTool() {
+  const API_KEY = process.env.REACT_APP_FINNHUB_API_KEY || ''
+  const [symbol, setSymbol] = useState('AAPL')
+  const [query, setQuery] = useState('AAPL')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [data, setData] = useState([])
+  const [watchlist, setWatchlist] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('watchlist') || '[]') } catch(e){ return [] }
+  })
+  const [showSMA, setShowSMA] = useState(true)
+  const [showEMA, setShowEMA] = useState(false)
+  const [smaShortLen, setSmaShortLen] = useState(20)
+  const [smaLongLen, setSmaLongLen] = useState(50)
+
+  useEffect(() => {
+    fetchSymbol(query)
+  }, [])
+
+  // Helper: unix timestamp for n days ago
+  function daysAgoUnix(days) {
+    return Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000)
+  }
+
+  async function fetchSymbol(sym) {
+    if (!sym) return
+    setError(null)
+    setLoading(true)
+    setData([])
+    try {
+      // Finnhub stock candles endpoint
+      // We'll fetch ~1 year daily data (365 days)
+      const to = Math.floor(Date.now() / 1000)
+      const from = daysAgoUnix(365)
+      const resp = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(sym)}&resolution=D&from=${from}&to=${to}&token=${API_KEY}`)
+      const json = await resp.json()
+      if (json.s !== 'ok') throw new Error(json.error || 'Failed to load candles')
+
+      // Build array of {date, open, high, low, close, volume}
+      const candles = json.t.map((ts, i) => ({
+        date: new Date(ts * 1000).toISOString().slice(0, 10),
+        open: json.o[i],
+        high: json.h[i],
+        low: json.l[i],
+        close: json.c[i],
+        volume: json.v[i]
+      }))
+
+      setSymbol(sym.toUpperCase())
+      setData(candles)
+    } catch (err) {
+      console.error(err)
+      setError(err.message || 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ---- indicators ----
+  function sma(values, period) {
+    const out = []
+    for (let i = 0; i < values.length; i++) {
+      if (i + 1 < period) { out.push(null); continue }
+      let sum = 0
+      for (let j = i + 1 - period; j <= i; j++) sum += values[j]
+      out.push(Number((sum / period).toFixed(4)))
+    }
+    return out
+  }
+
+  function ema(values, period) {
+    const out = []
+    const k = 2 / (period + 1)
+    let prev = null
+    for (let i = 0; i < values.length; i++) {
+      const v = values[i]
+      if (i === 0) { prev = v; out.push(prev); continue }
+      prev = prev * (1 - k) + v * k
+      out.push(Number(prev.toFixed(4)))
+    }
+    // pad leading entries to align length
+    for (let i = 0; i < period - 1; i++) out[i] = null
+    return out
+  }
+
+  const enriched = useMemo(() => {
+    if (!data || data.length === 0) return []
+    const closes = data.map(d => d.close)
+    const smaShort = sma(closes, smaShortLen)
+    const smaLong = sma(closes, smaLongLen)
+    const emaShort = ema(closes, smaShortLen)
+    return data.map((d, i) => ({ ...d, smaShort: smaShort[i], smaLong: smaLong[i], emaShort: emaShort[i] }))
+  }, [data, smaShortLen, smaLongLen])
+
+  // ---- simple SMA crossover backtest ----
+  function runBacktest(shortLen = smaShortLen, longLen = smaLongLen) {
+    if (!data || data.length === 0) return null
+    const closes = data.map(d => d.close)
+    const s = sma(closes, shortLen)
+    const l = sma(closes, longLen)
+    let position = 0 // 0 = cash, 1 = long
+    let cash = 10000
+    let shares = 0
+    const trades = []
+    for (let i = 1; i < data.length; i++) {
+      if (s[i] == null || l[i] == null) continue
+      // crossover
+      if (s[i - 1] <= l[i - 1] && s[i] > l[i] && position === 0) {
+        // buy at open price
+        const price = data[i].open
+        shares = Math.floor(cash / price)
+        if (shares > 0) {
+          cash -= shares * price
+          position = 1
+          trades.push({ type: 'BUY', date: data[i].date, price, shares })
+        }
+      } else if (s[i - 1] >= l[i - 1] && s[i] < l[i] && position === 1) {
+        // sell
+        const price = data[i].open
+        cash += shares * price
+        trades.push({ type: 'SELL', date: data[i].date, price, shares })
+        shares = 0
+        position = 0
+      }
+    }
+    // close position at last close
+    if (position === 1 && shares > 0) {
+      const price = data[data.length - 1].close
+      cash += shares * price
+      trades.push({ type: 'SELL', date: data[data.length - 1].date, price, shares })
+      shares = 0
+      position = 0
+    }
+    const final = cash
+    const buyAndHold = 10000 / data[0].close * data[data.length - 1].close
+    return { final, buyAndHold, trades }
+  }
+
+  // ---- watchlist ----
+  function addToWatch(sym) {
+    const normalized = sym.toUpperCase()
+    if (!watchlist.includes(normalized)) {
+      const next = [normalized, ...watchlist].slice(0, 50)
+      setWatchlist(next)
+      localStorage.setItem('watchlist', JSON.stringify(next))
+    }
+  }
+  function removeFromWatch(sym) {
+    const next = watchlist.filter(s => s !== sym)
+    setWatchlist(next)
+    localStorage.setItem('watchlist', JSON.stringify(next))
+  }
+
+  function exportCSV(rows = enriched) {
+    if (!rows || rows.length === 0) return
+    const header = ['date','open','high','low','close','volume','smaShort','smaLong','emaShort']
+    const lines = [header.join(',')]
+    for (const r of rows) {
+      lines.push([r.date,r.open,r.high,r.low,r.close,r.volume,r.smaShort ?? '', r.smaLong ?? '', r.emaShort ?? ''].join(','))
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${symbol || 'data'}.csv`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  // ---- UI ----
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        <header className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Stock Analysis Tool</h1>
+          <div className="flex items-center gap-2">
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Ticker e.g. AAPL" className="border rounded px-2 py-1" />
+            <button onClick={() => fetchSymbol(query)} className="bg-blue-600 text-white px-3 py-1 rounded">Load</button>
+            <button onClick={() => addToWatch(symbol)} className="bg-green-600 text-white px-3 py-1 rounded">+ Watch</button>
+          </div>
+        </header>
+
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white p-4 rounded shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-sm text-gray-500">Symbol</div>
+                <div className="text-lg font-semibold">{symbol} {loading && ' (loading...)'}</div>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2"><input type="checkbox" checked={showSMA} onChange={e => setShowSMA(e.target.checked)} /> SMA</label>
+                <label className="flex items-center gap-2"><input type="checkbox" checked={showEMA} onChange={e => setShowEMA(e.target.checked)} /> EMA</label>
+                <button onClick={() => exportCSV()} className="px-3 py-1 border rounded">Export CSV</button>
+              </div>
+            </div>
+
+            <div style={{ height: 420 }}>
+              {enriched.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-gray-500">No data. Try loading a ticker.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={enriched} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" minTickGap={20} />
+                    <YAxis domain={[dataMin => Math.floor(dataMin * 0.97), dataMax => Math.ceil(dataMax * 1.03)]} />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="close" dot={false} stroke="#1f2937" strokeWidth={2} name="Close Price" />
+                    {showSMA && <Line type="monotone" dataKey="smaShort" dot={false} stroke="#ef4444" strokeWidth={1.5} name={`SMA ${smaShortLen}`} />}
+                    {showSMA && <Line type="monotone" dataKey="smaLong" dot={false} stroke="#f97316" strokeWidth={1.5} name={`SMA ${smaLongLen}`} />}
+                    {showEMA && <Line type="monotone" dataKey="emaShort" dot={false} stroke="#2563eb" strokeWidth={1.5} name={`EMA ${smaShortLen}`} />}
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="p-3 bg-gray-50 rounded">
+                <div className="text-xs text-gray-500">SMA Short</div>
+                <input type="number" value={smaShortLen} onChange={e => setSmaShortLen(Number(e.target.value) || 1)} className="w-full border rounded px-2 py-1" />
+              </div>
+              <div className="p-3 bg-gray-50 rounded">
+                <div className="text-xs text-gray-500">SMA Long</div>
+                <input type="number" value={smaLongLen} onChange={e => setSmaLongLen(Number(e.target.value) || 1)} className="w-full border rounded px-2 py-1" />
+              </div>
+              <div className="p-3 bg-gray-50 rounded">
+                <div className="text-xs text-gray-500">Backtest</div>
+                <button onClick={() => {
+                  const res = runBacktest()
+                  if (!res) alert('Not enough data')
+                  else {
+                    alert(`Final portfolio: $${res.final.toFixed(2)}\nBuy & Hold: $${res.buyAndHold.toFixed(2)}\nTrades: ${res.trades.length}`)
+                  }
+                }} className="w-full bg-indigo-600 text-white px-2 py-1 rounded">Run SMA Crossover</button>
+              </div>
+            </div>
+
+            {error && <div className="mt-3 text-red-600">{error}</div>}
+          </div>
+
+          <aside className="bg-white p-4 rounded shadow">
+            <div className="mb-4">
+              <div className="text-sm text-gray-500">Watchlist</div>
+              <div className="mt-2 space-y-2">
+                {watchlist.length === 0 ? <div className="text-gray-500">Empty</div> : watchlist.map(w => (
+                  <div key={w} className="flex items-center justify-between">
+                    <button onClick={() => { fetchSymbol(w) }} className="text-left text-blue-600 underline">{w}</button>
+                    <button onClick={() => removeFromWatch(w)} className="text-sm text-red-600">Remove</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm text-gray-500">Recent data snapshot</div>
+              <div className="mt-2 text-xs text-gray-700">
+                {enriched.slice(-5).reverse().map(r => (
+                  <div key={r.date} className="flex justify-between py-1 border-b">
+                    <div>{r.date}</div>
+                    <div>${Number(r.close).toFixed(2)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <footer className="mt-6 text-sm text-gray-500">
+          <div>Notes: This tool is for educational / analysis purposes only. Not financial advice.</div>
+        </footer>
+      </div>
+    </div>
+  )
+}
+
