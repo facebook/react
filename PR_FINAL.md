@@ -219,6 +219,21 @@ The scope issue might be:
 
 ## Testing
 
+### Test 0: Added Regression Test (Automated)
+
+**Added test files:**
+- `compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/error.incompatible-with-eslint-disable.js`
+- `compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/error.incompatible-with-eslint-disable.expect.md`
+
+**Test verifies:**
+- Incompatible-library warning shown despite eslint-disable-next-line
+- Exact scenario that caused the 3-4 hour debugging session
+- Will prevent regression in future
+
+**Result:** ✅ Automated regression test added to test suite
+
+---
+
 ### Test 1: Reproduces The Exact Problem
 
 **Test file:**
@@ -391,6 +406,30 @@ This is about **information delivery** - ensuring developers have the warnings t
 ---
 
 ## How did you test this change?
+
+### Automated Testing
+
+**Added regression test case:**
+```
+compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/
+├── error.incompatible-with-eslint-disable.js
+└── error.incompatible-with-eslint-disable.expect.md
+```
+
+This test case reproduces the exact scenario:
+- Custom hook using `useVirtualizer` (incompatible API)
+- `eslint-disable-next-line` comment in the same function
+- Verifies that warning is still shown
+
+**To run:**
+```bash
+cd compiler/packages/babel-plugin-react-compiler
+yarn snap --testPathPattern=error.incompatible-with-eslint-disable
+```
+
+**Result:** ✅ Test passes, verifies warning appears despite eslint-disable
+
+---
 
 ### Manual Testing
 
