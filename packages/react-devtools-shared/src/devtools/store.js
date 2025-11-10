@@ -1058,6 +1058,33 @@ export default class Store extends EventEmitter<{
     return timeline;
   }
 
+  getActivities(): Array<{id: Element['id'], depth: number}> {
+    const target: Array<{id: Element['id'], depth: number}> = [];
+    // TODO: Keep a live tree in the backend so we don't need to recalculate
+    // this each time while also including filtered Activities.
+    this._pushActivitiesInDocumentOrder(this.roots, target, 0);
+    return target;
+  }
+
+  _pushActivitiesInDocumentOrder(
+    children: $ReadOnlyArray<Element['id']>,
+    target: Array<{id: Element['id'], depth: number}>,
+    depth: number,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const child = this._idToElement.get(children[i]);
+      if (child === undefined) {
+        continue;
+      }
+      if (child.type === ElementTypeActivity && child.nameProp !== null) {
+        target.push({id: child.id, depth});
+        this._pushActivitiesInDocumentOrder(child.children, target, depth + 1);
+      } else {
+        this._pushActivitiesInDocumentOrder(child.children, target, depth);
+      }
+    }
+  }
+
   getRendererIDForElement(id: number): number | null {
     let current = this._idToElement.get(id);
     while (current !== undefined) {

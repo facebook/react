@@ -59,6 +59,7 @@ export type StateContext = {
 
   // Activity slice
   activityID: Element['id'] | null,
+  activities: $ReadOnlyArray<{id: Element['id'], depth: number}>,
 
   // Inspection element panel
   inspectedElementID: number | null,
@@ -172,6 +173,7 @@ type State = {
 
   // Activity slice
   activityID: Element['id'] | null,
+  activities: $ReadOnlyArray<{id: Element['id'], depth: number}>,
 
   // Inspection element panel
   inspectedElementID: number | null,
@@ -809,6 +811,7 @@ function reduceActivityState(
     case 'HANDLE_STORE_MUTATION':
       let {activityID} = state;
       const [, , activitySliceIDChange] = action.payload;
+      const activities = store.getActivities();
       if (activitySliceIDChange === 0 && activityID !== null) {
         activityID = null;
       } else if (
@@ -817,10 +820,11 @@ function reduceActivityState(
       ) {
         activityID = activitySliceIDChange;
       }
-      if (activityID !== state.activityID) {
+      if (activityID !== state.activityID || activities !== state.activities) {
         return {
           ...state,
           activityID,
+          activities,
         };
       }
   }
@@ -863,6 +867,7 @@ function getInitialState({
 
     // Activity slice
     activityID: null,
+    activities: store.getActivities(),
 
     // Inspection element panel
     inspectedElementID:
