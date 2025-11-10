@@ -1182,66 +1182,52 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
   }
 }
 
-function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
-  // Only hide or unhide the top-most host nodes.
-  let hostSubtreeRoot = null;
+function hideOrUnhideAllChildren(parentFiber: Fiber, isHidden: boolean) {
+  if (!supportsMutation) {
+    return;
+  }
+  // Finds the nearest host component children and updates their visibility
+  // to either hidden or visible.
+  let child = parentFiber.child;
+  while (child !== null) {
+    hideOrUnhideAllChildrenOnFiber(child, isHidden);
+    child = child.sibling;
+  }
+}
 
-  if (supportsMutation) {
-    // We only have the top Fiber that was inserted but we need to recurse down its
-    // children to find all the terminal nodes.
-    let node: Fiber = finishedWork;
-    while (true) {
-      if (
-        node.tag === HostComponent ||
-        (supportsResources ? node.tag === HostHoistable : false)
-      ) {
-        if (hostSubtreeRoot === null) {
-          hostSubtreeRoot = node;
-          commitShowHideHostInstance(node, isHidden);
-        }
-      } else if (node.tag === HostText) {
-        if (hostSubtreeRoot === null) {
-          commitShowHideHostTextInstance(node, isHidden);
-        }
-      } else if (node.tag === DehydratedFragment) {
-        if (hostSubtreeRoot === null) {
-          commitShowHideSuspenseBoundary(node, isHidden);
-        }
-      } else if (
-        (node.tag === OffscreenComponent ||
-          node.tag === LegacyHiddenComponent) &&
-        (node.memoizedState: OffscreenState) !== null &&
-        node !== finishedWork
-      ) {
+function hideOrUnhideAllChildrenOnFiber(fiber: Fiber, isHidden: boolean) {
+  if (!supportsMutation) {
+    return;
+  }
+  switch (fiber.tag) {
+    case HostComponent:
+    case HostHoistable: {
+      // Found the nearest host component. Hide it.
+      commitShowHideHostInstance(fiber, isHidden);
+      return;
+    }
+    case HostText: {
+      commitShowHideHostTextInstance(fiber, isHidden);
+      return;
+    }
+    case DehydratedFragment: {
+      commitShowHideSuspenseBoundary(fiber, isHidden);
+      return;
+    }
+    case OffscreenComponent:
+    case LegacyHiddenComponent: {
+      const offscreenState: OffscreenState | null = fiber.memoizedState;
+      if (offscreenState !== null) {
         // Found a nested Offscreen component that is hidden.
         // Don't search any deeper. This tree should remain hidden.
-      } else if (node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
+      } else {
+        hideOrUnhideAllChildren(fiber, isHidden);
       }
-
-      if (node === finishedWork) {
-        return;
-      }
-      while (node.sibling === null) {
-        if (node.return === null || node.return === finishedWork) {
-          return;
-        }
-
-        if (hostSubtreeRoot === node) {
-          hostSubtreeRoot = null;
-        }
-
-        node = node.return;
-      }
-
-      if (hostSubtreeRoot === node) {
-        hostSubtreeRoot = null;
-      }
-
-      node.sibling.return = node.return;
-      node = node.sibling;
+      return;
+    }
+    default: {
+      hideOrUnhideAllChildren(fiber, isHidden);
+      return;
     }
   }
 }
