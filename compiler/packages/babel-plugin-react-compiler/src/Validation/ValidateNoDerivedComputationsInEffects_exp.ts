@@ -47,6 +47,43 @@ type ValidationContext = {
 class DerivationCache {
   hasChanges: boolean = false;
   cache: Map<IdentifierId, DerivationMetadata> = new Map();
+  private previousCache: Map<IdentifierId, DerivationMetadata> | null = null;
+
+  takeSnapshot(): void {
+    this.previousCache = new Map();
+    for (const [key, value] of this.cache.entries()) {
+      this.previousCache.set(key, {
+        place: value.place,
+        sourcesIds: new Set(value.sourcesIds),
+        typeOfValue: value.typeOfValue,
+      });
+    }
+  }
+
+  checkForChanges(): void {
+    if (this.previousCache === null) {
+      this.hasChanges = true;
+      return;
+    }
+
+    for (const [key, value] of this.cache.entries()) {
+      const previousValue = this.previousCache.get(key);
+      if (
+        previousValue === undefined ||
+        !this.isDerivationEqual(previousValue, value)
+      ) {
+        this.hasChanges = true;
+        return;
+      }
+    }
+
+    if (this.cache.size !== this.previousCache.size) {
+      this.hasChanges = true;
+      return;
+    }
+
+    this.hasChanges = false;
+  }
 
   snapshot(): boolean {
     const hasChanges = this.hasChanges;
@@ -92,14 +129,7 @@ class DerivationCache {
       newValue.sourcesIds.add(derivedVar.identifier.id);
     }
 
-    const existingValue = this.cache.get(derivedVar.identifier.id);
-    if (
-      existingValue === undefined ||
-      !this.isDerivationEqual(existingValue, newValue)
-    ) {
-      this.cache.set(derivedVar.identifier.id, newValue);
-      this.hasChanges = true;
-    }
+    this.cache.set(derivedVar.identifier.id, newValue);
   }
 
   private isDerivationEqual(
@@ -175,7 +205,6 @@ export function validateNoDerivedComputationsInEffects_exp(
           sourcesIds: new Set([param.identifier.id]),
           typeOfValue: 'fromProps',
         });
-        context.derivationCache.hasChanges = true;
       }
     }
   } else if (fn.fnType === 'Component') {
@@ -186,12 +215,13 @@ export function validateNoDerivedComputationsInEffects_exp(
         sourcesIds: new Set([props.identifier.id]),
         typeOfValue: 'fromProps',
       });
-      context.derivationCache.hasChanges = true;
     }
   }
 
   let isFirstPass = true;
   do {
+    context.derivationCache.takeSnapshot();
+
     for (const block of fn.body.blocks.values()) {
       recordPhiDerivations(block, context);
       for (const instr of block.instructions) {
@@ -199,6 +229,7 @@ export function validateNoDerivedComputationsInEffects_exp(
       }
     }
 
+    context.derivationCache.checkForChanges();
     isFirstPass = false;
   } while (context.derivationCache.snapshot());
 
@@ -331,11 +362,24 @@ function recordInstructionDerivations(
       case Effect.ConditionallyMutateIterator:
       case Effect.Mutate: {
         if (isMutable(instr, operand)) {
-          context.derivationCache.addDerivationEntry(
-            operand,
-            sources,
-            typeOfValue,
-          );
+          if (context.derivationCache.cache.has(operand.identifier.id)) {
+            const operandMetadata = context.derivationCache.cache.get(
+              operand.identifier.id,
+            );
+
+            if (operandMetadata !== undefined) {
+              operandMetadata.typeOfValue = joinValue(
+                typeOfValue,
+                operandMetadata.typeOfValue,
+              );
+            }
+          } else {
+            context.derivationCache.addDerivationEntry(
+              operand,
+              sources,
+              typeOfValue,
+            );
+          }
         }
         break;
       }
