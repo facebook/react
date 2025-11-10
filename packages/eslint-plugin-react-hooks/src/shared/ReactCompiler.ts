@@ -128,14 +128,57 @@ function makeRule(rule: LintRule): Rule.RuleModule {
             // If Flow already caught this error, we don't need to report it again.
             continue;
           }
+          // Check if this line has eslint-disable for react-hooks
+          const sourceCode = context.sourceCode ?? context.getSourceCode();
+          const lineNum = loc.start.line;
+          let hasESLintDisable = false;
+
+          const allComments = sourceCode.getAllComments?.() || [];
+          for (const comment of allComments) {
+            const commentLine = comment.loc?.end.line;
+            if (!commentLine) continue;
+
+            // Check for eslint-disable-next-line or eslint-disable
+            if (
+              (commentLine === lineNum - 1 &&
+                comment.value.includes('eslint-disable-next-line') &&
+                comment.value.includes('react-hooks')) ||
+              (commentLine <= lineNum &&
+                comment.value.includes('eslint-disable') &&
+                !comment.value.includes('eslint-disable-next-line') &&
+                comment.value.includes('react-hooks'))
+            ) {
+              hasESLintDisable = true;
+              break;
+            }
+          }
+
+          // For incompatible-library warnings with eslint-disable, show critical warning
+          let message = detail.printErrorMessage(result.sourceCode, {
+            eslint: true,
+          });
+
+          if (rule.category === 'IncompatibleLibrary' && hasESLintDisable) {
+            message =
+              '🚨 This hook will NOT be memoized\n\n' +
+              'You\'re using an incompatible API AND have eslint-disable in this function.\n' +
+              'React Compiler will skip memoization for safety.\n\n' +
+              '**Impact:**\n' +
+              '• Returns new object references every render\n' +
+              '• Breaks memoization in parent components\n' +
+              '• May cause performance issues\n\n' +
+              '**Solutions:**\n' +
+              '1. Remove eslint-disable and fix dependency issues\n' +
+              '2. Add "use no memo" directive to explicitly opt-out\n' +
+              '3. Use this API directly in components (not in custom hooks)';
+          }
+
           /*
            * TODO: if multiple rules report the same linter category,
            * we should deduplicate them with a "reported" set
            */
           context.report({
-            message: detail.printErrorMessage(result.sourceCode, {
-              eslint: true,
-            }),
+            message,
             loc,
             suggest: makeSuggestions(detail.options),
           });

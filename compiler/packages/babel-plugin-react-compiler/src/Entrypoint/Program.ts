@@ -700,11 +700,16 @@ function tryCompileFunction(
    * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
    * Program node itself. We need to figure out whether an eslint suppression range
    * applies to this function first.
+   * 
+   * In noEmit mode (used for linting), we still want to analyze functions with suppressions
+   * to catch incompatible-library warnings, so we skip the suppression check.
    */
-  const suppressionsInFunction = filterSuppressionsThatAffectFunction(
-    programContext.suppressions,
-    fn,
-  );
+  const suppressionsInFunction = programContext.opts.noEmit
+    ? []
+    : filterSuppressionsThatAffectFunction(
+        programContext.suppressions,
+        fn,
+      );
   if (suppressionsInFunction.length > 0) {
     return {
       kind: 'error',
