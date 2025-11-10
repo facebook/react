@@ -52310,15 +52310,15 @@ function validateNoDerivedComputationsInEffects_exp(fn) {
     const derivationCache = new DerivationCache();
     const errors = new CompilerError();
     const effects = new Set();
-    const setStateCache = new Map();
-    const effectSetStateCache = new Map();
+    const setStateLoads = new Map();
+    const setStateUsages = new Map();
     const context = {
         functions,
         errors,
         derivationCache,
         effects,
-        setStateCache,
-        effectSetStateCache,
+        setStateLoads,
+        setStateUsages,
     };
     if (fn.fnType === 'Hook') {
         for (const param of fn.params) {
@@ -52343,17 +52343,15 @@ function validateNoDerivedComputationsInEffects_exp(fn) {
             });
         }
     }
-    let isFirstPass = true;
     do {
         context.derivationCache.takeSnapshot();
         for (const block of fn.body.blocks.values()) {
             recordPhiDerivations(block, context);
             for (const instr of block.instructions) {
-                recordInstructionDerivations(instr, context, isFirstPass);
+                recordInstructionDerivations(instr, context);
             }
         }
         context.derivationCache.checkForChanges();
-        isFirstPass = false;
     } while (context.derivationCache.snapshot());
     for (const effect of effects) {
         validateEffect(effect, context);
@@ -52386,7 +52384,40 @@ function joinValue(lvalueType, valueType) {
         return lvalueType;
     return 'fromPropsAndState';
 }
+function getRootSetState(key, loads, visited = new Set()) {
+    if (visited.has(key)) {
+        return null;
+    }
+    visited.add(key);
+    const parentId = loads.get(key);
+    if (parentId === undefined) {
+        return null;
+    }
+    if (parentId === null) {
+        return key;
+    }
+    return getRootSetState(parentId, loads, visited);
+}
+function maybeRecordSetState(instr, loads, usages) {
+    for (const operand of eachInstructionLValue(instr)) {
+        if (instr.value.kind === 'LoadLocal' &&
+            loads.has(instr.value.place.identifier.id)) {
+            loads.set(operand.identifier.id, instr.value.place.identifier.id);
+        }
+        else {
+            if (isSetStateType(operand.identifier)) {
+                loads.set(operand.identifier.id, null);
+            }
+        }
+        const rootSetState = getRootSetState(operand.identifier.id, loads);
+        if (rootSetState !== null && usages.get(rootSetState) === undefined) {
+            usages.set(rootSetState, new Set([operand.loc]));
+        }
+    }
+}
 function recordInstructionDerivations(instr, context, isFirstPass) {
+    var _a;
+    maybeRecordSetState(instr, context.setStateLoads, context.setStateUsages);
     let typeOfValue = 'ignored';
     let isSource = false;
     const sources = new Set();
@@ -52396,7 +52427,7 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
         for (const [, block] of value.loweredFunc.func.body.blocks) {
             recordPhiDerivations(block, context);
             for (const instr of block.instructions) {
-                recordInstructionDerivations(instr, context, isFirstPass);
+                recordInstructionDerivations(instr, context);
             }
         }
     }
@@ -52417,14 +52448,10 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
         }
     }
     for (const operand of eachInstructionOperand(instr)) {
-        if (isSetStateType(operand.identifier) &&
-            operand.loc !== GeneratedSource &&
-            isFirstPass) {
-            if (context.setStateCache.has(operand.loc.identifierName)) {
-                context.setStateCache.get(operand.loc.identifierName).push(operand);
-            }
-            else {
-                context.setStateCache.set(operand.loc.identifierName, [operand]);
+        if (context.setStateLoads.has(operand.identifier.id)) {
+            const rootSetStateId = getRootSetState(operand.identifier.id, context.setStateLoads);
+            if (rootSetStateId !== null) {
+                (_a = context.setStateUsages.get(rootSetStateId)) === null || _a === void 0 ? void 0 : _a.add(operand.loc);
             }
         }
         const operandMetadata = context.derivationCache.cache.get(operand.identifier.id);
@@ -52562,11 +52589,32 @@ function renderTree(node, indent = '', isLast = true, propsSet, stateSet) {
     }
     return result;
 }
+function getFnLocalDeps(fn) {
+    if (!fn) {
+        return undefined;
+    }
+    const deps = new Set();
+    for (const [, block] of fn.loweredFunc.func.body.blocks) {
+        for (const instr of block.instructions) {
+            if (instr.value.kind === 'LoadLocal') {
+                deps.add(instr.value.place.identifier.id);
+            }
+        }
+    }
+    return deps;
+}
 function validateEffect(effectFunction, context) {
+    var _a;
     const seenBlocks = new Set();
     const effectDerivedSetStateCalls = [];
+    const effectSetStateUsages = new Map();
+    let cleanUpFunctionDeps;
     const globals = new Set();
     for (const block of effectFunction.body.blocks.values()) {
+        if (block.terminal.kind === 'return' &&
+            block.terminal.returnVariant === 'Explicit') {
+            cleanUpFunctionDeps = getFnLocalDeps(context.functions.get(block.terminal.value.identifier.id));
+        }
         for (const pred of block.preds) {
             if (!seenBlocks.has(pred)) {
                 return;
@@ -52576,18 +52624,12 @@ function validateEffect(effectFunction, context) {
             if (isUseRefType(instr.lvalue.identifier)) {
                 return;
             }
+            maybeRecordSetState(instr, context.setStateLoads, effectSetStateUsages);
             for (const operand of eachInstructionOperand(instr)) {
-                if (isSetStateType(operand.identifier) &&
-                    operand.loc !== GeneratedSource) {
-                    if (context.effectSetStateCache.has(operand.loc.identifierName)) {
-                        context.effectSetStateCache
-                            .get(operand.loc.identifierName)
-                            .push(operand);
-                    }
-                    else {
-                        context.effectSetStateCache.set(operand.loc.identifierName, [
-                            operand,
-                        ]);
+                if (context.setStateLoads.has(operand.identifier.id)) {
+                    const rootSetStateId = getRootSetState(operand.identifier.id, context.setStateLoads);
+                    if (rootSetStateId !== null) {
+                        (_a = effectSetStateUsages.get(rootSetStateId)) === null || _a === void 0 ? void 0 : _a.add(operand.loc);
                     }
                 }
             }
@@ -52599,7 +52641,7 @@ function validateEffect(effectFunction, context) {
                 if (argMetadata !== undefined) {
                     effectDerivedSetStateCalls.push({
                         value: instr.value,
-                        loc: instr.value.callee.loc,
+                        id: instr.value.callee.identifier.id,
                         sourceIds: argMetadata.sourcesIds,
                         typeOfValue: argMetadata.typeOfValue,
                     });
@@ -52626,14 +52668,12 @@ function validateEffect(effectFunction, context) {
         seenBlocks.add(block.id);
     }
     for (const derivedSetStateCall of effectDerivedSetStateCalls) {
-        if (derivedSetStateCall.loc !== GeneratedSource &&
-            context.effectSetStateCache.has(derivedSetStateCall.loc.identifierName) &&
-            context.setStateCache.has(derivedSetStateCall.loc.identifierName) &&
-            context.effectSetStateCache.get(derivedSetStateCall.loc.identifierName)
-                .length ===
-                context.setStateCache.get(derivedSetStateCall.loc.identifierName)
-                    .length -
-                    1) {
+        const rootSetStateCall = getRootSetState(derivedSetStateCall.id, context.setStateLoads);
+        if (rootSetStateCall !== null &&
+            effectSetStateUsages.has(rootSetStateCall) &&
+            context.setStateUsages.has(rootSetStateCall) &&
+            effectSetStateUsages.get(rootSetStateCall).size ===
+                context.setStateUsages.get(rootSetStateCall).size - 1) {
             const propsSet = new Set();
             const stateSet = new Set();
             const rootNodesMap = new Map();
@@ -52647,6 +52687,11 @@ function validateEffect(effectFunction, context) {
             }
             const rootNodes = Array.from(rootNodesMap.values());
             const trees = rootNodes.map((node, index) => renderTree(node, '', index === rootNodes.length - 1, propsSet, stateSet));
+            for (const dep of derivedSetStateCall.sourceIds) {
+                if (cleanUpFunctionDeps !== undefined && cleanUpFunctionDeps.has(dep)) {
+                    return;
+                }
+            }
             const propsArr = Array.from(propsSet);
             const stateArr = Array.from(stateSet);
             let rootSources = '';
