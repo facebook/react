@@ -358,8 +358,14 @@ function recordInstructionDerivations(
         context.effects.add(effectFunction.loweredFunc.func);
       }
     } else if (isUseStateType(lvalue.identifier) && value.args.length > 0) {
-      isSource = true;
-      typeOfValue = joinValue(typeOfValue, 'fromState');
+      typeOfValue = 'fromState';
+      context.derivationCache.addDerivationEntry(
+        lvalue,
+        new Set(),
+        typeOfValue,
+        true,
+      );
+      return;
     }
   }
 
