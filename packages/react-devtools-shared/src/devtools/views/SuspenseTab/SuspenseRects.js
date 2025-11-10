@@ -18,7 +18,7 @@ import typeof {
 } from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
-import {createContext, useContext} from 'react';
+import {createContext, useContext, useLayoutEffect} from 'react';
 import {
   TreeDispatcherContext,
   TreeStateContext,
@@ -236,13 +236,6 @@ function SuspenseRects({
             <span>{suspense.name}</span>
           </ScaledRect>
         ) : null}
-        {selected && visible ? (
-          <ScaledRect
-            className={styles.SuspenseRectOutline}
-            rect={boundingBox}
-            adjust={true}
-          />
-        ) : null}
       </ViewBox.Provider>
     </ScaledRect>
   );
@@ -435,7 +428,11 @@ function SuspenseRectsRoot({rootID}: {rootID: SuspenseNode['id']}): React$Node {
 
 const ViewBox = createContext<Rect>((null: any));
 
-function SuspenseRectsContainer(): React$Node {
+function SuspenseRectsContainer({
+  scaleRef,
+}: {
+  scaleRef: {current: number},
+}): React$Node {
   const store = useContext(StoreContext);
   const {inspectedElementID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
@@ -505,17 +502,47 @@ function SuspenseRectsContainer(): React$Node {
   const rootEnvironment =
     timeline.length === 0 ? null : timeline[0].environment;
 
+  useLayoutEffect(() => {
+    // 100% of the width represents this many pixels in the real document.
+    scaleRef.current = boundingBoxWidth;
+  }, [boundingBoxWidth]);
+
+  let selectedBoundingBox = null;
+  let selectedEnvironment = null;
+  if (isRootSelected) {
+    selectedEnvironment = rootEnvironment;
+  } else if (
+    inspectedElementID !== null &&
+    // TODO: Separate inspected element and inspected Suspense and use the inspected Suspense ID here.
+    store.containsSuspense(inspectedElementID)
+  ) {
+    const selectedSuspenseNode = store.getSuspenseByID(inspectedElementID);
+    if (
+      selectedSuspenseNode !== null &&
+      (selectedSuspenseNode.hasUniqueSuspenders || !uniqueSuspendersOnly)
+    ) {
+      selectedBoundingBox = getBoundingBox(selectedSuspenseNode.rects);
+      for (let i = 0; i < timeline.length; i++) {
+        const timelineStep = timeline[i];
+        if (timelineStep.id === inspectedElementID) {
+          selectedEnvironment = timelineStep.environment;
+          break;
+        }
+      }
+    }
+  }
+
   return (
     <div
       className={
         styles.SuspenseRectsContainer +
         (hasRootSuspenders ? ' ' + styles.SuspenseRectsRoot : '') +
+        (isRootSelected ? ' ' + styles.SuspenseRectsRootOutline : '') +
         ' ' +
         getClassNameForEnvironment(rootEnvironment)
       }
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
-      data-highlighted={isRootSelected}
       data-hovered={isRootHovered}>
       <ViewBox.Provider value={boundingBox}>
         <div
@@ -524,6 +551,17 @@ function SuspenseRectsContainer(): React$Node {
           {roots.map(rootID => {
             return <SuspenseRectsRoot key={rootID} rootID={rootID} />;
           })}
+          {selectedBoundingBox !== null ? (
+            <ScaledRect
+              className={
+                styles.SuspenseRectOutline +
+                ' ' +
+                getClassNameForEnvironment(selectedEnvironment)
+              }
+              rect={selectedBoundingBox}
+              adjust={true}
+            />
+          ) : null}
         </div>
       </ViewBox.Provider>
     </div>

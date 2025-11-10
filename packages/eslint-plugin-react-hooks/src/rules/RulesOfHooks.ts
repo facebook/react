@@ -833,6 +833,18 @@ const rule = {
           recordAllUseEffectEventFunctions(getScope(node));
         }
       },
+
+      // @ts-expect-error parser-hermes produces these node types
+      ComponentDeclaration(node) {
+        // component MyComponent() { const onClick = useEffectEvent(...) }
+        recordAllUseEffectEventFunctions(getScope(node));
+      },
+
+      // @ts-expect-error parser-hermes produces these node types
+      HookDeclaration(node) {
+        // hook useMyHook() { const onClick = useEffectEvent(...) }
+        recordAllUseEffectEventFunctions(getScope(node));
+      },
     };
   },
 } satisfies Rule.RuleModule;

@@ -80,8 +80,6 @@ export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
 
-export const enablePostpone = __EXPERIMENTAL__;
-
 export const enableHalt: boolean = true;
 
 export const enableViewTransition: boolean = true;
@@ -147,6 +145,9 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
 
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
+export const enableFragmentRefsInstanceHandles: boolean = false;
+
+export const enableInternalInstanceMap: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -230,6 +231,11 @@ export const enableProfilerTimer = __PROFILE__;
 // This flag will be used for both Server Component and Client Component tracks.
 // All calls should also be gated on enableProfilerTimer.
 export const enableComponentPerformanceTrack: boolean = true;
+
+// Enables annotating of React performance track events with `performanceIssue`
+// metadata, to more prominently highlight performance issues to users
+// (initially, an experimental feature in React Native).
+export const enablePerformanceIssueReporting: boolean = false;
 
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 // for an experimental timeline tool.

@@ -34,7 +34,6 @@ let ReactServerDOMServer;
 let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let ReactDOMFizzServer;
-let ReactDOMStaticServer;
 let Suspense;
 let ErrorBoundary;
 let JSDOM;
@@ -88,7 +87,6 @@ describe('ReactFlightDOM', () => {
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server.node');
-    ReactDOMStaticServer = require('react-dom/static.node');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
 
     ErrorBoundary = class extends React.Component {
@@ -1633,89 +1631,6 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<p>hello world</p>);
   });
 
-  // @gate enablePostpone
-  it('should allow postponing in Flight through a serialized promise', async () => {
-    const Context = React.createContext();
-    const ContextProvider = Context.Provider;
-
-    function Foo() {
-      const value = React.use(React.useContext(Context));
-      return <span>{value}</span>;
-    }
-
-    const ClientModule = clientExports({
-      ContextProvider,
-      Foo,
-    });
-
-    async function getFoo() {
-      React.unstable_postpone('foo');
-    }
-
-    function App() {
-      return (
-        <ClientModule.ContextProvider value={getFoo()}>
-          <div>
-            <Suspense fallback="loading...">
-              <ClientModule.Foo />
-            </Suspense>
-          </div>
-        </ClientModule.ContextProvider>
-      );
-    }
-
-    const {writable, readable} = getTestStream();
-
-    const {pipe} = await serverAct(() =>
-      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
-    );
-    pipe(writable);
-
-    let response = null;
-    function getResponse() {
-      if (response === null) {
-        response = ReactServerDOMClient.createFromReadableStream(readable);
-      }
-      return response;
-    }
-
-    function Response() {
-      return getResponse();
-    }
-
-    const errors = [];
-    function onError(error, errorInfo) {
-      errors.push(error, errorInfo);
-    }
-    const result = await serverAct(() =>
-      ReactDOMStaticServer.prerenderToNodeStream(<Response />, {
-        onError,
-      }),
-    );
-
-    const prelude = await new Promise((resolve, reject) => {
-      let content = '';
-      result.prelude.on('data', chunk => {
-        content += Buffer.from(chunk).toString('utf8');
-      });
-      result.prelude.on('error', error => {
-        reject(error);
-      });
-      result.prelude.on('end', () => resolve(content));
-    });
-
-    expect(errors).toEqual([]);
-    const doc = new JSDOM(prelude).window.document;
-    expect(getMeaningfulChildren(doc)).toEqual(
-      <html>
-        <head />
-        <body>
-          <div>loading...</div>
-        </body>
-      </html>,
-    );
-  });
-
   it('should support float methods when rendering in Fizz', async () => {
     function Component() {
       return <p>hello world</p>;
@@ -2870,7 +2785,7 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -3016,7 +2931,7 @@ describe('ReactFlightDOM', () => {
   });
 
   // This could be a bug. Discovered while making enableAsyncDebugInfo dynamic for www.
-  // @gate enableHalt || enablePostpone || (enableAsyncDebugInfo && __DEV__)
+  // @gate enableHalt || (enableAsyncDebugInfo && __DEV__)
   it('will leave async iterables in an incomplete state when halting', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));

@@ -1355,7 +1355,7 @@ function finishConcurrentRender(
       throw new Error('Root did not complete. This is a bug in React.');
     }
     case RootSuspendedWithDelay: {
-      if (!includesOnlyTransitions(lanes)) {
+      if (!includesOnlyTransitions(lanes) && !includesOnlyRetries(lanes)) {
         // Commit the placeholder.
         break;
       }

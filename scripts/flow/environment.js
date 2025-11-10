@@ -644,3 +644,7 @@ declare module 'rbush' {
     fromJSON(data: any): RBush<T>;
   }
 }
+
+declare class CSS {
+  static escape(str: string): string;
+}

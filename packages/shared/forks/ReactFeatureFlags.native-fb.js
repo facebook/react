@@ -27,6 +27,7 @@ export const {
   renameElementSymbol,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
+  enableFragmentRefsInstanceHandles,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -35,7 +36,7 @@ export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const disableLegacyContext: boolean = false;
 export const disableLegacyContextForFunctionComponents: boolean = false;
-export const disableLegacyMode: boolean = false;
+export const disableLegacyMode: boolean = true;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
 export const enableAsyncDebugInfo: boolean = false;
@@ -50,7 +51,6 @@ export const enableLegacyCache: boolean = false;
 export const enableLegacyFBSupport: boolean = false;
 export const enableLegacyHidden: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
-export const enablePostpone: boolean = false;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
 export const enableProfilerNestedUpdatePhase: boolean = __PROFILE__;
 export const enableProfilerTimer: boolean = __PROFILE__;
@@ -82,6 +82,9 @@ export const enableDefaultTransitionIndicator: boolean = true;
 export const ownerStackLimit = 1e4;
 export const enableComponentPerformanceTrack: boolean =
   __PROFILE__ && dynamicFlags.enableComponentPerformanceTrack;
+export const enablePerformanceIssueReporting: boolean =
+  enableComponentPerformanceTrack;
+export const enableInternalInstanceMap: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
