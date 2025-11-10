@@ -3391,7 +3391,7 @@ describe('Store', () => {
                 <Component key="inner-content">
       [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:14,height:1}]}
         <Suspense name="outer" rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:14,height:1}]}>
-          <Suspense name="inner" rects={[{x:1,y:2,width:13,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:14,height:1}]}>
     `);
   });
 });
