@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<5a376a49c846761f6f5dff09177ca48d>>
+ * @generated SignedSource<<ed8d5c7531f8755509eec4bb34b9ab68>>
  */
 
 'use strict';
@@ -52010,6 +52010,36 @@ class DerivationCache {
     constructor() {
         this.hasChanges = false;
         this.cache = new Map();
+        this.previousCache = null;
+    }
+    takeSnapshot() {
+        this.previousCache = new Map();
+        for (const [key, value] of this.cache.entries()) {
+            this.previousCache.set(key, {
+                place: value.place,
+                sourcesIds: new Set(value.sourcesIds),
+                typeOfValue: value.typeOfValue,
+            });
+        }
+    }
+    checkForChanges() {
+        if (this.previousCache === null) {
+            this.hasChanges = true;
+            return;
+        }
+        for (const [key, value] of this.cache.entries()) {
+            const previousValue = this.previousCache.get(key);
+            if (previousValue === undefined ||
+                !this.isDerivationEqual(previousValue, value)) {
+                this.hasChanges = true;
+                return;
+            }
+        }
+        if (this.cache.size !== this.previousCache.size) {
+            this.hasChanges = true;
+            return;
+        }
+        this.hasChanges = false;
     }
     snapshot() {
         const hasChanges = this.hasChanges;
@@ -52041,12 +52071,7 @@ class DerivationCache {
         if (newValue.sourcesIds.size === 0) {
             newValue.sourcesIds.add(derivedVar.identifier.id);
         }
-        const existingValue = this.cache.get(derivedVar.identifier.id);
-        if (existingValue === undefined ||
-            !this.isDerivationEqual(existingValue, newValue)) {
-            this.cache.set(derivedVar.identifier.id, newValue);
-            this.hasChanges = true;
-        }
+        this.cache.set(derivedVar.identifier.id, newValue);
     }
     isDerivationEqual(a, b) {
         if (a.typeOfValue !== b.typeOfValue) {
@@ -52086,7 +52111,6 @@ function validateNoDerivedComputationsInEffects_exp(fn) {
                     sourcesIds: new Set([param.identifier.id]),
                     typeOfValue: 'fromProps',
                 });
-                context.derivationCache.hasChanges = true;
             }
         }
     }
@@ -52098,17 +52122,18 @@ function validateNoDerivedComputationsInEffects_exp(fn) {
                 sourcesIds: new Set([props.identifier.id]),
                 typeOfValue: 'fromProps',
             });
-            context.derivationCache.hasChanges = true;
         }
     }
     let isFirstPass = true;
     do {
+        context.derivationCache.takeSnapshot();
         for (const block of fn.body.blocks.values()) {
             recordPhiDerivations(block, context);
             for (const instr of block.instructions) {
                 recordInstructionDerivations(instr, context, isFirstPass);
             }
         }
+        context.derivationCache.checkForChanges();
         isFirstPass = false;
     } while (context.derivationCache.snapshot());
     for (const effect of effects) {
@@ -52209,7 +52234,15 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
             case Effect.ConditionallyMutateIterator:
             case Effect.Mutate: {
                 if (isMutable(instr, operand)) {
-                    context.derivationCache.addDerivationEntry(operand, sources, typeOfValue);
+                    if (context.derivationCache.cache.has(operand.identifier.id)) {
+                        const operandMetadata = context.derivationCache.cache.get(operand.identifier.id);
+                        if (operandMetadata !== undefined) {
+                            operandMetadata.typeOfValue = joinValue(typeOfValue, operandMetadata.typeOfValue);
+                        }
+                    }
+                    else {
+                        context.derivationCache.addDerivationEntry(operand, sources, typeOfValue);
+                    }
                 }
                 break;
             }
