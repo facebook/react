@@ -117,6 +117,7 @@ import {
   DidCapture,
   AffectedParentLayout,
   ViewTransitionNamedStatic,
+  PortalStatic,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -1204,6 +1205,17 @@ function hideOrUnhideAllChildrenOnFiber(fiber: Fiber, isHidden: boolean) {
     case HostHoistable: {
       // Found the nearest host component. Hide it.
       commitShowHideHostInstance(fiber, isHidden);
+      // Typically, only the nearest host nodes need to be hidden, since that
+      // has the effect of also hiding everything inside of them.
+      //
+      // However, there's a special case for portals, because portals do not
+      // exist in the regular host tree hierarchy; we can't assume that just
+      // because a portal's HostComponent parent in the React tree will also be
+      // a parent in the actual host tree.
+      //
+      // So, if any portals exist within the tree, regardless of how deeply
+      // nested they are, we need to repeat this algorithm for its children.
+      hideOrUnhideNearestPortals(fiber, isHidden);
       return;
     }
     case HostText: {
@@ -1227,6 +1239,47 @@ function hideOrUnhideAllChildrenOnFiber(fiber: Fiber, isHidden: boolean) {
     }
     default: {
       hideOrUnhideAllChildren(fiber, isHidden);
+      return;
+    }
+  }
+}
+
+function hideOrUnhideNearestPortals(parentFiber: Fiber, isHidden: boolean) {
+  if (!supportsMutation) {
+    return;
+  }
+  if (parentFiber.subtreeFlags & PortalStatic) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      hideOrUnhideNearestPortalsOnFiber(child, isHidden);
+      child = child.sibling;
+    }
+  }
+}
+
+function hideOrUnhideNearestPortalsOnFiber(fiber: Fiber, isHidden: boolean) {
+  if (!supportsMutation) {
+    return;
+  }
+  switch (fiber.tag) {
+    case HostPortal: {
+      // Found a portal. Switch back to the normal hide/unhide algorithm to
+      // toggle the visibility of its children.
+      hideOrUnhideAllChildrenOnFiber(fiber, isHidden);
+      return;
+    }
+    case OffscreenComponent: {
+      const offscreenState: OffscreenState | null = fiber.memoizedState;
+      if (offscreenState !== null) {
+        // Found a nested Offscreen component that is hidden. Don't search any
+        // deeper. This tree should remain hidden.
+      } else {
+        hideOrUnhideNearestPortals(fiber, isHidden);
+      }
+      return;
+    }
+    default: {
+      hideOrUnhideNearestPortals(fiber, isHidden);
       return;
     }
   }
@@ -2291,6 +2344,15 @@ function commitMutationEffectsOnFiber(
       break;
     }
     case HostPortal: {
+      // For the purposes of visibility toggling, the direct children of a
+      // portal are considered "children" of the nearest hidden
+      // OffscreenComponent, regardless of whether there are any host components
+      // in between them. This is because portals are not part of the regular
+      // host tree hierarchy; we can't assume that just because a portal's
+      // HostComponent parent in the React tree will also be a parent in the
+      // actual host tree. So we must hide all of them.
+      const prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
+      offscreenDirectParentIsHidden = offscreenSubtreeIsHidden;
       const prevMutationContext = pushMutationContext();
       if (supportsResources) {
         const previousHoistableRoot = currentHoistableRoot;
@@ -2312,6 +2374,7 @@ function commitMutationEffectsOnFiber(
         rootViewTransitionAffected = true;
       }
       popMutationContext(prevMutationContext);
+      offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden;
 
       if (flags & Update) {
         if (supportsPersistence) {
