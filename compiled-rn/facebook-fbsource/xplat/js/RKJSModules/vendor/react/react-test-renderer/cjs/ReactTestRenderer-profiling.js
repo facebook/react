@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9422ff4afb2a1db5fbdfcd54f76b67ca>>
+ * @generated SignedSource<<a4edd033efa9f9c6bf1abc77a5a702bd>>
  */
 
 "use strict";
@@ -1893,16 +1893,16 @@ function createChildReconciler(shouldTrackSideEffects) {
       return (
         (newIndex = newIndex.index),
         newIndex < lastPlacedIndex
-          ? ((newFiber.flags |= 67108866), lastPlacedIndex)
+          ? ((newFiber.flags |= 134217730), lastPlacedIndex)
           : newIndex
       );
-    newFiber.flags |= 67108866;
+    newFiber.flags |= 134217730;
     return lastPlacedIndex;
   }
   function placeSingleChild(newFiber) {
     shouldTrackSideEffects &&
       null === newFiber.alternate &&
-      (newFiber.flags |= 67108866);
+      (newFiber.flags |= 134217730);
     return newFiber;
   }
   function updateTextNode(returnFiber, current, textContent, lanes) {
@@ -5513,7 +5513,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           (nextProps.treeBaseDuration = didSuspend.treeBaseDuration)),
         (workInProgress.deletions = null))
       : ((nextProps = createWorkInProgress(didSuspend, primaryChildProps)),
-        (nextProps.subtreeFlags = didSuspend.subtreeFlags & 65011712));
+        (nextProps.subtreeFlags = didSuspend.subtreeFlags & 132120576));
     null !== currentFallbackChildFragment
       ? (showFallback = createWorkInProgress(
           currentFallbackChildFragment,
@@ -6449,8 +6449,8 @@ function bubbleProperties(completedWork) {
 
       )
         (newChildLanes |= child$86.lanes | child$86.childLanes),
-          (subtreeFlags |= child$86.subtreeFlags & 65011712),
-          (subtreeFlags |= child$86.flags & 65011712),
+          (subtreeFlags |= child$86.subtreeFlags & 132120576),
+          (subtreeFlags |= child$86.flags & 132120576),
           (treeBaseDuration$85 += child$86.treeBaseDuration),
           (child$86 = child$86.sibling);
       completedWork.treeBaseDuration = treeBaseDuration$85;
@@ -6462,8 +6462,8 @@ function bubbleProperties(completedWork) {
       )
         (newChildLanes |=
           treeBaseDuration$85.lanes | treeBaseDuration$85.childLanes),
-          (subtreeFlags |= treeBaseDuration$85.subtreeFlags & 65011712),
-          (subtreeFlags |= treeBaseDuration$85.flags & 65011712),
+          (subtreeFlags |= treeBaseDuration$85.subtreeFlags & 132120576),
+          (subtreeFlags |= treeBaseDuration$85.flags & 132120576),
           (treeBaseDuration$85.return = completedWork),
           (treeBaseDuration$85 = treeBaseDuration$85.sibling);
   else if (0 !== (completedWork.mode & 2)) {
@@ -6722,7 +6722,12 @@ function completeWork(current, workInProgress, renderLanes) {
           (workInProgress.treeBaseDuration -= current.treeBaseDuration));
       return null;
     case 4:
-      return popHostContainer(), bubbleProperties(workInProgress), null;
+      return (
+        popHostContainer(),
+        (workInProgress.flags |= 67108864),
+        bubbleProperties(workInProgress),
+        null
+      );
     case 10:
       return (
         popProvider(workInProgress.type), bubbleProperties(workInProgress), null
@@ -7628,6 +7633,68 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   }
   popComponentEffectStart(prevEffectStart);
 }
+function hideOrUnhideAllChildren(parentFiber, isHidden) {
+  for (parentFiber = parentFiber.child; null !== parentFiber; )
+    hideOrUnhideAllChildrenOnFiber(parentFiber, isHidden),
+      (parentFiber = parentFiber.sibling);
+}
+function hideOrUnhideAllChildrenOnFiber(fiber, isHidden) {
+  switch (fiber.tag) {
+    case 5:
+    case 26:
+      try {
+        var instance = fiber.stateNode;
+        isHidden ? (instance.isHidden = !0) : (fiber.stateNode.isHidden = !1);
+      } catch (error) {
+        captureCommitPhaseError(fiber, fiber.return, error);
+      }
+      hideOrUnhideNearestPortals(fiber, isHidden);
+      break;
+    case 6:
+      try {
+        (fiber.stateNode.isHidden = isHidden ? !0 : !1),
+          (rootMutationContext = !0);
+      } catch (error) {
+        captureCommitPhaseError(fiber, fiber.return, error);
+      }
+      break;
+    case 18:
+      try {
+        var instance$jscomp$0 = fiber.stateNode;
+        isHidden ? shim$1(instance$jscomp$0) : shim$1(fiber.stateNode);
+      } catch (error) {
+        captureCommitPhaseError(fiber, fiber.return, error);
+      }
+      break;
+    case 22:
+    case 23:
+      null === fiber.memoizedState && hideOrUnhideAllChildren(fiber, isHidden);
+      break;
+    default:
+      hideOrUnhideAllChildren(fiber, isHidden);
+  }
+}
+function hideOrUnhideNearestPortals(parentFiber, isHidden$jscomp$0) {
+  if (parentFiber.subtreeFlags & 67108864)
+    for (parentFiber = parentFiber.child; null !== parentFiber; ) {
+      a: {
+        var fiber = parentFiber,
+          isHidden = isHidden$jscomp$0;
+        switch (fiber.tag) {
+          case 4:
+            hideOrUnhideAllChildrenOnFiber(fiber, isHidden);
+            break a;
+          case 22:
+            null === fiber.memoizedState &&
+              hideOrUnhideNearestPortals(fiber, isHidden);
+            break a;
+          default:
+            hideOrUnhideNearestPortals(fiber, isHidden);
+        }
+      }
+      parentFiber = parentFiber.sibling;
+    }
+}
 function detachFiberAfterEffects(fiber) {
   var alternate = fiber.alternate;
   null !== alternate &&
@@ -7889,27 +7956,23 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         (offscreenSubtreeWasHidden ||
           null === current ||
           safelyDetachRef(current, current.return));
-      if (
-        flags & 64 &&
+      flags & 64 &&
         offscreenSubtreeIsHidden &&
         ((finishedWork = finishedWork.updateQueue),
         null !== finishedWork &&
-          ((flags = finishedWork.callbacks), null !== flags))
-      ) {
-        var existingHiddenCallbacks = finishedWork.shared.hiddenCallbacks;
-        finishedWork.shared.hiddenCallbacks =
-          null === existingHiddenCallbacks
-            ? flags
-            : existingHiddenCallbacks.concat(flags);
-      }
+          ((root = finishedWork.callbacks),
+          null !== root &&
+            ((lanes = finishedWork.shared.hiddenCallbacks),
+            (finishedWork.shared.hiddenCallbacks =
+              null === lanes ? root : lanes.concat(root)))));
       break;
     case 26:
     case 27:
     case 5:
-      existingHiddenCallbacks = offscreenDirectParentIsHidden;
+      var prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
       offscreenDirectParentIsHidden = !1;
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      offscreenDirectParentIsHidden = existingHiddenCallbacks;
+      offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden;
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
         (offscreenSubtreeWasHidden ||
@@ -7922,11 +7985,11 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
       if (flags & 4 && null != finishedWork.stateNode) {
-        flags = finishedWork.memoizedProps;
+        root = finishedWork.memoizedProps;
         try {
           var instance = finishedWork.stateNode;
           instance.type = finishedWork.type;
-          instance.props = flags;
+          instance.props = root;
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -7940,10 +8003,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           throw Error(
             "This should have a text node initialized. This error is likely caused by a bug in React. Please file an issue."
           );
-        flags = finishedWork.memoizedProps;
-        existingHiddenCallbacks = finishedWork.stateNode;
+        root = finishedWork.memoizedProps;
+        lanes = finishedWork.stateNode;
         try {
-          (existingHiddenCallbacks.text = flags), (rootMutationContext = !0);
+          (lanes.text = root), (rootMutationContext = !0);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -7961,8 +8024,11 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         (needsIsomorphicIndicator = !1));
       break;
     case 4:
+      flags = offscreenDirectParentIsHidden;
+      offscreenDirectParentIsHidden = offscreenSubtreeIsHidden;
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
+      offscreenDirectParentIsHidden = flags;
       break;
     case 12:
       flags = pushNestedEffectDurations();
@@ -7975,132 +8041,74 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
       flags & 4 &&
-        ((flags = finishedWork.updateQueue),
-        null !== flags &&
+        ((root = finishedWork.updateQueue),
+        null !== root &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, flags)));
+          attachSuspenseRetryListeners(finishedWork, root)));
       break;
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
       finishedWork.child.flags & 8192 &&
-        ((existingHiddenCallbacks =
-          null !== current && null !== current.memoizedState),
+        ((root = null !== current && null !== current.memoizedState),
         null === finishedWork.memoizedState ||
-          existingHiddenCallbacks ||
+          root ||
           (globalMostRecentFallbackTime = now$1()));
       flags & 4 &&
-        ((flags = finishedWork.updateQueue),
-        null !== flags &&
+        ((root = finishedWork.updateQueue),
+        null !== root &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, flags)));
+          attachSuspenseRetryListeners(finishedWork, root)));
       break;
     case 22:
       instance = null !== finishedWork.memoizedState;
-      var wasHidden = null !== current && null !== current.memoizedState;
+      prevOffscreenDirectParentIsHidden =
+        null !== current && null !== current.memoizedState;
       if (finishedWork.mode & 1) {
         var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
           prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
-          prevOffscreenDirectParentIsHidden$130 = offscreenDirectParentIsHidden;
+          prevOffscreenDirectParentIsHidden$131 = offscreenDirectParentIsHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || instance;
         offscreenDirectParentIsHidden =
-          prevOffscreenDirectParentIsHidden$130 || instance;
-        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
+          prevOffscreenDirectParentIsHidden$131 || instance;
+        offscreenSubtreeWasHidden =
+          prevOffscreenSubtreeWasHidden || prevOffscreenDirectParentIsHidden;
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
-        offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden$130;
+        offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden$131;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
       } else recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
-      if (
-        flags & 8192 &&
+      flags & 8192 &&
         ((root = finishedWork.stateNode),
         (root._visibility = instance
           ? root._visibility & -2
           : root._visibility | 1),
         instance &&
           (null === current ||
-            wasHidden ||
+            prevOffscreenDirectParentIsHidden ||
             offscreenSubtreeIsHidden ||
             offscreenSubtreeWasHidden ||
             (0 !== (finishedWork.mode & 1) &&
               recursivelyTraverseDisappearLayoutEffects(finishedWork))),
-        instance || !offscreenDirectParentIsHidden)
-      )
-        a: for (root = null, lanes = finishedWork; ; ) {
-          if (5 === lanes.tag) {
-            if (null === root) {
-              current = root = lanes;
-              try {
-                (existingHiddenCallbacks = current.stateNode),
-                  instance
-                    ? (existingHiddenCallbacks.isHidden = !0)
-                    : (current.stateNode.isHidden = !1);
-              } catch (error) {
-                captureCommitPhaseError(current, current.return, error);
-              }
-            }
-          } else if (6 === lanes.tag) {
-            if (null === root) {
-              current = lanes;
-              try {
-                (current.stateNode.isHidden = instance ? !0 : !1),
-                  (rootMutationContext = !0);
-              } catch (error) {
-                captureCommitPhaseError(current, current.return, error);
-              }
-            }
-          } else if (18 === lanes.tag) {
-            if (null === root) {
-              current = lanes;
-              try {
-                var instance$jscomp$0 = current.stateNode;
-                instance
-                  ? shim$1(instance$jscomp$0)
-                  : shim$1(current.stateNode);
-              } catch (error) {
-                captureCommitPhaseError(current, current.return, error);
-              }
-            }
-          } else if (
-            ((22 !== lanes.tag && 23 !== lanes.tag) ||
-              null === lanes.memoizedState ||
-              lanes === finishedWork) &&
-            null !== lanes.child
-          ) {
-            lanes.child.return = lanes;
-            lanes = lanes.child;
-            continue;
-          }
-          if (lanes === finishedWork) break a;
-          for (; null === lanes.sibling; ) {
-            if (null === lanes.return || lanes.return === finishedWork) break a;
-            root === lanes && (root = null);
-            lanes = lanes.return;
-          }
-          root === lanes && (root = null);
-          lanes.sibling.return = lanes.return;
-          lanes = lanes.sibling;
-        }
+        (!instance && offscreenDirectParentIsHidden) ||
+          hideOrUnhideAllChildren(finishedWork, instance));
       flags & 4 &&
-        ((flags = finishedWork.updateQueue),
-        null !== flags &&
-          ((existingHiddenCallbacks = flags.retryQueue),
-          null !== existingHiddenCallbacks &&
-            ((flags.retryQueue = null),
-            attachSuspenseRetryListeners(
-              finishedWork,
-              existingHiddenCallbacks
-            ))));
+        ((root = finishedWork.updateQueue),
+        null !== root &&
+          ((lanes = root.retryQueue),
+          null !== lanes &&
+            ((root.retryQueue = null),
+            attachSuspenseRetryListeners(finishedWork, lanes))));
       break;
     case 19:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
       flags & 4 &&
-        ((flags = finishedWork.updateQueue),
-        null !== flags &&
+        ((root = finishedWork.updateQueue),
+        null !== root &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, flags)));
+          attachSuspenseRetryListeners(finishedWork, root)));
       break;
     case 30:
       break;
@@ -9416,8 +9424,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$143) {
-      handleThrow(root, thrownValue$143);
+    } catch (thrownValue$144) {
+      handleThrow(root, thrownValue$144);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -9534,8 +9542,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$145) {
-      handleThrow(root, thrownValue$145);
+    } catch (thrownValue$146) {
+      handleThrow(root, thrownValue$146);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -10215,7 +10223,7 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.deletions = null),
       (workInProgress.actualDuration = -0),
       (workInProgress.actualStartTime = -1.1));
-  workInProgress.flags = current.flags & 65011712;
+  workInProgress.flags = current.flags & 132120576;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
@@ -10236,7 +10244,7 @@ function createWorkInProgress(current, pendingProps) {
   return workInProgress;
 }
 function resetWorkInProgress(workInProgress, renderLanes) {
-  workInProgress.flags &= 65011714;
+  workInProgress.flags &= 132120578;
   var current = workInProgress.alternate;
   null === current
     ? ((workInProgress.childLanes = 0),
@@ -10814,17 +10822,17 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1247 = {
+var internals$jscomp$inline_1262 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-717e7084-20251107",
+  version: "19.3.0-native-fb-52684925-20251110",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-717e7084-20251107",
+  reconcilerVersion: "19.3.0-native-fb-52684925-20251110",
   getLaneLabelMap: function () {
     for (
-      var map = new Map(), lane = 1, index$150 = 0;
-      31 > index$150;
-      index$150++
+      var map = new Map(), lane = 1, index$151 = 0;
+      31 > index$151;
+      index$151++
     ) {
       var label = getLabelForLane(lane);
       map.set(lane, label);
@@ -10837,16 +10845,16 @@ var internals$jscomp$inline_1247 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1530 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1540 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1530.isDisabled &&
-    hook$jscomp$inline_1530.supportsFiber
+    !hook$jscomp$inline_1540.isDisabled &&
+    hook$jscomp$inline_1540.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1530.inject(
-        internals$jscomp$inline_1247
+      (rendererID = hook$jscomp$inline_1540.inject(
+        internals$jscomp$inline_1262
       )),
-        (injectedHook = hook$jscomp$inline_1530);
+        (injectedHook = hook$jscomp$inline_1540);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10970,4 +10978,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.3.0-native-fb-717e7084-20251107";
+exports.version = "19.3.0-native-fb-52684925-20251110";

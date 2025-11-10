@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<82b9035c516aebe362c5bfc92819a250>>
+ * @generated SignedSource<<27e794ad1f108c617b3278fab22d2199>>
  */
 
 "use strict";
@@ -4410,16 +4410,16 @@ __DEV__ &&
           return (
             (newIndex = newIndex.index),
             newIndex < lastPlacedIndex
-              ? ((newFiber.flags |= 67108866), lastPlacedIndex)
+              ? ((newFiber.flags |= 134217730), lastPlacedIndex)
               : newIndex
           );
-        newFiber.flags |= 67108866;
+        newFiber.flags |= 134217730;
         return lastPlacedIndex;
       }
       function placeSingleChild(newFiber) {
         shouldTrackSideEffects &&
           null === newFiber.alternate &&
-          (newFiber.flags |= 67108866);
+          (newFiber.flags |= 134217730);
         return newFiber;
       }
       function updateTextNode(returnFiber, current, textContent, lanes) {
@@ -6012,7 +6012,7 @@ __DEV__ &&
           null;
       hookTypesUpdateIndexDev = -1;
       null !== current &&
-        (current.flags & 65011712) !== (workInProgress.flags & 65011712) &&
+        (current.flags & 132120576) !== (workInProgress.flags & 132120576) &&
         console.error(
           "Internal React error: Expected static flag was missing. Please notify the React team."
         );
@@ -6085,7 +6085,7 @@ __DEV__ &&
       workInProgress.updateQueue = current.updateQueue;
       workInProgress.flags =
         0 !== (workInProgress.mode & 16)
-          ? workInProgress.flags & -402655237
+          ? workInProgress.flags & -805308421
           : workInProgress.flags & -2053;
       current.lanes &= ~lanes;
     }
@@ -6883,7 +6883,7 @@ __DEV__ &&
     }
     function mountEffect(create, deps) {
       0 !== (currentlyRenderingFiber.mode & 16)
-        ? mountEffectImpl(276826112, Passive, create, deps)
+        ? mountEffectImpl(545261568, Passive, create, deps)
         : mountEffectImpl(8390656, Passive, create, deps);
     }
     function useEffectEventImpl(payload) {
@@ -6925,7 +6925,7 @@ __DEV__ &&
     }
     function mountLayoutEffect(create, deps) {
       var fiberFlags = 4194308;
-      0 !== (currentlyRenderingFiber.mode & 16) && (fiberFlags |= 134217728);
+      0 !== (currentlyRenderingFiber.mode & 16) && (fiberFlags |= 268435456);
       return mountEffectImpl(fiberFlags, Layout, create, deps);
     }
     function imperativeHandleEffect(create, ref) {
@@ -6958,7 +6958,7 @@ __DEV__ &&
         );
       deps = null !== deps && void 0 !== deps ? deps.concat([ref]) : null;
       var fiberFlags = 4194308;
-      0 !== (currentlyRenderingFiber.mode & 16) && (fiberFlags |= 134217728);
+      0 !== (currentlyRenderingFiber.mode & 16) && (fiberFlags |= 268435456);
       mountEffectImpl(
         fiberFlags,
         Layout,
@@ -8489,7 +8489,7 @@ __DEV__ &&
           (state.state = workInProgress.memoizedState));
         "function" === typeof state.componentDidMount &&
           (workInProgress.flags |= 4194308);
-        0 !== (workInProgress.mode & 16) && (workInProgress.flags |= 134217728);
+        0 !== (workInProgress.mode & 16) && (workInProgress.flags |= 268435456);
         state = !0;
       } else if (null === current)
         (state = workInProgress.stateNode),
@@ -8559,11 +8559,11 @@ __DEV__ &&
                   "function" === typeof state.componentDidMount &&
                     (workInProgress.flags |= 4194308),
                   0 !== (workInProgress.mode & 16) &&
-                    (workInProgress.flags |= 134217728))
+                    (workInProgress.flags |= 268435456))
                 : ("function" === typeof state.componentDidMount &&
                     (workInProgress.flags |= 4194308),
                   0 !== (workInProgress.mode & 16) &&
-                    (workInProgress.flags |= 134217728),
+                    (workInProgress.flags |= 268435456),
                   (workInProgress.memoizedProps = nextProps),
                   (workInProgress.memoizedState = state$jscomp$0)),
               (state.props = nextProps),
@@ -8573,7 +8573,7 @@ __DEV__ &&
             : ("function" === typeof state.componentDidMount &&
                 (workInProgress.flags |= 4194308),
               0 !== (workInProgress.mode & 16) &&
-                (workInProgress.flags |= 134217728),
+                (workInProgress.flags |= 268435456),
               (state = !1));
       else {
         state = workInProgress.stateNode;
@@ -8998,7 +8998,7 @@ __DEV__ &&
           mode: "hidden",
           children: nextProps.children
         });
-        nextProps.subtreeFlags = didSuspend.subtreeFlags & 65011712;
+        nextProps.subtreeFlags = didSuspend.subtreeFlags & 132120576;
         null !== currentFallbackChildFragment
           ? (showFallback = createWorkInProgress(
               currentFallbackChildFragment,
@@ -10244,8 +10244,8 @@ __DEV__ &&
 
           )
             (newChildLanes |= _child2.lanes | _child2.childLanes),
-              (subtreeFlags |= _child2.subtreeFlags & 65011712),
-              (subtreeFlags |= _child2.flags & 65011712),
+              (subtreeFlags |= _child2.subtreeFlags & 132120576),
+              (subtreeFlags |= _child2.flags & 132120576),
               (_treeBaseDuration += _child2.treeBaseDuration),
               (_child2 = _child2.sibling);
           completedWork.treeBaseDuration = _treeBaseDuration;
@@ -10257,8 +10257,8 @@ __DEV__ &&
           )
             (newChildLanes |=
               _treeBaseDuration.lanes | _treeBaseDuration.childLanes),
-              (subtreeFlags |= _treeBaseDuration.subtreeFlags & 65011712),
-              (subtreeFlags |= _treeBaseDuration.flags & 65011712),
+              (subtreeFlags |= _treeBaseDuration.subtreeFlags & 132120576),
+              (subtreeFlags |= _treeBaseDuration.flags & 132120576),
               (_treeBaseDuration.return = completedWork),
               (_treeBaseDuration = _treeBaseDuration.sibling);
       else if (0 !== (completedWork.mode & 2)) {
@@ -10614,6 +10614,7 @@ __DEV__ &&
           return (
             popHostContainer(workInProgress),
             updateHostContainer(current, workInProgress),
+            (workInProgress.flags |= 67108864),
             bubbleProperties(workInProgress),
             null
           );
@@ -15832,14 +15833,14 @@ __DEV__ &&
       parentFiber,
       isInStrictMode
     ) {
-      if (0 !== (parentFiber.subtreeFlags & 67117056))
+      if (0 !== (parentFiber.subtreeFlags & 134225920))
         for (parentFiber = parentFiber.child; null !== parentFiber; ) {
           var root = root$jscomp$0,
             fiber = parentFiber,
             isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
           isStrictModeFiber = isInStrictMode || isStrictModeFiber;
           22 !== fiber.tag
-            ? fiber.flags & 67108864
+            ? fiber.flags & 134217728
               ? isStrictModeFiber &&
                 runWithFiberInDEV(
                   fiber,
@@ -15860,7 +15861,7 @@ __DEV__ &&
                     root,
                     fiber
                   )
-                : fiber.subtreeFlags & 67108864 &&
+                : fiber.subtreeFlags & 134217728 &&
                   runWithFiberInDEV(
                     fiber,
                     recursivelyTraverseAndDoubleInvokeEffectsInDEV,
@@ -16167,7 +16168,7 @@ __DEV__ &&
           (workInProgress.deletions = null),
           (workInProgress.actualDuration = -0),
           (workInProgress.actualStartTime = -1.1));
-      workInProgress.flags = current.flags & 65011712;
+      workInProgress.flags = current.flags & 132120576;
       workInProgress.childLanes = current.childLanes;
       workInProgress.lanes = current.lanes;
       workInProgress.child = current.child;
@@ -16205,7 +16206,7 @@ __DEV__ &&
       return workInProgress;
     }
     function resetWorkInProgress(workInProgress, renderLanes) {
-      workInProgress.flags &= 65011714;
+      workInProgress.flags &= 132120578;
       var current = workInProgress.alternate;
       null === current
         ? ((workInProgress.childLanes = 0),
@@ -19903,10 +19904,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-717e7084-20251107",
+        version: "19.3.0-native-fb-52684925-20251110",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-717e7084-20251107"
+        reconcilerVersion: "19.3.0-native-fb-52684925-20251110"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0263e44ee1edf9c2e89509085e61f392>>
+ * @generated SignedSource<<3dc0099294f315bc46eeb222b33b0c5a>>
  */
 
 "use strict";
@@ -3191,16 +3191,16 @@ function createChildReconciler(shouldTrackSideEffects) {
       return (
         (newIndex = newIndex.index),
         newIndex < lastPlacedIndex
-          ? ((newFiber.flags |= 67108866), lastPlacedIndex)
+          ? ((newFiber.flags |= 134217730), lastPlacedIndex)
           : newIndex
       );
-    newFiber.flags |= 67108866;
+    newFiber.flags |= 134217730;
     return lastPlacedIndex;
   }
   function placeSingleChild(newFiber) {
     shouldTrackSideEffects &&
       null === newFiber.alternate &&
-      (newFiber.flags |= 67108866);
+      (newFiber.flags |= 134217730);
     return newFiber;
   }
   function updateTextNode(returnFiber, current, textContent, lanes) {
@@ -6773,7 +6773,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       mode: "hidden",
       children: nextProps.children
     });
-    nextProps.subtreeFlags = didSuspend.subtreeFlags & 65011712;
+    nextProps.subtreeFlags = didSuspend.subtreeFlags & 132120576;
     null !== currentFallbackChildFragment
       ? (showFallback = createWorkInProgress(
           currentFallbackChildFragment,
@@ -7743,8 +7743,8 @@ function bubbleProperties(completedWork) {
 
       )
         (newChildLanes |= child$90.lanes | child$90.childLanes),
-          (subtreeFlags |= child$90.subtreeFlags & 65011712),
-          (subtreeFlags |= child$90.flags & 65011712),
+          (subtreeFlags |= child$90.subtreeFlags & 132120576),
+          (subtreeFlags |= child$90.flags & 132120576),
           (treeBaseDuration$89 += child$90.treeBaseDuration),
           (child$90 = child$90.sibling);
       completedWork.treeBaseDuration = treeBaseDuration$89;
@@ -7756,8 +7756,8 @@ function bubbleProperties(completedWork) {
       )
         (newChildLanes |=
           treeBaseDuration$89.lanes | treeBaseDuration$89.childLanes),
-          (subtreeFlags |= treeBaseDuration$89.subtreeFlags & 65011712),
-          (subtreeFlags |= treeBaseDuration$89.flags & 65011712),
+          (subtreeFlags |= treeBaseDuration$89.subtreeFlags & 132120576),
+          (subtreeFlags |= treeBaseDuration$89.flags & 132120576),
           (treeBaseDuration$89.return = completedWork),
           (treeBaseDuration$89 = treeBaseDuration$89.sibling);
   else if (0 !== (completedWork.mode & 2)) {
@@ -8086,6 +8086,7 @@ function completeWork(current, workInProgress, renderLanes) {
       return (
         popHostContainer(),
         updateHostContainer(current, workInProgress),
+        (workInProgress.flags |= 67108864),
         bubbleProperties(workInProgress),
         null
       );
@@ -12632,7 +12633,7 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.deletions = null),
       (workInProgress.actualDuration = -0),
       (workInProgress.actualStartTime = -1.1));
-  workInProgress.flags = current.flags & 65011712;
+  workInProgress.flags = current.flags & 132120576;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
@@ -12653,7 +12654,7 @@ function createWorkInProgress(current, pendingProps) {
   return workInProgress;
 }
 function resetWorkInProgress(workInProgress, renderLanes) {
-  workInProgress.flags &= 65011714;
+  workInProgress.flags &= 132120578;
   var current = workInProgress.alternate;
   null === current
     ? ((workInProgress.childLanes = 0),
@@ -13274,10 +13275,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1592 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-717e7084-20251107",
+    version: "19.3.0-native-fb-52684925-20251110",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-717e7084-20251107"
+    reconcilerVersion: "19.3.0-native-fb-52684925-20251110"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1592.rendererConfig = extraDevToolsConfig);
