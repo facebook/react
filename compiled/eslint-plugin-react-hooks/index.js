@@ -52358,9 +52358,7 @@ function validateNoDerivedComputationsInEffects_exp(fn) {
     for (const effect of effects) {
         validateEffect(effect, context);
     }
-    if (errors.hasAnyErrors()) {
-        throw errors;
-    }
+    return errors.asResult();
 }
 function recordPhiDerivations(block, context) {
     for (const phi of block.phis) {
@@ -52925,7 +52923,7 @@ function runWithEnvironment(func, env) {
             validateNoDerivedComputationsInEffects(hir);
         }
         if (env.config.validateNoDerivedComputationsInEffects_exp) {
-            validateNoDerivedComputationsInEffects_exp(hir);
+            env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
         }
         if (env.config.validateNoSetStateInEffects) {
             env.logErrors(validateNoSetStateInEffects(hir, env));
