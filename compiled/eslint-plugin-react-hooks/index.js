@@ -52965,11 +52965,11 @@ function runWithEnvironment(func, env) {
         if (env.config.validateNoSetStateInRender) {
             validateNoSetStateInRender(hir).unwrap();
         }
-        if (env.config.validateNoDerivedComputationsInEffects) {
-            validateNoDerivedComputationsInEffects(hir);
-        }
         if (env.config.validateNoDerivedComputationsInEffects_exp) {
             env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
+        }
+        else if (env.config.validateNoDerivedComputationsInEffects) {
+            validateNoDerivedComputationsInEffects(hir);
         }
         if (env.config.validateNoSetStateInEffects) {
             env.logErrors(validateNoSetStateInEffects(hir, env));
