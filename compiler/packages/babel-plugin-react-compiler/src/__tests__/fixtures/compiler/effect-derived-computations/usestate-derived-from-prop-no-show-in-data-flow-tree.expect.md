@@ -4,15 +4,21 @@
 ```javascript
 // @validateNoDerivedComputationsInEffects_exp
 
-function Component({ prop }) {
-  const [s, setS] = useState(prop)
-  const [second, setSecond] = useState(prop)
+function Component({prop}) {
+  const [s, setS] = useState();
+  const [second, setSecond] = useState(prop);
 
+  /*
+   * `second` is a source of state. It will inherit the value of `prop` in
+   * the first render, but after that it will no longer be updated when
+   * `prop` changes. So we shouldn't consider `second` as being derived from
+   * `prop`
+   */
   useEffect(() => {
-    setS(second)
-  }, [second])
+    setS(second);
+  }, [second]);
 
-  return <div>{s}</div>
+  return <div>{s}</div>;
 }
 
 ```
@@ -25,7 +31,7 @@ import { c as _c } from "react/compiler-runtime"; // @validateNoDerivedComputati
 function Component(t0) {
   const $ = _c(5);
   const { prop } = t0;
-  const [s, setS] = useState(prop);
+  const [s, setS] = useState();
   const [second] = useState(prop);
   let t1;
   let t2;
