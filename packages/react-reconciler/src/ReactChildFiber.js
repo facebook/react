@@ -2104,7 +2104,8 @@ export function validateSuspenseListChildren(
 ) {
   if (__DEV__) {
     if (
-      (revealOrder === 'forwards' ||
+      (revealOrder == null ||
+        revealOrder === 'forwards' ||
         revealOrder === 'backwards' ||
         revealOrder === 'unstable_legacy-backwards') &&
       children !== undefined &&

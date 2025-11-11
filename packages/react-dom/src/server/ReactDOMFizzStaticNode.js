@@ -12,11 +12,7 @@ import type {
   BootstrapScriptDescriptor,
   HeadersDescriptor,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
-import type {
-  PostponedState,
-  ErrorInfo,
-  PostponeInfo,
-} from 'react-server/src/ReactFizzServer';
+import type {PostponedState, ErrorInfo} from 'react-server/src/ReactFizzServer';
 import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import {Writable, Readable} from 'stream';
@@ -40,7 +36,7 @@ import {
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-import {enablePostpone, enableHalt} from 'shared/ReactFeatureFlags';
+import {enableHalt} from 'shared/ReactFeatureFlags';
 
 import {textEncoder} from 'react-server/src/ReactServerStreamConfigNode';
 
@@ -63,7 +59,6 @@ type Options = {
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
-  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
   onHeaders?: (headers: HeadersDescriptor) => void,
@@ -135,15 +130,14 @@ function prerenderToNodeStream(
       });
       const writable = createFakeWritableFromReadable(readable);
 
-      const result: StaticResult =
-        enablePostpone || enableHalt
-          ? {
-              postponed: getPostponedState(request),
-              prelude: readable,
-            }
-          : ({
-              prelude: readable,
-            }: any);
+      const result: StaticResult = enableHalt
+        ? {
+            postponed: getPostponedState(request),
+            prelude: readable,
+          }
+        : ({
+            prelude: readable,
+          }: any);
       resolve(result);
     }
     const resumableState = createResumableState(
@@ -171,7 +165,6 @@ function prerenderToNodeStream(
       undefined,
       undefined,
       onFatalError,
-      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -222,15 +215,14 @@ function prerender(
         {highWaterMark: 0},
       );
 
-      const result =
-        enablePostpone || enableHalt
-          ? {
-              postponed: getPostponedState(request),
-              prelude: stream,
-            }
-          : ({
-              prelude: stream,
-            }: any);
+      const result = enableHalt
+        ? {
+            postponed: getPostponedState(request),
+            prelude: stream,
+          }
+        : ({
+            prelude: stream,
+          }: any);
       resolve(result);
     }
 
@@ -266,7 +258,6 @@ function prerender(
       undefined,
       undefined,
       onFatalError,
-      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -288,7 +279,6 @@ type ResumeOptions = {
   nonce?: NonceOption,
   signal?: AbortSignal,
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
-  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
 };
 
 function resumeAndPrerenderToNodeStream(
@@ -322,7 +312,6 @@ function resumeAndPrerenderToNodeStream(
       undefined,
       undefined,
       onFatalError,
-      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -388,7 +377,6 @@ function resumeAndPrerender(
       undefined,
       undefined,
       onFatalError,
-      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;

@@ -35,6 +35,7 @@ export const {
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
   enableAsyncDebugInfo,
+  enableInternalInstanceMap,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -59,6 +60,8 @@ export const enableThrottledScheduling: boolean = false;
 
 export const enableHydrationLaneScheduling: boolean = true;
 
+export const enablePerformanceIssueReporting: boolean = false;
+
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableSchedulingProfiler;
@@ -70,8 +73,6 @@ export const enableLegacyCache: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 
 export const enableTaint: boolean = false;
-
-export const enablePostpone: boolean = false;
 
 export const enableHalt: boolean = true;
 
@@ -110,6 +111,8 @@ export const enableHydrationChangeEvent: boolean = false;
 export const enableDefaultTransitionIndicator: boolean = true;
 
 export const ownerStackLimit = 1e4;
+
+export const enableFragmentRefsInstanceHandles: boolean = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
