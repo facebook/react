@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<c0f1dd9bc7a9bae4c5fccbf1d8c61a22>>
+ * @generated SignedSource<<15e1058ba71f58435d8aa93fbd96cbff>>
  */
 
 'use strict';
@@ -52745,11 +52745,11 @@ function runWithEnvironment(func, env) {
         if (env.config.validateNoSetStateInRender) {
             validateNoSetStateInRender(hir).unwrap();
         }
-        if (env.config.validateNoDerivedComputationsInEffects) {
-            validateNoDerivedComputationsInEffects(hir);
-        }
         if (env.config.validateNoDerivedComputationsInEffects_exp) {
             env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
+        }
+        else if (env.config.validateNoDerivedComputationsInEffects) {
+            validateNoDerivedComputationsInEffects(hir);
         }
         if (env.config.validateNoSetStateInEffects) {
             env.logErrors(validateNoSetStateInEffects(hir, env));

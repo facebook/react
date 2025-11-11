@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<5ac6e45b38922dd61d88804a3291eec2>>
+ * @generated SignedSource<<d3651cda1512e392c76d475542419fb5>>
  */
 
 'use strict';
@@ -52966,11 +52966,11 @@ function runWithEnvironment(func, env) {
         if (env.config.validateNoSetStateInRender) {
             validateNoSetStateInRender(hir).unwrap();
         }
-        if (env.config.validateNoDerivedComputationsInEffects) {
-            validateNoDerivedComputationsInEffects(hir);
-        }
         if (env.config.validateNoDerivedComputationsInEffects_exp) {
             env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
+        }
+        else if (env.config.validateNoDerivedComputationsInEffects) {
+            validateNoDerivedComputationsInEffects(hir);
         }
         if (env.config.validateNoSetStateInEffects) {
             env.logErrors(validateNoSetStateInEffects(hir, env));
