@@ -105,6 +105,7 @@ import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRan
 import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
 import {validateNoDerivedComputationsInEffects_exp} from '../Validation/ValidateNoDerivedComputationsInEffects_exp';
 import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
+import {optimizeForSSR} from '../Optimization/OptimizeForSSR';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -236,6 +237,11 @@ function runWithEnvironment(
     }
   }
 
+  if (env.config.enableAllowSetStateFromRefsInEffects) {
+    optimizeForSSR(hir);
+    log({kind: 'hir', name: 'OptimizeForSSR', value: hir});
+  }
+
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
   log({kind: 'hir', name: 'DeadCodeElimination', value: hir});
@@ -305,7 +311,7 @@ function runWithEnvironment(
     value: hir,
   });
 
-  if (env.isInferredMemoEnabled) {
+  if (env.isInferredMemoEnabled && !env.config.enableOptimizeForSSR) {
     if (env.config.validateStaticComponents) {
       env.logErrors(validateStaticComponents(hir));
     }
