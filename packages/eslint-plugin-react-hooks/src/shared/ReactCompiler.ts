@@ -107,6 +107,84 @@ function hasFlowSuppression(
   return false;
 }
 
+function hasFunctionSuppression(
+  context: Rule.RuleContext,
+  node: any,
+): boolean {
+  const sourceCode = context.sourceCode ?? context.getSourceCode();
+  const allComments = sourceCode.getAllComments?.() || [];
+  
+  // Get function start line
+  const functionStart = node.loc?.start.line;
+  if (!functionStart) return false;
+
+  for (const comment of allComments) {
+    const commentLine = comment.loc?.end.line;
+    if (!commentLine) continue;
+
+    // Check for eslint-disable-next-line before function
+    if (
+      commentLine === functionStart - 1 &&
+      comment.value.includes('eslint-disable-next-line') &&
+      comment.value.includes('react-hooks')
+    ) {
+      return true;
+    }
+
+    // Check for eslint-disable block encompassing function
+    if (
+      commentLine <= functionStart &&
+      comment.value.includes('eslint-disable') &&
+      !comment.value.includes('eslint-disable-next-line') &&
+      comment.value.includes('react-hooks')
+    ) {
+      // Check if there's a corresponding eslint-enable after function start
+      const enableComment = allComments.find(
+        c =>
+          c.loc &&
+          c.loc.start.line > commentLine &&
+          c.value.includes('eslint-enable'),
+      );
+      if (!enableComment || (enableComment.loc && enableComment.loc.start.line > functionStart)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function containsIncompatibleAPI(
+  context: Rule.RuleContext,
+  node: any,
+): {found: boolean; loc?: any} {
+  const sourceCode = context.sourceCode ?? context.getSourceCode();
+  const text = sourceCode.getText(node);
+
+  // Known incompatible APIs from React Compiler
+  const incompatibleAPIs = [
+    'useVirtualizer',
+    // Add more as needed
+  ];
+
+  for (const api of incompatibleAPIs) {
+    const regex = new RegExp(`\\b${api}\\s*\\(`, 'g');
+    const match = regex.exec(text);
+    if (match) {
+      // Try to find approximate location
+      const lines = text.substring(0, match.index).split('\n');
+      const line = (node.loc?.start.line || 0) + lines.length - 1;
+      return {
+        found: true,
+        loc: {
+          start: {line, column: 0},
+          end: {line, column: 80},
+        },
+      };
+    }
+  }
+  return {found: false};
+}
+
 function makeRule(rule: LintRule): Rule.RuleModule {
   const create = (context: Rule.RuleContext): Rule.RuleListener => {
     const result = getReactCompilerResult(context);
@@ -190,6 +268,51 @@ function makeRule(rule: LintRule): Rule.RuleModule {
         }
       }
     }
+
+    // For incompatible-library rule, also check functions with suppressions
+    // that React Compiler skipped analyzing
+    if (rule.category === 'IncompatibleLibrary') {
+      return {
+        'FunctionDeclaration, FunctionExpression, ArrowFunctionExpression'(
+          node: any,
+        ) {
+          // Only check if function has suppression
+          if (!hasFunctionSuppression(context, node)) {
+            return;
+          }
+
+          // Check if function contains incompatible API
+          const result = containsIncompatibleAPI(context, node);
+          if (!result.found) {
+            return;
+          }
+
+          // Report critical warning
+          context.report({
+            node,
+            loc: result.loc || node.loc,
+            message:
+              '🚨 This hook will NOT be memoized\n\n' +
+              'You\'re using an incompatible API AND have eslint-disable in this function.\n' +
+              'React Compiler will skip memoization of this hook.\n\n' +
+              '**Critical: Impact on parent components**\n' +
+              'If this hook is used in a MEMOIZED component, it will break the component\'s\n' +
+              'memoization by returning new object references every render.\n\n' +
+              '**Required action:**\n' +
+              'Add "use no memo" to COMPONENTS that use this hook:\n\n' +
+              'function MyComponent() {\n' +
+              '  "use no memo";  // ← Add this!\n' +
+              '  const { data } = useThisHook({...});\n' +
+              '  return <div>...</div>;\n' +
+              '}\n\n' +
+              '**Alternative solutions:**\n' +
+              '1. Remove eslint-disable from this hook and fix dependency issues\n' +
+              '2. Use this API directly in components (not in custom hooks)',
+          });
+        },
+      };
+    }
+
     return {};
   };
 
