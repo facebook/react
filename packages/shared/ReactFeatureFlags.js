@@ -199,6 +199,8 @@ export const disableLegacyMode: boolean = true;
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
+export const disableSetStateInRenderOnMount: boolean = false;
+
 // -----------------------------------------------------------------------------
 // React DOM Chopping Block
 //
