@@ -1576,7 +1576,6 @@ export function attach(
       currentRoot = rootInstance;
       unmountInstanceRecursively(rootInstance);
       rootToFiberInstanceMap.delete(root);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
 
@@ -1646,7 +1645,6 @@ export function attach(
       currentRoot = newRoot;
       setRootPseudoKey(currentRoot.id, root.current);
       mountFiberRecursively(root.current, false);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
 
@@ -5751,11 +5749,12 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
-        flushPendingEvents();
-
-        needsToFlushComponentLogs = false;
         currentRoot = (null: any);
       });
+
+      flushPendingEvents();
+
+      needsToFlushComponentLogs = false;
     }
   }
 
