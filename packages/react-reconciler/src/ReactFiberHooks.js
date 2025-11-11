@@ -43,6 +43,7 @@ import {
   enableNoCloningMemoCache,
   enableViewTransition,
   enableGestureTransition,
+  disableSetStateInRenderOnMount,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -79,7 +80,14 @@ import {
   higherEventPriority,
 } from './ReactEventPriorities';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
-import {HostRoot, CacheComponent, HostComponent} from './ReactWorkTags';
+import {
+  HostRoot,
+  CacheComponent,
+  HostComponent,
+  FunctionComponent,
+  ForwardRef,
+  SimpleMemoComponent,
+} from './ReactWorkTags';
 import {
   LayoutStatic as LayoutStaticEffect,
   Passive as PassiveEffect,
@@ -341,6 +349,38 @@ function checkDepsAreArrayDev(deps: mixed): void {
         currentHookNameInDev,
         typeof deps,
       );
+    }
+  }
+}
+
+let didWarnAboutRenderUpdateOnMount;
+if (__DEV__) {
+  if (disableSetStateInRenderOnMount) {
+    didWarnAboutRenderUpdateOnMount = new Set<string>();
+  }
+}
+
+function warnAboutRenderUpdateOnMountInDEV(fiber: Fiber) {
+  if (__DEV__) {
+    if (disableSetStateInRenderOnMount) {
+      switch (fiber.tag) {
+        case FunctionComponent:
+        case ForwardRef:
+        case SimpleMemoComponent: {
+          const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+          // Dedupe by the rendering component because it's the one that needs to be fixed.
+          // Ignore multiple to prevent spamming console.
+          if (!didWarnAboutRenderUpdateOnMount.has(componentName)) {
+            didWarnAboutRenderUpdateOnMount.add(componentName);
+            console.error(
+              'A component called setState during the initial render. ' +
+                'This is deprecated, pass the initial value to useState instead. ' +
+                'To locate the bad setState() call, follow the stack trace ' +
+                'as described in https://react.dev/link/setstate-in-render',
+            );
+          }
+        }
+      }
     }
   }
 }
@@ -3583,6 +3623,13 @@ function dispatchReducerAction<S, A>(
 
   if (isRenderPhaseUpdate(fiber)) {
     enqueueRenderPhaseUpdate(queue, update);
+    if (__DEV__) {
+      if (disableSetStateInRenderOnMount) {
+        if (fiber.alternate === null) {
+          warnAboutRenderUpdateOnMountInDEV(fiber);
+        }
+      }
+    }
   } else {
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
@@ -3643,6 +3690,13 @@ function dispatchSetStateInternal<S, A>(
 
   if (isRenderPhaseUpdate(fiber)) {
     enqueueRenderPhaseUpdate(queue, update);
+    if (__DEV__) {
+      if (disableSetStateInRenderOnMount) {
+        if (fiber.alternate === null) {
+          warnAboutRenderUpdateOnMountInDEV(fiber);
+        }
+      }
+    }
   } else {
     const alternate = fiber.alternate;
     if (
