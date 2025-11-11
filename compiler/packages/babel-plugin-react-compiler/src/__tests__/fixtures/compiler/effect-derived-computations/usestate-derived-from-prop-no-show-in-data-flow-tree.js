@@ -1,4 +1,4 @@
-// @validateNoDerivedComputationsInEffects_exp
+// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
 
 function Component({prop}) {
   const [s, setS] = useState();
