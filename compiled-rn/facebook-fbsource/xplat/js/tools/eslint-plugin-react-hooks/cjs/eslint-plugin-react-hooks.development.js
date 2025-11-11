@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<573f7f0e418e252e831ed5be61b89ade>>
+ * @generated SignedSource<<5ac6e45b38922dd61d88804a3291eec2>>
  */
 
 'use strict';
@@ -52444,8 +52444,9 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
             }
         }
         else if (isUseStateType(lvalue.identifier) && value.args.length > 0) {
-            isSource = true;
-            typeOfValue = joinValue(typeOfValue, 'fromState');
+            typeOfValue = 'fromState';
+            context.derivationCache.addDerivationEntry(lvalue, new Set(), typeOfValue, true);
+            return;
         }
     }
     for (const operand of eachInstructionOperand(instr)) {

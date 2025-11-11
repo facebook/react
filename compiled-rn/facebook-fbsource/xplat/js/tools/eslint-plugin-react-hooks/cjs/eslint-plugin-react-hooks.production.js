@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<10d52cd1e056b35a35675af3e79456cc>>
+ * @generated SignedSource<<c0f1dd9bc7a9bae4c5fccbf1d8c61a22>>
  */
 
 'use strict';
@@ -52223,8 +52223,9 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
             }
         }
         else if (isUseStateType(lvalue.identifier) && value.args.length > 0) {
-            isSource = true;
-            typeOfValue = joinValue(typeOfValue, 'fromState');
+            typeOfValue = 'fromState';
+            context.derivationCache.addDerivationEntry(lvalue, new Set(), typeOfValue, true);
+            return;
         }
     }
     for (const operand of eachInstructionOperand(instr)) {
