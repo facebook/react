@@ -107,13 +107,10 @@ function hasFlowSuppression(
   return false;
 }
 
-function hasFunctionSuppression(
-  context: Rule.RuleContext,
-  node: any,
-): boolean {
+function hasFunctionSuppression(context: Rule.RuleContext, node: any): boolean {
   const sourceCode = context.sourceCode ?? context.getSourceCode();
   const allComments = sourceCode.getAllComments?.() || [];
-  
+
   // Get function start line
   const functionStart = node.loc?.start.line;
   if (!functionStart) return false;
@@ -145,7 +142,10 @@ function hasFunctionSuppression(
           c.loc.start.line > commentLine &&
           c.value.includes('eslint-enable'),
       );
-      if (!enableComment || (enableComment.loc && enableComment.loc.start.line > functionStart)) {
+      if (
+        !enableComment ||
+        (enableComment.loc && enableComment.loc.start.line > functionStart)
+      ) {
         return true;
       }
     }
@@ -239,10 +239,10 @@ function makeRule(rule: LintRule): Rule.RuleModule {
           if (rule.category === 'IncompatibleLibrary' && hasESLintDisable) {
             message =
               '🚨 This hook will NOT be memoized\n\n' +
-              'You\'re using an incompatible API AND have eslint-disable in this function.\n' +
+              "You're using an incompatible API AND have eslint-disable in this function.\n" +
               'React Compiler will skip memoization of this hook.\n\n' +
               '**Critical: Impact on parent components**\n' +
-              'If this hook is used in a MEMOIZED component, it will break the component\'s\n' +
+              "If this hook is used in a MEMOIZED component, it will break the component's\n" +
               'memoization by returning new object references every render.\n\n' +
               '**Required action:**\n' +
               'Add "use no memo" to COMPONENTS that use this hook:\n\n' +
@@ -293,10 +293,10 @@ function makeRule(rule: LintRule): Rule.RuleModule {
             loc: result.loc || node.loc,
             message:
               '🚨 This hook will NOT be memoized\n\n' +
-              'You\'re using an incompatible API AND have eslint-disable in this function.\n' +
+              "You're using an incompatible API AND have eslint-disable in this function.\n" +
               'React Compiler will skip memoization of this hook.\n\n' +
               '**Critical: Impact on parent components**\n' +
-              'If this hook is used in a MEMOIZED component, it will break the component\'s\n' +
+              "If this hook is used in a MEMOIZED component, it will break the component's\n" +
               'memoization by returning new object references every render.\n\n' +
               '**Required action:**\n' +
               'Add "use no memo" to COMPONENTS that use this hook:\n\n' +
