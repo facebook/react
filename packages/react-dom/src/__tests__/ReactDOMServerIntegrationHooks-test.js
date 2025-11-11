@@ -164,7 +164,10 @@ describe('ReactDOMServerHooks', () => {
         return <Text text={'Count: ' + count} />;
       }
 
-      const domNode = await render(<Counter />);
+      const domNode = await render(
+        <Counter />,
+        gate('disableSetStateInRenderOnMount') ? 1 : 0,
+      );
       expect(domNode.textContent).toEqual('Count: 12');
     });
 
@@ -177,7 +180,10 @@ describe('ReactDOMServerHooks', () => {
         return <span>Count: {count}</span>;
       }
 
-      const domNode = await render(<Counter />);
+      const domNode = await render(
+        <Counter />,
+        gate('disableSetStateInRenderOnMount') ? 1 : 0,
+      );
       expect(domNode.textContent).toEqual('Count: 3');
     });
 
@@ -246,7 +252,10 @@ describe('ReactDOMServerHooks', () => {
           return <Text text={count} />;
         }
 
-        const domNode = await render(<Counter />);
+        const domNode = await render(
+          <Counter />,
+          gate('disableSetStateInRenderOnMount') ? 1 : 0,
+        );
 
         expect(clearLog()).toEqual([
           'Render: 0',
@@ -299,7 +308,10 @@ describe('ReactDOMServerHooks', () => {
           return <Text text={count} />;
         }
 
-        const domNode = await render(<Counter />);
+        const domNode = await render(
+          <Counter />,
+          gate('disableSetStateInRenderOnMount') ? 1 : 0,
+        );
 
         expect(clearLog()).toEqual([
           // The count should increase by alternating amounts of 10 and 1
@@ -366,7 +378,10 @@ describe('ReactDOMServerHooks', () => {
           return <Text text={capitalizedText} />;
         }
 
-        const domNode = await render(<CapitalizedText text="hello" />);
+        const domNode = await render(
+          <CapitalizedText text="hello" />,
+          gate('disableSetStateInRenderOnMount') ? 1 : 0,
+        );
         expect(clearLog()).toEqual([
           "Capitalize 'hello'",
           "Capitalize 'hello, world.'",
@@ -400,7 +415,10 @@ describe('ReactDOMServerHooks', () => {
           return <Text text={capitalizedText} />;
         }
 
-        const domNode = await render(<CapitalizedText text="hello" />);
+        const domNode = await render(
+          <CapitalizedText text="hello" />,
+          gate('disableSetStateInRenderOnMount') ? 1 : 0,
+        );
         expect(clearLog()).toEqual([
           "Capitalize 'hello'",
           0,
@@ -482,7 +500,10 @@ describe('ReactDOMServerHooks', () => {
           return <span ref={ref}>Count: {count}</span>;
         }
 
-        const domNode = await render(<Counter />);
+        const domNode = await render(
+          <Counter />,
+          gate('disableSetStateInRenderOnMount') ? 1 : 0,
+        );
         expect(clearLog()).toEqual([0, 1, 2, 3]);
         expect(domNode.textContent).toEqual('Count: 3');
       },
@@ -512,7 +533,10 @@ describe('ReactDOMServerHooks', () => {
           return <span ref={ref}>Count: {count}</span>;
         }
 
-        const domNode = await render(<Counter />);
+        const domNode = await render(
+          <Counter />,
+          gate('disableSetStateInRenderOnMount') ? 1 : 0,
+        );
         expect(clearLog()).toEqual([0, 1, 2, 3]);
         expect(domNode.textContent).toEqual('Count: 3');
       },
@@ -590,7 +614,10 @@ describe('ReactDOMServerHooks', () => {
           return <Text text={capitalizeText()} />;
         }
 
-        const domNode = await render(<CapitalizedText text="hello" />);
+        const domNode = await render(
+          <CapitalizedText text="hello" />,
+          gate('disableSetStateInRenderOnMount') ? 1 : 0,
+        );
         const [first, second, third, fourth, result] = clearLog();
         expect(first).toBe(second);
         expect(second).toBe(third);
@@ -880,7 +907,10 @@ describe('ReactDOMServerHooks', () => {
       );
       expect(domNode1.textContent).toEqual('42');
 
-      const domNode2 = await render(<ReadInReducer />, 1);
+      const domNode2 = await render(
+        <ReadInReducer />,
+        gate('disableSetStateInRenderOnMount') ? 2 : 1,
+      );
       expect(domNode2.textContent).toEqual('42');
     });
   });

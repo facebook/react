@@ -1280,6 +1280,15 @@ describe('ReactUse', () => {
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
         '    in App (at **)',
+      ...(gate('disableSetStateInRenderOnMount')
+        ? [
+            'A component called setState during the initial render. ' +
+              'This is deprecated, pass the initial value to useState instead. ' +
+              'To locate the bad setState() call, follow the stack trace ' +
+              'as described in https://react.dev/link/setstate-in-render\n' +
+              '    in App (at **)',
+          ]
+        : []),
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +

@@ -18,6 +18,7 @@ let act;
 let createReactClass;
 let waitFor;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('ReactFresh', () => {
   let container;
@@ -37,6 +38,7 @@ describe('ReactFresh', () => {
       const InternalTestUtils = require('internal-test-utils');
       waitFor = InternalTestUtils.waitFor;
       assertLog = InternalTestUtils.assertLog;
+      assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
       createReactClass = require('create-react-class/factory')(
         React.Component,
@@ -2413,6 +2415,16 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
         return Hello;
       });
+
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in Hello (at **)',
+        ]);
+      }
 
       const el = container.firstChild;
       expect(el.textContent).toBe('10');
