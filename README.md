@@ -54,6 +54,7 @@ root.render(<HelloMessage name="Taylor" />);
 ```
 
 This example will render "Hello Taylor" into a container on the page.
+To see this action, ensure you have a root element in your HTML file with id 'container'
 
 You'll notice that we used an HTML-like syntax; [we call it JSX](https://react.dev/learn#writing-markup-with-jsx). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML.
 
