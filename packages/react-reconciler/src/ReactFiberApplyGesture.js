@@ -146,7 +146,7 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
   }
   let child = deletion.child;
   while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+    if (child.tag === OffscreenComponent && child.memoizedState !== null) {
       // This tree was already hidden so we skip it.
     } else {
       if (

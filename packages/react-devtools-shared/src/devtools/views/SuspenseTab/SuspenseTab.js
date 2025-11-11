@@ -6,12 +6,14 @@
  *
  * @flow
  */
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 import * as React from 'react';
 import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useReducer,
   useRef,
   Fragment,
@@ -30,12 +32,12 @@ import styles from './SuspenseTab.css';
 import SuspenseBreadcrumbs from './SuspenseBreadcrumbs';
 import SuspenseRects from './SuspenseRects';
 import SuspenseTimeline from './SuspenseTimeline';
-import SuspenseTreeList from './SuspenseTreeList';
+import ActivityList from './ActivityList';
 import {
   SuspenseTreeDispatcherContext,
   SuspenseTreeStateContext,
 } from './SuspenseTreeContext';
-import {StoreContext, OptionsContext} from '../context';
+import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Button from '../Button';
 import Toggle from '../Toggle';
 import typeof {SyntheticPointerEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
@@ -74,7 +76,7 @@ function ToggleUniqueSuspenders() {
   function handleToggleUniqueSuspenders() {
     const nextUniqueSuspendersOnly = !uniqueSuspendersOnly;
     // TODO: Handle different timeline modes (e.g. random order)
-    const nextTimeline = store.getSuspendableDocumentOrderSuspense(
+    const nextTimeline = store.getEndTimeOrDocumentOrderSuspense(
       nextUniqueSuspendersOnly,
     );
     suspenseTreeDispatch({
@@ -157,6 +159,130 @@ function ToggleInspectedElement({
   );
 }
 
+function SynchronizedScrollContainer({
+  className,
+  children,
+  scaleRef,
+}: {
+  className?: string,
+  children?: React.Node,
+  scaleRef: {current: number},
+}) {
+  const bridge = useContext(BridgeContext);
+  const ref = useRef(null);
+  const applyingScrollRef = useRef(false);
+
+  // TODO: useEffectEvent
+  function scrollContainerTo({
+    left,
+    top,
+    right,
+    bottom,
+  }: {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+  }): void {
+    const element = ref.current;
+    if (element === null) {
+      return;
+    }
+    const scale = scaleRef.current / element.clientWidth;
+    const targetLeft = Math.round(left / scale);
+    const targetTop = Math.round(top / scale);
+    if (
+      targetLeft !== Math.round(element.scrollLeft) ||
+      targetTop !== Math.round(element.scrollTop)
+    ) {
+      // Disable scroll events until we've applied the new scroll position.
+      applyingScrollRef.current = true;
+      element.scrollTo({
+        left: targetLeft,
+        top: targetTop,
+        behavior: 'smooth',
+      });
+    }
+  }
+
+  useEffect(() => {
+    const callback = scrollContainerTo;
+    bridge.addListener('scrollTo', callback);
+    // Ask for the current scroll position when we mount so we can attach ourselves to it.
+    bridge.send('requestScrollPosition');
+    return () => bridge.removeListener('scrollTo', callback);
+  }, [bridge]);
+
+  const scrollTimer = useRef<null | TimeoutID>(null);
+
+  // TODO: useEffectEvent
+  function sendScroll() {
+    if (scrollTimer.current) {
+      clearTimeout(scrollTimer.current);
+      scrollTimer.current = null;
+    }
+    if (applyingScrollRef.current) {
+      return;
+    }
+    const element = ref.current;
+    if (element === null) {
+      return;
+    }
+    const scale = scaleRef.current / element.clientWidth;
+    const left = element.scrollLeft * scale;
+    const top = element.scrollTop * scale;
+    const right = left + element.clientWidth * scale;
+    const bottom = top + element.clientHeight * scale;
+    bridge.send('scrollTo', {left, top, right, bottom});
+  }
+
+  // TODO: useEffectEvent
+  function throttleScroll() {
+    if (!scrollTimer.current) {
+      // Periodically synchronize the scroll while scrolling.
+      scrollTimer.current = setTimeout(sendScroll, 400);
+    }
+  }
+
+  function scrollEnd() {
+    // Upon scrollend send it immediately.
+    sendScroll();
+    applyingScrollRef.current = false;
+  }
+
+  useEffect(() => {
+    const element = ref.current;
+    if (element === null) {
+      return;
+    }
+    const scrollCallback = throttleScroll;
+    const scrollEndCallback = scrollEnd;
+    element.addEventListener('scroll', scrollCallback);
+    element.addEventListener('scrollend', scrollEndCallback);
+    return () => {
+      element.removeEventListener('scroll', scrollCallback);
+      element.removeEventListener('scrollend', scrollEndCallback);
+    };
+  }, [ref]);
+
+  return (
+    <div className={className} ref={ref}>
+      {children}
+    </div>
+  );
+}
+
+// TODO: Get this from the store directly.
+// The backend needs to keep a separate tree so that resuspending keeps Activity around.
+function useActivities(): $ReadOnlyArray<Element> {
+  const activities = useMemo(() => {
+    const items: Array<Element> = [];
+    return items;
+  }, []);
+
+  return activities;
+}
+
 function SuspenseTab(_: {}) {
   const store = useContext(StoreContext);
   const {hideSettings} = useContext(OptionsContext);
@@ -166,10 +292,10 @@ function SuspenseTab(_: {}) {
     initLayoutState,
   );
 
+  const activities = useActivities();
   // If there are no named Activity boundaries, we don't have any tree list and we should hide
-  // both the panel and the button to toggle it. Since we currently don't support it yet, it's
-  // always disabled.
-  const treeListDisabled = true;
+  // both the panel and the button to toggle it.
+  const treeListDisabled = activities.length === 0;
 
   const wrapperTreeRef = useRef<null | HTMLElement>(null);
   const resizeTreeRef = useRef<null | HTMLElement>(null);
@@ -341,16 +467,18 @@ function SuspenseTab(_: {}) {
     }
   };
 
+  const scaleRef = useRef(0);
+
   return (
     <SettingsModalContextController>
       <div className={styles.SuspenseTab} ref={wrapperTreeRef}>
         <div className={styles.TreeWrapper} ref={resizeTreeRef}>
           {treeListDisabled ? null : (
             <div
-              className={styles.TreeList}
+              className={styles.ActivityList}
               hidden={treeListHidden}
               ref={resizeTreeListRef}>
-              <SuspenseTreeList />
+              <ActivityList activities={activities} />
             </div>
           )}
           {treeListDisabled ? null : (
@@ -388,9 +516,11 @@ function SuspenseTab(_: {}) {
                 orientation="horizontal"
               />
             </header>
-            <div className={styles.Rects}>
-              <SuspenseRects />
-            </div>
+            <SynchronizedScrollContainer
+              className={styles.Rects}
+              scaleRef={scaleRef}>
+              <SuspenseRects scaleRef={scaleRef} />
+            </SynchronizedScrollContainer>
             <footer className={styles.SuspenseTreeViewFooter}>
               <SuspenseTimeline />
               <div className={styles.SuspenseTreeViewFooterButtons}>

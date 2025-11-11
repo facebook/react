@@ -33,6 +33,7 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
@@ -47,6 +48,7 @@ import {
   SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from './constants';
 import {
+  ComponentFilterActivitySlice,
   ComponentFilterElementType,
   ComponentFilterLocation,
   ElementTypeHostComponent,
@@ -432,14 +434,25 @@ export function printOperationsArray(operations: Array<number>) {
         for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
           const id = operations[i++];
           const hasUniqueSuspenders = operations[i++] === 1;
+          const endTime = operations[i++] / 1000;
           const isSuspended = operations[i++] === 1;
           const environmentNamesLength = operations[i++];
           i += environmentNamesLength;
           logs.push(
-            `Suspense node ${id} unique suspenders set to ${String(hasUniqueSuspenders)} is suspended set to ${String(isSuspended)} with ${String(environmentNamesLength)} environments`,
+            `Suspense node ${id} unique suspenders set to ${String(hasUniqueSuspenders)} ending at ${String(endTime)} is suspended set to ${String(isSuspended)} with ${String(environmentNamesLength)} environments`,
           );
         }
 
+        break;
+      }
+      case TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE: {
+        i++;
+        const activitySliceIDChange = operations[i + 1];
+        logs.push(
+          activitySliceIDChange === 0
+            ? 'Reset applied activity slice'
+            : 'Applied activity slice change to ' + activitySliceIDChange,
+        );
         break;
       }
       default:
@@ -467,7 +480,7 @@ export function getSavedComponentFilters(): Array<ComponentFilter> {
     );
     if (raw != null) {
       const parsedFilters: Array<ComponentFilter> = JSON.parse(raw);
-      return filterOutLocationComponentFilters(parsedFilters);
+      return persistableComponentFilters(parsedFilters);
     }
   } catch (error) {}
   return getDefaultComponentFilters();
@@ -478,16 +491,11 @@ export function setSavedComponentFilters(
 ): void {
   localStorageSetItem(
     LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
-    JSON.stringify(filterOutLocationComponentFilters(componentFilters)),
+    JSON.stringify(persistableComponentFilters(componentFilters)),
   );
 }
 
-// Following __debugSource removal from Fiber, the new approach for finding the source location
-// of a component, represented by the Fiber, is based on lazily generating and parsing component stack frames
-// To find the original location, React DevTools will perform symbolication, source maps are required for that.
-// In order to start filtering Fibers, we need to find location for all of them, which can't be done lazily.
-// Eager symbolication can become quite expensive for large applications.
-export function filterOutLocationComponentFilters(
+export function persistableComponentFilters(
   componentFilters: Array<ComponentFilter>,
 ): Array<ComponentFilter> {
   // This is just an additional check to preserve the previous state
@@ -496,7 +504,18 @@ export function filterOutLocationComponentFilters(
     return componentFilters;
   }
 
-  return componentFilters.filter(f => f.type !== ComponentFilterLocation);
+  return componentFilters.filter(f => {
+    return (
+      // Following __debugSource removal from Fiber, the new approach for finding the source location
+      // of a component, represented by the Fiber, is based on lazily generating and parsing component stack frames
+      // To find the original location, React DevTools will perform symbolication, source maps are required for that.
+      // In order to start filtering Fibers, we need to find location for all of them, which can't be done lazily.
+      // Eager symbolication can become quite expensive for large applications.
+      f.type !== ComponentFilterLocation &&
+      // Activity slice filters are based on DevTools instance IDs which do not persist across sessions.
+      f.type !== ComponentFilterActivitySlice
+    );
+  });
 }
 
 const vscodeFilepath = 'vscode://file/{path}:{line}:{column}';
