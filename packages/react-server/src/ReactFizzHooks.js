@@ -38,6 +38,7 @@ import {
 } from './ReactFizzConfig';
 import {createFastHash} from './ReactServerStreamConfig';
 
+import {disableSetStateInRenderOnMount} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
   REACT_CONTEXT_TYPE,
@@ -247,6 +248,20 @@ export function finishHooks(
 ): any {
   // This must be called after every function component to prevent hooks from
   // being used in classes.
+
+  if (__DEV__) {
+    if (disableSetStateInRenderOnMount) {
+      // Warn only on the first render phase update.
+      if (didScheduleRenderPhaseUpdate) {
+        console.error(
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render',
+        );
+      }
+    }
+  }
 
   while (didScheduleRenderPhaseUpdate) {
     // Updates were scheduled during the render phase. They are stored in
