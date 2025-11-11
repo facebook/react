@@ -1125,6 +1125,15 @@ describe('ReactAsyncActions', () => {
 
     const root = ReactNoop.createRoot();
     await act(() => root.render(<App />));
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in App (at **)',
+      ]);
+    }
     assertLog([
       'Render phase update count from 1 to 2',
       'Count: 1',
