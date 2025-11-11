@@ -99,6 +99,7 @@ import {
   Cloned,
   ViewTransitionStatic,
   Hydrate,
+  PortalStatic,
 } from './ReactFiberFlags';
 
 import {
@@ -1665,6 +1666,7 @@ function completeWork(
       if (current === null) {
         preparePortalMount(workInProgress.stateNode.containerInfo);
       }
+      workInProgress.flags |= PortalStatic;
       bubbleProperties(workInProgress);
       return null;
     case ContextProvider:

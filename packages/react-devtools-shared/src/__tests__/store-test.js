@@ -3298,4 +3298,100 @@ describe('Store', () => {
           <Suspense name="Inner" rects={[{x:1,y:2,width:6,height:1}]}>
     `);
   });
+
+  // @reactVersion >= 19.0
+  it('measures rects when reconnecting', async () => {
+    function Component({children, promise}) {
+      let content = '';
+      if (promise) {
+        const value = readValue(promise);
+        if (typeof value === 'string') {
+          content += value;
+        }
+      }
+      return (
+        <div>
+          {content}
+          {children}
+        </div>
+      );
+    }
+
+    function App({outer, inner}) {
+      return (
+        <React.Suspense
+          name="outer"
+          fallback={<Component key="outer-fallback">loading outer</Component>}>
+          <Component key="outer-content" promise={outer}>
+            outer content
+          </Component>
+          <React.Suspense
+            name="inner"
+            fallback={
+              <Component key="inner-fallback">loading inner</Component>
+            }>
+            <Component key="inner-content" promise={inner}>
+              inner content
+            </Component>
+          </React.Suspense>
+        </React.Suspense>
+      );
+    }
+
+    await actAsync(() => {
+      render(<App outer={null} inner={null} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense name="outer">
+              <Component key="outer-content">
+            ▾ <Suspense name="inner">
+                <Component key="inner-content">
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}
+        <Suspense name="outer" rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:13,height:1}]}>
+    `);
+
+    let outerResolve;
+    const outerPromise = new Promise(resolve => {
+      outerResolve = resolve;
+    });
+
+    let innerResolve;
+    const innerPromise = new Promise(resolve => {
+      innerResolve = resolve;
+    });
+    await actAsync(() => {
+      render(<App outer={outerPromise} inner={innerPromise} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense name="outer">
+              <Component key="outer-fallback">
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}
+        <Suspense name="outer" rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:13,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      outerResolve('..');
+      innerResolve('.');
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense name="outer">
+              <Component key="outer-content">
+            ▾ <Suspense name="inner">
+                <Component key="inner-content">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:14,height:1}]}
+        <Suspense name="outer" rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:14,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:14,height:1}]}>
+    `);
+  });
 });

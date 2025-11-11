@@ -669,6 +669,10 @@ export default class Store extends EventEmitter<{
     return element;
   }
 
+  containsSuspense(id: SuspenseNode['id']): boolean {
+    return this._idToSuspense.has(id);
+  }
+
   getSuspenseByID(id: SuspenseNode['id']): SuspenseNode | null {
     const suspense = this._idToSuspense.get(id);
     if (suspense === undefined) {
