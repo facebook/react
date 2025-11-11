@@ -31,8 +31,8 @@ import {
   BuiltInObjectId,
   BuiltInPropsId,
   BuiltInRefValueId,
-  BuiltInSetStateId,
   BuiltInUseRefId,
+  InferredSetState,
 } from '../HIR/ObjectShape';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
 import {assertExhaustive} from '../Utils/utils';
@@ -281,7 +281,7 @@ function* generateInstructionTypes(
       if (env.config.enableTreatSetIdentifiersAsStateSetters) {
         const name = getName(names, value.callee.identifier.id);
         if (name.startsWith('set')) {
-          shapeId = BuiltInSetStateId;
+          shapeId = InferredSetState;
         }
       }
       yield equation(value.callee.identifier.type, {

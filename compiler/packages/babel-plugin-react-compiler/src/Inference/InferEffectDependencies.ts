@@ -25,7 +25,7 @@ import {
   ReactiveScopeDependencies,
   Terminal,
   isUseRefType,
-  isSetStateType,
+  isAnySetStateType,
   isFireFunctionType,
   makeScopeId,
   HIR,
@@ -223,7 +223,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             for (const maybeDep of minimalDeps) {
               if (
                 ((isUseRefType(maybeDep.identifier) ||
-                  isSetStateType(maybeDep.identifier)) &&
+                  isAnySetStateType(maybeDep.identifier)) &&
                   !reactiveIds.has(maybeDep.identifier.id)) ||
                 isFireFunctionType(maybeDep.identifier) ||
                 isEffectEventFunctionType(maybeDep.identifier)
