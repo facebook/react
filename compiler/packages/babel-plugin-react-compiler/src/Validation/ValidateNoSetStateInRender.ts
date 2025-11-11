@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {Environment} from '../HIR/Environment';
 import {
   CompilerDiagnostic,
   CompilerError,
   ErrorCategory,
 } from '../CompilerError';
-import {HIRFunction, IdentifierId, isSetStateType} from '../HIR';
+import {HIRFunction, IdentifierId, isAnySetStateType} from '../HIR';
 import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {Result} from '../Utils/Result';
@@ -45,6 +46,7 @@ import {Result} from '../Utils/Result';
  */
 export function validateNoSetStateInRender(
   fn: HIRFunction,
+  env: Environment,
 ): Result<void, CompilerError> {
   const unconditionalSetStateFunctions: Set<IdentifierId> = new Set();
   return validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions);
@@ -85,7 +87,7 @@ function validateNoSetStateInRenderImpl(
             // faster-path to check if the function expression references a setState
             [...eachInstructionValueOperand(instr.value)].some(
               operand =>
-                isSetStateType(operand.identifier) ||
+                isAnySetStateType(operand.identifier) ||
                 unconditionalSetStateFunctions.has(operand.identifier.id),
             ) &&
             // if yes, does it unconditonally call it?
@@ -136,7 +138,7 @@ function validateNoSetStateInRenderImpl(
         case 'CallExpression': {
           const callee = instr.value.callee;
           if (
-            isSetStateType(callee.identifier) ||
+            isAnySetStateType(callee.identifier) ||
             unconditionalSetStateFunctions.has(callee.identifier.id)
           ) {
             if (activeManualMemoId !== null) {

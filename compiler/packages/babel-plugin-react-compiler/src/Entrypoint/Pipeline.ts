@@ -269,7 +269,7 @@ function runWithEnvironment(
     }
 
     if (env.config.validateNoSetStateInRender) {
-      validateNoSetStateInRender(hir).unwrap();
+      validateNoSetStateInRender(hir, env).unwrap();
     }
 
     if (env.config.validateNoDerivedComputationsInEffects_exp) {

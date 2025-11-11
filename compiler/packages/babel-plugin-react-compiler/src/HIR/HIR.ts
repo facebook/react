@@ -1875,6 +1875,14 @@ export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetState';
 }
 
+export function isAnySetStateType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' &&
+    (id.type.shapeId === 'InferredSetState' ||
+      id.type.shapeId === 'BuiltInSetState')
+  );
+}
+
 export function isUseActionStateType(id: Identifier): boolean {
   return (
     id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseActionState'
