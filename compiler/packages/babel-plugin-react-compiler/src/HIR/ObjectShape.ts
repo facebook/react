@@ -386,6 +386,7 @@ export const BuiltInJsxId = 'BuiltInJsx';
 export const BuiltInObjectId = 'BuiltInObject';
 export const BuiltInUseStateId = 'BuiltInUseState';
 export const BuiltInSetStateId = 'BuiltInSetState';
+export const InferedSetState = 'InferedSetState';
 export const BuiltInUseActionStateId = 'BuiltInUseActionState';
 export const BuiltInSetActionStateId = 'BuiltInSetActionState';
 export const BuiltInUseRefId = 'BuiltInUseRefId';
