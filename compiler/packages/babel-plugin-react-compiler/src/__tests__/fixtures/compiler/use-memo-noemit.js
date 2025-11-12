@@ -1,4 +1,4 @@
-// @noEmit
+// @outputMode:"none"
 
 function Foo() {
   'use memo';
