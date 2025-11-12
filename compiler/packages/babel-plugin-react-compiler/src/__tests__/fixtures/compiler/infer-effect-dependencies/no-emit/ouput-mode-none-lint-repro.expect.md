@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @inferEffectDependencies @noEmit
+// @inferEffectDependencies @outputMode:"none"
 import {print} from 'shared-runtime';
 import useEffectWrapper from 'useEffectWrapper';
 import {AUTODEPS} from 'react';
@@ -17,15 +17,14 @@ function ReactiveVariable({propVal}) {
 ## Code
 
 ```javascript
-// @inferEffectDependencies @noEmit
+// @inferEffectDependencies @outputMode:"none"
 import { print } from "shared-runtime";
 import useEffectWrapper from "useEffectWrapper";
 import { AUTODEPS } from "react";
 
-function ReactiveVariable(t0) {
-  const { propVal } = t0;
+function ReactiveVariable({ propVal }) {
   const arr = [propVal];
-  useEffectWrapper(() => print(arr), [arr]);
+  useEffectWrapper(() => print(arr), AUTODEPS);
 }
 
 ```

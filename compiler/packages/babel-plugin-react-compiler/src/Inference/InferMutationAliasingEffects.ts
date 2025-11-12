@@ -2451,7 +2451,10 @@ function computeEffectsForLegacySignature(
       }),
     });
   }
-  if (signature.knownIncompatible != null && state.env.isInferredMemoEnabled) {
+  if (
+    signature.knownIncompatible != null &&
+    (state.env.outputMode === 'client' || state.env.outputMode === 'ssr')
+  ) {
     const errors = new CompilerError();
     errors.pushDiagnostic(
       CompilerDiagnostic.create({

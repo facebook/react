@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @inferEffectDependencies @noEmit @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
+// @inferEffectDependencies @outputMode:"none" @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
 import {print} from 'shared-runtime';
 import useEffectWrapper from 'useEffectWrapper';
 import {AUTODEPS} from 'react';
@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @inferEffectDependencies @noEmit @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
+// @inferEffectDependencies @outputMode:"none" @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
 import { print } from "shared-runtime";
 import useEffectWrapper from "useEffectWrapper";
 import { AUTODEPS } from "react";
@@ -54,10 +54,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileError","fnLoc":{"start":{"line":6,"column":0,"index":227},"end":{"line":14,"column":1,"index":441},"filename":"retry-no-emit.ts"},"detail":{"options":{"category":"Immutability","reason":"This value cannot be modified","description":"Modifying a value previously passed as an argument to a hook is not allowed. Consider moving the modification before calling the hook","details":[{"kind":"error","loc":{"start":{"line":12,"column":2,"index":404},"end":{"line":12,"column":6,"index":408},"filename":"retry-no-emit.ts","identifierName":"arr2"},"message":"value cannot be modified"}]}}}
-{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":8,"column":2,"index":280},"end":{"line":8,"column":46,"index":324},"filename":"retry-no-emit.ts"},"decorations":[{"start":{"line":8,"column":31,"index":309},"end":{"line":8,"column":34,"index":312},"filename":"retry-no-emit.ts","identifierName":"arr"}]}
-{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":11,"column":2,"index":348},"end":{"line":11,"column":54,"index":400},"filename":"retry-no-emit.ts"},"decorations":[{"start":{"line":11,"column":25,"index":371},"end":{"line":11,"column":29,"index":375},"filename":"retry-no-emit.ts","identifierName":"arr2"},{"start":{"line":11,"column":25,"index":371},"end":{"line":11,"column":29,"index":375},"filename":"retry-no-emit.ts","identifierName":"arr2"},{"start":{"line":11,"column":35,"index":381},"end":{"line":11,"column":42,"index":388},"filename":"retry-no-emit.ts","identifierName":"propVal"}]}
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":6,"column":0,"index":227},"end":{"line":14,"column":1,"index":441},"filename":"retry-no-emit.ts"},"fnName":"Foo","memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":8,"column":2,"index":291},"end":{"line":8,"column":46,"index":335},"filename":"retry-no-emit.ts"},"decorations":[{"start":{"line":8,"column":31,"index":320},"end":{"line":8,"column":34,"index":323},"filename":"retry-no-emit.ts","identifierName":"arr"}]}
+{"kind":"AutoDepsDecorations","fnLoc":{"start":{"line":11,"column":2,"index":359},"end":{"line":11,"column":54,"index":411},"filename":"retry-no-emit.ts"},"decorations":[{"start":{"line":11,"column":25,"index":382},"end":{"line":11,"column":29,"index":386},"filename":"retry-no-emit.ts","identifierName":"arr2"},{"start":{"line":11,"column":25,"index":382},"end":{"line":11,"column":29,"index":386},"filename":"retry-no-emit.ts","identifierName":"arr2"},{"start":{"line":11,"column":35,"index":392},"end":{"line":11,"column":42,"index":399},"filename":"retry-no-emit.ts","identifierName":"propVal"}]}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":6,"column":0,"index":238},"end":{"line":14,"column":1,"index":452},"filename":"retry-no-emit.ts"},"fnName":"Foo","memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

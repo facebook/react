@@ -319,7 +319,7 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
     }
     case 'CallExpression':
     case 'MethodCall': {
-      if (state.env.config.enableOptimizeForSSR) {
+      if (state.env.outputMode === 'ssr') {
         const calleee =
           value.kind === 'CallExpression' ? value.callee : value.property;
         const hookKind = getHookKind(state.env, calleee.identifier);
