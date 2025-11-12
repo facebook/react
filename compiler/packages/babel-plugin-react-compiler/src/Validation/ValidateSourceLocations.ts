@@ -68,10 +68,15 @@ function isManualMemoization(node: t.Node): boolean {
     if (t.isIdentifier(callee)) {
       return callee.name === 'useMemo' || callee.name === 'useCallback';
     }
-    if (t.isMemberExpression(callee) && t.isIdentifier(callee.property)) {
+    if (
+      t.isMemberExpression(callee) &&
+      t.isIdentifier(callee.property) &&
+      t.isIdentifier(callee.object)
+    ) {
       return (
-        callee.property.name === 'useMemo' ||
-        callee.property.name === 'useCallback'
+        callee.object.name === 'React' &&
+        (callee.property.name === 'useMemo' ||
+          callee.property.name === 'useCallback')
       );
     }
   }
@@ -150,7 +155,10 @@ export function validateSourceLocations(
 
     // Use Babel's VISITOR_KEYS to traverse only actual node properties
     const keys = t.VISITOR_KEYS[node.type as keyof typeof t.VISITOR_KEYS];
-    if (!keys) return;
+
+    if (!keys) {
+      return;
+    }
 
     for (const key of keys) {
       const value = (node as any)[key];
