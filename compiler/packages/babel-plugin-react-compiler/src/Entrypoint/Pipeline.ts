@@ -105,6 +105,7 @@ import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRan
 import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
 import {validateNoDerivedComputationsInEffects_exp} from '../Validation/ValidateNoDerivedComputationsInEffects_exp';
 import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
+import {optimizeForSSR} from '../Optimization/OptimizeForSSR';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -236,6 +237,11 @@ function runWithEnvironment(
     }
   }
 
+  if (env.config.enableOptimizeForSSR) {
+    optimizeForSSR(hir);
+    log({kind: 'hir', name: 'OptimizeForSSR', value: hir});
+  }
+
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
   log({kind: 'hir', name: 'DeadCodeElimination', value: hir});
@@ -313,8 +319,10 @@ function runWithEnvironment(
      * if inferred memoization is enabled. This makes all later passes which
      * transform reactive-scope labeled instructions no-ops.
      */
-    inferReactiveScopeVariables(hir);
-    log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
+    if (!env.config.enableOptimizeForSSR) {
+      inferReactiveScopeVariables(hir);
+      log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
+    }
   }
 
   const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);

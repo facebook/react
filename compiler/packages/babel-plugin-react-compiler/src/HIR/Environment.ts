@@ -670,6 +670,8 @@ export const EnvironmentConfigSchema = z.object({
    * from refs need to be stored in state during mount.
    */
   enableAllowSetStateFromRefsInEffects: z.boolean().default(true),
+
+  enableOptimizeForSSR: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
