@@ -1,4 +1,4 @@
-// @compilationMode:"all" @inferEffectDependencies @panicThreshold:"none" @noEmit
+// @compilationMode:"all" @inferEffectDependencies @panicThreshold:"none" @outputMode:"none"
 import {print} from 'shared-runtime';
 import {AUTODEPS} from 'react';
 import useEffectWrapper from 'useEffectWrapper';

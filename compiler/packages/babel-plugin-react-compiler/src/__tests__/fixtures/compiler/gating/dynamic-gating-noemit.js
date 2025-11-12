@@ -1,4 +1,4 @@
-// @dynamicGating:{"source":"shared-runtime"} @noEmit
+// @dynamicGating:{"source":"shared-runtime"} @outputMode:"none"
 
 function Foo() {
   'use memo if(getTrue)';

@@ -1,4 +1,4 @@
-// @inferEffectDependencies @noEmit
+// @inferEffectDependencies @outputMode:"none"
 import {print} from 'shared-runtime';
 import useEffectWrapper from 'useEffectWrapper';
 import {AUTODEPS} from 'react';
