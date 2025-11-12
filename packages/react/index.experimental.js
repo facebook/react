@@ -56,6 +56,7 @@ export {
   useTransition,
   useActionState,
   version,
+  captureOwnerStack,
 } from './src/ReactClient';
 
 import {useOptimistic} from './src/ReactClient';

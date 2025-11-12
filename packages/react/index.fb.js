@@ -64,6 +64,7 @@ export {
   useSyncExternalStore,
   useTransition,
   version,
+  captureOwnerStack, // DEV-only
 } from './src/ReactClient';
 
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';
@@ -74,11 +75,3 @@ export {useMemoCache as unstable_useMemoCache} from './src/ReactHooks';
 // export to match the name of the OSS function typically exported from
 // react/compiler-runtime
 export {useMemoCache as c} from './src/ReactHooks';
-
-// Only export captureOwnerStack in development.
-let captureOwnerStack: ?() => null | string;
-if (__DEV__) {
-  captureOwnerStack = captureOwnerStackImpl;
-}
-
-export {captureOwnerStack};

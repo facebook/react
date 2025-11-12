@@ -52,4 +52,5 @@ export {
   useTransition,
   useActionState,
   version,
+  captureOwnerStack,
 } from './src/ReactClient';
