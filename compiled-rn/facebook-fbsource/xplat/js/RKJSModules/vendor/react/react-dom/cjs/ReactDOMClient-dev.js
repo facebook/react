@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5ff4a3e5d7af2cebc02272b3e8b9a60e>>
+ * @generated SignedSource<<93d115a32d74e9bc15da4902c7badca7>>
  */
 
 /*
@@ -25681,7 +25681,6 @@ __DEV__ &&
         case "pointerup":
         case "ratechange":
         case "reset":
-        case "resize":
         case "seeked":
         case "submit":
         case "toggle":
@@ -25717,6 +25716,7 @@ __DEV__ &&
         case "pointermove":
         case "pointerout":
         case "pointerover":
+        case "resize":
         case "scroll":
         case "touchmove":
         case "wheel":
@@ -30242,11 +30242,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-3a495ae7-20251112" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-093b3246-20251113" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-3a495ae7-20251112\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-093b3246-20251113\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30283,10 +30283,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-3a495ae7-20251112",
+          version: "19.3.0-native-fb-093b3246-20251113",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-3a495ae7-20251112"
+          reconcilerVersion: "19.3.0-native-fb-093b3246-20251113"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30436,5 +30436,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.3.0-native-fb-3a495ae7-20251112";
+    exports.version = "19.3.0-native-fb-093b3246-20251113";
   })();
