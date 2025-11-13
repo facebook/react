@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<d3651cda1512e392c76d475542419fb5>>
+ * @generated SignedSource<<95c713fa22b30dcd547cafa39895283b>>
  */
 
 'use strict';
@@ -32167,6 +32167,7 @@ const EnvironmentConfigSchema = v4.z.object({
     validateMemoizedEffectDependencies: v4.z.boolean().default(false),
     validateNoCapitalizedCalls: v4.z.nullable(v4.z.array(v4.z.string())).default(null),
     validateBlocklistedImports: v4.z.nullable(v4.z.array(v4.z.string())).default(null),
+    validateSourceLocations: v4.z.boolean().default(false),
     validateNoImpureFunctionsInRender: v4.z.boolean().default(false),
     validateNoFreezingKnownMutableFunctions: v4.z.boolean().default(false),
     enableAssumeHooksFollowRulesOfReact: v4.z.boolean().default(true),
@@ -50319,6 +50320,116 @@ function isUnmemoized(operand, scopes) {
     return operand.scope != null && !scopes.has(operand.scope.id);
 }
 
+const IMPORTANT_INSTRUMENTED_TYPES = new Set([
+    'ArrowFunctionExpression',
+    'AssignmentPattern',
+    'ObjectMethod',
+    'ExpressionStatement',
+    'BreakStatement',
+    'ContinueStatement',
+    'ReturnStatement',
+    'ThrowStatement',
+    'TryStatement',
+    'VariableDeclarator',
+    'IfStatement',
+    'ForStatement',
+    'ForInStatement',
+    'ForOfStatement',
+    'WhileStatement',
+    'DoWhileStatement',
+    'SwitchStatement',
+    'SwitchCase',
+    'WithStatement',
+    'FunctionDeclaration',
+    'FunctionExpression',
+    'LabeledStatement',
+    'ConditionalExpression',
+    'LogicalExpression',
+]);
+function isManualMemoization(node) {
+    if (libExports$1.isCallExpression(node)) {
+        const callee = node.callee;
+        if (libExports$1.isIdentifier(callee)) {
+            return callee.name === 'useMemo' || callee.name === 'useCallback';
+        }
+        if (libExports$1.isMemberExpression(callee) &&
+            libExports$1.isIdentifier(callee.property) &&
+            libExports$1.isIdentifier(callee.object)) {
+            return (callee.object.name === 'React' &&
+                (callee.property.name === 'useMemo' ||
+                    callee.property.name === 'useCallback'));
+        }
+    }
+    return false;
+}
+function locationKey(loc) {
+    return `${loc.start.line}:${loc.start.column}-${loc.end.line}:${loc.end.column}`;
+}
+function validateSourceLocations(func, generatedAst) {
+    const errors = new CompilerError();
+    const importantOriginalLocations = new Map();
+    func.traverse({
+        enter(path) {
+            const node = path.node;
+            if (!IMPORTANT_INSTRUMENTED_TYPES.has(node.type)) {
+                return;
+            }
+            if (isManualMemoization(node)) {
+                return;
+            }
+            if (node.loc) {
+                const key = locationKey(node.loc);
+                importantOriginalLocations.set(key, {
+                    loc: node.loc,
+                    nodeType: node.type,
+                });
+            }
+        },
+    });
+    const generatedLocations = new Set();
+    function collectGeneratedLocations(node) {
+        if (node.loc) {
+            generatedLocations.add(locationKey(node.loc));
+        }
+        const keys = libExports$1.VISITOR_KEYS[node.type];
+        if (!keys) {
+            return;
+        }
+        for (const key of keys) {
+            const value = node[key];
+            if (Array.isArray(value)) {
+                for (const item of value) {
+                    if (libExports$1.isNode(item)) {
+                        collectGeneratedLocations(item);
+                    }
+                }
+            }
+            else if (libExports$1.isNode(value)) {
+                collectGeneratedLocations(value);
+            }
+        }
+    }
+    collectGeneratedLocations(generatedAst.body);
+    for (const outlined of generatedAst.outlined) {
+        collectGeneratedLocations(outlined.fn.body);
+    }
+    for (const [key, { loc, nodeType }] of importantOriginalLocations) {
+        if (!generatedLocations.has(key)) {
+            errors.pushDiagnostic(CompilerDiagnostic.create({
+                category: ErrorCategory.Todo,
+                reason: 'Important source location missing in generated code',
+                description: `Source location for ${nodeType} is missing in the generated output. This can cause coverage instrumentation ` +
+                    `to fail to track this code properly, resulting in inaccurate coverage reports.`,
+            }).withDetails({
+                kind: 'error',
+                loc,
+                message: null,
+            }));
+        }
+    }
+    return errors.asResult();
+}
+
 function validateUseMemo(fn) {
     const errors = new CompilerError();
     const voidMemoErrors = new CompilerError();
@@ -53201,6 +53312,9 @@ function runWithEnvironment(func, env) {
     log({ kind: 'ast', name: 'Codegen', value: ast });
     for (const outlined of ast.outlined) {
         log({ kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn });
+    }
+    if (env.config.validateSourceLocations) {
+        validateSourceLocations(func, ast).unwrap();
     }
     if (env.config.throwUnknownException__testonly) {
         throw new Error('unexpected error');
