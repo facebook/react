@@ -313,7 +313,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
               "start": 0,
               "value": {
-                "value": undefined,
+                "value": [
+                  ,
+                ],
               },
             },
             "env": "Server",
@@ -418,7 +420,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
               "start": 0,
               "value": {
-                "value": undefined,
+                "value": [
+                  ,
+                ],
               },
             },
             "env": "Server",
