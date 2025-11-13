@@ -2759,7 +2759,6 @@ export type StreamState = {
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _pendingByteStreamIDs: Set<number>, // IDs of pending streams with type: 'bytes'
-  _toBeClosedByteStreamIDs: Set<number>, // IDs of byte streams that received close but may still need to enqueue chunks
   _debugInfo: ReactIOInfo, // DEV-only
   _debugTargetChunkSize: number, // DEV-only
 };
@@ -2775,7 +2774,6 @@ export function createStreamState(
     _rowLength: 0,
     _buffer: [],
     _pendingByteStreamIDs: new Set(),
-    _toBeClosedByteStreamIDs: new Set(),
   }: Omit<StreamState, '_debugInfo' | '_debugTargetChunkSize'>): any);
   if (__DEV__ && enableAsyncDebugInfo) {
     const response = unwrapWeakResponse(weakResponse);
@@ -4808,13 +4806,10 @@ function processFullStringRow(
     }
     // Fallthrough
     case 67 /* "C" */: {
-      // If this is for a pending byte stream, defer the close until all
-      // buffered chunks are enqueued at the end of processBinaryChunk.
       if (streamState._pendingByteStreamIDs.has(id)) {
-        streamState._toBeClosedByteStreamIDs.add(id);
-      } else {
-        stopStream(response, id, row);
+        streamState._pendingByteStreamIDs.delete(id);
       }
+      stopStream(response, id, row);
       return;
     }
     // Fallthrough
@@ -4848,11 +4843,6 @@ export function processBinaryChunk(
   const buffer = streamState._buffer;
   const chunkLength = chunk.length;
   incrementChunkDebugInfo(streamState, chunkLength);
-
-  // Buffer chunks for byte streams during parsing to avoid ArrayBuffer
-  // detachment. We'll enqueue them after the while loop to apply a zero-copy
-  // optimization when there's only a single chunk overall.
-  const pendingByteStreamChunks: Map<number, Array<Uint8Array>> = new Map();
 
   while (i < chunkLength) {
     let lastIdx = -1;
@@ -4934,21 +4924,23 @@ export function processBinaryChunk(
       const length = lastIdx - i;
       const lastChunk = new Uint8Array(chunk.buffer, offset, length);
 
-      // Check if this is a Uint8Array for a pending byte stream that needs to
-      // be buffered until the end of this chunk, to avoid detaching the
-      // underlying shared ArrayBuffer.
+      // Check if this is a Uint8Array for a byte stream. We enqueue it
+      // immediately but need to determine if we can use zero-copy or must copy.
       if (
         rowTag === 111 /* "o" */ &&
         streamState._pendingByteStreamIDs.has(rowID)
       ) {
-        let chunks = pendingByteStreamChunks.get(rowID);
-        if (chunks === undefined) {
-          chunks = [];
-          pendingByteStreamChunks.set(rowID, chunks);
-        }
-        chunks.push(lastChunk);
+        resolveBuffer(
+          response,
+          rowID,
+          // If we're at the end of the RSC chunk, no more parsing will access
+          // this buffer and we don't need to copy the chunk to allow detaching
+          // the buffer, otherwise we need to copy.
+          lastIdx === chunkLength ? lastChunk : lastChunk.slice(),
+          streamState,
+        );
       } else {
-        // Process all other row types immediately.
+        // Process all other row types.
         processFullBinaryRow(
           response,
           streamState,
@@ -4957,18 +4949,6 @@ export function processBinaryChunk(
           buffer,
           lastChunk,
         );
-
-        // If this was a close command for a byte stream that has no pending
-        // buffered chunks in this parse cycle, we can close it immediately
-        // instead of deferring until the end of the chunk.
-        if (
-          streamState._toBeClosedByteStreamIDs.has(rowID) &&
-          !pendingByteStreamChunks.has(rowID)
-        ) {
-          streamState._toBeClosedByteStreamIDs.delete(rowID);
-          streamState._pendingByteStreamIDs.delete(rowID);
-          stopStream(response, rowID, '');
-        }
       }
 
       // Reset state machine for a new row
@@ -4987,64 +4967,29 @@ export function processBinaryChunk(
       const length = chunk.byteLength - i;
       const remainingSlice = new Uint8Array(chunk.buffer, offset, length);
 
-      // For byte streams, we can enqueue chunks immediately rather than
-      // buffering them until the row completes.
+      // For byte streams, we can enqueue the partial chunk immediately using
+      // zero-copy since we're at the end of the RSC chunk and no more parsing
+      // will access this buffer.
       if (
         rowTag === 111 /* "o" */ &&
         streamState._pendingByteStreamIDs.has(rowID)
       ) {
-        let chunks = pendingByteStreamChunks.get(rowID);
-        if (chunks === undefined) {
-          chunks = [];
-          pendingByteStreamChunks.set(rowID, chunks);
-        }
-        chunks.push(remainingSlice);
+        // Update how many bytes we're still waiting for. We need to do this
+        // before enqueueing as enqueue will detach the buffer and byteLength
+        // will become 0.
+        rowLength -= remainingSlice.byteLength;
+        resolveBuffer(response, rowID, remainingSlice, streamState);
       } else {
         // For other row types, stash the rest of the current chunk until we can
         // process the full row.
         buffer.push(remainingSlice);
+        // Update how many bytes we're still waiting for. If we're looking for
+        // a newline, this doesn't hurt since we'll just ignore it.
+        rowLength -= remainingSlice.byteLength;
       }
-
-      // Update how many bytes we're still waiting for. If we're looking for
-      // a newline, this doesn't hurt since we'll just ignore it.
-      rowLength -= remainingSlice.byteLength;
       break;
     }
   }
-
-  // Enqueue all buffered byte stream chunks.
-  const streamCount = pendingByteStreamChunks.size;
-  if (streamCount > 0) {
-    pendingByteStreamChunks.forEach((chunks, streamId) => {
-      if (streamCount === 1 && chunks.length === 1) {
-        // Single stream with single chunk - use zero-copy optimization.
-        resolveBuffer(response, streamId, chunks[0], streamState);
-      } else if (chunks.length === 1) {
-        // Single chunk but multiple streams - must copy to avoid buffer
-        // detachment.
-        resolveBuffer(response, streamId, chunks[0].slice(), streamState);
-      } else {
-        // Multiple chunks - concatenate them into a single buffer to give the
-        // consumer a contiguous chunk.
-        const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
-        const concatenated = new Uint8Array(totalLength);
-        let offset = 0;
-        for (let j = 0; j < chunks.length; j++) {
-          concatenated.set(chunks[j], offset);
-          offset += chunks[j].length;
-        }
-        resolveBuffer(response, streamId, concatenated, streamState);
-      }
-    });
-  }
-
-  // Process deferred closes for byte streams that were in this chunk.
-  streamState._toBeClosedByteStreamIDs.forEach(id => {
-    streamState._pendingByteStreamIDs.delete(id);
-    stopStream(response, id, '');
-  });
-  streamState._toBeClosedByteStreamIDs.clear();
-
   streamState._rowState = rowState;
   streamState._rowID = rowID;
   streamState._rowTag = rowTag;
