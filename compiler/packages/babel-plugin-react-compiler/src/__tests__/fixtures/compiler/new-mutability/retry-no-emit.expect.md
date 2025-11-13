@@ -33,12 +33,13 @@ import { print } from "shared-runtime";
 import useEffectWrapper from "useEffectWrapper";
 import { AUTODEPS } from "react";
 
-function Foo({ propVal }) {
+function Foo(t0) {
+  const { propVal } = t0;
   const arr = [propVal];
-  useEffectWrapper(() => print(arr), AUTODEPS);
+  useEffectWrapper(() => print(arr), [arr]);
 
   const arr2 = [];
-  useEffectWrapper(() => arr2.push(propVal), AUTODEPS);
+  useEffectWrapper(() => arr2.push(propVal), [arr2, propVal]);
   arr2.push(2);
   return { arr, arr2 };
 }
