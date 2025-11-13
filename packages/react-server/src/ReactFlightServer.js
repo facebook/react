@@ -1192,9 +1192,15 @@ function serializeReadableStream(
       callOnAllReadyIfReady(request);
     } else {
       try {
-        streamTask.model = entry.value;
         request.pendingChunks++;
-        tryStreamTask(request, streamTask, isByteStream);
+        streamTask.model = entry.value;
+        if (isByteStream) {
+          // Chunks of byte streams are always Uint8Array instances.
+          const chunk: Uint8Array = (streamTask.model: any);
+          emitTypedArrayChunk(request, streamTask.id, 'b', chunk, false);
+        } else {
+          tryStreamTask(request, streamTask);
+        }
         enqueueFlush(request);
         reader.read().then(progress, error);
       } catch (x) {
@@ -1321,7 +1327,7 @@ function serializeAsyncIterable(
       try {
         streamTask.model = entry.value;
         request.pendingChunks++;
-        tryStreamTask(request, streamTask, false);
+        tryStreamTask(request, streamTask);
         enqueueFlush(request);
         if (__DEV__) {
           callIteratorInDEV(iterator, progress, error);
@@ -5536,7 +5542,6 @@ function emitChunk(
   request: Request,
   task: Task,
   value: ReactClientValue,
-  isByteStream: boolean,
 ): void {
   const id = task.id;
   // For certain types we have special types, we typically outlined them but
@@ -5562,7 +5567,7 @@ function emitChunk(
   }
   if (value instanceof Uint8Array) {
     // unsigned char
-    emitTypedArrayChunk(request, id, isByteStream ? 'b' : 'o', value, false);
+    emitTypedArrayChunk(request, id, 'o', value, false);
     return;
   }
   if (value instanceof Uint8ClampedArray) {
@@ -5720,7 +5725,7 @@ function retryTask(request: Request, task: Task): void {
 
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
-      emitChunk(request, task, resolvedModel, false);
+      emitChunk(request, task, resolvedModel);
     } else {
       // If the value is a string, it means it's a terminal value and we already escaped it
       // We don't need to escape it again so it's not passed the toJSON replacer.
@@ -5779,11 +5784,7 @@ function retryTask(request: Request, task: Task): void {
   }
 }
 
-function tryStreamTask(
-  request: Request,
-  task: Task,
-  isByteStream: boolean,
-): void {
+function tryStreamTask(request: Request, task: Task): void {
   // This is used to try to emit something synchronously but if it suspends,
   // we emit a reference to a new outlined task immediately instead.
   const prevCanEmitDebugInfo = canEmitDebugInfo;
@@ -5794,7 +5795,7 @@ function tryStreamTask(
   }
   const parentSerializedSize = serializedSize;
   try {
-    emitChunk(request, task, task.model, isByteStream);
+    emitChunk(request, task, task.model);
   } finally {
     serializedSize = parentSerializedSize;
     if (__DEV__) {
