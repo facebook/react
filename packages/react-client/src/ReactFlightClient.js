@@ -2758,7 +2758,6 @@ export type StreamState = {
   _rowTag: number, // 0 indicates that we're currently parsing the row ID
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
-  _pendingByteStreamIDs: Set<number>, // IDs of pending streams with type: 'bytes'
   _debugInfo: ReactIOInfo, // DEV-only
   _debugTargetChunkSize: number, // DEV-only
 };
@@ -2773,7 +2772,6 @@ export function createStreamState(
     _rowTag: 0,
     _rowLength: 0,
     _buffer: [],
-    _pendingByteStreamIDs: new Set(),
   }: Omit<StreamState, '_debugInfo' | '_debugTargetChunkSize'>): any);
   if (__DEV__ && enableAsyncDebugInfo) {
     const response = unwrapWeakResponse(weakResponse);
@@ -4790,7 +4788,6 @@ function processFullStringRow(
     }
     // Fallthrough
     case 114 /* "r" */: {
-      streamState._pendingByteStreamIDs.add(id);
       startReadableStream(response, id, 'bytes', streamState);
       return;
     }
@@ -4806,9 +4803,6 @@ function processFullStringRow(
     }
     // Fallthrough
     case 67 /* "C" */: {
-      if (streamState._pendingByteStreamIDs.has(id)) {
-        streamState._pendingByteStreamIDs.delete(id);
-      }
       stopStream(response, id, row);
       return;
     }
@@ -4843,7 +4837,6 @@ export function processBinaryChunk(
   const buffer = streamState._buffer;
   const chunkLength = chunk.length;
   incrementChunkDebugInfo(streamState, chunkLength);
-
   while (i < chunkLength) {
     let lastIdx = -1;
     switch (rowState) {
@@ -4864,6 +4857,7 @@ export function processBinaryChunk(
           resolvedRowTag === 65 /* "A" */ ||
           resolvedRowTag === 79 /* "O" */ ||
           resolvedRowTag === 111 /* "o" */ ||
+          resolvedRowTag === 98 /* "b" */ ||
           resolvedRowTag === 85 /* "U" */ ||
           resolvedRowTag === 83 /* "S" */ ||
           resolvedRowTag === 115 /* "s" */ ||
@@ -4926,10 +4920,7 @@ export function processBinaryChunk(
 
       // Check if this is a Uint8Array for a byte stream. We enqueue it
       // immediately but need to determine if we can use zero-copy or must copy.
-      if (
-        rowTag === 111 /* "o" */ &&
-        streamState._pendingByteStreamIDs.has(rowID)
-      ) {
+      if (rowTag === 98 /* "b" */) {
         resolveBuffer(
           response,
           rowID,
@@ -4967,15 +4958,12 @@ export function processBinaryChunk(
       const length = chunk.byteLength - i;
       const remainingSlice = new Uint8Array(chunk.buffer, offset, length);
 
-      // For byte streams, we can enqueue the partial chunk immediately using
-      // zero-copy since we're at the end of the RSC chunk and no more parsing
+      // For byte streams, we can enqueue the partial row immediately without
+      // copying since we're at the end of the RSC chunk and no more parsing
       // will access this buffer.
-      if (
-        rowTag === 111 /* "o" */ &&
-        streamState._pendingByteStreamIDs.has(rowID)
-      ) {
+      if (rowTag === 98 /* "b" */) {
         // Update how many bytes we're still waiting for. We need to do this
-        // before enqueueing as enqueue will detach the buffer and byteLength
+        // before enqueueing, as enqueue will detach the buffer and byteLength
         // will become 0.
         rowLength -= remainingSlice.byteLength;
         resolveBuffer(response, rowID, remainingSlice, streamState);
