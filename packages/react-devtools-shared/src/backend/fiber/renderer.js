@@ -1974,14 +1974,8 @@ export function attach(
             state: null,
           };
         } else {
-          const prevHooks = inspectHooksOfFiber(
-            prevFiber,
-            getDispatcherRef(renderer),
-          );
-          const nextHooks = inspectHooksOfFiber(
-            nextFiber,
-            getDispatcherRef(renderer),
-          );
+          const prevHooks = inspectHooks(prevFiber);
+          const nextHooks = inspectHooks(nextFiber);
           const indices = getChangedHooksIndices(prevHooks, nextHooks);
           const data: ChangeDescription = {
             context: getContextChanged(prevFiber, nextFiber),
