@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Fragment, useContext} from 'react';
+import {Fragment, useContext, useEffect, useRef} from 'react';
 import {ModalDialog} from '../ModalDialog';
 import {ProfilerContext} from './ProfilerContext';
 import TabBar from '../TabBar';
@@ -38,6 +38,8 @@ import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 import styles from './Profiler.css';
 
 function Profiler(_: {}) {
+  const profilerRef = useRef<HTMLDivElement | null>(null);
+
   const {
     didRecordCommits,
     isProcessingData,
@@ -47,6 +49,8 @@ function Profiler(_: {}) {
     selectedTabID,
     selectTab,
     supportsProfiling,
+    startProfiling,
+    stopProfiling,
   } = useContext(ProfilerContext);
 
   const {file: timelineTraceEventData, searchInputContainerRef} =
@@ -55,6 +59,34 @@ function Profiler(_: {}) {
   const {supportsTimeline} = useContext(StoreContext);
 
   const isLegacyProfilerSelected = selectedTabID !== 'timeline';
+
+  // Cmd+E to start/stop profiler recording
+  useEffect(() => {
+    const div = profilerRef.current;
+    if (div === null) {
+      return;
+    }
+
+    const ownerWindow = div.ownerDocument.defaultView;
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const correctModifier = isMac ? event.metaKey : event.ctrlKey;
+      if (correctModifier && event.key === 'e') {
+        if (isProfiling) {
+          stopProfiling();
+        } else {
+          startProfiling();
+        }
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    ownerWindow.addEventListener('keydown', handleKeyDown);
+    return () => {
+      ownerWindow.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isProfiling, startProfiling, stopProfiling]);
 
   let view = null;
   if (didRecordCommits || selectedTabID === 'timeline') {
@@ -112,7 +144,7 @@ function Profiler(_: {}) {
 
   return (
     <SettingsModalContextController>
-      <div className={styles.Profiler}>
+      <div ref={profilerRef} className={styles.Profiler}>
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
             <RecordToggle disabled={!supportsProfiling} />
