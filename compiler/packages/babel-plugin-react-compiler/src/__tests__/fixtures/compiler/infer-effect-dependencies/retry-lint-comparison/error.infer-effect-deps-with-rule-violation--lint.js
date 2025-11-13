@@ -1,17 +1,15 @@
-// @compilationMode:"all" @inferEffectDependencies @panicThreshold:"none" @noEmit
+// @inferEffectDependencies @outputMode:"lint" @panicThreshold:"none"
 import {print} from 'shared-runtime';
-import {AUTODEPS} from 'react';
 import useEffectWrapper from 'useEffectWrapper';
+import {AUTODEPS} from 'react';
 
 function Foo({propVal}) {
-  'use memo';
   const arr = [propVal];
   useEffectWrapper(() => print(arr), AUTODEPS);
 
   const arr2 = [];
   useEffectWrapper(() => arr2.push(propVal), AUTODEPS);
   arr2.push(2);
-
   return {arr, arr2};
 }
 
