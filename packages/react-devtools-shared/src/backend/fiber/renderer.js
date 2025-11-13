@@ -2038,7 +2038,8 @@ export function attach(
       prev.isStateEditable === true ||
       prev.name === 'SyncExternalStore' ||
       prev.name === 'Transition' ||
-      prev.name === 'ActionState';
+      prev.name === 'ActionState' ||
+      prev.name === 'FormState';
 
     // Compare the values to see if they changed
     if (isStatefulHook) {
