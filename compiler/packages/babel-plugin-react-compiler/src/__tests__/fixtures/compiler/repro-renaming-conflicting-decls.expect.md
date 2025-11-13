@@ -57,7 +57,6 @@ function Component(props) {
         t1 = null;
         break bb0;
       }
-
       t0 = identity(propsString);
     }
     $[0] = props;

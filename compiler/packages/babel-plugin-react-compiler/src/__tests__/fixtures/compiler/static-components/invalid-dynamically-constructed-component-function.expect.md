@@ -23,7 +23,6 @@ function Example(props) {
     const Component = function Component() {
       return <div />;
     };
-
     t0 = <Component />;
     $[0] = t0;
   } else {
