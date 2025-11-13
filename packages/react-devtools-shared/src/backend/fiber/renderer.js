@@ -18,7 +18,7 @@ import type {
   Wakeable,
 } from 'shared/ReactTypes';
 
-import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
+import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
 import {
   ComponentFilterDisplayName,
@@ -126,7 +126,6 @@ import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import {componentInfoToComponentLogsMap} from '../shared/DevToolsServerComponentLogs';
 
 import is from 'shared/objectIs';
-import hasOwnProperty from 'shared/hasOwnProperty';
 
 import {getIODescription} from 'shared/ReactIODescription';
 
@@ -2051,14 +2050,15 @@ export function attach(
 
   function flattenHooksTree(hooksTree: HooksTree): HooksTree {
     const flattened: HooksTree = [];
-    for (const hook of hooksTree) {
+    for (let i = 0; i < hooksTree.length; i++) {
+      const currentHook = hooksTree[i];
       // If the hook has subHooks, flatten them recursively
-      if (hook.subHooks && hook.subHooks.length > 0) {
-        flattened.push(...flattenHooksTree(hook.subHooks));
+      if (currentHook.subHooks && currentHook.subHooks.length > 0) {
+        flattened.push(...flattenHooksTree(currentHook.subHooks));
         continue;
       }
       // If the hook doesn't have subHooks, add it to the flattened list
-      flattened.push(hook);
+      flattened.push(currentHook);
     }
     return flattened;
   }
