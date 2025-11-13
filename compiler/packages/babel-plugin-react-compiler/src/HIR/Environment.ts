@@ -365,6 +365,13 @@ export const EnvironmentConfigSchema = z.object({
   validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
 
   /**
+   * Validates that AST nodes generated during codegen have proper source locations.
+   * This is useful for debugging issues with source maps and Istanbul coverage.
+   * When enabled, the compiler will error if important source locations are missing in the generated AST.
+   */
+  validateSourceLocations: z.boolean().default(false),
+
+  /**
    * Validate against impure functions called during render
    */
   validateNoImpureFunctionsInRender: z.boolean().default(false),
