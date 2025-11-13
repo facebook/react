@@ -1975,10 +1975,15 @@ export function attach(
             state: null,
           };
         } else {
-          const indices = getChangedHooksIndices(
-            prevFiber.memoizedState,
-            nextFiber.memoizedState,
+          const prevHooks = inspectHooksOfFiber(
+            prevFiber,
+            getDispatcherRef(renderer),
           );
+          const nextHooks = inspectHooksOfFiber(
+            nextFiber,
+            getDispatcherRef(renderer),
+          );
+          const indices = getChangedHooksIndices(prevHooks, nextHooks);
           const data: ChangeDescription = {
             context: getContextChanged(prevFiber, nextFiber),
             didHooksChange: indices !== null && indices.length > 0,
@@ -2027,72 +2032,60 @@ export function attach(
     return false;
   }
 
-  function isUseSyncExternalStoreHook(hookObject: any): boolean {
-    const queue = hookObject.queue;
-    if (!queue) {
-      return false;
-    }
+  function didStatefulHookChange(prev: HooksNode, next: HooksNode): boolean {
+    // Detect the shape of useState() / useReducer() / useTransition() / useSyncExternalStore() / useActionState()
+    const isStatefulHook =
+      prev.isStateEditable === true ||
+      prev.name === 'SyncExternalStore' ||
+      prev.name === 'Transition' ||
+      prev.name === 'ActionState';
 
-    const boundHasOwnProperty = hasOwnProperty.bind(queue);
-    return (
-      boundHasOwnProperty('value') &&
-      boundHasOwnProperty('getSnapshot') &&
-      typeof queue.getSnapshot === 'function'
-    );
-  }
-
-  function isHookThatCanScheduleUpdate(hookObject: any) {
-    const queue = hookObject.queue;
-    if (!queue) {
-      return false;
-    }
-
-    const boundHasOwnProperty = hasOwnProperty.bind(queue);
-
-    // Detect the shape of useState() / useReducer() / useTransition()
-    // using the attributes that are unique to these hooks
-    // but also stable (e.g. not tied to current Lanes implementation)
-    // We don't check for dispatch property, because useTransition doesn't have it
-    if (boundHasOwnProperty('pending')) {
-      return true;
-    }
-
-    return isUseSyncExternalStoreHook(hookObject);
-  }
-
-  function didStatefulHookChange(prev: any, next: any): boolean {
-    const prevMemoizedState = prev.memoizedState;
-    const nextMemoizedState = next.memoizedState;
-
-    if (isHookThatCanScheduleUpdate(prev)) {
-      return prevMemoizedState !== nextMemoizedState;
+    // Compare the values to see if they changed
+    if (isStatefulHook) {
+      return prev.value !== next.value;
     }
 
     return false;
   }
 
-  function getChangedHooksIndices(prev: any, next: any): null | Array<number> {
-    if (prev == null || next == null) {
+  function flattenHooksTree(hooksTree: HooksTree): HooksTree {
+    const flattened: HooksTree = [];
+    for (const hook of hooksTree) {
+      // If the hook has subHooks, flatten them recursively
+      if (hook.subHooks && hook.subHooks.length > 0) {
+        flattened.push(...flattenHooksTree(hook.subHooks));
+        continue;
+      }
+      // If the hook doesn't have subHooks, add it to the flattened list
+      flattened.push(hook);
+    }
+    return flattened;
+  }
+
+  function getChangedHooksIndices(
+    prevHooks: HooksTree | null,
+    nextHooks: HooksTree | null,
+  ): null | Array<number> {
+    if (prevHooks == null || nextHooks == null) {
       return null;
     }
 
-    const indices = [];
-    let index = 0;
+    const prevFlattened = flattenHooksTree(prevHooks);
+    const nextFlattened = flattenHooksTree(nextHooks);
 
-    while (next !== null) {
-      if (didStatefulHookChange(prev, next)) {
+    const indices: Array<number> = [];
+
+    for (let index = 0; index < prevFlattened.length; index++) {
+      const prevHook = prevFlattened[index];
+      const nextHook = nextFlattened[index];
+
+      if (prevHook === null || nextHook === null) {
+        continue;
+      }
+
+      if (didStatefulHookChange(prevHook, nextHook)) {
         indices.push(index);
       }
-
-      // useSyncExternalStore creates 2 internal hooks, but we only count it as 1 user-facing hook
-      if (isUseSyncExternalStoreHook(next)) {
-        next = next.next;
-        prev = prev.next;
-      }
-
-      next = next.next;
-      prev = prev.next;
-      index++;
     }
 
     return indices;
