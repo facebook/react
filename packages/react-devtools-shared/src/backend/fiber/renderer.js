@@ -2035,10 +2035,10 @@ export function attach(
     // Detect the shape of useState() / useReducer() / useTransition() / useSyncExternalStore() / useActionState()
     const isStatefulHook =
       prev.isStateEditable === true ||
-      prev.name === 'SyncExternalStore' ||
-      prev.name === 'Transition' ||
-      prev.name === 'ActionState' ||
-      prev.name === 'FormState';
+      prev.dispatcherHookName === 'SyncExternalStore' ||
+      prev.dispatcherHookName === 'Transition' ||
+      prev.dispatcherHookName === 'ActionState' ||
+      prev.dispatcherHookName === 'FormState';
 
     // Compare the values to see if they changed
     if (isStatefulHook) {
