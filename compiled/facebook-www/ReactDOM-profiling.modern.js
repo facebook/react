@@ -22082,7 +22082,6 @@ function getEventPriority(domEventName) {
     case "pointerup":
     case "ratechange":
     case "reset":
-    case "resize":
     case "seeked":
     case "submit":
     case "toggle":
@@ -22118,6 +22117,7 @@ function getEventPriority(domEventName) {
     case "pointermove":
     case "pointerout":
     case "pointerover":
+    case "resize":
     case "scroll":
     case "touchmove":
     case "wheel":
@@ -22182,14 +22182,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2374 = React.version;
 if (
-  "19.3.0-www-modern-3a495ae7-20251112" !==
+  "19.3.0-www-modern-093b3246-20251113" !==
   isomorphicReactPackageVersion$jscomp$inline_2374
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2374,
-      "19.3.0-www-modern-3a495ae7-20251112"
+      "19.3.0-www-modern-093b3246-20251113"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22207,10 +22207,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2376 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-3a495ae7-20251112",
+  version: "19.3.0-www-modern-093b3246-20251113",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-3a495ae7-20251112"
+  reconcilerVersion: "19.3.0-www-modern-093b3246-20251113"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2376.getLaneLabelMap = getLaneLabelMap),
@@ -22643,7 +22643,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-3a495ae7-20251112";
+exports.version = "19.3.0-www-modern-093b3246-20251113";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
