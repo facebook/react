@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<72e7dbe7339420ce99d11c3e83b2568e>>
+ * @generated SignedSource<<c3a10f18f44a76acef214665f666719a>>
  */
 
 'use strict';
@@ -52198,16 +52198,18 @@ function isNamedIdentifier(place) {
 }
 function validateNoDerivedComputationsInEffects_exp(fn) {
     const functions = new Map();
+    const candidateDependencies = new Map();
     const derivationCache = new DerivationCache();
     const errors = new CompilerError();
-    const effects = new Set();
+    const effectsCache = new Map();
     const setStateLoads = new Map();
     const setStateUsages = new Map();
     const context = {
         functions,
+        candidateDependencies,
         errors,
         derivationCache,
-        effects,
+        effectsCache,
         setStateLoads,
         setStateUsages,
     };
@@ -52244,8 +52246,8 @@ function validateNoDerivedComputationsInEffects_exp(fn) {
         }
         context.derivationCache.checkForChanges();
     } while (context.derivationCache.snapshot());
-    for (const effect of effects) {
-        validateEffect(effect, context);
+    for (const [, effect] of effectsCache) {
+        validateEffect(effect.effect, effect.dependencies, context);
     }
     return errors.asResult();
 }
@@ -52329,8 +52331,12 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
             value.args[0].kind === 'Identifier' &&
             value.args[1].kind === 'Identifier') {
             const effectFunction = context.functions.get(value.args[0].identifier.id);
-            if (effectFunction != null) {
-                context.effects.add(effectFunction.loweredFunc.func);
+            const deps = context.candidateDependencies.get(value.args[1].identifier.id);
+            if (effectFunction != null && deps != null) {
+                context.effectsCache.set(value.args[0].identifier.id, {
+                    effect: effectFunction.loweredFunc.func,
+                    dependencies: deps,
+                });
             }
         }
         else if (isUseStateType(lvalue.identifier) && value.args.length > 0) {
@@ -52338,6 +52344,9 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
             context.derivationCache.addDerivationEntry(lvalue, new Set(), typeOfValue, true);
             return;
         }
+    }
+    else if (value.kind === 'ArrayExpression') {
+        context.candidateDependencies.set(lvalue.identifier.id, value);
     }
     for (const operand of eachInstructionOperand(instr)) {
         if (context.setStateLoads.has(operand.identifier.id)) {
@@ -52495,11 +52504,19 @@ function getFnLocalDeps(fn) {
     }
     return deps;
 }
-function validateEffect(effectFunction, context) {
+function validateEffect(effectFunction, dependencies, context) {
     var _a;
     const seenBlocks = new Set();
     const effectDerivedSetStateCalls = [];
     const effectSetStateUsages = new Map();
+    for (const dep of dependencies.elements) {
+        if (dep.kind === 'Identifier') {
+            const root = getRootSetState(dep.identifier.id, context.setStateLoads);
+            if (root !== null) {
+                effectSetStateUsages.set(root, new Set([dep.loc]));
+            }
+        }
+    }
     let cleanUpFunctionDeps;
     const globals = new Set();
     for (const block of effectFunction.body.blocks.values()) {
