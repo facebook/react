@@ -540,7 +540,7 @@ function showNoReactDisclaimer() {
 function mountReactDevToolsWhenReactHasLoaded() {
   reactPollingInstance = startReactPolling(
     mountReactDevTools,
-    5, // ~5 seconds
+    5, // ~2.5 seconds
     showNoReactDisclaimer,
   );
 }
