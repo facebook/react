@@ -50,7 +50,6 @@ function Component() {
         }
         return 100;
       };
-
       setWidth(getBoundingRect(ref));
     };
     t1 = [];
