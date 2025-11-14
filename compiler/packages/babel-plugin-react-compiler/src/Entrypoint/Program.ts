@@ -24,6 +24,7 @@ import {
   validateRestrictedImports,
 } from './Imports';
 import {
+  CompilerOutputMode,
   CompilerReactTarget,
   ParsedPluginOptions,
   PluginOptions,
@@ -421,9 +422,17 @@ export function compileProgram(
   );
   const compiledFns: Array<CompileResult> = [];
 
+  // outputMode takes precedence if specified
+  const outputMode: CompilerOutputMode =
+    pass.opts.outputMode ?? (pass.opts.noEmit ? 'lint' : 'client');
   while (queue.length !== 0) {
     const current = queue.shift()!;
-    const compiled = processFn(current.fn, current.fnType, programContext);
+    const compiled = processFn(
+      current.fn,
+      current.fnType,
+      programContext,
+      outputMode,
+    );
 
     if (compiled != null) {
       for (const outlined of compiled.outlined) {
@@ -581,6 +590,7 @@ function processFn(
   fn: BabelFn,
   fnType: ReactFunctionType,
   programContext: ProgramContext,
+  outputMode: CompilerOutputMode,
 ): null | CodegenFunction {
   let directives: {
     optIn: t.Directive | null;
@@ -616,18 +626,27 @@ function processFn(
   }
 
   let compiledFn: CodegenFunction;
-  const compileResult = tryCompileFunction(fn, fnType, programContext);
+  const compileResult = tryCompileFunction(
+    fn,
+    fnType,
+    programContext,
+    outputMode,
+  );
   if (compileResult.kind === 'error') {
     if (directives.optOut != null) {
       logError(compileResult.error, programContext, fn.node.loc ?? null);
     } else {
       handleError(compileResult.error, programContext, fn.node.loc ?? null);
     }
-    const retryResult = retryCompileFunction(fn, fnType, programContext);
-    if (retryResult == null) {
+    if (outputMode === 'client') {
+      const retryResult = retryCompileFunction(fn, fnType, programContext);
+      if (retryResult == null) {
+        return null;
+      }
+      compiledFn = retryResult;
+    } else {
       return null;
     }
-    compiledFn = retryResult;
   } else {
     compiledFn = compileResult.compiledFn;
   }
@@ -663,7 +682,7 @@ function processFn(
 
   if (programContext.hasModuleScopeOptOut) {
     return null;
-  } else if (programContext.opts.noEmit) {
+  } else if (programContext.opts.outputMode === 'lint') {
     /**
      * inferEffectDependencies + noEmit is currently only used for linting. In
      * this mode, add source locations for where the compiler *can* infer effect
@@ -693,6 +712,7 @@ function tryCompileFunction(
   fn: BabelFn,
   fnType: ReactFunctionType,
   programContext: ProgramContext,
+  outputMode: CompilerOutputMode,
 ):
   | {kind: 'compile'; compiledFn: CodegenFunction}
   | {kind: 'error'; error: unknown} {
@@ -719,7 +739,7 @@ function tryCompileFunction(
         fn,
         programContext.opts.environment,
         fnType,
-        'all_features',
+        outputMode,
         programContext,
         programContext.opts.logger,
         programContext.filename,
@@ -757,7 +777,7 @@ function retryCompileFunction(
       fn,
       environment,
       fnType,
-      'no_inferred_memo',
+      'client-no-memo',
       programContext,
       programContext.opts.logger,
       programContext.filename,

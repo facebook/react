@@ -487,6 +487,13 @@ const skipFilter = new Set([
   'lower-context-selector-simple',
   'lower-context-acess-multiple',
   'bug-separate-memoization-due-to-callback-capturing',
+
+  // SSR optimization rewrites files in a way that causes differences or warnings
+  'ssr/optimize-ssr',
+  'ssr/ssr-use-reducer',
+  'ssr/ssr-use-reducer-initializer',
+  'ssr/infer-event-handlers-from-setState',
+  'ssr/infer-event-handlers-from-startTransition',
 ]);
 
 export default skipFilter;

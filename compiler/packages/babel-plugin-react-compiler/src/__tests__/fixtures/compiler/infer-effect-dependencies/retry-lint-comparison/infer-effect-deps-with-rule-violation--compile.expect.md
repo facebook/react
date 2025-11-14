@@ -2,20 +2,18 @@
 ## Input
 
 ```javascript
-// @compilationMode:"all" @inferEffectDependencies @panicThreshold:"none" @noEmit
+// @inferEffectDependencies @panicThreshold:"none"
 import {print} from 'shared-runtime';
-import {AUTODEPS} from 'react';
 import useEffectWrapper from 'useEffectWrapper';
+import {AUTODEPS} from 'react';
 
 function Foo({propVal}) {
-  'use memo';
   const arr = [propVal];
   useEffectWrapper(() => print(arr), AUTODEPS);
 
   const arr2 = [];
   useEffectWrapper(() => arr2.push(propVal), AUTODEPS);
   arr2.push(2);
-
   return {arr, arr2};
 }
 
@@ -30,20 +28,19 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @compilationMode:"all" @inferEffectDependencies @panicThreshold:"none" @noEmit
+// @inferEffectDependencies @panicThreshold:"none"
 import { print } from "shared-runtime";
-import { AUTODEPS } from "react";
 import useEffectWrapper from "useEffectWrapper";
+import { AUTODEPS } from "react";
 
-function Foo({ propVal }) {
-  "use memo";
+function Foo(t0) {
+  const { propVal } = t0;
   const arr = [propVal];
-  useEffectWrapper(() => print(arr), AUTODEPS);
+  useEffectWrapper(() => print(arr), [arr]);
 
   const arr2 = [];
-  useEffectWrapper(() => arr2.push(propVal), AUTODEPS);
+  useEffectWrapper(() => arr2.push(propVal), [arr2, propVal]);
   arr2.push(2);
-
   return { arr, arr2 };
 }
 

@@ -102,13 +102,24 @@ export type PluginOptions = Partial<{
 
   panicThreshold: PanicThresholdOptions;
 
-  /*
+  /**
+   * @deprecated
+   *
    * When enabled, Forget will continue statically analyzing and linting code, but skip over codegen
    * passes.
+   *
+   * NOTE: ignored if `outputMode` is specified
    *
    * Defaults to false
    */
   noEmit: boolean;
+
+  /**
+   * If specified, overrides `noEmit` and controls the output mode of the compiler.
+   *
+   * Defaults to null
+   */
+  outputMode: CompilerOutputMode | null;
 
   /*
    * Determines the strategy for determining which functions to compile. Note that regardless of
@@ -212,6 +223,19 @@ const CompilationModeSchema = z.enum([
 
 export type CompilationMode = z.infer<typeof CompilationModeSchema>;
 
+const CompilerOutputModeSchema = z.enum([
+  // Build optimized for SSR, with client features removed
+  'ssr',
+  // Build optimized for the client, with auto memoization
+  'client',
+  // Build optimized for the client without auto memo
+  'client-no-memo',
+  // Lint mode, the output is unused but validations should run
+  'lint',
+]);
+
+export type CompilerOutputMode = z.infer<typeof CompilerOutputModeSchema>;
+
 /**
  * Represents 'events' that may occur during compilation. Events are only
  * recorded when a logger is set (through the config).
@@ -293,6 +317,7 @@ export const defaultOptions: ParsedPluginOptions = {
   logger: null,
   gating: null,
   noEmit: false,
+  outputMode: null,
   dynamicGating: null,
   eslintSuppressionRules: null,
   flowSuppressions: true,
