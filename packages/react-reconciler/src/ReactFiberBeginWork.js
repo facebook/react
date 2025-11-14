@@ -1974,7 +1974,7 @@ function updateHostComponent(
     // If the transition state changed, propagate the change to all the
     // descendents. We use Context as an implementation detail for this.
     //
-    // This is intentionally set here instead of pushHostContext because
+    // We need to update it here because
     // pushHostContext gets called before we process the state hook, to avoid
     // a state mismatch in the event that something suspends.
     //
