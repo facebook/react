@@ -41109,6 +41109,7 @@ function applyEffect(context, state, _effect, initialized, effects) {
                 case ValueKind.Primitive: {
                     break;
                 }
+                case ValueKind.MaybeFrozen:
                 case ValueKind.Frozen: {
                     sourceType = 'frozen';
                     break;
