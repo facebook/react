@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<be190ba59474fa2a18956100188efea7>>
+ * @generated SignedSource<<772e0b44b5d776dc11042d5625b2d1a8>>
  */
 
 'use strict';
@@ -22092,8 +22092,9 @@ const BuiltInStartTransitionId = 'BuiltInStartTransition';
 const BuiltInFireId = 'BuiltInFire';
 const BuiltInFireFunctionId = 'BuiltInFireFunction';
 const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
-const BuiltinEffectEventId = 'BuiltInEffectEventFunction';
+const BuiltInEffectEventId = 'BuiltInEffectEventFunction';
 const BuiltInAutodepsId = 'BuiltInAutoDepsId';
+const BuiltInEventHandlerId = 'BuiltInEventHandlerId';
 const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
 const BUILTIN_SHAPES = new Map();
 addObject(BUILTIN_SHAPES, BuiltInPropsId, [
@@ -22740,7 +22741,14 @@ addFunction(BUILTIN_SHAPES, [], {
     returnType: { kind: 'Poly' },
     calleeEffect: Effect.ConditionallyMutate,
     returnValueKind: ValueKind.Mutable,
-}, BuiltinEffectEventId);
+}, BuiltInEffectEventId);
+addFunction(BUILTIN_SHAPES, [], {
+    positionalParams: [],
+    restParam: Effect.ConditionallyMutate,
+    returnType: { kind: 'Poly' },
+    calleeEffect: Effect.ConditionallyMutate,
+    returnValueKind: ValueKind.Mutable,
+}, BuiltInEventHandlerId);
 addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     [
         'toString',
@@ -31170,7 +31178,7 @@ const REACT_APIS = [
             returnType: {
                 kind: 'Function',
                 return: { kind: 'Poly' },
-                shapeId: BuiltinEffectEventId,
+                shapeId: BuiltInEffectEventId,
                 isConstructor: false,
             },
             calleeEffect: Effect.Read,
@@ -32193,6 +32201,7 @@ const EnvironmentConfigSchema = v4.z.object({
     validateNoVoidUseMemo: v4.z.boolean().default(true),
     validateNoDynamicallyCreatedComponentsOrHooks: v4.z.boolean().default(false),
     enableAllowSetStateFromRefsInEffects: v4.z.boolean().default(true),
+    enableInferEventHandlers: v4.z.boolean().default(false),
 });
 class Environment {
     constructor(scope, fnType, compilerMode, config, contextIdentifiers, parentFunction, logger, filename, code, programContext) {
@@ -48355,6 +48364,25 @@ function* generateInstructionTypes(env, names, instr) {
                     }
                 }
             }
+            if (env.config.enableInferEventHandlers) {
+                if (value.kind === 'JsxExpression' &&
+                    value.tag.kind === 'BuiltinTag' &&
+                    !value.tag.name.includes('-')) {
+                    for (const prop of value.props) {
+                        if (prop.kind === 'JsxAttribute' &&
+                            prop.name.startsWith('on') &&
+                            prop.name.length > 2 &&
+                            prop.name[2] === prop.name[2].toUpperCase()) {
+                            yield equation(prop.place.identifier.type, {
+                                kind: 'Function',
+                                shapeId: BuiltInEventHandlerId,
+                                return: makeType(),
+                                isConstructor: false,
+                            });
+                        }
+                    }
+                }
+            }
             yield equation(left, { kind: 'Object', shapeId: BuiltInJsxId });
             break;
         }
@@ -49278,6 +49306,10 @@ function refTypeOfType(place) {
         return { kind: 'None' };
     }
 }
+function isEventHandlerType(identifier) {
+    const type = identifier.type;
+    return type.kind === 'Function' && type.shapeId === BuiltInEventHandlerId;
+}
 function tyEqual(a, b) {
     if (a.kind !== b.kind) {
         return false;
@@ -49564,8 +49596,10 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                         }
                         if (!didError) {
                             const isRefLValue = isUseRefType(instr.lvalue.identifier);
+                            const isEventHandlerLValue = isEventHandlerType(instr.lvalue.identifier);
                             for (const operand of eachInstructionValueOperand(instr.value)) {
                                 if (isRefLValue ||
+                                    isEventHandlerLValue ||
                                     (hookKind != null &&
                                         hookKind !== 'useState' &&
                                         hookKind !== 'useReducer')) {
