@@ -61,6 +61,7 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import {validateProperties as validateTitleProperties} from '../shared/ReactDOMTitle';
 import sanitizeURL from '../shared/sanitizeURL';
 
 import noop from 'shared/noop';
@@ -99,6 +100,7 @@ function validatePropertiesInDevelopment(type: string, props: any) {
       registrationNameDependencies,
       possibleRegistrationNames,
     });
+    validateTitleProperties(type, props);
     if (
       props.contentEditable &&
       !props.suppressContentEditableWarning &&
