@@ -11,6 +11,7 @@ import {
   BasicBlock,
   BlockId,
   Instruction,
+  InstructionKind,
   InstructionValue,
   makeInstructionId,
   Pattern,
@@ -30,6 +31,32 @@ export function* eachInstructionLValue(
     yield instr.lvalue;
   }
   yield* eachInstructionValueLValue(instr.value);
+}
+
+export function* eachInstructionLValueWithKind(
+  instr: ReactiveInstruction,
+): Iterable<[Place, InstructionKind]> {
+  switch (instr.value.kind) {
+    case 'DeclareContext':
+    case 'StoreContext':
+    case 'DeclareLocal':
+    case 'StoreLocal': {
+      yield [instr.value.lvalue.place, instr.value.lvalue.kind];
+      break;
+    }
+    case 'Destructure': {
+      const kind = instr.value.lvalue.kind;
+      for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
+        yield [place, kind];
+      }
+      break;
+    }
+    case 'PostfixUpdate':
+    case 'PrefixUpdate': {
+      yield [instr.value.lvalue, InstructionKind.Reassign];
+      break;
+    }
+  }
 }
 
 export function* eachInstructionValueLValue(
