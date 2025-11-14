@@ -690,6 +690,18 @@ function validateEffect(
         instr.value.args.length === 1 &&
         instr.value.args[0].kind === 'Identifier'
       ) {
+        const calleeMetadata = context.derivationCache.cache.get(
+          instr.value.callee.identifier.id,
+        );
+
+        /*
+         * If the setState comes from a source other than local state skip
+         * since the fix is not to calculate in render
+         */
+        if (calleeMetadata?.typeOfValue != 'fromState') {
+          continue;
+        }
+
         const argMetadata = context.derivationCache.cache.get(
           instr.value.args[0].identifier.id,
         );
