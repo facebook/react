@@ -403,8 +403,9 @@ export const BuiltInStartTransitionId = 'BuiltInStartTransition';
 export const BuiltInFireId = 'BuiltInFire';
 export const BuiltInFireFunctionId = 'BuiltInFireFunction';
 export const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
-export const BuiltinEffectEventId = 'BuiltInEffectEventFunction';
+export const BuiltInEffectEventId = 'BuiltInEffectEventFunction';
 export const BuiltInAutodepsId = 'BuiltInAutoDepsId';
+export const BuiltInEventHandlerId = 'BuiltInEventHandlerId';
 
 // See getReanimatedModuleType() in Globals.ts — this is part of supporting Reanimated's ref-like types
 export const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
@@ -1243,7 +1244,20 @@ addFunction(
     calleeEffect: Effect.ConditionallyMutate,
     returnValueKind: ValueKind.Mutable,
   },
-  BuiltinEffectEventId,
+  BuiltInEffectEventId,
+);
+
+addFunction(
+  BUILTIN_SHAPES,
+  [],
+  {
+    positionalParams: [],
+    restParam: Effect.ConditionallyMutate,
+    returnType: {kind: 'Poly'},
+    calleeEffect: Effect.ConditionallyMutate,
+    returnValueKind: ValueKind.Mutable,
+  },
+  BuiltInEventHandlerId,
 );
 
 /**
