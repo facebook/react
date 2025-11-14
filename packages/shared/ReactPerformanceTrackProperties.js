@@ -292,7 +292,15 @@ export function addObjectDiffToProperties(
   // Mainly for performance. We need to minimize to only relevant information.
   let isDeeplyEqual = true;
   let prevPropertiesChecked = 0;
-  for (const key in prev) {
+  const prevKeys = Object.keys(prev);
+  for (let i = 0; i < prevKeys.length; i++) {
+    const key = prevKeys[i];
+    // Skip properties with getters to avoid evaluating them in dev mode.
+    const prevDescriptor = Object.getOwnPropertyDescriptor(prev, key);
+    if (prevDescriptor && typeof prevDescriptor.get === 'function') {
+      continue;
+    }
+
     if (prevPropertiesChecked > OBJECT_WIDTH_LIMIT) {
       properties.push([
         'Previous object has more than ' +
@@ -312,7 +320,15 @@ export function addObjectDiffToProperties(
   }
 
   let nextPropertiesChecked = 0;
-  for (const key in next) {
+  const nextKeys = Object.keys(next);
+  for (let i = 0; i < nextKeys.length; i++) {
+    const key = nextKeys[i];
+    // Skip properties with getters to avoid evaluating them in dev mode.
+    const nextDescriptor = Object.getOwnPropertyDescriptor(next, key);
+    if (nextDescriptor && typeof nextDescriptor.get === 'function') {
+      continue;
+    }
+
     if (nextPropertiesChecked > OBJECT_WIDTH_LIMIT) {
       properties.push([
         'Next object has more than ' +
@@ -325,6 +341,12 @@ export function addObjectDiffToProperties(
     }
 
     if (key in prev) {
+      const prevDescriptor = Object.getOwnPropertyDescriptor(prev, key);
+      if (prevDescriptor && typeof prevDescriptor.get === 'function') {
+        // Skip if the previous object has a getter for this key.
+        nextPropertiesChecked++;
+        continue;
+      }
       const prevValue = prev[key];
       const nextValue = next[key];
       if (prevValue !== nextValue) {
