@@ -304,6 +304,7 @@ export type HookKind =
   | 'useTransition'
   | 'useImperativeHandle'
   | 'useEffectEvent'
+  | 'useOptimistic'
   | 'Custom';
 
 /*
@@ -399,6 +400,8 @@ export const BuiltInUseReducerId = 'BuiltInUseReducer';
 export const BuiltInDispatchId = 'BuiltInDispatch';
 export const BuiltInUseContextHookId = 'BuiltInUseContextHook';
 export const BuiltInUseTransitionId = 'BuiltInUseTransition';
+export const BuiltInUseOptimisticId = 'BuiltInUseOptimistic';
+export const BuiltInSetOptimisticId = 'BuiltInSetOptimistic';
 export const BuiltInStartTransitionId = 'BuiltInStartTransition';
 export const BuiltInFireId = 'BuiltInFire';
 export const BuiltInFireFunctionId = 'BuiltInFireFunction';
@@ -1182,6 +1185,25 @@ addObject(BUILTIN_SHAPES, BuiltInUseTransitionId, [
         returnValueKind: ValueKind.Primitive,
       },
       BuiltInStartTransitionId,
+    ),
+  ],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInUseOptimisticId, [
+  ['0', {kind: 'Poly'}],
+  [
+    '1',
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Primitive,
+      },
+      BuiltInSetOptimisticId,
     ),
   ],
 ]);

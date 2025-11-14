@@ -23,6 +23,7 @@ import {
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
   BuiltInUseOperatorId,
+  BuiltInUseOptimisticId,
   BuiltInUseReducerId,
   BuiltInUseRefId,
   BuiltInUseStateId,
@@ -816,6 +817,18 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       calleeEffect: Effect.Read,
       hookKind: 'useTransition',
       returnValueKind: ValueKind.Frozen,
+    }),
+  ],
+  [
+    'useOptimistic',
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: {kind: 'Object', shapeId: BuiltInUseOptimisticId},
+      calleeEffect: Effect.Read,
+      hookKind: 'useOptimistic',
+      returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.State,
     }),
   ],
   [
