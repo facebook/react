@@ -9,8 +9,9 @@ import type * as BabelCore from '@babel/core';
 import {transformFromAstSync} from '@babel/core';
 import * as BabelParser from '@babel/parser';
 import BabelPluginReactCompiler, {
+  CompilerDiagnostic,
+  CompilerErrorDetail,
   ErrorSeverity,
-  type CompilerErrorDetailOptions,
   type PluginOptions,
 } from 'babel-plugin-react-compiler/src';
 import {LoggerEvent as RawLoggerEvent} from 'babel-plugin-react-compiler/src/Entrypoint';
@@ -53,15 +54,15 @@ const COMPILER_OPTIONS: PluginOptions = {
   logger,
 };
 
-function isActionableDiagnostic(detail: CompilerErrorDetailOptions) {
+function isActionableDiagnostic(
+  detail: CompilerErrorDetail | CompilerDiagnostic,
+) {
   switch (detail.severity) {
-    case ErrorSeverity.InvalidReact:
-    case ErrorSeverity.InvalidJS:
+    case ErrorSeverity.Error:
       return true;
-    case ErrorSeverity.InvalidConfig:
-    case ErrorSeverity.Invariant:
-    case ErrorSeverity.CannotPreserveMemoization:
-    case ErrorSeverity.Todo:
+    case ErrorSeverity.Hint:
+    case ErrorSeverity.Off:
+    case ErrorSeverity.Warning:
       return false;
     default:
       throw new Error(`Unhandled error severity \`${detail.severity}\``);
@@ -122,7 +123,7 @@ function countUniqueLocInEvents(events: Array<LoggerEvent>): number {
   const seenLocs = new Set<string>();
   let count = 0;
   for (const e of events) {
-    if (e.filename != null && e.fnLoc != null) {
+    if (e.filename != null && 'fnLoc' in e && e.fnLoc != null) {
       seenLocs.add(`${e.filename}:${e.fnLoc.start}:${e.fnLoc.end}`);
     } else {
       // failed to dedup due to lack of source locations
