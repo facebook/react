@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<c3a10f18f44a76acef214665f666719a>>
+ * @generated SignedSource<<b8a6b66587103e5ee659d1b9fb52e178>>
  */
 
 'use strict';
@@ -52546,6 +52546,10 @@ function validateEffect(effectFunction, dependencies, context) {
                 isSetStateType(instr.value.callee.identifier) &&
                 instr.value.args.length === 1 &&
                 instr.value.args[0].kind === 'Identifier') {
+                const calleeMetadata = context.derivationCache.cache.get(instr.value.callee.identifier.id);
+                if ((calleeMetadata === null || calleeMetadata === void 0 ? void 0 : calleeMetadata.typeOfValue) != 'fromState') {
+                    continue;
+                }
                 const argMetadata = context.derivationCache.cache.get(instr.value.args[0].identifier.id);
                 if (argMetadata !== undefined) {
                     effectDerivedSetStateCalls.push({

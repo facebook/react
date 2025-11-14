@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<fb517fff5500769965461897a457f6a4>>
+ * @generated SignedSource<<be190ba59474fa2a18956100188efea7>>
  */
 
 'use strict';
@@ -52767,6 +52767,10 @@ function validateEffect(effectFunction, dependencies, context) {
                 isSetStateType(instr.value.callee.identifier) &&
                 instr.value.args.length === 1 &&
                 instr.value.args[0].kind === 'Identifier') {
+                const calleeMetadata = context.derivationCache.cache.get(instr.value.callee.identifier.id);
+                if ((calleeMetadata === null || calleeMetadata === void 0 ? void 0 : calleeMetadata.typeOfValue) != 'fromState') {
+                    continue;
+                }
                 const argMetadata = context.derivationCache.cache.get(instr.value.args[0].identifier.id);
                 if (argMetadata !== undefined) {
                     effectDerivedSetStateCalls.push({
