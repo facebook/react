@@ -47,9 +47,7 @@ const {
   cloneNodeWithNewChildren,
   cloneNodeWithNewChildrenAndProps,
   cloneNodeWithNewProps,
-  createChildSet: createChildNodeSet,
   appendChild: appendChildNode,
-  appendChildToSet: appendChildNodeToSet,
   completeRoot,
   registerEventHandler,
   unstable_DefaultEventPriority: FabricDefaultPriority,
@@ -68,7 +66,6 @@ import {
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 
-import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
 
@@ -528,22 +525,14 @@ export function cloneHiddenTextInstance(
 }
 
 export function createContainerChildSet(): ChildSet {
-  if (passChildrenWhenCloningPersistedNodes) {
-    return [];
-  } else {
-    return createChildNodeSet();
-  }
+  return [];
 }
 
 export function appendChildToContainerChildSet(
   childSet: ChildSet,
   child: Instance | TextInstance,
 ): void {
-  if (passChildrenWhenCloningPersistedNodes) {
-    childSet.push(child.node);
-  } else {
-    appendChildNodeToSet(childSet, child.node);
-  }
+  childSet.push(child.node);
 }
 
 export function finalizeContainerChildren(

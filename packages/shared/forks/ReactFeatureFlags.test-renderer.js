@@ -52,7 +52,6 @@ export const enableFizzExternalRuntime: boolean = true;
 
 export const alwaysThrottleRetries: boolean = true;
 
-export const passChildrenWhenCloningPersistedNodes: boolean = false;
 export const disableClientCache: boolean = true;
 
 export const enableInfiniteRenderLoopDetection: boolean = false;
