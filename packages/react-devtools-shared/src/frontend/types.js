@@ -204,7 +204,11 @@ export type Rect = {
 };
 
 export type SuspenseTimelineStep = {
-  id: SuspenseNode['id'], // TODO: Will become a group.
+  /**
+   * The first step is either a host root (initial paint) or Activity (Transition).
+   * Subsequent steps are always Suspense nodes.
+   */
+  id: SuspenseNode['id'] | Element['id'], // TODO: Will become a group.
   environment: null | string,
   endTime: number,
 };

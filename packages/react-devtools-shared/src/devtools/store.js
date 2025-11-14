@@ -189,6 +189,8 @@ export default class Store extends EventEmitter<{
     {errorCount: number, warningCount: number},
   > = new Map();
 
+  _focusedTransition: 0 | Element['id'] = 0;
+
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
 
@@ -935,10 +937,9 @@ export default class Store extends EventEmitter<{
   }
 
   /**
-   * @param rootID
    * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
    */
-  getSuspendableDocumentOrderSuspense(
+  getSuspendableDocumentOrderSuspenseInitialPaint(
     uniqueSuspendersOnly: boolean,
   ): Array<SuspenseTimelineStep> {
     const target: Array<SuspenseTimelineStep> = [];
@@ -986,6 +987,76 @@ export default class Store extends EventEmitter<{
         );
       }
     }
+
+    return target;
+  }
+
+  _pushSuspenseChildrenInDocumentOrder(
+    children: Array<Element['id']>,
+    target: Array<SuspenseNode['id']>,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const childID = children[i];
+      const suspense = this.getSuspenseByID(childID);
+      if (suspense !== null) {
+        target.push(suspense.id);
+      } else {
+        const childElement = this.getElementByID(childID);
+        if (childElement !== null) {
+          this._pushSuspenseChildrenInDocumentOrder(
+            childElement.children,
+            target,
+          );
+        }
+      }
+    }
+  }
+
+  getSuspenseChildren(id: Element['id']): Array<SuspenseNode['id']> {
+    const transitionChildren: Array<SuspenseNode['id']> = [];
+
+    const root = this._idToElement.get(id);
+    if (root === undefined) {
+      return transitionChildren;
+    }
+
+    this._pushSuspenseChildrenInDocumentOrder(
+      root.children,
+      transitionChildren,
+    );
+
+    return transitionChildren;
+  }
+
+  /**
+   * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
+   */
+  getSuspendableDocumentOrderSuspenseTransition(
+    uniqueSuspendersOnly: boolean,
+  ): Array<SuspenseTimelineStep> {
+    const target: Array<SuspenseTimelineStep> = [];
+    const focusedTransitionID = this._focusedTransition;
+    if (focusedTransitionID === null) {
+      return target;
+    }
+
+    target.push({
+      id: focusedTransitionID,
+      // TODO: Get environment for Activity
+      environment: null,
+      endTime: 0,
+    });
+
+    const transitionChildren = this.getSuspenseChildren(focusedTransitionID);
+
+    this.pushTimelineStepsInDocumentOrder(
+      transitionChildren,
+      target,
+      uniqueSuspendersOnly,
+      // TODO: Get environment for Activity
+      [],
+      0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+    );
 
     return target;
   }
@@ -1045,7 +1116,14 @@ export default class Store extends EventEmitter<{
     uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseTimelineStep> {
     const timeline =
-      this.getSuspendableDocumentOrderSuspense(uniqueSuspendersOnly);
+      this._focusedTransition === 0
+        ? this.getSuspendableDocumentOrderSuspenseInitialPaint(
+            uniqueSuspendersOnly,
+          )
+        : this.getSuspendableDocumentOrderSuspenseTransition(
+            uniqueSuspendersOnly,
+          );
+
     if (timeline.length === 0) {
       return timeline;
     }
@@ -1056,6 +1134,33 @@ export default class Store extends EventEmitter<{
       return a === root ? -1 : b === root ? 1 : a.endTime - b.endTime;
     });
     return timeline;
+  }
+
+  getActivities(): Array<{id: Element['id'], depth: number}> {
+    const target: Array<{id: Element['id'], depth: number}> = [];
+    // TODO: Keep a live tree in the backend so we don't need to recalculate
+    // this each time while also including filtered Activities.
+    this._pushActivitiesInDocumentOrder(this.roots, target, 0);
+    return target;
+  }
+
+  _pushActivitiesInDocumentOrder(
+    children: $ReadOnlyArray<Element['id']>,
+    target: Array<{id: Element['id'], depth: number}>,
+    depth: number,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const child = this._idToElement.get(children[i]);
+      if (child === undefined) {
+        continue;
+      }
+      if (child.type === ElementTypeActivity && child.nameProp !== null) {
+        target.push({id: child.id, depth});
+        this._pushActivitiesInDocumentOrder(child.children, target, depth + 1);
+      } else {
+        this._pushActivitiesInDocumentOrder(child.children, target, depth);
+      }
+    }
   }
 
   getRendererIDForElement(id: number): number | null {
@@ -1244,7 +1349,7 @@ export default class Store extends EventEmitter<{
     const removedElementIDs: Map<number, number> = new Map();
     const removedSuspenseIDs: Map<SuspenseNode['id'], SuspenseNode['id']> =
       new Map();
-    let nextActivitySliceID = null;
+    let nextActivitySliceID: Element['id'] | null = null;
 
     let i = 2;
 
@@ -2117,6 +2222,10 @@ export default class Store extends EventEmitter<{
           filter.activityID = nextActivitySliceID;
         }
       }
+    }
+
+    if (nextActivitySliceID !== null) {
+      this._focusedTransition = nextActivitySliceID;
     }
 
     this.emit('mutated', [

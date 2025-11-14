@@ -15,10 +15,14 @@ import typeof {
   SyntheticMouseEvent,
   SyntheticKeyboardEvent,
 } from 'react-dom-bindings/src/events/SyntheticEvent';
+import type Store from 'react-devtools-shared/src/devtools/store';
 
 import * as React from 'react';
-import {useContext, useTransition} from 'react';
-import {ComponentFilterActivitySlice} from 'react-devtools-shared/src/frontend/types';
+import {useContext, useMemo, useTransition} from 'react';
+import {
+  ComponentFilterActivitySlice,
+  ElementTypeActivity,
+} from 'react-devtools-shared/src/frontend/types';
 import styles from './ActivityList.css';
 import {
   TreeStateContext,
@@ -26,6 +30,8 @@ import {
 } from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
 import {StoreContext} from '../context';
+import ButtonIcon from '../ButtonIcon';
+import Button from '../Button';
 
 export function useChangeActivitySliceAction(): (
   id: Element['id'] | null,
@@ -62,15 +68,49 @@ export function useChangeActivitySliceAction(): (
   return changeActivitySliceAction;
 }
 
+function findNearestActivityParentID(
+  elementID: Element['id'],
+  store: Store,
+): Element['id'] | null {
+  let currentID: null | Element['id'] = elementID;
+  while (currentID !== null) {
+    const element = store.getElementByID(currentID);
+    if (element === null) {
+      return null;
+    }
+    if (element.type === ElementTypeActivity) {
+      return element.id;
+    }
+    currentID = element.parentID;
+  }
+
+  return currentID;
+}
+
+function useSelectedActivityID(): Element['id'] | null {
+  const {inspectedElementID} = useContext(TreeStateContext);
+  const store = useContext(StoreContext);
+  return useMemo(() => {
+    if (inspectedElementID === null) {
+      return null;
+    }
+    const nearestActivityID = findNearestActivityParentID(
+      inspectedElementID,
+      store,
+    );
+    return nearestActivityID;
+  }, [inspectedElementID, store]);
+}
+
 export default function ActivityList({
   activities,
 }: {
-  activities: $ReadOnlyArray<Element>,
+  activities: $ReadOnlyArray<{id: Element['id'], depth: number}>,
 }): React$Node {
-  const {inspectedElementID} = useContext(TreeStateContext);
+  const {activityID, inspectedElementID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
-  // TODO: Derive from inspected element
-  const selectedActivityID = inspectedElementID;
+  const store = useContext(StoreContext);
+  const selectedActivityID = useSelectedActivityID();
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
 
@@ -79,8 +119,13 @@ export default function ActivityList({
   const changeActivitySliceAction = useChangeActivitySliceAction();
 
   function handleKeyDown(event: SyntheticKeyboardEvent) {
-    // TODO: Implement keyboard navigation
     switch (event.key) {
+      case 'Escape':
+        startActivitySliceSelection(() => {
+          changeActivitySliceAction(null);
+        });
+        event.preventDefault();
+        break;
       case 'Enter':
       case ' ':
         if (inspectedElementID !== null) {
@@ -149,25 +194,61 @@ export default function ActivityList({
   }
 
   return (
-    <ol
-      role="listbox"
-      className={styles.ActivityList}
-      data-pending-activity-slice-selection={isPendingActivitySliceSelection}
-      tabIndex={0}
-      onKeyDown={handleKeyDown}>
-      {activities.map(activity => (
-        <li
-          key={activity.id}
-          role="option"
-          aria-selected={activity.id === selectedActivityID ? 'true' : 'false'}
-          className={styles.ActivityListItem}
-          onClick={handleClick.bind(null, activity.id)}
-          onDoubleClick={handleDoubleClick}
-          onPointerOver={highlightHostInstance.bind(null, activity.id, false)}
-          onPointerLeave={clearHighlightHostInstance}>
-          {activity.nameProp}
-        </li>
-      ))}
-    </ol>
+    <div className={styles.ActivityListContaier}>
+      <div className={styles.ActivityListHeader}>
+        {activityID !== null && (
+          // TODO: Obsolete once filtered Activities are included in this list.
+          <Button
+            onClick={startActivitySliceSelection.bind(
+              null,
+              changeActivitySliceAction.bind(null, null),
+            )}
+            title="Back to full tree view">
+            <ButtonIcon type="previous" />
+          </Button>
+        )}
+      </div>
+      <ol
+        role="listbox"
+        className={styles.ActivityListList}
+        data-pending-activity-slice-selection={isPendingActivitySliceSelection}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}>
+        {activities.map(({id, depth}) => {
+          const activity = store.getElementByID(id);
+          if (activity === null) {
+            return null;
+          }
+          const name = activity.nameProp;
+          if (name === null) {
+            // This shouldn't actually happen. We only want to show activities with a name.
+            // And hide the whole list if no named Activities are present.
+            return null;
+          }
+
+          // TODO: Filtered Activities should have dedicated styles once we include
+          // filtered Activities in this list.
+          return (
+            <li
+              key={activity.id}
+              role="option"
+              aria-selected={
+                activity.id === selectedActivityID ? 'true' : 'false'
+              }
+              className={styles.ActivityListItem}
+              onClick={handleClick.bind(null, activity.id)}
+              onDoubleClick={handleDoubleClick}
+              onPointerOver={highlightHostInstance.bind(
+                null,
+                activity.id,
+                false,
+              )}
+              onPointerLeave={clearHighlightHostInstance}>
+              {'\u00A0'.repeat(depth) + name}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
