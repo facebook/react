@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<25ee6a5f36b228c5c99ce88d5f8ab232>>
+ * @generated SignedSource<<ab9b621e3d853ae7236df717c4554183>>
  */
 
 'use strict';
@@ -40889,6 +40889,7 @@ function applyEffect(context, state, _effect, initialized, effects) {
                 case ValueKind.Primitive: {
                     break;
                 }
+                case ValueKind.MaybeFrozen:
                 case ValueKind.Frozen: {
                     sourceType = 'frozen';
                     break;

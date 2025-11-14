@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<772e0b44b5d776dc11042d5625b2d1a8>>
+ * @generated SignedSource<<b519b6e2552b31b80ff139990332f7e5>>
  */
 
 'use strict';
@@ -41110,6 +41110,7 @@ function applyEffect(context, state, _effect, initialized, effects) {
                 case ValueKind.Primitive: {
                     break;
                 }
+                case ValueKind.MaybeFrozen:
                 case ValueKind.Frozen: {
                     sourceType = 'frozen';
                     break;
