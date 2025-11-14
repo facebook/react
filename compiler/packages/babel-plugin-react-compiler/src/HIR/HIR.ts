@@ -1823,6 +1823,10 @@ export function isPrimitiveType(id: Identifier): boolean {
   return id.type.kind === 'Primitive';
 }
 
+export function isPlainObjectType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInObject';
+}
+
 export function isArrayType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
 }
