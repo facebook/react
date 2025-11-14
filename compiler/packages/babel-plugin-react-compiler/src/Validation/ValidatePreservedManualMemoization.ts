@@ -540,6 +540,8 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           !this.scopes.has(identifier.scope.id) &&
           !this.prunedScopes.has(identifier.scope.id)
         ) {
+          const depName =
+            identifier.name?.kind === 'named' ? identifier.name.value : null;
           state.errors.pushDiagnostic(
             CompilerDiagnostic.create({
               category: ErrorCategory.PreserveManualMemo,
@@ -547,11 +549,16 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
               description: [
                 'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
                 'This dependency may be mutated later, which could cause the value to change unexpectedly',
+                depName
+                  ? `. If '${depName}' is defined later in the component (e.g., via useMemo or useCallback), try moving this memoization after the dependency's declaration`
+                  : '',
               ].join(''),
             }).withDetails({
               kind: 'error',
               loc,
-              message: 'This dependency may be modified later',
+              message: depName
+                ? `This dependency may be modified later. If '${depName}' is memoized, ensure it's declared before this hook`
+                : 'This dependency may be modified later',
             }),
           );
         }
