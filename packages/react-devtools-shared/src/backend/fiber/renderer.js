@@ -1576,7 +1576,6 @@ export function attach(
       currentRoot = rootInstance;
       unmountInstanceRecursively(rootInstance);
       rootToFiberInstanceMap.delete(root);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
 
@@ -1646,7 +1645,6 @@ export function attach(
       currentRoot = newRoot;
       setRootPseudoKey(currentRoot.id, root.current);
       mountFiberRecursively(root.current, false);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
 
@@ -2159,7 +2157,6 @@ export function attach(
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
-  let pendingUnmountedRootID: FiberInstance['id'] | null = null;
 
   function pushOperation(op: number): void {
     if (__DEV__) {
@@ -2187,8 +2184,7 @@ export function attach(
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
       pendingRealUnmountedSuspenseIDs.length === 0 &&
-      pendingSuspenderChanges.size === 0 &&
-      pendingUnmountedRootID === null
+      pendingSuspenderChanges.size === 0
     );
   }
 
@@ -2250,9 +2246,7 @@ export function attach(
       return;
     }
 
-    const numUnmountIDs =
-      pendingRealUnmountedIDs.length +
-      (pendingUnmountedRootID === null ? 0 : 1);
+    const numUnmountIDs = pendingRealUnmountedIDs.length;
     const numUnmountSuspenseIDs = pendingRealUnmountedSuspenseIDs.length;
     const numSuspenderChanges = pendingSuspenderChanges.size;
 
@@ -2330,11 +2324,6 @@ export function attach(
       for (let j = 0; j < pendingRealUnmountedIDs.length; j++) {
         operations[i++] = pendingRealUnmountedIDs[j];
       }
-      // The root ID should always be unmounted last.
-      if (pendingUnmountedRootID !== null) {
-        operations[i] = pendingUnmountedRootID;
-        i++;
-      }
     }
 
     // Fill in pending operations.
@@ -2382,7 +2371,6 @@ export function attach(
     pendingRealUnmountedIDs.length = 0;
     pendingRealUnmountedSuspenseIDs.length = 0;
     pendingSuspenderChanges.clear();
-    pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
   }
@@ -2868,7 +2856,6 @@ export function attach(
       // Already disconnected.
       return;
     }
-    const fiber = fiberInstance.data;
 
     if (trackedPathMatchInstance === fiberInstance) {
       // We're in the process of trying to restore previous selection.
@@ -2878,17 +2865,7 @@ export function attach(
     }
 
     const id = fiberInstance.id;
-    const isRoot = fiber.tag === HostRoot;
-    if (isRoot) {
-      // Roots must be removed only after all children have been removed.
-      // So we track it separately.
-      pendingUnmountedRootID = id;
-    } else {
-      // To maintain child-first ordering,
-      // we'll push it into one of these queues,
-      // and later arrange them in the correct order.
-      pendingRealUnmountedIDs.push(id);
-    }
+    pendingRealUnmountedIDs.push(id);
   }
 
   function recordSuspenseResize(suspenseNode: SuspenseNode): void {
@@ -5772,11 +5749,12 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
-        flushPendingEvents();
-
-        needsToFlushComponentLogs = false;
         currentRoot = (null: any);
       });
+
+      flushPendingEvents();
+
+      needsToFlushComponentLogs = false;
     }
   }
 

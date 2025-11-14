@@ -22,6 +22,7 @@ import {
   BasicBlock,
   isUseRefType,
   SourceLocation,
+  ArrayExpression,
 } from '../HIR';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
@@ -36,11 +37,17 @@ type DerivationMetadata = {
   isStateSource: boolean;
 };
 
+type EffectMetadata = {
+  effect: HIRFunction;
+  dependencies: ArrayExpression;
+};
+
 type ValidationContext = {
   readonly functions: Map<IdentifierId, FunctionExpression>;
+  readonly candidateDependencies: Map<IdentifierId, ArrayExpression>;
   readonly errors: CompilerError;
   readonly derivationCache: DerivationCache;
-  readonly effects: Set<HIRFunction>;
+  readonly effectsCache: Map<IdentifierId, EffectMetadata>;
   readonly setStateLoads: Map<IdentifierId, IdentifierId | null>;
   readonly setStateUsages: Map<IdentifierId, Set<SourceLocation>>;
 };
@@ -175,18 +182,20 @@ export function validateNoDerivedComputationsInEffects_exp(
   fn: HIRFunction,
 ): Result<void, CompilerError> {
   const functions: Map<IdentifierId, FunctionExpression> = new Map();
+  const candidateDependencies: Map<IdentifierId, ArrayExpression> = new Map();
   const derivationCache = new DerivationCache();
   const errors = new CompilerError();
-  const effects: Set<HIRFunction> = new Set();
+  const effectsCache: Map<IdentifierId, EffectMetadata> = new Map();
 
   const setStateLoads: Map<IdentifierId, IdentifierId> = new Map();
   const setStateUsages: Map<IdentifierId, Set<SourceLocation>> = new Map();
 
   const context: ValidationContext = {
     functions,
+    candidateDependencies,
     errors,
     derivationCache,
-    effects,
+    effectsCache,
     setStateLoads,
     setStateUsages,
   };
@@ -229,8 +238,8 @@ export function validateNoDerivedComputationsInEffects_exp(
     isFirstPass = false;
   } while (context.derivationCache.snapshot());
 
-  for (const effect of effects) {
-    validateEffect(effect, context);
+  for (const [, effect] of effectsCache) {
+    validateEffect(effect.effect, effect.dependencies, context);
   }
 
   return errors.asResult();
@@ -354,8 +363,14 @@ function recordInstructionDerivations(
       value.args[1].kind === 'Identifier'
     ) {
       const effectFunction = context.functions.get(value.args[0].identifier.id);
-      if (effectFunction != null) {
-        context.effects.add(effectFunction.loweredFunc.func);
+      const deps = context.candidateDependencies.get(
+        value.args[1].identifier.id,
+      );
+      if (effectFunction != null && deps != null) {
+        context.effectsCache.set(value.args[0].identifier.id, {
+          effect: effectFunction.loweredFunc.func,
+          dependencies: deps,
+        });
       }
     } else if (isUseStateType(lvalue.identifier) && value.args.length > 0) {
       typeOfValue = 'fromState';
@@ -367,6 +382,8 @@ function recordInstructionDerivations(
       );
       return;
     }
+  } else if (value.kind === 'ArrayExpression') {
+    context.candidateDependencies.set(lvalue.identifier.id, value);
   }
 
   for (const operand of eachInstructionOperand(instr)) {
@@ -596,6 +613,7 @@ function getFnLocalDeps(
 
 function validateEffect(
   effectFunction: HIRFunction,
+  dependencies: ArrayExpression,
   context: ValidationContext,
 ): void {
   const seenBlocks: Set<BlockId> = new Set();
@@ -611,6 +629,16 @@ function validateEffect(
     IdentifierId,
     Set<SourceLocation>
   > = new Map();
+
+  // Consider setStates in the effect's dependency array as being part of effectSetStateUsages
+  for (const dep of dependencies.elements) {
+    if (dep.kind === 'Identifier') {
+      const root = getRootSetState(dep.identifier.id, context.setStateLoads);
+      if (root !== null) {
+        effectSetStateUsages.set(root, new Set([dep.loc]));
+      }
+    }
+  }
 
   let cleanUpFunctionDeps: Set<IdentifierId> | undefined;
 
@@ -662,6 +690,18 @@ function validateEffect(
         instr.value.args.length === 1 &&
         instr.value.args[0].kind === 'Identifier'
       ) {
+        const calleeMetadata = context.derivationCache.cache.get(
+          instr.value.callee.identifier.id,
+        );
+
+        /*
+         * If the setState comes from a source other than local state skip
+         * since the fix is not to calculate in render
+         */
+        if (calleeMetadata?.typeOfValue != 'fromState') {
+          continue;
+        }
+
         const argMetadata = context.derivationCache.cache.get(
           instr.value.args[0].identifier.id,
         );

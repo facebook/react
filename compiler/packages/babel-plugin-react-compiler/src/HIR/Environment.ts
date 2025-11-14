@@ -365,6 +365,13 @@ export const EnvironmentConfigSchema = z.object({
   validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
 
   /**
+   * Validates that AST nodes generated during codegen have proper source locations.
+   * This is useful for debugging issues with source maps and Istanbul coverage.
+   * When enabled, the compiler will error if important source locations are missing in the generated AST.
+   */
+  validateSourceLocations: z.boolean().default(false),
+
+  /**
    * Validate against impure functions called during render
    */
   validateNoImpureFunctionsInRender: z.boolean().default(false),
@@ -670,6 +677,15 @@ export const EnvironmentConfigSchema = z.object({
    * from refs need to be stored in state during mount.
    */
   enableAllowSetStateFromRefsInEffects: z.boolean().default(true),
+
+  /**
+   * Enables inference of event handler types for JSX props on built-in DOM elements.
+   * When enabled, functions passed to event handler props (props starting with "on")
+   * on primitive JSX tags are inferred to have the BuiltinEventHandlerId type, which
+   * allows ref access within those functions since DOM event handlers are guaranteed
+   * by React to only execute in response to events, not during render.
+   */
+  enableInferEventHandlers: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;

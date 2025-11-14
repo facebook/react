@@ -1149,6 +1149,8 @@ function serializeReadableStream(
       supportsBYOB = false;
     }
   }
+  // At this point supportsBYOB is guaranteed to be a boolean.
+  const isByteStream: boolean = supportsBYOB;
 
   const reader = stream.getReader();
 
@@ -1172,7 +1174,7 @@ function serializeReadableStream(
   // The task represents the Stop row. This adds a Start row.
   request.pendingChunks++;
   const startStreamRow =
-    streamTask.id.toString(16) + ':' + (supportsBYOB ? 'r' : 'R') + '\n';
+    streamTask.id.toString(16) + ':' + (isByteStream ? 'r' : 'R') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
 
   function progress(entry: {done: boolean, value: ReactClientValue, ...}) {
@@ -1190,9 +1192,15 @@ function serializeReadableStream(
       callOnAllReadyIfReady(request);
     } else {
       try {
-        streamTask.model = entry.value;
         request.pendingChunks++;
-        tryStreamTask(request, streamTask);
+        streamTask.model = entry.value;
+        if (isByteStream) {
+          // Chunks of byte streams are always Uint8Array instances.
+          const chunk: Uint8Array = (streamTask.model: any);
+          emitTypedArrayChunk(request, streamTask.id, 'b', chunk, false);
+        } else {
+          tryStreamTask(request, streamTask);
+        }
         enqueueFlush(request);
         reader.read().then(progress, error);
       } catch (x) {
