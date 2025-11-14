@@ -8,12 +8,20 @@ function Component({prop1, prop2}) {
   const obj = {x, y};
   const [a, b] = arr;
   const {x: c, y: d} = obj;
+  let sound;
+
+  if (y > 10) {
+    sound = 'woof';
+  } else {
+    sound = 'meow';
+  }
 
   useEffect(() => {
     if (a > 10) {
       console.log(a);
+      console.log(sound);
     }
-  }, [a]);
+  }, [a, sound]);
 
   const foo = useCallback(() => {
     return a + b;
