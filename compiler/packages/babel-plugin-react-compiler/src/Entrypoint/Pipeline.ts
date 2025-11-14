@@ -105,6 +105,7 @@ import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRan
 import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
 import {validateNoDerivedComputationsInEffects_exp} from '../Validation/ValidateNoDerivedComputationsInEffects_exp';
 import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
+import {validateSourceLocations} from '../Validation/ValidateSourceLocations';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -272,12 +273,10 @@ function runWithEnvironment(
       validateNoSetStateInRender(hir).unwrap();
     }
 
-    if (env.config.validateNoDerivedComputationsInEffects) {
-      validateNoDerivedComputationsInEffects(hir);
-    }
-
     if (env.config.validateNoDerivedComputationsInEffects_exp) {
-      validateNoDerivedComputationsInEffects_exp(hir);
+      env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
+    } else if (env.config.validateNoDerivedComputationsInEffects) {
+      validateNoDerivedComputationsInEffects(hir);
     }
 
     if (env.config.validateNoSetStateInEffects) {
@@ -557,6 +556,10 @@ function runWithEnvironment(
   log({kind: 'ast', name: 'Codegen', value: ast});
   for (const outlined of ast.outlined) {
     log({kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn});
+  }
+
+  if (env.config.validateSourceLocations) {
+    validateSourceLocations(func, ast).unwrap();
   }
 
   /**

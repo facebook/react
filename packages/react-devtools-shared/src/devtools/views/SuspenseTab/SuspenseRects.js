@@ -510,9 +510,12 @@ function SuspenseRectsContainer({
   let selectedBoundingBox = null;
   let selectedEnvironment = null;
   if (isRootSelected) {
-    selectedBoundingBox = boundingBox;
     selectedEnvironment = rootEnvironment;
-  } else if (inspectedElementID !== null) {
+  } else if (
+    inspectedElementID !== null &&
+    // TODO: Separate inspected element and inspected Suspense and use the inspected Suspense ID here.
+    store.containsSuspense(inspectedElementID)
+  ) {
     const selectedSuspenseNode = store.getSuspenseByID(inspectedElementID);
     if (
       selectedSuspenseNode !== null &&
@@ -534,6 +537,7 @@ function SuspenseRectsContainer({
       className={
         styles.SuspenseRectsContainer +
         (hasRootSuspenders ? ' ' + styles.SuspenseRectsRoot : '') +
+        (isRootSelected ? ' ' + styles.SuspenseRectsRootOutline : '') +
         ' ' +
         getClassNameForEnvironment(rootEnvironment)
       }
@@ -551,7 +555,6 @@ function SuspenseRectsContainer({
             <ScaledRect
               className={
                 styles.SuspenseRectOutline +
-                (isRootSelected ? ' ' + styles.SuspenseRectOutlineRoot : '') +
                 ' ' +
                 getClassNameForEnvironment(selectedEnvironment)
               }
