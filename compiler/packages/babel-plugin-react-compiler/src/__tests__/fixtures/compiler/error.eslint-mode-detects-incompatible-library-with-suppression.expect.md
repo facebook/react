@@ -21,7 +21,6 @@ export const FIXTURE_ENTRYPOINT = {
   params: [],
 };
 
-
 ```
 
 
