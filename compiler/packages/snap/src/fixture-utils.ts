@@ -44,6 +44,21 @@ function stripExtension(filename: string, extensions: Array<string>): string {
   return filename;
 }
 
+/**
+ * Strip all extensions from a filename
+ * e.g., "foo.expect.md" -> "foo"
+ */
+function stripAllExtensions(filename: string): string {
+  let result = filename;
+  while (true) {
+    const extension = path.extname(result);
+    if (extension === '') {
+      return result;
+    }
+    result = path.basename(result, extension);
+  }
+}
+
 export async function readTestFilter(): Promise<TestFilter | null> {
   if (!(await exists(FILTER_PATH))) {
     throw new Error(`testfilter file not found at \`${FILTER_PATH}\``);
@@ -111,11 +126,18 @@ async function readInputFixtures(
   } else {
     inputFiles = (
       await Promise.all(
-        filter.paths.map(pattern =>
-          glob.glob(`${pattern}{${INPUT_EXTENSIONS.join(',')}}`, {
+        filter.paths.map(pattern => {
+          // Check if pattern already has an extension
+          const basename = path.basename(pattern);
+          const basenameWithoutExt = stripAllExtensions(basename);
+          const hasExtension = basename !== basenameWithoutExt;
+          const globPattern = hasExtension
+            ? pattern
+            : `${pattern}{${INPUT_EXTENSIONS.join(',')}}`;
+          return glob.glob(globPattern, {
             cwd: rootDir,
-          }),
-        ),
+          });
+        }),
       )
     ).flat();
   }
@@ -150,11 +172,24 @@ async function readOutputFixtures(
   } else {
     outputFiles = (
       await Promise.all(
-        filter.paths.map(pattern =>
-          glob.glob(`${pattern}${SNAPSHOT_EXTENSION}`, {
+        filter.paths.map(pattern => {
+          // If pattern already ends with .expect.md, use it as-is
+          if (pattern.endsWith(SNAPSHOT_EXTENSION)) {
+            return glob.glob(pattern, {
+              cwd: rootDir,
+            });
+          }
+          // Otherwise strip any extension before adding .expect.md
+          const basename = path.basename(pattern);
+          const basenameWithoutExt = stripAllExtensions(pattern);
+          const patternWithoutExt =
+            basename !== basenameWithoutExt
+              ? pattern.slice(0, -path.extname(pattern).length)
+              : pattern;
+          return glob.glob(`${patternWithoutExt}${SNAPSHOT_EXTENSION}`, {
             cwd: rootDir,
-          }),
-        ),
+          });
+        }),
       )
     ).flat();
   }
