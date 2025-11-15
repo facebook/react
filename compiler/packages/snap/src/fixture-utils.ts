@@ -44,6 +44,21 @@ function stripExtension(filename: string, extensions: Array<string>): string {
   return filename;
 }
 
+/**
+ * Strip all extensions from a filename
+ * e.g., "foo.expect.md" -> "foo"
+ */
+function stripAllExtensions(filename: string): string {
+  let result = filename;
+  while (true) {
+    const extension = path.extname(result);
+    if (extension === '') {
+      return result;
+    }
+    result = path.basename(result, extension);
+  }
+}
+
 export async function readTestFilter(): Promise<TestFilter | null> {
   if (!(await exists(FILTER_PATH))) {
     throw new Error(`testfilter file not found at \`${FILTER_PATH}\``);
@@ -111,11 +126,25 @@ async function readInputFixtures(
   } else {
     inputFiles = (
       await Promise.all(
-        filter.paths.map(pattern =>
-          glob.glob(`${pattern}{${INPUT_EXTENSIONS.join(',')}}`, {
+        filter.paths.map(pattern => {
+          // If the pattern already has an extension other than .expect.md,
+          // search for the pattern directly. Otherwise, search for the
+          // pattern with the expected input extensions added.
+          // Eg
+          // `alias-while` => search for `alias-while{.js,.jsx,.ts,.tsx}`
+          // `alias-while.js` => search as-is
+          // `alias-while.expect.md` => search for `alias-while{.js,.jsx,.ts,.tsx}`
+          const basename = path.basename(pattern);
+          const basenameWithoutExt = stripAllExtensions(basename);
+          const hasExtension = basename !== basenameWithoutExt;
+          const globPattern =
+            hasExtension && !pattern.endsWith(SNAPSHOT_EXTENSION)
+              ? pattern
+              : `${basenameWithoutExt}{${INPUT_EXTENSIONS.join(',')}}`;
+          return glob.glob(globPattern, {
             cwd: rootDir,
-          }),
-        ),
+          });
+        }),
       )
     ).flat();
   }
@@ -150,11 +179,13 @@ async function readOutputFixtures(
   } else {
     outputFiles = (
       await Promise.all(
-        filter.paths.map(pattern =>
-          glob.glob(`${pattern}${SNAPSHOT_EXTENSION}`, {
+        filter.paths.map(pattern => {
+          // Strip all extensions and find matching .expect.md files
+          const basenameWithoutExt = stripAllExtensions(pattern);
+          return glob.glob(`${basenameWithoutExt}${SNAPSHOT_EXTENSION}`, {
             cwd: rootDir,
-          }),
-        ),
+          });
+        }),
       )
     ).flat();
   }

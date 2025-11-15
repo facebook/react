@@ -21,13 +21,17 @@ import {
   isUseRefType,
   isRefValueType,
   Place,
+  Effect,
+  BlockId,
 } from '../HIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
 } from '../HIR/visitors';
+import {createControlDominators} from '../Inference/ControlDominators';
+import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {Result} from '../Utils/Result';
-import {Iterable_some} from '../Utils/utils';
+import {assertExhaustive, Iterable_some} from '../Utils/utils';
 
 /**
  * Validates against calling setState in the body of an effect (useEffect and friends),
@@ -140,6 +144,8 @@ function getSetStateCall(
   setStateFunctions: Map<IdentifierId, Place>,
   env: Environment,
 ): Place | null {
+  const enableAllowSetStateFromRefsInEffects =
+    env.config.enableAllowSetStateFromRefsInEffects;
   const refDerivedValues: Set<IdentifierId> = new Set();
 
   const isDerivedFromRef = (place: Place): boolean => {
@@ -150,9 +156,38 @@ function getSetStateCall(
     );
   };
 
+  const isRefControlledBlock: (id: BlockId) => boolean =
+    enableAllowSetStateFromRefsInEffects
+      ? createControlDominators(fn, place => isDerivedFromRef(place))
+      : (): boolean => false;
+
   for (const [, block] of fn.body.blocks) {
+    if (enableAllowSetStateFromRefsInEffects) {
+      for (const phi of block.phis) {
+        if (isDerivedFromRef(phi.place)) {
+          continue;
+        }
+        let isPhiDerivedFromRef = false;
+        for (const [, operand] of phi.operands) {
+          if (isDerivedFromRef(operand)) {
+            isPhiDerivedFromRef = true;
+            break;
+          }
+        }
+        if (isPhiDerivedFromRef) {
+          refDerivedValues.add(phi.place.identifier.id);
+        } else {
+          for (const [pred] of phi.operands) {
+            if (isRefControlledBlock(pred)) {
+              refDerivedValues.add(phi.place.identifier.id);
+              break;
+            }
+          }
+        }
+      }
+    }
     for (const instr of block.instructions) {
-      if (env.config.enableAllowSetStateFromRefsInEffects) {
+      if (enableAllowSetStateFromRefsInEffects) {
         const hasRefOperand = Iterable_some(
           eachInstructionValueOperand(instr.value),
           isDerivedFromRef,
@@ -161,6 +196,46 @@ function getSetStateCall(
         if (hasRefOperand) {
           for (const lvalue of eachInstructionLValue(instr)) {
             refDerivedValues.add(lvalue.identifier.id);
+          }
+          // Ref-derived values can also propagate through mutation
+          for (const operand of eachInstructionValueOperand(instr.value)) {
+            switch (operand.effect) {
+              case Effect.Capture:
+              case Effect.Store:
+              case Effect.ConditionallyMutate:
+              case Effect.ConditionallyMutateIterator:
+              case Effect.Mutate: {
+                if (isMutable(instr, operand)) {
+                  refDerivedValues.add(operand.identifier.id);
+                }
+                break;
+              }
+              case Effect.Freeze:
+              case Effect.Read: {
+                // no-op
+                break;
+              }
+              case Effect.Unknown: {
+                CompilerError.invariant(false, {
+                  reason: 'Unexpected unknown effect',
+                  description: null,
+                  details: [
+                    {
+                      kind: 'error',
+                      loc: operand.loc,
+                      message: null,
+                    },
+                  ],
+                  suggestions: null,
+                });
+              }
+              default: {
+                assertExhaustive(
+                  operand.effect,
+                  `Unexpected effect kind \`${operand.effect}\``,
+                );
+              }
+            }
           }
         }
 
@@ -203,7 +278,7 @@ function getSetStateCall(
             isSetStateType(callee.identifier) ||
             setStateFunctions.has(callee.identifier.id)
           ) {
-            if (env.config.enableAllowSetStateFromRefsInEffects) {
+            if (enableAllowSetStateFromRefsInEffects) {
               const arg = instr.value.args.at(0);
               if (
                 arg !== undefined &&
@@ -216,6 +291,8 @@ function getSetStateCall(
                  * be needed when initial layout measurements from refs need to be stored in state.
                  */
                 return null;
+              } else if (isRefControlledBlock(block.id)) {
+                continue;
               }
             }
             /*

@@ -672,9 +672,14 @@ export const EnvironmentConfigSchema = z.object({
   validateNoDynamicallyCreatedComponentsOrHooks: z.boolean().default(false),
 
   /**
-   * When enabled, allows setState calls in effects when the value being set is
-   * derived from a ref. This is useful for patterns where initial layout measurements
-   * from refs need to be stored in state during mount.
+   * When enabled, allows setState calls in effects based on valid patterns involving refs:
+   * - Allow setState where the value being set is derived from a ref. This is useful where
+   *   state needs to take into account layer information, and a layout effect reads layout
+   *   data from a ref and sets state.
+   * - Allow conditionally calling setState after manually comparing previous/new values
+   *   for changes via a ref. Relying on effect deps is insufficient for non-primitive values,
+   *   so a ref is generally required to manually track previous values and compare prev/next
+   *   for meaningful changes before setting state.
    */
   enableAllowSetStateFromRefsInEffects: z.boolean().default(true),
 
