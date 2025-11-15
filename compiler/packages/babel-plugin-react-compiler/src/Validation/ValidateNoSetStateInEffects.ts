@@ -21,13 +21,16 @@ import {
   isUseRefType,
   isRefValueType,
   Place,
+  Effect,
 } from '../HIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
 } from '../HIR/visitors';
+import {createControlDominators} from '../Inference/ControlDominators';
+import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {Result} from '../Utils/Result';
-import {Iterable_some} from '../Utils/utils';
+import {assertExhaustive, Iterable_some} from '../Utils/utils';
 
 /**
  * Validates against calling setState in the body of an effect (useEffect and friends),
@@ -150,6 +153,10 @@ function getSetStateCall(
     );
   };
 
+  const isReactiveControlledBlock = createControlDominators(fn, place =>
+    isDerivedFromRef(place),
+  );
+
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       if (env.config.enableAllowSetStateFromRefsInEffects) {
@@ -161,6 +168,46 @@ function getSetStateCall(
         if (hasRefOperand) {
           for (const lvalue of eachInstructionLValue(instr)) {
             refDerivedValues.add(lvalue.identifier.id);
+          }
+          // Ref-derived values can also propagate through mutation
+          for (const operand of eachInstructionValueOperand(instr.value)) {
+            switch (operand.effect) {
+              case Effect.Capture:
+              case Effect.Store:
+              case Effect.ConditionallyMutate:
+              case Effect.ConditionallyMutateIterator:
+              case Effect.Mutate: {
+                if (isMutable(instr, operand)) {
+                  refDerivedValues.add(operand.identifier.id);
+                }
+                break;
+              }
+              case Effect.Freeze:
+              case Effect.Read: {
+                // no-op
+                break;
+              }
+              case Effect.Unknown: {
+                CompilerError.invariant(false, {
+                  reason: 'Unexpected unknown effect',
+                  description: null,
+                  details: [
+                    {
+                      kind: 'error',
+                      loc: operand.loc,
+                      message: null,
+                    },
+                  ],
+                  suggestions: null,
+                });
+              }
+              default: {
+                assertExhaustive(
+                  operand.effect,
+                  `Unexpected effect kind \`${operand.effect}\``,
+                );
+              }
+            }
           }
         }
 
@@ -216,6 +263,8 @@ function getSetStateCall(
                  * be needed when initial layout measurements from refs need to be stored in state.
                  */
                 return null;
+              } else if (isReactiveControlledBlock(block.id)) {
+                continue;
               }
             }
             /*
