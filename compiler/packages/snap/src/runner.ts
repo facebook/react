@@ -12,7 +12,7 @@ import * as readline from 'readline';
 import ts from 'typescript';
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
-import {FILTER_PATH, PROJECT_ROOT} from './constants';
+import {FILTER_PATH, FIXTURES_PATH, PROJECT_ROOT} from './constants';
 import {TestFilter, getFixtures, readTestFilter} from './fixture-utils';
 import {TestResult, TestResults, report, update} from './reporter';
 import {
@@ -23,6 +23,7 @@ import {
 } from './runner-watch';
 import * as runnerWorker from './runner-worker';
 import {execSync} from 'child_process';
+import * as glob from 'glob';
 
 const WORKER_PATH = require.resolve('./runner-worker.js');
 const NUM_WORKERS = cpus().length - 1;
@@ -35,9 +36,17 @@ type RunnerOptions = {
   watch: boolean;
   filter: boolean;
   update: boolean;
+  pattern?: string;
 };
 
 const opts: RunnerOptions = yargs
+  .command('$0 [pattern]', 'Run snapshot tests', yargs => {
+    yargs.positional('pattern', {
+      type: 'string',
+      describe:
+        'Optional glob pattern to filter fixtures (e.g., "error.*", "use-memo")',
+    });
+  })
   .boolean('sync')
   .describe(
     'sync',
@@ -65,6 +74,54 @@ const opts: RunnerOptions = yargs
   .help('help')
   .strict()
   .parseSync(hideBin(process.argv));
+
+/**
+ * Create a TestFilter from a glob pattern
+ */
+async function createPatternFilter(pattern: string): Promise<TestFilter> {
+  // The pattern works against the base fixture path (without extensions)
+  // We need to append extensions to find the actual files, similar to how
+  // readInputFixtures works in fixture-utils.ts
+  const INPUT_EXTENSIONS = [
+    '.js',
+    '.cjs',
+    '.mjs',
+    '.ts',
+    '.cts',
+    '.mts',
+    '.jsx',
+    '.tsx',
+  ];
+  const SNAPSHOT_EXTENSION = '.expect.md';
+
+  // Try to match both input files and snapshot files
+  const [inputMatches, snapshotMatches] = await Promise.all([
+    glob.glob(`${pattern}{${INPUT_EXTENSIONS.join(',')}}`, {
+      cwd: FIXTURES_PATH,
+    }),
+    glob.glob(`${pattern}${SNAPSHOT_EXTENSION}`, {cwd: FIXTURES_PATH}),
+  ]);
+
+  // Remove file extensions to get the base paths
+  const allMatches = [...inputMatches, ...snapshotMatches];
+  const paths = allMatches.map((match: string) => {
+    // Remove common test file extensions
+    return match
+      .replace(/\.(js|jsx|ts|tsx|mjs|cjs|mts|cts)$/, '')
+      .replace(/\.expect\.md$/, '');
+  });
+
+  // Deduplicate paths
+  const uniquePaths = Array.from(new Set(paths)) as string[];
+
+  // Enable debug if there's only one unique match
+  const debug = uniquePaths.length === 1;
+
+  return {
+    debug,
+    paths: uniquePaths,
+  };
+}
 
 /**
  * Do a test run and return the test results
@@ -171,7 +228,10 @@ export async function main(opts: RunnerOptions): Promise<void> {
   worker.getStderr().pipe(process.stderr);
   worker.getStdout().pipe(process.stdout);
 
-  if (opts.watch) {
+  // If pattern is provided, force watch mode off and use pattern filter
+  const shouldWatch = opts.pattern ? false : opts.watch;
+
+  if (shouldWatch) {
     makeWatchRunner(state => onChange(worker, state), opts.filter);
     if (opts.filter) {
       /**
@@ -216,7 +276,15 @@ export async function main(opts: RunnerOptions): Promise<void> {
             try {
               execSync('yarn build', {cwd: PROJECT_ROOT});
               console.log('Built compiler successfully with tsup');
-              const testFilter = opts.filter ? await readTestFilter() : null;
+
+              // Determine which filter to use
+              let testFilter: TestFilter | null = null;
+              if (opts.pattern) {
+                testFilter = await createPatternFilter(opts.pattern);
+              } else if (opts.filter) {
+                testFilter = await readTestFilter();
+              }
+
               const results = await runFixtures(worker, testFilter, 0);
               if (opts.update) {
                 update(results);
