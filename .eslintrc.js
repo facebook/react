@@ -518,6 +518,14 @@ module.exports = {
       },
     },
     {
+      files: ['packages/react-devtools-*/**/*.js'],
+      excludedFiles: '**/__tests__/**/*.js',
+      plugins: ['eslint-plugin-react-hooks-published'],
+      rules: {
+        'react-hooks-published/rules-of-hooks': ERROR,
+      },
+    },
+    {
       files: ['packages/eslint-plugin-react-hooks/src/**/*'],
       extends: ['plugin:@typescript-eslint/recommended'],
       parser: '@typescript-eslint/parser',

@@ -11,6 +11,7 @@ import * as React from 'react';
 import {
   Fragment,
   Suspense,
+  startTransition,
   useCallback,
   useContext,
   useEffect,
@@ -37,7 +38,10 @@ import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 import {useExtensionComponentsPanelVisibility} from 'react-devtools-shared/src/frontend/hooks/useExtensionComponentsPanelVisibility';
+import {ElementTypeActivity} from 'react-devtools-shared/src/frontend/types';
 import {useChangeOwnerAction} from './OwnersListContext';
+import {useChangeActivitySliceAction} from '../SuspenseTab/ActivityList';
+import ActivitySlice from './ActivitySlice';
 
 // Indent for each node at level N, compared to node at level N - 1.
 const INDENTATION_SIZE = 10;
@@ -72,6 +76,7 @@ function calculateInitialScrollOffset(
 export default function Tree(): React.Node {
   const dispatch = useContext(TreeDispatcherContext);
   const {
+    activityID,
     numElements,
     ownerID,
     searchIndex,
@@ -302,6 +307,7 @@ export default function Tree(): React.Node {
   const handleBlur = useCallback(() => setTreeFocused(false), []);
   const handleFocus = useCallback(() => setTreeFocused(true), []);
 
+  const changeActivitySliceAction = useChangeActivitySliceAction();
   const changeOwnerAction = useChangeOwnerAction();
   const handleKeyPress = useCallback(
     (event: $FlowFixMe) => {
@@ -309,7 +315,17 @@ export default function Tree(): React.Node {
         case 'Enter':
         case ' ':
           if (inspectedElementID !== null) {
-            changeOwnerAction(inspectedElementID);
+            const inspectedElement = store.getElementByID(inspectedElementID);
+            startTransition(() => {
+              if (
+                inspectedElement !== null &&
+                inspectedElement.type === ElementTypeActivity
+              ) {
+                changeActivitySliceAction(inspectedElementID);
+              } else {
+                changeOwnerAction(inspectedElementID);
+              }
+            });
           }
           break;
         default:
@@ -444,7 +460,13 @@ export default function Tree(): React.Node {
             </Fragment>
           )}
           <Suspense fallback={<Loading />}>
-            {ownerID !== null ? <OwnersStack /> : <ComponentSearchInput />}
+            {ownerID !== null ? (
+              <OwnersStack />
+            ) : activityID !== null ? (
+              <ActivitySlice />
+            ) : (
+              <ComponentSearchInput />
+            )}
           </Suspense>
           {ownerID === null && (errors > 0 || warnings > 0) && (
             <React.Fragment>

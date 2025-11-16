@@ -22,12 +22,12 @@ export const {
   alwaysThrottleRetries,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
-  enablePersistedModeClonedFlag,
   enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
   renameElementSymbol,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
+  enableFragmentRefsInstanceHandles,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -45,13 +45,12 @@ export const enableCPUSuspense: boolean = true;
 export const enableCreateEventHandleAPI: boolean = false;
 export const enableMoveBefore: boolean = true;
 export const enableFizzExternalRuntime: boolean = true;
-export const enableHalt: boolean = false;
+export const enableHalt: boolean = true;
 export const enableInfiniteRenderLoopDetection: boolean = false;
 export const enableLegacyCache: boolean = false;
 export const enableLegacyFBSupport: boolean = false;
 export const enableLegacyHidden: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
-export const enablePostpone: boolean = false;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
 export const enableProfilerNestedUpdatePhase: boolean = __PROFILE__;
 export const enableProfilerTimer: boolean = __PROFILE__;
@@ -65,7 +64,7 @@ export const enableTaint: boolean = true;
 export const enableTransitionTracing: boolean = false;
 export const enableTrustedTypesIntegration: boolean = false;
 export const enableUpdaterTracking: boolean = __PROFILE__;
-export const enableUseEffectEventHook: boolean = false;
+export const enableUseEffectEventHook: boolean = true;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
@@ -83,6 +82,9 @@ export const enableDefaultTransitionIndicator: boolean = true;
 export const ownerStackLimit = 1e4;
 export const enableComponentPerformanceTrack: boolean =
   __PROFILE__ && dynamicFlags.enableComponentPerformanceTrack;
+export const enablePerformanceIssueReporting: boolean =
+  enableComponentPerformanceTrack;
+export const enableInternalInstanceMap: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

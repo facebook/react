@@ -25,12 +25,14 @@ import {
 } from '../HIR/HIR';
 import {
   BuiltInArrayId,
+  BuiltInEventHandlerId,
   BuiltInFunctionId,
   BuiltInJsxId,
   BuiltInMixedReadonlyId,
   BuiltInObjectId,
   BuiltInPropsId,
   BuiltInRefValueId,
+  BuiltInSetStateId,
   BuiltInUseRefId,
 } from '../HIR/ObjectShape';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
@@ -276,9 +278,16 @@ function* generateInstructionTypes(
        * We should change Hook to a subtype of Function or change unifier logic.
        * (see https://github.com/facebook/react-forget/pull/1427)
        */
+      let shapeId: string | null = null;
+      if (env.config.enableTreatSetIdentifiersAsStateSetters) {
+        const name = getName(names, value.callee.identifier.id);
+        if (name.startsWith('set')) {
+          shapeId = BuiltInSetStateId;
+        }
+      }
       yield equation(value.callee.identifier.type, {
         kind: 'Function',
-        shapeId: null,
+        shapeId,
         return: returnType,
         isConstructor: false,
       });
@@ -385,7 +394,7 @@ function* generateInstructionTypes(
               shapeId: BuiltInArrayId,
             });
           } else {
-            break;
+            continue;
           }
         }
       } else {
@@ -458,6 +467,41 @@ function* generateInstructionTypes(
               yield equation(prop.place.identifier.type, {
                 kind: 'Object',
                 shapeId: BuiltInUseRefId,
+              });
+            }
+          }
+        }
+      }
+      if (env.config.enableInferEventHandlers) {
+        if (
+          value.kind === 'JsxExpression' &&
+          value.tag.kind === 'BuiltinTag' &&
+          !value.tag.name.includes('-')
+        ) {
+          /*
+           * Infer event handler types for built-in DOM elements.
+           * Props starting with "on" (e.g., onClick, onSubmit) on primitive tags
+           * are inferred as event handlers. This allows functions with ref access
+           * to be passed to these props, since DOM event handlers are guaranteed
+           * by React to only execute in response to events, never during render.
+           *
+           * We exclude tags with hyphens to avoid web components (custom elements),
+           * which are required by the HTML spec to contain a hyphen. Web components
+           * may call event handler props during their lifecycle methods (e.g.,
+           * connectedCallback), which would be unsafe for ref access.
+           */
+          for (const prop of value.props) {
+            if (
+              prop.kind === 'JsxAttribute' &&
+              prop.name.startsWith('on') &&
+              prop.name.length > 2 &&
+              prop.name[2] === prop.name[2].toUpperCase()
+            ) {
+              yield equation(prop.place.identifier.type, {
+                kind: 'Function',
+                shapeId: BuiltInEventHandlerId,
+                return: makeType(),
+                isConstructor: false,
               });
             }
           }

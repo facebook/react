@@ -33,20 +33,6 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
-function formatV8Stack(stack) {
-  let v8StyleStack = '';
-  if (stack) {
-    for (let i = 0; i < stack.length; i++) {
-      const [name] = stack[i];
-      if (v8StyleStack !== '') {
-        v8StyleStack += '\n';
-      }
-      v8StyleStack += '    in ' + name + ' (at **)';
-    }
-  }
-  return v8StyleStack;
-}
-
 const repoRoot = path.resolve(__dirname, '../../../../');
 function normalizeReactCodeLocInfo(str) {
   const repoRootForRegexp = repoRoot.replace(/\//g, '\\/');
@@ -65,35 +51,6 @@ function getErrorForJestMatcher(error) {
     message: error.message,
     stack: normalizeReactCodeLocInfo(error.stack),
   };
-}
-
-function normalizeComponentInfo(debugInfo) {
-  if (Array.isArray(debugInfo.stack)) {
-    const {debugTask, debugStack, debugLocation, ...copy} = debugInfo;
-    copy.stack = formatV8Stack(debugInfo.stack);
-    if (debugInfo.owner) {
-      copy.owner = normalizeComponentInfo(debugInfo.owner);
-    }
-    return copy;
-  } else {
-    return debugInfo;
-  }
-}
-
-function getDebugInfo(obj) {
-  const debugInfo = obj._debugInfo;
-  if (debugInfo) {
-    const copy = [];
-    for (let i = 0; i < debugInfo.length; i++) {
-      if (debugInfo[i].awaited && debugInfo[i].awaited.name === 'RSC stream') {
-        // Ignore RSC stream I/O info.
-      } else {
-        copy.push(normalizeComponentInfo(debugInfo[i]));
-      }
-    }
-    return copy;
-  }
-  return debugInfo;
 }
 
 const finalizationRegistries = [];
@@ -132,6 +89,7 @@ let NoErrorExpected;
 let Scheduler;
 let assertLog;
 let assertConsoleErrorDev;
+let getDebugInfo;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -168,6 +126,11 @@ describe('ReactFlight', () => {
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
     assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
+
+    getDebugInfo = InternalTestUtils.getDebugInfo.bind(null, {
+      useV8Stack: true,
+      ignoreRscStreamInfo: true,
+    });
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -364,8 +327,8 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(root);
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: 12},
@@ -383,7 +346,7 @@ describe('ReactFlight', () => {
             ]
           : undefined,
       );
-      ReactNoop.render(await promise);
+      ReactNoop.render(result);
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
@@ -1415,9 +1378,7 @@ describe('ReactFlight', () => {
             environmentName: 'Server',
           },
         ],
-        findSourceMapURLCalls: [
-          [__filename, 'Server'],
-          [__filename, 'Server'],
+        findSourceMapURLCalls: expect.arrayContaining([
           // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
           ['inspected-page.html:29:11), <anonymous>', 'Server'],
           [
@@ -1426,8 +1387,7 @@ describe('ReactFlight', () => {
           ],
           ['file:///testing.js', 'Server'],
           ['', 'Server'],
-          [__filename, 'Server'],
-        ],
+        ]),
       });
     } else {
       expect(errors.map(getErrorForJestMatcher)).toEqual([
@@ -2822,8 +2782,8 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: gate(flags => flags.enableAsyncDebugInfo) ? 22 : 20},
@@ -2840,11 +2800,10 @@ describe('ReactFlight', () => {
             ]
           : undefined,
       );
-      const result = await promise;
 
       const thirdPartyChildren = await result.props.children[1];
       // We expect the debug info to be transferred from the inner stream to the outer.
-      expect(getDebugInfo(thirdPartyChildren[0])).toEqual(
+      expect(getDebugInfo(await thirdPartyChildren[0])).toEqual(
         __DEV__
           ? [
               {time: gate(flags => flags.enableAsyncDebugInfo) ? 54 : 22}, // Clamped to the start
@@ -2947,8 +2906,8 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: 16},
@@ -2961,17 +2920,10 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
-              {
-                time: 16,
-              },
-              {
-                time: 16,
-              },
               {time: 31},
             ]
           : undefined,
       );
-      const result = await promise;
       const thirdPartyFragment = await result.props.children;
       expect(getDebugInfo(thirdPartyFragment)).toEqual(
         __DEV__
@@ -2986,15 +2938,7 @@ describe('ReactFlight', () => {
                   children: {},
                 },
               },
-              {
-                time: 33,
-              },
-              {
-                time: 33,
-              },
-              {
-                time: 33,
-              },
+              {time: 33},
             ]
           : undefined,
       );
@@ -3050,8 +2994,8 @@ describe('ReactFlight', () => {
     );
 
     await act(async () => {
-      const promise = ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(promise)).toEqual(
+      const result = await ReactNoopFlightClient.read(transport);
+      expect(getDebugInfo(result)).toEqual(
         __DEV__
           ? [
               {time: 16},
@@ -3077,7 +3021,6 @@ describe('ReactFlight', () => {
             ]
           : undefined,
       );
-      const result = await promise;
       ReactNoop.render(result);
     });
 
@@ -3927,15 +3870,6 @@ describe('ReactFlight', () => {
           },
           {
             time: 13,
-          },
-          {
-            time: 14,
-          },
-          {
-            time: 15,
-          },
-          {
-            time: 16,
           },
         ]);
       } else {

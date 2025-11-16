@@ -63,11 +63,7 @@ function printRects(rects: SuspenseNode['rects']): string {
 }
 
 function printSuspense(suspense: SuspenseNode): string {
-  let name = '';
-  if (suspense.name !== null) {
-    name = ` name="${suspense.name}"`;
-  }
-
+  const name = ` name="${suspense.name || 'Unknown'}"`;
   const printedRects = printRects(suspense.rects);
 
   return `<Suspense${name}${printedRects}>`;

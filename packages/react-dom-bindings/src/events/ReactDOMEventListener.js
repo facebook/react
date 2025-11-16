@@ -341,7 +341,6 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'pointerup':
     case 'ratechange':
     case 'reset':
-    case 'resize':
     case 'seeked':
     case 'submit':
     case 'toggle':
@@ -380,6 +379,7 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'pointermove':
     case 'pointerout':
     case 'pointerover':
+    case 'resize':
     case 'scroll':
     case 'touchmove':
     case 'wheel':

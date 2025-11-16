@@ -25,7 +25,6 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
 import {
   getFragmentParentHostFiber,
-  getInstanceFromHostFiber,
   traverseFragmentInstance,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
@@ -41,6 +40,7 @@ import {
   type PublicTextInstance,
   type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {enableFragmentRefsInstanceHandles} from 'shared/ReactFeatureFlags';
 
 const {
   createNode,
@@ -120,6 +120,9 @@ export type TextInstance = {
 };
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
+type PublicInstanceWithFragmentHandles = PublicInstance & {
+  unstable_reactFragments?: Set<FragmentInstanceType>,
+};
 export type Container = {
   containerTag: number,
   publicInstance: PublicRootInstance | null,
@@ -303,6 +306,13 @@ export function getPublicInstance(instance: Instance): null | PublicInstance {
     return instance.canonical.publicInstance;
   }
 
+  // Handle root containers
+  if (instance.containerInfo != null) {
+    if (instance.containerInfo.publicInstance != null) {
+      return instance.containerInfo.publicInstance;
+    }
+  }
+
   // For compatibility with the legacy renderer, in case it's used with Fabric
   // in the same app.
   // $FlowExpectedError[prop-missing]
@@ -347,9 +357,8 @@ export function getPublicInstanceFromInternalInstanceHandle(
 }
 
 function getPublicInstanceFromHostFiber(fiber: Fiber): PublicInstance {
-  const instance = getInstanceFromHostFiber<Instance>(fiber);
-  const publicInstance = getPublicInstance(instance);
-  if (publicInstance == null) {
+  const publicInstance = getPublicInstance(fiber.stateNode);
+  if (publicInstance === null) {
     throw new Error('Expected to find a host node. This is a bug in React.');
   }
   return publicInstance;
@@ -602,17 +611,35 @@ export function preloadInstance(
   return true;
 }
 
-export function startSuspendingCommit(): void {}
+export opaque type SuspendedState = null;
+
+export function startSuspendingCommit(): SuspendedState {
+  return null;
+}
 
 export function suspendInstance(
+  state: SuspendedState,
   instance: Instance,
   type: Type,
   props: Props,
 ): void {}
 
-export function suspendOnActiveViewTransition(container: Container): void {}
+export function suspendOnActiveViewTransition(
+  state: SuspendedState,
+  container: Container,
+): void {}
 
-export function waitForCommitToBeReady(): null {
+export function waitForCommitToBeReady(
+  state: SuspendedState,
+  timeoutOffset: number,
+): null {
+  return null;
+}
+
+export function getSuspendedCommitReason(
+  state: SuspendedState,
+  rootContainer: Container,
+): null | string {
   return null;
 }
 
@@ -622,6 +649,10 @@ export type FragmentInstanceType = {
   observeUsing: (observer: IntersectionObserver) => void,
   unobserveUsing: (observer: IntersectionObserver) => void,
   compareDocumentPosition: (otherNode: PublicInstance) => number,
+  getRootNode(getRootNodeOptions?: {
+    composed: boolean,
+  }): Node | FragmentInstanceType,
+  getClientRects: () => Array<DOMRect>,
 };
 
 function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
@@ -680,11 +711,11 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   if (parentHostFiber === null) {
     return Node.DOCUMENT_POSITION_DISCONNECTED;
   }
-  const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
   const children: Array<Fiber> = [];
   traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
   if (children.length === 0) {
-    return compareDocumentPositionForEmptyFragment(
+    const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
+    return compareDocumentPositionForEmptyFragment<PublicInstance>(
       this._fragmentFiber,
       parentHostInstance,
       otherNode,
@@ -731,10 +762,81 @@ function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
   return false;
 }
 
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getRootNode = function (
+  this: FragmentInstanceType,
+  getRootNodeOptions?: {composed: boolean},
+): Node | FragmentInstanceType {
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return this;
+  }
+  const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
+  // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
+  const rootNode = (parentHostInstance.getRootNode(getRootNodeOptions): Node);
+  return rootNode;
+};
+
+// $FlowFixMe[prop-missing]
+FragmentInstance.prototype.getClientRects = function (
+  this: FragmentInstanceType,
+): Array<DOMRect> {
+  const rects: Array<DOMRect> = [];
+  traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
+  return rects;
+};
+function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
+  const instance = getPublicInstanceFromHostFiber(child);
+
+  // getBoundingClientRect is available on Fabric instances while getClientRects is not.
+  // This should work as a substitute in this case because the only equivalent of a multi-rect
+  // element in RN would be a nested Text component.
+  // Since we only use top-level nodes here, we can assume that getBoundingClientRect is sufficient.
+  // $FlowFixMe[method-unbinding]
+  // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
+  rects.push(instance.getBoundingClientRect());
+  return false;
+}
+
+function addFragmentHandleToFiber(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+): boolean {
+  if (enableFragmentRefsInstanceHandles) {
+    const instance = ((getPublicInstanceFromHostFiber(
+      child,
+    ): any): PublicInstanceWithFragmentHandles);
+    if (instance != null) {
+      addFragmentHandleToInstance(instance, fragmentInstance);
+    }
+  }
+  return false;
+}
+
+function addFragmentHandleToInstance(
+  instance: PublicInstanceWithFragmentHandles,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  if (enableFragmentRefsInstanceHandles) {
+    if (instance.unstable_reactFragments == null) {
+      instance.unstable_reactFragments = new Set();
+    }
+    instance.unstable_reactFragments.add(fragmentInstance);
+  }
+}
+
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
-  return new (FragmentInstance: any)(fragmentFiber);
+  const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
+  if (enableFragmentRefsInstanceHandles) {
+    traverseFragmentInstance(
+      fragmentFiber,
+      addFragmentHandleToFiber,
+      fragmentInstance,
+    );
+  }
+  return fragmentInstance;
 }
 
 export function updateFragmentInstanceFiber(
@@ -758,13 +860,26 @@ export function commitNewChildToFragmentInstance(
       observer.observe(publicInstance);
     });
   }
+  if (enableFragmentRefsInstanceHandles) {
+    addFragmentHandleToInstance(
+      ((publicInstance: any): PublicInstanceWithFragmentHandles),
+      fragmentInstance,
+    );
+  }
 }
 
 export function deleteChildFromFragmentInstance(
-  child: Instance,
+  childInstance: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  // Noop
+  const publicInstance = ((getPublicInstance(
+    childInstance,
+  ): any): PublicInstanceWithFragmentHandles);
+  if (enableFragmentRefsInstanceHandles) {
+    if (publicInstance.unstable_reactFragments != null) {
+      publicInstance.unstable_reactFragments.delete(fragmentInstance);
+    }
+  }
 }
 
 export const NotPendingTransition: TransitionStatus = null;

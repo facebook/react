@@ -34,7 +34,6 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {cache, cacheSignal} from './ReactCacheClient';
-import {postpone} from './ReactPostpone';
 import {
   getCacheForType,
   useCallback,
@@ -84,11 +83,10 @@ export {
   memo,
   cache,
   cacheSignal,
-  postpone as unstable_postpone,
   useCallback,
   useContext,
   useEffect,
-  useEffectEvent as experimental_useEffectEvent,
+  useEffectEvent,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
@@ -116,7 +114,7 @@ export {
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  REACT_ACTIVITY_TYPE as unstable_Activity,
+  REACT_ACTIVITY_TYPE as Activity,
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
   use,
@@ -125,8 +123,8 @@ export {
   // enableTransitionTracing
   REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
   // enableViewTransition
-  REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
-  addTransitionType as unstable_addTransitionType,
+  REACT_VIEW_TRANSITION_TYPE as ViewTransition,
+  addTransitionType as addTransitionType,
   // enableGestureTransition
   startGestureTransition as unstable_startGestureTransition,
   // DEV-only

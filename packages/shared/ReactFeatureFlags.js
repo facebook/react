@@ -80,11 +80,9 @@ export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
 
-export const enablePostpone = __EXPERIMENTAL__;
+export const enableHalt: boolean = true;
 
-export const enableHalt = __EXPERIMENTAL__;
-
-export const enableViewTransition = __EXPERIMENTAL__;
+export const enableViewTransition: boolean = true;
 
 export const enableGestureTransition = __EXPERIMENTAL__;
 
@@ -118,7 +116,7 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache: boolean = false;
 
-export const enableUseEffectEventHook = __EXPERIMENTAL__;
+export const enableUseEffectEventHook: boolean = true;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
@@ -128,12 +126,6 @@ export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 export const alwaysThrottleRetries: boolean = true;
 
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
-
-/**
- * Enables a new Fiber flag used in persisted mode to reduce the number
- * of cloned host components.
- */
-export const enablePersistedModeClonedFlag: boolean = false;
 
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
@@ -151,8 +143,11 @@ export const transitionLaneExpirationMs = 5000;
  */
 export const enableInfiniteRenderLoopDetection: boolean = false;
 
-export const enableFragmentRefs = __EXPERIMENTAL__;
-export const enableFragmentRefsScrollIntoView = __EXPERIMENTAL__;
+export const enableFragmentRefs: boolean = true;
+export const enableFragmentRefsScrollIntoView: boolean = true;
+export const enableFragmentRefsInstanceHandles: boolean = false;
+
+export const enableInternalInstanceMap: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -172,7 +167,7 @@ export const renameElementSymbol: boolean = true;
 /**
  * Enables a fix to run insertion effect cleanup on hidden subtrees.
  */
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = false;
+export const enableHiddenSubtreeInsertionEffectCleanup: boolean = true;
 
 /**
  * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
@@ -235,7 +230,12 @@ export const enableProfilerTimer = __PROFILE__;
 // Component rendering tracks to show up in the Performance tab.
 // This flag will be used for both Server Component and Client Component tracks.
 // All calls should also be gated on enableProfilerTimer.
-export const enableComponentPerformanceTrack = __EXPERIMENTAL__;
+export const enableComponentPerformanceTrack: boolean = true;
+
+// Enables annotating of React performance track events with `performanceIssue`
+// metadata, to more prominently highlight performance issues to users
+// (initially, an experimental feature in React Native).
+export const enablePerformanceIssueReporting: boolean = false;
 
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 // for an experimental timeline tool.

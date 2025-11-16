@@ -6,7 +6,7 @@
  */
 
 import * as t from '@babel/types';
-import {z} from 'zod';
+import {z} from 'zod/v4';
 import {
   CompilerDiagnostic,
   CompilerError,
@@ -20,7 +20,7 @@ import {
   tryParseExternalFunction,
 } from '../HIR/Environment';
 import {hasOwnProperty} from '../Utils/utils';
-import {fromZodError} from 'zod-validation-error';
+import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerPipelineValue} from './Pipeline';
 
 const PanicThresholdOptionsSchema = z.enum([
@@ -51,8 +51,8 @@ const CustomOptOutDirectiveSchema = z
   .default(null);
 type CustomOptOutDirective = z.infer<typeof CustomOptOutDirectiveSchema>;
 
-export type PluginOptions = {
-  environment: EnvironmentConfig;
+export type PluginOptions = Partial<{
+  environment: Partial<EnvironmentConfig>;
 
   logger: Logger | null;
 
@@ -166,7 +166,11 @@ export type PluginOptions = {
    * a userspace approximation of runtime APIs.
    */
   target: CompilerReactTarget;
-};
+}>;
+
+export type ParsedPluginOptions = Required<
+  Omit<PluginOptions, 'environment'>
+> & {environment: EnvironmentConfig};
 
 const CompilerReactTargetSchema = z.union([
   z.literal('17'),
@@ -282,7 +286,7 @@ export type Logger = {
   debugLogIRs?: (value: CompilerPipelineValue) => void;
 };
 
-export const defaultOptions: PluginOptions = {
+export const defaultOptions: ParsedPluginOptions = {
   compilationMode: 'infer',
   panicThreshold: 'none',
   environment: parseEnvironmentConfig({}).unwrap(),
@@ -299,9 +303,9 @@ export const defaultOptions: PluginOptions = {
   enableReanimatedCheck: true,
   customOptOutDirectives: null,
   target: '19',
-} as const;
+};
 
-export function parsePluginOptions(obj: unknown): PluginOptions {
+export function parsePluginOptions(obj: unknown): ParsedPluginOptions {
   if (obj == null || typeof obj !== 'object') {
     return defaultOptions;
   }

@@ -24,6 +24,35 @@ describe('Store', () => {
   let store;
   let withErrorsOrWarningsIgnored;
 
+  function readValue(promise) {
+    if (typeof React.use === 'function') {
+      return React.use(promise);
+    }
+
+    // Support for React < 19.0
+    switch (promise.status) {
+      case 'fulfilled':
+        return promise.value;
+      case 'rejected':
+        throw promise.reason;
+      case 'pending':
+        throw promise;
+      default:
+        promise.status = 'pending';
+        promise.then(
+          value => {
+            promise.status = 'fulfilled';
+            promise.value = value;
+          },
+          reason => {
+            promise.status = 'rejected';
+            promise.reason = reason;
+          },
+        );
+        throw promise;
+    }
+  }
+
   beforeAll(() => {
     // JSDDOM doesn't implement getClientRects so we're just faking one for testing purposes
     Element.prototype.getClientRects = function (this: Element) {
@@ -107,11 +136,7 @@ describe('Store', () => {
     let Dynamic = null;
     const Owner = () => {
       Dynamic = <Child />;
-      if (React.use) {
-        React.use(promise);
-      } else {
-        throw promise;
-      }
+      readValue(promise);
     };
     const Parent = () => {
       return Dynamic;
@@ -462,12 +487,9 @@ describe('Store', () => {
     // @reactVersion >= 18.0
     it('should display Suspense nodes properly in various states', async () => {
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const SuspendingComponent = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
       const Component = () => {
         return <div>Hello</div>;
@@ -514,12 +536,9 @@ describe('Store', () => {
     it('should support nested Suspense nodes', async () => {
       const Component = () => null;
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const Never = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
 
       const Wrapper = ({
@@ -819,7 +838,7 @@ describe('Store', () => {
             <Suspense name="two" rects={null}>
             <Suspense name="three" rects={null}>
       `);
-      await act(() =>
+      await actAsync(() =>
         agent.overrideSuspense({
           id: store.getElementIDAtIndex(2),
           rendererID,
@@ -955,12 +974,8 @@ describe('Store', () => {
             <Suspense name="three" rects={[{x:1,y:2,width:5,height:1}]}>
       `);
 
-      const rendererID = getRendererID();
-      const rootID = store.getRootIDForElement(store.getElementIDAtIndex(0));
       await actAsync(() => {
         agent.overrideSuspenseMilestone({
-          rendererID,
-          rootID,
           suspendedSet: [
             store.getElementIDAtIndex(4),
             store.getElementIDAtIndex(8),
@@ -990,8 +1005,6 @@ describe('Store', () => {
 
       await actAsync(() => {
         agent.overrideSuspenseMilestone({
-          rendererID,
-          rootID,
           suspendedSet: [],
         });
       });
@@ -1019,12 +1032,9 @@ describe('Store', () => {
 
     it('should display a partially rendered SuspenseList', async () => {
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const SuspendingComponent = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
       const Component = () => {
         return <div>Hello</div>;
@@ -1379,12 +1389,9 @@ describe('Store', () => {
     // @reactVersion >= 18.0
     it('should display Suspense nodes properly in various states', async () => {
       const Loading = () => <div>Loading...</div>;
+      const never = new Promise(() => {});
       const SuspendingComponent = () => {
-        if (React.use) {
-          React.use(new Promise(() => {}));
-        } else {
-          throw new Promise(() => {});
-        }
+        readValue(never);
       };
       const Component = () => {
         return <div>Hello</div>;
@@ -1539,7 +1546,7 @@ describe('Store', () => {
           ▸ <Wrapper>
       `);
 
-      const deepestedNodeID = agent.getIDForHostInstance(ref.current);
+      const deepestedNodeID = agent.getIDForHostInstance(ref.current).id;
 
       await act(() => store.toggleIsCollapsed(deepestedNodeID, false));
       expect(store).toMatchInlineSnapshot(`
@@ -2081,6 +2088,8 @@ describe('Store', () => {
         [root]
           ▾ <App>
               <Suspense>
+        [suspense-root]  rects={null}
+          <Suspense name="App" rects={null}>
       `);
 
       // Render again to unmount it before it finishes loading
@@ -2489,7 +2498,7 @@ describe('Store', () => {
       withErrorsOrWarningsIgnored(['test-only:'], async () => {
         await act(() => render(<React.Fragment />));
       });
-      expect(store).toMatchInlineSnapshot(`[root]`);
+      expect(store).toMatchInlineSnapshot(``);
       expect(store.componentWithErrorCount).toBe(0);
       expect(store.componentWithWarningCount).toBe(0);
     });
@@ -2813,7 +2822,7 @@ describe('Store', () => {
       `);
   });
 
-  // @reactVersion >= 18.0
+  // @reactVersion >= 17.0
   it('can reconcile Suspense in fallback positions', async () => {
     let resolveFallback;
     const fallbackPromise = new Promise(resolve => {
@@ -2826,7 +2835,7 @@ describe('Store', () => {
 
     function Component({children, promise}) {
       if (promise) {
-        React.use(promise);
+        readValue(promise);
       }
       return <div>{children}</div>;
     }
@@ -2892,7 +2901,7 @@ describe('Store', () => {
     `);
   });
 
-  // @reactVersion >= 18.0
+  // @reactVersion >= 17.0
   it('can reconcile resuspended Suspense with Suspense in fallback positions', async () => {
     let resolveHeadFallback;
     let resolveHeadContent;
@@ -2901,7 +2910,7 @@ describe('Store', () => {
 
     function Component({children, promise}) {
       if (promise) {
-        React.use(promise);
+        readValue(promise);
       }
       return <div>{children}</div>;
     }
@@ -3079,10 +3088,310 @@ describe('Store', () => {
         <Suspense name="head-fallback" rects={[{x:1,y:2,width:10,height:1}]}>
         <Suspense name="main" rects={[{x:1,y:2,width:4,height:1}]}>
     `);
+
+    await actAsync(() => render(null));
+
+    expect(store).toMatchInlineSnapshot(``);
   });
 
   it('should handle an empty root', async () => {
     await actAsync(() => render(null));
+    expect(store).toMatchInlineSnapshot(``);
+
+    await actAsync(() => render(<span />));
     expect(store).toMatchInlineSnapshot(`[root]`);
+  });
+
+  // @reactVersion >= 19.0
+  it('should reconcile promise-as-a-child', async () => {
+    function Component({children}) {
+      return <div>{children}</div>;
+    }
+
+    await actAsync(() =>
+      render(
+        <React.Suspense>
+          {Promise.resolve(<Component key="A">A</Component>)}
+        </React.Suspense>,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <Component key="A">
+      [suspense-root]  rects={[{x:1,y:2,width:1,height:1}]}
+        <Suspense name="Unknown" rects={[{x:1,y:2,width:1,height:1}]}>
+    `);
+
+    await actAsync(() =>
+      render(
+        <React.Suspense>
+          {Promise.resolve(<Component key="not-A">not A</Component>)}
+        </React.Suspense>,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense>
+            <Component key="not-A">
+      [suspense-root]  rects={[{x:1,y:2,width:5,height:1}]}
+        <Suspense name="Unknown" rects={[{x:1,y:2,width:5,height:1}]}>
+    `);
+
+    await actAsync(() => render(null));
+    expect(store).toMatchInlineSnapshot(``);
+  });
+
+  // @reactVersion >= 19
+  it('should keep suspended boundaries in the Suspense tree but not hidden Activity', async () => {
+    const Activity = React.Activity || React.unstable_Activity;
+
+    const never = new Promise(() => {});
+    function Never() {
+      readValue(never);
+      return null;
+    }
+    function Component({children}) {
+      return <div>{children}</div>;
+    }
+
+    function App({hidden}) {
+      return (
+        <>
+          <Activity mode={hidden ? 'hidden' : 'visible'}>
+            <React.Suspense name="inside-activity">
+              <Component key="inside-activity">inside Activity</Component>
+            </React.Suspense>
+          </Activity>
+          <React.Suspense name="outer-suspense">
+            <React.Suspense name="inner-suspense">
+              <Component key="inside-suspense">inside Suspense</Component>
+            </React.Suspense>
+            {hidden ? <Never /> : null}
+          </React.Suspense>
+        </>
+      );
+    }
+
+    await actAsync(() => {
+      render(<App hidden={true} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Activity>
+            <Suspense name="outer-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}]}
+        <Suspense name="outer-suspense" rects={null}>
+    `);
+
+    // mount as visible
+    await actAsync(() => {
+      render(null);
+    });
+    await actAsync(() => {
+      render(<App hidden={false} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Activity>
+            ▾ <Suspense name="inside-activity">
+                <Component key="inside-activity">
+          ▾ <Suspense name="outer-suspense">
+            ▾ <Suspense name="inner-suspense">
+                <Component key="inside-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="inside-activity" rects={[{x:1,y:2,width:15,height:1}]}>
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      render(<App hidden={true} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Activity>
+            <Suspense name="outer-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      render(<App hidden={false} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Activity>
+            ▾ <Suspense name="inside-activity">
+                <Component key="inside-activity">
+          ▾ <Suspense name="outer-suspense">
+            ▾ <Suspense name="inner-suspense">
+                <Component key="inside-suspense">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:15,height:1}]}
+        <Suspense name="inside-activity" rects={[{x:1,y:2,width:15,height:1}]}>
+        <Suspense name="outer-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+          <Suspense name="inner-suspense" rects={[{x:1,y:2,width:15,height:1}]}>
+    `);
+  });
+
+  // @reactVersion >= 19.0
+  it('guesses a Suspense name based on the owner', async () => {
+    let resolve;
+    const promise = new Promise(_resolve => {
+      resolve = _resolve;
+    });
+    function Inner() {
+      return (
+        <React.Suspense fallback={<p>Loading inner</p>}>
+          <p>{promise}</p>
+        </React.Suspense>
+      );
+    }
+
+    function Outer({children}) {
+      return (
+        <React.Suspense fallback={<p>Loading outer</p>}>
+          <p>{promise}</p>
+          {children}
+        </React.Suspense>
+      );
+    }
+
+    await actAsync(() => {
+      render(
+        <Outer>
+          <Inner />
+        </Outer>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Outer>
+            <Suspense>
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}]}
+        <Suspense name="Outer" rects={null}>
+    `);
+
+    await actAsync(() => {
+      resolve('loaded');
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Outer>
+          ▾ <Suspense>
+            ▾ <Inner>
+                <Suspense>
+      [suspense-root]  rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}
+        <Suspense name="Outer" rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}>
+          <Suspense name="Inner" rects={[{x:1,y:2,width:6,height:1}]}>
+    `);
+  });
+
+  // @reactVersion >= 19.0
+  it('measures rects when reconnecting', async () => {
+    function Component({children, promise}) {
+      let content = '';
+      if (promise) {
+        const value = readValue(promise);
+        if (typeof value === 'string') {
+          content += value;
+        }
+      }
+      return (
+        <div>
+          {content}
+          {children}
+        </div>
+      );
+    }
+
+    function App({outer, inner}) {
+      return (
+        <React.Suspense
+          name="outer"
+          fallback={<Component key="outer-fallback">loading outer</Component>}>
+          <Component key="outer-content" promise={outer}>
+            outer content
+          </Component>
+          <React.Suspense
+            name="inner"
+            fallback={
+              <Component key="inner-fallback">loading inner</Component>
+            }>
+            <Component key="inner-content" promise={inner}>
+              inner content
+            </Component>
+          </React.Suspense>
+        </React.Suspense>
+      );
+    }
+
+    await actAsync(() => {
+      render(<App outer={null} inner={null} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense name="outer">
+              <Component key="outer-content">
+            ▾ <Suspense name="inner">
+                <Component key="inner-content">
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}
+        <Suspense name="outer" rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:13,height:1}]}>
+    `);
+
+    let outerResolve;
+    const outerPromise = new Promise(resolve => {
+      outerResolve = resolve;
+    });
+
+    let innerResolve;
+    const innerPromise = new Promise(resolve => {
+      innerResolve = resolve;
+    });
+    await actAsync(() => {
+      render(<App outer={outerPromise} inner={innerPromise} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense name="outer">
+              <Component key="outer-fallback">
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}
+        <Suspense name="outer" rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:13,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      outerResolve('..');
+      innerResolve('.');
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense name="outer">
+              <Component key="outer-content">
+            ▾ <Suspense name="inner">
+                <Component key="inner-content">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:14,height:1}]}
+        <Suspense name="outer" rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:14,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:14,height:1}]}>
+    `);
   });
 });

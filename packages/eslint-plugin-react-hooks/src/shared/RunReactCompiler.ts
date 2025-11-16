@@ -6,31 +6,27 @@
  */
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
-import {transformFromAstSync, traverse} from '@babel/core';
+import {transformFromAstSync} from '@babel/core';
 import {parse as babelParse} from '@babel/parser';
-import {Directive, File} from '@babel/types';
-// @ts-expect-error: no types available
-import PluginProposalPrivateMethods from '@babel/plugin-proposal-private-methods';
+import {File} from '@babel/types';
 import BabelPluginReactCompiler, {
   parsePluginOptions,
   validateEnvironmentConfig,
-  OPT_OUT_DIRECTIVES,
   type PluginOptions,
   Logger,
   LoggerEvent,
 } from 'babel-plugin-react-compiler';
 import type {SourceCode} from 'eslint';
-import {SourceLocation} from 'estree';
 import * as HermesParser from 'hermes-parser';
 import {isDeepStrictEqual} from 'util';
 import type {ParseResult} from '@babel/parser';
 
-const COMPILER_OPTIONS: Partial<PluginOptions> = {
+const COMPILER_OPTIONS: PluginOptions = {
   noEmit: true,
   panicThreshold: 'none',
   // Don't emit errors on Flow suppressions--Flow already gave a signal
   flowSuppressions: false,
-  environment: validateEnvironmentConfig({
+  environment: {
     validateRefAccessDuringRender: true,
     validateNoSetStateInRender: true,
     validateNoSetStateInEffects: true,
@@ -43,20 +39,14 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
     validateNoCapitalizedCalls: [],
     validateHooksUsage: true,
     validateNoDerivedComputationsInEffects: true,
-  }),
+  },
 };
 
-export type UnusedOptOutDirective = {
-  loc: SourceLocation;
-  range: [number, number];
-  directive: string;
-};
 export type RunCacheEntry = {
   sourceCode: string;
   filename: string;
   userOpts: PluginOptions;
   flowSuppressions: Array<{line: number; code: string}>;
-  unusedOptOutDirectives: Array<UnusedOptOutDirective>;
   events: Array<LoggerEvent>;
 };
 
@@ -88,32 +78,13 @@ function getFlowSuppressions(
   return results;
 }
 
-function filterUnusedOptOutDirectives(
-  directives: ReadonlyArray<Directive>,
-): Array<UnusedOptOutDirective> {
-  const results: Array<UnusedOptOutDirective> = [];
-  for (const directive of directives) {
-    if (
-      OPT_OUT_DIRECTIVES.has(directive.value.value) &&
-      directive.loc != null
-    ) {
-      results.push({
-        loc: directive.loc,
-        directive: directive.value.value,
-        range: [directive.start!, directive.end!],
-      });
-    }
-  }
-  return results;
-}
-
 function runReactCompilerImpl({
   sourceCode,
   filename,
   userOpts,
 }: RunParams): RunCacheEntry {
   // Compat with older versions of eslint
-  const options: PluginOptions = parsePluginOptions({
+  const options = parsePluginOptions({
     ...COMPILER_OPTIONS,
     ...userOpts,
     environment: {
@@ -126,7 +97,6 @@ function runReactCompilerImpl({
     filename,
     userOpts,
     flowSuppressions: [],
-    unusedOptOutDirectives: [],
     events: [],
   };
   const userLogger: Logger | null = options.logger;
@@ -144,6 +114,7 @@ function runReactCompilerImpl({
   }
 
   let babelAST: ParseResult<File> | null = null;
+
   if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
     try {
       babelAST = babelParse(sourceCode.text, {
@@ -174,36 +145,11 @@ function runReactCompilerImpl({
         filename,
         highlightCode: false,
         retainLines: true,
-        plugins: [
-          [PluginProposalPrivateMethods, {loose: true}],
-          [BabelPluginReactCompiler, options],
-        ],
+        plugins: [[BabelPluginReactCompiler, options]],
         sourceType: 'module',
         configFile: false,
         babelrc: false,
       });
-
-      if (results.events.filter(e => e.kind === 'CompileError').length === 0) {
-        traverse(babelAST, {
-          FunctionDeclaration(path) {
-            results.unusedOptOutDirectives.push(
-              ...filterUnusedOptOutDirectives(path.node.body.directives),
-            );
-          },
-          ArrowFunctionExpression(path) {
-            if (path.node.body.type === 'BlockStatement') {
-              results.unusedOptOutDirectives.push(
-                ...filterUnusedOptOutDirectives(path.node.body.directives),
-              );
-            }
-          },
-          FunctionExpression(path) {
-            results.unusedOptOutDirectives.push(
-              ...filterUnusedOptOutDirectives(path.node.body.directives),
-            );
-          },
-        });
-      }
     } catch (err) {
       /* errors handled by injected logger */
     }

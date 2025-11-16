@@ -16,10 +16,12 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
+  SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from 'react-devtools-shared/src/constants';
 import {
   parseElementDisplayNameFromBackend,
@@ -208,7 +210,6 @@ function updateTree(
           i++; // Profiling flag
           i++; // supportsStrictMode flag
           i++; // hasOwnerMetadata flag
-          i++; // supportsTogglingSuspense flag
 
           if (__DEBUG__) {
             debug('Add', `new root fiber ${id}`);
@@ -378,7 +379,8 @@ function updateTree(
         const fiberID = operations[i + 1];
         const parentID = operations[i + 2];
         const nameStringID = operations[i + 3];
-        const numRects = operations[i + 4];
+        const isSuspended = operations[i + 4];
+        const numRects = operations[i + 5];
         const name = stringTable[nameStringID];
 
         if (__DEBUG__) {
@@ -388,16 +390,16 @@ function updateTree(
           } else {
             rects =
               '[' +
-              operations.slice(i + 5, i + 5 + numRects * 4).join(',') +
+              operations.slice(i + 6, i + 6 + numRects * 4).join(',') +
               ']';
           }
           debug(
             'Add suspense',
-            `node ${fiberID} (name=${JSON.stringify(name)}, rects={${rects}}) under ${parentID}`,
+            `node ${fiberID} (name=${JSON.stringify(name)}, rects={${rects}}) under ${parentID} suspended ${isSuspended}`,
           );
         }
 
-        i += 5 + (numRects === -1 ? 0 : numRects * 4);
+        i += 6 + (numRects === -1 ? 0 : numRects * 4);
         break;
       }
 
@@ -449,6 +451,42 @@ function updateTree(
 
         i += 3 + (numRects === -1 ? 0 : numRects * 4);
 
+        break;
+      }
+
+      case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
+        i++;
+        const changeLength = ((operations[i++]: any): number);
+
+        for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
+          const suspenseNodeId = operations[i++];
+          const hasUniqueSuspenders = operations[i++] === 1;
+          const endTime = operations[i++] / 1000;
+          const isSuspended = operations[i++] === 1;
+          const environmentNamesLength = operations[i++];
+          i += environmentNamesLength;
+          if (__DEBUG__) {
+            debug(
+              'Suspender changes',
+              `Suspense node ${suspenseNodeId} unique suspenders set to ${String(hasUniqueSuspenders)} ending at ${String(endTime)} is suspended set to ${String(isSuspended)} with ${String(environmentNamesLength)} environments`,
+            );
+          }
+        }
+
+        break;
+      }
+
+      case TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE: {
+        i++;
+        const activitySliceIDChange = operations[i++];
+        if (__DEBUG__) {
+          debug(
+            'Applied activity slice change',
+            activitySliceIDChange === 0
+              ? 'Reset applied activity slice'
+              : `Changed to activity slice ID ${activitySliceIDChange}`,
+          );
+        }
         break;
       }
 

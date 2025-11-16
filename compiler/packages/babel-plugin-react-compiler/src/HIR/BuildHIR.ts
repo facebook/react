@@ -1568,20 +1568,6 @@ function lowerObjectPropertyKey(
       name: key.node.value,
     };
   } else if (property.node.computed && key.isExpression()) {
-    if (!key.isIdentifier() && !key.isMemberExpression()) {
-      /*
-       * NOTE: allowing complex key expressions can trigger a bug where a mutation is made conditional
-       * see fixture
-       * error.object-expression-computed-key-modified-during-after-construction.js
-       */
-      builder.errors.push({
-        reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
-        category: ErrorCategory.Todo,
-        loc: key.node.loc ?? null,
-        suggestions: null,
-      });
-      return null;
-    }
     const place = lowerExpressionToTemporary(builder, key);
     return {
       kind: 'computed',
@@ -3080,6 +3066,12 @@ function isReorderableExpression(
         // global, definitely safe
         return true;
       }
+    }
+    case 'TSInstantiationExpression': {
+      const innerExpr = (expr as NodePath<t.TSInstantiationExpression>).get(
+        'expression',
+      ) as NodePath<t.Expression>;
+      return isReorderableExpression(builder, innerExpr, allowLocalIdentifiers);
     }
     case 'RegExpLiteral':
     case 'StringLiteral':

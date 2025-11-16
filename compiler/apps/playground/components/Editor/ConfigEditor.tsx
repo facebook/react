@@ -8,84 +8,87 @@
 import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
 import type {editor} from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-import React, {useState, useCallback} from 'react';
+import React, {
+  useState,
+  useRef,
+  unstable_ViewTransition as ViewTransition,
+  unstable_addTransitionType as addTransitionType,
+  startTransition,
+  Activity,
+} from 'react';
 import {Resizable} from 're-resizable';
-import {useSnackbar} from 'notistack';
 import {useStore, useStoreDispatch} from '../StoreContext';
-import {monacoOptions} from './monacoOptions';
-import {
-  ConfigError,
-  generateOverridePragmaFromConfig,
-  updateSourceWithOverridePragma,
-} from '../../lib/configUtils';
+import {monacoConfigOptions} from './monacoOptions';
+import {IconChevron} from '../Icons/IconChevron';
+import {CONFIG_PANEL_TRANSITION} from '../../lib/transitionTypes';
 
 // @ts-expect-error - webpack asset/source loader handles .d.ts files as strings
 import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
 
 loader.config({monaco});
 
-export default function ConfigEditor(): React.ReactElement {
+export default function ConfigEditor({
+  formattedAppliedConfig,
+}: {
+  formattedAppliedConfig: string;
+}): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <>
+      <Activity mode={isExpanded ? 'visible' : 'hidden'}>
+        <ExpandedEditor
+          onToggle={() => {
+            startTransition(() => {
+              addTransitionType(CONFIG_PANEL_TRANSITION);
+              setIsExpanded(false);
+            });
+          }}
+          formattedAppliedConfig={formattedAppliedConfig}
+        />
+      </Activity>
+      <Activity mode={isExpanded ? 'hidden' : 'visible'}>
+        <CollapsedEditor
+          onToggle={() => {
+            startTransition(() => {
+              addTransitionType(CONFIG_PANEL_TRANSITION);
+              setIsExpanded(true);
+            });
+          }}
+        />
+      </Activity>
+    </>
+  );
+}
+
+function ExpandedEditor({
+  onToggle,
+  formattedAppliedConfig,
+}: {
+  onToggle: (expanded: boolean) => void;
+  formattedAppliedConfig: string;
+}): React.ReactElement {
   const store = useStore();
   const dispatchStore = useStoreDispatch();
-  const {enqueueSnackbar} = useSnackbar();
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const toggleExpanded = useCallback(() => {
-    setIsExpanded(prev => !prev);
-  }, []);
-
-  const handleApplyConfig: () => Promise<void> = async () => {
-    try {
-      const config = store.config || '';
-
-      if (!config.trim()) {
-        enqueueSnackbar(
-          'Config is empty. Please add configuration options first.',
-          {
-            variant: 'warning',
-          },
-        );
-        return;
-      }
-      const newPragma = await generateOverridePragmaFromConfig(config);
-      const updatedSource = updateSourceWithOverridePragma(
-        store.source,
-        newPragma,
-      );
-
-      dispatchStore({
-        type: 'updateFile',
-        payload: {
-          source: updatedSource,
-          config: config,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to apply config:', error);
-
-      if (error instanceof ConfigError && error.message.trim()) {
-        enqueueSnackbar(error.message, {
-          variant: 'error',
-        });
-      } else {
-        enqueueSnackbar('Unexpected error: failed to apply config.', {
-          variant: 'error',
-        });
-      }
-    }
-  };
-
-  const handleChange: (value: string | undefined) => void = value => {
+  const handleChange: (value: string | undefined) => void = (
+    value: string | undefined,
+  ) => {
     if (value === undefined) return;
 
-    // Only update the config
-    dispatchStore({
-      type: 'updateFile',
-      payload: {
-        source: store.source,
-        config: value,
-      },
-    });
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      dispatchStore({
+        type: 'updateConfig',
+        payload: {
+          config: value,
+        },
+      });
+    }, 500); // 500ms debounce delay
   };
 
   const handleMount: (
@@ -109,75 +112,99 @@ export default function ConfigEditor(): React.ReactElement {
       allowSyntheticDefaultImports: true,
       jsx: monaco.languages.typescript.JsxEmit.React,
     });
-
-    const uri = monaco.Uri.parse(`file:///config.ts`);
-    const model = monaco.editor.getModel(uri);
-    if (model) {
-      model.updateOptions({tabSize: 2});
-    }
   };
 
   return (
-    <div className="flex flex-row relative">
-      {isExpanded ? (
-        <>
-          <Resizable
-            className="border-r"
-            minWidth={300}
-            maxWidth={600}
-            defaultSize={{width: 350, height: 'auto'}}
-            enable={{right: true}}>
-            <h2
-              title="Minimize config editor"
-              aria-label="Minimize config editor"
-              onClick={toggleExpanded}
-              className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 font-light text-secondary hover:text-link">
-              - Config Overrides
-            </h2>
-            <div className="h-[calc(100vh_-_3.5rem_-_4rem)]">
+    <ViewTransition
+      enter={{[CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none'}}
+      exit={{[CONFIG_PANEL_TRANSITION]: 'slide-out', default: 'none'}}>
+      <Resizable
+        minWidth={300}
+        maxWidth={600}
+        defaultSize={{width: 350}}
+        enable={{right: true, bottom: false}}>
+        <div className="bg-blue-10 relative h-full flex flex-col !h-[calc(100vh_-_3.5rem)] border border-gray-300">
+          <div
+            className="absolute w-8 h-16 bg-blue-10 rounded-r-full flex items-center justify-center z-[2] cursor-pointer border border-l-0 border-gray-300"
+            title="Minimize config editor"
+            onClick={onToggle}
+            style={{
+              top: '50%',
+              marginTop: '-32px',
+              right: '-32px',
+              borderTopLeftRadius: 0,
+              borderBottomLeftRadius: 0,
+            }}>
+            <IconChevron displayDirection="left" className="text-blue-50" />
+          </div>
+
+          <div className="flex-1 flex flex-col m-2 mb-2">
+            <div className="pb-2">
+              <h2 className="inline-block text-blue-50 py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
+                Config Overrides
+              </h2>
+            </div>
+            <div className="flex-1 border border-gray-300">
               <MonacoEditor
                 path={'config.ts'}
                 language={'typescript'}
                 value={store.config}
                 onMount={handleMount}
                 onChange={handleChange}
+                loading={''}
+                className="monaco-editor-config"
+                options={monacoConfigOptions}
+              />
+            </div>
+          </div>
+          <div className="flex-1 flex flex-col m-2">
+            <div className="pb-2">
+              <h2 className="inline-block text-blue-50 py-1.5 px-1.5 xs:px-3 sm:px-4 text-sm">
+                Applied Configs
+              </h2>
+            </div>
+            <div className="flex-1 border border-gray-300">
+              <MonacoEditor
+                path={'applied-config.js'}
+                language={'javascript'}
+                value={formattedAppliedConfig}
+                loading={''}
+                className="monaco-editor-applied-config"
                 options={{
-                  ...monacoOptions,
-                  lineNumbers: 'off',
-                  folding: false,
-                  renderLineHighlight: 'none',
-                  scrollBeyondLastLine: false,
-                  hideCursorInOverviewRuler: true,
-                  overviewRulerBorder: false,
-                  overviewRulerLanes: 0,
-                  fontSize: 12,
+                  ...monacoConfigOptions,
+                  readOnly: true,
                 }}
               />
             </div>
-          </Resizable>
-          <button
-            onClick={handleApplyConfig}
-            title="Apply config overrides to input"
-            aria-label="Apply config overrides to input"
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full border-2 border-white shadow-lg flex items-center justify-center text-sm font-medium transition-colors duration-150">
-            →
-          </button>
-        </>
-      ) : (
-        <div className="relative items-center h-full px-1 py-6 align-middle border-r border-grey-200">
-          <button
-            title="Expand config editor"
-            aria-label="Expand config editor"
-            style={{
-              transform: 'rotate(90deg) translate(-50%)',
-              whiteSpace: 'nowrap',
-            }}
-            onClick={toggleExpanded}
-            className="flex-grow-0 w-5 transition-colors duration-150 ease-in font-light text-secondary hover:text-link">
-            Config Overrides
-          </button>
+          </div>
         </div>
-      )}
+      </Resizable>
+    </ViewTransition>
+  );
+}
+
+function CollapsedEditor({
+  onToggle,
+}: {
+  onToggle: () => void;
+}): React.ReactElement {
+  return (
+    <div
+      className="w-4 !h-[calc(100vh_-_3.5rem)]"
+      style={{position: 'relative'}}>
+      <div
+        className="absolute w-10 h-16 bg-blue-10 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[2] cursor-pointer border border-gray-300"
+        title="Expand config editor"
+        onClick={onToggle}
+        style={{
+          top: '50%',
+          marginTop: '-32px',
+          left: '-8px',
+          borderTopLeftRadius: 0,
+          borderBottomLeftRadius: 0,
+        }}>
+        <IconChevron displayDirection="right" className="text-blue-50" />
+      </div>
     </div>
   );
 }
