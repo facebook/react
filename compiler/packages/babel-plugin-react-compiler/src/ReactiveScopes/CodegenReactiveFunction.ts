@@ -699,7 +699,9 @@ function codegenReactiveScope(
     outputComments.push(name.name);
     if (!cx.hasDeclared(identifier)) {
       statements.push(
-        t.variableDeclaration('let', [t.variableDeclarator(name)]),
+        t.variableDeclaration('let', [
+          createVariableDeclarator(name, null),
+        ]),
       );
     }
     cacheLoads.push({name, index, value: wrapCacheDep(cx, name)});
@@ -1754,11 +1756,13 @@ function createVariableDeclarator(
    * The variable declarator location is not preserved in HIR, however, we can use the
    * start location of the id and the end location of the init to recreate the
    * exact original variable declarator location.
+   * 
+   * Or if init is null, we likely have a declaration without an initializer, so we can use the id.loc.end as the end location.
    */
-  if (id.loc && init?.loc) {
+  if (id.loc && (init === null || init?.loc)) {
     node.loc = {
       start: id.loc.start,
-      end: init.loc.end,
+      end: init?.loc?.end ?? id.loc.end,
       filename: id.loc.filename,
       identifierName: undefined,
     };
