@@ -339,8 +339,10 @@ function isPromiseAwaitInternal(url: string, functionName: string): boolean {
     case 'Function.resolve':
     case 'Function.all':
     case 'Function.allSettled':
+    case 'Function.any':
     case 'Function.race':
     case 'Function.try':
+    case 'Function.withResolvers':
       return true;
     default:
       return false;
