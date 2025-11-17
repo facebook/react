@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<b519b6e2552b31b80ff139990332f7e5>>
+ * @generated SignedSource<<b46e95ea3b4b4221ae980eaa3dcb99c4>>
  */
 
 'use strict';
@@ -19858,6 +19858,29 @@ function* eachInstructionLValue(instr) {
     }
     yield* eachInstructionValueLValue(instr.value);
 }
+function* eachInstructionLValueWithKind(instr) {
+    switch (instr.value.kind) {
+        case 'DeclareContext':
+        case 'StoreContext':
+        case 'DeclareLocal':
+        case 'StoreLocal': {
+            yield [instr.value.lvalue.place, instr.value.lvalue.kind];
+            break;
+        }
+        case 'Destructure': {
+            const kind = instr.value.lvalue.kind;
+            for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
+                yield [place, kind];
+            }
+            break;
+        }
+        case 'PostfixUpdate':
+        case 'PrefixUpdate': {
+            yield [instr.value.lvalue, InstructionKind.Reassign];
+            break;
+        }
+    }
+}
 function* eachInstructionValueLValue(value) {
     switch (value.kind) {
         case 'DeclareContext':
@@ -38173,33 +38196,11 @@ function codegenInstructionNullable(cx, instr) {
         }
         else {
             lvalue = instr.value.lvalue.pattern;
-            let hasReassign = false;
-            let hasDeclaration = false;
             for (const place of eachPatternOperand(lvalue)) {
                 if (kind !== InstructionKind.Reassign &&
                     place.identifier.name === null) {
                     cx.temp.set(place.identifier.declarationId, null);
                 }
-                const isDeclared = cx.hasDeclared(place.identifier);
-                hasReassign || (hasReassign = isDeclared);
-                hasDeclaration || (hasDeclaration = !isDeclared);
-            }
-            if (hasReassign && hasDeclaration) {
-                CompilerError.invariant(false, {
-                    reason: 'Encountered a destructuring operation where some identifiers are already declared (reassignments) but others are not (declarations)',
-                    description: null,
-                    details: [
-                        {
-                            kind: 'error',
-                            loc: instr.loc,
-                            message: null,
-                        },
-                    ],
-                    suggestions: null,
-                });
-            }
-            else if (hasReassign) {
-                kind = InstructionKind.Reassign;
             }
             value = codegenPlaceToExpression(cx, instr.value.value);
         }
@@ -39403,10 +39404,13 @@ let Visitor$9 = class Visitor extends ReactiveFunctionTransform {
     }
     transformInstruction(instruction, state) {
         this.visitInstruction(instruction, state);
+        let instructionsToProcess = [instruction];
+        let result = { kind: 'keep' };
         if (instruction.value.kind === 'Destructure') {
             const transformed = transformDestructuring(state, instruction, instruction.value);
             if (transformed) {
-                return {
+                instructionsToProcess = transformed;
+                result = {
                     kind: 'replace-many',
                     value: transformed.map(instruction => ({
                         kind: 'instruction',
@@ -39415,7 +39419,14 @@ let Visitor$9 = class Visitor extends ReactiveFunctionTransform {
                 };
             }
         }
-        return { kind: 'keep' };
+        for (const instr of instructionsToProcess) {
+            for (const [place, kind] of eachInstructionLValueWithKind(instr)) {
+                if (kind !== InstructionKind.Reassign) {
+                    state.declared.add(place.identifier.declarationId);
+                }
+            }
+        }
+        return result;
     }
 };
 function transformDestructuring(state, instr, destructure) {
@@ -39426,9 +39437,12 @@ function transformDestructuring(state, instr, destructure) {
         if (isDeclared) {
             reassigned.add(place.identifier.id);
         }
-        hasDeclaration || (hasDeclaration = !isDeclared);
+        else {
+            hasDeclaration = true;
+        }
     }
-    if (reassigned.size === 0 || !hasDeclaration) {
+    if (!hasDeclaration) {
+        destructure.lvalue.kind = InstructionKind.Reassign;
         return null;
     }
     const instructions = [];
