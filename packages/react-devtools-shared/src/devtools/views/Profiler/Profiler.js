@@ -39,6 +39,7 @@ import styles from './Profiler.css';
 
 function Profiler(_: {}) {
   const profilerRef = useRef<HTMLDivElement | null>(null);
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
   const {
     didRecordCommits,
@@ -61,32 +62,30 @@ function Profiler(_: {}) {
   const isLegacyProfilerSelected = selectedTabID !== 'timeline';
 
   // Cmd+E to start/stop profiler recording
+  const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    const correctModifier = isMac ? event.metaKey : event.ctrlKey;
+    if (correctModifier && event.key === 'e') {
+      if (isProfiling) {
+        stopProfiling();
+      } else {
+        startProfiling();
+      }
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+
   useEffect(() => {
     const div = profilerRef.current;
     if (div === null) {
       return;
     }
-
     const ownerWindow = div.ownerDocument.defaultView;
-    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const correctModifier = isMac ? event.metaKey : event.ctrlKey;
-      if (correctModifier && event.key === 'e') {
-        if (isProfiling) {
-          stopProfiling();
-        } else {
-          startProfiling();
-        }
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    };
-
     ownerWindow.addEventListener('keydown', handleKeyDown);
     return () => {
       ownerWindow.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isProfiling, startProfiling, stopProfiling]);
+  }, []);
 
   let view = null;
   if (didRecordCommits || selectedTabID === 'timeline') {
