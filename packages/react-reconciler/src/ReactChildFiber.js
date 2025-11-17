@@ -15,6 +15,7 @@ import type {
   ReactDebugInfo,
   ReactComponentInfo,
   SuspenseListRevealOrder,
+  ReactKey,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
@@ -649,7 +650,7 @@ function createChildReconciler(
     current: Fiber | null,
     fragment: Iterable<React$Node>,
     lanes: Lanes,
-    key: null | string,
+    key: ReactKey,
   ): Fiber {
     if (current === null || current.tag !== Fragment) {
       // Insert

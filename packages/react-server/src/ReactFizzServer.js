@@ -27,6 +27,7 @@ import type {
   SuspenseProps,
   SuspenseListProps,
   SuspenseListRevealOrder,
+  ReactKey,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -3253,7 +3254,7 @@ function retryNode(request: Request, task: Task): void {
       case REACT_ELEMENT_TYPE: {
         const element: any = node;
         const type = element.type;
-        const key = element.key;
+        const key: ReactKey = element.key;
         const props = element.props;
 
         // TODO: We should get the ref off the props object right before using

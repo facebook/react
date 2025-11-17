@@ -65,6 +65,7 @@ import type {
   ReactFunctionLocation,
   ReactErrorInfo,
   ReactErrorInfoDev,
+  ReactKey,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -1641,7 +1642,7 @@ function processServerComponentReturnValue(
 function renderFunctionComponent<Props>(
   request: Request,
   task: Task,
-  key: null | string,
+  key: ReactKey,
   Component: (p: Props, arg: void) => any,
   props: Props,
   validated: number, // DEV-only
@@ -1828,7 +1829,7 @@ function renderFunctionComponent<Props>(
 
 function warnForMissingKey(
   request: Request,
-  key: null | string,
+  key: ReactKey,
   componentDebugInfo: ReactComponentInfo,
   debugTask: null | ConsoleTask,
 ): void {
@@ -2022,7 +2023,7 @@ function renderClientElement(
   request: Request,
   task: Task,
   type: any,
-  key: null | string,
+  key: ReactKey,
   props: any,
   validated: number, // DEV-only
 ): ReactJSONValue {
@@ -2159,7 +2160,7 @@ function renderElement(
   request: Request,
   task: Task,
   type: any,
-  key: null | string,
+  key: ReactKey,
   ref: mixed,
   props: any,
   validated: number, // DEV only
