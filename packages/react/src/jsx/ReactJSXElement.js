@@ -13,10 +13,11 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isArray from 'shared/isArray';
-import {ownerStackLimit} from 'shared/ReactFeatureFlags';
+import {ownerStackLimit, enableOptimisticKey} from 'shared/ReactFeatureFlags';
 
 const createTask =
   // eslint-disable-next-line react-internal/no-production-logging
@@ -300,14 +301,20 @@ export function jsxProd(type, config, maybeKey) {
     if (__DEV__) {
       checkKeyStringCoercion(maybeKey);
     }
-    key = '' + maybeKey;
+    key =
+      enableOptimisticKey && maybeKey === REACT_OPTIMISTIC_KEY
+        ? REACT_OPTIMISTIC_KEY
+        : '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
     if (__DEV__) {
       checkKeyStringCoercion(config.key);
     }
-    key = '' + config.key;
+    key =
+      enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY
+        ? REACT_OPTIMISTIC_KEY
+        : '' + config.key;
   }
 
   let props;
@@ -539,14 +546,20 @@ function jsxDEVImpl(
       if (__DEV__) {
         checkKeyStringCoercion(maybeKey);
       }
-      key = '' + maybeKey;
+      key =
+        enableOptimisticKey && maybeKey === REACT_OPTIMISTIC_KEY
+          ? REACT_OPTIMISTIC_KEY
+          : '' + maybeKey;
     }
 
     if (hasValidKey(config)) {
       if (__DEV__) {
         checkKeyStringCoercion(config.key);
       }
-      key = '' + config.key;
+      key =
+        enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY
+          ? REACT_OPTIMISTIC_KEY
+          : '' + config.key;
     }
 
     let props;
@@ -640,7 +653,10 @@ export function createElement(type, config, children) {
       if (__DEV__) {
         checkKeyStringCoercion(config.key);
       }
-      key = '' + config.key;
+      key =
+        enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY
+          ? REACT_OPTIMISTIC_KEY
+          : '' + config.key;
     }
 
     // Remaining properties are added to a new props object
@@ -772,7 +788,10 @@ export function cloneElement(element, config, children) {
       if (__DEV__) {
         checkKeyStringCoercion(config.key);
       }
-      key = '' + config.key;
+      key =
+        enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY
+          ? REACT_OPTIMISTIC_KEY
+          : '' + config.key;
     }
 
     // Remaining properties override existing props
