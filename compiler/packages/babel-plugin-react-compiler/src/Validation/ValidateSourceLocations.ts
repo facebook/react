@@ -58,8 +58,8 @@ const IMPORTANT_INSTRUMENTED_TYPES = new Set([
   'LabeledStatement',
   'ConditionalExpression',
   'LogicalExpression',
-  
-  /** 
+
+  /**
    * Note: these aren't important for coverage tracking,
    * but we still want to track them to ensure we aren't regressing them when
    * we fix the source location tracking for other nodes.
@@ -126,8 +126,10 @@ export function validateSourceLocations(
 ): Result<void, CompilerError> {
   const errors = new CompilerError();
 
-  // Step 1: Collect important locations from the original source
-  // Note: Multiple node types can share the same location (e.g. VariableDeclarator and Identifier)
+  /*
+   * Step 1: Collect important locations from the original source
+   * Note: Multiple node types can share the same location (e.g. VariableDeclarator and Identifier)
+   */
   const importantOriginalLocations = new Map<
     string,
     {loc: t.SourceLocation; nodeTypes: Set<string>}
@@ -207,15 +209,17 @@ export function validateSourceLocations(
     collectGeneratedLocations(outlined.fn.body);
   }
 
-  // Step 3: Validate that all important locations are preserved
-  // For certain node types, also validate that the node type matches
+  /*
+   * Step 3: Validate that all important locations are preserved
+   * For certain node types, also validate that the node type matches
+   */
   const strictNodeTypes = new Set([
     'VariableDeclaration',
     'VariableDeclarator',
     'Identifier',
   ]);
 
-  const reportMissingLocation = (loc: t.SourceLocation, nodeType: string) => {
+  const reportMissingLocation = (loc: t.SourceLocation, nodeType: string): void => {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Todo,
@@ -235,11 +239,12 @@ export function validateSourceLocations(
     loc: t.SourceLocation,
     expectedType: string,
     actualTypes: Set<string>,
-  ) => {
+  ): void => {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Todo,
-        reason: 'Important source location has wrong node type in generated code',
+        reason:
+          'Important source location has wrong node type in generated code',
         description:
           `Source location for ${expectedType} exists in the generated output but with wrong node type(s): ${Array.from(actualTypes).join(', ')}. ` +
           `This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports.`,
@@ -253,20 +258,25 @@ export function validateSourceLocations(
 
   for (const [key, {loc, nodeTypes}] of importantOriginalLocations) {
     const generatedNodeTypes = generatedLocations.get(key);
-    
+
     if (!generatedNodeTypes) {
       // Location is completely missing
       reportMissingLocation(loc, Array.from(nodeTypes).join(', '));
     } else {
       // Location exists, check each node type
       for (const nodeType of nodeTypes) {
-        if (strictNodeTypes.has(nodeType) && !generatedNodeTypes.has(nodeType)) {
-          // For strict node types, the specific node type must be present
-          // Check if any generated node type is also an important original node type
-          const hasValidNodeType = Array.from(generatedNodeTypes).some(genType =>
-            nodeTypes.has(genType)
+        if (
+          strictNodeTypes.has(nodeType) &&
+          !generatedNodeTypes.has(nodeType)
+        ) {
+          /*
+           * For strict node types, the specific node type must be present
+           * Check if any generated node type is also an important original node type
+           */
+          const hasValidNodeType = Array.from(generatedNodeTypes).some(
+            genType => nodeTypes.has(genType),
           );
-          
+
           if (hasValidNodeType) {
             // At least one generated node type is valid (also in original), so this is just missing
             reportMissingLocation(loc, nodeType);

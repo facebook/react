@@ -10,7 +10,7 @@ function Component({prop1, prop2}) {
   if (y > 5) {
     [destA, destB] = arr;
   }
-  
+
   const [a, b] = arr;
   const {x: c, y: d} = obj;
   let sound;
