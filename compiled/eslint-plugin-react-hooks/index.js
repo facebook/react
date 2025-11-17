@@ -44864,6 +44864,85 @@ function findOptionalPlaces(fn) {
     return optionals;
 }
 
+function createControlDominators(fn, isControlVariable) {
+    const postDominators = computePostDominatorTree(fn, {
+        includeThrowsAsExitNode: false,
+    });
+    const postDominatorFrontierCache = new Map();
+    function isControlledBlock(id) {
+        let controlBlocks = postDominatorFrontierCache.get(id);
+        if (controlBlocks === undefined) {
+            controlBlocks = postDominatorFrontier(fn, postDominators, id);
+            postDominatorFrontierCache.set(id, controlBlocks);
+        }
+        for (const blockId of controlBlocks) {
+            const controlBlock = fn.body.blocks.get(blockId);
+            switch (controlBlock.terminal.kind) {
+                case 'if':
+                case 'branch': {
+                    if (isControlVariable(controlBlock.terminal.test)) {
+                        return true;
+                    }
+                    break;
+                }
+                case 'switch': {
+                    if (isControlVariable(controlBlock.terminal.test)) {
+                        return true;
+                    }
+                    for (const case_ of controlBlock.terminal.cases) {
+                        if (case_.test !== null && isControlVariable(case_.test)) {
+                            return true;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        return false;
+    }
+    return isControlledBlock;
+}
+function postDominatorFrontier(fn, postDominators, targetId) {
+    const visited = new Set();
+    const frontier = new Set();
+    const targetPostDominators = postDominatorsOf(fn, postDominators, targetId);
+    for (const blockId of [...targetPostDominators, targetId]) {
+        if (visited.has(blockId)) {
+            continue;
+        }
+        visited.add(blockId);
+        const block = fn.body.blocks.get(blockId);
+        for (const pred of block.preds) {
+            if (!targetPostDominators.has(pred)) {
+                frontier.add(pred);
+            }
+        }
+    }
+    return frontier;
+}
+function postDominatorsOf(fn, postDominators, targetId) {
+    var _a;
+    const result = new Set();
+    const visited = new Set();
+    const queue = [targetId];
+    while (queue.length) {
+        const currentId = queue.shift();
+        if (visited.has(currentId)) {
+            continue;
+        }
+        visited.add(currentId);
+        const current = fn.body.blocks.get(currentId);
+        for (const pred of current.preds) {
+            const predPostDominator = (_a = postDominators.get(pred)) !== null && _a !== void 0 ? _a : pred;
+            if (predPostDominator === targetId || result.has(predPostDominator)) {
+                result.add(pred);
+            }
+            queue.push(pred);
+        }
+    }
+    return result;
+}
+
 class StableSidemap {
     constructor(env) {
         this.map = new Map();
@@ -44939,42 +45018,7 @@ function inferReactivePlaces(fn) {
         const place = param.kind === 'Identifier' ? param : param.place;
         reactiveIdentifiers.markReactive(place);
     }
-    const postDominators = computePostDominatorTree(fn, {
-        includeThrowsAsExitNode: false,
-    });
-    const postDominatorFrontierCache = new Map();
-    function isReactiveControlledBlock(id) {
-        let controlBlocks = postDominatorFrontierCache.get(id);
-        if (controlBlocks === undefined) {
-            controlBlocks = postDominatorFrontier(fn, postDominators, id);
-            postDominatorFrontierCache.set(id, controlBlocks);
-        }
-        for (const blockId of controlBlocks) {
-            const controlBlock = fn.body.blocks.get(blockId);
-            switch (controlBlock.terminal.kind) {
-                case 'if':
-                case 'branch': {
-                    if (reactiveIdentifiers.isReactive(controlBlock.terminal.test)) {
-                        return true;
-                    }
-                    break;
-                }
-                case 'switch': {
-                    if (reactiveIdentifiers.isReactive(controlBlock.terminal.test)) {
-                        return true;
-                    }
-                    for (const case_ of controlBlock.terminal.cases) {
-                        if (case_.test !== null &&
-                            reactiveIdentifiers.isReactive(case_.test)) {
-                            return true;
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        return false;
-    }
+    const isReactiveControlledBlock = createControlDominators(fn, place => reactiveIdentifiers.isReactive(place));
     do {
         for (const [, block] of fn.body.blocks) {
             let hasReactiveControl = isReactiveControlledBlock(block.id);
@@ -45091,46 +45135,6 @@ function inferReactivePlaces(fn) {
         }
     }
     propagateReactivityToInnerFunctions(fn, true);
-}
-function postDominatorFrontier(fn, postDominators, targetId) {
-    const visited = new Set();
-    const frontier = new Set();
-    const targetPostDominators = postDominatorsOf(fn, postDominators, targetId);
-    for (const blockId of [...targetPostDominators, targetId]) {
-        if (visited.has(blockId)) {
-            continue;
-        }
-        visited.add(blockId);
-        const block = fn.body.blocks.get(blockId);
-        for (const pred of block.preds) {
-            if (!targetPostDominators.has(pred)) {
-                frontier.add(pred);
-            }
-        }
-    }
-    return frontier;
-}
-function postDominatorsOf(fn, postDominators, targetId) {
-    var _a;
-    const result = new Set();
-    const visited = new Set();
-    const queue = [targetId];
-    while (queue.length) {
-        const currentId = queue.shift();
-        if (visited.has(currentId)) {
-            continue;
-        }
-        visited.add(currentId);
-        const current = fn.body.blocks.get(currentId);
-        for (const pred of current.preds) {
-            const predPostDominator = (_a = postDominators.get(pred)) !== null && _a !== void 0 ? _a : pred;
-            if (predPostDominator === targetId || result.has(predPostDominator)) {
-                result.add(pred);
-            }
-            queue.push(pred);
-        }
-    }
-    return result;
 }
 class ReactivityMap {
     constructor(aliasedIdentifiers) {
