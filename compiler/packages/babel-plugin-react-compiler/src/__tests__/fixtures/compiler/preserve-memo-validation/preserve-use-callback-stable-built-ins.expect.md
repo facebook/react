@@ -65,7 +65,7 @@ function useFoo() {
     t0 = () => {
       dispatch();
       startTransition(_temp3);
-      addOptimistic()
+      addOptimistic();
       setState(null);
       dispatchAction();
       ref.current = true;

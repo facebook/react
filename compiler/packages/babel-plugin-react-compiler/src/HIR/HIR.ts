@@ -1889,7 +1889,7 @@ export function isStartTransitionType(id: Identifier): boolean {
 
 export function isUseOptimisticType(id: Identifier): boolean {
   return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseOptimistic'
+    id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseOptimistic'
   );
 }
 
@@ -1944,10 +1944,10 @@ export function isStableTypeContainer(id: Identifier): boolean {
   }
   return (
     isUseStateType(id) || // setState
-    type_.shapeId === 'BuiltInUseActionState' || // setActionState
+    isUseActionStateType(id) || // setActionState
     isUseReducerType(id) || // dispatcher
-    type_.shapeId === 'BuiltInUseTransition' || // startTransition
-    isUseOptimisticType(id) // setOptimistic
+    isUseOptimisticType(id) || // setOptimistic
+    type_.shapeId === 'BuiltInUseTransition' // startTransition
   );
 }
 
@@ -1966,6 +1966,7 @@ export function evaluatesToStableTypeOrContainer(
       case 'useActionState':
       case 'useRef':
       case 'useTransition':
+      case 'useOptimistic':
         return true;
     }
   }
