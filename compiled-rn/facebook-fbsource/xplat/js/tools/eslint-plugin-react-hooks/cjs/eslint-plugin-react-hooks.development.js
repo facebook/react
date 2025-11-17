@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<2b9828fdf344d8488fb6182195633830>>
+ * @generated SignedSource<<c642e5aeb7b8bd3ea92997c1e9f92cac>>
  */
 
 'use strict';
@@ -51117,19 +51117,83 @@ function validateNoSetStateInEffects(fn, env) {
     return errors.asResult();
 }
 function getSetStateCall(fn, setStateFunctions, env) {
+    const enableAllowSetStateFromRefsInEffects = env.config.enableAllowSetStateFromRefsInEffects;
     const refDerivedValues = new Set();
     const isDerivedFromRef = (place) => {
         return (refDerivedValues.has(place.identifier.id) ||
             isUseRefType(place.identifier) ||
             isRefValueType(place.identifier));
     };
+    const isRefControlledBlock = enableAllowSetStateFromRefsInEffects
+        ? createControlDominators(fn, place => isDerivedFromRef(place))
+        : () => false;
     for (const [, block] of fn.body.blocks) {
+        if (enableAllowSetStateFromRefsInEffects) {
+            for (const phi of block.phis) {
+                if (isDerivedFromRef(phi.place)) {
+                    continue;
+                }
+                let isPhiDerivedFromRef = false;
+                for (const [, operand] of phi.operands) {
+                    if (isDerivedFromRef(operand)) {
+                        isPhiDerivedFromRef = true;
+                        break;
+                    }
+                }
+                if (isPhiDerivedFromRef) {
+                    refDerivedValues.add(phi.place.identifier.id);
+                }
+                else {
+                    for (const [pred] of phi.operands) {
+                        if (isRefControlledBlock(pred)) {
+                            refDerivedValues.add(phi.place.identifier.id);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         for (const instr of block.instructions) {
-            if (env.config.enableAllowSetStateFromRefsInEffects) {
+            if (enableAllowSetStateFromRefsInEffects) {
                 const hasRefOperand = Iterable_some(eachInstructionValueOperand(instr.value), isDerivedFromRef);
                 if (hasRefOperand) {
                     for (const lvalue of eachInstructionLValue(instr)) {
                         refDerivedValues.add(lvalue.identifier.id);
+                    }
+                    for (const operand of eachInstructionValueOperand(instr.value)) {
+                        switch (operand.effect) {
+                            case Effect.Capture:
+                            case Effect.Store:
+                            case Effect.ConditionallyMutate:
+                            case Effect.ConditionallyMutateIterator:
+                            case Effect.Mutate: {
+                                if (isMutable(instr, operand)) {
+                                    refDerivedValues.add(operand.identifier.id);
+                                }
+                                break;
+                            }
+                            case Effect.Freeze:
+                            case Effect.Read: {
+                                break;
+                            }
+                            case Effect.Unknown: {
+                                CompilerError.invariant(false, {
+                                    reason: 'Unexpected unknown effect',
+                                    description: null,
+                                    details: [
+                                        {
+                                            kind: 'error',
+                                            loc: operand.loc,
+                                            message: null,
+                                        },
+                                    ],
+                                    suggestions: null,
+                                });
+                            }
+                            default: {
+                                assertExhaustive$1(operand.effect, `Unexpected effect kind \`${operand.effect}\``);
+                            }
+                        }
                     }
                 }
                 if (instr.value.kind === 'PropertyLoad' &&
@@ -51157,12 +51221,15 @@ function getSetStateCall(fn, setStateFunctions, env) {
                     const callee = instr.value.callee;
                     if (isSetStateType(callee.identifier) ||
                         setStateFunctions.has(callee.identifier.id)) {
-                        if (env.config.enableAllowSetStateFromRefsInEffects) {
+                        if (enableAllowSetStateFromRefsInEffects) {
                             const arg = instr.value.args.at(0);
                             if (arg !== undefined &&
                                 arg.kind === 'Identifier' &&
                                 refDerivedValues.has(arg.identifier.id)) {
                                 return null;
+                            }
+                            else if (isRefControlledBlock(block.id)) {
+                                continue;
                             }
                         }
                         return callee;
