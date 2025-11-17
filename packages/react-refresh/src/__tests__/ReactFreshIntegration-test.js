@@ -403,7 +403,7 @@ describe('ReactFreshIntegration', () => {
       await patch(code);
     });
 
-    // @gate __DEV__ && enableActivity && enableScopeAPI
+    // @gate __DEV__ && enableActivity
     it('ignores ref for Scope in hidden subtree', async () => {
       const code = `
         import {

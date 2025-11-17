@@ -12,6 +12,11 @@
   background-color: color-mix(in srgb, var(--color-transition) 5%, transparent);
 }
 
+.SuspenseRectsRootOutline {
+  outline-width: 4px;
+  border-radius: 0.125rem;
+}
+
 .SuspenseRectsRoot[data-hovered='true'] {
   background-color: color-mix(in srgb, var(--color-transition) 15%, transparent);
 }
@@ -98,10 +103,6 @@
   outline-width: 4px;
   border-radius: 0.125rem;
   pointer-events: none;
-}
-
-.SuspenseRectOutlineRoot {
-  outline-color: var(--color-transition);
 }
 
 .SuspenseRectsBoundary[data-selected='true'] > .SuspenseRectsRect {

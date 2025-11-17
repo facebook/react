@@ -85,5 +85,7 @@ export const enableFragmentRefsScrollIntoView: boolean = false;
 export const enableFragmentRefsInstanceHandles: boolean = false;
 export const ownerStackLimit = 1e4;
 
+export const enableInternalInstanceMap: boolean = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

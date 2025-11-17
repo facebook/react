@@ -1149,6 +1149,8 @@ function serializeReadableStream(
       supportsBYOB = false;
     }
   }
+  // At this point supportsBYOB is guaranteed to be a boolean.
+  const isByteStream: boolean = supportsBYOB;
 
   const reader = stream.getReader();
 
@@ -1172,7 +1174,7 @@ function serializeReadableStream(
   // The task represents the Stop row. This adds a Start row.
   request.pendingChunks++;
   const startStreamRow =
-    streamTask.id.toString(16) + ':' + (supportsBYOB ? 'r' : 'R') + '\n';
+    streamTask.id.toString(16) + ':' + (isByteStream ? 'r' : 'R') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
 
   function progress(entry: {done: boolean, value: ReactClientValue, ...}) {
@@ -1190,9 +1192,15 @@ function serializeReadableStream(
       callOnAllReadyIfReady(request);
     } else {
       try {
-        streamTask.model = entry.value;
         request.pendingChunks++;
-        tryStreamTask(request, streamTask);
+        streamTask.model = entry.value;
+        if (isByteStream) {
+          // Chunks of byte streams are always Uint8Array instances.
+          const chunk: Uint8Array = (streamTask.model: any);
+          emitTypedArrayChunk(request, streamTask.id, 'b', chunk, false);
+        } else {
+          tryStreamTask(request, streamTask);
+        }
         enqueueFlush(request);
         reader.read().then(progress, error);
       } catch (x) {
@@ -2339,7 +2347,8 @@ function visitAsyncNodeImpl(
     // The technique for debugging the effects of uncached data on the render is to simply uncache it.
     return null;
   }
-  let previousIONode = null;
+
+  let previousIONode: void | null | PromiseNode | IONode = null;
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null) {
     previousIONode = visitAsyncNode(
@@ -2355,12 +2364,20 @@ function visitAsyncNodeImpl(
       return undefined;
     }
   }
+
+  // `found` represents the return value of the following switch statement.
+  // We can't use multiple `return` statements in the switch statement
+  // since that prevents Closure compiler from inlining `visitAsyncImpl`
+  // thus doubling the call stack size.
+  let found: void | null | PromiseNode | IONode;
   switch (node.tag) {
     case IO_NODE: {
-      return node;
+      found = node;
+      break;
     }
     case UNRESOLVED_PROMISE_NODE: {
-      return previousIONode;
+      found = previousIONode;
+      break;
     }
     case PROMISE_NODE: {
       const awaited = node.awaited;
@@ -2371,7 +2388,8 @@ function visitAsyncNodeImpl(
         if (ioNode === undefined) {
           // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
           // further aborted nodes.
-          return undefined;
+          found = undefined;
+          break;
         } else if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
@@ -2428,10 +2446,12 @@ function visitAsyncNodeImpl(
           forwardDebugInfo(request, task, debugInfo);
         }
       }
-      return match;
+      found = match;
+      break;
     }
     case UNRESOLVED_AWAIT_NODE: {
-      return previousIONode;
+      found = previousIONode;
+      break;
     }
     case AWAIT_NODE: {
       const awaited = node.awaited;
@@ -2441,7 +2461,8 @@ function visitAsyncNodeImpl(
         if (ioNode === undefined) {
           // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
           // further aborted nodes.
-          return undefined;
+          found = undefined;
+          break;
         } else if (ioNode !== null) {
           const startTime: number = node.start;
           const endTime: number = node.end;
@@ -2537,13 +2558,15 @@ function visitAsyncNodeImpl(
           forwardDebugInfo(request, task, debugInfo);
         }
       }
-      return match;
+      found = match;
+      break;
     }
     default: {
       // eslint-disable-next-line react-internal/prod-error-codes
       throw new Error('Unknown AsyncSequence tag. This is a bug in React.');
     }
   }
+  return found;
 }
 
 function emitAsyncSequence(
