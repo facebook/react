@@ -32,7 +32,9 @@ export default function RecordToggle({disabled}: Props): React.Node {
 
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const shortcut = isMac ? '⌘E' : 'Ctrl+E';
-  const title = isProfiling ? `Stop profiling - ${shortcut}` : `Start profiling - ${shortcut}`;
+  const title = isProfiling
+    ? `Stop profiling - ${shortcut}`
+    : `Start profiling - ${shortcut}`;
 
   return (
     <Button
