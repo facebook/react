@@ -35,6 +35,7 @@ type RunnerOptions = {
   watch: boolean;
   filter: boolean;
   update: boolean;
+  pattern?: string;
 };
 
 const opts: RunnerOptions = yargs
@@ -62,9 +63,15 @@ const opts: RunnerOptions = yargs
     'Only run fixtures which match the contents of testfilter.txt',
   )
   .default('filter', false)
+  .string('pattern')
+  .alias('p', 'pattern')
+  .describe(
+    'pattern',
+    'Optional glob pattern to filter fixtures (e.g., "error.*", "use-memo")',
+  )
   .help('help')
   .strict()
-  .parseSync(hideBin(process.argv));
+  .parseSync(hideBin(process.argv)) as RunnerOptions;
 
 /**
  * Do a test run and return the test results
@@ -171,7 +178,13 @@ export async function main(opts: RunnerOptions): Promise<void> {
   worker.getStderr().pipe(process.stderr);
   worker.getStdout().pipe(process.stdout);
 
-  if (opts.watch) {
+  // If pattern is provided, force watch mode off and use pattern filter
+  const shouldWatch = opts.watch && opts.pattern == null;
+  if (opts.watch && opts.pattern != null) {
+    console.warn('NOTE: --watch is ignored when a --pattern is supplied');
+  }
+
+  if (shouldWatch) {
     makeWatchRunner(state => onChange(worker, state), opts.filter);
     if (opts.filter) {
       /**
@@ -216,7 +229,18 @@ export async function main(opts: RunnerOptions): Promise<void> {
             try {
               execSync('yarn build', {cwd: PROJECT_ROOT});
               console.log('Built compiler successfully with tsup');
-              const testFilter = opts.filter ? await readTestFilter() : null;
+
+              // Determine which filter to use
+              let testFilter: TestFilter | null = null;
+              if (opts.pattern) {
+                testFilter = {
+                  debug: true,
+                  paths: [opts.pattern],
+                };
+              } else if (opts.filter) {
+                testFilter = await readTestFilter();
+              }
+
               const results = await runFixtures(worker, testFilter, 0);
               if (opts.update) {
                 update(results);
