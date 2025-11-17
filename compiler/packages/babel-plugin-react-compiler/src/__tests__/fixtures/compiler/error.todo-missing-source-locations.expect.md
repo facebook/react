@@ -14,7 +14,7 @@ function Component({prop1, prop2}) {
   if (y > 5) {
     [destA, destB] = arr;
   }
-  
+
   const [a, b] = arr;
   const {x: c, y: d} = obj;
   let sound;
@@ -90,7 +90,7 @@ error.todo-missing-source-locations.ts:11:4
 > 11 |     [destA, destB] = arr;
      |     ^^^^^^^^^^^^^^^^^^^^^
   12 |   }
-  13 |   
+  13 |
   14 |   const [a, b] = arr;
 
 Todo: Important source location missing in generated code
@@ -98,7 +98,7 @@ Todo: Important source location missing in generated code
 Source location for Identifier is missing in the generated output. This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports..
 
 error.todo-missing-source-locations.ts:15:9
-  13 |   
+  13 |
   14 |   const [a, b] = arr;
 > 15 |   const {x: c, y: d} = obj;
      |          ^
@@ -111,7 +111,7 @@ Todo: Important source location missing in generated code
 Source location for Identifier is missing in the generated output. This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports..
 
 error.todo-missing-source-locations.ts:15:15
-  13 |   
+  13 |
   14 |   const [a, b] = arr;
 > 15 |   const {x: c, y: d} = obj;
      |                ^
