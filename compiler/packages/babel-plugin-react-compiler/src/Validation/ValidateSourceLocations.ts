@@ -219,7 +219,10 @@ export function validateSourceLocations(
     'Identifier',
   ]);
 
-  const reportMissingLocation = (loc: t.SourceLocation, nodeType: string): void => {
+  const reportMissingLocation = (
+    loc: t.SourceLocation,
+    nodeType: string,
+  ): void => {
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
         category: ErrorCategory.Todo,
