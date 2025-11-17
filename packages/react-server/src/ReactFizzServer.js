@@ -171,6 +171,7 @@ import {
   REACT_SCOPE_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
   REACT_ACTIVITY_TYPE,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -3266,7 +3267,11 @@ function retryNode(request: Request, task: Task): void {
 
         const name = getComponentNameFromType(type);
         const keyOrIndex =
-          key == null ? (childIndex === -1 ? 0 : childIndex) : key;
+          key == null || key === REACT_OPTIMISTIC_KEY
+            ? childIndex === -1
+              ? 0
+              : childIndex
+            : key;
         const keyPath = [task.keyPath, name, keyOrIndex];
         if (task.replay !== null) {
           if (debugTask) {
