@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<f5fb35855c3e9d288ce976ae30f4b630>>
+ * @generated SignedSource<<c61c0e9ad2fc26fcadacfc01726a9637>>
  */
 
 'use strict';
@@ -18949,8 +18949,17 @@ function isRefOrRefLikeMutableType(type) {
 function isSetStateType(id) {
     return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetState';
 }
+function isUseActionStateType(id) {
+    return (id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseActionState');
+}
 function isStartTransitionType(id) {
     return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInStartTransition');
+}
+function isUseOptimisticType(id) {
+    return (id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseOptimistic');
+}
+function isSetOptimisticType(id) {
+    return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetOptimistic');
 }
 function isSetActionStateType(id) {
     return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetActionState');
@@ -18973,7 +18982,8 @@ function isStableType(id) {
         isSetActionStateType(id) ||
         isDispatcherType(id) ||
         isUseRefType(id) ||
-        isStartTransitionType(id));
+        isStartTransitionType(id) ||
+        isSetOptimisticType(id));
 }
 function isStableTypeContainer(id) {
     const type_ = id.type;
@@ -18981,8 +18991,9 @@ function isStableTypeContainer(id) {
         return false;
     }
     return (isUseStateType(id) ||
-        type_.shapeId === 'BuiltInUseActionState' ||
+        isUseActionStateType(id) ||
         isUseReducerType(id) ||
+        isUseOptimisticType(id) ||
         type_.shapeId === 'BuiltInUseTransition');
 }
 function evaluatesToStableTypeOrContainer(env, { value }) {
@@ -18995,6 +19006,7 @@ function evaluatesToStableTypeOrContainer(env, { value }) {
             case 'useActionState':
             case 'useRef':
             case 'useTransition':
+            case 'useOptimistic':
                 return true;
         }
     }
@@ -22096,6 +22108,8 @@ const BuiltInUseReducerId = 'BuiltInUseReducer';
 const BuiltInDispatchId = 'BuiltInDispatch';
 const BuiltInUseContextHookId = 'BuiltInUseContextHook';
 const BuiltInUseTransitionId = 'BuiltInUseTransition';
+const BuiltInUseOptimisticId = 'BuiltInUseOptimistic';
+const BuiltInSetOptimisticId = 'BuiltInSetOptimistic';
 const BuiltInStartTransitionId = 'BuiltInStartTransition';
 const BuiltInFireId = 'BuiltInFire';
 const BuiltInFireFunctionId = 'BuiltInFireFunction';
@@ -22708,6 +22722,19 @@ addObject(BUILTIN_SHAPES, BuiltInUseTransitionId, [
             calleeEffect: Effect.Read,
             returnValueKind: ValueKind.Primitive,
         }, BuiltInStartTransitionId),
+    ],
+]);
+addObject(BUILTIN_SHAPES, BuiltInUseOptimisticId, [
+    ['0', { kind: 'Poly' }],
+    [
+        '1',
+        addFunction(BUILTIN_SHAPES, [], {
+            positionalParams: [],
+            restParam: Effect.Freeze,
+            returnType: PRIMITIVE_TYPE,
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Primitive,
+        }, BuiltInSetOptimisticId),
     ],
 ]);
 addObject(BUILTIN_SHAPES, BuiltInUseActionStateId, [
@@ -30945,6 +30972,18 @@ const REACT_APIS = [
             calleeEffect: Effect.Read,
             hookKind: 'useTransition',
             returnValueKind: ValueKind.Frozen,
+        }),
+    ],
+    [
+        'useOptimistic',
+        addHook(DEFAULT_SHAPES, {
+            positionalParams: [],
+            restParam: Effect.Freeze,
+            returnType: { kind: 'Object', shapeId: BuiltInUseOptimisticId },
+            calleeEffect: Effect.Read,
+            hookKind: 'useOptimistic',
+            returnValueKind: ValueKind.Frozen,
+            returnValueReason: ValueReason.State,
         }),
     ],
     [
