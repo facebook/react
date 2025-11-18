@@ -120,6 +120,7 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
   LAZY_SYMBOL_STRING,
+  REACT_OPTIMISTIC_KEY,
 } from '../shared/ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
@@ -4849,7 +4850,10 @@ export function attach(
               }
               let previousSiblingOfBestMatch = null;
               let bestMatch = remainingReconcilingChildren;
-              if (componentInfo.key != null) {
+              if (
+                componentInfo.key != null &&
+                componentInfo.key !== REACT_OPTIMISTIC_KEY
+              ) {
                 // If there is a key try to find a matching key in the set.
                 bestMatch = remainingReconcilingChildren;
                 while (bestMatch !== null) {
@@ -6145,7 +6149,7 @@ export function attach(
       return {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
-        key: fiber.key,
+        key: fiber.key === REACT_OPTIMISTIC_KEY ? null : fiber.key,
         env: null,
         stack:
           fiber._debugOwner == null || fiber._debugStack == null
@@ -6158,7 +6162,11 @@ export function attach(
       return {
         displayName: componentInfo.name || 'Anonymous',
         id: instance.id,
-        key: componentInfo.key == null ? null : componentInfo.key,
+        key:
+          componentInfo.key == null ||
+          componentInfo.key === REACT_OPTIMISTIC_KEY
+            ? null
+            : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
         stack:
           componentInfo.owner == null || componentInfo.debugStack == null
@@ -7082,7 +7090,7 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
-      key: key != null ? key : null,
+      key: key != null && key !== REACT_OPTIMISTIC_KEY ? key : null,
 
       type: elementType,
 
@@ -8641,7 +8649,7 @@ export function attach(
     }
     return {
       displayName,
-      key,
+      key: key === REACT_OPTIMISTIC_KEY ? null : key,
       index,
     };
   }
@@ -8649,7 +8657,11 @@ export function attach(
   function getVirtualPathFrame(virtualInstance: VirtualInstance): PathFrame {
     return {
       displayName: virtualInstance.data.name || '',
-      key: virtualInstance.data.key == null ? null : virtualInstance.data.key,
+      key:
+        virtualInstance.data.key == null ||
+        virtualInstance.data.key === REACT_OPTIMISTIC_KEY
+          ? null
+          : virtualInstance.data.key,
       index: -1, // We use -1 to indicate that this is a virtual path frame.
     };
   }
