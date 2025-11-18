@@ -391,4 +391,6 @@ export type ProfilerProps = {
 export type ReactStore<S, A> = {
   _current: S,
   _reducer: (S, A) => S,
+  subscribe: (callback: () => void) => () => void,
+  dispatch: (action: A) => void,
 };

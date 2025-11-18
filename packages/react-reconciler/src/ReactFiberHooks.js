@@ -1813,14 +1813,44 @@ function mountStoreWithSelector<S, T>(
   store: ReactStore<S, mixed>,
   selector: S => T,
 ): T {
-  return selector(store._current);
+  const fiber = currentlyRenderingFiber;
+  const hook = mountWorkInProgressHook();
+  const selectedState = selector(store._current);
+  hook.memoizedState = selectedState;
+
+  mountEffect(createSubscription.bind(null, store, fiber), []);
+  return selectedState;
 }
 
 function updateStoreWithSelector<S, T>(
   store: ReactStore<S, mixed>,
   selector: S => T,
 ): T {
-  return selector(store._current);
+  const fiber = currentlyRenderingFiber;
+  const hook = updateWorkInProgressHook();
+
+  updateEffect(createSubscription.bind(null, store, fiber), []);
+
+  // TODO: Calling selector during render is not our end state.
+  // We need to find something we can eagerly write the state to which
+  // will be stable during subsequent renders.
+  // The hook object is not stable since it gets recreated during each render.
+  const nextState = selector(store._current);
+  if (!is(hook.memoizedState, nextState)) {
+    hook.memoizedState = nextState;
+    markWorkInProgressReceivedUpdate();
+  }
+  return nextState;
+}
+
+function createSubscription(store: ReactStore<mixed, mixed>, fiber: Fiber) {
+  return store.subscribe(() => {
+    const lane = requestUpdateLane(fiber);
+    const root = enqueueConcurrentRenderForLane(fiber, lane);
+    if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane);
+    }
+  });
 }
 
 function pushStoreConsistencyCheck<T>(
@@ -1862,7 +1892,7 @@ function updateStoreInstance<T>(
   // Something may have been mutated in between render and commit. This could
   // have been in an event that fired before the passive effects, or it could
   // have been in a layout effect. In that case, we would have used the old
-  // snapsho and getSnapshot values to bail out. We need to check one more time.
+  // snapshot and getSnapshot values to bail out. We need to check one more time.
   if (checkIfSnapshotChanged(inst)) {
     // Force a re-render.
     // We intentionally don't log update times and stacks here because this
