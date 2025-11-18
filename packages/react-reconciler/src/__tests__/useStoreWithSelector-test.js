@@ -69,12 +69,10 @@ describe('useStoreWithSelector', () => {
       }
     }
     const store = createStore(counterReducer, 2);
-    function identify(x) {
-      return x;
-    }
 
     function App() {
       const value = useStoreWithSelector(store, identify);
+      Scheduler.log(value);
       return <>{value}</>;
     }
 
@@ -83,6 +81,28 @@ describe('useStoreWithSelector', () => {
       startTransition(() => {
         root.render(<App />);
       });
+      await waitFor([2]);
     });
+    expect(root).toMatchRenderedOutput('2');
+
+    await act(async () => {
+      startTransition(() => {
+        store.dispatch({type: 'increment'});
+      });
+    });
+    assertLog([3]);
+    expect(root).toMatchRenderedOutput('3');
+
+    await act(async () => {
+      startTransition(() => {
+        store.dispatch({type: 'increment'});
+      });
+    });
+    assertLog([4]);
+    expect(root).toMatchRenderedOutput('4');
   });
 });
+
+function identify<T>(x: T): T {
+  return x;
+}

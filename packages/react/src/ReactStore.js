@@ -13,8 +13,24 @@ export function createStore<S, A>(
   reducer: (S, A) => S,
   initialValue: S,
 ): ReactStore<S, A> {
-  return {
+  const subscriptions = new Set<() => void>();
+
+  const self = {
     _current: initialValue,
     _reducer: reducer,
+    dispatch(action: A) {
+      const nextValue = reducer(self._current, action);
+      if (nextValue !== self._current) {
+        self._current = nextValue;
+        subscriptions.forEach(callback => callback());
+      }
+    },
+    subscribe(callback: () => void): () => void {
+      subscriptions.add(callback);
+      return () => {
+        subscriptions.delete(callback);
+      };
+    },
   };
+  return self;
 }
