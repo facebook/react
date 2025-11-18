@@ -92,7 +92,7 @@
 }
 
 .ActivityList {
-  flex: 0 0 var(--horizontal-resize-tree-list-percentage);
+  flex: 0 0 var(--horizontal-resize-activity-list-percentage);;
   border-right: 1px solid var(--color-border);
   overflow: auto;
 }
