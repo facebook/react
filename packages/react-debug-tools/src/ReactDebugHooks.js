@@ -14,6 +14,7 @@ import type {
   Usable,
   Thenable,
   ReactDebugInfo,
+  ReactStore,
 } from 'shared/ReactTypes';
 import type {
   ContextDependency,
@@ -481,6 +482,22 @@ function useSyncExternalStore<T>(
   return value;
 }
 
+function useStoreWithSelector<S, T>(
+  store: ReactStore<S, mixed>,
+  selector: (state: S) => T,
+): T {
+  const value = selector(store._current);
+  hookLog.push({
+    displayName: null,
+    primitive: 'StoreWithSelector',
+    stackError: new Error(),
+    value,
+    debugInfo: null,
+    dispatcherHookName: 'StoreWithSelector',
+  });
+  return value;
+}
+
 function useTransition(): [
   boolean,
   (callback: () => void, options?: StartTransitionOptions) => void,
@@ -777,6 +794,7 @@ const Dispatcher: DispatcherType = {
   useDeferredValue,
   useTransition,
   useSyncExternalStore,
+  useStoreWithSelector,
   useId,
   useHostTransitionStatus,
   useFormState,

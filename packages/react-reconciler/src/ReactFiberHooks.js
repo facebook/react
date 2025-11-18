@@ -14,6 +14,7 @@ import type {
   Thenable,
   RejectedThenable,
   Awaited,
+  ReactStore,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -1806,6 +1807,20 @@ function updateSyncExternalStore<T>(
   }
 
   return nextSnapshot;
+}
+
+function mountStoreWithSelector<S, T>(
+  store: ReactStore<S, mixed>,
+  selector: S => T,
+): T {
+  return selector(store._current);
+}
+
+function updateStoreWithSelector<S, T>(
+  store: ReactStore<S, mixed>,
+  selector: S => T,
+): T {
+  return selector(store._current);
 }
 
 function pushStoreConsistencyCheck<T>(
@@ -3879,6 +3894,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
+  useStoreWithSelector: throwInvalidHookError,
   useId: throwInvalidHookError,
   useHostTransitionStatus: throwInvalidHookError,
   useFormState: throwInvalidHookError,
@@ -3909,6 +3925,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
   useSyncExternalStore: mountSyncExternalStore,
+  useStoreWithSelector: mountStoreWithSelector,
   useId: mountId,
   useHostTransitionStatus: useHostTransitionStatus,
   useFormState: mountActionState,
@@ -3939,6 +3956,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
   useSyncExternalStore: updateSyncExternalStore,
+  useStoreWithSelector: updateStoreWithSelector,
   useId: updateId,
   useHostTransitionStatus: useHostTransitionStatus,
   useFormState: updateActionState,
@@ -3969,6 +3987,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
   useSyncExternalStore: updateSyncExternalStore,
+  useStoreWithSelector: updateStoreWithSelector,
   useId: updateId,
   useHostTransitionStatus: useHostTransitionStatus,
   useFormState: rerenderActionState,
@@ -4129,6 +4148,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useSyncExternalStore';
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    },
+    useStoreWithSelector<S, T>(
+      store: ReactStore<S, mixed>,
+      selector: (state: S) => T,
+    ): T {
+      currentHookNameInDev = 'useStoreWithSelector';
+      mountHookTypesDev();
+      return mountStoreWithSelector(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -4297,6 +4324,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
+    useStoreWithSelector<S, T>(
+      store: ReactStore<S, mixed>,
+      selector: (state: S) => T,
+    ): T {
+      currentHookNameInDev = 'useStoreWithSelector';
+      updateHookTypesDev();
+      return mountStoreWithSelector(store, selector);
+    },
     useId(): string {
       currentHookNameInDev = 'useId';
       updateHookTypesDev();
@@ -4464,6 +4499,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
+    useStoreWithSelector<S, T>(
+      store: ReactStore<S, mixed>,
+      selector: (state: S) => T,
+    ): T {
+      currentHookNameInDev = 'useStoreWithSelector';
+      updateHookTypesDev();
+      return updateStoreWithSelector(store, selector);
+    },
     useId(): string {
       currentHookNameInDev = 'useId';
       updateHookTypesDev();
@@ -4630,6 +4673,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useSyncExternalStore';
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    },
+    useStoreWithSelector<S, T>(
+      store: ReactStore<S, mixed>,
+      selector: (state: S) => T,
+    ): T {
+      currentHookNameInDev = 'useStoreWithSelector';
+      updateHookTypesDev();
+      return updateStoreWithSelector(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -4815,6 +4866,15 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    },
+    useStoreWithSelector<S, T>(
+      store: ReactStore<S, mixed>,
+      selector: (state: S) => T,
+    ): T {
+      currentHookNameInDev = 'useStoreWithSelector';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountStoreWithSelector(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -5008,6 +5068,15 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
+    useStoreWithSelector<S, T>(
+      store: ReactStore<S, mixed>,
+      selector: (state: S) => T,
+    ): T {
+      currentHookNameInDev = 'useStoreWithSelector';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateStoreWithSelector(store, selector);
+    },
     useId(): string {
       currentHookNameInDev = 'useId';
       warnInvalidHookAccess();
@@ -5199,6 +5268,15 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    },
+    useStoreWithSelector<S, T>(
+      store: ReactStore<S, mixed>,
+      selector: (state: S) => T,
+    ): T {
+      currentHookNameInDev = 'useStoreWithSelector';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateStoreWithSelector(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';

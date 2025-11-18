@@ -16,6 +16,7 @@ import type {
   Usable,
   ReactCustomFormAction,
   Awaited,
+  ReactStore,
 } from 'shared/ReactTypes';
 
 import type {ResumableState} from './ReactFizzConfig';
@@ -564,6 +565,14 @@ function useSyncExternalStore<T>(
   return getServerSnapshot();
 }
 
+function useStoreWithSelector<S, T>(
+  store: ReactStore<S, mixed>,
+  selector: (state: S) => T,
+): T {
+  resolveCurrentlyRenderingComponent();
+  return selector(store._current);
+}
+
 function useDeferredValue<T>(value: T, initialValue?: T): T {
   resolveCurrentlyRenderingComponent();
   return initialValue !== undefined ? initialValue : value;
@@ -827,6 +836,7 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useId,
       // Subscriptions are not setup in a server environment.
       useSyncExternalStore,
+      useStoreWithSelector,
       useOptimistic,
       useActionState,
       useFormState: useActionState,
@@ -851,6 +861,7 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useDeferredValue: clientHookNotSupported,
       useTransition: clientHookNotSupported,
       useSyncExternalStore: clientHookNotSupported,
+      useStoreWithSelector: clientHookNotSupported,
       useId,
       useHostTransitionStatus,
       useFormState: useActionState,

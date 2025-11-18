@@ -13,6 +13,7 @@ import type {
   StartTransitionOptions,
   Usable,
   Awaited,
+  ReactStore,
 } from 'shared/ReactTypes';
 import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
@@ -196,6 +197,14 @@ export function useSyncExternalStore<T>(
     getSnapshot,
     getServerSnapshot,
   );
+}
+
+export function useStoreWithSelector<T, S>(
+  store: ReactStore<S, mixed>,
+  selector: S => T,
+): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useStoreWithSelector(store, selector);
 }
 
 export function useCacheRefresh(): <T>(?() => T, ?T) => void {
