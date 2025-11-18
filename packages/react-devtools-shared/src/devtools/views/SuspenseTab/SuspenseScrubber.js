@@ -12,13 +12,15 @@ import type {SuspenseTimelineStep} from 'react-devtools-shared/src/frontend/type
 import typeof {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
-import {useRef} from 'react';
+import {useContext, useRef} from 'react';
+import {ElementTypeRoot} from 'react-devtools-shared/src/frontend/types';
 
 import styles from './SuspenseScrubber.css';
 
 import {getClassNameForEnvironment} from './SuspenseEnvironmentColors.js';
 
 import Tooltip from '../Components/reach-ui/tooltip';
+import {StoreContext} from '../context';
 
 export default function SuspenseScrubber({
   min,
@@ -43,6 +45,7 @@ export default function SuspenseScrubber({
   onHoverSegment: (index: number) => void,
   onHoverLeave: () => void,
 }): React$Node {
+  const store = useContext(StoreContext);
   const inputRef = useRef();
   function handleChange(event: SyntheticEvent) {
     const newValue = +event.currentTarget.value;
@@ -60,12 +63,16 @@ export default function SuspenseScrubber({
   }
   const steps = [];
   for (let index = min; index <= max; index++) {
-    const environment = timeline[index].environment;
+    const step = timeline[index];
+    const environment = step.environment;
+    const element = store.getElementByID(step.id);
     const label =
       index === min
         ? // The first step in the timeline is always a Transition (Initial Paint).
-          'Initial Paint' +
-          (environment === null ? '' : ' (' + environment + ')')
+          element === null || element.type === ElementTypeRoot
+          ? 'Initial Paint'
+          : 'Transition' +
+            (environment === null ? '' : ' (' + environment + ')')
         : // TODO: Consider adding the name of this specific boundary if this step has only one.
           environment === null
           ? 'Suspense'
