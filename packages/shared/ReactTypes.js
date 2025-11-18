@@ -381,3 +381,8 @@ export type ProfilerProps = {
   ) => void,
   children?: ReactNodeList,
 };
+
+export type ReactStore<S, A> = {
+  _current: S,
+  _reducer: (S, A) => S,
+};

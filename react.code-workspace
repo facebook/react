@@ -24,6 +24,7 @@
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "flow.pathToFlow": "${workspaceFolder}/node_modules/.bin/flow",
+    "flow.showUncovered": false,
     "prettier.configPath": "",
     "prettier.ignorePath": ""
   }

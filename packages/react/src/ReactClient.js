@@ -34,6 +34,7 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {cache, cacheSignal} from './ReactCacheClient';
+import {createStore} from './ReactStore';
 import {
   getCacheForType,
   useCallback,
@@ -46,6 +47,7 @@ import {
   useLayoutEffect,
   useMemo,
   useSyncExternalStore,
+  useStoreWithSelector,
   useReducer,
   useRef,
   useState,
@@ -83,6 +85,7 @@ export {
   memo,
   cache,
   cacheSignal,
+  createStore,
   useCallback,
   useContext,
   useEffect,
@@ -95,6 +98,7 @@ export {
   useOptimistic,
   useActionState,
   useSyncExternalStore,
+  useStoreWithSelector,
   useReducer,
   useRef,
   useState,

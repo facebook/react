@@ -17,6 +17,7 @@ import type {
   Awaited,
   ReactComponentInfo,
   ReactDebugInfo,
+  ReactStore,
 } from 'shared/ReactTypes';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import type {WorkTag} from './ReactWorkTags';
@@ -58,6 +59,7 @@ export type HookType =
   | 'useDeferredValue'
   | 'useTransition'
   | 'useSyncExternalStore'
+  | 'useStoreWithSelector'
   | 'useId'
   | 'useCacheRefresh'
   | 'useOptimistic'
@@ -436,6 +438,10 @@ export type Dispatcher = {
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,
     getServerSnapshot?: () => T,
+  ): T,
+  useStoreWithSelector<S, T>(
+    store: ReactStore<S, mixed>,
+    selector: (state: S) => T,
   ): T,
   useId(): string,
   useCacheRefresh: () => <T>(?() => T, ?T) => void,
