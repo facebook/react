@@ -339,8 +339,10 @@ function isPromiseAwaitInternal(url: string, functionName: string): boolean {
     case 'Function.resolve':
     case 'Function.all':
     case 'Function.allSettled':
+    case 'Function.any':
     case 'Function.race':
     case 'Function.try':
+    case 'Function.withResolvers':
       return true;
     default:
       return false;
@@ -2347,7 +2349,8 @@ function visitAsyncNodeImpl(
     // The technique for debugging the effects of uncached data on the render is to simply uncache it.
     return null;
   }
-  let previousIONode = null;
+
+  let previousIONode: void | null | PromiseNode | IONode = null;
   // First visit anything that blocked this sequence to start in the first place.
   if (node.previous !== null) {
     previousIONode = visitAsyncNode(
@@ -2363,12 +2366,20 @@ function visitAsyncNodeImpl(
       return undefined;
     }
   }
+
+  // `found` represents the return value of the following switch statement.
+  // We can't use multiple `return` statements in the switch statement
+  // since that prevents Closure compiler from inlining `visitAsyncImpl`
+  // thus doubling the call stack size.
+  let found: void | null | PromiseNode | IONode;
   switch (node.tag) {
     case IO_NODE: {
-      return node;
+      found = node;
+      break;
     }
     case UNRESOLVED_PROMISE_NODE: {
-      return previousIONode;
+      found = previousIONode;
+      break;
     }
     case PROMISE_NODE: {
       const awaited = node.awaited;
@@ -2379,7 +2390,8 @@ function visitAsyncNodeImpl(
         if (ioNode === undefined) {
           // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
           // further aborted nodes.
-          return undefined;
+          found = undefined;
+          break;
         } else if (ioNode !== null) {
           // This Promise was blocked on I/O. That's a signal that this Promise is interesting to log.
           // We don't log it yet though. We return it to be logged by the point where it's awaited.
@@ -2436,10 +2448,12 @@ function visitAsyncNodeImpl(
           forwardDebugInfo(request, task, debugInfo);
         }
       }
-      return match;
+      found = match;
+      break;
     }
     case UNRESOLVED_AWAIT_NODE: {
-      return previousIONode;
+      found = previousIONode;
+      break;
     }
     case AWAIT_NODE: {
       const awaited = node.awaited;
@@ -2449,7 +2463,8 @@ function visitAsyncNodeImpl(
         if (ioNode === undefined) {
           // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
           // further aborted nodes.
-          return undefined;
+          found = undefined;
+          break;
         } else if (ioNode !== null) {
           const startTime: number = node.start;
           const endTime: number = node.end;
@@ -2545,13 +2560,15 @@ function visitAsyncNodeImpl(
           forwardDebugInfo(request, task, debugInfo);
         }
       }
-      return match;
+      found = match;
+      break;
     }
     default: {
       // eslint-disable-next-line react-internal/prod-error-codes
       throw new Error('Unknown AsyncSequence tag. This is a bug in React.');
     }
   }
+  return found;
 }
 
 function emitAsyncSequence(
