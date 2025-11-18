@@ -298,23 +298,25 @@ export function jsxProd(type, config, maybeKey) {
   // <div {...props} key="Hi" />, because we aren't currently able to tell if
   // key is explicitly declared to be undefined or not.
   if (maybeKey !== undefined) {
-    if (__DEV__) {
-      checkKeyStringCoercion(maybeKey);
+    if (enableOptimisticKey && maybeKey === REACT_OPTIMISTIC_KEY) {
+      key = REACT_OPTIMISTIC_KEY;
+    } else {
+      if (__DEV__) {
+        checkKeyStringCoercion(maybeKey);
+      }
+      key = '' + maybeKey;
     }
-    key =
-      enableOptimisticKey && maybeKey === REACT_OPTIMISTIC_KEY
-        ? REACT_OPTIMISTIC_KEY
-        : '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
-    if (__DEV__) {
-      checkKeyStringCoercion(config.key);
+    if (enableOptimisticKey && maybeKey === REACT_OPTIMISTIC_KEY) {
+      key = REACT_OPTIMISTIC_KEY;
+    } else {
+      if (__DEV__) {
+        checkKeyStringCoercion(config.key);
+      }
+      key = '' + config.key;
     }
-    key =
-      enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY
-        ? REACT_OPTIMISTIC_KEY
-        : '' + config.key;
   }
 
   let props;
@@ -543,23 +545,25 @@ function jsxDEVImpl(
     // <div {...props} key="Hi" />, because we aren't currently able to tell if
     // key is explicitly declared to be undefined or not.
     if (maybeKey !== undefined) {
-      if (__DEV__) {
-        checkKeyStringCoercion(maybeKey);
+      if (enableOptimisticKey && maybeKey === REACT_OPTIMISTIC_KEY) {
+        key = REACT_OPTIMISTIC_KEY;
+      } else {
+        if (__DEV__) {
+          checkKeyStringCoercion(maybeKey);
+        }
+        key = '' + maybeKey;
       }
-      key =
-        enableOptimisticKey && maybeKey === REACT_OPTIMISTIC_KEY
-          ? REACT_OPTIMISTIC_KEY
-          : '' + maybeKey;
     }
 
     if (hasValidKey(config)) {
-      if (__DEV__) {
-        checkKeyStringCoercion(config.key);
+      if (enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY) {
+        key = REACT_OPTIMISTIC_KEY;
+      } else {
+        if (__DEV__) {
+          checkKeyStringCoercion(config.key);
+        }
+        key = '' + config.key;
       }
-      key =
-        enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY
-          ? REACT_OPTIMISTIC_KEY
-          : '' + config.key;
     }
 
     let props;
@@ -650,13 +654,14 @@ export function createElement(type, config, children) {
     }
 
     if (hasValidKey(config)) {
-      if (__DEV__) {
-        checkKeyStringCoercion(config.key);
+      if (enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY) {
+        key = REACT_OPTIMISTIC_KEY;
+      } else {
+        if (__DEV__) {
+          checkKeyStringCoercion(config.key);
+        }
+        key = '' + config.key;
       }
-      key =
-        enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY
-          ? REACT_OPTIMISTIC_KEY
-          : '' + config.key;
     }
 
     // Remaining properties are added to a new props object
@@ -785,13 +790,14 @@ export function cloneElement(element, config, children) {
       owner = __DEV__ ? getOwner() : undefined;
     }
     if (hasValidKey(config)) {
-      if (__DEV__) {
-        checkKeyStringCoercion(config.key);
+      if (enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY) {
+        key = REACT_OPTIMISTIC_KEY;
+      } else {
+        if (__DEV__) {
+          checkKeyStringCoercion(config.key);
+        }
+        key = '' + config.key;
       }
-      key =
-        enableOptimisticKey && config.key === REACT_OPTIMISTIC_KEY
-          ? REACT_OPTIMISTIC_KEY
-          : '' + config.key;
     }
 
     // Remaining properties override existing props
