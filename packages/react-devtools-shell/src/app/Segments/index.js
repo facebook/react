@@ -77,13 +77,13 @@ function Root({children}: {children: React.Node}): React.Node {
 
 export default function Segments(): React.Node {
   return (
-    <React.Activity name="/" mode="visible">
+    <React.Activity name="root" mode="visible">
       <Root>
-        <React.Activity name="/outer/" mode="visible">
+        <React.Activity name="outer" mode="visible">
           <OuterSegment>
-            <React.Activity name="/outer/inner" mode="visible">
+            <React.Activity name="inner" mode="visible">
               <InnerSegment>
-                <React.Activity name="/outer/inner/page" mode="visible">
+                <React.Activity name="slot" mode="visible">
                   <Page />
                 </React.Activity>
               </InnerSegment>
