@@ -44,6 +44,7 @@ import {
   enableObjectFiber,
   enableViewTransition,
   enableSuspenseyImages,
+  enableOptimisticKey,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -365,6 +366,12 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress.subtreeFlags = NoFlags;
     workInProgress.deletions = null;
 
+    if (enableOptimisticKey) {
+      // For optimistic keys, the Fibers can have different keys if one is optimistic
+      // and the other one is filled in.
+      workInProgress.key = current.key;
+    }
+
     if (enableProfilerTimer) {
       // We intentionally reset, rather than copy, actualDuration & actualStartTime.
       // This prevents time from endlessly accumulating in new commits.
@@ -489,7 +496,14 @@ export function resetWorkInProgress(
     workInProgress.memoizedState = current.memoizedState;
     workInProgress.updateQueue = current.updateQueue;
     // Needed because Blocks store data on type.
+    // TODO: Blocks don't exist anymore. Do we still need this?
     workInProgress.type = current.type;
+
+    if (enableOptimisticKey) {
+      // For optimistic keys, the Fibers can have different keys if one is optimistic
+      // and the other one is filled in.
+      workInProgress.key = current.key;
+    }
 
     // Clone the dependencies object. This is mutated during the render phase, so
     // it cannot be shared with the current fiber.
