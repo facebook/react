@@ -75,6 +75,7 @@ import {
   isGestureRender,
   GestureLane,
   UpdateLanes,
+  includesOnlyTransitions,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -235,6 +236,13 @@ type StoreInstance<T> = {
 type StoreConsistencyCheck<T> = {
   value: T,
   getSnapshot: () => T,
+};
+
+// TODO: Use something other than null
+type StoreWithSelectorQueue<T> = {
+  syncEagerState: T | null,
+  transitionEagerState: T | null,
+  lanes: Lanes,
 };
 
 type EventFunctionPayload<Args, Return, F: (...Array<Args>) => Return> = {
@@ -1815,10 +1823,24 @@ function mountStoreWithSelector<S, T>(
 ): T {
   const fiber = currentlyRenderingFiber;
   const hook = mountWorkInProgressHook();
-  const selectedState = selector(store._current);
+  const isTransition = includesOnlyTransitions(renderLanes);
+  const selectedState = selector(
+    isTransition ? store._transition : store._current,
+  );
+
+  // TODO: If store._transition !== store._current, we need to
+  // enqueue an entangled fixup update to ensure consistency.
   hook.memoizedState = selectedState;
 
-  mountEffect(createSubscription.bind(null, store, fiber), []);
+  // Create a queue object to hold eager states for sync and transition updates
+  const queue: StoreWithSelectorQueue<T> = {
+    syncEagerState: null,
+    transitionEagerState: null,
+    lanes: NoLanes,
+  };
+  hook.queue = queue;
+
+  mountEffect(createSubscription.bind(null, store, fiber, selector, queue), []);
   return selectedState;
 }
 
@@ -1828,27 +1850,72 @@ function updateStoreWithSelector<S, T>(
 ): T {
   const fiber = currentlyRenderingFiber;
   const hook = updateWorkInProgressHook();
+  const queue: StoreWithSelectorQueue<T> = (hook.queue: any);
 
-  updateEffect(createSubscription.bind(null, store, fiber), []);
+  updateEffect(
+    createSubscription.bind(null, store, fiber, selector, queue),
+    [],
+  );
 
-  // TODO: Calling selector during render is not our end state.
-  // We need to find something we can eagerly write the state to which
-  // will be stable during subsequent renders.
-  // The hook object is not stable since it gets recreated during each render.
-  const nextState = selector(store._current);
-  if (!is(hook.memoizedState, nextState)) {
-    hook.memoizedState = nextState;
+  // TODO: What's the correct check here?
+  const isTransition = includesOnlyTransitions(renderLanes);
+  let eagerState;
+  if (isTransition) {
+    eagerState = queue.transitionEagerState;
+    queue.transitionEagerState = null;
+  } else {
+    eagerState = queue.syncEagerState;
+    queue.syncEagerState = null;
+  }
+
+  // If we are rendering as part of an async transition update that still hasn't
+  // resolved, we want to stop rendering and wait for the promise to resolve.
+  if (queue.lanes === peekEntangledActionLane()) {
+    const entangledActionThenable = peekEntangledActionThenable();
+    if (entangledActionThenable !== null) {
+      // TODO: Instead of the throwing the thenable directly, throw a
+      // special object like `use` does so we can detect if it's captured
+      // by userspace.
+      throw entangledActionThenable;
+    }
+  }
+
+  // Check if the eager state is different from the previous memoized state
+  if (eagerState !== null && !is(hook.memoizedState, eagerState)) {
+    hook.memoizedState = eagerState;
     markWorkInProgressReceivedUpdate();
   }
-  return nextState;
+
+  return hook.memoizedState;
 }
 
-function createSubscription(store: ReactStore<mixed, mixed>, fiber: Fiber) {
+function createSubscription<S, T>(
+  store: ReactStore<S, mixed>,
+  fiber: Fiber,
+  selector: S => T,
+  queue: StoreWithSelectorQueue<T>,
+): () => void {
   return store.subscribe(() => {
     const lane = requestUpdateLane(fiber);
+    const isTransition = isTransitionLane(lane);
+    // Eagerly compute the new selected state
+    const newState = selector(
+      isTransition ? store._transition : store._current,
+    );
+
+    // Write to the appropriate queue property based on whether this is a transition
+    if (isTransition) {
+      queue.transitionEagerState = newState;
+    } else {
+      queue.syncEagerState = newState;
+    }
+
+    queue.lanes = mergeLanes(queue.lanes, lane);
+
     const root = enqueueConcurrentRenderForLane(fiber, lane);
     if (root !== null) {
       scheduleUpdateOnFiber(root, fiber, lane);
+      entangleTransitionUpdate(root, queue, lane);
     }
   });
 }
@@ -3877,7 +3944,7 @@ function enqueueRenderPhaseUpdate<S, A>(
 // TODO: Move to ReactFiberConcurrentUpdates?
 function entangleTransitionUpdate<S, A>(
   root: FiberRoot,
-  queue: UpdateQueue<S, A>,
+  queue: UpdateQueue<S, A> | StoreWithSelectorQueue<T>,
   lane: Lane,
 ): void {
   if (isTransitionLane(lane)) {
