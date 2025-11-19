@@ -77,7 +77,7 @@ function Profiler(_: {}) {
 
   useEffect(() => {
     const div = profilerRef.current;
-    if (div === null) {
+    if (!div) {
       return;
     }
     const ownerWindow = div.ownerDocument.defaultView;
