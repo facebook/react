@@ -14,19 +14,10 @@ let React;
 let ReactNoop;
 let Scheduler;
 let act;
-let useLayoutEffect;
-let forwardRef;
-let useImperativeHandle;
-let useRef;
-let useState;
-let use;
 let createStore;
 let startTransition;
 let waitFor;
-let waitForAll;
 let assertLog;
-let Suspense;
-let useMemo;
 
 describe('useStoreWithSelector', () => {
   beforeEach(() => {
@@ -35,20 +26,11 @@ describe('useStoreWithSelector', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    useLayoutEffect = React.useLayoutEffect;
-    useImperativeHandle = React.useImperativeHandle;
-    forwardRef = React.forwardRef;
-    useRef = React.useRef;
-    useState = React.useState;
-    use = React.use;
     createStore = React.createStore;
     useStoreWithSelector = React.useStoreWithSelector;
     startTransition = React.startTransition;
-    Suspense = React.Suspense;
-    useMemo = React.useMemo;
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
-    waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
 
     act = require('internal-test-utils').act;
@@ -100,6 +82,64 @@ describe('useStoreWithSelector', () => {
     });
     assertLog([4]);
     expect(root).toMatchRenderedOutput('4');
+  });
+  it('rebasing', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment' | 'decrement'},
+    ): number {
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        case 'double':
+          return count * 2;
+        default:
+          return count;
+      }
+    }
+    const store = createStore(counterReducer, 2);
+
+    function App() {
+      const value = useStoreWithSelector(store, identify);
+      Scheduler.log(value);
+      return <>{value}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+      await waitFor([2]);
+    });
+    expect(root).toMatchRenderedOutput('2');
+
+    let resolve;
+
+    await act(async () => {
+      await startTransition(async () => {
+        store.dispatch({type: 'increment'});
+        await new Promise(r => (resolve = r));
+      });
+    });
+
+    assertLog([]);
+    expect(root).toMatchRenderedOutput('2');
+
+    await act(async () => {
+      store.dispatch({type: 'double'});
+    });
+
+    assertLog([4]);
+    expect(root).toMatchRenderedOutput('4');
+
+    await act(async () => {
+      resolve();
+    });
+
+    // TODO: Get this working
+    // assertLog([6]);
+    // expect(root).toMatchRenderedOutput('6');
   });
 });
 
