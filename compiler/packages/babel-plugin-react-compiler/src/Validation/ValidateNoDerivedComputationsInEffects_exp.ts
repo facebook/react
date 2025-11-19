@@ -422,6 +422,14 @@ function recordInstructionDerivations(
     );
   }
 
+  if (value.kind === 'FunctionExpression') {
+    /*
+     * We don't want to record effect mutations of FunctionExpressions the mutations will happen in the
+     * function body and we will record them there.
+     */
+    return;
+  }
+
   for (const operand of eachInstructionOperand(instr)) {
     switch (operand.effect) {
       case Effect.Capture:
@@ -512,6 +520,19 @@ function buildTreeNode(
 
   const namedSiblings: Set<string> = new Set();
   for (const childId of sourceMetadata.sourcesIds) {
+    CompilerError.invariant(childId !== sourceId, {
+      reason:
+        'Unexpected self-reference: a value should not have itself as a source',
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: sourceMetadata.place.loc,
+          message: null,
+        },
+      ],
+    });
+
     const childNodes = buildTreeNode(
       childId,
       context,
