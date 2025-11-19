@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Fragment, useContext, useEffect, useRef} from 'react';
+import {Fragment, useContext, useEffect, useRef, useEffectEvent} from 'react';
 import {ModalDialog} from '../ModalDialog';
 import {ProfilerContext} from './ProfilerContext';
 import TabBar from '../TabBar';
