@@ -448,7 +448,7 @@ July 13, 2022
 * Timeline Profiler Sidebar with component tree ([lunaruan](https://github.com/lunaruan) and [blakef](https://github.com/blakef) in [#24816](https://github.com/facebook/react/pull/24816), [#24815](https://github.com/facebook/react/pull/24815), [#24814](https://github.com/facebook/react/pull/24814), [#24805](https://github.com/facebook/react/pull/24805), [#24776](https://github.com/facebook/react/pull/24776))
 * [DevTools][Bugfix] Fix DevTools Perf Issue When Unmounting Large React Subtrees ([lunaruan](https://github.com/lunaruan) in [#24863](https://github.com/facebook/react/pull/24863))
 * Enable "reload & profile" button for timeline view ([mondaychen](https://github.com/mondaychen) in [#24702](https://github.com/facebook/react/pull/24702))
-* Find best renderer when inspecting app with mutilple react roots ([mondaychen](https://github.com/mondaychen) in [#24665](https://github.com/facebook/react/pull/24665))
+* Find best renderer when inspecting app with multiple react roots ([mondaychen](https://github.com/mondaychen) in [#24665](https://github.com/facebook/react/pull/24665))
 * Only polyfill requestAnimationFrame when necessary ([mondaychen](https://github.com/mondaychen) in [#24651](https://github.com/facebook/react/pull/24651))
 
 ---
@@ -586,7 +586,7 @@ Because React Native embeds a copy of the React DevTools "backend" ([`react-devt
 
 #### Bugfix
 * DevTools should inject itself for XHTML pages too (not just HTML) ([@bvaughn](https://github.com/bvaughn) in [#22932](https://github.com/facebook/react/pull/22932))
-* Don't restore profiling data if we're profling ([@eps1lon](https://github.com/eps1lon) in [#22753](https://github.com/facebook/react/pull/22753))
+* Don't restore profiling data if we're profiling ([@eps1lon](https://github.com/eps1lon) in [#22753](https://github.com/facebook/react/pull/22753))
 * DevTools should properly report re-renders due to (use)context changes ([@bvaughn](https://github.com/bvaughn) in [#22746](https://github.com/facebook/react/pull/22746))
 * Filter empty commits (all Fibers bailed out) from Profiler ([@bvaughn](https://github.com/bvaughn) in [#22745](https://github.com/facebook/react/pull/22745))
 * Accept json file in import fileinput ([@jyash97](https://github.com/jyash97) in [#22717](https://github.com/facebook/react/pull/22717))

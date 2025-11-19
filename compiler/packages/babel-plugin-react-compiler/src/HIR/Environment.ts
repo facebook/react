@@ -229,7 +229,7 @@ export const EnvironmentConfigSchema = z.object({
 
   /**
    * Enable use of type annotations in the source to drive type inference. By default
-   * Forget attemps to infer types using only information that is guaranteed correct
+   * Forget attempts to infer types using only information that is guaranteed correct
    * given the source, and does not trust user-supplied type annotations. This mode
    * enables trusting user type annotations.
    */
@@ -292,7 +292,7 @@ export const EnvironmentConfigSchema = z.object({
    * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
    * Currently a prod-only optimization, requiring Fast JSX dependencies
    *
-   * The symbol configuration is set for backwards compatability with pre-React 19 transforms
+   * The symbol configuration is set for backwards compatibility with pre-React 19 transforms
    */
   inlineJsxTransform: ReactElementSymbolSchema.nullable().default(null),
 
@@ -549,7 +549,7 @@ export const EnvironmentConfigSchema = z.object({
    * makes sure we don't load a dep when it's a property (to check if it has
    * changed) and instead check the receiver.
    *
-   * This makes sure we don't end up throwing when the reciver is null. Consider
+   * This makes sure we don't end up throwing when the receiver is null. Consider
    * this code:
    *
    * ```
