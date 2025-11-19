@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ea63eccddef24631c16923434c5d677a>>
+ * @generated SignedSource<<4ecf526bcb26f25e21a4efacd17dd892>>
  */
 
 /*
@@ -581,14 +581,16 @@ __DEV__ &&
       return requiredContext(contextStackCursor$1.current);
     }
     function pushHostContext(fiber) {
-      null !== fiber.memoizedState &&
-        push(hostTransitionProviderCursor, fiber, fiber);
-      var context = requiredContext(contextStackCursor$1.current);
+      var stateHook = fiber.memoizedState;
+      null !== stateHook &&
+        ((HostTransitionContext._currentValue = stateHook.memoizedState),
+        push(hostTransitionProviderCursor, fiber, fiber));
+      stateHook = requiredContext(contextStackCursor$1.current);
       var type = fiber.type;
-      var nextContext = getChildHostContextProd(context.context, type);
-      type = updatedAncestorInfoDev(context.ancestorInfo, type);
+      var nextContext = getChildHostContextProd(stateHook.context, type);
+      type = updatedAncestorInfoDev(stateHook.ancestorInfo, type);
       nextContext = { context: nextContext, ancestorInfo: type };
-      context !== nextContext &&
+      stateHook !== nextContext &&
         (push(contextFiberStackCursor, fiber, fiber),
         push(contextStackCursor$1, nextContext, fiber));
     }
@@ -30304,11 +30306,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-eb89912e-20251118" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-8ac5f4eb-20251119" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-eb89912e-20251118\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-8ac5f4eb-20251119\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30345,10 +30347,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-eb89912e-20251118",
+          version: "19.3.0-native-fb-8ac5f4eb-20251119",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-eb89912e-20251118"
+          reconcilerVersion: "19.3.0-native-fb-8ac5f4eb-20251119"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30814,7 +30816,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-native-fb-eb89912e-20251118";
+    exports.version = "19.3.0-native-fb-8ac5f4eb-20251119";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

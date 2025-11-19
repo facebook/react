@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b5ea12f571da8046648c96188466696c>>
+ * @generated SignedSource<<b826a378f9467da06da86b1ccc6f7996>>
  */
 
 "use strict";
@@ -1005,7 +1005,10 @@ function popHostContainer() {
   pop(rootInstanceStackCursor);
 }
 function pushHostContext(fiber) {
-  null !== fiber.memoizedState && push(hostTransitionProviderCursor, fiber);
+  var stateHook = fiber.memoizedState;
+  null !== stateHook &&
+    ((HostTransitionContext._currentValue2 = stateHook.memoizedState),
+    push(hostTransitionProviderCursor, fiber));
   contextStackCursor.current !== NO_CONTEXT &&
     (push(contextFiberStackCursor, fiber),
     push(contextStackCursor, NO_CONTEXT));
@@ -10199,10 +10202,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1474 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-eb89912e-20251118",
+  version: "19.3.0-native-fb-8ac5f4eb-20251119",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-eb89912e-20251118"
+  reconcilerVersion: "19.3.0-native-fb-8ac5f4eb-20251119"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1475 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10338,4 +10341,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.3.0-native-fb-eb89912e-20251118";
+exports.version = "19.3.0-native-fb-8ac5f4eb-20251119";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d056b82ebdd08e72c5dd1f0d269c96c8>>
+ * @generated SignedSource<<62c3908e4b47949925c6cb6646926c98>>
  */
 
 "use strict";
@@ -2257,10 +2257,13 @@ function popHostContainer() {
   pop(rootInstanceStackCursor);
 }
 function pushHostContext(fiber) {
-  null !== fiber.memoizedState && push(hostTransitionProviderCursor, fiber);
-  var context = contextStackCursor.current;
-  context !== context &&
-    (push(contextFiberStackCursor, fiber), push(contextStackCursor, context));
+  var stateHook = fiber.memoizedState;
+  null !== stateHook &&
+    ((HostTransitionContext._currentValue2 = stateHook.memoizedState),
+    push(hostTransitionProviderCursor, fiber));
+  stateHook = contextStackCursor.current;
+  stateHook !== stateHook &&
+    (push(contextFiberStackCursor, fiber), push(contextStackCursor, stateHook));
 }
 function popHostContext(fiber) {
   contextFiberStackCursor.current === fiber &&
@@ -13471,10 +13474,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1611 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-eb89912e-20251118",
+    version: "19.3.0-native-fb-8ac5f4eb-20251119",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-eb89912e-20251118"
+    reconcilerVersion: "19.3.0-native-fb-8ac5f4eb-20251119"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1611.rendererConfig = extraDevToolsConfig);

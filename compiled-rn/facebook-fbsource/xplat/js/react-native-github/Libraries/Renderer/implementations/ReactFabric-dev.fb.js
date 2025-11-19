@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<31c68b1803cf4743899a348205a31051>>
+ * @generated SignedSource<<a893d5dd02eb28a96dce24c924653c89>>
  */
 
 "use strict";
@@ -2869,9 +2869,11 @@ __DEV__ &&
       pop(rootInstanceStackCursor, fiber);
     }
     function pushHostContext(fiber) {
-      null !== fiber.memoizedState &&
-        push(hostTransitionProviderCursor, fiber, fiber);
-      var context = requiredContext(contextStackCursor.current);
+      var stateHook = fiber.memoizedState;
+      null !== stateHook &&
+        ((HostTransitionContext._currentValue2 = stateHook.memoizedState),
+        push(hostTransitionProviderCursor, fiber, fiber));
+      stateHook = requiredContext(contextStackCursor.current);
       var nextContext = fiber.type;
       nextContext =
         "AndroidTextInput" === nextContext ||
@@ -2880,10 +2882,10 @@ __DEV__ &&
         "RCTText" === nextContext ||
         "RCTVirtualText" === nextContext;
       nextContext =
-        context.isInAParentText !== nextContext
+        stateHook.isInAParentText !== nextContext
           ? { isInAParentText: nextContext }
-          : context;
-      context !== nextContext &&
+          : stateHook;
+      stateHook !== nextContext &&
         (push(contextFiberStackCursor, fiber, fiber),
         push(contextStackCursor, nextContext, fiber));
     }
@@ -20219,10 +20221,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-eb89912e-20251118",
+        version: "19.3.0-native-fb-8ac5f4eb-20251119",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-eb89912e-20251118"
+        reconcilerVersion: "19.3.0-native-fb-8ac5f4eb-20251119"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cef14cb0f1d059ce6ccff6fcb4b0a0c3>>
+ * @generated SignedSource<<e1dde8f4b3511f38de7157a821f13d51>>
  */
 
 "use strict";
@@ -1053,7 +1053,10 @@ function popHostContainer() {
   pop(rootInstanceStackCursor);
 }
 function pushHostContext(fiber) {
-  null !== fiber.memoizedState && push(hostTransitionProviderCursor, fiber);
+  var stateHook = fiber.memoizedState;
+  null !== stateHook &&
+    ((HostTransitionContext._currentValue2 = stateHook.memoizedState),
+    push(hostTransitionProviderCursor, fiber));
   contextStackCursor.current !== NO_CONTEXT &&
     (push(contextFiberStackCursor, fiber),
     push(contextStackCursor, NO_CONTEXT));
@@ -10826,10 +10829,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1262 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-eb89912e-20251118",
+  version: "19.3.0-native-fb-8ac5f4eb-20251119",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-eb89912e-20251118",
+  reconcilerVersion: "19.3.0-native-fb-8ac5f4eb-20251119",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$151 = 0;
@@ -10980,4 +10983,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.3.0-native-fb-eb89912e-20251118";
+exports.version = "19.3.0-native-fb-8ac5f4eb-20251119";
