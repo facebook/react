@@ -2033,8 +2033,7 @@ function renderSuspenseListRows(
           insertionIndex,
           rowBoundary,
           prevContext,
-          // Assume we are text embedded at the trailing edges
-          i === 0 ? previousSegment.lastPushedText : true,
+          true, // Text embedding don't matter since this will never have any content
           true,
         );
         // The implicit boundary is immediately completed since it doesn't have any fallback content.
@@ -2051,13 +2050,19 @@ function renderSuspenseListRows(
           queueCompletedSegment(previousRowBoundary, previousSegment);
         }
 
+        const isTopSegment = forwards ? n === 0 : n === totalChildren - 1;
         const rowSegment = createPendingSegment(
           request,
           0,
           null,
           task.formatContext,
-          // Assume we are text embedded at the trailing edges
-          i === 0 ? previousSegment.lastPushedText : true,
+          // The top segment is going to get emitted right after last pushed thing to the parent.
+          // For any other row, the one above it will assume it's text embedded and so will finish
+          // with a comment. Therefore we can assume that we start as not having pushed text.
+          isTopSegment ? parentSegment.lastPushedText : false,
+          // Every child might end up being text embedded depending on what the previous one does.
+          // Even the last one might end up text embedded if all the others render null and then
+          // there's text after the List.
           true,
         );
         // We mark the row segment as having its parent flushed. It's not really flushed but there is
@@ -2171,8 +2176,13 @@ function renderSuspenseListRows(
           insertionIndex,
           null,
           task.formatContext,
-          // Assume we are text embedded at the trailing edges
-          i === 0 ? parentSegment.lastPushedText : true,
+          // The last segment is going to get emitted right after last pushed thing to the parent.
+          // For any other row, the one above it will assume it's text embedded and so will finish
+          // with a comment. Therefore we can assume that we start as not having pushed text.
+          i === totalChildren - 1 ? parentSegment.lastPushedText : false,
+          // Every child might end up being text embedded depending on what the previous one does.
+          // Even the last one might end up text embedded if all the others render null and then
+          // there's text after the List.
           true,
         );
         // Insert in the beginning of the sequence, which will insert before any previous rows.
