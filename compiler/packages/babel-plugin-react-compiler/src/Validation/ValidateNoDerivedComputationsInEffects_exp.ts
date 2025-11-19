@@ -520,6 +520,10 @@ function buildTreeNode(
 
   const namedSiblings: Set<string> = new Set();
   for (const childId of sourceMetadata.sourcesIds) {
+    if (childId === sourceId) {
+      continue;
+    }
+
     const childNodes = buildTreeNode(
       childId,
       context,
