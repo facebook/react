@@ -1025,10 +1025,16 @@ module.exports = function ($$$config) {
     pop(rootInstanceStackCursor);
   }
   function pushHostContext(fiber) {
-    null !== fiber.memoizedState && push(hostTransitionProviderCursor, fiber);
-    var context = contextStackCursor.current,
-      nextContext = getChildHostContext(context, fiber.type);
-    context !== nextContext &&
+    var stateHook = fiber.memoizedState;
+    null !== stateHook &&
+      ((stateHook = stateHook.memoizedState),
+      isPrimaryRenderer
+        ? (HostTransitionContext._currentValue = stateHook)
+        : (HostTransitionContext._currentValue2 = stateHook),
+      push(hostTransitionProviderCursor, fiber));
+    stateHook = contextStackCursor.current;
+    var nextContext = getChildHostContext(stateHook, fiber.type);
+    stateHook !== nextContext &&
       (push(contextFiberStackCursor, fiber),
       push(contextStackCursor, nextContext));
   }
@@ -14360,7 +14366,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-eb89912e-20251118"
+      reconcilerVersion: "19.3.0-www-classic-8ac5f4eb-20251119"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

@@ -2359,11 +2359,16 @@ __DEV__ &&
       return requiredContext(contextStackCursor.current);
     }
     function pushHostContext(fiber) {
-      null !== fiber.memoizedState &&
-        push(hostTransitionProviderCursor, fiber, fiber);
-      var context = requiredContext(contextStackCursor.current),
-        nextContext = getChildHostContext(context, fiber.type);
-      context !== nextContext &&
+      var stateHook = fiber.memoizedState;
+      null !== stateHook &&
+        ((stateHook = stateHook.memoizedState),
+        isPrimaryRenderer
+          ? (HostTransitionContext._currentValue = stateHook)
+          : (HostTransitionContext._currentValue2 = stateHook),
+        push(hostTransitionProviderCursor, fiber, fiber));
+      stateHook = requiredContext(contextStackCursor.current);
+      var nextContext = getChildHostContext(stateHook, fiber.type);
+      stateHook !== nextContext &&
         (push(contextFiberStackCursor, fiber, fiber),
         push(contextStackCursor, nextContext, fiber));
     }
@@ -22904,7 +22909,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-eb89912e-20251118"
+        reconcilerVersion: "19.3.0-www-modern-8ac5f4eb-20251119"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

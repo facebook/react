@@ -840,10 +840,13 @@ function popHostContainer() {
   pop(rootInstanceStackCursor);
 }
 function pushHostContext(fiber) {
-  null !== fiber.memoizedState && push(hostTransitionProviderCursor, fiber);
-  var context = contextStackCursor.current;
-  var JSCompiler_inline_result = getChildHostContextProd(context, fiber.type);
-  context !== JSCompiler_inline_result &&
+  var stateHook = fiber.memoizedState;
+  null !== stateHook &&
+    ((HostTransitionContext._currentValue = stateHook.memoizedState),
+    push(hostTransitionProviderCursor, fiber));
+  stateHook = contextStackCursor.current;
+  var JSCompiler_inline_result = getChildHostContextProd(stateHook, fiber.type);
+  stateHook !== JSCompiler_inline_result &&
     (push(contextFiberStackCursor, fiber),
     push(contextStackCursor, JSCompiler_inline_result));
 }
@@ -22190,14 +22193,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2374 = React.version;
 if (
-  "19.3.0-www-modern-eb89912e-20251118" !==
+  "19.3.0-www-modern-8ac5f4eb-20251119" !==
   isomorphicReactPackageVersion$jscomp$inline_2374
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2374,
-      "19.3.0-www-modern-eb89912e-20251118"
+      "19.3.0-www-modern-8ac5f4eb-20251119"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22215,10 +22218,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2376 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-eb89912e-20251118",
+  version: "19.3.0-www-modern-8ac5f4eb-20251119",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-eb89912e-20251118"
+  reconcilerVersion: "19.3.0-www-modern-8ac5f4eb-20251119"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2376.getLaneLabelMap = getLaneLabelMap),
@@ -22651,7 +22654,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-eb89912e-20251118";
+exports.version = "19.3.0-www-modern-8ac5f4eb-20251119";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
