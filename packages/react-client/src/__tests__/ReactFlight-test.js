@@ -3884,4 +3884,19 @@ describe('ReactFlight', () => {
       </main>,
     );
   });
+
+  // @gate enableOptimisticKey
+  it('collapses optimistic keys to an optimistic key', async () => {
+    function Bar({text}) {
+      return <div />;
+    }
+    function Foo() {
+      return <Bar key={ReactServer.optimisticKey} />;
+    }
+    const transport = ReactNoopFlightServer.render({
+      element: <Foo key="Outer Key" />,
+    });
+    const model = await ReactNoopFlightClient.read(transport);
+    expect(model.element.key).toBe(React.optimisticKey);
+  });
 });

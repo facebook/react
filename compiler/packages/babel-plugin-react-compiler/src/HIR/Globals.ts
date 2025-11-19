@@ -23,13 +23,14 @@ import {
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
   BuiltInUseOperatorId,
+  BuiltInUseOptimisticId,
   BuiltInUseReducerId,
   BuiltInUseRefId,
   BuiltInUseStateId,
   BuiltInUseTransitionId,
   BuiltInWeakMapId,
   BuiltInWeakSetId,
-  BuiltinEffectEventId,
+  BuiltInEffectEventId,
   ReanimatedSharedValueId,
   ShapeRegistry,
   addFunction,
@@ -819,6 +820,18 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
     }),
   ],
   [
+    'useOptimistic',
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: {kind: 'Object', shapeId: BuiltInUseOptimisticId},
+      calleeEffect: Effect.Read,
+      hookKind: 'useOptimistic',
+      returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.State,
+    }),
+  ],
+  [
     'use',
     addFunction(
       DEFAULT_SHAPES,
@@ -863,7 +876,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         returnType: {
           kind: 'Function',
           return: {kind: 'Poly'},
-          shapeId: BuiltinEffectEventId,
+          shapeId: BuiltInEffectEventId,
           isConstructor: false,
         },
         calleeEffect: Effect.Read,
