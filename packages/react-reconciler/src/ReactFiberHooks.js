@@ -76,6 +76,8 @@ import {
   GestureLane,
   UpdateLanes,
   includesOnlyTransitions,
+  includesTransitionLane,
+  SomeTransitionLane,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -1817,83 +1819,67 @@ function updateSyncExternalStore<T>(
   return nextSnapshot;
 }
 
+// Used as a placeholder to let us reuse updateReducerImpl for useStoreWithSelector.
+function storeReducer<S, A>(state: S, action: A): S {
+  throw new Error(
+    'Should never be called. This is a bug in React. Please file an issue.',
+  );
+}
+
 function mountStoreWithSelector<S, T>(
   store: ReactStore<S, mixed>,
   selector: S => T,
 ): T {
   const fiber = currentlyRenderingFiber;
-  const hook = mountWorkInProgressHook();
   const isTransition = includesOnlyTransitions(renderLanes);
-  const selectedState = selector(
+  // TODO: If store._transition !== store._current, we need to
+  // enqueue an entangled fixup update to ensure consistency.
+  const initialState = selector(
     isTransition ? store._transition : store._current,
   );
 
-  // TODO: If store._transition !== store._current, we need to
-  // enqueue an entangled fixup update to ensure consistency.
-  hook.memoizedState = selectedState;
+  const hook = mountWorkInProgressHook();
 
-  // Create a queue object to hold eager states for sync and transition updates
-  const queue: StoreWithSelectorQueue<T> = {
-    syncEagerState: null,
-    transitionEagerState: null,
+  hook.memoizedState = hook.baseState = initialState;
+  const queue: UpdateQueue<S, mixed> = {
+    pending: null,
     lanes: NoLanes,
+    dispatch: null,
+    lastRenderedReducer: storeReducer,
+    lastRenderedState: (initialState: any),
   };
   hook.queue = queue;
 
   mountEffect(createSubscription.bind(null, store, fiber, selector, queue), []);
-  return selectedState;
+  return initialState;
 }
 
 function updateStoreWithSelector<S, T>(
   store: ReactStore<S, mixed>,
   selector: S => T,
 ): T {
-  const fiber = currentlyRenderingFiber;
   const hook = updateWorkInProgressHook();
-  const queue: StoreWithSelectorQueue<T> = (hook.queue: any);
+  const [state /* _dispatch */] = updateReducerImpl<T, mixed>(
+    hook,
+    ((currentHook: any): Hook),
+    storeReducer,
+  );
+
+  const fiber = currentlyRenderingFiber;
+  const queue = hook.queue;
 
   updateEffect(
     createSubscription.bind(null, store, fiber, selector, queue),
     [],
   );
-
-  // TODO: What's the correct check here?
-  const isTransition = includesOnlyTransitions(renderLanes);
-  let eagerState;
-  if (isTransition) {
-    eagerState = queue.transitionEagerState;
-    queue.transitionEagerState = null;
-  } else {
-    eagerState = queue.syncEagerState;
-    queue.syncEagerState = null;
-  }
-
-  // If we are rendering as part of an async transition update that still hasn't
-  // resolved, we want to stop rendering and wait for the promise to resolve.
-  if (queue.lanes === peekEntangledActionLane()) {
-    const entangledActionThenable = peekEntangledActionThenable();
-    if (entangledActionThenable !== null) {
-      // TODO: Instead of the throwing the thenable directly, throw a
-      // special object like `use` does so we can detect if it's captured
-      // by userspace.
-      throw entangledActionThenable;
-    }
-  }
-
-  // Check if the eager state is different from the previous memoized state
-  if (eagerState !== null && !is(hook.memoizedState, eagerState)) {
-    hook.memoizedState = eagerState;
-    markWorkInProgressReceivedUpdate();
-  }
-
-  return hook.memoizedState;
+  return state;
 }
 
 function createSubscription<S, T>(
   store: ReactStore<S, mixed>,
   fiber: Fiber,
   selector: S => T,
-  queue: StoreWithSelectorQueue<T>,
+  queue: UpdateQueue<T, mixed>,
 ): () => void {
   return store.subscribe(() => {
     const lane = requestUpdateLane(fiber);
@@ -1903,19 +1889,67 @@ function createSubscription<S, T>(
       isTransition ? store._transition : store._current,
     );
 
-    // Write to the appropriate queue property based on whether this is a transition
-    if (isTransition) {
-      queue.transitionEagerState = newState;
-    } else {
-      queue.syncEagerState = newState;
-    }
+    const update: Update<T, mixed> = {
+      lane,
+      revertLane: NoLane,
+      gesture: null,
+      action: null,
+      hasEagerState: true,
+      eagerState: newState,
+      next: (null: any),
+    };
 
-    queue.lanes = mergeLanes(queue.lanes, lane);
+    const hasQueuedTransitionUpdate = includesTransitionLane(queue.lanes);
 
-    const root = enqueueConcurrentRenderForLane(fiber, lane);
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane, 'store.dispatch()', fiber);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitionUpdate(root, queue, lane);
+    }
+
+    // The way React's update ordering works is that for each render we apply
+    // the updates for that render's lane, and skip over any updates that don't
+    // have sufficient priority. For normal reducer updates this means that we
+    // will:
+    // 1. Apply a sync update on top of the currently committed state.
+    // 2. Reattempt the pending transition update, this time with the sync
+    //    update applied on top.
+    //
+    // However, we don't want each individual component's update to have to
+    // re-rerun the store's reducer in order to achieve this update reordering.
+    // Instead, if we know there is a pending transition update, we simply
+    // enqueue yet another transition update on top.
+    // The sync render will ignore this update but the subsequent transition render
+    // will apply it, giving us the desired final state.
+    //
+    // Ideally we could define a custom approach for store selector states, but
+    // for now this lets us reuse all of the very complex updateReducerImpl logic
+    // without changes.
+    if (hasQueuedTransitionUpdate && !isTransition) {
+      // TODO: We should determine the actual lane (lanes?) we need to use here.
+      const transitionLane = SomeTransitionLane;
+      const transitionState = selector(store._transition);
+      const transitionUpdate: Update<T, mixed> = {
+        lane: transitionLane,
+        revertLane: NoLane,
+        gesture: null,
+        action: null,
+        hasEagerState: true,
+        eagerState: transitionState,
+        next: (null: any),
+      };
+      const transitionRoot = enqueueConcurrentHookUpdate(
+        fiber,
+        queue,
+        transitionUpdate,
+        transitionLane,
+      );
+      if (transitionRoot !== null) {
+        startUpdateTimerByLane(transitionLane, 'store.dispatch()', fiber);
+        scheduleUpdateOnFiber(transitionRoot, fiber, transitionLane);
+        entangleTransitionUpdate(transitionRoot, queue, transitionLane);
+      }
     }
   });
 }
