@@ -1096,6 +1096,123 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
+  it('can stream in "backwards" with tail "hidden" with boundaries', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="backwards" tail="hidden">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <C />
+            </Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await C.resolve();
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'Suspend! [B]', // TODO: Defer rendering the content after fallback if previous suspended,
+      'C',
+      'Loading A',
+      'Loading B',
+      'Loading C',
+    ]);
+
+    expect(getVisibleChildren(container)).toEqual(<div />);
+
+    await serverAct(() => A.resolve());
+    assertLog(['A']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+      </div>,
+    );
+
+    await serverAct(() => B.resolve());
+    assertLog(['B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>C</span>
+        <span>B</span>
+        <span>A</span>
+      </div>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('can stream in "backwards" with tail "hidden" without boundaries', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="backwards" tail="hidden">
+            <A />
+            <B />
+            <C />
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await C.resolve();
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'Suspend! [B]', // TODO: Defer rendering the content after fallback if previous suspended,
+      'C',
+    ]);
+
+    expect(getVisibleChildren(container)).toEqual(<div />);
+
+    await serverAct(() => A.resolve());
+    assertLog(['A']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+      </div>,
+    );
+
+    await serverAct(() => B.resolve());
+    assertLog(['B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>C</span>
+        <span>B</span>
+        <span>A</span>
+      </div>,
+    );
+  });
+
   it('inserts text separators (comments) for text nodes (forwards)', async () => {
     function Foo() {
       return (
