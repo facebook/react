@@ -137,9 +137,8 @@ describe('useStoreWithSelector', () => {
       resolve();
     });
 
-    // TODO: Get this working
-    // assertLog([6]);
-    // expect(root).toMatchRenderedOutput('6');
+    assertLog([6]);
+    expect(root).toMatchRenderedOutput('6');
   });
 });
 
