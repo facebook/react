@@ -6437,7 +6437,12 @@ __DEV__ &&
               refProp = void 0 !== refProp ? refProp : null;
               var debugTask = task.debugTask,
                 name = getComponentNameFromType(type);
-              key = null == key ? (-1 === childIndex ? 0 : childIndex) : key;
+              key =
+                null == key || key === REACT_OPTIMISTIC_KEY
+                  ? -1 === childIndex
+                    ? 0
+                    : childIndex
+                  : key;
               var keyPath = [task.keyPath, name, key];
               null !== task.replay
                 ? debugTask
@@ -8239,6 +8244,7 @@ __DEV__ &&
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
       ASYNC_ITERATOR = Symbol.asyncIterator,
+      REACT_OPTIMISTIC_KEY = Symbol.for("react.optimistic_key"),
       isArrayImpl = Array.isArray,
       jsxPropsParents = new WeakMap(),
       jsxChildrenParents = new WeakMap(),
