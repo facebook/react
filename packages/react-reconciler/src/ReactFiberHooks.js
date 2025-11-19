@@ -1832,16 +1832,14 @@ function mountStoreWithSelector<S, T>(
 ): T {
   const fiber = currentlyRenderingFiber;
   const isTransition = includesOnlyTransitions(renderLanes);
-  // TODO: If store._transition !== store._current, we need to
-  // enqueue an entangled fixup update to ensure consistency.
-  const initialState = selector(
-    isTransition ? store._transition : store._current,
-  );
+  const storeState = isTransition ? store._transition : store._current;
+
+  const initialState = selector(storeState);
 
   const hook = mountWorkInProgressHook();
 
   hook.memoizedState = hook.baseState = initialState;
-  const queue: UpdateQueue<S, mixed> = {
+  const queue: UpdateQueue<T, mixed> = {
     pending: null,
     lanes: NoLanes,
     dispatch: null,
@@ -1851,6 +1849,33 @@ function mountStoreWithSelector<S, T>(
   hook.queue = queue;
 
   mountEffect(createSubscription.bind(null, store, fiber, selector, queue), []);
+
+  // If we are mounting mid-transition, we need to schedule an update to
+  // bring the selected state up to date with the transition state.
+  if (!is(storeState, store._transition)) {
+    const newState = selector(store._transition);
+    const lane = SomeTransitionLane;
+    const update: Update<T, mixed> = {
+      lane,
+      revertLane: NoLane,
+      gesture: null,
+      action: null,
+      hasEagerState: true,
+      eagerState: newState,
+      next: (null: any),
+    };
+
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
+    if (root !== null) {
+      startUpdateTimerByLane(
+        lane,
+        'useStoreWithSelector mount mid transition fixup',
+        fiber,
+      );
+      scheduleUpdateOnFiber(root, fiber, lane);
+      entangleTransitionUpdate(root, queue, lane);
+    }
+  }
   return initialState;
 }
 
