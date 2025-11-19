@@ -52,6 +52,8 @@ type ValidationContext = {
   readonly setStateUsages: Map<IdentifierId, Set<SourceLocation>>;
 };
 
+const MAX_FIXPOINT_ITERATIONS = 100;
+
 class DerivationCache {
   hasChanges: boolean = false;
   cache: Map<IdentifierId, DerivationMetadata> = new Map();
@@ -224,6 +226,7 @@ export function validateNoDerivedComputationsInEffects_exp(
   }
 
   let isFirstPass = true;
+  let iterationCount = 0;
   do {
     context.derivationCache.takeSnapshot();
 
@@ -236,6 +239,19 @@ export function validateNoDerivedComputationsInEffects_exp(
 
     context.derivationCache.checkForChanges();
     isFirstPass = false;
+    iterationCount++;
+    CompilerError.invariant(iterationCount < MAX_FIXPOINT_ITERATIONS, {
+      reason:
+        '[ValidateNoDerivedComputationsInEffects] Fixpoint iteration failed to converge',
+      description: `Fixpoint iteration exceeded ${MAX_FIXPOINT_ITERATIONS} iterations while tracking derivations. This suggests a cyclic dependency in the derivation cache.`,
+      details: [
+        {
+          kind: 'error',
+          loc: fn.loc,
+          message: `Exceeded ${MAX_FIXPOINT_ITERATIONS} iterations in ValidateNoDerivedComputationsInEffects`,
+        },
+      ],
+    });
   } while (context.derivationCache.snapshot());
 
   for (const [, effect] of effectsCache) {
@@ -422,6 +438,14 @@ function recordInstructionDerivations(
     );
   }
 
+  if (value.kind === 'FunctionExpression') {
+    /*
+     * We don't want to record effect mutations of FunctionExpressions the mutations will happen in the
+     * function body and we will record them there.
+     */
+    return;
+  }
+
   for (const operand of eachInstructionOperand(instr)) {
     switch (operand.effect) {
       case Effect.Capture:
@@ -512,6 +536,19 @@ function buildTreeNode(
 
   const namedSiblings: Set<string> = new Set();
   for (const childId of sourceMetadata.sourcesIds) {
+    CompilerError.invariant(childId !== sourceId, {
+      reason:
+        'Unexpected self-reference: a value should not have itself as a source',
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: sourceMetadata.place.loc,
+          message: null,
+        },
+      ],
+    });
+
     const childNodes = buildTreeNode(
       childId,
       context,
