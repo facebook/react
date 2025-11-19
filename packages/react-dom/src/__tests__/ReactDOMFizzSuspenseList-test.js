@@ -1095,4 +1095,81 @@ describe('ReactDOMFizzSuspenseList', () => {
       </div>,
     );
   });
+
+  it('inserts text separators (comments) for text nodes (forwards)', async () => {
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards">{['A', 'B', 'C']}</SuspenseList>
+        </div>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>{['A', 'B', 'C']}</div>);
+
+    const textNodes = 3;
+    const boundaryComments = 2 * textNodes; // TODO: One we remove the comments around boundaries this should be zero.
+    const textSeparators = textNodes; // One after each node.
+    const suspenseListComments = 2;
+    expect(container.firstChild.childNodes.length).toBe(
+      textNodes + textSeparators + boundaryComments + suspenseListComments,
+    );
+  });
+
+  it('inserts text separators (comments) for text nodes (backwards)', async () => {
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="backwards">{['C', 'B', 'A']}</SuspenseList>
+        </div>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>{['A', 'B', 'C']}</div>);
+
+    const textNodes = 3;
+    const boundaryComments = 2 * textNodes; // TODO: One we remove the comments around boundaries this should be zero.
+    const textSeparators = textNodes; // One after each node.
+    const suspenseListComments = 2;
+    expect(container.firstChild.childNodes.length).toBe(
+      textNodes + textSeparators + boundaryComments + suspenseListComments,
+    );
+  });
+
+  it('inserts text separators (comments) for text nodes (legacy)', async () => {
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="unstable_legacy-backwards">
+            {['A', 'B', 'C']}
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>{['A', 'B', 'C']}</div>);
+
+    const textNodes = 3;
+    const boundaryComments = 2 * textNodes; // TODO: One we remove the comments around boundaries this should be zero.
+    const textSeparators = textNodes; // One after each node.
+    const suspenseListComments = 2;
+    expect(container.firstChild.childNodes.length).toBe(
+      textNodes + textSeparators + boundaryComments + suspenseListComments,
+    );
+  });
 });
