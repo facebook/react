@@ -39,7 +39,9 @@ import styles from './Profiler.css';
 
 function Profiler(_: {}) {
   const profilerRef = useRef<HTMLDivElement | null>(null);
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const isMac =
+    typeof navigator !== 'undefined' &&
+    navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
   const {
     didRecordCommits,
