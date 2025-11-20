@@ -120,6 +120,27 @@ export default function DebuggingSettings({
           </a>
         </label>
       </div>
+
+      <div className={styles.SettingWrapper}>
+        <label className={styles.SettingRow}>
+          <input
+            type="checkbox"
+            checked={disableSecondConsoleLogDimmingInStrictMode}
+            onChange={({currentTarget}) =>
+              setDisableSecondConsoleLogDimmingInStrictMode(currentTarget.checked)
+            }
+            className={styles.SettingRowCheckbox}
+          />
+          Disable log dimming during additional invocations in&nbsp;
+          <a
+            className={styles.StrictModeLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://react.dev/reference/react/StrictMode">
+            Strict Mode
+          </a>
+        </label>
+      </div>
     </div>
   );
 }
