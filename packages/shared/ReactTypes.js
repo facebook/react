@@ -7,6 +7,12 @@
  * @flow
  */
 
+import type {ReactOptimisticKey} from './ReactSymbols';
+
+export type {ReactOptimisticKey};
+
+export type ReactKey = null | string | ReactOptimisticKey;
+
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -26,7 +32,7 @@ export type ReactText = string | number;
 export type ReactProvider<T> = {
   $$typeof: symbol | number,
   type: ReactContext<T>,
-  key: null | string,
+  key: ReactKey,
   ref: null,
   props: {
     value: T,
@@ -42,7 +48,7 @@ export type ReactConsumerType<T> = {
 export type ReactConsumer<T> = {
   $$typeof: symbol | number,
   type: ReactConsumerType<T>,
-  key: null | string,
+  key: ReactKey,
   ref: null,
   props: {
     children: (value: T) => ReactNodeList,
@@ -66,7 +72,7 @@ export type ReactContext<T> = {
 
 export type ReactPortal = {
   $$typeof: symbol | number,
-  key: null | string,
+  key: ReactKey,
   containerInfo: any,
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
@@ -204,7 +210,7 @@ export type ReactFunctionLocation = [
 export type ReactComponentInfo = {
   +name: string,
   +env?: string,
-  +key?: null | string,
+  +key?: ReactKey,
   +owner?: null | ReactComponentInfo,
   +stack?: null | ReactStackTrace,
   +props?: null | {[name: string]: mixed},

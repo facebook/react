@@ -27,6 +27,7 @@ import type {
   SuspenseProps,
   SuspenseListProps,
   SuspenseListRevealOrder,
+  ReactKey,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -170,6 +171,7 @@ import {
   REACT_SCOPE_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
   REACT_ACTIVITY_TYPE,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -3253,7 +3255,7 @@ function retryNode(request: Request, task: Task): void {
       case REACT_ELEMENT_TYPE: {
         const element: any = node;
         const type = element.type;
-        const key = element.key;
+        const key: ReactKey = element.key;
         const props = element.props;
 
         // TODO: We should get the ref off the props object right before using
@@ -3265,7 +3267,11 @@ function retryNode(request: Request, task: Task): void {
 
         const name = getComponentNameFromType(type);
         const keyOrIndex =
-          key == null ? (childIndex === -1 ? 0 : childIndex) : key;
+          key == null || key === REACT_OPTIMISTIC_KEY
+            ? childIndex === -1
+              ? 0
+              : childIndex
+            : key;
         const keyPath = [task.keyPath, name, keyOrIndex];
         if (task.replay !== null) {
           if (debugTask) {

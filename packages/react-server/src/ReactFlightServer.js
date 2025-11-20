@@ -65,6 +65,7 @@ import type {
   ReactFunctionLocation,
   ReactErrorInfo,
   ReactErrorInfoDev,
+  ReactKey,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -136,6 +137,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   ASYNC_ITERATOR,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 
 import {
@@ -534,7 +536,7 @@ type Task = {
   model: ReactClientValue,
   ping: () => void,
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
-  keyPath: null | string, // parent server component keys
+  keyPath: ReactKey, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   formatContext: FormatContext, // an approximate parent context from host components
   thenableState: ThenableState | null,
@@ -1643,7 +1645,7 @@ function processServerComponentReturnValue(
 function renderFunctionComponent<Props>(
   request: Request,
   task: Task,
-  key: null | string,
+  key: ReactKey,
   Component: (p: Props, arg: void) => any,
   props: Props,
   validated: number, // DEV-only
@@ -1814,7 +1816,12 @@ function renderFunctionComponent<Props>(
   if (key !== null) {
     // Append the key to the path. Technically a null key should really add the child
     // index. We don't do that to hold the payload small and implementation simple.
-    task.keyPath = prevKeyPath === null ? key : prevKeyPath + ',' + key;
+    if (key === REACT_OPTIMISTIC_KEY || prevKeyPath === REACT_OPTIMISTIC_KEY) {
+      // The optimistic key is viral. It turns the whole key into optimistic if any part is.
+      task.keyPath = REACT_OPTIMISTIC_KEY;
+    } else {
+      task.keyPath = prevKeyPath === null ? key : prevKeyPath + ',' + key;
+    }
   } else if (prevKeyPath === null) {
     // This sequence of Server Components has no keys. This means that it was rendered
     // in a slot that needs to assign an implicit key. Even if children below have
@@ -1830,7 +1837,7 @@ function renderFunctionComponent<Props>(
 
 function warnForMissingKey(
   request: Request,
-  key: null | string,
+  key: ReactKey,
   componentDebugInfo: ReactComponentInfo,
   debugTask: null | ConsoleTask,
 ): void {
@@ -2024,7 +2031,7 @@ function renderClientElement(
   request: Request,
   task: Task,
   type: any,
-  key: null | string,
+  key: ReactKey,
   props: any,
   validated: number, // DEV-only
 ): ReactJSONValue {
@@ -2034,7 +2041,12 @@ function renderClientElement(
   if (key === null) {
     key = keyPath;
   } else if (keyPath !== null) {
-    key = keyPath + ',' + key;
+    if (keyPath === REACT_OPTIMISTIC_KEY || key === REACT_OPTIMISTIC_KEY) {
+      // Optimistic key is viral and turns the whole key optimistic.
+      key = REACT_OPTIMISTIC_KEY;
+    } else {
+      key = keyPath + ',' + key;
+    }
   }
   let debugOwner = null;
   let debugStack = null;
@@ -2161,7 +2173,7 @@ function renderElement(
   request: Request,
   task: Task,
   type: any,
-  key: null | string,
+  key: ReactKey,
   ref: mixed,
   props: any,
   validated: number, // DEV only
@@ -2667,7 +2679,7 @@ function pingTask(request: Request, task: Task): void {
 function createTask(
   request: Request,
   model: ReactClientValue,
-  keyPath: null | string,
+  keyPath: ReactKey,
   implicitSlot: boolean,
   formatContext: FormatContext,
   abortSet: Set<Task>,
@@ -3521,7 +3533,7 @@ function renderModelDestructive(
             element._debugTask === undefined
           ) {
             let key = '';
-            if (element.key !== null) {
+            if (element.key !== null && element.key !== REACT_OPTIMISTIC_KEY) {
               key = ' key="' + element.key + '"';
             }
 
@@ -3547,7 +3559,7 @@ function renderModelDestructive(
           request,
           task,
           element.type,
-          // $FlowFixMe[incompatible-call] the key of an element is null | string
+          // $FlowFixMe[incompatible-call] the key of an element is null | string | ReactOptimisticKey
           element.key,
           ref,
           props,

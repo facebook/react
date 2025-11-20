@@ -17,6 +17,7 @@ import type {
   Awaited,
   ReactComponentInfo,
   ReactDebugInfo,
+  ReactKey,
 } from 'shared/ReactTypes';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import type {WorkTag} from './ReactWorkTags';
@@ -100,7 +101,7 @@ export type Fiber = {
   tag: WorkTag,
 
   // Unique identifier of this child.
-  key: null | string,
+  key: ReactKey,
 
   // The value of element.type which is used to preserve the identity during
   // reconciliation of this child.
