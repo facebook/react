@@ -25,7 +25,7 @@ module.exports = {
     'jest',
     'es',
     'no-for-of-loops',
-    'no-function-declare-after-return',
+    'no-function-declare-after-return',ewfvweFEA
     'react',
     'react-internal',
   ],
