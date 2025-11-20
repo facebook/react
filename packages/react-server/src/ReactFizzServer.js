@@ -245,12 +245,17 @@ type SuspenseList = {
   completedRows: number,
 };
 
+type SuspenseListRowMode = 0 | 1;
+
+const INDEPENDENT = 0; // Each boundary is revealed independently and when they're all done, the next row can unblock.
+const TOGETHER = 1; // All the boundaries within this row must be revealed together.
+
 type SuspenseListRow = {
   pendingTasks: number, // The number of tasks, previous rows and inner suspense boundaries blocking this row.
   boundaries: null | Array<SuspenseBoundary>, // The boundaries in this row waiting to be unblocked by the previous row. (null means this row is not blocked)
   hoistables: HoistableState, // Any dependencies that this row depends on. Future rows need to also depend on it.
   inheritedHoistables: null | HoistableState, // Any dependencies that previous row depend on, that new boundaries of this row needs.
-  together: boolean, // All the boundaries within this row must be revealed together.
+  mode: SuspenseListRowMode,
   next: null | SuspenseListRow, // The next row blocked by this one.
 };
 
@@ -1502,7 +1507,7 @@ function renderSuspenseBoundary(
         }
       } else {
         const boundaryRow = prevRow;
-        if (boundaryRow !== null && boundaryRow.together) {
+        if (boundaryRow !== null && boundaryRow.mode === TOGETHER) {
           tryToResolveTogetherRow(request, boundaryRow);
         }
       }
@@ -1769,7 +1774,7 @@ function unblockSuspenseListRow(
     const unblockedBoundaries = unblockedRow.boundaries;
     if (
       unblockedBoundaries !== null &&
-      (!unblockedRow.together ||
+      (unblockedRow.mode !== TOGETHER ||
         // Together rows are blocked on themselves. This is the last one, which will
         // unblock the row itself.
         unblockedRow.pendingTasks === 1)
@@ -1780,7 +1785,10 @@ function unblockSuspenseListRow(
         if (inheritedHoistables !== null) {
           hoistHoistables(unblockedBoundary.contentState, inheritedHoistables);
         }
-        if (unblockedRow.together && unblockedBoundary.pendingTasks === 1) {
+        if (
+          unblockedRow.mode === TOGETHER &&
+          unblockedBoundary.pendingTasks === 1
+        ) {
           // We decrement the task count when we flush each boundary of a together row.
           // We add it back here before finishing which decrements it again.
           unblockedRow.pendingTasks++;
@@ -1865,7 +1873,7 @@ function createSuspenseListRow(
     boundaries: null,
     hoistables: createHoistableState(),
     inheritedHoistables: null,
-    together: false,
+    mode: INDEPENDENT,
     next: null,
   };
   if (previousRow !== null && previousRow.pendingTasks > 0) {
@@ -2003,7 +2011,7 @@ function renderSuspenseListRows(
         const suspenseListRow = createSuspenseListRow(previousSuspenseListRow);
         // This effectively acts as a together row because we'll block it on its own boundary.
         // TODO: For "collapsed" this should be different.
-        suspenseListRow.together = true;
+        suspenseListRow.mode = TOGETHER;
         if (previousSuspenseListRow === null) {
           // If this is the first row, then it won't be blocked by any previous rows but
           // for hidden mode, it'll be blocked by its own boundary.
@@ -2367,7 +2375,7 @@ function renderSuspenseList(
     // This will cause boundaries to block on this row, but there's nothing to
     // unblock them. We'll use the partial flushing pass to unblock them.
     newRow.boundaries = [];
-    newRow.together = true;
+    newRow.mode = TOGETHER;
     task.keyPath = keyPath;
     renderNodeDestructive(request, task, children, -1);
     if (--newRow.pendingTasks === 0) {
@@ -5059,7 +5067,7 @@ function finishedTask(
   if (row !== null) {
     if (--row.pendingTasks === 0) {
       finishSuspenseListRow(request, row);
-    } else if (row.together) {
+    } else if (row.mode === TOGETHER) {
       tryToResolveTogetherRow(request, row);
     }
   }
@@ -5174,7 +5182,7 @@ function finishedTask(
         }
       }
       const boundaryRow = boundary.row;
-      if (boundaryRow !== null && boundaryRow.together) {
+      if (boundaryRow !== null && boundaryRow.mode === TOGETHER) {
         tryToResolveTogetherRow(request, boundaryRow);
       }
     }
@@ -5929,7 +5937,7 @@ function flushPartialBoundary(
   completedSegments.splice(0, i);
 
   const row = boundary.row;
-  if (row !== null && row.together && boundary.pendingTasks === 1) {
+  if (row !== null && row.mode === TOGETHER && boundary.pendingTasks === 1) {
     // "together" rows are blocked on their own boundaries.
     // We have now flushed all the boundary's segments as partials.
     // We can now unblock it from blocking the row that will eventually
