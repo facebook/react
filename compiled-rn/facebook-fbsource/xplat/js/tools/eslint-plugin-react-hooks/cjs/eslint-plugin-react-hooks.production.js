@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<cf304db32e4d474186cc1f8e12f5a01f>>
+ * @generated SignedSource<<cccc6934c34a3940400dd7fe6562ffc7>>
  */
 
 'use strict';
@@ -18914,6 +18914,9 @@ function isObjectMethodType(id) {
 function isPrimitiveType(id) {
     return id.type.kind === 'Primitive';
 }
+function isPlainObjectType(id) {
+    return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInObject';
+}
 function isArrayType(id) {
     return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
 }
@@ -32043,6 +32046,7 @@ const EnvironmentConfigSchema = v4.z.object({
     validateNoDynamicallyCreatedComponentsOrHooks: v4.z.boolean().default(false),
     enableAllowSetStateFromRefsInEffects: v4.z.boolean().default(true),
     enableInferEventHandlers: v4.z.boolean().default(false),
+    enableOptimizeForSSR: v4.z.boolean().default(false),
 });
 class Environment {
     constructor(scope, fnType, compilerMode, config, contextIdentifiers, parentFunction, logger, filename, code, programContext) {
@@ -34259,9 +34263,10 @@ function deadCodeElimination(fn) {
     retainWhere(fn.context, contextVar => state.isIdOrNameUsed(contextVar.identifier));
 }
 let State$2 = class State {
-    constructor() {
+    constructor(env) {
         this.named = new Set();
         this.identifiers = new Set();
+        this.env = env;
     }
     reference(identifier) {
         this.identifiers.add(identifier.id);
@@ -34283,7 +34288,7 @@ let State$2 = class State {
 function findReferencedIdentifiers(fn) {
     const hasLoop = hasBackEdge(fn);
     const reversedBlocks = [...fn.body.blocks.values()].reverse();
-    const state = new State$2();
+    const state = new State$2(fn.env);
     let size = state.count;
     do {
         size = state.count;
@@ -34430,12 +34435,25 @@ function pruneableValue(value, state) {
         case 'Debugger': {
             return false;
         }
-        case 'Await':
         case 'CallExpression':
+        case 'MethodCall': {
+            if (state.env.config.enableOptimizeForSSR) {
+                const calleee = value.kind === 'CallExpression' ? value.callee : value.property;
+                const hookKind = getHookKind(state.env, calleee.identifier);
+                switch (hookKind) {
+                    case 'useState':
+                    case 'useReducer':
+                    case 'useRef': {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        case 'Await':
         case 'ComputedDelete':
         case 'ComputedStore':
         case 'PropertyDelete':
-        case 'MethodCall':
         case 'PropertyStore':
         case 'StoreGlobal': {
             return false;
@@ -52512,7 +52530,7 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
                 });
             }
         }
-        else if (isUseStateType(lvalue.identifier) && value.args.length > 0) {
+        else if (isUseStateType(lvalue.identifier)) {
             typeOfValue = 'fromState';
             context.derivationCache.addDerivationEntry(lvalue, new Set(), typeOfValue, true);
             return;
@@ -52962,6 +52980,196 @@ function nameAnonymousFunctionsImpl(fn) {
     return nodes;
 }
 
+function optimizeForSSR(fn) {
+    const inlinedState = new Map();
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            const { value } = instr;
+            switch (value.kind) {
+                case 'Destructure': {
+                    if (inlinedState.has(value.value.identifier.id) &&
+                        value.lvalue.pattern.kind === 'ArrayPattern' &&
+                        value.lvalue.pattern.items.length >= 1 &&
+                        value.lvalue.pattern.items[0].kind === 'Identifier') {
+                        continue;
+                    }
+                    break;
+                }
+                case 'MethodCall':
+                case 'CallExpression': {
+                    const calleee = value.kind === 'CallExpression' ? value.callee : value.property;
+                    const hookKind = getHookKind(fn.env, calleee.identifier);
+                    switch (hookKind) {
+                        case 'useReducer': {
+                            if (value.args.length === 2 &&
+                                value.args[1].kind === 'Identifier') {
+                                const arg = value.args[1];
+                                const replace = {
+                                    kind: 'LoadLocal',
+                                    place: arg,
+                                    loc: arg.loc,
+                                };
+                                inlinedState.set(instr.lvalue.identifier.id, replace);
+                            }
+                            else if (value.args.length === 3 &&
+                                value.args[1].kind === 'Identifier' &&
+                                value.args[2].kind === 'Identifier') {
+                                const arg = value.args[1];
+                                const initializer = value.args[2];
+                                const replace = {
+                                    kind: 'CallExpression',
+                                    callee: initializer,
+                                    args: [arg],
+                                    loc: value.loc,
+                                };
+                                inlinedState.set(instr.lvalue.identifier.id, replace);
+                            }
+                            break;
+                        }
+                        case 'useState': {
+                            if (value.args.length === 1 &&
+                                value.args[0].kind === 'Identifier') {
+                                const arg = value.args[0];
+                                if (isPrimitiveType(arg.identifier) ||
+                                    isPlainObjectType(arg.identifier) ||
+                                    isArrayType(arg.identifier)) {
+                                    const replace = {
+                                        kind: 'LoadLocal',
+                                        place: arg,
+                                        loc: arg.loc,
+                                    };
+                                    inlinedState.set(instr.lvalue.identifier.id, replace);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            if (inlinedState.size !== 0) {
+                for (const operand of eachInstructionValueOperand(value)) {
+                    inlinedState.delete(operand.identifier.id);
+                }
+            }
+        }
+        if (inlinedState.size !== 0) {
+            for (const operand of eachTerminalOperand(block.terminal)) {
+                inlinedState.delete(operand.identifier.id);
+            }
+        }
+    }
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            const { value } = instr;
+            switch (value.kind) {
+                case 'FunctionExpression': {
+                    if (hasKnownNonRenderCall(value.loweredFunc.func)) {
+                        instr.value = {
+                            kind: 'Primitive',
+                            value: undefined,
+                            loc: value.loc,
+                        };
+                    }
+                    break;
+                }
+                case 'JsxExpression': {
+                    if (value.tag.kind === 'BuiltinTag' &&
+                        value.tag.name.indexOf('-') === -1) {
+                        const tag = value.tag.name;
+                        retainWhere(value.props, prop => {
+                            return (prop.kind === 'JsxSpreadAttribute' ||
+                                (!isKnownEventHandler(tag, prop.name) && prop.name !== 'ref'));
+                        });
+                    }
+                    break;
+                }
+                case 'Destructure': {
+                    if (inlinedState.has(value.value.identifier.id)) {
+                        CompilerError.invariant(value.lvalue.pattern.kind === 'ArrayPattern' &&
+                            value.lvalue.pattern.items.length >= 1 &&
+                            value.lvalue.pattern.items[0].kind === 'Identifier', {
+                            reason: 'Expected a valid destructuring pattern for inlined state',
+                            description: null,
+                            details: [
+                                {
+                                    kind: 'error',
+                                    message: 'Expected a valid destructuring pattern',
+                                    loc: value.loc,
+                                },
+                            ],
+                        });
+                        const store = {
+                            kind: 'StoreLocal',
+                            loc: value.loc,
+                            type: null,
+                            lvalue: {
+                                kind: value.lvalue.kind,
+                                place: value.lvalue.pattern.items[0],
+                            },
+                            value: value.value,
+                        };
+                        instr.value = store;
+                    }
+                    break;
+                }
+                case 'MethodCall':
+                case 'CallExpression': {
+                    const calleee = value.kind === 'CallExpression' ? value.callee : value.property;
+                    const hookKind = getHookKind(fn.env, calleee.identifier);
+                    switch (hookKind) {
+                        case 'useEffectEvent': {
+                            if (value.args.length === 1 &&
+                                value.args[0].kind === 'Identifier') {
+                                const load = {
+                                    kind: 'LoadLocal',
+                                    place: value.args[0],
+                                    loc: value.loc,
+                                };
+                                instr.value = load;
+                            }
+                            break;
+                        }
+                        case 'useEffect':
+                        case 'useLayoutEffect':
+                        case 'useInsertionEffect': {
+                            instr.value = {
+                                kind: 'Primitive',
+                                value: undefined,
+                                loc: value.loc,
+                            };
+                            break;
+                        }
+                        case 'useReducer':
+                        case 'useState': {
+                            const replace = inlinedState.get(instr.lvalue.identifier.id);
+                            if (replace != null) {
+                                instr.value = replace;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+function hasKnownNonRenderCall(fn) {
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            if (instr.value.kind === 'CallExpression' &&
+                (isSetStateType(instr.value.callee.identifier) ||
+                    isStartTransitionType(instr.value.callee.identifier))) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+const EVENT_HANDLER_PATTERN = /^on[A-Z]/;
+function isKnownEventHandler(_tag, prop) {
+    return EVENT_HANDLER_PATTERN.test(prop);
+}
+
 function run(func, config, fnType, mode, programContext, logger, filename, code) {
     var _a, _b;
     const contextIdentifiers = findContextIdentifiers(func);
@@ -53036,6 +53244,10 @@ function runWithEnvironment(func, env) {
             throw mutabilityAliasingErrors.unwrapErr();
         }
     }
+    if (env.config.enableOptimizeForSSR) {
+        optimizeForSSR(hir);
+        log({ kind: 'hir', name: 'OptimizeForSSR', value: hir });
+    }
     deadCodeElimination(hir);
     log({ kind: 'hir', name: 'DeadCodeElimination', value: hir });
     if (env.config.enableInstructionReordering) {
@@ -53093,8 +53305,10 @@ function runWithEnvironment(func, env) {
         if (env.config.validateStaticComponents) {
             env.logErrors(validateStaticComponents(hir));
         }
-        inferReactiveScopeVariables(hir);
-        log({ kind: 'hir', name: 'InferReactiveScopeVariables', value: hir });
+        if (!env.config.enableOptimizeForSSR) {
+            inferReactiveScopeVariables(hir);
+            log({ kind: 'hir', name: 'InferReactiveScopeVariables', value: hir });
+        }
     }
     const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
     log({
