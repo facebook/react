@@ -2,20 +2,28 @@
 import {useMemo} from 'react';
 import {makeObject_Primitives, Stringify} from 'shared-runtime';
 
-function Component({x, y, z}) {
-  const a = useMemo(() => {
+function useHook1(x) {
+  return useMemo(() => {
     return x?.y.z?.a;
   }, [x?.y.z?.a]);
-  const b = useMemo(() => {
+}
+function useHook2(x) {
+  useMemo(() => {
     return x.y.z?.a;
   }, [x.y.z?.a]);
-  const c = useMemo(() => {
+}
+function useHook3(x) {
+  return useMemo(() => {
     return x?.y.z.a?.b;
   }, [x?.y.z.a?.b]);
-  const d = useMemo(() => {
+}
+function useHook4(x, y, z) {
+  return useMemo(() => {
     return x?.y?.[(console.log(y), z?.b)];
   }, [x?.y, y, z?.b]);
-  const e = useMemo(() => {
+}
+function useHook5(x) {
+  return useMemo(() => {
     const e = [];
     const local = makeObject_Primitives(x);
     const fn = () => {
@@ -24,12 +32,23 @@ function Component({x, y, z}) {
     fn();
     return e;
   }, [x]);
-  const f = useMemo(() => {
+}
+function useHook6(x) {
+  return useMemo(() => {
     const f = [];
     f.push(x.y.z);
     f.push(x.y);
     f.push(x);
     return f;
   }, [x]);
+}
+
+function Component({x, y, z}) {
+  const a = useHook1(x);
+  const b = useHook2(x);
+  const c = useHook3(x);
+  const d = useHook4(x, y, z);
+  const e = useHook5(x);
+  const f = useHook6(x);
   return <Stringify results={[a, b, c, d, e, f]} />;
 }
