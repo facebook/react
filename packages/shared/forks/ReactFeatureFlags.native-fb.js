@@ -23,7 +23,6 @@ export const {
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
   enableEagerAlternateStateNodeCleanup,
-  passChildrenWhenCloningPersistedNodes,
   renameElementSymbol,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
