@@ -1887,6 +1887,18 @@ export function isStartTransitionType(id: Identifier): boolean {
   );
 }
 
+export function isUseOptimisticType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseOptimistic'
+  );
+}
+
+export function isSetOptimisticType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetOptimistic'
+  );
+}
+
 export function isSetActionStateType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetActionState'
@@ -1920,7 +1932,8 @@ export function isStableType(id: Identifier): boolean {
     isSetActionStateType(id) ||
     isDispatcherType(id) ||
     isUseRefType(id) ||
-    isStartTransitionType(id)
+    isStartTransitionType(id) ||
+    isSetOptimisticType(id)
   );
 }
 
@@ -1931,8 +1944,9 @@ export function isStableTypeContainer(id: Identifier): boolean {
   }
   return (
     isUseStateType(id) || // setState
-    type_.shapeId === 'BuiltInUseActionState' || // setActionState
+    isUseActionStateType(id) || // setActionState
     isUseReducerType(id) || // dispatcher
+    isUseOptimisticType(id) || // setOptimistic
     type_.shapeId === 'BuiltInUseTransition' // startTransition
   );
 }
@@ -1952,6 +1966,7 @@ export function evaluatesToStableTypeOrContainer(
       case 'useActionState':
       case 'useRef':
       case 'useTransition':
+      case 'useOptimistic':
         return true;
     }
   }

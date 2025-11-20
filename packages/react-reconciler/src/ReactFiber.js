@@ -14,6 +14,7 @@ import type {
   ReactScope,
   ViewTransitionProps,
   ActivityProps,
+  ReactKey,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
@@ -43,6 +44,7 @@ import {
   enableObjectFiber,
   enableViewTransition,
   enableSuspenseyImages,
+  enableOptimisticKey,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -137,7 +139,7 @@ function FiberNode(
   this: $FlowFixMe,
   tag: WorkTag,
   pendingProps: mixed,
-  key: null | string,
+  key: ReactKey,
   mode: TypeOfMode,
 ) {
   // Instance
@@ -224,7 +226,7 @@ function FiberNode(
 function createFiberImplClass(
   tag: WorkTag,
   pendingProps: mixed,
-  key: null | string,
+  key: ReactKey,
   mode: TypeOfMode,
 ): Fiber {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
@@ -234,7 +236,7 @@ function createFiberImplClass(
 function createFiberImplObject(
   tag: WorkTag,
   pendingProps: mixed,
-  key: null | string,
+  key: ReactKey,
   mode: TypeOfMode,
 ): Fiber {
   const fiber: Fiber = {
@@ -364,6 +366,12 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress.subtreeFlags = NoFlags;
     workInProgress.deletions = null;
 
+    if (enableOptimisticKey) {
+      // For optimistic keys, the Fibers can have different keys if one is optimistic
+      // and the other one is filled in.
+      workInProgress.key = current.key;
+    }
+
     if (enableProfilerTimer) {
       // We intentionally reset, rather than copy, actualDuration & actualStartTime.
       // This prevents time from endlessly accumulating in new commits.
@@ -488,7 +496,14 @@ export function resetWorkInProgress(
     workInProgress.memoizedState = current.memoizedState;
     workInProgress.updateQueue = current.updateQueue;
     // Needed because Blocks store data on type.
+    // TODO: Blocks don't exist anymore. Do we still need this?
     workInProgress.type = current.type;
+
+    if (enableOptimisticKey) {
+      // For optimistic keys, the Fibers can have different keys if one is optimistic
+      // and the other one is filled in.
+      workInProgress.key = current.key;
+    }
 
     // Clone the dependencies object. This is mutated during the render phase, so
     // it cannot be shared with the current fiber.
@@ -545,7 +560,7 @@ export function createHostRootFiber(
 // TODO: Get rid of this helper. Only createFiberFromElement should exist.
 export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
-  key: null | string,
+  key: ReactKey,
   pendingProps: any,
   owner: null | ReactComponentInfo | Fiber,
   mode: TypeOfMode,
@@ -747,7 +762,7 @@ export function createFiberFromFragment(
   elements: ReactFragment,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
   fiber.lanes = lanes;
@@ -759,7 +774,7 @@ function createFiberFromScope(
   pendingProps: any,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ) {
   const fiber = createFiber(ScopeComponent, pendingProps, key, mode);
   fiber.type = scope;
@@ -772,7 +787,7 @@ function createFiberFromProfiler(
   pendingProps: any,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ): Fiber {
   if (__DEV__) {
     if (typeof pendingProps.id !== 'string') {
@@ -801,7 +816,7 @@ export function createFiberFromSuspense(
   pendingProps: any,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ): Fiber {
   const fiber = createFiber(SuspenseComponent, pendingProps, key, mode);
   fiber.elementType = REACT_SUSPENSE_TYPE;
@@ -813,7 +828,7 @@ export function createFiberFromSuspenseList(
   pendingProps: any,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ): Fiber {
   const fiber = createFiber(SuspenseListComponent, pendingProps, key, mode);
   fiber.elementType = REACT_SUSPENSE_LIST_TYPE;
@@ -825,7 +840,7 @@ export function createFiberFromOffscreen(
   pendingProps: OffscreenProps,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ): Fiber {
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.lanes = lanes;
@@ -835,7 +850,7 @@ export function createFiberFromActivity(
   pendingProps: ActivityProps,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ): Fiber {
   const fiber = createFiber(ActivityComponent, pendingProps, key, mode);
   fiber.elementType = REACT_ACTIVITY_TYPE;
@@ -847,7 +862,7 @@ export function createFiberFromViewTransition(
   pendingProps: ViewTransitionProps,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ): Fiber {
   if (!enableSuspenseyImages) {
     // Render a ViewTransition component opts into SuspenseyImages mode even
@@ -871,7 +886,7 @@ export function createFiberFromLegacyHidden(
   pendingProps: LegacyHiddenProps,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ): Fiber {
   const fiber = createFiber(LegacyHiddenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_LEGACY_HIDDEN_TYPE;
@@ -883,7 +898,7 @@ export function createFiberFromTracingMarker(
   pendingProps: any,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | string,
+  key: ReactKey,
 ): Fiber {
   const fiber = createFiber(TracingMarkerComponent, pendingProps, key, mode);
   fiber.elementType = REACT_TRACING_MARKER_TYPE;

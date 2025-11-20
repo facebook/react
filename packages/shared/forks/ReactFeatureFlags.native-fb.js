@@ -36,7 +36,7 @@ export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const disableLegacyContext: boolean = false;
 export const disableLegacyContextForFunctionComponents: boolean = false;
-export const disableLegacyMode: boolean = true;
+export const disableLegacyMode: boolean = false;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
 export const enableAsyncDebugInfo: boolean = false;
@@ -85,6 +85,7 @@ export const enableComponentPerformanceTrack: boolean =
 export const enablePerformanceIssueReporting: boolean =
   enableComponentPerformanceTrack;
 export const enableInternalInstanceMap: boolean = false;
+export const enableOptimisticKey: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

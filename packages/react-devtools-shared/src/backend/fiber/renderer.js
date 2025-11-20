@@ -120,6 +120,7 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
   LAZY_SYMBOL_STRING,
+  REACT_OPTIMISTIC_KEY,
 } from '../shared/ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
@@ -1576,7 +1577,6 @@ export function attach(
       currentRoot = rootInstance;
       unmountInstanceRecursively(rootInstance);
       rootToFiberInstanceMap.delete(root);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
 
@@ -1646,7 +1646,6 @@ export function attach(
       currentRoot = newRoot;
       setRootPseudoKey(currentRoot.id, root.current);
       mountFiberRecursively(root.current, false);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
 
@@ -2159,7 +2158,6 @@ export function attach(
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
-  let pendingUnmountedRootID: FiberInstance['id'] | null = null;
 
   function pushOperation(op: number): void {
     if (__DEV__) {
@@ -2187,8 +2185,7 @@ export function attach(
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
       pendingRealUnmountedSuspenseIDs.length === 0 &&
-      pendingSuspenderChanges.size === 0 &&
-      pendingUnmountedRootID === null
+      pendingSuspenderChanges.size === 0
     );
   }
 
@@ -2250,9 +2247,7 @@ export function attach(
       return;
     }
 
-    const numUnmountIDs =
-      pendingRealUnmountedIDs.length +
-      (pendingUnmountedRootID === null ? 0 : 1);
+    const numUnmountIDs = pendingRealUnmountedIDs.length;
     const numUnmountSuspenseIDs = pendingRealUnmountedSuspenseIDs.length;
     const numSuspenderChanges = pendingSuspenderChanges.size;
 
@@ -2330,11 +2325,6 @@ export function attach(
       for (let j = 0; j < pendingRealUnmountedIDs.length; j++) {
         operations[i++] = pendingRealUnmountedIDs[j];
       }
-      // The root ID should always be unmounted last.
-      if (pendingUnmountedRootID !== null) {
-        operations[i] = pendingUnmountedRootID;
-        i++;
-      }
     }
 
     // Fill in pending operations.
@@ -2382,7 +2372,6 @@ export function attach(
     pendingRealUnmountedIDs.length = 0;
     pendingRealUnmountedSuspenseIDs.length = 0;
     pendingSuspenderChanges.clear();
-    pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
   }
@@ -2586,6 +2575,17 @@ export function attach(
         }
       }
     } else {
+      const suspenseNode = fiberInstance.suspenseNode;
+      if (suspenseNode !== null && fiber.memoizedState === null) {
+        // We're reconnecting an unsuspended Suspense. Measure to see if anything changed.
+        const prevRects = suspenseNode.rects;
+        const nextRects = measureInstance(fiberInstance);
+        if (!areEqualRects(prevRects, nextRects)) {
+          suspenseNode.rects = nextRects;
+          recordSuspenseResize(suspenseNode);
+        }
+      }
+
       const {key} = fiber;
       const displayName = getDisplayNameForFiber(fiber);
       const elementType = getElementTypeForFiber(fiber);
@@ -2857,7 +2857,6 @@ export function attach(
       // Already disconnected.
       return;
     }
-    const fiber = fiberInstance.data;
 
     if (trackedPathMatchInstance === fiberInstance) {
       // We're in the process of trying to restore previous selection.
@@ -2867,17 +2866,7 @@ export function attach(
     }
 
     const id = fiberInstance.id;
-    const isRoot = fiber.tag === HostRoot;
-    if (isRoot) {
-      // Roots must be removed only after all children have been removed.
-      // So we track it separately.
-      pendingUnmountedRootID = id;
-    } else {
-      // To maintain child-first ordering,
-      // we'll push it into one of these queues,
-      // and later arrange them in the correct order.
-      pendingRealUnmountedIDs.push(id);
-    }
+    pendingRealUnmountedIDs.push(id);
   }
 
   function recordSuspenseResize(suspenseNode: SuspenseNode): void {
@@ -4861,7 +4850,10 @@ export function attach(
               }
               let previousSiblingOfBestMatch = null;
               let bestMatch = remainingReconcilingChildren;
-              if (componentInfo.key != null) {
+              if (
+                componentInfo.key != null &&
+                componentInfo.key !== REACT_OPTIMISTIC_KEY
+              ) {
                 // If there is a key try to find a matching key in the set.
                 bestMatch = remainingReconcilingChildren;
                 while (bestMatch !== null) {
@@ -5761,11 +5753,12 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
-        flushPendingEvents();
-
-        needsToFlushComponentLogs = false;
         currentRoot = (null: any);
       });
+
+      flushPendingEvents();
+
+      needsToFlushComponentLogs = false;
     }
   }
 
@@ -6156,7 +6149,7 @@ export function attach(
       return {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
-        key: fiber.key,
+        key: fiber.key === REACT_OPTIMISTIC_KEY ? null : fiber.key,
         env: null,
         stack:
           fiber._debugOwner == null || fiber._debugStack == null
@@ -6169,7 +6162,11 @@ export function attach(
       return {
         displayName: componentInfo.name || 'Anonymous',
         id: instance.id,
-        key: componentInfo.key == null ? null : componentInfo.key,
+        key:
+          componentInfo.key == null ||
+          componentInfo.key === REACT_OPTIMISTIC_KEY
+            ? null
+            : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
         stack:
           componentInfo.owner == null || componentInfo.debugStack == null
@@ -7093,7 +7090,7 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
-      key: key != null ? key : null,
+      key: key != null && key !== REACT_OPTIMISTIC_KEY ? key : null,
 
       type: elementType,
 
@@ -8652,7 +8649,7 @@ export function attach(
     }
     return {
       displayName,
-      key,
+      key: key === REACT_OPTIMISTIC_KEY ? null : key,
       index,
     };
   }
@@ -8660,7 +8657,11 @@ export function attach(
   function getVirtualPathFrame(virtualInstance: VirtualInstance): PathFrame {
     return {
       displayName: virtualInstance.data.name || '',
-      key: virtualInstance.data.key == null ? null : virtualInstance.data.key,
+      key:
+        virtualInstance.data.key == null ||
+        virtualInstance.data.key === REACT_OPTIMISTIC_KEY
+          ? null
+          : virtualInstance.data.key,
       index: -1, // We use -1 to indicate that this is a virtual path frame.
     };
   }
