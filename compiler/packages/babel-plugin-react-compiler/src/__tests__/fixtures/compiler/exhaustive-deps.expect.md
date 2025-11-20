@@ -6,20 +6,28 @@
 import {useMemo} from 'react';
 import {makeObject_Primitives, Stringify} from 'shared-runtime';
 
-function Component({x, y, z}) {
-  const a = useMemo(() => {
+function useHook1(x) {
+  return useMemo(() => {
     return x?.y.z?.a;
   }, [x?.y.z?.a]);
-  const b = useMemo(() => {
+}
+function useHook2(x) {
+  useMemo(() => {
     return x.y.z?.a;
   }, [x.y.z?.a]);
-  const c = useMemo(() => {
+}
+function useHook3(x) {
+  return useMemo(() => {
     return x?.y.z.a?.b;
   }, [x?.y.z.a?.b]);
-  const d = useMemo(() => {
+}
+function useHook4(x, y, z) {
+  return useMemo(() => {
     return x?.y?.[(console.log(y), z?.b)];
   }, [x?.y, y, z?.b]);
-  const e = useMemo(() => {
+}
+function useHook5(x) {
+  return useMemo(() => {
     const e = [];
     const local = makeObject_Primitives(x);
     const fn = () => {
@@ -28,13 +36,24 @@ function Component({x, y, z}) {
     fn();
     return e;
   }, [x]);
-  const f = useMemo(() => {
+}
+function useHook6(x) {
+  return useMemo(() => {
     const f = [];
     f.push(x.y.z);
     f.push(x.y);
     f.push(x);
     return f;
   }, [x]);
+}
+
+function Component({x, y, z}) {
+  const a = useHook1(x);
+  const b = useHook2(x);
+  const c = useHook3(x);
+  const d = useHook4(x, y, z);
+  const e = useHook5(x);
+  const f = useHook6(x);
   return <Stringify results={[a, b, c, d, e, f]} />;
 }
 
@@ -47,56 +66,30 @@ import { c as _c } from "react/compiler-runtime"; // @validateExhaustiveMemoizat
 import { useMemo } from "react";
 import { makeObject_Primitives, Stringify } from "shared-runtime";
 
-function Component(t0) {
-  const $ = _c(21);
-  const { x, y, z } = t0;
-
+function useHook1(x) {
   x?.y.z?.a;
-  const a = x?.y.z?.a;
-  let t1;
-  if ($[0] !== x.y.z.a) {
-    t1 = () => x.y.z?.a;
-    $[0] = x.y.z.a;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  x.y.z?.a;
-  let t2;
-  if ($[2] !== t1) {
-    t2 = t1();
-    $[2] = t1;
-    $[3] = t2;
-  } else {
-    t2 = $[3];
-  }
-  const b = t2;
+  return x?.y.z?.a;
+}
 
+function useHook2(x) {
+  x.y.z?.a;
+}
+
+function useHook3(x) {
   x?.y.z.a?.b;
-  const c = x?.y.z.a?.b;
-  let t3;
-  if ($[4] !== x.y || $[5] !== y || $[6] !== z?.b) {
-    t3 = () => x?.y?.[(console.log(y), z?.b)];
-    $[4] = x.y;
-    $[5] = y;
-    $[6] = z?.b;
-    $[7] = t3;
-  } else {
-    t3 = $[7];
-  }
+  return x?.y.z.a?.b;
+}
+
+function useHook4(x, y, z) {
   x?.y;
   z?.b;
-  let t4;
-  if ($[8] !== t3) {
-    t4 = t3();
-    $[8] = t3;
-    $[9] = t4;
-  } else {
-    t4 = $[9];
-  }
-  const d = t4;
+  return x?.y?.[(console.log(y), z?.b)];
+}
+
+function useHook5(x) {
+  const $ = _c(2);
   let e;
-  if ($[10] !== x) {
+  if ($[0] !== x) {
     e = [];
     const local = makeObject_Primitives(x);
     const fn = () => {
@@ -104,45 +97,60 @@ function Component(t0) {
     };
 
     fn();
-    $[10] = x;
-    $[11] = e;
+    $[0] = x;
+    $[1] = e;
   } else {
-    e = $[11];
+    e = $[1];
   }
-  const e_0 = e;
+  return e;
+}
+
+function useHook6(x) {
+  const $ = _c(2);
   let f;
-  if ($[12] !== x) {
+  if ($[0] !== x) {
     f = [];
     f.push(x.y.z);
     f.push(x.y);
     f.push(x);
-    $[12] = x;
-    $[13] = f;
+    $[0] = x;
+    $[1] = f;
   } else {
-    f = $[13];
+    f = $[1];
   }
-  const f_0 = f;
-  let t5;
+  return f;
+}
+
+function Component(t0) {
+  const $ = _c(7);
+  const { x, y, z } = t0;
+  const a = useHook1(x);
+  const b = useHook2(x);
+  const c = useHook3(x);
+  const d = useHook4(x, y, z);
+  const e = useHook5(x);
+  const f = useHook6(x);
+  let t1;
   if (
-    $[14] !== a ||
-    $[15] !== b ||
-    $[16] !== c ||
-    $[17] !== d ||
-    $[18] !== e_0 ||
-    $[19] !== f_0
+    $[0] !== a ||
+    $[1] !== b ||
+    $[2] !== c ||
+    $[3] !== d ||
+    $[4] !== e ||
+    $[5] !== f
   ) {
-    t5 = <Stringify results={[a, b, c, d, e_0, f_0]} />;
-    $[14] = a;
-    $[15] = b;
-    $[16] = c;
-    $[17] = d;
-    $[18] = e_0;
-    $[19] = f_0;
-    $[20] = t5;
+    t1 = <Stringify results={[a, b, c, d, e, f]} />;
+    $[0] = a;
+    $[1] = b;
+    $[2] = c;
+    $[3] = d;
+    $[4] = e;
+    $[5] = f;
+    $[6] = t1;
   } else {
-    t5 = $[20];
+    t1 = $[6];
   }
-  return t5;
+  return t1;
 }
 
 ```
