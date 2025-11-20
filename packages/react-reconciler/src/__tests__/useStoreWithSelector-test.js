@@ -429,4 +429,55 @@ describe('useStoreWithSelector', () => {
     ]);
     expect(root).toMatchRenderedOutput('33');
   });
+  it('Component does not rerender if selected value is unchanged', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment' | 'decrement'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        case 'double':
+          return count * 2;
+        default:
+          return count;
+      }
+    }
+    const store = createStore(counterReducer, 2);
+
+    function isEven(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x % 2 === 0;
+    }
+
+    function App() {
+      const value = useStoreWithSelector(store, isEven);
+      Scheduler.log({kind: 'render', value, componentName: 'App'});
+      return <>{value ? 'true' : 'false'}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+      await waitFor([
+        {kind: 'selector', state: 2},
+        {kind: 'render', value: true, componentName: 'App'},
+      ]);
+    });
+
+    expect(root).toMatchRenderedOutput('true');
+
+    await act(async () => {
+      store.dispatch({type: 'double'});
+    });
+
+    assertLog([
+      {kind: 'reducer', state: 2, action: 'double'},
+      {kind: 'selector', state: 4},
+      // No rerender since selected value did not change
+    ]);
+
+    expect(root).toMatchRenderedOutput('true');
+  });
 });

@@ -1872,15 +1872,15 @@ function mountStoreWithSelector<S, T>(
       next: (null: any),
     };
 
-    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
+    const updateRoot = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
       startUpdateTimerByLane(
         lane,
         'useStoreWithSelector mount mid transition fixup',
         fiber,
       );
-      scheduleUpdateOnFiber(root, fiber, lane);
-      entangleTransitionUpdate(root, queue, lane);
+      scheduleUpdateOnFiber(updateRoot, fiber, lane);
+      entangleTransitionUpdate(updateRoot, queue, lane);
     }
   }
   return initialState;
@@ -1920,6 +1920,19 @@ function createSubscription<S, T>(
     const newState = selector(
       isTransition ? store._transition : store._current,
     );
+
+    if (
+      queue.lanes === NoLanes &&
+      queue.pending === null &&
+      is(newState, queue.lastRenderedState)
+    ) {
+      // Selected state hasn't changed. Bail out.
+
+      // In other similar places we call `enqueueConcurrentHookUpdateAndEagerlyBailout`
+      // but we don't need to here because we don't use update ordering to
+      // manage rebasing, we do it ourselves eagerly.
+      return;
+    }
 
     const update: Update<T, mixed> = {
       lane,
