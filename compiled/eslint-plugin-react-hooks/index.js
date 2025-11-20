@@ -52732,7 +52732,7 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
                 });
             }
         }
-        else if (isUseStateType(lvalue.identifier) && value.args.length > 0) {
+        else if (isUseStateType(lvalue.identifier)) {
             typeOfValue = 'fromState';
             context.derivationCache.addDerivationEntry(lvalue, new Set(), typeOfValue, true);
             return;
