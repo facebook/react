@@ -46,7 +46,7 @@ describe('useStoreWithSelector', () => {
       count: number,
       action: {type: 'increment' | 'decrement'},
     ): number {
-      Scheduler.log('reducer');
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
@@ -59,13 +59,13 @@ describe('useStoreWithSelector', () => {
     const store = createStore(counterReducer, 2);
 
     function identity(x) {
-      Scheduler.log('selector');
+      Scheduler.log({kind: 'selector', state: x});
       return x;
     }
 
     function App() {
       const value = useStoreWithSelector(store, identity);
-      Scheduler.log(value);
+      Scheduler.log({kind: 'render', value});
       return <>{value}</>;
     }
 
@@ -74,7 +74,10 @@ describe('useStoreWithSelector', () => {
       startTransition(() => {
         root.render(<App />);
       });
-      await waitFor(['selector', 2]);
+      await waitFor([
+        {kind: 'selector', state: 2},
+        {kind: 'render', value: 2},
+      ]);
     });
     expect(root).toMatchRenderedOutput('2');
 
@@ -83,7 +86,11 @@ describe('useStoreWithSelector', () => {
         store.dispatch({type: 'increment'});
       });
     });
-    assertLog(['reducer', 'selector', 3]);
+    assertLog([
+      {kind: 'reducer', state: 2, action: 'increment'},
+      {kind: 'selector', state: 3},
+      {kind: 'render', value: 3},
+    ]);
     expect(root).toMatchRenderedOutput('3');
 
     await act(async () => {
@@ -91,7 +98,11 @@ describe('useStoreWithSelector', () => {
         store.dispatch({type: 'increment'});
       });
     });
-    assertLog(['reducer', 'selector', 4]);
+    assertLog([
+      {kind: 'reducer', state: 3, action: 'increment'},
+      {kind: 'selector', state: 4},
+      {kind: 'render', value: 4},
+    ]);
     expect(root).toMatchRenderedOutput('4');
   });
   it('sync update interrupts transition update', async () => {
@@ -99,7 +110,7 @@ describe('useStoreWithSelector', () => {
       count: number,
       action: {type: 'increment' | 'decrement'},
     ): number {
-      Scheduler.log('reducer');
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
@@ -112,13 +123,13 @@ describe('useStoreWithSelector', () => {
     const store = createStore(counterReducer, 2);
 
     function identity(x) {
-      Scheduler.log('selector');
+      Scheduler.log({kind: 'selector', state: x});
       return x;
     }
 
     function App() {
       const value = useStoreWithSelector(store, identity);
-      Scheduler.log(value);
+      Scheduler.log({kind: 'render', value});
       return <>{value}</>;
     }
 
@@ -127,7 +138,10 @@ describe('useStoreWithSelector', () => {
       startTransition(() => {
         root.render(<App />);
       });
-      await waitFor(['selector', 2]);
+      await waitFor([
+        {kind: 'selector', state: 2},
+        {kind: 'render', value: 2},
+      ]);
     });
     expect(root).toMatchRenderedOutput('2');
 
@@ -140,21 +154,30 @@ describe('useStoreWithSelector', () => {
       });
     });
 
-    assertLog(['reducer', 'selector']);
+    assertLog([
+      {kind: 'reducer', state: 2, action: 'increment'},
+      {kind: 'selector', state: 3},
+    ]);
     expect(root).toMatchRenderedOutput('2');
 
     await act(async () => {
       store.dispatch({type: 'double'});
     });
 
-    assertLog(['reducer', 'reducer', 'selector', 'selector', 4]);
+    assertLog([
+      {kind: 'reducer', state: 3, action: 'double'},
+      {kind: 'reducer', state: 2, action: 'double'},
+      {kind: 'selector', state: 4},
+      {kind: 'selector', state: 6},
+      {kind: 'render', value: 4},
+    ]);
     expect(root).toMatchRenderedOutput('4');
 
     await act(async () => {
       resolve();
     });
 
-    assertLog([6]);
+    assertLog([{kind: 'render', value: 6}]);
     expect(root).toMatchRenderedOutput('6');
   });
   it('store reader mounts mid transition', async () => {
@@ -162,7 +185,7 @@ describe('useStoreWithSelector', () => {
       count: number,
       action: {type: 'increment' | 'decrement'},
     ): number {
-      Scheduler.log('reducer');
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
@@ -174,13 +197,13 @@ describe('useStoreWithSelector', () => {
     }
     const store = createStore(counterReducer, 2);
     function identity(x) {
-      Scheduler.log('selector');
+      Scheduler.log({kind: 'selector', state: x});
       return x;
     }
 
     function StoreReader({componentName}) {
       const value = useStoreWithSelector(store, identity);
-      Scheduler.log({value, componentName});
+      Scheduler.log({kind: 'render', value, componentName});
       return <>{value}</>;
     }
 
@@ -200,7 +223,10 @@ describe('useStoreWithSelector', () => {
     const root = ReactNoop.createRoot();
     await act(async () => {
       root.render(<App />);
-      await waitFor(['selector', {value: 2, componentName: 'stable'}]);
+      await waitFor([
+        {kind: 'selector', state: 2},
+        {kind: 'render', value: 2, componentName: 'stable'},
+      ]);
     });
 
     expect(root).toMatchRenderedOutput('2');
@@ -214,7 +240,10 @@ describe('useStoreWithSelector', () => {
       });
     });
 
-    assertLog(['reducer', 'selector']);
+    assertLog([
+      {kind: 'reducer', state: 2, action: 'increment'},
+      {kind: 'selector', state: 3},
+    ]);
     expect(root).toMatchRenderedOutput('2');
 
     await act(async () => {
@@ -222,10 +251,10 @@ describe('useStoreWithSelector', () => {
     });
 
     assertLog([
-      {componentName: 'stable', value: 2},
-      'selector',
-      'selector',
-      {componentName: 'conditional', value: 2},
+      {kind: 'render', componentName: 'stable', value: 2},
+      {kind: 'selector', state: 2},
+      {kind: 'selector', state: 3},
+      {kind: 'render', componentName: 'conditional', value: 2},
     ]);
 
     // TODO: Avoid triggering this error.
@@ -242,8 +271,8 @@ describe('useStoreWithSelector', () => {
     });
 
     assertLog([
-      {componentName: 'stable', value: 3},
-      {componentName: 'conditional', value: 3},
+      {kind: 'render', componentName: 'stable', value: 3},
+      {kind: 'render', componentName: 'conditional', value: 3},
     ]);
     expect(root).toMatchRenderedOutput('33');
   });
@@ -253,6 +282,7 @@ describe('useStoreWithSelector', () => {
       count: number,
       action: {type: 'increment' | 'decrement'},
     ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
@@ -264,15 +294,20 @@ describe('useStoreWithSelector', () => {
     }
     const store = createStore(counterReducer, 2);
 
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
     function StoreReader({componentName}) {
-      const value = useStoreWithSelector(store, identify);
-      Scheduler.log({value, componentName});
+      const value = useStoreWithSelector(store, identity);
+      Scheduler.log({kind: 'render', value, componentName});
       return <>{value}</>;
     }
 
     function App() {
-      const value = useStoreWithSelector(store, identify);
-      Scheduler.log({value, componentName: 'App'});
+      const value = useStoreWithSelector(store, identity);
+      Scheduler.log({kind: 'render', value, componentName: 'App'});
       return (
         <>
           {value}
@@ -284,7 +319,10 @@ describe('useStoreWithSelector', () => {
     const root = ReactNoop.createRoot();
     await act(async () => {
       root.render(<App />);
-      await waitFor([{value: 2, componentName: 'App'}]);
+      await waitFor([
+        {kind: 'selector', state: 2},
+        {kind: 'render', value: 2, componentName: 'App'},
+      ]);
     });
 
     expect(root).toMatchRenderedOutput('2');
@@ -298,7 +336,10 @@ describe('useStoreWithSelector', () => {
       });
     });
 
-    assertLog([]);
+    assertLog([
+      {kind: 'reducer', state: 2, action: 'increment'},
+      {kind: 'selector', state: 3},
+    ]);
     expect(root).toMatchRenderedOutput('2');
 
     await act(async () => {
@@ -306,8 +347,9 @@ describe('useStoreWithSelector', () => {
     });
 
     assertLog([
-      {componentName: 'App', value: 3},
-      {componentName: 'conditional', value: 3},
+      {kind: 'render', componentName: 'App', value: 3},
+      {kind: 'selector', state: 3},
+      {kind: 'render', componentName: 'conditional', value: 3},
     ]);
     expect(root).toMatchRenderedOutput('33');
   });
@@ -316,6 +358,7 @@ describe('useStoreWithSelector', () => {
       count: number,
       action: {type: 'increment' | 'decrement'},
     ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
@@ -327,9 +370,14 @@ describe('useStoreWithSelector', () => {
     }
     const store = createStore(counterReducer, 2);
 
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
     function StoreReader({componentName}) {
-      const value = useStoreWithSelector(store, identify);
-      Scheduler.log({value, componentName});
+      const value = useStoreWithSelector(store, identity);
+      Scheduler.log({kind: 'render', value, componentName});
       return <>{value}</>;
     }
 
@@ -349,7 +397,10 @@ describe('useStoreWithSelector', () => {
     const root = ReactNoop.createRoot();
     await act(async () => {
       root.render(<App />);
-      await waitFor([{value: 2, componentName: 'stable'}]);
+      await waitFor([
+        {kind: 'selector', state: 2},
+        {kind: 'render', value: 2, componentName: 'stable'},
+      ]);
     });
 
     expect(root).toMatchRenderedOutput('2');
@@ -358,7 +409,11 @@ describe('useStoreWithSelector', () => {
       startTransition(() => {
         store.dispatch({type: 'increment'});
       });
-      await waitFor([{value: 3, componentName: 'stable'}]);
+      assertLog([
+        {kind: 'reducer', state: 2, action: 'increment'},
+        {kind: 'selector', state: 3},
+      ]);
+      await waitFor([{kind: 'render', value: 3, componentName: 'stable'}]);
     });
 
     expect(root).toMatchRenderedOutput('3');
@@ -368,13 +423,10 @@ describe('useStoreWithSelector', () => {
     });
 
     assertLog([
-      {value: 3, componentName: 'stable'},
-      {componentName: 'conditional', value: 3},
+      {kind: 'render', value: 3, componentName: 'stable'},
+      {kind: 'selector', state: 3},
+      {kind: 'render', componentName: 'conditional', value: 3},
     ]);
     expect(root).toMatchRenderedOutput('33');
   });
 });
-
-function identify<T>(x: T): T {
-  return x;
-}
