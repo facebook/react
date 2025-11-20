@@ -1644,10 +1644,10 @@ describe('ReactDOMForm', () => {
     // We haven't reset yet.
     expect(inputRef.current.value).toEqual('3');
 
-    // Action completes. onReset hasn't fired though.
+    // Action completes. onReset has been fired and values reset manually.
     await act(() => resolveText('Wait'));
     assertLog([]);
-    expect(inputRef.current.value).toEqual('3');
+    expect(inputRef.current.value).toEqual('0');
   });
 
   it('requestFormReset schedules a form reset after transition completes', async () => {
