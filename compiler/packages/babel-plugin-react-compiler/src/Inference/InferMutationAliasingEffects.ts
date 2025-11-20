@@ -90,7 +90,7 @@ const DEBUG = false;
  * - Then we do abstract interpretation over the HIR, iterating until reaching a fixpoint.
  *   This phase tracks the abstract kind of each value (mutable, primitive, frozen, etc)
  *   and the set of values pointed to by each identifier. Each candidate effect is "applied"
- *   to the current abtract state, and effects may be dropped or rewritten accordingly.
+ *   to the current abstract state, and effects may be dropped or rewritten accordingly.
  *   For example, a "MutateConditionally <x>" effect may be dropped if x is not a mutable
  *   value. A "Mutate <y>" effect may get converted into a "MutateFrozen <error>" effect
  *   if y is mutable, etc.
@@ -286,7 +286,7 @@ class Context {
   catchHandlers: Map<BlockId, Place> = new Map();
   functionSignatureCache: Map<FunctionExpression, AliasingSignature> =
     new Map();
-  isFuctionExpression: boolean;
+  isFunctionExpression: boolean;
   fn: HIRFunction;
   hoistedContextDeclarations: Map<DeclarationId, Place | null>;
   nonMutatingSpreads: Set<IdentifierId>;
@@ -297,7 +297,7 @@ class Context {
     hoistedContextDeclarations: Map<DeclarationId, Place | null>,
     nonMutatingSpreads: Set<IdentifierId>,
   ) {
-    this.isFuctionExpression = isFunctionExpression;
+    this.isFunctionExpression = isFunctionExpression;
     this.fn = fn;
     this.hoistedContextDeclarations = hoistedContextDeclarations;
     this.nonMutatingSpreads = nonMutatingSpreads;
@@ -527,7 +527,7 @@ function inferBlock(
     if (handlerParam != null) {
       CompilerError.invariant(state.kind(handlerParam) != null, {
         reason:
-          'Expected catch binding to be intialized with a DeclareLocal Catch instruction',
+          'Expected catch binding to be initialized with a DeclareLocal Catch instruction',
         description: null,
         details: [
           {
@@ -569,7 +569,7 @@ function inferBlock(
       terminal.effects = effects.length !== 0 ? effects : null;
     }
   } else if (terminal.kind === 'return') {
-    if (!context.isFuctionExpression) {
+    if (!context.isFunctionExpression) {
       terminal.effects = [
         context.internEffect({
           kind: 'Freeze',
@@ -1373,7 +1373,7 @@ class InferenceState {
   #values: Map<InstructionValue, AbstractValue>;
   /*
    * The set of values pointed to by each identifier. This is a set
-   * to accomodate phi points (where a variable may have different
+   * to accommodate phi points (where a variable may have different
    * values from different control flow paths).
    */
   #variables: Map<IdentifierId, Set<InstructionValue>>;
