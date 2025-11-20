@@ -292,6 +292,68 @@ describe('useStoreWithSelector', () => {
     ]);
     expect(root).toMatchRenderedOutput('33');
   });
+  it('After transition update commits, new mounters mount with up-to-date state', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment' | 'decrement'},
+    ): number {
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        case 'double':
+          return count * 2;
+        default:
+          return count;
+      }
+    }
+    const store = createStore(counterReducer, 2);
+
+    function StoreReader({componentName}) {
+      const value = useStoreWithSelector(store, identify);
+      Scheduler.log({value, componentName});
+      return <>{value}</>;
+    }
+
+    let setShowReader;
+
+    function App() {
+      const [showReader, _setShowReader] = React.useState(false);
+      setShowReader = _setShowReader;
+      return (
+        <>
+          <StoreReader componentName="stable" />
+          {showReader ? <StoreReader componentName="conditional" /> : null}
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+      await waitFor([{value: 2, componentName: 'stable'}]);
+    });
+
+    expect(root).toMatchRenderedOutput('2');
+
+    await act(async () => {
+      startTransition(() => {
+        store.dispatch({type: 'increment'});
+      });
+      await waitFor([{value: 3, componentName: 'stable'}]);
+    });
+
+    expect(root).toMatchRenderedOutput('3');
+
+    await act(async () => {
+      setShowReader(true);
+    });
+
+    assertLog([
+      {value: 3, componentName: 'stable'},
+      {componentName: 'conditional', value: 3},
+    ]);
+    expect(root).toMatchRenderedOutput('33');
+  });
 });
 
 function identify<T>(x: T): T {

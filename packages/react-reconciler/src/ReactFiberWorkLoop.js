@@ -3903,6 +3903,12 @@ function flushLayoutEffects(): void {
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
 
+  if (root.stores != null) {
+    root.stores.forEach(store => {
+      store._current = store._transition;
+    });
+  }
+
   if (enableDefaultTransitionIndicator) {
     const cleanUpIndicator = root.pendingIndicator;
     if (cleanUpIndicator !== null && root.indicatorLanes === NoLanes) {

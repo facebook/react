@@ -1850,6 +1850,13 @@ function mountStoreWithSelector<S, T>(
 
   mountEffect(createSubscription.bind(null, store, fiber, selector, queue), []);
 
+  const root = ((getWorkInProgressRoot(): any): FiberRoot);
+  if (root.stores == null) {
+    root.stores = [store];
+  } else {
+    root.stores.push(store);
+  }
+
   // If we are mounting mid-transition, we need to schedule an update to
   // bring the selected state up to date with the transition state.
   if (!is(storeState, store._transition)) {
