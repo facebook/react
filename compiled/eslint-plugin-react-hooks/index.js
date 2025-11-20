@@ -52496,6 +52496,7 @@ function validateEffect$1(effectFunction, effectDeps, errors) {
     }
 }
 
+const MAX_FIXPOINT_ITERATIONS = 100;
 class DerivationCache {
     constructor() {
         this.hasChanges = false;
@@ -52615,6 +52616,7 @@ function validateNoDerivedComputationsInEffects_exp(fn) {
             });
         }
     }
+    let iterationCount = 0;
     do {
         context.derivationCache.takeSnapshot();
         for (const block of fn.body.blocks.values()) {
@@ -52624,6 +52626,18 @@ function validateNoDerivedComputationsInEffects_exp(fn) {
             }
         }
         context.derivationCache.checkForChanges();
+        iterationCount++;
+        CompilerError.invariant(iterationCount < MAX_FIXPOINT_ITERATIONS, {
+            reason: '[ValidateNoDerivedComputationsInEffects] Fixpoint iteration failed to converge.',
+            description: `Fixpoint iteration exceeded ${MAX_FIXPOINT_ITERATIONS} iterations while tracking derivations. This suggests a cyclic dependency in the derivation cache.`,
+            details: [
+                {
+                    kind: 'error',
+                    loc: fn.loc,
+                    message: `Exceeded ${MAX_FIXPOINT_ITERATIONS} iterations in ValidateNoDerivedComputationsInEffects`,
+                },
+            ],
+        });
     } while (context.derivationCache.snapshot());
     for (const [, effect] of effectsCache) {
         validateEffect(effect.effect, effect.dependencies, context);
@@ -52747,6 +52761,9 @@ function recordInstructionDerivations(instr, context, isFirstPass) {
     for (const lvalue of eachInstructionLValue(instr)) {
         context.derivationCache.addDerivationEntry(lvalue, sources, typeOfValue, isSource);
     }
+    if (value.kind === 'FunctionExpression') {
+        return;
+    }
     for (const operand of eachInstructionOperand(instr)) {
         switch (operand.effect) {
             case Effect.Capture:
@@ -52808,6 +52825,17 @@ function buildTreeNode(sourceId, context, visited = new Set()) {
     const children = [];
     const namedSiblings = new Set();
     for (const childId of sourceMetadata.sourcesIds) {
+        CompilerError.invariant(childId !== sourceId, {
+            reason: 'Unexpected self-reference: a value should not have itself as a source',
+            description: null,
+            details: [
+                {
+                    kind: 'error',
+                    loc: sourceMetadata.place.loc,
+                    message: null,
+                },
+            ],
+        });
         const childNodes = buildTreeNode(childId, context, new Set([
             ...visited,
             ...(isNamedIdentifier(sourceMetadata.place)
