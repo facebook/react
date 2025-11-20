@@ -1111,4 +1111,64 @@ describe('ReactDOMFizzStaticBrowser', () => {
       </div>,
     );
   });
+
+  // @gate enableHalt && enableOptimisticKey
+  it('can resume an optimistic keyed slot', async () => {
+    const errors = [];
+
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    async function Component() {
+      await promise;
+      return 'Hi';
+    }
+
+    if (React.optimisticKey === undefined) {
+      throw new Error('optimisticKey missing');
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading">
+            <Component key={React.optimisticKey} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const controller = new AbortController();
+    const pendingResult = serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      }),
+    );
+
+    await serverAct(() => {
+      controller.abort();
+    });
+
+    const prerendered = await pendingResult;
+
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual(<div>Loading</div>);
+
+    expect(prerendered.postponed).not.toBe(null);
+
+    await resolve();
+
+    const dynamic = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedState)),
+    );
+
+    await readIntoContainer(dynamic);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Hi</div>);
+  });
 });

@@ -29,6 +29,7 @@ export {
   cache,
   cacheSignal,
   startTransition,
+  optimisticKey,
   Activity,
   unstable_getCacheForType,
   unstable_SuspenseList,

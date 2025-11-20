@@ -9,7 +9,7 @@ import * as t from '@babel/types';
 import {ZodError, z} from 'zod/v4';
 import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerError} from '../CompilerError';
-import {Logger, ProgramContext} from '../Entrypoint';
+import {CompilerOutputMode, Logger, ProgramContext} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
@@ -51,6 +51,7 @@ import {Scope as BabelScope, NodePath} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
 import {FlowTypeEnv} from '../Flood/Types';
 import {defaultModuleTypeProvider} from './DefaultModuleTypeProvider';
+import {assertExhaustive} from '../Utils/utils';
 
 export const ReactElementSymbolSchema = z.object({
   elementSymbol: z.union([
@@ -730,7 +731,7 @@ export class Environment {
   code: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
-  compilerMode: CompilerMode;
+  outputMode: CompilerOutputMode;
   programContext: ProgramContext;
   hasFireRewrite: boolean;
   hasInferredEffect: boolean;
@@ -745,7 +746,7 @@ export class Environment {
   constructor(
     scope: BabelScope,
     fnType: ReactFunctionType,
-    compilerMode: CompilerMode,
+    outputMode: CompilerOutputMode,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
     parentFunction: NodePath<t.Function>, // the outermost function being compiled
@@ -756,7 +757,7 @@ export class Environment {
   ) {
     this.#scope = scope;
     this.fnType = fnType;
-    this.compilerMode = compilerMode;
+    this.outputMode = outputMode;
     this.config = config;
     this.filename = filename;
     this.code = code;
@@ -852,8 +853,65 @@ export class Environment {
     return this.#flowTypeEnvironment;
   }
 
-  get isInferredMemoEnabled(): boolean {
-    return this.compilerMode !== 'no_inferred_memo';
+  get enableDropManualMemoization(): boolean {
+    switch (this.outputMode) {
+      case 'lint': {
+        // linting drops to be more compatible with compiler analysis
+        return true;
+      }
+      case 'client':
+      case 'ssr': {
+        return true;
+      }
+      case 'client-no-memo': {
+        return false;
+      }
+      default: {
+        assertExhaustive(
+          this.outputMode,
+          `Unexpected output mode '${this.outputMode}'`,
+        );
+      }
+    }
+  }
+
+  get enableMemoization(): boolean {
+    switch (this.outputMode) {
+      case 'client':
+      case 'lint': {
+        // linting also enables memoization so that we can check if manual memoization is preserved
+        return true;
+      }
+      case 'ssr':
+      case 'client-no-memo': {
+        return false;
+      }
+      default: {
+        assertExhaustive(
+          this.outputMode,
+          `Unexpected output mode '${this.outputMode}'`,
+        );
+      }
+    }
+  }
+
+  get enableValidations(): boolean {
+    switch (this.outputMode) {
+      case 'client':
+      case 'lint':
+      case 'ssr': {
+        return true;
+      }
+      case 'client-no-memo': {
+        return false;
+      }
+      default: {
+        assertExhaustive(
+          this.outputMode,
+          `Unexpected output mode '${this.outputMode}'`,
+        );
+      }
+    }
   }
 
   get nextIdentifierId(): IdentifierId {

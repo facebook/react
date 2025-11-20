@@ -1,9 +1,10 @@
-// @inferEffectDependencies @noEmit @panicThreshold:"none" @loggerTestOnly @enableNewMutationAliasingModel
+// @inferEffectDependencies @outputMode:"lint" @panicThreshold:"none"
 import {print} from 'shared-runtime';
 import useEffectWrapper from 'useEffectWrapper';
 import {AUTODEPS} from 'react';
 
 function Foo({propVal}) {
+  'use memo';
   const arr = [propVal];
   useEffectWrapper(() => print(arr), AUTODEPS);
 
