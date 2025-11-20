@@ -862,20 +862,34 @@ function lowerStatement(
       );
       return;
     }
-    case 'VariableDeclaration': {
-      const stmt = stmtPath as NodePath<t.VariableDeclaration>;
-      const nodeKind: t.VariableDeclaration['kind'] = stmt.node.kind;
-      if (nodeKind === 'var') {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
-          category: ErrorCategory.Todo,
-          loc: stmt.node.loc ?? null,
-          suggestions: null,
-        });
-        return;
-      }
+   case 'VariableDeclaration': {
+  const stmt = stmtPath as NodePath<t.VariableDeclaration>;
+  const nodeKind: t.VariableDeclaration['kind'] = stmt.node.kind;
+  if (nodeKind === 'var') {
+    builder.errors.push({
+      reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
+      category: ErrorCategory.Todo,
+      loc: stmt.node.loc ?? null,
+      suggestions: null,
+    });
+    return;
+  }
+  // ADD THIS NEW CHECK FOR 'using' and 'await using'
+  if (nodeKind === 'using' || nodeKind === 'await using') {
+    builder.errors.push({
+      reason: `(BuildHIR::lowerStatement) 'using' declarations are not yet supported by React Compiler`,
+      category: ErrorCategory.Todo,
+      loc: stmt.node.loc ?? null,
+      suggestions: null,
+    });
+    return;
+  }
       const kind =
-        nodeKind === 'let' ? InstructionKind.Let : InstructionKind.Const;
+  nodeKind === 'let' 
+    ? InstructionKind.Let 
+    : nodeKind === 'using' || nodeKind === 'await using'
+    ? InstructionKind.Let  // Treat 'using' similar to 'let' for now
+    : InstructionKind.Const;
       for (const declaration of stmt.get('declarations')) {
         const id = declaration.get('id');
         const init = declaration.get('init');
