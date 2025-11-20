@@ -691,6 +691,8 @@ export const EnvironmentConfigSchema = z.object({
    * by React to only execute in response to events, not during render.
    */
   enableInferEventHandlers: z.boolean().default(false),
+
+  enableOptimizeForSSR: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
