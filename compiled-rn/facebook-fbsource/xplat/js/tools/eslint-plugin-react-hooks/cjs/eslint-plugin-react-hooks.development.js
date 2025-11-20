@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<5b08688550725da2e77192905e50b06b>>
+ * @generated SignedSource<<aa739a63ab5cc53b26186becab97ed1d>>
  */
 
 'use strict';
@@ -32267,10 +32267,9 @@ const EnvironmentConfigSchema = v4.z.object({
     validateNoDynamicallyCreatedComponentsOrHooks: v4.z.boolean().default(false),
     enableAllowSetStateFromRefsInEffects: v4.z.boolean().default(true),
     enableInferEventHandlers: v4.z.boolean().default(false),
-    enableOptimizeForSSR: v4.z.boolean().default(false),
 });
 class Environment {
-    constructor(scope, fnType, compilerMode, config, contextIdentifiers, parentFunction, logger, filename, code, programContext) {
+    constructor(scope, fnType, outputMode, config, contextIdentifiers, parentFunction, logger, filename, code, programContext) {
         _Environment_instances.add(this);
         _Environment_globals.set(this, void 0);
         _Environment_shapes.set(this, void 0);
@@ -32286,7 +32285,7 @@ class Environment {
         _Environment_flowTypeEnvironment.set(this, void 0);
         __classPrivateFieldSet(this, _Environment_scope, scope, "f");
         this.fnType = fnType;
-        this.compilerMode = compilerMode;
+        this.outputMode = outputMode;
         this.config = config;
         this.filename = filename;
         this.code = code;
@@ -32370,8 +32369,52 @@ class Environment {
         });
         return __classPrivateFieldGet(this, _Environment_flowTypeEnvironment, "f");
     }
-    get isInferredMemoEnabled() {
-        return this.compilerMode !== 'no_inferred_memo';
+    get enableDropManualMemoization() {
+        switch (this.outputMode) {
+            case 'lint': {
+                return true;
+            }
+            case 'client':
+            case 'ssr': {
+                return true;
+            }
+            case 'client-no-memo': {
+                return false;
+            }
+            default: {
+                assertExhaustive$1(this.outputMode, `Unexpected output mode '${this.outputMode}'`);
+            }
+        }
+    }
+    get enableMemoization() {
+        switch (this.outputMode) {
+            case 'client':
+            case 'lint': {
+                return true;
+            }
+            case 'ssr':
+            case 'client-no-memo': {
+                return false;
+            }
+            default: {
+                assertExhaustive$1(this.outputMode, `Unexpected output mode '${this.outputMode}'`);
+            }
+        }
+    }
+    get enableValidations() {
+        switch (this.outputMode) {
+            case 'client':
+            case 'lint':
+            case 'ssr': {
+                return true;
+            }
+            case 'client-no-memo': {
+                return false;
+            }
+            default: {
+                assertExhaustive$1(this.outputMode, `Unexpected output mode '${this.outputMode}'`);
+            }
+        }
     }
     get nextIdentifierId() {
         var _a, _b;
@@ -34658,7 +34701,7 @@ function pruneableValue(value, state) {
         }
         case 'CallExpression':
         case 'MethodCall': {
-            if (state.env.config.enableOptimizeForSSR) {
+            if (state.env.outputMode === 'ssr') {
                 const calleee = value.kind === 'CallExpression' ? value.callee : value.property;
                 const hookKind = getHookKind(state.env, calleee.identifier);
                 switch (hookKind) {
@@ -37469,7 +37512,7 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
     }
     const compiled = compileResult.unwrap();
     const hookGuard = fn.env.config.enableEmitHookGuards;
-    if (hookGuard != null && fn.env.isInferredMemoEnabled) {
+    if (hookGuard != null && fn.env.outputMode === 'client') {
         compiled.body = libExports$1.blockStatement([
             createHookGuard(hookGuard, fn.env.programContext, compiled.body.body, GuardKind.PushHookGuard, GuardKind.PopHookGuard),
         ]);
@@ -37499,7 +37542,7 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
     const emitInstrumentForget = fn.env.config.enableEmitInstrumentForget;
     if (emitInstrumentForget != null &&
         fn.id != null &&
-        fn.env.isInferredMemoEnabled) {
+        fn.env.outputMode === 'client') {
         const gating = emitInstrumentForget.gating != null
             ? libExports$1.identifier(fn.env.programContext.addImportSpecifier(emitInstrumentForget.gating).name)
             : null;
@@ -37737,7 +37780,8 @@ function codegenBlockNoReset(cx, block) {
     return libExports$1.blockStatement(statements);
 }
 function wrapCacheDep(cx, value) {
-    if (cx.env.config.enableEmitFreeze != null && cx.env.isInferredMemoEnabled) {
+    if (cx.env.config.enableEmitFreeze != null &&
+        cx.env.outputMode === 'client') {
         const emitFreezeIdentifier = cx.env.programContext.addImportSpecifier(cx.env.config.enableEmitFreeze).name;
         cx.env.programContext
             .assertGlobalBinding(EMIT_FREEZE_GLOBAL_GATING, cx.env.scope)
@@ -38583,7 +38627,7 @@ function createCallExpression(env, callee, args, loc, isHook) {
         callExpr.loc = loc;
     }
     const hookGuard = env.config.enableEmitHookGuards;
-    if (hookGuard != null && isHook && env.isInferredMemoEnabled) {
+    if (hookGuard != null && isHook && env.outputMode === 'client') {
         const iife = libExports$1.functionExpression(null, [], libExports$1.blockStatement([
             createHookGuard(hookGuard, env.programContext, [libExports$1.returnStatement(callExpr)], GuardKind.AllowHook, GuardKind.DisallowHook),
         ]));
@@ -42281,7 +42325,7 @@ function computeEffectsForLegacySignature(state, signature, lvalue, receiver, ar
             }),
         });
     }
-    if (signature.knownIncompatible != null && state.env.isInferredMemoEnabled) {
+    if (signature.knownIncompatible != null && state.env.enableValidations) {
         const errors = new CompilerError();
         errors.pushDiagnostic(CompilerDiagnostic.create({
             category: ErrorCategory.IncompatibleLibrary,
@@ -53413,7 +53457,7 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
     validateContextVariableLValues(hir);
     validateUseMemo(hir).unwrap();
-    if (env.isInferredMemoEnabled &&
+    if (env.enableDropManualMemoization &&
         !env.config.enablePreserveExistingManualUseMemo &&
         !env.config.disableMemoizationForDebugging &&
         !env.config.enableChangeDetectionForDebugging) {
@@ -53439,7 +53483,7 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'ConstantPropagation', value: hir });
     inferTypes(hir);
     log({ kind: 'hir', name: 'InferTypes', value: hir });
-    if (env.isInferredMemoEnabled) {
+    if (env.enableValidations) {
         if (env.config.validateHooksUsage) {
             validateHooksUsage(hir).unwrap();
         }
@@ -53460,12 +53504,12 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'AnalyseFunctions', value: hir });
     const mutabilityAliasingErrors = inferMutationAliasingEffects(hir);
     log({ kind: 'hir', name: 'InferMutationAliasingEffects', value: hir });
-    if (env.isInferredMemoEnabled) {
+    if (env.enableValidations) {
         if (mutabilityAliasingErrors.isErr()) {
             throw mutabilityAliasingErrors.unwrapErr();
         }
     }
-    if (env.config.enableOptimizeForSSR) {
+    if (env.outputMode === 'ssr') {
         optimizeForSSR(hir);
         log({ kind: 'hir', name: 'OptimizeForSSR', value: hir });
     }
@@ -53481,13 +53525,13 @@ function runWithEnvironment(func, env) {
         isFunctionExpression: false,
     });
     log({ kind: 'hir', name: 'InferMutationAliasingRanges', value: hir });
-    if (env.isInferredMemoEnabled) {
+    if (env.enableValidations) {
         if (mutabilityAliasingRangeErrors.isErr()) {
             throw mutabilityAliasingRangeErrors.unwrapErr();
         }
         validateLocalsNotReassignedAfterRender(hir);
     }
-    if (env.isInferredMemoEnabled) {
+    if (env.enableValidations) {
         if (env.config.assertValidMutableRanges) {
             assertValidMutableRanges(hir);
         }
@@ -53522,14 +53566,12 @@ function runWithEnvironment(func, env) {
         name: 'RewriteInstructionKindsBasedOnReassignment',
         value: hir,
     });
-    if (env.isInferredMemoEnabled) {
-        if (env.config.validateStaticComponents) {
-            env.logErrors(validateStaticComponents(hir));
-        }
-        if (!env.config.enableOptimizeForSSR) {
-            inferReactiveScopeVariables(hir);
-            log({ kind: 'hir', name: 'InferReactiveScopeVariables', value: hir });
-        }
+    if (env.enableValidations && env.config.validateStaticComponents) {
+        env.logErrors(validateStaticComponents(hir));
+    }
+    if (env.enableMemoization) {
+        inferReactiveScopeVariables(hir);
+        log({ kind: 'hir', name: 'InferReactiveScopeVariables', value: hir });
     }
     const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
     log({
@@ -54107,7 +54149,7 @@ function isFilePartOfSources(sources, filename) {
     return false;
 }
 function compileProgram(program, pass) {
-    var _a;
+    var _a, _b;
     if (shouldSkipCompilation(program, pass)) {
         return null;
     }
@@ -54128,9 +54170,10 @@ function compileProgram(program, pass) {
     });
     const queue = findFunctionsToCompile(program, pass, programContext);
     const compiledFns = [];
+    const outputMode = (_b = pass.opts.outputMode) !== null && _b !== void 0 ? _b : (pass.opts.noEmit ? 'lint' : 'client');
     while (queue.length !== 0) {
         const current = queue.shift();
-        const compiled = processFn(current.fn, current.fnType, programContext);
+        const compiled = processFn(current.fn, current.fnType, programContext, outputMode);
         if (compiled != null) {
             for (const outlined of compiled.outlined) {
                 CompilerError.invariant(outlined.fn.outlined.length === 0, {
@@ -54212,7 +54255,7 @@ function findFunctionsToCompile(program, pass, programContext) {
     }, Object.assign(Object.assign({}, pass), { opts: Object.assign(Object.assign({}, pass.opts), pass.opts), filename: (_a = pass.filename) !== null && _a !== void 0 ? _a : null }));
     return queue;
 }
-function processFn(fn, fnType, programContext) {
+function processFn(fn, fnType, programContext, outputMode) {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     let directives;
     if (fn.node.body.type !== 'BlockStatement') {
@@ -54233,7 +54276,7 @@ function processFn(fn, fnType, programContext) {
         };
     }
     let compiledFn;
-    const compileResult = tryCompileFunction(fn, fnType, programContext);
+    const compileResult = tryCompileFunction(fn, fnType, programContext, outputMode);
     if (compileResult.kind === 'error') {
         if (directives.optOut != null) {
             logError(compileResult.error, programContext, (_b = fn.node.loc) !== null && _b !== void 0 ? _b : null);
@@ -54241,11 +54284,16 @@ function processFn(fn, fnType, programContext) {
         else {
             handleError(compileResult.error, programContext, (_c = fn.node.loc) !== null && _c !== void 0 ? _c : null);
         }
-        const retryResult = retryCompileFunction(fn, fnType, programContext);
-        if (retryResult == null) {
+        if (outputMode === 'client') {
+            const retryResult = retryCompileFunction(fn, fnType, programContext);
+            if (retryResult == null) {
+                return null;
+            }
+            compiledFn = retryResult;
+        }
+        else {
             return null;
         }
-        compiledFn = retryResult;
     }
     else {
         compiledFn = compileResult.compiledFn;
@@ -54273,7 +54321,7 @@ function processFn(fn, fnType, programContext) {
     if (programContext.hasModuleScopeOptOut) {
         return null;
     }
-    else if (programContext.opts.noEmit) {
+    else if (programContext.opts.outputMode === 'lint') {
         for (const loc of compiledFn.inferredEffectLocations) {
             if (loc !== GeneratedSource) {
                 programContext.inferredEffectLocations.add(loc);
@@ -54289,7 +54337,7 @@ function processFn(fn, fnType, programContext) {
         return compiledFn;
     }
 }
-function tryCompileFunction(fn, fnType, programContext) {
+function tryCompileFunction(fn, fnType, programContext, outputMode) {
     const suppressionsInFunction = filterSuppressionsThatAffectFunction(programContext.suppressions, fn);
     if (suppressionsInFunction.length > 0) {
         return {
@@ -54300,7 +54348,7 @@ function tryCompileFunction(fn, fnType, programContext) {
     try {
         return {
             kind: 'compile',
-            compiledFn: compileFn(fn, programContext.opts.environment, fnType, 'all_features', programContext, programContext.opts.logger, programContext.filename, programContext.code),
+            compiledFn: compileFn(fn, programContext.opts.environment, fnType, outputMode, programContext, programContext.opts.logger, programContext.filename, programContext.code),
         };
     }
     catch (err) {
@@ -54313,7 +54361,7 @@ function retryCompileFunction(fn, fnType, programContext) {
         return null;
     }
     try {
-        const retryResult = compileFn(fn, environment, fnType, 'no_inferred_memo', programContext, programContext.opts.logger, programContext.filename, programContext.code);
+        const retryResult = compileFn(fn, environment, fnType, 'client-no-memo', programContext, programContext.opts.logger, programContext.filename, programContext.code);
         if (!retryResult.hasFireRewrite && !retryResult.hasInferredEffect) {
             return null;
         }
@@ -54989,6 +55037,12 @@ v4.z.enum([
     'annotation',
     'all',
 ]);
+v4.z.enum([
+    'ssr',
+    'client',
+    'client-no-memo',
+    'lint',
+]);
 const defaultOptions = {
     compilationMode: 'infer',
     panicThreshold: 'none',
@@ -54996,6 +55050,7 @@ const defaultOptions = {
     logger: null,
     gating: null,
     noEmit: false,
+    outputMode: null,
     dynamicGating: null,
     eslintSuppressionRules: null,
     flowSuppressions: true,
@@ -55414,7 +55469,7 @@ function BabelPluginReactCompiler(_babel) {
 
 var _LRUCache_values, _LRUCache_headIdx;
 const COMPILER_OPTIONS = {
-    noEmit: true,
+    outputMode: 'lint',
     panicThreshold: 'none',
     flowSuppressions: false,
     environment: {
