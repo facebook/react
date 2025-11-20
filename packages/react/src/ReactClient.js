@@ -35,7 +35,7 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {cache, cacheSignal} from './ReactCacheClient';
-import {createStore} from './ReactStore';
+import {createStore} from 'react-reconciler/src/ReactStore';
 import {
   getCacheForType,
   useCallback,

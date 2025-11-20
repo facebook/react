@@ -12,3 +12,10 @@ is compared with the previous state to determine if an update should be reported
 5. During the render phase, check the current lane, if it's a transition, read from the transition eager state, otherwise read from the sync eager state.
 6. Check if this is different than the previous memoized state, and if so, mark a pending update and update the memoized state.
 7. Return the memoized state.
+
+## Next
+
+1. Enqueue updates tagged by lane
+2. Method to compute state for lane
+3. On commit, update base state and filter out processed updates
+4. Root subscribes to store and schedules updates
