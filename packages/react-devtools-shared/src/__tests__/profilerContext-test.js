@@ -584,4 +584,93 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() => context.selectFiber(childID, 'Child'));
     expect(inspectedElementID).toBe(parentID);
   });
+
+  it('should toggle profiling when the keyboard shortcut is pressed', async () => {
+    // Use real timers for this test to avoid conflicts with Timeline's setInterval
+    jest.useRealTimers();
+
+    // Conetext providers
+    const Profiler = require('react-devtools-shared/src/devtools/views/Profiler/Profiler').default;
+    const {TimelineContextController} = require('react-devtools-timeline/src/TimelineContext');
+    const {SettingsContextController} = require('react-devtools-shared/src/devtools/views/Settings/SettingsContext');
+    const {ModalDialogContextController} = require('react-devtools-shared/src/devtools/views/ModalDialog');
+
+    // need a dom component for profiling to be enabled
+    const Component = () => null;
+    utils.act(() => render(<Component />));
+
+    const profilerContainer = document.createElement('div');
+    document.body.appendChild(profilerContainer);
+
+    // Create a root for the profiler
+    const ReactDOMClient = require('react-dom/client');
+    const profilerRoot = ReactDOMClient.createRoot(profilerContainer);
+
+    try {
+      // Render the profiler - use React.act to ensure render completes
+      React.act(() => {
+        profilerRoot.render(
+          <Contexts>
+            <SettingsContextController browserTheme="light">
+              <ModalDialogContextController>
+                <TimelineContextController>
+                  <Profiler />
+                </TimelineContextController>
+              </ModalDialogContextController>
+            </SettingsContextController>
+          </Contexts>
+        );
+      });
+
+      // Wait for any async effects to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify that the profiler is not profiling.
+      expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(false);
+
+      // Trigger the keyboard shortcut.
+      const ownerWindow = profilerContainer.ownerDocument.defaultView;
+      const isMac =
+        typeof navigator !== 'undefined' &&
+        navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+      const keyEvent = new KeyboardEvent('keydown', {
+        key: 'e',
+        metaKey: isMac,
+        ctrlKey: !isMac,
+        bubbles: true,
+      });
+
+      // Helper to wait for profiling state to change
+      const waitForProfilingState = async (expectedState, timeoutMs = 1000) => {
+        const startTime = Date.now();
+        while (store.profilerStore.isProfilingBasedOnUserInput !== expectedState) {
+          if (Date.now() - startTime > timeoutMs) {
+            throw new Error(
+              `Timeout waiting for profiling to be ${expectedState}. ` +
+              `Current state: ${store.profilerStore.isProfilingBasedOnUserInput}`
+            );
+          }
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+      };
+
+      // Dispatch keyboard event to toggle profiling on
+      ownerWindow.dispatchEvent(keyEvent);
+      await waitForProfilingState(true);
+
+      expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(true);
+
+      // Dispatch keyboard event to toggle profiling off
+      ownerWindow.dispatchEvent(keyEvent);
+      await waitForProfilingState(false);
+
+      expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(false);
+
+      document.body.removeChild(profilerContainer);
+    } finally {
+      // Restore fake timers for other tests
+      jest.useFakeTimers();
+    }
+  });
 });
