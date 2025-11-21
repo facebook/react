@@ -647,32 +647,17 @@ describe('ProfilerContext', () => {
         bubbles: true,
       });
 
-      // Helper to wait for profiling state to change
-      const waitForProfilingState = async (expectedState, timeoutMs = 1000) => {
-        const startTime = Date.now();
-        while (
-          store.profilerStore.isProfilingBasedOnUserInput !== expectedState
-        ) {
-          if (Date.now() - startTime > timeoutMs) {
-            throw new Error(
-              `Timeout waiting for profiling to be ${expectedState}. ` +
-                `Current state: ${store.profilerStore.isProfilingBasedOnUserInput}`,
-            );
-          }
-          await new Promise(resolve => setTimeout(resolve, 10));
-        }
-      };
-
       // Dispatch keyboard event to toggle profiling on
-      ownerWindow.dispatchEvent(keyEvent);
-      await waitForProfilingState(true);
-
+      // Use utils.act() to ensure all state updates complete
+      utils.act(() => {
+        ownerWindow.dispatchEvent(keyEvent);
+      });
       expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(true);
 
       // Dispatch keyboard event to toggle profiling off
-      ownerWindow.dispatchEvent(keyEvent);
-      await waitForProfilingState(false);
-
+      utils.act(() => {
+        ownerWindow.dispatchEvent(keyEvent);
+      });
       expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(false);
 
       document.body.removeChild(profilerContainer);
