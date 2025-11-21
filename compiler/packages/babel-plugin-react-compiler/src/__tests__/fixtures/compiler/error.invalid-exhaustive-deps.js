@@ -22,6 +22,14 @@ function Component({x, y, z}) {
   }, [x]);
   const f = useMemo(() => {
     return [];
-  }, [x, y.z, z?.y?.a]);
-  return <Stringify results={[a, b, c, d, e, f]} />;
+  }, [x, y.z, z?.y?.a, UNUSED_GLOBAL]);
+  const ref1 = useRef(null);
+  const ref2 = useRef(null);
+  const ref = z ? ref1 : ref2;
+  const cb = useMemo(() => {
+    return () => {
+      return ref.current;
+    };
+  }, []);
+  return <Stringify results={[a, b, c, d, e, f, cb]} />;
 }

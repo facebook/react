@@ -26,8 +26,16 @@ function Component({x, y, z}) {
   }, [x]);
   const f = useMemo(() => {
     return [];
-  }, [x, y.z, z?.y?.a]);
-  return <Stringify results={[a, b, c, d, e, f]} />;
+  }, [x, y.z, z?.y?.a, UNUSED_GLOBAL]);
+  const ref1 = useRef(null);
+  const ref2 = useRef(null);
+  const ref = z ? ref1 : ref2;
+  const cb = useMemo(() => {
+    return () => {
+      return ref.current;
+    };
+  }, []);
+  return <Stringify results={[a, b, c, d, e, f, cb]} />;
 }
 
 ```
@@ -36,11 +44,11 @@ function Component({x, y, z}) {
 ## Error
 
 ```
-Found 4 errors:
+Found 5 errors:
 
-Compilation Skipped: Found non-exhaustive dependencies
+Error: Found non-exhaustive dependencies
 
-Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI. This memoization cannot be safely rewritten by the compiler..
+Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
 
 error.invalid-exhaustive-deps.ts:7:11
    5 | function Component({x, y, z}) {
@@ -51,9 +59,9 @@ error.invalid-exhaustive-deps.ts:7:11
    9 |   const b = useMemo(() => {
   10 |     return x.y.z?.a;
 
-Compilation Skipped: Found non-exhaustive dependencies
+Error: Found non-exhaustive dependencies
 
-Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI. This memoization cannot be safely rewritten by the compiler..
+Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
 
 error.invalid-exhaustive-deps.ts:10:11
    8 |   }, [x?.y.z?.a.b]);
@@ -64,9 +72,9 @@ error.invalid-exhaustive-deps.ts:10:11
   12 |   const c = useMemo(() => {
   13 |     return x?.y.z.a?.b;
 
-Compilation Skipped: Found non-exhaustive dependencies
+Error: Found non-exhaustive dependencies
 
-Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI. This memoization cannot be safely rewritten by the compiler..
+Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
 
 error.invalid-exhaustive-deps.ts:13:11
   11 |   }, [x.y.z.a]);
@@ -77,22 +85,31 @@ error.invalid-exhaustive-deps.ts:13:11
   15 |   const d = useMemo(() => {
   16 |     return x?.y?.[(console.log(y), z?.b)];
 
-Compilation Skipped: Found unnecessary memoization dependencies
+Error: Found unnecessary memoization dependencies
 
-Unnecessary dependencies can cause a value to update more often than necessary, which can cause effects to run more than expected. This memoization cannot be safely rewritten by the compiler.
+Unnecessary dependencies can cause a value to update more often than necessary, which can cause effects to run more than expected.
 
-error.invalid-exhaustive-deps.ts:23:20
-  21 |     return e;
-  22 |   }, [x]);
-> 23 |   const f = useMemo(() => {
-     |                     ^^^^^^^
-> 24 |     return [];
-     | ^^^^^^^^^^^^^^
-> 25 |   }, [x, y.z, z?.y?.a]);
-     | ^^^^ Unnecessary dependencies `x`, `y.z`, `z?.y?.a`
-  26 |   return <Stringify results={[a, b, c, d, e, f]} />;
-  27 | }
-  28 |
+error.invalid-exhaustive-deps.ts:25:5
+  23 |   const f = useMemo(() => {
+  24 |     return [];
+> 25 |   }, [x, y.z, z?.y?.a, UNUSED_GLOBAL]);
+     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unnecessary dependencies `x`, `y.z`, `z?.y?.a`, `UNUSED_GLOBAL`
+  26 |   const ref1 = useRef(null);
+  27 |   const ref2 = useRef(null);
+  28 |   const ref = z ? ref1 : ref2;
+
+Error: Found non-exhaustive dependencies
+
+Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
+
+error.invalid-exhaustive-deps.ts:31:13
+  29 |   const cb = useMemo(() => {
+  30 |     return () => {
+> 31 |       return ref.current;
+     |              ^^^ Missing dependency `ref`. Refs, setState functions, and other "stable" values generally do not need to be added as dependencies, but this variable may change over time to point to different values
+  32 |     };
+  33 |   }, []);
+  34 |   return <Stringify results={[a, b, c, d, e, f, cb]} />;
 ```
           
       
