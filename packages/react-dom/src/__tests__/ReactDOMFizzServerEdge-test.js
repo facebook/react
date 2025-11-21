@@ -73,15 +73,9 @@ describe('ReactDOMFizzServerEdge', () => {
       setTimeout(resolve, 1);
     });
 
-    if (gate(flags => flags.enableFizzBlockingRender)) {
-      expect(result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head><link rel="expect" href="#_R_" blocking="render"/></head><body><main>hello</main><template id="_R_"></template></body></html>"`,
-      );
-    } else {
-      expect(result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head></head><body><main>hello</main></body></html>"`,
-      );
-    }
+    expect(result).toMatchInlineSnapshot(
+      `"<!DOCTYPE html><html><head></head><body><main>hello</main></body></html>"`,
+    );
   });
 
   it('recoverably errors and does not add rel="expect" for large shells', async () => {
