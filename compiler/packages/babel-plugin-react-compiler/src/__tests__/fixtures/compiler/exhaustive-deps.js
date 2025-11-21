@@ -1,5 +1,5 @@
 // @validateExhaustiveMemoizationDependencies
-import {useMemo} from 'react';
+import {useCallback, useMemo} from 'react';
 import {makeObject_Primitives, Stringify} from 'shared-runtime';
 
 function useHook1(x) {
@@ -43,6 +43,16 @@ function useHook6(x) {
   }, [x]);
 }
 
+function useHook7(x) {
+  const [state, setState] = useState(true);
+  const f = () => {
+    setState(x => !x);
+  };
+  return useCallback(() => {
+    f();
+  }, [f]);
+}
+
 function Component({x, y, z}) {
   const a = useHook1(x);
   const b = useHook2(x);
@@ -50,5 +60,6 @@ function Component({x, y, z}) {
   const d = useHook4(x, y, z);
   const e = useHook5(x);
   const f = useHook6(x);
-  return <Stringify results={[a, b, c, d, e, f]} />;
+  const g = useHook7(x);
+  return <Stringify results={[a, b, c, d, e, f, g]} />;
 }
