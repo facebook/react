@@ -590,10 +590,17 @@ describe('ProfilerContext', () => {
     jest.useRealTimers();
 
     // Conetext providers
-    const Profiler = require('react-devtools-shared/src/devtools/views/Profiler/Profiler').default;
-    const {TimelineContextController} = require('react-devtools-timeline/src/TimelineContext');
-    const {SettingsContextController} = require('react-devtools-shared/src/devtools/views/Settings/SettingsContext');
-    const {ModalDialogContextController} = require('react-devtools-shared/src/devtools/views/ModalDialog');
+    const Profiler =
+      require('react-devtools-shared/src/devtools/views/Profiler/Profiler').default;
+    const {
+      TimelineContextController,
+    } = require('react-devtools-timeline/src/TimelineContext');
+    const {
+      SettingsContextController,
+    } = require('react-devtools-shared/src/devtools/views/Settings/SettingsContext');
+    const {
+      ModalDialogContextController,
+    } = require('react-devtools-shared/src/devtools/views/ModalDialog');
 
     // need a dom component for profiling to be enabled
     const Component = () => null;
@@ -618,7 +625,7 @@ describe('ProfilerContext', () => {
                 </TimelineContextController>
               </ModalDialogContextController>
             </SettingsContextController>
-          </Contexts>
+          </Contexts>,
         );
       });
 
@@ -644,11 +651,13 @@ describe('ProfilerContext', () => {
       // Helper to wait for profiling state to change
       const waitForProfilingState = async (expectedState, timeoutMs = 1000) => {
         const startTime = Date.now();
-        while (store.profilerStore.isProfilingBasedOnUserInput !== expectedState) {
+        while (
+          store.profilerStore.isProfilingBasedOnUserInput !== expectedState
+        ) {
           if (Date.now() - startTime > timeoutMs) {
             throw new Error(
               `Timeout waiting for profiling to be ${expectedState}. ` +
-              `Current state: ${store.profilerStore.isProfilingBasedOnUserInput}`
+                `Current state: ${store.profilerStore.isProfilingBasedOnUserInput}`,
             );
           }
           await new Promise(resolve => setTimeout(resolve, 10));
