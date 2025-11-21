@@ -1213,6 +1213,301 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
+  it('can stream in "forwards" with tail "collapsed"', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+    const LoadingA = createAsyncText('Loading A');
+    const LoadingB = createAsyncText('Loading B');
+    const LoadingC = createAsyncText('Loading C');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards" tail="collapsed">
+            <Suspense fallback={<LoadingA />}>
+              <A />
+            </Suspense>
+            <Suspense fallback={<LoadingB />}>
+              <B />
+            </Suspense>
+            <Suspense fallback={<LoadingC />}>
+              <C />
+            </Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await C.resolve();
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'Suspend! [B]', // TODO: Defer rendering the content after fallback if previous suspended,
+      'C',
+      'Suspend! [Loading A]',
+      'Suspend! [Loading B]',
+      'Suspend! [Loading C]',
+    ]);
+
+    // We need the loading state for the first row before the shell completes.
+    expect(getVisibleChildren(container)).toEqual(undefined);
+
+    await serverAct(() => LoadingA.resolve());
+
+    assertLog(['Loading A']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading A</span>
+      </div>,
+    );
+
+    await serverAct(() => A.resolve());
+    assertLog(['A']);
+
+    // We can't show A yet because we don't yet have the loading state for the next row.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading A</span>
+      </div>,
+    );
+
+    await serverAct(() => LoadingB.resolve());
+    assertLog(['Loading B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>Loading B</span>
+      </div>,
+    );
+
+    await serverAct(() => B.resolve());
+    assertLog(['B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </div>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('can stream in "backwards" with tail "collapsed"', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+    const LoadingA = createAsyncText('Loading A');
+    const LoadingB = createAsyncText('Loading B');
+    const LoadingC = createAsyncText('Loading C');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="backwards" tail="collapsed">
+            <Suspense fallback={<LoadingA />}>
+              <A />
+            </Suspense>
+            <Suspense fallback={<LoadingB />}>
+              <B />
+            </Suspense>
+            <Suspense fallback={<LoadingC />}>
+              <C />
+            </Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await C.resolve();
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog([
+      'Suspend! [A]',
+      'Suspend! [B]', // TODO: Defer rendering the content after fallback if previous suspended,
+      'C',
+      'Suspend! [Loading A]',
+      'Suspend! [Loading B]',
+      'Suspend! [Loading C]',
+    ]);
+
+    // We need the loading state for the first row before the shell completes.
+    expect(getVisibleChildren(container)).toEqual(undefined);
+
+    await serverAct(() => LoadingA.resolve());
+
+    assertLog(['Loading A']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading A</span>
+      </div>,
+    );
+
+    await serverAct(() => A.resolve());
+    assertLog(['A']);
+
+    // We can't show A yet because we don't yet have the loading state for the next row.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading A</span>
+      </div>,
+    );
+
+    await serverAct(() => LoadingB.resolve());
+    assertLog(['Loading B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading B</span>
+        <span>A</span>
+      </div>,
+    );
+
+    await serverAct(() => B.resolve());
+    assertLog(['B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>C</span>
+        <span>B</span>
+        <span>A</span>
+      </div>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('can stream in a single row "forwards" with tail "collapsed"', async () => {
+    // This is a special case since there's no second loading state to unblock the first row.
+    const A = createAsyncText('A');
+    const LoadingA = createAsyncText('Loading A');
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards" tail="collapsed">
+            {[
+              <Suspense key="a" fallback={<LoadingA />}>
+                <A />
+              </Suspense>,
+            ]}
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog(['Suspend! [A]', 'Suspend! [Loading A]']);
+
+    // We need the loading state for the first row before the shell completes.
+    expect(getVisibleChildren(container)).toEqual(undefined);
+
+    await serverAct(() => LoadingA.resolve());
+
+    assertLog(['Loading A']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading A</span>
+      </div>,
+    );
+
+    await serverAct(() => A.resolve());
+    assertLog(['A']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+      </div>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('can stream in sync rows "forwards" with tail "collapsed"', async () => {
+    // Notably, this doesn't currently work if the fallbacks are blocked.
+    // We need the fallbacks to unblock previous rows and we don't know we won't
+    // need them until later. Needs some resolution at the end.
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards" tail="collapsed">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <Text text="A" />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <Text text="B" />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <Text text="C" />
+            </Suspense>
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog(['A', 'B', 'C', 'Loading A', 'Loading B']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </div>,
+    );
+  });
+
+  // @gate enableSuspenseList
+  it('can stream in sync rows "forwards" with tail "collapsed" without boundaries', async () => {
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards" tail="collapsed">
+            <Text text="A" />
+            <Text text="B" />
+            <Text text="C" />
+          </SuspenseList>
+        </div>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    assertLog(['A', 'B', 'C']);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </div>,
+    );
+  });
+
   it('inserts text separators (comments) for text nodes (forwards)', async () => {
     function Foo() {
       return (

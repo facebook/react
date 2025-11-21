@@ -268,6 +268,7 @@ type SuspenseBoundary = {
   pendingTasks: number, // when it reaches zero we can show this boundary's content
   list: null | SuspenseList, // if this boundary is an implicit boundary around a row, then this is the suspense list that it's added to.
   row: null | SuspenseListRow, // the row that this boundary blocks from completing.
+  preceedingRow: null | SuspenseListRow, // a preceeding row that can't complete until this boundary is complete (other than being blocked by that row).
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
   defer: boolean, // never inline deferred boundaries
@@ -825,6 +826,7 @@ function createSuspenseBoundary(
     pendingTasks: 0,
     list: null,
     row: row,
+    preceedingRow: null,
     completedSegments: [],
     byteSize: 0,
     defer: defer,
@@ -2002,6 +2004,7 @@ function renderSuspenseListRows(
       // the next boundary so that they can only complete in order.
       let previousRowBoundary: null | SuspenseBoundary = null;
       let previousSegment = parentSegment;
+
       for (let n = 0; n < totalChildren; n++) {
         const i =
           revealOrder === 'unstable_legacy-backwards'
@@ -2009,14 +2012,20 @@ function renderSuspenseListRows(
             : n;
         const node = rows[i];
         const suspenseListRow = createSuspenseListRow(previousSuspenseListRow);
-        // This effectively acts as a together row because we'll block it on its own boundary.
-        // TODO: For "collapsed" this should be different.
-        suspenseListRow.mode = TOGETHER;
-        if (previousSuspenseListRow === null) {
-          // If this is the first row, then it won't be blocked by any previous rows but
-          // for hidden mode, it'll be blocked by its own boundary.
-          // TODO: For "collapsed" this should be different.
-          suspenseListRow.boundaries = [];
+        if (tailMode === 'collapsed') {
+          if (previousSuspenseListRow === null && totalChildren > 1) {
+            // For collapsed mode, we'll block the first row from completing until the second row's
+            // loading state has completed. But only if there is a second row.
+            suspenseListRow.boundaries = [];
+          }
+        } else {
+          // Hidden mode effectively acts as a together row because we'll block it on its own boundary.
+          suspenseListRow.mode = TOGETHER;
+          if (previousSuspenseListRow === null) {
+            // If this is the first row, then it won't be blocked by any previous rows but
+            // for hidden mode, it'll be blocked by its own boundary.
+            suspenseListRow.boundaries = [];
+          }
         }
 
         task.row = suspenseListRow;
@@ -2025,12 +2034,18 @@ function renderSuspenseListRows(
         const rowBoundary = createSuspenseBoundary(
           request,
           suspenseList,
-          suspenseListRow, // For "hidden" the boundary blocks itself from completing. TODO: For "collapsed" it's different.
+          tailMode === 'collapsed' && previousSuspenseListRow === null
+            ? null
+            : suspenseListRow,
           abortSet,
           canHavePreamble(prevContext) ? createPreamble() : null,
           defer,
         );
-        rowBoundary.rootSegmentID = request.nextSegmentId++;
+
+        if (tailMode === 'collapsed' && previousSuspenseListRow !== null) {
+          previousSuspenseListRow.pendingTasks++;
+          rowBoundary.preceedingRow = previousSuspenseListRow;
+        }
 
         // In backwards mode, the next boundary segment is added before the content of the row.
         // The first one is added to the end of the parent segment.
@@ -2057,6 +2072,13 @@ function renderSuspenseListRows(
           finishedSegment(request, previousRowBoundary, previousSegment);
           queueCompletedSegment(previousRowBoundary, previousSegment);
         }
+        if (previousSuspenseListRow !== null) {
+          // Unblock the initial task on the previous row itself. We do this after we have had a
+          // chance to add the next row as a blocker for the previous row.
+          if (--previousSuspenseListRow.pendingTasks === 0) {
+            finishSuspenseListRow(request, previousSuspenseListRow);
+          }
+        }
 
         const isTopSegment = forwards ? n === 0 : n === totalChildren - 1;
         const rowSegment = createPendingSegment(
@@ -2077,10 +2099,21 @@ function renderSuspenseListRows(
         // no parent segment so there's nothing to wait on.
         rowSegment.parentFlushed = true;
 
-        task.blockedBoundary = rowBoundary;
-        task.blockedPreamble =
-          rowBoundary.preamble === null ? null : rowBoundary.preamble.content;
-        task.hoistableState = rowBoundary.contentState;
+        const blockedBoundary =
+          tailMode === 'collapsed' && previousSuspenseListRow === null
+            ? // The first row of a collapsed blocks the outer parent (or shell) from completing.
+              // We need to at least finish a loading state.
+              parentBoundary
+            : // For hidden, the blocked boundary is the row's implicit boundary itself.
+              rowBoundary;
+        if (blockedBoundary !== null) {
+          task.blockedBoundary = blockedBoundary;
+          task.blockedPreamble =
+            blockedBoundary.preamble === null
+              ? null
+              : blockedBoundary.preamble.content;
+          task.hoistableState = blockedBoundary.contentState;
+        }
         task.blockedSegment = rowSegment;
         rowSegment.status = RENDERING;
         try {
@@ -2106,14 +2139,18 @@ function renderSuspenseListRows(
               // then we don't have to wait for it to be flushed before we unblock future rows.
               // This lets us inline small rows in order.
               // Unblock the task for the implicit boundary. It will still be blocked by the row itself.
-              if (--suspenseListRow.pendingTasks === 0) {
-                finishSuspenseListRow(request, suspenseListRow);
+              suspenseListRow.pendingTasks--;
+            }
+          } else {
+            const preceedingRow = rowBoundary.preceedingRow;
+            if (preceedingRow !== null && rowBoundary.pendingTasks === 1) {
+              // We're blocking a preceeding row on completing this boundary. We only have one task left.
+              // That must be the preceeding row that blocks us from showing. We can now unblock the preceeding row.
+              rowBoundary.preceedingRow = null;
+              if (--preceedingRow.pendingTasks === 0) {
+                finishSuspenseListRow(request, preceedingRow);
               }
             }
-          }
-          // Unblock the initial task on the row itself.
-          if (--suspenseListRow.pendingTasks === 0) {
-            finishSuspenseListRow(request, suspenseListRow);
           }
         } catch (thrownValue: mixed) {
           task.blockedSegment = parentSegment;
@@ -2127,6 +2164,7 @@ function renderSuspenseListRows(
           }
           throw thrownValue;
         }
+
         // We nest each row into the previous row boundary's content.
         previousSegment = rowSegment;
         previousRowBoundary = rowBoundary;
@@ -2136,6 +2174,13 @@ function renderSuspenseListRows(
         // Once we've added the next boundary, we can finish the previous segment.
         finishedSegment(request, previousRowBoundary, previousSegment);
         queueCompletedSegment(previousRowBoundary, previousSegment);
+      }
+      if (previousSuspenseListRow !== null) {
+        // Unblock the initial task on the previous row itself. We do this after we have had a
+        // chance to add the next row as a blocker for the previous row.
+        if (--previousSuspenseListRow.pendingTasks === 0) {
+          finishSuspenseListRow(request, previousSuspenseListRow);
+        }
       }
       task.blockedBoundary = parentBoundary;
       task.blockedPreamble = parentPreamble;
@@ -5184,6 +5229,19 @@ function finishedTask(
       const boundaryRow = boundary.row;
       if (boundaryRow !== null && boundaryRow.mode === TOGETHER) {
         tryToResolveTogetherRow(request, boundaryRow);
+      }
+      const preceedingRow = boundary.preceedingRow;
+      if (preceedingRow !== null && boundary.pendingTasks === 1) {
+        // We're blocking a preceeding row on completing this boundary. We only have one task left.
+        // That must be the preceeding row that blocks us from showing. We can now unblock the preceeding row.
+        boundary.preceedingRow = null;
+        if (preceedingRow.pendingTasks === 1) {
+          unblockSuspenseListRow(
+            request,
+            preceedingRow,
+            preceedingRow.hoistables,
+          );
+        }
       }
     }
   }
