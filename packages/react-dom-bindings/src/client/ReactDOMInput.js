@@ -474,13 +474,18 @@ export function setDefaultValue(
   type: ?string,
   value: ToStringValue,
 ) {
+  const stringValue = toString(value);
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
+    // However, if the defaultValue has actually changed, we need to update it
+    // even for focused number inputs to ensure the visual value is properly updated
+    // after form actions complete.
     type !== 'number' ||
-    getActiveElement(node.ownerDocument) !== node
+    getActiveElement(node.ownerDocument) !== node ||
+    node.defaultValue !== stringValue
   ) {
-    if (node.defaultValue !== toString(value)) {
-      node.defaultValue = toString(value);
+    if (node.defaultValue !== stringValue) {
+      node.defaultValue = stringValue;
     }
   }
 }
