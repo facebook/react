@@ -59,7 +59,6 @@ function Component(props) {
       if (isLoadingNext) {
         return;
       }
-
       loadMoreWithTiming();
     };
     t2 = [isLoadingNext, loadMoreWithTiming];
