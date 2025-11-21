@@ -817,6 +817,11 @@ export type StartMemoize = {
    * (e.g. useMemo without a second arg)
    */
   deps: Array<ManualMemoDependency> | null;
+  /**
+   * The source location of the dependencies argument. Used for
+   * emitting diagnostics with a suggested replacement
+   */
+  depsLoc: SourceLocation | null;
   loc: SourceLocation;
 };
 export type FinishMemoize = {
