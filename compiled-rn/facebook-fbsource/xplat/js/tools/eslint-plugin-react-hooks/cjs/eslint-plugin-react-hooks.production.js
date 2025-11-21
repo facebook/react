@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<eec21a9def8d598bcc2e7d05b64a2531>>
+ * @generated SignedSource<<78c5314467754b02b864348098869816>>
  */
 
 'use strict';
@@ -44495,7 +44495,10 @@ function collectTemporaries(instr, env, sidemap) {
         }
         case 'ArrayExpression': {
             if (value.elements.every(e => e.kind === 'Identifier')) {
-                sidemap.maybeDepsLists.set(instr.lvalue.identifier.id, value.elements);
+                sidemap.maybeDepsLists.set(instr.lvalue.identifier.id, {
+                    loc: value.loc,
+                    deps: value.elements,
+                });
             }
             break;
         }
@@ -44505,7 +44508,7 @@ function collectTemporaries(instr, env, sidemap) {
         sidemap.maybeDeps.set(lvalue.identifier.id, maybeDep);
     }
 }
-function makeManualMemoizationMarkers(fnExpr, env, depsList, memoDecl, manualMemoId) {
+function makeManualMemoizationMarkers(fnExpr, env, depsList, depsLoc, memoDecl, manualMemoId) {
     return [
         {
             id: makeInstructionId(0),
@@ -44514,6 +44517,7 @@ function makeManualMemoizationMarkers(fnExpr, env, depsList, memoDecl, manualMem
                 kind: 'StartMemoize',
                 manualMemoId,
                 deps: depsList,
+                depsLoc,
                 loc: fnExpr.loc,
             },
             effects: null,
@@ -44558,71 +44562,69 @@ function getManualMemoizationReplacement(fn, loc, kind) {
 }
 function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
     const [fnPlace, depsListPlace] = instr.value.args;
-    if (fnPlace == null) {
+    if (fnPlace == null || fnPlace.kind !== 'Identifier') {
         errors.pushDiagnostic(CompilerDiagnostic.create({
             category: ErrorCategory.UseMemo,
             reason: `Expected a callback function to be passed to ${kind}`,
-            description: `Expected a callback function to be passed to ${kind}`,
+            description: kind === 'useCallback'
+                ? 'The first argument to useCallback() must be a function to cache'
+                : 'The first argument to useMemo() must be a function that calculates a result to cache',
             suggestions: null,
         }).withDetails({
             kind: 'error',
             loc: instr.value.loc,
-            message: `Expected a callback function to be passed to ${kind}`,
+            message: kind === 'useCallback'
+                ? `Expected a callback function`
+                : `Expected a memoization function`,
         }));
-        return { fnPlace: null, depsList: null };
+        return null;
     }
-    if (fnPlace.kind === 'Spread' || (depsListPlace === null || depsListPlace === void 0 ? void 0 : depsListPlace.kind) === 'Spread') {
+    if (depsListPlace == null) {
+        return {
+            fnPlace,
+            depsList: null,
+            depsLoc: null,
+        };
+    }
+    const maybeDepsList = depsListPlace.kind === 'Identifier'
+        ? sidemap.maybeDepsLists.get(depsListPlace.identifier.id)
+        : null;
+    if (maybeDepsList == null) {
         errors.pushDiagnostic(CompilerDiagnostic.create({
             category: ErrorCategory.UseMemo,
-            reason: `Unexpected spread argument to ${kind}`,
-            description: `Unexpected spread argument to ${kind}`,
+            reason: `Expected the dependency list for ${kind} to be an array literal`,
+            description: `Expected the dependency list for ${kind} to be an array literal`,
             suggestions: null,
         }).withDetails({
             kind: 'error',
-            loc: instr.value.loc,
-            message: `Unexpected spread argument to ${kind}`,
+            loc: (depsListPlace === null || depsListPlace === void 0 ? void 0 : depsListPlace.kind) === 'Identifier' ? depsListPlace.loc : instr.loc,
+            message: `Expected the dependency list for ${kind} to be an array literal`,
         }));
-        return { fnPlace: null, depsList: null };
+        return null;
     }
-    let depsList = null;
-    if (depsListPlace != null) {
-        const maybeDepsList = sidemap.maybeDepsLists.get(depsListPlace.identifier.id);
-        if (maybeDepsList == null) {
+    const depsList = [];
+    for (const dep of maybeDepsList.deps) {
+        const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
+        if (maybeDep == null) {
             errors.pushDiagnostic(CompilerDiagnostic.create({
                 category: ErrorCategory.UseMemo,
-                reason: `Expected the dependency list for ${kind} to be an array literal`,
-                description: `Expected the dependency list for ${kind} to be an array literal`,
+                reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
+                description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
                 suggestions: null,
             }).withDetails({
                 kind: 'error',
-                loc: depsListPlace.loc,
-                message: `Expected the dependency list for ${kind} to be an array literal`,
+                loc: dep.loc,
+                message: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
             }));
-            return { fnPlace, depsList: null };
         }
-        depsList = [];
-        for (const dep of maybeDepsList) {
-            const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
-            if (maybeDep == null) {
-                errors.pushDiagnostic(CompilerDiagnostic.create({
-                    category: ErrorCategory.UseMemo,
-                    reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
-                    description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
-                    suggestions: null,
-                }).withDetails({
-                    kind: 'error',
-                    loc: dep.loc,
-                    message: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
-                }));
-            }
-            else {
-                depsList.push(maybeDep);
-            }
+        else {
+            depsList.push(maybeDep);
         }
     }
     return {
         fnPlace,
         depsList,
+        depsLoc: maybeDepsList.loc,
     };
 }
 function dropManualMemoization(func) {
@@ -44651,10 +44653,11 @@ function dropManualMemoization(func) {
                     : instr.value.property.identifier.id;
                 const manualMemo = sidemap.manualMemos.get(id);
                 if (manualMemo != null) {
-                    const { fnPlace, depsList } = extractManualMemoizationArgs(instr, manualMemo.kind, sidemap, errors);
-                    if (fnPlace == null) {
+                    const memoDetails = extractManualMemoizationArgs(instr, manualMemo.kind, sidemap, errors);
+                    if (memoDetails == null) {
                         continue;
                     }
+                    const { fnPlace, depsList, depsLoc } = memoDetails;
                     instr.value = getManualMemoizationReplacement(fnPlace, instr.value.loc, manualMemo.kind);
                     if (isValidationEnabled) {
                         if (!sidemap.functions.has(fnPlace.identifier.id)) {
@@ -44679,7 +44682,7 @@ function dropManualMemoization(func) {
                                 reactive: false,
                                 loc: fnPlace.loc,
                             };
-                        const [startMarker, finishMarker] = makeManualMemoizationMarkers(fnPlace, func.env, depsList, memoDecl, nextManualMemoId++);
+                        const [startMarker, finishMarker] = makeManualMemoizationMarkers(fnPlace, func.env, depsList, depsLoc, memoDecl, nextManualMemoId++);
                         queuedInserts.set(manualMemo.loadInstr.id, startMarker);
                         queuedInserts.set(instr.id, finishMarker);
                     }
@@ -53363,36 +53366,50 @@ function validateExhaustiveDependencies(fn) {
             }
             extra.push(dep);
         }
-        if (missing.length !== 0) {
-            const diagnostic = CompilerDiagnostic.create({
-                category: ErrorCategory.PreserveManualMemo,
-                reason: 'Found non-exhaustive dependencies',
-                description: 'Missing dependencies can cause a value not to update when those inputs change, ' +
-                    'resulting in stale UI. This memoization cannot be safely rewritten by the compiler.',
-            });
-            for (const dep of missing) {
+        if (missing.length !== 0 || extra.length !== 0) {
+            let suggestions = null;
+            if (startMemo.depsLoc != null && typeof startMemo.depsLoc !== 'symbol') {
+                suggestions = [
+                    {
+                        description: 'Update dependencies',
+                        range: [startMemo.depsLoc.start.index, startMemo.depsLoc.end.index],
+                        op: CompilerSuggestionOperation.Replace,
+                        text: `[${inferred.map(printInferredDependency).join(', ')}]`,
+                    },
+                ];
+            }
+            if (missing.length !== 0) {
+                const diagnostic = CompilerDiagnostic.create({
+                    category: ErrorCategory.PreserveManualMemo,
+                    reason: 'Found non-exhaustive dependencies',
+                    description: 'Missing dependencies can cause a value not to update when those inputs change, ' +
+                        'resulting in stale UI. This memoization cannot be safely rewritten by the compiler.',
+                    suggestions,
+                });
+                for (const dep of missing) {
+                    diagnostic.withDetails({
+                        kind: 'error',
+                        message: `Missing dependency \`${printInferredDependency(dep)}\``,
+                        loc: dep.loc,
+                    });
+                }
+                error.pushDiagnostic(diagnostic);
+            }
+            else if (extra.length !== 0) {
+                const diagnostic = CompilerDiagnostic.create({
+                    category: ErrorCategory.PreserveManualMemo,
+                    reason: 'Found unnecessary memoization dependencies',
+                    description: 'Unnecessary dependencies can cause a value to update more often than necessary, ' +
+                        'which can cause effects to run more than expected. This memoization cannot be safely ' +
+                        'rewritten by the compiler',
+                });
                 diagnostic.withDetails({
                     kind: 'error',
-                    message: `Missing dependency \`${printInferredDependency(dep)}\``,
-                    loc: dep.loc,
+                    message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
+                    loc: value.loc,
                 });
+                error.pushDiagnostic(diagnostic);
             }
-            error.pushDiagnostic(diagnostic);
-        }
-        else if (extra.length !== 0) {
-            const diagnostic = CompilerDiagnostic.create({
-                category: ErrorCategory.PreserveManualMemo,
-                reason: 'Found unnecessary memoization dependencies',
-                description: 'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-                    'which can cause effects to run more than expected. This memoization cannot be safely ' +
-                    'rewritten by the compiler',
-            });
-            diagnostic.withDetails({
-                kind: 'error',
-                message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
-                loc: value.loc,
-            });
-            error.pushDiagnostic(diagnostic);
         }
         dependencies.clear();
         locals.clear();
