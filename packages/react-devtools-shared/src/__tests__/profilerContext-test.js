@@ -599,7 +599,7 @@ describe('ProfilerContext', () => {
       ModalDialogContextController,
     } = require('react-devtools-shared/src/devtools/views/ModalDialog');
 
-    // need a dom component for profiling to be enabled
+    // Dom component for profiling to be enabled
     const Component = () => null;
     utils.act(() => render(<Component />));
 
