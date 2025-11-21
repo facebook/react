@@ -9,7 +9,7 @@ import * as t from '@babel/types';
 import {ZodError, z} from 'zod/v4';
 import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerError} from '../CompilerError';
-import {Logger, ProgramContext} from '../Entrypoint';
+import {CompilerOutputMode, Logger, ProgramContext} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
@@ -51,6 +51,7 @@ import {Scope as BabelScope, NodePath} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
 import {FlowTypeEnv} from '../Flood/Types';
 import {defaultModuleTypeProvider} from './DefaultModuleTypeProvider';
+import {assertExhaustive} from '../Utils/utils';
 
 export const ReactElementSymbolSchema = z.object({
   elementSymbol: z.union([
@@ -218,6 +219,11 @@ export const EnvironmentConfigSchema = z.object({
   validatePreserveExistingMemoizationGuarantees: z.boolean().default(true),
 
   /**
+   * Validate that dependencies supplied to manual memoization calls are exhaustive.
+   */
+  validateExhaustiveMemoizationDependencies: z.boolean().default(false),
+
+  /**
    * When this is true, rather than pruning existing manual memoization but ensuring or validating
    * that the memoized values remain memoized, the compiler will simply not prune existing calls to
    * useMemo/useCallback.
@@ -363,6 +369,13 @@ export const EnvironmentConfigSchema = z.object({
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
   validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
+
+  /**
+   * Validates that AST nodes generated during codegen have proper source locations.
+   * This is useful for debugging issues with source maps and Istanbul coverage.
+   * When enabled, the compiler will error if important source locations are missing in the generated AST.
+   */
+  validateSourceLocations: z.boolean().default(false),
 
   /**
    * Validate against impure functions called during render
@@ -665,11 +678,25 @@ export const EnvironmentConfigSchema = z.object({
   validateNoDynamicallyCreatedComponentsOrHooks: z.boolean().default(false),
 
   /**
-   * When enabled, allows setState calls in effects when the value being set is
-   * derived from a ref. This is useful for patterns where initial layout measurements
-   * from refs need to be stored in state during mount.
+   * When enabled, allows setState calls in effects based on valid patterns involving refs:
+   * - Allow setState where the value being set is derived from a ref. This is useful where
+   *   state needs to take into account layer information, and a layout effect reads layout
+   *   data from a ref and sets state.
+   * - Allow conditionally calling setState after manually comparing previous/new values
+   *   for changes via a ref. Relying on effect deps is insufficient for non-primitive values,
+   *   so a ref is generally required to manually track previous values and compare prev/next
+   *   for meaningful changes before setting state.
    */
   enableAllowSetStateFromRefsInEffects: z.boolean().default(true),
+
+  /**
+   * Enables inference of event handler types for JSX props on built-in DOM elements.
+   * When enabled, functions passed to event handler props (props starting with "on")
+   * on primitive JSX tags are inferred to have the BuiltinEventHandlerId type, which
+   * allows ref access within those functions since DOM event handlers are guaranteed
+   * by React to only execute in response to events, not during render.
+   */
+  enableInferEventHandlers: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
@@ -709,7 +736,7 @@ export class Environment {
   code: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
-  compilerMode: CompilerMode;
+  outputMode: CompilerOutputMode;
   programContext: ProgramContext;
   hasFireRewrite: boolean;
   hasInferredEffect: boolean;
@@ -724,7 +751,7 @@ export class Environment {
   constructor(
     scope: BabelScope,
     fnType: ReactFunctionType,
-    compilerMode: CompilerMode,
+    outputMode: CompilerOutputMode,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
     parentFunction: NodePath<t.Function>, // the outermost function being compiled
@@ -735,7 +762,7 @@ export class Environment {
   ) {
     this.#scope = scope;
     this.fnType = fnType;
-    this.compilerMode = compilerMode;
+    this.outputMode = outputMode;
     this.config = config;
     this.filename = filename;
     this.code = code;
@@ -831,8 +858,65 @@ export class Environment {
     return this.#flowTypeEnvironment;
   }
 
-  get isInferredMemoEnabled(): boolean {
-    return this.compilerMode !== 'no_inferred_memo';
+  get enableDropManualMemoization(): boolean {
+    switch (this.outputMode) {
+      case 'lint': {
+        // linting drops to be more compatible with compiler analysis
+        return true;
+      }
+      case 'client':
+      case 'ssr': {
+        return true;
+      }
+      case 'client-no-memo': {
+        return false;
+      }
+      default: {
+        assertExhaustive(
+          this.outputMode,
+          `Unexpected output mode '${this.outputMode}'`,
+        );
+      }
+    }
+  }
+
+  get enableMemoization(): boolean {
+    switch (this.outputMode) {
+      case 'client':
+      case 'lint': {
+        // linting also enables memoization so that we can check if manual memoization is preserved
+        return true;
+      }
+      case 'ssr':
+      case 'client-no-memo': {
+        return false;
+      }
+      default: {
+        assertExhaustive(
+          this.outputMode,
+          `Unexpected output mode '${this.outputMode}'`,
+        );
+      }
+    }
+  }
+
+  get enableValidations(): boolean {
+    switch (this.outputMode) {
+      case 'client':
+      case 'lint':
+      case 'ssr': {
+        return true;
+      }
+      case 'client-no-memo': {
+        return false;
+      }
+      default: {
+        assertExhaustive(
+          this.outputMode,
+          `Unexpected output mode '${this.outputMode}'`,
+        );
+      }
+    }
   }
 
   get nextIdentifierId(): IdentifierId {

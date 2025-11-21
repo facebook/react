@@ -21,7 +21,7 @@ export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const disableLegacyContext: boolean = true;
 export const disableLegacyContextForFunctionComponents: boolean = true;
-export const disableLegacyMode: boolean = true;
+export const disableLegacyMode: boolean = false;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
 export const enableAsyncDebugInfo: boolean = false;
@@ -38,10 +38,10 @@ export const enableLegacyFBSupport: boolean = false;
 export const enableLegacyHidden: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
 export const enableObjectFiber: boolean = false;
-export const enablePostpone: boolean = false;
 export const enableReactTestRendererWarning: boolean = false;
 export const enableRetryLaneExpiration: boolean = false;
 export const enableComponentPerformanceTrack: boolean = true;
+export const enablePerformanceIssueReporting: boolean = false;
 export const enableSchedulingProfiler: boolean =
   !enableComponentPerformanceTrack && __PROFILE__;
 export const enableScopeAPI: boolean = false;
@@ -74,6 +74,11 @@ export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
+export const enableFragmentRefsInstanceHandles: boolean = false;
+
+export const enableInternalInstanceMap: boolean = false;
+
+export const enableOptimisticKey: boolean = false;
 
 // Profiling Only
 export const enableProfilerTimer: boolean = __PROFILE__;

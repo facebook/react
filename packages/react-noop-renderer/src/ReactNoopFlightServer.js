@@ -73,7 +73,6 @@ type Options = {
   signal?: AbortSignal,
   debugChannel?: {onMessage?: (message: string) => void},
   onError?: (error: mixed) => void,
-  onPostpone?: (reason: string) => void,
 };
 
 function render(model: ReactClientValue, options?: Options): Destination {
@@ -84,7 +83,6 @@ function render(model: ReactClientValue, options?: Options): Destination {
     bundlerConfig,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
-    options ? options.onPostpone : undefined,
     undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,

@@ -304,6 +304,30 @@ export class CompilerError extends Error {
   disabledDetails: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
   printedMessage: string | null = null;
 
+  static simpleInvariant(
+    condition: unknown,
+    options: {
+      reason: CompilerDiagnosticOptions['reason'];
+      description?: CompilerDiagnosticOptions['description'];
+      loc: SourceLocation;
+    },
+  ): asserts condition {
+    if (!condition) {
+      const errors = new CompilerError();
+      errors.pushDiagnostic(
+        CompilerDiagnostic.create({
+          reason: options.reason,
+          description: options.description ?? null,
+          category: ErrorCategory.Invariant,
+        }).withDetails({
+          kind: 'error',
+          loc: options.loc,
+          message: options.reason,
+        }),
+      );
+      throw errors;
+    }
+  }
   static invariant(
     condition: unknown,
     options: Omit<CompilerDiagnosticOptions, 'category'>,
@@ -576,7 +600,8 @@ function printErrorSummary(category: ErrorCategory, message: string): string {
     case ErrorCategory.Suppression:
     case ErrorCategory.Syntax:
     case ErrorCategory.UseMemo:
-    case ErrorCategory.VoidUseMemo: {
+    case ErrorCategory.VoidUseMemo:
+    case ErrorCategory.MemoDependencies: {
       heading = 'Error';
       break;
     }
@@ -634,6 +659,10 @@ export enum ErrorCategory {
    * Checks that manual memoization is preserved
    */
   PreserveManualMemo = 'PreserveManualMemo',
+  /**
+   * Checks for exhaustive useMemo/useCallback dependencies without extraneous values
+   */
+  MemoDependencies = 'MemoDependencies',
   /**
    * Checks for known incompatible libraries
    */
@@ -1028,6 +1057,16 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         name: 'void-use-memo',
         description:
           'Validates that useMemos always return a value and that the result of the useMemo is used by the component/hook. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
+        preset: LintRulePreset.RecommendedLatest,
+      };
+    }
+    case ErrorCategory.MemoDependencies: {
+      return {
+        category,
+        severity: ErrorSeverity.Error,
+        name: 'memo-dependencies',
+        description:
+          'Validates that useMemo() and useCallback() specify comprehensive dependencies without extraneous values. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
         preset: LintRulePreset.RecommendedLatest,
       };
     }

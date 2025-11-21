@@ -21,13 +21,18 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
   SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from '../constants';
-import {ElementTypeRoot} from '../frontend/types';
+import {
+  ElementTypeRoot,
+  ElementTypeActivity,
+  ComponentFilterActivitySlice,
+} from '../frontend/types';
 import {
   getSavedComponentFilters,
   setSavedComponentFilters,
@@ -144,7 +149,13 @@ export default class Store extends EventEmitter<{
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
   hostInstanceSelected: [Element['id']],
   settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
-  mutated: [[Array<Element['id']>, Map<Element['id'], Element['id']>]],
+  mutated: [
+    [
+      Array<Element['id']>,
+      Map<Element['id'], Element['id']>,
+      Element['id'] | null,
+    ],
+  ],
   recordChangeDescriptions: [],
   roots: [],
   rootSupportsBasicProfiling: [],
@@ -177,6 +188,8 @@ export default class Store extends EventEmitter<{
     Element['id'],
     {errorCount: number, warningCount: number},
   > = new Map();
+
+  _focusedTransition: 0 | Element['id'] = 0;
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -658,6 +671,10 @@ export default class Store extends EventEmitter<{
     return element;
   }
 
+  containsSuspense(id: SuspenseNode['id']): boolean {
+    return this._idToSuspense.has(id);
+  }
+
   getSuspenseByID(id: SuspenseNode['id']): SuspenseNode | null {
     const suspense = this._idToSuspense.get(id);
     if (suspense === undefined) {
@@ -920,10 +937,9 @@ export default class Store extends EventEmitter<{
   }
 
   /**
-   * @param rootID
    * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
    */
-  getSuspendableDocumentOrderSuspense(
+  getSuspendableDocumentOrderSuspenseInitialPaint(
     uniqueSuspendersOnly: boolean,
   ): Array<SuspenseTimelineStep> {
     const target: Array<SuspenseTimelineStep> = [];
@@ -971,6 +987,76 @@ export default class Store extends EventEmitter<{
         );
       }
     }
+
+    return target;
+  }
+
+  _pushSuspenseChildrenInDocumentOrder(
+    children: Array<Element['id']>,
+    target: Array<SuspenseNode['id']>,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const childID = children[i];
+      const suspense = this.getSuspenseByID(childID);
+      if (suspense !== null) {
+        target.push(suspense.id);
+      } else {
+        const childElement = this.getElementByID(childID);
+        if (childElement !== null) {
+          this._pushSuspenseChildrenInDocumentOrder(
+            childElement.children,
+            target,
+          );
+        }
+      }
+    }
+  }
+
+  getSuspenseChildren(id: Element['id']): Array<SuspenseNode['id']> {
+    const transitionChildren: Array<SuspenseNode['id']> = [];
+
+    const root = this._idToElement.get(id);
+    if (root === undefined) {
+      return transitionChildren;
+    }
+
+    this._pushSuspenseChildrenInDocumentOrder(
+      root.children,
+      transitionChildren,
+    );
+
+    return transitionChildren;
+  }
+
+  /**
+   * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
+   */
+  getSuspendableDocumentOrderSuspenseTransition(
+    uniqueSuspendersOnly: boolean,
+  ): Array<SuspenseTimelineStep> {
+    const target: Array<SuspenseTimelineStep> = [];
+    const focusedTransitionID = this._focusedTransition;
+    if (focusedTransitionID === null) {
+      return target;
+    }
+
+    target.push({
+      id: focusedTransitionID,
+      // TODO: Get environment for Activity
+      environment: null,
+      endTime: 0,
+    });
+
+    const transitionChildren = this.getSuspenseChildren(focusedTransitionID);
+
+    this.pushTimelineStepsInDocumentOrder(
+      transitionChildren,
+      target,
+      uniqueSuspendersOnly,
+      // TODO: Get environment for Activity
+      [],
+      0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+    );
 
     return target;
   }
@@ -1030,7 +1116,14 @@ export default class Store extends EventEmitter<{
     uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseTimelineStep> {
     const timeline =
-      this.getSuspendableDocumentOrderSuspense(uniqueSuspendersOnly);
+      this._focusedTransition === 0
+        ? this.getSuspendableDocumentOrderSuspenseInitialPaint(
+            uniqueSuspendersOnly,
+          )
+        : this.getSuspendableDocumentOrderSuspenseTransition(
+            uniqueSuspendersOnly,
+          );
+
     if (timeline.length === 0) {
       return timeline;
     }
@@ -1041,6 +1134,33 @@ export default class Store extends EventEmitter<{
       return a === root ? -1 : b === root ? 1 : a.endTime - b.endTime;
     });
     return timeline;
+  }
+
+  getActivities(): Array<{id: Element['id'], depth: number}> {
+    const target: Array<{id: Element['id'], depth: number}> = [];
+    // TODO: Keep a live tree in the backend so we don't need to recalculate
+    // this each time while also including filtered Activities.
+    this._pushActivitiesInDocumentOrder(this.roots, target, 0);
+    return target;
+  }
+
+  _pushActivitiesInDocumentOrder(
+    children: $ReadOnlyArray<Element['id']>,
+    target: Array<{id: Element['id'], depth: number}>,
+    depth: number,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const child = this._idToElement.get(children[i]);
+      if (child === undefined) {
+        continue;
+      }
+      if (child.type === ElementTypeActivity && child.nameProp !== null) {
+        target.push({id: child.id, depth});
+        this._pushActivitiesInDocumentOrder(child.children, target, depth + 1);
+      } else {
+        this._pushActivitiesInDocumentOrder(child.children, target, depth);
+      }
+    }
   }
 
   getRendererIDForElement(id: number): number | null {
@@ -1156,7 +1276,7 @@ export default class Store extends EventEmitter<{
         // The Tree context's search reducer expects an explicit list of ids for nodes that were added or removed.
         // In this  case, we can pass it empty arrays since nodes in a collapsed tree are still there (just hidden).
         // Updating the selected search index later may require auto-expanding a collapsed subtree though.
-        this.emit('mutated', [[], new Map()]);
+        this.emit('mutated', [[], new Map(), null]);
       }
     }
   }
@@ -1225,10 +1345,11 @@ export default class Store extends EventEmitter<{
 
     const addedElementIDs: Array<number> = [];
     // This is a mapping of removed ID -> parent ID:
+    // We'll use the parent ID to adjust selection if it gets deleted.
     const removedElementIDs: Map<number, number> = new Map();
     const removedSuspenseIDs: Map<SuspenseNode['id'], SuspenseNode['id']> =
       new Map();
-    // We'll use the parent ID to adjust selection if it gets deleted.
+    let nextActivitySliceID: Element['id'] | null = null;
 
     let i = 2;
 
@@ -1962,6 +2083,11 @@ export default class Store extends EventEmitter<{
 
           break;
         }
+        case TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE: {
+          i++;
+          nextActivitySliceID = operations[i++];
+          break;
+        }
         default:
           this._throwAndEmitError(
             new UnsupportedBridgeOperationError(
@@ -2060,8 +2186,83 @@ export default class Store extends EventEmitter<{
       console.groupEnd();
     }
 
-    this.emit('mutated', [addedElementIDs, removedElementIDs]);
+    if (nextActivitySliceID !== null && nextActivitySliceID !== 0) {
+      let didCollapse = false;
+      // The backend filtered everything above the Activity slice.
+      // We need to hide everything below the Activity slice by collapsing
+      // the Activities that are descendants of the next Activity slice.
+      const nextActivitySlice = this._idToElement.get(nextActivitySliceID);
+      if (nextActivitySlice === undefined) {
+        throw new Error('Next Activity slice not found in Store.');
+      }
+
+      for (let j = 0; j < nextActivitySlice.children.length; j++) {
+        didCollapse ||= this._collapseActivitiesRecursively(
+          nextActivitySlice.children[j],
+        );
+      }
+
+      if (didCollapse) {
+        let weightAcrossRoots = 0;
+        this._roots.forEach(rootID => {
+          const {weight} = ((this.getElementByID(rootID): any): Element);
+          weightAcrossRoots += weight;
+        });
+        this._weightAcrossRoots = weightAcrossRoots;
+      }
+    }
+
+    for (let j = 0; j < this._componentFilters.length; j++) {
+      const filter = this._componentFilters[j];
+      // If we're focusing an Activity, IDs may have changed.
+      if (filter.type === ComponentFilterActivitySlice) {
+        if (nextActivitySliceID === null || nextActivitySliceID === 0) {
+          filter.isValid = false;
+        } else {
+          filter.activityID = nextActivitySliceID;
+        }
+      }
+    }
+
+    if (nextActivitySliceID !== null) {
+      this._focusedTransition = nextActivitySliceID;
+    }
+
+    this.emit('mutated', [
+      addedElementIDs,
+      removedElementIDs,
+      nextActivitySliceID,
+    ]);
   };
+
+  _collapseActivitiesRecursively(elementID: number): boolean {
+    let didMutate = false;
+    const element = this._idToElement.get(elementID);
+    if (element === undefined) {
+      throw new Error('Element not found in Store.');
+    }
+
+    if (element.type === ElementTypeActivity) {
+      if (!element.isCollapsed) {
+        element.isCollapsed = true;
+
+        const weightDelta = 1 - element.weight;
+
+        let parentElement = this._idToElement.get(element.parentID);
+        while (parentElement !== undefined) {
+          parentElement.weight += weightDelta;
+          parentElement = this._idToElement.get(parentElement.parentID);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    for (let i = 0; i < element.children.length; i++) {
+      didMutate ||= this._collapseActivitiesRecursively(element.children[i]);
+    }
+    return didMutate;
+  }
 
   // Certain backends save filters on a per-domain basis.
   // In order to prevent filter preferences and applied filters from being out of sync,
@@ -2228,7 +2429,7 @@ export default class Store extends EventEmitter<{
 
     if (previousStatus !== status) {
       // Propagate to subscribers, although tree state has not changed
-      this.emit('mutated', [[], new Map()]);
+      this.emit('mutated', [[], new Map(), null]);
     }
   }
 

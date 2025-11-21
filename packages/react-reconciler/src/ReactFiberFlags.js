@@ -83,11 +83,13 @@ export const ViewTransitionNamedStatic =
 // ViewTransitionStatic tracks whether there are an ViewTransition components from
 // the nearest HostComponent down. It resets at every HostComponent level.
 export const ViewTransitionStatic = /*         */ 0b0000010000000000000000000000000;
+// Tracks whether a HostPortal is present in the tree.
+export const PortalStatic = /*                 */ 0b0000100000000000000000000000000;
 
 // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
-export const PlacementDEV = /*                 */ 0b0000100000000000000000000000000;
-export const MountLayoutDev = /*               */ 0b0001000000000000000000000000000;
-export const MountPassiveDev = /*              */ 0b0010000000000000000000000000000;
+export const PlacementDEV = /*                 */ 0b0001000000000000000000000000000;
+export const MountLayoutDev = /*               */ 0b0010000000000000000000000000000;
+export const MountPassiveDev = /*              */ 0b0100000000000000000000000000000;
 
 // Groups of flags that are used in the commit phase to skip over trees that
 // don't contain effects, by checking subtreeFlags.
@@ -139,4 +141,5 @@ export const StaticMask =
   RefStatic |
   MaySuspendCommit |
   ViewTransitionStatic |
-  ViewTransitionNamedStatic;
+  ViewTransitionNamedStatic |
+  PortalStatic;

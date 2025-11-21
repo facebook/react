@@ -26,6 +26,7 @@ import {
   ComponentFilterHOC,
   ComponentFilterLocation,
   ComponentFilterEnvironmentName,
+  ComponentFilterActivitySlice,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeFunction,
@@ -53,7 +54,7 @@ import {
   renamePathInObject,
   setInObject,
   utfEncodeString,
-  filterOutLocationComponentFilters,
+  persistableComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {
   formatConsoleArgumentsToSingleString,
@@ -85,6 +86,7 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
@@ -118,6 +120,7 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
   LAZY_SYMBOL_STRING,
+  REACT_OPTIMISTIC_KEY,
 } from '../shared/ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
@@ -170,6 +173,7 @@ import type {
 } from '../types';
 import type {
   ComponentFilter,
+  ActivitySliceFilter,
   ElementType,
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
@@ -868,6 +872,9 @@ const idToDevToolsInstanceMap: Map<
   FiberInstance | VirtualInstance,
 > = new Map();
 
+let focusedActivityID: null | FiberInstance['id'] = null;
+let focusedActivity: null | Fiber = null;
+
 const idToSuspenseNodeMap: Map<FiberInstance['id'], SuspenseNode> = new Map();
 
 // Map of canonical HostInstances to the nearest parent DevToolsInstance.
@@ -1435,16 +1442,25 @@ export function attach(
   const hideElementsWithPaths: Set<RegExp> = new Set();
   const hideElementsWithTypes: Set<ElementType> = new Set();
   const hideElementsWithEnvs: Set<string> = new Set();
+  let isInFocusedActivity: boolean = true;
 
   // Highlight updates
   let traceUpdatesEnabled: boolean = false;
   const traceUpdatesForNodes: Set<HostInstance> = new Set();
 
-  function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
+  function applyComponentFilters(
+    componentFilters: Array<ComponentFilter>,
+    nextActivitySlice: null | Fiber,
+  ) {
     hideElementsWithTypes.clear();
     hideElementsWithDisplayNames.clear();
     hideElementsWithPaths.clear();
     hideElementsWithEnvs.clear();
+    const previousFocusedActivityID = focusedActivityID;
+    focusedActivityID = null;
+    focusedActivity = null;
+    // Consider everything in the slice by default
+    isInFocusedActivity = true;
 
     componentFilters.forEach(componentFilter => {
       if (!componentFilter.isEnabled) {
@@ -1473,6 +1489,25 @@ export function attach(
         case ComponentFilterEnvironmentName:
           hideElementsWithEnvs.add(componentFilter.value);
           break;
+        case ComponentFilterActivitySlice:
+          if (
+            nextActivitySlice !== null &&
+            nextActivitySlice.tag === ActivityComponent
+          ) {
+            focusedActivity = nextActivitySlice;
+            isInFocusedActivity = false;
+            if (componentFilter.rendererID !== rendererID) {
+              // We filtered an Activity from another renderer.
+              // We need to restore the instance ID since we won't be mounting it
+              // in this renderer.
+              focusedActivityID = previousFocusedActivityID;
+            }
+          } else {
+            // We're not filtering by activity slice after all.
+            // Don't mark the filter as disabled here.
+            // Otherwise updateComponentFilters() will think no enabled filter was changed.
+          }
+          break;
         default:
           console.warn(
             `Invalid component filter type "${componentFilter.type}"`,
@@ -1486,11 +1521,9 @@ export function attach(
   // because they are stored in localStorage within the context of the extension.
   // Instead it relies on the extension to pass filters through.
   if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
-    const componentFiltersWithoutLocationBasedOnes =
-      filterOutLocationComponentFilters(
-        window.__REACT_DEVTOOLS_COMPONENT_FILTERS__,
-      );
-    applyComponentFilters(componentFiltersWithoutLocationBasedOnes);
+    const restoredComponentFilters: Array<ComponentFilter> =
+      persistableComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
+    applyComponentFilters(restoredComponentFilters, null);
   } else {
     // Unfortunately this feature is not expected to work for React Native for now.
     // It would be annoying for us to spam YellowBox warnings with unactionable stuff,
@@ -1498,7 +1531,7 @@ export function attach(
     //console.warn('⚛ DevTools: Could not locate saved component filters');
 
     // Fallback to assuming the default filters in this case.
-    applyComponentFilters(getDefaultComponentFilters());
+    applyComponentFilters(getDefaultComponentFilters(), null);
   }
 
   // If necessary, we can revisit optimizing this operation.
@@ -1512,6 +1545,27 @@ export function attach(
       throw Error('Cannot modify filter preferences while profiling');
     }
 
+    const previousForcedFallbacks =
+      forceFallbackForFibers.size > 0 ? new Set(forceFallbackForFibers) : null;
+    const previousForcedErrors =
+      forceErrorForFibers.size > 0 ? new Map(forceErrorForFibers) : null;
+
+    // The ID will be based on the old tree. We need to find the Fiber based on
+    // that ID before we unmount everything. We set the activity slice ID once
+    // we mount it again.
+    let nextFocusedActivity: null | Fiber = null;
+    let focusedActivityFilter: null | ActivitySliceFilter = null;
+    for (let i = 0; i < componentFilters.length; i++) {
+      const filter = componentFilters[i];
+      if (filter.type === ComponentFilterActivitySlice && filter.isEnabled) {
+        focusedActivityFilter = filter;
+        const instance = idToDevToolsInstanceMap.get(filter.activityID);
+        if (instance !== undefined && instance.kind === FIBER_INSTANCE) {
+          nextFocusedActivity = instance.data;
+        }
+      }
+    }
+
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
       const rootInstance = rootToFiberInstanceMap.get(root);
@@ -1523,14 +1577,58 @@ export function attach(
       currentRoot = rootInstance;
       unmountInstanceRecursively(rootInstance);
       rootToFiberInstanceMap.delete(root);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
 
-    applyComponentFilters(componentFilters);
+    if (
+      nextFocusedActivity !== focusedActivity &&
+      (focusedActivityFilter === null ||
+        focusedActivityFilter.rendererID === rendererID)
+    ) {
+      // When we find the applied instance during mount we will send the actual ID.
+      // Otherwise 0 will indicate that we unfocused the activity slice.
+      pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
+      pushOperation(0);
+    }
+    applyComponentFilters(componentFilters, nextFocusedActivity);
 
     // Reset pseudo counters so that new path selections will be persisted.
     rootDisplayNameCounter.clear();
+
+    // We just cleared all the forced states. Schedule updates on the affected Fibers
+    // so that we get their initial states again according to the new filters.
+    if (typeof scheduleUpdate === 'function') {
+      if (previousForcedFallbacks !== null) {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const fiber of previousForcedFallbacks) {
+          if (typeof scheduleRetry === 'function') {
+            scheduleRetry(fiber);
+          } else {
+            scheduleUpdate(fiber);
+          }
+        }
+      }
+      if (
+        previousForcedErrors !== null &&
+        typeof setErrorHandler === 'function'
+      ) {
+        // Unlike for Suspense, disabling the forced error state requires setting
+        // the status to false first. `shouldErrorFiberAccordingToMap` will clear
+        // the Fibers later.
+        setErrorHandler(shouldErrorFiberAccordingToMap);
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const [fiber, shouldError] of previousForcedErrors) {
+          forceErrorForFibers.set(fiber, false);
+          if (shouldError) {
+            if (typeof scheduleRetry === 'function') {
+              scheduleRetry(fiber);
+            } else {
+              scheduleUpdate(fiber);
+            }
+          }
+        }
+      }
+    }
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
@@ -1548,9 +1646,15 @@ export function attach(
       currentRoot = newRoot;
       setRootPseudoKey(currentRoot.id, root.current);
       mountFiberRecursively(root.current, false);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
+
+    // We need to write back the new ID for the focused Fiber.
+    // Otherwise subsequent filter applications will try to focus based on the old ID.
+    // This is also relevant to filter across renderers.
+    if (focusedActivityFilter !== null && focusedActivityID !== null) {
+      focusedActivityFilter.activityID = focusedActivityID;
+    }
 
     flushPendingEvents();
 
@@ -1581,6 +1685,10 @@ export function attach(
     data: ReactComponentInfo,
     secondaryEnv: null | string,
   ): boolean {
+    if (!isInFocusedActivity) {
+      return true;
+    }
+
     // For purposes of filtering Server Components are always Function Components.
     // Environment will be used to filter Server vs Client.
     // Technically they can be forwardRef and memo too but those filters will go away
@@ -1615,6 +1723,11 @@ export function attach(
   // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
     const {tag, type, key} = fiber;
+
+    // It is never valid to filter the root element.
+    if (tag !== HostRoot && !isInFocusedActivity) {
+      return true;
+    }
 
     switch (tag) {
       case DehydratedSuspenseComponent:
@@ -2045,7 +2158,6 @@ export function attach(
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
-  let pendingUnmountedRootID: FiberInstance['id'] | null = null;
 
   function pushOperation(op: number): void {
     if (__DEV__) {
@@ -2073,8 +2185,7 @@ export function attach(
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
       pendingRealUnmountedSuspenseIDs.length === 0 &&
-      pendingSuspenderChanges.size === 0 &&
-      pendingUnmountedRootID === null
+      pendingSuspenderChanges.size === 0
     );
   }
 
@@ -2136,9 +2247,7 @@ export function attach(
       return;
     }
 
-    const numUnmountIDs =
-      pendingRealUnmountedIDs.length +
-      (pendingUnmountedRootID === null ? 0 : 1);
+    const numUnmountIDs = pendingRealUnmountedIDs.length;
     const numUnmountSuspenseIDs = pendingRealUnmountedSuspenseIDs.length;
     const numSuspenderChanges = pendingSuspenderChanges.size;
 
@@ -2216,11 +2325,6 @@ export function attach(
       for (let j = 0; j < pendingRealUnmountedIDs.length; j++) {
         operations[i++] = pendingRealUnmountedIDs[j];
       }
-      // The root ID should always be unmounted last.
-      if (pendingUnmountedRootID !== null) {
-        operations[i] = pendingUnmountedRootID;
-        i++;
-      }
     }
 
     // Fill in pending operations.
@@ -2268,7 +2372,6 @@ export function attach(
     pendingRealUnmountedIDs.length = 0;
     pendingRealUnmountedSuspenseIDs.length = 0;
     pendingSuspenderChanges.clear();
-    pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
   }
@@ -2472,6 +2575,17 @@ export function attach(
         }
       }
     } else {
+      const suspenseNode = fiberInstance.suspenseNode;
+      if (suspenseNode !== null && fiber.memoizedState === null) {
+        // We're reconnecting an unsuspended Suspense. Measure to see if anything changed.
+        const prevRects = suspenseNode.rects;
+        const nextRects = measureInstance(fiberInstance);
+        if (!areEqualRects(prevRects, nextRects)) {
+          suspenseNode.rects = nextRects;
+          recordSuspenseResize(suspenseNode);
+        }
+      }
+
       const {key} = fiber;
       const displayName = getDisplayNameForFiber(fiber);
       const elementType = getElementTypeForFiber(fiber);
@@ -2743,7 +2857,6 @@ export function attach(
       // Already disconnected.
       return;
     }
-    const fiber = fiberInstance.data;
 
     if (trackedPathMatchInstance === fiberInstance) {
       // We're in the process of trying to restore previous selection.
@@ -2753,17 +2866,7 @@ export function attach(
     }
 
     const id = fiberInstance.id;
-    const isRoot = fiber.tag === HostRoot;
-    if (isRoot) {
-      // Roots must be removed only after all children have been removed.
-      // So we track it separately.
-      pendingUnmountedRootID = id;
-    } else {
-      // To maintain child-first ordering,
-      // we'll push it into one of these queues,
-      // and later arrange them in the correct order.
-      pendingRealUnmountedIDs.push(id);
-    }
+    pendingRealUnmountedIDs.push(id);
   }
 
   function recordSuspenseResize(suspenseNode: SuspenseNode): void {
@@ -3980,11 +4083,23 @@ export function attach(
     fiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): void {
+    const isFocusedActivityEntry =
+      focusedActivity !== null &&
+      (fiber === focusedActivity || fiber.alternate === focusedActivity);
+    if (isFocusedActivityEntry) {
+      isInFocusedActivity = true;
+    }
+
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     let newInstance = null;
     let newSuspenseNode = null;
     if (shouldIncludeInTree) {
       newInstance = recordMount(fiber, reconcilingParent);
+      if (isFocusedActivityEntry) {
+        focusedActivityID = newInstance.id;
+        pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
+        pushOperation(newInstance.id);
+      }
       if (fiber.tag === SuspenseComponent || fiber.tag === HostRoot) {
         newSuspenseNode = createSuspenseNode(newInstance);
         // Measure this Suspense node. In general we shouldn't do this until we have
@@ -4100,6 +4215,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const stashedIsInActivitySlice = isInFocusedActivity;
     if (newInstance !== null) {
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = newInstance;
@@ -4112,6 +4228,17 @@ export function attach(
       previouslyReconciledSiblingSuspenseNode = null;
       remainingReconcilingChildrenSuspenseNodes = null;
       shouldPopSuspenseNode = true;
+    }
+    if (
+      !isFocusedActivityEntry &&
+      focusedActivity !== null &&
+      fiber.tag === ActivityComponent
+    ) {
+      // We're not filtering how Activity within the focused activity.
+      // We cut of the bottom in the Frontend if we want to just show the
+      // Activity slice instead of all Activity descendants.
+      // The filtering in the backend only happens because filtering out
+      // everything above the focused Activity is hard to implement in the frontend.
     }
     try {
       if (traceUpdatesEnabled) {
@@ -4240,6 +4367,7 @@ export function attach(
         }
       }
     } finally {
+      isInFocusedActivity = stashedIsInActivitySlice;
       if (newInstance !== null) {
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
@@ -4271,6 +4399,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const stashedIsInActivitySlice = isInFocusedActivity;
     const previousSuspendedBy = instance.suspendedBy;
     // Push a new DevTools instance parent while reconciling this subtree.
     reconcilingParent = instance;
@@ -4287,6 +4416,19 @@ export function attach(
         instance.suspenseNode.firstChild;
 
       shouldPopSuspenseNode = true;
+    }
+
+    if (focusedActivity !== null) {
+      if (instance.id === focusedActivityID) {
+        isInFocusedActivity = true;
+      } else if (
+        instance.kind === FIBER_INSTANCE &&
+        instance.data !== null &&
+        instance.data.tag === ActivityComponent
+      ) {
+        // Filtering nested Activity components inside the focused activity
+        // is done in the frontend.
+      }
     }
 
     try {
@@ -4339,6 +4481,7 @@ export function attach(
         previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
         remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
       }
+      isInFocusedActivity = stashedIsInActivitySlice;
     }
     if (instance.kind === FIBER_INSTANCE) {
       recordUnmount(instance);
@@ -4707,7 +4850,10 @@ export function attach(
               }
               let previousSiblingOfBestMatch = null;
               let bestMatch = remainingReconcilingChildren;
-              if (componentInfo.key != null) {
+              if (
+                componentInfo.key != null &&
+                componentInfo.key !== REACT_OPTIMISTIC_KEY
+              ) {
                 // If there is a key try to find a matching key in the set.
                 bestMatch = remainingReconcilingChildren;
                 while (bestMatch !== null) {
@@ -5019,6 +5165,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const stashedIsInActivitySlice = isInFocusedActivity;
     let updateFlags = NoUpdate;
     let shouldMeasureSuspenseNode = false;
     let shouldPopSuspenseNode = false;
@@ -5057,6 +5204,15 @@ export function attach(
         suspenseNode.firstChild = null;
         shouldMeasureSuspenseNode = true;
         shouldPopSuspenseNode = true;
+      }
+
+      if (focusedActivity !== null) {
+        if (fiberInstance.id === focusedActivityID) {
+          isInFocusedActivity = true;
+        } else if (nextFiber.tag === ActivityComponent) {
+          // Filtering nested Activity components inside the focused activity
+          // is done in the frontend.
+        }
       }
     }
     try {
@@ -5482,6 +5638,7 @@ export function attach(
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
         }
+        isInFocusedActivity = stashedIsInActivitySlice;
       }
     }
   }
@@ -5596,11 +5753,12 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
-        flushPendingEvents();
-
-        needsToFlushComponentLogs = false;
         currentRoot = (null: any);
       });
+
+      flushPendingEvents();
+
+      needsToFlushComponentLogs = false;
     }
   }
 
@@ -5991,7 +6149,7 @@ export function attach(
       return {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
-        key: fiber.key,
+        key: fiber.key === REACT_OPTIMISTIC_KEY ? null : fiber.key,
         env: null,
         stack:
           fiber._debugOwner == null || fiber._debugStack == null
@@ -6004,7 +6162,11 @@ export function attach(
       return {
         displayName: componentInfo.name || 'Anonymous',
         id: instance.id,
-        key: componentInfo.key == null ? null : componentInfo.key,
+        key:
+          componentInfo.key == null ||
+          componentInfo.key === REACT_OPTIMISTIC_KEY
+            ? null
+            : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
         stack:
           componentInfo.owner == null || componentInfo.debugStack == null
@@ -6928,7 +7090,7 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
-      key: key != null ? key : null,
+      key: key != null && key !== REACT_OPTIMISTIC_KEY ? key : null,
 
       type: elementType,
 
@@ -8487,7 +8649,7 @@ export function attach(
     }
     return {
       displayName,
-      key,
+      key: key === REACT_OPTIMISTIC_KEY ? null : key,
       index,
     };
   }
@@ -8495,7 +8657,11 @@ export function attach(
   function getVirtualPathFrame(virtualInstance: VirtualInstance): PathFrame {
     return {
       displayName: virtualInstance.data.name || '',
-      key: virtualInstance.data.key == null ? null : virtualInstance.data.key,
+      key:
+        virtualInstance.data.key == null ||
+        virtualInstance.data.key === REACT_OPTIMISTIC_KEY
+          ? null
+          : virtualInstance.data.key,
       index: -1, // We use -1 to indicate that this is a virtual path frame.
     };
   }

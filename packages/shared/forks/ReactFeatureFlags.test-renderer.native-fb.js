@@ -33,7 +33,6 @@ export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
 export const enableObjectFiber = false;
-export const enablePostpone = false;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;
@@ -41,6 +40,7 @@ export const enableReactTestRendererWarning = false;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
+export const enablePerformanceIssueReporting = false;
 export const enableScopeAPI = false;
 export const enableEagerAlternateStateNodeCleanup = true;
 export const enableSuspenseAvoidThisFallback = false;
@@ -69,6 +69,7 @@ export const enableDefaultTransitionIndicator = true;
 export const enableFragmentRefs = false;
 export const enableFragmentRefsScrollIntoView = false;
 export const ownerStackLimit = 1e4;
+export const enableOptimisticKey = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
