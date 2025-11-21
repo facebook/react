@@ -36,6 +36,7 @@ export const {
   enableFragmentRefsScrollIntoView,
   enableAsyncDebugInfo,
   enableInternalInstanceMap,
+  disableSetStateInRenderOnMount,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
