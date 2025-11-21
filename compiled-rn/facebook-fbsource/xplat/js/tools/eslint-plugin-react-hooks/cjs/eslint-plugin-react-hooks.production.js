@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<78c5314467754b02b864348098869816>>
+ * @generated SignedSource<<2358d731da708fcd6737801a807581f0>>
  */
 
 'use strict';
@@ -18024,7 +18024,8 @@ function printErrorSummary(category, message) {
         case ErrorCategory.Suppression:
         case ErrorCategory.Syntax:
         case ErrorCategory.UseMemo:
-        case ErrorCategory.VoidUseMemo: {
+        case ErrorCategory.VoidUseMemo:
+        case ErrorCategory.MemoDependencies: {
             heading = 'Error';
             break;
         }
@@ -18058,6 +18059,7 @@ var ErrorCategory;
     ErrorCategory["VoidUseMemo"] = "VoidUseMemo";
     ErrorCategory["Factories"] = "Factories";
     ErrorCategory["PreserveManualMemo"] = "PreserveManualMemo";
+    ErrorCategory["MemoDependencies"] = "MemoDependencies";
     ErrorCategory["IncompatibleLibrary"] = "IncompatibleLibrary";
     ErrorCategory["Immutability"] = "Immutability";
     ErrorCategory["Globals"] = "Globals";
@@ -18328,6 +18330,15 @@ function getRuleForCategoryImpl(category) {
                 severity: ErrorSeverity.Error,
                 name: 'void-use-memo',
                 description: 'Validates that useMemos always return a value and that the result of the useMemo is used by the component/hook. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
+                preset: LintRulePreset.RecommendedLatest,
+            };
+        }
+        case ErrorCategory.MemoDependencies: {
+            return {
+                category,
+                severity: ErrorSeverity.Error,
+                name: 'memo-dependencies',
+                description: 'Validates that useMemo() and useCallback() specify comprehensive dependencies without extraneous values. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
                 preset: LintRulePreset.RecommendedLatest,
             };
         }
@@ -53264,7 +53275,7 @@ function validateExhaustiveDependencies(fn) {
         locals.clear();
     }
     function onFinishMemoize(value, dependencies, locals) {
-        var _b, _c;
+        var _b, _c, _d;
         CompilerError.simpleInvariant(startMemo != null && startMemo.manualMemoId === value.manualMemoId, {
             reason: 'Found FinishMemoize without corresponding StartMemoize',
             loc: value.loc,
@@ -53343,6 +53354,8 @@ function validateExhaustiveDependencies(fn) {
                 reason: 'Unexpected function dependency',
                 loc: value.loc,
             });
+            const isRequiredDependency = reactive.has(inferredDependency.identifier.id) ||
+                !isStableType(inferredDependency.identifier);
             let hasMatchingManualDependency = false;
             for (const manualDependency of manualDependencies) {
                 if (manualDependency.root.kind === 'NamedLocal' &&
@@ -53352,16 +53365,17 @@ function validateExhaustiveDependencies(fn) {
                         isSubPath(manualDependency.path, inferredDependency.path))) {
                     hasMatchingManualDependency = true;
                     matched.add(manualDependency);
+                    if (!isRequiredDependency) {
+                        extra.push(manualDependency);
+                    }
                 }
             }
-            if (!hasMatchingManualDependency) {
+            if (isRequiredDependency && !hasMatchingManualDependency) {
                 missing.push(inferredDependency);
             }
         }
         for (const dep of (_c = startMemo.deps) !== null && _c !== void 0 ? _c : []) {
-            if (matched.has(dep) ||
-                (dep.root.kind === 'NamedLocal' &&
-                    !reactive.has(dep.root.value.identifier.id))) {
+            if (matched.has(dep)) {
                 continue;
             }
             extra.push(dep);
@@ -53380,16 +53394,21 @@ function validateExhaustiveDependencies(fn) {
             }
             if (missing.length !== 0) {
                 const diagnostic = CompilerDiagnostic.create({
-                    category: ErrorCategory.PreserveManualMemo,
+                    category: ErrorCategory.MemoDependencies,
                     reason: 'Found non-exhaustive dependencies',
                     description: 'Missing dependencies can cause a value not to update when those inputs change, ' +
-                        'resulting in stale UI. This memoization cannot be safely rewritten by the compiler.',
+                        'resulting in stale UI',
                     suggestions,
                 });
                 for (const dep of missing) {
+                    let reactiveStableValueHint = '';
+                    if (isStableType(dep.identifier)) {
+                        reactiveStableValueHint =
+                            '. Refs, setState functions, and other "stable" values generally do not need to be added as dependencies, but this variable may change over time to point to different values';
+                    }
                     diagnostic.withDetails({
                         kind: 'error',
-                        message: `Missing dependency \`${printInferredDependency(dep)}\``,
+                        message: `Missing dependency \`${printInferredDependency(dep)}\`${reactiveStableValueHint}`,
                         loc: dep.loc,
                     });
                 }
@@ -53397,16 +53416,15 @@ function validateExhaustiveDependencies(fn) {
             }
             else if (extra.length !== 0) {
                 const diagnostic = CompilerDiagnostic.create({
-                    category: ErrorCategory.PreserveManualMemo,
+                    category: ErrorCategory.MemoDependencies,
                     reason: 'Found unnecessary memoization dependencies',
                     description: 'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-                        'which can cause effects to run more than expected. This memoization cannot be safely ' +
-                        'rewritten by the compiler',
+                        'which can cause effects to run more than expected',
                 });
                 diagnostic.withDetails({
                     kind: 'error',
                     message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
-                    loc: value.loc,
+                    loc: (_d = startMemo.depsLoc) !== null && _d !== void 0 ? _d : value.loc,
                 });
                 error.pushDiagnostic(diagnostic);
             }
@@ -53418,7 +53436,7 @@ function validateExhaustiveDependencies(fn) {
     collectDependencies(fn, temporaries, {
         onStartMemoize,
         onFinishMemoize,
-    });
+    }, false);
     return error.asResult();
 }
 function addDependency(dep, dependencies, locals) {
@@ -53440,10 +53458,16 @@ function visitCandidateDependency(place, temporaries, dependencies, locals) {
         addDependency(dep, dependencies, locals);
     }
 }
-function collectDependencies(fn, temporaries, callbacks) {
+function collectDependencies(fn, temporaries, callbacks, isFunctionExpression) {
     var _a;
     const optionals = findOptionalPlaces(fn);
     const locals = new Set();
+    if (isFunctionExpression) {
+        for (const param of fn.params) {
+            const place = param.kind === 'Identifier' ? param : param.place;
+            locals.add(place.identifier.id);
+        }
+    }
     const dependencies = new Set();
     function visit(place) {
         visitCandidateDependency(place, temporaries, dependencies, locals);
@@ -53581,7 +53605,9 @@ function collectDependencies(fn, temporaries, callbacks) {
                     break;
                 }
                 case 'PropertyLoad': {
-                    if (typeof value.property === 'number') {
+                    if (typeof value.property === 'number' ||
+                        (isUseRefType(value.object.identifier) &&
+                            value.property === 'current')) {
                         visit(value.object);
                         break;
                     }
@@ -53607,7 +53633,7 @@ function collectDependencies(fn, temporaries, callbacks) {
                 }
                 case 'FunctionExpression':
                 case 'ObjectMethod': {
-                    const functionDeps = collectDependencies(value.loweredFunc.func, temporaries, null);
+                    const functionDeps = collectDependencies(value.loweredFunc.func, temporaries, null, true);
                     temporaries.set(lvalue.identifier.id, functionDeps);
                     addDependency(functionDeps, dependencies, locals);
                     break;
