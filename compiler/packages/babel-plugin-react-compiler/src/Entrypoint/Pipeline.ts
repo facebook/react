@@ -105,6 +105,7 @@ import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDe
 import {validateNoDerivedComputationsInEffects_exp} from '../Validation/ValidateNoDerivedComputationsInEffects_exp';
 import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
 import {optimizeForSSR} from '../Optimization/OptimizeForSSR';
+import {validateExhaustiveDependencies} from '../Validation/ValidateExhaustiveDependencies';
 import {validateSourceLocations} from '../Validation/ValidateSourceLocations';
 
 export type CompilerPipelineValue =
@@ -301,6 +302,11 @@ function runWithEnvironment(
 
   inferReactivePlaces(hir);
   log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
+
+  if (env.config.validateExhaustiveMemoizationDependencies) {
+    // NOTE: this relies on reactivity inference running first
+    validateExhaustiveDependencies(hir).unwrap();
+  }
 
   rewriteInstructionKindsBasedOnReassignment(hir);
   log({
