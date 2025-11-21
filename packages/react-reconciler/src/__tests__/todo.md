@@ -19,3 +19,7 @@ is compared with the previous state to determine if an update should be reported
 2. Method to compute state for lane
 3. On commit, update base state and filter out processed updates
 4. Root subscribes to store and schedules updates
+
+- [ ] Look at dispatch to see how an update is assigned a lane. Can we do the same for store updates?
+- [ ] We should include an update if isSubsetOfLanes(renderLanes, update.lane)
+  - [ ] Small caveat relating to offscreen (see isHiddenUpdate in updateReducerImpl)

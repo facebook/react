@@ -165,6 +165,8 @@ import {requestCurrentTransition} from './ReactFiberTransition';
 import {callComponentInDEV} from './ReactFiberCallUserSpace';
 
 import {scheduleGesture} from './ReactFiberGestureScheduler';
+import type {StoreWrapper} from './ReactFiberStoreTracking'; // Ensure StoreTracking is loaded} from './ReactFiberStoreTracking'; // Ensure StoreTracking is loaded
+import {StoreTracker} from './ReactFiberStoreTracking'; // Ensure StoreTracking is loaded
 
 export type Update<S, A> = {
   lane: Lane,
@@ -1830,9 +1832,14 @@ function mountStoreWithSelector<S, T>(
   store: ReactStore<S, mixed>,
   selector: S => T,
 ): T {
+  const root = ((getWorkInProgressRoot(): any): FiberRoot);
+  if (root.storeTracker === null) {
+    root.storeTracker = new StoreTracker();
+  }
+
+  const wrapper = root.storeTracker.getWrapper(store);
   const fiber = currentlyRenderingFiber;
-  const isTransition = includesOnlyTransitions(renderLanes);
-  const storeState = isTransition ? store._transition : store._current;
+  const storeState = wrapper.getStateForLanes(renderLanes);
 
   const initialState = selector(storeState);
 
@@ -1848,19 +1855,16 @@ function mountStoreWithSelector<S, T>(
   };
   hook.queue = queue;
 
-  mountEffect(createSubscription.bind(null, store, fiber, selector, queue), []);
-
-  const root = ((getWorkInProgressRoot(): any): FiberRoot);
-  if (root.stores == null) {
-    root.stores = [store];
-  } else {
-    root.stores.push(store);
-  }
+  mountEffect(
+    createSubscription.bind(null, wrapper, fiber, selector, queue),
+    [],
+  );
 
   // If we are mounting mid-transition, we need to schedule an update to
   // bring the selected state up to date with the transition state.
-  if (!is(storeState, store._transition)) {
-    const newState = selector(store._transition);
+  const transitionState = wrapper.getStateForLanes(SomeTransitionLane);
+  if (!is(storeState, transitionState)) {
+    const newState = selector(transitionState);
     const lane = SomeTransitionLane;
     const update: Update<T, mixed> = {
       lane,
@@ -1887,9 +1891,17 @@ function mountStoreWithSelector<S, T>(
 }
 
 function updateStoreWithSelector<S, T>(
-  store: ReactStore<S, mixed>,
+  store: StoreWrapper<S, mixed>,
   selector: S => T,
 ): T {
+  const root = ((getWorkInProgressRoot(): any): FiberRoot);
+  if (root.storeTracker === null) {
+    // TODO: This could be an invariant violation if the store was not
+    // mounted previously.
+    root.storeTracker = new StoreTracker();
+  }
+
+  const wrapper = root.storeTracker.getWrapper(store);
   const hook = updateWorkInProgressHook();
   const [state /* _dispatch */] = updateReducerImpl<T, mixed>(
     hook,
@@ -1901,25 +1913,22 @@ function updateStoreWithSelector<S, T>(
   const queue = hook.queue;
 
   updateEffect(
-    createSubscription.bind(null, store, fiber, selector, queue),
+    createSubscription.bind(null, wrapper, fiber, selector, queue),
     [],
   );
   return state;
 }
 
 function createSubscription<S, T>(
-  store: ReactStore<S, mixed>,
+  storeWrapper: ReactStore<S, mixed>,
   fiber: Fiber,
   selector: S => T,
   queue: UpdateQueue<T, mixed>,
 ): () => void {
-  return store.subscribe(() => {
+  return storeWrapper.subscribe(() => {
     const lane = requestUpdateLane(fiber);
-    const isTransition = isTransitionLane(lane);
     // Eagerly compute the new selected state
-    const newState = selector(
-      isTransition ? store._transition : store._current,
-    );
+    const newState = selector(storeWrapper.getStateForLanes(lane));
 
     if (
       queue.lanes === NoLanes &&
@@ -1971,10 +1980,12 @@ function createSubscription<S, T>(
     // Ideally we could define a custom approach for store selector states, but
     // for now this lets us reuse all of the very complex updateReducerImpl logic
     // without changes.
-    if (hasQueuedTransitionUpdate && !isTransition) {
+    if (hasQueuedTransitionUpdate && !isTransitionLane(lane)) {
       // TODO: We should determine the actual lane (lanes?) we need to use here.
       const transitionLane = SomeTransitionLane;
-      const transitionState = selector(store._transition);
+      const transitionState = selector(
+        storeWrapper.getStateForLanes(transitionLane),
+      );
       const transitionUpdate: Update<T, mixed> = {
         lane: transitionLane,
         revertLane: NoLane,
