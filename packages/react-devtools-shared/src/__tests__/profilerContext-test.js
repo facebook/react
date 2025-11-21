@@ -589,7 +589,7 @@ describe('ProfilerContext', () => {
     // Use real timers for this test to avoid conflicts with Timeline's setInterval
     jest.useRealTimers();
 
-    // Conetext providers
+    // Context providers
     const Profiler =
       require('react-devtools-shared/src/devtools/views/Profiler/Profiler').default;
     const {
