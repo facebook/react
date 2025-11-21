@@ -609,8 +609,8 @@ describe('ProfilerContext', () => {
     // Create a root for the profiler
     const profilerRoot = ReactDOMClient.createRoot(profilerContainer);
 
-    // Render the profiler - use React.act to ensure render completes
-    React.act(() => {
+    // Render the profiler
+    utils.act(() => {
       profilerRoot.render(
         <Contexts>
           <SettingsContextController browserTheme="light">
