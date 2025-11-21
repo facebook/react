@@ -648,7 +648,6 @@ describe('ProfilerContext', () => {
       });
 
       // Dispatch keyboard event to toggle profiling on
-      // Use utils.act() to ensure all state updates complete
       utils.act(() => {
         ownerWindow.dispatchEvent(keyEvent);
       });
