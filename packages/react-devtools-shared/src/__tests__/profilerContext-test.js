@@ -610,7 +610,6 @@ describe('ProfilerContext', () => {
     document.body.appendChild(profilerContainer);
 
     // Create a root for the profiler
-    const ReactDOMClient = require('react-dom/client');
     const profilerRoot = ReactDOMClient.createRoot(profilerContainer);
 
     try {
