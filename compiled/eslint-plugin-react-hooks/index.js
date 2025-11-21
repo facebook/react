@@ -17822,6 +17822,22 @@ class CompilerErrorDetail {
     }
 }
 class CompilerError extends Error {
+    static simpleInvariant(condition, options) {
+        var _a;
+        if (!condition) {
+            const errors = new CompilerError();
+            errors.pushDiagnostic(CompilerDiagnostic.create({
+                reason: options.reason,
+                description: (_a = options.description) !== null && _a !== void 0 ? _a : null,
+                category: ErrorCategory.Invariant,
+            }).withDetails({
+                kind: 'error',
+                loc: options.loc,
+                message: options.reason,
+            }));
+            throw errors;
+        }
+    }
     static invariant(condition, options) {
         if (!condition) {
             const errors = new CompilerError();
@@ -18837,6 +18853,11 @@ function areEqualPaths(a, b) {
     return (a.length === b.length &&
         a.every((item, ix) => item.property === b[ix].property && item.optional === b[ix].optional));
 }
+function isSubPath(subpath, path) {
+    return (subpath.length <= path.length &&
+        subpath.every((item, ix) => item.property === path[ix].property &&
+            item.optional === path[ix].optional));
+}
 function getPlaceScope(id, place) {
     const scope = place.identifier.scope;
     if (scope !== null && isScopeActive(scope, id)) {
@@ -19608,7 +19629,7 @@ function printInstructionValue(instrValue) {
             break;
         }
         case 'StartMemoize': {
-            value = `StartMemoize deps=${(_e = (_d = instrValue.deps) === null || _d === void 0 ? void 0 : _d.map(dep => printManualMemoDependency(dep, false))) !== null && _e !== void 0 ? _e : '(none)'}`;
+            value = `StartMemoize deps=${(_e = (_d = instrValue.deps) === null || _d === void 0 ? void 0 : _d.map(dep => printManualMemoDependency$1(dep, false))) !== null && _e !== void 0 ? _e : '(none)'}`;
             break;
         }
         case 'FinishMemoize': {
@@ -19696,7 +19717,7 @@ function printName(name) {
 function printScope(scope) {
     return `${scope !== null ? `_@${scope.id}` : ''}`;
 }
-function printManualMemoDependency(val, nameOnly) {
+function printManualMemoDependency$1(val, nameOnly) {
     var _a;
     let rootStr;
     if (val.root.kind === 'Global') {
@@ -32214,6 +32235,7 @@ const EnvironmentConfigSchema = v4.z.object({
     enableResetCacheOnSourceFileChanges: v4.z.nullable(v4.z.boolean()).default(null),
     enablePreserveExistingMemoizationGuarantees: v4.z.boolean().default(true),
     validatePreserveExistingMemoizationGuarantees: v4.z.boolean().default(true),
+    validateExhaustiveMemoizationDependencies: v4.z.boolean().default(false),
     enablePreserveExistingManualUseMemo: v4.z.boolean().default(false),
     enableForest: v4.z.boolean().default(false),
     enableUseTypeAnnotations: v4.z.boolean().default(false),
@@ -44828,7 +44850,7 @@ function dropManualMemoization(func) {
     const isValidationEnabled = func.env.config.validatePreserveExistingMemoizationGuarantees ||
         func.env.config.validateNoSetStateInRender ||
         func.env.config.enablePreserveExistingMemoizationGuarantees;
-    const optionals = findOptionalPlaces(func);
+    const optionals = findOptionalPlaces$1(func);
     const sidemap = {
         functions: new Map(),
         manualMemos: new Map(),
@@ -44915,7 +44937,7 @@ function dropManualMemoization(func) {
     }
     return errors.asResult();
 }
-function findOptionalPlaces(fn) {
+function findOptionalPlaces$1(fn) {
     const optionals = new Set();
     for (const [, block] of fn.body.blocks) {
         if (block.terminal.kind === 'optional' && block.terminal.optional) {
@@ -46288,7 +46310,7 @@ function propagateScopeDependenciesHIR(fn) {
     const temporaries = collectTemporariesSidemap$1(fn, usedOutsideDeclaringScope);
     const { temporariesReadInOptional, processedInstrsInOptional, hoistableObjects, } = collectOptionalChainSidemap(fn);
     const hoistablePropertyLoads = keyByScopeId(fn, collectHoistablePropertyLoads(fn, temporaries, hoistableObjects));
-    const scopeDeps = collectDependencies(fn, usedOutsideDeclaringScope, new Map([...temporaries, ...temporariesReadInOptional]), processedInstrsInOptional);
+    const scopeDeps = collectDependencies$1(fn, usedOutsideDeclaringScope, new Map([...temporaries, ...temporariesReadInOptional]), processedInstrsInOptional);
     for (const [scope, deps] of scopeDeps) {
         if (deps.length === 0) {
             continue;
@@ -46639,7 +46661,7 @@ function handleInstruction(instr, context) {
         }
     }
 }
-function collectDependencies(fn, usedOutsideDeclaringScope, temporaries, processedInstrsInOptional) {
+function collectDependencies$1(fn, usedOutsideDeclaringScope, temporaries, processedInstrsInOptional) {
     const context = new DependencyCollectionContext(usedOutsideDeclaringScope, temporaries, processedInstrsInOptional);
     for (const param of fn.params) {
         if (param.kind === 'Identifier') {
@@ -50251,7 +50273,7 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
             'The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. ',
             (dep.identifier.name != null && dep.identifier.name.kind === 'named')
                 ? `The inferred dependency was \`${prettyPrintScopeDependency(dep)}\`, but the source dependencies were [${validDepsInMemoBlock
-                    .map(dep => printManualMemoDependency(dep, true))
+                    .map(dep => printManualMemoDependency$1(dep, true))
                     .join(', ')}]. ${errorDiagnostic
                     ? getCompareDependencyResultDescription(errorDiagnostic)
                     : 'Inferred dependency not present in source'}`
@@ -53434,6 +53456,546 @@ function isKnownEventHandler(_tag, prop) {
     return EVENT_HANDLER_PATTERN.test(prop);
 }
 
+function validateExhaustiveDependencies(fn) {
+    const reactive = collectReactiveIdentifiersHIR(fn);
+    const temporaries = new Map();
+    for (const param of fn.params) {
+        const place = param.kind === 'Identifier' ? param : param.place;
+        temporaries.set(place.identifier.id, {
+            kind: 'Local',
+            identifier: place.identifier,
+            path: [],
+            context: false,
+            loc: place.loc,
+        });
+    }
+    const error = new CompilerError();
+    let startMemo = null;
+    function onStartMemoize(value, dependencies, locals) {
+        CompilerError.simpleInvariant(startMemo == null, {
+            reason: 'Unexpected nested memo calls',
+            loc: value.loc,
+        });
+        startMemo = value;
+        dependencies.clear();
+        locals.clear();
+    }
+    function onFinishMemoize(value, dependencies, locals) {
+        var _b, _c;
+        CompilerError.simpleInvariant(startMemo != null && startMemo.manualMemoId === value.manualMemoId, {
+            reason: 'Found FinishMemoize without corresponding StartMemoize',
+            loc: value.loc,
+        });
+        visitCandidateDependency(value.decl, temporaries, dependencies, locals);
+        const inferred = Array.from(dependencies);
+        inferred.sort((a, b) => {
+            var _a, _b;
+            if (a.kind === 'Global' && b.kind == 'Global') {
+                return a.binding.name.localeCompare(b.binding.name);
+            }
+            else if (a.kind == 'Local' && b.kind == 'Local') {
+                CompilerError.simpleInvariant(a.identifier.name != null &&
+                    a.identifier.name.kind === 'named' &&
+                    b.identifier.name != null &&
+                    b.identifier.name.kind === 'named', {
+                    reason: 'Expected dependencies to be named variables',
+                    loc: a.loc,
+                });
+                if (a.identifier.id !== b.identifier.id) {
+                    return a.identifier.name.value.localeCompare(b.identifier.name.value);
+                }
+                if (a.path.length !== b.path.length) {
+                    return a.path.length - b.path.length;
+                }
+                for (let i = 0; i < a.path.length; i++) {
+                    const aProperty = a.path[i];
+                    const bProperty = b.path[i];
+                    const aOptional = aProperty.optional ? 0 : 1;
+                    const bOptional = bProperty.optional ? 0 : 1;
+                    if (aOptional !== bOptional) {
+                        return aOptional - bOptional;
+                    }
+                    else if (aProperty.property !== bProperty.property) {
+                        return String(aProperty.property).localeCompare(String(bProperty.property));
+                    }
+                }
+                return 0;
+            }
+            else {
+                const aName = a.kind === 'Global' ? a.binding.name : (_a = a.identifier.name) === null || _a === void 0 ? void 0 : _a.value;
+                const bName = b.kind === 'Global' ? b.binding.name : (_b = b.identifier.name) === null || _b === void 0 ? void 0 : _b.value;
+                if (aName != null && bName != null) {
+                    return aName.localeCompare(bName);
+                }
+                return 0;
+            }
+        });
+        retainWhere(inferred, (dep, ix) => {
+            const match = inferred.findIndex(prevDep => {
+                return (isEqualTemporary(prevDep, dep) ||
+                    (prevDep.kind === 'Local' &&
+                        dep.kind === 'Local' &&
+                        prevDep.identifier.id === dep.identifier.id &&
+                        isSubPath(prevDep.path, dep.path)));
+            });
+            return match === -1 || match >= ix;
+        });
+        const manualDependencies = (_b = startMemo.deps) !== null && _b !== void 0 ? _b : [];
+        const matched = new Set();
+        const missing = [];
+        const extra = [];
+        for (const inferredDependency of inferred) {
+            if (inferredDependency.kind === 'Global') {
+                for (const manualDependency of manualDependencies) {
+                    if (manualDependency.root.kind === 'Global' &&
+                        manualDependency.root.identifierName ===
+                            inferredDependency.binding.name) {
+                        matched.add(manualDependency);
+                        extra.push(manualDependency);
+                    }
+                }
+                continue;
+            }
+            CompilerError.simpleInvariant(inferredDependency.kind === 'Local', {
+                reason: 'Unexpected function dependency',
+                loc: value.loc,
+            });
+            let hasMatchingManualDependency = false;
+            for (const manualDependency of manualDependencies) {
+                if (manualDependency.root.kind === 'NamedLocal' &&
+                    manualDependency.root.value.identifier.id ===
+                        inferredDependency.identifier.id &&
+                    (areEqualPaths(manualDependency.path, inferredDependency.path) ||
+                        isSubPath(manualDependency.path, inferredDependency.path))) {
+                    hasMatchingManualDependency = true;
+                    matched.add(manualDependency);
+                }
+            }
+            if (!hasMatchingManualDependency) {
+                missing.push(inferredDependency);
+            }
+        }
+        for (const dep of (_c = startMemo.deps) !== null && _c !== void 0 ? _c : []) {
+            if (matched.has(dep) ||
+                (dep.root.kind === 'NamedLocal' &&
+                    !reactive.has(dep.root.value.identifier.id))) {
+                continue;
+            }
+            extra.push(dep);
+        }
+        if (missing.length !== 0) {
+            const diagnostic = CompilerDiagnostic.create({
+                category: ErrorCategory.PreserveManualMemo,
+                reason: 'Found non-exhaustive dependencies',
+                description: 'Missing dependencies can cause a value not to update when those inputs change, ' +
+                    'resulting in stale UI. This memoization cannot be safely rewritten by the compiler.',
+            });
+            for (const dep of missing) {
+                diagnostic.withDetails({
+                    kind: 'error',
+                    message: `Missing dependency \`${printInferredDependency(dep)}\``,
+                    loc: dep.loc,
+                });
+            }
+            error.pushDiagnostic(diagnostic);
+        }
+        else if (extra.length !== 0) {
+            const diagnostic = CompilerDiagnostic.create({
+                category: ErrorCategory.PreserveManualMemo,
+                reason: 'Found unnecessary memoization dependencies',
+                description: 'Unnecessary dependencies can cause a value to update more often than necessary, ' +
+                    'which can cause effects to run more than expected. This memoization cannot be safely ' +
+                    'rewritten by the compiler',
+            });
+            diagnostic.withDetails({
+                kind: 'error',
+                message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
+                loc: value.loc,
+            });
+            error.pushDiagnostic(diagnostic);
+        }
+        dependencies.clear();
+        locals.clear();
+        startMemo = null;
+    }
+    collectDependencies(fn, temporaries, {
+        onStartMemoize,
+        onFinishMemoize,
+    });
+    return error.asResult();
+}
+function addDependency(dep, dependencies, locals) {
+    if (dep.kind === 'Function') {
+        for (const x of dep.dependencies) {
+            addDependency(x, dependencies, locals);
+        }
+    }
+    else if (dep.kind === 'Global') {
+        dependencies.add(dep);
+    }
+    else if (!locals.has(dep.identifier.id)) {
+        dependencies.add(dep);
+    }
+}
+function visitCandidateDependency(place, temporaries, dependencies, locals) {
+    const dep = temporaries.get(place.identifier.id);
+    if (dep != null) {
+        addDependency(dep, dependencies, locals);
+    }
+}
+function collectDependencies(fn, temporaries, callbacks) {
+    var _a;
+    const optionals = findOptionalPlaces(fn);
+    const locals = new Set();
+    const dependencies = new Set();
+    function visit(place) {
+        visitCandidateDependency(place, temporaries, dependencies, locals);
+    }
+    for (const block of fn.body.blocks.values()) {
+        for (const phi of block.phis) {
+            let deps = null;
+            for (const operand of phi.operands.values()) {
+                const dep = temporaries.get(operand.identifier.id);
+                if (dep == null) {
+                    continue;
+                }
+                if (deps == null) {
+                    deps = [dep];
+                }
+                else {
+                    deps.push(dep);
+                }
+            }
+            if (deps == null) {
+                continue;
+            }
+            else if (deps.length === 1) {
+                temporaries.set(phi.place.identifier.id, deps[0]);
+            }
+            else {
+                temporaries.set(phi.place.identifier.id, {
+                    kind: 'Function',
+                    dependencies: new Set(deps),
+                });
+            }
+        }
+        for (const instr of block.instructions) {
+            const { lvalue, value } = instr;
+            switch (value.kind) {
+                case 'LoadGlobal': {
+                    temporaries.set(lvalue.identifier.id, {
+                        kind: 'Global',
+                        binding: value.binding,
+                    });
+                    break;
+                }
+                case 'LoadContext':
+                case 'LoadLocal': {
+                    if (locals.has(value.place.identifier.id)) {
+                        break;
+                    }
+                    const temp = temporaries.get(value.place.identifier.id);
+                    if (temp != null) {
+                        if (temp.kind === 'Local') {
+                            const local = Object.assign(Object.assign({}, temp), { loc: value.place.loc });
+                            temporaries.set(lvalue.identifier.id, local);
+                        }
+                        else {
+                            temporaries.set(lvalue.identifier.id, temp);
+                        }
+                    }
+                    break;
+                }
+                case 'DeclareLocal': {
+                    const local = {
+                        kind: 'Local',
+                        identifier: value.lvalue.place.identifier,
+                        path: [],
+                        context: false,
+                        loc: value.lvalue.place.loc,
+                    };
+                    temporaries.set(value.lvalue.place.identifier.id, local);
+                    locals.add(value.lvalue.place.identifier.id);
+                    break;
+                }
+                case 'StoreLocal': {
+                    if (value.lvalue.place.identifier.name == null) {
+                        const temp = temporaries.get(value.value.identifier.id);
+                        if (temp != null) {
+                            temporaries.set(value.lvalue.place.identifier.id, temp);
+                        }
+                        break;
+                    }
+                    visit(value.value);
+                    if (value.lvalue.kind !== InstructionKind.Reassign) {
+                        const local = {
+                            kind: 'Local',
+                            identifier: value.lvalue.place.identifier,
+                            path: [],
+                            context: false,
+                            loc: value.lvalue.place.loc,
+                        };
+                        temporaries.set(value.lvalue.place.identifier.id, local);
+                        locals.add(value.lvalue.place.identifier.id);
+                    }
+                    break;
+                }
+                case 'DeclareContext': {
+                    const local = {
+                        kind: 'Local',
+                        identifier: value.lvalue.place.identifier,
+                        path: [],
+                        context: true,
+                        loc: value.lvalue.place.loc,
+                    };
+                    temporaries.set(value.lvalue.place.identifier.id, local);
+                    break;
+                }
+                case 'StoreContext': {
+                    visit(value.value);
+                    if (value.lvalue.kind !== InstructionKind.Reassign) {
+                        const local = {
+                            kind: 'Local',
+                            identifier: value.lvalue.place.identifier,
+                            path: [],
+                            context: true,
+                            loc: value.lvalue.place.loc,
+                        };
+                        temporaries.set(value.lvalue.place.identifier.id, local);
+                        locals.add(value.lvalue.place.identifier.id);
+                    }
+                    break;
+                }
+                case 'Destructure': {
+                    visit(value.value);
+                    if (value.lvalue.kind !== InstructionKind.Reassign) {
+                        for (const lvalue of eachInstructionValueLValue(value)) {
+                            const local = {
+                                kind: 'Local',
+                                identifier: lvalue.identifier,
+                                path: [],
+                                context: false,
+                                loc: lvalue.loc,
+                            };
+                            temporaries.set(lvalue.identifier.id, local);
+                            locals.add(lvalue.identifier.id);
+                        }
+                    }
+                    break;
+                }
+                case 'PropertyLoad': {
+                    if (typeof value.property === 'number') {
+                        visit(value.object);
+                        break;
+                    }
+                    const object = temporaries.get(value.object.identifier.id);
+                    if (object != null && object.kind === 'Local') {
+                        const optional = (_a = optionals.get(value.object.identifier.id)) !== null && _a !== void 0 ? _a : false;
+                        const local = {
+                            kind: 'Local',
+                            identifier: object.identifier,
+                            context: object.context,
+                            path: [
+                                ...object.path,
+                                {
+                                    optional,
+                                    property: value.property,
+                                },
+                            ],
+                            loc: value.loc,
+                        };
+                        temporaries.set(lvalue.identifier.id, local);
+                    }
+                    break;
+                }
+                case 'FunctionExpression':
+                case 'ObjectMethod': {
+                    const functionDeps = collectDependencies(value.loweredFunc.func, temporaries, null);
+                    temporaries.set(lvalue.identifier.id, functionDeps);
+                    addDependency(functionDeps, dependencies, locals);
+                    break;
+                }
+                case 'StartMemoize': {
+                    const onStartMemoize = callbacks === null || callbacks === void 0 ? void 0 : callbacks.onStartMemoize;
+                    if (onStartMemoize != null) {
+                        onStartMemoize(value, dependencies, locals);
+                    }
+                    break;
+                }
+                case 'FinishMemoize': {
+                    const onFinishMemoize = callbacks === null || callbacks === void 0 ? void 0 : callbacks.onFinishMemoize;
+                    if (onFinishMemoize != null) {
+                        onFinishMemoize(value, dependencies, locals);
+                    }
+                    break;
+                }
+                case 'MethodCall': {
+                    for (const operand of eachInstructionValueOperand(value)) {
+                        if (operand.identifier.id === value.property.identifier.id) {
+                            continue;
+                        }
+                        visit(operand);
+                    }
+                    break;
+                }
+                default: {
+                    for (const operand of eachInstructionValueOperand(value)) {
+                        visit(operand);
+                    }
+                    for (const lvalue of eachInstructionLValue(instr)) {
+                        locals.add(lvalue.identifier.id);
+                    }
+                }
+            }
+        }
+        for (const operand of eachTerminalOperand(block.terminal)) {
+            if (optionals.has(operand.identifier.id)) {
+                continue;
+            }
+            visit(operand);
+        }
+    }
+    return { kind: 'Function', dependencies };
+}
+function printInferredDependency(dep) {
+    switch (dep.kind) {
+        case 'Global': {
+            return dep.binding.name;
+        }
+        case 'Local': {
+            CompilerError.simpleInvariant(dep.identifier.name != null && dep.identifier.name.kind === 'named', {
+                reason: 'Expected dependencies to be named variables',
+                loc: dep.loc,
+            });
+            return `${dep.identifier.name.value}${dep.path.map(p => (p.optional ? '?' : '') + '.' + p.property).join('')}`;
+        }
+    }
+}
+function printManualMemoDependency(dep) {
+    let identifierName;
+    if (dep.root.kind === 'Global') {
+        identifierName = dep.root.identifierName;
+    }
+    else {
+        const name = dep.root.value.identifier.name;
+        CompilerError.simpleInvariant(name != null && name.kind === 'named', {
+            reason: 'Expected manual dependencies to be named variables',
+            loc: dep.root.value.loc,
+        });
+        identifierName = name.value;
+    }
+    return `${identifierName}${dep.path.map(p => (p.optional ? '?' : '') + '.' + p.property).join('')}`;
+}
+function isEqualTemporary(a, b) {
+    switch (a.kind) {
+        case 'Function': {
+            return false;
+        }
+        case 'Global': {
+            return b.kind === 'Global' && a.binding.name === b.binding.name;
+        }
+        case 'Local': {
+            return (b.kind === 'Local' &&
+                a.identifier.id === b.identifier.id &&
+                areEqualPaths(a.path, b.path));
+        }
+    }
+}
+function collectReactiveIdentifiersHIR(fn) {
+    const reactive = new Set();
+    for (const block of fn.body.blocks.values()) {
+        for (const instr of block.instructions) {
+            for (const lvalue of eachInstructionLValue(instr)) {
+                if (lvalue.reactive) {
+                    reactive.add(lvalue.identifier.id);
+                }
+            }
+            for (const operand of eachInstructionValueOperand(instr.value)) {
+                if (operand.reactive) {
+                    reactive.add(operand.identifier.id);
+                }
+            }
+        }
+        for (const operand of eachTerminalOperand(block.terminal)) {
+            if (operand.reactive) {
+                reactive.add(operand.identifier.id);
+            }
+        }
+    }
+    return reactive;
+}
+function findOptionalPlaces(fn) {
+    const optionals = new Map();
+    const visited = new Set();
+    for (const [, block] of fn.body.blocks) {
+        if (visited.has(block.id)) {
+            continue;
+        }
+        if (block.terminal.kind === 'optional') {
+            visited.add(block.id);
+            const optionalTerminal = block.terminal;
+            let testBlock = fn.body.blocks.get(block.terminal.test);
+            const queue = [block.terminal.optional];
+            loop: while (true) {
+                visited.add(testBlock.id);
+                const terminal = testBlock.terminal;
+                switch (terminal.kind) {
+                    case 'branch': {
+                        const isOptional = queue.pop();
+                        CompilerError.simpleInvariant(isOptional !== undefined, {
+                            reason: 'Expected an optional value for each optional test condition',
+                            loc: terminal.test.loc,
+                        });
+                        if (isOptional != null) {
+                            optionals.set(terminal.test.identifier.id, isOptional);
+                        }
+                        if (terminal.fallthrough === optionalTerminal.fallthrough) {
+                            const consequent = fn.body.blocks.get(terminal.consequent);
+                            const last = consequent.instructions.at(-1);
+                            if (last !== undefined && last.value.kind === 'StoreLocal') {
+                                if (isOptional != null) {
+                                    optionals.set(last.value.value.identifier.id, isOptional);
+                                }
+                            }
+                            break loop;
+                        }
+                        else {
+                            testBlock = fn.body.blocks.get(terminal.fallthrough);
+                        }
+                        break;
+                    }
+                    case 'optional': {
+                        queue.push(terminal.optional);
+                        testBlock = fn.body.blocks.get(terminal.test);
+                        break;
+                    }
+                    case 'logical':
+                    case 'ternary': {
+                        queue.push(null);
+                        testBlock = fn.body.blocks.get(terminal.test);
+                        break;
+                    }
+                    case 'sequence': {
+                        testBlock = fn.body.blocks.get(terminal.block);
+                        break;
+                    }
+                    default: {
+                        CompilerError.simpleInvariant(false, {
+                            reason: `Unexpected terminal in optional`,
+                            loc: terminal.loc,
+                        });
+                    }
+                }
+            }
+            CompilerError.simpleInvariant(queue.length === 0, {
+                reason: 'Expected a matching number of conditional blocks and branch points',
+                loc: block.terminal.loc,
+            });
+        }
+    }
+    return optionals;
+}
+
 function run(func, config, fnType, mode, programContext, logger, filename, code) {
     var _a, _b;
     const contextIdentifiers = findContextIdentifiers(func);
@@ -53559,6 +54121,9 @@ function runWithEnvironment(func, env) {
     }
     inferReactivePlaces(hir);
     log({ kind: 'hir', name: 'InferReactivePlaces', value: hir });
+    if (env.config.validateExhaustiveMemoizationDependencies) {
+        validateExhaustiveDependencies(hir).unwrap();
+    }
     rewriteInstructionKindsBasedOnReassignment(hir);
     log({
         kind: 'hir',
