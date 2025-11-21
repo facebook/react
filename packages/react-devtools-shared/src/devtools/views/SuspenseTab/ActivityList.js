@@ -30,8 +30,6 @@ import {
 } from '../Components/TreeContext';
 import {useHighlightHostInstance} from '../hooks';
 import {StoreContext} from '../context';
-import ButtonIcon from '../ButtonIcon';
-import Button from '../Button';
 
 export function useChangeActivitySliceAction(): (
   id: Element['id'] | null,
@@ -118,6 +116,8 @@ export default function ActivityList({
     useTransition();
   const changeActivitySliceAction = useChangeActivitySliceAction();
 
+  const includeAllOption = activityID !== null;
+
   function handleKeyDown(event: SyntheticKeyboardEvent) {
     switch (event.key) {
       case 'Escape':
@@ -128,15 +128,16 @@ export default function ActivityList({
         break;
       case 'Enter':
       case ' ':
-        if (inspectedElementID !== null) {
-          startActivitySliceSelection(() => {
-            changeActivitySliceAction(inspectedElementID);
-          });
-        }
+        startActivitySliceSelection(() => {
+          changeActivitySliceAction(inspectedElementID);
+        });
         event.preventDefault();
         break;
       case 'Home':
-        treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: activities[0].id});
+        treeDispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: includeAllOption ? null : activities[0].id,
+        });
         event.preventDefault();
         break;
       case 'End':
@@ -150,15 +151,21 @@ export default function ActivityList({
         const currentIndex = activities.findIndex(
           activity => activity.id === selectedActivityID,
         );
-        if (currentIndex !== undefined) {
-          const nextIndex =
-            (currentIndex + activities.length - 1) % activities.length;
-
-          treeDispatch({
-            type: 'SELECT_ELEMENT_BY_ID',
-            payload: activities[nextIndex].id,
-          });
+        let nextIndex: number;
+        if (currentIndex === -1) {
+          // Currently selecting "All", wrap around to last Activity.
+          nextIndex = activities.length - 1;
+        } else {
+          nextIndex = currentIndex - 1;
+          if (!includeAllOption) {
+            nextIndex = (nextIndex + activities.length) % activities.length;
+          }
         }
+
+        treeDispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: nextIndex === -1 ? null : activities[nextIndex].id,
+        });
         event.preventDefault();
         break;
       }
@@ -166,14 +173,17 @@ export default function ActivityList({
         const currentIndex = activities.findIndex(
           activity => activity.id === selectedActivityID,
         );
-        if (currentIndex !== undefined) {
-          const nextIndex = (currentIndex + 1) % activities.length;
-
-          treeDispatch({
-            type: 'SELECT_ELEMENT_BY_ID',
-            payload: activities[nextIndex].id,
-          });
+        let nextIndex: number;
+        if (includeAllOption && currentIndex === activities.length - 1) {
+          // Currently selecting last Activity, wrap around to "All".
+          nextIndex = -1;
+        } else {
+          nextIndex = (currentIndex + 1) % activities.length;
         }
+        treeDispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: nextIndex === -1 ? null : activities[nextIndex].id,
+        });
         event.preventDefault();
         break;
       }
@@ -182,7 +192,7 @@ export default function ActivityList({
     }
   }
 
-  function handleClick(id: Element['id'], event: SyntheticMouseEvent) {
+  function handleClick(id: Element['id'] | null, event: SyntheticMouseEvent) {
     event.preventDefault();
     treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: id});
   }
@@ -195,25 +205,24 @@ export default function ActivityList({
 
   return (
     <div className={styles.ActivityListContaier}>
-      <div className={styles.ActivityListHeader}>
-        {activityID !== null && (
-          // TODO: Obsolete once filtered Activities are included in this list.
-          <Button
-            onClick={startActivitySliceSelection.bind(
-              null,
-              changeActivitySliceAction.bind(null, null),
-            )}
-            title="Back to full tree view">
-            <ButtonIcon type="previous" />
-          </Button>
-        )}
-      </div>
+      <div className={styles.ActivityListHeader} />
       <ol
         role="listbox"
         className={styles.ActivityListList}
         data-pending-activity-slice-selection={isPendingActivitySliceSelection}
         tabIndex={0}
         onKeyDown={handleKeyDown}>
+        {includeAllOption && (
+          // TODO: Obsolete once filtered Activities are included in this list.
+          <li
+            role="option"
+            aria-selected={null === selectedActivityID ? 'true' : 'false'}
+            className={styles.ActivityListItem}
+            onClick={handleClick.bind(null, null)}
+            onDoubleClick={handleDoubleClick}>
+            All
+          </li>
+        )}
         {activities.map(({id, depth}) => {
           const activity = store.getElementByID(id);
           if (activity === null) {
@@ -244,7 +253,7 @@ export default function ActivityList({
                 false,
               )}
               onPointerLeave={clearHighlightHostInstance}>
-              {'\u00A0'.repeat(depth) + name}
+              {'\u00A0'.repeat(depth + (includeAllOption ? 1 : 0)) + name}
             </li>
           );
         })}
