@@ -24,6 +24,7 @@ import {
   InstructionKind,
   isStableType,
   isSubPath,
+  isSubPathIgnoringOptionals,
   isUseRefType,
   LoadGlobal,
   ManualMemoDependency,
@@ -240,7 +241,10 @@ export function validateExhaustiveDependencies(
           manualDependency.root.value.identifier.id ===
             inferredDependency.identifier.id &&
           (areEqualPaths(manualDependency.path, inferredDependency.path) ||
-            isSubPath(manualDependency.path, inferredDependency.path))
+            isSubPathIgnoringOptionals(
+              manualDependency.path,
+              inferredDependency.path,
+            ))
         ) {
           hasMatchingManualDependency = true;
           matched.add(manualDependency);
@@ -260,6 +264,20 @@ export function validateExhaustiveDependencies(
       }
       extra.push(dep);
     }
+
+    /*
+     * For compatiblity with the existing exhaustive-deps rule, we allow
+     * known-stable values as dependencies even if the value is not reactive.
+     * This allows code that takes a dep on a non-reactive setState function
+     * to pass, for example.
+     */
+    retainWhere(extra, dep => {
+      const isNonReactiveStableValue =
+        dep.root.kind === 'NamedLocal' &&
+        !dep.root.value.reactive &&
+        isStableType(dep.root.value.identifier);
+      return !isNonReactiveStableValue;
+    });
 
     if (missing.length !== 0 || extra.length !== 0) {
       let suggestions: Array<CompilerSuggestion> | null = null;
