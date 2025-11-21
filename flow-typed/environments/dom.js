@@ -643,7 +643,7 @@ declare class Event {
   preventDefault(): void;
   /**
    * Returns true if preventDefault() was invoked successfully to indicate
-   * cancelation, and false otherwise.
+   * cancellation, and false otherwise.
    */
   +defaultPrevented: boolean;
   /**

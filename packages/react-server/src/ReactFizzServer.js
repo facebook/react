@@ -380,7 +380,7 @@ export opaque type Request = {
   trackedPostpones: null | PostponedHoles, // Gets set to non-null while we want to track postponed holes. I.e. during a prerender.
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
-  // Returning null/undefined will cause a defualt error message in production
+  // Returning null/undefined will cause a default error message in production
   onError: (error: mixed, errorInfo: ThrownInfo) => ?string,
   // onAllReady is called when all pending task is done but it may not have flushed yet.
   // This is a good time to start writing if you want only HTML and no intermediate steps.
@@ -2076,7 +2076,7 @@ function renderSuspenseList(
         prepareToUseThenableState(prevThenableState);
 
         // We need to know how many total rows are in this set, so that we
-        // can allocate enough id slots to acommodate them. So we must exhaust
+        // can allocate enough id slots to accommodate them. So we must exhaust
         // the iterator before we start recursively rendering the rows.
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
@@ -3364,7 +3364,7 @@ function retryNode(request: Request, task: Task): void {
           validateIterable(task, node, childIndex, iterator, iteratorFn);
         }
         // We need to know how many total children are in this set, so that we
-        // can allocate enough id slots to acommodate them. So we must exhaust
+        // can allocate enough id slots to accommodate them. So we must exhaust
         // the iterator before we start recursively rendering the children.
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
@@ -3402,7 +3402,7 @@ function retryNode(request: Request, task: Task): void {
         prepareToUseThenableState(prevThenableState);
 
         // We need to know how many total children are in this set, so that we
-        // can allocate enough id slots to acommodate them. So we must exhaust
+        // can allocate enough id slots to accommodate them. So we must exhaust
         // the iterator before we start recursively rendering the children.
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
