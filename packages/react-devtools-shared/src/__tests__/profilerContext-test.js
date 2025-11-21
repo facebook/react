@@ -628,9 +628,6 @@ describe('ProfilerContext', () => {
         );
       });
 
-      // Wait for any async effects to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-
       // Verify that the profiler is not profiling.
       expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(false);
 
