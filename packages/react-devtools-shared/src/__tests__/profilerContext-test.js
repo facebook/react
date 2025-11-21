@@ -641,14 +641,14 @@ describe('ProfilerContext', () => {
     });
 
     // Dispatch keyboard event to toggle profiling on
-    // Use recursivelyFlush=false to avoid infinite loop from Bridge timers
-    utils.act(() => {
+    // Try utils.actAsync with recursivelyFlush=false
+    await utils.actAsync(() => {
       ownerWindow.dispatchEvent(keyEvent);
     }, false);
     expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(true);
 
     // Dispatch keyboard event to toggle profiling off
-    utils.act(() => {
+    await utils.actAsync(() => {
       ownerWindow.dispatchEvent(keyEvent);
     }, false);
     expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(false);
