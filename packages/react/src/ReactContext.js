@@ -25,7 +25,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     _currentValue: defaultValue,
     _currentValue2: defaultValue,
     // Used to track how many concurrent renderers this context currently
-    // supports within in a single renderer. Such as parallel server rendering.
+    // supports within a single renderer. Such as parallel server rendering.
     _threadCount: 0,
     // These are circular
     Provider: (null: any),

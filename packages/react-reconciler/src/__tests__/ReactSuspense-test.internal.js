@@ -186,7 +186,7 @@ describe('ReactSuspense', () => {
     ]);
     expect(container.textContent).toEqual('ALoading B...');
 
-    // Resolve the second Suspense's promise resolves and switche back to the
+    // Resolve the second Suspense's promise resolves and switch back to the
     // normal view
     await act(() => resolveText('B'));
     assertLog(['B']);

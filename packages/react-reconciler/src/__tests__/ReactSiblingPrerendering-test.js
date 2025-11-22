@@ -318,7 +318,7 @@ describe('ReactSiblingPrerendering', () => {
       // to be updated.
       'Suspend! [C]',
 
-      // Now we're in prerender mode, so D is incuded in this attempt.
+      // Now we're in prerender mode, so D is included in this attempt.
       'Suspend! [C]',
       'Suspend! [D]',
     ]);
