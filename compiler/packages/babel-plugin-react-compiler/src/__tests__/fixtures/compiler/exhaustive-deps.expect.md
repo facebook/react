@@ -3,7 +3,7 @@
 
 ```javascript
 // @validateExhaustiveMemoizationDependencies
-import {useMemo} from 'react';
+import {useCallback, useMemo} from 'react';
 import {makeObject_Primitives, Stringify} from 'shared-runtime';
 
 function useHook1(x) {
@@ -47,6 +47,16 @@ function useHook6(x) {
   }, [x]);
 }
 
+function useHook7(x) {
+  const [state, setState] = useState(true);
+  const f = () => {
+    setState(x => !x);
+  };
+  return useCallback(() => {
+    f();
+  }, [f]);
+}
+
 function Component({x, y, z}) {
   const a = useHook1(x);
   const b = useHook2(x);
@@ -54,7 +64,8 @@ function Component({x, y, z}) {
   const d = useHook4(x, y, z);
   const e = useHook5(x);
   const f = useHook6(x);
-  return <Stringify results={[a, b, c, d, e, f]} />;
+  const g = useHook7(x);
+  return <Stringify results={[a, b, c, d, e, f, g]} />;
 }
 
 ```
@@ -63,7 +74,7 @@ function Component({x, y, z}) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @validateExhaustiveMemoizationDependencies
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { makeObject_Primitives, Stringify } from "shared-runtime";
 
 function useHook1(x) {
@@ -121,8 +132,36 @@ function useHook6(x) {
   return f;
 }
 
+function useHook7(x) {
+  const $ = _c(2);
+  const [, setState] = useState(true);
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = () => {
+      setState(_temp);
+    };
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  const f = t0;
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = () => {
+      f();
+    };
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  return t1;
+}
+function _temp(x_0) {
+  return !x_0;
+}
+
 function Component(t0) {
-  const $ = _c(7);
+  const $ = _c(8);
   const { x, y, z } = t0;
   const a = useHook1(x);
   const b = useHook2(x);
@@ -130,6 +169,7 @@ function Component(t0) {
   const d = useHook4(x, y, z);
   const e = useHook5(x);
   const f = useHook6(x);
+  const g = useHook7(x);
   let t1;
   if (
     $[0] !== a ||
@@ -137,18 +177,20 @@ function Component(t0) {
     $[2] !== c ||
     $[3] !== d ||
     $[4] !== e ||
-    $[5] !== f
+    $[5] !== f ||
+    $[6] !== g
   ) {
-    t1 = <Stringify results={[a, b, c, d, e, f]} />;
+    t1 = <Stringify results={[a, b, c, d, e, f, g]} />;
     $[0] = a;
     $[1] = b;
     $[2] = c;
     $[3] = d;
     $[4] = e;
     $[5] = f;
-    $[6] = t1;
+    $[6] = g;
+    $[7] = t1;
   } else {
-    t1 = $[6];
+    t1 = $[7];
   }
   return t1;
 }

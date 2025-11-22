@@ -1067,7 +1067,15 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         name: 'memo-dependencies',
         description:
           'Validates that useMemo() and useCallback() specify comprehensive dependencies without extraneous values. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
-        preset: LintRulePreset.RecommendedLatest,
+        /**
+         * TODO: the "MemoDependencies" rule largely reimplements the "exhaustive-deps" non-compiler rule,
+         * allowing the compiler to ensure it does not regress change behavior due to different dependencies.
+         * We previously relied on the source having ESLint suppressions for any exhaustive-deps violations,
+         * but it's more reliable to verify it within the compiler.
+         *
+         * Long-term we should de-duplicate these implementations.
+         */
+        preset: LintRulePreset.Off,
       };
     }
     case ErrorCategory.IncompatibleLibrary: {
