@@ -303,9 +303,11 @@ function runWithEnvironment(
   inferReactivePlaces(hir);
   log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
 
-  if (env.config.validateExhaustiveMemoizationDependencies) {
-    // NOTE: this relies on reactivity inference running first
-    validateExhaustiveDependencies(hir).unwrap();
+  if (env.enableValidations) {
+    if (env.config.validateExhaustiveMemoizationDependencies) {
+      // NOTE: this relies on reactivity inference running first
+      validateExhaustiveDependencies(hir).unwrap();
+    }
   }
 
   rewriteInstructionKindsBasedOnReassignment(hir);
