@@ -104,7 +104,7 @@ export function assertConsoleLogsCleared() {
   const errors = clearErrors();
 
   if (logs.length > 0 || errors.length > 0 || warnings.length > 0) {
-    let message = `${chalk.dim('asserConsoleLogsCleared')}(${chalk.red(
+    let message = `${chalk.dim('assertConsoleLogsCleared')}(${chalk.red(
       'expected',
     )})\n`;
 

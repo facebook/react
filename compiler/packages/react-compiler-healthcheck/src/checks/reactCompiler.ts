@@ -18,7 +18,7 @@ import chalk from 'chalk';
 
 type LoggerEvent = RawLoggerEvent & {filename: string | null};
 
-const SucessfulCompilation: Array<LoggerEvent> = [];
+const SuccessfulCompilation: Array<LoggerEvent> = [];
 const ActionableFailures: Array<LoggerEvent> = [];
 const OtherFailures: Array<LoggerEvent> = [];
 
@@ -27,7 +27,7 @@ const logger = {
     const event = {...rawEvent, filename};
     switch (event.kind) {
       case 'CompileSuccess': {
-        SucessfulCompilation.push(event);
+        SuccessfulCompilation.push(event);
         return;
       }
       case 'CompileError': {
@@ -141,12 +141,12 @@ export default {
 
   report(): void {
     const totalComponents =
-      SucessfulCompilation.length +
+      SuccessfulCompilation.length +
       countUniqueLocInEvents(OtherFailures) +
       countUniqueLocInEvents(ActionableFailures);
     console.log(
       chalk.green(
-        `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`,
+        `Successfully compiled ${SuccessfulCompilation.length} out of ${totalComponents} components.`,
       ),
     );
   },

@@ -320,7 +320,7 @@ describe('ReactDOMFizzShellHydration', () => {
     });
     assertLog([
       'New screen',
-      'This root received an early update, before anything was able ' +
+      'This root received an early update, before anything was able to ' +
         'hydrate. Switched the entire root to client rendering.',
     ]);
     expect(container.textContent).toBe('New screen');

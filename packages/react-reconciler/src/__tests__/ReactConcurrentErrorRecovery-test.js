@@ -141,7 +141,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     if (caches.length === 0) {
       throw Error('Cache does not exist.');
     } else {
-      // Resolve the most recently created cache. An older cache can by
+      // Resolve the most recently created cache. An older cache can be
       // resolved with `caches[index].resolve(text)`.
       caches[caches.length - 1].resolve(text);
     }
@@ -153,7 +153,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     if (caches.length === 0) {
       throw Error('Cache does not exist.');
     } else {
-      // Resolve the most recently created cache. An older cache can by
+      // Resolve the most recently created cache. An older cache can be
       // resolved with `caches[index].reject(text, error)`.
       caches[caches.length - 1].reject(text, error);
     }
@@ -334,7 +334,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     // This also works if the suspended component is wrapped with an error
     // boundary. (This is only interesting because when a component suspends
     // outside of a transition, we throw an error, which can be captured by
-    // an error boundary.
+    // an error boundary.)
     await act(() => {
       startTransition(() => {
         root.render(
