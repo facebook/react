@@ -264,31 +264,33 @@ export function commitHookEffectListUnmount(
           const destroy = inst.destroy;
           if (destroy !== undefined) {
             inst.destroy = undefined;
-            if (enableSchedulingProfiler) {
-              if ((flags & HookPassive) !== NoHookEffect) {
-                markComponentPassiveEffectUnmountStarted(finishedWork);
-              } else if ((flags & HookLayout) !== NoHookEffect) {
-                markComponentLayoutEffectUnmountStarted(finishedWork);
+            if (typeof destroy === 'function') {
+              if (enableSchedulingProfiler) {
+                if ((flags & HookPassive) !== NoHookEffect) {
+                  markComponentPassiveEffectUnmountStarted(finishedWork);
+                } else if ((flags & HookLayout) !== NoHookEffect) {
+                  markComponentLayoutEffectUnmountStarted(finishedWork);
+                }
               }
-            }
 
-            if (__DEV__) {
-              if ((flags & HookInsertion) !== NoHookEffect) {
-                setIsRunningInsertionEffect(true);
+              if (__DEV__) {
+                if ((flags & HookInsertion) !== NoHookEffect) {
+                  setIsRunningInsertionEffect(true);
+                }
               }
-            }
-            safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
-            if (__DEV__) {
-              if ((flags & HookInsertion) !== NoHookEffect) {
-                setIsRunningInsertionEffect(false);
+              safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+              if (__DEV__) {
+                if ((flags & HookInsertion) !== NoHookEffect) {
+                  setIsRunningInsertionEffect(false);
+                }
               }
-            }
 
-            if (enableSchedulingProfiler) {
-              if ((flags & HookPassive) !== NoHookEffect) {
-                markComponentPassiveEffectUnmountStopped();
-              } else if ((flags & HookLayout) !== NoHookEffect) {
-                markComponentLayoutEffectUnmountStopped();
+              if (enableSchedulingProfiler) {
+                if ((flags & HookPassive) !== NoHookEffect) {
+                  markComponentPassiveEffectUnmountStopped();
+                } else if ((flags & HookLayout) !== NoHookEffect) {
+                  markComponentLayoutEffectUnmountStopped();
+                }
               }
             }
           }
@@ -912,6 +914,9 @@ function safelyCallDestroy(
   destroy: (() => void) | (({...}) => void),
   resource?: {...} | void | null,
 ) {
+  if (typeof destroy !== 'function') {
+    return;
+  }
   // $FlowFixMe[extra-arg] @poteto this is safe either way because the extra arg is ignored if it's not a CRUD effect
   const destroy_ = resource == null ? destroy : destroy.bind(null, resource);
   if (__DEV__) {
