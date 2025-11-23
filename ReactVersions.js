@@ -18,7 +18,7 @@
 //
 //   0.0.0-experimental-241c4467e-20200129
 
-const ReactVersion = '19.3.0';
+const ReactVersion = '19.3.1';
 
 // The label used by the @canary channel. Represents the upcoming release's
 // stability. Most of the time, this will be "canary", but we may temporarily
@@ -26,7 +26,7 @@ const ReactVersion = '19.3.0';
 //
 // It only affects the label used in the version string. To customize the
 // npm dist tags used during publish, refer to .github/workflows/runtime_prereleases_*.yml.
-const canaryChannelLabel = 'canary';
+const canaryChannelLabel = 'new';
 
 // If the canaryChannelLabel is "rc", the build pipeline will use this to build
 // an RC version of the packages.
