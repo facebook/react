@@ -1,4 +1,4 @@
-// @inferEffectDependencies @noEmit @panicThreshold:"none" @loggerTestOnly
+// @inferEffectDependencies @panicThreshold:"none"
 import {print} from 'shared-runtime';
 import useEffectWrapper from 'useEffectWrapper';
 import {AUTODEPS} from 'react';
