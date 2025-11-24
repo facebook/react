@@ -825,7 +825,7 @@ function createSuspenseBoundary(
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
-    list: null,
+    list: list,
     row: row,
     preceedingRow: null,
     completedSegments: [],
@@ -5752,6 +5752,17 @@ function flushSegment(
   segment.boundary = null;
   boundary.parentFlushed = true;
 
+  const suspenseList = boundary.list;
+  if (suspenseList !== null) {
+    return flushSuspenseListSegment(
+      request,
+      destination,
+      suspenseList,
+      boundary,
+      hoistableState,
+    );
+  }
+
   return flushSuspenseBoundarySegment(
     request,
     destination,
@@ -5759,6 +5770,113 @@ function flushSegment(
     segment,
     hoistableState,
   );
+}
+
+function flushSuspenseListSegment(
+  request: Request,
+  destination: Destination,
+  suspenseList: SuspenseList,
+  boundary: SuspenseBoundary,
+  hoistableState: null | HoistableState,
+): boolean {
+  // This segment is a Suspense boundary. We need to decide whether to
+  // emit the content or the fallback now.
+  if (boundary.status === CLIENT_RENDERED) {
+    // The suspense list didn't complete all the way. Emit a marker to continue on the client.
+    /*
+      if (__DEV__) {
+        writeClientRenderedSuspenseList(
+          destination,
+          request.renderState,
+          boundary.errorDigest,
+          boundary.errorMessage,
+          boundary.errorStack,
+          boundary.errorComponentStack,
+        );
+      } else {
+        writeClientRenderedSuspenseList(
+          destination,
+          request.renderState,
+          boundary.errorDigest,
+          null,
+          null,
+          null,
+        );
+      }
+      */
+    return true;
+  } else if (boundary.status !== COMPLETED) {
+    if (boundary.status === PENDING) {
+      boundary.rootSegmentID = request.nextSegmentId++;
+    }
+
+    if (boundary.completedSegments.length > 0) {
+      // If this is at least partially complete, we can queue it to be partially emitted early.
+      request.partialBoundaries.push(boundary);
+    }
+
+    if (suspenseList.id === -1) {
+      // We lazily assign an ID to the list marker.
+      suspenseList.id = boundary.rootSegmentID;
+      // This is the first time we're emitting this list so we need to emit the marker.
+      // const id = suspenseList.id;
+      // return writePendingSuspenseList(destination, request.renderState, id);
+      return true;
+    } else {
+      // This is just a partial continuation of a previously emitted list. We already have
+      // a marker for the list so there's nothing more to emit.
+      return true;
+    }
+  } else if (
+    // We don't outline when we're emitting partially completed boundaries optimistically
+    // because it doesn't make sense to outline something if its parent is going to be
+    // blocked on something later in the stream anyway.
+    !flushingPartialBoundaries &&
+    isEligibleForOutlining(request, boundary) &&
+    (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
+      hasSuspenseyContent(boundary.contentState) ||
+      boundary.defer)
+  ) {
+    boundary.rootSegmentID = request.nextSegmentId++;
+    if (suspenseList.id === -1) {
+      // We lazily assign an ID to the list marker.
+      suspenseList.id = boundary.rootSegmentID;
+    }
+
+    request.completedBoundaries.push(boundary);
+
+    // const id = suspenseList.id;
+    // return writePendingSuspenseList(destination, request.renderState, id);
+    return true;
+  } else {
+    // We're inlining this boundary so its bytes get counted to the current running count.
+    flushedByteSize += boundary.byteSize;
+    if (hoistableState) {
+      hoistHoistables(hoistableState, boundary.contentState);
+    }
+
+    const row = boundary.row;
+    if (row !== null && isEligibleForOutlining(request, boundary)) {
+      // Once we have written the boundary, we can unblock the row and let future
+      // rows be written. This may schedule new completed boundaries.
+      if (--row.pendingTasks === 0) {
+        finishSuspenseListRow(request, row);
+      }
+    }
+
+    // We can inline this row's content without any additional markers.
+    const completedSegments = boundary.completedSegments;
+
+    if (completedSegments.length !== 1) {
+      throw new Error(
+        'A previously unvisited boundary must have exactly one root segment. This is a bug in React.',
+      );
+    }
+
+    const contentSegment = completedSegments[0];
+    // TODO: Apply a tail call optimization to avoid recursing into the list.
+    return flushSegment(request, destination, contentSegment, hoistableState);
+  }
 }
 
 function flushSuspenseBoundarySegment(
