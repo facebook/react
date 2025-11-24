@@ -5752,6 +5752,22 @@ function flushSegment(
   segment.boundary = null;
   boundary.parentFlushed = true;
 
+  return flushSuspenseBoundarySegment(
+    request,
+    destination,
+    boundary,
+    segment,
+    hoistableState,
+  );
+}
+
+function flushSuspenseBoundarySegment(
+  request: Request,
+  destination: Destination,
+  boundary: SuspenseBoundary,
+  fallbackSegment: Segment,
+  hoistableState: null | HoistableState,
+): boolean {
   // This segment is a Suspense boundary. We need to decide whether to
   // emit the content or the fallback now.
   if (boundary.status === CLIENT_RENDERED) {
@@ -5788,7 +5804,7 @@ function flushSegment(
       );
     }
     // Flush the fallback.
-    flushSubtree(request, destination, segment, hoistableState);
+    flushSubtree(request, destination, fallbackSegment, hoistableState);
 
     return writeEndClientRenderedSuspenseBoundary(
       destination,
@@ -5815,7 +5831,7 @@ function flushSegment(
       hoistHoistables(hoistableState, boundary.fallbackState);
     }
     // Flush the fallback.
-    flushSubtree(request, destination, segment, hoistableState);
+    flushSubtree(request, destination, fallbackSegment, hoistableState);
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else if (
@@ -5853,7 +5869,7 @@ function flushSegment(
     // flushes later in this pass or in a future flush
 
     // Flush the fallback.
-    flushSubtree(request, destination, segment, hoistableState);
+    flushSubtree(request, destination, fallbackSegment, hoistableState);
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else {
