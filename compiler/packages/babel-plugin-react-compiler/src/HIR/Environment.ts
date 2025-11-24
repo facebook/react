@@ -224,6 +224,12 @@ export const EnvironmentConfigSchema = z.object({
   validateExhaustiveMemoizationDependencies: z.boolean().default(true),
 
   /**
+   * Validate that dependencies supplied to effects (useEffect, useLayoutEffect, useInsertionEffect)
+   * do not include extraneous values that are not referenced within the effect.
+   */
+  validateExtraneousEffectDependencies: z.boolean().default(false),
+
+  /**
    * When this is true, rather than pruning existing manual memoization but ensuring or validating
    * that the memoized values remain memoized, the compiler will simply not prune existing calls to
    * useMemo/useCallback.

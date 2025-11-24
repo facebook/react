@@ -106,6 +106,7 @@ import {validateNoDerivedComputationsInEffects_exp} from '../Validation/Validate
 import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
 import {optimizeForSSR} from '../Optimization/OptimizeForSSR';
 import {validateExhaustiveDependencies} from '../Validation/ValidateExhaustiveDependencies';
+import {validateExtraneousEffectDependencies} from '../Validation/ValidateExtraneousEffectDependencies';
 import {validateSourceLocations} from '../Validation/ValidateSourceLocations';
 
 export type CompilerPipelineValue =
@@ -298,6 +299,10 @@ function runWithEnvironment(
     }
 
     validateNoFreezingKnownMutableFunctions(hir).unwrap();
+
+    if (env.config.validateExtraneousEffectDependencies) {
+      env.logErrors(validateExtraneousEffectDependencies(hir));
+    }
   }
 
   inferReactivePlaces(hir);
