@@ -400,7 +400,15 @@ export function compileProgram(
    */
   const suppressions = findProgramSuppressions(
     pass.comments,
-    pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
+    /*
+     * If the compiler is validating hooks rules and exhaustive memo dependencies, we don't need to check
+     * for React ESLint suppressions
+     */
+    pass.opts.environment.validateExhaustiveMemoizationDependencies &&
+      pass.opts.environment.validateHooksUsage
+      ? null
+      : (pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS),
+    // Always bail on Flow suppressions
     pass.opts.flowSuppressions,
   );
 
