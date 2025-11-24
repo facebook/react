@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<2337e63004f055225e280f413b58803c>>
+ * @generated SignedSource<<4d88abae981b381367aff4a299c85e7d>>
  */
 
 'use strict';
@@ -18339,7 +18339,7 @@ function getRuleForCategoryImpl(category) {
                 severity: ErrorSeverity.Error,
                 name: 'memo-dependencies',
                 description: 'Validates that useMemo() and useCallback() specify comprehensive dependencies without extraneous values. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
-                preset: LintRulePreset.RecommendedLatest,
+                preset: LintRulePreset.Off,
             };
         }
         case ErrorCategory.IncompatibleLibrary: {
@@ -53401,7 +53401,7 @@ function validateExhaustiveDependencies(fn) {
             if (missing.length !== 0) {
                 const diagnostic = CompilerDiagnostic.create({
                     category: ErrorCategory.MemoDependencies,
-                    reason: 'Found non-exhaustive dependencies',
+                    reason: 'Found missing memoization dependencies',
                     description: 'Missing dependencies can cause a value not to update when those inputs change, ' +
                         'resulting in stale UI',
                     suggestions,
@@ -53425,7 +53425,7 @@ function validateExhaustiveDependencies(fn) {
                     category: ErrorCategory.MemoDependencies,
                     reason: 'Found unnecessary memoization dependencies',
                     description: 'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-                        'which can cause effects to run more than expected',
+                        'causing performance regressions and effects to fire more often than expected',
                 });
                 diagnostic.withDetails({
                     kind: 'error',
@@ -53950,8 +53950,10 @@ function runWithEnvironment(func, env) {
     }
     inferReactivePlaces(hir);
     log({ kind: 'hir', name: 'InferReactivePlaces', value: hir });
-    if (env.config.validateExhaustiveMemoizationDependencies) {
-        validateExhaustiveDependencies(hir).unwrap();
+    if (env.enableValidations) {
+        if (env.config.validateExhaustiveMemoizationDependencies) {
+            validateExhaustiveDependencies(hir).unwrap();
+        }
     }
     rewriteInstructionKindsBasedOnReassignment(hir);
     log({

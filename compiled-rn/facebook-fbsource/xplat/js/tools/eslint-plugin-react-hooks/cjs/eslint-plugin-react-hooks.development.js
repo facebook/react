@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<9ce85d70aa98ae708844495ffc4b54ac>>
+ * @generated SignedSource<<cb2803d0b5ab3cc9cd80c4ff449662f5>>
  */
 
 'use strict';
@@ -18354,7 +18354,7 @@ function getRuleForCategoryImpl(category) {
                 severity: ErrorSeverity.Error,
                 name: 'memo-dependencies',
                 description: 'Validates that useMemo() and useCallback() specify comprehensive dependencies without extraneous values. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
-                preset: LintRulePreset.RecommendedLatest,
+                preset: LintRulePreset.Off,
             };
         }
         case ErrorCategory.IncompatibleLibrary: {
@@ -53622,7 +53622,7 @@ function validateExhaustiveDependencies(fn) {
             if (missing.length !== 0) {
                 const diagnostic = CompilerDiagnostic.create({
                     category: ErrorCategory.MemoDependencies,
-                    reason: 'Found non-exhaustive dependencies',
+                    reason: 'Found missing memoization dependencies',
                     description: 'Missing dependencies can cause a value not to update when those inputs change, ' +
                         'resulting in stale UI',
                     suggestions,
@@ -53646,7 +53646,7 @@ function validateExhaustiveDependencies(fn) {
                     category: ErrorCategory.MemoDependencies,
                     reason: 'Found unnecessary memoization dependencies',
                     description: 'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-                        'which can cause effects to run more than expected',
+                        'causing performance regressions and effects to fire more often than expected',
                 });
                 diagnostic.withDetails({
                     kind: 'error',
@@ -54171,8 +54171,10 @@ function runWithEnvironment(func, env) {
     }
     inferReactivePlaces(hir);
     log({ kind: 'hir', name: 'InferReactivePlaces', value: hir });
-    if (env.config.validateExhaustiveMemoizationDependencies) {
-        validateExhaustiveDependencies(hir).unwrap();
+    if (env.enableValidations) {
+        if (env.config.validateExhaustiveMemoizationDependencies) {
+            validateExhaustiveDependencies(hir).unwrap();
+        }
     }
     rewriteInstructionKindsBasedOnReassignment(hir);
     log({
