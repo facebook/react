@@ -26,16 +26,16 @@ export default function DebuggingSettings({
 }: Props): React.Node {
   const usedHookSettings = use(hookSettings);
 
-  const [appendComponentStack, setAppendComponentStack] = useState(
-    usedHookSettings.appendComponentStack,
-  );
-  const [breakOnConsoleErrors, setBreakOnConsoleErrors] = useState(
-    usedHookSettings.breakOnConsoleErrors,
-  );
+  const [appendComponentStack, setAppendComponentStack] =
+  useState(usedHookSettings.appendComponentStack);
+  const [breakOnConsoleErrors, setBreakOnConsoleErrors] =
+  useState(usedHookSettings.breakOnConsoleErrors,);
   const [hideConsoleLogsInStrictMode, setHideConsoleLogsInStrictMode] =
     useState(usedHookSettings.hideConsoleLogsInStrictMode);
   const [showInlineWarningsAndErrors, setShowInlineWarningsAndErrors] =
     useState(usedHookSettings.showInlineWarningsAndErrors);
+  const [disableSecondConsoleLogDimmingInStrictMode, setDisableSecondConsoleLogDimmingInStrictMode] =
+    useState(usedHookSettings.disableSecondConsoleLogDimmingInStrictMode);
 
   useEffect(() => {
     store.setShouldShowWarningsAndErrors(showInlineWarningsAndErrors);
@@ -47,6 +47,7 @@ export default function DebuggingSettings({
       breakOnConsoleErrors,
       showInlineWarningsAndErrors,
       hideConsoleLogsInStrictMode,
+      disableSecondConsoleLogDimmingInStrictMode,
     });
   }, [
     store,
@@ -54,6 +55,7 @@ export default function DebuggingSettings({
     breakOnConsoleErrors,
     showInlineWarningsAndErrors,
     hideConsoleLogsInStrictMode,
+    disableSecondConsoleLogDimmingInStrictMode,
   ]);
 
   return (
