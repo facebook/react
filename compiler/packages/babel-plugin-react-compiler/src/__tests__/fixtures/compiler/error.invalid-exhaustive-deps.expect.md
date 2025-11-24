@@ -53,7 +53,7 @@ function Component({x, y, z}) {
 ```
 Found 4 errors:
 
-Error: Found non-exhaustive dependencies
+Error: Found missing memoization dependencies
 
 Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
 
@@ -66,7 +66,7 @@ error.invalid-exhaustive-deps.ts:7:11
    9 |   }, [x?.y.z?.a.b]);
   10 |   const b = useMemo(() => {
 
-Error: Found non-exhaustive dependencies
+Error: Found missing memoization dependencies
 
 Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
 
@@ -81,7 +81,7 @@ error.invalid-exhaustive-deps.ts:15:11
 
 Error: Found unnecessary memoization dependencies
 
-Unnecessary dependencies can cause a value to update more often than necessary, which can cause effects to run more than expected.
+Unnecessary dependencies can cause a value to update more often than necessary, causing performance regressions and effects to fire more often than expected.
 
 error.invalid-exhaustive-deps.ts:31:5
   29 |     return [];
@@ -92,7 +92,7 @@ error.invalid-exhaustive-deps.ts:31:5
   33 |   const ref2 = useRef(null);
   34 |   const ref = z ? ref1 : ref2;
 
-Error: Found non-exhaustive dependencies
+Error: Found missing memoization dependencies
 
 Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
 
