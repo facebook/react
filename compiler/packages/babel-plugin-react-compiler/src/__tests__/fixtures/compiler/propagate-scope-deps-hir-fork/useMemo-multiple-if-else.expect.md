@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enablePropagateDepsInHIR
+// @enablePropagateDepsInHIR @validateExhaustiveMemoizationDependencies:false
 import {useMemo} from 'react';
 
 function Component(props) {
@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
+import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR @validateExhaustiveMemoizationDependencies:false
 import { useMemo } from "react";
 
 function Component(props) {
