@@ -8,7 +8,7 @@
 import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
 import prettyFormat from 'pretty-format';
-import {Logger, ProgramContext} from '.';
+import {CompilerOutputMode, Logger, ProgramContext} from '.';
 import {
   HIRFunction,
   ReactiveFunction,
@@ -24,7 +24,6 @@ import {
   pruneUnusedLabelsHIR,
 } from '../HIR';
 import {
-  CompilerMode,
   Environment,
   EnvironmentConfig,
   ReactFunctionType,
@@ -105,6 +104,8 @@ import {inferMutationAliasingRanges} from '../Inference/InferMutationAliasingRan
 import {validateNoDerivedComputationsInEffects} from '../Validation/ValidateNoDerivedComputationsInEffects';
 import {validateNoDerivedComputationsInEffects_exp} from '../Validation/ValidateNoDerivedComputationsInEffects_exp';
 import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
+import {optimizeForSSR} from '../Optimization/OptimizeForSSR';
+import {validateExhaustiveDependencies} from '../Validation/ValidateExhaustiveDependencies';
 import {validateSourceLocations} from '../Validation/ValidateSourceLocations';
 
 export type CompilerPipelineValue =
@@ -119,7 +120,7 @@ function run(
   >,
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
-  mode: CompilerMode,
+  mode: CompilerOutputMode,
   programContext: ProgramContext,
   logger: Logger | null,
   filename: string | null,
@@ -169,7 +170,7 @@ function runWithEnvironment(
   validateUseMemo(hir).unwrap();
 
   if (
-    env.isInferredMemoEnabled &&
+    env.enableDropManualMemoization &&
     !env.config.enablePreserveExistingManualUseMemo &&
     !env.config.disableMemoizationForDebugging &&
     !env.config.enableChangeDetectionForDebugging
@@ -205,7 +206,7 @@ function runWithEnvironment(
   inferTypes(hir);
   log({kind: 'hir', name: 'InferTypes', value: hir});
 
-  if (env.isInferredMemoEnabled) {
+  if (env.enableValidations) {
     if (env.config.validateHooksUsage) {
       validateHooksUsage(hir).unwrap();
     }
@@ -231,10 +232,15 @@ function runWithEnvironment(
 
   const mutabilityAliasingErrors = inferMutationAliasingEffects(hir);
   log({kind: 'hir', name: 'InferMutationAliasingEffects', value: hir});
-  if (env.isInferredMemoEnabled) {
+  if (env.enableValidations) {
     if (mutabilityAliasingErrors.isErr()) {
       throw mutabilityAliasingErrors.unwrapErr();
     }
+  }
+
+  if (env.outputMode === 'ssr') {
+    optimizeForSSR(hir);
+    log({kind: 'hir', name: 'OptimizeForSSR', value: hir});
   }
 
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
@@ -253,14 +259,14 @@ function runWithEnvironment(
     isFunctionExpression: false,
   });
   log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
-  if (env.isInferredMemoEnabled) {
+  if (env.enableValidations) {
     if (mutabilityAliasingRangeErrors.isErr()) {
       throw mutabilityAliasingRangeErrors.unwrapErr();
     }
     validateLocalsNotReassignedAfterRender(hir);
   }
 
-  if (env.isInferredMemoEnabled) {
+  if (env.enableValidations) {
     if (env.config.assertValidMutableRanges) {
       assertValidMutableRanges(hir);
     }
@@ -297,6 +303,11 @@ function runWithEnvironment(
   inferReactivePlaces(hir);
   log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
 
+  if (env.config.validateExhaustiveMemoizationDependencies) {
+    // NOTE: this relies on reactivity inference running first
+    validateExhaustiveDependencies(hir).unwrap();
+  }
+
   rewriteInstructionKindsBasedOnReassignment(hir);
   log({
     kind: 'hir',
@@ -304,11 +315,11 @@ function runWithEnvironment(
     value: hir,
   });
 
-  if (env.isInferredMemoEnabled) {
-    if (env.config.validateStaticComponents) {
-      env.logErrors(validateStaticComponents(hir));
-    }
+  if (env.enableValidations && env.config.validateStaticComponents) {
+    env.logErrors(validateStaticComponents(hir));
+  }
 
+  if (env.enableMemoization) {
     /**
      * Only create reactive scopes (which directly map to generated memo blocks)
      * if inferred memoization is enabled. This makes all later passes which
@@ -580,7 +591,7 @@ export function compileFn(
   >,
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
-  mode: CompilerMode,
+  mode: CompilerOutputMode,
   programContext: ProgramContext,
   logger: Logger | null,
   filename: string | null,
