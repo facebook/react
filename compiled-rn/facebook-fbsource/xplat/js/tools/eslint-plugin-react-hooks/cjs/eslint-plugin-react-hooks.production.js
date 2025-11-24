@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<97f63bdc6dcd509f18a3772c6cae7efd>>
+ * @generated SignedSource<<2337e63004f055225e280f413b58803c>>
  */
 
 'use strict';
@@ -18854,6 +18854,10 @@ function isSubPath(subpath, path) {
     return (subpath.length <= path.length &&
         subpath.every((item, ix) => item.property === path[ix].property &&
             item.optional === path[ix].optional));
+}
+function isSubPathIgnoringOptionals(subpath, path) {
+    return (subpath.length <= path.length &&
+        subpath.every((item, ix) => item.property === path[ix].property));
 }
 function getPlaceScope(id, place) {
     const scope = place.identifier.scope;
@@ -53354,15 +53358,14 @@ function validateExhaustiveDependencies(fn) {
                 reason: 'Unexpected function dependency',
                 loc: value.loc,
             });
-            const isRequiredDependency = reactive.has(inferredDependency.identifier.id) ||
-                !isStableType(inferredDependency.identifier);
+            const isRequiredDependency = reactive.has(inferredDependency.identifier.id);
             let hasMatchingManualDependency = false;
             for (const manualDependency of manualDependencies) {
                 if (manualDependency.root.kind === 'NamedLocal' &&
                     manualDependency.root.value.identifier.id ===
                         inferredDependency.identifier.id &&
                     (areEqualPaths(manualDependency.path, inferredDependency.path) ||
-                        isSubPath(manualDependency.path, inferredDependency.path))) {
+                        isSubPathIgnoringOptionals(manualDependency.path, inferredDependency.path))) {
                     hasMatchingManualDependency = true;
                     matched.add(manualDependency);
                     if (!isRequiredDependency) {
@@ -53381,10 +53384,7 @@ function validateExhaustiveDependencies(fn) {
             extra.push(dep);
         }
         retainWhere(extra, dep => {
-            const isNonReactiveStableValue = dep.root.kind === 'NamedLocal' &&
-                !dep.root.value.reactive &&
-                isStableType(dep.root.value.identifier);
-            return !isNonReactiveStableValue;
+            return dep.root.kind === 'Global' || dep.root.value.reactive;
         });
         if (missing.length !== 0 || extra.length !== 0) {
             let suggestions = null;
