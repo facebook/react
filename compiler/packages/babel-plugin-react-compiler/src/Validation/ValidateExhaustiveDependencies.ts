@@ -24,6 +24,7 @@ import {
   InstructionKind,
   isStableType,
   isSubPath,
+  isSubPathIgnoringOptionals,
   isUseRefType,
   LoadGlobal,
   ManualMemoDependency,
@@ -240,7 +241,10 @@ export function validateExhaustiveDependencies(
           manualDependency.root.value.identifier.id ===
             inferredDependency.identifier.id &&
           (areEqualPaths(manualDependency.path, inferredDependency.path) ||
-            isSubPath(manualDependency.path, inferredDependency.path))
+            isSubPathIgnoringOptionals(
+              manualDependency.path,
+              inferredDependency.path,
+            ))
         ) {
           hasMatchingManualDependency = true;
           matched.add(manualDependency);
