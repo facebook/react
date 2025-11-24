@@ -18353,7 +18353,7 @@ function getRuleForCategoryImpl(category) {
                 severity: ErrorSeverity.Error,
                 name: 'memo-dependencies',
                 description: 'Validates that useMemo() and useCallback() specify comprehensive dependencies without extraneous values. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
-                preset: LintRulePreset.Off,
+                preset: LintRulePreset.RecommendedLatest,
             };
         }
         case ErrorCategory.IncompatibleLibrary: {
@@ -18868,10 +18868,6 @@ function isSubPath(subpath, path) {
     return (subpath.length <= path.length &&
         subpath.every((item, ix) => item.property === path[ix].property &&
             item.optional === path[ix].optional));
-}
-function isSubPathIgnoringOptionals(subpath, path) {
-    return (subpath.length <= path.length &&
-        subpath.every((item, ix) => item.property === path[ix].property));
 }
 function getPlaceScope(id, place) {
     const scope = place.identifier.scope;
@@ -53578,14 +53574,15 @@ function validateExhaustiveDependencies(fn) {
                 reason: 'Unexpected function dependency',
                 loc: value.loc,
             });
-            const isRequiredDependency = reactive.has(inferredDependency.identifier.id);
+            const isRequiredDependency = reactive.has(inferredDependency.identifier.id) ||
+                !isStableType(inferredDependency.identifier);
             let hasMatchingManualDependency = false;
             for (const manualDependency of manualDependencies) {
                 if (manualDependency.root.kind === 'NamedLocal' &&
                     manualDependency.root.value.identifier.id ===
                         inferredDependency.identifier.id &&
                     (areEqualPaths(manualDependency.path, inferredDependency.path) ||
-                        isSubPathIgnoringOptionals(manualDependency.path, inferredDependency.path))) {
+                        isSubPath(manualDependency.path, inferredDependency.path))) {
                     hasMatchingManualDependency = true;
                     matched.add(manualDependency);
                     if (!isRequiredDependency) {
@@ -53603,9 +53600,6 @@ function validateExhaustiveDependencies(fn) {
             }
             extra.push(dep);
         }
-        retainWhere(extra, dep => {
-            return dep.root.kind === 'Global' || dep.root.value.reactive;
-        });
         if (missing.length !== 0 || extra.length !== 0) {
             let suggestions = null;
             if (startMemo.depsLoc != null && typeof startMemo.depsLoc !== 'symbol') {
@@ -53621,7 +53615,7 @@ function validateExhaustiveDependencies(fn) {
             if (missing.length !== 0) {
                 const diagnostic = CompilerDiagnostic.create({
                     category: ErrorCategory.MemoDependencies,
-                    reason: 'Found missing memoization dependencies',
+                    reason: 'Found non-exhaustive dependencies',
                     description: 'Missing dependencies can cause a value not to update when those inputs change, ' +
                         'resulting in stale UI',
                     suggestions,
@@ -53645,7 +53639,7 @@ function validateExhaustiveDependencies(fn) {
                     category: ErrorCategory.MemoDependencies,
                     reason: 'Found unnecessary memoization dependencies',
                     description: 'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-                        'causing performance regressions and effects to fire more often than expected',
+                        'which can cause effects to run more than expected',
                 });
                 diagnostic.withDetails({
                     kind: 'error',
@@ -54170,10 +54164,8 @@ function runWithEnvironment(func, env) {
     }
     inferReactivePlaces(hir);
     log({ kind: 'hir', name: 'InferReactivePlaces', value: hir });
-    if (env.enableValidations) {
-        if (env.config.validateExhaustiveMemoizationDependencies) {
-            validateExhaustiveDependencies(hir).unwrap();
-        }
+    if (env.config.validateExhaustiveMemoizationDependencies) {
+        validateExhaustiveDependencies(hir).unwrap();
     }
     rewriteInstructionKindsBasedOnReassignment(hir);
     log({
