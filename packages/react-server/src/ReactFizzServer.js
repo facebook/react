@@ -77,6 +77,9 @@ import {
   writeClientRenderBoundaryInstruction,
   writeCompletedBoundaryInstruction,
   writeCompletedSegmentInstruction,
+  writeClientRenderListInstruction,
+  writeAppendListInstruction,
+  writeCompletedListInstruction,
   writeHoistablesForBoundary,
   pushTextInstance,
   pushStartInstance,
@@ -245,6 +248,7 @@ type LegacyContext = {
 type SuspenseList = {
   id: number,
   forwards: boolean,
+  totalRows: number,
   completedRows: number,
 };
 
@@ -1866,6 +1870,7 @@ function createSuspenseList(forwards: boolean): SuspenseList {
   return {
     id: -1,
     forwards: forwards,
+    totalRows: 0,
     completedRows: 0,
   };
 }
@@ -2033,6 +2038,8 @@ function renderSuspenseListRows(
 
         task.row = suspenseListRow;
         task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+
+        suspenseList.totalRows++;
 
         const rowBoundary = createSuspenseBoundary(
           request,
@@ -5781,9 +5788,9 @@ function flushSuspenseListSegment(
   boundary: SuspenseBoundary,
   hoistableState: null | HoistableState,
 ): boolean {
-  // This segment is a Suspense boundary. We need to decide whether to
-  // emit the content or the fallback now.
+  // This segment is a SuspenseList boundary row.
   if (boundary.status === CLIENT_RENDERED) {
+    suspenseList.completedRows++;
     // The suspense list didn't complete all the way. Emit a marker to continue on the client.
     if (__DEV__) {
       return writeClientRenderedSuspenseListMarker(
@@ -5870,6 +5877,8 @@ function flushSuspenseListSegment(
         finishSuspenseListRow(request, row);
       }
     }
+
+    suspenseList.completedRows++;
 
     // We can inline this row's content without any additional markers.
     const completedSegments = boundary.completedSegments;
@@ -6036,28 +6045,55 @@ function flushClientRenderedBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
-  if (__DEV__) {
-    return writeClientRenderBoundaryInstruction(
-      destination,
-      request.resumableState,
-      request.renderState,
-      boundary.rootSegmentID,
-      boundary.errorDigest,
-      boundary.errorMessage,
-      boundary.errorStack,
-      boundary.errorComponentStack,
-    );
+  const suspenseList = boundary.list;
+  if (suspenseList !== null) {
+    if (__DEV__) {
+      return writeClientRenderListInstruction(
+        destination,
+        request.resumableState,
+        request.renderState,
+        suspenseList.id,
+        boundary.errorDigest,
+        boundary.errorMessage,
+        boundary.errorStack,
+        boundary.errorComponentStack,
+      );
+    } else {
+      return writeClientRenderListInstruction(
+        destination,
+        request.resumableState,
+        request.renderState,
+        suspenseList.id,
+        boundary.errorDigest,
+        null,
+        null,
+        null,
+      );
+    }
   } else {
-    return writeClientRenderBoundaryInstruction(
-      destination,
-      request.resumableState,
-      request.renderState,
-      boundary.rootSegmentID,
-      boundary.errorDigest,
-      null,
-      null,
-      null,
-    );
+    if (__DEV__) {
+      return writeClientRenderBoundaryInstruction(
+        destination,
+        request.resumableState,
+        request.renderState,
+        boundary.rootSegmentID,
+        boundary.errorDigest,
+        boundary.errorMessage,
+        boundary.errorStack,
+        boundary.errorComponentStack,
+      );
+    } else {
+      return writeClientRenderBoundaryInstruction(
+        destination,
+        request.resumableState,
+        request.renderState,
+        boundary.rootSegmentID,
+        boundary.errorDigest,
+        null,
+        null,
+        null,
+      );
+    }
   }
 }
 
@@ -6105,13 +6141,40 @@ function flushCompletedBoundary(
     boundary.contentState,
     request.renderState,
   );
-  return writeCompletedBoundaryInstruction(
-    destination,
-    request.resumableState,
-    request.renderState,
-    boundary.rootSegmentID,
-    boundary.contentState,
-  );
+
+  const suspenseList = boundary.list;
+  if (suspenseList !== null) {
+    suspenseList.completedRows++;
+    if (suspenseList.completedRows < suspenseList.totalRows) {
+      return writeAppendListInstruction(
+        destination,
+        request.resumableState,
+        request.renderState,
+        suspenseList.id,
+        boundary.rootSegmentID,
+        boundary.contentState,
+        suspenseList.forwards,
+      );
+    } else {
+      return writeCompletedListInstruction(
+        destination,
+        request.resumableState,
+        request.renderState,
+        suspenseList.id,
+        boundary.rootSegmentID,
+        boundary.contentState,
+        suspenseList.forwards,
+      );
+    }
+  } else {
+    return writeCompletedBoundaryInstruction(
+      destination,
+      request.resumableState,
+      request.renderState,
+      boundary.rootSegmentID,
+      boundary.contentState,
+    );
+  }
 }
 
 function flushPartialBoundary(
@@ -6181,7 +6244,6 @@ function flushPartiallyCompletedSegment(
         'A root segment ID must have been assigned by now. This is a bug in React.',
       );
     }
-
     return flushSegmentContainer(request, destination, segment, hoistableState);
   } else if (segmentID === boundary.rootSegmentID) {
     // When we emit postponed boundaries, we might have assigned the ID already

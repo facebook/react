@@ -95,6 +95,12 @@ export const writeCompletedBoundaryInstruction =
   $$$config.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$config.writeClientRenderBoundaryInstruction;
+export const writeAppendListInstruction = $$$config.writeAppendListInstruction;
+export const writeCompletedListInstruction =
+  $$$config.writeCompletedListInstruction;
+export const writeClientRenderListInstruction =
+  $$$config.writeClientRenderListInstruction;
+
 export const NotPendingTransition = $$$config.NotPendingTransition;
 export const createPreambleState = $$$config.createPreambleState;
 export const canHavePreamble = $$$config.canHavePreamble;

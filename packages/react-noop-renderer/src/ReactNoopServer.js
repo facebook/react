@@ -352,6 +352,45 @@ const ReactNoopServer = ReactFizzServer({
     return true;
   },
 
+  writeAppendListInstruction(
+    destination: Destination,
+    renderState: RenderState,
+    boundary: SuspenseInstance,
+    contentSegmentID: number,
+  ): boolean {
+    const segment = destination.segments.get(contentSegmentID);
+    if (!segment) {
+      throw new Error('Missing segment.');
+    }
+    boundary.children = segment.children;
+    boundary.state = 'appended';
+    return true;
+  },
+
+  writeCompletedListInstruction(
+    destination: Destination,
+    renderState: RenderState,
+    boundary: SuspenseInstance,
+    contentSegmentID: number,
+  ): boolean {
+    const segment = destination.segments.get(contentSegmentID);
+    if (!segment) {
+      throw new Error('Missing segment.');
+    }
+    boundary.children = segment.children;
+    boundary.state = 'complete';
+    return true;
+  },
+
+  writeClientRenderedSuspenseListMarker(
+    destination: Destination,
+    renderState: RenderState,
+    boundary: SuspenseInstance,
+  ): boolean {
+    boundary.status = 'client-render';
+    return true;
+  },
+
   writePreambleStart() {},
   writePreambleEnd() {},
   writeHoistables() {},
