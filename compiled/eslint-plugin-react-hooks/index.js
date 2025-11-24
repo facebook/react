@@ -18869,6 +18869,10 @@ function isSubPath(subpath, path) {
         subpath.every((item, ix) => item.property === path[ix].property &&
             item.optional === path[ix].optional));
 }
+function isSubPathIgnoringOptionals(subpath, path) {
+    return (subpath.length <= path.length &&
+        subpath.every((item, ix) => item.property === path[ix].property));
+}
 function getPlaceScope(id, place) {
     const scope = place.identifier.scope;
     if (scope !== null && isScopeActive(scope, id)) {
@@ -53582,7 +53586,7 @@ function validateExhaustiveDependencies(fn) {
                     manualDependency.root.value.identifier.id ===
                         inferredDependency.identifier.id &&
                     (areEqualPaths(manualDependency.path, inferredDependency.path) ||
-                        isSubPath(manualDependency.path, inferredDependency.path))) {
+                        isSubPathIgnoringOptionals(manualDependency.path, inferredDependency.path))) {
                     hasMatchingManualDependency = true;
                     matched.add(manualDependency);
                     if (!isRequiredDependency) {
