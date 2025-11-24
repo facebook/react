@@ -53578,8 +53578,7 @@ function validateExhaustiveDependencies(fn) {
                 reason: 'Unexpected function dependency',
                 loc: value.loc,
             });
-            const isRequiredDependency = reactive.has(inferredDependency.identifier.id) ||
-                !isStableType(inferredDependency.identifier);
+            const isRequiredDependency = reactive.has(inferredDependency.identifier.id);
             let hasMatchingManualDependency = false;
             for (const manualDependency of manualDependencies) {
                 if (manualDependency.root.kind === 'NamedLocal' &&
@@ -53605,10 +53604,7 @@ function validateExhaustiveDependencies(fn) {
             extra.push(dep);
         }
         retainWhere(extra, dep => {
-            const isNonReactiveStableValue = dep.root.kind === 'NamedLocal' &&
-                !dep.root.value.reactive &&
-                isStableType(dep.root.value.identifier);
-            return !isNonReactiveStableValue;
+            return dep.root.kind === 'Global' || dep.root.value.reactive;
         });
         if (missing.length !== 0 || extra.length !== 0) {
             let suggestions = null;
