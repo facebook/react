@@ -284,7 +284,7 @@ export function validateExhaustiveDependencies(
       if (missing.length !== 0) {
         const diagnostic = CompilerDiagnostic.create({
           category: ErrorCategory.MemoDependencies,
-          reason: 'Found non-exhaustive dependencies',
+          reason: 'Found missing memoization dependencies',
           description:
             'Missing dependencies can cause a value not to update when those inputs change, ' +
             'resulting in stale UI',
@@ -309,7 +309,7 @@ export function validateExhaustiveDependencies(
           reason: 'Found unnecessary memoization dependencies',
           description:
             'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-            'which can cause effects to run more than expected',
+            'causing performance regressions and effects to fire more often than expected',
         });
         diagnostic.withDetails({
           kind: 'error',
