@@ -5,11 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @gate enableStore
  */
 
 'use strict';
 
-let useStoreWithSelector;
+let useStore;
 let React;
 let ReactNoop;
 let Scheduler;
@@ -20,7 +21,7 @@ let waitFor;
 let assertLog;
 let assertConsoleErrorDev;
 
-describe('useStoreWithSelector', () => {
+describe('useStore', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -34,14 +35,14 @@ describe('useStoreWithSelector', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     createStore = React.createStore;
-    useStoreWithSelector = React.useStoreWithSelector;
+    useStore = React.useStore;
     startTransition = React.startTransition;
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
     assertLog = InternalTestUtils.assertLog;
   });
 
-  it('useStoreWithSelector', async () => {
+  it('useStore', async () => {
     function counterReducer(
       count: number,
       action: {type: 'increment' | 'decrement'},
@@ -64,7 +65,7 @@ describe('useStoreWithSelector', () => {
     }
 
     function App() {
-      const value = useStoreWithSelector(store, identity);
+      const value = useStore(store, identity);
       Scheduler.log({kind: 'render', value});
       return <>{value}</>;
     }
@@ -128,7 +129,7 @@ describe('useStoreWithSelector', () => {
     }
 
     function App() {
-      const value = useStoreWithSelector(store, identity);
+      const value = useStore(store, identity);
       Scheduler.log({kind: 'render', value});
       return <>{value}</>;
     }
@@ -202,7 +203,7 @@ describe('useStoreWithSelector', () => {
     }
 
     function StoreReader({componentName}) {
-      const value = useStoreWithSelector(store, identity);
+      const value = useStore(store, identity);
       Scheduler.log({kind: 'render', value, componentName});
       return <>{value}</>;
     }
@@ -300,13 +301,13 @@ describe('useStoreWithSelector', () => {
     }
 
     function StoreReader({componentName}) {
-      const value = useStoreWithSelector(store, identity);
+      const value = useStore(store, identity);
       Scheduler.log({kind: 'render', value, componentName});
       return <>{value}</>;
     }
 
     function App() {
-      const value = useStoreWithSelector(store, identity);
+      const value = useStore(store, identity);
       Scheduler.log({kind: 'render', value, componentName: 'App'});
       return (
         <>
@@ -376,7 +377,7 @@ describe('useStoreWithSelector', () => {
     }
 
     function StoreReader({componentName}) {
-      const value = useStoreWithSelector(store, identity);
+      const value = useStore(store, identity);
       Scheduler.log({kind: 'render', value, componentName});
       return <>{value}</>;
     }
@@ -452,7 +453,7 @@ describe('useStoreWithSelector', () => {
     }
 
     function App() {
-      const value = useStoreWithSelector(store, isEven);
+      const value = useStore(store, isEven);
       Scheduler.log({kind: 'render', value, componentName: 'App'});
       return <>{value ? 'true' : 'false'}</>;
     }

@@ -65,6 +65,7 @@ export const enableTransitionTracing: boolean = false;
 export const enableTrustedTypesIntegration: boolean = false;
 export const enableUpdaterTracking: boolean = __PROFILE__;
 export const enableUseEffectEventHook: boolean = true;
+export const enableStore: boolean = true;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;

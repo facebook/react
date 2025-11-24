@@ -61,7 +61,7 @@ export type HookType =
   | 'useDeferredValue'
   | 'useTransition'
   | 'useSyncExternalStore'
-  | 'useStoreWithSelector'
+  | 'useStore'
   | 'useId'
   | 'useCacheRefresh'
   | 'useOptimistic'
@@ -443,10 +443,11 @@ export type Dispatcher = {
     getSnapshot: () => T,
     getServerSnapshot?: () => T,
   ): T,
-  useStoreWithSelector<S, T>(
+  // TODO: Non-nullable once `enableStore` is on everywhere.
+  useStore?: <S, T>(
     store: ReactStore<S, mixed>,
-    selector: (state: S) => T,
-  ): T,
+    selector?: (state: S) => T,
+  ) => S | T,
   useId(): string,
   useCacheRefresh: () => <T>(?() => T, ?T) => void,
   useMemoCache: (size: number) => Array<any>,

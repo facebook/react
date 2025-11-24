@@ -199,12 +199,13 @@ export function useSyncExternalStore<T>(
   );
 }
 
-export function useStoreWithSelector<T, S>(
+export function useStore<S, T>(
   store: ReactStore<S, mixed>,
-  selector: S => T,
-): T {
+  selector?: (state: S) => T,
+): S | T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useStoreWithSelector(store, selector);
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
+  return dispatcher.useStore(store, selector);
 }
 
 export function useCacheRefresh(): <T>(?() => T, ?T) => void {

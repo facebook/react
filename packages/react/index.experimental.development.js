@@ -21,7 +21,6 @@ export {
   createContext,
   createElement,
   createRef,
-  createStore,
   use,
   forwardRef,
   isValidElement,
@@ -54,12 +53,13 @@ export {
   useRef,
   useState,
   useSyncExternalStore,
-  useStoreWithSelector,
+  useStore,
   useTransition,
   useActionState,
   version,
   act, // DEV-only
   captureOwnerStack, // DEV-only
+  createStore,
 } from './src/ReactClient';
 
 import {useOptimistic} from './src/ReactClient';

@@ -33,6 +33,7 @@ export const enableSuspenseAvoidThisFallback: boolean = false;
 export const enableCPUSuspense: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
 export const enableUseEffectEventHook: boolean = true;
+export const enableStore: boolean = true;
 export const enableLegacyFBSupport: boolean = false;
 export const enableMoveBefore: boolean = false;
 export const enableHiddenSubtreeInsertionEffectCleanup: boolean = false;

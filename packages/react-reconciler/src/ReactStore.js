@@ -8,11 +8,18 @@
  */
 
 import type {ReactStore} from 'shared/ReactTypes';
+import {enableStore} from 'shared/ReactFeatureFlags';
 
 export function createStore<S, A>(
   reducer: (S, A) => S,
   initialValue: S,
 ): ReactStore<S, A> {
+  if (!enableStore) {
+    throw new Error(
+      'createStore is not available because the enableStore feature flag is not enabled.',
+    );
+  }
+
   const subscriptions = new Set<(action: A) => void>();
 
   let state = initialValue;

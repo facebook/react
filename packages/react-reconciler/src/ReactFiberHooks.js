@@ -40,6 +40,7 @@ import {
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableUseEffectEventHook,
+  enableStore,
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
@@ -243,7 +244,7 @@ type StoreConsistencyCheck<T> = {
 };
 
 // TODO: Use something other than null
-type StoreWithSelectorQueue<T> = {
+type StoreQueue<T> = {
   syncEagerState: T | null,
   transitionEagerState: T | null,
   lanes: Lanes,
@@ -1821,17 +1822,20 @@ function updateSyncExternalStore<T>(
   return nextSnapshot;
 }
 
-// Used as a placeholder to let us reuse updateReducerImpl for useStoreWithSelector.
+// Used as a placeholder to let us reuse updateReducerImpl for useStore.
 function storeReducer<S, A>(state: S, action: A): S {
   throw new Error(
-    'Should never be called. This is a bug in React. Please file an issue.',
+    'storeReducer should never be called. This is a bug in React. Please file an issue.',
   );
 }
 
-function mountStoreWithSelector<S, T>(
-  store: ReactStore<S, mixed>,
-  selector: S => T,
-): T {
+function identity<T>(x: T): T {
+  return x;
+}
+
+function mountStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
+  const actualSelector: S => T =
+    selector === undefined ? (identity: any) : selector;
   const root = ((getWorkInProgressRoot(): any): FiberRoot);
   if (root.storeTracker === null) {
     root.storeTracker = new StoreTracker();
@@ -1841,7 +1845,7 @@ function mountStoreWithSelector<S, T>(
   const fiber = currentlyRenderingFiber;
   const storeState = wrapper.getStateForLanes(renderLanes);
 
-  const initialState = selector(storeState);
+  const initialState = actualSelector(storeState);
 
   const hook = mountWorkInProgressHook();
 
@@ -1856,7 +1860,7 @@ function mountStoreWithSelector<S, T>(
   hook.queue = queue;
 
   mountEffect(
-    createSubscription.bind(null, wrapper, fiber, selector, queue),
+    createSubscription.bind(null, wrapper, fiber, actualSelector, queue),
     [],
   );
 
@@ -1864,7 +1868,7 @@ function mountStoreWithSelector<S, T>(
   // bring the selected state up to date with the transition state.
   const transitionState = wrapper.getStateForLanes(SomeTransitionLane);
   if (!is(storeState, transitionState)) {
-    const newState = selector(transitionState);
+    const newState = actualSelector(transitionState);
     const lane = SomeTransitionLane;
     const update: Update<T, mixed> = {
       lane,
@@ -1880,7 +1884,7 @@ function mountStoreWithSelector<S, T>(
     if (updateRoot !== null) {
       startUpdateTimerByLane(
         lane,
-        'useStoreWithSelector mount mid transition fixup',
+        'useStore mount mid transition fixup',
         fiber,
       );
       scheduleUpdateOnFiber(updateRoot, fiber, lane);
@@ -1890,10 +1894,9 @@ function mountStoreWithSelector<S, T>(
   return initialState;
 }
 
-function updateStoreWithSelector<S, T>(
-  store: ReactStore<S, mixed>,
-  selector: S => T,
-): T {
+function updateStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
+  const actualSelector: S => T =
+    selector === undefined ? (identity: any) : selector;
   const root = ((getWorkInProgressRoot(): any): FiberRoot);
   if (root.storeTracker === null) {
     // TODO: This could be an invariant violation if the store was not
@@ -1913,7 +1916,7 @@ function updateStoreWithSelector<S, T>(
   const queue = hook.queue;
 
   updateEffect(
-    createSubscription.bind(null, wrapper, fiber, selector, queue),
+    createSubscription.bind(null, wrapper, fiber, actualSelector, queue),
     [],
   );
   return state;
@@ -4081,7 +4084,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
-  useStoreWithSelector: throwInvalidHookError,
   useId: throwInvalidHookError,
   useHostTransitionStatus: throwInvalidHookError,
   useFormState: throwInvalidHookError,
@@ -4092,6 +4094,9 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
+}
+if (enableStore) {
+  (ContextOnlyDispatcher: Dispatcher).useStore = throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -4112,7 +4117,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
   useSyncExternalStore: mountSyncExternalStore,
-  useStoreWithSelector: mountStoreWithSelector,
   useId: mountId,
   useHostTransitionStatus: useHostTransitionStatus,
   useFormState: mountActionState,
@@ -4123,6 +4127,9 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
+}
+if (enableStore) {
+  (HooksDispatcherOnMount: Dispatcher).useStore = mountStore;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -4143,7 +4150,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
   useSyncExternalStore: updateSyncExternalStore,
-  useStoreWithSelector: updateStoreWithSelector,
   useId: updateId,
   useHostTransitionStatus: useHostTransitionStatus,
   useFormState: updateActionState,
@@ -4154,6 +4160,9 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
+}
+if (enableStore) {
+  (HooksDispatcherOnUpdate: Dispatcher).useStore = updateStore;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -4174,7 +4183,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
   useSyncExternalStore: updateSyncExternalStore,
-  useStoreWithSelector: updateStoreWithSelector,
   useId: updateId,
   useHostTransitionStatus: useHostTransitionStatus,
   useFormState: rerenderActionState,
@@ -4185,6 +4193,9 @@ const HooksDispatcherOnRerender: Dispatcher = {
 };
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
+}
+if (enableStore) {
+  (HooksDispatcherOnRerender: Dispatcher).useStore = updateStore;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -4336,13 +4347,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStoreWithSelector<S, T>(
-      store: ReactStore<S, mixed>,
-      selector: (state: S) => T,
-    ): T {
-      currentHookNameInDev = 'useStoreWithSelector';
+    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
       mountHookTypesDev();
-      return mountStoreWithSelector(store, selector);
+      return mountStore(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -4393,6 +4401,16 @@ if (__DEV__) {
         mountHookTypesDev();
         return mountEvent(callback);
       };
+  }
+  if (enableStore) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useStore = function useStore<
+      S,
+      T,
+    >(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
+      mountHookTypesDev();
+      return mountStore(store, selector);
+    };
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -4511,13 +4529,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStoreWithSelector<S, T>(
-      store: ReactStore<S, mixed>,
-      selector: (state: S) => T,
-    ): T {
-      currentHookNameInDev = 'useStoreWithSelector';
+    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
       updateHookTypesDev();
-      return mountStoreWithSelector(store, selector);
+      return mountStore(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -4567,6 +4582,17 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return mountEvent(callback);
+      };
+  }
+  if (enableStore) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useStore =
+      function useStore<S, T>(
+        store: ReactStore<S, mixed>,
+        selector?: (state: S) => T,
+      ): T {
+        currentHookNameInDev = 'useStore';
+        updateHookTypesDev();
+        return mountStore(store, selector);
       };
   }
 
@@ -4686,13 +4712,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStoreWithSelector<S, T>(
-      store: ReactStore<S, mixed>,
-      selector: (state: S) => T,
-    ): T {
-      currentHookNameInDev = 'useStoreWithSelector';
+    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
       updateHookTypesDev();
-      return updateStoreWithSelector(store, selector);
+      return updateStore(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -4743,6 +4766,16 @@ if (__DEV__) {
         updateHookTypesDev();
         return updateEvent(callback);
       };
+  }
+  if (enableStore) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useStore = function useStore<
+      S,
+      T,
+    >(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
+      updateHookTypesDev();
+      return updateStore(store, selector);
+    };
   }
 
   HooksDispatcherOnRerenderInDEV = {
@@ -4861,13 +4894,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStoreWithSelector<S, T>(
-      store: ReactStore<S, mixed>,
-      selector: (state: S) => T,
-    ): T {
-      currentHookNameInDev = 'useStoreWithSelector';
+    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
       updateHookTypesDev();
-      return updateStoreWithSelector(store, selector);
+      return updateStore(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -4918,6 +4948,16 @@ if (__DEV__) {
         updateHookTypesDev();
         return updateEvent(callback);
       };
+  }
+  if (enableStore) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useStore = function useStore<
+      S,
+      T,
+    >(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
+      updateHookTypesDev();
+      return updateStore(store, selector);
+    };
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -5054,14 +5094,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStoreWithSelector<S, T>(
-      store: ReactStore<S, mixed>,
-      selector: (state: S) => T,
-    ): T {
-      currentHookNameInDev = 'useStoreWithSelector';
+    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountStoreWithSelector(store, selector);
+      return mountStore(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -5118,6 +5155,18 @@ if (__DEV__) {
         warnInvalidHookAccess();
         mountHookTypesDev();
         return mountEvent(callback);
+      };
+  }
+  if (enableStore) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useStore =
+      function useStore<S, T>(
+        store: ReactStore<S, mixed>,
+        selector?: (state: S) => T,
+      ): T {
+        currentHookNameInDev = 'useStore';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountStore(store, selector);
       };
   }
 
@@ -5255,14 +5304,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStoreWithSelector<S, T>(
-      store: ReactStore<S, mixed>,
-      selector: (state: S) => T,
-    ): T {
-      currentHookNameInDev = 'useStoreWithSelector';
+    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateStoreWithSelector(store, selector);
+      return updateStore(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -5319,6 +5365,18 @@ if (__DEV__) {
         warnInvalidHookAccess();
         updateHookTypesDev();
         return updateEvent(callback);
+      };
+  }
+  if (enableStore) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useStore =
+      function useStore<S, T>(
+        store: ReactStore<S, mixed>,
+        selector?: (state: S) => T,
+      ): T {
+        currentHookNameInDev = 'useStore';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateStore(store, selector);
       };
   }
 
@@ -5456,14 +5514,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStoreWithSelector<S, T>(
-      store: ReactStore<S, mixed>,
-      selector: (state: S) => T,
-    ): T {
-      currentHookNameInDev = 'useStoreWithSelector';
+    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+      currentHookNameInDev = 'useStore';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateStoreWithSelector(store, selector);
+      return updateStore(store, selector);
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -5520,6 +5575,18 @@ if (__DEV__) {
         warnInvalidHookAccess();
         updateHookTypesDev();
         return updateEvent(callback);
+      };
+  }
+  if (enableStore) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useStore =
+      function useStore<S, T>(
+        store: ReactStore<S, mixed>,
+        selector?: (state: S) => T,
+      ): T {
+        currentHookNameInDev = 'useStore';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateStore(store, selector);
       };
   }
 }

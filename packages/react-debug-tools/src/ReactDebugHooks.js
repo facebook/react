@@ -482,13 +482,11 @@ function useSyncExternalStore<T>(
   return value;
 }
 
-function useStoreWithSelector<S, T>(
+function useStore<S, T>(
   store: ReactStore<S, mixed>,
-  selector: (state: S) => T,
+  selector?: (state: S) => T,
 ): T {
-  throw new Error(
-    'useStoreWithSelector is not yet supported in React Debug Tools.',
-  );
+  throw new Error('useStore is not yet supported in React Debug Tools.');
 }
 
 function useTransition(): [
@@ -787,7 +785,7 @@ const Dispatcher: DispatcherType = {
   useDeferredValue,
   useTransition,
   useSyncExternalStore,
-  useStoreWithSelector,
+  useStore,
   useId,
   useHostTransitionStatus,
   useFormState,

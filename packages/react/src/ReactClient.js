@@ -35,7 +35,6 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {cache, cacheSignal} from './ReactCacheClient';
-import {createStore} from 'react-reconciler/src/ReactStore';
 import {
   getCacheForType,
   useCallback,
@@ -48,7 +47,7 @@ import {
   useLayoutEffect,
   useMemo,
   useSyncExternalStore,
-  useStoreWithSelector,
+  useStore,
   useReducer,
   useRef,
   useState,
@@ -66,6 +65,8 @@ import {addTransitionType} from './ReactTransitionType';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
 import * as ReactCompilerRuntime from './ReactCompilerRuntime';
+
+import {createStore} from 'react-reconciler/src/ReactStore';
 
 const Children = {
   map,
@@ -86,7 +87,6 @@ export {
   memo,
   cache,
   cacheSignal,
-  createStore,
   useCallback,
   useContext,
   useEffect,
@@ -99,7 +99,7 @@ export {
   useOptimistic,
   useActionState,
   useSyncExternalStore,
-  useStoreWithSelector,
+  useStore,
   useReducer,
   useRef,
   useState,
@@ -138,4 +138,5 @@ export {
   useId,
   act,
   captureOwnerStack,
+  createStore,
 };

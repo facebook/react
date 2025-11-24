@@ -39,7 +39,7 @@ import {
 } from './ReactFizzConfig';
 import {createFastHash} from './ReactServerStreamConfig';
 
-import {enableUseEffectEventHook} from 'shared/ReactFeatureFlags';
+import {enableUseEffectEventHook, enableStore} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
   REACT_CONTEXT_TYPE,
@@ -565,13 +565,11 @@ function useSyncExternalStore<T>(
   return getServerSnapshot();
 }
 
-function useStoreWithSelector<S, T>(
+function useStore<S, T>(
   store: ReactStore<S, mixed>,
-  selector: (state: S) => T,
+  selector?: (state: S) => T,
 ): T {
-  throw new Error(
-    'useStoreWithSelector is not yet supported during server rendering.',
-  );
+  throw new Error('useStore is not yet supported during server rendering.');
 }
 
 function useDeferredValue<T>(value: T, initialValue?: T): T {
@@ -837,7 +835,6 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useId,
       // Subscriptions are not setup in a server environment.
       useSyncExternalStore,
-      useStoreWithSelector,
       useOptimistic,
       useActionState,
       useFormState: useActionState,
@@ -862,7 +859,6 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useDeferredValue: clientHookNotSupported,
       useTransition: clientHookNotSupported,
       useSyncExternalStore: clientHookNotSupported,
-      useStoreWithSelector: clientHookNotSupported,
       useId,
       useHostTransitionStatus,
       useFormState: useActionState,
@@ -874,6 +870,11 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
 
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = useEffectEvent;
+}
+if (enableStore) {
+  HooksDispatcher.useStore = supportsClientAPIs
+    ? useStore
+    : clientHookNotSupported;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);
