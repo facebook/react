@@ -10,7 +10,7 @@
 import type {Lanes} from './ReactFiberLane';
 import type {ReactStore} from 'shared/ReactTypes';
 
-import {includesOnlyTransitions} from './ReactFiberLane';
+import {includesTransitionLane} from './ReactFiberLane';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
 
@@ -44,14 +44,16 @@ export class StoreWrapper<S, A> {
     }
   }
   getStateForLanes(lanes: Lanes): S {
-    const isTransition = includesOnlyTransitions(lanes);
+    const isTransition = includesTransitionLane(lanes);
     return isTransition ? this._headState : this._committedState;
   }
   subscribe(callback: () => void): () => void {
+    // TODO: Have our own subscription mechanism such that fibers subscribe to the wrapper
+    // and the wrapper can subscribe to the store.
     return this.store.subscribe(callback);
   }
   commitFinished(lanes: Lanes) {
-    this._committedState = this._headState;
+    this._committedState = this.getStateForLanes(lanes);
   }
   dispose() {
     this._unsubscribe();

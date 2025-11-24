@@ -17,7 +17,7 @@ export function createStore<S, A>(
 
   let state = initialValue;
 
-  const self = {
+  return {
     getState(): S {
       return state;
     },
@@ -33,5 +33,4 @@ export function createStore<S, A>(
       };
     },
   };
-  return self;
 }

@@ -388,9 +388,18 @@ export type ProfilerProps = {
   children?: ReactNodeList,
 };
 
-export type ReactStore<S, A> = {
+export type ReactExternalDataSource<S, A> = {
+  // Get the current state of the store.
   getState(): S,
+  // The stable reducer function used by the store to produce new states.
   reducer: (S, A) => S,
+  // Subscribe to the store. The callback will be called after the state has
+  // updated and includes the action that was dispatched.
   subscribe: (callback: (action: A) => void) => () => void,
+};
+
+export type ReactStore<S, A> = {
+  ...ReactExternalDataSource<S, A>,
+  // Dispatch an action to the store.
   dispatch: (action: A) => void,
 };
