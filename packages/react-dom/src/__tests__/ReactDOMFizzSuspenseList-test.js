@@ -1526,9 +1526,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(getVisibleChildren(container)).toEqual(<div>{['A', 'B', 'C']}</div>);
 
     const textNodes = 3;
-    const boundaryComments = gate(flags => flags.enableFizzSuspenseListTail)
-      ? 2 * textNodes // TODO: One we remove the comments around boundaries this should be zero.
-      : 0;
+    const boundaryComments = 0;
     const textSeparators = gate(flags => flags.enableFizzSuspenseListTail)
       ? textNodes // One after each node.
       : textNodes - 1; // One between each node
@@ -1558,9 +1556,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(getVisibleChildren(container)).toEqual(<div>{['A', 'B', 'C']}</div>);
 
     const textNodes = 3;
-    const boundaryComments = gate(flags => flags.enableFizzSuspenseListTail)
-      ? 2 * textNodes // TODO: One we remove the comments around boundaries this should be zero.
-      : 0;
+    const boundaryComments = 0;
     const textSeparators = textNodes; // One after each node.
     const suspenseListComments = gate(flags => flags.enableFizzSuspenseListTail)
       ? 2
@@ -1590,9 +1586,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(getVisibleChildren(container)).toEqual(<div>{['A', 'B', 'C']}</div>);
 
     const textNodes = 3;
-    const boundaryComments = gate(flags => flags.enableFizzSuspenseListTail)
-      ? 2 * textNodes // TODO: One we remove the comments around boundaries this should be zero.
-      : 0;
+    const boundaryComments = 0;
     const textSeparators = textNodes; // One after each node.
     const suspenseListComments = gate(flags => flags.enableFizzSuspenseListTail)
       ? 2

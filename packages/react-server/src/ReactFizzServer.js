@@ -2087,6 +2087,8 @@ function renderSuspenseListRows(
           // chance to add the next row as a blocker for the previous row.
           if (--previousSuspenseListRow.pendingTasks === 0) {
             finishSuspenseListRow(request, previousSuspenseListRow);
+          } else if (previousSuspenseListRow.mode === TOGETHER) {
+            tryToResolveTogetherRow(request, previousSuspenseListRow);
           }
         }
 
@@ -2190,6 +2192,8 @@ function renderSuspenseListRows(
         // chance to add the next row as a blocker for the previous row.
         if (--previousSuspenseListRow.pendingTasks === 0) {
           finishSuspenseListRow(request, previousSuspenseListRow);
+        } else if (previousSuspenseListRow.mode === TOGETHER) {
+          tryToResolveTogetherRow(request, previousSuspenseListRow);
         }
       }
       task.blockedBoundary = parentBoundary;
