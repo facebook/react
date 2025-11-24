@@ -64,6 +64,8 @@ import {
   pushEndActivityBoundary,
   pushStartSuspenseListBoundary,
   pushEndSuspenseListBoundary,
+  writePendingSuspenseListMarker,
+  writeClientRenderedSuspenseListMarker,
   writeStartCompletedSuspenseBoundary,
   writeStartPendingSuspenseBoundary,
   writeStartClientRenderedSuspenseBoundary,
@@ -5783,28 +5785,25 @@ function flushSuspenseListSegment(
   // emit the content or the fallback now.
   if (boundary.status === CLIENT_RENDERED) {
     // The suspense list didn't complete all the way. Emit a marker to continue on the client.
-    /*
-      if (__DEV__) {
-        writeClientRenderedSuspenseList(
-          destination,
-          request.renderState,
-          boundary.errorDigest,
-          boundary.errorMessage,
-          boundary.errorStack,
-          boundary.errorComponentStack,
-        );
-      } else {
-        writeClientRenderedSuspenseList(
-          destination,
-          request.renderState,
-          boundary.errorDigest,
-          null,
-          null,
-          null,
-        );
-      }
-      */
-    return true;
+    if (__DEV__) {
+      return writeClientRenderedSuspenseListMarker(
+        destination,
+        request.renderState,
+        boundary.errorDigest,
+        boundary.errorMessage,
+        boundary.errorStack,
+        boundary.errorComponentStack,
+      );
+    } else {
+      return writeClientRenderedSuspenseListMarker(
+        destination,
+        request.renderState,
+        boundary.errorDigest,
+        null,
+        null,
+        null,
+      );
+    }
   } else if (boundary.status !== COMPLETED) {
     if (boundary.status === PENDING) {
       boundary.rootSegmentID = request.nextSegmentId++;
@@ -5819,9 +5818,11 @@ function flushSuspenseListSegment(
       // We lazily assign an ID to the list marker.
       suspenseList.id = boundary.rootSegmentID;
       // This is the first time we're emitting this list so we need to emit the marker.
-      // const id = suspenseList.id;
-      // return writePendingSuspenseList(destination, request.renderState, id);
-      return true;
+      return writePendingSuspenseListMarker(
+        destination,
+        request.renderState,
+        suspenseList.id,
+      );
     } else {
       // This is just a partial continuation of a previously emitted list. We already have
       // a marker for the list so there's nothing more to emit.
@@ -5838,16 +5839,22 @@ function flushSuspenseListSegment(
       boundary.defer)
   ) {
     boundary.rootSegmentID = request.nextSegmentId++;
+    request.completedBoundaries.push(boundary);
+
     if (suspenseList.id === -1) {
       // We lazily assign an ID to the list marker.
       suspenseList.id = boundary.rootSegmentID;
+      // This is the first time we're emitting this list so we need to emit the marker.
+      return writePendingSuspenseListMarker(
+        destination,
+        request.renderState,
+        suspenseList.id,
+      );
+    } else {
+      // This is just a partial continuation of a previously emitted list. We already have
+      // a marker for the list so there's nothing more to emit.
+      return true;
     }
-
-    request.completedBoundaries.push(boundary);
-
-    // const id = suspenseList.id;
-    // return writePendingSuspenseList(destination, request.renderState, id);
-    return true;
   } else {
     // We're inlining this boundary so its bytes get counted to the current running count.
     flushedByteSize += boundary.byteSize;

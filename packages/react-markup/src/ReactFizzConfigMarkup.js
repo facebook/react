@@ -65,6 +65,8 @@ export {
   writeClientRenderBoundaryInstruction,
   writeStartPendingSuspenseBoundary,
   writeEndPendingSuspenseBoundary,
+  writePendingSuspenseListMarker,
+  writeClientRenderedSuspenseListMarker,
   writeHoistablesForBoundary,
   writePlaceholder,
   createRootFormatContext,

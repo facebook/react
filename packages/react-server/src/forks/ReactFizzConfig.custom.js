@@ -71,6 +71,10 @@ export const pushStartSuspenseListBoundary =
   $$$config.pushStartSuspenseListBoundary;
 export const pushEndSuspenseListBoundary =
   $$$config.pushEndSuspenseListBoundary;
+export const writePendingSuspenseListMarker =
+  $$$config.writePendingSuspenseListMarker;
+export const writeClientRenderedSuspenseListMarker =
+  $$$config.writeClientRenderedSuspenseListMarker;
 export const writeStartCompletedSuspenseBoundary =
   $$$config.writeStartCompletedSuspenseBoundary;
 export const writeStartPendingSuspenseBoundary =

@@ -221,6 +221,19 @@ const ReactNoopServer = ReactFizzServer({
     target.push(POP);
   },
 
+  writePendingSuspenseList(
+    destination: Destination,
+    renderState: RenderState,
+  ): boolean {
+    return true;
+  },
+  writeClientRenderedSuspenseList(
+    destination: Destination,
+    renderState: RenderState,
+  ): boolean {
+    return true;
+  },
+
   writeStartCompletedSuspenseBoundary(
     destination: Destination,
     renderState: RenderState,
