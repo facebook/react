@@ -106,6 +106,61 @@ describe('useStore', () => {
     ]);
     expect(root).toMatchRenderedOutput('4');
   });
+
+  it('useStore (no selector)', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment' | 'decrement'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        case 'decrement':
+          return count - 1;
+        default:
+          return count;
+      }
+    }
+    const store = createStore(counterReducer, 2);
+
+    function App() {
+      const value = useStore(store);
+      Scheduler.log({kind: 'render', value});
+      return <>{value}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+      await waitFor([{kind: 'render', value: 2}]);
+    });
+    expect(root).toMatchRenderedOutput('2');
+
+    await act(async () => {
+      startTransition(() => {
+        store.dispatch({type: 'increment'});
+      });
+    });
+    assertLog([
+      {kind: 'reducer', state: 2, action: 'increment'},
+      {kind: 'render', value: 3},
+    ]);
+    expect(root).toMatchRenderedOutput('3');
+
+    await act(async () => {
+      startTransition(() => {
+        store.dispatch({type: 'increment'});
+      });
+    });
+    assertLog([
+      {kind: 'reducer', state: 3, action: 'increment'},
+      {kind: 'render', value: 4},
+    ]);
+    expect(root).toMatchRenderedOutput('4');
+  });
   it('sync update interrupts transition update', async () => {
     function counterReducer(
       count: number,
@@ -355,6 +410,115 @@ describe('useStore', () => {
     expect(root).toMatchRenderedOutput('33');
   });
   it('After transition update commits, new mounters mount with up-to-date state', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment' | 'decrement'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        case 'double':
+          return count * 2;
+        default:
+          return count;
+      }
+    }
+    const store = createStore(counterReducer, 2);
+
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
+    function StoreReader({componentName}) {
+      const value = useStore(store, identity);
+      Scheduler.log({kind: 'render', value, componentName});
+      return <>{value}</>;
+    }
+
+    let setShowReader;
+
+    function App() {
+      const [showReader, _setShowReader] = React.useState(false);
+      setShowReader = _setShowReader;
+      return (
+        <>
+          <StoreReader componentName="stable" />
+          {showReader ? <StoreReader componentName="conditional" /> : null}
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+      await waitFor([
+        {kind: 'selector', state: 2},
+        {kind: 'render', value: 2, componentName: 'stable'},
+      ]);
+    });
+
+    expect(root).toMatchRenderedOutput('2');
+
+    let resolve;
+
+    await act(async () => {
+      await startTransition(async () => {
+        store.dispatch({type: 'increment'});
+        await new Promise(r => (resolve = r));
+      });
+    });
+
+    assertLog([
+      {kind: 'reducer', state: 2, action: 'increment'},
+      {kind: 'selector', state: 3},
+    ]);
+
+    expect(root).toMatchRenderedOutput('2');
+
+    await act(async () => {
+      store.dispatch({type: 'double'});
+    });
+    assertLog([
+      {kind: 'reducer', state: 3, action: 'double'},
+      {kind: 'reducer', state: 2, action: 'double'},
+      {kind: 'selector', state: 4},
+      {kind: 'selector', state: 6},
+      {kind: 'render', value: 4, componentName: 'stable'},
+    ]);
+
+    expect(root).toMatchRenderedOutput('4');
+
+    await act(async () => {
+      setShowReader(true);
+    });
+
+    assertLog([
+      {kind: 'render', value: 4, componentName: 'stable'},
+      {kind: 'selector', state: 4},
+      {kind: 'selector', state: 6},
+      {kind: 'render', componentName: 'conditional', value: 4},
+    ]);
+    // TODO: Avoid triggering this error.
+    assertConsoleErrorDev([
+      'Cannot update a component (`StoreReader`) while rendering a different component (`StoreReader`). ' +
+        'To locate the bad setState() call inside `StoreReader`, ' +
+        'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
+        '    in App (at **)',
+    ]);
+    expect(root).toMatchRenderedOutput('44');
+
+    await act(async () => {
+      resolve();
+    });
+
+    assertLog([
+      {kind: 'render', value: 6, componentName: 'stable'},
+      {kind: 'render', componentName: 'conditional', value: 6},
+    ]);
+  });
+  it('After mid-transition sync update commits, new mounters mount with up-to-date sync state (but not transition state)', async () => {
     function counterReducer(
       count: number,
       action: {type: 'increment' | 'decrement'},
