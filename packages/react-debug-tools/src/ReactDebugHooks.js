@@ -486,16 +486,9 @@ function useStoreWithSelector<S, T>(
   store: ReactStore<S, mixed>,
   selector: (state: S) => T,
 ): T {
-  const value = selector(store._current);
-  hookLog.push({
-    displayName: null,
-    primitive: 'StoreWithSelector',
-    stackError: new Error(),
-    value,
-    debugInfo: null,
-    dispatcherHookName: 'StoreWithSelector',
-  });
-  return value;
+  throw new Error(
+    'useStoreWithSelector is not yet supported in React Debug Tools.',
+  );
 }
 
 function useTransition(): [

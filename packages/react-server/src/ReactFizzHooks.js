@@ -569,8 +569,9 @@ function useStoreWithSelector<S, T>(
   store: ReactStore<S, mixed>,
   selector: (state: S) => T,
 ): T {
-  resolveCurrentlyRenderingComponent();
-  return selector(store._current);
+  throw new Error(
+    'useStoreWithSelector is not yet supported during server rendering.',
+  );
 }
 
 function useDeferredValue<T>(value: T, initialValue?: T): T {

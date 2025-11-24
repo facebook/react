@@ -1877,7 +1877,7 @@ function mountStoreWithSelector<S, T>(
     };
 
     const updateRoot = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
-    if (root !== null) {
+    if (updateRoot !== null) {
       startUpdateTimerByLane(
         lane,
         'useStoreWithSelector mount mid transition fixup',
@@ -1891,7 +1891,7 @@ function mountStoreWithSelector<S, T>(
 }
 
 function updateStoreWithSelector<S, T>(
-  store: StoreWrapper<S, mixed>,
+  store: ReactStore<S, mixed>,
   selector: S => T,
 ): T {
   const root = ((getWorkInProgressRoot(): any): FiberRoot);
@@ -1920,7 +1920,7 @@ function updateStoreWithSelector<S, T>(
 }
 
 function createSubscription<S, T>(
-  storeWrapper: ReactStore<S, mixed>,
+  storeWrapper: StoreWrapper<S, mixed>,
   fiber: Fiber,
   selector: S => T,
   queue: UpdateQueue<T, mixed>,
@@ -4034,7 +4034,7 @@ function enqueueRenderPhaseUpdate<S, A>(
 // TODO: Move to ReactFiberConcurrentUpdates?
 function entangleTransitionUpdate<S, A>(
   root: FiberRoot,
-  queue: UpdateQueue<S, A> | StoreWithSelectorQueue<T>,
+  queue: UpdateQueue<S, A>,
   lane: Lane,
 ): void {
   if (isTransitionLane(lane)) {
