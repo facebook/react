@@ -584,7 +584,10 @@ export function installHook(
           debugger;
         }
 
-        if (isRunningDuringStrictModeInvocation && !settings.disableSecondConsoleLogDimmingInStrictMode) {
+        if (
+          isRunningDuringStrictModeInvocation &&
+          !settings.disableSecondConsoleLogDimmingInStrictMode
+        ) {
           // Dim the text color of the double logs if we're not hiding them.
           // Firefox doesn't support ANSI escape sequences
           if (__IS_FIREFOX__) {

@@ -26,16 +26,20 @@ export default function DebuggingSettings({
 }: Props): React.Node {
   const usedHookSettings = use(hookSettings);
 
-  const [appendComponentStack, setAppendComponentStack] =
-  useState(usedHookSettings.appendComponentStack);
-  const [breakOnConsoleErrors, setBreakOnConsoleErrors] =
-  useState(usedHookSettings.breakOnConsoleErrors,);
+  const [appendComponentStack, setAppendComponentStack] = useState(
+    usedHookSettings.appendComponentStack,
+  );
+  const [breakOnConsoleErrors, setBreakOnConsoleErrors] = useState(
+    usedHookSettings.breakOnConsoleErrors,
+  );
   const [hideConsoleLogsInStrictMode, setHideConsoleLogsInStrictMode] =
     useState(usedHookSettings.hideConsoleLogsInStrictMode);
   const [showInlineWarningsAndErrors, setShowInlineWarningsAndErrors] =
     useState(usedHookSettings.showInlineWarningsAndErrors);
-  const [disableSecondConsoleLogDimmingInStrictMode, setDisableSecondConsoleLogDimmingInStrictMode] =
-    useState(usedHookSettings.disableSecondConsoleLogDimmingInStrictMode);
+  const [
+    disableSecondConsoleLogDimmingInStrictMode,
+    setDisableSecondConsoleLogDimmingInStrictMode,
+  ] = useState(usedHookSettings.disableSecondConsoleLogDimmingInStrictMode);
 
   useEffect(() => {
     store.setShouldShowWarningsAndErrors(showInlineWarningsAndErrors);
@@ -107,9 +111,12 @@ export default function DebuggingSettings({
           <input
             type="checkbox"
             checked={hideConsoleLogsInStrictMode}
-            onChange={({currentTarget}) =>
-              setHideConsoleLogsInStrictMode(currentTarget.checked)
-            }
+            onChange={({currentTarget}) => {
+              setHideConsoleLogsInStrictMode(currentTarget.checked);
+              if (currentTarget.checked) {
+                setDisableSecondConsoleLogDimmingInStrictMode(false);
+              }
+            }}
             className={styles.SettingRowCheckbox}
           />
           Hide logs during additional invocations in&nbsp;
@@ -123,13 +130,26 @@ export default function DebuggingSettings({
         </label>
       </div>
 
-      <div className={styles.SettingWrapper}>
-        <label className={styles.SettingRow}>
+      <div
+        className={
+          hideConsoleLogsInStrictMode
+            ? `${styles.SettingDisabled} ${styles.SettingWrapper}`
+            : styles.SettingWrapper
+        }>
+        <label
+          className={
+            hideConsoleLogsInStrictMode
+              ? `${styles.SettingDisabled} ${styles.SettingRow}`
+              : styles.SettingRow
+          }>
           <input
             type="checkbox"
             checked={disableSecondConsoleLogDimmingInStrictMode}
+            disabled={hideConsoleLogsInStrictMode}
             onChange={({currentTarget}) =>
-              setDisableSecondConsoleLogDimmingInStrictMode(currentTarget.checked)
+              setDisableSecondConsoleLogDimmingInStrictMode(
+                currentTarget.checked,
+              )
             }
             className={styles.SettingRowCheckbox}
           />
