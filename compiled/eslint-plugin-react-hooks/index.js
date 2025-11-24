@@ -53600,6 +53600,12 @@ function validateExhaustiveDependencies(fn) {
             }
             extra.push(dep);
         }
+        retainWhere(extra, dep => {
+            const isNonReactiveStableValue = dep.root.kind === 'NamedLocal' &&
+                !dep.root.value.reactive &&
+                isStableType(dep.root.value.identifier);
+            return !isNonReactiveStableValue;
+        });
         if (missing.length !== 0 || extra.length !== 0) {
             let suggestions = null;
             if (startMemo.depsLoc != null && typeof startMemo.depsLoc !== 'symbol') {
@@ -54428,7 +54434,7 @@ function findProgramSuppressions(programComments, ruleNames, flowSuppressions) {
     let disableNextLinePattern = null;
     let disablePattern = null;
     let enablePattern = null;
-    if (ruleNames.length !== 0) {
+    if (ruleNames != null && ruleNames.length !== 0) {
         const rulePattern = `(${ruleNames.join('|')})`;
         disableNextLinePattern = new RegExp(`eslint-disable-next-line ${rulePattern}`);
         disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
@@ -54765,7 +54771,10 @@ function compileProgram(program, pass) {
         handleError(restrictedImportsErr, pass, null);
         return null;
     }
-    const suppressions = findProgramSuppressions(pass.comments, (_a = pass.opts.eslintSuppressionRules) !== null && _a !== void 0 ? _a : DEFAULT_ESLINT_SUPPRESSIONS, pass.opts.flowSuppressions);
+    const suppressions = findProgramSuppressions(pass.comments, pass.opts.environment.validateExhaustiveMemoizationDependencies &&
+        pass.opts.environment.validateHooksUsage
+        ? null
+        : ((_a = pass.opts.eslintSuppressionRules) !== null && _a !== void 0 ? _a : DEFAULT_ESLINT_SUPPRESSIONS), pass.opts.flowSuppressions);
     const programContext = new ProgramContext({
         program: program,
         opts: pass.opts,
