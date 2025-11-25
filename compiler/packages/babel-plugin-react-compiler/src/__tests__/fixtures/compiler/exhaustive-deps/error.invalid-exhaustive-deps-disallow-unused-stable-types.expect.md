@@ -25,18 +25,20 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Found unnecessary memoization dependencies
+Error: Found missing/extra memoization dependencies
 
-Unnecessary dependencies can cause a value to update more often than necessary, causing performance regressions and effects to fire more often than expected.
+Extra dependencies can cause a value to update more often than it should, resulting in performance problems such as excessive renders or effects firing too often.
 
-error.invalid-exhaustive-deps-disallow-unused-stable-types.ts:11:5
+error.invalid-exhaustive-deps-disallow-unused-stable-types.ts:11:13
    9 |     return [state];
   10 |     // error: `setState` is a stable type, but not actually referenced
 > 11 |   }, [state, setState]);
-     |      ^^^^^^^^^^^^^^^^^ Unnecessary dependencies `setState`
+     |              ^^^^^^^^ Unnecessary dependency `setState`
   12 |
   13 |   return 'oops';
   14 | }
+
+Inferred dependencies: `[state]`
 ```
           
       

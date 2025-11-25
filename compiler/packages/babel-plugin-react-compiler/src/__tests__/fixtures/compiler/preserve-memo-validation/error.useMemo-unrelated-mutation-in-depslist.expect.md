@@ -32,9 +32,9 @@ function useFoo(input1) {
 ```
 Found 1 error:
 
-Error: Found missing memoization dependencies
+Error: Found missing/extra memoization dependencies
 
-Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
+Missing dependencies can cause a value to update less often than it should, resulting in stale UI.
 
 error.useMemo-unrelated-mutation-in-depslist.ts:18:14
   16 |   const memoized = useMemo(() => {
@@ -44,6 +44,8 @@ error.useMemo-unrelated-mutation-in-depslist.ts:18:14
   19 |
   20 |   return [x, memoized];
   21 | }
+
+Inferred dependencies: `[x, y]`
 ```
           
       
