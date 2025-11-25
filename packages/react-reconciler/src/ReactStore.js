@@ -10,15 +10,22 @@
 import type {ReactStore} from 'shared/ReactTypes';
 import {enableStore} from 'shared/ReactFeatureFlags';
 
+function defaultReducer<S>(state: S, action: (prev: S) => S): S {
+  return action(state);
+}
+
+declare function createStore<S>(initialValue: S): ReactStore<S, (prev: S) => S>;
+
 export function createStore<S, A>(
-  reducer: (S, A) => S,
   initialValue: S,
+  reducer?: (S, A) => S,
 ): ReactStore<S, A> {
   if (!enableStore) {
     throw new Error(
       'createStore is not available because the enableStore feature flag is not enabled.',
     );
   }
+  const actualReducer = reducer ?? (defaultReducer: any);
 
   const subscriptions = new Set<(action: A) => void>();
 
@@ -28,9 +35,9 @@ export function createStore<S, A>(
     getState(): S {
       return state;
     },
-    reducer: reducer,
+    reducer: actualReducer,
     dispatch(action: A) {
-      state = reducer(state, action);
+      state = actualReducer(state, action);
       subscriptions.forEach(callback => callback(action));
     },
     subscribe(callback: (action: A) => void): () => void {

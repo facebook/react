@@ -40,6 +40,40 @@ describe('useStore', () => {
     assertLog = InternalTestUtils.assertLog;
   });
 
+  it('simplest use', async () => {
+    const store = createStore(2);
+
+    function App() {
+      const value = useStore(store);
+      Scheduler.log({kind: 'render', value});
+      return <>{value}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+      await waitFor([{kind: 'render', value: 2}]);
+    });
+    expect(root).toMatchRenderedOutput('2');
+
+    await act(async () => {
+      startTransition(() => {
+        store.dispatch(n => n + 1);
+      });
+    });
+    assertLog([{kind: 'render', value: 3}]);
+    expect(root).toMatchRenderedOutput('3');
+
+    await act(async () => {
+      startTransition(() => {
+        store.dispatch(n => n + 1);
+      });
+    });
+    assertLog([{kind: 'render', value: 4}]);
+    expect(root).toMatchRenderedOutput('4');
+  });
   it('useStore', async () => {
     function counterReducer(
       count: number,
@@ -53,7 +87,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -116,7 +150,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function App() {
       const value = useStore(store);
@@ -170,7 +204,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -243,7 +277,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
       return x;
@@ -331,7 +365,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -407,7 +441,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -508,7 +542,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -579,7 +613,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function isEven(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -629,7 +663,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector:identity', state: x});
@@ -717,7 +751,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -781,7 +815,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -849,7 +883,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -932,7 +966,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -1012,7 +1046,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 2);
+    const store = createStore(2, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -1084,7 +1118,7 @@ describe('useStore', () => {
           return count;
       }
     }
-    const store = createStore(counterReducer, 0);
+    const store = createStore(0, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
@@ -1145,8 +1179,8 @@ describe('useStore', () => {
       }
     }
 
-    const storeA = createStore(counterReducer, 10);
-    const storeB = createStore(counterReducer, 20);
+    const storeA = createStore(10, counterReducer);
+    const storeB = createStore(20, counterReducer);
 
     function identity(x) {
       Scheduler.log({kind: 'selector', state: x});
