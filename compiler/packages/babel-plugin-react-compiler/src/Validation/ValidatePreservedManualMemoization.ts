@@ -267,6 +267,7 @@ function validateInferredDep(
           effect: Effect.Read,
           reactive: false,
         },
+        constant: false,
       },
       path: [...dep.path],
     };
@@ -379,6 +380,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
                 root: {
                   kind: 'NamedLocal',
                   value: storeTarget,
+                  constant: false,
                 },
                 path: [],
               });
@@ -408,6 +410,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         root: {
           kind: 'NamedLocal',
           value: {...lvalue},
+          constant: false,
         },
         path: [],
       });
