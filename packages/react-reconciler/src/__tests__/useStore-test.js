@@ -1070,4 +1070,120 @@ describe('useStore', () => {
     assertLog([{kind: 'reducer', state: 3, action: 'increment'}]);
     expect(root).toMatchRenderedOutput(null);
   });
+
+  it('batched sync updates in an event handler', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        default:
+          return count;
+      }
+    }
+    const store = createStore(counterReducer, 0);
+
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
+    function App() {
+      const value = useStore(store, identity);
+      Scheduler.log({kind: 'render', value});
+      return <>{value}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    assertLog([
+      {kind: 'selector', state: 0},
+      {kind: 'render', value: 0},
+    ]);
+    expect(root).toMatchRenderedOutput('0');
+
+    // Dispatch multiple actions synchronously, simulating an event handler
+    // They should be batched into a single render
+    await act(async () => {
+      store.dispatch({type: 'increment'});
+      store.dispatch({type: 'increment'});
+      store.dispatch({type: 'increment'});
+    });
+
+    // All three reducer calls happen, but only one render
+    // Note: A future optimization could allow us to avoid calling the selector
+    // multiple times here
+    assertLog([
+      {kind: 'reducer', state: 0, action: 'increment'},
+      {kind: 'selector', state: 1},
+      {kind: 'reducer', state: 1, action: 'increment'},
+      {kind: 'selector', state: 2},
+      {kind: 'reducer', state: 2, action: 'increment'},
+      {kind: 'selector', state: 3},
+      {kind: 'render', value: 3},
+    ]);
+    expect(root).toMatchRenderedOutput('3');
+  });
+
+  it('changing the store prop triggers a re-render with the new store state', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        default:
+          return count;
+      }
+    }
+
+    const storeA = createStore(counterReducer, 10);
+    const storeB = createStore(counterReducer, 20);
+
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
+    let setStore;
+
+    function App() {
+      const [store, _setStore] = React.useState(storeA);
+      setStore = _setStore;
+      const value = useStore(store, identity);
+      Scheduler.log({kind: 'render', value});
+      return <>{value}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    assertLog([
+      {kind: 'selector', state: 10},
+      {kind: 'render', value: 10},
+    ]);
+    expect(root).toMatchRenderedOutput('10');
+
+    // Change the store prop from storeA to storeB
+    await act(async () => {
+      setStore(storeB);
+    });
+
+    // Should re-render with storeB's state (20)
+    assertLog([
+      {kind: 'selector', state: 20},
+      {kind: 'render', value: 20},
+    ]);
+    expect(root).toMatchRenderedOutput('20');
+  });
 });
