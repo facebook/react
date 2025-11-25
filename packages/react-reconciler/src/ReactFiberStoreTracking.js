@@ -19,9 +19,11 @@ export class StoreWrapper<S, A> {
   _committedState: S;
   _headState: S;
   _unsubscribe: () => void;
+  _listeners: Set<() => void>;
   store: ReactExternalDataSource<S, A>;
   constructor(store: ReactExternalDataSource<S, A>) {
     this._headState = this._committedState = store.getState();
+    this._listeners = new Set();
     this._unsubscribe = store.subscribe(action => {
       this.handleUpdate(action);
     });
@@ -42,15 +44,18 @@ export class StoreWrapper<S, A> {
       // React's update reordering semantics.
       this._committedState = this.store.reducer(this._committedState, action);
     }
+    // Notify all subscribed fibers
+    this._listeners.forEach(listener => listener());
   }
   getStateForLanes(lanes: Lanes): S {
     const isTransition = includesTransitionLane(lanes);
     return isTransition ? this._headState : this._committedState;
   }
   subscribe(callback: () => void): () => void {
-    // TODO: Have our own subscription mechanism such that fibers subscribe to the wrapper
-    // and the wrapper can subscribe to the store.
-    return this.store.subscribe(callback);
+    this._listeners.add(callback);
+    return () => {
+      this._listeners.delete(callback);
+    };
   }
   commitFinished(lanes: Lanes) {
     this._committedState = this.getStateForLanes(lanes);
