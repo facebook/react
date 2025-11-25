@@ -33,7 +33,7 @@ describe('useStore', () => {
     createStore = React.createStore;
     useStore = React.useStore;
     useLayoutEffect = React.useLayoutEffect;
-    useEffect = React.useLayoutEffect;
+    useEffect = React.useEffect;
     startTransition = React.startTransition;
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
@@ -43,14 +43,12 @@ describe('useStore', () => {
   it('useStore', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
-        case 'decrement':
-          return count - 1;
         default:
           return count;
       }
@@ -108,14 +106,12 @@ describe('useStore', () => {
   it('useStore (no selector)', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
-        case 'decrement':
-          return count - 1;
         default:
           return count;
       }
@@ -162,7 +158,7 @@ describe('useStore', () => {
   it('sync update interrupts transition update', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment' | 'double'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
@@ -237,14 +233,12 @@ describe('useStore', () => {
   it('store reader mounts mid transition', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
-        case 'double':
-          return count * 2;
         default:
           return count;
       }
@@ -327,14 +321,12 @@ describe('useStore', () => {
   it('store reader mounts as a result of store update in transition', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
-        case 'double':
-          return count * 2;
         default:
           return count;
       }
@@ -403,7 +395,7 @@ describe('useStore', () => {
   it('After transition update commits, new mounters mount with up-to-date state', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment' | 'double'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
@@ -506,14 +498,12 @@ describe('useStore', () => {
   it('After mid-transition sync update commits, new mounters mount with up-to-date sync state (but not transition state)', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
-        case 'double':
-          return count * 2;
         default:
           return count;
       }
@@ -580,14 +570,9 @@ describe('useStore', () => {
     expect(root).toMatchRenderedOutput('33');
   });
   it('Component does not rerender if selected value is unchanged', async () => {
-    function counterReducer(
-      count: number,
-      action: {type: 'increment' | 'decrement'},
-    ): number {
+    function counterReducer(count: number, action: {type: 'double'}): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
-        case 'increment':
-          return count + 1;
         case 'double':
           return count * 2;
         default:
@@ -634,14 +619,12 @@ describe('useStore', () => {
   it('selector changes sync mid transition while store is updating', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
-        case 'double':
-          return count * 2;
         default:
           return count;
       }
@@ -724,7 +707,7 @@ describe('useStore', () => {
   it('store reader mounts after sibling updates state in useLayoutEffect', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
@@ -788,7 +771,7 @@ describe('useStore', () => {
   it('store reader mounts after sibling updates state in useEffect', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement'},
+      action: {type: 'increment'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
@@ -939,16 +922,12 @@ describe('useStore', () => {
   it('sync update interrupts transition with identical state change', async () => {
     function counterReducer(
       count: number,
-      action: {type: 'increment' | 'decrement' | 'set', value?: number},
+      action: {type: 'increment'},
     ): number {
       Scheduler.log({kind: 'reducer', state: count, action: action.type});
       switch (action.type) {
         case 'increment':
           return count + 1;
-        case 'decrement':
-          return count - 1;
-        case 'set':
-          return action.value;
         default:
           return count;
       }
@@ -1018,5 +997,77 @@ describe('useStore', () => {
     // The transition completes with state 4 (original transition 3 + sync increment)
     assertLog([{kind: 'render', value: 4}]);
     expect(root).toMatchRenderedOutput('4');
+  });
+
+  it('selector is not called after component unmounts', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        default:
+          return count;
+      }
+    }
+    const store = createStore(counterReducer, 2);
+
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
+    function StoreReader() {
+      const value = useStore(store, identity);
+      Scheduler.log({kind: 'render', value});
+      return <>{value}</>;
+    }
+
+    let setShowReader;
+
+    function App() {
+      const [showReader, _setShowReader] = React.useState(true);
+      setShowReader = _setShowReader;
+      return showReader ? <StoreReader /> : null;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    assertLog([
+      {kind: 'selector', state: 2},
+      {kind: 'render', value: 2},
+    ]);
+    expect(root).toMatchRenderedOutput('2');
+
+    // Unmount the component that uses the store
+    await act(async () => {
+      setShowReader(false);
+    });
+
+    assertLog([]);
+    expect(root).toMatchRenderedOutput(null);
+
+    // Dispatch an action to the store after unmount
+    // The selector should NOT be called since the component is unmounted
+    await act(async () => {
+      store.dispatch({type: 'increment'});
+    });
+
+    // Only the reducer should run, not the selector
+    assertLog([{kind: 'reducer', state: 2, action: 'increment'}]);
+    expect(root).toMatchRenderedOutput(null);
+
+    // Dispatch another action to confirm selector is still not called
+    await act(async () => {
+      store.dispatch({type: 'increment'});
+    });
+
+    assertLog([{kind: 'reducer', state: 3, action: 'increment'}]);
+    expect(root).toMatchRenderedOutput(null);
   });
 });
