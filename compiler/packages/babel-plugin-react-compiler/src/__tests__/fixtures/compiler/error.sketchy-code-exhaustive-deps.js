@@ -1,3 +1,4 @@
+// @validateExhaustiveMemoizationDependencies:false
 function Component() {
   const item = [];
   const foo = useCallback(

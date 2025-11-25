@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateExhaustiveMemoizationDependencies:false
 import {useState, useMemo} from 'react';
 import {useIdentity} from 'shared-runtime';
 
@@ -36,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @validateExhaustiveMemoizationDependencies:false
 import { useState, useMemo } from "react";
 import { useIdentity } from "shared-runtime";
 
