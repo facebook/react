@@ -241,11 +241,10 @@ export function validateExhaustiveDependencies(
           matched.add(manualDependency);
         }
       }
-      const isOptionalDependency =
-        !reactive.has(inferredDependency.identifier.id) &&
-        (isStableType(inferredDependency.identifier) ||
-          isPrimitiveType(inferredDependency.identifier));
-      if (hasMatchingManualDependency || isOptionalDependency) {
+      if (
+        hasMatchingManualDependency ||
+        isOptionalDependency(inferredDependency, reactive)
+      ) {
         continue;
       }
       missing.push(inferredDependency);
@@ -274,54 +273,106 @@ export function validateExhaustiveDependencies(
     }
 
     if (missing.length !== 0 || extra.length !== 0) {
-      let suggestions: Array<CompilerSuggestion> | null = null;
+      let suggestion: CompilerSuggestion | null = null;
       if (startMemo.depsLoc != null && typeof startMemo.depsLoc !== 'symbol') {
-        suggestions = [
-          {
-            description: 'Update dependencies',
-            range: [startMemo.depsLoc.start.index, startMemo.depsLoc.end.index],
-            op: CompilerSuggestionOperation.Replace,
-            text: `[${inferred.map(printInferredDependency).join(', ')}]`,
-          },
-        ];
+        suggestion = {
+          description: 'Update dependencies',
+          range: [startMemo.depsLoc.start.index, startMemo.depsLoc.end.index],
+          op: CompilerSuggestionOperation.Replace,
+          text: `[${inferred
+            .filter(
+              dep =>
+                dep.kind === 'Local' && !isOptionalDependency(dep, reactive),
+            )
+            .map(printInferredDependency)
+            .join(', ')}]`,
+        };
       }
-      if (missing.length !== 0) {
-        const diagnostic = CompilerDiagnostic.create({
-          category: ErrorCategory.MemoDependencies,
-          reason: 'Found missing memoization dependencies',
-          description:
-            'Missing dependencies can cause a value not to update when those inputs change, ' +
-            'resulting in stale UI',
-          suggestions,
-        });
-        for (const dep of missing) {
-          let reactiveStableValueHint = '';
-          if (isStableType(dep.identifier)) {
-            reactiveStableValueHint =
-              '. Refs, setState functions, and other "stable" values generally do not need to be added as dependencies, but this variable may change over time to point to different values';
-          }
-          diagnostic.withDetails({
-            kind: 'error',
-            message: `Missing dependency \`${printInferredDependency(dep)}\`${reactiveStableValueHint}`,
-            loc: dep.loc,
-          });
+      const diagnostic = CompilerDiagnostic.create({
+        category: ErrorCategory.MemoDependencies,
+        reason: 'Found missing/extra memoization dependencies',
+        description: [
+          missing.length !== 0
+            ? 'Missing dependencies can cause a value to update less often than it should, ' +
+              'resulting in stale UI'
+            : null,
+          extra.length !== 0
+            ? 'Extra dependencies can cause a value to update more often than it should, ' +
+              'resulting in performance problems such as excessive renders or effects firing too often'
+            : null,
+        ]
+          .filter(Boolean)
+          .join('. '),
+        suggestions: suggestion != null ? [suggestion] : null,
+      });
+      for (const dep of missing) {
+        let reactiveStableValueHint = '';
+        if (isStableType(dep.identifier)) {
+          reactiveStableValueHint =
+            '. Refs, setState functions, and other "stable" values generally do not need to be added ' +
+            'as dependencies, but this variable may change over time to point to different values';
         }
-        error.pushDiagnostic(diagnostic);
-      } else if (extra.length !== 0) {
-        const diagnostic = CompilerDiagnostic.create({
-          category: ErrorCategory.MemoDependencies,
-          reason: 'Found unnecessary memoization dependencies',
-          description:
-            'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-            'causing performance regressions and effects to fire more often than expected',
-        });
         diagnostic.withDetails({
           kind: 'error',
-          message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
-          loc: startMemo.depsLoc ?? value.loc,
+          message: `Missing dependency \`${printInferredDependency(dep)}\`${reactiveStableValueHint}`,
+          loc: dep.loc,
         });
-        error.pushDiagnostic(diagnostic);
       }
+      for (const dep of extra) {
+        if (dep.root.kind === 'Global') {
+          diagnostic.withDetails({
+            kind: 'error',
+            message:
+              `Unnecessary dependency \`${printManualMemoDependency(dep)}\`. ` +
+              'Values declared outside of a component/hook should not be listed as ' +
+              'dependencies as the component will not re-render if they change',
+            loc: dep.loc ?? startMemo.depsLoc ?? value.loc,
+          });
+          error.pushDiagnostic(diagnostic);
+        } else {
+          const root = dep.root.value;
+          const matchingInferred = inferred.find(
+            (
+              inferredDep,
+            ): inferredDep is Extract<InferredDependency, {kind: 'Local'}> => {
+              return (
+                inferredDep.kind === 'Local' &&
+                inferredDep.identifier.id === root.identifier.id &&
+                isSubPathIgnoringOptionals(inferredDep.path, dep.path)
+              );
+            },
+          );
+          if (
+            matchingInferred != null &&
+            !isOptionalDependency(matchingInferred, reactive)
+          ) {
+            diagnostic.withDetails({
+              kind: 'error',
+              message:
+                `Overly precise dependency \`${printManualMemoDependency(dep)}\`, ` +
+                `use \`${printInferredDependency(matchingInferred)}\` instead`,
+              loc: dep.loc ?? startMemo.depsLoc ?? value.loc,
+            });
+          } else {
+            /**
+             * Else this dependency doesn't correspond to anything referenced in the memo function,
+             * or is an optional dependency so we don't want to suggest adding it
+             */
+            diagnostic.withDetails({
+              kind: 'error',
+              message: `Unnecessary dependency \`${printManualMemoDependency(dep)}\``,
+              loc: dep.loc ?? startMemo.depsLoc ?? value.loc,
+            });
+          }
+        }
+      }
+      if (suggestion != null) {
+        diagnostic.withDetails({
+          kind: 'hint',
+          message: `Inferred dependencies: \`${suggestion.text}\``,
+        });
+      }
+      error.pushDiagnostic(diagnostic);
     }
 
     dependencies.clear();
@@ -825,4 +876,15 @@ export function findOptionalPlaces(
     }
   }
   return optionals;
+}
+
+function isOptionalDependency(
+  inferredDependency: Extract<InferredDependency, {kind: 'Local'}>,
+  reactive: Set<IdentifierId>,
+): boolean {
+  return (
+    !reactive.has(inferredDependency.identifier.id) &&
+    (isStableType(inferredDependency.identifier) ||
+      isPrimitiveType(inferredDependency.identifier))
+  );
 }

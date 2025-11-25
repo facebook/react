@@ -807,6 +807,7 @@ export type ManualMemoDependency = {
       }
     | {kind: 'Global'; identifierName: string};
   path: DependencyPath;
+  loc: SourceLocation;
 };
 
 export type StartMemoize = {

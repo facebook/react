@@ -242,6 +242,7 @@ function validateInferredDep(
     normalizedDep = {
       root: maybeNormalizedRoot.root,
       path: [...maybeNormalizedRoot.path, ...dep.path],
+      loc: maybeNormalizedRoot.loc,
     };
   } else {
     CompilerError.invariant(dep.identifier.name?.kind === 'named', {
@@ -270,6 +271,7 @@ function validateInferredDep(
         constant: false,
       },
       path: [...dep.path],
+      loc: GeneratedSource,
     };
   }
   for (const decl of declsWithinMemoBlock) {
@@ -383,6 +385,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
                   constant: false,
                 },
                 path: [],
+                loc: storeTarget.loc,
               });
             }
           }
@@ -413,6 +416,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           constant: false,
         },
         path: [],
+        loc: lvalue.loc,
       });
     }
   }
