@@ -65,6 +65,7 @@ export function collectMaybeMemoDependencies(
           identifierName: value.binding.name,
         },
         path: [],
+        loc: value.loc,
       };
     }
     case 'PropertyLoad': {
@@ -74,6 +75,7 @@ export function collectMaybeMemoDependencies(
           root: object.root,
           // TODO: determine if the access is optional
           path: [...object.path, {property: value.property, optional}],
+          loc: value.loc,
         };
       }
       break;
@@ -95,6 +97,7 @@ export function collectMaybeMemoDependencies(
             constant: false,
           },
           path: [],
+          loc: value.place.loc,
         };
       }
       break;
