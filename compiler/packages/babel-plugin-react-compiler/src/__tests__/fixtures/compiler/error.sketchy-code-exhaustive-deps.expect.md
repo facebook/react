@@ -2,11 +2,14 @@
 ## Input
 
 ```javascript
+import {arrayPush} from 'shared-runtime';
+
+// @validateExhaustiveMemoizationDependencies
 function Component() {
   const item = [];
   const foo = useCallback(
     () => {
-      item.push(1);
+      arrayPush(item, 1);
     }, // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
@@ -22,18 +25,18 @@ function Component() {
 ```
 Found 1 error:
 
-Error: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled
+Error: Found missing memoization dependencies
 
-React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. Found suppression `eslint-disable-next-line react-hooks/exhaustive-deps`.
+Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
 
-error.sketchy-code-exhaustive-deps.ts:6:7
-  4 |     () => {
-  5 |       item.push(1);
-> 6 |     }, // eslint-disable-next-line react-hooks/exhaustive-deps
-    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Found React rule suppression
-  7 |     []
-  8 |   );
-  9 |
+error.sketchy-code-exhaustive-deps.ts:8:16
+   6 |   const foo = useCallback(
+   7 |     () => {
+>  8 |       arrayPush(item, 1);
+     |                 ^^^^ Missing dependency `item`
+   9 |     }, // eslint-disable-next-line react-hooks/exhaustive-deps
+  10 |     []
+  11 |   );
 ```
           
       
