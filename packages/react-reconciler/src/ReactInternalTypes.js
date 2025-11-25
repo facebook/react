@@ -18,7 +18,7 @@ import type {
   ReactComponentInfo,
   ReactDebugInfo,
   ReactKey,
-  ReactStore,
+  ReactExternalDataSource,
 } from 'shared/ReactTypes';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import type {WorkTag} from './ReactWorkTags';
@@ -445,7 +445,7 @@ export type Dispatcher = {
   ): T,
   // TODO: Non-nullable once `enableStore` is on everywhere.
   useStore?: <S, T>(
-    store: ReactStore<S, mixed>,
+    store: ReactExternalDataSource<S, mixed>,
     selector?: (state: S) => T,
   ) => S | T,
   useId(): string,

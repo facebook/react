@@ -8,7 +8,7 @@
  */
 
 import type {Lanes} from './ReactFiberLane';
-import type {ReactStore} from 'shared/ReactTypes';
+import type {ReactExternalDataSource} from 'shared/ReactTypes';
 
 import {includesTransitionLane} from './ReactFiberLane';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -19,8 +19,8 @@ export class StoreWrapper<S, A> {
   _committedState: S;
   _headState: S;
   _unsubscribe: () => void;
-  store: ReactStore<S, A>;
-  constructor(store: ReactStore<S, A>) {
+  store: ReactExternalDataSource<S, A>;
+  constructor(store: ReactExternalDataSource<S, A>) {
     this._headState = this._committedState = store.getState();
     this._unsubscribe = store.subscribe(action => {
       this.handleUpdate(action);
@@ -67,7 +67,7 @@ type StoreWrapperInfo<S, A> = {
 
 // Used by a React root to track the stores referenced by its fibers.
 export class StoreTracker {
-  stores: Map<ReactStore<any, any>, StoreWrapperInfo<any, any>>;
+  stores: Map<ReactExternalDataSource<any, any>, StoreWrapperInfo<any, any>>;
 
   constructor() {
     this.stores = new Map();
@@ -79,7 +79,7 @@ export class StoreTracker {
     });
   }
 
-  getWrapper<S, A>(store: ReactStore<S, A>): StoreWrapper<S, A> {
+  getWrapper<S, A>(store: ReactExternalDataSource<S, A>): StoreWrapper<S, A> {
     const info = this.stores.get(store);
     if (info !== undefined) {
       info.references++;
@@ -90,7 +90,7 @@ export class StoreTracker {
     return wrapper;
   }
 
-  remove<S, A>(store: ReactStore<S, A>): void {
+  remove<S, A>(store: ReactExternalDataSource<S, A>): void {
     const info = this.stores.get(store);
     if (info !== undefined) {
       info.references--;

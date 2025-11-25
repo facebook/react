@@ -14,7 +14,7 @@ import type {
   Usable,
   Thenable,
   ReactDebugInfo,
-  ReactStore,
+  ReactExternalDataSource,
 } from 'shared/ReactTypes';
 import type {
   ContextDependency,
@@ -483,7 +483,7 @@ function useSyncExternalStore<T>(
 }
 
 function useStore<S, T>(
-  store: ReactStore<S, mixed>,
+  store: ReactExternalDataSource<S, mixed>,
   selector?: (state: S) => T,
 ): T {
   throw new Error('useStore is not yet supported in React Debug Tools.');

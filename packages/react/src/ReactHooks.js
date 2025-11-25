@@ -13,7 +13,7 @@ import type {
   StartTransitionOptions,
   Usable,
   Awaited,
-  ReactStore,
+  ReactExternalDataSource,
 } from 'shared/ReactTypes';
 import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
@@ -200,7 +200,7 @@ export function useSyncExternalStore<T>(
 }
 
 export function useStore<S, T>(
-  store: ReactStore<S, mixed>,
+  store: ReactExternalDataSource<S, mixed>,
   selector?: (state: S) => T,
 ): S | T {
   const dispatcher = resolveDispatcher();

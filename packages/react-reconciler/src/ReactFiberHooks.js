@@ -14,7 +14,7 @@ import type {
   Thenable,
   RejectedThenable,
   Awaited,
-  ReactStore,
+  ReactExternalDataSource,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -1825,7 +1825,10 @@ function storeReducerPlaceholder<S, A>(state: S, action: A): S {
   );
 }
 
-function mountStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
+function mountStore<S, T>(
+  store: ReactExternalDataSource<S, mixed>,
+  selector?: S => T,
+): T {
   const actualSelector: S => T =
     selector === undefined ? (identity: any) : selector;
   const root = ((getWorkInProgressRoot(): any): FiberRoot);
@@ -1868,7 +1871,10 @@ function mountStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
   return initialState;
 }
 
-function updateStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
+function updateStore<S, T>(
+  store: ReactExternalDataSource<S, mixed>,
+  selector?: S => T,
+): T {
   const actualSelector: S => T =
     selector === undefined ? (identity: any) : selector;
   const root = ((getWorkInProgressRoot(): any): FiberRoot);
@@ -4374,7 +4380,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    useStore<S, T>(
+      store: ReactExternalDataSource<S, mixed>,
+      selector?: (state: S) => T,
+    ): T {
       currentHookNameInDev = 'useStore';
       mountHookTypesDev();
       return mountStore(store, selector);
@@ -4433,7 +4442,7 @@ if (__DEV__) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useStore = function useStore<
       S,
       T,
-    >(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    >(store: ReactExternalDataSource<S, mixed>, selector?: (state: S) => T): T {
       currentHookNameInDev = 'useStore';
       mountHookTypesDev();
       return mountStore(store, selector);
@@ -4556,7 +4565,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    useStore<S, T>(
+      store: ReactExternalDataSource<S, mixed>,
+      selector?: (state: S) => T,
+    ): T {
       currentHookNameInDev = 'useStore';
       updateHookTypesDev();
       return mountStore(store, selector);
@@ -4614,7 +4626,7 @@ if (__DEV__) {
   if (enableStore) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useStore =
       function useStore<S, T>(
-        store: ReactStore<S, mixed>,
+        store: ReactExternalDataSource<S, mixed>,
         selector?: (state: S) => T,
       ): T {
         currentHookNameInDev = 'useStore';
@@ -4739,7 +4751,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    useStore<S, T>(
+      store: ReactExternalDataSource<S, mixed>,
+      selector?: (state: S) => T,
+    ): T {
       currentHookNameInDev = 'useStore';
       updateHookTypesDev();
       return updateStore(store, selector);
@@ -4798,7 +4813,7 @@ if (__DEV__) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useStore = function useStore<
       S,
       T,
-    >(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    >(store: ReactExternalDataSource<S, mixed>, selector?: (state: S) => T): T {
       currentHookNameInDev = 'useStore';
       updateHookTypesDev();
       return updateStore(store, selector);
@@ -4921,7 +4936,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    useStore<S, T>(
+      store: ReactExternalDataSource<S, mixed>,
+      selector?: (state: S) => T,
+    ): T {
       currentHookNameInDev = 'useStore';
       updateHookTypesDev();
       return updateStore(store, selector);
@@ -4980,7 +4998,7 @@ if (__DEV__) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useStore = function useStore<
       S,
       T,
-    >(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    >(store: ReactExternalDataSource<S, mixed>, selector?: (state: S) => T): T {
       currentHookNameInDev = 'useStore';
       updateHookTypesDev();
       return updateStore(store, selector);
@@ -5121,7 +5139,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    useStore<S, T>(
+      store: ReactExternalDataSource<S, mixed>,
+      selector?: (state: S) => T,
+    ): T {
       currentHookNameInDev = 'useStore';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -5187,7 +5208,7 @@ if (__DEV__) {
   if (enableStore) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useStore =
       function useStore<S, T>(
-        store: ReactStore<S, mixed>,
+        store: ReactExternalDataSource<S, mixed>,
         selector?: (state: S) => T,
       ): T {
         currentHookNameInDev = 'useStore';
@@ -5331,7 +5352,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    useStore<S, T>(
+      store: ReactExternalDataSource<S, mixed>,
+      selector?: (state: S) => T,
+    ): T {
       currentHookNameInDev = 'useStore';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -5397,7 +5421,7 @@ if (__DEV__) {
   if (enableStore) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useStore =
       function useStore<S, T>(
-        store: ReactStore<S, mixed>,
+        store: ReactExternalDataSource<S, mixed>,
         selector?: (state: S) => T,
       ): T {
         currentHookNameInDev = 'useStore';
@@ -5541,7 +5565,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useStore<S, T>(store: ReactStore<S, mixed>, selector?: (state: S) => T): T {
+    useStore<S, T>(
+      store: ReactExternalDataSource<S, mixed>,
+      selector?: (state: S) => T,
+    ): T {
       currentHookNameInDev = 'useStore';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -5607,7 +5634,7 @@ if (__DEV__) {
   if (enableStore) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useStore =
       function useStore<S, T>(
-        store: ReactStore<S, mixed>,
+        store: ReactExternalDataSource<S, mixed>,
         selector?: (state: S) => T,
       ): T {
         currentHookNameInDev = 'useStore';
