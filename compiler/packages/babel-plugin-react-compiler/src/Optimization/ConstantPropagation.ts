@@ -31,6 +31,7 @@ import {
   removeUnreachableForUpdates,
 } from '../HIR/HIRBuilder';
 import {eliminateRedundantPhi} from '../SSA';
+import {retainWhere} from '../Utils/utils';
 
 /*
  * Applies constant propagation/folding to the given function. The approach is
@@ -607,6 +608,19 @@ function evaluateInstruction(
     case 'ObjectMethod':
     case 'FunctionExpression': {
       constantPropagationImpl(value.loweredFunc.func, constants);
+      return null;
+    }
+    case 'StartMemoize': {
+      if (value.deps != null) {
+        for (const dep of value.deps) {
+          if (dep.root.kind === 'NamedLocal') {
+            const placeValue = read(constants, dep.root.value);
+            if (placeValue != null && placeValue.kind === 'Primitive') {
+              dep.root.constant = true;
+            }
+          }
+        }
+      }
       return null;
     }
     default: {

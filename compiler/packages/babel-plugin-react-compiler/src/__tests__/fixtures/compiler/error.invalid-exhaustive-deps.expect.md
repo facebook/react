@@ -87,7 +87,7 @@ error.invalid-exhaustive-deps.ts:31:5
   29 |     return [];
   30 |     // error: unnecessary
 > 31 |   }, [x, y.z, z?.y?.a, UNUSED_GLOBAL]);
-     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unnecessary dependencies `x`, `y.z`, `z?.y?.a`, `UNUSED_GLOBAL`
+     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Unnecessary dependencies `x` (), `y.z` (), `z?.y?.a` (), `UNUSED_GLOBAL` ()
   32 |   const ref1 = useRef(null);
   33 |   const ref2 = useRef(null);
   34 |   const ref = z ? ref1 : ref2;
