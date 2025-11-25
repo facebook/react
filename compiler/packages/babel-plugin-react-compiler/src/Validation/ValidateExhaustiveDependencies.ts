@@ -24,6 +24,7 @@ import {
   InstructionKind,
   isStableType,
   isSubPath,
+  isSubPathIgnoringOptionals,
   isUseRefType,
   LoadGlobal,
   ManualMemoDependency,
@@ -42,20 +43,37 @@ import {retainWhere} from '../Utils/utils';
 const DEBUG = false;
 
 /**
- * Validates that existing manual memoization had exhaustive dependencies.
- * Memoization with missing or extra reactive dependencies is invalid React
- * and compilation can change behavior, causing a value to be computed more
- * or less times.
+ * Validates that existing manual memoization is exhaustive and does not
+ * have extraneous dependencies. The goal of the validation is to ensure
+ * that auto-memoization will not substantially change the behavior of
+ * the program:
+ * - If the manual dependencies were non-exhaustive (missing important deps)
+ *   then auto-memoization will include those dependencies, and cause the
+ *   value to update *more* frequently.
+ * - If the manual dependencies had extraneous deps, then auto memoization
+ *   will remove them and cause the value to update *less* frequently.
  *
- * TODOs:
- * - Handle cases of mixed optional and non-optional versions of the same path,
- *   eg referecing both x.y.z and x.y?.z in the same memo block. we should collapse
- *   this into a single canonical dep that we look for in the manual deps. see the
- *   existing exhaustive deps rule for implementation.
- * - Handle cases where the user deps were not simple identifiers + property chains.
- *   We try to detect this in ValidateUseMemo but we miss some cases. The problem
- *   is that invalid forms can be value blocks or function calls that don't get
- *   removed by DCE, leaving a structure like:
+ * We consider a value V as missing if ALL of the following conditions are met:
+ * - V is reactive
+ * - There is no manual dependency path P such that whenever V would change,
+ *   P would also change. If V is `x.y.z`, this means there must be some
+ *   path P that is either `x.y.z`, `x.y`, or `x`. Note that we assume no
+ *   interior mutability, such that a shorter path "covers" changes to longer
+ *   more precise paths.
+ *
+ * We consider a value V extraneous if either of the folowing are true:
+ * - V is a reactive local that is unreferenced
+ * - V is a global that is unreferenced
+ *
+ * In other words, we allow extraneous non-reactive values since we know they cannot
+ * impact how often the memoization would run.
+ *
+ * ## TODO: Invalid, Complex Deps
+ *
+ * Handle cases where the user deps were not simple identifiers + property chains.
+ * We try to detect this in ValidateUseMemo but we miss some cases. The problem
+ * is that invalid forms can be value blocks or function calls that don't get
+ * removed by DCE, leaving a structure like:
  *
  * StartMemoize
  * t0 = <value to memoize>
@@ -208,31 +226,9 @@ export function validateExhaustiveDependencies(
         reason: 'Unexpected function dependency',
         loc: value.loc,
       });
-      /**
-       * Dependencies technically only need to include reactive values. However,
-       * reactivity inference for general values is subtle since it involves all
-       * of our complex control and data flow analysis. To keep results more
-       * stable and predictable to developers, we intentionally stay closer to
-       * the rules of the classic exhaustive-deps rule. Values should be included
-       * as dependencies if either of the following is true:
-       * - They're reactive
-       * - They're non-reactive and not a known-stable value type.
-       *
-       * Thus `const ref: Ref = cond ? ref1 : ref2` has to be a dependency
-       * (assuming `cond` is reactive) since it's reactive despite being a ref.
-       *
-       * Similarly, `const x = [1,2,3]` has to be a dependency since even
-       * though it's non reactive, it's not a known stable type.
-       *
-       * TODO: consider reimplementing a simpler form of reactivity inference.
-       * Ideally we'd consider `const ref: Ref = cond ? ref1 : ref2` as a required
-       * dependency even if our data/control flow tells us that `cond` is non-reactive.
-       * It's simpler for developers to reason about based on a more structural/AST
-       * driven approach.
-       */
-      const isRequiredDependency =
-        reactive.has(inferredDependency.identifier.id) ||
-        !isStableType(inferredDependency.identifier);
+      const isRequiredDependency = reactive.has(
+        inferredDependency.identifier.id,
+      );
       let hasMatchingManualDependency = false;
       for (const manualDependency of manualDependencies) {
         if (
@@ -240,7 +236,10 @@ export function validateExhaustiveDependencies(
           manualDependency.root.value.identifier.id ===
             inferredDependency.identifier.id &&
           (areEqualPaths(manualDependency.path, inferredDependency.path) ||
-            isSubPath(manualDependency.path, inferredDependency.path))
+            isSubPathIgnoringOptionals(
+              manualDependency.path,
+              inferredDependency.path,
+            ))
         ) {
           hasMatchingManualDependency = true;
           matched.add(manualDependency);
@@ -261,6 +260,15 @@ export function validateExhaustiveDependencies(
       extra.push(dep);
     }
 
+    /**
+     * Per docblock, we only consider dependencies as extraneous if
+     * they are unused globals or reactive locals. Notably, this allows
+     * non-reactive locals.
+     */
+    retainWhere(extra, dep => {
+      return dep.root.kind === 'Global' || dep.root.value.reactive;
+    });
+
     if (missing.length !== 0 || extra.length !== 0) {
       let suggestions: Array<CompilerSuggestion> | null = null;
       if (startMemo.depsLoc != null && typeof startMemo.depsLoc !== 'symbol') {
@@ -276,7 +284,7 @@ export function validateExhaustiveDependencies(
       if (missing.length !== 0) {
         const diagnostic = CompilerDiagnostic.create({
           category: ErrorCategory.MemoDependencies,
-          reason: 'Found non-exhaustive dependencies',
+          reason: 'Found missing memoization dependencies',
           description:
             'Missing dependencies can cause a value not to update when those inputs change, ' +
             'resulting in stale UI',
@@ -301,7 +309,7 @@ export function validateExhaustiveDependencies(
           reason: 'Found unnecessary memoization dependencies',
           description:
             'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-            'which can cause effects to run more than expected',
+            'causing performance regressions and effects to fire more often than expected',
         });
         diagnostic.withDetails({
           kind: 'error',
