@@ -76,7 +76,6 @@ import {
   isGestureRender,
   GestureLane,
   UpdateLanes,
-  includesOnlyTransitions,
   includesTransitionLane,
   SomeTransitionLane,
 } from './ReactFiberLane';
@@ -241,13 +240,6 @@ type StoreInstance<T> = {
 type StoreConsistencyCheck<T> = {
   value: T,
   getSnapshot: () => T,
-};
-
-// TODO: Use something other than null
-type StoreQueue<T> = {
-  syncEagerState: T | null,
-  transitionEagerState: T | null,
-  lanes: Lanes,
 };
 
 type EventFunctionPayload<Args, Return, F: (...Array<Args>) => Return> = {
@@ -1822,15 +1814,15 @@ function updateSyncExternalStore<T>(
   return nextSnapshot;
 }
 
-// Used as a placeholder to let us reuse updateReducerImpl for useStore.
-function storeReducer<S, A>(state: S, action: A): S {
+function identity<T>(x: T): T {
+  return x;
+}
+
+function storeReducerPlaceholder<S, A>(state: S, action: A): S {
+  // This reducer is never called because we handle updates in the subscription.
   throw new Error(
     'storeReducer should never be called. This is a bug in React. Please file an issue.',
   );
-}
-
-function identity<T>(x: T): T {
-  return x;
 }
 
 function mountStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
@@ -1853,22 +1845,91 @@ function mountStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
   const queue: UpdateQueue<T, mixed> = {
     pending: null,
     lanes: NoLanes,
-    dispatch: null,
-    lastRenderedReducer: storeReducer,
+    // Hack: We don't use dispatch for anything, so we can repurpose
+    // it to store the selector.
+    dispatch: actualSelector as any,
+    lastRenderedReducer: storeReducerPlaceholder,
     lastRenderedState: (initialState: any),
   };
   hook.queue = queue;
 
   mountEffect(
-    createSubscription.bind(null, wrapper, fiber, actualSelector, queue),
-    [],
+    createSubscription.bind(
+      null,
+      wrapper,
+      fiber,
+      actualSelector,
+      queue,
+      storeState,
+    ),
+    [actualSelector],
   );
 
+  return initialState;
+}
+
+function updateStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
+  const actualSelector: S => T =
+    selector === undefined ? (identity: any) : selector;
+  const root = ((getWorkInProgressRoot(): any): FiberRoot);
+  if (root.storeTracker === null) {
+    // TODO: This could be an invariant violation if the store was not
+    // mounted previously.
+    root.storeTracker = new StoreTracker();
+  }
+
+  const wrapper = root.storeTracker.getWrapper(store);
+  const hook = updateWorkInProgressHook();
+  const storeState = wrapper.getStateForLanes(renderLanes);
+  const [state, previousSelector] = updateReducerImpl<T, mixed>(
+    hook,
+    ((currentHook: any): Hook),
+    storeReducerPlaceholder,
+  );
+
+  const fiber = currentlyRenderingFiber;
+  const queue = hook.queue;
+
+  let nextState = state;
+
+  if (previousSelector !== actualSelector) {
+    queue.dispatch = actualSelector;
+    nextState = actualSelector(storeState);
+    queue.lastRenderedState = nextState;
+  }
+
+  updateEffect(
+    createSubscription.bind(
+      null,
+      wrapper,
+      fiber,
+      actualSelector,
+      queue,
+      storeState,
+    ),
+    [actualSelector],
+  );
+
+  return nextState;
+}
+
+// Subscribes to the store and ensures updates are scheduled for any pending
+// transitions.
+function createSubscription<S, T>(
+  storeWrapper: StoreWrapper<S, mixed>,
+  fiber: Fiber,
+  selector: S => T,
+  queue: UpdateQueue<T, mixed>,
+  storeState: S,
+): () => void {
   // If we are mounting mid-transition, we need to schedule an update to
   // bring the selected state up to date with the transition state.
-  const transitionState = wrapper.getStateForLanes(SomeTransitionLane);
-  if (!is(storeState, transitionState)) {
-    const newState = actualSelector(transitionState);
+  const mountTransitionState =
+    storeWrapper.getStateForLanes(SomeTransitionLane);
+  if (!is(storeState, mountTransitionState)) {
+    const newState = selector(mountTransitionState);
+    // TODO: It's possible this is the same as the existing mount state. In that
+    // case we should avoid triggering a redundant update.
     const lane = SomeTransitionLane;
     const update: Update<T, mixed> = {
       lane,
@@ -1891,43 +1952,6 @@ function mountStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
       entangleTransitionUpdate(updateRoot, queue, lane);
     }
   }
-  return initialState;
-}
-
-function updateStore<S, T>(store: ReactStore<S, mixed>, selector?: S => T): T {
-  const actualSelector: S => T =
-    selector === undefined ? (identity: any) : selector;
-  const root = ((getWorkInProgressRoot(): any): FiberRoot);
-  if (root.storeTracker === null) {
-    // TODO: This could be an invariant violation if the store was not
-    // mounted previously.
-    root.storeTracker = new StoreTracker();
-  }
-
-  const wrapper = root.storeTracker.getWrapper(store);
-  const hook = updateWorkInProgressHook();
-  const [state /* _dispatch */] = updateReducerImpl<T, mixed>(
-    hook,
-    ((currentHook: any): Hook),
-    storeReducer,
-  );
-
-  const fiber = currentlyRenderingFiber;
-  const queue = hook.queue;
-
-  updateEffect(
-    createSubscription.bind(null, wrapper, fiber, actualSelector, queue),
-    [],
-  );
-  return state;
-}
-
-function createSubscription<S, T>(
-  storeWrapper: StoreWrapper<S, mixed>,
-  fiber: Fiber,
-  selector: S => T,
-  queue: UpdateQueue<T, mixed>,
-): () => void {
   return storeWrapper.subscribe(() => {
     const lane = requestUpdateLane(fiber);
     // Eagerly compute the new selected state
@@ -1936,6 +1960,8 @@ function createSubscription<S, T>(
     if (
       queue.lanes === NoLanes &&
       queue.pending === null &&
+      // TODO: `queue.lastRenderedState` may not be the correct thing to check here since
+      // this may be at a different priority than the last render.
       is(newState, queue.lastRenderedState)
     ) {
       // Selected state hasn't changed. Bail out.
@@ -1943,6 +1969,7 @@ function createSubscription<S, T>(
       // In other similar places we call `enqueueConcurrentHookUpdateAndEagerlyBailout`
       // but we don't need to here because we don't use update ordering to
       // manage rebasing, we do it ourselves eagerly.
+
       return;
     }
 
