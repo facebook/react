@@ -25,9 +25,9 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Found missing memoization dependencies
+Error: Found missing/extra memoization dependencies
 
-Missing dependencies can cause a value not to update when those inputs change, resulting in stale UI.
+Missing dependencies can cause a value to update less often than it should, resulting in stale UI.
 
 error.sketchy-code-exhaustive-deps.ts:8:16
    6 |   const foo = useCallback(
@@ -37,6 +37,8 @@ error.sketchy-code-exhaustive-deps.ts:8:16
    9 |     }, // eslint-disable-next-line react-hooks/exhaustive-deps
   10 |     []
   11 |   );
+
+Inferred dependencies: `[item]`
 ```
           
       
