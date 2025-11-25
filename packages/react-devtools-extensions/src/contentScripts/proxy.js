@@ -117,3 +117,39 @@ function connectPort() {
   // $FlowFixMe[incompatible-use]
   port.onDisconnect.addListener(handleDisconnect);
 }
+
+let evalRequestId = 0;
+const evalRequestCallbacks = new Map();
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  switch (msg?.source) {
+    case 'devtools-page-eval': {
+      const {scriptId, args} = msg.payload;
+      const requestId = evalRequestId++;
+      window.postMessage(
+        {
+          source: 'react-devtools-content-script-eval',
+          payload: {
+            requestId,
+            scriptId,
+            args,
+          },
+        },
+        '*',
+      );
+      evalRequestCallbacks.set(requestId, sendResponse);
+      return true; // Indicate we will respond asynchronously
+    }
+  }
+});
+
+window.addEventListener('message', event => {
+  if (event.data?.source === 'react-devtools-content-script-eval-response') {
+    const {requestId, response} = event.data.payload;
+    const callback = evalRequestCallbacks.get(requestId);
+    if (callback) {
+      callback(response);
+      evalRequestCallbacks.delete(requestId);
+    }
+  }
+});

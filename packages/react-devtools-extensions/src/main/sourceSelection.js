@@ -1,7 +1,9 @@
-/* global chrome */
+import {evalInInspectedWindow} from './evalInInspectedWindow';
 
 export function viewAttributeSource(rendererID, elementID, path) {
-  chrome.devtools.inspectedWindow.eval(
+  evalInInspectedWindow(
+    'viewAttributeSource',
+    [{rendererID, elementID, path}],
     '{' + // The outer block is important because it means we can declare local variables.
       'const renderer = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.rendererInterfaces.get(' +
       JSON.stringify(rendererID) +
@@ -31,7 +33,9 @@ export function viewAttributeSource(rendererID, elementID, path) {
 }
 
 export function viewElementSource(rendererID, elementID) {
-  chrome.devtools.inspectedWindow.eval(
+  evalInInspectedWindow(
+    'viewElementSource',
+    [{rendererID, elementID}],
     '{' + // The outer block is important because it means we can declare local variables.
       'const renderer = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.rendererInterfaces.get(' +
       JSON.stringify(rendererID) +

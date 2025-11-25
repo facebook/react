@@ -1,4 +1,4 @@
-/* global chrome */
+import {evalInInspectedWindow} from './evalInInspectedWindow';
 
 class CouldNotFindReactOnThePageError extends Error {
   constructor() {
@@ -26,7 +26,9 @@ export function startReactPolling(
 
   // This function will call onSuccess only if React was found and polling is not aborted, onError will be called for every other case
   function checkIfReactPresentInInspectedWindow(onSuccess, onError) {
-    chrome.devtools.inspectedWindow.eval(
+    evalInInspectedWindow(
+      'checkIfReactPresentInInspectedWindow',
+      [],
       'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
       (pageHasReact, exceptionInfo) => {
         if (status === 'aborted') {
