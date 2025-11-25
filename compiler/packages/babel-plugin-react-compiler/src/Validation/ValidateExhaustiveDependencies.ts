@@ -22,6 +22,7 @@ import {
   Identifier,
   IdentifierId,
   InstructionKind,
+  isPrimitiveType,
   isStableType,
   isSubPath,
   isSubPathIgnoringOptionals,
@@ -53,20 +54,18 @@ const DEBUG = false;
  * - If the manual dependencies had extraneous deps, then auto memoization
  *   will remove them and cause the value to update *less* frequently.
  *
- * We consider a value V as missing if ALL of the following conditions are met:
- * - V is reactive
- * - There is no manual dependency path P such that whenever V would change,
- *   P would also change. If V is `x.y.z`, this means there must be some
- *   path P that is either `x.y.z`, `x.y`, or `x`. Note that we assume no
- *   interior mutability, such that a shorter path "covers" changes to longer
- *   more precise paths.
- *
- * We consider a value V extraneous if either of the folowing are true:
- * - V is a reactive local that is unreferenced
- * - V is a global that is unreferenced
- *
- * In other words, we allow extraneous non-reactive values since we know they cannot
- * impact how often the memoization would run.
+ * The implementation compares the manual dependencies against the values
+ * actually used within the memoization function
+ * - For each value V referenced in the memo function, either:
+ *   - If the value is non-reactive *and* a known stable type, then the
+ *     value may optionally be specified as an exact dependency.
+ *   - Otherwise, report an error unless there is a manual dependency that will
+ *     invalidate whenever V invalidates. If `x.y.z` is referenced, there must
+ *     be a manual dependency for `x.y.z`, `x.y`, or `x`. Note that we assume
+ *     no interior mutability, ie we assume that any changes to inner paths must
+ *     always cause the other path to change as well.
+ * - Any dependencies that do not correspond to a value referenced in the memo
+ *   function are considered extraneous and throw an error
  *
  * ## TODO: Invalid, Complex Deps
  *
@@ -226,9 +225,6 @@ export function validateExhaustiveDependencies(
         reason: 'Unexpected function dependency',
         loc: value.loc,
       });
-      const isRequiredDependency = reactive.has(
-        inferredDependency.identifier.id,
-      );
       let hasMatchingManualDependency = false;
       for (const manualDependency of manualDependencies) {
         if (
@@ -243,31 +239,39 @@ export function validateExhaustiveDependencies(
         ) {
           hasMatchingManualDependency = true;
           matched.add(manualDependency);
-          if (!isRequiredDependency) {
-            extra.push(manualDependency);
-          }
         }
       }
-      if (isRequiredDependency && !hasMatchingManualDependency) {
-        missing.push(inferredDependency);
+      const isOptionalDependency =
+        !reactive.has(inferredDependency.identifier.id) &&
+        (isStableType(inferredDependency.identifier) ||
+          isPrimitiveType(inferredDependency.identifier));
+      if (hasMatchingManualDependency || isOptionalDependency) {
+        continue;
       }
+      missing.push(inferredDependency);
     }
 
     for (const dep of startMemo.deps ?? []) {
       if (matched.has(dep)) {
         continue;
       }
+      if (dep.root.kind === 'NamedLocal' && dep.root.constant) {
+        CompilerError.simpleInvariant(
+          !dep.root.value.reactive &&
+            isPrimitiveType(dep.root.value.identifier),
+          {
+            reason: 'Expected constant-folded dependency to be non-reactive',
+            loc: dep.root.value.loc,
+          },
+        );
+        /*
+         * Constant primitives can get constant-folded, which means we won't
+         * see a LoadLocal for the value within the memo function.
+         */
+        continue;
+      }
       extra.push(dep);
     }
-
-    /**
-     * Per docblock, we only consider dependencies as extraneous if
-     * they are unused globals or reactive locals. Notably, this allows
-     * non-reactive locals.
-     */
-    retainWhere(extra, dep => {
-      return dep.root.kind === 'Global' || dep.root.value.reactive;
-    });
 
     if (missing.length !== 0 || extra.length !== 0) {
       let suggestions: Array<CompilerSuggestion> | null = null;
