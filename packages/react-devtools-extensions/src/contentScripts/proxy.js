@@ -147,12 +147,19 @@ window.addEventListener('message', event => {
   if (event.data?.source === 'react-devtools-content-script-eval-response') {
     const {requestId, response} = event.data.payload;
     const callback = evalRequestCallbacks.get(requestId);
-    if (callback) {
-      try {
-        callback(response);
-      } finally {
-        evalRequestCallbacks.delete(requestId);
-      }
+    try {
+      if (!callback)
+        throw new Error(
+          `No eval request callback for id "${requestId}" exists.`,
+        );
+      callback(response);
+    } catch (e) {
+      console.warn(
+        'React DevTools Content Script eval response error occurred:',
+        e,
+      );
+    } finally {
+      evalRequestCallbacks.delete(requestId);
     }
   }
 });
