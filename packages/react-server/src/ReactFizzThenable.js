@@ -19,8 +19,10 @@ import type {
   FulfilledThenable,
   RejectedThenable,
 } from 'shared/ReactTypes';
+import type {ComponentStackNode} from './ReactFizzComponentStack';
 
 import noop from 'shared/noop';
+import {currentTaskInDEV} from './ReactFizzCurrentTask';
 
 export opaque type ThenableState = Array<Thenable<any>>;
 
@@ -126,6 +128,9 @@ export function trackUsedThenable<T>(
       // get captured by the work loop, log a warning, because that means
       // something in userspace must have caught it.
       suspendedThenable = thenable;
+      if (__DEV__ && shouldCaptureSuspendedCallSite) {
+        captureSuspendedCallSite();
+      }
       throw SuspenseException;
     }
   }
@@ -162,4 +167,78 @@ export function getSuspendedThenable(): Thenable<mixed> {
   const thenable = suspendedThenable;
   suspendedThenable = null;
   return thenable;
+}
+
+let shouldCaptureSuspendedCallSite: boolean = false;
+export function setCaptureSuspendedCallSiteDEV(capture: boolean): void {
+  if (!__DEV__) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'setCaptureSuspendedCallSiteDEV was called in a production environment. ' +
+        'This is a bug in React.',
+    );
+  }
+  shouldCaptureSuspendedCallSite = capture;
+}
+
+// DEV-only
+let suspendedCallSiteStack: ComponentStackNode | null = null;
+let suspendedCallSiteDebugTask: ConsoleTask | null = null;
+function captureSuspendedCallSite(): void {
+  const currentTask = currentTaskInDEV;
+  if (currentTask === null) {
+    // eslint-disable-next-line react-internal/prod-error-codes -- not a prod error
+    throw new Error(
+      'Expected to have a current task when tracking a suspend call site. ' +
+        'This is a bug in React.',
+    );
+  }
+  const currentComponentStack = currentTask.componentStack;
+  if (currentComponentStack === null) {
+    // eslint-disable-next-line react-internal/prod-error-codes -- not a prod error
+    throw new Error(
+      'Expected to have a component stack on the current task when ' +
+        'tracking a suspended call site. This is a bug in React.',
+    );
+  }
+  suspendedCallSiteStack = {
+    parent: currentComponentStack.parent,
+    type: currentComponentStack.type,
+    owner: currentComponentStack.owner,
+    stack: Error('react-stack-top-frame'),
+  };
+  suspendedCallSiteDebugTask = currentTask.debugTask;
+}
+export function getSuspendedCallSiteStackDEV(): ComponentStackNode | null {
+  if (__DEV__) {
+    if (suspendedCallSiteStack === null) {
+      return null;
+    }
+    const callSite = suspendedCallSiteStack;
+    suspendedCallSiteStack = null;
+    return callSite;
+  } else {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'getSuspendedCallSiteDEV was called in a production environment. ' +
+        'This is a bug in React.',
+    );
+  }
+}
+
+export function getSuspendedCallSiteDebugTaskDEV(): ConsoleTask | null {
+  if (__DEV__) {
+    if (suspendedCallSiteDebugTask === null) {
+      return null;
+    }
+    const debugTask = suspendedCallSiteDebugTask;
+    suspendedCallSiteDebugTask = null;
+    return debugTask;
+  } else {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'getSuspendedCallSiteDebugTaskDEV was called in a production environment. ' +
+        'This is a bug in React.',
+    );
+  }
 }

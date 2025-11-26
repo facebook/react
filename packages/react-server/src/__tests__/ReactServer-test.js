@@ -17,13 +17,25 @@ let ReactNoopServer;
 function normalizeCodeLocInfo(str) {
   return (
     str &&
-    str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
-      const dot = name.lastIndexOf('.');
-      if (dot !== -1) {
-        name = name.slice(dot + 1);
-      }
-      return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
-    })
+    str
+      .split('\n')
+      .filter(frame => {
+        // These frames should be ignore-listed since they point into
+        // React internals i.e. node_modules.
+        return (
+          frame.indexOf('ReactFizzHooks') === -1 &&
+          frame.indexOf('ReactFizzThenable') === -1 &&
+          frame.indexOf('ReactHooks') === -1
+        );
+      })
+      .join('\n')
+      .replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+        const dot = name.lastIndexOf('.');
+        if (dot !== -1) {
+          name = name.slice(dot + 1);
+        }
+        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+      })
   );
 }
 
@@ -53,8 +65,21 @@ describe('ReactServer', () => {
       React.use(promise);
       return <div>Hello, Dave!</div>;
     }
+    function Indirection({promise}) {
+      return (
+        <div>
+          <Component promise={promise} />
+        </div>
+      );
+    }
     function App({promise}) {
-      return <Component promise={promise} />;
+      return (
+        <section>
+          <div>
+            <Indirection promise={promise} />
+          </div>
+        </section>
+      );
     }
 
     let caughtError;
@@ -80,10 +105,28 @@ describe('ReactServer', () => {
       }),
     );
     expect(normalizeCodeLocInfo(componentStack)).toEqual(
-      '\n    in Component (at **)' + '\n    in App (at **)',
+      '\n    in Component (at **)' +
+        '\n    in div' +
+        '\n    in Indirection (at **)' +
+        '\n    in div' +
+        '\n    in section' +
+        '\n    in App (at **)',
     );
-    expect(normalizeCodeLocInfo(ownerStack)).toEqual(
-      __DEV__ ? '\n    in App (at **)' : null,
-    );
+    if (__DEV__) {
+      if (gate(flags => flags.enableAsyncDebugInfo)) {
+        expect(normalizeCodeLocInfo(ownerStack)).toEqual(
+          '' +
+            '\n    in Component (at **)' +
+            '\n    in Indirection (at **)' +
+            '\n    in App (at **)',
+        );
+      } else {
+        expect(normalizeCodeLocInfo(ownerStack)).toEqual(
+          '' + '\n    in Indirection (at **)' + '\n    in App (at **)',
+        );
+      }
+    } else {
+      expect(ownerStack).toBeNull();
+    }
   });
 });

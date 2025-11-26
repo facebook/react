@@ -190,7 +190,13 @@ import assign from 'shared/assign';
 import noop from 'shared/noop';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
-import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
+import {
+  SuspenseException,
+  getSuspendedThenable,
+  getSuspendedCallSiteStackDEV,
+  getSuspendedCallSiteDebugTaskDEV,
+  setCaptureSuspendedCallSiteDEV,
+} from './ReactFizzThenable';
 
 // Linked list representing the identity of a component given the component/tag name and key.
 // The name might be minified but we assume that it's going to be the same generated name. Typically
@@ -1021,6 +1027,39 @@ function pushHaltedAwaitOnComponentStack(
       }
     }
   }
+}
+
+function pushSuspendedCallSiteOnComponentStack(
+  request: Request,
+  task: Task,
+): void {
+  setCaptureSuspendedCallSiteDEV(true);
+  let suspendCallSiteStack: ComponentStackNode | null = null;
+  let suspendCallSiteDebugTask: ConsoleTask | null = null;
+  const previousPingedTasks = request.pingedTasks;
+  try {
+    // TODO: Use a dedicated method to re-render instead of abusing ping.
+    request.pingedTasks = [task];
+    performWork(request);
+    suspendCallSiteStack = getSuspendedCallSiteStackDEV();
+    suspendCallSiteDebugTask = getSuspendedCallSiteDebugTaskDEV();
+  } finally {
+    request.pingedTasks = previousPingedTasks;
+    setCaptureSuspendedCallSiteDEV(false);
+  }
+
+  if (suspendCallSiteStack !== null) {
+    const ownerStack = task.componentStack;
+    task.componentStack = {
+      // The owner of the suspended call site would be the owner of this task.
+      // We need the task itself otherwise we'd miss a frame.
+      owner: ownerStack,
+      parent: suspendCallSiteStack.parent,
+      stack: suspendCallSiteStack.stack,
+      type: suspendCallSiteStack.type,
+    };
+  }
+  task.debugTask = suspendCallSiteDebugTask;
 }
 
 function pushServerComponentStack(
@@ -4535,12 +4574,9 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         debugInfo = node._debugInfo;
       }
       pushHaltedAwaitOnComponentStack(task, debugInfo);
-      /*
       if (task.thenableState !== null) {
-        // TODO: If we were stalled inside use() of a Client Component then we should
-        // rerender to get the stack trace from the use() call.
+        pushSuspendedCallSiteOnComponentStack(request, task);
       }
-      */
     }
   }
 
@@ -4962,7 +4998,9 @@ function retryRenderTask(
   task: RenderTask,
   segment: Segment,
 ): void {
-  if (segment.status !== PENDING) {
+  // TODO: We only retry when aborted to get the suspended callsite.
+  // Use a dedicated mechanism to re-render.
+  if (segment.status !== PENDING && segment.status !== ABORTED) {
     // We completed this by other means before we had a chance to retry it.
     return;
   }

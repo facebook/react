@@ -45,6 +45,11 @@ module.exports = function render(url, res) {
     onError(x) {
       didError = true;
       console.error(x);
+      // Redundant with `console.createTask`. Only added for debugging.
+      console.error(
+        'The above error occurred during server rendering: %s',
+        React.captureOwnerStack()
+      );
     },
   });
   // Abandon and switch to client rendering if enough time passes.
