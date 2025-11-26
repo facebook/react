@@ -1,4 +1,4 @@
-// @enableNewMutationAliasingModel @enablePreserveExistingMemoizationGuarantees:false
+// @enableNewMutationAliasingModel @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import {useMemo} from 'react';
 
 function useFoo(arr1, arr2) {
