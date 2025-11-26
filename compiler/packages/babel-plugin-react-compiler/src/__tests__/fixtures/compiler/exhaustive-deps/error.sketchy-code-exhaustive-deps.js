@@ -1,8 +1,11 @@
+import {arrayPush} from 'shared-runtime';
+
+// @validateExhaustiveMemoizationDependencies
 function Component() {
   const item = [];
   const foo = useCallback(
     () => {
-      item.push(1);
+      arrayPush(item, 1);
     }, // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
