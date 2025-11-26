@@ -61,7 +61,13 @@ describe('ReactServer', () => {
   });
 
   it('has Owner Stacks in DEV when aborted', async () => {
+    const Context = React.createContext(null);
+
     function Component({promise}) {
+      const context = React.use(Context);
+      if (context === null) {
+        throw new Error('Missing context');
+      }
       React.use(promise);
       return <div>Hello, Dave!</div>;
     }
@@ -86,7 +92,9 @@ describe('ReactServer', () => {
     let componentStack;
     let ownerStack;
     const result = ReactNoopServer.render(
-      <App promise={new Promise(() => {})} />,
+      <Context value="provided">
+        <App promise={new Promise(() => {})} />
+      </Context>,
       {
         onError: (error, errorInfo) => {
           caughtError = error;
