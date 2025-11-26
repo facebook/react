@@ -1029,24 +1029,65 @@ function pushHaltedAwaitOnComponentStack(
   }
 }
 
+// performWork + retryTask without mutation
+function rerenderHaltedTask(request: Request, task: Task): void {
+  const prevContext = getActiveContext();
+  const prevDispatcher = ReactSharedInternals.H;
+  ReactSharedInternals.H = HooksDispatcher;
+  const prevAsyncDispatcher = ReactSharedInternals.A;
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
+
+  const prevRequest = currentRequest;
+  currentRequest = request;
+
+  const prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+  ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+
+  const prevResumableState = currentResumableState;
+  setCurrentResumableState(request.resumableState);
+  switchContext(task.context);
+  const prevTaskInDEV = currentTaskInDEV;
+  setCurrentTaskInDEV(task);
+  try {
+    retryNode(request, task);
+  } catch (x) {
+    // Suspended again.
+    resetHooksState();
+  } finally {
+    setCurrentTaskInDEV(prevTaskInDEV);
+    setCurrentResumableState(prevResumableState);
+
+    ReactSharedInternals.H = prevDispatcher;
+    ReactSharedInternals.A = prevAsyncDispatcher;
+
+    ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
+    if (prevDispatcher === HooksDispatcher) {
+      // This means that we were in a reentrant work loop. This could happen
+      // in a renderer that supports synchronous work like renderToString,
+      // when it's called from within another renderer.
+      // Normally we don't bother switching the contexts to their root/default
+      // values when leaving because we'll likely need the same or similar
+      // context again. However, when we're inside a synchronous loop like this
+      // we'll to restore the context to what it was before returning.
+      switchContext(prevContext);
+    }
+    currentRequest = prevRequest;
+  }
+}
+
 function pushSuspendedCallSiteOnComponentStack(
   request: Request,
   task: Task,
 ): void {
   setCaptureSuspendedCallSiteDEV(true);
-  let suspendCallSiteStack: ComponentStackNode | null = null;
-  let suspendCallSiteDebugTask: ConsoleTask | null = null;
-  const previousPingedTasks = request.pingedTasks;
   try {
-    // TODO: Use a dedicated method to re-render instead of abusing ping.
-    request.pingedTasks = [task];
-    performWork(request);
-    suspendCallSiteStack = getSuspendedCallSiteStackDEV();
-    suspendCallSiteDebugTask = getSuspendedCallSiteDebugTaskDEV();
+    rerenderHaltedTask(request, task);
   } finally {
-    request.pingedTasks = previousPingedTasks;
     setCaptureSuspendedCallSiteDEV(false);
   }
+
+  const suspendCallSiteStack = getSuspendedCallSiteStackDEV();
+  const suspendCallSiteDebugTask = getSuspendedCallSiteDebugTaskDEV();
 
   if (suspendCallSiteStack !== null) {
     const ownerStack = task.componentStack;
@@ -4998,9 +5039,7 @@ function retryRenderTask(
   task: RenderTask,
   segment: Segment,
 ): void {
-  // TODO: We only retry when aborted to get the suspended callsite.
-  // Use a dedicated mechanism to re-render.
-  if (segment.status !== PENDING && segment.status !== ABORTED) {
+  if (segment.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
     return;
   }
