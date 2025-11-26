@@ -6,10 +6,17 @@
  *
  */
 
+import {Suspense} from 'react';
 import Html from './Html';
 import BigComponent from './BigComponent';
+import MaybeHaltedComponent from './MaybeHaltedComponent';
 
-export default function App({assets, title}) {
+const serverHalt =
+  typeof window === 'undefined'
+    ? new Promise(() => {})
+    : Promise.resolve('client');
+
+export default function App({assets, promise, title}) {
   const components = [];
 
   for (let i = 0; i <= 250; i++) {
@@ -21,6 +28,10 @@ export default function App({assets, title}) {
       <h1>{title}</h1>
       {components}
       <h1>all done</h1>
+      <h2>or maybe not</h2>
+      <Suspense fallback="loading more...">
+        <MaybeHaltedComponent promise={serverHalt} />
+      </Suspense>
     </Html>
   );
 }
