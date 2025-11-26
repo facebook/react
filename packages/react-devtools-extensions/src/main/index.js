@@ -711,6 +711,12 @@ if (chrome.devtools.panels.setOpenResourceHandler) {
         resource.url,
         lineNumber - 1,
         columnNumber - 1,
+        maybeError => {
+          if (maybeError && maybeError.isError) {
+            // Not a resource Chrome can open. Fallback to browser default behavior.
+            window.open(resource.url);
+          }
+        },
       );
     },
   );
