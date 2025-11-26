@@ -56,7 +56,7 @@ describe('ReactDOMFizzStaticNode', () => {
     }
   }
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should call prerenderToNodeStream', async () => {
     const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>hello world</div>,
@@ -65,14 +65,14 @@ describe('ReactDOMFizzStaticNode', () => {
     expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should suppport web streams', async () => {
     const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>);
     const prelude = await readContentWeb(result.prelude);
     expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should emit DOCTYPE at the root of the document', async () => {
     const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <html>
@@ -91,7 +91,7 @@ describe('ReactDOMFizzStaticNode', () => {
     }
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should emit bootstrap script src at the end', async () => {
     const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>hello world</div>,
@@ -107,7 +107,7 @@ describe('ReactDOMFizzStaticNode', () => {
     );
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('emits all HTML as one unit', async () => {
     let hasLoaded = false;
     let resolve;
@@ -137,7 +137,7 @@ describe('ReactDOMFizzStaticNode', () => {
     expect(prelude).toMatchInlineSnapshot(`"<div><!--$-->Done<!--/$--></div>"`);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should reject the promise when an error is thrown at the root', async () => {
     const reportedErrors = [];
     let caughtError = null;
@@ -159,7 +159,7 @@ describe('ReactDOMFizzStaticNode', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should reject the promise when an error is thrown inside a fallback', async () => {
     const reportedErrors = [];
     let caughtError = null;
@@ -183,7 +183,7 @@ describe('ReactDOMFizzStaticNode', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
     const result = await ReactDOMFizzStatic.prerenderToNodeStream(
@@ -204,7 +204,7 @@ describe('ReactDOMFizzStaticNode', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -234,7 +234,7 @@ describe('ReactDOMFizzStaticNode', () => {
     expect(errors).toEqual(['This operation was aborted']);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   // @gate !enableHalt
   it('should reject if aborting before the shell is complete and enableHalt is disabled', async () => {
     const errors = [];
@@ -300,7 +300,7 @@ describe('ReactDOMFizzStaticNode', () => {
     expect(content).toBe('');
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('should be able to abort before something suspends', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -341,7 +341,7 @@ describe('ReactDOMFizzStaticNode', () => {
     }
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   // @gate !enableHalt
   it('should reject if passing an already aborted signal and enableHalt is disabled', async () => {
     const errors = [];
@@ -412,7 +412,7 @@ describe('ReactDOMFizzStaticNode', () => {
     expect(content).toBe('');
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('supports custom abort reasons with a string', async () => {
     const promise = new Promise(r => {});
     function Wait() {
@@ -454,7 +454,7 @@ describe('ReactDOMFizzStaticNode', () => {
     expect(errors).toEqual(['foobar', 'foobar']);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('supports custom abort reasons with an Error', async () => {
     const promise = new Promise(r => {});
     function Wait() {

@@ -39,12 +39,9 @@ import type {
   EncodeFormActionCallback,
 } from './ReactFlightReplyClient';
 
-import type {Postpone} from 'react/src/ReactPostpone';
-
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
-  enablePostpone,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
   enableAsyncDebugInfo,
@@ -89,7 +86,6 @@ import {
 import {
   REACT_LAZY_TYPE,
   REACT_ELEMENT_TYPE,
-  REACT_POSTPONE_TYPE,
   ASYNC_ITERATOR,
   REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
@@ -367,6 +363,7 @@ type Response = {
   _debugRootStack?: null | Error, // DEV-only
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugStartTime: number, // DEV-only
+  _debugEndTime?: number, // DEV-only
   _debugIOStarted: boolean, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
   _debugChannel?: void | DebugChannel, // DEV-only
@@ -500,6 +497,33 @@ function createErrorChunk<T>(
   return new ReactPromise(ERRORED, null, error);
 }
 
+function filterDebugInfo(
+  response: Response,
+  value: {_debugInfo: ReactDebugInfo, ...},
+) {
+  if (response._debugEndTime === null) {
+    // No end time was defined, so we keep all debug info entries.
+    return;
+  }
+
+  // Remove any debug info entries after the defined end time. For async info
+  // that means we're including anything that was awaited before the end time,
+  // but it doesn't need to be resolved before the end time.
+  const relativeEndTime =
+    response._debugEndTime -
+    // $FlowFixMe[prop-missing]
+    performance.timeOrigin;
+  const debugInfo = [];
+  for (let i = 0; i < value._debugInfo.length; i++) {
+    const info = value._debugInfo[i];
+    if (typeof info.time === 'number' && info.time > relativeEndTime) {
+      break;
+    }
+    debugInfo.push(info);
+  }
+  value._debugInfo = debugInfo;
+}
+
 function moveDebugInfoFromChunkToInnerValue<T>(
   chunk: InitializedChunk<T> | InitializedStreamChunk<any>,
   value: T,
@@ -534,7 +558,17 @@ function moveDebugInfoFromChunkToInnerValue<T>(
   }
 }
 
+function processChunkDebugInfo<T>(
+  response: Response,
+  chunk: InitializedChunk<T> | InitializedStreamChunk<any>,
+  value: T,
+): void {
+  filterDebugInfo(response, chunk);
+  moveDebugInfoFromChunkToInnerValue(chunk, value);
+}
+
 function wakeChunk<T>(
+  response: Response,
   listeners: Array<InitializationReference | (T => mixed)>,
   value: T,
   chunk: InitializedChunk<T>,
@@ -544,16 +578,17 @@ function wakeChunk<T>(
     if (typeof listener === 'function') {
       listener(value);
     } else {
-      fulfillReference(listener, value, chunk);
+      fulfillReference(response, listener, value, chunk);
     }
   }
 
   if (__DEV__) {
-    moveDebugInfoFromChunkToInnerValue(chunk, value);
+    processChunkDebugInfo(response, chunk, value);
   }
 }
 
 function rejectChunk(
+  response: Response,
   listeners: Array<InitializationReference | (mixed => mixed)>,
   error: mixed,
 ): void {
@@ -562,7 +597,7 @@ function rejectChunk(
     if (typeof listener === 'function') {
       listener(error);
     } else {
-      rejectReference(listener, error);
+      rejectReference(response, listener.handler, error);
     }
   }
 }
@@ -595,13 +630,14 @@ function resolveBlockedCycle<T>(
 }
 
 function wakeChunkIfInitialized<T>(
+  response: Response,
   chunk: SomeChunk<T>,
   resolveListeners: Array<InitializationReference | (T => mixed)>,
   rejectListeners: null | Array<InitializationReference | (mixed => mixed)>,
 ): void {
   switch (chunk.status) {
     case INITIALIZED:
-      wakeChunk(resolveListeners, chunk.value, chunk);
+      wakeChunk(response, resolveListeners, chunk.value, chunk);
       break;
     case BLOCKED:
       // It is possible that we're blocked on our own chunk if it's a cycle.
@@ -615,7 +651,7 @@ function wakeChunkIfInitialized<T>(
           if (cyclicHandler !== null) {
             // This reference points back to this chunk. We can resolve the cycle by
             // using the value from that handler.
-            fulfillReference(reference, cyclicHandler.value, chunk);
+            fulfillReference(response, reference, cyclicHandler.value, chunk);
             resolveListeners.splice(i, 1);
             i--;
             if (rejectListeners !== null) {
@@ -629,6 +665,7 @@ function wakeChunkIfInitialized<T>(
               case INITIALIZED:
                 const initializedChunk: InitializedChunk<T> = (chunk: any);
                 wakeChunk(
+                  response,
                   resolveListeners,
                   initializedChunk.value,
                   initializedChunk,
@@ -636,7 +673,7 @@ function wakeChunkIfInitialized<T>(
                 return;
               case ERRORED:
                 if (rejectListeners !== null) {
-                  rejectChunk(rejectListeners, chunk.reason);
+                  rejectChunk(response, rejectListeners, chunk.reason);
                 }
                 return;
             }
@@ -666,7 +703,7 @@ function wakeChunkIfInitialized<T>(
       break;
     case ERRORED:
       if (rejectListeners) {
-        rejectChunk(rejectListeners, chunk.reason);
+        rejectChunk(response, rejectListeners, chunk.reason);
       }
       break;
   }
@@ -724,7 +761,7 @@ function triggerErrorOnChunk<T>(
   erroredChunk.status = ERRORED;
   erroredChunk.reason = error;
   if (listeners !== null) {
-    rejectChunk(listeners, error);
+    rejectChunk(response, listeners, error);
   }
 }
 
@@ -776,6 +813,12 @@ function createInitializedStreamChunk<
   value: T,
   controller: FlightStreamController,
 ): InitializedChunk<T> {
+  if (__DEV__) {
+    // Retain a strong reference to the Response while we wait for chunks.
+    if (response._pendingChunks++ === 0) {
+      response._weakResponse.response = response;
+    }
+  }
   // We use the reason field to stash the controller since we already have that
   // field. It's a bit of a hack but efficient.
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
@@ -832,7 +875,7 @@ function resolveModelChunk<T>(
     // longer be rendered or might not be the highest pri.
     initializeModelChunk(resolvedChunk);
     // The status might have changed after initialization.
-    wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+    wakeChunkIfInitialized(response, chunk, resolveListeners, rejectListeners);
   }
 }
 
@@ -861,12 +904,11 @@ function resolveModuleChunk<T>(
   }
   if (resolveListeners !== null) {
     initializeModuleChunk(resolvedChunk);
-    wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+    wakeChunkIfInitialized(response, chunk, resolveListeners, rejectListeners);
   }
 }
 
 type InitializationReference = {
-  response: Response, // TODO: Remove Response from here and pass it through instead.
   handler: InitializationHandler,
   parentObject: Object,
   key: string,
@@ -1005,7 +1047,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
         if (typeof listener === 'function') {
           listener(value);
         } else {
-          fulfillReference(listener, value, cyclicChunk);
+          fulfillReference(response, listener, value, cyclicChunk);
         }
       }
     }
@@ -1026,7 +1068,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     initializedChunk.value = value;
 
     if (__DEV__) {
-      moveDebugInfoFromChunkToInnerValue(initializedChunk, value);
+      processChunkDebugInfo(response, initializedChunk, value);
     }
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
@@ -1413,11 +1455,12 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
 }
 
 function fulfillReference(
+  response: Response,
   reference: InitializationReference,
   value: any,
   fulfilledChunk: SomeChunk<any>,
 ): void {
-  const {response, handler, parentObject, key, map, path} = reference;
+  const {handler, parentObject, key, map, path} = reference;
 
   for (let i = 1; i < path.length; i++) {
     while (
@@ -1487,7 +1530,11 @@ function fulfillReference(
             return;
           }
           default: {
-            rejectReference(reference, referencedChunk.reason);
+            rejectReference(
+              response,
+              reference.handler,
+              referencedChunk.reason,
+            );
             return;
           }
         }
@@ -1585,21 +1632,20 @@ function fulfillReference(
     initializedChunk.value = handler.value;
     initializedChunk.reason = handler.reason; // Used by streaming chunks
     if (resolveListeners !== null) {
-      wakeChunk(resolveListeners, handler.value, initializedChunk);
+      wakeChunk(response, resolveListeners, handler.value, initializedChunk);
     } else {
       if (__DEV__) {
-        moveDebugInfoFromChunkToInnerValue(initializedChunk, handler.value);
+        processChunkDebugInfo(response, initializedChunk, handler.value);
       }
     }
   }
 }
 
 function rejectReference(
-  reference: InitializationReference,
+  response: Response,
+  handler: InitializationHandler,
   error: mixed,
 ): void {
-  const {handler, response} = reference;
-
   if (handler.errored) {
     // We've already errored. We could instead build up an AggregateError
     // but if there are multiple errors we just take the first one like
@@ -1690,7 +1736,6 @@ function waitForReference<T>(
   }
 
   const reference: InitializationReference = {
-    response,
     handler,
     parentObject,
     key,
@@ -1838,10 +1883,10 @@ function loadServerReference<A: Iterable<any>, T>(
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
       if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, handler.value, initializedChunk);
+        wakeChunk(response, resolveListeners, handler.value, initializedChunk);
       } else {
         if (__DEV__) {
-          moveDebugInfoFromChunkToInnerValue(initializedChunk, handler.value);
+          processChunkDebugInfo(response, initializedChunk, handler.value);
         }
       }
     }
@@ -2578,6 +2623,7 @@ function ResponseInstance(
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
   debugStartTime: void | number, // DEV-only
+  debugEndTime: void | number, // DEV-only
   debugChannel: void | DebugChannel, // DEV-only
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
@@ -2645,6 +2691,7 @@ function ResponseInstance(
       // and is not considered I/O required to load the stream.
       setTimeout(markIOStarted.bind(this), 0);
     }
+    this._debugEndTime = debugEndTime == null ? null : debugEndTime;
     this._debugFindSourceMapURL = findSourceMapURL;
     this._debugChannel = debugChannel;
     this._blockedConsole = null;
@@ -2688,6 +2735,7 @@ export function createResponse(
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
   debugStartTime: void | number, // DEV-only
+  debugEndTime: void | number, // DEV-only
   debugChannel: void | DebugChannel, // DEV-only
 ): WeakResponse {
   return getWeakResponse(
@@ -2704,6 +2752,7 @@ export function createResponse(
       replayConsole,
       environmentName,
       debugStartTime,
+      debugEndTime,
       debugChannel,
     ),
   );
@@ -3032,7 +3081,6 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
     // We already resolved. We didn't expect to see this.
     return;
   }
-  releasePendingChunk(response, chunk);
 
   const resolveListeners = chunk.value;
 
@@ -3075,10 +3123,10 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   resolvedChunk.value = stream;
   resolvedChunk.reason = controller;
   if (resolveListeners !== null) {
-    wakeChunk(resolveListeners, chunk.value, (chunk: any));
+    wakeChunk(response, resolveListeners, chunk.value, (chunk: any));
   } else {
     if (__DEV__) {
-      moveDebugInfoFromChunkToInnerValue(resolvedChunk, stream);
+      processChunkDebugInfo(response, resolvedChunk, stream);
     }
   }
 }
@@ -3218,7 +3266,12 @@ function startAsyncIterable<T>(
         initializedChunk.status = INITIALIZED;
         initializedChunk.value = {done: false, value: value};
         if (resolveListeners !== null) {
-          wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+          wakeChunkIfInitialized(
+            response,
+            chunk,
+            resolveListeners,
+            rejectListeners,
+          );
         }
       }
       nextWriteIndex++;
@@ -3327,6 +3380,14 @@ function stopStream(
     // We didn't expect not to have an existing stream;
     return;
   }
+  if (__DEV__) {
+    if (--response._pendingChunks === 0) {
+      // We're no longer waiting for any more chunks. We can release the strong
+      // reference to the response. We'll regain it if we ask for any more data
+      // later on.
+      response._weakResponse.response = null;
+    }
+  }
   const streamChunk: InitializedStreamChunk<any> = (chunk: any);
   const controller = streamChunk.reason;
   controller.close(row === '' ? '"$undefined"' : row);
@@ -3406,88 +3467,6 @@ function resolveErrorDev(
   (error: any).name = name;
   (error: any).environmentName = env;
   return error;
-}
-
-function resolvePostponeProd(
-  response: Response,
-  id: number,
-  streamState: StreamState,
-): void {
-  if (__DEV__) {
-    // These errors should never make it into a build so we don't need to encode them in codes.json
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'resolvePostponeProd should never be called in development mode. Use resolvePostponeDev instead. This is a bug in React.',
-    );
-  }
-  const error = new Error(
-    'A Server Component was postponed. The reason is omitted in production' +
-      ' builds to avoid leaking sensitive details.',
-  );
-  const postponeInstance: Postpone = (error: any);
-  postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
-  postponeInstance.stack = 'Error: ' + error.message;
-  const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    const newChunk: ErroredChunk<any> = createErrorChunk(
-      response,
-      postponeInstance,
-    );
-    chunks.set(id, newChunk);
-  } else {
-    triggerErrorOnChunk(response, chunk, postponeInstance);
-  }
-}
-
-function resolvePostponeDev(
-  response: Response,
-  id: number,
-  reason: string,
-  stack: ReactStackTrace,
-  env: string,
-  streamState: StreamState,
-): void {
-  if (!__DEV__) {
-    // These errors should never make it into a build so we don't need to encode them in codes.json
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'resolvePostponeDev should never be called in production mode. Use resolvePostponeProd instead. This is a bug in React.',
-    );
-  }
-  let postponeInstance: Postpone;
-  const callStack = buildFakeCallStack(
-    response,
-    stack,
-    env,
-    false,
-    // $FlowFixMe[incompatible-use]
-    Error.bind(null, reason || ''),
-  );
-  const rootTask = response._debugRootTask;
-  if (rootTask != null) {
-    postponeInstance = rootTask.run(callStack);
-  } else {
-    postponeInstance = callStack();
-  }
-  postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
-  const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    const newChunk: ErroredChunk<any> = createErrorChunk(
-      response,
-      postponeInstance,
-    );
-    if (__DEV__) {
-      resolveChunkDebugInfo(response, streamState, newChunk);
-    }
-    chunks.set(id, newChunk);
-  } else {
-    if (__DEV__) {
-      resolveChunkDebugInfo(response, streamState, chunk);
-    }
-    triggerErrorOnChunk(response, chunk, postponeInstance);
-  }
 }
 
 function resolveErrorModel(
@@ -4841,25 +4820,6 @@ function processFullStringRow(
       return;
     }
     // Fallthrough
-    case 80 /* "P" */: {
-      if (enablePostpone) {
-        if (__DEV__) {
-          const postponeInfo = JSON.parse(row);
-          resolvePostponeDev(
-            response,
-            id,
-            postponeInfo.reason,
-            postponeInfo.stack,
-            postponeInfo.env,
-            streamState,
-          );
-        } else {
-          resolvePostponeProd(response, id, streamState);
-        }
-        return;
-      }
-    }
-    // Fallthrough
     default: /* """ "{" "[" "t" "f" "n" "0" - "9" */ {
       if (__DEV__ && row === '') {
         resolveDebugHalt(response, id);
@@ -4910,6 +4870,7 @@ export function processBinaryChunk(
           resolvedRowTag === 65 /* "A" */ ||
           resolvedRowTag === 79 /* "O" */ ||
           resolvedRowTag === 111 /* "o" */ ||
+          resolvedRowTag === 98 /* "b" */ ||
           resolvedRowTag === 85 /* "U" */ ||
           resolvedRowTag === 83 /* "S" */ ||
           resolvedRowTag === 115 /* "s" */ ||
@@ -4969,14 +4930,31 @@ export function processBinaryChunk(
       // We found the last chunk of the row
       const length = lastIdx - i;
       const lastChunk = new Uint8Array(chunk.buffer, offset, length);
-      processFullBinaryRow(
-        response,
-        streamState,
-        rowID,
-        rowTag,
-        buffer,
-        lastChunk,
-      );
+
+      // Check if this is a Uint8Array for a byte stream. We enqueue it
+      // immediately but need to determine if we can use zero-copy or must copy.
+      if (rowTag === 98 /* "b" */) {
+        resolveBuffer(
+          response,
+          rowID,
+          // If we're at the end of the RSC chunk, no more parsing will access
+          // this buffer and we don't need to copy the chunk to allow detaching
+          // the buffer, otherwise we need to copy.
+          lastIdx === chunkLength ? lastChunk : lastChunk.slice(),
+          streamState,
+        );
+      } else {
+        // Process all other row types.
+        processFullBinaryRow(
+          response,
+          streamState,
+          rowID,
+          rowTag,
+          buffer,
+          lastChunk,
+        );
+      }
+
       // Reset state machine for a new row
       i = lastIdx;
       if (rowState === ROW_CHUNK_BY_NEWLINE) {
@@ -4989,14 +4967,27 @@ export function processBinaryChunk(
       rowLength = 0;
       buffer.length = 0;
     } else {
-      // The rest of this row is in a future chunk. We stash the rest of the
-      // current chunk until we can process the full row.
+      // The rest of this row is in a future chunk.
       const length = chunk.byteLength - i;
       const remainingSlice = new Uint8Array(chunk.buffer, offset, length);
-      buffer.push(remainingSlice);
-      // Update how many bytes we're still waiting for. If we're looking for
-      // a newline, this doesn't hurt since we'll just ignore it.
-      rowLength -= remainingSlice.byteLength;
+
+      // For byte streams, we can enqueue the partial row immediately without
+      // copying since we're at the end of the RSC chunk and no more parsing
+      // will access this buffer.
+      if (rowTag === 98 /* "b" */) {
+        // Update how many bytes we're still waiting for. We need to do this
+        // before enqueueing, as enqueue will detach the buffer and byteLength
+        // will become 0.
+        rowLength -= remainingSlice.byteLength;
+        resolveBuffer(response, rowID, remainingSlice, streamState);
+      } else {
+        // For other row types, stash the rest of the current chunk until we can
+        // process the full row.
+        buffer.push(remainingSlice);
+        // Update how many bytes we're still waiting for. If we're looking for
+        // a newline, this doesn't hurt since we'll just ignore it.
+        rowLength -= remainingSlice.byteLength;
+      }
       break;
     }
   }

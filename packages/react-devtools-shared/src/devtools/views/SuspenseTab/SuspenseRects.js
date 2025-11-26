@@ -9,6 +9,7 @@
 
 import type Store from 'react-devtools-shared/src/devtools/store';
 import type {
+  Element,
   SuspenseNode,
   Rect,
 } from 'react-devtools-shared/src/frontend/types';
@@ -18,7 +19,7 @@ import typeof {
 } from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
-import {createContext, useContext} from 'react';
+import {createContext, useContext, useLayoutEffect, useMemo} from 'react';
 import {
   TreeDispatcherContext,
   TreeStateContext,
@@ -236,13 +237,6 @@ function SuspenseRects({
             <span>{suspense.name}</span>
           </ScaledRect>
         ) : null}
-        {selected && visible ? (
-          <ScaledRect
-            className={styles.SuspenseRectOutline}
-            rect={boundingBox}
-            adjust={true}
-          />
-        ) : null}
       </ViewBox.Provider>
     </ScaledRect>
   );
@@ -433,18 +427,57 @@ function SuspenseRectsRoot({rootID}: {rootID: SuspenseNode['id']}): React$Node {
   });
 }
 
+function SuspenseRectsInitialPaint(): React$Node {
+  const {roots} = useContext(SuspenseTreeStateContext);
+  return roots.map(rootID => {
+    return <SuspenseRectsRoot key={rootID} rootID={rootID} />;
+  });
+}
+
+function SuspenseRectsTransition({id}: {id: Element['id']}): React$Node {
+  const store = useContext(StoreContext);
+  const children = useMemo(() => {
+    return store.getSuspenseChildren(id);
+  }, [id, store]);
+
+  return children.map(suspenseID => {
+    return (
+      <SuspenseRects
+        key={suspenseID}
+        suspenseID={suspenseID}
+        parentRects={null}
+      />
+    );
+  });
+}
+
 const ViewBox = createContext<Rect>((null: any));
 
-function SuspenseRectsContainer(): React$Node {
+function SuspenseRectsContainer({
+  scaleRef,
+}: {
+  scaleRef: {current: number},
+}): React$Node {
   const store = useContext(StoreContext);
-  const {inspectedElementID} = useContext(TreeStateContext);
+  const {activityID, inspectedElementID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   // TODO: This relies on a full re-render of all children when the Suspense tree changes.
   const {roots, timeline, hoveredTimelineIndex, uniqueSuspendersOnly} =
     useContext(SuspenseTreeStateContext);
 
-  // TODO: bbox does not consider uniqueSuspendersOnly filter
+  const activityChildren: $ReadOnlyArray<SuspenseNode['id']> | null =
+    useMemo(() => {
+      if (activityID === null) {
+        return null;
+      }
+      return store.getSuspenseChildren(activityID);
+    }, [activityID, store]);
+  const transitionChildren =
+    activityChildren === null ? roots : activityChildren;
+
+  // We're using the bounding box of the entire document to anchor the Transition
+  // in the actual document.
   const boundingBox = getDocumentBoundingRect(store, roots);
 
   const boundingBoxWidth = boundingBox.width;
@@ -459,14 +492,18 @@ function SuspenseRectsContainer(): React$Node {
       // Already clicked on an inner rect
       return;
     }
-    if (roots.length === 0) {
+    if (transitionChildren.length === 0) {
       // Nothing to select
       return;
     }
     const arbitraryRootID = roots[0];
+    const transitionRoot = activityID === null ? arbitraryRootID : activityID;
 
     event.preventDefault();
-    treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: arbitraryRootID});
+    treeDispatch({
+      type: 'SELECT_ELEMENT_BY_ID',
+      payload: transitionRoot,
+    });
     suspenseTreeDispatch({
       type: 'SET_SUSPENSE_LINEAGE',
       payload: arbitraryRootID,
@@ -486,7 +523,8 @@ function SuspenseRectsContainer(): React$Node {
   }
 
   const isRootSelected = roots.includes(inspectedElementID);
-  const isRootHovered = hoveredTimelineIndex === 0;
+  // When we're focusing a Transition, the first timeline step will not be a root.
+  const isRootHovered = activityID === null && hoveredTimelineIndex === 0;
 
   let hasRootSuspenders = false;
   if (!uniqueSuspendersOnly) {
@@ -505,25 +543,74 @@ function SuspenseRectsContainer(): React$Node {
   const rootEnvironment =
     timeline.length === 0 ? null : timeline[0].environment;
 
+  useLayoutEffect(() => {
+    // 100% of the width represents this many pixels in the real document.
+    scaleRef.current = boundingBoxWidth;
+  }, [boundingBoxWidth]);
+
+  let selectedBoundingBox = null;
+  let selectedEnvironment = null;
+  if (isRootSelected) {
+    selectedEnvironment = rootEnvironment;
+  } else if (
+    inspectedElementID !== null &&
+    // TODO: Separate inspected element and inspected Suspense and use the inspected Suspense ID here.
+    store.containsSuspense(inspectedElementID)
+  ) {
+    const selectedSuspenseNode = store.getSuspenseByID(inspectedElementID);
+    if (
+      selectedSuspenseNode !== null &&
+      (selectedSuspenseNode.hasUniqueSuspenders || !uniqueSuspendersOnly)
+    ) {
+      selectedBoundingBox = getBoundingBox(selectedSuspenseNode.rects);
+      for (let i = 0; i < timeline.length; i++) {
+        const timelineStep = timeline[i];
+        if (timelineStep.id === inspectedElementID) {
+          selectedEnvironment = timelineStep.environment;
+          break;
+        }
+      }
+    }
+  }
+
   return (
     <div
       className={
         styles.SuspenseRectsContainer +
-        (hasRootSuspenders ? ' ' + styles.SuspenseRectsRoot : '') +
+        (hasRootSuspenders &&
+        // We don't want to draw attention to the root if we're looking at a Transition.
+        // TODO: Draw bounding rect of Transition and check if the Transition
+        // has unique suspenders.
+        activityID === null
+          ? ' ' + styles.SuspenseRectsRoot
+          : '') +
+        (isRootSelected ? ' ' + styles.SuspenseRectsRootOutline : '') +
         ' ' +
         getClassNameForEnvironment(rootEnvironment)
       }
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
-      data-highlighted={isRootSelected}
       data-hovered={isRootHovered}>
       <ViewBox.Provider value={boundingBox}>
         <div
           className={styles.SuspenseRectsViewBox}
           style={{aspectRatio, width}}>
-          {roots.map(rootID => {
-            return <SuspenseRectsRoot key={rootID} rootID={rootID} />;
-          })}
+          {activityID === null ? (
+            <SuspenseRectsInitialPaint />
+          ) : (
+            <SuspenseRectsTransition id={activityID} />
+          )}
+          {selectedBoundingBox !== null ? (
+            <ScaledRect
+              className={
+                styles.SuspenseRectOutline +
+                ' ' +
+                getClassNameForEnvironment(selectedEnvironment)
+              }
+              rect={selectedBoundingBox}
+              adjust={true}
+            />
+          ) : null}
         </div>
       </ViewBox.Provider>
     </div>

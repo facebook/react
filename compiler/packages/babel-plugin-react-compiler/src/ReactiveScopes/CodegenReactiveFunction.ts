@@ -159,7 +159,7 @@ export function codegenFunction(
   const compiled = compileResult.unwrap();
 
   const hookGuard = fn.env.config.enableEmitHookGuards;
-  if (hookGuard != null && fn.env.isInferredMemoEnabled) {
+  if (hookGuard != null && fn.env.outputMode === 'client') {
     compiled.body = t.blockStatement([
       createHookGuard(
         hookGuard,
@@ -259,7 +259,7 @@ export function codegenFunction(
   if (
     emitInstrumentForget != null &&
     fn.id != null &&
-    fn.env.isInferredMemoEnabled
+    fn.env.outputMode === 'client'
   ) {
     /*
      * Technically, this is a conditional hook call. However, we expect
@@ -591,7 +591,10 @@ function codegenBlockNoReset(
 }
 
 function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
-  if (cx.env.config.enableEmitFreeze != null && cx.env.isInferredMemoEnabled) {
+  if (
+    cx.env.config.enableEmitFreeze != null &&
+    cx.env.outputMode === 'client'
+  ) {
     const emitFreezeIdentifier = cx.env.programContext.addImportSpecifier(
       cx.env.config.enableEmitFreeze,
     ).name;
@@ -1359,8 +1362,6 @@ function codegenInstructionNullable(
       value = null;
     } else {
       lvalue = instr.value.lvalue.pattern;
-      let hasReassign = false;
-      let hasDeclaration = false;
       for (const place of eachPatternOperand(lvalue)) {
         if (
           kind !== InstructionKind.Reassign &&
@@ -1368,26 +1369,6 @@ function codegenInstructionNullable(
         ) {
           cx.temp.set(place.identifier.declarationId, null);
         }
-        const isDeclared = cx.hasDeclared(place.identifier);
-        hasReassign ||= isDeclared;
-        hasDeclaration ||= !isDeclared;
-      }
-      if (hasReassign && hasDeclaration) {
-        CompilerError.invariant(false, {
-          reason:
-            'Encountered a destructuring operation where some identifiers are already declared (reassignments) but others are not (declarations)',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: instr.loc,
-              message: null,
-            },
-          ],
-          suggestions: null,
-        });
-      } else if (hasReassign) {
-        kind = InstructionKind.Reassign;
       }
       value = codegenPlaceToExpression(cx, instr.value.value);
     }
@@ -1794,7 +1775,7 @@ function createCallExpression(
   }
 
   const hookGuard = env.config.enableEmitHookGuards;
-  if (hookGuard != null && isHook && env.isInferredMemoEnabled) {
+  if (hookGuard != null && isHook && env.outputMode === 'client') {
     const iife = t.functionExpression(
       null,
       [],

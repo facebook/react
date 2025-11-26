@@ -40,6 +40,7 @@ import {
   type PublicTextInstance,
   type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {enableFragmentRefsInstanceHandles} from 'shared/ReactFeatureFlags';
 
 const {
   createNode,
@@ -119,6 +120,9 @@ export type TextInstance = {
 };
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
+type PublicInstanceWithFragmentHandles = PublicInstance & {
+  unstable_reactFragments?: Set<FragmentInstanceType>,
+};
 export type Container = {
   containerTag: number,
   publicInstance: PublicRootInstance | null,
@@ -794,10 +798,45 @@ function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
   return false;
 }
 
+function addFragmentHandleToFiber(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+): boolean {
+  if (enableFragmentRefsInstanceHandles) {
+    const instance = ((getPublicInstanceFromHostFiber(
+      child,
+    ): any): PublicInstanceWithFragmentHandles);
+    if (instance != null) {
+      addFragmentHandleToInstance(instance, fragmentInstance);
+    }
+  }
+  return false;
+}
+
+function addFragmentHandleToInstance(
+  instance: PublicInstanceWithFragmentHandles,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  if (enableFragmentRefsInstanceHandles) {
+    if (instance.unstable_reactFragments == null) {
+      instance.unstable_reactFragments = new Set();
+    }
+    instance.unstable_reactFragments.add(fragmentInstance);
+  }
+}
+
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
-  return new (FragmentInstance: any)(fragmentFiber);
+  const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
+  if (enableFragmentRefsInstanceHandles) {
+    traverseFragmentInstance(
+      fragmentFiber,
+      addFragmentHandleToFiber,
+      fragmentInstance,
+    );
+  }
+  return fragmentInstance;
 }
 
 export function updateFragmentInstanceFiber(
@@ -821,13 +860,26 @@ export function commitNewChildToFragmentInstance(
       observer.observe(publicInstance);
     });
   }
+  if (enableFragmentRefsInstanceHandles) {
+    addFragmentHandleToInstance(
+      ((publicInstance: any): PublicInstanceWithFragmentHandles),
+      fragmentInstance,
+    );
+  }
 }
 
 export function deleteChildFromFragmentInstance(
-  child: Instance,
+  childInstance: Instance,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  // Noop
+  const publicInstance = ((getPublicInstance(
+    childInstance,
+  ): any): PublicInstanceWithFragmentHandles);
+  if (enableFragmentRefsInstanceHandles) {
+    if (publicInstance.unstable_reactFragments != null) {
+      publicInstance.unstable_reactFragments.delete(fragmentInstance);
+    }
+  }
 }
 
 export const NotPendingTransition: TransitionStatus = null;

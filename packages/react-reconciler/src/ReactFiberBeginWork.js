@@ -115,7 +115,6 @@ import {
   enableTransitionTracing,
   enableLegacyHidden,
   enableCPUSuspense,
-  enablePostpone,
   disableLegacyMode,
   enableHydrationLaneScheduling,
   enableViewTransition,
@@ -1975,7 +1974,7 @@ function updateHostComponent(
     // If the transition state changed, propagate the change to all the
     // descendents. We use Context as an implementation detail for this.
     //
-    // This is intentionally set here instead of pushHostContext because
+    // We need to update it here because
     // pushHostContext gets called before we process the state hook, to avoid
     // a state mismatch in the event that something suspends.
     //
@@ -2457,10 +2456,7 @@ function updateSuspenseComponent(
       }
 
       return bailoutOffscreenComponent(null, primaryChildFragment);
-    } else if (
-      enableCPUSuspense &&
-      typeof nextProps.unstable_expectedLoadTime === 'number'
-    ) {
+    } else if (enableCPUSuspense && nextProps.defer === true) {
       // This is a CPU-bound tree. Skip this tree and show a placeholder to
       // unblock the surrounding content. Then immediately retry after the
       // initial commit.
@@ -2973,28 +2969,25 @@ function updateDehydratedSuspenseComponent(
         ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
       }
 
-      // TODO: Figure out a better signal than encoding a magic digest value.
-      if (!enablePostpone || digest !== 'POSTPONE') {
-        let error: Error;
-        if (__DEV__ && message) {
-          // eslint-disable-next-line react-internal/prod-error-codes
-          error = new Error(message);
-        } else {
-          error = new Error(
-            'The server could not finish this Suspense boundary, likely ' +
-              'due to an error during server rendering. ' +
-              'Switched to client rendering.',
-          );
-        }
-        // Replace the stack with the server stack
-        error.stack = (__DEV__ && stack) || '';
-        (error: any).digest = digest;
-        const capturedValue = createCapturedValueFromError(
-          error,
-          componentStack === undefined ? null : componentStack,
+      let error: Error;
+      if (__DEV__ && message) {
+        // eslint-disable-next-line react-internal/prod-error-codes
+        error = new Error(message);
+      } else {
+        error = new Error(
+          'The server could not finish this Suspense boundary, likely ' +
+            'due to an error during server rendering. ' +
+            'Switched to client rendering.',
         );
-        queueHydrationError(capturedValue);
       }
+      // Replace the stack with the server stack
+      error.stack = (__DEV__ && stack) || '';
+      (error: any).digest = digest;
+      const capturedValue = createCapturedValueFromError(
+        error,
+        componentStack === undefined ? null : componentStack,
+      );
+      queueHydrationError(capturedValue);
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -3245,25 +3238,16 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
   if (__DEV__) {
     const cacheKey = revealOrder == null ? 'null' : revealOrder;
     if (
+      revealOrder != null &&
       revealOrder !== 'forwards' &&
+      revealOrder !== 'backwards' &&
       revealOrder !== 'unstable_legacy-backwards' &&
       revealOrder !== 'together' &&
       revealOrder !== 'independent' &&
       !didWarnAboutRevealOrder[cacheKey]
     ) {
       didWarnAboutRevealOrder[cacheKey] = true;
-      if (revealOrder == null) {
-        console.error(
-          'The default for the <SuspenseList revealOrder="..."> prop is changing. ' +
-            'To be future compatible you must explictly specify either ' +
-            '"independent" (the current default), "together", "forwards" or "legacy_unstable-backwards".',
-        );
-      } else if (revealOrder === 'backwards') {
-        console.error(
-          'The rendering order of <SuspenseList revealOrder="backwards"> is changing. ' +
-            'To be future compatible you must specify revealOrder="legacy_unstable-backwards" instead.',
-        );
-      } else if (typeof revealOrder === 'string') {
+      if (typeof revealOrder === 'string') {
         switch (revealOrder.toLowerCase()) {
           case 'together':
           case 'forwards':
@@ -3314,18 +3298,7 @@ function validateTailOptions(
     const cacheKey = tailMode == null ? 'null' : tailMode;
     if (!didWarnAboutTailOptions[cacheKey]) {
       if (tailMode == null) {
-        if (
-          revealOrder === 'forwards' ||
-          revealOrder === 'backwards' ||
-          revealOrder === 'unstable_legacy-backwards'
-        ) {
-          didWarnAboutTailOptions[cacheKey] = true;
-          console.error(
-            'The default for the <SuspenseList tail="..."> prop is changing. ' +
-              'To be future compatible you must explictly specify either ' +
-              '"visible" (the current default), "collapsed" or "hidden".',
-          );
-        }
+        // The default tail is now "hidden".
       } else if (
         tailMode !== 'visible' &&
         tailMode !== 'collapsed' &&
@@ -3338,6 +3311,7 @@ function validateTailOptions(
           tailMode,
         );
       } else if (
+        revealOrder != null &&
         revealOrder !== 'forwards' &&
         revealOrder !== 'backwards' &&
         revealOrder !== 'unstable_legacy-backwards'
@@ -3345,7 +3319,7 @@ function validateTailOptions(
         didWarnAboutTailOptions[cacheKey] = true;
         console.error(
           '<SuspenseList tail="%s" /> is only valid if revealOrder is ' +
-            '"forwards" or "backwards". ' +
+            '"forwards" (default) or "backwards". ' +
             'Did you mean to specify revealOrder="forwards"?',
           tailMode,
         );
@@ -3386,6 +3360,17 @@ function initSuspenseListRenderState(
   }
 }
 
+function reverseChildren(fiber: Fiber): void {
+  let row = fiber.child;
+  fiber.child = null;
+  while (row !== null) {
+    const nextRow = row.sibling;
+    row.sibling = fiber.child;
+    fiber.child = row;
+    row = nextRow;
+  }
+}
+
 // This can end up rendering this component multiple passes.
 // The first pass splits the children fibers into two sets. A head and tail.
 // We first render the head. If anything is in fallback state, we do another
@@ -3404,6 +3389,13 @@ function updateSuspenseListComponent(
   const newChildren = nextProps.children;
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
+
+  if (workInProgress.flags & DidCapture) {
+    // This is the second pass after having suspended in a row. Proceed directly
+    // to the complete phase.
+    pushSuspenseListContext(workInProgress, suspenseContext);
+    return null;
+  }
 
   const shouldForceFallback = hasSuspenseListContext(
     suspenseContext,
@@ -3424,7 +3416,16 @@ function updateSuspenseListComponent(
   validateTailOptions(tailMode, revealOrder);
   validateSuspenseListChildren(newChildren, revealOrder);
 
-  reconcileChildren(current, workInProgress, newChildren, renderLanes);
+  if (revealOrder === 'backwards' && current !== null) {
+    // For backwards the current mounted set will be backwards. Reconciling against it
+    // will lead to mismatches and reorders. We need to swap the original set first
+    // and then restore it afterwards.
+    reverseChildren(current);
+    reconcileChildren(current, workInProgress, newChildren, renderLanes);
+    reverseChildren(current);
+  } else {
+    reconcileChildren(current, workInProgress, newChildren, renderLanes);
+  }
   // Read how many children forks this set pushed so we can push it every time we retry.
   const treeForkCount = getIsHydrating() ? getForksAtLevel(workInProgress) : 0;
 
@@ -3449,31 +3450,37 @@ function updateSuspenseListComponent(
     workInProgress.memoizedState = null;
   } else {
     switch (revealOrder) {
-      case 'forwards': {
+      case 'backwards': {
+        // We're going to find the first row that has existing content.
+        // We are also going to reverse the order of anything in the existing content
+        // since we want to actually render them backwards from the reconciled set.
+        // The tail is left in order, because it'll be added to the front as we
+        // complete each item.
         const lastContentRow = findLastContentRow(workInProgress.child);
         let tail;
         if (lastContentRow === null) {
           // The whole list is part of the tail.
-          // TODO: We could fast path by just rendering the tail now.
           tail = workInProgress.child;
           workInProgress.child = null;
         } else {
           // Disconnect the tail rows after the content row.
-          // We're going to render them separately later.
+          // We're going to render them separately later in reverse order.
           tail = lastContentRow.sibling;
           lastContentRow.sibling = null;
+          // We have to now reverse the main content so it renders backwards too.
+          reverseChildren(workInProgress);
         }
+        // TODO: If workInProgress.child is null, we can continue on the tail immediately.
         initSuspenseListRenderState(
           workInProgress,
-          false, // isBackwards
+          true, // isBackwards
           tail,
-          lastContentRow,
+          null, // last
           tailMode,
           treeForkCount,
         );
         break;
       }
-      case 'backwards':
       case 'unstable_legacy-backwards': {
         // We're going to find the first row that has existing content.
         // At the same time we're going to reverse the list of everything
@@ -3517,10 +3524,37 @@ function updateSuspenseListComponent(
         );
         break;
       }
-      default: {
-        // The default reveal order is the same as not having
+      case 'independent': {
+        // The "independent" reveal order is the same as not having
         // a boundary.
         workInProgress.memoizedState = null;
+        break;
+      }
+      // The default is now forwards.
+      case 'forwards':
+      default: {
+        const lastContentRow = findLastContentRow(workInProgress.child);
+        let tail;
+        if (lastContentRow === null) {
+          // The whole list is part of the tail.
+          // TODO: We could fast path by just rendering the tail now.
+          tail = workInProgress.child;
+          workInProgress.child = null;
+        } else {
+          // Disconnect the tail rows after the content row.
+          // We're going to render them separately later.
+          tail = lastContentRow.sibling;
+          lastContentRow.sibling = null;
+        }
+        initSuspenseListRenderState(
+          workInProgress,
+          false, // isBackwards
+          tail,
+          lastContentRow,
+          tailMode,
+          treeForkCount,
+        );
+        break;
       }
     }
   }
@@ -3977,6 +4011,14 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       break;
     }
     case SuspenseListComponent: {
+      if (workInProgress.flags & DidCapture) {
+        // Second pass caught.
+        return updateSuspenseListComponent(
+          current,
+          workInProgress,
+          renderLanes,
+        );
+      }
       const didSuspendBefore = (current.flags & DidCapture) !== NoFlags;
 
       let hasChildWork = includesSomeLane(

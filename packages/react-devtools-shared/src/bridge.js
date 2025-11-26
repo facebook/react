@@ -217,6 +217,7 @@ export type BackendEvents = {
   selectElement: [number],
   shutdown: [],
   stopInspectingHost: [boolean],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
   syncSelectionToBuiltinElementsPanel: [],
   unsupportedRendererVersion: [],
 
@@ -270,6 +271,8 @@ type FrontendEvents = {
   startProfiling: [StartProfilingParams],
   stopInspectingHost: [],
   scrollToHostInstance: [ScrollToHostInstance],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
+  requestScrollPosition: [],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
@@ -416,7 +419,8 @@ class Bridge<
     try {
       if (this._messageQueue.length) {
         for (let i = 0; i < this._messageQueue.length; i += 2) {
-          this._wall.send(this._messageQueue[i], ...this._messageQueue[i + 1]);
+          // This only supports one argument in practice but the types suggests it should support multiple.
+          this._wall.send(this._messageQueue[i], this._messageQueue[i + 1][0]);
         }
         this._messageQueue.length = 0;
       }

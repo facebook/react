@@ -6,16 +6,15 @@
   border-radius: 0.25rem;
 }
 
-.SuspenseRectsContainer[data-highlighted='true'] {
-  outline-color: var(--color-transition);
-  outline-style: solid;
-  outline-width: 4px;
-}
-
 .SuspenseRectsRoot {
   cursor: pointer;
   outline-color: var(--color-transition);
   background-color: color-mix(in srgb, var(--color-transition) 5%, transparent);
+}
+
+.SuspenseRectsRootOutline {
+  outline-width: 4px;
+  border-radius: 0.125rem;
 }
 
 .SuspenseRectsRoot[data-hovered='true'] {

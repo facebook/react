@@ -304,6 +304,7 @@ export type HookKind =
   | 'useTransition'
   | 'useImperativeHandle'
   | 'useEffectEvent'
+  | 'useOptimistic'
   | 'Custom';
 
 /*
@@ -399,12 +400,15 @@ export const BuiltInUseReducerId = 'BuiltInUseReducer';
 export const BuiltInDispatchId = 'BuiltInDispatch';
 export const BuiltInUseContextHookId = 'BuiltInUseContextHook';
 export const BuiltInUseTransitionId = 'BuiltInUseTransition';
+export const BuiltInUseOptimisticId = 'BuiltInUseOptimistic';
+export const BuiltInSetOptimisticId = 'BuiltInSetOptimistic';
 export const BuiltInStartTransitionId = 'BuiltInStartTransition';
 export const BuiltInFireId = 'BuiltInFire';
 export const BuiltInFireFunctionId = 'BuiltInFireFunction';
 export const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
-export const BuiltinEffectEventId = 'BuiltInEffectEventFunction';
+export const BuiltInEffectEventId = 'BuiltInEffectEventFunction';
 export const BuiltInAutodepsId = 'BuiltInAutoDepsId';
+export const BuiltInEventHandlerId = 'BuiltInEventHandlerId';
 
 // See getReanimatedModuleType() in Globals.ts — this is part of supporting Reanimated's ref-like types
 export const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
@@ -1185,6 +1189,25 @@ addObject(BUILTIN_SHAPES, BuiltInUseTransitionId, [
   ],
 ]);
 
+addObject(BUILTIN_SHAPES, BuiltInUseOptimisticId, [
+  ['0', {kind: 'Poly'}],
+  [
+    '1',
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Primitive,
+      },
+      BuiltInSetOptimisticId,
+    ),
+  ],
+]);
+
 addObject(BUILTIN_SHAPES, BuiltInUseActionStateId, [
   ['0', {kind: 'Poly'}],
   [
@@ -1243,7 +1266,20 @@ addFunction(
     calleeEffect: Effect.ConditionallyMutate,
     returnValueKind: ValueKind.Mutable,
   },
-  BuiltinEffectEventId,
+  BuiltInEffectEventId,
+);
+
+addFunction(
+  BUILTIN_SHAPES,
+  [],
+  {
+    positionalParams: [],
+    restParam: Effect.ConditionallyMutate,
+    returnType: {kind: 'Poly'},
+    calleeEffect: Effect.ConditionallyMutate,
+    returnValueKind: ValueKind.Mutable,
+  },
+  BuiltInEventHandlerId,
 );
 
 /**

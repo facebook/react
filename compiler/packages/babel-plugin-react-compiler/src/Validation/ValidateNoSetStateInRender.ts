@@ -10,10 +10,115 @@ import {
   CompilerError,
   ErrorCategory,
 } from '../CompilerError';
-import {HIRFunction, IdentifierId, isSetStateType} from '../HIR';
+import {
+  HIRFunction,
+  Identifier,
+  IdentifierId,
+  Instruction,
+  InstructionValue,
+  isPrimitiveType,
+  isSetStateType,
+  Phi,
+  Place,
+  SpreadPattern,
+} from '../HIR';
 import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {Result} from '../Utils/Result';
+
+function isPrimitiveSetArg(
+  arg: Place | SpreadPattern,
+  fn: HIRFunction,
+): boolean {
+  if (arg.kind !== 'Identifier') {
+    return false;
+  }
+
+  const visited = new Set<IdentifierId>();
+  const defs = buildDefinitionMap(fn);
+  return isPrimitiveIdentifier(arg.identifier, defs, visited);
+}
+
+type DefinitionMap = Map<IdentifierId, Instruction | Phi>;
+
+function buildDefinitionMap(fn: HIRFunction): DefinitionMap {
+  const defs: DefinitionMap = new Map();
+
+  for (const [, block] of fn.body.blocks) {
+    for (const phi of block.phis) {
+      defs.set(phi.place.identifier.id, phi);
+    }
+    for (const instr of block.instructions) {
+      defs.set(instr.lvalue.identifier.id, instr);
+    }
+  }
+
+  return defs;
+}
+
+function isPrimitiveIdentifier(
+  identifier: Identifier,
+  defs: DefinitionMap,
+  visited: Set<IdentifierId>,
+): boolean {
+  if (isPrimitiveType(identifier)) {
+    return true;
+  }
+
+  if (visited.has(identifier.id)) {
+    return false;
+  }
+  visited.add(identifier.id);
+
+  const def = defs.get(identifier.id);
+  if (def == null) {
+    return false;
+  }
+
+  if (isPhi(def)) {
+    return Array.from(def.operands.values()).every(operand =>
+      isPrimitiveIdentifier(operand.identifier, defs, visited),
+    );
+  }
+
+  return isPrimitiveInstruction(def.value, defs, visited);
+}
+
+function isPhi(def: Instruction | Phi): def is Phi {
+  return 'kind' in def && def.kind === 'Phi';
+}
+
+function isPrimitiveInstruction(
+  value: InstructionValue,
+  defs: DefinitionMap,
+  visited: Set<IdentifierId>,
+): boolean {
+  switch (value.kind) {
+    case 'Primitive':
+    case 'TemplateLiteral':
+    case 'JSXText':
+    case 'UnaryExpression':
+    case 'BinaryExpression':
+      return true;
+
+    case 'TypeCastExpression':
+      return isPrimitiveIdentifier(value.value.identifier, defs, visited);
+
+    case 'LoadLocal':
+    case 'LoadContext':
+      return isPrimitiveIdentifier(value.place.identifier, defs, visited);
+
+    case 'StoreLocal':
+    case 'StoreContext':
+      return isPrimitiveIdentifier(value.value.identifier, defs, visited);
+
+    case 'Await':
+      return isPrimitiveIdentifier(value.value.identifier, defs, visited);
+
+    default:
+      return false;
+  }
+}
 
 /**
  * Validates that the given function does not have an infinite update loop
@@ -55,6 +160,7 @@ function validateNoSetStateInRenderImpl(
   unconditionalSetStateFunctions: Set<IdentifierId>,
 ): Result<void, CompilerError> {
   const unconditionalBlocks = computeUnconditionalBlocks(fn);
+  const enableUseKeyedState = fn.env.config.enableUseKeyedState;
   let activeManualMemoId: number | null = null;
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
@@ -155,20 +261,48 @@ function validateNoSetStateInRenderImpl(
                 }),
               );
             } else if (unconditionalBlocks.has(block.id)) {
-              errors.pushDiagnostic(
-                CompilerDiagnostic.create({
-                  category: ErrorCategory.RenderSetState,
-                  reason:
-                    'Calling setState during render may trigger an infinite loop',
-                  description:
-                    'Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)',
-                  suggestions: null,
-                }).withDetails({
-                  kind: 'error',
-                  loc: callee.loc,
-                  message: 'Found setState() in render',
-                }),
-              );
+              let isArgPrimitive = false;
+
+              if (instr.value.args.length > 0) {
+                const arg = instr.value.args[0];
+                if (arg.kind === 'Identifier') {
+                  isArgPrimitive = isPrimitiveSetArg(arg, fn);
+                }
+              }
+
+              if (isArgPrimitive) {
+                if (enableUseKeyedState) {
+                  errors.pushDiagnostic(
+                    CompilerDiagnostic.create({
+                      category: ErrorCategory.RenderSetState,
+                      reason:
+                        'Calling setState during render may trigger an infinite loop',
+                      description:
+                        'Use useKeyedState instead of calling setState directly in render. Example: const [value, setValue] = useKeyedState(initialValue, key)',
+                      suggestions: null,
+                    }).withDetails({
+                      kind: 'error',
+                      loc: callee.loc,
+                      message: 'Found setState() in render',
+                    }),
+                  );
+                }
+              } else {
+                errors.pushDiagnostic(
+                  CompilerDiagnostic.create({
+                    category: ErrorCategory.RenderSetState,
+                    reason:
+                      'Calling setState during render may trigger an infinite loop',
+                    description:
+                      'Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)',
+                    suggestions: null,
+                  }).withDetails({
+                    kind: 'error',
+                    loc: callee.loc,
+                    message: 'Found setState() in render',
+                  }),
+                );
+              }
             }
           }
           break;
