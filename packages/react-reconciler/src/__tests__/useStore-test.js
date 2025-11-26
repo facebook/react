@@ -21,6 +21,8 @@ let waitFor;
 let assertLog;
 let useLayoutEffect;
 let useEffect;
+let use;
+let Suspense;
 
 describe('useStore', () => {
   beforeEach(() => {
@@ -34,6 +36,8 @@ describe('useStore', () => {
     useStore = React.useStore;
     useLayoutEffect = React.useLayoutEffect;
     useEffect = React.useEffect;
+    use = React.use;
+    Suspense = React.Suspense;
     startTransition = React.startTransition;
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
@@ -1221,6 +1225,122 @@ describe('useStore', () => {
     expect(root).toMatchRenderedOutput('20');
   });
 
+  it('first store reader is in a tree that suspends on mount', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        default:
+          return count;
+      }
+    }
+    const store = createStore(2, counterReducer);
+
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
+    let resolve;
+    const promise = new Promise(r => {
+      resolve = r;
+    });
+
+    function SuspendingStoreReader() {
+      const value = useStore(store, identity);
+      Scheduler.log({
+        kind: 'render',
+        value,
+        componentName: 'SuspendingStoreReader',
+      });
+      use(promise);
+      Scheduler.log({
+        kind: 'after suspend',
+        componentName: 'SuspendingStoreReader',
+      });
+      return <>{value}</>;
+    }
+
+    function Fallback() {
+      Scheduler.log({kind: 'render', componentName: 'Fallback'});
+      return 'Loading...';
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={<Fallback />}>
+          <SuspendingStoreReader />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Initial render - the store reader suspends
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    assertLog([
+      {kind: 'selector', state: 2},
+      {kind: 'render', value: 2, componentName: 'SuspendingStoreReader'},
+      // Component suspends, fallback is shown
+      {kind: 'render', componentName: 'Fallback'},
+      // TODO: React tries to render the suspended tree again?
+      {kind: 'selector', state: 2},
+      {kind: 'render', value: 2, componentName: 'SuspendingStoreReader'},
+      // {kind: 'render', componentName: 'Fallback'},
+    ]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Dispatch while suspended - only the reducer runs since the
+    // suspended component is not being re-rendered
+
+    let resolveTransition;
+    await act(async () => {
+      startTransition(async () => {
+        store.dispatch({type: 'increment'});
+        await new Promise(r => (resolveTransition = r));
+      });
+    });
+
+    assertLog([{kind: 'reducer', state: 2, action: 'increment'}]);
+    // Still showing fallback
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Resolve the suspense
+    await act(async () => {
+      resolve();
+    });
+
+    // Now the component should render with the pre-transition state
+    assertLog([
+      {kind: 'selector', state: 2},
+      {kind: 'render', value: 2, componentName: 'SuspendingStoreReader'},
+      {kind: 'after suspend', componentName: 'SuspendingStoreReader'},
+      // React tries to re-render the transition state eagerly
+      {kind: 'selector', state: 3},
+      // WAT?
+      {kind: 'render', componentName: 'Fallback'},
+    ]);
+    expect(root).toMatchRenderedOutput('2');
+
+    // Verify updates continue to work after unsuspending
+    await act(async () => {
+      resolveTransition();
+    });
+
+    assertLog([
+      {kind: 'render', value: 3, componentName: 'SuspendingStoreReader'},
+      {kind: 'after suspend', componentName: 'SuspendingStoreReader'},
+    ]);
+    expect(root).toMatchRenderedOutput('3');
+  });
+
   it('store is already updating in transition on initial mount', async () => {
     function counterReducer(
       count: number,
@@ -1258,6 +1378,7 @@ describe('useStore', () => {
     }
 
     const root = ReactNoop.createRoot();
+    assertLog([{kind: 'reducer', state: 2, action: 'increment'}]);
     await act(async () => {
       root.render(<App />);
     });
@@ -1314,6 +1435,7 @@ describe('useStore', () => {
     }
 
     const root = ReactNoop.createRoot();
+    assertLog([{kind: 'reducer', action: 'increment', state: 2}]);
     await act(async () => {
       root.render(<App />);
     });
