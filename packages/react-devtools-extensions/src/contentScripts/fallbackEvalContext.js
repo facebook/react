@@ -1,32 +1,23 @@
-/*
-  Can not access `Developer Tools Console API` (e.g., inspect(), $0) in this context.
-  So some functions are no-op or throw error.
-*/
-const evalScripts = {
-  checkIfReactPresentInInspectedWindow: () =>
-    window.__REACT_DEVTOOLS_GLOBAL_HOOK__ &&
-    window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0,
-  reload: () => window.location.reload(),
-  setBrowserSelectionFromReact: () => {
-    throw new Error('Not supported in fallback eval context');
-  },
-  setReactSelectionFromBrowser: () => {
-    throw new Error('Not supported in fallback eval context');
-  },
-  viewAttributeSource: ({rendererID, elementID, path}) => {
-    return false; // Not supported in fallback eval context
-  },
-  viewElementSource: ({rendererID, elementID}) => {
-    return false; // Not supported in fallback eval context
-  },
-};
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
+import {evalScripts} from '../evalScripts';
 
 window.addEventListener('message', event => {
   if (event.data?.source === 'react-devtools-content-script-eval') {
     const {scriptId, args, requestId} = event.data.payload;
     const response = {result: null, error: null};
     try {
-      response.result = evalScripts[scriptId].apply(null, args);
+      if (!evalScripts[scriptId]) {
+        throw new Error(`No eval script with id "${scriptId}" exists.`);
+      }
+      response.result = evalScripts[scriptId].fn.apply(null, args);
     } catch (err) {
       response.error = err.message;
     }

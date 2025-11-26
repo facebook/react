@@ -71,7 +71,7 @@ function createBridge() {
 
   bridge.addListener('reloadAppForProfiling', () => {
     localStorageSetItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
-    evalInInspectedWindow('reload', [], 'window.location.reload();');
+    evalInInspectedWindow('reload', []);
   });
 
   bridge.addListener(

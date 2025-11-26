@@ -7,9 +7,6 @@ export function setBrowserSelectionFromReact() {
   evalInInspectedWindow(
     'setBrowserSelectionFromReact',
     [],
-    '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0) ?' +
-      '(inspect(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0), true) :' +
-      'false',
     (didSelectionChange, evalError) => {
       if (evalError) {
         console.error(evalError);
@@ -24,9 +21,6 @@ export function setReactSelectionFromBrowser(bridge) {
   evalInInspectedWindow(
     'setReactSelectionFromBrowser',
     [],
-    '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0) ?' +
-      '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = $0, true) :' +
-      'false',
     (didSelectionChange, evalError) => {
       if (evalError) {
         console.error(evalError);

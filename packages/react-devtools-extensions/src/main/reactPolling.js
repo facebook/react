@@ -29,7 +29,6 @@ export function startReactPolling(
     evalInInspectedWindow(
       'checkIfReactPresentInInspectedWindow',
       [],
-      'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
       (pageHasReact, exceptionInfo) => {
         if (status === 'aborted') {
           onError(

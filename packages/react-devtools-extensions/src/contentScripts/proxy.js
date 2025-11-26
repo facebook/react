@@ -119,7 +119,7 @@ function connectPort() {
 }
 
 let evalRequestId = 0;
-const evalRequestCallbacks = new Map();
+const evalRequestCallbacks = new Map<number, Function>();
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   switch (msg?.source) {
@@ -148,8 +148,11 @@ window.addEventListener('message', event => {
     const {requestId, response} = event.data.payload;
     const callback = evalRequestCallbacks.get(requestId);
     if (callback) {
-      callback(response);
-      evalRequestCallbacks.delete(requestId);
+      try {
+        callback(response);
+      } finally {
+        evalRequestCallbacks.delete(requestId);
+      }
     }
   }
 });
