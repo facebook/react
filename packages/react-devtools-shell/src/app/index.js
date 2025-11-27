@@ -116,10 +116,7 @@ function mountTestApp() {
   mountApp(Iframe);
   mountApp(TraceUpdatesTest);
   mountApp(Segments);
-
-  if (shouldRenderLegacy) {
-    mountLegacyApp(PartiallyStrictApp);
-  }
+  mountApp(PartiallyStrictApp);
 }
 
 function unmountTestApp() {
