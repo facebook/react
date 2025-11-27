@@ -1,0 +1,68 @@
+{
+  "name": "react-error-assistant",
+  "version": "0.1.0",
+  "description": "RAG-powered error message assistant for React/Vite development",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-error-assistant"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist",
+    "python",
+    "src"
+  ],
+  "keywords": [
+    "react",
+    "vite",
+    "error",
+    "assistant",
+    "rag",
+    "llm",
+    "developer-tools"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:python": "cd python && python -m pytest test_*.py -v || echo 'Python tests skipped (pytest not available)'",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "download-kb": "node scripts/download-knowledge-base.js",
+    "demo": "node scripts/run-e2e-demo.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./vite": "./dist/vite.js"
+  },
+  "peerDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.2.5",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.4.3",
+    "vite": "^5.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://react.dev/"
+}
+

@@ -1,0 +1,31 @@
+{
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "module": "ES2015",
+    "target": "ES2015",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2020"],
+    "sourceMap": false,
+    "types": ["node", "jest"],
+    "downlevelIteration": true,
+    "rootDir": "../..",
+    "baseUrl": ".",
+    "typeRoots": [
+      "../../node_modules/@types"
+    ],
+    "checkJs": false,
+    "allowJs": false,
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": false,
+    "importsNotUsedAsValues": "remove",
+    "noUncheckedIndexedAccess": false,
+    "noUnusedParameters": false,
+    "useUnknownInCatchVariables": true,
+    "noUnusedLocals": false,
+    "removeComments": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["__tests__/**/*", "node_modules", "dist"]
+}
+

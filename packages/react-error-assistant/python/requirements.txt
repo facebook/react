@@ -1,0 +1,24 @@
+# Python dependencies for React Error Assistant RAG pipeline
+
+# Core dependencies - pinned for compatibility
+numpy>=1.24.0,<2.0.0
+pydantic>=1.10.0,<2.0.0
+
+# RAG Components
+sentence-transformers>=2.2.0,<3.0.0
+chromadb>=0.5.0,<1.0.0  # Pure-Python core since 0.5.x (Windows-friendly)
+
+# HTTP Server
+flask>=3.0.0,<4.0.0
+flask-cors>=4.0.0,<5.0.0
+
+# LLM Providers
+openai>=1.0.0,<2.0.0
+requests>=2.31.0,<3.0.0
+
+# Knowledge Base Construction
+gitpython>=3.1.0,<4.0.0
+
+# Utilities
+python-dotenv>=1.0.0,<2.0.0
+

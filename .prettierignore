@@ -39,3 +39,6 @@ compiler/*.ico
 compiler/*.svg
 compiler/*.lock
 compiler/*.toml
+
+# Test fixtures with intentional errors
+packages/react-error-assistant/fixtures/**
