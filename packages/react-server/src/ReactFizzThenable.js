@@ -207,6 +207,12 @@ function captureSuspendedCallSite(): void {
     owner: currentComponentStack.owner,
     stack: Error('react-stack-top-frame'),
   };
+  // TODO: If this is used in error handlers, the ConsoleTask stack
+  // will just be this debugTask + the stack of the abort() call which usually means
+  // it's just this debugTask.
+  // Ideally we'd be able to reconstruct the owner ConsoleTask as well.
+  // The stack of the debugTask would not point to the suspend location anyway.
+  // The focus is really on callsite which should be used in captureOwnerStack().
   suspendedCallSiteDebugTask = currentTask.debugTask;
 }
 export function getSuspendedCallSiteStackDEV(): ComponentStackNode | null {

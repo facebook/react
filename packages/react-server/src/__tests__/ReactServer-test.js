@@ -9,6 +9,7 @@
  */
 
 'use strict';
+import {AsyncLocalStorage} from 'node:async_hooks';
 
 let act;
 let React;
@@ -39,9 +40,20 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+const currentTask = new AsyncLocalStorage({defaultValue: null});
+
 describe('ReactServer', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    console.createTask = jest.fn(taskName => {
+      return {
+        run: taskFn => {
+          const parentTask = currentTask.getStore() || '';
+          return currentTask.run(parentTask + '\n' + taskName, taskFn);
+        },
+      };
+    });
 
     act = require('internal-test-utils').act;
     React = require('react');
@@ -91,6 +103,7 @@ describe('ReactServer', () => {
     let caughtError;
     let componentStack;
     let ownerStack;
+    let task;
     const result = ReactNoopServer.render(
       <Context value="provided">
         <App promise={new Promise(() => {})} />
@@ -100,6 +113,7 @@ describe('ReactServer', () => {
           caughtError = error;
           componentStack = errorInfo.componentStack;
           ownerStack = __DEV__ ? React.captureOwnerStack() : null;
+          task = currentTask.getStore();
         },
       },
     );
@@ -133,8 +147,10 @@ describe('ReactServer', () => {
           '' + '\n    in Indirection (at **)' + '\n    in App (at **)',
         );
       }
+      expect(task).toEqual('\n<Component>');
     } else {
       expect(ownerStack).toBeNull();
+      expect(task).toEqual(undefined);
     }
   });
 });
