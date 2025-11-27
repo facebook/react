@@ -4616,6 +4616,13 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       }
       pushHaltedAwaitOnComponentStack(task, debugInfo);
       if (task.thenableState !== null) {
+        // TODO: really?
+        // If the thenable was resolved in the meantime, we won't get a stack.
+        // We won't know which thenable in thenableState is newly settled though.
+        // We can't just clear status fields on each thenable because then the
+        // stack may point at a thenable that wasn't stalled. In those cases
+        // it's better to point at the callsite of the stalled Component as an
+        // entrypoint instead of the wrong thenable.
         pushSuspendedCallSiteOnComponentStack(request, task);
       }
     }
