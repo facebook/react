@@ -153,7 +153,7 @@ export default function SnapshotSelector(_: Props): React.Node {
         data-testname="SnapshotSelector-PreviousButton"
         disabled={numFilteredCommits === 0}
         onClick={selectPrevCommitIndex}
-        title="Select previous commit - Left arrow">
+        title="Select previous commit ←">
         <ButtonIcon type="previous" />
       </Button>
       <div
@@ -187,7 +187,7 @@ export default function SnapshotSelector(_: Props): React.Node {
         data-testname="SnapshotSelector-NextButton"
         disabled={numFilteredCommits === 0}
         onClick={selectNextCommitIndex}
-        title="Select next commit - Right arrow">
+        title="Select next commit →">
         <ButtonIcon type="next" />
       </Button>
     </Fragment>
