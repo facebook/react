@@ -26,6 +26,7 @@ import Profiler from './Profiler/Profiler';
 import SuspenseTab from './SuspenseTab/SuspenseTab';
 import TabBar from './TabBar';
 import EditorPane from './Editor/EditorPane';
+import InspectedElementPane from './InspectedElement/InspectedElementPane';
 import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
@@ -100,6 +101,7 @@ export type Props = {
   // The root <DevTools> app is rendered in the top-level extension window,
   // but individual tabs (e.g. Components, Profiling) can be rendered into portals within their browser panels.
   componentsPortalContainer?: Element,
+  inspectedElementPortalContainer?: Element,
   profilerPortalContainer?: Element,
   suspensePortalContainer?: Element,
   editorPortalContainer?: Element,
@@ -155,6 +157,7 @@ export default function DevTools({
   canViewElementSourceFunction,
   componentsPortalContainer,
   editorPortalContainer,
+  inspectedElementPortalContainer,
   profilerPortalContainer,
   suspensePortalContainer,
   currentSelectedSource,
@@ -377,6 +380,14 @@ export default function DevTools({
                                     <EditorPane
                                       selectedSource={currentSelectedSource}
                                       portalContainer={editorPortalContainer}
+                                    />
+                                  ) : null}
+                                  {inspectedElementPortalContainer ? (
+                                    <InspectedElementPane
+                                      selectedSource={currentSelectedSource}
+                                      portalContainer={
+                                        inspectedElementPortalContainer
+                                      }
                                     />
                                   ) : null}
                                 </ThemeProvider>
