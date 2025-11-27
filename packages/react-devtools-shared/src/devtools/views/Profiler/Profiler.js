@@ -76,7 +76,11 @@ function Profiler(_: {}) {
       }
       event.preventDefault();
       event.stopPropagation();
-    } else if (isLegacyProfilerSelected && didRecordCommits && selectedCommitIndex !== null) {
+    } else if (
+      isLegacyProfilerSelected &&
+      didRecordCommits &&
+      selectedCommitIndex !== null
+    ) {
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         if (event.key === 'ArrowLeft') {
           selectPrevCommitIndex();
@@ -88,7 +92,6 @@ function Profiler(_: {}) {
       }
     }
   });
-
 
   useEffect(() => {
     const div = profilerRef.current;

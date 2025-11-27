@@ -770,3 +770,4 @@ describe('ProfilerContext', () => {
 
     document.body.removeChild(profilerContainer);
   });
+});

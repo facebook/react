@@ -266,40 +266,44 @@ function ProfilerContextController({children}: Props): React.Node {
     [commitData, isCommitFilterEnabled, minCommitDuration],
   );
 
-const selectedFilteredCommitIndex = useMemo(() => {
-  if (selectedCommitIndex !== null) {
-    for (let i = 0; i < filteredCommitIndices.length; i++) {
-      if (filteredCommitIndices[i] === selectedCommitIndex) {
-        return i;
+  const selectedFilteredCommitIndex = useMemo(() => {
+    if (selectedCommitIndex !== null) {
+      for (let i = 0; i < filteredCommitIndices.length; i++) {
+        if (filteredCommitIndices[i] === selectedCommitIndex) {
+          return i;
+        }
       }
     }
-  }
-  return null;
-}, [filteredCommitIndices, selectedCommitIndex]);
+    return null;
+  }, [filteredCommitIndices, selectedCommitIndex]);
 
+  const selectNextCommitIndex = useCallback(() => {
+    if (
+      selectedFilteredCommitIndex === null ||
+      filteredCommitIndices.length === 0
+    ) {
+      return;
+    }
+    let nextCommitIndex = selectedFilteredCommitIndex + 1;
+    if (nextCommitIndex === filteredCommitIndices.length) {
+      nextCommitIndex = 0;
+    }
+    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
+  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
 
- const selectNextCommitIndex = useCallback(() => {
-  if (selectedFilteredCommitIndex === null || filteredCommitIndices.length === 0) {
-    return;
-  }
-  let nextCommitIndex = selectedFilteredCommitIndex + 1;
-  if (nextCommitIndex === filteredCommitIndices.length) {
-    nextCommitIndex = 0;
-  }
-  selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
-}, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
-
-const selectPrevCommitIndex = useCallback(() => {
-  if (selectedFilteredCommitIndex === null || filteredCommitIndices.length === 0) {
-    return;
-  }
-  let prevCommitIndex = selectedFilteredCommitIndex - 1;
-  if (prevCommitIndex < 0) {
-    prevCommitIndex = filteredCommitIndices.length - 1;
-  }
-  selectCommitIndex(filteredCommitIndices[prevCommitIndex]);
-}, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
-
+  const selectPrevCommitIndex = useCallback(() => {
+    if (
+      selectedFilteredCommitIndex === null ||
+      filteredCommitIndices.length === 0
+    ) {
+      return;
+    }
+    let prevCommitIndex = selectedFilteredCommitIndex - 1;
+    if (prevCommitIndex < 0) {
+      prevCommitIndex = filteredCommitIndices.length - 1;
+    }
+    selectCommitIndex(filteredCommitIndices[prevCommitIndex]);
+  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
 
   const value = useMemo(
     () => ({
