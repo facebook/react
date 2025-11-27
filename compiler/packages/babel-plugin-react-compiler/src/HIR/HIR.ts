@@ -803,9 +803,11 @@ export type ManualMemoDependency = {
     | {
         kind: 'NamedLocal';
         value: Place;
+        constant: boolean;
       }
     | {kind: 'Global'; identifierName: string};
   path: DependencyPath;
+  loc: SourceLocation;
 };
 
 export type StartMemoize = {
@@ -817,6 +819,11 @@ export type StartMemoize = {
    * (e.g. useMemo without a second arg)
    */
   deps: Array<ManualMemoDependency> | null;
+  /**
+   * The source location of the dependencies argument. Used for
+   * emitting diagnostics with a suggested replacement
+   */
+  depsLoc: SourceLocation | null;
   loc: SourceLocation;
 };
 export type FinishMemoize = {
@@ -1680,6 +1687,28 @@ export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
     )
   );
 }
+export function isSubPath(
+  subpath: DependencyPath,
+  path: DependencyPath,
+): boolean {
+  return (
+    subpath.length <= path.length &&
+    subpath.every(
+      (item, ix) =>
+        item.property === path[ix].property &&
+        item.optional === path[ix].optional,
+    )
+  );
+}
+export function isSubPathIgnoringOptionals(
+  subpath: DependencyPath,
+  path: DependencyPath,
+): boolean {
+  return (
+    subpath.length <= path.length &&
+    subpath.every((item, ix) => item.property === path[ix].property)
+  );
+}
 
 export function getPlaceScope(
   id: InstructionId,
@@ -1821,6 +1850,10 @@ export function isObjectType(id: Identifier): boolean {
 
 export function isPrimitiveType(id: Identifier): boolean {
   return id.type.kind === 'Primitive';
+}
+
+export function isPlainObjectType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInObject';
 }
 
 export function isArrayType(id: Identifier): boolean {
