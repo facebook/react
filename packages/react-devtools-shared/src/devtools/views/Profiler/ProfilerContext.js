@@ -61,6 +61,12 @@ export type Context = {
   // It impacts the flame graph and ranked charts.
   selectedCommitIndex: number | null,
   selectCommitIndex: (value: number | null) => void,
+  selectNextCommitIndex(): void,
+  selectPrevCommitIndex(): void,
+
+  // Which commits are currently filtered by duration?
+  filteredCommitIndices: Array<number>,
+  selectedFilteredCommitIndex: number | null,
 
   // Which fiber is currently selected in the Ranked or Flamegraph charts?
   selectedFiberID: number | null,
@@ -234,6 +240,67 @@ function ProfilerContextController({children}: Props): React.Node {
     }
   }
 
+  // Get commit data for the current root
+  // NOTE: Unlike profilerStore.getDataForRoot() which uses Suspense (throws when data unavailable),
+  // this uses subscription pattern and returns [] when data isn't ready.
+  // Always check didRecordCommits before using commitData or filteredCommitIndices.
+  const commitData = useMemo(() => {
+    if (!didRecordCommits || rootID === null || profilingData === null) {
+      return [];
+    }
+    const dataForRoot = profilingData.dataForRoots.get(rootID);
+    return dataForRoot ? dataForRoot.commitData : [];
+  }, [didRecordCommits, rootID, profilingData]);
+
+  const filteredCommitIndices = useMemo(
+    () =>
+      commitData.reduce((reduced, commitDatum, index) => {
+        if (
+          !isCommitFilterEnabled ||
+          commitDatum.duration >= minCommitDuration
+        ) {
+          reduced.push(index);
+        }
+        return reduced;
+      }, []),
+    [commitData, isCommitFilterEnabled, minCommitDuration],
+  );
+
+const selectedFilteredCommitIndex = useMemo(() => {
+  if (selectedCommitIndex !== null) {
+    for (let i = 0; i < filteredCommitIndices.length; i++) {
+      if (filteredCommitIndices[i] === selectedCommitIndex) {
+        return i;
+      }
+    }
+  }
+  return null;
+}, [filteredCommitIndices, selectedCommitIndex]);
+
+
+ const selectNextCommitIndex = useCallback(() => {
+  if (selectedFilteredCommitIndex === null || filteredCommitIndices.length === 0) {
+    return;
+  }
+  let nextCommitIndex = selectedFilteredCommitIndex + 1;
+  if (nextCommitIndex === filteredCommitIndices.length) {
+    nextCommitIndex = 0;
+  }
+  selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
+}, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
+
+const selectPrevCommitIndex = useCallback(() => {
+  if (selectedFilteredCommitIndex === null || filteredCommitIndices.length === 0) {
+    return;
+  }
+  let prevCommitIndex = selectedFilteredCommitIndex - 1;
+  if (prevCommitIndex < 0) {
+    prevCommitIndex = filteredCommitIndices.length - 1;
+  }
+  selectCommitIndex(filteredCommitIndices[prevCommitIndex]);
+}, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
+
+
   const value = useMemo(
     () => ({
       selectedTabID,
@@ -257,6 +324,10 @@ function ProfilerContextController({children}: Props): React.Node {
 
       selectedCommitIndex,
       selectCommitIndex,
+      selectNextCommitIndex,
+      selectPrevCommitIndex,
+      filteredCommitIndices,
+      selectedFilteredCommitIndex,
 
       selectedFiberID,
       selectedFiberName,
@@ -285,6 +356,10 @@ function ProfilerContextController({children}: Props): React.Node {
 
       selectedCommitIndex,
       selectCommitIndex,
+      selectNextCommitIndex,
+      selectPrevCommitIndex,
+      filteredCommitIndices,
+      selectedFilteredCommitIndex,
 
       selectedFiberID,
       selectedFiberName,

@@ -655,4 +655,118 @@ describe('ProfilerContext', () => {
 
     document.body.removeChild(profilerContainer);
   });
-});
+
+  it('should navigate between commits when the keyboard shortcut is pressed', async () => {
+    const Parent = () => <Child />;
+    const Child = () => null;
+
+    const container = document.createElement('div');
+    utils.act(() => legacyRender(<Parent />, container));
+
+    // Profile and record multiple commits
+    await utils.actAsync(() => store.profilerStore.startProfiling());
+    await utils.actAsync(() => legacyRender(<Parent />, container)); // Commit 1
+    await utils.actAsync(() => legacyRender(<Parent />, container)); // Commit 2
+    await utils.actAsync(() => legacyRender(<Parent />, container)); // Commit 3
+    await utils.actAsync(() => store.profilerStore.stopProfiling());
+
+    // Context providers
+    const Profiler =
+      require('react-devtools-shared/src/devtools/views/Profiler/Profiler').default;
+    const {
+      TimelineContextController,
+    } = require('react-devtools-timeline/src/TimelineContext');
+    const {
+      SettingsContextController,
+    } = require('react-devtools-shared/src/devtools/views/Settings/SettingsContext');
+    const {
+      ModalDialogContextController,
+    } = require('react-devtools-shared/src/devtools/views/ModalDialog');
+
+    let context: Context = ((null: any): Context);
+    function ContextReader() {
+      context = React.useContext(ProfilerContext);
+      return null;
+    }
+
+    const profilerContainer = document.createElement('div');
+    document.body.appendChild(profilerContainer);
+
+    // Create a root for the profiler
+    const profilerRoot = ReactDOMClient.createRoot(profilerContainer);
+
+    // Render the profiler with ContextReader
+    await utils.actAsync(() => {
+      profilerRoot.render(
+        <Contexts>
+          <SettingsContextController browserTheme="light">
+            <ModalDialogContextController>
+              <TimelineContextController>
+                <Profiler />
+                <ContextReader />
+              </TimelineContextController>
+            </ModalDialogContextController>
+          </SettingsContextController>
+        </Contexts>,
+      );
+    });
+
+    // Verify we have profiling data with 3 commits
+    expect(context.didRecordCommits).toBe(true);
+    expect(context.profilingData).not.toBeNull();
+    const rootID = context.rootID;
+    expect(rootID).not.toBeNull();
+    const dataForRoot = context.profilingData.dataForRoots.get(rootID);
+    expect(dataForRoot.commitData.length).toBe(3);
+
+    // Set initial commit selection
+    await utils.actAsync(() => context.selectCommitIndex(0));
+    expect(context.selectedCommitIndex).toBe(0);
+
+    const ownerWindow = profilerContainer.ownerDocument.defaultView;
+
+    // Test ArrowRight navigation (forward)
+    const arrowRightEvent = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      bubbles: true,
+    });
+
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowRightEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(1);
+
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowRightEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(2);
+
+    // Test wrap-around (last -> first)
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowRightEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(0);
+
+    // Test ArrowLeft navigation (backward)
+    const arrowLeftEvent = new KeyboardEvent('keydown', {
+      key: 'ArrowLeft',
+      bubbles: true,
+    });
+
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowLeftEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(2);
+
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowLeftEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(1);
+
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowLeftEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(0);
+
+    document.body.removeChild(profilerContainer);
+  });

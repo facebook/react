@@ -54,6 +54,8 @@ function Profiler(_: {}) {
     supportsProfiling,
     startProfiling,
     stopProfiling,
+    selectPrevCommitIndex,
+    selectNextCommitIndex,
   } = useContext(ProfilerContext);
 
   const {file: timelineTraceEventData, searchInputContainerRef} =
@@ -74,8 +76,19 @@ function Profiler(_: {}) {
       }
       event.preventDefault();
       event.stopPropagation();
+    } else if (isLegacyProfilerSelected && didRecordCommits && selectedCommitIndex !== null) {
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        if (event.key === 'ArrowLeft') {
+          selectPrevCommitIndex();
+        } else {
+          selectNextCommitIndex();
+        }
+        event.preventDefault();
+        event.stopPropagation();
+      }
     }
   });
+
 
   useEffect(() => {
     const div = profilerRef.current;
