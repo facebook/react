@@ -58,15 +58,24 @@
       "default": "./client.js"
     },
     "./server": {
-      "react-server": "./server.react-server.js",
-      "workerd": "./server.edge.js",
-      "bun": "./server.bun.js",
-      "deno": "./server.browser.js",
-      "worker": "./server.browser.js",
-      "node": "./server.node.js",
-      "edge-light": "./server.edge.js",
-      "browser": "./server.browser.js",
-      "default": "./server.node.js"
+     "deno": "./server.node.js",
+  "bun": "./server.bun.js",
+  "workerd": "./server.browser.js",
+  "edge-light": "./server.browser.js",
+  "node": "./server.node.js",
+  "import": {
+    "types": "./server.js",
+    "development": "./server.browser.development.js",
+    "production": "./server.browser.production.min.js",
+    "default": "./server.browser.production.min.js"
+  },
+  "require": {
+    "types": "./server.js",
+    "development": "./server.browser.development.js",
+    "production": "./server.browser.production.min.js",
+    "default": "./server.browser.production.min.js"
+  },
+  "default": "./server.node.js"
     },
     "./server.browser": {
       "react-server": "./server.react-server.js",
