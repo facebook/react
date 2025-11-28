@@ -193,6 +193,7 @@ import isArray from 'shared/isArray';
 import {
   SuspenseException,
   getSuspendedThenable,
+  ensureSuspendableThenableStateDEV,
   getSuspendedCallSiteStackDEV,
   getSuspendedCallSiteDebugTaskDEV,
   setCaptureSuspendedCallSiteDEV,
@@ -1030,7 +1031,7 @@ function pushHaltedAwaitOnComponentStack(
 }
 
 // performWork + retryTask without mutation
-function rerenderHaltedTask(request: Request, task: Task): void {
+function rerenderStalledTask(request: Request, task: Task): void {
   const prevContext = getActiveContext();
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
@@ -1080,9 +1081,14 @@ function pushSuspendedCallSiteOnComponentStack(
   task: Task,
 ): void {
   setCaptureSuspendedCallSiteDEV(true);
+  const restoreThenableState = ensureSuspendableThenableStateDEV(
+    // refined at the callsite
+    ((task.thenableState: any): ThenableState),
+  );
   try {
-    rerenderHaltedTask(request, task);
+    rerenderStalledTask(request, task);
   } finally {
+    restoreThenableState();
     setCaptureSuspendedCallSiteDEV(false);
   }
 
@@ -4616,13 +4622,6 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       }
       pushHaltedAwaitOnComponentStack(task, debugInfo);
       if (task.thenableState !== null) {
-        // TODO: really?
-        // If the thenable was resolved in the meantime, we won't get a stack.
-        // We won't know which thenable in thenableState is newly settled though.
-        // We can't just clear status fields on each thenable because then the
-        // stack may point at a thenable that wasn't stalled. In those cases
-        // it's better to point at the callsite of the stalled Component as an
-        // entrypoint instead of the wrong thenable.
         pushSuspendedCallSiteOnComponentStack(request, task);
       }
     }

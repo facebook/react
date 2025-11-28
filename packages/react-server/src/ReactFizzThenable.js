@@ -7,11 +7,8 @@
  * @flow
  */
 
-// Corresponds to ReactFiberWakeable and ReactFlightWakeable modules. Generally,
+// Corresponds to ReactFiberThenable and ReactFlightThenable modules. Generally,
 // changes to one module should be reflected in the others.
-
-// TODO: Rename this module and the corresponding Fiber one to "Thenable"
-// instead of "Wakeable". Or some other more appropriate name.
 
 import type {
   Thenable,
@@ -185,6 +182,10 @@ export function setCaptureSuspendedCallSiteDEV(capture: boolean): void {
 let suspendedCallSiteStack: ComponentStackNode | null = null;
 let suspendedCallSiteDebugTask: ConsoleTask | null = null;
 function captureSuspendedCallSite(): void {
+  // This is currently only used when aborting in Fizz.
+  // You can only abort the render in Fizz and Flight.
+  // In Fiber we only track suspended use via DevTools.
+  // In Flight, we track suspended use via async debug info.
   const currentTask = currentTaskInDEV;
   if (currentTask === null) {
     // eslint-disable-next-line react-internal/prod-error-codes -- not a prod error
@@ -244,6 +245,39 @@ export function getSuspendedCallSiteDebugTaskDEV(): ConsoleTask | null {
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
       'getSuspendedCallSiteDebugTaskDEV was called in a production environment. ' +
+        'This is a bug in React.',
+    );
+  }
+}
+
+export function ensureSuspendableThenableStateDEV(
+  thenableState: ThenableState,
+): () => void {
+  if (__DEV__) {
+    const lastThenable = thenableState[thenableState.length - 1];
+    switch (lastThenable.status) {
+      case 'fulfilled':
+        const previousThenableValue = lastThenable.value;
+        delete lastThenable.value;
+        delete (lastThenable: any).status;
+        return () => {
+          lastThenable.value = previousThenableValue;
+          lastThenable.status = 'fulfilled';
+        };
+      case 'rejected':
+        const previousThenableReason = lastThenable.reason;
+        delete lastThenable.reason;
+        delete (lastThenable: any).status;
+        return () => {
+          lastThenable.reason = previousThenableReason;
+          lastThenable.status = 'rejected';
+        };
+    }
+    return noop;
+  } else {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'ensureSuspendableThenableStateDEV was called in a production environment. ' +
         'This is a bug in React.',
     );
   }

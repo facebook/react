@@ -165,7 +165,8 @@ describe('ReactServer', () => {
       if (gate(flags => flags.enableAsyncDebugInfo)) {
         expect(ignoreListStack(ownerStack)).toEqual(
           '' +
-            '\n    at Component (./ReactServer-test.js:95:13)' +
+            // Pointing at React.use(p2)
+            '\n    at Component (./ReactServer-test.js:94:13)' +
             '\n    at Indirection (./ReactServer-test.js:101:44)' +
             '\n    at App (./ReactServer-test.js:109:46)',
         );
