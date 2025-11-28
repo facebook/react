@@ -65,9 +65,9 @@ function Profiler(_: {}) {
 
   const isLegacyProfilerSelected = selectedTabID !== 'timeline';
 
-  // Cmd+E to start/stop profiler recording
   const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
     const correctModifier = isMac ? event.metaKey : event.ctrlKey;
+    // Cmd+E to start/stop profiler recording
     if (correctModifier && event.key === 'e') {
       if (isProfiling) {
         stopProfiling();
@@ -81,6 +81,7 @@ function Profiler(_: {}) {
       didRecordCommits &&
       selectedCommitIndex !== null
     ) {
+      // Left/Right to navigate commits
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         if (event.key === 'ArrowLeft') {
           selectPrevCommitIndex();

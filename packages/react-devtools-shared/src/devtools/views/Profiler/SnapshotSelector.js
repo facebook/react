@@ -47,17 +47,6 @@ export default function SnapshotSelector(_: Props): React.Node {
 
   const numFilteredCommits = filteredCommitIndices.length;
 
-  // Handle edge cases where selected commit becomes invalid after filtering
-  if (selectedFilteredCommitIndex === null) {
-    if (numFilteredCommits > 0) {
-      selectCommitIndex(0);
-    } else {
-      selectCommitIndex(null);
-    }
-  } else if (selectedFilteredCommitIndex >= numFilteredCommits) {
-    selectCommitIndex(numFilteredCommits === 0 ? null : numFilteredCommits - 1);
-  }
-
   let label = null;
   if (numFilteredCommits > 0) {
     // $FlowFixMe[missing-local-annot]

@@ -19,7 +19,7 @@ import {
 import {StoreContext} from '../context';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
-import type {ProfilingDataFrontend} from './types';
+import type {CommitDataFrontend, ProfilingDataFrontend} from './types';
 
 export type TabID = 'flame-chart' | 'ranked-chart' | 'timeline';
 
@@ -205,6 +205,7 @@ function ProfilerContextController({children}: Props): React.Node {
   const [selectedCommitIndex, selectCommitIndex] = useState<number | null>(
     null,
   );
+
   const [selectedTabID, selectTab] = useLocalStorage<TabID>(
     'React::DevTools::Profiler::defaultTab',
     'flame-chart',
@@ -246,15 +247,17 @@ function ProfilerContextController({children}: Props): React.Node {
   // Always check didRecordCommits before using commitData or filteredCommitIndices.
   const commitData = useMemo(() => {
     if (!didRecordCommits || rootID === null || profilingData === null) {
-      return [];
+      return ([]: Array<CommitDataFrontend>);
     }
     const dataForRoot = profilingData.dataForRoots.get(rootID);
-    return dataForRoot ? dataForRoot.commitData : [];
+    return dataForRoot
+      ? dataForRoot.commitData
+      : ([]: Array<CommitDataFrontend>);
   }, [didRecordCommits, rootID, profilingData]);
 
   const filteredCommitIndices = useMemo(
     () =>
-      commitData.reduce((reduced, commitDatum, index) => {
+      commitData.reduce((reduced: Array<number>, commitDatum, index) => {
         if (
           !isCommitFilterEnabled ||
           commitDatum.duration >= minCommitDuration
@@ -262,7 +265,7 @@ function ProfilerContextController({children}: Props): React.Node {
           reduced.push(index);
         }
         return reduced;
-      }, []),
+      }, ([]: Array<number>)),
     [commitData, isCommitFilterEnabled, minCommitDuration],
   );
 
@@ -304,6 +307,21 @@ function ProfilerContextController({children}: Props): React.Node {
     }
     selectCommitIndex(filteredCommitIndices[prevCommitIndex]);
   }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
+
+  // Handle edge cases where selected commit becomes invalid after filtering
+  const numFilteredCommits = filteredCommitIndices.length;
+  if (selectedFilteredCommitIndex === null && numFilteredCommits > 0) {
+    selectCommitIndex(filteredCommitIndices[0]);
+  } else if (
+    selectedFilteredCommitIndex !== null &&
+    selectedFilteredCommitIndex >= numFilteredCommits
+  ) {
+    selectCommitIndex(
+      numFilteredCommits === 0
+        ? null
+        : filteredCommitIndices[numFilteredCommits - 1],
+    );
+  }
 
   const value = useMemo(
     () => ({

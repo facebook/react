@@ -770,4 +770,97 @@ describe('ProfilerContext', () => {
 
     document.body.removeChild(profilerContainer);
   });
+
+  it('should handle commit selection edge cases when filtering commits', async () => {
+    // Create components that render with different durations
+    const FastComponent = () => null;
+    const SlowComponent = () => {
+      // Simulate slow render
+      const start = performance.now();
+      while (performance.now() - start < 20) {
+        // Busy wait
+      }
+      return null;
+    };
+
+    const container = document.createElement('div');
+
+    // Initial render
+    utils.act(() => legacyRender(<FastComponent />, container));
+
+    let context: Context = ((null: any): Context);
+    function ContextReader() {
+      context = React.useContext(ProfilerContext);
+      return null;
+    }
+
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts>
+          <ContextReader />
+        </Contexts>,
+      ),
+    );
+
+    // Profile with multiple commits of varying durations
+    await utils.actAsync(() => store.profilerStore.startProfiling());
+    await utils.actAsync(() => legacyRender(<FastComponent />, container)); // Fast commit (index 0)
+    await utils.actAsync(() => legacyRender(<SlowComponent />, container)); // Slow commit (index 1)
+    await utils.actAsync(() => legacyRender(<FastComponent />, container)); // Fast commit (index 2)
+    await utils.actAsync(() => legacyRender(<SlowComponent />, container)); // Slow commit (index 3)
+    await utils.actAsync(() => store.profilerStore.stopProfiling());
+
+    // Initially, no commit is selected and no filter is enabled
+    expect(context.selectedCommitIndex).toBe(null);
+    expect(context.isCommitFilterEnabled).toBe(false);
+
+    // Case 1: When no commit is selected and there are commits, first should auto-select
+    expect(context.filteredCommitIndices.length).toBe(4);
+    expect(context.selectedFilteredCommitIndex).toBe(null);
+
+    // The context should auto-select the first commit when rendered with commits available
+    await utils.actAsync(() => {
+      TestRenderer.create(
+        <Contexts>
+          <ContextReader />
+        </Contexts>,
+      );
+    });
+    expect(context.selectedCommitIndex).toBe(0);
+
+    // Case 2: Select a slow commit, then enable filter to hide it
+    await utils.actAsync(() => context.selectCommitIndex(3)); // Select last slow commit
+    expect(context.selectedCommitIndex).toBe(3);
+
+    // Enable filter with duration threshold that filters out fast commits
+    await utils.actAsync(() => context.setIsCommitFilterEnabled(true));
+    await utils.actAsync(() => context.setMinCommitDuration(10)); // Filter for commits > 10ms
+
+    // After filtering, only slow commits (1, 3) should remain
+    // Selected commit (3) should still be valid
+    expect(context.filteredCommitIndices).toEqual([1, 3]);
+    expect(context.selectedCommitIndex).toBe(3);
+    expect(context.selectedFilteredCommitIndex).toBe(1); // Index 1 in filtered array
+
+    // Case 3: Select a fast commit, then filter it out
+    await utils.actAsync(() => context.setIsCommitFilterEnabled(false));
+    await utils.actAsync(() => context.selectCommitIndex(0)); // Select first fast commit
+    expect(context.selectedCommitIndex).toBe(0);
+
+    // Re-enable filter - commit 0 should be filtered out
+    await utils.actAsync(() => context.setIsCommitFilterEnabled(true));
+
+    // Context should auto-correct to last valid filtered commit
+    expect(context.filteredCommitIndices).toEqual([1, 3]);
+    expect(context.selectedCommitIndex).toBe(3); // Auto-corrected to last filtered commit
+    expect(context.selectedFilteredCommitIndex).toBe(1);
+
+    // Case 4: Filter out all commits
+    await utils.actAsync(() => context.setMinCommitDuration(1000)); // Very high threshold
+
+    // No commits should pass filter
+    expect(context.filteredCommitIndices).toEqual([]);
+    expect(context.selectedCommitIndex).toBe(null); // Should be null when no commits
+    expect(context.selectedFilteredCommitIndex).toBe(null);
+  });
 });
