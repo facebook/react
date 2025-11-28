@@ -18,26 +18,36 @@ let ReactNoopServer;
 function normalizeCodeLocInfo(str) {
   return (
     str &&
-    str
-      .split('\n')
-      .filter(frame => {
-        // These frames should be ignore-listed since they point into
-        // React internals i.e. node_modules.
-        return (
-          frame.indexOf('ReactFizzHooks') === -1 &&
-          frame.indexOf('ReactFizzThenable') === -1 &&
-          frame.indexOf('ReactHooks') === -1
-        );
-      })
-      .join('\n')
-      .replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
-        const dot = name.lastIndexOf('.');
-        if (dot !== -1) {
-          name = name.slice(dot + 1);
-        }
-        return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
-      })
+    str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+      const dot = name.lastIndexOf('.');
+      if (dot !== -1) {
+        name = name.slice(dot + 1);
+      }
+      return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+    })
   );
+}
+
+/**
+ * Removes all stackframes not pointing into this file
+ */
+function ignoreListStack(str) {
+  if (!str) {
+    return str;
+  }
+
+  let ignoreListedStack = '';
+  const lines = str.split('\n');
+
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const line of lines) {
+    if (line.indexOf(__filename) === -1) {
+    } else {
+      ignoreListedStack += '\n' + line.replace(__dirname, '.');
+    }
+  }
+
+  return ignoreListedStack;
 }
 
 const currentTask = new AsyncLocalStorage({defaultValue: null});
@@ -75,26 +85,28 @@ describe('ReactServer', () => {
   it('has Owner Stacks in DEV when aborted', async () => {
     const Context = React.createContext(null);
 
-    function Component({promise}) {
+    function Component({p1, p2, p3}) {
       const context = React.use(Context);
       if (context === null) {
         throw new Error('Missing context');
       }
-      React.use(promise);
+      React.use(p1);
+      React.use(p2);
+      React.use(p3);
       return <div>Hello, Dave!</div>;
     }
-    function Indirection({promise}) {
+    function Indirection({p1, p2, p3}) {
       return (
         <div>
-          <Component promise={promise} />
+          <Component p1={p1} p2={p2} p3={p3} />
         </div>
       );
     }
-    function App({promise}) {
+    function App({p1, p2, p3}) {
       return (
         <section>
           <div>
-            <Indirection promise={promise} />
+            <Indirection p1={p1} p2={p2} p3={p3} />
           </div>
         </section>
       );
@@ -104,9 +116,21 @@ describe('ReactServer', () => {
     let componentStack;
     let ownerStack;
     let task;
+    const resolvedPromise = Promise.resolve('one');
+    resolvedPromise.status = 'fulfilled';
+    resolvedPromise.value = 'one';
+    let resolvePendingPromise;
+    const pendingPromise = new Promise(resolve => {
+      resolvePendingPromise = value => {
+        pendingPromise.status = 'fulfilled';
+        pendingPromise.value = value;
+        resolve(value);
+      };
+    });
+    const hangingPromise = new Promise(() => {});
     const result = ReactNoopServer.render(
       <Context value="provided">
-        <App promise={new Promise(() => {})} />
+        <App p1={resolvedPromise} p2={pendingPromise} p3={hangingPromise} />
       </Context>,
       {
         onError: (error, errorInfo) => {
@@ -119,6 +143,7 @@ describe('ReactServer', () => {
     );
 
     await act(async () => {
+      resolvePendingPromise('two');
       result.abort();
     });
     expect(caughtError).toEqual(
@@ -135,16 +160,20 @@ describe('ReactServer', () => {
         '\n    in App (at **)',
     );
     if (__DEV__) {
+      // The concrete location may change as this test is updated.
+      // Just make sure they still point at the same code
       if (gate(flags => flags.enableAsyncDebugInfo)) {
-        expect(normalizeCodeLocInfo(ownerStack)).toEqual(
+        expect(ignoreListStack(ownerStack)).toEqual(
           '' +
-            '\n    in Component (at **)' +
-            '\n    in Indirection (at **)' +
-            '\n    in App (at **)',
+            '\n    at Component (./ReactServer-test.js:95:13)' +
+            '\n    at Indirection (./ReactServer-test.js:101:44)' +
+            '\n    at App (./ReactServer-test.js:109:46)',
         );
       } else {
-        expect(normalizeCodeLocInfo(ownerStack)).toEqual(
-          '' + '\n    in Indirection (at **)' + '\n    in App (at **)',
+        expect(ignoreListStack(ownerStack)).toEqual(
+          '' +
+            '\n    at Indirection (./ReactServer-test.js:101:44)' +
+            '\n    at App (./ReactServer-test.js:109:46)',
         );
       }
       expect(task).toEqual('\n<Component>');
