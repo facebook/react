@@ -806,6 +806,7 @@ describe('ReactFlightDOMNode', () => {
         resolvePendingPromise = value => {
           p2.status = 'fulfilled';
           p2.value = value;
+          resolve(value);
         };
       });
       const p3 = new Promise(() => {});
@@ -885,11 +886,11 @@ describe('ReactFlightDOMNode', () => {
       },
     );
 
+    resolvePendingPromise('custom-instrum-resolve');
     await serverAct(
       async () =>
         new Promise(resolve => {
           setImmediate(() => {
-            resolvePendingPromise();
             clientAbortController.abort();
             resolve();
           });
@@ -905,7 +906,9 @@ describe('ReactFlightDOMNode', () => {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
         '\n' +
           '    in SharedComponent (at **)\n' +
-          '    in ServerComponent\n' +
+          '    in ServerComponent' +
+          (gate(flags => flags.enableAsyncDebugInfo) ? ' (at **)' : '') +
+          '\n' +
           '    in Suspense\n' +
           '    in body\n' +
           '    in html\n' +
@@ -927,11 +930,13 @@ describe('ReactFlightDOMNode', () => {
       expect(ignoreListStack(ownerStack)).toBe(
         // eslint-disable-next-line react-internal/safe-string-coercion
         '' +
+          // The concrete location may change as this test is updated.
+          // Just make sure they still point at React.use(p2)
           (gate(flags => flags.enableAsyncDebugInfo)
             ? '\n    at SharedComponent (./ReactFlightDOMNode-test.js:791:7)'
             : '') +
-          '\n    at ServerComponent (file://./ReactFlightDOMNode-test.js:812:26)' +
-          '\n    at App (file://./ReactFlightDOMNode-test.js:829:25)',
+          '\n    at ServerComponent (file://./ReactFlightDOMNode-test.js:813:26)' +
+          '\n    at App (file://./ReactFlightDOMNode-test.js:830:25)',
       );
     } else {
       expect(ownerStack).toBeNull();
@@ -1522,12 +1527,12 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in Dynamic' +
             (gate(flags => flags.enableAsyncDebugInfo)
-              ? ' (file://ReactFlightDOMNode-test.js:1392:27)\n'
+              ? ' (file://ReactFlightDOMNode-test.js:1397:27)\n'
               : '\n') +
             '    in body\n' +
             '    in html\n' +
-            '    in App (file://ReactFlightDOMNode-test.js:1409:25)\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1484:16)',
+            '    in App (file://ReactFlightDOMNode-test.js:1414:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1489:16)',
         );
       } else {
         expect(
@@ -1536,7 +1541,7 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1484:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1489:16)',
         );
       }
 
@@ -1546,8 +1551,8 @@ describe('ReactFlightDOMNode', () => {
             normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
           ).toBe(
             '\n' +
-              '    in Dynamic (file://ReactFlightDOMNode-test.js:1392:27)\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1409:25)',
+              '    in Dynamic (file://ReactFlightDOMNode-test.js:1397:27)\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1414:25)',
           );
         } else {
           expect(
@@ -1555,7 +1560,7 @@ describe('ReactFlightDOMNode', () => {
           ).toBe(
             '' +
               '\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1409:25)',
+              '    in App (file://ReactFlightDOMNode-test.js:1414:25)',
           );
         }
       } else {
