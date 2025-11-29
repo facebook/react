@@ -2802,14 +2802,23 @@ function renderLazyComponent(
   ref: any,
 ): void {
   let Component;
+  let previouslyAbortingDEV;
   if (__DEV__) {
+    previouslyAbortingDEV = request.status === ABORTING;
     Component = callLazyInitInDEV(lazyComponent);
   } else {
     const payload = lazyComponent._payload;
     const init = lazyComponent._init;
     Component = init(payload);
   }
-  if (request.status === ABORTING) {
+  if (
+    request.status === ABORTING &&
+    // If we already started rendering the Lazy Componentn in an aborting state
+    // and reach this point, the lazy was already resolved.
+    // We don't bail here again since this is most likely a discarded rerender
+    // to get the stack where we suspended in dev.
+    (!__DEV__ || !previouslyAbortingDEV)
+  ) {
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
