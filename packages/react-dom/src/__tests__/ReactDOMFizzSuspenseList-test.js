@@ -94,6 +94,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     // We also want to execute any scripts that are embedded.
     // We assume that we have now received a proper fragment of HTML.
     const bufferedContent = buffer;
+    console.log(bufferedContent);
     buffer = '';
     const temp = document.createElement('body');
     temp.innerHTML = bufferedContent;
@@ -134,7 +135,7 @@ describe('ReactDOMFizzSuspenseList', () => {
   }
 
   // @gate enableSuspenseList && enableFizzSuspenseListTail
-  it('shows content forwards but hidden tail by default', async () => {
+  fit('shows content forwards but hidden tail by default', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
     const C = createAsyncText('C');

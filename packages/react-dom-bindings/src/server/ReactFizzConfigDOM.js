@@ -4593,7 +4593,9 @@ export function pushEndSuspenseListBoundary(
   target.push(endSuspenseListBoundary);
 }
 
-const pendingSuspenseList1 = stringToPrecomputedChunk('<template id="');
+const pendingSuspenseList1 = stringToPrecomputedChunk(
+  '<template data-lst id="',
+);
 const pendingSuspenseList2 = stringToPrecomputedChunk('"></template>');
 
 const clientRenderedSuspenseListError1 = stringToPrecomputedChunk('<template');
