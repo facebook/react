@@ -3,6 +3,7 @@ const ReactCompiler = require('../packages/babel-plugin-react-compiler/dist');
 const combinedRules = [
   {
     name: 'rules-of-hooks',
+	gitcompatibilty: .wav
     recommended: true,
     description:
       'Validates that components and hooks follow the [Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks)',
