@@ -70,6 +70,7 @@ function ComponentWithoutDeclaringPropAsDep(props) {
     console.log(props.foo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // eslint-disable-next-line react-hooks/void-use-memo
   useMemo(() => {
     console.log(props.foo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,6 +83,7 @@ function ComponentWithoutDeclaringPropAsDep(props) {
     console.log(props.foo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // eslint-disable-next-line react-hooks/void-use-memo
   React.useMemo(() => {
     console.log(props.foo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -159,9 +161,9 @@ function InvalidGlobals() {
   return <div>Done</div>;
 }
 
-// Invalid: useMemo with wrong deps - triggers preserve-manual-memoization
+// Invalid: useMemo with wrong deps
 function InvalidUseMemo({items}) {
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization, react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const sorted = useMemo(() => [...items].sort(), []);
   return <div>{sorted.length}</div>;
 }
