@@ -221,7 +221,7 @@ export const EnvironmentConfigSchema = z.object({
   /**
    * Validate that dependencies supplied to manual memoization calls are exhaustive.
    */
-  validateExhaustiveMemoizationDependencies: z.boolean().default(false),
+  validateExhaustiveMemoizationDependencies: z.boolean().default(true),
 
   /**
    * When this is true, rather than pruning existing manual memoization but ensuring or validating

@@ -1,3 +1,4 @@
+// @validateExhaustiveMemoizationDependencies:false
 export function useFormatRelativeTime(opts = {}) {
   const {timeZone, minimal} = opts;
   const format = useCallback(function formatWithUnit() {}, [minimal]);

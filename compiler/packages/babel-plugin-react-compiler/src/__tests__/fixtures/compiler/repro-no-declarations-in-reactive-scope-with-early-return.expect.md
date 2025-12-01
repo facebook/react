@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions @enablePreserveExistingMemoizationGuarantees:false
+// @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 function Component() {
   const items = useItems();
   const filteredItems = useMemo(
@@ -37,7 +37,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions @enablePreserveExistingMemoizationGuarantees:false
+import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 function Component() {
   const $ = _c(6);
   const items = useItems();

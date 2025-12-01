@@ -22,8 +22,10 @@ import {
   Identifier,
   IdentifierId,
   InstructionKind,
+  isPrimitiveType,
   isStableType,
   isSubPath,
+  isSubPathIgnoringOptionals,
   isUseRefType,
   LoadGlobal,
   ManualMemoDependency,
@@ -42,20 +44,35 @@ import {retainWhere} from '../Utils/utils';
 const DEBUG = false;
 
 /**
- * Validates that existing manual memoization had exhaustive dependencies.
- * Memoization with missing or extra reactive dependencies is invalid React
- * and compilation can change behavior, causing a value to be computed more
- * or less times.
+ * Validates that existing manual memoization is exhaustive and does not
+ * have extraneous dependencies. The goal of the validation is to ensure
+ * that auto-memoization will not substantially change the behavior of
+ * the program:
+ * - If the manual dependencies were non-exhaustive (missing important deps)
+ *   then auto-memoization will include those dependencies, and cause the
+ *   value to update *more* frequently.
+ * - If the manual dependencies had extraneous deps, then auto memoization
+ *   will remove them and cause the value to update *less* frequently.
  *
- * TODOs:
- * - Handle cases of mixed optional and non-optional versions of the same path,
- *   eg referecing both x.y.z and x.y?.z in the same memo block. we should collapse
- *   this into a single canonical dep that we look for in the manual deps. see the
- *   existing exhaustive deps rule for implementation.
- * - Handle cases where the user deps were not simple identifiers + property chains.
- *   We try to detect this in ValidateUseMemo but we miss some cases. The problem
- *   is that invalid forms can be value blocks or function calls that don't get
- *   removed by DCE, leaving a structure like:
+ * The implementation compares the manual dependencies against the values
+ * actually used within the memoization function
+ * - For each value V referenced in the memo function, either:
+ *   - If the value is non-reactive *and* a known stable type, then the
+ *     value may optionally be specified as an exact dependency.
+ *   - Otherwise, report an error unless there is a manual dependency that will
+ *     invalidate whenever V invalidates. If `x.y.z` is referenced, there must
+ *     be a manual dependency for `x.y.z`, `x.y`, or `x`. Note that we assume
+ *     no interior mutability, ie we assume that any changes to inner paths must
+ *     always cause the other path to change as well.
+ * - Any dependencies that do not correspond to a value referenced in the memo
+ *   function are considered extraneous and throw an error
+ *
+ * ## TODO: Invalid, Complex Deps
+ *
+ * Handle cases where the user deps were not simple identifiers + property chains.
+ * We try to detect this in ValidateUseMemo but we miss some cases. The problem
+ * is that invalid forms can be value blocks or function calls that don't get
+ * removed by DCE, leaving a structure like:
  *
  * StartMemoize
  * t0 = <value to memoize>
@@ -208,31 +225,6 @@ export function validateExhaustiveDependencies(
         reason: 'Unexpected function dependency',
         loc: value.loc,
       });
-      /**
-       * Dependencies technically only need to include reactive values. However,
-       * reactivity inference for general values is subtle since it involves all
-       * of our complex control and data flow analysis. To keep results more
-       * stable and predictable to developers, we intentionally stay closer to
-       * the rules of the classic exhaustive-deps rule. Values should be included
-       * as dependencies if either of the following is true:
-       * - They're reactive
-       * - They're non-reactive and not a known-stable value type.
-       *
-       * Thus `const ref: Ref = cond ? ref1 : ref2` has to be a dependency
-       * (assuming `cond` is reactive) since it's reactive despite being a ref.
-       *
-       * Similarly, `const x = [1,2,3]` has to be a dependency since even
-       * though it's non reactive, it's not a known stable type.
-       *
-       * TODO: consider reimplementing a simpler form of reactivity inference.
-       * Ideally we'd consider `const ref: Ref = cond ? ref1 : ref2` as a required
-       * dependency even if our data/control flow tells us that `cond` is non-reactive.
-       * It's simpler for developers to reason about based on a more structural/AST
-       * driven approach.
-       */
-      const isRequiredDependency =
-        reactive.has(inferredDependency.identifier.id) ||
-        !isStableType(inferredDependency.identifier);
       let hasMatchingManualDependency = false;
       for (const manualDependency of manualDependencies) {
         if (
@@ -240,76 +232,147 @@ export function validateExhaustiveDependencies(
           manualDependency.root.value.identifier.id ===
             inferredDependency.identifier.id &&
           (areEqualPaths(manualDependency.path, inferredDependency.path) ||
-            isSubPath(manualDependency.path, inferredDependency.path))
+            isSubPathIgnoringOptionals(
+              manualDependency.path,
+              inferredDependency.path,
+            ))
         ) {
           hasMatchingManualDependency = true;
           matched.add(manualDependency);
-          if (!isRequiredDependency) {
-            extra.push(manualDependency);
-          }
         }
       }
-      if (isRequiredDependency && !hasMatchingManualDependency) {
-        missing.push(inferredDependency);
+      if (
+        hasMatchingManualDependency ||
+        isOptionalDependency(inferredDependency, reactive)
+      ) {
+        continue;
       }
+      missing.push(inferredDependency);
     }
 
     for (const dep of startMemo.deps ?? []) {
       if (matched.has(dep)) {
         continue;
       }
+      if (dep.root.kind === 'NamedLocal' && dep.root.constant) {
+        CompilerError.simpleInvariant(
+          !dep.root.value.reactive &&
+            isPrimitiveType(dep.root.value.identifier),
+          {
+            reason: 'Expected constant-folded dependency to be non-reactive',
+            loc: dep.root.value.loc,
+          },
+        );
+        /*
+         * Constant primitives can get constant-folded, which means we won't
+         * see a LoadLocal for the value within the memo function.
+         */
+        continue;
+      }
       extra.push(dep);
     }
 
     if (missing.length !== 0 || extra.length !== 0) {
-      let suggestions: Array<CompilerSuggestion> | null = null;
+      let suggestion: CompilerSuggestion | null = null;
       if (startMemo.depsLoc != null && typeof startMemo.depsLoc !== 'symbol') {
-        suggestions = [
-          {
-            description: 'Update dependencies',
-            range: [startMemo.depsLoc.start.index, startMemo.depsLoc.end.index],
-            op: CompilerSuggestionOperation.Replace,
-            text: `[${inferred.map(printInferredDependency).join(', ')}]`,
-          },
-        ];
+        suggestion = {
+          description: 'Update dependencies',
+          range: [startMemo.depsLoc.start.index, startMemo.depsLoc.end.index],
+          op: CompilerSuggestionOperation.Replace,
+          text: `[${inferred
+            .filter(
+              dep =>
+                dep.kind === 'Local' && !isOptionalDependency(dep, reactive),
+            )
+            .map(printInferredDependency)
+            .join(', ')}]`,
+        };
       }
-      if (missing.length !== 0) {
-        const diagnostic = CompilerDiagnostic.create({
-          category: ErrorCategory.MemoDependencies,
-          reason: 'Found non-exhaustive dependencies',
-          description:
-            'Missing dependencies can cause a value not to update when those inputs change, ' +
-            'resulting in stale UI',
-          suggestions,
-        });
-        for (const dep of missing) {
-          let reactiveStableValueHint = '';
-          if (isStableType(dep.identifier)) {
-            reactiveStableValueHint =
-              '. Refs, setState functions, and other "stable" values generally do not need to be added as dependencies, but this variable may change over time to point to different values';
-          }
-          diagnostic.withDetails({
-            kind: 'error',
-            message: `Missing dependency \`${printInferredDependency(dep)}\`${reactiveStableValueHint}`,
-            loc: dep.loc,
-          });
+      const diagnostic = CompilerDiagnostic.create({
+        category: ErrorCategory.MemoDependencies,
+        reason: 'Found missing/extra memoization dependencies',
+        description: [
+          missing.length !== 0
+            ? 'Missing dependencies can cause a value to update less often than it should, ' +
+              'resulting in stale UI'
+            : null,
+          extra.length !== 0
+            ? 'Extra dependencies can cause a value to update more often than it should, ' +
+              'resulting in performance problems such as excessive renders or effects firing too often'
+            : null,
+        ]
+          .filter(Boolean)
+          .join('. '),
+        suggestions: suggestion != null ? [suggestion] : null,
+      });
+      for (const dep of missing) {
+        let reactiveStableValueHint = '';
+        if (isStableType(dep.identifier)) {
+          reactiveStableValueHint =
+            '. Refs, setState functions, and other "stable" values generally do not need to be added ' +
+            'as dependencies, but this variable may change over time to point to different values';
         }
-        error.pushDiagnostic(diagnostic);
-      } else if (extra.length !== 0) {
-        const diagnostic = CompilerDiagnostic.create({
-          category: ErrorCategory.MemoDependencies,
-          reason: 'Found unnecessary memoization dependencies',
-          description:
-            'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-            'which can cause effects to run more than expected',
-        });
         diagnostic.withDetails({
           kind: 'error',
-          message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
-          loc: startMemo.depsLoc ?? value.loc,
+          message: `Missing dependency \`${printInferredDependency(dep)}\`${reactiveStableValueHint}`,
+          loc: dep.loc,
         });
-        error.pushDiagnostic(diagnostic);
       }
+      for (const dep of extra) {
+        if (dep.root.kind === 'Global') {
+          diagnostic.withDetails({
+            kind: 'error',
+            message:
+              `Unnecessary dependency \`${printManualMemoDependency(dep)}\`. ` +
+              'Values declared outside of a component/hook should not be listed as ' +
+              'dependencies as the component will not re-render if they change',
+            loc: dep.loc ?? startMemo.depsLoc ?? value.loc,
+          });
+          error.pushDiagnostic(diagnostic);
+        } else {
+          const root = dep.root.value;
+          const matchingInferred = inferred.find(
+            (
+              inferredDep,
+            ): inferredDep is Extract<InferredDependency, {kind: 'Local'}> => {
+              return (
+                inferredDep.kind === 'Local' &&
+                inferredDep.identifier.id === root.identifier.id &&
+                isSubPathIgnoringOptionals(inferredDep.path, dep.path)
+              );
+            },
+          );
+          if (
+            matchingInferred != null &&
+            !isOptionalDependency(matchingInferred, reactive)
+          ) {
+            diagnostic.withDetails({
+              kind: 'error',
+              message:
+                `Overly precise dependency \`${printManualMemoDependency(dep)}\`, ` +
+                `use \`${printInferredDependency(matchingInferred)}\` instead`,
+              loc: dep.loc ?? startMemo.depsLoc ?? value.loc,
+            });
+          } else {
+            /**
+             * Else this dependency doesn't correspond to anything referenced in the memo function,
+             * or is an optional dependency so we don't want to suggest adding it
+             */
+            diagnostic.withDetails({
+              kind: 'error',
+              message: `Unnecessary dependency \`${printManualMemoDependency(dep)}\``,
+              loc: dep.loc ?? startMemo.depsLoc ?? value.loc,
+            });
+          }
+        }
+      }
+      if (suggestion != null) {
+        diagnostic.withDetails({
+          kind: 'hint',
+          message: `Inferred dependencies: \`${suggestion.text}\``,
+        });
+      }
+      error.pushDiagnostic(diagnostic);
     }
 
     dependencies.clear();
@@ -813,4 +876,15 @@ export function findOptionalPlaces(
     }
   }
   return optionals;
+}
+
+function isOptionalDependency(
+  inferredDependency: Extract<InferredDependency, {kind: 'Local'}>,
+  reactive: Set<IdentifierId>,
+): boolean {
+  return (
+    !reactive.has(inferredDependency.identifier.id) &&
+    (isStableType(inferredDependency.identifier) ||
+      isPrimitiveType(inferredDependency.identifier))
+  );
 }
