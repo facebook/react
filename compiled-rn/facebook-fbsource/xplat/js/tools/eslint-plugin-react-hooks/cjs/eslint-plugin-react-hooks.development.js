@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<12c00e63d0aefc759ce7fcf5b255677f>>
+ * @generated SignedSource<<5eeb686eeaba055cd3322dd359145375>>
  */
 
 'use strict';
@@ -19076,6 +19076,9 @@ function isUseLayoutEffectHookType(id) {
 function isUseInsertionEffectHookType(id) {
     return (id.type.kind === 'Function' &&
         id.type.shapeId === 'BuiltInUseInsertionEffectHook');
+}
+function isUseEffectEventType(id) {
+    return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectEvent');
 }
 function isUseContextHookType(id) {
     return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseContextHook');
@@ -51249,7 +51252,16 @@ function validateNoSetStateInEffects(fn, env) {
                     const callee = instr.value.kind === 'MethodCall'
                         ? instr.value.receiver
                         : instr.value.callee;
-                    if (isUseEffectHookType(callee.identifier) ||
+                    if (isUseEffectEventType(callee.identifier)) {
+                        const arg = instr.value.args[0];
+                        if (arg !== undefined && arg.kind === 'Identifier') {
+                            const setState = setStateFunctions.get(arg.identifier.id);
+                            if (setState !== undefined) {
+                                setStateFunctions.set(instr.lvalue.identifier.id, setState);
+                            }
+                        }
+                    }
+                    else if (isUseEffectHookType(callee.identifier) ||
                         isUseLayoutEffectHookType(callee.identifier) ||
                         isUseInsertionEffectHookType(callee.identifier)) {
                         const arg = instr.value.args[0];

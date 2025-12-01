@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<6f7496d7ed5ccf38959f2ec2f057cb36>>
+ * @generated SignedSource<<1863808726e395a56235c4f645a1436a>>
  */
 
 'use strict';
@@ -19061,6 +19061,9 @@ function isUseLayoutEffectHookType(id) {
 function isUseInsertionEffectHookType(id) {
     return (id.type.kind === 'Function' &&
         id.type.shapeId === 'BuiltInUseInsertionEffectHook');
+}
+function isUseEffectEventType(id) {
+    return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectEvent');
 }
 function isUseContextHookType(id) {
     return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseContextHook');
@@ -51028,7 +51031,16 @@ function validateNoSetStateInEffects(fn, env) {
                     const callee = instr.value.kind === 'MethodCall'
                         ? instr.value.receiver
                         : instr.value.callee;
-                    if (isUseEffectHookType(callee.identifier) ||
+                    if (isUseEffectEventType(callee.identifier)) {
+                        const arg = instr.value.args[0];
+                        if (arg !== undefined && arg.kind === 'Identifier') {
+                            const setState = setStateFunctions.get(arg.identifier.id);
+                            if (setState !== undefined) {
+                                setStateFunctions.set(instr.lvalue.identifier.id, setState);
+                            }
+                        }
+                    }
+                    else if (isUseEffectHookType(callee.identifier) ||
                         isUseLayoutEffectHookType(callee.identifier) ||
                         isUseInsertionEffectHookType(callee.identifier)) {
                         const arg = instr.value.args[0];
