@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<882ad7e6af4a05bbfadeb5c4af0b4f8b>>
+ * @generated SignedSource<<12c00e63d0aefc759ce7fcf5b255677f>>
  */
 
 'use strict';
@@ -18354,7 +18354,7 @@ function getRuleForCategoryImpl(category) {
                 severity: ErrorSeverity.Error,
                 name: 'memo-dependencies',
                 description: 'Validates that useMemo() and useCallback() specify comprehensive dependencies without extraneous values. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
-                preset: LintRulePreset.RecommendedLatest,
+                preset: LintRulePreset.Off,
             };
         }
         case ErrorCategory.IncompatibleLibrary: {
@@ -18869,6 +18869,10 @@ function isSubPath(subpath, path) {
     return (subpath.length <= path.length &&
         subpath.every((item, ix) => item.property === path[ix].property &&
             item.optional === path[ix].optional));
+}
+function isSubPathIgnoringOptionals(subpath, path) {
+    return (subpath.length <= path.length &&
+        subpath.every((item, ix) => item.property === path[ix].property));
 }
 function getPlaceScope(id, place) {
     const scope = place.identifier.scope;
@@ -32247,7 +32251,7 @@ const EnvironmentConfigSchema = v4.z.object({
     enableResetCacheOnSourceFileChanges: v4.z.nullable(v4.z.boolean()).default(null),
     enablePreserveExistingMemoizationGuarantees: v4.z.boolean().default(true),
     validatePreserveExistingMemoizationGuarantees: v4.z.boolean().default(true),
-    validateExhaustiveMemoizationDependencies: v4.z.boolean().default(false),
+    validateExhaustiveMemoizationDependencies: v4.z.boolean().default(true),
     enablePreserveExistingManualUseMemo: v4.z.boolean().default(false),
     enableForest: v4.z.boolean().default(false),
     enableUseTypeAnnotations: v4.z.boolean().default(false),
@@ -34529,6 +34533,19 @@ function evaluateInstruction(constants, instr) {
         case 'ObjectMethod':
         case 'FunctionExpression': {
             constantPropagationImpl(value.loweredFunc.func, constants);
+            return null;
+        }
+        case 'StartMemoize': {
+            if (value.deps != null) {
+                for (const dep of value.deps) {
+                    if (dep.root.kind === 'NamedLocal') {
+                        const placeValue = read(constants, dep.root.value);
+                        if (placeValue != null && placeValue.kind === 'Primitive') {
+                            dep.root.constant = true;
+                        }
+                    }
+                }
+            }
             return null;
         }
         default: {
@@ -44648,6 +44665,7 @@ function collectMaybeMemoDependencies(value, maybeDeps, optional) {
                     identifierName: value.binding.name,
                 },
                 path: [],
+                loc: value.loc,
             };
         }
         case 'PropertyLoad': {
@@ -44656,6 +44674,7 @@ function collectMaybeMemoDependencies(value, maybeDeps, optional) {
                 return {
                     root: object.root,
                     path: [...object.path, { property: value.property, optional }],
+                    loc: value.loc,
                 };
             }
             break;
@@ -44672,8 +44691,10 @@ function collectMaybeMemoDependencies(value, maybeDeps, optional) {
                     root: {
                         kind: 'NamedLocal',
                         value: Object.assign({}, value.place),
+                        constant: false,
                     },
                     path: [],
+                    loc: value.place.loc,
                 };
             }
             break;
@@ -50235,6 +50256,7 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
         normalizedDep = {
             root: maybeNormalizedRoot.root,
             path: [...maybeNormalizedRoot.path, ...dep.path],
+            loc: maybeNormalizedRoot.loc,
         };
     }
     else {
@@ -50260,8 +50282,10 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
                     effect: Effect.Read,
                     reactive: false,
                 },
+                constant: false,
             },
             path: [...dep.path],
+            loc: GeneratedSource,
         };
     }
     for (const decl of declsWithinMemoBlock) {
@@ -50347,8 +50371,10 @@ class Visitor extends ReactiveFunctionVisitor {
                                 root: {
                                     kind: 'NamedLocal',
                                     value: storeTarget,
+                                    constant: false,
                                 },
                                 path: [],
+                                loc: storeTarget.loc,
                             });
                         }
                     }
@@ -50375,8 +50401,10 @@ class Visitor extends ReactiveFunctionVisitor {
                 root: {
                     kind: 'NamedLocal',
                     value: Object.assign({}, lvalue),
+                    constant: false,
                 },
                 path: [],
+                loc: lvalue.loc,
             });
         }
     }
@@ -53496,7 +53524,7 @@ function validateExhaustiveDependencies(fn) {
         locals.clear();
     }
     function onFinishMemoize(value, dependencies, locals) {
-        var _b, _c, _d;
+        var _b, _c, _d, _e, _f, _g, _h, _j;
         CompilerError.simpleInvariant(startMemo != null && startMemo.manualMemoId === value.manualMemoId, {
             reason: 'Found FinishMemoize without corresponding StartMemoize',
             loc: value.loc,
@@ -53575,80 +53603,123 @@ function validateExhaustiveDependencies(fn) {
                 reason: 'Unexpected function dependency',
                 loc: value.loc,
             });
-            const isRequiredDependency = reactive.has(inferredDependency.identifier.id) ||
-                !isStableType(inferredDependency.identifier);
             let hasMatchingManualDependency = false;
             for (const manualDependency of manualDependencies) {
                 if (manualDependency.root.kind === 'NamedLocal' &&
                     manualDependency.root.value.identifier.id ===
                         inferredDependency.identifier.id &&
                     (areEqualPaths(manualDependency.path, inferredDependency.path) ||
-                        isSubPath(manualDependency.path, inferredDependency.path))) {
+                        isSubPathIgnoringOptionals(manualDependency.path, inferredDependency.path))) {
                     hasMatchingManualDependency = true;
                     matched.add(manualDependency);
-                    if (!isRequiredDependency) {
-                        extra.push(manualDependency);
-                    }
                 }
             }
-            if (isRequiredDependency && !hasMatchingManualDependency) {
-                missing.push(inferredDependency);
+            if (hasMatchingManualDependency ||
+                isOptionalDependency(inferredDependency, reactive)) {
+                continue;
             }
+            missing.push(inferredDependency);
         }
         for (const dep of (_c = startMemo.deps) !== null && _c !== void 0 ? _c : []) {
             if (matched.has(dep)) {
                 continue;
             }
+            if (dep.root.kind === 'NamedLocal' && dep.root.constant) {
+                CompilerError.simpleInvariant(!dep.root.value.reactive &&
+                    isPrimitiveType(dep.root.value.identifier), {
+                    reason: 'Expected constant-folded dependency to be non-reactive',
+                    loc: dep.root.value.loc,
+                });
+                continue;
+            }
             extra.push(dep);
         }
         if (missing.length !== 0 || extra.length !== 0) {
-            let suggestions = null;
+            let suggestion = null;
             if (startMemo.depsLoc != null && typeof startMemo.depsLoc !== 'symbol') {
-                suggestions = [
-                    {
-                        description: 'Update dependencies',
-                        range: [startMemo.depsLoc.start.index, startMemo.depsLoc.end.index],
-                        op: CompilerSuggestionOperation.Replace,
-                        text: `[${inferred.map(printInferredDependency).join(', ')}]`,
-                    },
-                ];
+                suggestion = {
+                    description: 'Update dependencies',
+                    range: [startMemo.depsLoc.start.index, startMemo.depsLoc.end.index],
+                    op: CompilerSuggestionOperation.Replace,
+                    text: `[${inferred
+                        .filter(dep => dep.kind === 'Local' && !isOptionalDependency(dep, reactive))
+                        .map(printInferredDependency)
+                        .join(', ')}]`,
+                };
             }
-            if (missing.length !== 0) {
-                const diagnostic = CompilerDiagnostic.create({
-                    category: ErrorCategory.MemoDependencies,
-                    reason: 'Found non-exhaustive dependencies',
-                    description: 'Missing dependencies can cause a value not to update when those inputs change, ' +
-                        'resulting in stale UI',
-                    suggestions,
-                });
-                for (const dep of missing) {
-                    let reactiveStableValueHint = '';
-                    if (isStableType(dep.identifier)) {
-                        reactiveStableValueHint =
-                            '. Refs, setState functions, and other "stable" values generally do not need to be added as dependencies, but this variable may change over time to point to different values';
-                    }
-                    diagnostic.withDetails({
-                        kind: 'error',
-                        message: `Missing dependency \`${printInferredDependency(dep)}\`${reactiveStableValueHint}`,
-                        loc: dep.loc,
-                    });
+            const diagnostic = CompilerDiagnostic.create({
+                category: ErrorCategory.MemoDependencies,
+                reason: 'Found missing/extra memoization dependencies',
+                description: [
+                    missing.length !== 0
+                        ? 'Missing dependencies can cause a value to update less often than it should, ' +
+                            'resulting in stale UI'
+                        : null,
+                    extra.length !== 0
+                        ? 'Extra dependencies can cause a value to update more often than it should, ' +
+                            'resulting in performance problems such as excessive renders or effects firing too often'
+                        : null,
+                ]
+                    .filter(Boolean)
+                    .join('. '),
+                suggestions: suggestion != null ? [suggestion] : null,
+            });
+            for (const dep of missing) {
+                let reactiveStableValueHint = '';
+                if (isStableType(dep.identifier)) {
+                    reactiveStableValueHint =
+                        '. Refs, setState functions, and other "stable" values generally do not need to be added ' +
+                            'as dependencies, but this variable may change over time to point to different values';
                 }
-                error.pushDiagnostic(diagnostic);
-            }
-            else if (extra.length !== 0) {
-                const diagnostic = CompilerDiagnostic.create({
-                    category: ErrorCategory.MemoDependencies,
-                    reason: 'Found unnecessary memoization dependencies',
-                    description: 'Unnecessary dependencies can cause a value to update more often than necessary, ' +
-                        'which can cause effects to run more than expected',
-                });
                 diagnostic.withDetails({
                     kind: 'error',
-                    message: `Unnecessary dependencies ${extra.map(dep => `\`${printManualMemoDependency(dep)}\``).join(', ')}`,
-                    loc: (_d = startMemo.depsLoc) !== null && _d !== void 0 ? _d : value.loc,
+                    message: `Missing dependency \`${printInferredDependency(dep)}\`${reactiveStableValueHint}`,
+                    loc: dep.loc,
                 });
-                error.pushDiagnostic(diagnostic);
             }
+            for (const dep of extra) {
+                if (dep.root.kind === 'Global') {
+                    diagnostic.withDetails({
+                        kind: 'error',
+                        message: `Unnecessary dependency \`${printManualMemoDependency(dep)}\`. ` +
+                            'Values declared outside of a component/hook should not be listed as ' +
+                            'dependencies as the component will not re-render if they change',
+                        loc: (_e = (_d = dep.loc) !== null && _d !== void 0 ? _d : startMemo.depsLoc) !== null && _e !== void 0 ? _e : value.loc,
+                    });
+                    error.pushDiagnostic(diagnostic);
+                }
+                else {
+                    const root = dep.root.value;
+                    const matchingInferred = inferred.find((inferredDep) => {
+                        return (inferredDep.kind === 'Local' &&
+                            inferredDep.identifier.id === root.identifier.id &&
+                            isSubPathIgnoringOptionals(inferredDep.path, dep.path));
+                    });
+                    if (matchingInferred != null &&
+                        !isOptionalDependency(matchingInferred, reactive)) {
+                        diagnostic.withDetails({
+                            kind: 'error',
+                            message: `Overly precise dependency \`${printManualMemoDependency(dep)}\`, ` +
+                                `use \`${printInferredDependency(matchingInferred)}\` instead`,
+                            loc: (_g = (_f = dep.loc) !== null && _f !== void 0 ? _f : startMemo.depsLoc) !== null && _g !== void 0 ? _g : value.loc,
+                        });
+                    }
+                    else {
+                        diagnostic.withDetails({
+                            kind: 'error',
+                            message: `Unnecessary dependency \`${printManualMemoDependency(dep)}\``,
+                            loc: (_j = (_h = dep.loc) !== null && _h !== void 0 ? _h : startMemo.depsLoc) !== null && _j !== void 0 ? _j : value.loc,
+                        });
+                    }
+                }
+            }
+            if (suggestion != null) {
+                diagnostic.withDetails({
+                    kind: 'hint',
+                    message: `Inferred dependencies: \`${suggestion.text}\``,
+                });
+            }
+            error.pushDiagnostic(diagnostic);
         }
         dependencies.clear();
         locals.clear();
@@ -54039,6 +54110,11 @@ function findOptionalPlaces(fn) {
     }
     return optionals;
 }
+function isOptionalDependency(inferredDependency, reactive) {
+    return (!reactive.has(inferredDependency.identifier.id) &&
+        (isStableType(inferredDependency.identifier) ||
+            isPrimitiveType(inferredDependency.identifier)));
+}
 
 function run(func, config, fnType, mode, programContext, logger, filename, code) {
     var _a, _b;
@@ -54165,8 +54241,10 @@ function runWithEnvironment(func, env) {
     }
     inferReactivePlaces(hir);
     log({ kind: 'hir', name: 'InferReactivePlaces', value: hir });
-    if (env.config.validateExhaustiveMemoizationDependencies) {
-        validateExhaustiveDependencies(hir).unwrap();
+    if (env.enableValidations) {
+        if (env.config.validateExhaustiveMemoizationDependencies) {
+            validateExhaustiveDependencies(hir).unwrap();
+        }
     }
     rewriteInstructionKindsBasedOnReassignment(hir);
     log({
