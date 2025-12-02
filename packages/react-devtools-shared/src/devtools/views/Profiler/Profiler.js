@@ -81,8 +81,11 @@ function Profiler(_: {}) {
       didRecordCommits &&
       selectedCommitIndex !== null
     ) {
-      // Left/Right to navigate commits
-      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      // Cmd+Left/Right (Mac) or Ctrl+Left/Right (Windows/Linux) to navigate commits
+      if (
+        correctModifier &&
+        (event.key === 'ArrowLeft' || event.key === 'ArrowRight')
+      ) {
         if (event.key === 'ArrowLeft') {
           selectPrevCommitIndex();
         } else {

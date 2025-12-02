@@ -10,7 +10,14 @@
 import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
-import {createContext, useCallback, useContext, useMemo, useState} from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {
   TreeDispatcherContext,
@@ -195,9 +202,9 @@ function ProfilerContextController({children}: Props): React.Node {
     }
   }
 
-  const [isCommitFilterEnabled, setIsCommitFilterEnabled] =
+  const [isCommitFilterEnabled, setIsCommitFilterEnabledValue] =
     useLocalStorage<boolean>('React::DevTools::isCommitFilterEnabled', false);
-  const [minCommitDuration, setMinCommitDuration] = useLocalStorage<number>(
+  const [minCommitDuration, setMinCommitDurationValue] = useLocalStorage<number>(
     'minCommitDuration',
     0,
   );
@@ -255,30 +262,42 @@ function ProfilerContextController({children}: Props): React.Node {
       : ([]: Array<CommitDataFrontend>);
   }, [didRecordCommits, rootID, profilingData]);
 
-  const filteredCommitIndices = useMemo(
-    () =>
-      commitData.reduce((reduced: Array<number>, commitDatum, index) => {
-        if (
-          !isCommitFilterEnabled ||
-          commitDatum.duration >= minCommitDuration
-        ) {
+  // Helper to calculate filtered indices based on filter settings
+  const calculateFilteredIndices = useCallback(
+    (enabled: boolean, minDuration: number): Array<number> => {
+      return commitData.reduce((reduced: Array<number>, commitDatum, index) => {
+        if (!enabled || commitDatum.duration >= minDuration) {
           reduced.push(index);
         }
         return reduced;
-      }, ([]: Array<number>)),
-    [commitData, isCommitFilterEnabled, minCommitDuration],
+      }, ([]: Array<number>));
+    },
+    [commitData],
   );
 
-  const selectedFilteredCommitIndex = useMemo(() => {
-    if (selectedCommitIndex !== null) {
-      for (let i = 0; i < filteredCommitIndices.length; i++) {
-        if (filteredCommitIndices[i] === selectedCommitIndex) {
+  // Helper to find the index in filtered array for a given commit index
+  const findFilteredIndex = useCallback(
+    (commitIndex: number | null, filtered: Array<number>): number | null => {
+      if (commitIndex === null) return null;
+      for (let i = 0; i < filtered.length; i++) {
+        if (filtered[i] === commitIndex) {
           return i;
         }
       }
-    }
-    return null;
-  }, [filteredCommitIndices, selectedCommitIndex]);
+      return null;
+    },
+    [],
+  );
+
+  const filteredCommitIndices = useMemo(
+    () => calculateFilteredIndices(isCommitFilterEnabled, minCommitDuration),
+    [calculateFilteredIndices, isCommitFilterEnabled, minCommitDuration],
+  );
+
+  const selectedFilteredCommitIndex = useMemo(
+    () => findFilteredIndex(selectedCommitIndex, filteredCommitIndices),
+    [findFilteredIndex, selectedCommitIndex, filteredCommitIndices],
+  );
 
   const selectNextCommitIndex = useCallback(() => {
     if (
@@ -308,20 +327,77 @@ function ProfilerContextController({children}: Props): React.Node {
     selectCommitIndex(filteredCommitIndices[prevCommitIndex]);
   }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
 
-  // Handle edge cases where selected commit becomes invalid after filtering
-  const numFilteredCommits = filteredCommitIndices.length;
-  if (selectedFilteredCommitIndex === null && numFilteredCommits > 0) {
-    selectCommitIndex(filteredCommitIndices[0]);
-  } else if (
-    selectedFilteredCommitIndex !== null &&
-    selectedFilteredCommitIndex >= numFilteredCommits
-  ) {
-    selectCommitIndex(
-      numFilteredCommits === 0
-        ? null
-        : filteredCommitIndices[numFilteredCommits - 1],
-    );
-  }
+  const setIsCommitFilterEnabled = useCallback(
+    (value: boolean) => {
+      setIsCommitFilterEnabledValue(value);
+
+      // Calculate what the filtered indices will be with the new setting
+      const newFilteredIndices = calculateFilteredIndices(value, minCommitDuration);
+
+      // Handle edge cases where selected commit becomes invalid after filtering
+      const currentSelectedIndex = selectedCommitIndex;
+      const selectedFilteredIndex = findFilteredIndex(currentSelectedIndex, newFilteredIndices);
+
+      if (selectedFilteredIndex === null && newFilteredIndices.length > 0) {
+        // No valid selection but commits exist - select first
+        selectCommitIndex(newFilteredIndices[0]);
+      } else if (
+        selectedFilteredIndex !== null &&
+        selectedFilteredIndex >= newFilteredIndices.length
+      ) {
+        // Selected commit was filtered out - select last valid commit
+        selectCommitIndex(
+          newFilteredIndices.length === 0
+            ? null
+            : newFilteredIndices[newFilteredIndices.length - 1],
+        );
+      }
+    },
+    [
+      setIsCommitFilterEnabledValue,
+      calculateFilteredIndices,
+      findFilteredIndex,
+      minCommitDuration,
+      selectedCommitIndex,
+      selectCommitIndex,
+    ],
+  );
+
+  const setMinCommitDuration = useCallback(
+    (value: number) => {
+      setMinCommitDurationValue(value);
+
+      // Calculate what the filtered indices will be with the new setting
+      const newFilteredIndices = calculateFilteredIndices(isCommitFilterEnabled, value);
+
+      // Handle edge cases where selected commit becomes invalid after filtering
+      const currentSelectedIndex = selectedCommitIndex;
+      const selectedFilteredIndex = findFilteredIndex(currentSelectedIndex, newFilteredIndices);
+
+      if (selectedFilteredIndex === null && newFilteredIndices.length > 0) {
+        // No valid selection but commits exist - select first
+        selectCommitIndex(newFilteredIndices[0]);
+      } else if (
+        selectedFilteredIndex !== null &&
+        selectedFilteredIndex >= newFilteredIndices.length
+      ) {
+        // Selected commit was filtered out - select last valid commit
+        selectCommitIndex(
+          newFilteredIndices.length === 0
+            ? null
+            : newFilteredIndices[newFilteredIndices.length - 1],
+        );
+      }
+    },
+    [
+      setMinCommitDurationValue,
+      calculateFilteredIndices,
+      findFilteredIndex,
+      isCommitFilterEnabled,
+      selectedCommitIndex,
+      selectCommitIndex,
+    ],
+  );
 
   const value = useMemo(
     () => ({
