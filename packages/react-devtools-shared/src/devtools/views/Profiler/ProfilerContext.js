@@ -286,19 +286,15 @@ function ProfilerContextController({children}: Props): React.Node {
         newFilteredIndices,
       );
 
-      if (selectedFilteredIndex === null && newFilteredIndices.length > 0) {
-        // No valid selection but commits exist - select first
+      if (newFilteredIndices.length === 0) {
+        // No commits pass the filter - clear selection
+        selectCommitIndex(null);
+      } else if (selectedFilteredIndex === null) {
+        // Currently selected commit was filtered out - select first available
         selectCommitIndex(newFilteredIndices[0]);
-      } else if (
-        selectedFilteredIndex !== null &&
-        selectedFilteredIndex >= newFilteredIndices.length
-      ) {
-        // Selected commit was filtered out - select last valid commit
-        selectCommitIndex(
-          newFilteredIndices.length === 0
-            ? null
-            : newFilteredIndices[newFilteredIndices.length - 1],
-        );
+      } else if (selectedFilteredIndex >= newFilteredIndices.length) {
+        // Selected index is out of bounds - select last available
+        selectCommitIndex(newFilteredIndices[newFilteredIndices.length - 1]);
       }
     },
     [findFilteredIndex, selectedCommitIndex, selectCommitIndex],
@@ -341,6 +337,24 @@ function ProfilerContextController({children}: Props): React.Node {
     }
     selectCommitIndex(filteredCommitIndices[prevCommitIndex]);
   }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
+
+  // Auto-correct invalid commit selection after filtering
+  // This handles cases where:
+  // 1. No commit is selected but commits exist (auto-select first)
+  // 2. Selected commit is out of bounds after filtering (auto-select last)
+  const numFilteredCommits = filteredCommitIndices.length;
+  if (selectedFilteredCommitIndex === null && numFilteredCommits > 0) {
+    selectCommitIndex(filteredCommitIndices[0]);
+  } else if (
+    selectedFilteredCommitIndex !== null &&
+    selectedFilteredCommitIndex >= numFilteredCommits
+  ) {
+    selectCommitIndex(
+      numFilteredCommits === 0
+        ? null
+        : filteredCommitIndices[numFilteredCommits - 1],
+    );
+  }
 
   const setIsCommitFilterEnabled = useCallback(
     (value: boolean) => {
