@@ -780,6 +780,7 @@ describe('ProfilerContext', () => {
     document.body.removeChild(profilerContainer);
   });
 
+  // @reactVersion >= 18
   it('should handle commit selection edge cases when filtering commits', async () => {
     // Create components that render with different durations
     const FastComponent = () => null;
@@ -793,9 +794,10 @@ describe('ProfilerContext', () => {
     };
 
     const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
 
     // Initial render
-    utils.act(() => legacyRender(<FastComponent />, container));
+    utils.act(() => root.render(<FastComponent />));
 
     let context: Context = ((null: any): Context);
     function ContextReader() {
@@ -813,10 +815,10 @@ describe('ProfilerContext', () => {
 
     // Profile with multiple commits of varying durations
     await utils.actAsync(() => store.profilerStore.startProfiling());
-    await utils.actAsync(() => legacyRender(<FastComponent />, container)); // Fast commit (index 0)
-    await utils.actAsync(() => legacyRender(<SlowComponent />, container)); // Slow commit (index 1)
-    await utils.actAsync(() => legacyRender(<FastComponent />, container)); // Fast commit (index 2)
-    await utils.actAsync(() => legacyRender(<SlowComponent />, container)); // Slow commit (index 3)
+    await utils.actAsync(() => root.render(<FastComponent />)); // Fast commit (index 0)
+    await utils.actAsync(() => root.render(<SlowComponent />)); // Slow commit (index 1)
+    await utils.actAsync(() => root.render(<FastComponent />)); // Fast commit (index 2)
+    await utils.actAsync(() => root.render(<SlowComponent />)); // Slow commit (index 3)
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
     // Initially, no commit is selected and no filter is enabled
