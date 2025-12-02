@@ -204,10 +204,8 @@ function ProfilerContextController({children}: Props): React.Node {
 
   const [isCommitFilterEnabled, setIsCommitFilterEnabledValue] =
     useLocalStorage<boolean>('React::DevTools::isCommitFilterEnabled', false);
-  const [minCommitDuration, setMinCommitDurationValue] = useLocalStorage<number>(
-    'minCommitDuration',
-    0,
-  );
+  const [minCommitDuration, setMinCommitDurationValue] =
+    useLocalStorage<number>('minCommitDuration', 0);
 
   const [selectedCommitIndex, selectCommitIndex] = useState<number | null>(
     null,
@@ -275,7 +273,6 @@ function ProfilerContextController({children}: Props): React.Node {
     [commitData],
   );
 
-  // Helper to find the index in filtered array for a given commit index
   const findFilteredIndex = useCallback(
     (commitIndex: number | null, filtered: Array<number>): number | null => {
       if (commitIndex === null) return null;
@@ -332,11 +329,17 @@ function ProfilerContextController({children}: Props): React.Node {
       setIsCommitFilterEnabledValue(value);
 
       // Calculate what the filtered indices will be with the new setting
-      const newFilteredIndices = calculateFilteredIndices(value, minCommitDuration);
+      const newFilteredIndices = calculateFilteredIndices(
+        value,
+        minCommitDuration,
+      );
 
       // Handle edge cases where selected commit becomes invalid after filtering
       const currentSelectedIndex = selectedCommitIndex;
-      const selectedFilteredIndex = findFilteredIndex(currentSelectedIndex, newFilteredIndices);
+      const selectedFilteredIndex = findFilteredIndex(
+        currentSelectedIndex,
+        newFilteredIndices,
+      );
 
       if (selectedFilteredIndex === null && newFilteredIndices.length > 0) {
         // No valid selection but commits exist - select first
@@ -368,11 +371,17 @@ function ProfilerContextController({children}: Props): React.Node {
       setMinCommitDurationValue(value);
 
       // Calculate what the filtered indices will be with the new setting
-      const newFilteredIndices = calculateFilteredIndices(isCommitFilterEnabled, value);
+      const newFilteredIndices = calculateFilteredIndices(
+        isCommitFilterEnabled,
+        value,
+      );
 
       // Handle edge cases where selected commit becomes invalid after filtering
       const currentSelectedIndex = selectedCommitIndex;
-      const selectedFilteredIndex = findFilteredIndex(currentSelectedIndex, newFilteredIndices);
+      const selectedFilteredIndex = findFilteredIndex(
+        currentSelectedIndex,
+        newFilteredIndices,
+      );
 
       if (selectedFilteredIndex === null && newFilteredIndices.length > 0) {
         // No valid selection but commits exist - select first
