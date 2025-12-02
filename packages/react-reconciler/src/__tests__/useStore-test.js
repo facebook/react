@@ -1220,4 +1220,109 @@ describe('useStore', () => {
     ]);
     expect(root).toMatchRenderedOutput('20');
   });
+
+  it('store is already updating in transition on initial mount', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        default:
+          return count;
+      }
+    }
+
+    const store = createStore(2, counterReducer);
+
+    let resolve;
+
+    startTransition(async () => {
+      store.dispatch({type: 'increment'});
+      await new Promise(r => {
+        resolve = r;
+      });
+    });
+
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
+    function App() {
+      const value = useStore(store, identity);
+      Scheduler.log({kind: 'render', value});
+      return <>{value}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    // Technically we the transition is not complete, so we
+    // SHOULD be showing 2 here.
+    assertLog([
+      {kind: 'selector', state: 3},
+      {kind: 'render', value: 3},
+    ]);
+    expect(root).toMatchRenderedOutput('3');
+
+    // Change the store prop from storeA to storeB
+    await act(async () => {
+      resolve();
+    });
+
+    assertLog([
+      // This is where we should be updating to 3.
+    ]);
+    expect(root).toMatchRenderedOutput('3');
+  });
+
+  it('store is previously updated in transition before initial mount', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        default:
+          return count;
+      }
+    }
+
+    const store = createStore(2, counterReducer);
+
+    startTransition(async () => {
+      store.dispatch({type: 'increment'});
+    });
+    // Transition completed immediately, so if we are tracking committed state
+    // we would need to mark this transtion as complete.
+
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
+    function App() {
+      const value = useStore(store, identity);
+      Scheduler.log({kind: 'render', value});
+      return <>{value}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    assertLog([
+      {kind: 'selector', state: 3},
+      {kind: 'render', value: 3},
+    ]);
+    expect(root).toMatchRenderedOutput('3');
+  });
 });
