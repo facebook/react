@@ -18,7 +18,13 @@ export function assertTerminalSuccessorsExist(fn: HIRFunction): void {
         description: `Block bb${successor} does not exist for terminal '${printTerminal(
           block.terminal,
         )}'`,
-        loc: (block.terminal as any).loc ?? GeneratedSource,
+        details: [
+          {
+            kind: 'error',
+            loc: (block.terminal as any).loc ?? GeneratedSource,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
       return successor;
@@ -33,14 +39,26 @@ export function assertTerminalPredsExist(fn: HIRFunction): void {
       CompilerError.invariant(predBlock != null, {
         reason: 'Expected predecessor block to exist',
         description: `Block ${block.id} references non-existent ${pred}`,
-        loc: GeneratedSource,
+        details: [
+          {
+            kind: 'error',
+            loc: GeneratedSource,
+            message: null,
+          },
+        ],
       });
       CompilerError.invariant(
         [...eachTerminalSuccessor(predBlock.terminal)].includes(block.id),
         {
           reason: 'Terminal successor does not reference correct predecessor',
           description: `Block bb${block.id} has bb${predBlock.id} as a predecessor, but bb${predBlock.id}'s successors do not include bb${block.id}`,
-          loc: GeneratedSource,
+          details: [
+            {
+              kind: 'error',
+              loc: GeneratedSource,
+              message: null,
+            },
+          ],
         },
       );
     }

@@ -34,6 +34,7 @@ function Component(props) {
   let y;
   if ($[0] !== props.p0 || $[1] !== props.p2 || $[2] !== props.p3) {
     const x = [];
+
     switch (props.p0) {
       case true: {
         x.push(props.p2);
@@ -43,7 +44,6 @@ function Component(props) {
         y = x;
       }
     }
-
     t0 = <Component data={x} />;
     $[0] = props.p0;
     $[1] = props.p2;

@@ -46,7 +46,14 @@ export function raiseUnificationErrors(
     if (errs.length === 0) {
       CompilerError.invariant(false, {
         reason: 'Should not have array of zero errors',
-        loc,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc,
+            message: null,
+          },
+        ],
       });
     } else if (errs.length === 1) {
       CompilerError.throwInvalidJS({

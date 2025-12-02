@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import {useCallback} from 'react';
 import {Stringify} from 'shared-runtime';
 
@@ -35,7 +36,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import { useCallback } from "react";
 import { Stringify } from "shared-runtime";
 

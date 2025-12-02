@@ -56,6 +56,9 @@ export function printFunction(fn: HIRFunction): string {
   } else {
     definition += '<<anonymous>>';
   }
+  if (fn.nameHint != null) {
+    definition += ` ${fn.nameHint}`;
+  }
   if (fn.params.length !== 0) {
     definition +=
       '(' +
@@ -596,7 +599,13 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         {
           reason: 'Bad assumption about quasi length.',
           description: null,
-          loc: instrValue.loc,
+          details: [
+            {
+              kind: 'error',
+              loc: instrValue.loc,
+              message: null,
+            },
+          ],
           suggestions: null,
         },
       );
@@ -865,8 +874,15 @@ export function printManualMemoDependency(
   } else {
     CompilerError.invariant(val.root.value.identifier.name?.kind === 'named', {
       reason: 'DepsValidation: expected named local variable in depslist',
+      description: null,
       suggestions: null,
-      loc: val.root.value.loc,
+      details: [
+        {
+          kind: 'error',
+          loc: val.root.value.loc,
+          message: null,
+        },
+      ],
     });
     rootStr = nameOnly
       ? val.root.value.identifier.name.value

@@ -14,7 +14,7 @@ import {allRules} from '../src/rules/ReactCompilerRule';
 
 testRule(
   'rules-of-hooks',
-  allRules[getRuleForCategory(ErrorCategory.Hooks).name],
+  allRules[getRuleForCategory(ErrorCategory.Hooks).name].rule,
   {
     valid: [
       {

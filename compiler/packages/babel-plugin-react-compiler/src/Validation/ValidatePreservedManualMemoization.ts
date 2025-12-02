@@ -9,7 +9,6 @@ import {
   CompilerDiagnostic,
   CompilerError,
   ErrorCategory,
-  ErrorSeverity,
 } from '../CompilerError';
 import {
   DeclarationId,
@@ -19,7 +18,6 @@ import {
   IdentifierId,
   InstructionValue,
   ManualMemoDependency,
-  Place,
   PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveInstruction,
@@ -30,7 +28,10 @@ import {
   SourceLocation,
 } from '../HIR';
 import {printIdentifier, printManualMemoDependency} from '../HIR/PrintHIR';
-import {eachInstructionValueOperand} from '../HIR/visitors';
+import {
+  eachInstructionValueLValue,
+  eachInstructionValueOperand,
+} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
 import {
   ReactiveFunctionVisitor,
@@ -241,12 +242,20 @@ function validateInferredDep(
     normalizedDep = {
       root: maybeNormalizedRoot.root,
       path: [...maybeNormalizedRoot.path, ...dep.path],
+      loc: maybeNormalizedRoot.loc,
     };
   } else {
     CompilerError.invariant(dep.identifier.name?.kind === 'named', {
       reason:
         'ValidatePreservedManualMemoization: expected scope dependency to be named',
-      loc: GeneratedSource,
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: GeneratedSource,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
     normalizedDep = {
@@ -259,8 +268,10 @@ function validateInferredDep(
           effect: Effect.Read,
           reactive: false,
         },
+        constant: false,
       },
       path: [...dep.path],
+      loc: GeneratedSource,
     };
   }
   for (const decl of declsWithinMemoBlock) {
@@ -283,7 +294,6 @@ function validateInferredDep(
   errorState.pushDiagnostic(
     CompilerDiagnostic.create({
       category: ErrorCategory.PreserveManualMemo,
-      severity: ErrorSeverity.CannotPreserveMemoization,
       reason: 'Existing memoization could not be preserved',
       description: [
         'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
@@ -299,13 +309,13 @@ function validateInferredDep(
               errorDiagnostic
                 ? getCompareDependencyResultDescription(errorDiagnostic)
                 : 'Inferred dependency not present in source'
-            }.`
+            }`
           : '',
       ]
         .join('')
         .trim(),
       suggestions: null,
-    }).withDetail({
+    }).withDetails({
       kind: 'error',
       loc: memoLocation,
       message: 'Could not preserve existing manual memoization',
@@ -332,56 +342,55 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
    * @returns a @{ManualMemoDependency} representing the variable +
    * property reads represented by @value
    */
-  recordDepsInValue(
-    value: ReactiveValue,
-    state: VisitorState,
-  ): ManualMemoDependency | null {
+  recordDepsInValue(value: ReactiveValue, state: VisitorState): void {
     switch (value.kind) {
       case 'SequenceExpression': {
         for (const instr of value.instructions) {
           this.visitInstruction(instr, state);
         }
-        const result = this.recordDepsInValue(value.value, state);
-        return result;
+        this.recordDepsInValue(value.value, state);
+        break;
       }
       case 'OptionalExpression': {
-        return this.recordDepsInValue(value.value, state);
+        this.recordDepsInValue(value.value, state);
+        break;
       }
       case 'ConditionalExpression': {
         this.recordDepsInValue(value.test, state);
         this.recordDepsInValue(value.consequent, state);
         this.recordDepsInValue(value.alternate, state);
-        return null;
+        break;
       }
       case 'LogicalExpression': {
         this.recordDepsInValue(value.left, state);
         this.recordDepsInValue(value.right, state);
-        return null;
+        break;
       }
       default: {
-        const dep = collectMaybeMemoDependencies(
-          value,
-          this.temporaries,
-          false,
-        );
-        if (value.kind === 'StoreLocal' || value.kind === 'StoreContext') {
-          const storeTarget = value.lvalue.place;
-          state.manualMemoState?.decls.add(
-            storeTarget.identifier.declarationId,
-          );
-          if (storeTarget.identifier.name?.kind === 'named' && dep == null) {
-            const dep: ManualMemoDependency = {
-              root: {
-                kind: 'NamedLocal',
-                value: storeTarget,
-              },
-              path: [],
-            };
-            this.temporaries.set(storeTarget.identifier.id, dep);
-            return dep;
+        collectMaybeMemoDependencies(value, this.temporaries, false);
+        if (
+          value.kind === 'StoreLocal' ||
+          value.kind === 'StoreContext' ||
+          value.kind === 'Destructure'
+        ) {
+          for (const storeTarget of eachInstructionValueLValue(value)) {
+            state.manualMemoState?.decls.add(
+              storeTarget.identifier.declarationId,
+            );
+            if (storeTarget.identifier.name?.kind === 'named') {
+              this.temporaries.set(storeTarget.identifier.id, {
+                root: {
+                  kind: 'NamedLocal',
+                  value: storeTarget,
+                  constant: false,
+                },
+                path: [],
+                loc: storeTarget.loc,
+              });
+            }
           }
         }
-        return dep;
+        break;
       }
     }
   }
@@ -398,19 +407,17 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       state.manualMemoState.decls.add(lvalue.identifier.declarationId);
     }
 
-    const maybeDep = this.recordDepsInValue(value, state);
-    if (lvalId != null) {
-      if (maybeDep != null) {
-        temporaries.set(lvalId, maybeDep);
-      } else if (isNamedLocal) {
-        temporaries.set(lvalId, {
-          root: {
-            kind: 'NamedLocal',
-            value: {...(instr.lvalue as Place)},
-          },
-          path: [],
-        });
-      }
+    this.recordDepsInValue(value, state);
+    if (lvalue != null) {
+      temporaries.set(lvalue.identifier.id, {
+        root: {
+          kind: 'NamedLocal',
+          value: {...lvalue},
+          constant: false,
+        },
+        path: [],
+        loc: lvalue.loc,
+      });
     }
   }
 
@@ -497,7 +504,13 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       CompilerError.invariant(state.manualMemoState == null, {
         reason: 'Unexpected nested StartMemoize instructions',
         description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${value.manualMemoId}`,
-        loc: value.loc,
+        details: [
+          {
+            kind: 'error',
+            loc: value.loc,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
 
@@ -537,13 +550,12 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           state.errors.pushDiagnostic(
             CompilerDiagnostic.create({
               category: ErrorCategory.PreserveManualMemo,
-              severity: ErrorSeverity.CannotPreserveMemoization,
               reason: 'Existing memoization could not be preserved',
               description: [
                 'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. ',
-                'This dependency may be mutated later, which could cause the value to change unexpectedly.',
+                'This dependency may be mutated later, which could cause the value to change unexpectedly',
               ].join(''),
-            }).withDetail({
+            }).withDetails({
               kind: 'error',
               loc,
               message: 'This dependency may be modified later',
@@ -559,7 +571,13 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         {
           reason: 'Unexpected mismatch between StartMemoize and FinishMemoize',
           description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${value.manualMemoId}`,
-          loc: value.loc,
+          details: [
+            {
+              kind: 'error',
+              loc: value.loc,
+              message: null,
+            },
+          ],
           suggestions: null,
         },
       );
@@ -585,17 +603,16 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
               state.errors.pushDiagnostic(
                 CompilerDiagnostic.create({
                   category: ErrorCategory.PreserveManualMemo,
-                  severity: ErrorSeverity.CannotPreserveMemoization,
                   reason: 'Existing memoization could not be preserved',
                   description: [
-                    'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. ',
+                    'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output',
                     DEBUG
                       ? `${printIdentifier(identifier)} was not memoized.`
                       : '',
                   ]
                     .join('')
                     .trim(),
-                }).withDetail({
+                }).withDetails({
                   kind: 'error',
                   loc,
                   message: 'Could not preserve existing memoization',

@@ -82,6 +82,7 @@ function Foo() {
   const result = t1;
 
   useNoAlias(result, obj);
+
   if (shouldCaptureObj && result[0] !== obj) {
     throw new Error("Unexpected");
   }

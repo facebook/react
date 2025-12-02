@@ -13,8 +13,10 @@ import {
   CompilerSuggestionOperation,
   LintRules,
   type LintRule,
+  ErrorSeverity,
+  LintRulePreset,
 } from 'babel-plugin-react-compiler';
-import type {Rule} from 'eslint';
+import {type Linter, type Rule} from 'eslint';
 import runReactCompiler, {RunCacheEntry} from './RunReactCompiler';
 
 function assertExhaustive(_: never, errorMsg: string): never {
@@ -148,7 +150,7 @@ function makeRule(rule: LintRule): Rule.RuleModule {
       type: 'problem',
       docs: {
         description: rule.description,
-        recommended: rule.recommended,
+        recommended: rule.preset === LintRulePreset.Recommended,
       },
       fixable: 'code',
       hasSuggestions: true,
@@ -159,58 +161,47 @@ function makeRule(rule: LintRule): Rule.RuleModule {
   };
 }
 
-export const NoUnusedDirectivesRule: Rule.RuleModule = {
-  meta: {
-    type: 'suggestion',
-    docs: {
-      recommended: true,
-    },
-    fixable: 'code',
-    hasSuggestions: true,
-    // validation is done at runtime with zod
-    schema: [{type: 'object', additionalProperties: true}],
-  },
-  create(context: Rule.RuleContext): Rule.RuleListener {
-    const results = getReactCompilerResult(context);
-
-    for (const directive of results.unusedOptOutDirectives) {
-      context.report({
-        message: `Unused '${directive.directive}' directive`,
-        loc: directive.loc,
-        suggest: [
-          {
-            desc: 'Remove the directive',
-            fix(fixer): Rule.Fix {
-              return fixer.removeRange(directive.range);
-            },
-          },
-        ],
-      });
-    }
-    return {};
-  },
+type RulesConfig = {
+  [name: string]: {rule: Rule.RuleModule; severity: ErrorSeverity};
 };
 
-type RulesObject = {[name: string]: Rule.RuleModule};
+export const allRules: RulesConfig = LintRules.reduce((acc, rule) => {
+  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
+  return acc;
+}, {} as RulesConfig);
 
-export const allRules: RulesObject = LintRules.reduce(
-  (acc, rule) => {
-    acc[rule.name] = makeRule(rule);
-    return acc;
-  },
-  {
-    'no-unused-directives': NoUnusedDirectivesRule,
-  } as RulesObject,
-);
+export const recommendedRules: RulesConfig = LintRules.filter(
+  rule => rule.preset === LintRulePreset.Recommended,
+).reduce((acc, rule) => {
+  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
+  return acc;
+}, {} as RulesConfig);
 
-export const recommendedRules: RulesObject = LintRules.filter(
-  rule => rule.recommended,
-).reduce(
-  (acc, rule) => {
-    acc[rule.name] = makeRule(rule);
-    return acc;
-  },
-  {
-    'no-unused-directives': NoUnusedDirectivesRule,
-  } as RulesObject,
-);
+export const recommendedLatestRules: RulesConfig = LintRules.filter(
+  rule =>
+    rule.preset === LintRulePreset.Recommended ||
+    rule.preset === LintRulePreset.RecommendedLatest,
+).reduce((acc, rule) => {
+  acc[rule.name] = {rule: makeRule(rule), severity: rule.severity};
+  return acc;
+}, {} as RulesConfig);
+
+export function mapErrorSeverityToESlint(
+  severity: ErrorSeverity,
+): Linter.StringSeverity {
+  switch (severity) {
+    case ErrorSeverity.Error: {
+      return 'error';
+    }
+    case ErrorSeverity.Warning: {
+      return 'warn';
+    }
+    case ErrorSeverity.Hint:
+    case ErrorSeverity.Off: {
+      return 'off';
+    }
+    default: {
+      assertExhaustive(severity, `Unhandled severity: ${severity}`);
+    }
+  }
+}

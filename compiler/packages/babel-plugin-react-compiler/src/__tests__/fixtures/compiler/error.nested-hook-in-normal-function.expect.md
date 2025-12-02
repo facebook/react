@@ -35,7 +35,7 @@ Found 1 error:
 
 Error: Components and hooks cannot be created dynamically
 
-The function `useConfiguredState` appears to be a React hook, but it's defined inside `createCustomHook`. Components and Hooks should always be declared at module scope
+The function `useConfiguredState` appears to be a React hook, but it's defined inside `createCustomHook`. Components and Hooks should always be declared at module scope.
 
 error.nested-hook-in-normal-function.ts:4:9
   2 | import {useState} from 'react';

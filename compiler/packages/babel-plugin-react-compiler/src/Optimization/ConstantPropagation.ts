@@ -191,7 +191,14 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
       case 'Primitive': {
         CompilerError.invariant(value.kind === 'Primitive', {
           reason: 'value kind expected to be Primitive',
-          loc: null,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
 
@@ -204,7 +211,14 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
       case 'LoadGlobal': {
         CompilerError.invariant(value.kind === 'LoadGlobal', {
           reason: 'value kind expected to be LoadGlobal',
-          loc: null,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: null,
+              message: null,
+            },
+          ],
           suggestions: null,
         });
 
@@ -593,6 +607,19 @@ function evaluateInstruction(
     case 'ObjectMethod':
     case 'FunctionExpression': {
       constantPropagationImpl(value.loweredFunc.func, constants);
+      return null;
+    }
+    case 'StartMemoize': {
+      if (value.deps != null) {
+        for (const dep of value.deps) {
+          if (dep.root.kind === 'NamedLocal') {
+            const placeValue = read(constants, dep.root.value);
+            if (placeValue != null && placeValue.kind === 'Primitive') {
+              dep.root.constant = true;
+            }
+          }
+        }
+      }
       return null;
     }
     default: {

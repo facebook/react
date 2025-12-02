@@ -249,6 +249,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
   const fn: HIRFunction = {
     loc: GeneratedSource,
     id: null,
+    nameHint: null,
     fnType: 'Other',
     env,
     params: [obj],
@@ -275,6 +276,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     value: {
       kind: 'FunctionExpression',
       name: null,
+      nameHint: null,
       loweredFunc: {
         func: fn,
       },

@@ -24,9 +24,9 @@ function useThing(fn) {
 ```
 Found 1 error:
 
-Error: `this` is not supported syntax
+Compilation Skipped: `this` is not supported syntax
 
-React Compiler does not support compiling functions that use `this`
+React Compiler does not support compiling functions that use `this`.
 
 error.reserved-words.ts:8:28
    6 |

@@ -11,7 +11,6 @@ import {
   CompilerError,
   CompilerErrorDetail,
   ErrorCategory,
-  ErrorSeverity,
 } from '../CompilerError';
 import {ExternalFunction, ReactFunctionType} from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
@@ -24,7 +23,12 @@ import {
   ProgramContext,
   validateRestrictedImports,
 } from './Imports';
-import {CompilerReactTarget, PluginOptions} from './Options';
+import {
+  CompilerOutputMode,
+  CompilerReactTarget,
+  ParsedPluginOptions,
+  PluginOptions,
+} from './Options';
 import {compileFn} from './Pipeline';
 import {
   filterSuppressionsThatAffectFunction,
@@ -35,7 +39,7 @@ import {GeneratedSource} from '../HIR';
 import {Err, Ok, Result} from '../Utils/Result';
 
 export type CompilerPass = {
-  opts: PluginOptions;
+  opts: ParsedPluginOptions;
   filename: string | null;
   comments: Array<t.CommentBlock | t.CommentLine>;
   code: string | null;
@@ -46,7 +50,7 @@ const DYNAMIC_GATING_DIRECTIVE = new RegExp('^use memo if\\(([^\\)]*)\\)$');
 
 export function tryFindDirectiveEnablingMemoization(
   directives: Array<t.Directive>,
-  opts: PluginOptions,
+  opts: ParsedPluginOptions,
 ): Result<t.Directive | null, CompilerError> {
   const optIn = directives.find(directive =>
     OPT_IN_DIRECTIVES.has(directive.value.value),
@@ -82,7 +86,7 @@ export function findDirectiveDisablingMemoization(
 }
 function findDirectivesDynamicGating(
   directives: Array<t.Directive>,
-  opts: PluginOptions,
+  opts: ParsedPluginOptions,
 ): Result<
   {
     gating: ExternalFunction;
@@ -105,7 +109,6 @@ function findDirectivesDynamicGating(
         errors.push({
           reason: `Dynamic gating directive is not a valid JavaScript identifier`,
           description: `Found '${directive.value.value}'`,
-          severity: ErrorSeverity.InvalidReact,
           category: ErrorCategory.Gating,
           loc: directive.loc ?? null,
           suggestions: null,
@@ -113,7 +116,7 @@ function findDirectivesDynamicGating(
       }
     }
   }
-  if (errors.hasErrors()) {
+  if (errors.hasAnyErrors()) {
     return Err(errors);
   } else if (result.length > 1) {
     const error = new CompilerError();
@@ -122,7 +125,6 @@ function findDirectivesDynamicGating(
       description: `Expected a single directive but found [${result
         .map(r => r.directive.value.value)
         .join(', ')}]`,
-      severity: ErrorSeverity.InvalidReact,
       category: ErrorCategory.Gating,
       loc: result[0].directive.loc ?? null,
       suggestions: null,
@@ -141,15 +143,13 @@ function findDirectivesDynamicGating(
   }
 }
 
-function isCriticalError(err: unknown): boolean {
-  return !(err instanceof CompilerError) || err.isCritical();
+function isError(err: unknown): boolean {
+  return !(err instanceof CompilerError) || err.hasErrors();
 }
 
 function isConfigError(err: unknown): boolean {
   if (err instanceof CompilerError) {
-    return err.details.some(
-      detail => detail.severity === ErrorSeverity.InvalidConfig,
-    );
+    return err.details.some(detail => detail.category === ErrorCategory.Config);
   }
   return false;
 }
@@ -214,8 +214,7 @@ function handleError(
   logError(err, context, fnLoc);
   if (
     context.opts.panicThreshold === 'all_errors' ||
-    (context.opts.panicThreshold === 'critical_errors' &&
-      isCriticalError(err)) ||
+    (context.opts.panicThreshold === 'critical_errors' && isError(err)) ||
     isConfigError(err) // Always throws regardless of panic threshold
   ) {
     throw err;
@@ -316,7 +315,13 @@ function insertNewOutlinedFunctionNode(
       CompilerError.invariant(insertedFuncDecl.isFunctionDeclaration(), {
         reason: 'Expected inserted function declaration',
         description: `Got: ${insertedFuncDecl}`,
-        loc: insertedFuncDecl.node?.loc ?? null,
+        details: [
+          {
+            kind: 'error',
+            loc: insertedFuncDecl.node?.loc ?? null,
+            message: null,
+          },
+        ],
       });
       return insertedFuncDecl;
     }
@@ -395,7 +400,15 @@ export function compileProgram(
    */
   const suppressions = findProgramSuppressions(
     pass.comments,
-    pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
+    /*
+     * If the compiler is validating hooks rules and exhaustive memo dependencies, we don't need to check
+     * for React ESLint suppressions
+     */
+    pass.opts.environment.validateExhaustiveMemoizationDependencies &&
+      pass.opts.environment.validateHooksUsage
+      ? null
+      : (pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS),
+    // Always bail on Flow suppressions
     pass.opts.flowSuppressions,
   );
 
@@ -417,15 +430,30 @@ export function compileProgram(
   );
   const compiledFns: Array<CompileResult> = [];
 
+  // outputMode takes precedence if specified
+  const outputMode: CompilerOutputMode =
+    pass.opts.outputMode ?? (pass.opts.noEmit ? 'lint' : 'client');
   while (queue.length !== 0) {
     const current = queue.shift()!;
-    const compiled = processFn(current.fn, current.fnType, programContext);
+    const compiled = processFn(
+      current.fn,
+      current.fnType,
+      programContext,
+      outputMode,
+    );
 
     if (compiled != null) {
       for (const outlined of compiled.outlined) {
         CompilerError.invariant(outlined.fn.outlined.length === 0, {
           reason: 'Unexpected nested outlined functions',
-          loc: outlined.fn.loc,
+          description: null,
+          details: [
+            {
+              kind: 'error',
+              loc: outlined.fn.loc,
+              message: null,
+            },
+          ],
         });
         const fn = insertNewOutlinedFunctionNode(
           program,
@@ -458,7 +486,6 @@ export function compileProgram(
         new CompilerErrorDetail({
           reason:
             'Unexpected compiled functions when module scope opt-out is present',
-          severity: ErrorSeverity.Invariant,
           category: ErrorCategory.Invariant,
           loc: null,
         }),
@@ -571,6 +598,7 @@ function processFn(
   fn: BabelFn,
   fnType: ReactFunctionType,
   programContext: ProgramContext,
+  outputMode: CompilerOutputMode,
 ): null | CodegenFunction {
   let directives: {
     optIn: t.Directive | null;
@@ -606,18 +634,27 @@ function processFn(
   }
 
   let compiledFn: CodegenFunction;
-  const compileResult = tryCompileFunction(fn, fnType, programContext);
+  const compileResult = tryCompileFunction(
+    fn,
+    fnType,
+    programContext,
+    outputMode,
+  );
   if (compileResult.kind === 'error') {
     if (directives.optOut != null) {
       logError(compileResult.error, programContext, fn.node.loc ?? null);
     } else {
       handleError(compileResult.error, programContext, fn.node.loc ?? null);
     }
-    const retryResult = retryCompileFunction(fn, fnType, programContext);
-    if (retryResult == null) {
+    if (outputMode === 'client') {
+      const retryResult = retryCompileFunction(fn, fnType, programContext);
+      if (retryResult == null) {
+        return null;
+      }
+      compiledFn = retryResult;
+    } else {
       return null;
     }
-    compiledFn = retryResult;
   } else {
     compiledFn = compileResult.compiledFn;
   }
@@ -653,7 +690,7 @@ function processFn(
 
   if (programContext.hasModuleScopeOptOut) {
     return null;
-  } else if (programContext.opts.noEmit) {
+  } else if (programContext.opts.outputMode === 'lint') {
     /**
      * inferEffectDependencies + noEmit is currently only used for linting. In
      * this mode, add source locations for where the compiler *can* infer effect
@@ -683,6 +720,7 @@ function tryCompileFunction(
   fn: BabelFn,
   fnType: ReactFunctionType,
   programContext: ProgramContext,
+  outputMode: CompilerOutputMode,
 ):
   | {kind: 'compile'; compiledFn: CodegenFunction}
   | {kind: 'error'; error: unknown} {
@@ -709,7 +747,7 @@ function tryCompileFunction(
         fn,
         programContext.opts.environment,
         fnType,
-        'all_features',
+        outputMode,
         programContext,
         programContext.opts.logger,
         programContext.filename,
@@ -747,7 +785,7 @@ function retryCompileFunction(
       fn,
       environment,
       fnType,
-      'no_inferred_memo',
+      'client-no-memo',
       programContext,
       programContext.opts.logger,
       programContext.filename,
@@ -827,7 +865,6 @@ function shouldSkipCompilation(
           reason: `Expected a filename but found none.`,
           description:
             "When the 'sources' config options is specified, the React compiler will only compile files with a name",
-          severity: ErrorSeverity.InvalidConfig,
           category: ErrorCategory.Config,
           loc: null,
         }),
@@ -890,7 +927,6 @@ function validateNoDynamicallyCreatedComponentsOrHooks(
       if (nestedFnType === 'Component' || nestedFnType === 'Hook') {
         CompilerError.throwDiagnostic({
           category: ErrorCategory.Factories,
-          severity: ErrorSeverity.InvalidReact,
           reason: `Components and hooks cannot be created dynamically`,
           description: `The function \`${nestedName}\` appears to be a React ${nestedFnType.toLowerCase()}, but it's defined inside \`${parentName}\`. Components and Hooks should always be declared at module scope`,
           details: [
@@ -1416,7 +1452,13 @@ export function getReactCompilerRuntimeModule(
       {
         reason: 'Expected target to already be validated',
         description: null,
-        loc: null,
+        details: [
+          {
+            kind: 'error',
+            loc: null,
+            message: null,
+          },
+        ],
         suggestions: null,
       },
     );

@@ -126,6 +126,7 @@ function wwwOnCaughtError(
 
   defaultOnCaughtError(error, errorInfo);
 }
+const noopOnDefaultTransitionIndicator = noop;
 
 export function createRoot(
   container: Element | Document | DocumentFragment,
@@ -137,6 +138,7 @@ export function createRoot(
       ({
         onUncaughtError: wwwOnUncaughtError,
         onCaughtError: wwwOnCaughtError,
+        onDefaultTransitionIndicator: noopOnDefaultTransitionIndicator,
       }: any),
       options,
     ),
@@ -155,6 +157,7 @@ export function hydrateRoot(
       ({
         onUncaughtError: wwwOnUncaughtError,
         onCaughtError: wwwOnCaughtError,
+        onDefaultTransitionIndicator: noopOnDefaultTransitionIndicator,
       }: any),
       options,
     ),
@@ -211,7 +214,6 @@ function getReactRootElementInContainer(container: any) {
 // This isn't reachable because onRecoverableError isn't called in the
 // legacy API.
 const noopOnRecoverableError = noop;
-const noopOnDefaultTransitionIndicator = noop;
 
 function legacyCreateRootFromDOMContainer(
   container: Container,

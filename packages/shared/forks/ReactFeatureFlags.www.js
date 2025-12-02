@@ -34,6 +34,8 @@ export const {
   enableScrollEndPolyfill,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
+  enableAsyncDebugInfo,
+  enableInternalInstanceMap,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -58,6 +60,8 @@ export const enableThrottledScheduling: boolean = false;
 
 export const enableHydrationLaneScheduling: boolean = true;
 
+export const enablePerformanceIssueReporting: boolean = false;
+
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableSchedulingProfiler;
@@ -70,9 +74,7 @@ export const enableAsyncIterableChildren: boolean = false;
 
 export const enableTaint: boolean = false;
 
-export const enablePostpone: boolean = false;
-
-export const enableHalt: boolean = false;
+export const enableHalt: boolean = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
@@ -92,9 +94,6 @@ export const enableFizzExternalRuntime: boolean = true;
 
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
-export const enablePersistedModeClonedFlag: boolean = false;
-
-export const enableAsyncDebugInfo: boolean = false;
 export const disableClientCache: boolean = true;
 
 export const enableReactTestRendererWarning: boolean = false;
@@ -109,9 +108,13 @@ export const enableSuspenseyImages: boolean = false;
 export const enableFizzBlockingRender: boolean = true;
 export const enableSrcObject: boolean = false;
 export const enableHydrationChangeEvent: boolean = false;
-export const enableDefaultTransitionIndicator: boolean = false;
+export const enableDefaultTransitionIndicator: boolean = true;
 
 export const ownerStackLimit = 1e4;
+
+export const enableFragmentRefsInstanceHandles: boolean = true;
+
+export const enableOptimisticKey: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

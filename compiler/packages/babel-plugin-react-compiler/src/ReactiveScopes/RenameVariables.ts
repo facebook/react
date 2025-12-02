@@ -186,7 +186,13 @@ class Scopes {
     CompilerError.invariant(last === next, {
       reason: 'Mismatch push/pop calls',
       description: null,
-      loc: null,
+      details: [
+        {
+          kind: 'error',
+          loc: null,
+          message: null,
+        },
+      ],
       suggestions: null,
     });
   }

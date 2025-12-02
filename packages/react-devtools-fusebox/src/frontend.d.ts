@@ -5,13 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export type MessagePayload = null | string | number | boolean | { [key: string]: MessagePayload } | MessagePayload[];
-export type Message = { event: string, payload?: MessagePayload };
+export type MessagePayload =
+  | null
+  | string
+  | number
+  | boolean
+  | {[key: string]: MessagePayload}
+  | MessagePayload[];
+export type Message = {event: string; payload?: MessagePayload};
 
 export type WallListener = (message: Message) => void;
 export type Wall = {
-  listen: (fn: WallListener) => Function,
-  send: (event: string, payload?: MessagePayload) => void,
+  listen: (fn: WallListener) => Function;
+  send: (event: string, payload?: MessagePayload) => void;
 };
 
 export type Bridge = {
@@ -22,7 +28,7 @@ export type Bridge = {
 export type Store = Object;
 export type BrowserTheme = 'dark' | 'light';
 export type Config = {
-  supportsReloadAndProfile?: boolean,
+  supportsReloadAndProfile?: boolean;
 };
 
 export function createBridge(wall: Wall): Bridge;
@@ -55,15 +61,23 @@ export type CanViewElementSource = (
   source: ReactFunctionLocation | ReactCallSite,
   symbolicatedSource: ReactFunctionLocation | ReactCallSite | null,
 ) => boolean;
+export type FetchFileWithCaching = (url: string) => Promise<string>;
 
 export type InitializationOptions = {
-  bridge: Bridge,
-  store: Store,
-  theme?: BrowserTheme,
-  viewAttributeSourceFunction?: ViewAttributeSource,
-  viewElementSourceFunction?: ViewElementSource,
-  canViewElementSourceFunction?: CanViewElementSource,
+  bridge: Bridge;
+  store: Store;
+  theme?: BrowserTheme;
+  viewAttributeSourceFunction?: ViewAttributeSource;
+  viewElementSourceFunction?: ViewElementSource;
+  canViewElementSourceFunction?: CanViewElementSource;
+  fetchFileWithCaching?: FetchFileWithCaching;
 };
 
-export function initializeComponents(node: Element | Document, options: InitializationOptions): void;
-export function initializeProfiler(node: Element | Document, options: InitializationOptions): void;
+export function initializeComponents(
+  node: Element | Document,
+  options: InitializationOptions,
+): void;
+export function initializeProfiler(
+  node: Element | Document,
+  options: InitializationOptions,
+): void;

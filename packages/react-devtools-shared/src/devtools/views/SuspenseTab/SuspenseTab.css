@@ -14,16 +14,25 @@
   -webkit-font-smoothing: var(--font-smoothing);
 }
 
+.VRule {
+  height: 20px;
+  width: 1px;
+  flex: 0 0 1px;
+  margin: 0 0.5rem;
+  background-color: var(--color-border);
+}
+
 .TreeWrapper {
   border-top: 1px solid var(--color-border);
-  flex: 1 1 var(--horizontal-resize-tree-percentage);
+  flex: 1 1 65%;
   display: flex;
   flex-direction: row;
   height: 100%;
+  overflow: auto;
 }
 
 .InspectedElementWrapper {
-  flex: 1 1 35%;
+  flex: 0 0 calc(100% - var(--horizontal-resize-tree-percentage));
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -48,10 +57,6 @@
   cursor: ew-resize;
 }
 
-.TreeView footer {
-  display: none;
-}
-
 @container devtools (width < 600px) {
   .SuspenseTab {
     flex-direction: column;
@@ -59,12 +64,12 @@
 
   .TreeWrapper {
     border-top: 1px solid var(--color-border);
-    flex: 1 1 var(--vertical-resize-tree-percentage);
+    flex: 1 1 50%;
     overflow: hidden;
   }
 
   .InspectedElementWrapper {
-    flex: 1 1 50%;
+    flex: 0 0 calc(100% - var(--vertical-resize-tree-percentage));
   }
 
   .TreeWrapper + .ResizeBarWrapper .ResizeBar {
@@ -75,21 +80,20 @@
     cursor: ns-resize;
   }
 
-  .TreeView footer {
-    display: flex;
-    justify-content: end;
-    border-top: 1px solid var(--color-border);
-  }
-
   .ToggleInspectedElement[data-orientation="horizontal"] {
     display: none;
   }
 }
 
-.TreeList {
-  flex: 0 0 var(--horizontal-resize-tree-list-percentage);
+@container devtools (width >= 600px) {
+  .ToggleInspectedElement[data-orientation="vertical"] {
+    display: none;
+  }
+}
+
+.ActivityList {
+  flex: 0 0 var(--horizontal-resize-activity-list-percentage);;
   border-right: 1px solid var(--color-border);
-  padding: 0.25rem;
   overflow: auto;
 }
 
@@ -102,28 +106,39 @@
 }
 
 .Rects {
-  border-top: 1px solid var(--color-border);
   padding: 0.25rem;
   flex-grow: 1;
   overflow: auto;
 }
 
 .SuspenseTreeViewHeader {
-  padding: 0.25rem;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: flex-start;
-}
-
-.SuspenseTreeViewHeaderMain {
-  display: grid;
-  grid-template-rows: auto auto;
+  flex: 0 0 42px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .SuspenseBreadcrumbs {
+  flex: 1;
   /**
    * TODO: Switch to single item view on overflow like OwnerStack does.
    * OwnerStack has more constraints that make it easier so it won't be a 1:1 port.
    */
   overflow-x: auto;
+}
+
+.SuspenseTreeViewFooter {
+  flex: 0 0 42px;
+  display: flex;
+  justify-content: end;
+  border-top: 1px solid var(--color-border);
+  padding: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.SuspenseTreeViewFooterButtons {
+  padding: 0.25rem;
 }

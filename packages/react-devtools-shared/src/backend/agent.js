@@ -8,7 +8,11 @@
  */
 
 import EventEmitter from '../events';
-import {SESSION_STORAGE_LAST_SELECTION_KEY, __DEBUG__} from '../constants';
+import {
+  SESSION_STORAGE_LAST_SELECTION_KEY,
+  UNKNOWN_SUSPENDERS_NONE,
+  __DEBUG__,
+} from '../constants';
 import setupHighlighter from './views/Highlighter';
 import {
   initialize as setupTraceUpdates,
@@ -26,10 +30,15 @@ import type {
   RendererID,
   RendererInterface,
   DevToolsHookSettings,
+  InspectedElement,
 } from './types';
-import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
+import type {
+  ComponentFilter,
+  DehydratedData,
+  ElementType,
+} from 'react-devtools-shared/src/frontend/types';
 import type {GroupItem} from './views/TraceUpdates/canvas';
-import {isReactNativeEnvironment} from './utils';
+import {gte, isReactNativeEnvironment} from './utils';
 import {
   sessionStorageGetItem,
   sessionStorageRemoveItem,
@@ -70,6 +79,13 @@ type InspectElementParams = {
   id: number,
   path: Array<string | number> | null,
   rendererID: number,
+  requestID: number,
+};
+
+type InspectScreenParams = {
+  forceFullData: boolean,
+  id: number,
+  path: Array<string | number> | null,
   requestID: number,
 };
 
@@ -131,8 +147,6 @@ type OverrideSuspenseParams = {
 };
 
 type OverrideSuspenseMilestoneParams = {
-  rendererID: number,
-  rootID: number,
   suspendedSet: Array<number>,
 };
 
@@ -140,6 +154,111 @@ type PersistedSelection = {
   rendererID: number,
   path: Array<PathFrame>,
 };
+
+function createEmptyInspectedScreen(
+  arbitraryRootID: number,
+  type: ElementType,
+): InspectedElement {
+  const suspendedBy: DehydratedData = {
+    cleaned: [],
+    data: [],
+    unserializable: [],
+  };
+  return {
+    // invariants
+    id: arbitraryRootID,
+    type: type,
+    // Properties we merge
+    isErrored: false,
+    errors: [],
+    warnings: [],
+    suspendedBy,
+    suspendedByRange: null,
+    // TODO: How to merge these?
+    unknownSuspenders: UNKNOWN_SUSPENDERS_NONE,
+    // Properties where merging doesn't make sense so we ignore them entirely in the UI
+    rootType: null,
+    plugins: {stylex: null},
+    nativeTag: null,
+    env: null,
+    source: null,
+    stack: null,
+    rendererPackageName: null,
+    rendererVersion: null,
+    // These don't make sense for a Root. They're just bottom values.
+    key: null,
+    canEditFunctionProps: false,
+    canEditHooks: false,
+    canEditFunctionPropsDeletePaths: false,
+    canEditFunctionPropsRenamePaths: false,
+    canEditHooksAndDeletePaths: false,
+    canEditHooksAndRenamePaths: false,
+    canToggleError: false,
+    canToggleSuspense: false,
+    isSuspended: false,
+    hasLegacyContext: false,
+    context: null,
+    hooks: null,
+    props: null,
+    state: null,
+    owners: null,
+  };
+}
+
+function mergeRoots(
+  left: InspectedElement,
+  right: InspectedElement,
+  suspendedByOffset: number,
+): void {
+  const leftSuspendedByRange = left.suspendedByRange;
+  const rightSuspendedByRange = right.suspendedByRange;
+
+  if (right.isErrored) {
+    left.isErrored = true;
+  }
+  for (let i = 0; i < right.errors.length; i++) {
+    left.errors.push(right.errors[i]);
+  }
+  for (let i = 0; i < right.warnings.length; i++) {
+    left.warnings.push(right.warnings[i]);
+  }
+
+  const leftSuspendedBy: DehydratedData = left.suspendedBy;
+  const {data, cleaned, unserializable} = (right.suspendedBy: DehydratedData);
+  const leftSuspendedByData = ((leftSuspendedBy.data: any): Array<mixed>);
+  const rightSuspendedByData = ((data: any): Array<mixed>);
+  for (let i = 0; i < rightSuspendedByData.length; i++) {
+    leftSuspendedByData.push(rightSuspendedByData[i]);
+  }
+  for (let i = 0; i < cleaned.length; i++) {
+    leftSuspendedBy.cleaned.push(
+      [suspendedByOffset + cleaned[i][0]].concat(cleaned[i].slice(1)),
+    );
+  }
+  for (let i = 0; i < unserializable.length; i++) {
+    leftSuspendedBy.unserializable.push(
+      [suspendedByOffset + unserializable[i][0]].concat(
+        unserializable[i].slice(1),
+      ),
+    );
+  }
+
+  if (rightSuspendedByRange !== null) {
+    if (leftSuspendedByRange === null) {
+      left.suspendedByRange = [
+        rightSuspendedByRange[0],
+        rightSuspendedByRange[1],
+      ];
+    } else {
+      if (rightSuspendedByRange[0] < leftSuspendedByRange[0]) {
+        leftSuspendedByRange[0] = rightSuspendedByRange[0];
+      }
+      if (rightSuspendedByRange[1] > leftSuspendedByRange[1]) {
+        leftSuspendedByRange[1] = rightSuspendedByRange[1];
+      }
+    }
+  }
+}
 
 export default class Agent extends EventEmitter<{
   hideNativeHighlight: [],
@@ -201,6 +320,7 @@ export default class Agent extends EventEmitter<{
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
+    bridge.addListener('inspectScreen', this.inspectScreen);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideError', this.overrideError);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
@@ -335,7 +455,10 @@ export default class Agent extends EventEmitter<{
     return renderer.getInstanceAndStyle(id);
   }
 
-  getIDForHostInstance(target: HostInstance): number | null {
+  getIDForHostInstance(
+    target: HostInstance,
+    onlySuspenseNodes?: boolean,
+  ): null | {id: number, rendererID: number} {
     if (isReactNativeEnvironment() || typeof target.nodeType !== 'number') {
       // In React Native or non-DOM we simply pick any renderer that has a match.
       for (const rendererID in this._rendererInterfaces) {
@@ -343,9 +466,14 @@ export default class Agent extends EventEmitter<{
           (rendererID: any)
         ]: any): RendererInterface);
         try {
-          const match = renderer.getElementIDForHostInstance(target);
-          if (match != null) {
-            return match;
+          const id = onlySuspenseNodes
+            ? renderer.getSuspenseNodeIDForHostInstance(target)
+            : renderer.getElementIDForHostInstance(target);
+          if (id !== null) {
+            return {
+              id: id,
+              rendererID: +rendererID,
+            };
           }
         } catch (error) {
           // Some old React versions might throw if they can't find a match.
@@ -358,6 +486,7 @@ export default class Agent extends EventEmitter<{
       // that is registered if there isn't an exact match.
       let bestMatch: null | Element = null;
       let bestRenderer: null | RendererInterface = null;
+      let bestRendererID: number = 0;
       // Find the nearest ancestor which is mounted by a React.
       for (const rendererID in this._rendererInterfaces) {
         const renderer = ((this._rendererInterfaces[
@@ -371,6 +500,7 @@ export default class Agent extends EventEmitter<{
             // Exact match we can exit early.
             bestMatch = nearestNode;
             bestRenderer = renderer;
+            bestRendererID = +rendererID;
             break;
           }
           if (bestMatch === null || bestMatch.contains(nearestNode)) {
@@ -378,12 +508,21 @@ export default class Agent extends EventEmitter<{
             // so the new match is a deeper and therefore better match.
             bestMatch = nearestNode;
             bestRenderer = renderer;
+            bestRendererID = +rendererID;
           }
         }
       }
       if (bestRenderer != null && bestMatch != null) {
         try {
-          return bestRenderer.getElementIDForHostInstance(bestMatch);
+          const id = onlySuspenseNodes
+            ? bestRenderer.getSuspenseNodeIDForHostInstance(bestMatch)
+            : bestRenderer.getElementIDForHostInstance(bestMatch);
+          if (id !== null) {
+            return {
+              id,
+              rendererID: bestRendererID,
+            };
+          }
         } catch (error) {
           // Some old React versions might throw if they can't find a match.
           // If so we should ignore it...
@@ -394,65 +533,14 @@ export default class Agent extends EventEmitter<{
   }
 
   getComponentNameForHostInstance(target: HostInstance): string | null {
-    // We duplicate this code from getIDForHostInstance to avoid an object allocation.
-    if (isReactNativeEnvironment() || typeof target.nodeType !== 'number') {
-      // In React Native or non-DOM we simply pick any renderer that has a match.
-      for (const rendererID in this._rendererInterfaces) {
-        const renderer = ((this._rendererInterfaces[
-          (rendererID: any)
-        ]: any): RendererInterface);
-        try {
-          const id = renderer.getElementIDForHostInstance(target);
-          if (id) {
-            return renderer.getDisplayNameForElementID(id);
-          }
-        } catch (error) {
-          // Some old React versions might throw if they can't find a match.
-          // If so we should ignore it...
-        }
-      }
-      return null;
-    } else {
-      // In the DOM we use a smarter mechanism to find the deepest a DOM node
-      // that is registered if there isn't an exact match.
-      let bestMatch: null | Element = null;
-      let bestRenderer: null | RendererInterface = null;
-      // Find the nearest ancestor which is mounted by a React.
-      for (const rendererID in this._rendererInterfaces) {
-        const renderer = ((this._rendererInterfaces[
-          (rendererID: any)
-        ]: any): RendererInterface);
-        const nearestNode: null | Element = renderer.getNearestMountedDOMNode(
-          (target: any),
-        );
-        if (nearestNode !== null) {
-          if (nearestNode === target) {
-            // Exact match we can exit early.
-            bestMatch = nearestNode;
-            bestRenderer = renderer;
-            break;
-          }
-          if (bestMatch === null || bestMatch.contains(nearestNode)) {
-            // If this is the first match or the previous match contains the new match,
-            // so the new match is a deeper and therefore better match.
-            bestMatch = nearestNode;
-            bestRenderer = renderer;
-          }
-        }
-      }
-      if (bestRenderer != null && bestMatch != null) {
-        try {
-          const id = bestRenderer.getElementIDForHostInstance(bestMatch);
-          if (id) {
-            return bestRenderer.getDisplayNameForElementID(id);
-          }
-        } catch (error) {
-          // Some old React versions might throw if they can't find a match.
-          // If so we should ignore it...
-        }
-      }
-      return null;
+    const match = this.getIDForHostInstance(target);
+    if (match !== null) {
+      const renderer = ((this._rendererInterfaces[
+        (match.rendererID: any)
+      ]: any): RendererInterface);
+      return renderer.getDisplayNameForElementID(match.id);
     }
+    return null;
   }
 
   getBackendVersion: () => void = () => {
@@ -531,6 +619,138 @@ export default class Agent extends EventEmitter<{
     }
   };
 
+  inspectScreen: InspectScreenParams => void = ({
+    requestID,
+    id,
+    forceFullData,
+    path: screenPath,
+  }) => {
+    let inspectedScreen: InspectedElement | null = null;
+    let found = false;
+    // the suspendedBy index will be from the previously merged roots.
+    // We need to keep track of how many suspendedBy we've already seen to know
+    // to which renderer the index belongs.
+    let suspendedByOffset = 0;
+    let suspendedByPathIndex: number | null = null;
+    // The path to hydrate for a specific renderer
+    let rendererPath: InspectElementParams['path'] = null;
+    if (screenPath !== null && screenPath.length > 1) {
+      const secondaryCategory = screenPath[0];
+      if (secondaryCategory !== 'suspendedBy') {
+        throw new Error(
+          'Only hydrating suspendedBy paths is supported. This is a bug.',
+        );
+      }
+      if (typeof screenPath[1] !== 'number') {
+        throw new Error(
+          `Expected suspendedBy index to be a number. Received '${screenPath[1]}' instead. This is a bug.`,
+        );
+      }
+      suspendedByPathIndex = screenPath[1];
+      rendererPath = screenPath.slice(2);
+    }
+
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      let path: InspectElementParams['path'] = null;
+      if (suspendedByPathIndex !== null && rendererPath !== null) {
+        const suspendedByPathRendererIndex =
+          suspendedByPathIndex - suspendedByOffset;
+        const rendererHasRequestedSuspendedByPath =
+          renderer.getElementAttributeByPath(id, [
+            'suspendedBy',
+            suspendedByPathRendererIndex,
+          ]) !== undefined;
+        if (rendererHasRequestedSuspendedByPath) {
+          path = ['suspendedBy', suspendedByPathRendererIndex].concat(
+            rendererPath,
+          );
+        }
+      }
+
+      const inspectedRootsPayload = renderer.inspectElement(
+        requestID,
+        id,
+        path,
+        forceFullData,
+      );
+      switch (inspectedRootsPayload.type) {
+        case 'hydrated-path':
+          // The path will be relative to the Roots of this renderer. We adjust it
+          // to be relative to all Roots of this implementation.
+          inspectedRootsPayload.path[1] += suspendedByOffset;
+          // TODO: Hydration logic is flawed since the Frontend path is not based
+          // on the original backend data but rather its own representation of it (e.g. due to reorder).
+          // So we can receive null here instead when hydration fails
+          if (inspectedRootsPayload.value !== null) {
+            for (
+              let i = 0;
+              i < inspectedRootsPayload.value.cleaned.length;
+              i++
+            ) {
+              inspectedRootsPayload.value.cleaned[i][1] += suspendedByOffset;
+            }
+          }
+          this._bridge.send('inspectedScreen', inspectedRootsPayload);
+          // If we hydrated a path, it must've been in a specific renderer so we can stop here.
+          return;
+        case 'full-data':
+          const inspectedRoots = inspectedRootsPayload.value;
+          if (inspectedScreen === null) {
+            inspectedScreen = createEmptyInspectedScreen(
+              inspectedRoots.id,
+              inspectedRoots.type,
+            );
+          }
+          mergeRoots(inspectedScreen, inspectedRoots, suspendedByOffset);
+          const dehydratedSuspendedBy: DehydratedData =
+            inspectedRoots.suspendedBy;
+          const suspendedBy = ((dehydratedSuspendedBy.data: any): Array<mixed>);
+          suspendedByOffset += suspendedBy.length;
+          found = true;
+          break;
+        case 'no-change':
+          found = true;
+          const rootsSuspendedBy: Array<mixed> =
+            (renderer.getElementAttributeByPath(id, ['suspendedBy']): any);
+          suspendedByOffset += rootsSuspendedBy.length;
+          break;
+        case 'not-found':
+          break;
+        case 'error':
+          // bail out and show the error
+          // TODO: aggregate errors
+          this._bridge.send('inspectedScreen', inspectedRootsPayload);
+          return;
+      }
+    }
+
+    if (inspectedScreen === null) {
+      if (found) {
+        this._bridge.send('inspectedScreen', {
+          type: 'no-change',
+          responseID: requestID,
+          id,
+        });
+      } else {
+        this._bridge.send('inspectedScreen', {
+          type: 'not-found',
+          responseID: requestID,
+          id,
+        });
+      }
+    } else {
+      this._bridge.send('inspectedScreen', {
+        type: 'full-data',
+        responseID: requestID,
+        id,
+        value: inspectedScreen,
+      });
+    }
+  };
+
   logElementToConsole: ElementAndRendererID => void = ({id, rendererID}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -567,17 +787,15 @@ export default class Agent extends EventEmitter<{
   };
 
   overrideSuspenseMilestone: OverrideSuspenseMilestoneParams => void = ({
-    rendererID,
-    rootID,
     suspendedSet,
   }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(
-        `Invalid renderer id "${rendererID}" to override suspense milestone`,
-      );
-    } else {
-      renderer.overrideSuspenseMilestone(rootID, suspendedSet);
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      if (renderer.supportsTogglingSuspense) {
+        renderer.overrideSuspenseMilestone(suspendedSet);
+      }
     }
   };
 
@@ -721,9 +939,9 @@ export default class Agent extends EventEmitter<{
   };
 
   selectNode(target: HostInstance): void {
-    const id = this.getIDForHostInstance(target);
-    if (id !== null) {
-      this._bridge.send('selectElement', id);
+    const match = this.getIDForHostInstance(target);
+    if (match !== null) {
+      this._bridge.send('selectElement', match.id);
     }
   }
 
@@ -739,7 +957,7 @@ export default class Agent extends EventEmitter<{
     if (renderer !== null) {
       const devRenderer = renderer.bundleType === 1;
       const enableSuspenseTab =
-        devRenderer && renderer.version.includes('-experimental-');
+        devRenderer && gte(renderer.version, '19.3.0-canary');
       if (enableSuspenseTab) {
         this._bridge.send('enableSuspenseTab');
       }

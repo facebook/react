@@ -421,6 +421,26 @@ function f() { }
       await expect(run('http://test/c.mjs')).resolves.toStrictEqual(result);
       await expect(run('http://test/d.mjs')).resolves.toStrictEqual(result);
     });
+
+    it('should not throw for invalid base URL with relative source map', async () => {
+      const fs2 = {
+        'bundle.js': `${source}bundle.js.map`,
+      };
+      const fetch2 = async url => fs2[url] || null;
+      const run = url => symbolicateSource(fetch2, url, 1, 1);
+      await expect(run('bundle.js')).resolves.toBe(null);
+    });
+
+    it('should resolve absolute source map even if base URL is invalid', async () => {
+      const fs3 = {
+        'invalid-base.js': `${source}http://test/a.mjs.map`,
+        'http://test/a.mts': `export function f() {}`,
+        'http://test/a.mjs.map': `{"version":3,"file":"a.mjs","sourceRoot":"","sources":["a.mts"],"names":[],"mappings":";;AAAA,cAAsB;AAAtB,SAAgB,CAAC,KAAI,CAAC"}`,
+      };
+      const fetch3 = async url => fs3[url] || null;
+      const run = url => symbolicateSource(fetch3, url, 4, 10);
+      await expect(run('invalid-base.js')).resolves.toStrictEqual(result);
+    });
   });
 
   describe('formatConsoleArguments', () => {

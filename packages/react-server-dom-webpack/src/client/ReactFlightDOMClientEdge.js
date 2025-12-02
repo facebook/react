@@ -79,6 +79,8 @@ export type Options = {
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
+  startTime?: number,
+  endTime?: number,
   // For the Edge client we only support a single-direction debug channel.
   debugChannel?: {readable?: ReadableStream, ...},
 };
@@ -109,6 +111,10 @@ function createResponseFromOptions(options: Options) {
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    __DEV__ && options && options.startTime != null
+      ? options.startTime
+      : undefined,
+    __DEV__ && options && options.endTime != null ? options.endTime : undefined,
     debugChannel,
   );
 }
@@ -117,8 +123,9 @@ function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
   onDone: () => void,
+  debugValue: mixed,
 ): void {
-  const streamState = createStreamState();
+  const streamState = createStreamState(response, debugValue);
   const reader = stream.getReader();
   function progress({
     done,
@@ -160,9 +167,14 @@ function createFromReadableStream<T>(
       }
     };
     startReadingFromStream(response, options.debugChannel.readable, handleDone);
-    startReadingFromStream(response, stream, handleDone);
+    startReadingFromStream(response, stream, handleDone, stream);
   } else {
-    startReadingFromStream(response, stream, close.bind(null, response));
+    startReadingFromStream(
+      response,
+      stream,
+      close.bind(null, response),
+      stream,
+    );
   }
 
   return getRoot(response);
@@ -192,12 +204,13 @@ function createFromFetch<T>(
           options.debugChannel.readable,
           handleDone,
         );
-        startReadingFromStream(response, (r.body: any), handleDone);
+        startReadingFromStream(response, (r.body: any), handleDone, r);
       } else {
         startReadingFromStream(
           response,
           (r.body: any),
           close.bind(null, response),
+          r,
         );
       }
     },

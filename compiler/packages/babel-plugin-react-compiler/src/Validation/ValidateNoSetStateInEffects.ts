@@ -9,19 +9,30 @@ import {
   CompilerDiagnostic,
   CompilerError,
   ErrorCategory,
-  ErrorSeverity,
 } from '../CompilerError';
 import {
+  Environment,
   HIRFunction,
   IdentifierId,
   isSetStateType,
   isUseEffectHookType,
+  isUseEffectEventType,
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
+  isUseRefType,
+  isRefValueType,
   Place,
+  Effect,
+  BlockId,
 } from '../HIR';
-import {eachInstructionValueOperand} from '../HIR/visitors';
+import {
+  eachInstructionLValue,
+  eachInstructionValueOperand,
+} from '../HIR/visitors';
+import {createControlDominators} from '../Inference/ControlDominators';
+import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {Result} from '../Utils/Result';
+import {assertExhaustive, Iterable_some} from '../Utils/utils';
 
 /**
  * Validates against calling setState in the body of an effect (useEffect and friends),
@@ -33,6 +44,7 @@ import {Result} from '../Utils/Result';
  */
 export function validateNoSetStateInEffects(
   fn: HIRFunction,
+  env: Environment,
 ): Result<void, CompilerError> {
   const setStateFunctions: Map<IdentifierId, Place> = new Map();
   const errors = new CompilerError();
@@ -73,6 +85,7 @@ export function validateNoSetStateInEffects(
             const callee = getSetStateCall(
               instr.value.loweredFunc.func,
               setStateFunctions,
+              env,
             );
             if (callee !== null) {
               setStateFunctions.set(instr.lvalue.identifier.id, callee);
@@ -86,7 +99,20 @@ export function validateNoSetStateInEffects(
             instr.value.kind === 'MethodCall'
               ? instr.value.receiver
               : instr.value.callee;
-          if (
+
+          if (isUseEffectEventType(callee.identifier)) {
+            const arg = instr.value.args[0];
+            if (arg !== undefined && arg.kind === 'Identifier') {
+              const setState = setStateFunctions.get(arg.identifier.id);
+              if (setState !== undefined) {
+                /**
+                 * This effect event function calls setState synchonously,
+                 * treat it as a setState function for transitive tracking
+                 */
+                setStateFunctions.set(instr.lvalue.identifier.id, setState);
+              }
+            }
+          } else if (
             isUseEffectHookType(callee.identifier) ||
             isUseLayoutEffectHookType(callee.identifier) ||
             isUseInsertionEffectHookType(callee.identifier)
@@ -107,9 +133,8 @@ export function validateNoSetStateInEffects(
                       '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
                       'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
                       '(https://react.dev/learn/you-might-not-need-an-effect)',
-                    severity: ErrorSeverity.InvalidReact,
                     suggestions: null,
-                  }).withDetail({
+                  }).withDetails({
                     kind: 'error',
                     loc: setState.loc,
                     message:
@@ -131,9 +156,113 @@ export function validateNoSetStateInEffects(
 function getSetStateCall(
   fn: HIRFunction,
   setStateFunctions: Map<IdentifierId, Place>,
+  env: Environment,
 ): Place | null {
+  const enableAllowSetStateFromRefsInEffects =
+    env.config.enableAllowSetStateFromRefsInEffects;
+  const refDerivedValues: Set<IdentifierId> = new Set();
+
+  const isDerivedFromRef = (place: Place): boolean => {
+    return (
+      refDerivedValues.has(place.identifier.id) ||
+      isUseRefType(place.identifier) ||
+      isRefValueType(place.identifier)
+    );
+  };
+
+  const isRefControlledBlock: (id: BlockId) => boolean =
+    enableAllowSetStateFromRefsInEffects
+      ? createControlDominators(fn, place => isDerivedFromRef(place))
+      : (): boolean => false;
+
   for (const [, block] of fn.body.blocks) {
+    if (enableAllowSetStateFromRefsInEffects) {
+      for (const phi of block.phis) {
+        if (isDerivedFromRef(phi.place)) {
+          continue;
+        }
+        let isPhiDerivedFromRef = false;
+        for (const [, operand] of phi.operands) {
+          if (isDerivedFromRef(operand)) {
+            isPhiDerivedFromRef = true;
+            break;
+          }
+        }
+        if (isPhiDerivedFromRef) {
+          refDerivedValues.add(phi.place.identifier.id);
+        } else {
+          for (const [pred] of phi.operands) {
+            if (isRefControlledBlock(pred)) {
+              refDerivedValues.add(phi.place.identifier.id);
+              break;
+            }
+          }
+        }
+      }
+    }
     for (const instr of block.instructions) {
+      if (enableAllowSetStateFromRefsInEffects) {
+        const hasRefOperand = Iterable_some(
+          eachInstructionValueOperand(instr.value),
+          isDerivedFromRef,
+        );
+
+        if (hasRefOperand) {
+          for (const lvalue of eachInstructionLValue(instr)) {
+            refDerivedValues.add(lvalue.identifier.id);
+          }
+          // Ref-derived values can also propagate through mutation
+          for (const operand of eachInstructionValueOperand(instr.value)) {
+            switch (operand.effect) {
+              case Effect.Capture:
+              case Effect.Store:
+              case Effect.ConditionallyMutate:
+              case Effect.ConditionallyMutateIterator:
+              case Effect.Mutate: {
+                if (isMutable(instr, operand)) {
+                  refDerivedValues.add(operand.identifier.id);
+                }
+                break;
+              }
+              case Effect.Freeze:
+              case Effect.Read: {
+                // no-op
+                break;
+              }
+              case Effect.Unknown: {
+                CompilerError.invariant(false, {
+                  reason: 'Unexpected unknown effect',
+                  description: null,
+                  details: [
+                    {
+                      kind: 'error',
+                      loc: operand.loc,
+                      message: null,
+                    },
+                  ],
+                  suggestions: null,
+                });
+              }
+              default: {
+                assertExhaustive(
+                  operand.effect,
+                  `Unexpected effect kind \`${operand.effect}\``,
+                );
+              }
+            }
+          }
+        }
+
+        if (
+          instr.value.kind === 'PropertyLoad' &&
+          instr.value.property === 'current' &&
+          (isUseRefType(instr.value.object.identifier) ||
+            isRefValueType(instr.value.object.identifier))
+        ) {
+          refDerivedValues.add(instr.lvalue.identifier.id);
+        }
+      }
+
       switch (instr.value.kind) {
         case 'LoadLocal': {
           if (setStateFunctions.has(instr.value.place.identifier.id)) {
@@ -163,6 +292,23 @@ function getSetStateCall(
             isSetStateType(callee.identifier) ||
             setStateFunctions.has(callee.identifier.id)
           ) {
+            if (enableAllowSetStateFromRefsInEffects) {
+              const arg = instr.value.args.at(0);
+              if (
+                arg !== undefined &&
+                arg.kind === 'Identifier' &&
+                refDerivedValues.has(arg.identifier.id)
+              ) {
+                /**
+                 * The one special case where we allow setStates in effects is in the very specific
+                 * scenario where the value being set is derived from a ref. For example this may
+                 * be needed when initial layout measurements from refs need to be stored in state.
+                 */
+                return null;
+              } else if (isRefControlledBlock(block.id)) {
+                continue;
+              }
+            }
             /*
              * TODO: once we support multiple locations per error, we should link to the
              * original Place in the case that setStateFunction.has(callee)

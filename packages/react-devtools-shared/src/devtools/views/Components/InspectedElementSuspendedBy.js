@@ -9,11 +9,11 @@
 
 import {copy} from 'clipboard-js';
 import * as React from 'react';
-import {useState} from 'react';
+import {useState, useTransition} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
-import {serializeDataForCopy} from '../utils';
+import {serializeDataForCopy, pluralize} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
 import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
@@ -21,6 +21,8 @@ import StackTraceView from './StackTraceView';
 import OwnerView from './OwnerView';
 import {meta} from '../../../hydration';
 import useInferredName from '../useInferredName';
+
+import {getClassNameForEnvironment} from '../SuspenseTab/SuspenseEnvironmentColors.js';
 
 import type {
   InspectedElement,
@@ -44,6 +46,7 @@ type RowProps = {
   index: number,
   minTime: number,
   maxTime: number,
+  skipName?: boolean,
 };
 
 function getShortDescription(name: string, description: string): string {
@@ -99,8 +102,10 @@ function SuspendedByRow({
   index,
   minTime,
   maxTime,
+  skipName,
 }: RowProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openIsPending, startOpenTransition] = useTransition();
   const ioInfo = asyncInfo.awaited;
   const name = useInferredName(asyncInfo);
   const description = ioInfo.description;
@@ -144,7 +149,16 @@ function SuspendedByRow({
     <div className={styles.CollapsableRow}>
       <Button
         className={styles.CollapsableHeader}
-        onClick={() => setIsOpen(prevIsOpen => !prevIsOpen)}
+        // TODO: May be better to leave to React's default Transition indicator.
+        // Though no apps implement this option at the moment.
+        data-pending={openIsPending}
+        onClick={() => {
+          startOpenTransition(() => {
+            setIsOpen(prevIsOpen => !prevIsOpen);
+          });
+        }}
+        // Changing the title on pending transition will not be visible since
+        // (Reach?) tooltips are dismissed on activation.
         title={
           longName +
           ' — ' +
@@ -156,8 +170,10 @@ function SuspendedByRow({
           className={styles.CollapsableHeaderIcon}
           type={isOpen ? 'expanded' : 'collapsed'}
         />
-        <span className={styles.CollapsableHeaderTitle}>{name}</span>
-        {shortDescription === '' ? null : (
+        <span className={styles.CollapsableHeaderTitle}>
+          {skipName && shortDescription !== '' ? shortDescription : name}
+        </span>
+        {skipName || shortDescription === '' ? null : (
           <>
             <span className={styles.CollapsableHeaderSeparator}>{' ('}</span>
             <span className={styles.CollapsableHeaderTitle}>
@@ -167,7 +183,12 @@ function SuspendedByRow({
           </>
         )}
         <div className={styles.CollapsableHeaderFiller} />
-        <div className={styles.TimeBarContainer}>
+        <div
+          className={
+            styles.TimeBarContainer +
+            ' ' +
+            getClassNameForEnvironment(ioInfo.env)
+          }>
           <div
             className={
               !isRejected ? styles.TimeBarSpan : styles.TimeBarSpanErrored
@@ -290,13 +311,146 @@ type Props = {
   store: Store,
 };
 
-function compareTime(a: SerializedAsyncInfo, b: SerializedAsyncInfo): number {
-  const ioA = a.awaited;
-  const ioB = b.awaited;
+function withIndex(
+  value: SerializedAsyncInfo,
+  index: number,
+): {
+  index: number,
+  value: SerializedAsyncInfo,
+} {
+  return {
+    index,
+    value,
+  };
+}
+
+function compareTime(
+  a: {
+    index: number,
+    value: SerializedAsyncInfo,
+  },
+  b: {
+    index: number,
+    value: SerializedAsyncInfo,
+  },
+): number {
+  const ioA = a.value.awaited;
+  const ioB = b.value.awaited;
   if (ioA.start === ioB.start) {
     return ioA.end - ioB.end;
   }
   return ioA.start - ioB.start;
+}
+
+type GroupProps = {
+  bridge: FrontendBridge,
+  element: Element,
+  inspectedElement: InspectedElement,
+  store: Store,
+  name: string,
+  environment: null | string,
+  suspendedBy: Array<{
+    index: number,
+    value: SerializedAsyncInfo,
+  }>,
+  minTime: number,
+  maxTime: number,
+};
+
+function SuspendedByGroup({
+  bridge,
+  element,
+  inspectedElement,
+  store,
+  name,
+  environment,
+  suspendedBy,
+  minTime,
+  maxTime,
+}: GroupProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  let start = Infinity;
+  let end = -Infinity;
+  let isRejected = false;
+  for (let i = 0; i < suspendedBy.length; i++) {
+    const asyncInfo: SerializedAsyncInfo = suspendedBy[i].value;
+    const ioInfo = asyncInfo.awaited;
+    if (ioInfo.start < start) {
+      start = ioInfo.start;
+    }
+    if (ioInfo.end > end) {
+      end = ioInfo.end;
+    }
+    const value: any = ioInfo.value;
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      value[meta.name] === 'rejected Thenable'
+    ) {
+      isRejected = true;
+    }
+  }
+  const timeScale = 100 / (maxTime - minTime);
+  let left = (start - minTime) * timeScale;
+  let width = (end - start) * timeScale;
+  if (width < 5) {
+    // Use at least a 5% width to avoid showing too small indicators.
+    width = 5;
+    if (left > 95) {
+      left = 95;
+    }
+  }
+  const pluralizedName = pluralize(name);
+  return (
+    <div className={styles.CollapsableRow}>
+      <Button
+        className={styles.CollapsableHeader}
+        onClick={() => {
+          setIsOpen(prevIsOpen => !prevIsOpen);
+        }}
+        title={pluralizedName}>
+        <ButtonIcon
+          className={styles.CollapsableHeaderIcon}
+          type={isOpen ? 'expanded' : 'collapsed'}
+        />
+        <span className={styles.CollapsableHeaderTitle}>{pluralizedName}</span>
+        <div className={styles.CollapsableHeaderFiller} />
+        {isOpen ? null : (
+          <div
+            className={
+              styles.TimeBarContainer +
+              ' ' +
+              getClassNameForEnvironment(environment)
+            }>
+            <div
+              className={
+                !isRejected ? styles.TimeBarSpan : styles.TimeBarSpanErrored
+              }
+              style={{
+                left: left.toFixed(2) + '%',
+                width: width.toFixed(2) + '%',
+              }}
+            />
+          </div>
+        )}
+      </Button>
+      {isOpen &&
+        suspendedBy.map(({value, index}) => (
+          <SuspendedByRow
+            key={index}
+            index={index}
+            asyncInfo={value}
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+            minTime={minTime}
+            maxTime={maxTime}
+            skipName={true}
+          />
+        ))}
+    </div>
+  );
 }
 
 export default function InspectedElementSuspendedBy({
@@ -312,6 +466,17 @@ export default function InspectedElementSuspendedBy({
     (suspendedBy == null || suspendedBy.length === 0) &&
     inspectedElement.unknownSuspenders === UNKNOWN_SUSPENDERS_NONE
   ) {
+    if (inspectedElement.isSuspended) {
+      // If we're still suspended, show a place holder until the data loads.
+      // We don't know what we're suspended by until it has loaded.
+      return (
+        <div>
+          <div className={styles.HeaderRow}>
+            <div className={styles.Header}>suspended...</div>
+          </div>
+        </div>
+      );
+    }
     return null;
   }
 
@@ -343,8 +508,34 @@ export default function InspectedElementSuspendedBy({
     minTime = maxTime - 25;
   }
 
-  const sortedSuspendedBy = suspendedBy === null ? [] : suspendedBy.slice(0);
+  const sortedSuspendedBy =
+    suspendedBy === null ? [] : suspendedBy.map(withIndex);
   sortedSuspendedBy.sort(compareTime);
+
+  // Organize into groups of consecutive entries with the same name.
+  const groups = [];
+  let currentGroup = null;
+  let currentGroupName = null;
+  let currentGroupEnv = null;
+  for (let i = 0; i < sortedSuspendedBy.length; i++) {
+    const entry = sortedSuspendedBy[i];
+    const name = entry.value.awaited.name;
+    const env = entry.value.awaited.env;
+    if (
+      currentGroupName !== name ||
+      currentGroupEnv !== env ||
+      !name ||
+      name === 'Promise' ||
+      currentGroup === null
+    ) {
+      // Create a new group.
+      currentGroupName = name;
+      currentGroupEnv = env;
+      currentGroup = [];
+      groups.push(currentGroup);
+    }
+    currentGroup.push(entry);
+  }
 
   let unknownSuspenders = null;
   switch (inspectedElement.unknownSuspenders) {
@@ -386,19 +577,49 @@ export default function InspectedElementSuspendedBy({
           <ButtonIcon type="copy" />
         </Button>
       </div>
-      {sortedSuspendedBy.map((asyncInfo, index) => (
-        <SuspendedByRow
-          key={index}
-          index={index}
-          asyncInfo={asyncInfo}
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-          minTime={minTime}
-          maxTime={maxTime}
-        />
-      ))}
+      {groups.length === 1
+        ? // If it's only one type of suspender we can flatten it.
+          groups[0].map(entry => (
+            <SuspendedByRow
+              key={entry.index}
+              index={entry.index}
+              asyncInfo={entry.value}
+              bridge={bridge}
+              element={element}
+              inspectedElement={inspectedElement}
+              store={store}
+              minTime={minTime}
+              maxTime={maxTime}
+            />
+          ))
+        : groups.map((entries, index) =>
+            entries.length === 1 ? (
+              <SuspendedByRow
+                key={entries[0].index}
+                index={entries[0].index}
+                asyncInfo={entries[0].value}
+                bridge={bridge}
+                element={element}
+                inspectedElement={inspectedElement}
+                store={store}
+                minTime={minTime}
+                maxTime={maxTime}
+              />
+            ) : (
+              <SuspendedByGroup
+                key={entries[0].index}
+                name={entries[0].value.awaited.name}
+                environment={entries[0].value.awaited.env}
+                suspendedBy={entries}
+                bridge={bridge}
+                element={element}
+                inspectedElement={inspectedElement}
+                store={store}
+                minTime={minTime}
+                maxTime={maxTime}
+              />
+            ),
+          )}
       {unknownSuspenders}
     </div>
   );

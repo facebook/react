@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic, CompilerError, ErrorSeverity} from '..';
+import {CompilerDiagnostic, CompilerError} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {HIRFunction} from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
@@ -44,9 +44,8 @@ export function validateNoImpureFunctionsInRender(
                   ? `\`${signature.canonicalName}\` is an impure function. `
                   : '') +
                 'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-              severity: ErrorSeverity.InvalidReact,
               suggestions: null,
-            }).withDetail({
+            }).withDetails({
               kind: 'error',
               loc: callee.loc,
               message: 'Cannot call impure function',

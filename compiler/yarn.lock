@@ -326,7 +326,7 @@
     lru-cache "^5.1.1"
     semver "^6.3.1"
 
-"@babel/helper-create-class-features-plugin@^7.18.6", "@babel/helper-create-class-features-plugin@^7.25.9", "@babel/helper-create-class-features-plugin@^7.27.0":
+"@babel/helper-create-class-features-plugin@^7.25.9", "@babel/helper-create-class-features-plugin@^7.27.0":
   version "7.27.0"
   resolved "https://registry.npmjs.org/@babel/helper-create-class-features-plugin/-/helper-create-class-features-plugin-7.27.0.tgz"
   integrity sha512-vSGCvMecvFCd/BdpGlhpXYNhhC4ccxyvQWpbGL4CWbvfEoLFWUZuSuf7s9Aw70flgQF+6vptvgK2IfOnKlRmBg==
@@ -705,14 +705,6 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.25.9"
     "@babel/traverse" "^7.25.9"
-
-"@babel/plugin-proposal-private-methods@^7.18.6":
-  version "7.18.6"
-  resolved "https://registry.npmjs.org/@babel/plugin-proposal-private-methods/-/plugin-proposal-private-methods-7.18.6.tgz"
-  integrity sha512-nutsvktDItsNn4rpGItSNV2sz1XwS+nfU0Rg8aCx3W3NOKVzdMjJRu0O5OkgDp3ZGICSTbgRpxZoWsxoKRvbeA==
-  dependencies:
-    "@babel/helper-create-class-features-plugin" "^7.18.6"
-    "@babel/helper-plugin-utils" "^7.18.6"
 
 "@babel/plugin-proposal-private-property-in-object@7.21.0-placeholder-for-preset-env.2":
   version "7.21.0-placeholder-for-preset-env.2"
@@ -10494,16 +10486,7 @@ string-length@^4.0.1:
     char-regex "^1.0.2"
     strip-ansi "^6.0.0"
 
-"string-width-cjs@npm:string-width@^4.2.0":
-  version "4.2.3"
-  resolved "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz"
-  integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
-  dependencies:
-    emoji-regex "^8.0.0"
-    is-fullwidth-code-point "^3.0.0"
-    strip-ansi "^6.0.1"
-
-string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
+"string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
   version "4.2.3"
   resolved "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -10576,14 +10559,7 @@ string_decoder@~1.1.1:
   dependencies:
     safe-buffer "~5.1.0"
 
-"strip-ansi-cjs@npm:strip-ansi@^6.0.1":
-  version "6.0.1"
-  resolved "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz"
-  integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
-  dependencies:
-    ansi-regex "^5.0.1"
-
-strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+"strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   version "6.0.1"
   resolved "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
@@ -11360,7 +11336,7 @@ workerpool@^6.5.1:
   resolved "https://registry.npmjs.org/workerpool/-/workerpool-6.5.1.tgz"
   integrity sha512-Fs4dNYcsdpYSAfVxhnl1L5zTksjvOJxtC5hzMNl+1t9B8hTJTdKDyZ5ju7ztgPy+ft9tBFXoOlDNiOT9WUXZlA==
 
-"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0":
+"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0", wrap-ansi@^7.0.0:
   version "7.0.0"
   resolved "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-7.0.0.tgz"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
@@ -11373,15 +11349,6 @@ wrap-ansi@^6.2.0:
   version "6.2.0"
   resolved "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-6.2.0.tgz"
   integrity sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==
-  dependencies:
-    ansi-styles "^4.0.0"
-    string-width "^4.1.0"
-    strip-ansi "^6.0.0"
-
-wrap-ansi@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-7.0.0.tgz"
-  integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
   dependencies:
     ansi-styles "^4.0.0"
     string-width "^4.1.0"
@@ -11538,17 +11505,17 @@ zod-to-json-schema@^3.24.1:
   resolved "https://registry.npmjs.org/zod-to-json-schema/-/zod-to-json-schema-3.24.5.tgz"
   integrity sha512-/AuWwMP+YqiPbsJx5D6TfgRTc4kTLjsh5SOcd4bLsfUg2RcEXrFMJl1DGgdHy2aCfsIA/cr/1JM0xcB2GZji8g==
 
-zod-validation-error@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.npmjs.org/zod-validation-error/-/zod-validation-error-2.1.0.tgz"
-  integrity sha512-VJh93e2wb4c3tWtGgTa0OF/dTt/zoPCPzXq4V11ZjxmEAFaPi/Zss1xIZdEB5RD8GD00U0/iVXgqkF77RV7pdQ==
+"zod-validation-error@^3.5.0 || ^4.0.0":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/zod-validation-error/-/zod-validation-error-4.0.2.tgz#bc605eba49ce0fcd598c127fee1c236be3f22918"
+  integrity sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==
 
-zod-validation-error@^3.0.3:
-  version "3.0.3"
-  resolved "https://registry.npmjs.org/zod-validation-error/-/zod-validation-error-3.0.3.tgz"
-  integrity sha512-cETTrcMq3Ze58vhdR0zD37uJm/694I6mAxcf/ei5bl89cC++fBNxrC2z8lkFze/8hVMPwrbtrwXHR2LB50fpHw==
-
-zod@^3.22.4, zod@^3.23.8, zod@^3.24.1:
+zod@^3.23.8, zod@^3.24.1:
   version "3.24.3"
   resolved "https://registry.npmjs.org/zod/-/zod-3.24.3.tgz"
   integrity sha512-HhY1oqzWCQWuUqvBFnsyrtZRhyPeR7SUGv+C4+MsisMuVfSPx8HpwWqH8tRahSlt6M3PiFAcoeFhZAqIXTxoSg==
+
+"zod@^3.25.0 || ^4.0.0":
+  version "4.1.12"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-4.1.12.tgz#64f1ea53d00eab91853195653b5af9eee68970f0"
+  integrity sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==

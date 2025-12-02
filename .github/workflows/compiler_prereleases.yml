@@ -19,6 +19,9 @@ on:
       tag_version:
         required: false
         type: string
+      dry_run:
+        required: false
+        type: boolean
     secrets:
       NPM_TOKEN:
         required: true
@@ -55,7 +58,13 @@ jobs:
           key: compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/yarn.lock') }}
       - run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
-      - name: Publish packages to npm
+      - if: inputs.dry_run == true
+        name: Publish packages to npm (dry run)
+        run: |
+          cp ./scripts/release/ci-npmrc ~/.npmrc
+          scripts/release/publish.js --frfr --debug --ci --versionName=${{ inputs.version_name }} --tag=${{ inputs.dist_tag }} ${{ inputs.tag_version && format('--tagVersion={0}', inputs.tag_version) || '' }}
+      - if: inputs.dry_run != true
+        name: Publish packages to npm
         run: |
           cp ./scripts/release/ci-npmrc ~/.npmrc
           scripts/release/publish.js --frfr --ci --versionName=${{ inputs.version_name }} --tag=${{ inputs.dist_tag }} ${{ inputs.tag_version && format('--tagVersion={0}', inputs.tag_version) || '' }}

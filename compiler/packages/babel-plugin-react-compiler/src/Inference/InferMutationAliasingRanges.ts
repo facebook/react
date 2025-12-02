@@ -229,7 +229,14 @@ export function inferMutationAliasingRanges(
         } else {
           CompilerError.invariant(effect.kind === 'Freeze', {
             reason: `Unexpected '${effect.kind}' effect for MaybeThrow terminal`,
-            loc: block.terminal.loc,
+            description: null,
+            details: [
+              {
+                kind: 'error',
+                loc: block.terminal.loc,
+                message: null,
+              },
+            ],
           });
         }
       }
@@ -378,7 +385,14 @@ export function inferMutationAliasingRanges(
           case 'Apply': {
             CompilerError.invariant(false, {
               reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
-              loc: effect.function.loc,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: effect.function.loc,
+                  message: null,
+                },
+              ],
             });
           }
           case 'MutateTransitive':
@@ -525,7 +539,14 @@ export function inferMutationAliasingRanges(
       const fromNode = state.nodes.get(from.identifier);
       CompilerError.invariant(fromNode != null, {
         reason: `Expected a node to exist for all parameters and context variables`,
-        loc: into.loc,
+        description: null,
+        details: [
+          {
+            kind: 'error',
+            loc: into.loc,
+            message: null,
+          },
+        ],
       });
       if (fromNode.lastMutated === mutationIndex) {
         if (into.identifier.id === fn.returns.identifier.id) {
@@ -547,7 +568,7 @@ export function inferMutationAliasingRanges(
     }
   }
 
-  if (errors.hasErrors() && !isFunctionExpression) {
+  if (errors.hasAnyErrors() && !isFunctionExpression) {
     return Err(errors);
   }
   return Ok(functionEffects);
@@ -758,7 +779,13 @@ class AliasingState {
         if (edge.index >= index) {
           break;
         }
-        queue.push({place: edge.node, transitive, direction: 'forwards', kind});
+        queue.push({
+          place: edge.node,
+          transitive,
+          direction: 'forwards',
+          // Traversing a maybeAlias edge always downgrades to conditional mutation
+          kind: edge.kind === 'maybeAlias' ? MutationKind.Conditional : kind,
+        });
       }
       for (const [alias, when] of node.createdFrom) {
         if (when >= index) {
@@ -786,7 +813,12 @@ class AliasingState {
           if (when >= index) {
             continue;
           }
-          queue.push({place: alias, transitive, direction: 'backwards', kind});
+          queue.push({
+            place: alias,
+            transitive,
+            direction: 'backwards',
+            kind,
+          });
         }
         /**
          * MaybeAlias indicates potential data flow from unknown function calls,

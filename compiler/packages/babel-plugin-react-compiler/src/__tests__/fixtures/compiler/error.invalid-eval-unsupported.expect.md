@@ -15,7 +15,7 @@ function Component(props) {
 ```
 Found 1 error:
 
-Error: The 'eval' function is not supported
+Compilation Skipped: The 'eval' function is not supported
 
 Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler.
 

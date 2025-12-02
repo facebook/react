@@ -709,7 +709,14 @@ function createPropsProperties(
     const spreadProp = jsxSpreadAttributes[0];
     CompilerError.invariant(spreadProp.kind === 'JsxSpreadAttribute', {
       reason: 'Spread prop attribute must be of kind JSXSpreadAttribute',
-      loc: instr.loc,
+      description: null,
+      details: [
+        {
+          kind: 'error',
+          loc: instr.loc,
+          message: null,
+        },
+      ],
     });
     propsProperty = {
       kind: 'ObjectProperty',

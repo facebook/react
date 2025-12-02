@@ -33,8 +33,14 @@ import {TimelineSearchContextController} from './TimelineSearchContext';
 import styles from './Timeline.css';
 
 export function Timeline(_: {}): React.Node {
-  const {file, inMemoryTimelineData, isTimelineSupported, setFile, viewState} =
-    useContext(TimelineContext);
+  const {
+    file,
+    inMemoryTimelineData,
+    isPerformanceTracksSupported,
+    isTimelineSupported,
+    setFile,
+    viewState,
+  } = useContext(TimelineContext);
   const {didRecordCommits, isProfiling} = useContext(ProfilerContext);
 
   const ref = useRef(null);
@@ -95,7 +101,11 @@ export function Timeline(_: {}): React.Node {
   } else if (isTimelineSupported) {
     content = <NoProfilingData />;
   } else {
-    content = <TimelineNotSupported />;
+    content = (
+      <TimelineNotSupported
+        isPerformanceTracksSupported={isPerformanceTracksSupported}
+      />
+    );
   }
 
   return (

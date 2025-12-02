@@ -31,7 +31,7 @@ Found 1 error:
 
 Error: Components and hooks cannot be created dynamically
 
-The function `Wrapper` appears to be a React component, but it's defined inside `getInput`. Components and Hooks should always be declared at module scope
+The function `Wrapper` appears to be a React component, but it's defined inside `getInput`. Components and Hooks should always be declared at module scope.
 
 error.nested-component-in-normal-function.ts:2:16
   1 | // @validateNoDynamicallyCreatedComponentsOrHooks

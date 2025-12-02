@@ -52,6 +52,8 @@ export type Options = {
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
+  startTime?: number,
+  endTime?: number,
 };
 
 function createDebugCallbackFromWritableStream(
@@ -103,6 +105,10 @@ function createResponseFromOptions(options: void | Options) {
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    __DEV__ && options && options.startTime != null
+      ? options.startTime
+      : undefined,
+    __DEV__ && options && options.endTime != null ? options.endTime : undefined,
     debugChannel,
   );
 }
@@ -115,7 +121,7 @@ function startReadingFromUniversalStream(
   // This is the same as startReadingFromStream except this allows WebSocketStreams which
   // return ArrayBuffer and string chunks instead of Uint8Array chunks. We could potentially
   // always allow streams with variable chunk types.
-  const streamState = createStreamState();
+  const streamState = createStreamState(response, stream);
   const reader = stream.getReader();
   function progress({
     done,
@@ -149,8 +155,9 @@ function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
   onDone: () => void,
+  debugValue: mixed,
 ): void {
-  const streamState = createStreamState();
+  const streamState = createStreamState(response, debugValue);
   const reader = stream.getReader();
   function progress({
     done,
@@ -194,9 +201,14 @@ function createFromReadableStream<T>(
       options.debugChannel.readable,
       handleDone,
     );
-    startReadingFromStream(response, stream, handleDone);
+    startReadingFromStream(response, stream, handleDone, stream);
   } else {
-    startReadingFromStream(response, stream, close.bind(null, response));
+    startReadingFromStream(
+      response,
+      stream,
+      close.bind(null, response),
+      stream,
+    );
   }
   return getRoot(response);
 }
@@ -225,12 +237,13 @@ function createFromFetch<T>(
           options.debugChannel.readable,
           handleDone,
         );
-        startReadingFromStream(response, (r.body: any), handleDone);
+        startReadingFromStream(response, (r.body: any), handleDone, r);
       } else {
         startReadingFromStream(
           response,
           (r.body: any),
           close.bind(null, response),
+          r,
         );
       }
     },

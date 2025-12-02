@@ -7,14 +7,19 @@
 
 import {BindingKind} from '@babel/traverse';
 import * as t from '@babel/types';
-import {CompilerError} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorCategory,
+} from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import type {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
-import {z} from 'zod';
+import {z} from 'zod/v4';
 import type {AliasingEffect} from '../Inference/AliasingEffects';
 import {isReservedWord} from '../Utils/Keyword';
+import {Err, Ok, Result} from '../Utils/Result';
 
 /*
  * *******************************************************************************************
@@ -53,7 +58,8 @@ export type SourceLocation = t.SourceLocation | typeof GeneratedSource;
  */
 export type ReactiveFunction = {
   loc: SourceLocation;
-  id: string | null;
+  id: ValidIdentifierName | null;
+  nameHint: string | null;
   params: Array<Place | SpreadPattern>;
   generator: boolean;
   async: boolean;
@@ -275,7 +281,8 @@ export type ReactiveTryTerminal = {
 // A function lowered to HIR form, ie where its body is lowered to an HIR control-flow graph
 export type HIRFunction = {
   loc: SourceLocation;
-  id: string | null;
+  id: ValidIdentifierName | null;
+  nameHint: string | null;
   fnType: ReactFunctionType;
   env: Environment;
   params: Array<Place | SpreadPattern>;
@@ -796,9 +803,11 @@ export type ManualMemoDependency = {
     | {
         kind: 'NamedLocal';
         value: Place;
+        constant: boolean;
       }
     | {kind: 'Global'; identifierName: string};
   path: DependencyPath;
+  loc: SourceLocation;
 };
 
 export type StartMemoize = {
@@ -810,6 +819,11 @@ export type StartMemoize = {
    * (e.g. useMemo without a second arg)
    */
   deps: Array<ManualMemoDependency> | null;
+  /**
+   * The source location of the dependencies argument. Used for
+   * emitting diagnostics with a suggested replacement
+   */
+  depsLoc: SourceLocation | null;
   loc: SourceLocation;
 };
 export type FinishMemoize = {
@@ -1123,7 +1137,8 @@ export type JsxAttribute =
 
 export type FunctionExpression = {
   kind: 'FunctionExpression';
-  name: string | null;
+  name: ValidIdentifierName | null;
+  nameHint: string | null;
   loweredFunc: LoweredFunction;
   type:
     | 'ArrowFunctionExpression'
@@ -1298,31 +1313,52 @@ export function forkTemporaryIdentifier(
   };
 }
 
+export function validateIdentifierName(
+  name: string,
+): Result<ValidatedIdentifier, CompilerError> {
+  if (isReservedWord(name)) {
+    const error = new CompilerError();
+    error.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Syntax,
+        reason: 'Expected a non-reserved identifier name',
+        description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
+        suggestions: null,
+      }).withDetails({
+        kind: 'error',
+        loc: GeneratedSource,
+        message: 'reserved word',
+      }),
+    );
+    return Err(error);
+  } else if (!t.isValidIdentifier(name)) {
+    const error = new CompilerError();
+    error.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Syntax,
+        reason: `Expected a valid identifier name`,
+        description: `\`${name}\` is not a valid JavaScript identifier`,
+        suggestions: null,
+      }).withDetails({
+        kind: 'error',
+        loc: GeneratedSource,
+        message: 'reserved word',
+      }),
+    );
+  }
+  return Ok({
+    kind: 'named',
+    value: name as ValidIdentifierName,
+  });
+}
+
 /**
  * Creates a valid identifier name. This should *not* be used for synthesizing
  * identifier names: only call this method for identifier names that appear in the
  * original source code.
  */
 export function makeIdentifierName(name: string): ValidatedIdentifier {
-  if (isReservedWord(name)) {
-    CompilerError.throwInvalidJS({
-      reason: 'Expected a non-reserved identifier name',
-      loc: GeneratedSource,
-      description: `\`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name`,
-      suggestions: null,
-    });
-  } else {
-    CompilerError.invariant(t.isValidIdentifier(name), {
-      reason: `Expected a valid identifier name`,
-      loc: GeneratedSource,
-      description: `\`${name}\` is not a valid JavaScript identifier`,
-      suggestions: null,
-    });
-  }
-  return {
-    kind: 'named',
-    value: name as ValidIdentifierName,
-  };
+  return validateIdentifierName(name).unwrap();
 }
 
 /**
@@ -1334,8 +1370,14 @@ export function makeIdentifierName(name: string): ValidatedIdentifier {
 export function promoteTemporary(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
-    loc: GeneratedSource,
     description: `Identifier already has a name, \`${identifier.name}\``,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   identifier.name = {
@@ -1358,8 +1400,14 @@ export function isPromotedTemporary(name: string): boolean {
 export function promoteTemporaryJsxTag(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
-    loc: GeneratedSource,
     description: `Identifier already has a name, \`${identifier.name}\``,
+    details: [
+      {
+        kind: 'error',
+        loc: GeneratedSource,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   identifier.name = {
@@ -1527,7 +1575,13 @@ export function isMutableEffect(
       CompilerError.invariant(false, {
         reason: 'Unexpected unknown effect',
         description: null,
-        loc: location,
+        details: [
+          {
+            kind: 'error',
+            loc: location,
+            message: null,
+          },
+        ],
         suggestions: null,
       });
     }
@@ -1633,6 +1687,28 @@ export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
     )
   );
 }
+export function isSubPath(
+  subpath: DependencyPath,
+  path: DependencyPath,
+): boolean {
+  return (
+    subpath.length <= path.length &&
+    subpath.every(
+      (item, ix) =>
+        item.property === path[ix].property &&
+        item.optional === path[ix].optional,
+    )
+  );
+}
+export function isSubPathIgnoringOptionals(
+  subpath: DependencyPath,
+  path: DependencyPath,
+): boolean {
+  return (
+    subpath.length <= path.length &&
+    subpath.every((item, ix) => item.property === path[ix].property)
+  );
+}
 
 export function getPlaceScope(
   id: InstructionId,
@@ -1660,7 +1736,13 @@ export function makeBlockId(id: number): BlockId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected block id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as BlockId;
@@ -1677,7 +1759,13 @@ export function makeScopeId(id: number): ScopeId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected block id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as ScopeId;
@@ -1694,7 +1782,13 @@ export function makeIdentifierId(id: number): IdentifierId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected identifier id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as IdentifierId;
@@ -1711,7 +1805,13 @@ export function makeDeclarationId(id: number): DeclarationId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected declaration id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as DeclarationId;
@@ -1728,7 +1828,13 @@ export function makeInstructionId(id: number): InstructionId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected instruction id to be a non-negative integer',
     description: null,
-    loc: null,
+    details: [
+      {
+        kind: 'error',
+        loc: null,
+        message: null,
+      },
+    ],
     suggestions: null,
   });
   return id as InstructionId;
@@ -1744,6 +1850,10 @@ export function isObjectType(id: Identifier): boolean {
 
 export function isPrimitiveType(id: Identifier): boolean {
   return id.type.kind === 'Primitive';
+}
+
+export function isPlainObjectType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInObject';
 }
 
 export function isArrayType(id: Identifier): boolean {
@@ -1810,6 +1920,18 @@ export function isStartTransitionType(id: Identifier): boolean {
   );
 }
 
+export function isUseOptimisticType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseOptimistic'
+  );
+}
+
+export function isSetOptimisticType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetOptimistic'
+  );
+}
+
 export function isSetActionStateType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetActionState'
@@ -1843,7 +1965,8 @@ export function isStableType(id: Identifier): boolean {
     isSetActionStateType(id) ||
     isDispatcherType(id) ||
     isUseRefType(id) ||
-    isStartTransitionType(id)
+    isStartTransitionType(id) ||
+    isSetOptimisticType(id)
   );
 }
 
@@ -1854,8 +1977,9 @@ export function isStableTypeContainer(id: Identifier): boolean {
   }
   return (
     isUseStateType(id) || // setState
-    type_.shapeId === 'BuiltInUseActionState' || // setActionState
+    isUseActionStateType(id) || // setActionState
     isUseReducerType(id) || // dispatcher
+    isUseOptimisticType(id) || // setOptimistic
     type_.shapeId === 'BuiltInUseTransition' // startTransition
   );
 }
@@ -1875,6 +1999,7 @@ export function evaluatesToStableTypeOrContainer(
       case 'useActionState':
       case 'useRef':
       case 'useTransition':
+      case 'useOptimistic':
         return true;
     }
   }
@@ -1896,6 +2021,11 @@ export function isUseInsertionEffectHookType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' &&
     id.type.shapeId === 'BuiltInUseInsertionEffectHook'
+  );
+}
+export function isUseEffectEventType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectEvent'
   );
 }
 

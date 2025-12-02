@@ -14,7 +14,7 @@ import {allRules} from '../src/rules/ReactCompilerRule';
 
 testRule(
   'no impure function calls rule',
-  allRules[getRuleForCategory(ErrorCategory.Purity).name],
+  allRules[getRuleForCategory(ErrorCategory.Purity).name].rule,
   {
     valid: [],
     invalid: [

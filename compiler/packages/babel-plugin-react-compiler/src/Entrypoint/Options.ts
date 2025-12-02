@@ -6,7 +6,7 @@
  */
 
 import * as t from '@babel/types';
-import {z} from 'zod';
+import {z} from 'zod/v4';
 import {
   CompilerDiagnostic,
   CompilerError,
@@ -20,7 +20,7 @@ import {
   tryParseExternalFunction,
 } from '../HIR/Environment';
 import {hasOwnProperty} from '../Utils/utils';
-import {fromZodError} from 'zod-validation-error';
+import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerPipelineValue} from './Pipeline';
 
 const PanicThresholdOptionsSchema = z.enum([
@@ -51,8 +51,8 @@ const CustomOptOutDirectiveSchema = z
   .default(null);
 type CustomOptOutDirective = z.infer<typeof CustomOptOutDirectiveSchema>;
 
-export type PluginOptions = {
-  environment: EnvironmentConfig;
+export type PluginOptions = Partial<{
+  environment: Partial<EnvironmentConfig>;
 
   logger: Logger | null;
 
@@ -102,13 +102,24 @@ export type PluginOptions = {
 
   panicThreshold: PanicThresholdOptions;
 
-  /*
+  /**
+   * @deprecated
+   *
    * When enabled, Forget will continue statically analyzing and linting code, but skip over codegen
    * passes.
+   *
+   * NOTE: ignored if `outputMode` is specified
    *
    * Defaults to false
    */
   noEmit: boolean;
+
+  /**
+   * If specified, overrides `noEmit` and controls the output mode of the compiler.
+   *
+   * Defaults to null
+   */
+  outputMode: CompilerOutputMode | null;
 
   /*
    * Determines the strategy for determining which functions to compile. Note that regardless of
@@ -135,7 +146,12 @@ export type PluginOptions = {
    */
   eslintSuppressionRules: Array<string> | null | undefined;
 
+  /**
+   * Whether to report "suppression" errors for Flow suppressions. If false, suppression errors
+   * are only emitted for ESLint suppressions
+   */
   flowSuppressions: boolean;
+
   /*
    * Ignore 'use no forget' annotations. Helpful during testing but should not be used in production.
    */
@@ -161,7 +177,11 @@ export type PluginOptions = {
    * a userspace approximation of runtime APIs.
    */
   target: CompilerReactTarget;
-};
+}>;
+
+export type ParsedPluginOptions = Required<
+  Omit<PluginOptions, 'environment'>
+> & {environment: EnvironmentConfig};
 
 const CompilerReactTargetSchema = z.union([
   z.literal('17'),
@@ -202,6 +222,19 @@ const CompilationModeSchema = z.enum([
 ]);
 
 export type CompilationMode = z.infer<typeof CompilationModeSchema>;
+
+const CompilerOutputModeSchema = z.enum([
+  // Build optimized for SSR, with client features removed
+  'ssr',
+  // Build optimized for the client, with auto memoization
+  'client',
+  // Build optimized for the client without auto memo
+  'client-no-memo',
+  // Lint mode, the output is unused but validations should run
+  'lint',
+]);
+
+export type CompilerOutputMode = z.infer<typeof CompilerOutputModeSchema>;
 
 /**
  * Represents 'events' that may occur during compilation. Events are only
@@ -277,13 +310,14 @@ export type Logger = {
   debugLogIRs?: (value: CompilerPipelineValue) => void;
 };
 
-export const defaultOptions: PluginOptions = {
+export const defaultOptions: ParsedPluginOptions = {
   compilationMode: 'infer',
   panicThreshold: 'none',
   environment: parseEnvironmentConfig({}).unwrap(),
   logger: null,
   gating: null,
   noEmit: false,
+  outputMode: null,
   dynamicGating: null,
   eslintSuppressionRules: null,
   flowSuppressions: true,
@@ -294,9 +328,9 @@ export const defaultOptions: PluginOptions = {
   enableReanimatedCheck: true,
   customOptOutDirectives: null,
   target: '19',
-} as const;
+};
 
-export function parsePluginOptions(obj: unknown): PluginOptions {
+export function parsePluginOptions(obj: unknown): ParsedPluginOptions {
   if (obj == null || typeof obj !== 'object') {
     return defaultOptions;
   }

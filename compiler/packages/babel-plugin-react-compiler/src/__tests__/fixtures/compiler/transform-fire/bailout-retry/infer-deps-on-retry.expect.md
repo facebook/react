@@ -46,6 +46,7 @@ function useFoo(t0) {
     () => {
       log(derived);
     },
+
     [derived],
     [derived],
   );

@@ -32,6 +32,7 @@ import fbt from "fbt";
 function Component() {
   const $ = _c(1);
   const sections = Object.keys(items);
+
   for (let i = 0; i < sections.length; i = i + 3, i) {
     chunks.push(sections.slice(i, i + 3).map(_temp));
   }

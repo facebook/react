@@ -31,8 +31,13 @@ import prettier from 'prettier';
 import SproutTodoFilter from './SproutTodoFilter';
 import {isExpectError} from './fixture-utils';
 import {makeSharedRuntimeTypeProvider} from './sprout/shared-runtime-type-provider';
+
 export function parseLanguage(source: string): 'flow' | 'typescript' {
   return source.indexOf('@flow') !== -1 ? 'flow' : 'typescript';
+}
+
+export function parseSourceType(source: string): 'script' | 'module' {
+  return source.indexOf('@script') !== -1 ? 'script' : 'module';
 }
 
 /**
@@ -98,6 +103,7 @@ export function parseInput(
   input: string,
   filename: string,
   language: 'flow' | 'typescript',
+  sourceType: 'module' | 'script',
 ): BabelCore.types.File {
   // Extract the first line to quickly check for custom test directives
   if (language === 'flow') {
@@ -105,14 +111,14 @@ export function parseInput(
       babel: true,
       flow: 'all',
       sourceFilename: filename,
-      sourceType: 'module',
+      sourceType,
       enableExperimentalComponentSyntax: true,
     });
   } else {
     return BabelParser.parse(input, {
       sourceFilename: filename,
       plugins: ['typescript', 'jsx'],
-      sourceType: 'module',
+      sourceType,
     });
   }
 }
@@ -221,11 +227,12 @@ export async function transformFixtureInput(
   const firstLine = input.substring(0, input.indexOf('\n'));
 
   const language = parseLanguage(firstLine);
+  const sourceType = parseSourceType(firstLine);
   // Preserve file extension as it determines typescript's babel transform
   // mode (e.g. stripping types, parsing rules for brackets)
   const filename =
     path.basename(fixturePath) + (language === 'typescript' ? '.ts' : '');
-  const inputAst = parseInput(input, filename, language);
+  const inputAst = parseInput(input, filename, language, sourceType);
   // Give babel transforms an absolute path as relative paths get prefixed
   // with `cwd`, which is different across machines
   const virtualFilepath = '/' + filename;
