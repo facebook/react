@@ -11,7 +11,7 @@
 'use strict';
 
 function injectProxy({target}: {target: any}) {
-  // Firefox's behaviour for injecting this content script can be unpredictable
+  // Firefox's behavior for injecting this content script can be unpredictable
   // While navigating the history, some content scripts might not be re-injected and still be alive
   if (!window.__REACT_DEVTOOLS_PROXY_INJECTED__) {
     window.__REACT_DEVTOOLS_PROXY_INJECTED__ = true;
