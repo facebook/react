@@ -10,13 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import {createContext, useCallback, useContext, useMemo, useState} from 'react';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {
   TreeDispatcherContext,
