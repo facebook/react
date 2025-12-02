@@ -1,0 +1,44 @@
+name: React CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install Yarn
+        run: npm install --global yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint code
+        run: yarn lint
+
+      - name: Run tests
+        run: yarn test --ci
+
+      - name: Build packages
+        run: yarn build
+      
+      - name: build docker images
+        if: github.event_name == 'push'
+        run: |
+          docker build -t myapp:latest .
