@@ -260,7 +260,6 @@ function ProfilerContextController({children}: Props): React.Node {
       : ([]: Array<CommitDataFrontend>);
   }, [didRecordCommits, rootID, profilingData]);
 
-  // Helper to calculate filtered indices based on filter settings
   const calculateFilteredIndices = useCallback(
     (enabled: boolean, minDuration: number): Array<number> => {
       return commitData.reduce((reduced: Array<number>, commitDatum, index) => {
@@ -284,6 +283,32 @@ function ProfilerContextController({children}: Props): React.Node {
       return null;
     },
     [],
+  );
+
+  const adjustSelectionAfterFilterChange = useCallback(
+    (newFilteredIndices: Array<number>) => {
+      const currentSelectedIndex = selectedCommitIndex;
+      const selectedFilteredIndex = findFilteredIndex(
+        currentSelectedIndex,
+        newFilteredIndices,
+      );
+
+      if (selectedFilteredIndex === null && newFilteredIndices.length > 0) {
+        // No valid selection but commits exist - select first
+        selectCommitIndex(newFilteredIndices[0]);
+      } else if (
+        selectedFilteredIndex !== null &&
+        selectedFilteredIndex >= newFilteredIndices.length
+      ) {
+        // Selected commit was filtered out - select last valid commit
+        selectCommitIndex(
+          newFilteredIndices.length === 0
+            ? null
+            : newFilteredIndices[newFilteredIndices.length - 1],
+        );
+      }
+    },
+    [findFilteredIndex, selectedCommitIndex, selectCommitIndex],
   );
 
   const filteredCommitIndices = useMemo(
@@ -328,41 +353,18 @@ function ProfilerContextController({children}: Props): React.Node {
     (value: boolean) => {
       setIsCommitFilterEnabledValue(value);
 
-      // Calculate what the filtered indices will be with the new setting
       const newFilteredIndices = calculateFilteredIndices(
         value,
         minCommitDuration,
       );
 
-      // Handle edge cases where selected commit becomes invalid after filtering
-      const currentSelectedIndex = selectedCommitIndex;
-      const selectedFilteredIndex = findFilteredIndex(
-        currentSelectedIndex,
-        newFilteredIndices,
-      );
-
-      if (selectedFilteredIndex === null && newFilteredIndices.length > 0) {
-        // No valid selection but commits exist - select first
-        selectCommitIndex(newFilteredIndices[0]);
-      } else if (
-        selectedFilteredIndex !== null &&
-        selectedFilteredIndex >= newFilteredIndices.length
-      ) {
-        // Selected commit was filtered out - select last valid commit
-        selectCommitIndex(
-          newFilteredIndices.length === 0
-            ? null
-            : newFilteredIndices[newFilteredIndices.length - 1],
-        );
-      }
+      adjustSelectionAfterFilterChange(newFilteredIndices);
     },
     [
       setIsCommitFilterEnabledValue,
       calculateFilteredIndices,
-      findFilteredIndex,
       minCommitDuration,
-      selectedCommitIndex,
-      selectCommitIndex,
+      adjustSelectionAfterFilterChange,
     ],
   );
 
@@ -370,41 +372,18 @@ function ProfilerContextController({children}: Props): React.Node {
     (value: number) => {
       setMinCommitDurationValue(value);
 
-      // Calculate what the filtered indices will be with the new setting
       const newFilteredIndices = calculateFilteredIndices(
         isCommitFilterEnabled,
         value,
       );
 
-      // Handle edge cases where selected commit becomes invalid after filtering
-      const currentSelectedIndex = selectedCommitIndex;
-      const selectedFilteredIndex = findFilteredIndex(
-        currentSelectedIndex,
-        newFilteredIndices,
-      );
-
-      if (selectedFilteredIndex === null && newFilteredIndices.length > 0) {
-        // No valid selection but commits exist - select first
-        selectCommitIndex(newFilteredIndices[0]);
-      } else if (
-        selectedFilteredIndex !== null &&
-        selectedFilteredIndex >= newFilteredIndices.length
-      ) {
-        // Selected commit was filtered out - select last valid commit
-        selectCommitIndex(
-          newFilteredIndices.length === 0
-            ? null
-            : newFilteredIndices[newFilteredIndices.length - 1],
-        );
-      }
+      adjustSelectionAfterFilterChange(newFilteredIndices);
     },
     [
       setMinCommitDurationValue,
       calculateFilteredIndices,
-      findFilteredIndex,
       isCommitFilterEnabled,
-      selectedCommitIndex,
-      selectCommitIndex,
+      adjustSelectionAfterFilterChange,
     ],
   );
 
