@@ -1372,7 +1372,7 @@ function parseModelString(
         // Symbol
         return Symbol.for(value.slice(2));
       }
-      case 'F': {
+      case 'h': {
         // Server Reference
         const ref = value.slice(2);
         return getOutlinedModel(

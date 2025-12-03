@@ -1936,7 +1936,7 @@ function serializePromiseID(id: number): string {
 }
 
 function serializeServerReferenceID(id: number): string {
-  return '$F' + id.toString(16);
+  return '$h' + id.toString(16);
 }
 
 function serializeSymbolReference(name: string): string {
