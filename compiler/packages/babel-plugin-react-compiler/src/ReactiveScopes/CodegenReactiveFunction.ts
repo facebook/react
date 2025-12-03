@@ -6,15 +6,15 @@
  */
 
 import * as t from '@babel/types';
-import {createHmac} from 'crypto';
+import { createHmac } from 'crypto';
 import {
   pruneHoistedContexts,
   pruneUnusedLValues,
   pruneUnusedLabels,
   renameVariables,
 } from '.';
-import {CompilerError, ErrorCategory} from '../CompilerError';
-import {Environment, ExternalFunction} from '../HIR';
+import { CompilerError, ErrorCategory } from '../CompilerError';
+import { Environment, ExternalFunction } from '../HIR';
 import {
   ArrayPattern,
   BlockId,
@@ -44,16 +44,16 @@ import {
   getHookKind,
   makeIdentifierName,
 } from '../HIR/HIR';
-import {printIdentifier, printInstruction, printPlace} from '../HIR/PrintHIR';
-import {eachPatternOperand} from '../HIR/visitors';
-import {Err, Ok, Result} from '../Utils/Result';
-import {GuardKind} from '../Utils/RuntimeDiagnosticConstants';
-import {assertExhaustive} from '../Utils/utils';
-import {buildReactiveFunction} from './BuildReactiveFunction';
-import {SINGLE_CHILD_FBT_TAGS} from './MemoizeFbtAndMacroOperandsInSameScope';
-import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
-import {EMIT_FREEZE_GLOBAL_GATING, ReactFunctionType} from '../HIR/Environment';
-import {ProgramContext} from '../Entrypoint';
+import { printIdentifier, printInstruction, printPlace } from '../HIR/PrintHIR';
+import { eachPatternOperand } from '../HIR/visitors';
+import { Err, Ok, Result } from '../Utils/Result';
+import { GuardKind } from '../Utils/RuntimeDiagnosticConstants';
+import { assertExhaustive } from '../Utils/utils';
+import { buildReactiveFunction } from './BuildReactiveFunction';
+import { SINGLE_CHILD_FBT_TAGS } from './MemoizeFbtAndMacroOperandsInSameScope';
+import { ReactiveFunctionVisitor, visitReactiveFunction } from './visitors';
+import { EMIT_FREEZE_GLOBAL_GATING, ReactFunctionType } from '../HIR/Environment';
+import { ProgramContext } from '../Entrypoint';
 
 export const MEMO_CACHE_SENTINEL = 'react.memo_cache_sentinel';
 export const EARLY_RETURN_SENTINEL = 'react.early_return_sentinel';
@@ -268,10 +268,10 @@ export function codegenFunction(
     const gating =
       emitInstrumentForget.gating != null
         ? t.identifier(
-            fn.env.programContext.addImportSpecifier(
-              emitInstrumentForget.gating,
-            ).name,
-          )
+          fn.env.programContext.addImportSpecifier(
+            emitInstrumentForget.gating,
+          ).name,
+        )
         : null;
 
     const globalGating =
@@ -326,7 +326,7 @@ export function codegenFunction(
   }
 
   const outlined: CodegenFunction['outlined'] = [];
-  for (const {fn: outlinedFunction, type} of cx.env.getOutlinedFunctions()) {
+  for (const { fn: outlinedFunction, type } of cx.env.getOutlinedFunctions()) {
     const reactiveFunction = buildReactiveFunction(outlinedFunction);
     pruneUnusedLabels(reactiveFunction);
     pruneUnusedLValues(reactiveFunction);
@@ -345,7 +345,7 @@ export function codegenFunction(
     if (codegen.isErr()) {
       return codegen;
     }
-    outlined.push({fn: codegen.unwrap(), type});
+    outlined.push({ fn: codegen.unwrap(), type });
   }
   compiled.outlined = outlined;
 
@@ -675,7 +675,7 @@ function codegenReactiveScope(
   }
   let firstOutputIndex: number | null = null;
 
-  for (const [, {identifier}] of [...scope.declarations].sort(([, a], [, b]) =>
+  for (const [, { identifier }] of [...scope.declarations].sort(([, a], [, b]) =>
     compareScopeDeclaration(a, b),
   )) {
     const index = cx.nextCacheIndex;
@@ -705,7 +705,7 @@ function codegenReactiveScope(
         t.variableDeclaration('let', [t.variableDeclarator(name)]),
       );
     }
-    cacheLoads.push({name, index, value: wrapCacheDep(cx, name)});
+    cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
     cx.declare(identifier);
   }
   for (const reassignment of scope.reassignments) {
@@ -715,7 +715,7 @@ function codegenReactiveScope(
     }
     const name = convertIdentifier(reassignment);
     outputComments.push(name.name);
-    cacheLoads.push({name, index, value: wrapCacheDep(cx, name)});
+    cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
   }
 
   let testCondition = (changeExpressions as Array<t.Expression>).reduce(
@@ -790,7 +790,7 @@ function codegenReactiveScope(
     const changeDetectionStatements: Array<t.Statement> = [];
     const idempotenceDetectionStatements: Array<t.Statement> = [];
 
-    for (const {name, index, value} of cacheLoads) {
+    for (const { name, index, value } of cacheLoads) {
       const loadName = cx.synthesizeName(`old$${name.name}`);
       const slot = t.memberExpression(
         t.identifier(cx.synthesizeName('$')),
@@ -857,7 +857,7 @@ function codegenReactiveScope(
       ),
     ]);
   } else {
-    for (const {name, index, value} of cacheLoads) {
+    for (const { name, index, value } of cacheLoads) {
       cacheStoreStatements.push(
         t.expressionStatement(
           t.assignmentExpression(
@@ -947,7 +947,7 @@ function codegenReactiveScope(
   if (earlyReturnValue !== null) {
     CompilerError.invariant(
       earlyReturnValue.value.name !== null &&
-        earlyReturnValue.value.name.kind === 'named',
+      earlyReturnValue.value.name.kind === 'named',
       {
         reason: `Expected early return value to be promoted to a named variable`,
         description: null,
@@ -1132,8 +1132,8 @@ function codegenTerminal(
     case 'for-of': {
       CompilerError.invariant(
         terminal.init.kind === 'SequenceExpression' &&
-          terminal.init.instructions.length === 1 &&
-          terminal.init.instructions[0].value.kind === 'GetIterator',
+        terminal.init.instructions.length === 1 &&
+        terminal.init.instructions[0].value.kind === 'GetIterator',
         {
           reason: `Expected a single-expression sequence expression init for for..of`,
           description: `Got \`${terminal.init.kind}\` expression instead`,
@@ -1276,7 +1276,10 @@ function codegenTerminal(
             case_.test !== null
               ? codegenPlaceToExpression(cx, case_.test)
               : null;
-          const block = codegenBlock(cx, case_.block!);
+          const block =
+            case_.block != null
+              ? codegenBlock(cx, case_.block)
+              : t.blockStatement([]);
           return t.switchCase(test, block.body.length === 0 ? [] : [block]);
         }),
       );
@@ -1572,7 +1575,7 @@ function codegenForInit(
       } else {
         CompilerError.invariant(
           instr.type === 'VariableDeclaration' &&
-            (instr.kind === 'let' || instr.kind === 'const'),
+          (instr.kind === 'let' || instr.kind === 'const'),
           {
             reason: 'Expected a variable declaration',
             details: [
@@ -1994,7 +1997,7 @@ function codegenInstructionValue(
       const memberExpr = codegenPlaceToExpression(cx, instrValue.property);
       CompilerError.invariant(
         t.isMemberExpression(memberExpr) ||
-          t.isOptionalMemberExpression(memberExpr),
+        t.isOptionalMemberExpression(memberExpr),
         {
           reason:
             '[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression',
@@ -2060,8 +2063,8 @@ function codegenInstructionValue(
                   value,
                   property.key.kind === 'computed',
                   key.type === 'Identifier' &&
-                    value.type === 'Identifier' &&
-                    value.name === key.name,
+                  value.type === 'Identifier' &&
+                  value.name === key.name,
                 ),
               );
               break;
@@ -2139,11 +2142,24 @@ function codegenInstructionValue(
         instrValue.tag.kind === 'Identifier'
           ? codegenPlaceToExpression(cx, instrValue.tag)
           : t.stringLiteral(instrValue.tag.name);
-      let tag: t.JSXIdentifier | t.JSXNamespacedName | t.JSXMemberExpression;
+
+      // Fix: Emit _jsx() calls for identifier tags to preserve variable references
+      // instead of converting them to JSX syntax which Babel would treat as intrinsics
       if (tagValue.type === 'Identifier') {
-        tag = createJsxIdentifier(instrValue.tag.loc, tagValue.name);
-      } else if (tagValue.type === 'MemberExpression') {
+        value = codegenJsxCallExpression(
+          cx,
+          tagValue,
+          instrValue.props,
+          instrValue.children,
+          instrValue.loc,
+        );
+        break;
+      }
+
+      let tag: t.JSXIdentifier | t.JSXNamespacedName | t.JSXMemberExpression;
+      if (tagValue.type === 'MemberExpression') {
         tag = convertMemberExpressionToJsx(tagValue);
+
       } else {
         CompilerError.invariant(tagValue.type === 'StringLiteral', {
           reason: `Expected JSX tag to be an identifier or string, got \`${tagValue.type}\``,
@@ -2405,9 +2421,8 @@ function codegenInstructionValue(
           if (t.isVariableDeclaration(stmt)) {
             const declarator = stmt.declarations[0];
             cx.errors.push({
-              reason: `(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare '${
-                (declarator.id as t.Identifier).name
-              }'`,
+              reason: `(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare '${(declarator.id as t.Identifier).name
+                }'`,
               category: ErrorCategory.Todo,
               loc: declarator.loc ?? null,
               suggestions: null,
@@ -2680,6 +2695,89 @@ function codegenJsxFbtChildElement(
   }
 }
 
+/**
+ * Generates a _jsx() call expression for identifier tags to preserve variable references.
+ * This avoids the bug where lowercase variables are converted to intrinsic element strings.
+ */
+function codegenJsxCallExpression(
+  cx: Context,
+  tag: t.Expression,
+  props: Array<JsxAttribute>,
+  children: Array<Place> | null,
+  loc: SourceLocation,
+): t.CallExpression {
+  // Import jsx from react/jsx-runtime
+  const jsxRuntime: ExternalFunction = {
+    source: 'react/jsx-runtime',
+    importSpecifierName: 'jsx',
+  };
+  const jsxIdentifier = cx.env.programContext.addImportSpecifier(jsxRuntime);
+
+  // Convert props to object properties
+  const properties: Array<t.ObjectProperty | t.SpreadElement> = [];
+  let keyProp: t.Expression | null = null;
+
+  for (const prop of props) {
+    if (prop.kind === 'JsxAttribute') {
+      const propValue = codegenPlaceToExpression(cx, prop.place);
+
+      // Extract key prop (passed as 3rd argument to _jsx)
+      if (prop.name === 'key') {
+        keyProp = propValue;
+        continue;
+      }
+
+      // Use identifier for valid JS identifiers, string literal for others (e.g., 'data-foo')
+      const keyNode = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(prop.name)
+        ? t.identifier(prop.name)
+        : t.stringLiteral(prop.name);
+
+      properties.push(t.objectProperty(keyNode, propValue));
+    } else {
+      // Spread attribute
+      properties.push(t.spreadElement(codegenPlaceToExpression(cx, prop.argument)));
+    }
+  }
+
+  // Convert children to expressions and add as 'children' prop
+  if (children !== null && children.length > 0) {
+    const childExpressions = children.map(child => {
+      const childValue = codegenPlace(cx, child);
+      // Convert JSXText to StringLiteral
+      if (childValue.type === 'JSXText') {
+        return t.stringLiteral(childValue.value);
+      }
+      // JSXElement and other expressions pass through
+      if (t.isExpression(childValue)) {
+        return childValue;
+      }
+      // Fallback: wrap in expression
+      return childValue as any;
+    });
+
+    const childrenValue = childExpressions.length === 1
+      ? childExpressions[0]!
+      : t.arrayExpression(childExpressions);
+
+    properties.push(t.objectProperty(t.identifier('children'), childrenValue));
+  }
+
+  const propsObject = t.objectExpression(properties);
+  const args: t.Expression[] = [tag, propsObject];
+
+  // Add key as 3rd argument if present
+  if (keyProp) {
+    args.push(keyProp);
+  }
+
+  const callExpr = t.callExpression(t.identifier(jsxIdentifier.name), args);
+  if (loc && loc !== GeneratedSource) {
+    callExpr.loc = loc as any;
+  }
+
+  return callExpr;
+}
+
 function convertMemberExpressionToJsx(
   expr: t.MemberExpression,
 ): t.JSXMemberExpression {
@@ -2807,8 +2905,8 @@ function codegenLValue(
               value,
               property.key.kind === 'computed',
               key.type === 'Identifier' &&
-                value.type === 'Identifier' &&
-                value.name === key.name,
+              value.type === 'Identifier' &&
+              value.name === key.name,
             );
           } else {
             return t.restElement(codegenLValue(cx, property.place));
