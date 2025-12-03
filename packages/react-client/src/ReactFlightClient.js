@@ -555,6 +555,7 @@ function resolveModuleChunk<T>(
   const resolvedChunk: ResolvedModuleChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODULE;
   resolvedChunk.value = value;
+  resolvedChunk.reason = null;
   if (resolveListeners !== null) {
     initializeModuleChunk(resolvedChunk);
     wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
@@ -616,6 +617,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
+    initializedChunk.reason = null;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
@@ -634,6 +636,7 @@ function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
+    initializedChunk.reason = null;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
@@ -652,6 +655,8 @@ export function reportGlobalError(response: Response, error: Error): void {
     // because we won't be getting any new data to resolve it.
     if (chunk.status === PENDING) {
       triggerErrorOnChunk(chunk, error);
+    } else if (chunk.status === INITIALIZED && chunk.reason !== null) {
+      chunk.reason.error(error);
     }
   });
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -1008,6 +1013,7 @@ function waitForReference<T>(
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
+      initializedChunk.reason = null;
       if (resolveListeners !== null) {
         wakeChunk(resolveListeners, handler.value);
       }
@@ -1186,6 +1192,7 @@ function loadServerReference<A: Iterable<any>, T>(
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
+      initializedChunk.reason = null;
       if (resolveListeners !== null) {
         wakeChunk(resolveListeners, handler.value);
       }
@@ -1443,7 +1450,7 @@ function parseModelString(
         // Symbol
         return Symbol.for(value.slice(2));
       }
-      case 'F': {
+      case 'h': {
         // Server Reference
         const ref = value.slice(2);
         return getOutlinedModel(
@@ -1854,6 +1861,7 @@ function startReadableStream<T>(
   type: void | 'bytes',
 ): void {
   let controller: ReadableStreamController = (null: any);
+  let closed = false;
   const stream = new ReadableStream({
     type: type,
     start(c) {
@@ -1911,6 +1919,10 @@ function startReadableStream<T>(
       }
     },
     close(json: UninitializedModel): void {
+      if (closed) {
+        return;
+      }
+      closed = true;
       if (previousBlockedChunk === null) {
         controller.close();
       } else {
@@ -1921,6 +1933,10 @@ function startReadableStream<T>(
       }
     },
     error(error: mixed): void {
+      if (closed) {
+        return;
+      }
+      closed = true;
       if (previousBlockedChunk === null) {
         // $FlowFixMe[incompatible-call]
         controller.error(error);
@@ -1980,6 +1996,7 @@ function startAsyncIterable<T>(
           (chunk: any);
         initializedChunk.status = INITIALIZED;
         initializedChunk.value = {done: false, value: value};
+        initializedChunk.reason = null;
         if (resolveListeners !== null) {
           wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
         }
@@ -1999,6 +2016,9 @@ function startAsyncIterable<T>(
       nextWriteIndex++;
     },
     close(value: UninitializedModel): void {
+      if (closed) {
+        return;
+      }
       closed = true;
       if (nextWriteIndex === buffer.length) {
         buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
@@ -2020,6 +2040,9 @@ function startAsyncIterable<T>(
       }
     },
     error(error: Error): void {
+      if (closed) {
+        return;
+      }
       closed = true;
       if (nextWriteIndex === buffer.length) {
         buffer[nextWriteIndex] =

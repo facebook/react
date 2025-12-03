@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {unstable_prerenderToNodeStream} from './src/server/react-flight-dom-server.node.unbundled';
+throw new Error('Use react-server-dom-webpack/client instead.');

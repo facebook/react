@@ -5,7 +5,8 @@
 const path = require('path');
 const url = require('url');
 
-const register = require('react-server-dom-webpack/node-register');
+const register = require('react-server-dom-unbundled/node-register');
+// TODO: This seems to have no effect anymore. Remove?
 register();
 
 const babelRegister = require('@babel/register');
@@ -52,7 +53,7 @@ const React = require('react');
 
 async function renderApp(res, returnValue, formState) {
   const {renderToPipeableStream} = await import(
-    'react-server-dom-webpack/server'
+    'react-server-dom-unbundled/server'
   );
   // const m = require('../src/App.js');
   const m = await import('../src/App.js');
@@ -107,7 +108,7 @@ async function renderApp(res, returnValue, formState) {
 
 async function prerenderApp(res, returnValue, formState) {
   const {unstable_prerenderToNodeStream: prerenderToNodeStream} = await import(
-    'react-server-dom-webpack/static'
+    'react-server-dom-unbundled/static'
   );
   // const m = require('../src/App.js');
   const m = await import('../src/App.js');
@@ -170,7 +171,7 @@ app.get('/', async function (req, res) {
 
 app.post('/', bodyParser.text(), async function (req, res) {
   const {decodeReply, decodeReplyFromBusboy, decodeAction, decodeFormState} =
-    await import('react-server-dom-webpack/server');
+    await import('react-server-dom-unbundled/server');
   const serverReference = req.get('rsc-action');
   if (serverReference) {
     // This is the client-side case

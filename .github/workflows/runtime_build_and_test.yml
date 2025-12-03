@@ -45,7 +45,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           lookup-only: true
       - uses: actions/setup-node@v4
         if: steps.node_modules.outputs.cache-hit != 'true'
@@ -59,10 +59,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-node_modules-v6-
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Save cache
@@ -71,7 +69,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
 
   runtime_compiler_node_modules_cache:
     name: Cache Runtime, Compiler node_modules
@@ -86,7 +84,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          key: runtime-and-compiler-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
           lookup-only: true
       - uses: actions/setup-node@v4
         if: steps.node_modules.outputs.cache-hit != 'true'
@@ -102,10 +100,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          restore-keys: |
-            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-and-compiler-node_modules-v6-
+          key: runtime-and-compiler-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
@@ -116,7 +112,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          key: runtime-and-compiler-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
 
   # ----- FLOW -----
   discover_flow_inline_configs:
@@ -158,10 +154,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-node_modules-v6-
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -188,10 +182,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-node_modules-v6-
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -220,7 +212,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -278,10 +270,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          restore-keys: |
-            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-and-compiler-node_modules-v6-
+          key: runtime-and-compiler-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -290,6 +280,37 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
 
+  # Hardcoded to improve parallelism
+  test-linter:
+    name: Test eslint-plugin-react-hooks
+    needs: [runtime_compiler_node_modules_cache]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path:  |
+            yarn.lock
+            compiler/yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: |
+            **/node_modules
+          key: runtime-and-compiler-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+      - name: Install runtime dependencies
+        run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - name: Install compiler dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: compiler
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: ./scripts/react-compiler/build-compiler.sh && ./scripts/react-compiler/link-compiler.sh
+      - run: yarn workspace eslint-plugin-react-hooks test
+        
   # ----- BUILD -----
   build_and_lint:
     name: yarn build and lint
@@ -322,10 +343,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          restore-keys: |
-            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-and-compiler-node_modules-v6-
+          key: runtime-and-compiler-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -413,10 +432,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          restore-keys: |
-            runtime-and-compiler-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-and-compiler-node_modules-v6-
+          key: runtime-and-compiler-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -452,10 +469,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-node_modules-v6-
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -505,10 +520,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-node_modules-v6-
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -545,10 +558,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-node_modules-v6-
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -697,10 +708,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-node_modules-v6-
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -754,10 +763,8 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            runtime-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-
-            runtime-node_modules-v6-
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile

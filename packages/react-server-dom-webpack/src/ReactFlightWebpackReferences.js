@@ -103,6 +103,12 @@ function bind(this: ServerReference<any>): any {
   return newFn;
 }
 
+const serverReferenceToString = {
+  value: () => 'function () { [omitted code] }',
+  configurable: true,
+  writable: true,
+};
+
 export function registerServerReference<T: Function>(
   reference: T,
   id: string,
@@ -126,12 +132,14 @@ export function registerServerReference<T: Function>(
             configurable: true,
           },
           bind: {value: bind, configurable: true},
+          toString: serverReferenceToString,
         }
       : {
           $$typeof,
           $$id,
           $$bound,
           bind: {value: bind, configurable: true},
+          toString: serverReferenceToString,
         },
   );
 }
