@@ -1270,7 +1270,6 @@ describe('useStore', () => {
     ]);
     expect(root).toMatchRenderedOutput('3');
 
-    // Change the store prop from storeA to storeB
     await act(async () => {
       resolve();
     });
@@ -1324,5 +1323,63 @@ describe('useStore', () => {
       {kind: 'render', value: 3},
     ]);
     expect(root).toMatchRenderedOutput('3');
+  });
+
+  it('store is created in a transition that is still ongoing during initial mount', async () => {
+    function counterReducer(
+      count: number,
+      action: {type: 'increment'},
+    ): number {
+      Scheduler.log({kind: 'reducer', state: count, action: action.type});
+      switch (action.type) {
+        case 'increment':
+          return count + 1;
+        default:
+          return count;
+      }
+    }
+
+    let store;
+    let resolve;
+
+    startTransition(async () => {
+      store = createStore(2, counterReducer);
+      await new Promise(r => {
+        resolve = r;
+      });
+    });
+
+    function identity(x) {
+      Scheduler.log({kind: 'selector', state: x});
+      return x;
+    }
+
+    function App() {
+      const value = useStore(store, identity);
+      Scheduler.log({kind: 'render', value});
+      return <>{value}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    // Technically there is no valid state since the store should not really
+    // exist until the transition completes?
+    assertLog([
+      {kind: 'selector', state: 2},
+      {kind: 'render', value: 2},
+    ]);
+    expect(root).toMatchRenderedOutput('2');
+
+    await act(async () => {
+      resolve();
+    });
+
+    assertLog([
+      // Not clear what should be happening here.
+    ]);
+    expect(root).toMatchRenderedOutput('2');
   });
 });
