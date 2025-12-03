@@ -24,6 +24,8 @@ import {
 } from '../shared/ReactFlightImportMetadata';
 import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
 
+import hasOwnProperty from 'shared/hasOwnProperty';
+
 export type ServerConsumerModuleMap = {
   [clientId: string]: {
     [clientExportName: string]: ClientReference<any>,
@@ -158,7 +160,10 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
     // default property of this if it was an ESM interop module.
     return moduleExports.default;
   }
-  return moduleExports[metadata.name];
+  if (hasOwnProperty.call(moduleExports, metadata.name)) {
+    return moduleExports[metadata.name];
+  }
+  return (undefined: any);
 }
 
 export function getModuleDebugInfo<T>(metadata: ClientReference<T>): null {

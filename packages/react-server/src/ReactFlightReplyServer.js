@@ -50,44 +50,35 @@ export type JSONValue =
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
-const CYCLIC = 'cyclic';
 const RESOLVED_MODEL = 'resolved_model';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 
+type RESPONSE_SYMBOL_TYPE = 'RESPONSE_SYMBOL'; // Fake symbol type.
+const RESPONSE_SYMBOL: RESPONSE_SYMBOL_TYPE = (Symbol(): any);
+
 type PendingChunk<T> = {
   status: 'pending',
-  value: null | Array<(T) => mixed>,
-  reason: null | Array<(mixed) => mixed>,
-  _response: Response,
+  value: null | Array<InitializationReference | (T => mixed)>,
+  reason: null | Array<InitializationReference | (mixed => mixed)>,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type BlockedChunk<T> = {
   status: 'blocked',
-  value: null | Array<(T) => mixed>,
-  reason: null | Array<(mixed) => mixed>,
-  _response: Response,
-  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
-};
-type CyclicChunk<T> = {
-  status: 'cyclic',
-  value: null | Array<(T) => mixed>,
-  reason: null | Array<(mixed) => mixed>,
-  _response: Response,
+  value: null | Array<InitializationReference | (T => mixed)>,
+  reason: null | Array<InitializationReference | (mixed => mixed)>,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModelChunk<T> = {
   status: 'resolved_model',
   value: string,
-  reason: number,
-  _response: Response,
+  reason: {id: number, [RESPONSE_SYMBOL_TYPE]: Response},
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
   status: 'fulfilled',
   value: T,
   reason: null,
-  _response: Response,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedStreamChunk<
@@ -96,38 +87,34 @@ type InitializedStreamChunk<
   status: 'fulfilled',
   value: T,
   reason: FlightStreamController,
-  _response: Response,
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
   status: 'rejected',
   value: null,
   reason: mixed,
-  _response: Response,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
-  | CyclicChunk<T>
   | ResolvedModelChunk<T>
   | InitializedChunk<T>
   | ErroredChunk<T>;
 
 // $FlowFixMe[missing-this-annot]
-function Chunk(status: any, value: any, reason: any, response: Response) {
+function ReactPromise(status: any, value: any, reason: any) {
   this.status = status;
   this.value = value;
   this.reason = reason;
-  this._response = response;
 }
 // We subclass Promise.prototype so that we get other methods like .catch
-Chunk.prototype = (Object.create(Promise.prototype): any);
+ReactPromise.prototype = (Object.create(Promise.prototype): any);
 // TODO: This doesn't return a new Promise chain unlike the real .then
-Chunk.prototype.then = function <T>(
+ReactPromise.prototype.then = function <T>(
   this: SomeChunk<T>,
   resolve: (value: T) => mixed,
-  reject: (reason: mixed) => mixed,
+  reject: ?(reason: mixed) => mixed,
 ) {
   const chunk: SomeChunk<T> = this;
   // If we have resolved content, we try to initialize it first which
@@ -140,26 +127,31 @@ Chunk.prototype.then = function <T>(
   // The status might have changed after initialization.
   switch (chunk.status) {
     case INITIALIZED:
-      resolve(chunk.value);
+      if (typeof resolve === 'function') {
+        resolve(chunk.value);
+      }
       break;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
-      if (resolve) {
+      if (typeof resolve === 'function') {
         if (chunk.value === null) {
-          chunk.value = ([]: Array<(T) => mixed>);
+          chunk.value = ([]: Array<InitializationReference | (T => mixed)>);
         }
         chunk.value.push(resolve);
       }
-      if (reject) {
+      if (typeof reject === 'function') {
         if (chunk.reason === null) {
-          chunk.reason = ([]: Array<(mixed) => mixed>);
+          chunk.reason = ([]: Array<
+            InitializationReference | (mixed => mixed),
+          >);
         }
         chunk.reason.push(reject);
       }
       break;
     default:
-      reject(chunk.reason);
+      if (typeof reject === 'function') {
+        reject(chunk.reason);
+      }
       break;
   }
 };
@@ -181,28 +173,114 @@ export function getRoot<T>(response: Response): Thenable<T> {
 
 function createPendingChunk<T>(response: Response): PendingChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(PENDING, null, null, response);
+  return new ReactPromise(PENDING, null, null);
 }
 
-function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
+function wakeChunk<T>(
+  response: Response,
+  listeners: Array<InitializationReference | (T => mixed)>,
+  value: T,
+): void {
   for (let i = 0; i < listeners.length; i++) {
     const listener = listeners[i];
-    listener(value);
+    if (typeof listener === 'function') {
+      listener(value);
+    } else {
+      fulfillReference(response, listener, value);
+    }
   }
 }
 
+function rejectChunk(
+  response: Response,
+  listeners: Array<InitializationReference | (mixed => mixed)>,
+  error: mixed,
+): void {
+  for (let i = 0; i < listeners.length; i++) {
+    const listener = listeners[i];
+    if (typeof listener === 'function') {
+      listener(error);
+    } else {
+      rejectReference(response, listener.handler, error);
+    }
+  }
+}
+
+function resolveBlockedCycle<T>(
+  resolvedChunk: SomeChunk<T>,
+  reference: InitializationReference,
+): null | InitializationHandler {
+  const referencedChunk = reference.handler.chunk;
+  if (referencedChunk === null) {
+    return null;
+  }
+  if (referencedChunk === resolvedChunk) {
+    // We found the cycle. We can resolve the blocked cycle now.
+    return reference.handler;
+  }
+  const resolveListeners = referencedChunk.value;
+  if (resolveListeners !== null) {
+    for (let i = 0; i < resolveListeners.length; i++) {
+      const listener = resolveListeners[i];
+      if (typeof listener !== 'function') {
+        const foundHandler = resolveBlockedCycle(resolvedChunk, listener);
+        if (foundHandler !== null) {
+          return foundHandler;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function wakeChunkIfInitialized<T>(
+  response: Response,
   chunk: SomeChunk<T>,
-  resolveListeners: Array<(T) => mixed>,
-  rejectListeners: null | Array<(mixed) => mixed>,
+  resolveListeners: Array<InitializationReference | (T => mixed)>,
+  rejectListeners: null | Array<InitializationReference | (mixed => mixed)>,
 ): void {
   switch (chunk.status) {
     case INITIALIZED:
-      wakeChunk(resolveListeners, chunk.value);
+      wakeChunk(response, resolveListeners, chunk.value);
       break;
-    case PENDING:
     case BLOCKED:
-    case CYCLIC:
+      // It is possible that we're blocked on our own chunk if it's a cycle.
+      // Before adding back the listeners to the chunk, let's check if it would
+      // result in a cycle.
+      for (let i = 0; i < resolveListeners.length; i++) {
+        const listener = resolveListeners[i];
+        if (typeof listener !== 'function') {
+          const reference: InitializationReference = listener;
+          const cyclicHandler = resolveBlockedCycle(chunk, reference);
+          if (cyclicHandler !== null) {
+            // This reference points back to this chunk. We can resolve the cycle by
+            // using the value from that handler.
+            fulfillReference(response, reference, cyclicHandler.value);
+            resolveListeners.splice(i, 1);
+            i--;
+            if (rejectListeners !== null) {
+              const rejectionIdx = rejectListeners.indexOf(reference);
+              if (rejectionIdx !== -1) {
+                rejectListeners.splice(rejectionIdx, 1);
+              }
+            }
+            // The status might have changed after fulfilling the reference.
+            switch ((chunk: SomeChunk<T>).status) {
+              case INITIALIZED:
+                const initializedChunk: InitializedChunk<T> = (chunk: any);
+                wakeChunk(response, resolveListeners, initializedChunk.value);
+                return;
+              case ERRORED:
+                if (rejectListeners !== null) {
+                  rejectChunk(response, rejectListeners, chunk.reason);
+                }
+                return;
+            }
+          }
+        }
+      }
+    // Fallthrough
+    case PENDING:
       if (chunk.value) {
         for (let i = 0; i < resolveListeners.length; i++) {
           chunk.value.push(resolveListeners[i]);
@@ -223,13 +301,17 @@ function wakeChunkIfInitialized<T>(
       break;
     case ERRORED:
       if (rejectListeners) {
-        wakeChunk(rejectListeners, chunk.reason);
+        wakeChunk(response, rejectListeners, chunk.reason);
       }
       break;
   }
 }
 
-function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
+function triggerErrorOnChunk<T>(
+  response: Response,
+  chunk: SomeChunk<T>,
+  error: mixed,
+): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
     // If we get more data to an already resolved ID, we assume that it's
     // a stream chunk since any other row shouldn't have more than one entry.
@@ -244,7 +326,7 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   erroredChunk.status = ERRORED;
   erroredChunk.reason = error;
   if (listeners !== null) {
-    wakeChunk(listeners, error);
+    rejectChunk(response, listeners, error);
   }
 }
 
@@ -254,7 +336,10 @@ function createResolvedModelChunk<T>(
   id: number,
 ): ResolvedModelChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODEL, value, id, response);
+  return new ReactPromise(RESOLVED_MODEL, value, {
+    id,
+    [RESPONSE_SYMBOL]: response,
+  });
 }
 
 function createErroredChunk<T>(
@@ -262,10 +347,11 @@ function createErroredChunk<T>(
   reason: mixed,
 ): ErroredChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(ERRORED, null, reason, response);
+  return new ReactPromise(ERRORED, null, reason);
 }
 
 function resolveModelChunk<T>(
+  response: Response,
   chunk: SomeChunk<T>,
   value: string,
   id: number,
@@ -287,14 +373,14 @@ function resolveModelChunk<T>(
   const resolvedChunk: ResolvedModelChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODEL;
   resolvedChunk.value = value;
-  resolvedChunk.reason = id;
+  resolvedChunk.reason = {id, [RESPONSE_SYMBOL]: response};
   if (resolveListeners !== null) {
     // This is unfortunate that we're reading this eagerly if
     // we already have listeners attached since they might no
     // longer be rendered or might not be the highest pri.
     initializeModelChunk(resolvedChunk);
     // The status might have changed after initialization.
-    wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+    wakeChunkIfInitialized(response, chunk, resolveListeners, rejectListeners);
   }
 }
 
@@ -308,7 +394,7 @@ function createInitializedStreamChunk<
   // We use the reason field to stash the controller since we already have that
   // field. It's a bit of a hack but efficient.
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, value, controller, response);
+  return new ReactPromise(INITIALIZED, value, controller);
 }
 
 function createResolvedIteratorResultChunk<T>(
@@ -320,10 +406,14 @@ function createResolvedIteratorResultChunk<T>(
   const iteratorResultJSON =
     (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODEL, iteratorResultJSON, -1, response);
+  return new ReactPromise(RESOLVED_MODEL, iteratorResultJSON, {
+    id: -1,
+    [RESPONSE_SYMBOL]: response,
+  });
 }
 
 function resolveIteratorResultChunk<T>(
+  response: Response,
   chunk: SomeChunk<IteratorResult<T, T>>,
   value: string,
   done: boolean,
@@ -331,55 +421,112 @@ function resolveIteratorResultChunk<T>(
   // To reuse code as much code as possible we add the wrapper element as part of the JSON.
   const iteratorResultJSON =
     (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
-  resolveModelChunk(chunk, iteratorResultJSON, -1);
+  resolveModelChunk(response, chunk, iteratorResultJSON, -1);
 }
 
-function bindArgs(fn: any, args: any) {
-  return fn.bind.apply(fn, [null].concat(args));
-}
-
-function loadServerReference<T>(
+function loadServerReference<A: Iterable<any>, T>(
   response: Response,
-  id: ServerReferenceId,
-  bound: null | Thenable<Array<any>>,
-  parentChunk: SomeChunk<T>,
+  metaData: {
+    id: any,
+    bound: null | Thenable<Array<any>>,
+  },
   parentObject: Object,
   key: string,
-): T {
+): (...A) => Promise<T> {
+  const id: ServerReferenceId = metaData.id;
+  if (typeof id !== 'string') {
+    return (null: any);
+  }
   const serverReference: ServerReference<T> =
     resolveServerReference<$FlowFixMe>(response._bundlerConfig, id);
   // We expect most servers to not really need this because you'd just have all
   // the relevant modules already loaded but it allows for lazy loading of code
   // if needed.
-  const preloadPromise = preloadModule(serverReference);
-  let promise: Promise<T>;
-  if (bound) {
-    promise = Promise.all([(bound: any), preloadPromise]).then(
-      ([args]: Array<any>) => bindArgs(requireModule(serverReference), args),
-    );
-  } else {
-    if (preloadPromise) {
-      promise = Promise.resolve(preloadPromise).then(() =>
-        requireModule(serverReference),
-      );
+  const bound = metaData.bound;
+  let promise: null | Thenable<any> = preloadModule(serverReference);
+  if (!promise) {
+    if (bound instanceof ReactPromise) {
+      promise = Promise.resolve(bound);
     } else {
-      // Synchronously available
-      return requireModule(serverReference);
+      const resolvedValue = (requireModule(serverReference): any);
+      return resolvedValue;
+    }
+  } else if (bound instanceof ReactPromise) {
+    promise = Promise.all([promise, bound]);
+  }
+
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
+    handler.deps++;
+  } else {
+    handler = initializingHandler = {
+      chunk: null,
+      value: null,
+      reason: null,
+      deps: 1,
+      errored: false,
+    };
+  }
+
+  function fulfill(): void {
+    let resolvedValue = (requireModule(serverReference): any);
+
+    if (metaData.bound) {
+      // This promise is coming from us and should have initilialized by now.
+      const promiseValue = (metaData.bound: any).value;
+      const boundArgs: Array<any> = Array.isArray(promiseValue)
+        ? promiseValue.slice(0)
+        : [];
+      boundArgs.unshift(null); // this
+      resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
+    }
+
+    parentObject[key] = resolvedValue;
+
+    // If this is the root object for a model reference, where `handler.value`
+    // is a stale `null`, the resolved value can be used directly.
+    if (key === '' && handler.value === null) {
+      handler.value = resolvedValue;
+    }
+
+    handler.deps--;
+
+    if (handler.deps === 0) {
+      const chunk = handler.chunk;
+      if (chunk === null || chunk.status !== BLOCKED) {
+        return;
+      }
+      const resolveListeners = chunk.value;
+      const initializedChunk: InitializedChunk<T> = (chunk: any);
+      initializedChunk.status = INITIALIZED;
+      initializedChunk.value = handler.value;
+      if (resolveListeners !== null) {
+        wakeChunk(response, resolveListeners, handler.value);
+      }
     }
   }
-  promise.then(
-    createModelResolver(
-      parentChunk,
-      parentObject,
-      key,
-      false,
-      response,
-      createModel,
-      [],
-    ),
-    createModelReject(parentChunk),
-  );
-  // We need a placeholder value that will be replaced later.
+
+  function reject(error: mixed): void {
+    if (handler.errored) {
+      // We've already errored. We could instead build up an AggregateError
+      // but if there are multiple errors we just take the first one like
+      // Promise.all.
+      return;
+    }
+    handler.errored = true;
+    handler.value = null;
+    handler.reason = error;
+    const chunk = handler.chunk;
+    if (chunk === null || chunk.status !== BLOCKED) {
+      return;
+    }
+    triggerErrorOnChunk(response, chunk, error);
+  }
+
+  promise.then(fulfill, reject);
+
+  // Return a place holder value for now.
   return (null: any);
 }
 
@@ -427,7 +574,7 @@ function reviveModel(
             value[key],
             childRef,
           );
-          if (newValue !== undefined) {
+          if (newValue !== undefined || key === '__proto__') {
             // $FlowFixMe[cannot-write]
             value[key] = newValue;
           } else {
@@ -441,24 +588,42 @@ function reviveModel(
   return value;
 }
 
-let initializingChunk: ResolvedModelChunk<any> = (null: any);
-let initializingChunkBlockedModel: null | {deps: number, value: any} = null;
-function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
-  const prevChunk = initializingChunk;
-  const prevBlocked = initializingChunkBlockedModel;
-  initializingChunk = chunk;
-  initializingChunkBlockedModel = null;
+type InitializationReference = {
+  handler: InitializationHandler,
+  parentObject: Object,
+  key: string,
+  map: (
+    response: Response,
+    model: any,
+    parentObject: Object,
+    key: string,
+  ) => any,
+  path: Array<string>,
+};
+type InitializationHandler = {
+  chunk: null | BlockedChunk<any>,
+  value: any,
+  reason: any,
+  deps: number,
+  errored: boolean,
+};
+let initializingHandler: null | InitializationHandler = null;
 
-  const rootReference =
-    chunk.reason === -1 ? undefined : chunk.reason.toString(16);
+function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
+  const prevHandler = initializingHandler;
+  initializingHandler = null;
+
+  const {[RESPONSE_SYMBOL]: response, id} = chunk.reason;
+
+  const rootReference = id === -1 ? undefined : id.toString(16);
 
   const resolvedModel = chunk.value;
 
-  // We go to the CYCLIC state until we've fully resolved this.
+  // We go to the BLOCKED state until we've fully resolved this.
   // We do this before parsing in case we try to initialize the same chunk
   // while parsing the model. Such as in a cyclic reference.
-  const cyclicChunk: CyclicChunk<T> = (chunk: any);
-  cyclicChunk.status = CYCLIC;
+  const cyclicChunk: BlockedChunk<T> = (chunk: any);
+  cyclicChunk.status = BLOCKED;
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
 
@@ -466,37 +631,50 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     const rawModel = JSON.parse(resolvedModel);
 
     const value: T = reviveModel(
-      chunk._response,
+      response,
       {'': rawModel},
       '',
       rawModel,
       rootReference,
     );
-    if (
-      initializingChunkBlockedModel !== null &&
-      initializingChunkBlockedModel.deps > 0
-    ) {
-      initializingChunkBlockedModel.value = value;
-      // We discovered new dependencies on modules that are not yet resolved.
-      // We have to go the BLOCKED state until they're resolved.
-      const blockedChunk: BlockedChunk<T> = (chunk: any);
-      blockedChunk.status = BLOCKED;
-    } else {
-      const resolveListeners = cyclicChunk.value;
-      const initializedChunk: InitializedChunk<T> = (chunk: any);
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = value;
-      if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, value);
+
+    // Invoke any listeners added while resolving this model. I.e. cyclic
+    // references. This may or may not fully resolve the model depending on
+    // if they were blocked.
+    const resolveListeners = cyclicChunk.value;
+    if (resolveListeners !== null) {
+      cyclicChunk.value = null;
+      cyclicChunk.reason = null;
+      for (let i = 0; i < resolveListeners.length; i++) {
+        const listener = resolveListeners[i];
+        if (typeof listener === 'function') {
+          listener(value);
+        } else {
+          fulfillReference(response, listener, value);
+        }
       }
     }
+    if (initializingHandler !== null) {
+      if (initializingHandler.errored) {
+        throw initializingHandler.reason;
+      }
+      if (initializingHandler.deps > 0) {
+        // We discovered new dependencies on modules that are not yet resolved.
+        // We have to keep the BLOCKED state until they're resolved.
+        initializingHandler.value = value;
+        initializingHandler.chunk = cyclicChunk;
+        return;
+      }
+    }
+    const initializedChunk: InitializedChunk<T> = (chunk: any);
+    initializedChunk.status = INITIALIZED;
+    initializedChunk.value = value;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
     erroredChunk.reason = error;
   } finally {
-    initializingChunk = prevChunk;
-    initializingChunkBlockedModel = prevBlocked;
+    initializingHandler = prevHandler;
   }
 }
 
@@ -510,7 +688,7 @@ export function reportGlobalError(response: Response, error: Error): void {
     // trigger an error but if it wasn't then we need to
     // because we won't be getting any new data to resolve it.
     if (chunk.status === PENDING) {
-      triggerErrorOnChunk(chunk, error);
+      triggerErrorOnChunk(response, chunk, error);
     }
   });
 }
@@ -523,9 +701,8 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
     const key = prefix + id;
     // Check if we have this field in the backing store already.
     const backingEntry = response._formData.get(key);
-    if (backingEntry != null) {
-      // We assume that this is a string entry for now.
-      chunk = createResolvedModelChunk(response, (backingEntry: any), id);
+    if (typeof backingEntry === 'string') {
+      chunk = createResolvedModelChunk(response, backingEntry, id);
     } else if (response._closed) {
       // We have already errored the response and we're not going to get
       // anything more streaming in so this will immediately error.
@@ -539,57 +716,152 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   return chunk;
 }
 
-function createModelResolver<T>(
-  chunk: SomeChunk<T>,
-  parentObject: Object,
-  key: string,
-  cyclic: boolean,
+function fulfillReference(
   response: Response,
-  map: (response: Response, model: any) => T,
-  path: Array<string>,
-): (value: any) => void {
-  let blocked;
-  if (initializingChunkBlockedModel) {
-    blocked = initializingChunkBlockedModel;
-    if (!cyclic) {
-      blocked.deps++;
+  reference: InitializationReference,
+  value: any,
+): void {
+  const {handler, parentObject, key, map, path} = reference;
+
+  for (let i = 1; i < path.length; i++) {
+    // The server doesn't have any lazy references but we unwrap Chunks here in the same way as the client.
+    while (value instanceof ReactPromise) {
+      const referencedChunk: SomeChunk<any> = value;
+      switch (referencedChunk.status) {
+        case RESOLVED_MODEL:
+          initializeModelChunk(referencedChunk);
+          break;
+      }
+      switch (referencedChunk.status) {
+        case INITIALIZED: {
+          value = referencedChunk.value;
+          continue;
+        }
+        case BLOCKED:
+        case PENDING: {
+          // If we're not yet initialized we need to skip what we've already drilled
+          // through and then wait for the next value to become available.
+          path.splice(0, i - 1);
+          // Add "listener" to our new chunk dependency.
+          if (referencedChunk.value === null) {
+            referencedChunk.value = [reference];
+          } else {
+            referencedChunk.value.push(reference);
+          }
+          if (referencedChunk.reason === null) {
+            referencedChunk.reason = [reference];
+          } else {
+            referencedChunk.reason.push(reference);
+          }
+          return;
+        }
+        default: {
+          rejectReference(response, reference.handler, referencedChunk.reason);
+          return;
+        }
+      }
     }
-  } else {
-    blocked = initializingChunkBlockedModel = {
-      deps: (cyclic ? 0 : 1) as number,
-      value: (null: any),
-    };
+    const name = path[i];
+    if (typeof value === 'object' && hasOwnProperty.call(value, name)) {
+      value = value[name];
+    }
   }
-  return value => {
-    for (let i = 1; i < path.length; i++) {
-      value = value[path[i]];
-    }
-    parentObject[key] = map(response, value);
 
-    // If this is the root object for a model reference, where `blocked.value`
-    // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && blocked.value === null) {
-      blocked.value = parentObject[key];
-    }
+  const mappedValue = map(response, value, parentObject, key);
+  parentObject[key] = mappedValue;
 
-    blocked.deps--;
-    if (blocked.deps === 0) {
-      if (chunk.status !== BLOCKED) {
-        return;
-      }
-      const resolveListeners = chunk.value;
-      const initializedChunk: InitializedChunk<T> = (chunk: any);
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = blocked.value;
-      if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, blocked.value);
-      }
+  // If this is the root object for a model reference, where `handler.value`
+  // is a stale `null`, the resolved value can be used directly.
+  if (key === '' && handler.value === null) {
+    handler.value = mappedValue;
+  }
+
+  // There are no Elements or Debug Info to transfer here.
+
+  handler.deps--;
+
+  if (handler.deps === 0) {
+    const chunk = handler.chunk;
+    if (chunk === null || chunk.status !== BLOCKED) {
+      return;
     }
-  };
+    const resolveListeners = chunk.value;
+    const initializedChunk: InitializedChunk<any> = (chunk: any);
+    initializedChunk.status = INITIALIZED;
+    initializedChunk.value = handler.value;
+    initializedChunk.reason = handler.reason; // Used by streaming chunks
+    if (resolveListeners !== null) {
+      wakeChunk(response, resolveListeners, handler.value);
+    }
+  }
 }
 
-function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
-  return (error: mixed) => triggerErrorOnChunk(chunk, error);
+function rejectReference(
+  response: Response,
+  handler: InitializationHandler,
+  error: mixed,
+): void {
+  if (handler.errored) {
+    // We've already errored. We could instead build up an AggregateError
+    // but if there are multiple errors we just take the first one like
+    // Promise.all.
+    return;
+  }
+  handler.errored = true;
+  handler.value = null;
+  handler.reason = error;
+  const chunk = handler.chunk;
+  if (chunk === null || chunk.status !== BLOCKED) {
+    return;
+  }
+  // There's no debug info to forward in this direction.
+  triggerErrorOnChunk(response, chunk, error);
+}
+
+function waitForReference<T>(
+  referencedChunk: PendingChunk<T> | BlockedChunk<T>,
+  parentObject: Object,
+  key: string,
+  response: Response,
+  map: (response: Response, model: any, parentObject: Object, key: string) => T,
+  path: Array<string>,
+): T {
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
+    handler.deps++;
+  } else {
+    handler = initializingHandler = {
+      chunk: null,
+      value: null,
+      reason: null,
+      deps: 1,
+      errored: false,
+    };
+  }
+
+  const reference: InitializationReference = {
+    handler,
+    parentObject,
+    key,
+    map,
+    path,
+  };
+
+  // Add "listener".
+  if (referencedChunk.value === null) {
+    referencedChunk.value = [reference];
+  } else {
+    referencedChunk.value.push(reference);
+  }
+  if (referencedChunk.reason === null) {
+    referencedChunk.reason = [reference];
+  } else {
+    referencedChunk.reason.push(reference);
+  }
+
+  // Return a place holder value for now.
+  return (null: any);
 }
 
 function getOutlinedModel<T>(
@@ -597,7 +869,7 @@ function getOutlinedModel<T>(
   reference: string,
   parentObject: Object,
   key: string,
-  map: (response: Response, model: any) => T,
+  map: (response: Response, model: any, parentObject: Object, key: string) => T,
 ): T {
   const path = reference.split(':');
   const id = parseInt(path[0], 16);
@@ -612,28 +884,79 @@ function getOutlinedModel<T>(
     case INITIALIZED:
       let value = chunk.value;
       for (let i = 1; i < path.length; i++) {
-        value = value[path[i]];
+        // The server doesn't have any lazy references but we unwrap Chunks here in the same way as the client.
+        while (value instanceof ReactPromise) {
+          const referencedChunk: SomeChunk<any> = value;
+          switch (referencedChunk.status) {
+            case RESOLVED_MODEL:
+              initializeModelChunk(referencedChunk);
+              break;
+          }
+          switch (referencedChunk.status) {
+            case INITIALIZED: {
+              value = referencedChunk.value;
+              break;
+            }
+            case BLOCKED:
+            case PENDING: {
+              return waitForReference(
+                referencedChunk,
+                parentObject,
+                key,
+                response,
+                map,
+                path.slice(i - 1),
+              );
+            }
+            default: {
+              // This is an error. Instead of erroring directly, we're going to encode this on
+              // an initialization handler so that we can catch it at the nearest Element.
+              if (initializingHandler) {
+                initializingHandler.errored = true;
+                initializingHandler.value = null;
+                initializingHandler.reason = referencedChunk.reason;
+              } else {
+                initializingHandler = {
+                  chunk: null,
+                  value: null,
+                  reason: referencedChunk.reason,
+                  deps: 0,
+                  errored: true,
+                };
+              }
+              return (null: any);
+            }
+          }
+        }
+        const name = path[i];
+        if (typeof value === 'object' && hasOwnProperty.call(value, name)) {
+          value = value[name];
+        }
       }
-      return map(response, value);
+      const chunkValue = map(response, value, parentObject, key);
+      // There's no Element nor Debug Info in the ReplyServer so we don't have to check those here.
+      return chunkValue;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
-      const parentChunk = initializingChunk;
-      chunk.then(
-        createModelResolver(
-          parentChunk,
-          parentObject,
-          key,
-          chunk.status === CYCLIC,
-          response,
-          map,
-          path,
-        ),
-        createModelReject(parentChunk),
-      );
-      return (null: any);
+      return waitForReference(chunk, parentObject, key, response, map, path);
     default:
-      throw chunk.reason;
+      // This is an error. Instead of erroring directly, we're going to encode this on
+      // an initialization handler.
+      if (initializingHandler) {
+        initializingHandler.errored = true;
+        initializingHandler.value = null;
+        initializingHandler.reason = chunk.reason;
+      } else {
+        initializingHandler = {
+          chunk: null,
+          value: null,
+          reason: chunk.reason,
+          deps: 0,
+          errored: true,
+        };
+      }
+      // Placeholder
+      return (null: any);
   }
 }
 
@@ -657,7 +980,7 @@ function createModel(response: Response, model: any): any {
   return model;
 }
 
-function parseTypedArray(
+function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
   response: Response,
   reference: string,
   constructor: any,
@@ -670,30 +993,78 @@ function parseTypedArray(
   const key = prefix + id;
   // We should have this backingEntry in the store already because we emitted
   // it before referencing it. It should be a Blob.
+  // TODO: Use getOutlinedModel to allow us to emit the Blob later. We should be able to do that now.
   const backingEntry: Blob = (response._formData.get(key): any);
 
-  const promise =
-    constructor === ArrayBuffer
-      ? backingEntry.arrayBuffer()
-      : backingEntry.arrayBuffer().then(function (buffer) {
-          return new constructor(buffer);
-        });
+  const promise: Promise<ArrayBuffer> = backingEntry.arrayBuffer();
 
   // Since loading the buffer is an async operation we'll be blocking the parent
   // chunk.
-  const parentChunk = initializingChunk;
-  promise.then(
-    createModelResolver(
-      parentChunk,
-      parentObject,
-      parentKey,
-      false,
-      response,
-      createModel,
-      [],
-    ),
-    createModelReject(parentChunk),
-  );
+
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
+    handler.deps++;
+  } else {
+    handler = initializingHandler = {
+      chunk: null,
+      value: null,
+      reason: null,
+      deps: 1,
+      errored: false,
+    };
+  }
+
+  function fulfill(buffer: ArrayBuffer): void {
+    const resolvedValue: T =
+      constructor === ArrayBuffer
+        ? (buffer: any)
+        : (new constructor(buffer): any);
+
+    parentObject[parentKey] = resolvedValue;
+
+    // If this is the root object for a model reference, where `handler.value`
+    // is a stale `null`, the resolved value can be used directly.
+    if (parentKey === '' && handler.value === null) {
+      handler.value = resolvedValue;
+    }
+
+    handler.deps--;
+
+    if (handler.deps === 0) {
+      const chunk = handler.chunk;
+      if (chunk === null || chunk.status !== BLOCKED) {
+        return;
+      }
+      const resolveListeners = chunk.value;
+      const initializedChunk: InitializedChunk<T> = (chunk: any);
+      initializedChunk.status = INITIALIZED;
+      initializedChunk.value = handler.value;
+      if (resolveListeners !== null) {
+        wakeChunk(response, resolveListeners, handler.value);
+      }
+    }
+  }
+
+  function reject(error: mixed): void {
+    if (handler.errored) {
+      // We've already errored. We could instead build up an AggregateError
+      // but if there are multiple errors we just take the first one like
+      // Promise.all.
+      return;
+    }
+    handler.errored = true;
+    handler.value = null;
+    handler.reason = error;
+    const chunk = handler.chunk;
+    if (chunk === null || chunk.status !== BLOCKED) {
+      return;
+    }
+    triggerErrorOnChunk(response, chunk, error);
+  }
+
+  promise.then(fulfill, reject);
+
   return null;
 }
 
@@ -711,12 +1082,13 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   const key = prefix + id;
   const existingEntries = response._formData.getAll(key);
   for (let i = 0; i < existingEntries.length; i++) {
-    // We assume that this is a string entry for now.
-    const value: string = (existingEntries[i]: any);
-    if (value[0] === 'C') {
-      controller.close(value === 'C' ? '"$undefined"' : value.slice(1));
-    } else {
-      controller.enqueueModel(value);
+    const value = existingEntries[i];
+    if (typeof value === 'string') {
+      if (value[0] === 'C') {
+        controller.close(value === 'C' ? '"$undefined"' : value.slice(1));
+      } else {
+        controller.enqueueModel(value);
+      }
     }
   }
 }
@@ -774,7 +1146,7 @@ function parseReadableStream<T>(
             // to synchronous emitting.
             previousBlockedChunk = null;
           }
-          resolveModelChunk(chunk, json, -1);
+          resolveModelChunk(response, chunk, json, -1);
         });
       }
     },
@@ -844,7 +1216,12 @@ function parseAsyncIterable<T>(
           false,
         );
       } else {
-        resolveIteratorResultChunk(buffer[nextWriteIndex], value, false);
+        resolveIteratorResultChunk(
+          response,
+          buffer[nextWriteIndex],
+          value,
+          false,
+        );
       }
       nextWriteIndex++;
     },
@@ -857,12 +1234,18 @@ function parseAsyncIterable<T>(
           true,
         );
       } else {
-        resolveIteratorResultChunk(buffer[nextWriteIndex], value, true);
+        resolveIteratorResultChunk(
+          response,
+          buffer[nextWriteIndex],
+          value,
+          true,
+        );
       }
       nextWriteIndex++;
       while (nextWriteIndex < buffer.length) {
         // In generators, any extra reads from the iterator have the value undefined.
         resolveIteratorResultChunk(
+          response,
           buffer[nextWriteIndex++],
           '"$undefined"',
           true,
@@ -876,7 +1259,7 @@ function parseAsyncIterable<T>(
           createPendingChunk<IteratorResult<T, T>>(response);
       }
       while (nextWriteIndex < buffer.length) {
-        triggerErrorOnChunk(buffer[nextWriteIndex++], error);
+        triggerErrorOnChunk(response, buffer[nextWriteIndex++], error);
       }
     },
   };
@@ -892,11 +1275,10 @@ function parseAsyncIterable<T>(
         if (nextReadIndex === buffer.length) {
           if (closed) {
             // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-            return new Chunk(
+            return new ReactPromise(
               INITIALIZED,
               {done: true, value: undefined},
               null,
-              response,
             );
           }
           buffer[nextReadIndex] =
@@ -935,19 +1317,7 @@ function parseModelString(
       case 'F': {
         // Server Reference
         const ref = value.slice(2);
-        // TODO: Just encode this in the reference inline instead of as a model.
-        const metaData: {
-          id: ServerReferenceId,
-          bound: null | Thenable<Array<any>>,
-        } = getOutlinedModel(response, ref, obj, key, createModel);
-        return loadServerReference(
-          response,
-          metaData.id,
-          metaData.bound,
-          initializingChunk,
-          obj,
-          key,
-        );
+        return getOutlinedModel(response, ref, obj, key, loadServerReference);
       }
       case 'T': {
         // Temporary Reference
@@ -1121,7 +1491,7 @@ export function resolveField(
     const chunk = chunks.get(id);
     if (chunk) {
       // We were waiting on this key so now we can resolve it.
-      resolveModelChunk(chunk, value, id);
+      resolveModelChunk(response, chunk, value, id);
     }
   }
 }
