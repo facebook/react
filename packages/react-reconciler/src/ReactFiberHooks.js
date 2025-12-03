@@ -3565,7 +3565,8 @@ function dispatchReducerAction<S, A>(
       console.error(
         "State updates from the useState() and useReducer() Hooks don't support the " +
           'second callback argument. To execute a side effect after ' +
-          'rendering, declare it in the component body with useEffect().',
+          'rendering, declare it inside the component function using useEffect(), not during render.',
+
       );
     }
   }
