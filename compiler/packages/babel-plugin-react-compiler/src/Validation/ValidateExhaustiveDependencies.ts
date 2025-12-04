@@ -140,6 +140,7 @@ export function validateExhaustiveDependencies(
         startMemo.deps ?? [],
         reactive,
         startMemo.depsLoc,
+        ErrorCategory.MemoDependencies,
       );
       if (diagnostic != null) {
         error.pushDiagnostic(diagnostic);
@@ -199,6 +200,7 @@ export function validateExhaustiveDependencies(
           manualDeps,
           reactive,
           null,
+          ErrorCategory.EffectExhaustiveDependencies,
         );
         if (diagnostic != null) {
           error.pushDiagnostic(diagnostic);
@@ -215,6 +217,9 @@ function validateDependencies(
   manualDependencies: Array<ManualMemoDependency>,
   reactive: Set<IdentifierId>,
   manualMemoLoc: SourceLocation | null,
+  category:
+    | ErrorCategory.MemoDependencies
+    | ErrorCategory.EffectExhaustiveDependencies,
 ): CompilerDiagnostic | null {
   // Sort dependencies by name and path, with shorter/non-optional paths first
   inferred.sort((a, b) => {
@@ -373,23 +378,7 @@ function validateDependencies(
           .join(', ')}]`,
       };
     }
-    const diagnostic = CompilerDiagnostic.create({
-      category: ErrorCategory.MemoDependencies,
-      reason: 'Found missing/extra memoization dependencies',
-      description: [
-        missing.length !== 0
-          ? 'Missing dependencies can cause a value to update less often than it should, ' +
-            'resulting in stale UI'
-          : null,
-        extra.length !== 0
-          ? 'Extra dependencies can cause a value to update more often than it should, ' +
-            'resulting in performance problems such as excessive renders or effects firing too often'
-          : null,
-      ]
-        .filter(Boolean)
-        .join('. '),
-      suggestions: suggestion != null ? [suggestion] : null,
-    });
+    const diagnostic = createDiagnostic(category, missing, extra, suggestion);
     for (const dep of missing) {
       let reactiveStableValueHint = '';
       if (isStableType(dep.identifier)) {
@@ -1000,4 +989,65 @@ function isOptionalDependency(
     (isStableType(inferredDependency.identifier) ||
       isPrimitiveType(inferredDependency.identifier))
   );
+}
+
+function createDiagnostic(
+  category:
+    | ErrorCategory.MemoDependencies
+    | ErrorCategory.EffectExhaustiveDependencies,
+  missing: Array<InferredDependency>,
+  extra: Array<ManualMemoDependency>,
+  suggestion: CompilerSuggestion | null,
+): CompilerDiagnostic {
+  let reason: string;
+  let description: string;
+
+  function joinMissingExtraDetail(
+    missingString: string,
+    extraString: string,
+    joinStr: string,
+  ): string {
+    return [
+      missing.length !== 0 ? missingString : null,
+      extra.length !== 0 ? extraString : null,
+    ]
+      .filter(Boolean)
+      .join(joinStr);
+  }
+
+  switch (category) {
+    case ErrorCategory.MemoDependencies: {
+      reason = `Found ${joinMissingExtraDetail('missing', 'extra', '/')} memoization dependencies`;
+      description = joinMissingExtraDetail(
+        'Missing dependencies can cause a value to update less often than it should, resulting in stale UI',
+        'Extra dependencies can cause a value to update more often than it should, resulting in performance' +
+          ' problems such as excessive renders or effects firing too often',
+        '. ',
+      );
+      break;
+    }
+    case ErrorCategory.EffectExhaustiveDependencies: {
+      reason = `Found ${joinMissingExtraDetail('missing', 'extra', '/')} effect dependencies`;
+      description = joinMissingExtraDetail(
+        'Missing dependencies can cause an effect to fire less often than it should',
+        'Extra dependencies can cause an effect to fire more often than it should, resulting' +
+          ' in performance problems such as excessive renders and side effects',
+        '. ',
+      );
+      break;
+    }
+    default: {
+      CompilerError.simpleInvariant(false, {
+        reason: `Unexpected error category: ${category}`,
+        loc: GeneratedSource,
+      });
+    }
+  }
+
+  return CompilerDiagnostic.create({
+    category,
+    reason,
+    description,
+    suggestions: suggestion != null ? [suggestion] : null,
+  });
 }

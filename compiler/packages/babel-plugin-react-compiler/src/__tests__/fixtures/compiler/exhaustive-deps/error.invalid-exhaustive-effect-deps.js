@@ -4,11 +4,21 @@ import {useEffect} from 'react';
 function Component({x, y, z}) {
   // error: missing dep - x
   useEffect(() => {
-    console.log(x);
+    log(x);
   }, []);
 
   // error: extra dep - y
   useEffect(() => {
-    console.log(x);
+    log(x);
   }, [x, y]);
+
+  // error: missing dep - z; extra dep - y
+  useEffect(() => {
+    log(x, z);
+  }, [x, y]);
+
+  // error: missing dep x
+  useEffect(() => {
+    log(x);
+  }, [x.y]);
 }

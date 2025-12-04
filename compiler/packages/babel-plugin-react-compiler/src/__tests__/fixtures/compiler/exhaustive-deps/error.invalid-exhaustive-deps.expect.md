@@ -101,7 +101,7 @@ error.invalid-exhaustive-deps.ts:17:6
 
 Inferred dependencies: `[x?.y.z.a?.b]`
 
-Error: Found missing/extra memoization dependencies
+Error: Found extra memoization dependencies
 
 Extra dependencies can cause a value to update more often than it should, resulting in performance problems such as excessive renders or effects firing too often.
 
@@ -143,7 +143,7 @@ error.invalid-exhaustive-deps.ts:31:23
 
 Inferred dependencies: `[]`
 
-Error: Found missing/extra memoization dependencies
+Error: Found missing memoization dependencies
 
 Missing dependencies can cause a value to update less often than it should, resulting in stale UI.
 
