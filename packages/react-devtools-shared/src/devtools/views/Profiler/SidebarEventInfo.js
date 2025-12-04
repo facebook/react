@@ -28,11 +28,8 @@ import styles from './SidebarEventInfo.css';
 
 export type Props = {};
 
-type FunctionLocationProps = {
-  location: ReactFunctionLocation,
-  displayName: string,
-};
-function FunctionLocation({location, displayName}: FunctionLocationProps) {
+// Removed type alias FunctionLocationProps
+function FunctionLocation({location, displayName}) {
   // TODO: We should support symbolication here as well, but
   // symbolicating the whole stack can be expensive
   const [canViewSource, viewSource] = useOpenResource(location, null);
@@ -50,11 +47,9 @@ function FunctionLocation({location, displayName}: FunctionLocationProps) {
   );
 }
 
-type SchedulingEventProps = {
-  eventInfo: SchedulingEvent,
-};
+// Removed type alias SchedulingEventProps
 
-function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
+function SchedulingEventInfo({eventInfo}) {
   const {componentName, timestamp} = eventInfo;
   const componentStack = eventInfo.componentStack || null;
 
@@ -83,7 +78,7 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
                 </Button>
               </div>
               <ul className={styles.List}>
-                {stackToComponentLocations(componentStack).map(
+                {(stackToComponentLocations(componentStack) || []).map(
                   ([displayName, location], index) => {
                     if (location == null) {
                       return (
@@ -115,7 +110,7 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
   );
 }
 
-export default function SidebarEventInfo(_: Props): React.Node {
+export default function SidebarEventInfo(_) {
   const {selectedEvent} = useContext(TimelineContext);
   // (TODO) Refactor in next PR so this supports multiple types of events
   if (selectedEvent && selectedEvent.schedulingEvent) {
