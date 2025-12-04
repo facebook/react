@@ -2023,6 +2023,11 @@ export function isUseInsertionEffectHookType(id: Identifier): boolean {
     id.type.shapeId === 'BuiltInUseInsertionEffectHook'
   );
 }
+export function isUseEffectEventType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectEvent'
+  );
+}
 
 export function isUseContextHookType(id: Identifier): boolean {
   return (
