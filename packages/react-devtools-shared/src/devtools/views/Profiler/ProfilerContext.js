@@ -10,7 +10,14 @@
 import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
-import {createContext, useCallback, useContext, useMemo, useState} from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+} from 'react';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {
   TreeDispatcherContext,
@@ -170,6 +177,7 @@ function ProfilerContextController({children}: Props): React.Node {
     [setRootID, selectFiber],
   );
 
+  // why am i doing this instead of use effect
   if (prevProfilingData !== profilingData) {
     setPrevProfilingData(profilingData);
 
@@ -230,7 +238,7 @@ function ProfilerContextController({children}: Props): React.Node {
   );
 
   // Clear selections when starting a new profiling session
-  React.useEffect(() => {
+  useEffect(() => {
     if (isProfiling) {
       selectCommitIndex(null);
       selectFiberID(null);
@@ -264,10 +272,8 @@ function ProfilerContextController({children}: Props): React.Node {
     [commitData],
   );
 
-  // Auto-select first commit when profiling data becomes available
-  // Only runs when profilingData or rootID change, NOT when selectedCommitIndex changes
-  // This ensures it only auto-selects when new data arrives, not when filtering clears selection
-  React.useEffect(() => {
+  // Auto-select first commit when profiling data becomes available and no commit is selected
+  useEffect(() => {
     if (
       profilingData !== null &&
       selectedCommitIndex === null &&
@@ -302,13 +308,10 @@ function ProfilerContextController({children}: Props): React.Node {
       );
 
       if (newFilteredIndices.length === 0) {
-        // No commits pass the filter - clear selection
         selectCommitIndex(null);
       } else if (currentSelectedIndex === null) {
-        // No commit was selected - select first available
         selectCommitIndex(newFilteredIndices[0]);
       } else if (selectedFilteredIndex === null) {
-        // Currently selected commit was filtered out - find closest commit before it
         let closestBefore = null;
         for (let i = newFilteredIndices.length - 1; i >= 0; i--) {
           if (newFilteredIndices[i] < currentSelectedIndex) {
@@ -316,7 +319,6 @@ function ProfilerContextController({children}: Props): React.Node {
             break;
           }
         }
-        // If no commit before it, use the first available
         selectCommitIndex(
           closestBefore !== null ? closestBefore : newFilteredIndices[0],
         );
@@ -450,7 +452,6 @@ function ProfilerContextController({children}: Props): React.Node {
       supportsProfiling,
 
       rootID,
-      setRootID,
       setRootIDAndClearFiber,
 
       isCommitFilterEnabled,
