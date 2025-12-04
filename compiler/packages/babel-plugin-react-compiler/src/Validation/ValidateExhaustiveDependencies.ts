@@ -25,6 +25,7 @@ import {
   Identifier,
   IdentifierId,
   InstructionKind,
+  isEffectEventFunctionType,
   isPrimitiveType,
   isStableType,
   isSubPath,
@@ -317,6 +318,12 @@ function validateDependencies(
       reason: 'Unexpected function dependency',
       loc: inferredDependency.loc,
     });
+    /**
+     * Skip effect event functions as they are not valid dependencies
+     */
+    if (isEffectEventFunctionType(inferredDependency.identifier)) {
+      continue;
+    }
     let hasMatchingManualDependency = false;
     for (const manualDependency of manualDependencies) {
       if (
@@ -339,6 +346,7 @@ function validateDependencies(
     ) {
       continue;
     }
+
     missing.push(inferredDependency);
   }
 
@@ -416,6 +424,17 @@ function validateDependencies(
           },
         );
         if (
+          matchingInferred != null &&
+          isEffectEventFunctionType(matchingInferred.identifier)
+        ) {
+          diagnostic.withDetails({
+            kind: 'error',
+            message:
+              `Functions returned from \`useEffectEvent\` must not be included in the dependency array. ` +
+              `Remove \`${printManualMemoDependency(dep)}\` from the dependencies.`,
+            loc: dep.loc ?? manualMemoLoc,
+          });
+        } else if (
           matchingInferred != null &&
           !isOptionalDependency(matchingInferred, reactive)
         ) {
