@@ -18,6 +18,7 @@ import {
   areEqualPaths,
   BlockId,
   DependencyPath,
+  Environment,
   FinishMemoize,
   GeneratedSource,
   HIRFunction,
@@ -87,6 +88,7 @@ const DEBUG = false;
  */
 export function validateExhaustiveDependencies(
   fn: HIRFunction,
+  env: Environment,
 ): Result<void, CompilerError> {
   const reactive = collectReactiveIdentifiersHIR(fn);
 
@@ -129,17 +131,19 @@ export function validateExhaustiveDependencies(
         loc: value.loc,
       },
     );
-    visitCandidateDependency(value.decl, temporaries, dependencies, locals);
-    const inferred: Array<InferredDependency> = Array.from(dependencies);
+    if (env.config.validateExhaustiveMemoizationDependencies) {
+      visitCandidateDependency(value.decl, temporaries, dependencies, locals);
+      const inferred: Array<InferredDependency> = Array.from(dependencies);
 
-    const diagnostic = validateDependencies(
-      inferred,
-      startMemo.deps ?? [],
-      reactive,
-      startMemo.depsLoc,
-    );
-    if (diagnostic != null) {
-      error.pushDiagnostic(diagnostic);
+      const diagnostic = validateDependencies(
+        inferred,
+        startMemo.deps ?? [],
+        reactive,
+        startMemo.depsLoc,
+      );
+      if (diagnostic != null) {
+        error.pushDiagnostic(diagnostic);
+      }
     }
 
     dependencies.clear();
@@ -154,6 +158,9 @@ export function validateExhaustiveDependencies(
       onStartMemoize,
       onFinishMemoize,
       onEffect: (inferred, manual) => {
+        if (env.config.validateExhaustiveEffectDependencies === false) {
+          return;
+        }
         if (DEBUG) {
           console.log(Array.from(inferred, printInferredDependency));
           console.log(Array.from(manual, printInferredDependency));
