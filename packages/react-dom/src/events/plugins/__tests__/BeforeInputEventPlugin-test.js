@@ -858,4 +858,69 @@ describe('BeforeInputEventPlugin', () => {
   it('should extract onBeforeInput when simulating in env with only CompositionEvent on contenteditable', async () => {
     await testContentEditableComponent(environments[3], scenarios);
   });
+
+  // New tests to cover native `beforeinput` events (e.g. Firefox replacement
+  // flows such as macOS accent menu or spellcheck/autocorrect replacements).
+  it('should extract onBeforeInput for native beforeinput on input[type=text]', async () => {
+    ({ReactDOMClient, act} = loadReactDOMClientAndAct());
+    const root = ReactDOMClient.createRoot(container);
+    let beforeInputEvent = null;
+    const spyOnBeforeInput = jest.fn();
+
+    await act(() => {
+      root.render(
+        <input
+          type="text"
+          onBeforeInput={e => {
+            spyOnBeforeInput();
+            beforeInputEvent = e;
+          }}
+        />,
+      );
+    });
+
+    const node = container.firstChild;
+
+    // Simulate a native beforeinput with replacement data
+    simulateEvent(node, 'beforeinput', {
+      data: 'á',
+      inputType: 'insertReplacementText',
+    });
+
+    expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
+    expect(beforeInputEvent).not.toBeNull();
+    expect(beforeInputEvent.nativeEvent.type).toBe('beforeinput');
+    expect(beforeInputEvent.data).toBe('á');
+  });
+
+  it('should extract onBeforeInput for native beforeinput on contentEditable', async () => {
+    ({ReactDOMClient, act} = loadReactDOMClientAndAct());
+    const root = ReactDOMClient.createRoot(container);
+    let beforeInputEvent = null;
+    const spyOnBeforeInput = jest.fn();
+
+    await act(() => {
+      root.render(
+        <div
+          contentEditable={true}
+          onBeforeInput={e => {
+            spyOnBeforeInput();
+            beforeInputEvent = e;
+          }}
+        />,
+      );
+    });
+
+    const node = container.firstChild;
+
+    simulateEvent(node, 'beforeinput', {
+      data: 'ç',
+      inputType: 'insertText',
+    });
+
+    expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
+    expect(beforeInputEvent).not.toBeNull();
+    expect(beforeInputEvent.nativeEvent.type).toBe('beforeinput');
+    expect(beforeInputEvent.data).toBe('ç');
+  });
 });
