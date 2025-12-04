@@ -136,6 +136,13 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
           }
           return Reflect.set(target, key, value, receiver);
         },
+        get(target, key, receiver) {
+          if (key === 'stack') {
+            // https://github.com/nodejs/node/issues/60862
+            return Reflect.get(target, key);
+          }
+          return Reflect.get(target, key, receiver);
+        },
       });
       originalErrorInstances.set(proxy, error);
       return proxy;
