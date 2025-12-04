@@ -756,7 +756,6 @@ const bundles = [
     externals: ['acorn'],
   },
 
-
   /******* React Server DOM Unbundled Server *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -805,10 +804,10 @@ const bundles = [
   {
     bundleTypes: [NODE_ES2015],
     moduleType: RENDERER_UTILS,
-    entry: 'react-server-dom-unbundled/src/ReactFlightWebpackNodeRegister',
+    entry: 'react-server-dom-unbundled/src/ReactFlightUnbundledNodeRegister',
     name: 'react-server-dom-unbundled-node-register',
     condition: 'react-server',
-    global: 'ReactFlightWebpackNodeRegister',
+    global: 'ReactFlightUnbundledNodeRegister',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['url', 'module', 'react-server-dom-unbundled/server'],

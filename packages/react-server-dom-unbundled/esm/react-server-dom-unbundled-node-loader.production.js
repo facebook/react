@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from '../src/ReactFlightWebpackNodeLoader.js';
+export * from '../src/ReactFlightUnbundledNodeLoader.js';

@@ -14,7 +14,7 @@ const url = require('url');
 const Module = require('module');
 
 module.exports = function register() {
-  const Server: any = require('react-server-dom-webpack/server');
+  const Server: any = require('react-server-dom-unbundled/server');
   const registerServerReference = Server.registerServerReference;
   const createClientModuleProxy = Server.createClientModuleProxy;
 

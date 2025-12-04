@@ -6,6 +6,7 @@ const path = require('path');
 const url = require('url');
 
 const register = require('react-server-dom-unbundled/node-register');
+// TODO: This seems to have no effect anymore. Remove?
 register();
 
 const babelRegister = require('@babel/register');

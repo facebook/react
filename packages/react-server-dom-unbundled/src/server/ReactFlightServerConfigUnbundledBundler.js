@@ -16,7 +16,7 @@ import type {
 import type {
   ClientReference,
   ServerReference,
-} from '../ReactFlightWebpackReferences';
+} from '../ReactFlightUnbundledReferences';
 
 export type {ClientReference, ServerReference};
 
@@ -34,7 +34,7 @@ export type ClientReferenceKey = string;
 export {
   isClientReference,
   isServerReference,
-} from '../ReactFlightWebpackReferences';
+} from '../ReactFlightUnbundledReferences';
 
 export function getClientReferenceKey(
   reference: ClientReference<any>,

@@ -10,4 +10,4 @@
 export {
   prerender,
   prerenderToNodeStream,
-} from './src/server/react-flight-dom-server.node.unbundled';
+} from './src/server/react-flight-dom-server.node';

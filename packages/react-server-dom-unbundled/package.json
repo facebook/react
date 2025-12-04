@@ -8,7 +8,6 @@
     "README.md",
     "index.js",
     "client.js",
-    "client.node.js",
     "server.js",
     "server.node.js",
     "static.js",
@@ -19,8 +18,7 @@
   ],
   "exports": {
     ".": "./index.js",
-    "./client": "./client.node.js",
-    "./client.node": "./client.node.js",
+    "./client": "./client.js",
     "./server": {
       "react-server": "./server.node.js",
       "default": "./server.js"
