@@ -24,6 +24,7 @@ let hasErrored = false;
 let fatalError = undefined;
 let waitForPaint;
 let SuspenseList;
+let assertConsoleErrorDev;
 
 describe('useId', () => {
   beforeEach(() => {
@@ -43,6 +44,7 @@ describe('useId', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForPaint = InternalTestUtils.waitForPaint;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     // Test Environment
     const jsdom = new JSDOM(
@@ -366,9 +368,28 @@ describe('useId', () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
       pipe(writable);
     });
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in App (at **)',
+      ]);
+    }
+
     await clientAct(async () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in App (at **)',
+      ]);
+    }
     expect(container).toMatchInlineSnapshot(`
       <div
         id="container"
