@@ -69,6 +69,7 @@ export const enableDefaultTransitionIndicator = true;
 export const enableFragmentRefs = false;
 export const enableFragmentRefsScrollIntoView = false;
 export const ownerStackLimit = 1e4;
+export const enableOptimisticKey = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

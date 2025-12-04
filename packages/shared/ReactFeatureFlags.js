@@ -98,6 +98,8 @@ export const enableHydrationChangeEvent = __EXPERIMENTAL__;
 
 export const enableDefaultTransitionIndicator = __EXPERIMENTAL__;
 
+export const enableOptimisticKey = __EXPERIMENTAL__;
+
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
  */

@@ -584,4 +584,75 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() => context.selectFiber(childID, 'Child'));
     expect(inspectedElementID).toBe(parentID);
   });
+
+  it('should toggle profiling when the keyboard shortcut is pressed', async () => {
+    // Context providers
+    const Profiler =
+      require('react-devtools-shared/src/devtools/views/Profiler/Profiler').default;
+    const {
+      TimelineContextController,
+    } = require('react-devtools-timeline/src/TimelineContext');
+    const {
+      SettingsContextController,
+    } = require('react-devtools-shared/src/devtools/views/Settings/SettingsContext');
+    const {
+      ModalDialogContextController,
+    } = require('react-devtools-shared/src/devtools/views/ModalDialog');
+
+    // Dom component for profiling to be enabled
+    const Component = () => null;
+    utils.act(() => render(<Component />));
+
+    const profilerContainer = document.createElement('div');
+    document.body.appendChild(profilerContainer);
+
+    // Create a root for the profiler
+    const profilerRoot = ReactDOMClient.createRoot(profilerContainer);
+
+    // Render the profiler
+    utils.act(() => {
+      profilerRoot.render(
+        <Contexts>
+          <SettingsContextController browserTheme="light">
+            <ModalDialogContextController>
+              <TimelineContextController>
+                <Profiler />
+              </TimelineContextController>
+            </ModalDialogContextController>
+          </SettingsContextController>
+        </Contexts>,
+      );
+    });
+
+    // Verify that the profiler is not profiling.
+    expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(false);
+
+    // Trigger the keyboard shortcut.
+    const ownerWindow = profilerContainer.ownerDocument.defaultView;
+    const isMac =
+      typeof navigator !== 'undefined' &&
+      navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+    const keyEvent = new KeyboardEvent('keydown', {
+      key: 'e',
+      metaKey: isMac,
+      ctrlKey: !isMac,
+      bubbles: true,
+    });
+
+    // Dispatch keyboard event to toggle profiling on
+    // Try utils.actAsync with recursivelyFlush=false
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(keyEvent);
+    }, false);
+    expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(true);
+
+    // Dispatch keyboard event to toggle profiling off
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(keyEvent);
+    }, false);
+    expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(false);
+
+    document.body.removeChild(profilerContainer);
+  });
 });

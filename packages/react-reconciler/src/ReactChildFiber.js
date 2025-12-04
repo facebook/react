@@ -15,6 +15,8 @@ import type {
   ReactDebugInfo,
   ReactComponentInfo,
   SuspenseListRevealOrder,
+  ReactKey,
+  ReactOptimisticKey,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
@@ -37,6 +39,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_LEGACY_ELEMENT_TYPE,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 import {
   HostRoot,
@@ -50,6 +53,7 @@ import {
   enableAsyncIterableChildren,
   disableLegacyMode,
   enableFragmentRefs,
+  enableOptimisticKey,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -462,18 +466,33 @@ function createChildReconciler(
 
   function mapRemainingChildren(
     currentFirstChild: Fiber,
-  ): Map<string | number, Fiber> {
+  ): Map<string | number | ReactOptimisticKey, Fiber> {
     // Add the remaining children to a temporary map so that we can find them by
     // keys quickly. Implicit (null) keys get added to this set with their index
     // instead.
-    const existingChildren: Map<string | number, Fiber> = new Map();
+    const existingChildren: Map<
+      | string
+      | number
+      // This type is only here for the case when enableOptimisticKey is disabled.
+      // Remove it after it ships.
+      | ReactOptimisticKey,
+      Fiber,
+    > = new Map();
 
     let existingChild: null | Fiber = currentFirstChild;
     while (existingChild !== null) {
-      if (existingChild.key !== null) {
-        existingChildren.set(existingChild.key, existingChild);
-      } else {
+      if (existingChild.key === null) {
         existingChildren.set(existingChild.index, existingChild);
+      } else if (
+        enableOptimisticKey &&
+        existingChild.key === REACT_OPTIMISTIC_KEY
+      ) {
+        // For optimistic keys, we store the negative index (minus one) to differentiate
+        // them from the regular indices. We'll look this up regardless of what the new
+        // key is, if there's no other match.
+        existingChildren.set(-existingChild.index - 1, existingChild);
+      } else {
+        existingChildren.set(existingChild.key, existingChild);
       }
       existingChild = existingChild.sibling;
     }
@@ -636,6 +655,10 @@ function createChildReconciler(
     } else {
       // Update
       const existing = useFiber(current, portal.children || []);
+      if (enableOptimisticKey) {
+        // If the old key was optimistic we need to now save the real one.
+        existing.key = portal.key;
+      }
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugInfo = currentDebugInfo;
@@ -649,7 +672,7 @@ function createChildReconciler(
     current: Fiber | null,
     fragment: Iterable<React$Node>,
     lanes: Lanes,
-    key: null | string,
+    key: ReactKey,
   ): Fiber {
     if (current === null || current.tag !== Fragment) {
       // Insert
@@ -670,6 +693,10 @@ function createChildReconciler(
     } else {
       // Update
       const existing = useFiber(current, fragment);
+      if (enableOptimisticKey) {
+        // If the old key was optimistic we need to now save the real one.
+        existing.key = key;
+      }
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugInfo = currentDebugInfo;
@@ -840,7 +867,13 @@ function createChildReconciler(
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (newChild.key === key) {
+          if (
+            // If the old child was an optimisticKey, then we'd normally consider that a match,
+            // but instead, we'll bail to return null from the slot which will bail to slow path.
+            // That's to ensure that if the new key has a match elsewhere in the list, then that
+            // takes precedence over assuming the identity of an optimistic slot.
+            newChild.key === key
+          ) {
             const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
             const updated = updateElement(
               returnFiber,
@@ -855,7 +888,13 @@ function createChildReconciler(
           }
         }
         case REACT_PORTAL_TYPE: {
-          if (newChild.key === key) {
+          if (
+            // If the old child was an optimisticKey, then we'd normally consider that a match,
+            // but instead, we'll bail to return null from the slot which will bail to slow path.
+            // That's to ensure that if the new key has a match elsewhere in the list, then that
+            // takes precedence over assuming the identity of an optimistic slot.
+            newChild.key === key
+          ) {
             return updatePortal(returnFiber, oldFiber, newChild, lanes);
           } else {
             return null;
@@ -939,7 +978,7 @@ function createChildReconciler(
   }
 
   function updateFromMap(
-    existingChildren: Map<string | number, Fiber>,
+    existingChildren: Map<string | number | ReactOptimisticKey, Fiber>,
     returnFiber: Fiber,
     newIdx: number,
     newChild: any,
@@ -968,7 +1007,11 @@ function createChildReconciler(
           const matchedFiber =
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
-            ) || null;
+            ) ||
+            (enableOptimisticKey &&
+              // If the existing child was an optimistic key, we may still match on the index.
+              existingChildren.get(-newIdx - 1)) ||
+            null;
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
           const updated = updateElement(
             returnFiber,
@@ -983,7 +1026,11 @@ function createChildReconciler(
           const matchedFiber =
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
-            ) || null;
+            ) ||
+            (enableOptimisticKey &&
+              // If the existing child was an optimistic key, we may still match on the index.
+              existingChildren.get(-newIdx - 1)) ||
+            null;
           return updatePortal(returnFiber, matchedFiber, newChild, lanes);
         }
         case REACT_LAZY_TYPE: {
@@ -1274,14 +1321,22 @@ function createChildReconciler(
           );
         }
         if (shouldTrackSideEffects) {
-          if (newFiber.alternate !== null) {
+          const currentFiber = newFiber.alternate;
+          if (currentFiber !== null) {
             // The new fiber is a work in progress, but if there exists a
             // current, that means that we reused the fiber. We need to delete
             // it from the child list so that we don't add it to the deletion
             // list.
-            existingChildren.delete(
-              newFiber.key === null ? newIdx : newFiber.key,
-            );
+            if (
+              enableOptimisticKey &&
+              currentFiber.key === REACT_OPTIMISTIC_KEY
+            ) {
+              existingChildren.delete(-newIdx - 1);
+            } else {
+              existingChildren.delete(
+                currentFiber.key === null ? newIdx : currentFiber.key,
+              );
+            }
           }
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
@@ -1568,14 +1623,22 @@ function createChildReconciler(
           );
         }
         if (shouldTrackSideEffects) {
-          if (newFiber.alternate !== null) {
+          const currentFiber = newFiber.alternate;
+          if (currentFiber !== null) {
             // The new fiber is a work in progress, but if there exists a
             // current, that means that we reused the fiber. We need to delete
             // it from the child list so that we don't add it to the deletion
             // list.
-            existingChildren.delete(
-              newFiber.key === null ? newIdx : newFiber.key,
-            );
+            if (
+              enableOptimisticKey &&
+              currentFiber.key === REACT_OPTIMISTIC_KEY
+            ) {
+              existingChildren.delete(-newIdx - 1);
+            } else {
+              existingChildren.delete(
+                currentFiber.key === null ? newIdx : currentFiber.key,
+              );
+            }
           }
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
@@ -1642,12 +1705,19 @@ function createChildReconciler(
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (
+        child.key === key ||
+        (enableOptimisticKey && child.key === REACT_OPTIMISTIC_KEY)
+      ) {
         const elementType = element.type;
         if (elementType === REACT_FRAGMENT_TYPE) {
           if (child.tag === Fragment) {
             deleteRemainingChildren(returnFiber, child.sibling);
             const existing = useFiber(child, element.props.children);
+            if (enableOptimisticKey) {
+              // If the old key was optimistic we need to now save the real one.
+              existing.key = key;
+            }
             if (enableFragmentRefs) {
               coerceRef(existing, element);
             }
@@ -1677,6 +1747,10 @@ function createChildReconciler(
           ) {
             deleteRemainingChildren(returnFiber, child.sibling);
             const existing = useFiber(child, element.props);
+            if (enableOptimisticKey) {
+              // If the old key was optimistic we need to now save the real one.
+              existing.key = key;
+            }
             coerceRef(existing, element);
             existing.return = returnFiber;
             if (__DEV__) {
@@ -1736,7 +1810,10 @@ function createChildReconciler(
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (
+        child.key === key ||
+        (enableOptimisticKey && child.key === REACT_OPTIMISTIC_KEY)
+      ) {
         if (
           child.tag === HostPortal &&
           child.stateNode.containerInfo === portal.containerInfo &&
@@ -1744,6 +1821,10 @@ function createChildReconciler(
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, portal.children || []);
+          if (enableOptimisticKey) {
+            // If the old key was optimistic we need to now save the real one.
+            existing.key = key;
+          }
           existing.return = returnFiber;
           return existing;
         } else {
