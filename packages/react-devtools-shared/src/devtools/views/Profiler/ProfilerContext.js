@@ -229,15 +229,14 @@ function ProfilerContextController({children}: Props): React.Node {
     [store],
   );
 
-  if (isProfiling) {
-    if (selectedCommitIndex !== null) {
+  // Clear selections when starting a new profiling session
+  React.useEffect(() => {
+    if (isProfiling) {
       selectCommitIndex(null);
-    }
-    if (selectedFiberID !== null) {
       selectFiberID(null);
       selectFiberName(null);
     }
-  }
+  }, [isProfiling]);
 
   // Get commit data for the current root
   // NOTE: Unlike profilerStore.getDataForRoot() which uses Suspense (throws when data unavailable),
@@ -265,6 +264,23 @@ function ProfilerContextController({children}: Props): React.Node {
     [commitData],
   );
 
+  // Auto-select first commit when profiling data becomes available
+  // Only runs when profilingData or rootID change, NOT when selectedCommitIndex changes
+  // This ensures it only auto-selects when new data arrives, not when filtering clears selection
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally reading selectedCommitIndex without depending on it
+    if (
+      profilingData !== null &&
+      selectedCommitIndex === null &&
+      rootID !== null
+    ) {
+      const dataForRoot = profilingData.dataForRoots.get(rootID);
+      if (dataForRoot && dataForRoot.commitData.length > 0) {
+        selectCommitIndex(0);
+      }
+    }
+  }, [profilingData, rootID]);
+
   const findFilteredIndex = useCallback(
     (commitIndex: number | null, filtered: Array<number>): number | null => {
       if (commitIndex === null) return null;
@@ -289,13 +305,27 @@ function ProfilerContextController({children}: Props): React.Node {
       if (newFilteredIndices.length === 0) {
         // No commits pass the filter - clear selection
         selectCommitIndex(null);
-      } else if (selectedFilteredIndex === null) {
-        // Currently selected commit was filtered out - select first available
+      } else if (currentSelectedIndex === null) {
+        // No commit was selected - select first available
         selectCommitIndex(newFilteredIndices[0]);
+      } else if (selectedFilteredIndex === null) {
+        // Currently selected commit was filtered out - find closest commit before it
+        let closestBefore = null;
+        for (let i = newFilteredIndices.length - 1; i >= 0; i--) {
+          if (newFilteredIndices[i] < currentSelectedIndex) {
+            closestBefore = newFilteredIndices[i];
+            break;
+          }
+        }
+        // If no commit before it, use the first available
+        selectCommitIndex(
+          closestBefore !== null ? closestBefore : newFilteredIndices[0],
+        );
       } else if (selectedFilteredIndex >= newFilteredIndices.length) {
-        // Selected index is out of bounds - select last available
+        // Filtered position is out of bounds - clamp to last available
         selectCommitIndex(newFilteredIndices[newFilteredIndices.length - 1]);
       }
+      // Otherwise, the current selection is still valid in the filtered list, keep it
     },
     [findFilteredIndex, selectedCommitIndex, selectCommitIndex],
   );
@@ -337,24 +367,6 @@ function ProfilerContextController({children}: Props): React.Node {
     }
     selectCommitIndex(filteredCommitIndices[prevCommitIndex]);
   }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
-
-  // Auto-correct invalid commit selection after filtering
-  // This handles cases where:
-  // 1. No commit is selected but commits exist (auto-select first)
-  // 2. Selected commit is out of bounds after filtering (auto-select last)
-  const numFilteredCommits = filteredCommitIndices.length;
-  if (selectedFilteredCommitIndex === null && numFilteredCommits > 0) {
-    selectCommitIndex(filteredCommitIndices[0]);
-  } else if (
-    selectedFilteredCommitIndex !== null &&
-    selectedFilteredCommitIndex >= numFilteredCommits
-  ) {
-    selectCommitIndex(
-      numFilteredCommits === 0
-        ? null
-        : filteredCommitIndices[numFilteredCommits - 1],
-    );
-  }
 
   const setIsCommitFilterEnabled = useCallback(
     (value: boolean) => {
