@@ -1,6 +1,6 @@
 function Foo(props) {
   let x;
-  ((x = []), null);
+  (x = []), null;
   return x;
 }
 
