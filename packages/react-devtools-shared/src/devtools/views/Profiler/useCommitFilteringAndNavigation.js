@@ -13,7 +13,6 @@ import {useLocalStorage} from '../hooks';
 import type {CommitDataFrontend} from './types';
 
 export type CommitFilteringAndNavigation = {
-  // Filter settings
   isCommitFilterEnabled: boolean,
   setIsCommitFilterEnabled: (value: boolean) => void,
   minCommitDuration: number,
@@ -46,7 +45,6 @@ export function useCommitFilteringAndNavigation(
     null,
   );
 
-  // Calculate which commit indices pass the filter
   const calculateFilteredIndices = useCallback(
     (enabled: boolean, minDuration: number): Array<number> => {
       return commitData.reduce((reduced: Array<number>, commitDatum, index) => {
@@ -59,7 +57,6 @@ export function useCommitFilteringAndNavigation(
     [commitData],
   );
 
-  // Find the position of a commit index within the filtered list
   const findFilteredIndex = useCallback(
     (commitIndex: number | null, filtered: Array<number>): number | null => {
       if (commitIndex === null) return null;
@@ -110,19 +107,16 @@ export function useCommitFilteringAndNavigation(
     [findFilteredIndex, selectedCommitIndex, selectCommitIndex],
   );
 
-  // Memoized filtered indices based on current filter settings
   const filteredCommitIndices = useMemo(
     () => calculateFilteredIndices(isCommitFilterEnabled, minCommitDuration),
     [calculateFilteredIndices, isCommitFilterEnabled, minCommitDuration],
   );
 
-  // Position of the selected commit within the filtered list
   const selectedFilteredCommitIndex = useMemo(
     () => findFilteredIndex(selectedCommitIndex, filteredCommitIndices),
     [findFilteredIndex, selectedCommitIndex, filteredCommitIndices],
   );
 
-  // Navigate to next commit (wraps around)
   const selectNextCommitIndex = useCallback(() => {
     if (
       selectedFilteredCommitIndex === null ||
@@ -137,7 +131,6 @@ export function useCommitFilteringAndNavigation(
     selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
   }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
 
-  // Navigate to previous commit (wraps around)
   const selectPrevCommitIndex = useCallback(() => {
     if (
       selectedFilteredCommitIndex === null ||

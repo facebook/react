@@ -167,7 +167,7 @@ function ProfilerContextController({children}: Props): React.Node {
         }
       }
     },
-    [dispatch, store, profilingData],
+    [dispatch, selectFiberID, selectFiberName, store, profilingData],
   );
 
   const setRootIDAndClearFiber = useCallback(
@@ -175,7 +175,7 @@ function ProfilerContextController({children}: Props): React.Node {
       selectFiber(null, null);
       setRootID(id);
     },
-    [selectFiber],
+    [setRootID, selectFiber],
   );
 
   // Sync rootID with profilingData changes.
