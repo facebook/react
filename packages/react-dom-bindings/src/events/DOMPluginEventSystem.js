@@ -349,11 +349,12 @@ export function listenToNonDelegatedEvent(
 ): void {
   if (__DEV__) {
     if (!nonDelegatedEvents.has(domEventName)) {
-      console.error(
-        'Did not expect a listenToNonDelegatedEvent() call for "%s". ' +
-          'This is a bug in React. Please file an issue.',
-        domEventName,
-      );
+        console.error(
+           'React detected a call to listenToNonDelegatedEvent() for "%s", ' +
+           'which should only be used for non-delegated events (e.g., media events, scroll). ' +
+           'Check if this event should be handled differently or remove the call.',
+           domEventName,
+         );
     }
   }
   const isCapturePhaseListener = false;
