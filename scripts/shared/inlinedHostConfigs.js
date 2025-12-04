@@ -63,8 +63,8 @@ module.exports = [
       'react-dom/src/server/react-dom-server.node.js',
       'react-dom/test-utils',
       'react-dom/unstable_server-external-runtime',
-      'react-server-dom-webpack/src/client/react-flight-dom-client.node.unbundled',
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
+      'react-server-dom-unbundled/src/client/react-flight-dom-client.node',
+      'react-server-dom-unbundled/src/server/react-flight-dom-server.node',
     ],
     paths: [
       'react-dom',
@@ -83,18 +83,18 @@ module.exports = [
       'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
       'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
       'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
-      'react-server-dom-webpack',
-      'react-server-dom-webpack/client.node.unbundled',
-      'react-server-dom-webpack/server',
-      'react-server-dom-webpack/server.node.unbundled',
-      'react-server-dom-webpack/static',
-      'react-server-dom-webpack/static.node.unbundled',
-      'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.node
-      'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
-      'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerNode.js',
-      'react-server-dom-webpack/src/client/react-flight-dom-client.node.unbundled',
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
-      'react-server-dom-webpack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
+      'react-server-dom-unbundled',
+      'react-server-dom-unbundled/client.node',
+      'react-server-dom-unbundled/server',
+      'react-server-dom-unbundled/server.node',
+      'react-server-dom-unbundled/static',
+      'react-server-dom-unbundled/static.node',
+      'react-server-dom-unbundled/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-unbundled/client
+      'react-server-dom-unbundled/src/client/ReactFlightDOMClientNode.js', // react-server-dom-unbundled/client
+      'react-server-dom-unbundled/src/client/ReactFlightClientConfigBundlerNode.js',
+      'react-server-dom-unbundled/src/client/react-flight-dom-client.node',
+      'react-server-dom-unbundled/src/server/react-flight-dom-server.node',
+      'react-server-dom-unbundled/src/server/ReactFlightDOMServerNode.js', // react-server-dom-unbundled/src/server/react-flight-dom-server.node
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
