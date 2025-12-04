@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<5eeb686eeaba055cd3322dd359145375>>
+ * @generated SignedSource<<5dd35912e8cd4383b9e064ffb4b223df>>
  */
 
 'use strict';
@@ -56425,6 +56425,7 @@ function makeRule(rule) {
             docs: {
                 description: rule.description,
                 recommended: rule.preset === LintRulePreset.Recommended,
+                url: `https://react.dev/reference/eslint-plugin-react-hooks/lints/${rule.name}`,
             },
             fixable: 'code',
             hasSuggestions: true,

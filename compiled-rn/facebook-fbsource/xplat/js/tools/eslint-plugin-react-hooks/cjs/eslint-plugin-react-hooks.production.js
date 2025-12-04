@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<1863808726e395a56235c4f645a1436a>>
+ * @generated SignedSource<<921e71f5eb82d4d910416d81365b137c>>
  */
 
 'use strict';
@@ -56204,6 +56204,7 @@ function makeRule(rule) {
             docs: {
                 description: rule.description,
                 recommended: rule.preset === LintRulePreset.Recommended,
+                url: `https://react.dev/reference/eslint-plugin-react-hooks/lints/${rule.name}`,
             },
             fixable: 'code',
             hasSuggestions: true,
