@@ -56424,6 +56424,7 @@ function makeRule(rule) {
             docs: {
                 description: rule.description,
                 recommended: rule.preset === LintRulePreset.Recommended,
+                url: `https://react.dev/reference/eslint-plugin-react-hooks/lints/${rule.name}`,
             },
             fixable: 'code',
             hasSuggestions: true,
