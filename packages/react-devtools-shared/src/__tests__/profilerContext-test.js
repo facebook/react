@@ -778,21 +778,34 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() => profilerRoot.unmount());
     document.body.removeChild(profilerContainer);
   });
-
+  // @reactVersion >= 18
   it('should handle commit selection edge cases when filtering commits', async () => {
-    const Parent = () => <Child />;
-    const Child = () => null;
+    const Scheduler = require('scheduler');
+
+    // Create components that do varying amounts of work to generate different commit durations
+    const Parent = ({count}) => {
+      Scheduler.unstable_advanceTime(10);
+      const items = [];
+      for (let i = 0; i < count; i++) {
+        items.push(<Child key={i} duration={i} />);
+      }
+      return <div>{items}</div>;
+    };
+    const Child = ({duration}) => {
+      Scheduler.unstable_advanceTime(duration);
+      return <span>{duration}</span>;
+    };
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    utils.act(() => root.render(<Parent />));
+    utils.act(() => root.render(<Parent count={1} />));
 
-    // Profile and record multiple commits
+    // Profile and record multiple commits with different amounts of work
     await utils.actAsync(() => store.profilerStore.startProfiling());
-    await utils.actAsync(() => root.render(<Parent />)); // Commit 1
-    await utils.actAsync(() => root.render(<Parent />)); // Commit 2
-    await utils.actAsync(() => root.render(<Parent />)); // Commit 3
-    await utils.actAsync(() => root.render(<Parent />)); // Commit 4
+    await utils.actAsync(() => root.render(<Parent count={5} />)); // Commit 1 - 20ms
+    await utils.actAsync(() => root.render(<Parent count={20} />)); // Commit 2 - 200ms
+    await utils.actAsync(() => root.render(<Parent count={50} />)); // Commit 3 - 1235ms
+    await utils.actAsync(() => root.render(<Parent count={10} />)); // Commit 4 - 55ms
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
     // Context providers
@@ -879,7 +892,6 @@ describe('ProfilerContext', () => {
     expect(context.selectedCommitIndex).toBe(null);
     expect(context.selectedFilteredCommitIndex).toBe(null);
 
-    // Lower the threshold to allow commits through again
     await utils.actAsync(() => {
       context.setMinCommitDuration(0);
     });
@@ -899,37 +911,34 @@ describe('ProfilerContext', () => {
     }, false);
     expect(context.selectedCommitIndex).toBe(2);
 
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowRightEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(3);
+
     // Filter out the currently selected commit using actual commit data
-    const commitDurations = dataForRoot.commitData.map(commit => commit.duration);
-    const selectedCommitDuration = commitDurations[2];
-    console.log('commitDurations', commitDurations)
+    const commitDurations = dataForRoot.commitData.map(
+      commit => commit.duration,
+    );
+    const selectedCommitDuration = commitDurations[3];
     const filterThreshold = selectedCommitDuration + 0.001;
     await utils.actAsync(() => {
       context.setMinCommitDuration(filterThreshold);
     });
 
     // Edge case 5: Should auto-select first available commit when current one is filtered
-    // (or null if all are filtered)
-    if (context.filteredCommitIndices.length > 0) {
-      console.log('filteredCommitIndices is not empty')
-      expect(context.selectedCommitIndex).not.toBe(null);
-      expect(context.selectedFilteredCommitIndex).toBe(0);
-    } else {
-      console.log('filteredCommitIndices is empty')
-      expect(context.selectedCommitIndex).toBe(null);
-      expect(context.selectedFilteredCommitIndex).toBe(null);
-    }
+    expect(context.selectedCommitIndex).not.toBe(null);
+    expect(context.selectedFilteredCommitIndex).toBe(1);
 
     await utils.actAsync(() => {
       context.setIsCommitFilterEnabled(false);
     });
 
-    // Edge case 6: When filtering is disabled, selected commit should remain or be reset to first if it was null
+    // Edge case 6: When filtering is disabled, selected commit should remain
     expect(context.filteredCommitIndices.length).toBe(4);
-    expect(context.selectedCommitIndex).not.toBe(null);
-    expect(context.selectedFilteredCommitIndex).not.toBe(null);
+    expect(context.selectedCommitIndex).toBe(2);
+    expect(context.selectedFilteredCommitIndex).toBe(2);
 
-    // Cleanup
     await utils.actAsync(() => profilerRoot.unmount());
     document.body.removeChild(profilerContainer);
   });
