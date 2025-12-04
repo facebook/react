@@ -25,6 +25,7 @@ import {
 } from '../Components/TreeContext';
 import {StoreContext} from '../context';
 import {logEvent} from 'react-devtools-shared/src/Logger';
+import {useCommitFilteringAndNavigation} from './useCommitFilteringAndNavigation';
 
 import type {CommitDataFrontend, ProfilingDataFrontend} from './types';
 
@@ -166,7 +167,7 @@ function ProfilerContextController({children}: Props): React.Node {
         }
       }
     },
-    [dispatch, selectFiberID, selectFiberName, store, profilingData],
+    [dispatch, store, profilingData],
   );
 
   const setRootIDAndClearFiber = useCallback(
@@ -174,10 +175,10 @@ function ProfilerContextController({children}: Props): React.Node {
       selectFiber(null, null);
       setRootID(id);
     },
-    [setRootID, selectFiber],
+    [selectFiber],
   );
 
-  // why am i doing this instead of use effect
+  // Sync rootID with profilingData changes.
   if (prevProfilingData !== profilingData) {
     setPrevProfilingData(profilingData);
 
@@ -202,15 +203,6 @@ function ProfilerContextController({children}: Props): React.Node {
       }
     }
   }
-
-  const [isCommitFilterEnabled, setIsCommitFilterEnabledValue] =
-    useLocalStorage<boolean>('React::DevTools::isCommitFilterEnabled', false);
-  const [minCommitDuration, setMinCommitDurationValue] =
-    useLocalStorage<number>('minCommitDuration', 0);
-
-  const [selectedCommitIndex, selectCommitIndex] = useState<number | null>(
-    null,
-  );
 
   const [selectedTabID, selectTab] = useLocalStorage<TabID>(
     'React::DevTools::Profiler::defaultTab',
@@ -237,15 +229,6 @@ function ProfilerContextController({children}: Props): React.Node {
     [store],
   );
 
-  // Clear selections when starting a new profiling session
-  useEffect(() => {
-    if (isProfiling) {
-      selectCommitIndex(null);
-      selectFiberID(null);
-      selectFiberName(null);
-    }
-  }, [isProfiling]);
-
   // Get commit data for the current root
   // NOTE: Unlike profilerStore.getDataForRoot() which uses Suspense (throws when data unavailable),
   // this uses subscription pattern and returns [] when data isn't ready.
@@ -260,19 +243,30 @@ function ProfilerContextController({children}: Props): React.Node {
       : ([]: Array<CommitDataFrontend>);
   }, [didRecordCommits, rootID, profilingData]);
 
-  const calculateFilteredIndices = useCallback(
-    (enabled: boolean, minDuration: number): Array<number> => {
-      return commitData.reduce((reduced: Array<number>, commitDatum, index) => {
-        if (!enabled || commitDatum.duration >= minDuration) {
-          reduced.push(index);
-        }
-        return reduced;
-      }, ([]: Array<number>));
-    },
-    [commitData],
-  );
+  // Commit filtering and navigation
+  const {
+    isCommitFilterEnabled,
+    setIsCommitFilterEnabled,
+    minCommitDuration,
+    setMinCommitDuration,
+    selectedCommitIndex,
+    selectCommitIndex,
+    filteredCommitIndices,
+    selectedFilteredCommitIndex,
+    selectNextCommitIndex,
+    selectPrevCommitIndex,
+  } = useCommitFilteringAndNavigation(commitData);
 
-  // Auto-select first commit when profiling data becomes available and no commit is selected
+  // Clear selections when starting a new profiling session
+  useEffect(() => {
+    if (isProfiling) {
+      selectCommitIndex(null);
+      selectFiberID(null);
+      selectFiberName(null);
+    }
+  }, [isProfiling, selectCommitIndex]);
+
+  // Auto-select first commit when profiling data becomes available and no commit is selected.
   useEffect(() => {
     if (
       profilingData !== null &&
@@ -284,128 +278,7 @@ function ProfilerContextController({children}: Props): React.Node {
         selectCommitIndex(0);
       }
     }
-  }, [profilingData, rootID]);
-
-  const findFilteredIndex = useCallback(
-    (commitIndex: number | null, filtered: Array<number>): number | null => {
-      if (commitIndex === null) return null;
-      for (let i = 0; i < filtered.length; i++) {
-        if (filtered[i] === commitIndex) {
-          return i;
-        }
-      }
-      return null;
-    },
-    [],
-  );
-
-  const adjustSelectionAfterFilterChange = useCallback(
-    (newFilteredIndices: Array<number>) => {
-      const currentSelectedIndex = selectedCommitIndex;
-      const selectedFilteredIndex = findFilteredIndex(
-        currentSelectedIndex,
-        newFilteredIndices,
-      );
-
-      if (newFilteredIndices.length === 0) {
-        selectCommitIndex(null);
-      } else if (currentSelectedIndex === null) {
-        selectCommitIndex(newFilteredIndices[0]);
-      } else if (selectedFilteredIndex === null) {
-        let closestBefore = null;
-        for (let i = newFilteredIndices.length - 1; i >= 0; i--) {
-          if (newFilteredIndices[i] < currentSelectedIndex) {
-            closestBefore = newFilteredIndices[i];
-            break;
-          }
-        }
-        selectCommitIndex(
-          closestBefore !== null ? closestBefore : newFilteredIndices[0],
-        );
-      } else if (selectedFilteredIndex >= newFilteredIndices.length) {
-        // Filtered position is out of bounds - clamp to last available
-        selectCommitIndex(newFilteredIndices[newFilteredIndices.length - 1]);
-      }
-      // Otherwise, the current selection is still valid in the filtered list, keep it
-    },
-    [findFilteredIndex, selectedCommitIndex, selectCommitIndex],
-  );
-
-  const filteredCommitIndices = useMemo(
-    () => calculateFilteredIndices(isCommitFilterEnabled, minCommitDuration),
-    [calculateFilteredIndices, isCommitFilterEnabled, minCommitDuration],
-  );
-
-  const selectedFilteredCommitIndex = useMemo(
-    () => findFilteredIndex(selectedCommitIndex, filteredCommitIndices),
-    [findFilteredIndex, selectedCommitIndex, filteredCommitIndices],
-  );
-
-  const selectNextCommitIndex = useCallback(() => {
-    if (
-      selectedFilteredCommitIndex === null ||
-      filteredCommitIndices.length === 0
-    ) {
-      return;
-    }
-    let nextCommitIndex = selectedFilteredCommitIndex + 1;
-    if (nextCommitIndex === filteredCommitIndices.length) {
-      nextCommitIndex = 0;
-    }
-    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
-  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
-
-  const selectPrevCommitIndex = useCallback(() => {
-    if (
-      selectedFilteredCommitIndex === null ||
-      filteredCommitIndices.length === 0
-    ) {
-      return;
-    }
-    let prevCommitIndex = selectedFilteredCommitIndex - 1;
-    if (prevCommitIndex < 0) {
-      prevCommitIndex = filteredCommitIndices.length - 1;
-    }
-    selectCommitIndex(filteredCommitIndices[prevCommitIndex]);
-  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
-
-  const setIsCommitFilterEnabled = useCallback(
-    (value: boolean) => {
-      setIsCommitFilterEnabledValue(value);
-
-      const newFilteredIndices = calculateFilteredIndices(
-        value,
-        minCommitDuration,
-      );
-
-      adjustSelectionAfterFilterChange(newFilteredIndices);
-    },
-    [
-      setIsCommitFilterEnabledValue,
-      calculateFilteredIndices,
-      minCommitDuration,
-      adjustSelectionAfterFilterChange,
-    ],
-  );
-
-  const setMinCommitDuration = useCallback(
-    (value: number) => {
-      setMinCommitDurationValue(value);
-
-      const newFilteredIndices = calculateFilteredIndices(
-        isCommitFilterEnabled,
-        value,
-      );
-
-      adjustSelectionAfterFilterChange(newFilteredIndices);
-    },
-    [
-      setMinCommitDurationValue,
-      calculateFilteredIndices,
-      isCommitFilterEnabled,
-      adjustSelectionAfterFilterChange,
-    ],
-  );
+  }, [profilingData, rootID, selectCommitIndex]);
 
   const value = useMemo(
     () => ({
