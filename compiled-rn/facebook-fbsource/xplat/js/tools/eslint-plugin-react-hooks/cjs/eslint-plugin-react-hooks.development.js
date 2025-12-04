@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<5dd35912e8cd4383b9e064ffb4b223df>>
+ * @generated SignedSource<<4ed0e92717e38d12bad2db5ea2c9190f>>
  */
 
 'use strict';
@@ -32272,6 +32272,7 @@ const EnvironmentConfigSchema = v4.z.object({
     validateHooksUsage: v4.z.boolean().default(true),
     validateRefAccessDuringRender: v4.z.boolean().default(true),
     validateNoSetStateInRender: v4.z.boolean().default(true),
+    enableUseKeyedState: v4.z.boolean().default(false),
     validateNoSetStateInEffects: v4.z.boolean().default(false),
     validateNoDerivedComputationsInEffects: v4.z.boolean().default(false),
     validateNoDerivedComputationsInEffects_exp: v4.z.boolean().default(false),
@@ -50147,16 +50148,35 @@ function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
                             }));
                         }
                         else if (unconditionalBlocks.has(block.id)) {
-                            errors.pushDiagnostic(CompilerDiagnostic.create({
-                                category: ErrorCategory.RenderSetState,
-                                reason: 'Calling setState during render may trigger an infinite loop',
-                                description: 'Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)',
-                                suggestions: null,
-                            }).withDetails({
-                                kind: 'error',
-                                loc: callee.loc,
-                                message: 'Found setState() in render',
-                            }));
+                            const enableUseKeyedState = fn.env.config.enableUseKeyedState;
+                            if (enableUseKeyedState) {
+                                errors.pushDiagnostic(CompilerDiagnostic.create({
+                                    category: ErrorCategory.RenderSetState,
+                                    reason: 'Cannot call setState during render',
+                                    description: 'Calling setState during render may trigger an infinite loop.\n' +
+                                        '* To reset state when other state/props change, use `const [state, setState] = useKeyedState(initialState, key)` to reset `state` when `key` changes.\n' +
+                                        '* To derive data from other state/props, compute the derived data during render without using state',
+                                    suggestions: null,
+                                }).withDetails({
+                                    kind: 'error',
+                                    loc: callee.loc,
+                                    message: 'Found setState() in render',
+                                }));
+                            }
+                            else {
+                                errors.pushDiagnostic(CompilerDiagnostic.create({
+                                    category: ErrorCategory.RenderSetState,
+                                    reason: 'Cannot call setState during render',
+                                    description: 'Calling setState during render may trigger an infinite loop.\n' +
+                                        '* To reset state when other state/props change, store the previous value in state and update conditionally: https://react.dev/reference/react/useState#storing-information-from-previous-renders\n' +
+                                        '* To derive data from other state/props, compute the derived data during render without using state',
+                                    suggestions: null,
+                                }).withDetails({
+                                    kind: 'error',
+                                    loc: callee.loc,
+                                    message: 'Found setState() in render',
+                                }));
+                            }
                         }
                     }
                     break;
