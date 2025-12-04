@@ -268,7 +268,6 @@ function ProfilerContextController({children}: Props): React.Node {
   // Only runs when profilingData or rootID change, NOT when selectedCommitIndex changes
   // This ensures it only auto-selects when new data arrives, not when filtering clears selection
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally reading selectedCommitIndex without depending on it
     if (
       profilingData !== null &&
       selectedCommitIndex === null &&

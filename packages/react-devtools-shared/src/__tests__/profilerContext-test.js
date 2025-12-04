@@ -671,7 +671,6 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() => root.render(<Parent />)); // Commit 3
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
-    // Context providers
     const Profiler =
       require('react-devtools-shared/src/devtools/views/Profiler/Profiler').default;
     const {
@@ -693,10 +692,8 @@ describe('ProfilerContext', () => {
     const profilerContainer = document.createElement('div');
     document.body.appendChild(profilerContainer);
 
-    // Create a root for the profiler
     const profilerRoot = ReactDOMClient.createRoot(profilerContainer);
 
-    // Render the profiler with ContextReader
     await utils.actAsync(() => {
       profilerRoot.render(
         <Contexts>
@@ -778,7 +775,7 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() => profilerRoot.unmount());
     document.body.removeChild(profilerContainer);
   });
-  // @reactVersion >= 18
+
   it('should handle commit selection edge cases when filtering commits', async () => {
     const Scheduler = require('scheduler');
 
