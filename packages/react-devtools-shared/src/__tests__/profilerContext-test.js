@@ -656,7 +656,6 @@ describe('ProfilerContext', () => {
     document.body.removeChild(profilerContainer);
   });
 
-  // @reactVersion >= 18
   it('should navigate between commits when the keyboard shortcut is pressed', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
@@ -720,7 +719,6 @@ describe('ProfilerContext', () => {
     expect(rootID).not.toBeNull();
     const dataForRoot = context.profilingData.dataForRoots.get(rootID);
     expect(dataForRoot.commitData.length).toBe(3);
-
     // Should start at the first commit
     expect(context.selectedCommitIndex).toBe(0);
 
@@ -776,27 +774,39 @@ describe('ProfilerContext', () => {
     }, false);
     expect(context.selectedCommitIndex).toBe(0);
 
+    // Cleanup
+    await utils.actAsync(() => profilerRoot.unmount());
     document.body.removeChild(profilerContainer);
   });
 
-  // TODO - need to render acutal UI components to test this
   it('should handle commit selection edge cases when filtering commits', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-
-    // Initial render
     utils.act(() => root.render(<Parent />));
 
-    // Profile with multiple commits
+    // Profile and record multiple commits
     await utils.actAsync(() => store.profilerStore.startProfiling());
-    await utils.actAsync(() => root.render(<Parent />)); // Commit (index 0)
-    await utils.actAsync(() => root.render(<Parent />)); // Commit (index 1)
-    await utils.actAsync(() => root.render(<Parent />)); // Commit (index 2)
-    await utils.actAsync(() => root.render(<Parent />)); // Commit (index 3)
+    await utils.actAsync(() => root.render(<Parent />)); // Commit 1
+    await utils.actAsync(() => root.render(<Parent />)); // Commit 2
+    await utils.actAsync(() => root.render(<Parent />)); // Commit 3
+    await utils.actAsync(() => root.render(<Parent />)); // Commit 4
     await utils.actAsync(() => store.profilerStore.stopProfiling());
+
+    // Context providers
+    const Profiler =
+      require('react-devtools-shared/src/devtools/views/Profiler/Profiler').default;
+    const {
+      TimelineContextController,
+    } = require('react-devtools-timeline/src/TimelineContext');
+    const {
+      SettingsContextController,
+    } = require('react-devtools-shared/src/devtools/views/Settings/SettingsContext');
+    const {
+      ModalDialogContextController,
+    } = require('react-devtools-shared/src/devtools/views/ModalDialog');
 
     let context: Context = ((null: any): Context);
     function ContextReader() {
@@ -804,18 +814,123 @@ describe('ProfilerContext', () => {
       return null;
     }
 
-    // Render context reader to access ProfilerContext
+    const profilerContainer = document.createElement('div');
+    document.body.appendChild(profilerContainer);
+
+    const profilerRoot = ReactDOMClient.createRoot(profilerContainer);
+
     await utils.actAsync(() => {
-      TestRenderer.create(
+      profilerRoot.render(
         <Contexts>
-          <ContextReader />
+          <SettingsContextController browserTheme="light">
+            <ModalDialogContextController>
+              <TimelineContextController>
+                <Profiler />
+                <ContextReader />
+              </TimelineContextController>
+            </ModalDialogContextController>
+          </SettingsContextController>
         </Contexts>,
       );
     });
 
-    // Test: With commits and no filter, first commit should be auto-selected
+    // Verify we have profiling data with 4 commits
+    expect(context.didRecordCommits).toBe(true);
+    expect(context.profilingData).not.toBeNull();
+    const rootID = context.rootID;
+    expect(rootID).not.toBeNull();
+    const dataForRoot = context.profilingData.dataForRoots.get(rootID);
+    expect(dataForRoot.commitData.length).toBe(4);
+    // Edge case 1: Should start at the first commit
     expect(context.selectedCommitIndex).toBe(0);
-    expect(context.filteredCommitIndices.length).toBe(4); // All 4 commits
-    expect(context.selectedFilteredCommitIndex).toBe(0); // First in filtered list
+
+    const ownerWindow = profilerContainer.ownerDocument.defaultView;
+    const isMac =
+      typeof navigator !== 'undefined' &&
+      navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+    const arrowRightEvent = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      metaKey: isMac,
+      ctrlKey: !isMac,
+      bubbles: true,
+    });
+
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowRightEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(1);
+
+    await utils.actAsync(() => {
+      context.setIsCommitFilterEnabled(true);
+    });
+
+    // Edge case 2:  When filtering is enabled, selected commit should remain if it's still visible
+    expect(context.filteredCommitIndices.length).toBe(4);
+    expect(context.selectedCommitIndex).toBe(1);
+    expect(context.selectedFilteredCommitIndex).toBe(1);
+
+    await utils.actAsync(() => {
+      context.setMinCommitDuration(1000000);
+    });
+
+    // Edge case 3: When all commits are filtered out, selection should be null
+    expect(context.filteredCommitIndices).toEqual([]);
+    expect(context.selectedCommitIndex).toBe(null);
+    expect(context.selectedFilteredCommitIndex).toBe(null);
+
+    // Lower the threshold to allow commits through again
+    await utils.actAsync(() => {
+      context.setMinCommitDuration(0);
+    });
+
+    // Edge case 4: After restoring commits, first commit should be auto-selected
+    expect(context.filteredCommitIndices.length).toBe(4);
+    expect(context.selectedCommitIndex).toBe(0);
+    expect(context.selectedFilteredCommitIndex).toBe(0);
+
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowRightEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(1);
+
+    await utils.actAsync(() => {
+      ownerWindow.dispatchEvent(arrowRightEvent);
+    }, false);
+    expect(context.selectedCommitIndex).toBe(2);
+
+    // Filter out the currently selected commit using actual commit data
+    const commitDurations = dataForRoot.commitData.map(commit => commit.duration);
+    const selectedCommitDuration = commitDurations[2];
+    console.log('commitDurations', commitDurations)
+    const filterThreshold = selectedCommitDuration + 0.001;
+    await utils.actAsync(() => {
+      context.setMinCommitDuration(filterThreshold);
+    });
+
+    // Edge case 5: Should auto-select first available commit when current one is filtered
+    // (or null if all are filtered)
+    if (context.filteredCommitIndices.length > 0) {
+      console.log('filteredCommitIndices is not empty')
+      expect(context.selectedCommitIndex).not.toBe(null);
+      expect(context.selectedFilteredCommitIndex).toBe(0);
+    } else {
+      console.log('filteredCommitIndices is empty')
+      expect(context.selectedCommitIndex).toBe(null);
+      expect(context.selectedFilteredCommitIndex).toBe(null);
+    }
+
+    await utils.actAsync(() => {
+      context.setIsCommitFilterEnabled(false);
+    });
+
+    // Edge case 6: When filtering is disabled, selected commit should remain or be reset to first if it was null
+    expect(context.filteredCommitIndices.length).toBe(4);
+    expect(context.selectedCommitIndex).not.toBe(null);
+    expect(context.selectedFilteredCommitIndex).not.toBe(null);
+
+    // Cleanup
+    await utils.actAsync(() => profilerRoot.unmount());
+    document.body.removeChild(profilerContainer);
   });
 });
