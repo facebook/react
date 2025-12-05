@@ -1,10 +1,12 @@
-// @loggerTestOnly @validateNoSetStateInEffects
-import {useEffect, useState} from 'react';
-
+// @validateNoSetStateInEffects
 function Component() {
-  const [state, setState] = useState(0);
   useEffect(() => {
-    setState(s => s + 1);
-  });
-  return state;
+    setCount(count + 1); // should error
+  }, []);
+
+  const [count, setCount] = useState(0); // useState declared AFTER useEffect
+
+  useEffect(() => {
+    setCount(c => c + 1); // should error
+  }, []);
 }

@@ -22,8 +22,8 @@ import {
   isUseRefType,
   isRefValueType,
   Place,
-  Effect,
   BlockId,
+  Effect,
 } from '../HIR';
 import {
   eachInstructionLValue,
@@ -48,103 +48,100 @@ export function validateNoSetStateInEffects(
 ): Result<void, CompilerError> {
   const setStateFunctions: Map<IdentifierId, Place> = new Map();
   const errors = new CompilerError();
+
+  function collectSetStateSetters(targetFn: HIRFunction): void {
+    for (const [, block] of targetFn.body.blocks) {
+      for (const instr of block.instructions) {
+        switch (instr.value.kind) {
+          case 'LoadLocal': {
+            if (setStateFunctions.has(instr.value.place.identifier.id)) {
+              setStateFunctions.set(instr.lvalue.identifier.id, instr.value.place);
+            }
+            break;
+          }
+          case 'StoreLocal': {
+            if (setStateFunctions.has(instr.value.value.identifier.id)) {
+              setStateFunctions.set(instr.value.lvalue.place.identifier.id, instr.value.value);
+              setStateFunctions.set(instr.lvalue.identifier.id, instr.value.value);
+            }
+            break;
+          }
+          case 'FunctionExpression': {
+            if (
+              [...eachInstructionValueOperand(instr.value)].some(
+                operand =>
+                  isSetStateType(operand.identifier) ||
+                  setStateFunctions.has(operand.identifier.id),
+              )
+            ) {
+              const callee = getSetStateCall(instr.value.loweredFunc.func, setStateFunctions, env);
+              if (callee !== null) {
+                setStateFunctions.set(instr.lvalue.identifier.id, callee);
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // First pass: main component body
+  collectSetStateSetters(fn);
+
+  // Second pass: any nested functions (fixes #35291 – useState after first useEffect)
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      switch (instr.value.kind) {
-        case 'LoadLocal': {
-          if (setStateFunctions.has(instr.value.place.identifier.id)) {
-            setStateFunctions.set(
-              instr.lvalue.identifier.id,
-              instr.value.place,
-            );
-          }
-          break;
-        }
-        case 'StoreLocal': {
-          if (setStateFunctions.has(instr.value.value.identifier.id)) {
-            setStateFunctions.set(
-              instr.value.lvalue.place.identifier.id,
-              instr.value.value,
-            );
-            setStateFunctions.set(
-              instr.lvalue.identifier.id,
-              instr.value.value,
-            );
-          }
-          break;
-        }
-        case 'FunctionExpression': {
-          if (
-            // faster-path to check if the function expression references a setState
-            [...eachInstructionValueOperand(instr.value)].some(
-              operand =>
-                isSetStateType(operand.identifier) ||
-                setStateFunctions.has(operand.identifier.id),
-            )
-          ) {
-            const callee = getSetStateCall(
-              instr.value.loweredFunc.func,
-              setStateFunctions,
-              env,
-            );
-            if (callee !== null) {
-              setStateFunctions.set(instr.lvalue.identifier.id, callee);
-            }
-          }
-          break;
-        }
-        case 'MethodCall':
-        case 'CallExpression': {
-          const callee =
-            instr.value.kind === 'MethodCall'
-              ? instr.value.receiver
-              : instr.value.callee;
+      if (instr.value.kind === 'FunctionExpression') {
+        collectSetStateSetters(instr.value.loweredFunc.func);
+      }
+    }
+  }
 
-          if (isUseEffectEventType(callee.identifier)) {
-            const arg = instr.value.args[0];
-            if (arg !== undefined && arg.kind === 'Identifier') {
-              const setState = setStateFunctions.get(arg.identifier.id);
-              if (setState !== undefined) {
-                /**
-                 * This effect event function calls setState synchonously,
-                 * treat it as a setState function for transitive tracking
-                 */
-                setStateFunctions.set(instr.lvalue.identifier.id, setState);
-              }
-            }
-          } else if (
-            isUseEffectHookType(callee.identifier) ||
-            isUseLayoutEffectHookType(callee.identifier) ||
-            isUseInsertionEffectHookType(callee.identifier)
-          ) {
-            const arg = instr.value.args[0];
-            if (arg !== undefined && arg.kind === 'Identifier') {
-              const setState = setStateFunctions.get(arg.identifier.id);
-              if (setState !== undefined) {
-                errors.pushDiagnostic(
-                  CompilerDiagnostic.create({
-                    category: ErrorCategory.EffectSetState,
-                    reason:
-                      'Calling setState synchronously within an effect can trigger cascading renders',
-                    description:
-                      'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +
-                      'In general, the body of an effect should do one or both of the following:\n' +
-                      '* Update external systems with the latest state from React.\n' +
-                      '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
-                      'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
-                      '(https://react.dev/learn/you-might-not-need-an-effect)',
-                    suggestions: null,
-                  }).withDetails({
-                    kind: 'error',
-                    loc: setState.loc,
-                    message:
-                      'Avoid calling setState() directly within an effect',
-                  }),
-                );
-              }
+  // Validate effects using the complete set of known setters
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'MethodCall' || instr.value.kind === 'CallExpression') {
+        const callee =
+          instr.value.kind === 'MethodCall' ? instr.value.receiver : instr.value.callee;
+
+        if (isUseEffectEventType(callee.identifier)) {
+          const arg = instr.value.args[0];
+          if (arg?.kind === 'Identifier') {
+            const setState = setStateFunctions.get(arg.identifier.id);
+            if (setState !== undefined) {
+              setStateFunctions.set(instr.lvalue.identifier.id, setState);
             }
           }
-          break;
+        } else if (
+          isUseEffectHookType(callee.identifier) ||
+          isUseLayoutEffectHookType(callee.identifier) ||
+          isUseInsertionEffectHookType(callee.identifier)
+        ) {
+          const arg = instr.value.args[0];
+          if (arg?.kind === 'Identifier') {
+            const setState = setStateFunctions.get(arg.identifier.id);
+            if (setState !== undefined) {
+              errors.pushDiagnostic(
+                CompilerDiagnostic.create({
+                  category: ErrorCategory.EffectSetState,
+                  reason: 'Calling setState synchronously within an effect can trigger cascading renders',
+                  description:
+                    'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +
+                    'In general, the body of an effect should do one or both of the following:\n' +
+                    '* Update external systems with the latest state from React.\n' +
+                    '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
+                    'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
+                    '(https://react.dev/learn/you-might-not-need-an-effect)',
+                  suggestions: null,
+                }).withDetails({
+                  kind: 'error',
+                  loc: setState.loc,
+                  message: 'Avoid calling setState() directly within an effect',
+                }),
+              );
+            }
+          }
         }
       }
     }
@@ -158,37 +155,31 @@ function getSetStateCall(
   setStateFunctions: Map<IdentifierId, Place>,
   env: Environment,
 ): Place | null {
-  const enableAllowSetStateFromRefsInEffects =
-    env.config.enableAllowSetStateFromRefsInEffects;
+  const enableAllowSetStateFromRefsInEffects = env.config.enableAllowSetStateFromRefsInEffects;
   const refDerivedValues: Set<IdentifierId> = new Set();
 
-  const isDerivedFromRef = (place: Place): boolean => {
-    return (
-      refDerivedValues.has(place.identifier.id) ||
-      isUseRefType(place.identifier) ||
-      isRefValueType(place.identifier)
-    );
-  };
+  const isDerivedFromRef = (place: Place): boolean =>
+    refDerivedValues.has(place.identifier.id) ||
+    isUseRefType(place.identifier) ||
+    isRefValueType(place.identifier);
 
   const isRefControlledBlock: (id: BlockId) => boolean =
     enableAllowSetStateFromRefsInEffects
       ? createControlDominators(fn, place => isDerivedFromRef(place))
-      : (): boolean => false;
+      : () => false;
 
   for (const [, block] of fn.body.blocks) {
     if (enableAllowSetStateFromRefsInEffects) {
       for (const phi of block.phis) {
-        if (isDerivedFromRef(phi.place)) {
-          continue;
-        }
-        let isPhiDerivedFromRef = false;
+        if (isDerivedFromRef(phi.place)) continue;
+        let derived = false;
         for (const [, operand] of phi.operands) {
           if (isDerivedFromRef(operand)) {
-            isPhiDerivedFromRef = true;
+            derived = true;
             break;
           }
         }
-        if (isPhiDerivedFromRef) {
+        if (derived) {
           refDerivedValues.add(phi.place.identifier.id);
         } else {
           for (const [pred] of phi.operands) {
@@ -200,54 +191,24 @@ function getSetStateCall(
         }
       }
     }
+
     for (const instr of block.instructions) {
       if (enableAllowSetStateFromRefsInEffects) {
-        const hasRefOperand = Iterable_some(
-          eachInstructionValueOperand(instr.value),
-          isDerivedFromRef,
-        );
-
+        const hasRefOperand = Iterable_some(eachInstructionValueOperand(instr.value), isDerivedFromRef);
         if (hasRefOperand) {
           for (const lvalue of eachInstructionLValue(instr)) {
             refDerivedValues.add(lvalue.identifier.id);
           }
-          // Ref-derived values can also propagate through mutation
           for (const operand of eachInstructionValueOperand(instr.value)) {
-            switch (operand.effect) {
-              case Effect.Capture:
-              case Effect.Store:
-              case Effect.ConditionallyMutate:
-              case Effect.ConditionallyMutateIterator:
-              case Effect.Mutate: {
-                if (isMutable(instr, operand)) {
-                  refDerivedValues.add(operand.identifier.id);
-                }
-                break;
-              }
-              case Effect.Freeze:
-              case Effect.Read: {
-                // no-op
-                break;
-              }
-              case Effect.Unknown: {
-                CompilerError.invariant(false, {
-                  reason: 'Unexpected unknown effect',
-                  description: null,
-                  details: [
-                    {
-                      kind: 'error',
-                      loc: operand.loc,
-                      message: null,
-                    },
-                  ],
-                  suggestions: null,
-                });
-              }
-              default: {
-                assertExhaustive(
-                  operand.effect,
-                  `Unexpected effect kind \`${operand.effect}\``,
-                );
+            if (
+              operand.effect === Effect.Capture ||
+              operand.effect === Effect.Store ||
+              operand.effect === Effect.ConditionallyMutate ||
+              operand.effect === Effect.ConditionallyMutateIterator ||
+              operand.effect === Effect.Mutate
+            ) {
+              if (isMutable(instr, operand)) {
+                refDerivedValues.add(operand.identifier.id);
               }
             }
           }
@@ -256,65 +217,39 @@ function getSetStateCall(
         if (
           instr.value.kind === 'PropertyLoad' &&
           instr.value.property === 'current' &&
-          (isUseRefType(instr.value.object.identifier) ||
-            isRefValueType(instr.value.object.identifier))
+          (isUseRefType(instr.value.object.identifier) || isRefValueType(instr.value.object.identifier))
         ) {
           refDerivedValues.add(instr.lvalue.identifier.id);
         }
       }
 
       switch (instr.value.kind) {
-        case 'LoadLocal': {
+        case 'LoadLocal':
           if (setStateFunctions.has(instr.value.place.identifier.id)) {
-            setStateFunctions.set(
-              instr.lvalue.identifier.id,
-              instr.value.place,
-            );
+            setStateFunctions.set(instr.lvalue.identifier.id, instr.value.place);
           }
           break;
-        }
-        case 'StoreLocal': {
+        case 'StoreLocal':
           if (setStateFunctions.has(instr.value.value.identifier.id)) {
-            setStateFunctions.set(
-              instr.value.lvalue.place.identifier.id,
-              instr.value.value,
-            );
-            setStateFunctions.set(
-              instr.lvalue.identifier.id,
-              instr.value.value,
-            );
+            setStateFunctions.set(instr.value.lvalue.place.identifier.id, instr.value.value);
+            setStateFunctions.set(instr.lvalue.identifier.id, instr.value.value);
           }
           break;
-        }
         case 'CallExpression': {
           const callee = instr.value.callee;
-          if (
-            isSetStateType(callee.identifier) ||
-            setStateFunctions.has(callee.identifier.id)
-          ) {
+          if (isSetStateType(callee.identifier) || setStateFunctions.has(callee.identifier.id)) {
             if (enableAllowSetStateFromRefsInEffects) {
-              const arg = instr.value.args.at(0);
-              if (
-                arg !== undefined &&
-                arg.kind === 'Identifier' &&
-                refDerivedValues.has(arg.identifier.id)
-              ) {
-                /**
-                 * The one special case where we allow setStates in effects is in the very specific
-                 * scenario where the value being set is derived from a ref. For example this may
-                 * be needed when initial layout measurements from refs need to be stored in state.
-                 */
+              const arg = instr.value.args[0];
+              if (arg?.kind === 'Identifier' && refDerivedValues.has(arg.identifier.id)) {
                 return null;
-              } else if (isRefControlledBlock(block.id)) {
+              }
+              if (isRefControlledBlock(block.id)) {
                 continue;
               }
             }
-            /*
-             * TODO: once we support multiple locations per error, we should link to the
-             * original Place in the case that setStateFunction.has(callee)
-             */
             return callee;
           }
+          break;
         }
       }
     }
