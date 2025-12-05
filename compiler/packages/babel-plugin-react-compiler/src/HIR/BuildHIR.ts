@@ -2652,13 +2652,55 @@ function lowerExpression(
         });
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       } else if (builder.isContextIdentifier(argument)) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.`,
-          category: ErrorCategory.Todo,
-          loc: exprPath.node.loc ?? null,
-          suggestions: null,
+        const binaryOperator = expr.node.operator === '++' ? '+' : '-';
+        const lvalue = lowerIdentifierForAssignment(
+          builder,
+          argument.node.loc ?? GeneratedSource,
+          InstructionKind.Reassign,
+          argument,
+        );
+
+        if (lvalue === null) {
+          return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
+        } else if (lvalue.kind === 'Global') {
+          builder.errors.push({
+            reason: `(BuildHIR::lowerExpression) Expected Identifier to be a context variable`,
+            category: ErrorCategory.Invariant,
+            loc: exprLoc,
+            suggestions: null,
+          });
+          return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
+        }
+
+        // Load the current value
+        const previousValue = lowerExpressionToTemporary(builder, argument);
+
+        // Calculate the new value
+        const updatedValue = lowerValueToTemporary(builder, {
+          kind: 'BinaryExpression',
+          operator: binaryOperator,
+          left: {...previousValue},
+          right: lowerValueToTemporary(builder, {
+            kind: 'Primitive',
+            value: 1,
+            loc: GeneratedSource,
+          }),
+          loc: exprLoc,
         });
-        return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
+
+        // Store the new value
+        const newValuePlace = lowerValueToTemporary(builder, {
+          kind: 'StoreContext',
+          lvalue: {place: {...lvalue}, kind: InstructionKind.Reassign},
+          value: {...updatedValue},
+          loc: exprLoc,
+        });
+
+        return {
+          kind: 'LoadLocal',
+          place: expr.node.prefix ? {...newValuePlace} : {...previousValue},
+          loc: exprLoc,
+        };
       }
       const lvalue = lowerIdentifierForAssignment(
         builder,
