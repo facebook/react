@@ -488,6 +488,7 @@ function getPlugins(
           rewrite_polyfills: false,
           inject_libraries: false,
           allow_dynamic_import: true,
+          dynamic_import_alias: 'import',
 
           // Don't let it create global variables in the browser.
           // https://github.com/facebook/react/issues/10909
