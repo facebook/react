@@ -319,7 +319,6 @@ public:
 
   [[nodiscard]]
   NEVER_INLINE static T* getCheck();
-  NEVER_INLINE static T* getCheck();
 
   [[nodiscard]]
   static T* getNoCheck() {
@@ -584,8 +583,6 @@ public:
 #endif
   }
 
-  [[nodiscard]]
-  NEVER_INLINE T* getCheck() const;
   [[nodiscard]]
   NEVER_INLINE T* getCheck() const;
 
