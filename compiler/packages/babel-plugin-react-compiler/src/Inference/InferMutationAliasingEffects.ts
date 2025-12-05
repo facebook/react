@@ -27,11 +27,11 @@ import {
   InstructionKind,
   InstructionValue,
   isArrayType,
-  isJsxType,
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
   isSetType,
+  isUseRefType,
   makeIdentifierId,
   Phi,
   Place,
@@ -569,14 +569,21 @@ function inferBlock(
       terminal.effects = effects.length !== 0 ? effects : null;
     }
   } else if (terminal.kind === 'return') {
+    terminal.effects = [
+      context.internEffect({
+        kind: 'Alias',
+        from: terminal.value,
+        into: context.fn.returns,
+      }),
+    ];
     if (!context.isFuctionExpression) {
-      terminal.effects = [
+      terminal.effects.push(
         context.internEffect({
           kind: 'Freeze',
           value: terminal.value,
           reason: ValueReason.JsxCaptured,
         }),
-      ];
+      );
     }
   }
 }
@@ -1973,27 +1980,51 @@ function computeSignatureForInstruction(
           into: lvalue,
         });
       }
+      if (isUseRefType(value.object.identifier)) {
+        effects.push({
+          kind: 'Impure',
+          into: lvalue,
+          reason: 'Cannot access ref values during render',
+        });
+      }
       break;
     }
     case 'PropertyStore':
     case 'ComputedStore': {
-      /**
-       * Add a hint about naming as "ref"/"-Ref", but only if we weren't able to infer any
-       * type for the object. In some cases the variable may be named like a ref, but is
-       * also used as a ref callback such that we infer the type as a function rather than
-       * a ref.
-       */
-      const mutationReason: MutationReason | null =
-        value.kind === 'PropertyStore' &&
-        value.property === 'current' &&
-        value.object.identifier.type.kind === 'Type'
-          ? {kind: 'AssignCurrentProperty'}
-          : null;
-      effects.push({
-        kind: 'Mutate',
-        value: value.object,
-        reason: mutationReason,
-      });
+      if (isUseRefType(value.object.identifier)) {
+        const diagnostic = CompilerDiagnostic.create({
+          category: ErrorCategory.Immutability,
+          reason: 'Cannot write to refs during render',
+          description: 'Cannot write to refs during render',
+        }).withDetails({
+          kind: 'error',
+          loc: value.loc,
+          message: `Cannot write to refs during render`,
+        });
+        effects.push({
+          kind: 'MutateGlobal',
+          error: diagnostic,
+          place: value.object,
+        });
+      } else {
+        /**
+         * Add a hint about naming as "ref"/"-Ref", but only if we weren't able to infer any
+         * type for the object. In some cases the variable may be named like a ref, but is
+         * also used as a ref callback such that we infer the type as a function rather than
+         * a ref.
+         */
+        const mutationReason: MutationReason | null =
+          value.kind === 'PropertyStore' &&
+          value.property === 'current' &&
+          value.object.identifier.type.kind === 'Type'
+            ? {kind: 'AssignCurrentProperty'}
+            : null;
+        effects.push({
+          kind: 'Mutate',
+          value: value.object,
+          reason: mutationReason,
+        });
+      }
       effects.push({
         kind: 'Capture',
         from: value.value,
@@ -2155,21 +2186,13 @@ function computeSignatureForInstruction(
           }
         }
         for (const prop of value.props) {
-          if (
-            prop.kind === 'JsxAttribute' &&
-            prop.place.identifier.type.kind === 'Function' &&
-            (isJsxType(prop.place.identifier.type.return) ||
-              (prop.place.identifier.type.return.kind === 'Phi' &&
-                prop.place.identifier.type.return.operands.some(operand =>
-                  isJsxType(operand),
-                )))
-          ) {
-            // Any props which return jsx are assumed to be called during render
-            effects.push({
-              kind: 'Render',
-              place: prop.place,
-            });
+          if (prop.kind === 'JsxAttribute' && /^on[A-Z]/.test(prop.name)) {
+            continue;
           }
+          effects.push({
+            kind: 'Render',
+            place: prop.kind === 'JsxAttribute' ? prop.place : prop.argument,
+          });
         }
       }
       break;
@@ -2423,7 +2446,7 @@ function computeEffectsForLegacySignature(
   lvalue: Place,
   receiver: Place,
   args: Array<Place | SpreadPattern | Hole>,
-  loc: SourceLocation,
+  _loc: SourceLocation,
 ): Array<AliasingEffect> {
   const returnValueReason = signature.returnValueReason ?? ValueReason.Other;
   const effects: Array<AliasingEffect> = [];
@@ -2436,20 +2459,11 @@ function computeEffectsForLegacySignature(
   if (signature.impure && state.env.config.validateNoImpureFunctionsInRender) {
     effects.push({
       kind: 'Impure',
-      place: receiver,
-      error: CompilerDiagnostic.create({
-        category: ErrorCategory.Purity,
-        reason: 'Cannot call impure function during render',
-        description:
-          (signature.canonicalName != null
-            ? `\`${signature.canonicalName}\` is an impure function. `
-            : '') +
-          'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-      }).withDetails({
-        kind: 'error',
-        loc,
-        message: 'Cannot call impure function',
-      }),
+      into: lvalue,
+      reason:
+        signature.canonicalName != null
+          ? `\`${signature.canonicalName}\` is an impure function. `
+          : 'impure function',
     });
   }
   if (signature.knownIncompatible != null && state.env.enableValidations) {
@@ -2748,7 +2762,13 @@ function computeEffectsForSignature(
         }
         break;
       }
-      case 'Impure':
+      case 'Impure': {
+        const values = substitutions.get(effect.into.identifier.id) ?? [];
+        for (const value of values) {
+          effects.push({kind: effect.kind, into: value, reason: effect.reason});
+        }
+        break;
+      }
       case 'MutateFrozen':
       case 'MutateGlobal': {
         const values = substitutions.get(effect.place.identifier.id) ?? [];
