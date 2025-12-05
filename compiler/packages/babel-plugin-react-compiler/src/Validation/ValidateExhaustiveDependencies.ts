@@ -18,7 +18,6 @@ import {
   areEqualPaths,
   BlockId,
   DependencyPath,
-  Environment,
   FinishMemoize,
   GeneratedSource,
   HIRFunction,
@@ -89,8 +88,8 @@ const DEBUG = false;
  */
 export function validateExhaustiveDependencies(
   fn: HIRFunction,
-  env: Environment,
 ): Result<void, CompilerError> {
+  const env = fn.env;
   const reactive = collectReactiveIdentifiersHIR(fn);
 
   const temporaries: Map<IdentifierId, Temporary> = new Map();

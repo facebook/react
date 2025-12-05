@@ -309,7 +309,7 @@ function runWithEnvironment(
       env.config.validateExhaustiveEffectDependencies
     ) {
       // NOTE: this relies on reactivity inference running first
-      validateExhaustiveDependencies(hir, env).unwrap();
+      validateExhaustiveDependencies(hir).unwrap();
     }
   }
 
