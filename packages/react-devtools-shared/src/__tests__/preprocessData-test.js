@@ -1294,7 +1294,7 @@ describe('Timeline profiler', () => {
         describe('long event handlers', () => {
           // @reactVersion >= 18.0
           // @reactVersion <= 18.2
-          it('should not warn when React scedules a (sync) update inside of a short event handler', async () => {
+          it('should not warn when React schedules a (sync) update inside of a short event handler', async () => {
             function App() {
               return null;
             }
@@ -1342,7 +1342,7 @@ describe('Timeline profiler', () => {
 
           // @reactVersion >= 18.0
           // @reactVersion <= 18.2
-          it('should warn when React scedules a long (sync) update inside of an event', async () => {
+          it('should warn when React schedules a long (sync) update inside of an event', async () => {
             function App() {
               return null;
             }

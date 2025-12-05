@@ -93,7 +93,7 @@ export default function SnapshotSelector(_: Props): React.Node {
         const filteredIndex = Math.min(
           Math.max(value - 1, 0),
 
-          // Snashots are shown to the user as 1-based
+          // Snapshots are shown to the user as 1-based
           // but the indices within the profiler data array ar 0-based.
           numFilteredCommits - 1,
         );
