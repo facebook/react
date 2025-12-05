@@ -45,12 +45,12 @@ describe('ReactFlightDOMNode', () => {
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
-      require('react-server-dom-webpack/server.node'),
+      jest.requireActual('react-server-dom-webpack/server.node'),
     );
     ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
     jest.mock('react-server-dom-webpack/static', () =>
-      require('react-server-dom-webpack/static.node'),
+      jest.requireActual('react-server-dom-webpack/static.node'),
     );
     ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
@@ -64,7 +64,7 @@ describe('ReactFlightDOMNode', () => {
     __unmockReact();
     jest.unmock('react-server-dom-webpack/server');
     jest.mock('react-server-dom-webpack/client', () =>
-      require('react-server-dom-webpack/client.node'),
+      jest.requireActual('react-server-dom-webpack/client.node'),
     );
 
     React = require('react');
