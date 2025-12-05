@@ -7,4 +7,6 @@
  * @flow
  */
 
-export * from './src/client/react-flight-dom-client.node.unbundled';
+'use strict';
+
+throw new Error('Use react-server-dom-unbundled/client instead.');
