@@ -19,6 +19,7 @@ import {
   REACT_SCOPE_TYPE,
   REACT_TRACING_MARKER_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -127,6 +128,8 @@ export {
   addTransitionType as addTransitionType,
   // enableGestureTransition
   startGestureTransition as unstable_startGestureTransition,
+  // enableOptimisticKey
+  REACT_OPTIMISTIC_KEY as optimisticKey,
   // DEV-only
   useId,
   act,

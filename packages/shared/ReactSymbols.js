@@ -65,3 +65,12 @@ export function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<any> {
 }
 
 export const ASYNC_ITERATOR = Symbol.asyncIterator;
+
+export const REACT_OPTIMISTIC_KEY: ReactOptimisticKey = (Symbol.for(
+  'react.optimistic_key',
+): any);
+
+// This is actually a symbol but Flow doesn't support comparison of symbols to refine.
+// We use a boolean since in our code we often expect string (key) or number (index),
+// so by pretending to be a boolean we cover a lot of cases that don't consider this case.
+export type ReactOptimisticKey = true;

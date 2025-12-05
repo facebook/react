@@ -954,6 +954,7 @@ function applyEffect(
         case ValueKind.Primitive: {
           break;
         }
+        case ValueKind.MaybeFrozen:
         case ValueKind.Frozen: {
           sourceType = 'frozen';
           break;
@@ -2451,7 +2452,7 @@ function computeEffectsForLegacySignature(
       }),
     });
   }
-  if (signature.knownIncompatible != null && state.env.isInferredMemoEnabled) {
+  if (signature.knownIncompatible != null && state.env.enableValidations) {
     const errors = new CompilerError();
     errors.pushDiagnostic(
       CompilerDiagnostic.create({
