@@ -64,7 +64,8 @@ ThreadLocalManager::ThreadLocalList::ThreadLocalList() {
 
 #ifdef __linux__
 
-static int visit_phdr(dl_phdr_info* info, size_t, void*) {
+[[nodiscard]]
+static int visit_phdr(dl_phdr_info* info, [[maybe_unused]] size_t size, [[maybe_unused]] void* p) {
   for (size_t i = 0, n = info->dlpi_phnum; i < n; ++i) {
     const auto& hdr = info->dlpi_phdr[i];
     auto addr = info->dlpi_addr + hdr.p_vaddr;
@@ -77,7 +78,8 @@ static int visit_phdr(dl_phdr_info* info, size_t, void*) {
   return 0;
 }
 
-std::pair<void*,size_t> getCppTdata() {
+[[nodiscard]]
+std::pair<void*, size_t> getCppTdata() {
   uintptr_t addr;
   if (!arch_prctl(ARCH_GET_FS, &addr)) {
     // fs points to the end of the threadlocal area.
@@ -90,7 +92,8 @@ std::pair<void*,size_t> getCppTdata() {
 #else
 
 // how do you find the thread local section on your system?
-std::pair<void*,size_t> getCppTdata() {
+[[nodiscard]]
+std::pair<void*, size_t> getCppTdata() {
   return {nullptr, 0};
 }
 

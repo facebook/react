@@ -56,7 +56,7 @@ public:
     pe.exclude_kernel = 0;
     pe.exclude_hv = 1;
     pe.read_format =
-      PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING;
+      PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
     }
 
   ~HardwareCounterImpl() {
@@ -68,7 +68,9 @@ public:
      * perf_event_open(struct perf_event_attr *hw_event_uptr, pid_t pid,
      *                 int cpu, int group_fd, unsigned long flags)
      */
-    if (inited) return;
+    if (inited) {
+      return;
+    }
     inited = true;
     m_fd = syscall(__NR_perf_event_open, &pe, 0, -1, -1, 0);
     if (m_fd < 0) {
@@ -87,6 +89,7 @@ public:
     reset();
   }
 
+  [[nodiscard]]
   int64_t read() {
     uint64_t values[3];
     if (readRaw(values)) {
@@ -101,8 +104,11 @@ public:
     extra += amount;
   }
 
+  [[nodiscard]]
   bool readRaw(uint64_t* values) {
-    if (m_err || !useCounters()) return false;
+    if (m_err || !useCounters()) {
+      return false;
+    }
     init_if_not();
 
     if (m_fd > 0) {
@@ -123,7 +129,9 @@ public:
   }
 
   void reset() {
-    if (m_err || !useCounters()) return;
+    if (m_err || !useCounters()) {
+      return;
+    }
     init_if_not();
     extra = 0;
     if (m_fd > 0) {
@@ -213,31 +221,37 @@ void HardwareCounter::reset() {
     m_storeCounter->reset();
     m_loadCounter->reset();
   }
-  for (unsigned i = 0; i < m_counters.size(); i++) {
+  for (unsigned int i = 0; i < m_counters.size(); i++) {
     m_counters[i]->reset();
   }
 }
 
+[[nodiscard]]
 int64_t HardwareCounter::GetInstructionCount() {
   return s_counter->getInstructionCount();
 }
 
+[[nodiscard]]
 int64_t HardwareCounter::getInstructionCount() {
   return m_instructionCounter->read();
 }
 
+[[nodiscard]]
 int64_t HardwareCounter::GetLoadCount() {
   return s_counter->getLoadCount();
 }
 
+[[nodiscard]]
 int64_t HardwareCounter::getLoadCount() {
   return m_loadCounter->read();
 }
 
+[[nodiscard]]
 int64_t HardwareCounter::GetStoreCount() {
   return s_counter->getStoreCount();
 }
 
+[[nodiscard]]
 int64_t HardwareCounter::getStoreCount() {
   return m_storeCounter->read();
 }
@@ -296,9 +310,7 @@ struct PerfTable perfTable[] = {
 
 static int findEvent(const char *event, struct PerfTable *t,
                      int len, int *match_len) {
-  int i;
-
-  for (i = 0; i < len; i++) {
+  for (int i = 0; i < len; i++) {
     if (!strncmp(event, t[i].name, strlen(t[i].name))) {
       *match_len = strlen(t[i].name);
       return i;
@@ -390,9 +402,10 @@ bool HardwareCounter::addPerfEvent(const char* event) {
   return true;
 }
 
+[[nodiscard]]
 bool HardwareCounter::eventExists(const char *event) {
   // hopefully m_counters set is small, so a linear scan does not hurt
-  for(unsigned i = 0; i < m_counters.size(); i++) {
+  for (unsigned int i = 0; i < m_counters.size(); i++) {
     if (!strcmp(event, m_counters[i]->m_desc.c_str())) {
       return true;
     }
@@ -443,7 +456,7 @@ void HardwareCounter::getPerfEvents(PerfEventCallback f, void* data) {
     f(s_loads, getLoadCount(), data);
     f(s_stores, getStoreCount(), data);
   }
-  for (unsigned i = 0; i < m_counters.size(); i++) {
+  for (unsigned int i = 0; i < m_counters.size(); i++) {
     f(m_counters[i]->m_desc, m_counters[i]->read(), data);
   }
 }

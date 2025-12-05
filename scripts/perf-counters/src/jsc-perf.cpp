@@ -38,13 +38,13 @@ void add_native_hook(
 }
 
 static void fprint_value(
-  FILE *file,
+  FILE* file,
   JSContextRef context,
   JSValueRef obj
 ) {
   JSStringRef jsStr = JSValueToStringCopy(context, obj, NULL);
   size_t size = JSStringGetMaximumUTF8CStringSize(jsStr);
-  char *str = (char *) calloc(
+  char* str = (char*)calloc(
     size,
     1
   );
@@ -64,7 +64,7 @@ static JSValueRef js_print(
   JSObjectRef thisObject,
   size_t argumentCount,
   const JSValueRef arguments[],
-  JSValueRef *exception
+  JSValueRef* exception
 ) {
   for (int i = 0; i < argumentCount; i++) {
     if (i != 0) {
@@ -82,7 +82,7 @@ static JSValueRef js_perf_counters_init(
   JSObjectRef thisObject,
   size_t argumentCount,
   const JSValueRef arguments[],
-  JSValueRef *exception
+  JSValueRef* exception
 ) {
   // TODO: Allow customizing recorded events
   bool enable = true;
@@ -94,19 +94,20 @@ static JSValueRef js_perf_counters_init(
   return JSValueMakeUndefined(context);
 }
 
+[[nodiscard]]
 static JSValueRef js_perf_counters_get_counters(
   JSContextRef context,
   JSObjectRef object,
   JSObjectRef thisObject,
   size_t argumentCount,
   const JSValueRef arguments[],
-  JSValueRef *exception
+  JSValueRef* exception
 ) {
   JSObjectRef result = JSObjectMake(context, NULL, NULL);
   std::pair<JSContextRef, JSObjectRef> pair(context, result);
 
   HardwareCounter::GetPerfEvents(
-    [](const std::string& key, int64_t value, void* data) {
+    [](const std::string& key, int64_t value, void* data) -> void {
       std::pair<JSContextRef, JSObjectRef>& pair =
         *reinterpret_cast<std::pair<JSContextRef, JSObjectRef>*>(data);
       JSContextRef context = pair.first;
@@ -126,13 +127,13 @@ static JSValueRef js_perf_counters_get_counters(
   return result;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char* argv[]) {
   if (argc != 2) {
     fprintf(stderr, "usage: jsc-runner file\n");
     exit(1);
   }
 
-  char *filename = argv[1];
+  char* filename = argv[1];
   std::ifstream ifs(filename);
   if (ifs.fail()) {
     std::cerr << "Error opening \"" << filename << "\": " << strerror(errno) << "\n";

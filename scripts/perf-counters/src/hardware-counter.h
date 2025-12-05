@@ -37,8 +37,11 @@ public:
   ~HardwareCounter();
 
   static void Reset();
+  [[nodiscard]]
   static int64_t GetInstructionCount();
+  [[nodiscard]]
   static int64_t GetLoadCount();
+  [[nodiscard]]
   static int64_t GetStoreCount();
   static bool SetPerfEvents(std::string events);
   static void IncInstructionCount(int64_t amount);
@@ -53,9 +56,13 @@ public:
   bool m_countersSet{false};
 private:
   void reset();
+  [[nodiscard]]
   int64_t getInstructionCount();
+  [[nodiscard]]
   int64_t getLoadCount();
+  [[nodiscard]]
   int64_t getStoreCount();
+  [[nodiscard]]
   bool eventExists(const char* event);
   bool addPerfEvent(const char* event);
   bool setPerfEvents(std::string events);
@@ -81,10 +88,13 @@ public:
   ~HardwareCounter() { }
 
   static void Reset() { }
+  [[nodiscard]]
   static int64_t GetInstructionCount() { return 0; }
+  [[nodiscard]]
   static int64_t GetLoadCount() { return 0; }
+  [[nodiscard]]
   static int64_t GetStoreCount() { return 0; }
-  static bool SetPerfEvents(folly::StringPiece events) { return false; }
+  static bool SetPerfEvents(std::string events) { return false; }
   static void IncInstructionCount(int64_t amount) {}
   static void IncLoadCount(int64_t amount) {}
   static void IncStoreCount(int64_t amount) {}

@@ -22,8 +22,10 @@
 namespace HPHP {
 
 // return the location of the current thread's tdata section
-std::pair<void*,size_t> getCppTdata();
+[[nodiscard]]
+std::pair<void*, size_t> getCppTdata();
 
+[[nodiscard]]
 inline uintptr_t tlsBase() {
   uintptr_t retval;
 #if defined(__x86_64__)
@@ -84,7 +86,7 @@ inline uintptr_t tlsBase() {
 ///////////////////////////////////////////////////////////////////////////////
 // helper
 
-inline void ThreadLocalCheckReturn(int ret, const char *funcName) {
+inline void ThreadLocalCheckReturn(int ret, const char* funcName) {
   if (ret != 0) {
     // This is used from global constructors so the safest thing to do is just
     // print to stderr and exit().
@@ -93,7 +95,7 @@ inline void ThreadLocalCheckReturn(int ret, const char *funcName) {
   }
 }
 
-inline void ThreadLocalCreateKey(pthread_key_t *key, void (*del)(void*)) {
+inline void ThreadLocalCreateKey(pthread_key_t* key, void (*del)(void*)) {
   int ret = pthread_key_create(key, del);
   ThreadLocalCheckReturn(ret, "pthread_key_create");
 }
@@ -135,18 +137,19 @@ typedef struct __darwin_pthread_handler_rec darwin_pthread_handler;
  */
 template <typename T>
 struct ThreadLocalNode {
-  T * m_p;
-  void (*m_on_thread_exit_fn)(void * p);
-  void * m_next;
+  T* m_p;
+  void (*m_on_thread_exit_fn)(void* p);
+  void* m_next;
   size_t m_size;
 };
 
 struct ThreadLocalManager {
-  template<class T>
+  template <typename T>
   static void PushTop(ThreadLocalNode<T>& node) {
     PushTop(&node, sizeof(T));
   }
-  template<class F> void scan(F& mark) const;
+  template <typename F>
+  void scan(F& mark) const;
 
 private:
   static void PushTop(void* node, size_t size);
@@ -157,6 +160,7 @@ private:
     darwin_pthread_handler handler;
 #endif
   };
+  [[nodiscard]]
   static ThreadLocalList* getList(void* p) {
     return static_cast<ThreadLocalList*>(p);
   }
@@ -177,9 +181,9 @@ private:
 // ThreadLocal allocates by calling new without parameters and frees by calling
 // delete
 
-template<typename T>
-void ThreadLocalOnThreadExit(void * p) {
-  ThreadLocalNode<T> * pNode = (ThreadLocalNode<T>*)p;
+template <typename T>
+void ThreadLocalOnThreadExit(void* p) {
+  ThreadLocalNode<T>* pNode = (ThreadLocalNode<T>*)p;
   delete pNode->m_p;
   pNode->m_p = nullptr;
 }
@@ -188,9 +192,10 @@ void ThreadLocalOnThreadExit(void * p) {
  * The USE_GCC_FAST_TLS implementation of ThreadLocal is just a lazy-initialized
  * pointer wrapper. In this case, we have one ThreadLocal object per thread.
  */
-template<typename T>
+template <typename T>
 struct ThreadLocal {
-  T *get() const {
+  [[nodiscard]]
+  T* get() const {
     if (m_node.m_p == nullptr) {
       const_cast<ThreadLocal<T>*>(this)->create();
     }
@@ -199,7 +204,10 @@ struct ThreadLocal {
 
   NEVER_INLINE void create();
 
-  bool isNull() const { return m_node.m_p == nullptr; }
+  [[nodiscard]]
+  bool isNull() const {
+    return m_node.m_p == nullptr;
+  }
 
   void destroy() {
     delete m_node.m_p;
@@ -210,18 +218,20 @@ struct ThreadLocal {
     m_node.m_p = nullptr;
   }
 
-  T *operator->() const {
+  [[nodiscard]]
+  T* operator->() const {
     return get();
   }
 
-  T &operator*() const {
+  [[nodiscard]]
+  T& operator*() const {
     return *get();
   }
 
   ThreadLocalNode<T> m_node;
 };
 
-template<typename T>
+template <typename T>
 void ThreadLocal<T>::create() {
   if (m_node.m_on_thread_exit_fn == nullptr) {
     m_node.m_on_thread_exit_fn = ThreadLocalOnThreadExit<T>;
@@ -236,9 +246,12 @@ void ThreadLocal<T>::create() {
  * explicitly initialized with getCheck(), rather than being initialized when
  * it is first dereferenced.
  */
-template<typename T>
+template <typename T>
 struct ThreadLocalNoCheck {
-  NEVER_INLINE T *getCheck() const;
+  [[nodiscard]]
+  NEVER_INLINE T* getCheck() const;
+
+  [[nodiscard]]
   T* getNoCheck() const {
     assert(m_node.m_p);
     return m_node.m_p;
@@ -246,18 +259,23 @@ struct ThreadLocalNoCheck {
 
   NEVER_INLINE void create();
 
-  bool isNull() const { return m_node.m_p == nullptr; }
+  [[nodiscard]]
+  bool isNull() const {
+    return m_node.m_p == nullptr;
+  }
 
   void destroy() {
     delete m_node.m_p;
     m_node.m_p = nullptr;
   }
 
-  T *operator->() const {
+  [[nodiscard]]
+  T* operator->() const {
     return getNoCheck();
   }
 
-  T &operator*() const {
+  [[nodiscard]]
+  T& operator*() const {
     return *getNoCheck();
   }
 
@@ -266,7 +284,7 @@ private:
   void setNull() { m_node.m_p = nullptr; }
 };
 
-template<typename T>
+template <typename T>
 void ThreadLocalNoCheck<T>::create() {
   if (m_node.m_on_thread_exit_fn == nullptr) {
     m_node.m_on_thread_exit_fn = ThreadLocalOnThreadExit<T>;
@@ -275,8 +293,9 @@ void ThreadLocalNoCheck<T>::create() {
   assert(m_node.m_p == nullptr);
   m_node.m_p = new T();
 }
-template<typename T>
-T *ThreadLocalNoCheck<T>::getCheck() const {
+template <typename T>
+[[nodiscard]]
+T* ThreadLocalNoCheck<T>::getCheck() const {
   if (m_node.m_p == nullptr) {
     const_cast<ThreadLocalNoCheck<T>*>(this)->create();
   }
@@ -287,7 +306,7 @@ T *ThreadLocalNoCheck<T>::getCheck() const {
 ///////////////////////////////////////////////////////////////////////////////
 // Singleton thread-local storage for T
 
-template<typename T>
+template <typename T>
 void ThreadLocalSingletonOnThreadExit(void *obj) {
   T::OnThreadExit((T*)obj);
 }
@@ -298,15 +317,21 @@ class ThreadLocalSingleton {
 public:
   ThreadLocalSingleton() { s_inited = true; }
 
-  NEVER_INLINE static T *getCheck();
+  [[nodiscard]]
+  NEVER_INLINE static T* getCheck();
+  NEVER_INLINE static T* getCheck();
 
+  [[nodiscard]]
   static T* getNoCheck() {
     assert(s_inited);
     assert(s_singleton == (T*)&s_storage);
     return (T*)&s_storage;
   }
 
-  static bool isNull() { return s_singleton == nullptr; }
+  [[nodiscard]]
+  static bool isNull() {
+    return s_singleton == nullptr;
+  }
 
   static void destroy() {
     assert(!s_singleton || s_singleton == (T*)&s_storage);
@@ -317,27 +342,30 @@ public:
     }
   }
 
-  T *operator->() const {
+  [[nodiscard]]
+  T* operator->() const {
     return getNoCheck();
   }
 
-  T &operator*() const {
+  [[nodiscard]]
+  T& operator*() const {
     return *getNoCheck();
   }
 
 private:
-  static __thread T *s_singleton;
+  static __thread T* s_singleton;
   typedef typename std::aligned_storage<sizeof(T), sizeof(void*)>::type
           StorageType;
   static __thread StorageType s_storage;
   static bool s_inited; // no-fast-TLS requires construction so be consistent
 };
 
-template<typename T>
+template <typename T>
 bool ThreadLocalSingleton<T>::s_inited = false;
 
-template<typename T>
-T *ThreadLocalSingleton<T>::getCheck() {
+template <typename T>
+[[nodiscard]]
+T* ThreadLocalSingleton<T>::getCheck() {
   assert(s_inited);
   if (!s_singleton) {
     T* p = (T*) &s_storage;
@@ -347,17 +375,18 @@ T *ThreadLocalSingleton<T>::getCheck() {
   return s_singleton;
 }
 
-template<typename T> __thread T *ThreadLocalSingleton<T>::s_singleton;
-template<typename T> __thread typename ThreadLocalSingleton<T>::StorageType
+template <typename T> __thread T* ThreadLocalSingleton<T>::s_singleton;
+template <typename T> __thread typename ThreadLocalSingleton<T>::StorageType
                               ThreadLocalSingleton<T>::s_storage;
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // some classes don't need new/delete at all
 
-template<typename T, bool throwOnNull = true>
+template <typename T, bool throwOnNull = true>
 struct ThreadLocalProxy {
-  T *get() const {
+  [[nodiscard]]
+  T* get() const {
     if (m_p == nullptr && throwOnNull) {
       throw std::runtime_error("ThreadLocalProxy::get() called before set()");
     }
@@ -368,21 +397,26 @@ struct ThreadLocalProxy {
     m_p = obj;
   }
 
-  bool isNull() const { return m_p == nullptr; }
+  [[nodiscard]]
+  bool isNull() const {
+    return m_p == nullptr;
+  }
 
   void destroy() {
     m_p = nullptr;
   }
 
-  T *operator->() const {
+  [[nodiscard]]
+  T* operator->() const {
     return get();
   }
 
-  T &operator*() const {
+  [[nodiscard]]
+  T& operator*() const {
     return *get();
   }
 
-  T * m_p;
+  T* m_p;
 };
 
 /*
@@ -419,8 +453,8 @@ struct ThreadLocalProxy {
 ///////////////////////////////////////////////////////////////////////////////
 // ThreadLocal allocates by calling new() without parameters
 
-template<typename T>
-void ThreadLocalOnThreadExit(void *p) {
+template <typename T>
+void ThreadLocalOnThreadExit(void* p) {
   delete (T*)p;
 }
 
@@ -435,9 +469,9 @@ void ThreadLocalOnThreadExit(void *p) {
 // https://github.com/facebook/hhvm/issues/4444#issuecomment-92497582
 typedef struct __darwin_pthread_handler_rec darwin_pthread_handler;
 
-template<typename T>
-void ThreadLocalOnThreadCleanup(void *key) {
-  void *obj = pthread_getspecific((pthread_key_t)key);
+template <typename T>
+void ThreadLocalOnThreadCleanup(void* key) {
+  void* obj = pthread_getspecific((pthread_key_t)key);
   if (obj) {
     ThreadLocalOnThreadExit<T>(obj);
   }
@@ -447,7 +481,7 @@ inline void ThreadLocalSetCleanupHandler(pthread_key_t cleanup_key,
                                          pthread_key_t key,
                                          void (*del)(void*)) {
   // Prevent from adding the handler for multiple times.
-  darwin_pthread_handler *handler =
+  darwin_pthread_handler* handler =
       (darwin_pthread_handler*)pthread_getspecific(cleanup_key);
   if (handler)
     return;
@@ -469,7 +503,7 @@ inline void ThreadLocalSetCleanupHandler(pthread_key_t cleanup_key,
  * object is a true global, and the get() method returns a thread-dependent
  * pointer from pthread's thread-specific data management.
  */
-template<typename T>
+template <typename T>
 class ThreadLocal {
 public:
   /**
@@ -485,8 +519,9 @@ public:
 #endif
   }
 
-  T *get() const {
-    T *obj = (T*)pthread_getspecific(m_key);
+  [[nodiscard]]
+  T* get() const {
+    T* obj = (T*)pthread_getspecific(m_key);
     if (obj == nullptr) {
       obj = new T();
       ThreadLocalSetValue(m_key, obj);
@@ -498,7 +533,10 @@ public:
     return obj;
   }
 
-  bool isNull() const { return pthread_getspecific(m_key) == nullptr; }
+  [[nodiscard]]
+  bool isNull() const {
+    return pthread_getspecific(m_key) == nullptr;
+  }
 
   void destroy() {
     delete (T*)pthread_getspecific(m_key);
@@ -512,11 +550,13 @@ public:
   /**
    * Access object's member or method through this operator overload.
    */
-  T *operator->() const {
+  [[nodiscard]]
+  T* operator->() const {
     return get();
   }
 
-  T &operator*() const {
+  [[nodiscard]]
+  T& operator*() const {
     return *get();
   }
 
@@ -528,7 +568,7 @@ private:
 #endif
 };
 
-template<typename T>
+template <typename T>
 class ThreadLocalNoCheck {
 public:
   /**
@@ -544,15 +584,22 @@ public:
 #endif
   }
 
-  NEVER_INLINE T *getCheck() const;
+  [[nodiscard]]
+  NEVER_INLINE T* getCheck() const;
+  [[nodiscard]]
+  NEVER_INLINE T* getCheck() const;
 
+  [[nodiscard]]
   T* getNoCheck() const {
-    T *obj = (T*)pthread_getspecific(m_key);
+    T* obj = (T*)pthread_getspecific(m_key);
     assert(obj);
     return obj;
   }
 
-  bool isNull() const { return pthread_getspecific(m_key) == nullptr; }
+  [[nodiscard]]
+  bool isNull() const {
+    return pthread_getspecific(m_key) == nullptr;
+  }
 
   void destroy() {
     delete (T*)pthread_getspecific(m_key);
@@ -562,11 +609,13 @@ public:
   /**
    * Access object's member or method through this operator overload.
    */
-  T *operator->() const {
+  [[nodiscard]]
+  T* operator->() const {
     return getNoCheck();
   }
 
-  T &operator*() const {
+  [[nodiscard]]
+  T& operator*() const {
     return *getNoCheck();
   }
 
@@ -579,9 +628,9 @@ public:
 #endif
 };
 
-template<typename T>
-T *ThreadLocalNoCheck<T>::getCheck() const {
-  T *obj = (T*)pthread_getspecific(m_key);
+template <typename T>
+T* ThreadLocalNoCheck<T>::getCheck() const {
+  T* obj = (T*)pthread_getspecific(m_key);
   if (obj == nullptr) {
     obj = new T();
     ThreadLocalSetValue(m_key, obj);
@@ -596,16 +645,16 @@ T *ThreadLocalNoCheck<T>::getCheck() const {
 ///////////////////////////////////////////////////////////////////////////////
 // Singleton thread-local storage for T
 
-template<typename T>
-void ThreadLocalSingletonOnThreadExit(void *obj) {
+template <typename T>
+void ThreadLocalSingletonOnThreadExit(void* obj) {
   T::OnThreadExit((T*)obj);
   free(obj);
 }
 
 #ifdef __APPLE__
-template<typename T>
-void ThreadLocalSingletonOnThreadCleanup(void *key) {
-  void *obj = pthread_getspecific((pthread_key_t)key);
+template <typename T>
+void ThreadLocalSingletonOnThreadCleanup(void* key) {
+  void* obj = pthread_getspecific((pthread_key_t)key);
   if (obj) {
     ThreadLocalSingletonOnThreadExit<T>(obj);
   }
@@ -613,19 +662,22 @@ void ThreadLocalSingletonOnThreadCleanup(void *key) {
 #endif
 
 // ThreadLocalSingleton has NoCheck property
-template<typename T>
+template <typename T>
 class ThreadLocalSingleton {
 public:
   ThreadLocalSingleton() { getKey(); }
 
-  NEVER_INLINE static T *getCheck();
+  [[nodiscard]]
+  NEVER_INLINE static T* getCheck();
+  [[nodiscard]]
   static T* getNoCheck() {
     assert(s_inited);
-    T *obj = (T*)pthread_getspecific(s_key);
+    T* obj = (T*)pthread_getspecific(s_key);
     assert(obj);
     return obj;
   }
 
+  [[nodiscard]]
   static bool isNull() {
     return !s_inited || pthread_getspecific(s_key) == nullptr;
   }
@@ -637,11 +689,13 @@ public:
     ThreadLocalSetValue(s_key, nullptr);
   }
 
-  T *operator->() const {
+  [[nodiscard]]
+  T* operator->() const {
     return getNoCheck();
   }
 
-  T &operator*() const {
+  [[nodiscard]]
+  T& operator*() const {
     return *getNoCheck();
   }
 
@@ -653,6 +707,7 @@ private:
   static pthread_key_t s_cleanup_key;
 #endif
 
+  [[nodiscard]]
   static pthread_key_t getKey() {
     if (!s_inited) {
       s_inited = true;
@@ -668,10 +723,10 @@ private:
   }
 };
 
-template<typename T>
-T *ThreadLocalSingleton<T>::getCheck() {
+template <typename T>
+T* ThreadLocalSingleton<T>::getCheck() {
   assert(s_inited);
-  T *obj = (T*)pthread_getspecific(s_key);
+  T* obj = (T*)pthread_getspecific(s_key);
   if (obj == nullptr) {
     obj = (T*)malloc(sizeof(T));
     T::Create(obj);
@@ -684,20 +739,20 @@ T *ThreadLocalSingleton<T>::getCheck() {
   return obj;
 }
 
-template<typename T>
+template <typename T>
 pthread_key_t ThreadLocalSingleton<T>::s_key;
-template<typename T>
+template <typename T>
 bool ThreadLocalSingleton<T>::s_inited = false;
 
 #ifdef __APPLE__
-template<typename T>
+template <typename T>
 pthread_key_t ThreadLocalSingleton<T>::s_cleanup_key;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // some classes don't need new/delete at all
 
-template<typename T, bool throwOnNull = true>
+template <typename T, bool throwOnNull = true>
 class ThreadLocalProxy {
 public:
   /**
@@ -707,8 +762,9 @@ public:
     ThreadLocalCreateKey(&m_key, nullptr);
   }
 
-  T *get() const {
-    T *obj = (T*)pthread_getspecific(m_key);
+  [[nodiscard]]
+  T* get() const {
+    T* obj = (T*)pthread_getspecific(m_key);
     if (obj == nullptr && throwOnNull) {
       throw std::runtime_error("ThreadLocalProxy::get() called before set()");
     }
@@ -719,7 +775,10 @@ public:
     ThreadLocalSetValue(m_key, obj);
   }
 
-  bool isNull() const { return pthread_getspecific(m_key) == nullptr; }
+  [[nodiscard]]
+  bool isNull() const {
+    return pthread_getspecific(m_key) == nullptr;
+  }
 
   void destroy() {
     ThreadLocalSetValue(m_key, nullptr);
@@ -728,11 +787,13 @@ public:
   /**
    * Access object's member or method through this operator overload.
    */
-  T *operator->() const {
+  [[nodiscard]]
+  T* operator->() const {
     return get();
   }
 
-  T &operator*() const {
+  [[nodiscard]]
+  T& operator*() const {
     return *get();
   }
 
