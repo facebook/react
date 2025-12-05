@@ -162,7 +162,7 @@ export type AliasingEffect =
   /**
    * Indicates a side-effect that is not safe during render
    */
-  | {kind: 'Impure'; place: Place; error: CompilerDiagnostic}
+  | {kind: 'Impure'; into: Place; reason: string}
   /**
    * Indicates that a given place is accessed during render. Used to distingush
    * hook arguments that are known to be called immediately vs those used for
@@ -222,6 +222,7 @@ export function hashEffect(effect: AliasingEffect): string {
       return [effect.kind, effect.value.identifier.id, effect.reason].join(':');
     }
     case 'Impure':
+      return [effect.kind, effect.into.identifier.id, effect.reason].join(':');
     case 'Render': {
       return [effect.kind, effect.place.identifier.id].join(':');
     }

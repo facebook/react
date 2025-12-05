@@ -190,14 +190,18 @@ function parseAliasingSignatureConfig(
           };
         }
         case 'Impure': {
-          const place = lookup(effect.place);
+          const into = lookup(effect.into);
           return {
             kind: 'Impure',
+            into,
+            reason: effect.reason,
+          };
+        }
+        case 'Render': {
+          const place = lookup(effect.place);
+          return {
+            kind: 'Render',
             place,
-            error: CompilerError.throwTodo({
-              reason: 'Support impure effect declarations',
-              loc: GeneratedSource,
-            }),
           };
         }
         case 'Apply': {
@@ -1512,6 +1516,11 @@ export const DefaultNonmutatingHook = addHook(
           kind: 'Freeze',
           value: '@rest',
           reason: ValueReason.HookCaptured,
+        },
+        // Render the arguments
+        {
+          kind: 'Render',
+          place: '@rest',
         },
         // Returns a frozen value
         {
