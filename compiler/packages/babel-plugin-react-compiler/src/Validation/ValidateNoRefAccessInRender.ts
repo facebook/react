@@ -511,7 +511,7 @@ function validateNoRefAccessInRenderImpl(
                   CompilerDiagnostic.create({
                     category: ErrorCategory.Refs,
                     reason: 'Cannot access refs during render',
-                    description: ERROR_DESCRIPTION,
+                    description: REF_ERROR_DESCRIPTION,
                   }).withDetails({
                     kind: 'error',
                     loc: callee.loc,
@@ -666,7 +666,7 @@ function validateNoRefAccessInRenderImpl(
                   CompilerDiagnostic.create({
                     category: ErrorCategory.Refs,
                     reason: 'Cannot access refs during render',
-                    description: ERROR_DESCRIPTION,
+                    description: REF_ERROR_DESCRIPTION,
                   })
                     .withDetails({
                       kind: 'error',
@@ -814,7 +814,7 @@ function guardCheck(errors: CompilerError, operand: Place, env: Env): void {
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
         reason: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
+        description: REF_ERROR_DESCRIPTION,
       }).withDetails({
         kind: 'error',
         loc: operand.loc,
@@ -838,7 +838,7 @@ function validateNoRefValueAccess(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
         reason: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
+        description: REF_ERROR_DESCRIPTION,
       }).withDetails({
         kind: 'error',
         loc: (type.kind === 'RefValue' && type.loc) || operand.loc,
@@ -864,7 +864,7 @@ function validateNoRefPassedToFunction(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
         reason: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
+        description: REF_ERROR_DESCRIPTION,
       }).withDetails({
         kind: 'error',
         loc: (type.kind === 'RefValue' && type.loc) || loc,
@@ -886,7 +886,7 @@ function validateNoRefUpdate(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
         reason: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
+        description: REF_ERROR_DESCRIPTION,
       }).withDetails({
         kind: 'error',
         loc: (type.kind === 'RefValue' && type.loc) || loc,
@@ -907,7 +907,7 @@ function validateNoDirectRefValueAccess(
       CompilerDiagnostic.create({
         category: ErrorCategory.Refs,
         reason: 'Cannot access refs during render',
-        description: ERROR_DESCRIPTION,
+        description: REF_ERROR_DESCRIPTION,
       }).withDetails({
         kind: 'error',
         loc: type.loc ?? operand.loc,
@@ -917,7 +917,7 @@ function validateNoDirectRefValueAccess(
   }
 }
 
-const ERROR_DESCRIPTION =
+export const REF_ERROR_DESCRIPTION =
   'React refs are values that are not needed for rendering. Refs should only be accessed ' +
   'outside of render, such as in event handlers or effects. ' +
   'Accessing a ref value (the `current` property) during render can cause your component ' +
