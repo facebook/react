@@ -23,6 +23,14 @@ Error: Cannot call impure function during render
 
 `Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
 
+error.invalid-impure-functions-in-render.ts:7:20
+  5 |   const now = performance.now();
+  6 |   const rand = Math.random();
+> 7 |   return <Foo date={date} now={now} rand={rand} />;
+    |                     ^^^^ Cannot reference impure value during render
+  8 | }
+  9 |
+
 error.invalid-impure-functions-in-render.ts:4:15
   2 |
   3 | function Component() {
@@ -36,6 +44,14 @@ Error: Cannot call impure function during render
 
 `performance.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
 
+error.invalid-impure-functions-in-render.ts:7:31
+  5 |   const now = performance.now();
+  6 |   const rand = Math.random();
+> 7 |   return <Foo date={date} now={now} rand={rand} />;
+    |                                ^^^ Cannot reference impure value during render
+  8 | }
+  9 |
+
 error.invalid-impure-functions-in-render.ts:5:14
   3 | function Component() {
   4 |   const date = Date.now();
@@ -48,6 +64,14 @@ error.invalid-impure-functions-in-render.ts:5:14
 Error: Cannot call impure function during render
 
 `Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+error.invalid-impure-functions-in-render.ts:7:42
+  5 |   const now = performance.now();
+  6 |   const rand = Math.random();
+> 7 |   return <Foo date={date} now={now} rand={rand} />;
+    |                                           ^^^^ Cannot reference impure value during render
+  8 | }
+  9 |
 
 error.invalid-impure-functions-in-render.ts:6:15
   4 |   const date = Date.now();

@@ -27,11 +27,11 @@ import {
   InstructionKind,
   InstructionValue,
   isArrayType,
-  isJsxType,
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
   isSetType,
+  isUseRefType,
   makeIdentifierId,
   Phi,
   Place,
@@ -70,6 +70,7 @@ import {
   MutationReason,
 } from './AliasingEffects';
 import {ErrorCategory} from '../CompilerError';
+import {REF_ERROR_DESCRIPTION} from '../Validation/ValidateNoRefAccessInRender';
 
 const DEBUG = false;
 
@@ -569,14 +570,21 @@ function inferBlock(
       terminal.effects = effects.length !== 0 ? effects : null;
     }
   } else if (terminal.kind === 'return') {
+    terminal.effects = [
+      context.internEffect({
+        kind: 'Alias',
+        from: terminal.value,
+        into: context.fn.returns,
+      }),
+    ];
     if (!context.isFuctionExpression) {
-      terminal.effects = [
+      terminal.effects.push(
         context.internEffect({
           kind: 'Freeze',
           value: terminal.value,
           reason: ValueReason.JsxCaptured,
         }),
-      ];
+      );
     }
   }
 }
@@ -1973,6 +1981,24 @@ function computeSignatureForInstruction(
           into: lvalue,
         });
       }
+      if (
+        env.config.validateRefAccessDuringRender &&
+        isUseRefType(value.object.identifier)
+      ) {
+        effects.push({
+          kind: 'Impure',
+          into: lvalue,
+          error: CompilerDiagnostic.create({
+            category: ErrorCategory.Refs,
+            reason: 'Cannot access refs during render',
+            description: REF_ERROR_DESCRIPTION,
+          }).withDetails({
+            kind: 'error',
+            loc: value.loc,
+            message: `Cannot access ref value during render`,
+          }),
+        });
+      }
       break;
     }
     case 'PropertyStore':
@@ -2155,21 +2181,13 @@ function computeSignatureForInstruction(
           }
         }
         for (const prop of value.props) {
-          if (
-            prop.kind === 'JsxAttribute' &&
-            prop.place.identifier.type.kind === 'Function' &&
-            (isJsxType(prop.place.identifier.type.return) ||
-              (prop.place.identifier.type.return.kind === 'Phi' &&
-                prop.place.identifier.type.return.operands.some(operand =>
-                  isJsxType(operand),
-                )))
-          ) {
-            // Any props which return jsx are assumed to be called during render
-            effects.push({
-              kind: 'Render',
-              place: prop.place,
-            });
+          if (prop.kind === 'JsxAttribute' && /^on[A-Z]/.test(prop.name)) {
+            continue;
           }
+          effects.push({
+            kind: 'Render',
+            place: prop.kind === 'JsxAttribute' ? prop.place : prop.argument,
+          });
         }
       }
       break;
@@ -2436,7 +2454,7 @@ function computeEffectsForLegacySignature(
   if (signature.impure && state.env.config.validateNoImpureFunctionsInRender) {
     effects.push({
       kind: 'Impure',
-      place: receiver,
+      into: lvalue,
       error: CompilerDiagnostic.create({
         category: ErrorCategory.Purity,
         reason: 'Cannot call impure function during render',
@@ -2748,7 +2766,13 @@ function computeEffectsForSignature(
         }
         break;
       }
-      case 'Impure':
+      case 'Impure': {
+        const values = substitutions.get(effect.into.identifier.id) ?? [];
+        for (const value of values) {
+          effects.push({kind: effect.kind, into: value, error: effect.error});
+        }
+        break;
+      }
       case 'MutateFrozen':
       case 'MutateGlobal': {
         const values = substitutions.get(effect.place.identifier.id) ?? [];
