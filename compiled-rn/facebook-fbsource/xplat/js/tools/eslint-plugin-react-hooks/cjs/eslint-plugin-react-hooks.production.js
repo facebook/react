@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<8537bd327098ce740b5fd3ebdd86b13f>>
+ * @generated SignedSource<<09d3eadc617eff924b73153b883befd2>>
  */
 
 'use strict';
@@ -32967,12 +32967,6 @@ function findDisjointMutableValues(fn) {
                 for (const operand of eachInstructionOperand(instr)) {
                     if (isMutable(instr, operand) &&
                         operand.identifier.mutableRange.start > 0) {
-                        if (instr.value.kind === 'FunctionExpression' ||
-                            instr.value.kind === 'ObjectMethod') {
-                            if (operand.identifier.type.kind === 'Primitive') {
-                                continue;
-                            }
-                        }
                         operands.push(operand.identifier);
                     }
                 }

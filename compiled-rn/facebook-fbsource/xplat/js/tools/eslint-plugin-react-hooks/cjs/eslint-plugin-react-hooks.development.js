@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<4ed0e92717e38d12bad2db5ea2c9190f>>
+ * @generated SignedSource<<5fdc5ec4a895f96cf9d6870f9ac10c9b>>
  */
 
 'use strict';
@@ -33188,12 +33188,6 @@ function findDisjointMutableValues(fn) {
                 for (const operand of eachInstructionOperand(instr)) {
                     if (isMutable(instr, operand) &&
                         operand.identifier.mutableRange.start > 0) {
-                        if (instr.value.kind === 'FunctionExpression' ||
-                            instr.value.kind === 'ObjectMethod') {
-                            if (operand.identifier.type.kind === 'Primitive') {
-                                continue;
-                            }
-                        }
                         operands.push(operand.identifier);
                     }
                 }
