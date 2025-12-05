@@ -60,10 +60,10 @@ describe('ReactFlightDOM', () => {
     FlightReactDOM = require('react-dom');
 
     jest.mock('react-server-dom-webpack/server', () =>
-      require('react-server-dom-webpack/server.node.unbundled'),
+      require('react-server-dom-unbundled/server.node'),
     );
     jest.mock('react-server-dom-webpack/static', () =>
-      require('react-server-dom-webpack/static.node.unbundled'),
+      require('react-server-dom-unbundled/static.node'),
     );
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
