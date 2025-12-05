@@ -172,6 +172,10 @@ jobs:
           node-version-file: '.nvmrc'
           cache: yarn
           cache-dependency-path: yarn.lock
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
