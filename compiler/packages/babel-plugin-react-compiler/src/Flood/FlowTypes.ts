@@ -190,13 +190,13 @@ export interface AbstractEnum {
 
 // CanonicalRendersForm types
 export type CanonicalRendersForm =
-  | InstrinsicRenders
+  | IntrinsicRenders
   | NominalRenders
   | StructuralRenders
   | DefaultRenders;
 
-export interface InstrinsicRenders {
-  kind: 'InstrinsicRenders';
+export interface IntrinsicRenders {
+  kind: 'IntrinsicRenders';
   name: string;
 }
 
