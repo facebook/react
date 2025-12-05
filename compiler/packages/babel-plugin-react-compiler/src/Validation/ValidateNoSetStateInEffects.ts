@@ -170,10 +170,10 @@ function getSetStateCall(
     );
   };
 
-  const isRefControlledBlock: (id: BlockId) => boolean =
+  const isRefControlledBlock: (id: BlockId) => Place | null =
     enableAllowSetStateFromRefsInEffects
       ? createControlDominators(fn, place => isDerivedFromRef(place))
-      : (): boolean => false;
+      : (): Place | null => null;
 
   for (const [, block] of fn.body.blocks) {
     if (enableAllowSetStateFromRefsInEffects) {
@@ -192,7 +192,7 @@ function getSetStateCall(
           refDerivedValues.add(phi.place.identifier.id);
         } else {
           for (const [pred] of phi.operands) {
-            if (isRefControlledBlock(pred)) {
+            if (isRefControlledBlock(pred) != null) {
               refDerivedValues.add(phi.place.identifier.id);
               break;
             }
@@ -305,7 +305,7 @@ function getSetStateCall(
                  * be needed when initial layout measurements from refs need to be stored in state.
                  */
                 return null;
-              } else if (isRefControlledBlock(block.id)) {
+              } else if (isRefControlledBlock(block.id) != null) {
                 continue;
               }
             }
