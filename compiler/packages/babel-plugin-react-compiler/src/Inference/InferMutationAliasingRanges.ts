@@ -19,6 +19,7 @@ import {
   ValueReason,
   Place,
   isPrimitiveType,
+  isUseRefType,
 } from '../HIR/HIR';
 import {
   eachInstructionLValue,
@@ -28,6 +29,9 @@ import {
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
 import {Err, Ok, Result} from '../Utils/Result';
 import {AliasingEffect, MutationReason} from './AliasingEffects';
+import {printIdentifier, printType} from '../HIR/PrintHIR';
+
+const DEBUG = false;
 
 /**
  * This pass builds an abstract model of the heap and interprets the effects of the
@@ -104,6 +108,10 @@ export function inferMutationAliasingRanges(
     reason: MutationReason | null;
   }> = [];
   const renders: Array<{index: number; place: Place}> = [];
+  const impure: Array<{
+    index: number;
+    effect: Extract<AliasingEffect, {kind: 'Impure'}>;
+  }> = [];
 
   let index = 0;
 
@@ -197,14 +205,18 @@ export function inferMutationAliasingRanges(
           });
         } else if (
           effect.kind === 'MutateFrozen' ||
-          effect.kind === 'MutateGlobal' ||
-          effect.kind === 'Impure'
+          effect.kind === 'MutateGlobal'
         ) {
           errors.pushDiagnostic(effect.error);
           functionEffects.push(effect);
         } else if (effect.kind === 'Render') {
           renders.push({index: index++, place: effect.place});
           functionEffects.push(effect);
+        } else if (effect.kind === 'Impure') {
+          impure.push({
+            index: index++,
+            effect,
+          });
         }
       }
     }
@@ -214,10 +226,6 @@ export function inferMutationAliasingRanges(
         state.assign(index, from, into);
       }
     }
-    if (block.terminal.kind === 'return') {
-      state.assign(index++, block.terminal.value, fn.returns);
-    }
-
     if (
       (block.terminal.kind === 'maybe-throw' ||
         block.terminal.kind === 'return') &&
@@ -243,7 +251,20 @@ export function inferMutationAliasingRanges(
     }
   }
 
+  for (const {index, effect} of impure) {
+    if (DEBUG) {
+      console.log(
+        `[${index}] impure ${printIdentifier(effect.into.identifier)}`,
+      );
+    }
+    state.impure(index, effect);
+  }
   for (const mutation of mutations) {
+    if (DEBUG) {
+      console.log(
+        `[${mutation.index}] mutate ${printIdentifier(mutation.place.identifier)}`,
+      );
+    }
     state.mutate(
       mutation.index,
       mutation.place.identifier,
@@ -255,8 +276,16 @@ export function inferMutationAliasingRanges(
       errors,
     );
   }
+  if (DEBUG) {
+    console.log(state.debug());
+  }
   for (const render of renders) {
-    state.render(render.index, render.place.identifier, errors);
+    if (DEBUG) {
+      console.log(
+        `[${render.index}] render ${printIdentifier(render.place.identifier)}`,
+      );
+    }
+    state.render(render.index, render.place, errors);
   }
   for (const param of [...fn.context, ...fn.params]) {
     const place = param.kind === 'Identifier' ? param : param.place;
@@ -515,6 +544,17 @@ export function inferMutationAliasingRanges(
   const ignoredErrors = new CompilerError();
   for (const param of [...fn.params, ...fn.context, fn.returns]) {
     const place = param.kind === 'Identifier' ? param : param.place;
+    const node = state.nodes.get(place.identifier);
+    if (node != null && node.impure != null) {
+      if (node.impure.kind === 'Impure') {
+        functionEffects.push({...node.impure, into: place});
+      } else {
+        const source = state.nodes.get(node.impure.node);
+        if (source != null && source.impure?.kind === 'Impure') {
+          functionEffects.push({...source.impure, into: place});
+        }
+      }
+    }
     tracked.push(place);
   }
   for (const into of tracked) {
@@ -577,7 +617,6 @@ export function inferMutationAliasingRanges(
 function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
   for (const effect of fn.aliasingEffects ?? []) {
     switch (effect.kind) {
-      case 'Impure':
       case 'MutateFrozen':
       case 'MutateGlobal': {
         errors.pushDiagnostic(effect.error);
@@ -612,9 +651,81 @@ type Node = {
     | {kind: 'Object'}
     | {kind: 'Phi'}
     | {kind: 'Function'; function: HIRFunction};
+  impure:
+    | Extract<AliasingEffect, {kind: 'Impure'}>
+    | {kind: 'Indirect'; node: Identifier}
+    | null;
 };
+
+function _printNode(node: Node): string {
+  const out: Array<string> = [];
+  debugNode(out, node);
+  return out.join('\n');
+}
+function debugNode(out: Array<string>, node: Node): void {
+  out.push(
+    printIdentifier(node.id) +
+      printType(node.id.type) +
+      ` lastMutated=[${node.lastMutated}]`,
+  );
+  if (node.transitive != null) {
+    out.push(`  transitive=${node.transitive.kind}`);
+  }
+  if (node.local != null) {
+    out.push(`  local=${node.local.kind}`);
+  }
+  if (node.mutationReason != null) {
+    out.push(`  mutationReason=${node.mutationReason?.kind}`);
+  }
+  if (node.impure != null) {
+    out.push(
+      `  impure=${node.impure.kind === 'Impure' ? node.impure.error.reason : 'source=$' + node.impure.node.id}`,
+    );
+  }
+  const edges: Array<{
+    index: number;
+    direction: '<=' | '=>';
+    kind: string;
+    id: Identifier;
+  }> = [];
+  for (const [alias, index] of node.createdFrom) {
+    edges.push({index, direction: '<=', kind: 'createFrom', id: alias});
+  }
+  for (const [alias, index] of node.aliases) {
+    edges.push({index, direction: '<=', kind: 'alias', id: alias});
+  }
+  for (const [alias, index] of node.maybeAliases) {
+    edges.push({index, direction: '<=', kind: 'alias?', id: alias});
+  }
+  for (const [alias, index] of node.captures) {
+    edges.push({index, direction: '<=', kind: 'capture', id: alias});
+  }
+  for (const edge of node.edges) {
+    edges.push({
+      index: edge.index,
+      direction: '=>',
+      kind: edge.kind,
+      id: edge.node,
+    });
+  }
+  edges.sort((a, b) => a.index - b.index);
+  for (const edge of edges) {
+    out.push(
+      `  [${edge.index}] ${edge.direction} ${edge.kind} ${printIdentifier(edge.id)}`,
+    );
+  }
+}
+
 class AliasingState {
   nodes: Map<Identifier, Node> = new Map();
+
+  debug(): string {
+    const items: Array<string> = [];
+    for (const [_id, node] of this.nodes) {
+      debugNode(items, node);
+    }
+    return items.join('\n');
+  }
 
   create(place: Place, value: Node['value']): void {
     this.nodes.set(place.identifier, {
@@ -629,6 +740,7 @@ class AliasingState {
       lastMutated: 0,
       mutationReason: null,
       value,
+      impure: null,
     });
   }
 
@@ -681,9 +793,12 @@ class AliasingState {
     }
   }
 
-  render(index: number, start: Identifier, errors: CompilerError): void {
+  impure(
+    index: number,
+    effect: Extract<AliasingEffect, {kind: 'Impure'}>,
+  ): void {
     const seen = new Set<Identifier>();
-    const queue: Array<Identifier> = [start];
+    const queue: Array<Identifier> = [effect.into.identifier];
     while (queue.length !== 0) {
       const current = queue.pop()!;
       if (seen.has(current)) {
@@ -691,11 +806,69 @@ class AliasingState {
       }
       seen.add(current);
       const node = this.nodes.get(current);
-      if (node == null || node.transitive != null || node.local != null) {
+      if (node == null || node.impure != null || isUseRefType(node.id)) {
+        continue;
+      }
+      node.impure =
+        node.id.id === effect.into.identifier.id
+          ? effect
+          : {kind: 'Indirect', node: effect.into.identifier};
+      for (const edge of node.edges) {
+        if (index < edge.index) {
+          queue.push(edge.node);
+        }
+      }
+    }
+  }
+
+  render(index: number, start: Place, errors: CompilerError): void {
+    const seen = new Set<Identifier>();
+    const queue: Array<Identifier> = [start.identifier];
+    while (queue.length !== 0) {
+      const current = queue.pop()!;
+      if (seen.has(current)) {
+        continue;
+      }
+      seen.add(current);
+      const node = this.nodes.get(current);
+      if (
+        node == null ||
+        node.transitive != null ||
+        node.local != null ||
+        isUseRefType(node.id)
+      ) {
+        if (DEBUG) {
+          console.log(`  render ${printIdentifier(current)}: skip mutated/ref`);
+        }
         continue;
       }
       if (node.value.kind === 'Function') {
-        appendFunctionErrors(errors, node.value.function);
+        const returns = node.value.function.returns;
+        if (
+          isJsxType(returns.identifier.type) ||
+          (returns.identifier.type.kind === 'Phi' &&
+            returns.identifier.type.operands.some(operand =>
+              isJsxType(operand),
+            ))
+        ) {
+          appendFunctionErrors(errors, node.value.function);
+        }
+        if (DEBUG) {
+          console.log(`  render ${printIdentifier(current)}: skip function`);
+        }
+        continue;
+      }
+      if (node.impure != null && node.impure.kind === 'Impure') {
+        const diagnostic = node.impure.error;
+        if (node.id.id !== start.identifier.id) {
+          diagnostic.options.details.unshift({
+            kind: 'error',
+            loc: start.loc,
+            message: 'Cannot reference impure value during render',
+          });
+        }
+        errors.pushDiagnostic(diagnostic);
+        node.impure = null;
       }
       for (const [alias, when] of node.createdFrom) {
         if (when >= index) {
@@ -704,6 +877,12 @@ class AliasingState {
         queue.push(alias);
       }
       for (const [alias, when] of node.aliases) {
+        if (when >= index) {
+          continue;
+        }
+        queue.push(alias);
+      }
+      for (const [alias, when] of node.maybeAliases) {
         if (when >= index) {
           continue;
         }
@@ -760,6 +939,10 @@ class AliasingState {
         node.local == null
       ) {
         appendFunctionErrors(errors, node.value.function);
+      }
+      if (node.impure != null && node.impure.kind === 'Impure') {
+        errors.pushDiagnostic(node.impure.error);
+        node.impure = null;
       }
       if (transitive) {
         if (node.transitive == null || node.transitive.kind < kind) {
