@@ -854,7 +854,9 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         severity: ErrorSeverity.Error,
         name: 'set-state-in-effect',
         description:
-          'Validates against calling setState synchronously in an effect, which can lead to re-renders that degrade performance',
+          'Validates against calling setState synchronously in an effect. ' +
+          'This can indicate non-local derived data, a derived event pattern, or ' +
+          'improper external data synchronization.',
         preset: LintRulePreset.Recommended,
       };
     }
