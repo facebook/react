@@ -1,12 +1,12 @@
 'use strict';
 
-const ClosureCompiler = require('google-closure-compiler').compiler;
 const {promisify} = require('util');
 const fs = require('fs');
 const tmp = require('tmp');
 const writeFileAsync = promisify(fs.writeFile);
 
-function compile(flags) {
+async function compile(flags) {
+  const ClosureCompiler = (await import('google-closure-compiler')).compiler;
   return new Promise((resolve, reject) => {
     const closureCompiler = new ClosureCompiler(flags);
     closureCompiler.run(function (exitCode, stdOut, stdErr) {
