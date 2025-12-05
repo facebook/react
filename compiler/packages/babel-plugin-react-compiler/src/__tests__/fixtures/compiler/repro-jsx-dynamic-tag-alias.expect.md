@@ -27,10 +27,11 @@ const base = "div";
 
 const TestComponent: React.FC = () => {
   const $ = _c(1);
-  const Comp = base;
+
+  const T0 = base;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Comp />;
+    t0 = <T0 />;
     $[0] = t0;
   } else {
     t0 = $[0];

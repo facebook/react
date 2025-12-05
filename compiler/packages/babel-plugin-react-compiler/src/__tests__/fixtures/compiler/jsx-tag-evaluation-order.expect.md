@@ -30,13 +30,13 @@ import { StaticText1, StaticText2 } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(3);
-  let Tag = StaticText1;
 
-  const T0 = Tag;
-  const t0 = ((Tag = StaticText2), props.value);
+  const T0 = StaticText1;
+  const t0 = props.value;
+  const T1 = StaticText2;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <Tag />;
+    t1 = <T1 />;
     $[0] = t1;
   } else {
     t1 = $[0];

@@ -23,6 +23,7 @@ import {
   markInstructionIds,
   markPredecessors,
   mergeConsecutiveBlocks,
+  promoteTemporaryJsxTag,
   reversePostorderBlocks,
 } from '../HIR';
 import {
@@ -598,14 +599,16 @@ function evaluateInstruction(
       return result;
     }
     case 'LoadLocal': {
-      if (
-        instr.lvalue != null &&
-        jsxTagIdentifiers.has(instr.lvalue.identifier.id)
-      ) {
-        return null;
-      }
       const placeValue = read(constants, value.place);
       if (placeValue !== null) {
+        if (
+          instr.lvalue != null &&
+          jsxTagIdentifiers.has(instr.lvalue.identifier.id) &&
+          placeValue.kind === 'LoadGlobal' &&
+          instr.lvalue.identifier.name == null
+        ) {
+          promoteTemporaryJsxTag(instr.lvalue.identifier);
+        }
         instr.value = placeValue;
       }
       return placeValue;
