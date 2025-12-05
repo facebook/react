@@ -171,7 +171,7 @@ private:
     ThreadLocalCreateKey(&m_key, ThreadLocalManager::OnThreadExit);
 #endif
   };
-  static void OnThreadExit(void *p);
+  static void OnThreadExit(void* p);
   pthread_key_t m_key;
 
   static ThreadLocalManager& GetManager();
@@ -307,7 +307,7 @@ T* ThreadLocalNoCheck<T>::getCheck() const {
 // Singleton thread-local storage for T
 
 template <typename T>
-void ThreadLocalSingletonOnThreadExit(void *obj) {
+void ThreadLocalSingletonOnThreadExit(void* obj) {
   T::OnThreadExit((T*)obj);
 }
 
