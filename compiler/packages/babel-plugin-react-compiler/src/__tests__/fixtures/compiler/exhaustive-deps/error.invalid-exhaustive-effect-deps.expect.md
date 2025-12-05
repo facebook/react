@@ -48,6 +48,8 @@ error.invalid-exhaustive-effect-deps.ts:7:8
    9 |
   10 |   // error: extra dep - y
 
+Inferred dependencies: `[x]`
+
 Error: Found extra effect dependencies
 
 Extra dependencies can cause an effect to fire more often than it should, resulting in performance problems such as excessive renders and side effects.
@@ -60,6 +62,8 @@ error.invalid-exhaustive-effect-deps.ts:13:9
   14 |
   15 |   // error: missing dep - z; extra dep - y
   16 |   useEffect(() => {
+
+Inferred dependencies: `[x]`
 
 Error: Found missing/extra effect dependencies
 
@@ -83,6 +87,8 @@ error.invalid-exhaustive-effect-deps.ts:18:9
   20 |   // error: missing dep x
   21 |   useEffect(() => {
 
+Inferred dependencies: `[x, z]`
+
 Error: Found missing/extra effect dependencies
 
 Missing dependencies can cause an effect to fire less often than it should. Extra dependencies can cause an effect to fire more often than it should, resulting in performance problems such as excessive renders and side effects.
@@ -103,6 +109,8 @@ error.invalid-exhaustive-effect-deps.ts:23:6
      |       ^^^ Overly precise dependency `x.y`, use `x` instead
   24 | }
   25 |
+
+Inferred dependencies: `[x]`
 ```
           
       

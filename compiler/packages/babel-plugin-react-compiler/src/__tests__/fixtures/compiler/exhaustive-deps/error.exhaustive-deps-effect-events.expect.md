@@ -51,6 +51,8 @@ error.exhaustive-deps-effect-events.ts:16:6
   18 |   // error - do not include effect event in deps
   19 |   useEffect(() => {
 
+Inferred dependencies: `[]`
+
 Error: Found extra effect dependencies
 
 Extra dependencies can cause an effect to fire more often than it should, resulting in performance problems such as excessive renders and side effects.
@@ -64,6 +66,8 @@ error.exhaustive-deps-effect-events.ts:21:6
   23 |   // error - do not include effect event captured values in deps
   24 |   useEffect(() => {
 
+Inferred dependencies: `[z]`
+
 Error: Found extra effect dependencies
 
 Extra dependencies can cause an effect to fire more often than it should, resulting in performance problems such as excessive renders and side effects.
@@ -75,6 +79,8 @@ error.exhaustive-deps-effect-events.ts:26:6
      |       ^ Unnecessary dependency `y`
   27 | }
   28 |
+
+Inferred dependencies: `[z]`
 ```
           
       

@@ -158,7 +158,7 @@ export function validateExhaustiveDependencies(
     {
       onStartMemoize,
       onFinishMemoize,
-      onEffect: (inferred, manual) => {
+      onEffect: (inferred, manual, manualMemoLoc) => {
         if (env.config.validateExhaustiveEffectDependencies === false) {
           return;
         }
@@ -199,7 +199,7 @@ export function validateExhaustiveDependencies(
           Array.from(inferred),
           manualDeps,
           reactive,
-          null,
+          manualMemoLoc,
           ErrorCategory.EffectExhaustiveDependencies,
         );
         if (diagnostic != null) {
@@ -379,7 +379,10 @@ function validateDependencies(
         op: CompilerSuggestionOperation.Replace,
         text: `[${inferred
           .filter(
-            dep => dep.kind === 'Local' && !isOptionalDependency(dep, reactive),
+            dep =>
+              dep.kind === 'Local' &&
+              !isOptionalDependency(dep, reactive) &&
+              !isEffectEventFunctionType(dep.identifier),
           )
           .map(printInferredDependency)
           .join(', ')}]`,
@@ -559,6 +562,7 @@ function collectDependencies(
     onEffect: (
       inferred: Set<InferredDependency>,
       manual: Set<InferredDependency>,
+      manualMemoLoc: SourceLocation | null,
     ) => void;
   } | null,
   isFunctionExpression: boolean,
@@ -778,6 +782,7 @@ function collectDependencies(
           temporaries.set(lvalue.identifier.id, {
             kind: 'Aggregate',
             dependencies: arrayDeps,
+            loc: value.loc,
           });
           break;
         }
@@ -796,7 +801,11 @@ function collectDependencies(
                 fnDeps?.kind === 'Aggregate' &&
                 manualDeps?.kind === 'Aggregate'
               ) {
-                onEffect(fnDeps.dependencies, manualDeps.dependencies);
+                onEffect(
+                  fnDeps.dependencies,
+                  manualDeps.dependencies,
+                  manualDeps.loc ?? null,
+                );
               }
             }
           }
@@ -893,7 +902,11 @@ type Temporary =
       context: boolean;
       loc: SourceLocation;
     }
-  | {kind: 'Aggregate'; dependencies: Set<InferredDependency>};
+  | {
+      kind: 'Aggregate';
+      dependencies: Set<InferredDependency>;
+      loc?: SourceLocation;
+    };
 type InferredDependency = Extract<Temporary, {kind: 'Local' | 'Global'}>;
 
 function collectReactiveIdentifiersHIR(fn: HIRFunction): Set<IdentifierId> {
