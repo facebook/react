@@ -437,6 +437,11 @@ function loadServerReference<A: Iterable<any>, T>(
   if (typeof id !== 'string') {
     return (null: any);
   }
+  if (key === 'then') {
+    // This should never happen because we always serialize objects with then-functions
+    // as "thenable" which reduces to ReactPromise with no other fields.
+    return (null: any);
+  }
   const serverReference: ServerReference<T> =
     resolveServerReference<$FlowFixMe>(response._bundlerConfig, id);
   // We expect most servers to not really need this because you'd just have all
@@ -976,7 +981,17 @@ function extractIterator(response: Response, model: Array<any>): Iterator<any> {
   return model[Symbol.iterator]();
 }
 
-function createModel(response: Response, model: any): any {
+function createModel(
+  response: Response,
+  model: any,
+  parentObject: Object,
+  key: string,
+): any {
+  if (key === 'then' && typeof model === 'function') {
+    // This should never happen because we always serialize objects with then-functions
+    // as "thenable" which reduces to ReactPromise with no other fields.
+    return null;
+  }
   return model;
 }
 
