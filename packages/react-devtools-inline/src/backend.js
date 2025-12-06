@@ -27,6 +27,7 @@ function startActivation(contentWindow: any, bridge: BackendBridge) {
       componentFilters,
       showInlineWarningsAndErrors,
       hideConsoleLogsInStrictMode,
+      disableSecondConsoleLogDimmingInStrictMode,
     } = data;
 
     contentWindow.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ =
@@ -38,6 +39,8 @@ function startActivation(contentWindow: any, bridge: BackendBridge) {
       showInlineWarningsAndErrors;
     contentWindow.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ =
       hideConsoleLogsInStrictMode;
+    contentWindow.__REACT_DEVTOOLS_DISABLE_SECOND_CONSOLE_LOG_DIMMING_IN_STRICT_MODE__ =
+      disableSecondConsoleLogDimmingInStrictMode;
 
     // TRICKY
     // The backend entry point may be required in the context of an iframe or the parent window.
@@ -53,6 +56,8 @@ function startActivation(contentWindow: any, bridge: BackendBridge) {
         showInlineWarningsAndErrors;
       window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ =
         hideConsoleLogsInStrictMode;
+      window.__REACT_DEVTOOLS_DISABLE_SECOND_CONSOLE_LOG_DIMMING_IN_STRICT_MODE__ =
+        disableSecondConsoleLogDimmingInStrictMode;
     }
 
     finishActivation(contentWindow, bridge);
