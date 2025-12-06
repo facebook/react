@@ -5,6 +5,7 @@
 function Component() {
   const foo = () => {
     someGlobal = true;
+    return <div />;
   };
   // Children are generally access/called during render, so
   // modifying a global in a children function is almost
@@ -29,9 +30,9 @@ error.assign-global-in-jsx-children.ts:3:4
   2 |   const foo = () => {
 > 3 |     someGlobal = true;
     |     ^^^^^^^^^^ `someGlobal` cannot be reassigned
-  4 |   };
-  5 |   // Children are generally access/called during render, so
-  6 |   // modifying a global in a children function is almost
+  4 |     return <div />;
+  5 |   };
+  6 |   // Children are generally access/called during render, so
 ```
           
       
