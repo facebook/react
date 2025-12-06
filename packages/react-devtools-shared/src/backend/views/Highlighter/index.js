@@ -9,6 +9,7 @@
 
 import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
+import {isReactNativeEnvironment} from 'react-devtools-shared/src/backend/utils';
 
 import type {HostInstance} from 'react-devtools-shared/src/backend/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
@@ -49,6 +50,11 @@ export default function setupHighlighter(
     right: number,
     bottom: number,
   }) {
+    if (isReactNativeEnvironment()) {
+      // Not implemented.
+      return;
+    }
+
     if (
       left === Math.round(window.scrollX) &&
       top === Math.round(window.scrollY)
@@ -65,6 +71,11 @@ export default function setupHighlighter(
 
   let scrollTimer = null;
   function sendScroll() {
+    if (isReactNativeEnvironment()) {
+      // Not implemented.
+      return;
+    }
+
     if (scrollTimer) {
       clearTimeout(scrollTimer);
       scrollTimer = null;
@@ -85,14 +96,17 @@ export default function setupHighlighter(
     applyingScroll = false;
   }
 
-  document.addEventListener('scroll', () => {
-    if (!scrollTimer) {
-      // Periodically synchronize the scroll while scrolling.
-      scrollTimer = setTimeout(sendScroll, 400);
-    }
-  });
+  // $FlowFixMe[method-unbinding]
+  if (document && typeof document.addEventListener === 'function') {
+    document.addEventListener('scroll', () => {
+      if (!scrollTimer) {
+        // Periodically synchronize the scroll while scrolling.
+        scrollTimer = setTimeout(sendScroll, 400);
+      }
+    });
 
-  document.addEventListener('scrollend', scrollEnd);
+    document.addEventListener('scrollend', scrollEnd);
+  }
 
   function startInspectingHost(onlySuspenseNodes: boolean) {
     inspectOnlySuspenseNodes = onlySuspenseNodes;
@@ -318,6 +332,11 @@ export default function setupHighlighter(
     // If you wanted to show the overlay, highlightHostInstance should be used instead
     // with the scrollIntoView option.
     hideOverlay(agent);
+
+    if (isReactNativeEnvironment()) {
+      // Not implemented.
+      return;
+    }
 
     if (scrollDelayTimer) {
       clearTimeout(scrollDelayTimer);
