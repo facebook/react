@@ -17,6 +17,8 @@ declare const __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
 
+declare const __REACT_DEVTOOLS_HIDE_CONSOLE__: void | true;
+
 declare const reportError: (error: mixed) => void;
 
 declare module 'create-react-class' {
