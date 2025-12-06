@@ -3272,9 +3272,23 @@ export function startHostTransition<F>(
         // set the pending form status.
         noop
       : () => {
-          // Automatically reset the form when the action completes.
-          requestFormReset(formFiber);
-          return action(formData);
+          const result = action(formData);
+          // Check if the result is a thenable (Promise-like)
+          if (result != null && typeof result.then === 'function') {
+            // If it's async, only reset the form if it succeeds
+            return result.then(
+              () => {
+                requestFormReset(formFiber);
+              },
+              () => {
+                // On error, don't reset the form
+              },
+            );
+          } else {
+            // Sync case: reset immediately
+            requestFormReset(formFiber);
+            return result;
+          }
         },
   );
 }
