@@ -25,7 +25,7 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Found missing/extra memoization dependencies
+Error: Found missing memoization dependencies
 
 Missing dependencies can cause a value to update less often than it should, resulting in stale UI.
 

@@ -304,7 +304,10 @@ function runWithEnvironment(
   log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
 
   if (env.enableValidations) {
-    if (env.config.validateExhaustiveMemoizationDependencies) {
+    if (
+      env.config.validateExhaustiveMemoizationDependencies ||
+      env.config.validateExhaustiveEffectDependencies
+    ) {
       // NOTE: this relies on reactivity inference running first
       validateExhaustiveDependencies(hir).unwrap();
     }

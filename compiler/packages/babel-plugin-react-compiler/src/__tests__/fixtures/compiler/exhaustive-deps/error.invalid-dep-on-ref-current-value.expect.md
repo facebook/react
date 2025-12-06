@@ -21,7 +21,7 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Found missing/extra memoization dependencies
+Error: Found extra memoization dependencies
 
 Extra dependencies can cause a value to update more often than it should, resulting in performance problems such as excessive renders or effects firing too often.
 

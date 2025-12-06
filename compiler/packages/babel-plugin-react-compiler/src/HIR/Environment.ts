@@ -224,6 +224,11 @@ export const EnvironmentConfigSchema = z.object({
   validateExhaustiveMemoizationDependencies: z.boolean().default(true),
 
   /**
+   * Validate that dependencies supplied to effect hooks are exhaustive.
+   */
+  validateExhaustiveEffectDependencies: z.boolean().default(false),
+
+  /**
    * When this is true, rather than pruning existing manual memoization but ensuring or validating
    * that the memoized values remain memoized, the compiler will simply not prune existing calls to
    * useMemo/useCallback.
