@@ -74,7 +74,6 @@ function Component() {
         console.log(ref.current.value);
       }
     };
-
     t0 = (
       <>
         <input ref={ref} />

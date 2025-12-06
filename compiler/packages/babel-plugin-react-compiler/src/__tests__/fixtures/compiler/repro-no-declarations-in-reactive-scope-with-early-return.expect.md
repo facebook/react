@@ -62,7 +62,6 @@ function Component() {
         t1 = t2;
         break bb0;
       }
-
       t0 = filteredItems.map(_temp2);
     }
     $[0] = items;

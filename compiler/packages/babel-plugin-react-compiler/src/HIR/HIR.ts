@@ -694,11 +694,13 @@ export type SpreadPattern = {
 export type ArrayPattern = {
   kind: 'ArrayPattern';
   items: Array<Place | SpreadPattern | Hole>;
+  loc: SourceLocation;
 };
 
 export type ObjectPattern = {
   kind: 'ObjectPattern';
   properties: Array<ObjectProperty | SpreadPattern>;
+  loc: SourceLocation;
 };
 
 export type ObjectPropertyKey =
