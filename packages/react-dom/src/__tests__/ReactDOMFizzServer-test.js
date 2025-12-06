@@ -3630,10 +3630,9 @@ describe('ReactDOMFizzServer', () => {
         '</script><script async="" src="foo"></script>' +
         (gate(flags => flags.shouldUseFizzExternalRuntime)
           ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
-          : '') +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#_R_" blocking="render">'
           : ''),
+      // Note: No <link rel="expect"> because the stream completes fully (all tasks done)
+      // before piping, so there's no need for blocking render instructions.
     );
   });
 
@@ -4565,16 +4564,10 @@ describe('ReactDOMFizzServer', () => {
     expect(document.getElementsByTagName('script').length).toEqual(1);
 
     // the html should be as-is
+    // Note: No <link rel="expect"> or <template> because all tasks are complete
+    // when piping, so blocking render instructions are not needed.
     expect(document.documentElement.innerHTML).toEqual(
-      '<head><script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>' +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#_R_" blocking="render">'
-          : '') +
-        '</head><body><p>hello world!</p>' +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="_R_"></template>'
-          : '') +
-        '</body>',
+      '<head><script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script></head><body><p>hello world!</p></body>',
     );
   });
 
@@ -6613,19 +6606,14 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
 
+    // Note: No <link rel="expect"> or <template> because all tasks are complete
+    // when piping, so blocking render instructions are not needed.
     expect(document.documentElement.outerHTML).toEqual(
       '<html><head>' +
         (gate(flags => flags.shouldUseFizzExternalRuntime)
           ? '<script src="react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js" async=""></script>'
           : '') +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<link rel="expect" href="#_R_" blocking="render">'
-          : '') +
-        '</head><body><script>try { foo() } catch (e) {} ;</script>' +
-        (gate(flags => flags.enableFizzBlockingRender)
-          ? '<template id="_R_"></template>'
-          : '') +
-        '</body></html>',
+        '</head><body><script>try { foo() } catch (e) {} ;</script></body></html>',
     );
   });
 
