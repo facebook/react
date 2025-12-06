@@ -1,4 +1,4 @@
-// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
+// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly @outputMode:"lint"
 
 function Component({prop}) {
   const [s, setS] = useState(0);
