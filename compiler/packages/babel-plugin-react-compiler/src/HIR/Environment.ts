@@ -696,6 +696,16 @@ export const EnvironmentConfigSchema = z.object({
   enableAllowSetStateFromRefsInEffects: z.boolean().default(true),
 
   /**
+   * When enabled, provides verbose error messages for setState calls within effects,
+   * presenting multiple possible fixes to the user/agent since we cannot statically
+   * determine which specific use-case applies:
+   * 1. Non-local derived data - requires restructuring state ownership
+   * 2. Derived event pattern - detecting when a prop changes
+   * 3. Force update / external sync - should use useSyncExternalStore
+   */
+  enableVerboseNoSetStateInEffect: z.boolean().default(false),
+
+  /**
    * Enables inference of event handler types for JSX props on built-in DOM elements.
    * When enabled, functions passed to event handler props (props starting with "on")
    * on primitive JSX tags are inferred to have the BuiltinEventHandlerId type, which
