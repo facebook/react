@@ -467,9 +467,11 @@ function useSyncExternalStore<T>(
   // useSyncExternalStore() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
-  nextHook(); // SyncExternalStore
+  const hook = nextHook(); // SyncExternalStore
   nextHook(); // Effect
-  const value = getSnapshot();
+  // Read from hook.memoizedState to get the value that was used during render,
+  // not the current value from getSnapshot() which may have changed.
+  const value = hook !== null ? hook.memoizedState : getSnapshot();
   hookLog.push({
     displayName: null,
     primitive: 'SyncExternalStore',
