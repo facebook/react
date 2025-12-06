@@ -74,22 +74,13 @@ export function validateNoSetStateInEffects(
           break;
         }
         case 'FunctionExpression': {
-          if (
-            // faster-path to check if the function expression references a setState
-            [...eachInstructionValueOperand(instr.value)].some(
-              operand =>
-                isSetStateType(operand.identifier) ||
-                setStateFunctions.has(operand.identifier.id),
-            )
-          ) {
-            const callee = getSetStateCall(
-              instr.value.loweredFunc.func,
-              setStateFunctions,
-              env,
-            );
-            if (callee !== null) {
-              setStateFunctions.set(instr.lvalue.identifier.id, callee);
-            }
+          const callee = getSetStateCall(
+            instr.value.loweredFunc.func,
+            setStateFunctions,
+            env,
+          );
+          if (callee !== null) {
+            setStateFunctions.set(instr.lvalue.identifier.id, callee);
           }
           break;
         }
