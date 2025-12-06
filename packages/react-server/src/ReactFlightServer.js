@@ -2320,28 +2320,42 @@ function renderElement(
   return renderClientElement(request, task, type, key, props, validated);
 }
 
+// Sentinel to mark nodes currently being evaluated.
+// Distinguishes "in progress" from a real cached result (including undefined/null).
+const IN_PROGRESS: symbol = Symbol.for('react.asyncTraversal.inProgress');
+
 function visitAsyncNode(
   request: Request,
   task: Task,
   node: AsyncSequence,
   visited: Map<
     AsyncSequence | ReactDebugInfo,
-    void | null | PromiseNode | IONode,
+    void | null | PromiseNode | IONode | symbol,
   >,
   cutOff: number,
 ): void | null | PromiseNode | IONode {
   if (visited.has(node)) {
-    // It's possible to visit them same node twice when it's part of both an "awaited" path
-    // and a "previous" path. This also gracefully handles cycles which would be a bug.
-    return visited.get(node);
+    const memo = visited.get(node);
+    if (memo === IN_PROGRESS) {
+      // Cycle detected: we're currently evaluating this node further up the call stack.
+      // Return null to indicate no I/O was found on this cyclic path. We don't return
+      // undefined here because that signals "abort" semantics which would skip emitting
+      // I/O info for other non-cyclic branches of this node.
+      return null;
+    }
+    // It's possible to visit the same node twice when it's part of both an "awaited" path
+    // and a "previous" path. Return the cached result.
+    return memo;
   }
-  // Set it as visited early in case we see ourselves before returning.
-  visited.set(node, null);
+  // Mark as in progress before descending so cycles short-circuit.
+  visited.set(node, IN_PROGRESS);
+
   const result = visitAsyncNodeImpl(request, task, node, visited, cutOff);
-  if (result !== null) {
-    // If we ended up with a value, let's use that value for future visits.
-    visited.set(node, result);
-  }
+
+  // Cache the exact result for future visits (including undefined/null).
+  // This ensures revisits observe the real computed value, not the IN_PROGRESS marker.
+  visited.set(node, result);
+
   return result;
 }
 
@@ -2351,7 +2365,7 @@ function visitAsyncNodeImpl(
   node: AsyncSequence,
   visited: Map<
     AsyncSequence | ReactDebugInfo,
-    void | null | PromiseNode | IONode,
+    void | null | PromiseNode | IONode | symbol,
   >,
   cutOff: number,
 ): void | null | PromiseNode | IONode {
@@ -2593,7 +2607,7 @@ function emitAsyncSequence(
 ): void {
   const visited: Map<
     AsyncSequence | ReactDebugInfo,
-    void | null | PromiseNode | IONode,
+    void | null | PromiseNode | IONode | symbol,
   > = new Map();
   if (__DEV__ && alreadyForwardedDebugInfo) {
     visited.set(alreadyForwardedDebugInfo, null);
