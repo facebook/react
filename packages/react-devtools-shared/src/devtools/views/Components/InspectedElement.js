@@ -34,13 +34,17 @@ import useEditorURL from '../useEditorURL';
 import styles from './InspectedElement.css';
 import Tooltip from './reach-ui/tooltip';
 
-export type Props = {};
+export type Props = {
+  actionButtons?: React.Node,
+};
 
 // TODO Make edits and deletes also use transition API!
 
 const noSourcePromise = Promise.resolve(null);
 
-export default function InspectedElementWrapper(_: Props): React.Node {
+export default function InspectedElementWrapper({
+  actionButtons,
+}: Props): React.Node {
   const {inspectedElementID} = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -304,6 +308,13 @@ export default function InspectedElementWrapper(_: Props): React.Node {
             source={source}
             symbolicatedSourcePromise={symbolicatedSourcePromise}
           />
+        )}
+
+        {actionButtons && (
+          <>
+            <div className={styles.VRule} />
+            {actionButtons}
+          </>
         )}
       </div>
 

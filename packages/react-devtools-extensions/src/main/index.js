@@ -205,6 +205,7 @@ function createBridgeAndStore() {
         bridge,
         browserTheme: getBrowserTheme(),
         componentsPortalContainer,
+        inspectedElementPortalContainer,
         profilerPortalContainer,
         editorPortalContainer,
         currentSelectedSource,
@@ -275,6 +276,46 @@ function createComponentsPanel() {
       });
     },
   );
+}
+
+function createElementsInspectPanel() {
+  if (inspectedElementPortalContainer) {
+    // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(inspectedElementPortalContainer);
+    render();
+
+    return;
+  }
+
+  if (inspectedElementPane) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
+    return;
+  }
+
+  const elementsPanel = chrome.devtools.panels.elements;
+  if (!elementsPanel || !elementsPanel.createSidebarPane) {
+    // TODO: Does Firefox support elements panel extensions?
+    return;
+  }
+
+  elementsPanel.createSidebarPane('React Element ⚛', createdPane => {
+    inspectedElementPane = createdPane;
+
+    createdPane.setPage('panel.html');
+    createdPane.setHeight('75px');
+
+    createdPane.onShown.addListener(portal => {
+      inspectedElementPortalContainer = portal.container;
+      if (inspectedElementPortalContainer != null && render) {
+        ensureInitialHTMLIsCleared(inspectedElementPortalContainer);
+
+        render();
+        portal.injectStyles(cloneStyleTags);
+
+        logEvent({event_name: 'selected-inspected-element-pane'});
+      }
+    });
+  });
 }
 
 function createProfilerPanel() {
@@ -507,6 +548,7 @@ function mountReactDevTools() {
   createComponentsPanel();
   createProfilerPanel();
   createSourcesEditorPanel();
+  createElementsInspectPanel();
   // Suspense Tab is created via the hook
   // TODO(enableSuspenseTab): Create eagerly once Suspense tab is stable
 }
@@ -555,10 +597,12 @@ let componentsPanel = null;
 let profilerPanel = null;
 let suspensePanel = null;
 let editorPane = null;
+let inspectedElementPane = null;
 let componentsPortalContainer = null;
 let profilerPortalContainer = null;
 let suspensePortalContainer = null;
 let editorPortalContainer = null;
+let inspectedElementPortalContainer = null;
 
 let mostRecentOverrideTab = null;
 let render = null;
