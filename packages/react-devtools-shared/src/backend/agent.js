@@ -953,6 +953,12 @@ export default class Agent extends EventEmitter<{
     );
   }
 
+  selectNodeWithViewData(viewData: TouchedViewDataAtPoint): void => {
+    if (viewData !== null) {
+      this._bridge.send('viewDataAtPoint', viewData);
+    }
+  }
+
   registerRendererInterface(
     rendererID: RendererID,
     rendererInterface: RendererInterface,
