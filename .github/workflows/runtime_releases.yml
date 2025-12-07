@@ -1,0 +1,93 @@
+name: (Runtime) Publish stable Releases
+
+on:
+  workflow_call:
+    inputs:
+      commit_sha:
+        required: true
+        default: ""
+        type: string
+      dist_tag:
+        description: NPM dist tag to publish under
+        required: true
+        type: string
+      only_packages:
+        description: Packages to publish (space separated)
+        type: string
+      skip_packages:
+        description: Packages to NOT publish (space separated)
+        type: string
+      dry:
+        required: true
+        description: Dry run instead of publish?
+        type: boolean
+        default: true
+    secrets:
+      GH_TOKEN:
+        required: true
+      NPM_TOKEN:
+        required: true
+
+permissions: {}
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+jobs:
+  publish_release_stable:
+    name: Publish release (stable) ${{ inputs.commit_sha }} @${{ inputs.dist_tag }}
+    runs-on: ubuntu-latest
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: |
+            **/node_modules
+          key: runtime-release-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
+      - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: yarn --cwd scripts/release install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: cp ./scripts/release/ci-npmrc ~/.npmrc
+      - run: |
+          GH_TOKEN=${{ secrets.GH_TOKEN }} scripts/release/prepare-release-from-ci.js --skipTests -r latest --commit=${{ inputs.commit_sha }}
+      - name: Check prepared files
+        run: ls -R build/node_modules
+      - if: "${{ inputs.only_packages }}"
+        name: "Publish ${{ inputs.only_packages }}"
+        run: |
+          scripts/release/publish.js \
+            --ci \
+            --tags=${{ inputs.dist_tag }} \
+            --onlyPackages=${{ inputs.only_packages }} ${{ (inputs.dry && '') || '\'}}
+            ${{ inputs.dry && '--dry' || '' }}
+      - if: "${{ inputs.skip_packages }}"
+        name: "Publish all packages EXCEPT ${{ inputs.skip_packages }}"
+        run: |
+          scripts/release/publish.js \
+            --ci \
+            --tags=${{ inputs.dist_tag }} \
+            --skipPackages=${{ inputs.skip_packages }} ${{ (inputs.dry && '') || '\'}}
+            ${{ inputs.dry && '--dry' || '' }}
+      - if: "${{ !inputs.skip_packages && !inputs.only_packages }}"
+        name: "Publish all packages"
+        run: |
+          scripts/release/publish.js \
+            --ci \
+            --tags=${{ inputs.dist_tag }} ${{ (inputs.dry && '') || '\'}}
+            ${{ inputs.dry && '--dry' || '' }}

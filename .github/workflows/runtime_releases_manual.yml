@@ -1,0 +1,72 @@
+name: (Runtime) Publish Releases Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Commit SHA to publish
+        required: true
+        type: string
+      dist_tag:
+        description: NPM dist tag to publish under
+        required: true
+        type: choice
+        options:
+          - latest
+          - untagged
+      only_packages:
+        description: Packages to publish (space separated)
+        type: string
+      skip_packages:
+        description: Packages to NOT publish (space separated)
+        type: string
+      dry:
+        required: true
+        description: Dry run instead of publish?
+        type: boolean
+        default: true
+      force_notify:
+        description: Force a Discord notification?
+        type: boolean
+        default: false
+
+permissions: {}
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+jobs:
+  notify:
+    if: ${{ inputs.force_notify || inputs.dry == false || inputs.dry == 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@86dc739f3f165f16dadc5666051c367efa1692f4
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-author-name: ${{ github.event.sender.login }}
+          embed-author-url: ${{ github.event.sender.html_url }}
+          embed-author-icon-url: ${{ github.event.sender.avatar_url }}
+          embed-title: "⚠️ Publishing Stable release ${{ (inputs.dry && ' (dry run)') || '' }}"
+          embed-description: |
+            ```json
+            ${{ toJson(inputs) }}
+            ```
+          embed-url: https://github.com/facebook/react/actions/runs/${{ github.run_id }}
+
+  publish_release_stable:
+    name: Publish to Stable channel
+    uses: facebook/react/.github/workflows/runtime_releases.yml@main
+    permissions:
+      # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
+      actions: read
+    with:
+      commit_sha: ${{ inputs.commit_sha }}
+      release_channel: stable
+      dist_tag: ${{ inputs.dist_tag }}
+      only_packages: ${{ inputs.only_packages }}
+      skip_packages: ${{ inputs.skip_packages }}
+      dry: ${{ inputs.dry }}
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
