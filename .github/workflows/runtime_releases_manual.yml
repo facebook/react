@@ -56,7 +56,7 @@ jobs:
 
   publish_release_stable:
     name: Publish to Stable channel
-    uses: facebook/react/.github/workflows/runtime_releases.yml@main
+    uses: facebook/react/.github/workflows/runtime_releases.yml@sebbie/12-07-add_release_workflow_using_ci_artifacts
     permissions:
       # We use github.token to download the build artifact from a previous runtime_build_and_test.yml run
       actions: read
