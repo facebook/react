@@ -16,6 +16,7 @@ import {
   IdentifierId,
   isSetStateType,
   isUseEffectHookType,
+  isUseEffectEventType,
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
   isUseRefType,
@@ -98,7 +99,20 @@ export function validateNoSetStateInEffects(
             instr.value.kind === 'MethodCall'
               ? instr.value.receiver
               : instr.value.callee;
-          if (
+
+          if (isUseEffectEventType(callee.identifier)) {
+            const arg = instr.value.args[0];
+            if (arg !== undefined && arg.kind === 'Identifier') {
+              const setState = setStateFunctions.get(arg.identifier.id);
+              if (setState !== undefined) {
+                /**
+                 * This effect event function calls setState synchonously,
+                 * treat it as a setState function for transitive tracking
+                 */
+                setStateFunctions.set(instr.lvalue.identifier.id, setState);
+              }
+            }
+          } else if (
             isUseEffectHookType(callee.identifier) ||
             isUseLayoutEffectHookType(callee.identifier) ||
             isUseInsertionEffectHookType(callee.identifier)

@@ -319,6 +319,12 @@ export const EnvironmentConfigSchema = z.object({
   validateNoSetStateInRender: z.boolean().default(true),
 
   /**
+   * When enabled, changes the behavior of validateNoSetStateInRender to recommend
+   * using useKeyedState instead of the manual pattern for resetting state.
+   */
+  enableUseKeyedState: z.boolean().default(false),
+
+  /**
    * Validates that setState is not called synchronously within an effect (useEffect and friends).
    * Scheduling a setState (with an event listener, subscription, etc) is valid.
    */

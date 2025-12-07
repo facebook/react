@@ -753,7 +753,7 @@ describe('Store component filters', () => {
     });
   });
 
-  // @reactVersion >= 16.6
+  // @reactVersion >= 18.0
   it('resets forced error and fallback states when filters are changed', async () => {
     store.componentFilters = [];
     class ErrorBoundary extends React.Component {
