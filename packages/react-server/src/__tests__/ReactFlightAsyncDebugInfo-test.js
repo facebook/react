@@ -3155,7 +3155,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
     }
 
     const stream = ReactServerDOMServer.renderToPipeableStream(
-      <Component />,
+      ReactServer.createElement(Component),
       {},
     );
 
@@ -3192,7 +3192,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
                 3158,
-                40,
+                19,
                 3146,
                 36,
               ],
@@ -3216,7 +3216,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
                     3158,
-                    40,
+                    19,
                     3146,
                     36,
                   ],
@@ -3248,7 +3248,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
                   3158,
-                  40,
+                  19,
                   3146,
                   36,
                 ],
