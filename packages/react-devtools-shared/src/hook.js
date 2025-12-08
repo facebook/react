@@ -422,7 +422,7 @@ export function installHook(
       const startStackFrame = openModuleRangesStack.pop();
       const stopStackFrame = getTopStackFrameString(error);
       if (stopStackFrame !== null) {
-        // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         moduleRanges.push([startStackFrame, stopStackFrame]);
       }
     }

@@ -166,6 +166,7 @@ export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
     // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
+    // $FlowFixMe[incompatible-type]
     destination.error(error);
   } else {
     // Earlier implementations doesn't support this method. In that environment you're

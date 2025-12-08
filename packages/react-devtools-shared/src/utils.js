@@ -604,7 +604,7 @@ export function parseElementDisplayNameFromBackend(
   }
 
   return {
-    // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[incompatible-type]
     formattedDisplayName: displayName,
     hocDisplayNames,
     compiledWithForget: false,

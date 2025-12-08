@@ -673,7 +673,7 @@ FragmentInstance.prototype.observeUsing = function (
 };
 function observeChild(child: Fiber, observer: IntersectionObserver) {
   const publicInstance = getPublicInstanceFromHostFiber(child);
-  // $FlowFixMe[incompatible-call] DOM types expect Element
+  // $FlowFixMe[incompatible-type] DOM types expect Element
   observer.observe(publicInstance);
   return false;
 }
@@ -697,7 +697,7 @@ FragmentInstance.prototype.unobserveUsing = function (
 };
 function unobserveChild(child: Fiber, observer: IntersectionObserver) {
   const publicInstance = getPublicInstanceFromHostFiber(child);
-  // $FlowFixMe[incompatible-call] DOM types expect Element
+  // $FlowFixMe[incompatible-type] DOM types expect Element
   observer.unobserve(publicInstance);
   return false;
 }
@@ -856,7 +856,7 @@ export function commitNewChildToFragmentInstance(
       throw new Error('Expected to find a host node. This is a bug in React.');
     }
     fragmentInstance._observers.forEach(observer => {
-      // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+      // $FlowFixMe[incompatible-type] Element types are behind a flag in RN
       observer.observe(publicInstance);
     });
   }

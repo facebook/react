@@ -4701,7 +4701,7 @@ export function attach(
       return;
     }
     pushOperation(SUSPENSE_TREE_OPERATION_REORDER_CHILDREN);
-    // $FlowFixMe[incompatible-call] TODO: Allow filtering SuspenseNode
+    // $FlowFixMe[incompatible-type] TODO: Allow filtering SuspenseNode
     pushOperation(parentInstance.instance.id);
     pushOperation(numChildren);
     for (let i = 0; i < nextChildren.length; i++) {

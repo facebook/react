@@ -164,6 +164,7 @@ function flushWork(hasTimeRemaining: boolean, initialTime: number) {
         if (currentTask !== null) {
           const currentTime = getCurrentTime();
           // $FlowFixMe[incompatible-call] found when upgrading Flow
+          // $FlowFixMe[incompatible-type]
           markTaskErrored(currentTask, currentTime);
           // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTask.isQueued = false;
@@ -208,6 +209,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number): boolean {
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
       if (enableProfiling) {
         // $FlowFixMe[incompatible-call] found when upgrading Flow
+        // $FlowFixMe[incompatible-type]
         markTaskRun(currentTask, currentTime);
       }
       const continuationCallback = callback(didUserCallbackTimeout);
@@ -219,6 +221,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number): boolean {
         currentTask.callback = continuationCallback;
         if (enableProfiling) {
           // $FlowFixMe[incompatible-call] found when upgrading Flow
+          // $FlowFixMe[incompatible-type]
           markTaskYield(currentTask, currentTime);
         }
         advanceTimers(currentTime);
@@ -234,6 +237,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number): boolean {
       } else {
         if (enableProfiling) {
           // $FlowFixMe[incompatible-call] found when upgrading Flow
+          // $FlowFixMe[incompatible-type]
           markTaskCompleted(currentTask, currentTime);
           // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTask.isQueued = false;
@@ -313,6 +317,7 @@ function unstable_next<T>(eventHandler: () => T): T {
 function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
   var parentPriorityLevel = currentPriorityLevel;
   // $FlowFixMe[incompatible-return]
+  // $FlowFixMe[incompatible-type]
   // $FlowFixMe[missing-this-annot]
   return function () {
     // This is a fork of runWithPriority, inlined for performance.
