@@ -29,22 +29,22 @@ type AnimationPlaybackEvent$Init = Event$Init & {
 };
 
 type BaseComputedKeyframe = {|
-  composite?: CompositeOperationOrAuto,
-  computedOffset?: number,
-  easing?: string,
-  offset?: number | null,
+  composite: CompositeOperationOrAuto,
+  computedOffset: number,
+  easing: string,
+  offset: number | null,
 |};
 
 type BaseKeyframe = {|
-  composite?: CompositeOperationOrAuto,
-  easing?: string,
-  offset?: number | null,
+  composite: CompositeOperationOrAuto,
+  easing: string,
+  offset: number | null,
 |};
 
 type BasePropertyIndexedKeyframe = {|
-  composite?: CompositeOperationOrAuto | Array<CompositeOperationOrAuto>,
-  easing?: string | Array<string>,
-  offset?: number | null | Array<number | null>,
+  composite: CompositeOperationOrAuto | Array<CompositeOperationOrAuto>,
+  easing: string | Array<string>,
+  offset: number | null | Array<number | null>,
 |};
 
 type ComputedEffectTiming = {|
@@ -67,33 +67,28 @@ type DocumentTimelineOptions = {|
 |};
 
 type EffectTiming = {|
-  direction?: PlaybackDirection,
-  easing?: string,
-  fill?: FillMode,
-  iterations?: number,
-  iterationStart?: number,
-  delay?: number,
-  duration?: number | string,
-  endDelay?: number,
+  direction: PlaybackDirection,
+  easing: string,
+  fill: FillMode,
+  iterations: number,
+  iterationStart: number,
 |};
 
 type GetAnimationsOptions = {|
-  pseudoElement?: string | null,
-  subtree?: boolean,
+  pseudoElement: string | null,
+  subtree: boolean,
 |};
 
 type KeyframeAnimationOptions = {|
   ...KeyframeEffectOptions,
-  id?: string,
-  timeline?: AnimationTimeline | null,
-  rangeStart?: string,
-  rangeEnd?: string,
+  id: string,
+  timeline: AnimationTimeline | null,
 |};
 
 type KeyframeEffectOptions = {|
   ...EffectTiming,
-  composite?: CompositeOperation,
-  pseudoElement?: string | null,
+  composite: CompositeOperation,
+  pseudoElement: string | null,
 |};
 
 type Keyframe = {
@@ -182,7 +177,6 @@ declare class KeyframeEffect extends AnimationEffect {
   constructor(source: KeyframeEffect): void;
 
   target: Element | null;
-  pseudoElement: string | null;
   composite: CompositeOperation;
   // This is actually web-animations-2
   iterationComposite: IterationCompositeOperation;
