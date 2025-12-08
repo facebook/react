@@ -1144,7 +1144,7 @@ function serializeReadableStream(
   // receiving side. It also implies that different chunks can be split up or merged as opposed
   // to a readable stream that happens to have Uint8Array as the type which might expect it to be
   // received in the same slices.
-  // $FlowFixMe: This is a Node.js extension.
+  // $FlowFixMe[prop-missing]: This is a Node.js extension.
   let supportsBYOB: void | boolean = stream.supportsBYOB;
   if (supportsBYOB === undefined) {
     try {
@@ -1222,7 +1222,6 @@ function serializeReadableStream(
     erroredTask(request, streamTask, reason);
     enqueueFlush(request);
 
-    // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
   function abortStream() {
@@ -1241,7 +1240,6 @@ function serializeReadableStream(
       erroredTask(request, streamTask, reason);
       enqueueFlush(request);
     }
-    // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
 
@@ -1355,7 +1353,8 @@ function serializeAsyncIterable(
     enqueueFlush(request);
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
-      // $FlowFixMe should be able to pass mixed
+      // $FlowFixMe[incompatible-call] should be able to pass mixed
+      // $FlowFixMe[prop-missing]
       iterator.throw(reason).then(error, error);
     }
   }
@@ -1377,7 +1376,8 @@ function serializeAsyncIterable(
     }
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
-      // $FlowFixMe should be able to pass mixed
+      // $FlowFixMe[incompatible-call] should be able to pass mixed
+      // $FlowFixMe[prop-missing]
       iterator.throw(reason).then(error, error);
     }
   }
@@ -1577,10 +1577,10 @@ function processServerComponentReturnValue(
           // tempting to try to return the value from a generator.
           if (iterator === iterableChild) {
             const isGeneratorComponent =
-              // $FlowIgnore[method-unbinding]
+              // $FlowFixMe[method-unbinding]
               Object.prototype.toString.call(Component) ===
                 '[object GeneratorFunction]' &&
-              // $FlowIgnore[method-unbinding]
+              // $FlowFixMe[method-unbinding]
               Object.prototype.toString.call(iterableChild) ===
                 '[object Generator]';
             if (!isGeneratorComponent) {
@@ -1617,10 +1617,10 @@ function processServerComponentReturnValue(
           // tempting to try to return the value from a generator.
           if (iterator === iterableChild) {
             const isGeneratorComponent =
-              // $FlowIgnore[method-unbinding]
+              // $FlowFixMe[method-unbinding]
               Object.prototype.toString.call(Component) ===
                 '[object AsyncGeneratorFunction]' &&
-              // $FlowIgnore[method-unbinding]
+              // $FlowFixMe[method-unbinding]
               Object.prototype.toString.call(iterableChild) ===
                 '[object AsyncGenerator]';
             if (!isGeneratorComponent) {
@@ -3231,7 +3231,6 @@ function serializeDebugBlob(request: Request, blob: Blob): string {
     const digest = '';
     emitErrorChunk(request, id, digest, reason, true, null);
     enqueueFlush(request);
-    // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(noop, noop);
   }
   // $FlowFixMe[incompatible-call]
@@ -3284,7 +3283,6 @@ function serializeBlob(request: Request, blob: Blob): string {
     request.cacheController.signal.removeEventListener('abort', abortBlob);
     erroredTask(request, newTask, reason);
     enqueueFlush(request);
-    // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
   function abortBlob() {
@@ -3303,7 +3301,6 @@ function serializeBlob(request: Request, blob: Blob): string {
       erroredTask(request, newTask, reason);
       enqueueFlush(request);
     }
-    // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
 

@@ -174,9 +174,9 @@ function SuspenseTreeContextController({children}: Props): React.Node {
             let selectedTimelineID: null | number = null;
             if (selectedTimelineStep !== null) {
               selectedTimelineID = selectedTimelineStep.id;
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-call]
               while (removedIDs.has(selectedTimelineID)) {
-                // $FlowFixMe
+                // $FlowFixMe[incompatible-type]
                 selectedTimelineID = removedIDs.get(selectedTimelineID);
               }
             }

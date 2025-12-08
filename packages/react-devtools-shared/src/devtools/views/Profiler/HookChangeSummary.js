@@ -27,7 +27,7 @@ import Toggle from '../Toggle';
 import type {HooksNode} from 'react-debug-tools/src/ReactDebugHooks';
 import type {ChangeDescription} from './types';
 
-// $FlowFixMe: Flow doesn't know about Intl.ListFormat
+// $FlowFixMe[prop-missing]: Flow doesn't know about Intl.ListFormat
 const hookListFormatter = new Intl.ListFormat('en', {
   style: 'long',
   type: 'conjunction',

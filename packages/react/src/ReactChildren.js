@@ -369,7 +369,7 @@ function mapChildren(
   context: mixed,
 ): ?Array<React$Node> {
   if (children == null) {
-    // $FlowFixMe limitation refining abstract types in Flow
+    // $FlowFixMe[incompatible-type] limitation refining abstract types in Flow
     return children;
   }
   const result: Array<React$Node> = [];

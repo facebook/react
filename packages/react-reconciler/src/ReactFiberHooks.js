@@ -416,9 +416,9 @@ function warnIfAsyncClientComponent(Component: Function) {
     // for transpiled async functions. Neither mechanism is completely
     // bulletproof but together they cover the most common cases.
     const isAsyncFunction =
-      // $FlowIgnore[method-unbinding]
+      // $FlowFixMe[method-unbinding]
       Object.prototype.toString.call(Component) === '[object AsyncFunction]' ||
-      // $FlowIgnore[method-unbinding]
+      // $FlowFixMe[method-unbinding]
       Object.prototype.toString.call(Component) ===
         '[object AsyncGeneratorFunction]';
     if (isAsyncFunction) {
@@ -2745,8 +2745,8 @@ function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
   const hook = updateWorkInProgressHook();
   const ref = hook.memoizedState;
   useEffectEventImpl({ref, nextImpl: callback});
-  // $FlowIgnore[incompatible-return]
-  // $FlowIgnore[incompatible-type]
+  // $FlowFixMe[incompatible-return]
+  // $FlowFixMe[incompatible-type]
   return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(

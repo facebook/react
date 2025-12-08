@@ -3770,7 +3770,7 @@ export function attach(
       start,
       end,
       value: promise,
-      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      // $FlowFixMe[incompatible-type]: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
     if (byteSize > 0) {
@@ -3779,7 +3779,7 @@ export function attach(
     }
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
-      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      // $FlowFixMe[incompatible-type]: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber._debugOwner == null ? null : fiber._debugOwner,
       debugStack: fiber._debugStack == null ? null : fiber._debugStack,
       debugTask: fiber._debugTask == null ? null : fiber._debugTask,
@@ -3886,7 +3886,7 @@ export function attach(
       start,
       end,
       value: promise,
-      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      // $FlowFixMe[incompatible-type]: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
     if (byteSize > 0) {
@@ -3895,7 +3895,7 @@ export function attach(
     }
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
-      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      // $FlowFixMe[incompatible-type]: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber._debugOwner == null ? null : fiber._debugOwner,
       debugStack: fiber._debugStack == null ? null : fiber._debugStack,
       debugTask: fiber._debugTask == null ? null : fiber._debugTask,
@@ -6053,7 +6053,7 @@ export function attach(
   function getNearestMountedDOMNode(publicInstance: Element): null | Element {
     let domNode: null | Element = publicInstance;
     while (domNode && !publicInstanceToDevToolsInstanceMap.has(domNode)) {
-      // $FlowFixMe: In practice this is either null or Element.
+      // $FlowFixMe[incompatible-type]: In practice this is either null or Element.
       domNode = domNode.parentNode;
     }
     return domNode;
@@ -8807,7 +8807,7 @@ export function attach(
       return (instance.source = extractLocationFromComponentStack(lastLine));
     }
 
-    // $FlowFixMe: refined.
+    // $FlowFixMe[incompatible-return]: refined.
     return unresolvedSource;
   }
 
