@@ -56,7 +56,9 @@ export function createCapturedValueFromError(
     stack: stack,
   };
   if (typeof stack === 'string') {
+    // $FlowFixMe[incompatible-type]
     CapturedStacks.set(value, captured);
   }
+  // $FlowFixMe[incompatible-type]
   return captured;
 }

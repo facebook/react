@@ -163,6 +163,7 @@ export function switchContext(newSnapshot: ContextSnapshot): void {
   if (prev !== next) {
     if (prev === null) {
       // $FlowFixMe[incompatible-call]: This has to be non-null since it's not equal to prev.
+      // $FlowFixMe[incompatible-type]
       pushAllNext(next);
     } else if (next === null) {
       popAllPrevious(prev);

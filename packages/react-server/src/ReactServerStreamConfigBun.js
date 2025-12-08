@@ -56,6 +56,7 @@ export function writeChunk(
   }
 
   // $FlowFixMe[incompatible-call]: write() is compatible with both types in Bun
+  // $FlowFixMe[incompatible-type]
   destination.write(chunk);
 }
 
@@ -64,6 +65,7 @@ export function writeChunkAndReturn(
   chunk: PrecomputedChunk | Chunk | BinaryChunk,
 ): boolean {
   // $FlowFixMe[incompatible-call]: write() is compatible with both types in Bun
+  // $FlowFixMe[incompatible-type]
   return !!destination.write(chunk);
 }
 
@@ -101,12 +103,14 @@ export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
     // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
+    // $FlowFixMe[incompatible-type]
     destination.error(error);
 
     // $FlowFixMe[incompatible-use]
     // $FlowFixMe[method-unbinding]
   } else if (typeof destination.destroy === 'function') {
     // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
+    // $FlowFixMe[incompatible-type]
     destination.destroy(error);
 
     // $FlowFixMe[incompatible-use]

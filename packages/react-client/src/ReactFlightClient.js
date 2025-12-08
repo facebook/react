@@ -283,12 +283,12 @@ ReactPromise.prototype.then = function <T>(
     const rejectCallback = reject;
     const wrapperPromise: Promise<T> = new Promise((res, rej) => {
       resolve = value => {
-        // $FlowFixMe
+        // $FlowFixMe[prop-missing]
         wrapperPromise._debugInfo = this._debugInfo;
         res(value);
       };
       reject = reason => {
-        // $FlowFixMe
+        // $FlowFixMe[prop-missing]
         wrapperPromise._debugInfo = this._debugInfo;
         rej(reason);
       };
@@ -720,6 +720,7 @@ function triggerErrorOnChunk<T>(
     const streamChunk: InitializedStreamChunk<any> = (chunk: any);
     const controller = streamChunk.reason;
     // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    // $FlowFixMe[incompatible-type]
     controller.error(error);
     return;
   }
@@ -3207,6 +3208,7 @@ function startReadableStream<T>(
     error(error: mixed): void {
       if (previousBlockedChunk === null) {
         // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         controller.error(error);
       } else {
         const blockedChunk = previousBlockedChunk;
@@ -3920,7 +3922,7 @@ function initializeDebugInfo(
   }
   if (debugInfo.owner == null && response._debugRootOwner != null) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
-      // $FlowFixMe: By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
+      // $FlowFixMe[incompatible-type]: By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
       debugInfo;
     // $FlowFixMe[cannot-write]
     componentInfoOrAsyncInfo.owner = response._debugRootOwner;
@@ -4266,7 +4268,7 @@ function logComponentInfo(
   childrenEndTime: number,
   isLastComponent: boolean,
 ): void {
-  // $FlowFixMe: Refined.
+  // $FlowFixMe[incompatible-use]: Refined.
   if (
     isLastComponent &&
     root.status === ERRORED &&
@@ -4445,7 +4447,7 @@ function flushComponentPerformance(
             if (componentEndTime > childrenEndTime) {
               childrenEndTime = componentEndTime;
             }
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             const componentInfo: ReactComponentInfo = candidateInfo;
             logComponentInfo(
               response,
@@ -4469,7 +4471,7 @@ function flushComponentPerformance(
             if (endTime > childrenEndTime) {
               childrenEndTime = endTime;
             }
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             const asyncInfo: ReactAsyncInfo = candidateInfo;
             const env = response._rootEnvironmentName;
             const promise = asyncInfo.awaited.value;
@@ -4532,7 +4534,7 @@ function flushComponentPerformance(
             if (componentEndTime > childrenEndTime) {
               childrenEndTime = componentEndTime;
             }
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             const componentInfo: ReactComponentInfo = candidateInfo;
             const env = response._rootEnvironmentName;
             logComponentAborted(

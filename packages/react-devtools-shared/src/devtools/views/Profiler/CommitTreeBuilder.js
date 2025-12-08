@@ -515,7 +515,7 @@ const __printTree = (commitTree: CommitTree) => {
       const id = queue.shift();
       const depth = queue.shift();
 
-      // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       const node = nodes.get(id);
       if (node == null) {
         // $FlowFixMe[incompatible-type]
@@ -523,7 +523,7 @@ const __printTree = (commitTree: CommitTree) => {
       }
 
       console.log(
-        // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         `${'•'.repeat(depth)}${node.id}:${node.displayName || ''} ${
           node.key ? `key:"${node.key}"` : ''
         } (${node.treeBaseDuration})`,

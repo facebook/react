@@ -265,7 +265,7 @@ function initialize(socket: WebSocket) {
     socket.close();
   });
 
-  // $FlowFixMe[incompatible-call] found when upgrading Flow
+  // $FlowFixMe[incompatible-type] found when upgrading Flow
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,

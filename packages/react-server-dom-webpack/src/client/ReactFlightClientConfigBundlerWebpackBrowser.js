@@ -51,7 +51,7 @@ export function addChunkDebugInfo(
     const scriptFilename = __webpack_get_script_filename__(chunkId);
     let href;
     try {
-      // $FlowFixMe
+      // $FlowFixMe[incompatible-call]
       href = new URL(scriptFilename, document.baseURI).href;
     } catch (_) {
       href = scriptFilename;
@@ -74,9 +74,9 @@ export function addChunkDebugInfo(
       }
     }
     const value = Promise.resolve(href);
-    // $FlowFixMe
+    // $FlowFixMe[prop-missing]
     value.status = 'fulfilled';
-    // $FlowFixMe
+    // $FlowFixMe[prop-missing]
     value.value = {
       chunkId: chunkId,
       href: href,

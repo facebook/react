@@ -67,6 +67,7 @@ import type {WorkTag} from 'react-reconciler/src/ReactWorkTags';
 const defaultOnDefaultTransitionIndicator: () => void | (() => void) = noop;
 
 // $FlowFixMe[prop-missing]: This is only in the development export.
+// $FlowFixMe[missing-export]
 const act = React.act;
 
 // TODO: Remove from public bundle
@@ -179,7 +180,7 @@ function flatten(arr) {
       // $FlowFixMe[incompatible-use]
       n.i += 1;
       if (isArray(el)) {
-        // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         stack.push(n);
         stack.push({i: 0, array: el});
         break;

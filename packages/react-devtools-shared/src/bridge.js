@@ -362,13 +362,13 @@ class Bridge<
     this._messageQueue.push(event, payload);
     if (!this._scheduledFlush) {
       this._scheduledFlush = true;
-      // $FlowFixMe
+      // $FlowFixMe[cannot-resolve-name]
       if (typeof devtoolsJestTestScheduler === 'function') {
         // This exists just for our own jest tests.
         // They're written in such a way that we can neither mock queueMicrotask
         // because then we break React DOM and we can't not mock it because then
         // we can't synchronously flush it. So they need to be rewritten.
-        // $FlowFixMe
+        // $FlowFixMe[cannot-resolve-name]
         devtoolsJestTestScheduler(this._flush); // eslint-disable-line no-undef
       } else {
         queueMicrotask(this._flush);

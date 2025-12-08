@@ -2224,10 +2224,12 @@ export function validateSuspenseListChildren(
           enableAsyncIterableChildren &&
           children.$$typeof === REACT_ELEMENT_TYPE &&
           typeof children.type === 'function' &&
-          // $FlowFixMe
+          // $FlowFixMe[incompatible-use]
+          // $FlowFixMe[method-unbinding]
           (Object.prototype.toString.call(children.type) ===
             '[object GeneratorFunction]' ||
-            // $FlowFixMe
+            // $FlowFixMe[incompatible-use]
+            // $FlowFixMe[method-unbinding]
             Object.prototype.toString.call(children.type) ===
               '[object AsyncGeneratorFunction]')
         ) {
