@@ -132,7 +132,7 @@ export default function Tree(): React.Node {
         Math.min(0, elementLeft - viewportLeft) +
         Math.max(0, elementRight - viewportRight);
 
-      // $FlowExpectedError[incompatible-call] Flow doesn't support instant as an option for behavior.
+      // $FlowExpectedError[incompatible-type] Flow doesn't support instant as an option for behavior.
       listDOMElement.scrollBy({
         left: horizontalDelta,
         behavior: 'instant',
@@ -181,7 +181,7 @@ export default function Tree(): React.Node {
         Math.min(0, elementLeft - viewportLeft) +
         Math.max(0, elementRight - viewportRight);
 
-      // $FlowExpectedError[incompatible-call] Flow doesn't support instant as an option for behavior.
+      // $FlowExpectedError[incompatible-type] Flow doesn't support instant as an option for behavior.
       listDOMElement.scrollBy({
         top: verticalDelta,
         left: horizontalDelta,

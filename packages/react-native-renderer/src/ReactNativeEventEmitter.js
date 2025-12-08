@@ -235,7 +235,7 @@ export function receiveTouches(
         rootNodeID = target;
       }
     }
-    // $FlowFixMe[incompatible-call] Shouldn't we *not* call it if rootNodeID is null?
+    // $FlowFixMe[incompatible-type] Shouldn't we *not* call it if rootNodeID is null?
     _receiveRootNodeIDEvent(rootNodeID, eventTopLevelType, nativeEvent);
   }
 }

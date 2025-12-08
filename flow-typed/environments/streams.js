@@ -1,73 +1,73 @@
 // flow-typed signature: e6e6768618776352dd676f63502aea4d
 // flow-typed version: 40e7dfcbd5/streams/flow_>=v0.261.x
 
-type TextEncodeOptions = {options?: boolean, ...};
+type TextEncodeOptions = { options?: boolean, ... };
 
 declare class ReadableStreamController {
   constructor(
     stream: ReadableStream,
     underlyingSource: UnderlyingSource,
     size: number,
-    highWaterMark: number
-  ): void;
+    highWaterMark: number,
+  ): void,
 
-  desiredSize: number;
+  desiredSize: number,
 
-  close(): void;
-  enqueue(chunk: any): void;
-  error(error: Error): void;
+  close(): void,
+  enqueue(chunk: any): void,
+  error(error: Error): void,
 }
 
 declare class ReadableStreamBYOBRequest {
-  constructor(controller: ReadableStreamController, view: $TypedArray): void;
+  constructor(controller: ReadableStreamController, view: $TypedArray): void,
 
-  view: $TypedArray;
+  view: $TypedArray,
 
-  respond(bytesWritten: number): ?any;
-  respondWithNewView(view: $TypedArray): ?any;
+  respond(bytesWritten: number): ?any,
+  respondWithNewView(view: $TypedArray): ?any,
 }
 
 declare class ReadableByteStreamController extends ReadableStreamController {
   constructor(
     stream: ReadableStream,
     underlyingSource: UnderlyingSource,
-    highWaterMark: number
-  ): void;
+    highWaterMark: number,
+  ): void,
 
-  byobRequest: ReadableStreamBYOBRequest;
+  byobRequest: ReadableStreamBYOBRequest,
 }
 
 declare class ReadableStreamReader {
-  constructor(stream: ReadableStream): void;
+  constructor(stream: ReadableStream): void,
 
-  closed: boolean;
+  closed: boolean,
 
-  cancel(reason: string): void;
+  cancel(reason: string): void,
   read(): Promise<{
     value: ?any,
     done: boolean,
     ...
-  }>;
-  releaseLock(): void;
+  }>,
+  releaseLock(): void,
 }
 
 declare interface UnderlyingSource {
-  autoAllocateChunkSize?: number;
-  type?: string;
+  autoAllocateChunkSize?: number,
+  type?: string,
 
-  start?: (controller: ReadableStreamController) => ?Promise<void>;
-  pull?: (controller: ReadableStreamController) => ?Promise<void>;
-  cancel?: (reason: string) => ?Promise<void>;
+  start?: (controller: ReadableStreamController) => ?Promise<void>,
+  pull?: (controller: ReadableStreamController) => ?Promise<void>,
+  cancel?: (reason: string) => ?Promise<void>,
 }
 
 declare class TransformStream {
-  readable: ReadableStream;
-  writable: WritableStream;
-}
+  readable: ReadableStream,
+  writable: WritableStream,
+};
 
 interface PipeThroughTransformStream {
-  readable: ReadableStream;
-  writable: WritableStream;
+  readable: ReadableStream,
+  writable: WritableStream,
 }
 
 type PipeToOptions = {
@@ -77,7 +77,7 @@ type PipeToOptions = {
   ...
 };
 
-type QueuingStrategy = {
+type QueuingStrategy  = {
   highWaterMark: number,
   size(chunk: ?any): number,
   ...
@@ -86,51 +86,51 @@ type QueuingStrategy = {
 declare class ReadableStream {
   constructor(
     underlyingSource: ?UnderlyingSource,
-    queuingStrategy: ?QueuingStrategy
-  ): void;
+    queuingStrategy: ?QueuingStrategy,
+  ): void,
 
-  locked: boolean;
+  locked: boolean,
 
-  cancel(reason: string): void;
-  getReader(): ReadableStreamReader;
-  pipeThrough(transform: PipeThroughTransformStream, options: ?any): void;
-  pipeTo(dest: WritableStream, options: ?PipeToOptions): Promise<void>;
-  tee(): [ReadableStream, ReadableStream];
-}
+  cancel(reason: string): void,
+  getReader(): ReadableStreamReader,
+  pipeThrough(transform: PipeThroughTransformStream, options: ?any): void,
+  pipeTo(dest: WritableStream, options: ?PipeToOptions): Promise<void>,
+  tee(): [ReadableStream, ReadableStream],
+};
 
 declare interface WritableStreamController {
-  error(error: Error): void;
+  error(error: Error): void,
 }
 
 declare interface UnderlyingSink {
-  autoAllocateChunkSize?: number;
-  type?: string;
+  autoAllocateChunkSize?: number,
+  type?: string,
 
-  abort?: (reason: string) => ?Promise<void>;
-  close?: (controller: WritableStreamController) => ?Promise<void>;
-  start?: (controller: WritableStreamController) => ?Promise<void>;
-  write?: (chunk: any, controller: WritableStreamController) => ?Promise<void>;
+  abort?: (reason: string) => ?Promise<void>,
+  close?: (controller: WritableStreamController) => ?Promise<void>,
+  start?: (controller: WritableStreamController) => ?Promise<void>,
+  write?: (chunk: any, controller: WritableStreamController) => ?Promise<void>,
 }
 
 declare interface WritableStreamWriter {
-  closed: Promise<any>;
-  desiredSize?: number;
-  ready: Promise<any>;
+  closed: Promise<any>,
+  desiredSize?: number,
+  ready: Promise<any>,
 
-  abort(reason: string): ?Promise<any>;
-  close(): Promise<any>;
-  releaseLock(): void;
-  write(chunk: any): Promise<any>;
+  abort(reason: string): ?Promise<any>,
+  close(): Promise<any>,
+  releaseLock(): void,
+  write(chunk: any): Promise<any>,
 }
 
 declare class WritableStream {
   constructor(
     underlyingSink: ?UnderlyingSink,
-    queuingStrategy: QueuingStrategy
-  ): void;
+    queuingStrategy: QueuingStrategy,
+  ): void,
 
-  locked: boolean;
+  locked: boolean,
 
-  abort(reason: string): void;
-  getWriter(): WritableStreamWriter;
+  abort(reason: string): void,
+  getWriter(): WritableStreamWriter,
 }

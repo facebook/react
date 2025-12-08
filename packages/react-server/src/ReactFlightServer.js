@@ -394,6 +394,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
     const originalMethod = descriptor.value;
     const originalName = Object.getOwnPropertyDescriptor(
       // $FlowFixMe[incompatible-call]: We should be able to get descriptors from any function.
+      // $FlowFixMe[incompatible-type]
       originalMethod,
       'name',
     );
@@ -422,6 +423,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         emitConsoleChunk(request, methodName, owner, env, stack, args);
       }
       // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       return originalMethod.apply(this, arguments);
     };
     if (originalName) {
@@ -3222,6 +3224,7 @@ function serializeDebugBlob(request: Request, blob: Blob): string {
     // TODO: Emit the chunk early and refer to it later by dedupe.
     model.push(entry.value);
     // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     return reader.read().then(progress).catch(error);
   }
   function error(reason: mixed) {
@@ -3232,6 +3235,7 @@ function serializeDebugBlob(request: Request, blob: Blob): string {
     reader.cancel(reason).then(noop, noop);
   }
   // $FlowFixMe[incompatible-call]
+  // $FlowFixMe[incompatible-type]
   reader.read().then(progress).catch(error);
   return '$B' + id.toString(16);
 }
@@ -3270,6 +3274,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     // TODO: Emit the chunk early and refer to it later by dedupe.
     model.push(entry.value);
     // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     return reader.read().then(progress).catch(error);
   }
   function error(reason: mixed) {
@@ -3305,6 +3310,7 @@ function serializeBlob(request: Request, blob: Blob): string {
   request.cacheController.signal.addEventListener('abort', abortBlob);
 
   // $FlowFixMe[incompatible-call]
+  // $FlowFixMe[incompatible-type]
   reader.read().then(progress).catch(error);
 
   return '$B' + newTask.id.toString(16);
@@ -3889,6 +3895,7 @@ function renderModelDestructive(
     }
 
     // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[incompatible-type]
     return value;
   }
 
@@ -5018,6 +5025,7 @@ function renderDebugModel(
     }
 
     // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[incompatible-type]
     return value;
   }
 
@@ -5158,9 +5166,11 @@ function serializeDebugModel(
   debugNoOutline = model;
   try {
     // $FlowFixMe[incompatible-cast] stringify can return null
+    // $FlowFixMe[incompatible-type]
     return (stringify(model, replacer): string);
   } catch (x) {
     // $FlowFixMe[incompatible-cast] stringify can return null
+    // $FlowFixMe[incompatible-type]
     return (stringify(
       'Unknown Value: React could not send it from the server.\n' + x.message,
     ): string);
@@ -5222,9 +5232,11 @@ function emitOutlinedDebugModelChunk(
   let json: string;
   try {
     // $FlowFixMe[incompatible-cast] stringify can return null
+    // $FlowFixMe[incompatible-type]
     json = (stringify(model, replacer): string);
   } catch (x) {
     // $FlowFixMe[incompatible-cast] stringify can return null
+    // $FlowFixMe[incompatible-type]
     json = (stringify(
       'Unknown Value: React could not send it from the server.\n' + x.message,
     ): string);
