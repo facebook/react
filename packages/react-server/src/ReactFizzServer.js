@@ -1273,7 +1273,7 @@ function renderSuspenseBoundary(
     }
     return;
   }
-  // $FlowFixMe: Refined.
+  // $FlowFixMe[incompatible-type]: Refined.
   const task: RenderTask = someTask;
 
   const prevKeyPath = task.keyPath;
@@ -2089,7 +2089,8 @@ function renderSuspenseList(
           // If it's an iterator we need to continue reading where we left
           // off. We can do that by reading the first few rows from the previous
           // thenable state.
-          // $FlowFixMe
+          // $FlowFixMe[incompatible-type]
+          // $FlowFixMe[underconstrained-implicit-instantiation]
           let step = readPreviousThenableFromState();
           while (step !== undefined) {
             if (step.done) {
@@ -2226,7 +2227,7 @@ function renderHostElement(
       props,
     ));
     if (isPreambleContext(newContext)) {
-      // $FlowFixMe: Refined
+      // $FlowFixMe[incompatible-type]: Refined
       renderPreamble(request, (task: RenderTask), segment, children);
     } else {
       // We use the non-destructive form because if something suspends, we still
@@ -3414,7 +3415,8 @@ function retryNode(request: Request, task: Task): void {
           // If it's an iterator we need to continue reading where we left
           // off. We can do that by reading the first few rows from the previous
           // thenable state.
-          // $FlowFixMe
+          // $FlowFixMe[incompatible-type]
+          // $FlowFixMe[underconstrained-implicit-instantiation]
           let step = readPreviousThenableFromState();
           while (step !== undefined) {
             if (step.done) {
@@ -3704,7 +3706,7 @@ function renderChildrenArray(
     if (task.replay !== null) {
       replayFragment(
         request,
-        // $FlowFixMe: Refined.
+        // $FlowFixMe[incompatible-type]: Refined.
         task,
         children,
         childIndex,
@@ -4097,7 +4099,7 @@ function renderNode(
               : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             task,
             thenableState,
           );
@@ -4133,7 +4135,7 @@ function renderNode(
               : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             task,
             thenableState,
           );
@@ -4198,7 +4200,7 @@ function renderNode(
               : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             task,
             thenableState,
           );
@@ -4233,7 +4235,7 @@ function renderNode(
               : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             task,
             thenableState,
           );
@@ -4944,13 +4946,13 @@ function retryTask(request: Request, task: Task): void {
   if (segment === null) {
     retryReplayTask(
       request,
-      // $FlowFixMe: Refined.
+      // $FlowFixMe[incompatible-type]: Refined.
       task,
     );
   } else {
     retryRenderTask(
       request,
-      // $FlowFixMe: Refined.
+      // $FlowFixMe[incompatible-type]: Refined.
       task,
       segment,
     );

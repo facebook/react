@@ -15,7 +15,7 @@ export function createStringDecoder(): StringDecoder {
   return new TextDecoder();
 }
 
-const decoderOptions = {stream: true};
+const decoderOptions: {stream?: boolean, ...} = {stream: true};
 
 export function readPartialStringChunk(
   decoder: StringDecoder,
