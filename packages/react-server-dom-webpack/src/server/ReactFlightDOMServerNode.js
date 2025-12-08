@@ -129,11 +129,12 @@ function startReadingFromDebugChannelReadable(
     const ws: WebSocket = (stream: any);
     ws.binaryType = 'arraybuffer';
     ws.addEventListener('message', event => {
-      // $FlowFixMe
+      // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       onData(event.data);
     });
     ws.addEventListener('error', event => {
-      // $FlowFixMe
+      // $FlowFixMe[prop-missing]
       onError(event.error);
     });
     ws.addEventListener('close', onClose);
@@ -610,6 +611,7 @@ function decodeReplyFromBusboy<T>(
     reportGlobalError(
       response,
       // $FlowFixMe[incompatible-call] types Error and mixed are incompatible
+      // $FlowFixMe[incompatible-type]
       err,
     );
   });
@@ -672,7 +674,8 @@ function decodeReplyFromAsyncIterable<T>(
     reportGlobalError(response, reason);
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
-      // $FlowFixMe should be able to pass mixed
+      // $FlowFixMe[incompatible-call] should be able to pass mixed
+      // $FlowFixMe[prop-missing]
       iterator.throw(reason).then(error, error);
     }
   }

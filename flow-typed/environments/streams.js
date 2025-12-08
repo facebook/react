@@ -42,7 +42,7 @@ declare class ReadableStreamReader {
 
   closed: boolean;
 
-  cancel(reason: string): void;
+  cancel(reason: mixed): Promise<void>;
   read(): Promise<{
     value: ?any,
     done: boolean,
@@ -57,7 +57,7 @@ declare interface UnderlyingSource {
 
   start?: (controller: ReadableStreamController) => ?Promise<void>;
   pull?: (controller: ReadableStreamController) => ?Promise<void>;
-  cancel?: (reason: string) => ?Promise<void>;
+  cancel?: (reason: mixed) => ?Promise<void>;
 }
 
 declare class TransformStream {
@@ -78,8 +78,8 @@ type PipeToOptions = {
 };
 
 type QueuingStrategy = {
-  highWaterMark: number,
-  size(chunk: ?any): number,
+  highWaterMark?: number,
+  size?: (chunk: ?any) => number,
   ...
 };
 
@@ -91,7 +91,7 @@ declare class ReadableStream {
 
   locked: boolean;
 
-  cancel(reason: string): void;
+  cancel(reason: mixed): Promise<void>;
   getReader(): ReadableStreamReader;
   pipeThrough(transform: PipeThroughTransformStream, options: ?any): void;
   pipeTo(dest: WritableStream, options: ?PipeToOptions): Promise<void>;
@@ -106,7 +106,7 @@ declare interface UnderlyingSink {
   autoAllocateChunkSize?: number;
   type?: string;
 
-  abort?: (reason: string) => ?Promise<void>;
+  abort?: (reason: mixed) => ?Promise<void>;
   close?: (controller: WritableStreamController) => ?Promise<void>;
   start?: (controller: WritableStreamController) => ?Promise<void>;
   write?: (chunk: any, controller: WritableStreamController) => ?Promise<void>;

@@ -601,7 +601,8 @@ function printErrorSummary(category: ErrorCategory, message: string): string {
     case ErrorCategory.Syntax:
     case ErrorCategory.UseMemo:
     case ErrorCategory.VoidUseMemo:
-    case ErrorCategory.MemoDependencies: {
+    case ErrorCategory.MemoDependencies:
+    case ErrorCategory.EffectExhaustiveDependencies: {
       heading = 'Error';
       break;
     }
@@ -683,6 +684,10 @@ export enum ErrorCategory {
    * Checks for memoized effect deps
    */
   EffectDependencies = 'EffectDependencies',
+  /**
+   * Checks for exhaustive and extraneous effect dependencies
+   */
+  EffectExhaustiveDependencies = 'EffectExhaustiveDependencies',
   /**
    * Checks for no setState in effect bodies
    */
@@ -835,6 +840,16 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         severity: ErrorSeverity.Error,
         name: 'memoized-effect-dependencies',
         description: 'Validates that effect dependencies are memoized',
+        preset: LintRulePreset.Off,
+      };
+    }
+    case ErrorCategory.EffectExhaustiveDependencies: {
+      return {
+        category,
+        severity: ErrorSeverity.Error,
+        name: 'exhaustive-effect-dependencies',
+        description:
+          'Validates that effect dependencies are exhaustive and without extraneous values',
         preset: LintRulePreset.Off,
       };
     }

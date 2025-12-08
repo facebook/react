@@ -195,11 +195,12 @@ export function commitHookEffectListMount(
                 hookName = 'useEffect';
               }
               let addendum;
+              // $FlowFixMe[invalid-compare]
               if (destroy === null) {
                 addendum =
                   ' You returned null. If your effect does not require clean ' +
                   'up, return undefined (or nothing).';
-                // $FlowFixMe (@poteto) this check is safe on arbitrary non-null/void objects
+                // $FlowFixMe[incompatible-type] (@poteto) this check is safe on arbitrary non-null/void objects
               } else if (typeof destroy.then === 'function') {
                 addendum =
                   '\n\nIt looks like you wrote ' +
@@ -924,7 +925,8 @@ function safelyCallDestroy(
     );
   } else {
     try {
-      // $FlowFixMe(incompatible-call) Already bound to resource
+      // $FlowFixMe[incompatible-call] Already bound to resource
+      // $FlowFixMe[incompatible-type]
       destroy_();
     } catch (error) {
       captureCommitPhaseError(current, nearestMountedAncestor, error);
@@ -951,11 +953,11 @@ function commitProfiler(
     onRender(
       id,
       phase,
-      // $FlowFixMe: This should be always a number in profiling mode
+      // $FlowFixMe[incompatible-type]: This should be always a number in profiling mode
       finishedWork.actualDuration,
-      // $FlowFixMe: This should be always a number in profiling mode
+      // $FlowFixMe[incompatible-type]: This should be always a number in profiling mode
       finishedWork.treeBaseDuration,
-      // $FlowFixMe: This should be always a number in profiling mode
+      // $FlowFixMe[incompatible-type]: This should be always a number in profiling mode
       finishedWork.actualStartTime,
       commitStartTime,
     );

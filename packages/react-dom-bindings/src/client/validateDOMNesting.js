@@ -418,6 +418,7 @@ function isTagValidWithParent(
 
     case 'rp':
     case 'rt':
+      // $FlowFixMe[incompatible-type] parentTag is nullable but indexOf handles it correctly
       return impliedEndTags.indexOf(parentTag) === -1;
 
     case 'caption':
