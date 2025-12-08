@@ -58,7 +58,7 @@ import {getOrInsertWith} from '../Utils/utils';
  * each named variable are serialized. Thus `x = 1; y = x; x = 2; z = x` will establish a chain
  * of dependencies and retain the correct ordering.
  *
- * The algorithm proceeds one basic block at a time, first building up the dependnecy graph and then
+ * The algorithm proceeds one basic block at a time, first building up the dependency graph and then
  * reordering.
  *
  * The reordering weights nodes according to their transitive dependencies, and whether a particular node

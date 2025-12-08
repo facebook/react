@@ -1458,7 +1458,7 @@ describe('Timeline profiler', () => {
             }
           `);
 
-          // There should be two batches of renders: Suspeneded and resolved.
+          // There should be two batches of renders: Suspended and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
           expect(timelineData.componentMeasures).toHaveLength(2);
         });
@@ -1516,7 +1516,7 @@ describe('Timeline profiler', () => {
             }
           `);
 
-          // There should be two batches of renders: Suspeneded and resolved.
+          // There should be two batches of renders: Suspended and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
           expect(timelineData.componentMeasures).toHaveLength(2);
         });
@@ -1721,7 +1721,7 @@ describe('Timeline profiler', () => {
               ]
             `);
 
-          // There should be two batches of renders: Suspeneded and resolved.
+          // There should be two batches of renders: Suspended and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
           // An additional measure with pre-warming
           expect(timelineData.componentMeasures).toHaveLength(3);
@@ -1791,7 +1791,7 @@ describe('Timeline profiler', () => {
               ]
             `);
 
-          // There should be two batches of renders: Suspeneded and resolved.
+          // There should be two batches of renders: Suspended and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
           // An additional measure with pre-warming
           expect(timelineData.componentMeasures).toHaveLength(3);
@@ -2578,7 +2578,7 @@ describe('Timeline profiler', () => {
         });
 
         it('should generate component stacks for state update', async () => {
-          function CommponentWithChildren({initialRender}) {
+          function ComponentWithChildren({initialRender}) {
             Scheduler.log('Render ComponentWithChildren');
             return <Child initialRender={initialRender} />;
           }
@@ -2592,7 +2592,7 @@ describe('Timeline profiler', () => {
             return null;
           }
 
-          modernRender(<CommponentWithChildren initialRender={false} />);
+          modernRender(<ComponentWithChildren initialRender={false} />);
 
           await waitForAll([
             'Render ComponentWithChildren',
@@ -2613,7 +2613,7 @@ describe('Timeline profiler', () => {
                           "componentName": "Child",
                           "componentStack": "
                           in Child (at **)
-                          in CommponentWithChildren (at **)",
+                          in ComponentWithChildren (at **)",
                           "lanes": "0b0000000000000000000000000100000",
                           "timestamp": 10,
                           "type": "schedule-state-update",
