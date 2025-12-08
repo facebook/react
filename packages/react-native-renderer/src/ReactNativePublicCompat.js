@@ -146,7 +146,7 @@ export function findNodeHandle(componentOrHandle: any): ?number {
   }
 
   if (hostInstance == null) {
-    // $FlowFixMe[incompatible-return] Flow limitation in refining an opaque type
+    // $FlowFixMe[incompatible-type] Flow limitation in refining an opaque type
     return hostInstance;
   }
 
