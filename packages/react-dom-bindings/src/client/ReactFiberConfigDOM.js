@@ -1455,6 +1455,7 @@ export function applyViewTransitionName(
     const rects = instance.getClientRects();
     if (
       // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       countClientRects(rects) === 1
     ) {
       // If the instance has a single client rect, that means that it can be
@@ -1711,11 +1712,11 @@ function moveOutOfViewport(
   // while still letting it paint its "old" state to a snapshot.
   const transform = getComputedTransform(originalStyle);
   // Clear the long form properties.
-  // $FlowFixMe
+  // $FlowFixMe[prop-missing]
   element.style.translate = 'none';
-  // $FlowFixMe
+  // $FlowFixMe[prop-missing]
   element.style.scale = 'none';
-  // $FlowFixMe
+  // $FlowFixMe[prop-missing]
   element.style.rotate = 'none';
   // Apply a translate to move it way out of the viewport. This is applied first
   // so that it is in the coordinate space of the parent and not after applying
@@ -1798,7 +1799,7 @@ export function cloneRootViewTransitionContainer(
       if (getComputedStyle(positionedAncestor).position !== 'static') {
         break;
       }
-      // $FlowFixMe: This is refined.
+      // $FlowFixMe[incompatible-type]: This is refined.
       positionedAncestor = positionedAncestor.parentNode;
     }
 
@@ -2004,7 +2005,6 @@ function cancelAllViewTransitionAnimations(scope: Element) {
   for (let i = 0; i < animations.length; i++) {
     const anim = animations[i];
     const effect: KeyframeEffect = (anim.effect: any);
-    // $FlowFixMe
     const pseudo: ?string = effect.pseudoElement;
     if (
       pseudo != null &&
@@ -2218,7 +2218,6 @@ export function startViewTransition(
       for (let i = 0; i < animations.length; i++) {
         const animation = animations[i];
         const effect: KeyframeEffect = (animation.effect: any);
-        // $FlowFixMe
         const pseudoElement: ?string = effect.pseudoElement;
         if (
           pseudoElement != null &&
@@ -2259,13 +2258,13 @@ export function startViewTransition(
             height !== undefined
           ) {
             // Replace the keyframes with ones that don't animate the width/height.
-            // $FlowFixMe
+            // $FlowFixMe[incompatible-type]
             effect.setKeyframes(keyframes);
             // Read back the new animation to see what the underlying width/height of the pseudo-element was.
             const computedStyle = getComputedStyle(
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-type]
               effect.target,
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-type]
               effect.pseudoElement,
             );
             if (
@@ -2280,7 +2279,7 @@ export function startViewTransition(
               const last = keyframes[keyframes.length - 1];
               last.width = width;
               last.height = height;
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-type]
               effect.setKeyframes(keyframes);
             }
           }
@@ -2562,7 +2561,6 @@ export function startGestureTransition(
       let longestDuration = 0;
       for (let i = 0; i < animations.length; i++) {
         const effect: KeyframeEffect = (animations[i].effect: any);
-        // $FlowFixMe
         const pseudoElement: ?string = effect.pseudoElement;
         if (pseudoElement == null) {
         } else if (pseudoElement.startsWith('::view-transition')) {
@@ -2594,7 +2592,6 @@ export function startGestureTransition(
           continue;
         }
         const effect: KeyframeEffect = (anim.effect: any);
-        // $FlowFixMe
         const pseudoElement: ?string = effect.pseudoElement;
         if (
           pseudoElement != null &&
@@ -2654,7 +2651,7 @@ export function startGestureTransition(
           }
           animateGesture(
             effect.getKeyframes(),
-            // $FlowFixMe: Always documentElement atm.
+            // $FlowFixMe[incompatible-type]: Always documentElement atm.
             effect.target,
             pseudoElement,
             timeline,
@@ -2681,7 +2678,7 @@ export function startGestureTransition(
               const pseudoElementName = '::view-transition-group' + groupName;
               animateGesture(
                 [{}, {}],
-                // $FlowFixMe: Always documentElement atm.
+                // $FlowFixMe[incompatible-type]: Always documentElement atm.
                 effect.target,
                 pseudoElementName,
                 timeline,
@@ -3203,6 +3200,7 @@ FragmentInstance.prototype.getRootNode = function (
     getInstanceFromHostFiber<Instance>(parentHostFiber);
   const rootNode =
     // $FlowFixMe[incompatible-cast] Flow expects Node
+    // $FlowFixMe[incompatible-type]
     (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
   return rootNode;
 };
@@ -4649,9 +4647,11 @@ export function getHoistableRoot(container: Container): HoistableRoot {
   return typeof container.getRootNode === 'function'
     ? /* $FlowFixMe[incompatible-cast] Flow types this as returning a `Node`,
        * but it's either a `Document` or `ShadowRoot`. */
+      // $FlowFixMe[incompatible-type]
       (container.getRootNode(): Document | ShadowRoot)
     : container.nodeType === DOCUMENT_NODE
       ? // $FlowFixMe[incompatible-cast] We've constrained this to be a Document which satisfies the return type
+        // $FlowFixMe[incompatible-type]
         (container: Document)
       : container.ownerDocument;
 }
@@ -4962,12 +4962,14 @@ function preinitStyle(
     }
 
     // Construct a Resource and cache it
+    // $FlowFixMe[incompatible-type]
     resource = {
       type: 'stylesheet',
       instance,
       count: 1,
       state,
     };
+    // $FlowFixMe[incompatible-type]
     styles.set(key, resource);
     return;
   }

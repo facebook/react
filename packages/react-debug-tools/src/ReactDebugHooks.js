@@ -726,9 +726,11 @@ function useActionState<S, P>(
 
 function useHostTransitionStatus(): TransitionStatus {
   const status = readContext<TransitionStatus>(
+    // $FlowFixMe[incompatible-type]
     // $FlowFixMe[prop-missing] `readContext` only needs _currentValue
     ({
       // $FlowFixMe[incompatible-cast] TODO: Incorrect bottom value without access to Fiber config.
+      // $FlowFixMe[incompatible-type]
       _currentValue: null,
     }: ReactContext<TransitionStatus>),
   );

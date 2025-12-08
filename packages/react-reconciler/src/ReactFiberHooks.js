@@ -416,9 +416,9 @@ function warnIfAsyncClientComponent(Component: Function) {
     // for transpiled async functions. Neither mechanism is completely
     // bulletproof but together they cover the most common cases.
     const isAsyncFunction =
-      // $FlowIgnore[method-unbinding]
+      // $FlowFixMe[method-unbinding]
       Object.prototype.toString.call(Component) === '[object AsyncFunction]' ||
-      // $FlowIgnore[method-unbinding]
+      // $FlowFixMe[method-unbinding]
       Object.prototype.toString.call(Component) ===
         '[object AsyncGeneratorFunction]';
     if (isAsyncFunction) {
@@ -2647,6 +2647,7 @@ function updateEffectImpl(
       const prevEffect: Effect = currentHook.memoizedState;
       const prevDeps = prevEffect.deps;
       // $FlowFixMe[incompatible-call] (@poteto)
+      // $FlowFixMe[incompatible-type]
       if (areHookInputsEqual(nextDeps, prevDeps)) {
         hook.memoizedState = pushSimpleEffect(
           hookFlags,
@@ -2727,6 +2728,7 @@ function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
   const ref = {impl: callback};
   hook.memoizedState = ref;
   // $FlowIgnore[incompatible-return]
+  // $FlowFixMe[incompatible-type]
   return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
@@ -2743,7 +2745,8 @@ function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
   const hook = updateWorkInProgressHook();
   const ref = hook.memoizedState;
   useEffectEventImpl({ref, nextImpl: callback});
-  // $FlowIgnore[incompatible-return]
+  // $FlowFixMe[incompatible-return]
+  // $FlowFixMe[incompatible-type]
   return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
