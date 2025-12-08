@@ -39,7 +39,7 @@ export const getModuleDebugInfo = $$$config.getModuleDebugInfo;
 export const dispatchHint = $$$config.dispatchHint;
 export const prepareDestinationForModule =
   $$$config.prepareDestinationForModule;
-export const usedWithSSR = true;
+export const usedWithSSR: boolean = true;
 
 export opaque type Source = mixed;
 

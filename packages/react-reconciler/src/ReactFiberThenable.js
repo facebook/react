@@ -290,6 +290,7 @@ export function suspendCommit(): void {
   // This extra indirection only exists so it can handle passing
   // noopSuspenseyCommitThenable through to throwException.
   // TODO: Factor the thenable check out of throwException
+  // $FlowFixMe[incompatible-type]
   suspendedThenable = noopSuspenseyCommitThenable;
   throw SuspenseyCommitException;
 }

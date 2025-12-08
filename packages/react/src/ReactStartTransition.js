@@ -80,6 +80,7 @@ export function startTransition(
     }
     if (
       typeof returnValue === 'object' &&
+      // $FlowFixMe[invalid-compare]
       returnValue !== null &&
       typeof returnValue.then === 'function'
     ) {
@@ -94,7 +95,11 @@ export function startTransition(
     reportGlobalError(error);
   } finally {
     warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-    if (prevTransition !== null && currentTransition.types !== null) {
+    if (
+      prevTransition !== null &&
+      // $FlowFixMe[invalid-compare]
+      currentTransition.types !== null
+    ) {
       // If we created a new types set in the inner transition, we transfer it to the parent
       // since they should share the same set. They're conceptually entangled.
       if (__DEV__) {
@@ -140,6 +145,7 @@ export function startGestureTransition(
   if (enableViewTransition) {
     currentTransition.types = null;
   }
+  // $FlowFixMe[constant-condition]
   if (enableGestureTransition) {
     currentTransition.gesture = provider;
   }
@@ -158,6 +164,7 @@ export function startGestureTransition(
     if (__DEV__) {
       if (
         typeof returnValue === 'object' &&
+        // $FlowFixMe[invalid-compare]
         returnValue !== null &&
         typeof returnValue.then === 'function'
       ) {

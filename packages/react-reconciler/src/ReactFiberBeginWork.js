@@ -1834,6 +1834,7 @@ function updateHostRoot(
   // Caution: React DevTools currently depends on this property
   // being called "element".
   const nextChildren = nextState.element;
+  // $FlowFixMe[constant-condition]
   if (supportsHydration && prevState.isDehydrated) {
     // This is a hydration root whose shell has not yet hydrated. We should
     // attempt to hydrate.
@@ -1983,6 +1984,7 @@ function updateHostComponent(
     // and forms cannot be nested. If we did support nested providers, then
     // we would need to push a context value even for host fibers that
     // haven't been upgraded yet.
+    // $FlowFixMe[constant-condition]
     if (isPrimaryRenderer) {
       HostTransitionContext._currentValue = newState;
     } else {
@@ -2117,8 +2119,10 @@ function mountLazyComponent(
         renderLanes,
       );
     }
+  // $FlowFixMe[invalid-compare]
   } else if (Component !== undefined && Component !== null) {
     const $$typeof = Component.$$typeof;
+    // $FlowFixMe[invalid-compare]
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
       workInProgress.tag = ForwardRef;
       if (__DEV__) {
@@ -2132,6 +2136,7 @@ function mountLazyComponent(
         props,
         renderLanes,
       );
+    // $FlowFixMe[invalid-compare]
     } else if ($$typeof === REACT_MEMO_TYPE) {
       workInProgress.tag = MemoComponent;
       return updateMemoComponent(
@@ -2147,8 +2152,11 @@ function mountLazyComponent(
   let hint = '';
   if (__DEV__) {
     if (
+      // $FlowFixMe[invalid-compare]
       Component !== null &&
+      // $FlowFixMe[invalid-compare]
       typeof Component === 'object' &&
+      // $FlowFixMe[invalid-compare]
       Component.$$typeof === REACT_LAZY_TYPE
     ) {
       hint = ' Did you wrap a component in React.lazy() more than once?';
@@ -2264,7 +2272,9 @@ function updateSuspenseOffscreenState(
 ): OffscreenState {
   let cachePool: SpawnedCachePool | null = null;
   const prevCachePool: SpawnedCachePool | null = prevOffscreenState.cachePool;
+  // $FlowFixMe[invalid-compare]
   if (prevCachePool !== null) {
+    // $FlowFixMe[constant-condition]
     const parentCache = isPrimaryRenderer
       ? CacheContext._currentValue
       : CacheContext._currentValue2;
@@ -2303,6 +2313,7 @@ function shouldRemainOnFallback(
   // whether the current fiber (if it exists) was visible in the previous tree.
   if (current !== null) {
     const suspenseState: SuspenseState = current.memoizedState;
+    // $FlowFixMe[invalid-compare]
     if (suspenseState === null) {
       // Currently showing content. Don't hide it, even if ForceSuspenseFallback
       // is true. More precise name might be "ForceRemainSuspenseFallback".
@@ -3248,10 +3259,15 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
     ) {
       didWarnAboutRevealOrder[cacheKey] = true;
       if (typeof revealOrder === 'string') {
+        // $FlowFixMe[invalid-compare]
         switch (revealOrder.toLowerCase()) {
+          // $FlowFixMe[invalid-compare]
           case 'together':
+          // $FlowFixMe[invalid-compare]
           case 'forwards':
+          // $FlowFixMe[invalid-compare]
           case 'backwards':
+          // $FlowFixMe[invalid-compare]
           case 'independent': {
             console.error(
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
@@ -3261,7 +3277,9 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
             );
             break;
           }
+          // $FlowFixMe[invalid-compare]
           case 'forward':
+          // $FlowFixMe[invalid-compare]
           case 'backward': {
             console.error(
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
@@ -3809,6 +3827,7 @@ function remountFiber(
     newWorkInProgress.return = oldWorkInProgress.return;
     newWorkInProgress.ref = oldWorkInProgress.ref;
 
+    // $FlowFixMe[constant-condition]
     if (__DEV__) {
       newWorkInProgress._debugInfo = oldWorkInProgress._debugInfo;
     }

@@ -12,10 +12,11 @@ import {TextDecoder} from 'util';
 export type StringDecoder = TextDecoder;
 
 export function createStringDecoder(): StringDecoder {
+  // $FlowFixMe[incompatible-type] flow-typed has incorrect constructor signature
   return new TextDecoder();
 }
 
-const decoderOptions = {stream: true};
+const decoderOptions: {stream?: boolean, ...} = {stream: true};
 
 export function readPartialStringChunk(
   decoder: StringDecoder,

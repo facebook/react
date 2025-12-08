@@ -39,6 +39,7 @@ export const rootContextSnapshot: ContextSnapshot = null;
 let currentActiveSnapshot: ContextSnapshot = null;
 
 function popNode(prev: ContextNode<any>): void {
+  // $FlowFixMe[constant-condition]
   if (isPrimaryRenderer) {
     prev.context._currentValue = prev.parentValue;
   } else {
@@ -47,6 +48,7 @@ function popNode(prev: ContextNode<any>): void {
 }
 
 function pushNode(next: ContextNode<any>): void {
+  // $FlowFixMe[constant-condition]
   if (isPrimaryRenderer) {
     next.context._currentValue = next.value;
   } else {
@@ -163,6 +165,7 @@ export function switchContext(newSnapshot: ContextSnapshot): void {
   if (prev !== next) {
     if (prev === null) {
       // $FlowFixMe[incompatible-call]: This has to be non-null since it's not equal to prev.
+      // $FlowFixMe[incompatible-type]
       pushAllNext(next);
     } else if (next === null) {
       popAllPrevious(prev);
@@ -182,6 +185,7 @@ export function pushProvider<T>(
   nextValue: T,
 ): ContextSnapshot {
   let prevValue;
+  // $FlowFixMe[constant-condition]
   if (isPrimaryRenderer) {
     prevValue = context._currentValue;
     context._currentValue = nextValue;
@@ -243,6 +247,7 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
       );
     }
   }
+  // $FlowFixMe[constant-condition]
   if (isPrimaryRenderer) {
     const value = prevSnapshot.parentValue;
     prevSnapshot.context._currentValue = value;
@@ -284,6 +289,7 @@ export function getActiveContext(): ContextSnapshot {
 }
 
 export function readContext<T>(context: ReactContext<T>): T {
+  // $FlowFixMe[constant-condition]
   const value = isPrimaryRenderer
     ? context._currentValue
     : context._currentValue2;

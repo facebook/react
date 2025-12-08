@@ -76,7 +76,9 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
   if (writtenBytes > 0) {
     target = ((currentView: any): Uint8Array).subarray(writtenBytes);
   }
-  const {read, written} = textEncoder.encodeInto(stringChunk, target);
+  const {read, written} =
+    // $FlowFixMe[prop-missing] flow-typed missing encodeInto method
+    textEncoder.encodeInto(stringChunk, target);
   writtenBytes += written;
 
   if (read < stringChunk.length) {
@@ -85,6 +87,7 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
       (currentView: any).subarray(0, writtenBytes),
     );
     currentView = new Uint8Array(VIEW_SIZE);
+    // $FlowFixMe[prop-missing] flow-typed missing encodeInto method
     writtenBytes = textEncoder.encodeInto(
       stringChunk.slice(read),
       (currentView: any),
@@ -232,6 +235,7 @@ export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
 
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
+  // $FlowFixMe[incompatible-type]
   destination.destroy(error);
 }
 

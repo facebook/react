@@ -26,4 +26,4 @@ export const preloadModule: any = null;
 export const requireModule: any = null;
 export const getModuleDebugInfo: any = null;
 export const prepareDestinationForModule: any = null;
-export const usedWithSSR = true;
+export const usedWithSSR: boolean = true;

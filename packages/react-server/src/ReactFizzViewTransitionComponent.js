@@ -32,10 +32,12 @@ function getClassNameByType(classByType: ?ViewTransitionClass): ?string {
   }
   let className: ?string = null;
   const activeTypes = null; // TODO: Support passing active types.
+  // $FlowFixMe[constant-condition]
   if (activeTypes !== null) {
     for (let i = 0; i < activeTypes.length; i++) {
       const match = classByType[activeTypes[i]];
       if (match != null) {
+        // $FlowFixMe[invalid-compare]
         if (match === 'none') {
           // If anything matches "none" that takes precedence over any other
           // type that also matches.

@@ -13,11 +13,15 @@ export type Element<+C> = React$Element<C>;
 export type MixedElement = React$Element<ElementType>;
 export type Key = React$Key;
 export type Node = React$Node;
+// $FlowFixMe[cannot-resolve-name] React$Context was removed in Flow 0.288
 export type Context<T> = React$Context<T>;
 export type Portal = React$Portal;
+// $FlowFixMe[cannot-resolve-name] React$RefSetter was removed in Flow 0.288
 export type RefSetter<-I> = React$RefSetter<I>;
+// $FlowFixMe[cannot-resolve-name] React$ElementProps was removed in Flow 0.288
 export type ElementProps<C> = React$ElementProps<C>;
 export type ElementConfig<C> = React$ElementConfig<C>;
+// $FlowFixMe[cannot-resolve-name] React$ElementRef was removed in Flow 0.288
 export type ElementRef<C> = React$ElementRef<C>;
 export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
 

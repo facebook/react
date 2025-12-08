@@ -16,4 +16,4 @@ export * from 'react-server-dom-turbopack/src/client/ReactFlightClientConfigBund
 export * from 'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackServer';
 export * from 'react-server-dom-turbopack/src/client/ReactFlightClientConfigTargetTurbopackServer';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
-export const usedWithSSR = true;
+export const usedWithSSR: boolean = true;
