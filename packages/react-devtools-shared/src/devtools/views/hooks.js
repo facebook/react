@@ -235,7 +235,7 @@ export function useModalDismissSignal(
     const handleRootNodeClick: MouseEventHandler = event => {
       if (
         modalRef.current !== null &&
-        /* $FlowExpectedError[incompatible-call] Instead of dealing with possibly multiple realms
+        /* $FlowExpectedError[incompatible-type] Instead of dealing with possibly multiple realms
          and multiple Node references to comply with Flow (e.g. checking with `event.target instanceof Node`)
          just delegate it to contains call */
         !modalRef.current.contains(event.target)

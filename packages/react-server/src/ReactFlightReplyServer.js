@@ -318,6 +318,7 @@ function triggerErrorOnChunk<T>(
     const streamChunk: InitializedStreamChunk<any> = (chunk: any);
     const controller = streamChunk.reason;
     // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    // $FlowFixMe[incompatible-type]
     controller.error(error);
     return;
   }
@@ -1178,6 +1179,7 @@ function parseReadableStream<T>(
     error(error: mixed): void {
       if (previousBlockedChunk === null) {
         // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         controller.error(error);
       } else {
         const blockedChunk = previousBlockedChunk;
@@ -1374,6 +1376,7 @@ function parseModelString(
         backingFormData.forEach((entry: File | string, entryKey: string) => {
           if (entryKey.startsWith(formPrefix)) {
             // $FlowFixMe[incompatible-call]
+            // $FlowFixMe[incompatible-type]
             data.append(entryKey.slice(formPrefix.length), entry);
           }
         });

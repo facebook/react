@@ -392,6 +392,7 @@ function getEventKey(nativeEvent: {[propName: string]: mixed}) {
   if (nativeEvent.type === 'keypress') {
     const charCode = getEventCharCode(
       // $FlowFixMe[incompatible-call] unable to narrow to `KeyboardEvent`
+      // $FlowFixMe[incompatible-type]
       nativeEvent,
     );
 
@@ -464,6 +465,7 @@ const KeyboardEventInterface: EventInterfaceType = {
     if (event.type === 'keypress') {
       return getEventCharCode(
         // $FlowFixMe[incompatible-call] unable to narrow to `KeyboardEvent`
+        // $FlowFixMe[incompatible-type]
         event,
       );
     }
@@ -488,6 +490,7 @@ const KeyboardEventInterface: EventInterfaceType = {
     if (event.type === 'keypress') {
       return getEventCharCode(
         // $FlowFixMe[incompatible-call] unable to narrow to `KeyboardEvent`
+        // $FlowFixMe[incompatible-type]
         event,
       );
     }

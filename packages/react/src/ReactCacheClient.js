@@ -28,6 +28,7 @@ function noopCache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
   // accidentally depend on those details.
   return function () {
     // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
+    // $FlowFixMe[incompatible-type]
     return fn.apply(null, arguments);
   };
 }

@@ -547,6 +547,7 @@ export function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): F {
   // $FlowIgnore[incompatible-return]
+  // $FlowIgnore[incompatible-type]
   return throwOnUseEffectEventCall;
 }
 
