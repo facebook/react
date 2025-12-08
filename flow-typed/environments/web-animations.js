@@ -182,6 +182,7 @@ declare class KeyframeEffect extends AnimationEffect {
   constructor(source: KeyframeEffect): void;
 
   target: Element | null;
+  pseudoElement: string | null;
   composite: CompositeOperation;
   // This is actually web-animations-2
   iterationComposite: IterationCompositeOperation;

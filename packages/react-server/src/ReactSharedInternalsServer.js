@@ -12,7 +12,9 @@ import type {SharedStateServer} from 'react/src/ReactSharedInternalsServer';
 import * as React from 'react';
 
 const ReactSharedInternalsServer: SharedStateServer =
-  // $FlowFixMe: It's defined in the one we resolve to.
+  // $FlowFixMe[prop-missing]: It's defined in the one we resolve to.
+  // $FlowFixMe[incompatible-type]
+  // $FlowFixMe[missing-export]
   React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
 if (!ReactSharedInternalsServer) {

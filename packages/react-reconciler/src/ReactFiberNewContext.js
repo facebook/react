@@ -551,20 +551,24 @@ function readContextForConsumer<T>(
     }
 
     // This is the first dependency for this component. Create a new list.
+    // $FlowFixMe[incompatible-type]
     lastContextDependency = contextItem;
     consumer.dependencies = __DEV__
-      ? {
+      ? // $FlowFixMe[incompatible-type]
+        {
           lanes: NoLanes,
           firstContext: contextItem,
           _debugThenableState: null,
         }
-      : {
+      : // $FlowFixMe[incompatible-type]
+        {
           lanes: NoLanes,
           firstContext: contextItem,
         };
     consumer.flags |= NeedsPropagation;
   } else {
     // Append a new context item.
+    // $FlowFixMe[incompatible-type]
     lastContextDependency = lastContextDependency.next = contextItem;
   }
   return value;

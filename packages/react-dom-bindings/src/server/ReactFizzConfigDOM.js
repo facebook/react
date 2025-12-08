@@ -3366,7 +3366,7 @@ function pushImg(
         // reenter this branch in a second pass for duplicate img hrefs.
         promotablePreloads.delete(key);
 
-        // $FlowFixMe - Flow should understand that this is a Resource if the condition was true
+        // $FlowFixMe[incompatible-call] - Flow should understand that this is a Resource if the condition was true
         renderState.highImagePreloads.add(resource);
       }
     } else if (!resumableState.imageResources.hasOwnProperty(key)) {
