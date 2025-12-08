@@ -95,7 +95,7 @@ async function executeScript(script: Element) {
     }
 
     try {
-      // $FlowFixMe
+      // $FlowFixMe[unsupported-syntax]
       require(scriptSrc);
     } catch (x) {
       const event = new window.ErrorEvent('error', {error: x});

@@ -546,8 +546,8 @@ function throwOnUseEffectEventCall() {
 export function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): F {
-  // $FlowIgnore[incompatible-return]
-  // $FlowIgnore[incompatible-type]
+  // $FlowFixMe[incompatible-return]
+  // $FlowFixMe[incompatible-type]
   return throwOnUseEffectEventCall;
 }
 
@@ -631,7 +631,7 @@ function useActionState<S, P>(
   const actionStateHookIndex = actionStateCounter++;
   const request: Request = (currentlyRenderingRequest: any);
 
-  // $FlowIgnore[prop-missing]
+  // $FlowFixMe[prop-missing]
   const formAction = action.$$FORM_ACTION;
   if (typeof formAction === 'function') {
     // This is a server action. These have additional features to enable
@@ -653,7 +653,7 @@ function useActionState<S, P>(
     let state = initialState;
     const componentKeyPath = (currentlyRenderingKeyPath: any);
     const postbackActionState = getFormState(request);
-    // $FlowIgnore[prop-missing]
+    // $FlowFixMe[prop-missing]
     const isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
     if (
       postbackActionState !== null &&
@@ -687,9 +687,9 @@ function useActionState<S, P>(
       boundAction(payload);
     };
 
-    // $FlowIgnore[prop-missing]
+    // $FlowFixMe[prop-missing]
     if (typeof boundAction.$$FORM_ACTION === 'function') {
-      // $FlowIgnore[prop-missing]
+      // $FlowFixMe[prop-missing]
       dispatch.$$FORM_ACTION = (prefix: string) => {
         const metadata: ReactCustomFormAction =
           boundAction.$$FORM_ACTION(prefix);
