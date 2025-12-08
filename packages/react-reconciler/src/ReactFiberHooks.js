@@ -1149,6 +1149,7 @@ function useThenable<T>(thenable: Thenable<T>): T {
 }
 
 function use<T>(usable: Usable<T>): T {
+  // $FlowFixMe[invalid-compare]
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
@@ -1527,6 +1528,7 @@ function updateReducerImpl<S, A>(
         }
       }
       update = update.next;
+      // $FlowFixMe[invalid-compare]
     } while (update !== null && update !== first);
 
     if (newBaseQueueLast === null) {
@@ -2473,6 +2475,7 @@ function updateActionStateImpl<S, P>(
   let state: Awaited<S>;
   if (
     typeof actionResult === 'object' &&
+    // $FlowFixMe[invalid-compare]
     actionResult !== null &&
     // $FlowFixMe[method-unbinding]
     typeof actionResult.then === 'function'
@@ -2837,6 +2840,7 @@ function mountImperativeHandle<T>(
       console.error(
         'Expected useImperativeHandle() second argument to be a function ' +
           'that creates a handle. Instead received: %s.',
+        // $FlowFixMe[invalid-compare]
         create !== null ? typeof create : 'null',
       );
     }
@@ -2871,6 +2875,7 @@ function updateImperativeHandle<T>(
       console.error(
         'Expected useImperativeHandle() second argument to be a function ' +
           'that creates a handle. Instead received: %s.',
+        // $FlowFixMe[invalid-compare]
         create !== null ? typeof create : 'null',
       );
     }

@@ -81,6 +81,7 @@ export function markTaskStart(
   },
   ms: number,
 ) {
+  // $FlowFixMe[constant-condition]
   if (enableProfiling) {
     if (eventLog !== null) {
       // performance.now returns a float, representing milliseconds. When the
@@ -99,6 +100,7 @@ export function markTaskCompleted(
   },
   ms: number,
 ) {
+  // $FlowFixMe[constant-condition]
   if (enableProfiling) {
     if (eventLog !== null) {
       logEvent([TaskCompleteEvent, ms * 1000, task.id]);
@@ -114,6 +116,7 @@ export function markTaskCanceled(
   },
   ms: number,
 ) {
+  // $FlowFixMe[constant-condition]
   if (enableProfiling) {
     if (eventLog !== null) {
       logEvent([TaskCancelEvent, ms * 1000, task.id]);
@@ -129,6 +132,7 @@ export function markTaskErrored(
   },
   ms: number,
 ) {
+  // $FlowFixMe[constant-condition]
   if (enableProfiling) {
     if (eventLog !== null) {
       logEvent([TaskErrorEvent, ms * 1000, task.id]);
@@ -144,6 +148,7 @@ export function markTaskRun(
   },
   ms: number,
 ) {
+  // $FlowFixMe[constant-condition]
   if (enableProfiling) {
     runIdCounter++;
 
@@ -154,6 +159,7 @@ export function markTaskRun(
 }
 
 export function markTaskYield(task: {id: number, ...}, ms: number) {
+  // $FlowFixMe[constant-condition]
   if (enableProfiling) {
     if (eventLog !== null) {
       logEvent([TaskYieldEvent, ms * 1000, task.id, runIdCounter]);
@@ -162,6 +168,7 @@ export function markTaskYield(task: {id: number, ...}, ms: number) {
 }
 
 export function markSchedulerSuspended(ms: number) {
+  // $FlowFixMe[constant-condition]
   if (enableProfiling) {
     mainThreadIdCounter++;
 
@@ -172,6 +179,7 @@ export function markSchedulerSuspended(ms: number) {
 }
 
 export function markSchedulerUnsuspended(ms: number) {
+  // $FlowFixMe[constant-condition]
   if (enableProfiling) {
     if (eventLog !== null) {
       logEvent([SchedulerResumeEvent, ms * 1000, mainThreadIdCounter]);

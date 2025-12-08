@@ -40,6 +40,7 @@ function collectScopedNodes(
       const {type, memoizedProps, stateNode} = node;
       const instance = getPublicInstance(stateNode);
       if (
+        // $FlowFixMe[invalid-compare]
         instance !== null &&
         fn(type, memoizedProps || emptyObject, instance) === true
       ) {
@@ -65,6 +66,7 @@ function collectFirstScopedNode(
     if (node.tag === HostComponent) {
       const {type, memoizedProps, stateNode} = node;
       const instance = getPublicInstance(stateNode);
+      // $FlowFixMe[invalid-compare]
       if (instance !== null && fn(type, memoizedProps, instance) === true) {
         return instance;
       }

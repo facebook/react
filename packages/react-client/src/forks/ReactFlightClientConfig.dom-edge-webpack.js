@@ -16,4 +16,4 @@ export * from 'react-server-dom-webpack/src/client/ReactFlightClientConfigBundle
 export * from 'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer';
 export * from 'react-server-dom-webpack/src/client/ReactFlightClientConfigTargetWebpackServer';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
-export const usedWithSSR = true;
+export const usedWithSSR: boolean = true;

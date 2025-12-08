@@ -350,6 +350,7 @@ export function enqueueCapturedUpdate<State>(
         } while (update !== null);
 
         // Append the captured update the end of the cloned list.
+        // $FlowFixMe[invalid-compare]
         if (newLast === null) {
           newFirst = newLast = capturedUpdate;
         } else {
@@ -672,6 +673,7 @@ export function processUpdateQueue<State>(
     queue.firstBaseUpdate = newFirstBaseUpdate;
     queue.lastBaseUpdate = newLastBaseUpdate;
 
+    // $FlowFixMe[invalid-compare]
     if (firstBaseUpdate === null) {
       // `queue.lanes` is used for entangling transitions. We can set it back to
       // zero once the queue is empty.

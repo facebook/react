@@ -195,6 +195,7 @@ export function commitHookEffectListMount(
                 hookName = 'useEffect';
               }
               let addendum;
+              // $FlowFixMe[invalid-compare]
               if (destroy === null) {
                 addendum =
                   ' You returned null. If your effect does not require clean ' +

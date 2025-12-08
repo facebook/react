@@ -1264,6 +1264,7 @@ function recoverFromConcurrentError(
   // Before rendering again, save the errors from the previous attempt.
   const errorsFromFirstAttempt = workInProgressRootConcurrentErrors;
 
+  // $FlowFixMe[constant-condition]
   const wasRootDehydrated = supportsHydration && isRootDehydrated(root);
   if (wasRootDehydrated) {
     // The shell failed to hydrate. Set a flag to force a client rendering
@@ -4196,6 +4197,7 @@ function flushSpawnedWork(): void {
 
   // Eagerly flush any event replaying that we unblocked within this commit.
   // This ensures that those are observed before we render any new changes.
+  // $FlowFixMe[constant-condition]
   if (supportsHydration) {
     flushHydrationEvents();
   }

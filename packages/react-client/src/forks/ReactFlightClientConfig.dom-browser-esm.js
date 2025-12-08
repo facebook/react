@@ -15,4 +15,4 @@ export * from 'react-client/src/ReactClientConsoleConfigBrowser';
 export * from 'react-server-dom-esm/src/client/ReactFlightClientConfigBundlerESM';
 export * from 'react-server-dom-esm/src/client/ReactFlightClientConfigTargetESMBrowser';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
-export const usedWithSSR = false;
+export const usedWithSSR: boolean = false;

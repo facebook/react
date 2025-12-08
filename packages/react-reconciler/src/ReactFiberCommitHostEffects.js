@@ -508,6 +508,7 @@ function commitPlacement(finishedWork: Fiber): void {
     parentFiber = parentFiber.return;
   }
 
+  // $FlowFixMe[constant-condition]
   if (!supportsMutation) {
     if (enableFragmentRefs) {
       commitImmutablePlacementNodeToFragmentInstances(

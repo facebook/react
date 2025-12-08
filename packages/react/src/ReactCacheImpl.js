@@ -76,6 +76,7 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
       const arg = arguments[i];
       if (
         typeof arg === 'function' ||
+        // $FlowFixMe[invalid-compare]
         (typeof arg === 'object' && arg !== null)
       ) {
         // Objects go into a WeakMap

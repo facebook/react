@@ -1040,7 +1040,9 @@ export function appendChildToContainer(
   // defined.
   // https://github.com/facebook/react/issues/11918
   const reactRootContainer = container._reactRootContainer;
+  // $FlowFixMe[invalid-compare]
   if (
+    // $FlowFixMe[invalid-compare]
     (reactRootContainer === null || reactRootContainer === undefined) &&
     parentNode.onclick === null
   ) {
@@ -1346,8 +1348,10 @@ export function unhideDehydratedBoundary(
 export function unhideInstance(instance: Instance, props: Props): void {
   instance = ((instance: any): HTMLElement);
   const styleProp = props[STYLE];
+  // $FlowFixMe[invalid-compare]
   const display =
     styleProp !== undefined &&
+    // $FlowFixMe[invalid-compare]
     styleProp !== null &&
     styleProp.hasOwnProperty('display')
       ? styleProp.display
@@ -3324,7 +3328,9 @@ function validateDocumentPositionWithFiberTree(
   if (documentPosition & Node.DOCUMENT_POSITION_CONTAINS) {
     if (otherFiber === null) {
       // otherFiber could be null if its the document or body element
+      // $FlowFixMe[invalid-compare]
       const ownerDocument = otherNode.ownerDocument;
+      // $FlowFixMe[invalid-compare]
       return otherNode === ownerDocument || otherNode === ownerDocument.body;
     }
     return isFragmentContainedByFiber(fragmentFiber, otherFiber);
@@ -4438,7 +4444,7 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
 //     Singletons
 // -------------------
 
-export const supportsSingletons = true;
+export const supportsSingletons: boolean = true;
 
 export function isHostSingletonType(type: string): boolean {
   return type === 'html' || type === 'head' || type === 'body';
@@ -4565,7 +4571,7 @@ export function releaseSingletonInstance(instance: Instance): void {
 //     Resources
 // -------------------
 
-export const supportsResources = true;
+export const supportsResources: boolean = true;
 
 type HoistableTagType = 'link' | 'meta' | 'title';
 type TResource<

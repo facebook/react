@@ -647,6 +647,7 @@ export function processReply(
       const iteratorFn = getIteratorFn(value);
       if (iteratorFn) {
         const iterator = iteratorFn.call(value);
+        // $FlowFixMe[invalid-compare]
         if (iterator === value) {
           // Iterator, not Iterable
           const iteratorId = nextPartId++;
@@ -969,6 +970,7 @@ function customEncodeFormAction(
     );
   }
   let boundPromise: Promise<Array<any>> = (referenceClosure.bound: any);
+  // $FlowFixMe[invalid-compare]
   if (boundPromise === null) {
     boundPromise = Promise.resolve([]);
   }

@@ -131,6 +131,7 @@ function useId(): string {
 
 function use<T>(usable: Usable<T>): T {
   if (
+    // $FlowFixMe[invalid-compare]
     (usable !== null && typeof usable === 'object') ||
     typeof usable === 'function'
   ) {

@@ -1560,6 +1560,7 @@ function pushAttribute(
       return;
     }
     case 'src': {
+      // $FlowFixMe[invalid-compare]
       if (enableSrcObject && typeof value === 'object' && value !== null) {
         if (typeof Blob === 'function' && value instanceof Blob) {
           pushSrcObjectAttribute(target, value);
@@ -3562,7 +3563,10 @@ function pushTitle(
             ' tags to a single string value.',
           childType,
         );
+      // $FlowFixMe[invalid-compare]
+      // $FlowFixMe[constant-condition]
       } else if (child && child.toString === {}.toString) {
+        // $FlowFixMe[invalid-compare]
         if (child.$$typeof != null) {
           console.error(
             'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an object that appears to be' +
@@ -4018,8 +4022,10 @@ function pushStartCustomElement(
             typeof propValue !== 'function' &&
             typeof propValue !== 'symbol'
           ) {
+            // $FlowFixMe[invalid-compare]
             if (propValue === false) {
               continue;
+              // $FlowFixMe[invalid-compare]
             } else if (propValue === true) {
               propValue = '';
             } else if (typeof propValue === 'object') {
@@ -4611,6 +4617,7 @@ export function writeStartPendingSuspenseBoundary(
 ): boolean {
   writeChunk(destination, startPendingSuspenseBoundary1);
 
+  // $FlowFixMe[invalid-compare]
   if (id === null) {
     throw new Error(
       'An ID must have been assigned before we can complete the boundary.',

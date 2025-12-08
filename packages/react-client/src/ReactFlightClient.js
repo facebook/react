@@ -501,6 +501,7 @@ function filterDebugInfo(
   response: Response,
   value: {_debugInfo: ReactDebugInfo, ...},
 ) {
+  // $FlowFixMe[invalid-compare]
   if (response._debugEndTime === null) {
     // No end time was defined, so we keep all debug info entries.
     return;

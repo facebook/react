@@ -361,6 +361,7 @@ export function useReducer<S, I, A>(
   init?: I => S,
 ): [S, Dispatch<A>] {
   if (__DEV__) {
+    // $FlowFixMe[invalid-compare]
     if (reducer !== basicStateReducer) {
       currentHookNameInDev = 'useReducer';
     }
@@ -410,6 +411,7 @@ export function useReducer<S, I, A>(
       isInHookUserCodeInDev = true;
     }
     let initialState;
+    // $FlowFixMe[invalid-compare]
     if (reducer === basicStateReducer) {
       // Special case for `useState`.
       initialState =
@@ -446,6 +448,7 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
 
   const nextDeps = deps === undefined ? null : deps;
 
+  // $FlowFixMe[invalid-compare]
   if (workInProgressHook !== null) {
     const prevState = workInProgressHook.memoizedState;
     if (prevState !== null) {
@@ -748,6 +751,7 @@ function useId(): string {
 }
 
 function use<T>(usable: Usable<T>): T {
+  // $FlowFixMe[invalid-compare]
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
@@ -805,6 +809,7 @@ function clientHookNotSupported() {
   );
 }
 
+// $FlowFixMe[constant-condition]
 export const HooksDispatcher: Dispatcher = supportsClientAPIs
   ? {
       readContext,
