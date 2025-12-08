@@ -78,8 +78,8 @@ type PipeToOptions = {
 };
 
 type QueuingStrategy = {
-  highWaterMark: number,
-  size(chunk: ?any): number,
+  highWaterMark?: number,
+  size?: (chunk: ?any) => number,
   ...
 };
 

@@ -83,6 +83,7 @@ function createPortal(
 
   // TODO: pass ReactDOM portal implementation as third argument
   // $FlowFixMe[incompatible-return] The Flow type is opaque but there's no way to actually create it.
+  // $FlowFixMe[incompatible-type]
   return createPortalImpl(children, container, null, key);
 }
 
@@ -101,6 +102,7 @@ function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
     }
   }
   // $FlowFixMe[incompatible-call]
+  // $FlowFixMe[incompatible-type]
   return flushSyncWithoutWarningIfAlreadyRendering(fn);
 }
 
