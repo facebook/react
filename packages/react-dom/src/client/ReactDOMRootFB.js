@@ -427,6 +427,7 @@ export function render(
   }
   return legacyRenderSubtreeIntoContainer(
     null,
+    // $FlowFixMe[incompatible-type] React$Element is a subtype of ReactNodeList
     element,
     container,
     false,
