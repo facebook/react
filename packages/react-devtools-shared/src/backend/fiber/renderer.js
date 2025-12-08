@@ -1091,7 +1091,7 @@ export function attach(
     // For example, ASTs cached for the component (for named hooks) may no longer be valid.
     // Send a signal to the frontend to purge this cached information.
     // The "fastRefreshScheduled" dispatched is global (not Fiber or even Renderer specific).
-    // This is less effecient since it means the front-end will need to purge the entire cache,
+    // This is less efficient since it means the front-end will need to purge the entire cache,
     // but this is probably an okay trade off in order to reduce coupling between the DevTools and Fast Refresh.
     renderer.scheduleRefresh = (...args) => {
       try {
@@ -5240,7 +5240,7 @@ export function attach(
         }
         if (prevFiber.stateNode !== nextFiber.stateNode) {
           // In persistent mode, it's possible for the stateNode to update with
-          // a new clone. In that case we need to release the old one and aquire
+          // a new clone. In that case we need to release the old one and acquire
           // new one instead.
           releaseHostInstance(nearestInstance, prevFiber.stateNode);
           aquireHostInstance(nearestInstance, nextFiber.stateNode);
@@ -6448,7 +6448,7 @@ export function attach(
       const ioInfo = asyncInfo.awaited;
       if (foundIOEntries.has(ioInfo)) {
         // We have already added this I/O entry to the result. We can dedupe it.
-        // This can happen when an instance depends on the same data in mutliple places.
+        // This can happen when an instance depends on the same data in multiple places.
         continue;
       }
       foundIOEntries.add(ioInfo);
@@ -7550,7 +7550,7 @@ export function attach(
     const inspectedElement = mostRecentlyInspectedElement;
 
     // Any time an inspected element has an update,
-    // we should update the selected $r value as wel.
+    // we should update the selected $r value as well.
     // Do this before dehydration (cleanForBridge).
     updateSelectedElement(inspectedElement);
 

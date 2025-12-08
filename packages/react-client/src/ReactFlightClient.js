@@ -1828,7 +1828,7 @@ function loadServerReference<A: Iterable<any>, T>(
     let resolvedValue = (requireModule(serverReference): any);
 
     if (metaData.bound) {
-      // This promise is coming from us and should have initilialized by now.
+      // This promise is coming from us and should have initialized by now.
       const boundArgs: Array<any> = (metaData.bound: any).value.slice(0);
       boundArgs.unshift(null); // this
       resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
