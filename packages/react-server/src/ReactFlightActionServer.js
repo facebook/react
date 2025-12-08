@@ -94,6 +94,7 @@ export function decodeAction<T>(
   body.forEach((value: string | File, key: string) => {
     if (!key.startsWith('$ACTION_')) {
       // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       formData.append(key, value);
       return;
     }

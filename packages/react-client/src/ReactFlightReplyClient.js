@@ -535,6 +535,7 @@ export function processReply(
 
       if (isArray(value)) {
         // $FlowFixMe[incompatible-return]
+        // $FlowFixMe[incompatible-type]
         return value;
       }
       // TODO: Should we the Object.prototype.toString.call() to test for cross-realm objects?
@@ -552,6 +553,7 @@ export function processReply(
         // $FlowFixMe[prop-missing]: FormData has forEach.
         value.forEach((originalValue: string | File, originalKey: string) => {
           // $FlowFixMe[incompatible-call]
+          // $FlowFixMe[incompatible-type]
           data.append(prefix + originalKey, originalValue);
         });
         return serializeFormDataReference(refId);
@@ -829,6 +831,7 @@ export function processReply(
     }
     modelRoot = model;
     // $FlowFixMe[incompatible-return] it's not going to be undefined because we'll encode it.
+    // $FlowFixMe[incompatible-type]
     return JSON.stringify(model, resolveToJSON);
   }
 
@@ -855,6 +858,7 @@ export function processReply(
     formData.set(formFieldPrefix + '0', json);
     if (pendingParts === 0) {
       // $FlowFixMe[incompatible-call] this has already been refined.
+      // $FlowFixMe[incompatible-type]
       resolve(formData);
     }
   }
@@ -934,6 +938,7 @@ function defaultEncodeFormAction(
     // $FlowFixMe[prop-missing]
     encodedFormData.forEach((value: string | File, key: string) => {
       // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
     });
     data = prefixedData;
@@ -1184,6 +1189,7 @@ function bind(this: Function): Function {
 
   if (!referenceClosure) {
     // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     return FunctionBind.apply(this, arguments);
   }
 

@@ -1455,6 +1455,7 @@ export function applyViewTransitionName(
     const rects = instance.getClientRects();
     if (
       // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       countClientRects(rects) === 1
     ) {
       // If the instance has a single client rect, that means that it can be
@@ -3203,6 +3204,7 @@ FragmentInstance.prototype.getRootNode = function (
     getInstanceFromHostFiber<Instance>(parentHostFiber);
   const rootNode =
     // $FlowFixMe[incompatible-cast] Flow expects Node
+    // $FlowFixMe[incompatible-type]
     (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
   return rootNode;
 };
@@ -4649,9 +4651,11 @@ export function getHoistableRoot(container: Container): HoistableRoot {
   return typeof container.getRootNode === 'function'
     ? /* $FlowFixMe[incompatible-cast] Flow types this as returning a `Node`,
        * but it's either a `Document` or `ShadowRoot`. */
+      // $FlowFixMe[incompatible-type]
       (container.getRootNode(): Document | ShadowRoot)
     : container.nodeType === DOCUMENT_NODE
       ? // $FlowFixMe[incompatible-cast] We've constrained this to be a Document which satisfies the return type
+        // $FlowFixMe[incompatible-type]
         (container: Document)
       : container.ownerDocument;
 }

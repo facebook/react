@@ -720,6 +720,7 @@ function triggerErrorOnChunk<T>(
     const streamChunk: InitializedStreamChunk<any> = (chunk: any);
     const controller = streamChunk.reason;
     // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    // $FlowFixMe[incompatible-type]
     controller.error(error);
     return;
   }
@@ -3207,6 +3208,7 @@ function startReadableStream<T>(
     error(error: mixed): void {
       if (previousBlockedChunk === null) {
         // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         controller.error(error);
       } else {
         const blockedChunk = previousBlockedChunk;

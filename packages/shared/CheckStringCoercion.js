@@ -18,6 +18,7 @@
  */
 
 // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+// $FlowFixMe[incompatible-type]
 function typeName(value: mixed): string {
   if (__DEV__) {
     // toStringTag is needed for namespaced types like Temporal.Instant
@@ -27,11 +28,13 @@ function typeName(value: mixed): string {
       (value: any).constructor.name ||
       'Object';
     // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[incompatible-type]
     return type;
   }
 }
 
 // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+// $FlowFixMe[incompatible-type]
 function willCoercionThrow(value: mixed): boolean {
   if (__DEV__) {
     try {
