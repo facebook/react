@@ -1070,6 +1070,7 @@ function updateClassInstance(
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing() &&
     !(
+      // $FlowFixMe[invalid-compare]
       current !== null &&
       current.dependencies !== null &&
       checkIfContextChanged(current.dependencies)
@@ -1121,6 +1122,7 @@ function updateClassInstance(
     // both before and after `shouldComponentUpdate` has been called. Not ideal,
     // but I'm loath to refactor this function. This only happens for memoized
     // components so it's not that common.
+    // $FlowFixMe[invalid-compare]
     (current !== null &&
       current.dependencies !== null &&
       checkIfContextChanged(current.dependencies));

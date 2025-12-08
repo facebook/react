@@ -508,9 +508,11 @@ function logComponentEffectErrored(
       if (debugTask) {
         debugTask.run(
           // $FlowFixMe[method-unbinding]
+          // $FlowFixMe[incompatible-type]
           performance.measure.bind(performance, measureName, options),
         );
       } else {
+        // $FlowFixMe[incompatible-type]
         performance.measure(measureName, options);
       }
       performance.clearMeasures(measureName);
@@ -780,9 +782,11 @@ export function logBlockingStart(
         if (debugTask) {
           debugTask.run(
             // $FlowFixMe[method-unbinding]
+            // $FlowFixMe[incompatible-type]
             performance.measure.bind(performance, label, measureOptions),
           );
         } else {
+          // $FlowFixMe[incompatible-type]
           performance.measure(label, measureOptions);
         }
         performance.clearMeasures(label);
@@ -886,9 +890,11 @@ export function logGestureStart(
         if (debugTask) {
           debugTask.run(
             // $FlowFixMe[method-unbinding]
+            // $FlowFixMe[incompatible-type]
             performance.measure.bind(performance, label, measureOptions),
           );
         } else {
+          // $FlowFixMe[incompatible-type]
           performance.measure(label, measureOptions);
         }
         performance.clearMeasures(label);
@@ -1027,9 +1033,11 @@ export function logTransitionStart(
         if (debugTask) {
           debugTask.run(
             // $FlowFixMe[method-unbinding]
+            // $FlowFixMe[incompatible-type]
             performance.measure.bind(performance, label, measureOptions),
           );
         } else {
+          // $FlowFixMe[incompatible-type]
           performance.measure(label, measureOptions);
         }
         performance.clearMeasures(label);

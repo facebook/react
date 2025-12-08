@@ -200,6 +200,7 @@ const SuspenseException: mixed = new Error(
 );
 
 function use<T>(usable: Usable<T>): T {
+  // $FlowFixMe[invalid-compare]
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
@@ -726,9 +727,11 @@ function useActionState<S, P>(
 
 function useHostTransitionStatus(): TransitionStatus {
   const status = readContext<TransitionStatus>(
+    // $FlowFixMe[incompatible-type]
     // $FlowFixMe[prop-missing] `readContext` only needs _currentValue
     ({
       // $FlowFixMe[incompatible-cast] TODO: Incorrect bottom value without access to Fiber config.
+      // $FlowFixMe[incompatible-type]
       _currentValue: null,
     }: ReactContext<TransitionStatus>),
   );
@@ -1339,10 +1342,12 @@ export function inspectHooksOfFiber(
   } else if (hasOwnProperty.call(currentFiber, 'dependencies_old')) {
     const dependencies: Dependencies = (currentFiber: any).dependencies_old;
     currentContextDependency =
+      // $FlowFixMe[invalid-compare]
       dependencies !== null ? dependencies.firstContext : null;
   } else if (hasOwnProperty.call(currentFiber, 'dependencies_new')) {
     const dependencies: Dependencies = (currentFiber: any).dependencies_new;
     currentContextDependency =
+      // $FlowFixMe[invalid-compare]
       dependencies !== null ? dependencies.firstContext : null;
   } else if (hasOwnProperty.call(currentFiber, 'contextDependencies')) {
     const contextDependencies = (currentFiber: any).contextDependencies;

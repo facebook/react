@@ -237,7 +237,7 @@ export function initAsyncDebugInfo(): void {
               // If we begin before we resolve, that means that this is actually already resolved but
               // the promiseResolve hook is called at the end of the execution. So we track the time
               // in the before call instead.
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-type]
               lastRanAwait = resolvePromiseOrAwaitNode(node, performance.now());
               break;
             }

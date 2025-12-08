@@ -103,6 +103,7 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
     }
 
     if (
+      // $FlowFixMe[invalid-compare]
       result !== null &&
       typeof result === 'object' &&
       // $FlowFixMe[method-unbinding]

@@ -811,6 +811,7 @@ function createChildReconciler(
         return created;
       }
 
+      // $FlowFixMe[invalid-compare]
       if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
         const context: ReactContext<mixed> = (newChild: any);
         return createChild(
@@ -952,6 +953,7 @@ function createChildReconciler(
         return updated;
       }
 
+      // $FlowFixMe[invalid-compare]
       if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
         const context: ReactContext<mixed> = (newChild: any);
         return updateSlot(
@@ -1084,6 +1086,7 @@ function createChildReconciler(
         return updated;
       }
 
+      // $FlowFixMe[invalid-compare]
       if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
         const context: ReactContext<mixed> = (newChild: any);
         return updateFromMap(
@@ -1982,6 +1985,7 @@ function createChildReconciler(
         return firstChild;
       }
 
+      // $FlowFixMe[invalid-compare]
       if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
         const context: ReactContext<mixed> = (newChild: any);
         return reconcileChildFibersImpl(
@@ -2224,10 +2228,12 @@ export function validateSuspenseListChildren(
           enableAsyncIterableChildren &&
           children.$$typeof === REACT_ELEMENT_TYPE &&
           typeof children.type === 'function' &&
-          // $FlowFixMe
+          // $FlowFixMe[incompatible-use]
+          // $FlowFixMe[method-unbinding]
           (Object.prototype.toString.call(children.type) ===
             '[object GeneratorFunction]' ||
-            // $FlowFixMe
+            // $FlowFixMe[incompatible-use]
+            // $FlowFixMe[method-unbinding]
             Object.prototype.toString.call(children.type) ===
               '[object AsyncGeneratorFunction]')
         ) {

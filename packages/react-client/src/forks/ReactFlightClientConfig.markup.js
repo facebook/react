@@ -68,7 +68,7 @@ export function getModuleDebugInfo<T>(metadata: ClientReference<T>): null {
   );
 }
 
-export const usedWithSSR = true;
+export const usedWithSSR: boolean = true;
 
 type HintCode = string;
 type HintModel<T: HintCode> = null; // eslint-disable-line no-unused-vars
