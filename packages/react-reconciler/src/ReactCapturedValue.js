@@ -25,6 +25,7 @@ export function createCapturedValueAtFiber<T>(
 ): CapturedValue<T> {
   // If the value is an error, call this function immediately after it is thrown
   // so the stack is accurate.
+  // $FlowFixMe[invalid-compare]
   if (typeof value === 'object' && value !== null) {
     const existing = CapturedStacks.get(value);
     if (existing !== undefined) {
@@ -56,7 +57,9 @@ export function createCapturedValueFromError(
     stack: stack,
   };
   if (typeof stack === 'string') {
+    // $FlowFixMe[incompatible-type]
     CapturedStacks.set(value, captured);
   }
+  // $FlowFixMe[incompatible-type]
   return captured;
 }

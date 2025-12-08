@@ -461,6 +461,7 @@ function recursivelyInsertNewFiber(
     }
     case HostText: {
       const textInstance: TextInstance = finishedWork.stateNode;
+      // $FlowFixMe[invalid-compare]
       if (textInstance === null) {
         throw new Error(
           'This should have a text node initialized. This error is likely ' +
@@ -602,6 +603,7 @@ function recursivelyInsertClonesFromExistingTree(
       }
       case HostText: {
         const textInstance: TextInstance = child.stateNode;
+        // $FlowFixMe[invalid-compare]
         if (textInstance === null) {
           throw new Error(
             'This should have a text node initialized. This error is likely ' +
@@ -875,6 +877,7 @@ function insertDestinationClonesOfFiber(
     }
     case HostText: {
       const textInstance: TextInstance = finishedWork.stateNode;
+      // $FlowFixMe[invalid-compare]
       if (textInstance === null) {
         throw new Error(
           'This should have a text node initialized. This error is likely ' +
@@ -919,6 +922,7 @@ function insertDestinationClonesOfFiber(
           parentViewTransition,
           nextPhase,
         );
+      // $FlowFixMe[invalid-compare]
       } else if (current !== null && current.memoizedState === null) {
         // Was previously mounted as visible but is now hidden.
         trackEnterViewTransitions(current);
@@ -1081,6 +1085,7 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
         const isHidden = newState !== null;
         if (!isHidden) {
           measureExitViewTransitions(finishedWork);
+        // $FlowFixMe[invalid-compare]
         } else if (current !== null && current.memoizedState === null) {
           // Was previously mounted as visible but is now hidden.
           commitEnterViewTransitions(current, true);
@@ -1237,6 +1242,7 @@ function restoreViewTransitionsOnFiber(finishedWork: Fiber) {
         const isHidden = newState !== null;
         if (!isHidden) {
           restoreEnterOrExitViewTransitions(finishedWork);
+        // $FlowFixMe[invalid-compare]
         } else if (current !== null && current.memoizedState === null) {
           // Was previously mounted as visible but is now hidden.
           restoreEnterOrExitViewTransitions(current);

@@ -256,6 +256,7 @@ function legacyCreateRootFromDOMContainer(
         ? container.parentNode
         : container;
     // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     listenToAllSupportedEvents(rootContainerElement);
 
     flushSyncWork();
@@ -293,6 +294,7 @@ function legacyCreateRootFromDOMContainer(
         ? container.parentNode
         : container;
     // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     listenToAllSupportedEvents(rootContainerElement);
 
     // Initial mount should not be batched.
@@ -425,6 +427,7 @@ export function render(
   }
   return legacyRenderSubtreeIntoContainer(
     null,
+    // $FlowFixMe[incompatible-type] React$Element is a subtype of ReactNodeList
     element,
     container,
     false,

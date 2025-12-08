@@ -71,10 +71,12 @@ function decodeBoundActionMetaData(
     bound: null | Promise<Array<any>>,
   }>(actionResponse);
   // Force it to initialize
-  // $FlowFixMe
+  // $FlowFixMe[incompatible-call]
+  // $FlowFixMe[incompatible-type]
   refPromise.then(() => {});
   if (refPromise.status !== 'fulfilled') {
-    // $FlowFixMe
+    // $FlowFixMe[incompatible-use]
+    // $FlowFixMe[prop-missing]
     throw refPromise.reason;
   }
   return refPromise.value;
@@ -94,6 +96,7 @@ export function decodeAction<T>(
   body.forEach((value: string | File, key: string) => {
     if (!key.startsWith('$ACTION_')) {
       // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       formData.append(key, value);
       return;
     }

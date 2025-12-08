@@ -165,6 +165,7 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
     }
 
     // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[incompatible-type]
     return result;
   } finally {
     const depth = actingUpdatesScopeDepth;
@@ -287,6 +288,7 @@ export async function serverAct<T>(scope: () => Thenable<T>): Thenable<T> {
     }
 
     // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[incompatible-type]
     return result;
   } finally {
     if (typeof process === 'object') {

@@ -15,4 +15,4 @@ export * from 'react-client/src/ReactClientConsoleConfigServer';
 export * from 'react-server-dom-unbundled/src/client/ReactFlightClientConfigBundlerNode';
 export * from 'react-server-dom-unbundled/src/client/ReactFlightClientConfigTargetNodeServer';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
-export const usedWithSSR = true;
+export const usedWithSSR: boolean = true;

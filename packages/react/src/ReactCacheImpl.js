@@ -58,6 +58,7 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
     if (!dispatcher) {
       // If there is no dispatcher, then we treat this as not being cached.
       // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
+      // $FlowFixMe[incompatible-type]
       return fn.apply(null, arguments);
     }
     const fnMap: WeakMap<any, CacheNode<T>> = dispatcher.getCacheForType(
@@ -75,6 +76,7 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
       const arg = arguments[i];
       if (
         typeof arg === 'function' ||
+        // $FlowFixMe[invalid-compare]
         (typeof arg === 'object' && arg !== null)
       ) {
         // Objects go into a WeakMap
@@ -112,6 +114,7 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
     }
     try {
       // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
+      // $FlowFixMe[incompatible-type]
       const result = fn.apply(null, arguments);
       const terminatedNode: TerminatedCacheNode<T> = (cacheNode: any);
       terminatedNode.s = TERMINATED;
