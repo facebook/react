@@ -85,6 +85,7 @@ declare class ScrollTimeline extends AnimationTimeline {
 // $FlowFixMe[libdef-override]
 declare opaque type React$Element<
   +ElementType: React$ElementType,
+  // $FlowFixMe[cannot-resolve-name] React$ElementProps was removed in Flow 0.288
   +P = React$ElementProps<ElementType>,
 >: {
   +type: ElementType,
