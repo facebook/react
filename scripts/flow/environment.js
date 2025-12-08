@@ -649,3 +649,160 @@ declare module 'rbush' {
 declare class CSS {
   static escape(str: string): string;
 }
+
+// Override flow-typed definitions that have regressions in newer versions
+
+// TextDecoder: options should be optional (overrides both bom.js and node.js)
+// $FlowFixMe[libdef-override]
+declare class TextDecoder {
+  constructor(
+    encoding?: string,
+    options?: {fatal?: boolean, ignoreBOM?: boolean, ...},
+  ): void;
+  +encoding: string;
+  +fatal: boolean;
+  +ignoreBOM: boolean;
+  decode(
+    input?: ArrayBuffer | $ArrayBufferView,
+    options?: {+stream?: boolean, ...},
+  ): string;
+}
+
+// TextEncoder: add encodeInto method
+// $FlowFixMe[libdef-override]
+declare class TextEncoder {
+  constructor(encoding?: string): void;
+  +encoding: string;
+  encode(input?: string): Uint8Array;
+  encodeInto(
+    source: string,
+    destination: Uint8Array,
+  ): {read: number, written: number};
+}
+
+// ReadableStreamDefaultReader: cancel returns Promise<void> and takes mixed
+// $FlowFixMe[libdef-override]
+declare class ReadableStreamDefaultReader<R = any> {
+  constructor(stream: ReadableStream<R>): void;
+  +closed: Promise<void>;
+  cancel(reason?: mixed): Promise<void>;
+  read(): Promise<{done: false, value: R} | {done: true, value?: void}>;
+  releaseLock(): void;
+}
+
+// KeyframeAnimationOptions: add duration property
+// $FlowFixMe[libdef-override]
+type KeyframeAnimationOptions = {
+  id?: string,
+  delay?: number,
+  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse',
+  duration?: number | string,
+  easing?: string,
+  endDelay?: number,
+  fill?: 'none' | 'forwards' | 'backwards' | 'both' | 'auto',
+  iterationStart?: number,
+  iterations?: number,
+  composite?: 'replace' | 'add' | 'accumulate',
+  iterationComposite?: 'replace' | 'accumulate',
+  pseudoElement?: string,
+  timeline?: AnimationTimeline,
+  ...
+};
+
+// GetAnimationsOptions: pseudoElement should be optional
+// $FlowFixMe[libdef-override]
+type GetAnimationsOptions = {
+  subtree?: boolean,
+  pseudoElement?: string,
+  ...
+};
+
+// KeyframeEffect: add pseudoElement and getTiming
+// $FlowFixMe[libdef-override]
+declare class KeyframeEffect {
+  constructor(
+    target: Element | null,
+    keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+    options?: number | KeyframeEffectOptions,
+  ): void;
+  target: Element | null;
+  pseudoElement: string | null;
+  iterationComposite: 'replace' | 'accumulate';
+  composite: 'replace' | 'add' | 'accumulate';
+  getKeyframes(): Keyframe[];
+  setKeyframes(keyframes: Keyframe[] | PropertyIndexedKeyframes | null): void;
+  getTiming(): EffectTiming;
+  +activeDuration: number;
+  +currentIteration: number | null;
+  +duration: number;
+  +endTime: number;
+  +localTime: number | null;
+  +progress: number | null;
+  +startTime: number | null;
+}
+
+// QueuingStrategy: size should be optional
+// $FlowFixMe[libdef-override]
+type QueuingStrategy = {
+  highWaterMark?: number,
+  size?: (chunk: any) => number,
+  ...
+};
+
+// Override error-stack-parser StackFrame to be importable as a type
+// $FlowFixMe[libdef-override]
+declare module 'error-stack-parser' {
+  declare export interface StackFrame {
+    isConstructor?: boolean;
+    getIsConstructor(): boolean;
+    setIsConstructor(): void;
+
+    isEval?: boolean;
+    getIsEval(): boolean;
+    setIsEval(): void;
+
+    isNative?: boolean;
+    getIsNative(): boolean;
+    setIsNative(): void;
+
+    isTopLevel?: boolean;
+    getIsTopLevel(): boolean;
+    setIsTopLevel(): void;
+
+    columnNumber?: number;
+    getColumnNumber(): number;
+    setColumnNumber(): void;
+
+    lineNumber?: number;
+    getLineNumber(): number;
+    setLineNumber(): void;
+
+    fileName?: string;
+    getFileName(): string;
+    setFileName(): void;
+
+    functionName?: string;
+    getFunctionName(): string;
+    setFunctionName(): void;
+
+    source?: string;
+    getSource(): string;
+    setSource(): void;
+
+    args?: any[];
+    getArgs(): any[];
+    setArgs(): void;
+
+    evalOrigin?: StackFrame;
+    getEvalOrigin(): StackFrame;
+    setEvalOrigin(): void;
+
+    toString(): string;
+  }
+
+  declare class ErrorStackParser {
+    parse(error: Error): Array<StackFrame>;
+  }
+
+  declare module.exports: ErrorStackParser;
+}

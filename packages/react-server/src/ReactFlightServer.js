@@ -1225,6 +1225,8 @@ function serializeReadableStream(
     erroredTask(request, streamTask, reason);
     enqueueFlush(request);
 
+    // $FlowFixMe[incompatible-type] flow-typed has wrong cancel() signature
+    // $FlowFixMe[incompatible-use] cancel() returns Promise<void>
     reader.cancel(reason).then(error, error);
   }
   function abortStream() {
@@ -1243,6 +1245,8 @@ function serializeReadableStream(
       erroredTask(request, streamTask, reason);
       enqueueFlush(request);
     }
+    // $FlowFixMe[incompatible-type] flow-typed has wrong cancel() signature
+    // $FlowFixMe[incompatible-use] cancel() returns Promise<void>
     reader.cancel(reason).then(error, error);
   }
 
@@ -3235,6 +3239,8 @@ function serializeDebugBlob(request: Request, blob: Blob): string {
     const digest = '';
     emitErrorChunk(request, id, digest, reason, true, null);
     enqueueFlush(request);
+    // $FlowFixMe[incompatible-type] flow-typed has wrong cancel() signature
+    // $FlowFixMe[incompatible-use] cancel() returns Promise<void>
     reader.cancel(reason).then(noop, noop);
   }
   // $FlowFixMe[incompatible-call]
@@ -3287,6 +3293,8 @@ function serializeBlob(request: Request, blob: Blob): string {
     request.cacheController.signal.removeEventListener('abort', abortBlob);
     erroredTask(request, newTask, reason);
     enqueueFlush(request);
+    // $FlowFixMe[incompatible-type] flow-typed has wrong cancel() signature
+    // $FlowFixMe[incompatible-use] cancel() returns Promise<void>
     reader.cancel(reason).then(error, error);
   }
   function abortBlob() {
@@ -3305,6 +3313,8 @@ function serializeBlob(request: Request, blob: Blob): string {
       erroredTask(request, newTask, reason);
       enqueueFlush(request);
     }
+    // $FlowFixMe[incompatible-type] flow-typed has wrong cancel() signature
+    // $FlowFixMe[incompatible-use] cancel() returns Promise<void>
     reader.cancel(reason).then(error, error);
   }
 
