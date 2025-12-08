@@ -2973,6 +2973,7 @@ function workLoopConcurrent(nonIdle: boolean) {
     const yieldAfter = now() + (nonIdle ? 25 : 5);
     do {
       // $FlowFixMe[incompatible-call] flow doesn't know that now() is side-effect free
+      // $FlowFixMe[incompatible-type]
       performUnitOfWork(workInProgress);
     } while (workInProgress !== null && now() < yieldAfter);
   }
@@ -2983,6 +2984,7 @@ function workLoopConcurrentByScheduler() {
   // Perform work until Scheduler asks us to yield
   while (workInProgress !== null && !shouldYield()) {
     // $FlowFixMe[incompatible-call] flow doesn't know that shouldYield() is side-effect free
+    // $FlowFixMe[incompatible-type]
     performUnitOfWork(workInProgress);
   }
 }

@@ -195,7 +195,7 @@ export function formatConsoleArgumentsToSingleString(
     if (args.length) {
       const REGEXP = /(%?)(%([jds]))/g;
 
-      // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       formatted = formatted.replace(REGEXP, (match, escaped, ptn, flag) => {
         let arg = args.shift();
         switch (flag) {

@@ -164,6 +164,7 @@ function flushWork(initialTime: number) {
         if (currentTask !== null) {
           const currentTime = getCurrentTime();
           // $FlowFixMe[incompatible-call] found when upgrading Flow
+          // $FlowFixMe[incompatible-type]
           markTaskErrored(currentTask, currentTime);
           // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTask.isQueued = false;
@@ -207,6 +208,7 @@ function workLoop(initialTime: number) {
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
       if (enableProfiling) {
         // $FlowFixMe[incompatible-call] found when upgrading Flow
+        // $FlowFixMe[incompatible-type]
         markTaskRun(currentTask, currentTime);
       }
       const continuationCallback = callback(didUserCallbackTimeout);
@@ -218,6 +220,7 @@ function workLoop(initialTime: number) {
         currentTask.callback = continuationCallback;
         if (enableProfiling) {
           // $FlowFixMe[incompatible-call] found when upgrading Flow
+          // $FlowFixMe[incompatible-type]
           markTaskYield(currentTask, currentTime);
         }
         advanceTimers(currentTime);
@@ -225,6 +228,7 @@ function workLoop(initialTime: number) {
       } else {
         if (enableProfiling) {
           // $FlowFixMe[incompatible-call] found when upgrading Flow
+          // $FlowFixMe[incompatible-type]
           markTaskCompleted(currentTask, currentTime);
           // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTask.isQueued = false;
@@ -310,6 +314,7 @@ function unstable_next<T>(eventHandler: () => T): T {
 function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
   var parentPriorityLevel = currentPriorityLevel;
   // $FlowFixMe[incompatible-return]
+  // $FlowFixMe[incompatible-type]
   // $FlowFixMe[missing-this-annot]
   return function () {
     // This is a fork of runWithPriority, inlined for performance.

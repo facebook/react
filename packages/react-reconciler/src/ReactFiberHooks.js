@@ -2647,6 +2647,7 @@ function updateEffectImpl(
       const prevEffect: Effect = currentHook.memoizedState;
       const prevDeps = prevEffect.deps;
       // $FlowFixMe[incompatible-call] (@poteto)
+      // $FlowFixMe[incompatible-type]
       if (areHookInputsEqual(nextDeps, prevDeps)) {
         hook.memoizedState = pushSimpleEffect(
           hookFlags,
@@ -2727,6 +2728,7 @@ function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
   const ref = {impl: callback};
   hook.memoizedState = ref;
   // $FlowIgnore[incompatible-return]
+  // $FlowFixMe[incompatible-type]
   return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
@@ -2744,6 +2746,7 @@ function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
   const ref = hook.memoizedState;
   useEffectEventImpl({ref, nextImpl: callback});
   // $FlowIgnore[incompatible-return]
+  // $FlowIgnore[incompatible-type]
   return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
