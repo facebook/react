@@ -11,8 +11,8 @@ import {
   CompilerErrorDetail,
   ErrorCategory,
 } from '../CompilerError';
-import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
-import {isHookName} from '../HIR/Environment';
+import { computeUnconditionalBlocks } from '../HIR/ComputeUnconditionalBlocks';
+import { isHookName } from '../HIR/Environment';
 import {
   HIRFunction,
   IdentifierId,
@@ -25,8 +25,8 @@ import {
   eachInstructionOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
-import {assertExhaustive} from '../Utils/utils';
-import {Result} from '../Utils/Result';
+import { assertExhaustive } from '../Utils/utils';
+import { Result } from '../Utils/Result';
 
 /**
  * Represents the possible kinds of value which may be stored at a given Place during
@@ -168,6 +168,88 @@ export function validateHooksUsage(
     }
   }
 
+  /**
+   * Track whether each Place (by identifier id) is *only* ever used as a direct callee
+   * (i.e. useValue() or useValue?.()). If a Place is used anywhere else (assigned,
+   * passed as an operand, stored, used in a non-call context), mark it as false.
+   *
+   * This allows the safe pattern:
+   *   const { useValue } = hooks;
+   *   useValue(); // allowed
+   *
+   * while preserving reports for cases where the hook is actually passed around as a value.
+   */
+  const usedOnlyAsCallee = new Map<IdentifierId, boolean>();
+
+  // Initialize seen identifiers as true; we'll flip to false when we encounter non-callee usages.
+  // We need two small passes over the HIR:
+  // 1) collect all Place ids that appear (init true)
+  // 2) mark false for occurrences that are not a callee usage
+  (function computeUsedOnlyAsCallee() {
+    // pass 1: discover all identifier ids (params, phis, instr lvalues and operands)
+    for (const param of fn.params) {
+      const place = param.kind === 'Identifier' ? param : param.place;
+      usedOnlyAsCallee.set(place.identifier.id, true);
+    }
+
+    for (const [, block] of fn.body.blocks) {
+      for (const phi of block.phis) {
+        usedOnlyAsCallee.set(phi.place.identifier.id, true);
+        for (const [, operand] of phi.operands) {
+          usedOnlyAsCallee.set(operand.identifier.id, true);
+        }
+      }
+
+      for (const instr of block.instructions) {
+        for (const lvalue of eachInstructionLValue(instr)) {
+          usedOnlyAsCallee.set(lvalue.identifier.id, true);
+        }
+        for (const operand of eachInstructionOperand(instr)) {
+          usedOnlyAsCallee.set(operand.identifier.id, true);
+        }
+      }
+
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        usedOnlyAsCallee.set(operand.identifier.id, true);
+      }
+    }
+
+    // pass 2: mark false any occurrence which is not a direct callee usage
+    for (const [, block] of fn.body.blocks) {
+      for (const instr of block.instructions) {
+        // For CallExpression, the callee is allowed; other operands are not.
+        if (instr.value.kind === 'CallExpression') {
+          const callCallee = instr.value.callee;
+          // any operand that's not the callee => not only-callee
+          for (const operand of eachInstructionOperand(instr)) {
+            if (operand.identifier.id !== callCallee.identifier.id) {
+              usedOnlyAsCallee.set(operand.identifier.id, false);
+            }
+          }
+          // the callee itself remains possible-only-callee (do nothing)
+        } else if (instr.value.kind === 'MethodCall') {
+          // For MethodCall, the property is the callee (e.g. obj.useValue())
+          const methodProp = instr.value.property;
+          for (const operand of eachInstructionOperand(instr)) {
+            if (operand.identifier.id !== methodProp.identifier.id) {
+              usedOnlyAsCallee.set(operand.identifier.id, false);
+            }
+          }
+        } else {
+          // For all other instruction kinds, any operands appearing are used in a non-callee way
+          for (const operand of eachInstructionOperand(instr)) {
+            usedOnlyAsCallee.set(operand.identifier.id, false);
+          }
+        }
+      }
+
+      // Any terminal operand is a non-callee usage (terminals aren't call callee positions here)
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        usedOnlyAsCallee.set(operand.identifier.id, false);
+      }
+    }
+  })();
+
   const valueKinds = new Map<IdentifierId, Kind>();
   function getKindForPlace(place: Place): Kind {
     const knownKind = valueKinds.get(place.identifier.id);
@@ -183,8 +265,14 @@ export function validateHooksUsage(
 
   function visitPlace(place: Place): void {
     const kind = valueKinds.get(place.identifier.id);
+
     if (kind === Kind.KnownHook) {
-      recordInvalidHookUsageError(place);
+      // If this identifier is only ever used as the callee of call expressions,
+      // then the pattern `const { useValue } = hooks; useValue();` is safe — skip reporting.
+      const onlyCallee = usedOnlyAsCallee.get(place.identifier.id) ?? false;
+      if (!onlyCallee) {
+        recordInvalidHookUsageError(place);
+      }
     }
   }
 
@@ -202,7 +290,7 @@ export function validateHooksUsage(
     for (const phi of block.phis) {
       let kind: Kind =
         phi.place.identifier.name !== null &&
-        isHookName(phi.place.identifier.name.value)
+          isHookName(phi.place.identifier.name.value)
           ? Kind.PotentialHook
           : Kind.Local;
       for (const [, operand] of phi.operands) {
