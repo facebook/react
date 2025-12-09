@@ -188,7 +188,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     }
 
     // TODO (npm-packages) Warn if "isBackendStorageAPISupported"
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
+    // $FlowFixMe[incompatible-type] found when upgrading Flow
     const agent = new Agent(bridge, isProfiling, onReloadAndProfile);
     if (typeof onReloadAndProfileFlagsReset === 'function') {
       onReloadAndProfileFlagsReset();
@@ -212,7 +212,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     // Setup React Native style editor if the environment supports it.
     if (resolveRNStyle != null || hook.resolveRNStyle != null) {
       setupNativeStyleEditor(
-        // $FlowFixMe[incompatible-call] found when upgrading Flow
+        // $FlowFixMe[incompatible-type] found when upgrading Flow
         bridge,
         agent,
         ((resolveRNStyle || hook.resolveRNStyle: any): ResolveNativeStyle),

@@ -217,7 +217,7 @@ function destroyWeb() {
 
     // $FlowFixMe[incompatible-use]: Flow doesn't recognize Popover API and loses canvas nullability tracking
     if (canvas.parentNode != null) {
-      // $FlowFixMe[incompatible-call]: Flow doesn't track that canvas is non-null here
+      // $FlowFixMe[incompatible-type]: Flow doesn't track that canvas is non-null here
       canvas.parentNode.removeChild(canvas);
     }
     canvas = null;

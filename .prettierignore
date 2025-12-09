@@ -1,6 +1,9 @@
 # react runtime
 build
 
+# flow-typed generated files use Flow syntax Prettier can't parse
+flow-typed
+
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
 packages/react-devtools-extensions/firefox/build
