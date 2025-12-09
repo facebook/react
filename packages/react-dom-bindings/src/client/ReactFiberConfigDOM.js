@@ -2190,8 +2190,6 @@ export function startViewTransition(
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
 
-    // Cached for cancellation in finished callback. Calling getAnimations() after
-    // the transition finishes crashes Safari due to stale element references.
     const viewTransitionAnimations: Array<Animation> = [];
 
     const readyCallback = () => {
@@ -2300,8 +2298,10 @@ export function startViewTransition(
     };
     transition.ready.then(readyCallback, handleError);
     transition.finished.finally(() => {
-      // Cancel animations from cached list to avoid getAnimations() crash in Safari.
       for (let i = 0; i < viewTransitionAnimations.length; i++) {
+        // In Safari, we need to manually cancel all manually started animations
+        // or it'll block or interfer with future transitions.
+        // We can't use getAnimations() due to #35336 so we collect them in an array.
         viewTransitionAnimations[i].cancel();
       }
       // $FlowFixMe[prop-missing]
@@ -2537,8 +2537,6 @@ export function startGestureTransition(
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
     const customTimelineCleanup: Array<() => void> = []; // Cleanup Animations started in a CustomTimeline
-    // Cached for cancellation in finished callback. Calling getAnimations() after
-    // the transition finishes crashes Safari due to stale element references.
     const viewTransitionAnimations: Array<Animation> = [];
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
@@ -2735,8 +2733,10 @@ export function startGestureTransition(
     };
     transition.ready.then(readyForAnimations, handleError);
     transition.finished.finally(() => {
-      // Cancel animations from cached list to avoid getAnimations() crash in Safari.
       for (let i = 0; i < viewTransitionAnimations.length; i++) {
+        // In Safari, we need to manually cancel all manually started animations
+        // or it'll block or interfer with future transitions.
+        // We can't use getAnimations() due to #35336 so we collect them in an array.
         viewTransitionAnimations[i].cancel();
       }
       for (let i = 0; i < customTimelineCleanup.length; i++) {
