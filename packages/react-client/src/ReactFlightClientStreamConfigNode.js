@@ -12,6 +12,7 @@ import {TextDecoder} from 'util';
 export type StringDecoder = TextDecoder;
 
 export function createStringDecoder(): StringDecoder {
+  // $FlowFixMe[incompatible-type] Flow's TextDecoder libdef requires options but it's optional at runtime
   return new TextDecoder();
 }
 

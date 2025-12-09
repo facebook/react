@@ -29,7 +29,7 @@ function getInstanceFromNode(node: Instance | TextInstance): Fiber | null {
     return instance.canonical.internalInstanceHandle;
   }
 
-  // $FlowFixMe[incompatible-return] DevTools incorrectly passes a fiber in React Native.
+  // $FlowFixMe[incompatible-type] DevTools incorrectly passes a fiber in React Native.
   return node;
 }
 
