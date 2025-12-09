@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<aa2d371441f69b02934805d5c78b1ec5>>
+ * @generated SignedSource<<9d1934ce423f2fb4b985bd615c65edcf>>
  */
 
 'use strict';
@@ -56136,6 +56136,8 @@ const COMPILER_OPTIONS = {
         validateNoCapitalizedCalls: [],
         validateHooksUsage: true,
         validateNoDerivedComputationsInEffects: true,
+        enableUseKeyedState: true,
+        enableVerboseNoSetStateInEffect: true,
     },
 };
 const FLOW_SUPPRESSION_REGEX = /\$FlowFixMe\[([^\]]*)\]/g;

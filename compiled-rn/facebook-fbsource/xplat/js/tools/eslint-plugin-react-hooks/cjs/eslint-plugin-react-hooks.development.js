@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<44f85302818a20f89fcbf544a4c9807e>>
+ * @generated SignedSource<<402b7722f8f7db6818fd12c17f776ce0>>
  */
 
 'use strict';
@@ -56357,6 +56357,8 @@ const COMPILER_OPTIONS = {
         validateNoCapitalizedCalls: [],
         validateHooksUsage: true,
         validateNoDerivedComputationsInEffects: true,
+        enableUseKeyedState: true,
+        enableVerboseNoSetStateInEffect: true,
     },
 };
 const FLOW_SUPPRESSION_REGEX = /\$FlowFixMe\[([^\]]*)\]/g;
