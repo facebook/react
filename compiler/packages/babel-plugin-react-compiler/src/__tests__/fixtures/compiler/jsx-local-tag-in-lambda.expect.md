@@ -37,8 +37,7 @@ function useFoo() {
   return t0;
 }
 function _temp() {
-  const T0 = Stringify;
-  return <T0 value={4} />;
+  return <Stringify value={4} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {

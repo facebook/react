@@ -23,7 +23,6 @@ import {
   markInstructionIds,
   markPredecessors,
   mergeConsecutiveBlocks,
-  promoteTemporaryJsxTag,
   reversePostorderBlocks,
 } from '../HIR';
 import {
@@ -63,12 +62,7 @@ export function constantPropagation(fn: HIRFunction): void {
 
 function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
   while (true) {
-    const jsxTagIdentifiers = collectJsxTagIdentifiers(fn);
-    const haveTerminalsChanged = applyConstantPropagation(
-      fn,
-      constants,
-      jsxTagIdentifiers,
-    );
+    const haveTerminalsChanged = applyConstantPropagation(fn, constants);
     if (!haveTerminalsChanged) {
       break;
     }
@@ -112,7 +106,6 @@ function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
 function applyConstantPropagation(
   fn: HIRFunction,
   constants: Constants,
-  jsxTagIdentifiers: Set<IdentifierId>,
 ): boolean {
   let hasChanges = false;
   for (const [, block] of fn.body.blocks) {
@@ -137,7 +130,7 @@ function applyConstantPropagation(
         continue;
       }
       const instr = block.instructions[i]!;
-      const value = evaluateInstruction(constants, instr, jsxTagIdentifiers);
+      const value = evaluateInstruction(constants, instr);
       if (value !== null) {
         constants.set(instr.lvalue.identifier.id, value);
       }
@@ -246,7 +239,6 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
 function evaluateInstruction(
   constants: Constants,
   instr: Instruction,
-  jsxTagIdentifiers: Set<IdentifierId>,
 ): Constant | null {
   const value = instr.value;
   switch (value.kind) {
@@ -601,14 +593,6 @@ function evaluateInstruction(
     case 'LoadLocal': {
       const placeValue = read(constants, value.place);
       if (placeValue !== null) {
-        if (
-          instr.lvalue != null &&
-          jsxTagIdentifiers.has(instr.lvalue.identifier.id) &&
-          placeValue.kind === 'LoadGlobal' &&
-          instr.lvalue.identifier.name == null
-        ) {
-          promoteTemporaryJsxTag(instr.lvalue.identifier);
-        }
         instr.value = placeValue;
       }
       return placeValue;
@@ -655,19 +639,3 @@ function read(constants: Constants, place: Place): Constant | null {
 
 type Constant = Primitive | LoadGlobal;
 type Constants = Map<IdentifierId, Constant>;
-
-function collectJsxTagIdentifiers(fn: HIRFunction): Set<IdentifierId> {
-  const identifiers = new Set<IdentifierId>();
-
-  for (const [, block] of fn.body.blocks) {
-    for (const instr of block.instructions) {
-      if (
-        instr.value.kind === 'JsxExpression' &&
-        instr.value.tag.kind === 'Identifier'
-      ) {
-        identifiers.add(instr.value.tag.identifier.id);
-      }
-    }
-  }
-  return identifiers;
-}

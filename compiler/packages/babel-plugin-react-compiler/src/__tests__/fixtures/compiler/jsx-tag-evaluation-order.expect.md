@@ -31,12 +31,10 @@ import { StaticText1, StaticText2 } from "shared-runtime";
 function Component(props) {
   const $ = _c(3);
 
-  const T0 = StaticText1;
   const t0 = props.value;
-  const T1 = StaticText2;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <T1 />;
+    t1 = <StaticText2 />;
     $[0] = t1;
   } else {
     t1 = $[0];
@@ -44,10 +42,10 @@ function Component(props) {
   let t2;
   if ($[1] !== t0) {
     t2 = (
-      <T0>
+      <StaticText1>
         {t0}
         {t1}
-      </T0>
+      </StaticText1>
     );
     $[1] = t0;
     $[2] = t2;
