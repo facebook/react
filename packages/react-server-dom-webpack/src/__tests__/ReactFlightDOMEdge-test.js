@@ -232,7 +232,7 @@ describe('ReactFlightDOMEdge', () => {
 
   async function createBufferedUnclosingStream(
     stream: ReadableStream<Uint8Array>,
-  ): ReadableStream<Uint8Array> {
+  ): Promise<ReadableStream<Uint8Array>> {
     const chunks: Array<Uint8Array> = [];
     const reader = stream.getReader();
     while (true) {
@@ -2200,5 +2200,60 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toContain(
       'Switched to client rendering because the server rendering errored:\n\nssr-throw',
     );
+  });
+
+  it('should properly resolve with deduped objects', async () => {
+    const obj = {foo: 'hi'};
+
+    function Test(props) {
+      return props.obj.foo;
+    }
+
+    const root = {
+      obj: obj,
+      node: <Test obj={obj} />,
+    };
+
+    const stream = ReactServerDOMServer.renderToReadableStream(root);
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    const result = await response;
+    expect(result).toEqual({obj: obj, node: 'hi'});
+  });
+
+  it('does not leak the server reference code', async () => {
+    function foo() {
+      return 'foo';
+    }
+
+    const bar = () => {
+      return 'bar';
+    };
+
+    const anonymous = (
+      () => () =>
+        'anonymous'
+    )();
+
+    expect(
+      ReactServerDOMServer.registerServerReference(foo, 'foo-id').toString(),
+    ).toBe('function () { [omitted code] }');
+
+    expect(
+      ReactServerDOMServer.registerServerReference(bar, 'bar-id').toString(),
+    ).toBe('function () { [omitted code] }');
+
+    expect(
+      ReactServerDOMServer.registerServerReference(
+        anonymous,
+        'anonymous-id',
+      ).toString(),
+    ).toBe('function () { [omitted code] }');
   });
 });

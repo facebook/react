@@ -479,25 +479,6 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry:
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
-    name: 'react-server-dom-webpack-server.node.unbundled',
-    condition: 'react-server',
-    global: 'ReactServerDOMServer',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: [
-      'react',
-      'react-dom',
-      'async_hooks',
-      'crypto',
-      'stream',
-      'util',
-    ],
-  },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
     entry: 'react-server-dom-webpack/src/server/react-flight-dom-server.edge',
     name: 'react-server-dom-webpack-server.edge',
     condition: 'react-server',
@@ -524,17 +505,6 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack/src/client/react-flight-dom-client.node',
     name: 'react-server-dom-webpack-client.node',
-    global: 'ReactServerDOMClient',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', 'util', 'crypto'],
-  },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
-    entry:
-      'react-server-dom-webpack/src/client/react-flight-dom-client.node.unbundled',
-    name: 'react-server-dom-webpack-client.node.unbundled',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -784,6 +754,63 @@ const bundles = [
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['acorn'],
+  },
+
+  /******* React Server DOM Unbundled Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-unbundled/src/server/react-flight-dom-server.node',
+    name: 'react-server-dom-unbundled-server.node',
+    condition: 'react-server',
+    global: 'ReactServerDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: [
+      'react',
+      'react-dom',
+      'async_hooks',
+      'crypto',
+      'stream',
+      'util',
+    ],
+  },
+
+  /******* React Server DOM Unbundled Client *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-unbundled/src/client/react-flight-dom-client.node',
+    name: 'react-server-dom-unbundled-client.node',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom', 'util', 'crypto'],
+  },
+
+  /******* React Server DOM Unbundled Node.js Loader *******/
+  {
+    bundleTypes: [ESM_PROD],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-server-dom-unbundled/node-loader',
+    condition: 'react-server',
+    global: 'ReactServerUnbundledNodeLoader',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['acorn'],
+  },
+
+  /******* React Server DOM Unbundled Node.js CommonJS Loader *******/
+  {
+    bundleTypes: [NODE_ES2015],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-server-dom-unbundled/src/ReactFlightUnbundledNodeRegister',
+    name: 'react-server-dom-unbundled-node-register',
+    condition: 'react-server',
+    global: 'ReactFlightUnbundledNodeRegister',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['url', 'module', 'react-server-dom-unbundled/server'],
   },
 
   /******* React Suspense Test Utils *******/

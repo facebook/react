@@ -147,7 +147,7 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  it('should supports ReadableStreams with typed arrays', async () => {
+  it('should support ReadableStreams with typed arrays', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
     ]).buffer;
@@ -244,6 +244,53 @@ describe('ReactFlightDOMReplyEdge', () => {
         Array.from(new Uint8Array(c.buffer, c.byteOffset, c.byteLength)),
       ),
     );
+  });
+
+  it('should cancel the transported ReadableStream when we are cancelled', async () => {
+    const s = new ReadableStream({
+      start(controller) {
+        controller.enqueue('hi');
+        controller.close();
+      },
+    });
+
+    const body = await ReactServerDOMClient.encodeReply(s);
+
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const entry of body) {
+          if (entry[1] === 'C') {
+            // Return before finishing the stream.
+            return;
+          }
+          yield entry;
+        }
+      },
+    };
+
+    const result = await ReactServerDOMServer.decodeReplyFromAsyncIterable(
+      iterable,
+      webpackServerMap,
+    );
+
+    const reader = result.getReader();
+
+    // We should be able to read the part we already emitted before the abort
+    expect(await reader.read()).toEqual({
+      value: 'hi',
+      done: false,
+    });
+
+    let error = null;
+    try {
+      await reader.read();
+    } catch (x) {
+      error = x;
+    }
+
+    expect(error).not.toBe(null);
+    expect(error.message).toBe('Connection closed.');
   });
 
   it('should abort when parsing an incomplete payload', async () => {
