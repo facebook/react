@@ -389,14 +389,6 @@ export function findDisjointMutableValues(
              */
             operand.identifier.mutableRange.start > 0
           ) {
-            if (
-              instr.value.kind === 'FunctionExpression' ||
-              instr.value.kind === 'ObjectMethod'
-            ) {
-              if (operand.identifier.type.kind === 'Primitive') {
-                continue;
-              }
-            }
             operands.push(operand.identifier);
           }
         }
