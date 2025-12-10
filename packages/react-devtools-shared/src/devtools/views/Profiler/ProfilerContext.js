@@ -217,19 +217,6 @@ function ProfilerContextController({children}: Props): React.Node {
     },
   );
 
-  const startProfiling = useCallback(() => {
-    logEvent({
-      event_name: 'profiling-start',
-      metadata: {current_tab: selectedTabID},
-    });
-
-    // Clear selections when starting a new profiling session
-    selectCommitIndex(null);
-    selectFiberID(null);
-    selectFiberName(null);
-
-    store.profilerStore.startProfiling();
-  }, [store, selectedTabID, selectCommitIndex]);
   const stopProfiling = useCallback(
     () => store.profilerStore.stopProfiling(),
     [store],
@@ -262,6 +249,20 @@ function ProfilerContextController({children}: Props): React.Node {
     selectNextCommitIndex,
     selectPrevCommitIndex,
   } = useCommitFilteringAndNavigation(commitData);
+
+  const startProfiling = useCallback(() => {
+    logEvent({
+      event_name: 'profiling-start',
+      metadata: {current_tab: selectedTabID},
+    });
+
+    // Clear selections when starting a new profiling session
+    selectCommitIndex(null);
+    selectFiberID(null);
+    selectFiberName(null);
+
+    store.profilerStore.startProfiling();
+  }, [store, selectedTabID, selectCommitIndex]);
 
   // Auto-select first commit when profiling data becomes available and no commit is selected.
   useEffect(() => {
