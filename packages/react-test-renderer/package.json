@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "19.0.1",
+  "version": "19.0.2",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": {
@@ -23,7 +23,7 @@
     "scheduler": "^0.23.0"
   },
   "peerDependencies": {
-    "react": "^19.0.1"
+    "react": "^19.0.2"
   },
   "files": [
     "LICENSE",
