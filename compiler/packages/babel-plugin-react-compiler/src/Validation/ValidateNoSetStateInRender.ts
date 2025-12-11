@@ -155,20 +155,40 @@ function validateNoSetStateInRenderImpl(
                 }),
               );
             } else if (unconditionalBlocks.has(block.id)) {
-              errors.pushDiagnostic(
-                CompilerDiagnostic.create({
-                  category: ErrorCategory.RenderSetState,
-                  reason:
-                    'Calling setState during render may trigger an infinite loop',
-                  description:
-                    'Calling setState during render will trigger another render, and can lead to infinite loops. (https://react.dev/reference/react/useState)',
-                  suggestions: null,
-                }).withDetails({
-                  kind: 'error',
-                  loc: callee.loc,
-                  message: 'Found setState() in render',
-                }),
-              );
+              const enableUseKeyedState = fn.env.config.enableUseKeyedState;
+              if (enableUseKeyedState) {
+                errors.pushDiagnostic(
+                  CompilerDiagnostic.create({
+                    category: ErrorCategory.RenderSetState,
+                    reason: 'Cannot call setState during render',
+                    description:
+                      'Calling setState during render may trigger an infinite loop.\n' +
+                      '* To reset state when other state/props change, use `const [state, setState] = useKeyedState(initialState, key)` to reset `state` when `key` changes.\n' +
+                      '* To derive data from other state/props, compute the derived data during render without using state',
+                    suggestions: null,
+                  }).withDetails({
+                    kind: 'error',
+                    loc: callee.loc,
+                    message: 'Found setState() in render',
+                  }),
+                );
+              } else {
+                errors.pushDiagnostic(
+                  CompilerDiagnostic.create({
+                    category: ErrorCategory.RenderSetState,
+                    reason: 'Cannot call setState during render',
+                    description:
+                      'Calling setState during render may trigger an infinite loop.\n' +
+                      '* To reset state when other state/props change, store the previous value in state and update conditionally: https://react.dev/reference/react/useState#storing-information-from-previous-renders\n' +
+                      '* To derive data from other state/props, compute the derived data during render without using state',
+                    suggestions: null,
+                  }).withDetails({
+                    kind: 'error',
+                    loc: callee.loc,
+                    message: 'Found setState() in render',
+                  }),
+                );
+              }
             }
           }
           break;

@@ -2820,15 +2820,16 @@ describe('ReactFlightDOMBrowser', () => {
       },
     });
 
+    const app = ReactServer.createElement(
+      ReactServer.Fragment,
+      null,
+      ReactServer.createElement(Paragraph, null, 'foo'),
+      ReactServer.createElement(Paragraph, null, 'bar'),
+    );
     const stream = await serverAct(() =>
       ReactServerDOMServer.renderToReadableStream(
         {
-          root: ReactServer.createElement(
-            ReactServer.Fragment,
-            null,
-            ReactServer.createElement(Paragraph, null, 'foo'),
-            ReactServer.createElement(Paragraph, null, 'bar'),
-          ),
+          root: app,
         },
         webpackMap,
         {
@@ -2901,26 +2902,10 @@ describe('ReactFlightDOMBrowser', () => {
             "props": {},
             "stack": [
               [
-                "",
-                "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2829,
-                27,
-                2823,
-                34,
-              ],
-              [
-                "serverAct",
-                "/packages/internal-test-utils/internalAct.js",
-                270,
-                19,
-                231,
-                1,
-              ],
-              [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2823,
-                18,
+                2826,
+                19,
                 2810,
                 89,
               ],
