@@ -56,9 +56,7 @@ function Foo(t0) {
   let t2;
   if ($[2] !== arr2 || $[3] !== foo || $[4] !== x) {
     let y = [];
-
     getVal1 = _temp;
-
     t2 = () => [y];
     foo ? (y = x.concat(arr2)) : y;
     $[2] = arr2;
