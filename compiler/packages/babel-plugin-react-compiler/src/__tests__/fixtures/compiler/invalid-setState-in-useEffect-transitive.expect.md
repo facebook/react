@@ -35,7 +35,6 @@ function Component() {
     const f = () => {
       setState(_temp);
     };
-
     t0 = () => {
       f();
     };

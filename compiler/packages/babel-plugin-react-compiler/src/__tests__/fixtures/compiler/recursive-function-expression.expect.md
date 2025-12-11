@@ -62,7 +62,6 @@ function Component() {
       }
       return callback(x - 1);
     }
-
     t0 = callback(10);
     $[0] = t0;
   } else {
