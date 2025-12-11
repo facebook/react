@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {renderToReadableStream} from 'react-server-dom-webpack/server';
+import {renderToReadableStream} from 'react-server-dom-unbundled/server';
 import {createFromReadableStream} from 'react-server-dom-webpack/client';
 import {PassThrough, Readable} from 'stream';
 

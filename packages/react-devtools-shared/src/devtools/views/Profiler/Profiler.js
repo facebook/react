@@ -54,6 +54,8 @@ function Profiler(_: {}) {
     supportsProfiling,
     startProfiling,
     stopProfiling,
+    selectPrevCommitIndex,
+    selectNextCommitIndex,
   } = useContext(ProfilerContext);
 
   const {file: timelineTraceEventData, searchInputContainerRef} =
@@ -63,9 +65,9 @@ function Profiler(_: {}) {
 
   const isLegacyProfilerSelected = selectedTabID !== 'timeline';
 
-  // Cmd+E to start/stop profiler recording
   const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
     const correctModifier = isMac ? event.metaKey : event.ctrlKey;
+    // Cmd+E to start/stop profiler recording
     if (correctModifier && event.key === 'e') {
       if (isProfiling) {
         stopProfiling();
@@ -74,6 +76,24 @@ function Profiler(_: {}) {
       }
       event.preventDefault();
       event.stopPropagation();
+    } else if (
+      isLegacyProfilerSelected &&
+      didRecordCommits &&
+      selectedCommitIndex !== null
+    ) {
+      // Cmd+Left/Right (Mac) or Ctrl+Left/Right (Windows/Linux) to navigate commits
+      if (
+        correctModifier &&
+        (event.key === 'ArrowLeft' || event.key === 'ArrowRight')
+      ) {
+        if (event.key === 'ArrowLeft') {
+          selectPrevCommitIndex();
+        } else {
+          selectNextCommitIndex();
+        }
+        event.preventDefault();
+        event.stopPropagation();
+      }
     }
   });
 
