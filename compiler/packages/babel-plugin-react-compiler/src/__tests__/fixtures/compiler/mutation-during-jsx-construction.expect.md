@@ -32,6 +32,7 @@ function Component(props) {
   let element;
   if ($[0] !== props.value) {
     const key = {};
+
     element = <div key={mutateAndReturnNewValue(key)}>{props.value}</div>;
 
     mutate(key);

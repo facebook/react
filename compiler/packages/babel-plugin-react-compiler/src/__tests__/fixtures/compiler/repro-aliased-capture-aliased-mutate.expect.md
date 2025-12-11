@@ -73,6 +73,7 @@ function useFoo(t0) {
   if ($[0] !== a || $[1] !== b) {
     const x = [];
     const y = { value: a };
+
     arrayPush(x, y);
     const y_alias = y;
     const cb = () => y_alias.value;

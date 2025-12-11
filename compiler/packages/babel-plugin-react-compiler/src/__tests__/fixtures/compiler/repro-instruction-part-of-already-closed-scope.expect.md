@@ -46,6 +46,7 @@ function Component(t0) {
     const a = identity(data, index);
     const b = identity(data, index);
     const c = identity(data, index);
+
     const t4 = identity(b);
     if ($[6] !== t4) {
       t2 = <Stringify value={t4} />;

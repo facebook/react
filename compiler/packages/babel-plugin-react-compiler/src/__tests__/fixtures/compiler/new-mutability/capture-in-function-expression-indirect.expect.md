@@ -48,6 +48,7 @@ function Component(t0) {
       const b = { x };
       a.y.x = b;
     };
+
     f0();
     mutate(y);
     t1 = <Stringify x={y} />;

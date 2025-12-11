@@ -41,6 +41,7 @@ function Component(t0) {
       const y = [x];
       return y[0];
     };
+
     const x0 = f();
     const z = [x0];
     const x1 = z[0];

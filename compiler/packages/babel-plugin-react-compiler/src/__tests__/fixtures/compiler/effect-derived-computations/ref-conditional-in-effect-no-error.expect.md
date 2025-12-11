@@ -50,6 +50,7 @@ export default function Component(t0) {
         setLocal(test + test);
       }
     };
+
     t2 = [test];
     $[0] = test;
     $[1] = t1;

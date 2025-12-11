@@ -47,6 +47,7 @@ function Foo(props) {
       }
       arr.push(t1);
     }
+
     t0 = <Stringify arr={arr} />;
     $[0] = props.cond;
     $[1] = props.value;

@@ -68,6 +68,7 @@ function Component() {
         update();
       }
     };
+
     t2 = [update];
     $[2] = update;
     $[3] = t1;

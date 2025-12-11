@@ -71,6 +71,7 @@ function Component(t0) {
         setData(data_0);
       }
     };
+
     t2 = [x, y];
     $[0] = x;
     $[1] = y;

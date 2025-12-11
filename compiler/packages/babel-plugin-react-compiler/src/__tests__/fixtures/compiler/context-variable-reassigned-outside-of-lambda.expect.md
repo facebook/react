@@ -34,6 +34,7 @@ function Component(props) {
     const callback = () => {
       console.log(x);
     };
+
     x = {};
     t0 = <Stringify callback={callback} shouldInvokeFns={true} />;
     $[0] = t0;

@@ -45,6 +45,7 @@ function Component(t0) {
       z.a = 2;
       mutate(y.b);
     };
+
     x();
     t1 = [y, z];
     $[0] = a;

@@ -29,6 +29,7 @@ function Component(props) {
     const onLoad = () => {
       log(id);
     };
+
     t0 = <Foo onLoad={onLoad} />;
     $[0] = id;
     $[1] = t0;

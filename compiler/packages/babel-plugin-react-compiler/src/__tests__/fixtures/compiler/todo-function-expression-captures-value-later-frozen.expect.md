@@ -28,11 +28,14 @@ function Component(props) {
   let t0;
   if ($[0] !== props.cond) {
     const x = {};
+
     const onChange = (e) => {
       maybeMutate(x, e.target.value);
     };
+
     if (props.cond) {
     }
+
     onChange();
     t0 = <Foo value={x} />;
     $[0] = props.cond;

@@ -49,6 +49,7 @@ function useFoo() {
   let t2;
   if ($[2] !== handleLogout) {
     const getComponent = () => <ColumnItem onPress={() => handleLogout()} />;
+
     t2 = getComponent();
     $[2] = handleLogout;
     $[3] = t2;

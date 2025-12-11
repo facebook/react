@@ -27,6 +27,7 @@ function Component(props) {
     const f = function () {
       return <div>{props.name}</div>;
     };
+
     t0 = f.call();
     $[0] = props;
     $[1] = t0;

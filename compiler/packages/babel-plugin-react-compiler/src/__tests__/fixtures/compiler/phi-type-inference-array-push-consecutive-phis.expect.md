@@ -75,7 +75,9 @@ function Component(props) {
     } else {
       y = [];
     }
+
     y.push(x);
+
     t1 = [x, y];
     $[1] = props.cond;
     $[2] = props.cond2;

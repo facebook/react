@@ -31,6 +31,7 @@ function Component(t0) {
       y.x = x;
       mutate(y);
     };
+
     f();
     t1 = <div>{x}</div>;
     $[0] = a;

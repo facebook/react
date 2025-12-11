@@ -94,14 +94,19 @@ function testFunction(props) {
         break;
       }
     }
+
     if (a) {
     }
+
     if (b) {
     }
+
     if (c) {
     }
+
     if (d) {
     }
+
     mutate(d, null);
     t0 = { a, b, c, d };
     $[0] = t0;

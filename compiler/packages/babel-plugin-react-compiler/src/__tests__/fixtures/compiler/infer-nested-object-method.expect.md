@@ -40,6 +40,7 @@ function Test() {
         return _temp;
       },
     };
+
     t0 = <Stringify value={context} shouldInvokeFns={true} />;
     $[0] = t0;
   } else {

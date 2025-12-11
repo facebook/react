@@ -35,6 +35,7 @@ function f(a, b) {
         x.push(b);
       }
     }
+
     t0 = <div>{x}</div>;
     $[0] = a.length;
     $[1] = b;

@@ -66,6 +66,7 @@ function Component(t0) {
         return null;
       }
     };
+
     t1 = <Stringify shouldInvokeFns={true} callback={callback} />;
     $[0] = isObjNull;
     $[1] = obj;

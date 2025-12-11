@@ -61,6 +61,7 @@ function Foo(t0) {
   const fnFactory = () => () => {
     myVar = _temp;
   };
+
   let myVar = _temp2;
   useIdentity();
 

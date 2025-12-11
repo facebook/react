@@ -35,8 +35,10 @@ function Component() {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const a = makeObject_Primitives();
+
     const x = [];
     x.push(a);
+
     mutate(x);
     t0 = [x, a];
     $[0] = t0;

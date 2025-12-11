@@ -35,6 +35,7 @@ function Component() {
     const onSubmitAction = () => {
       dispatchAction();
     };
+
     t0 = <Foo onSubmitAction={onSubmitAction} />;
     $[0] = t0;
   } else {

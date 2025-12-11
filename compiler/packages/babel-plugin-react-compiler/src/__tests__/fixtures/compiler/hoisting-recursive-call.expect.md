@@ -37,6 +37,7 @@ function Foo(t0) {
         return x * factorial(x - 1);
       }
     };
+
     t1 = factorial(value);
     $[0] = value;
     $[1] = t1;
