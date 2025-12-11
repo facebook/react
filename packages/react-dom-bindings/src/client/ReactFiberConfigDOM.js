@@ -1996,26 +1996,6 @@ export function hasInstanceAffectedParent(
   return oldRect.height !== newRect.height || oldRect.width !== newRect.width;
 }
 
-function cancelAllViewTransitionAnimations(scope: Element) {
-  // In Safari, we need to manually cancel all manually start animations
-  // or it'll block or interfer with future transitions.
-  // $FlowFixMe[prop-missing]
-  const animations = scope.getAnimations({subtree: true});
-  for (let i = 0; i < animations.length; i++) {
-    const anim = animations[i];
-    const effect: KeyframeEffect = (anim.effect: any);
-    // $FlowFixMe
-    const pseudo: ?string = effect.pseudoElement;
-    if (
-      pseudo != null &&
-      pseudo.startsWith('::view-transition') &&
-      effect.target === scope
-    ) {
-      anim.cancel();
-    }
-  }
-}
-
 // How long to wait for new fonts to load before just committing anyway.
 // This freezes the screen. It needs to be short enough that it doesn't cause too much of
 // an issue when it's a new load and slow, yet long enough that you have a chance to load
@@ -2210,6 +2190,8 @@ export function startViewTransition(
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
 
+    const viewTransitionAnimations: Array<Animation> = [];
+
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
@@ -2224,6 +2206,7 @@ export function startViewTransition(
           pseudoElement != null &&
           pseudoElement.startsWith('::view-transition')
         ) {
+          viewTransitionAnimations.push(animation);
           const keyframes = effect.getKeyframes();
           // Next, we're going to try to optimize this animation in case the auto-generated
           // width/height keyframes are unnecessary.
@@ -2315,7 +2298,12 @@ export function startViewTransition(
     };
     transition.ready.then(readyCallback, handleError);
     transition.finished.finally(() => {
-      cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
+      for (let i = 0; i < viewTransitionAnimations.length; i++) {
+        // In Safari, we need to manually cancel all manually started animations
+        // or it'll block or interfer with future transitions.
+        // We can't use getAnimations() due to #35336 so we collect them in an array.
+        viewTransitionAnimations[i].cancel();
+      }
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
@@ -2549,6 +2537,7 @@ export function startGestureTransition(
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
     const customTimelineCleanup: Array<() => void> = []; // Cleanup Animations started in a CustomTimeline
+    const viewTransitionAnimations: Array<Animation> = [];
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
@@ -2566,6 +2555,7 @@ export function startGestureTransition(
         const pseudoElement: ?string = effect.pseudoElement;
         if (pseudoElement == null) {
         } else if (pseudoElement.startsWith('::view-transition')) {
+          viewTransitionAnimations.push(animations[i]);
           const timing = effect.getTiming();
           const duration =
             // $FlowFixMe[prop-missing]
@@ -2743,7 +2733,12 @@ export function startGestureTransition(
     };
     transition.ready.then(readyForAnimations, handleError);
     transition.finished.finally(() => {
-      cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
+      for (let i = 0; i < viewTransitionAnimations.length; i++) {
+        // In Safari, we need to manually cancel all manually started animations
+        // or it'll block or interfer with future transitions.
+        // We can't use getAnimations() due to #35336 so we collect them in an array.
+        viewTransitionAnimations[i].cancel();
+      }
       for (let i = 0; i < customTimelineCleanup.length; i++) {
         const cleanup = customTimelineCleanup[i];
         cleanup();

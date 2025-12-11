@@ -45,12 +45,12 @@ describe('ReactFlightDOMNode', () => {
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
-      require('react-server-dom-webpack/server.node'),
+      jest.requireActual('react-server-dom-webpack/server.node'),
     );
     ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
     jest.mock('react-server-dom-webpack/static', () =>
-      require('react-server-dom-webpack/static.node'),
+      jest.requireActual('react-server-dom-webpack/static.node'),
     );
     ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
@@ -64,7 +64,7 @@ describe('ReactFlightDOMNode', () => {
     __unmockReact();
     jest.unmock('react-server-dom-webpack/server');
     jest.mock('react-server-dom-webpack/client', () =>
-      require('react-server-dom-webpack/client.node'),
+      jest.requireActual('react-server-dom-webpack/client.node'),
     );
 
     React = require('react');
@@ -1216,11 +1216,7 @@ describe('ReactFlightDOMNode', () => {
         const data1 = await getDynamicData1();
         const data2 = await getDynamicData2();
 
-        return (
-          <p>
-            {data1} {data2}
-          </p>
-        );
+        return ReactServer.createElement('p', null, data1, ' ', data2);
       }
 
       function App() {
@@ -1350,8 +1346,8 @@ describe('ReactFlightDOMNode', () => {
               : '\n') +
             '    in body\n' +
             '    in html\n' +
-            '    in App (file://ReactFlightDOMNode-test.js:1233:25)\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1308:16)',
+            '    in App (file://ReactFlightDOMNode-test.js:1229:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1304:16)',
         );
       } else {
         expect(
@@ -1360,7 +1356,7 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1308:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1304:16)',
         );
       }
 
@@ -1371,7 +1367,7 @@ describe('ReactFlightDOMNode', () => {
           ).toBe(
             '\n' +
               '    in Dynamic (file://ReactFlightDOMNode-test.js:1216:27)\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1233:25)',
+              '    in App (file://ReactFlightDOMNode-test.js:1229:25)',
           );
         } else {
           expect(
@@ -1379,7 +1375,7 @@ describe('ReactFlightDOMNode', () => {
           ).toBe(
             '' +
               '\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1233:25)',
+              '    in App (file://ReactFlightDOMNode-test.js:1229:25)',
           );
         }
       } else {
