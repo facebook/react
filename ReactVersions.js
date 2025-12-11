@@ -7,18 +7,18 @@
 //
 // The @latest channel uses the version as-is, e.g.:
 //
-//   19.0.2
+//   19.0.3
 //
 // The @canary channel appends additional information, with the scheme
 // <version>-<label>-<commit_sha>, e.g.:
 //
-//   19.0.2-canary-a1c2d3e4
+//   19.0.3-canary-a1c2d3e4
 //
 // The @experimental channel doesn't include a version, only a date and a sha, e.g.:
 //
 //   0.0.0-experimental-241c4467e-20200129
 
-const ReactVersion = '19.0.2';
+const ReactVersion = '19.0.3';
 
 // The label used by the @canary channel. Represents the upcoming release's
 // stability. Most of the time, this will be "canary", but we may temporarily
