@@ -96,8 +96,11 @@ export default function setupHighlighter(
     applyingScroll = false;
   }
 
-  // $FlowFixMe[method-unbinding]
-  if (document && typeof document.addEventListener === 'function') {
+  if (
+    typeof document === 'object' &&
+    // $FlowFixMe[method-unbinding]
+    typeof document.addEventListener === 'function'
+  ) {
     document.addEventListener('scroll', () => {
       if (!scrollTimer) {
         // Periodically synchronize the scroll while scrolling.
