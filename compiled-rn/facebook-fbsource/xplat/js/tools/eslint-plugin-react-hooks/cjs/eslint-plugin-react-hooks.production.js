@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<9d1934ce423f2fb4b985bd615c65edcf>>
+ * @generated SignedSource<<feffb3ef932e35fc4916b2985f8a9c47>>
  */
 
 'use strict';
@@ -26140,7 +26140,7 @@ function lowerIdentifierForAssignment(builder, loc, kind, path) {
     return place;
 }
 function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4;
     const lvalueNode = lvaluePath.node;
     switch (lvalueNode.type) {
         case 'Identifier': {
@@ -26373,13 +26373,14 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     pattern: {
                         kind: 'ArrayPattern',
                         items,
+                        loc: (_p = lvalue.node.loc) !== null && _p !== void 0 ? _p : GeneratedSource,
                     },
                 },
                 value,
                 loc,
             });
             for (const { place, path } of followups) {
-                lowerAssignment(builder, (_p = path.node.loc) !== null && _p !== void 0 ? _p : loc, kind, path, place, assignmentKind);
+                lowerAssignment(builder, (_q = path.node.loc) !== null && _q !== void 0 ? _q : loc, kind, path, place, assignmentKind);
             }
             return { kind: 'LoadLocal', place: temporary, loc: value.loc };
         }
@@ -26401,14 +26402,14 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ObjectPattern`,
                             category: ErrorCategory.Todo,
-                            loc: (_q = argument.node.loc) !== null && _q !== void 0 ? _q : null,
+                            loc: (_r = argument.node.loc) !== null && _r !== void 0 ? _r : null,
                             suggestions: null,
                         });
                         continue;
                     }
                     if (forceTemporaries ||
                         getStoreKind(builder, argument) === 'StoreContext') {
-                        const temp = buildTemporaryPlace(builder, (_r = property.node.loc) !== null && _r !== void 0 ? _r : GeneratedSource);
+                        const temp = buildTemporaryPlace(builder, (_s = property.node.loc) !== null && _s !== void 0 ? _s : GeneratedSource);
                         promoteTemporary(temp.identifier);
                         properties.push({
                             kind: 'Spread',
@@ -26417,7 +26418,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         followups.push({ place: temp, path: argument });
                     }
                     else {
-                        const identifier = lowerIdentifierForAssignment(builder, (_s = property.node.loc) !== null && _s !== void 0 ? _s : GeneratedSource, kind, argument);
+                        const identifier = lowerIdentifierForAssignment(builder, (_t = property.node.loc) !== null && _t !== void 0 ? _t : GeneratedSource, kind, argument);
                         if (identifier === null) {
                             continue;
                         }
@@ -26425,7 +26426,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                             builder.errors.push({
                                 category: ErrorCategory.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
-                                loc: (_t = property.node.loc) !== null && _t !== void 0 ? _t : GeneratedSource,
+                                loc: (_u = property.node.loc) !== null && _u !== void 0 ? _u : GeneratedSource,
                             });
                             continue;
                         }
@@ -26440,7 +26441,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
                             category: ErrorCategory.Todo,
-                            loc: (_u = property.node.loc) !== null && _u !== void 0 ? _u : null,
+                            loc: (_v = property.node.loc) !== null && _v !== void 0 ? _v : null,
                             suggestions: null,
                         });
                         continue;
@@ -26449,7 +26450,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern`,
                             category: ErrorCategory.Todo,
-                            loc: (_v = property.node.loc) !== null && _v !== void 0 ? _v : null,
+                            loc: (_w = property.node.loc) !== null && _w !== void 0 ? _w : null,
                             suggestions: null,
                         });
                         continue;
@@ -26463,7 +26464,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         builder.errors.push({
                             reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
                             category: ErrorCategory.Todo,
-                            loc: (_w = element.node.loc) !== null && _w !== void 0 ? _w : null,
+                            loc: (_x = element.node.loc) !== null && _x !== void 0 ? _x : null,
                             suggestions: null,
                         });
                         continue;
@@ -26472,7 +26473,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         !forceTemporaries &&
                         (assignmentKind === 'Assignment' ||
                             getStoreKind(builder, element) === 'StoreLocal')) {
-                        const identifier = lowerIdentifierForAssignment(builder, (_x = element.node.loc) !== null && _x !== void 0 ? _x : GeneratedSource, kind, element);
+                        const identifier = lowerIdentifierForAssignment(builder, (_y = element.node.loc) !== null && _y !== void 0 ? _y : GeneratedSource, kind, element);
                         if (identifier === null) {
                             continue;
                         }
@@ -26480,7 +26481,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                             builder.errors.push({
                                 category: ErrorCategory.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
-                                loc: (_y = element.node.loc) !== null && _y !== void 0 ? _y : GeneratedSource,
+                                loc: (_z = element.node.loc) !== null && _z !== void 0 ? _z : GeneratedSource,
                             });
                             continue;
                         }
@@ -26492,7 +26493,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         });
                     }
                     else {
-                        const temp = buildTemporaryPlace(builder, (_z = element.node.loc) !== null && _z !== void 0 ? _z : GeneratedSource);
+                        const temp = buildTemporaryPlace(builder, (_0 = element.node.loc) !== null && _0 !== void 0 ? _0 : GeneratedSource);
                         promoteTemporary(temp.identifier);
                         properties.push({
                             kind: 'ObjectProperty',
@@ -26511,19 +26512,20 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     pattern: {
                         kind: 'ObjectPattern',
                         properties,
+                        loc: (_1 = lvalue.node.loc) !== null && _1 !== void 0 ? _1 : GeneratedSource,
                     },
                 },
                 value,
                 loc,
             });
             for (const { place, path } of followups) {
-                lowerAssignment(builder, (_0 = path.node.loc) !== null && _0 !== void 0 ? _0 : loc, kind, path, place, assignmentKind);
+                lowerAssignment(builder, (_2 = path.node.loc) !== null && _2 !== void 0 ? _2 : loc, kind, path, place, assignmentKind);
             }
             return { kind: 'LoadLocal', place: temporary, loc: value.loc };
         }
         case 'AssignmentPattern': {
             const lvalue = lvaluePath;
-            const loc = (_1 = lvalue.node.loc) !== null && _1 !== void 0 ? _1 : GeneratedSource;
+            const loc = (_3 = lvalue.node.loc) !== null && _3 !== void 0 ? _3 : GeneratedSource;
             const temp = buildTemporaryPlace(builder, loc);
             const testBlock = builder.reserve('value');
             const continuationBlock = builder.reserve(builder.currentBlockKind());
@@ -26594,7 +26596,7 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
             builder.errors.push({
                 reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,
                 category: ErrorCategory.Todo,
-                loc: (_2 = lvaluePath.node.loc) !== null && _2 !== void 0 ? _2 : null,
+                loc: (_4 = lvaluePath.node.loc) !== null && _4 !== void 0 ? _4 : null,
                 suggestions: null,
             });
             return { kind: 'UnsupportedNode', node: lvalueNode, loc };
@@ -37681,7 +37683,7 @@ function codegenReactiveScope(cx, statements, scope, block) {
         const name = convertIdentifier(identifier);
         outputComments.push(name.name);
         if (!cx.hasDeclared(identifier)) {
-            statements.push(libExports$1.variableDeclaration('let', [libExports$1.variableDeclarator(name)]));
+            statements.push(libExports$1.variableDeclaration('let', [createVariableDeclarator(name, null)]));
         }
         cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
         cx.declare(identifier);
@@ -38162,7 +38164,7 @@ function codegenInstructionNullable(cx, instr) {
                     suggestions: null,
                 });
                 return createVariableDeclaration(instr.loc, 'const', [
-                    libExports$1.variableDeclarator(codegenLValue(cx, lvalue), value),
+                    createVariableDeclarator(codegenLValue(cx, lvalue), value),
                 ]);
             }
             case InstructionKind.Function: {
@@ -38219,7 +38221,7 @@ function codegenInstructionNullable(cx, instr) {
                     suggestions: null,
                 });
                 return createVariableDeclaration(instr.loc, 'let', [
-                    libExports$1.variableDeclarator(codegenLValue(cx, lvalue), value),
+                    createVariableDeclarator(codegenLValue(cx, lvalue), value),
                 ]);
             }
             case InstructionKind.Reassign: {
@@ -38427,6 +38429,9 @@ function withLoc(fn) {
         return node;
     };
 }
+const createIdentifier = withLoc(libExports$1.identifier);
+const createArrayPattern = withLoc(libExports$1.arrayPattern);
+const createObjectPattern = withLoc(libExports$1.objectPattern);
 const createBinaryExpression = withLoc(libExports$1.binaryExpression);
 const createExpressionStatement = withLoc(libExports$1.expressionStatement);
 const createVariableDeclaration = withLoc(libExports$1.variableDeclaration);
@@ -38456,6 +38461,19 @@ const createThrowStatement = withLoc(libExports$1.throwStatement);
 const createTryStatement = withLoc(libExports$1.tryStatement);
 const createBreakStatement = withLoc(libExports$1.breakStatement);
 const createContinueStatement = withLoc(libExports$1.continueStatement);
+function createVariableDeclarator(id, init) {
+    var _a, _b;
+    const node = libExports$1.variableDeclarator(id, init);
+    if (id.loc && (init === null || (init === null || init === void 0 ? void 0 : init.loc))) {
+        node.loc = {
+            start: id.loc.start,
+            end: (_b = (_a = init === null || init === void 0 ? void 0 : init.loc) === null || _a === void 0 ? void 0 : _a.end) !== null && _b !== void 0 ? _b : id.loc.end,
+            filename: id.loc.filename,
+            identifierName: undefined,
+        };
+    }
+    return node;
+}
 function createHookGuard(guard, context, stmts, before, after) {
     const guardFnName = context.addImportSpecifier(guard).name;
     function createHookGuardImpl(kind) {
@@ -38500,7 +38518,7 @@ function codegenInstruction(cx, instr, value) {
         }
         else {
             return createVariableDeclaration(instr.loc, 'const', [
-                libExports$1.variableDeclarator(convertIdentifier(instr.lvalue.identifier), expressionValue),
+                createVariableDeclarator(convertIdentifier(instr.lvalue.identifier), expressionValue),
             ]);
         }
     }
@@ -39150,7 +39168,7 @@ function codegenObjectPropertyKey(cx, key) {
 function codegenArrayPattern(cx, pattern) {
     const hasHoles = !pattern.items.every(e => e.kind !== 'Hole');
     if (hasHoles) {
-        const result = libExports$1.arrayPattern([]);
+        const result = createArrayPattern(pattern.loc, []);
         for (const item of pattern.items) {
             if (item.kind === 'Hole') {
                 result.elements.push(null);
@@ -39162,7 +39180,7 @@ function codegenArrayPattern(cx, pattern) {
         return result;
     }
     else {
-        return libExports$1.arrayPattern(pattern.items.map(item => {
+        return createArrayPattern(pattern.loc, pattern.items.map(item => {
             if (item.kind === 'Hole') {
                 return null;
             }
@@ -39176,7 +39194,7 @@ function codegenLValue(cx, pattern) {
             return codegenArrayPattern(cx, pattern);
         }
         case 'ObjectPattern': {
-            return libExports$1.objectPattern(pattern.properties.map(property => {
+            return createObjectPattern(pattern.loc, pattern.properties.map(property => {
                 if (property.kind === 'ObjectProperty') {
                     const key = codegenObjectPropertyKey(cx, property.key);
                     const value = codegenLValue(cx, property.place);
@@ -39271,7 +39289,7 @@ function convertIdentifier(identifier) {
         description: `identifier ${identifier.id} is unnamed`,
         suggestions: null,
     });
-    return libExports$1.identifier(identifier.name.value);
+    return createIdentifier(identifier.loc, identifier.name.value);
 }
 function compareScopeDependency(a, b) {
     var _a, _b;
@@ -50374,6 +50392,8 @@ const IMPORTANT_INSTRUMENTED_TYPES = new Set([
     'LabeledStatement',
     'ConditionalExpression',
     'LogicalExpression',
+    'VariableDeclaration',
+    'Identifier',
 ]);
 function isManualMemoization(node) {
     if (libExports$1.isCallExpression(node)) {
@@ -50408,17 +50428,30 @@ function validateSourceLocations(func, generatedAst) {
             }
             if (node.loc) {
                 const key = locationKey(node.loc);
-                importantOriginalLocations.set(key, {
-                    loc: node.loc,
-                    nodeType: node.type,
-                });
+                const existing = importantOriginalLocations.get(key);
+                if (existing) {
+                    existing.nodeTypes.add(node.type);
+                }
+                else {
+                    importantOriginalLocations.set(key, {
+                        loc: node.loc,
+                        nodeTypes: new Set([node.type]),
+                    });
+                }
             }
         },
     });
-    const generatedLocations = new Set();
+    const generatedLocations = new Map();
     function collectGeneratedLocations(node) {
         if (node.loc) {
-            generatedLocations.add(locationKey(node.loc));
+            const key = locationKey(node.loc);
+            const nodeTypes = generatedLocations.get(key);
+            if (nodeTypes) {
+                nodeTypes.add(node.type);
+            }
+            else {
+                generatedLocations.set(key, new Set([node.type]));
+            }
         }
         const keys = libExports$1.VISITOR_KEYS[node.type];
         if (!keys) {
@@ -50442,18 +50475,53 @@ function validateSourceLocations(func, generatedAst) {
     for (const outlined of generatedAst.outlined) {
         collectGeneratedLocations(outlined.fn.body);
     }
-    for (const [key, { loc, nodeType }] of importantOriginalLocations) {
-        if (!generatedLocations.has(key)) {
-            errors.pushDiagnostic(CompilerDiagnostic.create({
-                category: ErrorCategory.Todo,
-                reason: 'Important source location missing in generated code',
-                description: `Source location for ${nodeType} is missing in the generated output. This can cause coverage instrumentation ` +
-                    `to fail to track this code properly, resulting in inaccurate coverage reports.`,
-            }).withDetails({
-                kind: 'error',
-                loc,
-                message: null,
-            }));
+    const strictNodeTypes = new Set([
+        'VariableDeclaration',
+        'VariableDeclarator',
+        'Identifier',
+    ]);
+    const reportMissingLocation = (loc, nodeType) => {
+        errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Todo,
+            reason: 'Important source location missing in generated code',
+            description: `Source location for ${nodeType} is missing in the generated output. This can cause coverage instrumentation ` +
+                `to fail to track this code properly, resulting in inaccurate coverage reports.`,
+        }).withDetails({
+            kind: 'error',
+            loc,
+            message: null,
+        }));
+    };
+    const reportWrongNodeType = (loc, expectedType, actualTypes) => {
+        errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Todo,
+            reason: 'Important source location has wrong node type in generated code',
+            description: `Source location for ${expectedType} exists in the generated output but with wrong node type(s): ${Array.from(actualTypes).join(', ')}. ` +
+                `This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports.`,
+        }).withDetails({
+            kind: 'error',
+            loc,
+            message: null,
+        }));
+    };
+    for (const [key, { loc, nodeTypes }] of importantOriginalLocations) {
+        const generatedNodeTypes = generatedLocations.get(key);
+        if (!generatedNodeTypes) {
+            reportMissingLocation(loc, Array.from(nodeTypes).join(', '));
+        }
+        else {
+            for (const nodeType of nodeTypes) {
+                if (strictNodeTypes.has(nodeType) &&
+                    !generatedNodeTypes.has(nodeType)) {
+                    const hasValidNodeType = Array.from(generatedNodeTypes).some(genType => nodeTypes.has(genType));
+                    if (hasValidNodeType) {
+                        reportMissingLocation(loc, nodeType);
+                    }
+                    else {
+                        reportWrongNodeType(loc, nodeType, generatedNodeTypes);
+                    }
+                }
+            }
         }
     }
     return errors.asResult();
@@ -51638,6 +51706,7 @@ function emitDestructureProps(env, propsObj, oldToNewProps) {
                 pattern: {
                     kind: 'ObjectPattern',
                     properties,
+                    loc: GeneratedSource,
                 },
                 kind: InstructionKind.Let,
             },
