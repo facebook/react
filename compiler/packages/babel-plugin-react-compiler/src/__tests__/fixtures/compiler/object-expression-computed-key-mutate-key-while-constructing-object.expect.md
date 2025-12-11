@@ -30,6 +30,7 @@ function Component(props) {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const key = {};
+
     t0 = mutateAndReturn(key);
     $[0] = t0;
   } else {

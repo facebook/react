@@ -48,6 +48,7 @@ function Component(props) {
       x.push(props.p1);
       y = x;
     }
+
     t0 = (
       <Stringify>
         {x}

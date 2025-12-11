@@ -33,6 +33,7 @@ function Component() {
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     const x = [];
     x.push(a);
+
     t1 = [x, a];
     $[1] = t1;
   } else {

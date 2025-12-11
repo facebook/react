@@ -57,6 +57,7 @@ function useFoo(props) {
       };
       return b;
     };
+
     t1 = a()()();
     $0[0] = props.value;
     $0[1] = t1;

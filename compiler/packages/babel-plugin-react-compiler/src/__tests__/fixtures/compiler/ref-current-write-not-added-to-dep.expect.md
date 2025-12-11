@@ -25,6 +25,7 @@ function VideoTab() {
     const x = () => {
       ref.current = 1;
     };
+
     t0 = <VideoList videos={x} />;
     $[0] = t0;
   } else {

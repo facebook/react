@@ -65,14 +65,17 @@ function Component() {
   if ($[2] !== bar || $[3] !== foo) {
     t2 = () => {
       let isChanged = false;
+
       const newData = foo.map((val) => {
         bar.someMethod(val);
         isChanged = true;
       });
+
       if (isChanged) {
         setFoo(newData);
       }
     };
+
     t3 = [foo, bar];
     $[2] = bar;
     $[3] = foo;

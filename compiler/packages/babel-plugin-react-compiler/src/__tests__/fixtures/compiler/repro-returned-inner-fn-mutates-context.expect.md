@@ -63,6 +63,7 @@ function Foo(t0) {
       obj.value = newValue;
       obj.a = a;
     };
+
     const updater = updaterFactory();
     updater(b);
     t1 = <Stringify cb={obj} shouldInvokeFns={true} />;

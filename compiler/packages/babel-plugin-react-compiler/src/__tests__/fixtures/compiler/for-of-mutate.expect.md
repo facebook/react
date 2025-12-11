@@ -38,6 +38,7 @@ function Component(_props) {
         <div key={toJSON(item)}>{toJSON(mutateAndReturn(item))}</div>,
       );
     }
+
     t0 = <div>{results}</div>;
     $[0] = t0;
   } else {

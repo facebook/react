@@ -29,6 +29,7 @@ function Component(props) {
   let t0;
   if ($[0] !== props) {
     var _ref;
+
     t0 =
       (_ref = props) != null
         ? (_ref = _ref.group) != null

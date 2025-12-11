@@ -35,6 +35,7 @@ function Component(props) {
       const arr = [...bar(props)];
       return arr.at(x);
     };
+
     t1 = fn();
     $[2] = props;
     $[3] = x;

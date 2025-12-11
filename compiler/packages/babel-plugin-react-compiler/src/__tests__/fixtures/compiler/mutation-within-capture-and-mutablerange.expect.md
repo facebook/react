@@ -58,6 +58,7 @@ function useFoo(t0) {
     const x = { a };
     const y = [b];
     mutate(x);
+
     z = [mutate(y)];
 
     mutate(y);

@@ -45,6 +45,7 @@ function useKeyCommand() {
       const nextPosition = direction === "left" ? addOne(position) : position;
       currentPosition.current = nextPosition;
     };
+
     const moveLeft = { handler: handleKey("left") };
     const moveRight = { handler: handleKey("right") };
     t0 = [moveLeft, moveRight];

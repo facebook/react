@@ -49,6 +49,7 @@ function foo(a, b, c) {
     if (a) {
       x.push(a);
     }
+
     t0 = <div>{x}</div>;
     $[0] = a;
     $[1] = t0;

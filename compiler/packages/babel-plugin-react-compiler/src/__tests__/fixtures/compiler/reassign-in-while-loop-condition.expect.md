@@ -39,6 +39,7 @@ function Component() {
     while ((item = items.pop())) {
       sum = sum + item;
     }
+
     t0 = [items, sum];
     $[0] = t0;
   } else {

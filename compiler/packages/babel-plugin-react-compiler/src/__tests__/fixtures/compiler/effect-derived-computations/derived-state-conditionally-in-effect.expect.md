@@ -46,6 +46,7 @@ function Component(t0) {
         setLocalValue("disabled");
       }
     };
+
     t2 = [value, enabled];
     $[0] = enabled;
     $[1] = value;

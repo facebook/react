@@ -42,7 +42,9 @@ function Component(props) {
     const b = [];
     b.push(props.b);
     a.a = null;
+
     const c = [a];
+
     t0 = [c, a];
     $[0] = props.b;
     $[1] = t0;

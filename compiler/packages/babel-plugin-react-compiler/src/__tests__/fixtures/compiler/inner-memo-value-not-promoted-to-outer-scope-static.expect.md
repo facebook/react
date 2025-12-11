@@ -25,6 +25,7 @@ function Component(props) {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const count = new MaybeMutable();
+
     t0 = (
       <View>
         <View>

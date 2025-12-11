@@ -30,6 +30,7 @@ function get2() {
       const copy = x;
       return copy;
     };
+
     const x = 2;
     t0 = callbk();
     $[0] = t0;

@@ -36,6 +36,7 @@ function f() {
     const onClick = () => {
       dispatch();
     };
+
     t0 = <div onClick={onClick} />;
     $[0] = t0;
   } else {

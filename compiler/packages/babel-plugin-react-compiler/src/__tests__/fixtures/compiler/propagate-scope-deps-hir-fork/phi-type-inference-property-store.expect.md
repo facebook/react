@@ -49,7 +49,9 @@ function Component(props) {
     } else {
       y = { a: props.a };
     }
+
     y.x = x;
+
     t1 = [x, y];
     $[1] = props.a;
     $[2] = props.cond;

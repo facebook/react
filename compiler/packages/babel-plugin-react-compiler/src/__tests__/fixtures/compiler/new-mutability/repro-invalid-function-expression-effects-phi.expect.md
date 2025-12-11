@@ -38,8 +38,10 @@ function Component(t0) {
       while (z == null) {
         z = x;
       }
+
       z.y = y;
     };
+
     f();
     mutate(x);
     t1 = <div>{x}</div>;

@@ -39,6 +39,7 @@ function Example(props) {
       obj.property = props.value;
       return obj;
     };
+
     t0 = f();
     $[0] = object;
     $[1] = props.value;

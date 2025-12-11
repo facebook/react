@@ -6,28 +6,14 @@ function Component({prop1, prop2}) {
   const y = x * 2;
   const arr = [x, y];
   const obj = {x, y};
-  let destA, destB;
-  if (y > 5) {
-    [destA, destB] = arr;
-  }
-
   const [a, b] = arr;
   const {x: c, y: d} = obj;
-  let sound;
-
-  if (y > 10) {
-    sound = 'woof';
-  } else {
-    sound = 'meow';
-  }
 
   useEffect(() => {
     if (a > 10) {
       console.log(a);
-      console.log(sound);
-      console.log(destA, destB);
     }
-  }, [a, sound, destA, destB]);
+  }, [a]);
 
   const foo = useCallback(() => {
     return a + b;

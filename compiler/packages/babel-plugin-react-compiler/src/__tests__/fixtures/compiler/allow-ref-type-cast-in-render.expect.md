@@ -36,6 +36,7 @@ function useArrayOfRef() {
     const callback = (value) => {
       ref.current = value;
     };
+
     t0 = [callback];
     $[0] = t0;
   } else {

@@ -61,6 +61,7 @@ function Component() {
   let t1;
   if ($[2] !== state) {
     const doubledArray = makeArray(state);
+
     t1 = doubledArray.join("");
     $[2] = state;
     $[3] = t1;
