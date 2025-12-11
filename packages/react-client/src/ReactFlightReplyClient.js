@@ -104,7 +104,7 @@ function serializePromiseID(id: number): string {
 }
 
 function serializeServerReferenceID(id: number): string {
-  return '$F' + id.toString(16);
+  return '$h' + id.toString(16);
 }
 
 function serializeTemporaryReferenceMarker(): string {
@@ -112,7 +112,6 @@ function serializeTemporaryReferenceMarker(): string {
 }
 
 function serializeFormDataReference(id: number): string {
-  // Why K? F is "Function". D is "Date". What else?
   return '$K' + id.toString(16);
 }
 
@@ -474,8 +473,22 @@ export function processReply(
         }
       }
 
+      const existingReference = writtenObjects.get(value);
+
       // $FlowFixMe[method-unbinding]
       if (typeof value.then === 'function') {
+        if (existingReference !== undefined) {
+          if (modelRoot === value) {
+            // This is the ID we're currently emitting so we need to write it
+            // once but if we discover it again, we refer to it by id.
+            modelRoot = null;
+          } else {
+            // We've already emitted this as an outlined object, so we can
+            // just refer to that by its existing ID.
+            return existingReference;
+          }
+        }
+
         // We assume that any object with a .then property is a "Thenable" type,
         // or a Promise type. Either of which can be represented by a Promise.
         if (formData === null) {
@@ -484,11 +497,19 @@ export function processReply(
         }
         pendingParts++;
         const promiseId = nextPartId++;
+        const promiseReference = serializePromiseID(promiseId);
+        writtenObjects.set(value, promiseReference);
         const thenable: Thenable<any> = (value: any);
         thenable.then(
           partValue => {
             try {
-              const partJSON = serializeModel(partValue, promiseId);
+              const previousReference = writtenObjects.get(partValue);
+              let partJSON;
+              if (previousReference !== undefined) {
+                partJSON = JSON.stringify(previousReference);
+              } else {
+                partJSON = serializeModel(partValue, promiseId);
+              }
               // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
               const data: FormData = formData;
               data.append(formFieldPrefix + promiseId, partJSON);
@@ -504,10 +525,9 @@ export function processReply(
           // that throws on the server instead.
           reject,
         );
-        return serializePromiseID(promiseId);
+        return promiseReference;
       }
 
-      const existingReference = writtenObjects.get(value);
       if (existingReference !== undefined) {
         if (modelRoot === value) {
           // This is the ID we're currently emitting so we need to write it
