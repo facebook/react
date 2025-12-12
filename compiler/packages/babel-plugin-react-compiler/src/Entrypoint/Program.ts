@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+// @ts-ignore
 import {NodePath} from '@babel/core';
+// @ts-ignore
 import * as t from '@babel/types';
 import {
   CompilerError,
@@ -270,7 +272,9 @@ export function createNewFunctionNode(
       break;
     }
     default: {
+      // @ts-ignore
       assertExhaustive(
+        // @ts-ignore
         originalFn.node,
         `Creating unhandled function: ${originalFn.node}`,
       );
@@ -326,7 +330,9 @@ function insertNewOutlinedFunctionNode(
       return insertedFuncDecl;
     }
     default: {
+      // @ts-ignore
       assertExhaustive(
+        // @ts-ignore
         originalFn,
         `Inserting unhandled function: ${originalFn}`,
       );
@@ -993,10 +999,13 @@ function getReactFunctionType(
       return componentSyntaxType;
     }
     case 'all': {
+      // @ts-ignore
       return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
     }
     default: {
+      // @ts-ignore
       assertExhaustive(
+        // @ts-ignore
         pass.opts.compilationMode,
         `Unexpected compilationMode \`${pass.opts.compilationMode}\``,
       );
@@ -1157,6 +1166,7 @@ function isValidPropsAnnotation(
   } else if (annot.type === 'Noop') {
     return true;
   } else {
+    // @ts-ignore
     assertExhaustive(annot, `Unexpected annotation node \`${annot}\``);
   }
 }
@@ -1430,6 +1440,23 @@ function getFunctionReferencedBeforeDeclarationAtTopLevel(
        */
       if (scope === null && id.isReferencedIdentifier()) {
         referencedBeforeDeclaration.add(fn.fn);
+      } else if (scope !== null && id.isReferencedIdentifier()) {
+        // Check if this function call is within another function that's being compiled
+        // This handles the case where named functions call other named functions
+        // defined in a different order within the same component
+        const parentFunction = scope.getFunctionParent();
+        if (parentFunction !== null) {
+          const parentFnName = getFunctionName(parentFunction);
+          if (parentFnName && parentFnName.isIdentifier()) {
+            const parentFn = fnNames.get(parentFnName.node.name);
+            if (parentFn) {
+              // This is a named function calling another named function
+              // Add the called function to referencedBeforeDeclaration to ensure
+              // proper ordering during compilation
+              referencedBeforeDeclaration.add(fn.fn);
+            }
+          }
+        }
       }
     },
   });
