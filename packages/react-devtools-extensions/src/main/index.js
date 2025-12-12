@@ -32,6 +32,7 @@ import {
 } from './elementSelection';
 import {viewAttributeSource} from './sourceSelection';
 
+import {evalInInspectedWindow} from './evalInInspectedWindow';
 import {startReactPolling} from './reactPolling';
 import {cloneStyleTags} from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
@@ -70,7 +71,7 @@ function createBridge() {
 
   bridge.addListener('reloadAppForProfiling', () => {
     localStorageSetItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
-    chrome.devtools.inspectedWindow.eval('window.location.reload();');
+    evalInInspectedWindow('reload', []);
   });
 
   bridge.addListener(
