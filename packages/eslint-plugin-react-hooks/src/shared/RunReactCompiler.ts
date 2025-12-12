@@ -39,6 +39,9 @@ const COMPILER_OPTIONS: PluginOptions = {
     validateNoCapitalizedCalls: [],
     validateHooksUsage: true,
     validateNoDerivedComputationsInEffects: true,
+    // Temporarily enabled for internal testing
+    enableUseKeyedState: true,
+    enableVerboseNoSetStateInEffect: true,
   },
 };
 

@@ -96,8 +96,11 @@ export default function setupHighlighter(
     applyingScroll = false;
   }
 
-  // $FlowFixMe[method-unbinding]
-  if (document && typeof document.addEventListener === 'function') {
+  if (
+    typeof document === 'object' &&
+    // $FlowFixMe[method-unbinding]
+    typeof document.addEventListener === 'function'
+  ) {
     document.addEventListener('scroll', () => {
       if (!scrollTimer) {
         // Periodically synchronize the scroll while scrolling.
@@ -202,13 +205,12 @@ export default function setupHighlighter(
           typeof node.getClientRects === 'function'
             ? node.getClientRects()
             : [];
-        // If this is currently display: none, then try another node.
-        // This can happen when one of the host instances is a hoistable.
         if (
-          nodeRects.length > 0 &&
-          (nodeRects.length > 2 ||
-            nodeRects[0].width > 0 ||
-            nodeRects[0].height > 0)
+          typeof node.getClientRects === 'undefined' || // If Host doesn't implement getClientRects, try to show the overlay.
+          (nodeRects.length > 0 && //                      If this is currently display: none, then try another node.
+            (nodeRects.length > 2 || //                    This can happen when one of the host instances is a hoistable.
+              nodeRects[0].width > 0 ||
+              nodeRects[0].height > 0))
         ) {
           // $FlowFixMe[method-unbinding]
           if (scrollIntoView && typeof node.scrollIntoView === 'function') {
