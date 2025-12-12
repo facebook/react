@@ -132,6 +132,12 @@ export class CompilerDiagnostic {
     return new CompilerDiagnostic({...options, details: []});
   }
 
+  clone(): CompilerDiagnostic {
+    const cloned = CompilerDiagnostic.create({...this.options});
+    cloned.options.details = [...this.options.details];
+    return cloned;
+  }
+
   get reason(): CompilerDiagnosticOptions['reason'] {
     return this.options.reason;
   }

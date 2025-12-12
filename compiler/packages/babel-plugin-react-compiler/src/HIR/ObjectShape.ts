@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  ErrorCategory,
+} from '../CompilerError';
 import {AliasingEffect, AliasingSignature} from '../Inference/AliasingEffects';
 import {assertExhaustive} from '../Utils/utils';
 import {
@@ -190,14 +194,26 @@ function parseAliasingSignatureConfig(
           };
         }
         case 'Impure': {
-          const place = lookup(effect.place);
+          const into = lookup(effect.into);
           return {
             kind: 'Impure',
-            place,
-            error: CompilerError.throwTodo({
-              reason: 'Support impure effect declarations',
-              loc: GeneratedSource,
+            into,
+            error: CompilerDiagnostic.create({
+              category: ErrorCategory.Purity,
+              reason: 'Cannot call impure function during render',
+              description: effect.reason,
+            }).withDetails({
+              kind: 'error',
+              loc,
+              message: 'Cannot call impure function',
             }),
+          };
+        }
+        case 'Render': {
+          const place = lookup(effect.place);
+          return {
+            kind: 'Render',
+            place,
           };
         }
         case 'Apply': {
@@ -1512,6 +1528,11 @@ export const DefaultNonmutatingHook = addHook(
           kind: 'Freeze',
           value: '@rest',
           reason: ValueReason.HookCaptured,
+        },
+        // Render the arguments
+        {
+          kind: 'Render',
+          place: '@rest',
         },
         // Returns a frozen value
         {
