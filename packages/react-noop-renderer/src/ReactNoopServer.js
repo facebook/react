@@ -34,6 +34,10 @@ type ActivityInstance = {
   children: Array<Instance | TextInstance | SuspenseInstance>,
 };
 
+type SuspenseListInstance = {
+  children: Array<Instance | TextInstance | SuspenseInstance>,
+};
+
 type SuspenseInstance = {
   state: 'pending' | 'complete' | 'client-render',
   children: Array<Instance | TextInstance | SuspenseInstance>,
@@ -194,6 +198,23 @@ const ReactNoopServer = ReactFizzServer({
   },
 
   pushEndActivityBoundary(
+    target: Array<Uint8Array>,
+    renderState: RenderState,
+  ): void {
+    target.push(POP);
+  },
+
+  pushStartSuspenseListBoundary(
+    target: Array<Uint8Array>,
+    renderState: RenderState,
+  ): void {
+    const suspenseListInstance: SuspenseListInstance = {
+      children: [],
+    };
+    target.push(Buffer.from(JSON.stringify(suspenseListInstance), 'utf8'));
+  },
+
+  pushEndSuspenseListBoundary(
     target: Array<Uint8Array>,
     renderState: RenderState,
   ): void {
