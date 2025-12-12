@@ -1,4 +1,4 @@
-// @validateNoDerivedComputationsInEffects_exp @enableTreatSetIdentifiersAsStateSetters @loggerTestOnly
+// @validateNoDerivedComputationsInEffects_exp @enableTreatSetIdentifiersAsStateSetters @loggerTestOnly @outputMode:"lint"
 
 function Component({setParentState, prop}) {
   useEffect(() => {
