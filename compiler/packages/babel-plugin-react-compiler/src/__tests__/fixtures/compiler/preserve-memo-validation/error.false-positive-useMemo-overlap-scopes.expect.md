@@ -44,13 +44,13 @@ Found 1 error:
 
 Compilation Skipped: Existing memoization could not be preserved
 
-React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly. If 'x' is defined later in the component (e.g., via useMemo or useCallback), try moving this memoization after the dependency's declaration.
 
 error.false-positive-useMemo-overlap-scopes.ts:23:9
   21 |   const result = useMemo(() => {
   22 |     return [Math.max(x[1], a)];
 > 23 |   }, [a, x]);
-     |          ^ This dependency may be modified later
+     |          ^ This dependency may be modified later. If 'x' is memoized, ensure it's declared before this hook
   24 |   arrayPush(y, 3);
   25 |   return {result, y};
   26 | }
