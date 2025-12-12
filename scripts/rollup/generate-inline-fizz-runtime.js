@@ -1,7 +1,6 @@
 'use strict';
 
 const fs = require('fs');
-const ClosureCompiler = require('google-closure-compiler').compiler;
 const prettier = require('prettier');
 
 const instructionDir =
@@ -46,6 +45,7 @@ const config = [
 const prettierConfig = require('../../.prettierrc.js');
 
 async function main() {
+  const ClosureCompiler = (await import('google-closure-compiler')).compiler;
   const exportStatements = await Promise.all(
     config.map(async ({entry, exportName}) => {
       const fullEntryPath = instructionDir + '/' + entry;
