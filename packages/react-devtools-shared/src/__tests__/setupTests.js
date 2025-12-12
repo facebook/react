@@ -248,6 +248,7 @@ beforeEach(() => {
     breakOnConsoleErrors: false,
     showInlineWarningsAndErrors: true,
     hideConsoleLogsInStrictMode: false,
+    disableSecondConsoleLogDimmingInStrictMode: false,
   });
 
   const bridgeListeners = [];
