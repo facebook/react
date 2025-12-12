@@ -1,8 +1,8 @@
-// @validateExhaustiveEffectDependencies:"all"
+// @validateExhaustiveEffectDependencies:"extra-only"
 import {useEffect} from 'react';
 
 function Component({x, y, z}) {
-  // error: missing dep - x
+  // no error: missing dep not reported in extra-only mode
   useEffect(() => {
     log(x);
   }, []);
@@ -12,12 +12,12 @@ function Component({x, y, z}) {
     log(x);
   }, [x, y]);
 
-  // error: missing dep - z; extra dep - y
+  // error: extra dep - y (missing dep - z not reported)
   useEffect(() => {
     log(x, z);
   }, [x, y]);
 
-  // error: missing dep x
+  // error: extra dep - x.y
   useEffect(() => {
     log(x);
   }, [x.y]);

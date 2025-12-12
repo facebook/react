@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateExhaustiveEffectDependencies
+// @validateExhaustiveEffectDependencies:"all"
 import {useEffect, useEffectEvent} from 'react';
 
 function Component({x, y, z}) {

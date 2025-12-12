@@ -225,8 +225,15 @@ export const EnvironmentConfigSchema = z.object({
 
   /**
    * Validate that dependencies supplied to effect hooks are exhaustive.
+   * Can be:
+   * - 'off': No validation (default)
+   * - 'all': Validate and report both missing and extra dependencies
+   * - 'missing-only': Only report missing dependencies
+   * - 'extra-only': Only report extra/unnecessary dependencies
    */
-  validateExhaustiveEffectDependencies: z.boolean().default(false),
+  validateExhaustiveEffectDependencies: z
+    .enum(['off', 'all', 'missing-only', 'extra-only'])
+    .default('off'),
 
   /**
    * When this is true, rather than pruning existing manual memoization but ensuring or validating

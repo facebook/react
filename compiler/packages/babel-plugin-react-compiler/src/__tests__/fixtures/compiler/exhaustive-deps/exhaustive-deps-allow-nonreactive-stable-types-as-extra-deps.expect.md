@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateExhaustiveMemoizationDependencies @validateExhaustiveEffectDependencies
+// @validateExhaustiveMemoizationDependencies @validateExhaustiveEffectDependencies:"all"
 import {
   useCallback,
   useTransition,
@@ -69,7 +69,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateExhaustiveMemoizationDependencies @validateExhaustiveEffectDependencies
+import { c as _c } from "react/compiler-runtime"; // @validateExhaustiveMemoizationDependencies @validateExhaustiveEffectDependencies:"all"
 import {
   useCallback,
   useTransition,
