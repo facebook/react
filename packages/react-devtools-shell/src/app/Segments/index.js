@@ -75,22 +75,26 @@ function Root({children}: {children: React.Node}): React.Node {
   );
 }
 
+const dynamicData = deferred(10, 'Dynamic Data: 📈📉📊', 'dynamicData');
 export default function Segments(): React.Node {
   return (
-    <React.Activity name="/" mode="visible">
-      <Root>
-        <React.Activity name="/outer/" mode="visible">
-          <OuterSegment>
-            <React.Activity name="/outer/inner" mode="visible">
-              <InnerSegment>
-                <React.Activity name="/outer/inner/page" mode="visible">
-                  <Page />
-                </React.Activity>
-              </InnerSegment>
-            </React.Activity>
-          </OuterSegment>
-        </React.Activity>
-      </Root>
-    </React.Activity>
+    <>
+      <p>{dynamicData}</p>
+      <React.Activity name="root" mode="visible">
+        <Root>
+          <React.Activity name="outer" mode="visible">
+            <OuterSegment>
+              <React.Activity name="inner" mode="visible">
+                <InnerSegment>
+                  <React.Activity name="slot" mode="visible">
+                    <Page />
+                  </React.Activity>
+                </InnerSegment>
+              </React.Activity>
+            </OuterSegment>
+          </React.Activity>
+        </Root>
+      </React.Activity>
+    </>
   );
 }

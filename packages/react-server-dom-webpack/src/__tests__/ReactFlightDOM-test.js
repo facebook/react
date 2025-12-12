@@ -60,10 +60,10 @@ describe('ReactFlightDOM', () => {
     FlightReactDOM = require('react-dom');
 
     jest.mock('react-server-dom-webpack/server', () =>
-      require('react-server-dom-webpack/server.node.unbundled'),
+      require('react-server-dom-unbundled/server.node'),
     );
     jest.mock('react-server-dom-webpack/static', () =>
-      require('react-server-dom-webpack/static.node.unbundled'),
+      require('react-server-dom-unbundled/static.node'),
     );
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
@@ -154,6 +154,23 @@ describe('ReactFlightDOM', () => {
       readable,
       writable,
     };
+  }
+
+  function createUnclosingStream(
+    stream: ReadableStream<Uint8Array>,
+  ): ReadableStream<Uint8Array> {
+    const reader = stream.getReader();
+
+    const s = new ReadableStream({
+      async pull(controller) {
+        const {done, value} = await reader.read();
+        if (!done) {
+          controller.enqueue(value);
+        }
+      },
+    });
+
+    return s;
   }
 
   const theInfinitePromise = new Promise(() => {});
@@ -2970,7 +2987,7 @@ describe('ReactFlightDOM', () => {
     const {prelude} = await pendingResult;
 
     const result = await ReactServerDOMClient.createFromReadableStream(
-      Readable.toWeb(prelude),
+      createUnclosingStream(Readable.toWeb(prelude)),
     );
 
     const iterator = result.multiShotIterable[Symbol.asyncIterator]();

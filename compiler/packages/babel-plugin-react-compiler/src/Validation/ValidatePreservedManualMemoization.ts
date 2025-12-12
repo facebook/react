@@ -242,6 +242,7 @@ function validateInferredDep(
     normalizedDep = {
       root: maybeNormalizedRoot.root,
       path: [...maybeNormalizedRoot.path, ...dep.path],
+      loc: maybeNormalizedRoot.loc,
     };
   } else {
     CompilerError.invariant(dep.identifier.name?.kind === 'named', {
@@ -267,8 +268,10 @@ function validateInferredDep(
           effect: Effect.Read,
           reactive: false,
         },
+        constant: false,
       },
       path: [...dep.path],
+      loc: GeneratedSource,
     };
   }
   for (const decl of declsWithinMemoBlock) {
@@ -379,8 +382,10 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
                 root: {
                   kind: 'NamedLocal',
                   value: storeTarget,
+                  constant: false,
                 },
                 path: [],
+                loc: storeTarget.loc,
               });
             }
           }
@@ -408,8 +413,10 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         root: {
           kind: 'NamedLocal',
           value: {...lvalue},
+          constant: false,
         },
         path: [],
+        loc: lvalue.loc,
       });
     }
   }

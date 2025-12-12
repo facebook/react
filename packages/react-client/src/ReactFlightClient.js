@@ -813,6 +813,12 @@ function createInitializedStreamChunk<
   value: T,
   controller: FlightStreamController,
 ): InitializedChunk<T> {
+  if (__DEV__) {
+    // Retain a strong reference to the Response while we wait for chunks.
+    if (response._pendingChunks++ === 0) {
+      response._weakResponse.response = response;
+    }
+  }
   // We use the reason field to stash the controller since we already have that
   // field. It's a bit of a hack but efficient.
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
@@ -888,6 +894,7 @@ function resolveModuleChunk<T>(
   const resolvedChunk: ResolvedModuleChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODULE;
   resolvedChunk.value = value;
+  resolvedChunk.reason = null;
   if (__DEV__) {
     const debugInfo = getModuleDebugInfo(value);
     if (debugInfo !== null) {
@@ -1108,6 +1115,8 @@ export function reportGlobalError(
     // because we won't be getting any new data to resolve it.
     if (chunk.status === PENDING) {
       triggerErrorOnChunk(response, chunk, error);
+    } else if (chunk.status === INITIALIZED && chunk.reason !== null) {
+      chunk.reason.error(error);
     }
   });
   if (__DEV__) {
@@ -1456,15 +1465,95 @@ function fulfillReference(
 ): void {
   const {handler, parentObject, key, map, path} = reference;
 
-  for (let i = 1; i < path.length; i++) {
+  try {
+    for (let i = 1; i < path.length; i++) {
+      while (
+        typeof value === 'object' &&
+        value !== null &&
+        value.$$typeof === REACT_LAZY_TYPE
+      ) {
+        // We never expect to see a Lazy node on this path because we encode those as
+        // separate models. This must mean that we have inserted an extra lazy node
+        // e.g. to replace a blocked element. We must instead look for it inside.
+        const referencedChunk: SomeChunk<any> = value._payload;
+        if (referencedChunk === handler.chunk) {
+          // This is a reference to the thing we're currently blocking. We can peak
+          // inside of it to get the value.
+          value = handler.value;
+          continue;
+        } else {
+          switch (referencedChunk.status) {
+            case RESOLVED_MODEL:
+              initializeModelChunk(referencedChunk);
+              break;
+            case RESOLVED_MODULE:
+              initializeModuleChunk(referencedChunk);
+              break;
+          }
+          switch (referencedChunk.status) {
+            case INITIALIZED: {
+              value = referencedChunk.value;
+              continue;
+            }
+            case BLOCKED: {
+              // It is possible that we're blocked on our own chunk if it's a cycle.
+              // Before adding the listener to the inner chunk, let's check if it would
+              // result in a cycle.
+              const cyclicHandler = resolveBlockedCycle(
+                referencedChunk,
+                reference,
+              );
+              if (cyclicHandler !== null) {
+                // This reference points back to this chunk. We can resolve the cycle by
+                // using the value from that handler.
+                value = cyclicHandler.value;
+                continue;
+              }
+              // Fallthrough
+            }
+            case PENDING: {
+              // If we're not yet initialized we need to skip what we've already drilled
+              // through and then wait for the next value to become available.
+              path.splice(0, i - 1);
+              // Add "listener" to our new chunk dependency.
+              if (referencedChunk.value === null) {
+                referencedChunk.value = [reference];
+              } else {
+                referencedChunk.value.push(reference);
+              }
+              if (referencedChunk.reason === null) {
+                referencedChunk.reason = [reference];
+              } else {
+                referencedChunk.reason.push(reference);
+              }
+              return;
+            }
+            case HALTED: {
+              // Do nothing. We couldn't fulfill.
+              // TODO: Mark downstreams as halted too.
+              return;
+            }
+            default: {
+              rejectReference(
+                response,
+                reference.handler,
+                referencedChunk.reason,
+              );
+              return;
+            }
+          }
+        }
+      }
+      value = value[path[i]];
+    }
+
     while (
       typeof value === 'object' &&
       value !== null &&
       value.$$typeof === REACT_LAZY_TYPE
     ) {
-      // We never expect to see a Lazy node on this path because we encode those as
-      // separate models. This must mean that we have inserted an extra lazy node
-      // e.g. to replace a blocked element. We must instead look for it inside.
+      // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
+      // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
       const referencedChunk: SomeChunk<any> = value._payload;
       if (referencedChunk === handler.chunk) {
         // This is a reference to the thing we're currently blocking. We can peak
@@ -1485,132 +1574,57 @@ function fulfillReference(
             value = referencedChunk.value;
             continue;
           }
-          case BLOCKED: {
-            // It is possible that we're blocked on our own chunk if it's a cycle.
-            // Before adding the listener to the inner chunk, let's check if it would
-            // result in a cycle.
-            const cyclicHandler = resolveBlockedCycle(
-              referencedChunk,
-              reference,
-            );
-            if (cyclicHandler !== null) {
-              // This reference points back to this chunk. We can resolve the cycle by
-              // using the value from that handler.
-              value = cyclicHandler.value;
-              continue;
-            }
-            // Fallthrough
-          }
-          case PENDING: {
-            // If we're not yet initialized we need to skip what we've already drilled
-            // through and then wait for the next value to become available.
-            path.splice(0, i - 1);
-            // Add "listener" to our new chunk dependency.
-            if (referencedChunk.value === null) {
-              referencedChunk.value = [reference];
-            } else {
-              referencedChunk.value.push(reference);
-            }
-            if (referencedChunk.reason === null) {
-              referencedChunk.reason = [reference];
-            } else {
-              referencedChunk.reason.push(reference);
-            }
-            return;
-          }
-          case HALTED: {
-            // Do nothing. We couldn't fulfill.
-            // TODO: Mark downstreams as halted too.
-            return;
-          }
-          default: {
-            rejectReference(
-              response,
-              reference.handler,
-              referencedChunk.reason,
-            );
-            return;
-          }
         }
       }
+      break;
     }
-    value = value[path[i]];
-  }
 
-  while (
-    typeof value === 'object' &&
-    value !== null &&
-    value.$$typeof === REACT_LAZY_TYPE
-  ) {
-    // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
-    // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
-    const referencedChunk: SomeChunk<any> = value._payload;
-    if (referencedChunk === handler.chunk) {
-      // This is a reference to the thing we're currently blocking. We can peak
-      // inside of it to get the value.
-      value = handler.value;
-      continue;
-    } else {
-      switch (referencedChunk.status) {
-        case RESOLVED_MODEL:
-          initializeModelChunk(referencedChunk);
+    const mappedValue = map(response, value, parentObject, key);
+    parentObject[key] = mappedValue;
+
+    // If this is the root object for a model reference, where `handler.value`
+    // is a stale `null`, the resolved value can be used directly.
+    if (key === '' && handler.value === null) {
+      handler.value = mappedValue;
+    }
+
+    // If the parent object is an unparsed React element tuple, we also need to
+    // update the props and owner of the parsed element object (i.e.
+    // handler.value).
+    if (
+      parentObject[0] === REACT_ELEMENT_TYPE &&
+      typeof handler.value === 'object' &&
+      handler.value !== null &&
+      handler.value.$$typeof === REACT_ELEMENT_TYPE
+    ) {
+      const element: any = handler.value;
+      switch (key) {
+        case '3':
+          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          element.props = mappedValue;
           break;
-        case RESOLVED_MODULE:
-          initializeModuleChunk(referencedChunk);
+        case '4':
+          // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
+          if (__DEV__) {
+            element._owner = mappedValue;
+          }
+          break;
+        case '5':
+          // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
+          if (__DEV__) {
+            element._debugStack = mappedValue;
+          }
+          break;
+        default:
+          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
           break;
       }
-      switch (referencedChunk.status) {
-        case INITIALIZED: {
-          value = referencedChunk.value;
-          continue;
-        }
-      }
+    } else if (__DEV__ && !reference.isDebug) {
+      transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
     }
-    break;
-  }
-
-  const mappedValue = map(response, value, parentObject, key);
-  parentObject[key] = mappedValue;
-
-  // If this is the root object for a model reference, where `handler.value`
-  // is a stale `null`, the resolved value can be used directly.
-  if (key === '' && handler.value === null) {
-    handler.value = mappedValue;
-  }
-
-  // If the parent object is an unparsed React element tuple, we also need to
-  // update the props and owner of the parsed element object (i.e.
-  // handler.value).
-  if (
-    parentObject[0] === REACT_ELEMENT_TYPE &&
-    typeof handler.value === 'object' &&
-    handler.value !== null &&
-    handler.value.$$typeof === REACT_ELEMENT_TYPE
-  ) {
-    const element: any = handler.value;
-    switch (key) {
-      case '3':
-        transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
-        element.props = mappedValue;
-        break;
-      case '4':
-        // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
-        if (__DEV__) {
-          element._owner = mappedValue;
-        }
-        break;
-      case '5':
-        // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
-        if (__DEV__) {
-          element._debugStack = mappedValue;
-        }
-        break;
-      default:
-        transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
-        break;
-    }
-  } else if (__DEV__ && !reference.isDebug) {
-    transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+  } catch (error) {
+    rejectReference(response, reference.handler, error);
+    return;
   }
 
   handler.deps--;
@@ -1876,6 +1890,7 @@ function loadServerReference<A: Iterable<any>, T>(
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
+      initializedChunk.reason = null;
       if (resolveListeners !== null) {
         wakeChunk(response, resolveListeners, handler.value, initializedChunk);
       } else {
@@ -2353,7 +2368,7 @@ function parseModelString(
         // Symbol
         return Symbol.for(value.slice(2));
       }
-      case 'F': {
+      case 'h': {
         // Server Reference
         const ref = value.slice(2);
         return getOutlinedModel(
@@ -3075,7 +3090,6 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
     // We already resolved. We didn't expect to see this.
     return;
   }
-  releasePendingChunk(response, chunk);
 
   const resolveListeners = chunk.value;
 
@@ -3133,6 +3147,7 @@ function startReadableStream<T>(
   streamState: StreamState,
 ): void {
   let controller: ReadableStreamController = (null: any);
+  let closed = false;
   const stream = new ReadableStream({
     type: type,
     start(c) {
@@ -3190,6 +3205,10 @@ function startReadableStream<T>(
       }
     },
     close(json: UninitializedModel): void {
+      if (closed) {
+        return;
+      }
+      closed = true;
       if (previousBlockedChunk === null) {
         controller.close();
       } else {
@@ -3200,6 +3219,10 @@ function startReadableStream<T>(
       }
     },
     error(error: mixed): void {
+      if (closed) {
+        return;
+      }
+      closed = true;
       if (previousBlockedChunk === null) {
         // $FlowFixMe[incompatible-call]
         controller.error(error);
@@ -3260,6 +3283,7 @@ function startAsyncIterable<T>(
           (chunk: any);
         initializedChunk.status = INITIALIZED;
         initializedChunk.value = {done: false, value: value};
+        initializedChunk.reason = null;
         if (resolveListeners !== null) {
           wakeChunkIfInitialized(
             response,
@@ -3289,6 +3313,9 @@ function startAsyncIterable<T>(
       nextWriteIndex++;
     },
     close(value: UninitializedModel): void {
+      if (closed) {
+        return;
+      }
       closed = true;
       if (nextWriteIndex === buffer.length) {
         buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
@@ -3316,6 +3343,9 @@ function startAsyncIterable<T>(
       }
     },
     error(error: Error): void {
+      if (closed) {
+        return;
+      }
       closed = true;
       if (nextWriteIndex === buffer.length) {
         buffer[nextWriteIndex] =
@@ -3374,6 +3404,14 @@ function stopStream(
   if (!chunk || chunk.status !== INITIALIZED) {
     // We didn't expect not to have an existing stream;
     return;
+  }
+  if (__DEV__) {
+    if (--response._pendingChunks === 0) {
+      // We're no longer waiting for any more chunks. We can release the strong
+      // reference to the response. We'll regain it if we ask for any more data
+      // later on.
+      response._weakResponse.response = null;
+    }
   }
   const streamChunk: InitializedStreamChunk<any> = (chunk: any);
   const controller = streamChunk.reason;
@@ -4857,6 +4895,7 @@ export function processBinaryChunk(
           resolvedRowTag === 65 /* "A" */ ||
           resolvedRowTag === 79 /* "O" */ ||
           resolvedRowTag === 111 /* "o" */ ||
+          resolvedRowTag === 98 /* "b" */ ||
           resolvedRowTag === 85 /* "U" */ ||
           resolvedRowTag === 83 /* "S" */ ||
           resolvedRowTag === 115 /* "s" */ ||
@@ -4916,14 +4955,31 @@ export function processBinaryChunk(
       // We found the last chunk of the row
       const length = lastIdx - i;
       const lastChunk = new Uint8Array(chunk.buffer, offset, length);
-      processFullBinaryRow(
-        response,
-        streamState,
-        rowID,
-        rowTag,
-        buffer,
-        lastChunk,
-      );
+
+      // Check if this is a Uint8Array for a byte stream. We enqueue it
+      // immediately but need to determine if we can use zero-copy or must copy.
+      if (rowTag === 98 /* "b" */) {
+        resolveBuffer(
+          response,
+          rowID,
+          // If we're at the end of the RSC chunk, no more parsing will access
+          // this buffer and we don't need to copy the chunk to allow detaching
+          // the buffer, otherwise we need to copy.
+          lastIdx === chunkLength ? lastChunk : lastChunk.slice(),
+          streamState,
+        );
+      } else {
+        // Process all other row types.
+        processFullBinaryRow(
+          response,
+          streamState,
+          rowID,
+          rowTag,
+          buffer,
+          lastChunk,
+        );
+      }
+
       // Reset state machine for a new row
       i = lastIdx;
       if (rowState === ROW_CHUNK_BY_NEWLINE) {
@@ -4936,14 +4992,27 @@ export function processBinaryChunk(
       rowLength = 0;
       buffer.length = 0;
     } else {
-      // The rest of this row is in a future chunk. We stash the rest of the
-      // current chunk until we can process the full row.
+      // The rest of this row is in a future chunk.
       const length = chunk.byteLength - i;
       const remainingSlice = new Uint8Array(chunk.buffer, offset, length);
-      buffer.push(remainingSlice);
-      // Update how many bytes we're still waiting for. If we're looking for
-      // a newline, this doesn't hurt since we'll just ignore it.
-      rowLength -= remainingSlice.byteLength;
+
+      // For byte streams, we can enqueue the partial row immediately without
+      // copying since we're at the end of the RSC chunk and no more parsing
+      // will access this buffer.
+      if (rowTag === 98 /* "b" */) {
+        // Update how many bytes we're still waiting for. We need to do this
+        // before enqueueing, as enqueue will detach the buffer and byteLength
+        // will become 0.
+        rowLength -= remainingSlice.byteLength;
+        resolveBuffer(response, rowID, remainingSlice, streamState);
+      } else {
+        // For other row types, stash the rest of the current chunk until we can
+        // process the full row.
+        buffer.push(remainingSlice);
+        // Update how many bytes we're still waiting for. If we're looking for
+        // a newline, this doesn't hurt since we'll just ignore it.
+        rowLength -= remainingSlice.byteLength;
+      }
       break;
     }
   }
