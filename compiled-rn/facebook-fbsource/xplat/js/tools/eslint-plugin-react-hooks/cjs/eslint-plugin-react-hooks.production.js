@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<feffb3ef932e35fc4916b2985f8a9c47>>
+ * @generated SignedSource<<e0c89d9d6b2410b3ece5a19d87d83bc6>>
  */
 
 'use strict';
@@ -54253,16 +54253,17 @@ function runWithEnvironment(func, env) {
         if (env.config.validateNoSetStateInRender) {
             validateNoSetStateInRender(hir).unwrap();
         }
-        if (env.config.validateNoDerivedComputationsInEffects_exp) {
+        if (env.config.validateNoDerivedComputationsInEffects_exp &&
+            env.outputMode === 'lint') {
             env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
         }
         else if (env.config.validateNoDerivedComputationsInEffects) {
             validateNoDerivedComputationsInEffects(hir);
         }
-        if (env.config.validateNoSetStateInEffects) {
+        if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
             env.logErrors(validateNoSetStateInEffects(hir, env));
         }
-        if (env.config.validateNoJSXInTryStatements) {
+        if (env.config.validateNoJSXInTryStatements && env.outputMode === 'lint') {
             env.logErrors(validateNoJSXInTryStatement(hir));
         }
         if (env.config.validateNoImpureFunctionsInRender) {
@@ -54284,7 +54285,9 @@ function runWithEnvironment(func, env) {
         name: 'RewriteInstructionKindsBasedOnReassignment',
         value: hir,
     });
-    if (env.enableValidations && env.config.validateStaticComponents) {
+    if (env.enableValidations &&
+        env.config.validateStaticComponents &&
+        env.outputMode === 'lint') {
         env.logErrors(validateStaticComponents(hir));
     }
     if (env.enableMemoization) {
