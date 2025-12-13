@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoVoidUseMemo:false
+// @validateNoVoidUseMemo:false @validateExhaustiveMemoizationDependencies:false
 function Component(props) {
   const item = props.item;
   const thumbnails = [];
@@ -23,7 +23,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateNoVoidUseMemo:false
+import { c as _c } from "react/compiler-runtime"; // @validateNoVoidUseMemo:false @validateExhaustiveMemoizationDependencies:false
 function Component(props) {
   const $ = _c(6);
   const item = props.item;
