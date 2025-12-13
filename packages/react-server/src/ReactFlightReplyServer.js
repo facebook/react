@@ -33,6 +33,7 @@ import {
 import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
+import getPrototypeOf from 'shared/getPrototypeOf';
 
 interface FlightStreamController {
   enqueueModel(json: string): void;
@@ -128,6 +129,26 @@ ReactPromise.prototype.then = function <T>(
   switch (chunk.status) {
     case INITIALIZED:
       if (typeof resolve === 'function') {
+        let inspectedValue = chunk.value;
+        // Recursively check if the value is itself a ReactPromise and if so if it points
+        // back to itself. This helps catch recursive thenables early error.
+        let cycleProtection = 0;
+        while (inspectedValue instanceof ReactPromise) {
+          cycleProtection++;
+          if (inspectedValue === chunk || cycleProtection > 1000) {
+            if (typeof reject === 'function') {
+              reject(new Error('Cannot have cyclic thenables.'));
+            }
+            return;
+          }
+          if (inspectedValue.status === INITIALIZED) {
+            inspectedValue = inspectedValue.value;
+          } else {
+            // If this is lazily resolved, pending or blocked, it'll eventually become
+            // initialized and break the loop. Rejected also breaks it.
+            break;
+          }
+        }
         resolve(chunk.value);
       }
       break;
@@ -155,6 +176,9 @@ ReactPromise.prototype.then = function <T>(
       break;
   }
 };
+
+const ObjectPrototype = Object.prototype;
+const ArrayPrototype = Array.prototype;
 
 export type Response = {
   _bundlerConfig: ServerManifest,
@@ -506,6 +530,7 @@ function loadServerReference<A: Iterable<any>, T>(
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
+      initializedChunk.reason = null;
       if (resolveListeners !== null) {
         wakeChunk(response, resolveListeners, handler.value);
       }
@@ -674,6 +699,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
+    initializedChunk.reason = null;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
@@ -694,6 +720,8 @@ export function reportGlobalError(response: Response, error: Error): void {
     // because we won't be getting any new data to resolve it.
     if (chunk.status === PENDING) {
       triggerErrorOnChunk(response, chunk, error);
+    } else if (chunk.status === INITIALIZED && chunk.reason !== null) {
+      chunk.reason.error(error);
     }
   });
 }
@@ -728,57 +756,34 @@ function fulfillReference(
 ): void {
   const {handler, parentObject, key, map, path} = reference;
 
-  for (let i = 1; i < path.length; i++) {
-    // The server doesn't have any lazy references but we unwrap Chunks here in the same way as the client.
-    while (value instanceof ReactPromise) {
-      const referencedChunk: SomeChunk<any> = value;
-      switch (referencedChunk.status) {
-        case RESOLVED_MODEL:
-          initializeModelChunk(referencedChunk);
-          break;
-      }
-      switch (referencedChunk.status) {
-        case INITIALIZED: {
-          value = referencedChunk.value;
-          continue;
-        }
-        case BLOCKED:
-        case PENDING: {
-          // If we're not yet initialized we need to skip what we've already drilled
-          // through and then wait for the next value to become available.
-          path.splice(0, i - 1);
-          // Add "listener" to our new chunk dependency.
-          if (referencedChunk.value === null) {
-            referencedChunk.value = [reference];
-          } else {
-            referencedChunk.value.push(reference);
-          }
-          if (referencedChunk.reason === null) {
-            referencedChunk.reason = [reference];
-          } else {
-            referencedChunk.reason.push(reference);
-          }
-          return;
-        }
-        default: {
-          rejectReference(response, reference.handler, referencedChunk.reason);
-          return;
-        }
+  try {
+    for (let i = 1; i < path.length; i++) {
+      // The server doesn't have any lazy references so we don't expect to go through a Promise.
+      const name = path[i];
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        (getPrototypeOf(value) === ObjectPrototype ||
+          getPrototypeOf(value) === ArrayPrototype) &&
+        hasOwnProperty.call(value, name)
+      ) {
+        value = value[name];
+      } else {
+        throw new Error('Invalid reference.');
       }
     }
-    const name = path[i];
-    if (typeof value === 'object' && hasOwnProperty.call(value, name)) {
-      value = value[name];
+
+    const mappedValue = map(response, value, parentObject, key);
+    parentObject[key] = mappedValue;
+
+    // If this is the root object for a model reference, where `handler.value`
+    // is a stale `null`, the resolved value can be used directly.
+    if (key === '' && handler.value === null) {
+      handler.value = mappedValue;
     }
-  }
-
-  const mappedValue = map(response, value, parentObject, key);
-  parentObject[key] = mappedValue;
-
-  // If this is the root object for a model reference, where `handler.value`
-  // is a stale `null`, the resolved value can be used directly.
-  if (key === '' && handler.value === null) {
-    handler.value = mappedValue;
+  } catch (error) {
+    rejectReference(response, reference.handler, error);
+    return;
   }
 
   // There are no Elements or Debug Info to transfer here.
@@ -889,53 +894,17 @@ function getOutlinedModel<T>(
     case INITIALIZED:
       let value = chunk.value;
       for (let i = 1; i < path.length; i++) {
-        // The server doesn't have any lazy references but we unwrap Chunks here in the same way as the client.
-        while (value instanceof ReactPromise) {
-          const referencedChunk: SomeChunk<any> = value;
-          switch (referencedChunk.status) {
-            case RESOLVED_MODEL:
-              initializeModelChunk(referencedChunk);
-              break;
-          }
-          switch (referencedChunk.status) {
-            case INITIALIZED: {
-              value = referencedChunk.value;
-              break;
-            }
-            case BLOCKED:
-            case PENDING: {
-              return waitForReference(
-                referencedChunk,
-                parentObject,
-                key,
-                response,
-                map,
-                path.slice(i - 1),
-              );
-            }
-            default: {
-              // This is an error. Instead of erroring directly, we're going to encode this on
-              // an initialization handler so that we can catch it at the nearest Element.
-              if (initializingHandler) {
-                initializingHandler.errored = true;
-                initializingHandler.value = null;
-                initializingHandler.reason = referencedChunk.reason;
-              } else {
-                initializingHandler = {
-                  chunk: null,
-                  value: null,
-                  reason: referencedChunk.reason,
-                  deps: 0,
-                  errored: true,
-                };
-              }
-              return (null: any);
-            }
-          }
-        }
         const name = path[i];
-        if (typeof value === 'object' && hasOwnProperty.call(value, name)) {
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          (getPrototypeOf(value) === ObjectPrototype ||
+            getPrototypeOf(value) === ArrayPrototype) &&
+          hasOwnProperty.call(value, name)
+        ) {
           value = value[name];
+        } else {
+          throw new Error('Invalid reference.');
         }
       }
       const chunkValue = map(response, value, parentObject, key);
@@ -1006,6 +975,11 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
   const id = parseInt(reference.slice(2), 16);
   const prefix = response._prefix;
   const key = prefix + id;
+  const chunks = response._chunks;
+  if (chunks.has(id)) {
+    throw new Error('Already initialized typed array.');
+  }
+
   // We should have this backingEntry in the store already because we emitted
   // it before referencing it. It should be a Blob.
   // TODO: Use getOutlinedModel to allow us to emit the Blob later. We should be able to do that now.
@@ -1055,6 +1029,7 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
+      initializedChunk.reason = null;
       if (resolveListeners !== null) {
         wakeChunk(response, resolveListeners, handler.value);
       }
@@ -1116,8 +1091,13 @@ function parseReadableStream<T>(
   parentKey: string,
 ): ReadableStream {
   const id = parseInt(reference.slice(2), 16);
+  const chunks = response._chunks;
+  if (chunks.has(id)) {
+    throw new Error('Already initialized stream.');
+  }
 
   let controller: ReadableStreamController = (null: any);
+  let closed = false;
   const stream = new ReadableStream({
     type: type,
     start(c) {
@@ -1166,6 +1146,10 @@ function parseReadableStream<T>(
       }
     },
     close(json: string): void {
+      if (closed) {
+        return;
+      }
+      closed = true;
       if (previousBlockedChunk === null) {
         controller.close();
       } else {
@@ -1176,6 +1160,10 @@ function parseReadableStream<T>(
       }
     },
     error(error: mixed): void {
+      if (closed) {
+        return;
+      }
+      closed = true;
       if (previousBlockedChunk === null) {
         // $FlowFixMe[incompatible-call]
         controller.error(error);
@@ -1218,6 +1206,10 @@ function parseAsyncIterable<T>(
   parentKey: string,
 ): $AsyncIterable<T, T, void> | $AsyncIterator<T, T, void> {
   const id = parseInt(reference.slice(2), 16);
+  const chunks = response._chunks;
+  if (chunks.has(id)) {
+    throw new Error('Already initialized stream.');
+  }
 
   const buffer: Array<SomeChunk<IteratorResult<T, T>>> = [];
   let closed = false;
@@ -1241,6 +1233,9 @@ function parseAsyncIterable<T>(
       nextWriteIndex++;
     },
     close(value: string): void {
+      if (closed) {
+        return;
+      }
       closed = true;
       if (nextWriteIndex === buffer.length) {
         buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
@@ -1268,6 +1263,9 @@ function parseAsyncIterable<T>(
       }
     },
     error(error: Error): void {
+      if (closed) {
+        return;
+      }
       closed = true;
       if (nextWriteIndex === buffer.length) {
         buffer[nextWriteIndex] =
@@ -1329,7 +1327,7 @@ function parseModelString(
         const chunk = getChunk(response, id);
         return chunk;
       }
-      case 'F': {
+      case 'h': {
         // Server Reference
         const ref = value.slice(2);
         return getOutlinedModel(response, ref, obj, key, loadServerReference);
