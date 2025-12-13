@@ -10,6 +10,7 @@ import {
   CompilerDiagnostic,
   CompilerError,
   CompilerSuggestionOperation,
+  Effect,
   SourceLocation,
 } from '..';
 import {CompilerSuggestion, ErrorCategory} from '../CompilerError';
@@ -18,10 +19,12 @@ import {
   BlockId,
   DependencyPath,
   FinishMemoize,
+  GeneratedSource,
   HIRFunction,
   Identifier,
   IdentifierId,
   InstructionKind,
+  isEffectEventFunctionType,
   isPrimitiveType,
   isStableType,
   isSubPath,
@@ -40,6 +43,7 @@ import {
 } from '../HIR/visitors';
 import {Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
+import {isEffectHook} from './ValidateMemoizedEffectDependencies';
 
 const DEBUG = false;
 
@@ -85,6 +89,7 @@ const DEBUG = false;
 export function validateExhaustiveDependencies(
   fn: HIRFunction,
 ): Result<void, CompilerError> {
+  const env = fn.env;
   const reactive = collectReactiveIdentifiersHIR(fn);
 
   const temporaries: Map<IdentifierId, Temporary> = new Map();
@@ -126,253 +131,20 @@ export function validateExhaustiveDependencies(
         loc: value.loc,
       },
     );
-    visitCandidateDependency(value.decl, temporaries, dependencies, locals);
-    const inferred: Array<InferredDependency> = Array.from(dependencies);
-    // Sort dependencies by name and path, with shorter/non-optional paths first
-    inferred.sort((a, b) => {
-      if (a.kind === 'Global' && b.kind == 'Global') {
-        return a.binding.name.localeCompare(b.binding.name);
-      } else if (a.kind == 'Local' && b.kind == 'Local') {
-        CompilerError.simpleInvariant(
-          a.identifier.name != null &&
-            a.identifier.name.kind === 'named' &&
-            b.identifier.name != null &&
-            b.identifier.name.kind === 'named',
-          {
-            reason: 'Expected dependencies to be named variables',
-            loc: a.loc,
-          },
-        );
-        if (a.identifier.id !== b.identifier.id) {
-          return a.identifier.name.value.localeCompare(b.identifier.name.value);
-        }
-        if (a.path.length !== b.path.length) {
-          // if a's path is shorter this returns a negative, sorting a first
-          return a.path.length - b.path.length;
-        }
-        for (let i = 0; i < a.path.length; i++) {
-          const aProperty = a.path[i];
-          const bProperty = b.path[i];
-          const aOptional = aProperty.optional ? 0 : 1;
-          const bOptional = bProperty.optional ? 0 : 1;
-          if (aOptional !== bOptional) {
-            // sort non-optionals first
-            return aOptional - bOptional;
-          } else if (aProperty.property !== bProperty.property) {
-            return String(aProperty.property).localeCompare(
-              String(bProperty.property),
-            );
-          }
-        }
-        return 0;
-      } else {
-        const aName =
-          a.kind === 'Global' ? a.binding.name : a.identifier.name?.value;
-        const bName =
-          b.kind === 'Global' ? b.binding.name : b.identifier.name?.value;
-        if (aName != null && bName != null) {
-          return aName.localeCompare(bName);
-        }
-        return 0;
-      }
-    });
-    // remove redundant inferred dependencies
-    retainWhere(inferred, (dep, ix) => {
-      const match = inferred.findIndex(prevDep => {
-        return (
-          isEqualTemporary(prevDep, dep) ||
-          (prevDep.kind === 'Local' &&
-            dep.kind === 'Local' &&
-            prevDep.identifier.id === dep.identifier.id &&
-            isSubPath(prevDep.path, dep.path))
-        );
-      });
-      // only retain entries that don't have a prior match
-      return match === -1 || match >= ix;
-    });
-    // Validate that all manual dependencies belong there
-    if (DEBUG) {
-      console.log('manual');
-      console.log(
-        (startMemo.deps ?? [])
-          .map(x => '  ' + printManualMemoDependency(x))
-          .join('\n'),
-      );
-      console.log('inferred');
-      console.log(
-        inferred.map(x => '  ' + printInferredDependency(x)).join('\n'),
-      );
-    }
-    const manualDependencies = startMemo.deps ?? [];
-    const matched: Set<ManualMemoDependency> = new Set();
-    const missing: Array<Extract<InferredDependency, {kind: 'Local'}>> = [];
-    const extra: Array<ManualMemoDependency> = [];
-    for (const inferredDependency of inferred) {
-      if (inferredDependency.kind === 'Global') {
-        for (const manualDependency of manualDependencies) {
-          if (
-            manualDependency.root.kind === 'Global' &&
-            manualDependency.root.identifierName ===
-              inferredDependency.binding.name
-          ) {
-            matched.add(manualDependency);
-            extra.push(manualDependency);
-          }
-        }
-        continue;
-      }
-      CompilerError.simpleInvariant(inferredDependency.kind === 'Local', {
-        reason: 'Unexpected function dependency',
-        loc: value.loc,
-      });
-      let hasMatchingManualDependency = false;
-      for (const manualDependency of manualDependencies) {
-        if (
-          manualDependency.root.kind === 'NamedLocal' &&
-          manualDependency.root.value.identifier.id ===
-            inferredDependency.identifier.id &&
-          (areEqualPaths(manualDependency.path, inferredDependency.path) ||
-            isSubPathIgnoringOptionals(
-              manualDependency.path,
-              inferredDependency.path,
-            ))
-        ) {
-          hasMatchingManualDependency = true;
-          matched.add(manualDependency);
-        }
-      }
-      if (
-        hasMatchingManualDependency ||
-        isOptionalDependency(inferredDependency, reactive)
-      ) {
-        continue;
-      }
-      missing.push(inferredDependency);
-    }
+    if (env.config.validateExhaustiveMemoizationDependencies) {
+      visitCandidateDependency(value.decl, temporaries, dependencies, locals);
+      const inferred: Array<InferredDependency> = Array.from(dependencies);
 
-    for (const dep of startMemo.deps ?? []) {
-      if (matched.has(dep)) {
-        continue;
+      const diagnostic = validateDependencies(
+        inferred,
+        startMemo.deps ?? [],
+        reactive,
+        startMemo.depsLoc,
+        ErrorCategory.MemoDependencies,
+      );
+      if (diagnostic != null) {
+        error.pushDiagnostic(diagnostic);
       }
-      if (dep.root.kind === 'NamedLocal' && dep.root.constant) {
-        CompilerError.simpleInvariant(
-          !dep.root.value.reactive &&
-            isPrimitiveType(dep.root.value.identifier),
-          {
-            reason: 'Expected constant-folded dependency to be non-reactive',
-            loc: dep.root.value.loc,
-          },
-        );
-        /*
-         * Constant primitives can get constant-folded, which means we won't
-         * see a LoadLocal for the value within the memo function.
-         */
-        continue;
-      }
-      extra.push(dep);
-    }
-
-    if (missing.length !== 0 || extra.length !== 0) {
-      let suggestion: CompilerSuggestion | null = null;
-      if (startMemo.depsLoc != null && typeof startMemo.depsLoc !== 'symbol') {
-        suggestion = {
-          description: 'Update dependencies',
-          range: [startMemo.depsLoc.start.index, startMemo.depsLoc.end.index],
-          op: CompilerSuggestionOperation.Replace,
-          text: `[${inferred
-            .filter(
-              dep =>
-                dep.kind === 'Local' && !isOptionalDependency(dep, reactive),
-            )
-            .map(printInferredDependency)
-            .join(', ')}]`,
-        };
-      }
-      const diagnostic = CompilerDiagnostic.create({
-        category: ErrorCategory.MemoDependencies,
-        reason: 'Found missing/extra memoization dependencies',
-        description: [
-          missing.length !== 0
-            ? 'Missing dependencies can cause a value to update less often than it should, ' +
-              'resulting in stale UI'
-            : null,
-          extra.length !== 0
-            ? 'Extra dependencies can cause a value to update more often than it should, ' +
-              'resulting in performance problems such as excessive renders or effects firing too often'
-            : null,
-        ]
-          .filter(Boolean)
-          .join('. '),
-        suggestions: suggestion != null ? [suggestion] : null,
-      });
-      for (const dep of missing) {
-        let reactiveStableValueHint = '';
-        if (isStableType(dep.identifier)) {
-          reactiveStableValueHint =
-            '. Refs, setState functions, and other "stable" values generally do not need to be added ' +
-            'as dependencies, but this variable may change over time to point to different values';
-        }
-        diagnostic.withDetails({
-          kind: 'error',
-          message: `Missing dependency \`${printInferredDependency(dep)}\`${reactiveStableValueHint}`,
-          loc: dep.loc,
-        });
-      }
-      for (const dep of extra) {
-        if (dep.root.kind === 'Global') {
-          diagnostic.withDetails({
-            kind: 'error',
-            message:
-              `Unnecessary dependency \`${printManualMemoDependency(dep)}\`. ` +
-              'Values declared outside of a component/hook should not be listed as ' +
-              'dependencies as the component will not re-render if they change',
-            loc: dep.loc ?? startMemo.depsLoc ?? value.loc,
-          });
-          error.pushDiagnostic(diagnostic);
-        } else {
-          const root = dep.root.value;
-          const matchingInferred = inferred.find(
-            (
-              inferredDep,
-            ): inferredDep is Extract<InferredDependency, {kind: 'Local'}> => {
-              return (
-                inferredDep.kind === 'Local' &&
-                inferredDep.identifier.id === root.identifier.id &&
-                isSubPathIgnoringOptionals(inferredDep.path, dep.path)
-              );
-            },
-          );
-          if (
-            matchingInferred != null &&
-            !isOptionalDependency(matchingInferred, reactive)
-          ) {
-            diagnostic.withDetails({
-              kind: 'error',
-              message:
-                `Overly precise dependency \`${printManualMemoDependency(dep)}\`, ` +
-                `use \`${printInferredDependency(matchingInferred)}\` instead`,
-              loc: dep.loc ?? startMemo.depsLoc ?? value.loc,
-            });
-          } else {
-            /**
-             * Else this dependency doesn't correspond to anything referenced in the memo function,
-             * or is an optional dependency so we don't want to suggest adding it
-             */
-            diagnostic.withDetails({
-              kind: 'error',
-              message: `Unnecessary dependency \`${printManualMemoDependency(dep)}\``,
-              loc: dep.loc ?? startMemo.depsLoc ?? value.loc,
-            });
-          }
-        }
-      }
-      if (suggestion != null) {
-        diagnostic.withDetails({
-          kind: 'hint',
-          message: `Inferred dependencies: \`${suggestion.text}\``,
-        });
-      }
-      error.pushDiagnostic(diagnostic);
     }
 
     dependencies.clear();
@@ -386,10 +158,317 @@ export function validateExhaustiveDependencies(
     {
       onStartMemoize,
       onFinishMemoize,
+      onEffect: (inferred, manual, manualMemoLoc) => {
+        if (env.config.validateExhaustiveEffectDependencies === false) {
+          return;
+        }
+        if (DEBUG) {
+          console.log(Array.from(inferred, printInferredDependency));
+          console.log(Array.from(manual, printInferredDependency));
+        }
+        const manualDeps: Array<ManualMemoDependency> = [];
+        for (const dep of manual) {
+          if (dep.kind === 'Local') {
+            manualDeps.push({
+              root: {
+                kind: 'NamedLocal',
+                constant: false,
+                value: {
+                  effect: Effect.Read,
+                  identifier: dep.identifier,
+                  kind: 'Identifier',
+                  loc: dep.loc,
+                  reactive: reactive.has(dep.identifier.id),
+                },
+              },
+              path: dep.path,
+              loc: dep.loc,
+            });
+          } else {
+            manualDeps.push({
+              root: {
+                kind: 'Global',
+                identifierName: dep.binding.name,
+              },
+              path: [],
+              loc: GeneratedSource,
+            });
+          }
+        }
+        const diagnostic = validateDependencies(
+          Array.from(inferred),
+          manualDeps,
+          reactive,
+          manualMemoLoc,
+          ErrorCategory.EffectExhaustiveDependencies,
+        );
+        if (diagnostic != null) {
+          error.pushDiagnostic(diagnostic);
+        }
+      },
     },
     false, // isFunctionExpression
   );
   return error.asResult();
+}
+
+function validateDependencies(
+  inferred: Array<InferredDependency>,
+  manualDependencies: Array<ManualMemoDependency>,
+  reactive: Set<IdentifierId>,
+  manualMemoLoc: SourceLocation | null,
+  category:
+    | ErrorCategory.MemoDependencies
+    | ErrorCategory.EffectExhaustiveDependencies,
+): CompilerDiagnostic | null {
+  // Sort dependencies by name and path, with shorter/non-optional paths first
+  inferred.sort((a, b) => {
+    if (a.kind === 'Global' && b.kind == 'Global') {
+      return a.binding.name.localeCompare(b.binding.name);
+    } else if (a.kind == 'Local' && b.kind == 'Local') {
+      CompilerError.simpleInvariant(
+        a.identifier.name != null &&
+          a.identifier.name.kind === 'named' &&
+          b.identifier.name != null &&
+          b.identifier.name.kind === 'named',
+        {
+          reason: 'Expected dependencies to be named variables',
+          loc: a.loc,
+        },
+      );
+      if (a.identifier.id !== b.identifier.id) {
+        return a.identifier.name.value.localeCompare(b.identifier.name.value);
+      }
+      if (a.path.length !== b.path.length) {
+        // if a's path is shorter this returns a negative, sorting a first
+        return a.path.length - b.path.length;
+      }
+      for (let i = 0; i < a.path.length; i++) {
+        const aProperty = a.path[i];
+        const bProperty = b.path[i];
+        const aOptional = aProperty.optional ? 0 : 1;
+        const bOptional = bProperty.optional ? 0 : 1;
+        if (aOptional !== bOptional) {
+          // sort non-optionals first
+          return aOptional - bOptional;
+        } else if (aProperty.property !== bProperty.property) {
+          return String(aProperty.property).localeCompare(
+            String(bProperty.property),
+          );
+        }
+      }
+      return 0;
+    } else {
+      const aName =
+        a.kind === 'Global' ? a.binding.name : a.identifier.name?.value;
+      const bName =
+        b.kind === 'Global' ? b.binding.name : b.identifier.name?.value;
+      if (aName != null && bName != null) {
+        return aName.localeCompare(bName);
+      }
+      return 0;
+    }
+  });
+  // remove redundant inferred dependencies
+  retainWhere(inferred, (dep, ix) => {
+    const match = inferred.findIndex(prevDep => {
+      return (
+        isEqualTemporary(prevDep, dep) ||
+        (prevDep.kind === 'Local' &&
+          dep.kind === 'Local' &&
+          prevDep.identifier.id === dep.identifier.id &&
+          isSubPath(prevDep.path, dep.path))
+      );
+    });
+    // only retain entries that don't have a prior match
+    return match === -1 || match >= ix;
+  });
+  // Validate that all manual dependencies belong there
+  if (DEBUG) {
+    console.log('manual');
+    console.log(
+      manualDependencies
+        .map(x => '  ' + printManualMemoDependency(x))
+        .join('\n'),
+    );
+    console.log('inferred');
+    console.log(
+      inferred.map(x => '  ' + printInferredDependency(x)).join('\n'),
+    );
+  }
+  const matched: Set<ManualMemoDependency> = new Set();
+  const missing: Array<Extract<InferredDependency, {kind: 'Local'}>> = [];
+  const extra: Array<ManualMemoDependency> = [];
+  for (const inferredDependency of inferred) {
+    if (inferredDependency.kind === 'Global') {
+      for (const manualDependency of manualDependencies) {
+        if (
+          manualDependency.root.kind === 'Global' &&
+          manualDependency.root.identifierName ===
+            inferredDependency.binding.name
+        ) {
+          matched.add(manualDependency);
+          extra.push(manualDependency);
+        }
+      }
+      continue;
+    }
+    CompilerError.simpleInvariant(inferredDependency.kind === 'Local', {
+      reason: 'Unexpected function dependency',
+      loc: inferredDependency.loc,
+    });
+    /**
+     * Skip effect event functions as they are not valid dependencies
+     */
+    if (isEffectEventFunctionType(inferredDependency.identifier)) {
+      continue;
+    }
+    let hasMatchingManualDependency = false;
+    for (const manualDependency of manualDependencies) {
+      if (
+        manualDependency.root.kind === 'NamedLocal' &&
+        manualDependency.root.value.identifier.id ===
+          inferredDependency.identifier.id &&
+        (areEqualPaths(manualDependency.path, inferredDependency.path) ||
+          isSubPathIgnoringOptionals(
+            manualDependency.path,
+            inferredDependency.path,
+          ))
+      ) {
+        hasMatchingManualDependency = true;
+        matched.add(manualDependency);
+      }
+    }
+    if (
+      hasMatchingManualDependency ||
+      isOptionalDependency(inferredDependency, reactive)
+    ) {
+      continue;
+    }
+
+    missing.push(inferredDependency);
+  }
+
+  for (const dep of manualDependencies) {
+    if (matched.has(dep)) {
+      continue;
+    }
+    if (dep.root.kind === 'NamedLocal' && dep.root.constant) {
+      CompilerError.simpleInvariant(
+        !dep.root.value.reactive && isPrimitiveType(dep.root.value.identifier),
+        {
+          reason: 'Expected constant-folded dependency to be non-reactive',
+          loc: dep.root.value.loc,
+        },
+      );
+      /*
+       * Constant primitives can get constant-folded, which means we won't
+       * see a LoadLocal for the value within the memo function.
+       */
+      continue;
+    }
+    extra.push(dep);
+  }
+
+  if (missing.length !== 0 || extra.length !== 0) {
+    let suggestion: CompilerSuggestion | null = null;
+    if (manualMemoLoc != null && typeof manualMemoLoc !== 'symbol') {
+      suggestion = {
+        description: 'Update dependencies',
+        range: [manualMemoLoc.start.index, manualMemoLoc.end.index],
+        op: CompilerSuggestionOperation.Replace,
+        text: `[${inferred
+          .filter(
+            dep =>
+              dep.kind === 'Local' &&
+              !isOptionalDependency(dep, reactive) &&
+              !isEffectEventFunctionType(dep.identifier),
+          )
+          .map(printInferredDependency)
+          .join(', ')}]`,
+      };
+    }
+    const diagnostic = createDiagnostic(category, missing, extra, suggestion);
+    for (const dep of missing) {
+      let reactiveStableValueHint = '';
+      if (isStableType(dep.identifier)) {
+        reactiveStableValueHint =
+          '. Refs, setState functions, and other "stable" values generally do not need to be added ' +
+          'as dependencies, but this variable may change over time to point to different values';
+      }
+      diagnostic.withDetails({
+        kind: 'error',
+        message: `Missing dependency \`${printInferredDependency(dep)}\`${reactiveStableValueHint}`,
+        loc: dep.loc,
+      });
+    }
+    for (const dep of extra) {
+      if (dep.root.kind === 'Global') {
+        diagnostic.withDetails({
+          kind: 'error',
+          message:
+            `Unnecessary dependency \`${printManualMemoDependency(dep)}\`. ` +
+            'Values declared outside of a component/hook should not be listed as ' +
+            'dependencies as the component will not re-render if they change',
+          loc: dep.loc ?? manualMemoLoc,
+        });
+      } else {
+        const root = dep.root.value;
+        const matchingInferred = inferred.find(
+          (
+            inferredDep,
+          ): inferredDep is Extract<InferredDependency, {kind: 'Local'}> => {
+            return (
+              inferredDep.kind === 'Local' &&
+              inferredDep.identifier.id === root.identifier.id &&
+              isSubPathIgnoringOptionals(inferredDep.path, dep.path)
+            );
+          },
+        );
+        if (
+          matchingInferred != null &&
+          isEffectEventFunctionType(matchingInferred.identifier)
+        ) {
+          diagnostic.withDetails({
+            kind: 'error',
+            message:
+              `Functions returned from \`useEffectEvent\` must not be included in the dependency array. ` +
+              `Remove \`${printManualMemoDependency(dep)}\` from the dependencies.`,
+            loc: dep.loc ?? manualMemoLoc,
+          });
+        } else if (
+          matchingInferred != null &&
+          !isOptionalDependency(matchingInferred, reactive)
+        ) {
+          diagnostic.withDetails({
+            kind: 'error',
+            message:
+              `Overly precise dependency \`${printManualMemoDependency(dep)}\`, ` +
+              `use \`${printInferredDependency(matchingInferred)}\` instead`,
+            loc: dep.loc ?? manualMemoLoc,
+          });
+        } else {
+          /**
+           * Else this dependency doesn't correspond to anything referenced in the memo function,
+           * or is an optional dependency so we don't want to suggest adding it
+           */
+          diagnostic.withDetails({
+            kind: 'error',
+            message: `Unnecessary dependency \`${printManualMemoDependency(dep)}\``,
+            loc: dep.loc ?? manualMemoLoc,
+          });
+        }
+      }
+    }
+    if (suggestion != null) {
+      diagnostic.withDetails({
+        kind: 'hint',
+        message: `Inferred dependencies: \`${suggestion.text}\``,
+      });
+    }
+    return diagnostic;
+  }
+  return null;
 }
 
 function addDependency(
@@ -397,7 +476,7 @@ function addDependency(
   dependencies: Set<InferredDependency>,
   locals: Set<IdentifierId>,
 ): void {
-  if (dep.kind === 'Function') {
+  if (dep.kind === 'Aggregate') {
     for (const x of dep.dependencies) {
       addDependency(x, dependencies, locals);
     }
@@ -480,9 +559,14 @@ function collectDependencies(
       dependencies: Set<InferredDependency>,
       locals: Set<IdentifierId>,
     ) => void;
+    onEffect: (
+      inferred: Set<InferredDependency>,
+      manual: Set<InferredDependency>,
+      manualMemoLoc: SourceLocation | null,
+    ) => void;
   } | null,
   isFunctionExpression: boolean,
-): Extract<Temporary, {kind: 'Function'}> {
+): Extract<Temporary, {kind: 'Aggregate'}> {
   const optionals = findOptionalPlaces(fn);
   if (DEBUG) {
     console.log(prettyFormat(optionals));
@@ -501,25 +585,25 @@ function collectDependencies(
   }
   for (const block of fn.body.blocks.values()) {
     for (const phi of block.phis) {
-      let deps: Array<Temporary> | null = null;
+      const deps: Array<InferredDependency> = [];
       for (const operand of phi.operands.values()) {
         const dep = temporaries.get(operand.identifier.id);
         if (dep == null) {
           continue;
         }
-        if (deps == null) {
-          deps = [dep];
+        if (dep.kind === 'Aggregate') {
+          deps.push(...dep.dependencies);
         } else {
           deps.push(dep);
         }
       }
-      if (deps == null) {
+      if (deps.length === 0) {
         continue;
       } else if (deps.length === 1) {
         temporaries.set(phi.place.identifier.id, deps[0]!);
       } else {
         temporaries.set(phi.place.identifier.id, {
-          kind: 'Function',
+          kind: 'Aggregate',
           dependencies: new Set(deps),
         });
       }
@@ -537,9 +621,6 @@ function collectDependencies(
         }
         case 'LoadContext':
         case 'LoadLocal': {
-          if (locals.has(value.place.identifier.id)) {
-            break;
-          }
           const temp = temporaries.get(value.place.identifier.id);
           if (temp != null) {
             if (temp.kind === 'Local') {
@@ -547,6 +628,9 @@ function collectDependencies(
               temporaries.set(lvalue.identifier.id, local);
             } else {
               temporaries.set(lvalue.identifier.id, temp);
+            }
+            if (locals.has(value.place.identifier.id)) {
+              locals.add(lvalue.identifier.id);
             }
           }
           break;
@@ -683,10 +767,55 @@ function collectDependencies(
           }
           break;
         }
+        case 'ArrayExpression': {
+          const arrayDeps: Set<InferredDependency> = new Set();
+          for (const item of value.elements) {
+            if (item.kind === 'Hole') {
+              continue;
+            }
+            const place = item.kind === 'Identifier' ? item : item.place;
+            // Visit with alternative deps/locals to record manual dependencies
+            visitCandidateDependency(place, temporaries, arrayDeps, new Set());
+            // Visit normally to propagate inferred dependencies upward
+            visit(place);
+          }
+          temporaries.set(lvalue.identifier.id, {
+            kind: 'Aggregate',
+            dependencies: arrayDeps,
+            loc: value.loc,
+          });
+          break;
+        }
+        case 'CallExpression':
         case 'MethodCall': {
+          const receiver =
+            value.kind === 'CallExpression' ? value.callee : value.property;
+
+          const onEffect = callbacks?.onEffect;
+          if (onEffect != null && isEffectHook(receiver.identifier)) {
+            const [fn, deps] = value.args;
+            if (fn?.kind === 'Identifier' && deps?.kind === 'Identifier') {
+              const fnDeps = temporaries.get(fn.identifier.id);
+              const manualDeps = temporaries.get(deps.identifier.id);
+              if (
+                fnDeps?.kind === 'Aggregate' &&
+                manualDeps?.kind === 'Aggregate'
+              ) {
+                onEffect(
+                  fnDeps.dependencies,
+                  manualDeps.dependencies,
+                  manualDeps.loc ?? null,
+                );
+              }
+            }
+          }
+
           // Ignore the method itself
           for (const operand of eachInstructionValueOperand(value)) {
-            if (operand.identifier.id === value.property.identifier.id) {
+            if (
+              value.kind === 'MethodCall' &&
+              operand.identifier.id === value.property.identifier.id
+            ) {
               continue;
             }
             visit(operand);
@@ -710,7 +839,7 @@ function collectDependencies(
       visit(operand);
     }
   }
-  return {kind: 'Function', dependencies};
+  return {kind: 'Aggregate', dependencies};
 }
 
 function printInferredDependency(dep: InferredDependency): string {
@@ -748,7 +877,7 @@ function printManualMemoDependency(dep: ManualMemoDependency): string {
 
 function isEqualTemporary(a: Temporary, b: Temporary): boolean {
   switch (a.kind) {
-    case 'Function': {
+    case 'Aggregate': {
       return false;
     }
     case 'Global': {
@@ -773,7 +902,11 @@ type Temporary =
       context: boolean;
       loc: SourceLocation;
     }
-  | {kind: 'Function'; dependencies: Set<Temporary>};
+  | {
+      kind: 'Aggregate';
+      dependencies: Set<InferredDependency>;
+      loc?: SourceLocation;
+    };
 type InferredDependency = Extract<Temporary, {kind: 'Local' | 'Global'}>;
 
 function collectReactiveIdentifiersHIR(fn: HIRFunction): Set<IdentifierId> {
@@ -887,4 +1020,65 @@ function isOptionalDependency(
     (isStableType(inferredDependency.identifier) ||
       isPrimitiveType(inferredDependency.identifier))
   );
+}
+
+function createDiagnostic(
+  category:
+    | ErrorCategory.MemoDependencies
+    | ErrorCategory.EffectExhaustiveDependencies,
+  missing: Array<InferredDependency>,
+  extra: Array<ManualMemoDependency>,
+  suggestion: CompilerSuggestion | null,
+): CompilerDiagnostic {
+  let reason: string;
+  let description: string;
+
+  function joinMissingExtraDetail(
+    missingString: string,
+    extraString: string,
+    joinStr: string,
+  ): string {
+    return [
+      missing.length !== 0 ? missingString : null,
+      extra.length !== 0 ? extraString : null,
+    ]
+      .filter(Boolean)
+      .join(joinStr);
+  }
+
+  switch (category) {
+    case ErrorCategory.MemoDependencies: {
+      reason = `Found ${joinMissingExtraDetail('missing', 'extra', '/')} memoization dependencies`;
+      description = joinMissingExtraDetail(
+        'Missing dependencies can cause a value to update less often than it should, resulting in stale UI',
+        'Extra dependencies can cause a value to update more often than it should, resulting in performance' +
+          ' problems such as excessive renders or effects firing too often',
+        '. ',
+      );
+      break;
+    }
+    case ErrorCategory.EffectExhaustiveDependencies: {
+      reason = `Found ${joinMissingExtraDetail('missing', 'extra', '/')} effect dependencies`;
+      description = joinMissingExtraDetail(
+        'Missing dependencies can cause an effect to fire less often than it should',
+        'Extra dependencies can cause an effect to fire more often than it should, resulting' +
+          ' in performance problems such as excessive renders and side effects',
+        '. ',
+      );
+      break;
+    }
+    default: {
+      CompilerError.simpleInvariant(false, {
+        reason: `Unexpected error category: ${category}`,
+        loc: GeneratedSource,
+      });
+    }
+  }
+
+  return CompilerDiagnostic.create({
+    category,
+    reason,
+    description,
+    suggestions: suggestion != null ? [suggestion] : null,
+  });
 }
