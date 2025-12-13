@@ -6,10 +6,10 @@
  */
 
 import * as t from '@babel/types';
-import {ZodError, z} from 'zod';
-import {fromZodError} from 'zod-validation-error';
+import {ZodError, z} from 'zod/v4';
+import {fromZodError} from 'zod-validation-error/v4';
 import {CompilerError} from '../CompilerError';
-import {Logger, ProgramContext} from '../Entrypoint';
+import {CompilerOutputMode, Logger, ProgramContext} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
@@ -51,6 +51,7 @@ import {Scope as BabelScope, NodePath} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
 import {FlowTypeEnv} from '../Flood/Types';
 import {defaultModuleTypeProvider} from './DefaultModuleTypeProvider';
+import {assertExhaustive} from '../Utils/utils';
 
 export const ReactElementSymbolSchema = z.object({
   elementSymbol: z.union([
@@ -83,21 +84,11 @@ export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
 export const USE_FIRE_FUNCTION_NAME = 'useFire';
 export const EMIT_FREEZE_GLOBAL_GATING = '__DEV__';
 
-export const MacroMethodSchema = z.union([
-  z.object({type: z.literal('wildcard')}),
-  z.object({type: z.literal('name'), name: z.string()}),
-]);
-
-// Would like to change this to drop the string option, but breaks compatibility with existing configs
-export const MacroSchema = z.union([
-  z.string(),
-  z.tuple([z.string(), z.array(MacroMethodSchema)]),
-]);
+export const MacroSchema = z.string();
 
 export type CompilerMode = 'all_features' | 'no_inferred_memo';
 
 export type Macro = z.infer<typeof MacroSchema>;
-export type MacroMethod = z.infer<typeof MacroMethodSchema>;
 
 const HookSchema = z.object({
   /*
@@ -228,6 +219,16 @@ export const EnvironmentConfigSchema = z.object({
   validatePreserveExistingMemoizationGuarantees: z.boolean().default(true),
 
   /**
+   * Validate that dependencies supplied to manual memoization calls are exhaustive.
+   */
+  validateExhaustiveMemoizationDependencies: z.boolean().default(true),
+
+  /**
+   * Validate that dependencies supplied to effect hooks are exhaustive.
+   */
+  validateExhaustiveEffectDependencies: z.boolean().default(false),
+
+  /**
    * When this is true, rather than pruning existing manual memoization but ensuring or validating
    * that the memoized values remain memoized, the compiler will simply not prune existing calls to
    * useMemo/useCallback.
@@ -323,6 +324,12 @@ export const EnvironmentConfigSchema = z.object({
   validateNoSetStateInRender: z.boolean().default(true),
 
   /**
+   * When enabled, changes the behavior of validateNoSetStateInRender to recommend
+   * using useKeyedState instead of the manual pattern for resetting state.
+   */
+  enableUseKeyedState: z.boolean().default(false),
+
+  /**
    * Validates that setState is not called synchronously within an effect (useEffect and friends).
    * Scheduling a setState (with an event listener, subscription, etc) is valid.
    */
@@ -333,6 +340,12 @@ export const EnvironmentConfigSchema = z.object({
    * during render.
    */
   validateNoDerivedComputationsInEffects: z.boolean().default(false),
+
+  /**
+   * Experimental: Validates that effects are not used to calculate derived data which could instead be computed
+   * during render. Generates a custom error message for each type of violation.
+   */
+  validateNoDerivedComputationsInEffects_exp: z.boolean().default(false),
 
   /**
    * Validates against creating JSX within a try block and recommends using an error boundary
@@ -367,6 +380,13 @@ export const EnvironmentConfigSchema = z.object({
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
   validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
+
+  /**
+   * Validates that AST nodes generated during codegen have proper source locations.
+   * This is useful for debugging issues with source maps and Istanbul coverage.
+   * When enabled, the compiler will error if important source locations are missing in the generated AST.
+   */
+  validateSourceLocations: z.boolean().default(false),
 
   /**
    * Validate against impure functions called during render
@@ -659,7 +679,7 @@ export const EnvironmentConfigSchema = z.object({
    * Invalid:
    *   useMemo(() => { ... }, [...]);
    */
-  validateNoVoidUseMemo: z.boolean().default(false),
+  validateNoVoidUseMemo: z.boolean().default(true),
 
   /**
    * Validates that Components/Hooks are always defined at module level. This prevents scope
@@ -669,11 +689,35 @@ export const EnvironmentConfigSchema = z.object({
   validateNoDynamicallyCreatedComponentsOrHooks: z.boolean().default(false),
 
   /**
-   * When enabled, allows setState calls in effects when the value being set is
-   * derived from a ref. This is useful for patterns where initial layout measurements
-   * from refs need to be stored in state during mount.
+   * When enabled, allows setState calls in effects based on valid patterns involving refs:
+   * - Allow setState where the value being set is derived from a ref. This is useful where
+   *   state needs to take into account layer information, and a layout effect reads layout
+   *   data from a ref and sets state.
+   * - Allow conditionally calling setState after manually comparing previous/new values
+   *   for changes via a ref. Relying on effect deps is insufficient for non-primitive values,
+   *   so a ref is generally required to manually track previous values and compare prev/next
+   *   for meaningful changes before setting state.
    */
   enableAllowSetStateFromRefsInEffects: z.boolean().default(true),
+
+  /**
+   * When enabled, provides verbose error messages for setState calls within effects,
+   * presenting multiple possible fixes to the user/agent since we cannot statically
+   * determine which specific use-case applies:
+   * 1. Non-local derived data - requires restructuring state ownership
+   * 2. Derived event pattern - detecting when a prop changes
+   * 3. Force update / external sync - should use useSyncExternalStore
+   */
+  enableVerboseNoSetStateInEffect: z.boolean().default(false),
+
+  /**
+   * Enables inference of event handler types for JSX props on built-in DOM elements.
+   * When enabled, functions passed to event handler props (props starting with "on")
+   * on primitive JSX tags are inferred to have the BuiltinEventHandlerId type, which
+   * allows ref access within those functions since DOM event handlers are guaranteed
+   * by React to only execute in response to events, not during render.
+   */
+  enableInferEventHandlers: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
@@ -713,7 +757,7 @@ export class Environment {
   code: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
-  compilerMode: CompilerMode;
+  outputMode: CompilerOutputMode;
   programContext: ProgramContext;
   hasFireRewrite: boolean;
   hasInferredEffect: boolean;
@@ -728,7 +772,7 @@ export class Environment {
   constructor(
     scope: BabelScope,
     fnType: ReactFunctionType,
-    compilerMode: CompilerMode,
+    outputMode: CompilerOutputMode,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
     parentFunction: NodePath<t.Function>, // the outermost function being compiled
@@ -739,7 +783,7 @@ export class Environment {
   ) {
     this.#scope = scope;
     this.fnType = fnType;
-    this.compilerMode = compilerMode;
+    this.outputMode = outputMode;
     this.config = config;
     this.filename = filename;
     this.code = code;
@@ -835,8 +879,65 @@ export class Environment {
     return this.#flowTypeEnvironment;
   }
 
-  get isInferredMemoEnabled(): boolean {
-    return this.compilerMode !== 'no_inferred_memo';
+  get enableDropManualMemoization(): boolean {
+    switch (this.outputMode) {
+      case 'lint': {
+        // linting drops to be more compatible with compiler analysis
+        return true;
+      }
+      case 'client':
+      case 'ssr': {
+        return true;
+      }
+      case 'client-no-memo': {
+        return false;
+      }
+      default: {
+        assertExhaustive(
+          this.outputMode,
+          `Unexpected output mode '${this.outputMode}'`,
+        );
+      }
+    }
+  }
+
+  get enableMemoization(): boolean {
+    switch (this.outputMode) {
+      case 'client':
+      case 'lint': {
+        // linting also enables memoization so that we can check if manual memoization is preserved
+        return true;
+      }
+      case 'ssr':
+      case 'client-no-memo': {
+        return false;
+      }
+      default: {
+        assertExhaustive(
+          this.outputMode,
+          `Unexpected output mode '${this.outputMode}'`,
+        );
+      }
+    }
+  }
+
+  get enableValidations(): boolean {
+    switch (this.outputMode) {
+      case 'client':
+      case 'lint':
+      case 'ssr': {
+        return true;
+      }
+      case 'client-no-memo': {
+        return false;
+      }
+      default: {
+        assertExhaustive(
+          this.outputMode,
+          `Unexpected output mode '${this.outputMode}'`,
+        );
+      }
+    }
   }
 
   get nextIdentifierId(): IdentifierId {

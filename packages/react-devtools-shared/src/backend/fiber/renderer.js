@@ -26,6 +26,7 @@ import {
   ComponentFilterHOC,
   ComponentFilterLocation,
   ComponentFilterEnvironmentName,
+  ComponentFilterActivitySlice,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeFunction,
@@ -53,7 +54,7 @@ import {
   renamePathInObject,
   setInObject,
   utfEncodeString,
-  filterOutLocationComponentFilters,
+  persistableComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {
   formatConsoleArgumentsToSingleString,
@@ -85,6 +86,7 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
@@ -118,6 +120,7 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
   LAZY_SYMBOL_STRING,
+  REACT_OPTIMISTIC_KEY,
 } from '../shared/ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
@@ -170,6 +173,7 @@ import type {
 } from '../types';
 import type {
   ComponentFilter,
+  ActivitySliceFilter,
   ElementType,
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
@@ -301,6 +305,7 @@ type SuspenseNode = {
   rects: null | Array<Rect>, // The bounding rects of content children.
   suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
   environments: Map<string, number>, // Tracks the Flight environment names that suspended this. I.e. if the server blocked this.
+  endTime: number, // Track a short cut to the maximum end time value within the suspendedBy set.
   // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
   // also in the parent sets. This determine whether this could contribute in the loading sequence.
   hasUniqueSuspenders: boolean,
@@ -330,6 +335,7 @@ function createSuspenseNode(
     rects: null,
     suspendedBy: new Map(),
     environments: new Map(),
+    endTime: 0,
     hasUniqueSuspenders: false,
     hasUnknownSuspenders: false,
   });
@@ -865,6 +871,9 @@ const idToDevToolsInstanceMap: Map<
   FiberInstance['id'] | VirtualInstance['id'],
   FiberInstance | VirtualInstance,
 > = new Map();
+
+let focusedActivityID: null | FiberInstance['id'] = null;
+let focusedActivity: null | Fiber = null;
 
 const idToSuspenseNodeMap: Map<FiberInstance['id'], SuspenseNode> = new Map();
 
@@ -1433,16 +1442,25 @@ export function attach(
   const hideElementsWithPaths: Set<RegExp> = new Set();
   const hideElementsWithTypes: Set<ElementType> = new Set();
   const hideElementsWithEnvs: Set<string> = new Set();
+  let isInFocusedActivity: boolean = true;
 
   // Highlight updates
   let traceUpdatesEnabled: boolean = false;
   const traceUpdatesForNodes: Set<HostInstance> = new Set();
 
-  function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
+  function applyComponentFilters(
+    componentFilters: Array<ComponentFilter>,
+    nextActivitySlice: null | Fiber,
+  ) {
     hideElementsWithTypes.clear();
     hideElementsWithDisplayNames.clear();
     hideElementsWithPaths.clear();
     hideElementsWithEnvs.clear();
+    const previousFocusedActivityID = focusedActivityID;
+    focusedActivityID = null;
+    focusedActivity = null;
+    // Consider everything in the slice by default
+    isInFocusedActivity = true;
 
     componentFilters.forEach(componentFilter => {
       if (!componentFilter.isEnabled) {
@@ -1471,6 +1489,25 @@ export function attach(
         case ComponentFilterEnvironmentName:
           hideElementsWithEnvs.add(componentFilter.value);
           break;
+        case ComponentFilterActivitySlice:
+          if (
+            nextActivitySlice !== null &&
+            nextActivitySlice.tag === ActivityComponent
+          ) {
+            focusedActivity = nextActivitySlice;
+            isInFocusedActivity = false;
+            if (componentFilter.rendererID !== rendererID) {
+              // We filtered an Activity from another renderer.
+              // We need to restore the instance ID since we won't be mounting it
+              // in this renderer.
+              focusedActivityID = previousFocusedActivityID;
+            }
+          } else {
+            // We're not filtering by activity slice after all.
+            // Don't mark the filter as disabled here.
+            // Otherwise updateComponentFilters() will think no enabled filter was changed.
+          }
+          break;
         default:
           console.warn(
             `Invalid component filter type "${componentFilter.type}"`,
@@ -1484,11 +1521,9 @@ export function attach(
   // because they are stored in localStorage within the context of the extension.
   // Instead it relies on the extension to pass filters through.
   if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
-    const componentFiltersWithoutLocationBasedOnes =
-      filterOutLocationComponentFilters(
-        window.__REACT_DEVTOOLS_COMPONENT_FILTERS__,
-      );
-    applyComponentFilters(componentFiltersWithoutLocationBasedOnes);
+    const restoredComponentFilters: Array<ComponentFilter> =
+      persistableComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
+    applyComponentFilters(restoredComponentFilters, null);
   } else {
     // Unfortunately this feature is not expected to work for React Native for now.
     // It would be annoying for us to spam YellowBox warnings with unactionable stuff,
@@ -1496,7 +1531,7 @@ export function attach(
     //console.warn('⚛ DevTools: Could not locate saved component filters');
 
     // Fallback to assuming the default filters in this case.
-    applyComponentFilters(getDefaultComponentFilters());
+    applyComponentFilters(getDefaultComponentFilters(), null);
   }
 
   // If necessary, we can revisit optimizing this operation.
@@ -1510,6 +1545,27 @@ export function attach(
       throw Error('Cannot modify filter preferences while profiling');
     }
 
+    const previousForcedFallbacks =
+      forceFallbackForFibers.size > 0 ? new Set(forceFallbackForFibers) : null;
+    const previousForcedErrors =
+      forceErrorForFibers.size > 0 ? new Map(forceErrorForFibers) : null;
+
+    // The ID will be based on the old tree. We need to find the Fiber based on
+    // that ID before we unmount everything. We set the activity slice ID once
+    // we mount it again.
+    let nextFocusedActivity: null | Fiber = null;
+    let focusedActivityFilter: null | ActivitySliceFilter = null;
+    for (let i = 0; i < componentFilters.length; i++) {
+      const filter = componentFilters[i];
+      if (filter.type === ComponentFilterActivitySlice && filter.isEnabled) {
+        focusedActivityFilter = filter;
+        const instance = idToDevToolsInstanceMap.get(filter.activityID);
+        if (instance !== undefined && instance.kind === FIBER_INSTANCE) {
+          nextFocusedActivity = instance.data;
+        }
+      }
+    }
+
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
       const rootInstance = rootToFiberInstanceMap.get(root);
@@ -1521,14 +1577,58 @@ export function attach(
       currentRoot = rootInstance;
       unmountInstanceRecursively(rootInstance);
       rootToFiberInstanceMap.delete(root);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
 
-    applyComponentFilters(componentFilters);
+    if (
+      nextFocusedActivity !== focusedActivity &&
+      (focusedActivityFilter === null ||
+        focusedActivityFilter.rendererID === rendererID)
+    ) {
+      // When we find the applied instance during mount we will send the actual ID.
+      // Otherwise 0 will indicate that we unfocused the activity slice.
+      pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
+      pushOperation(0);
+    }
+    applyComponentFilters(componentFilters, nextFocusedActivity);
 
     // Reset pseudo counters so that new path selections will be persisted.
     rootDisplayNameCounter.clear();
+
+    // We just cleared all the forced states. Schedule updates on the affected Fibers
+    // so that we get their initial states again according to the new filters.
+    if (typeof scheduleUpdate === 'function') {
+      if (previousForcedFallbacks !== null) {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const fiber of previousForcedFallbacks) {
+          if (typeof scheduleRetry === 'function') {
+            scheduleRetry(fiber);
+          } else {
+            scheduleUpdate(fiber);
+          }
+        }
+      }
+      if (
+        previousForcedErrors !== null &&
+        typeof setErrorHandler === 'function'
+      ) {
+        // Unlike for Suspense, disabling the forced error state requires setting
+        // the status to false first. `shouldErrorFiberAccordingToMap` will clear
+        // the Fibers later.
+        setErrorHandler(shouldErrorFiberAccordingToMap);
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const [fiber, shouldError] of previousForcedErrors) {
+          forceErrorForFibers.set(fiber, false);
+          if (shouldError) {
+            if (typeof scheduleRetry === 'function') {
+              scheduleRetry(fiber);
+            } else {
+              scheduleUpdate(fiber);
+            }
+          }
+        }
+      }
+    }
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
@@ -1546,9 +1646,15 @@ export function attach(
       currentRoot = newRoot;
       setRootPseudoKey(currentRoot.id, root.current);
       mountFiberRecursively(root.current, false);
-      flushPendingEvents();
       currentRoot = (null: any);
     });
+
+    // We need to write back the new ID for the focused Fiber.
+    // Otherwise subsequent filter applications will try to focus based on the old ID.
+    // This is also relevant to filter across renderers.
+    if (focusedActivityFilter !== null && focusedActivityID !== null) {
+      focusedActivityFilter.activityID = focusedActivityID;
+    }
 
     flushPendingEvents();
 
@@ -1579,6 +1685,10 @@ export function attach(
     data: ReactComponentInfo,
     secondaryEnv: null | string,
   ): boolean {
+    if (!isInFocusedActivity) {
+      return true;
+    }
+
     // For purposes of filtering Server Components are always Function Components.
     // Environment will be used to filter Server vs Client.
     // Technically they can be forwardRef and memo too but those filters will go away
@@ -1613,6 +1723,11 @@ export function attach(
   // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
     const {tag, type, key} = fiber;
+
+    // It is never valid to filter the root element.
+    if (tag !== HostRoot && !isInFocusedActivity) {
+      return true;
+    }
 
     switch (tag) {
       case DehydratedSuspenseComponent:
@@ -1913,6 +2028,20 @@ export function attach(
     return false;
   }
 
+  function isUseSyncExternalStoreHook(hookObject: any): boolean {
+    const queue = hookObject.queue;
+    if (!queue) {
+      return false;
+    }
+
+    const boundHasOwnProperty = hasOwnProperty.bind(queue);
+    return (
+      boundHasOwnProperty('value') &&
+      boundHasOwnProperty('getSnapshot') &&
+      typeof queue.getSnapshot === 'function'
+    );
+  }
+
   function isHookThatCanScheduleUpdate(hookObject: any) {
     const queue = hookObject.queue;
     if (!queue) {
@@ -1929,12 +2058,7 @@ export function attach(
       return true;
     }
 
-    // Detect useSyncExternalStore()
-    return (
-      boundHasOwnProperty('value') &&
-      boundHasOwnProperty('getSnapshot') &&
-      typeof queue.getSnapshot === 'function'
-    );
+    return isUseSyncExternalStoreHook(hookObject);
   }
 
   function didStatefulHookChange(prev: any, next: any): boolean {
@@ -1955,10 +2079,18 @@ export function attach(
 
     const indices = [];
     let index = 0;
+
     while (next !== null) {
       if (didStatefulHookChange(prev, next)) {
         indices.push(index);
       }
+
+      // useSyncExternalStore creates 2 internal hooks, but we only count it as 1 user-facing hook
+      if (isUseSyncExternalStoreHook(next)) {
+        next = next.next;
+        prev = prev.next;
+      }
+
       next = next.next;
       prev = prev.next;
       index++;
@@ -2026,7 +2158,6 @@ export function attach(
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
-  let pendingUnmountedRootID: FiberInstance['id'] | null = null;
 
   function pushOperation(op: number): void {
     if (__DEV__) {
@@ -2054,8 +2185,7 @@ export function attach(
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
       pendingRealUnmountedSuspenseIDs.length === 0 &&
-      pendingSuspenderChanges.size === 0 &&
-      pendingUnmountedRootID === null
+      pendingSuspenderChanges.size === 0
     );
   }
 
@@ -2117,9 +2247,7 @@ export function attach(
       return;
     }
 
-    const numUnmountIDs =
-      pendingRealUnmountedIDs.length +
-      (pendingUnmountedRootID === null ? 0 : 1);
+    const numUnmountIDs = pendingRealUnmountedIDs.length;
     const numUnmountSuspenseIDs = pendingRealUnmountedSuspenseIDs.length;
     const numSuspenderChanges = pendingSuspenderChanges.size;
 
@@ -2139,8 +2267,8 @@ export function attach(
         // Regular operations
         pendingOperations.length +
         // All suspender changes are batched in a single message.
-        // [SUSPENSE_TREE_OPERATION_SUSPENDERS, suspenderChangesLength, ...[id, hasUniqueSuspenders]]
-        (numSuspenderChanges > 0 ? 2 + numSuspenderChanges * 2 : 0),
+        // [SUSPENSE_TREE_OPERATION_SUSPENDERS, suspenderChangesLength, ...[id, hasUniqueSuspenders, endTime, isSuspended]]
+        (numSuspenderChanges > 0 ? 2 + numSuspenderChanges * 4 : 0),
     );
 
     // Identify which renderer this update is coming from.
@@ -2197,11 +2325,6 @@ export function attach(
       for (let j = 0; j < pendingRealUnmountedIDs.length; j++) {
         operations[i++] = pendingRealUnmountedIDs[j];
       }
-      // The root ID should always be unmounted last.
-      if (pendingUnmountedRootID !== null) {
-        operations[i] = pendingUnmountedRootID;
-        i++;
-      }
     }
 
     // Fill in pending operations.
@@ -2225,6 +2348,15 @@ export function attach(
         }
         operations[i++] = fiberIdWithChanges;
         operations[i++] = suspense.hasUniqueSuspenders ? 1 : 0;
+        operations[i++] = Math.round(suspense.endTime * 1000);
+        const instance = suspense.instance;
+        const isSuspended =
+          // TODO: Track if other SuspenseNode like SuspenseList rows are suspended.
+          (instance.kind === FIBER_INSTANCE ||
+            instance.kind === FILTERED_FIBER_INSTANCE) &&
+          instance.data.tag === SuspenseComponent &&
+          instance.data.memoizedState !== null;
+        operations[i++] = isSuspended ? 1 : 0;
         operations[i++] = suspense.environments.size;
         suspense.environments.forEach((count, env) => {
           operations[i++] = getStringID(env);
@@ -2240,7 +2372,6 @@ export function attach(
     pendingRealUnmountedIDs.length = 0;
     pendingRealUnmountedSuspenseIDs.length = 0;
     pendingSuspenderChanges.clear();
-    pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
   }
@@ -2251,7 +2382,10 @@ export function attach(
     if (typeof instance !== 'object' || instance === null) {
       return null;
     }
-    if (typeof instance.getClientRects === 'function') {
+    if (
+      typeof instance.getClientRects === 'function' ||
+      instance.nodeType === 3
+    ) {
       // DOM
       const doc = instance.ownerDocument;
       if (instance === doc.documentElement) {
@@ -2273,7 +2407,21 @@ export function attach(
       const win = doc && doc.defaultView;
       const scrollX = win ? win.scrollX : 0;
       const scrollY = win ? win.scrollY : 0;
-      const rects = instance.getClientRects();
+      let rects;
+      if (instance.nodeType === 3) {
+        // Text nodes cannot be measured directly but we can measure a Range.
+        if (typeof doc.createRange !== 'function') {
+          return null;
+        }
+        const range = doc.createRange();
+        if (typeof range.getClientRects !== 'function') {
+          return null;
+        }
+        range.selectNodeContents(instance);
+        rects = range.getClientRects();
+      } else {
+        rects = instance.getClientRects();
+      }
       for (let i = 0; i < rects.length; i++) {
         const rect = rects[i];
         result.push({
@@ -2427,6 +2575,17 @@ export function attach(
         }
       }
     } else {
+      const suspenseNode = fiberInstance.suspenseNode;
+      if (suspenseNode !== null && fiber.memoizedState === null) {
+        // We're reconnecting an unsuspended Suspense. Measure to see if anything changed.
+        const prevRects = suspenseNode.rects;
+        const nextRects = measureInstance(fiberInstance);
+        if (!areEqualRects(prevRects, nextRects)) {
+          suspenseNode.rects = nextRects;
+          recordSuspenseResize(suspenseNode);
+        }
+      }
+
       const {key} = fiber;
       const displayName = getDisplayNameForFiber(fiber);
       const elementType = getElementTypeForFiber(fiber);
@@ -2639,9 +2798,15 @@ export function attach(
 
     const fiber = fiberInstance.data;
     const props = fiber.memoizedProps;
-    // TODO: Compute a fallback name based on Owner, key etc.
-    const name = props === null ? null : props.name || null;
+    // The frontend will guess a name based on heuristics (e.g. owner) if no explicit name is given.
+    const name =
+      fiber.tag !== SuspenseComponent || props === null
+        ? null
+        : props.name || null;
     const nameStringID = getStringID(name);
+
+    const isSuspended =
+      fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
 
     if (__DEBUG__) {
       console.log('recordSuspenseMount()', suspenseInstance);
@@ -2653,6 +2818,7 @@ export function attach(
     pushOperation(fiberID);
     pushOperation(parentID);
     pushOperation(nameStringID);
+    pushOperation(isSuspended ? 1 : 0);
 
     const rects = suspenseInstance.rects;
     if (rects === null) {
@@ -2661,10 +2827,10 @@ export function attach(
       pushOperation(rects.length);
       for (let i = 0; i < rects.length; ++i) {
         const rect = rects[i];
-        pushOperation(Math.round(rect.x));
-        pushOperation(Math.round(rect.y));
-        pushOperation(Math.round(rect.width));
-        pushOperation(Math.round(rect.height));
+        pushOperation(Math.round(rect.x * 1000));
+        pushOperation(Math.round(rect.y * 1000));
+        pushOperation(Math.round(rect.width * 1000));
+        pushOperation(Math.round(rect.height * 1000));
       }
     }
   }
@@ -2691,7 +2857,6 @@ export function attach(
       // Already disconnected.
       return;
     }
-    const fiber = fiberInstance.data;
 
     if (trackedPathMatchInstance === fiberInstance) {
       // We're in the process of trying to restore previous selection.
@@ -2701,17 +2866,7 @@ export function attach(
     }
 
     const id = fiberInstance.id;
-    const isRoot = fiber.tag === HostRoot;
-    if (isRoot) {
-      // Roots must be removed only after all children have been removed.
-      // So we track it separately.
-      pendingUnmountedRootID = id;
-    } else {
-      // To maintain child-first ordering,
-      // we'll push it into one of these queues,
-      // and later arrange them in the correct order.
-      pendingRealUnmountedIDs.push(id);
-    }
+    pendingRealUnmountedIDs.push(id);
   }
 
   function recordSuspenseResize(suspenseNode: SuspenseNode): void {
@@ -2733,10 +2888,10 @@ export function attach(
       pushOperation(rects.length);
       for (let i = 0; i < rects.length; ++i) {
         const rect = rects[i];
-        pushOperation(Math.round(rect.x));
-        pushOperation(Math.round(rect.y));
-        pushOperation(Math.round(rect.width));
-        pushOperation(Math.round(rect.height));
+        pushOperation(Math.round(rect.x * 1000));
+        pushOperation(Math.round(rect.y * 1000));
+        pushOperation(Math.round(rect.width * 1000));
+        pushOperation(Math.round(rect.height * 1000));
       }
     }
   }
@@ -2830,7 +2985,10 @@ export function attach(
     let parentInstance = reconcilingParent;
     while (
       parentInstance.kind === FILTERED_FIBER_INSTANCE &&
-      parentInstance.parent !== null
+      parentInstance.parent !== null &&
+      // We can't move past the parent Suspense node.
+      // The Suspense node holding async info must be a parent of the devtools instance (or the instance itself)
+      parentInstance !== parentSuspenseNode.instance
     ) {
       parentInstance = parentInstance.parent;
     }
@@ -2860,12 +3018,19 @@ export function attach(
     // like owner instances to link down into the tree.
     if (!suspendedBySet.has(parentInstance)) {
       suspendedBySet.add(parentInstance);
+      const virtualEndTime = getVirtualEndTime(ioInfo);
       if (
         !parentSuspenseNode.hasUniqueSuspenders &&
         !ioExistsInSuspenseAncestor(parentSuspenseNode, ioInfo)
       ) {
         // This didn't exist in the parent before, so let's mark this boundary as having a unique suspender.
         parentSuspenseNode.hasUniqueSuspenders = true;
+        if (parentSuspenseNode.endTime < virtualEndTime) {
+          parentSuspenseNode.endTime = virtualEndTime;
+        }
+        recordSuspenseSuspenders(parentSuspenseNode);
+      } else if (parentSuspenseNode.endTime < virtualEndTime) {
+        parentSuspenseNode.endTime = virtualEndTime;
         recordSuspenseSuspenders(parentSuspenseNode);
       }
     }
@@ -2927,6 +3092,26 @@ export function attach(
     }
   }
 
+  function getVirtualEndTime(ioInfo: ReactIOInfo): number {
+    if (ioInfo.env != null) {
+      // Sort client side content first so that scripts and streams don't
+      // cover up the effect of server time.
+      return ioInfo.end + 1000000;
+    }
+    return ioInfo.end;
+  }
+
+  function computeEndTime(suspenseNode: SuspenseNode) {
+    let maxEndTime = 0;
+    suspenseNode.suspendedBy.forEach((set, ioInfo) => {
+      const virtualEndTime = getVirtualEndTime(ioInfo);
+      if (virtualEndTime > maxEndTime) {
+        maxEndTime = virtualEndTime;
+      }
+    });
+    return maxEndTime;
+  }
+
   function removePreviousSuspendedBy(
     instance: DevToolsInstance,
     previousSuspendedBy: null | Array<ReactAsyncInfo>,
@@ -2944,6 +3129,7 @@ export function attach(
     if (previousSuspendedBy !== null && suspenseNode !== null) {
       const nextSuspendedBy = instance.suspendedBy;
       let changedEnvironment = false;
+      let mayHaveChangedEndTime = false;
       for (let i = 0; i < previousSuspendedBy.length; i++) {
         const asyncInfo = previousSuspendedBy[i];
         if (
@@ -2956,6 +3142,11 @@ export function attach(
           // Let's remove it from the parent SuspenseNode.
           const ioInfo = asyncInfo.awaited;
           const suspendedBySet = suspenseNode.suspendedBy.get(ioInfo);
+
+          if (suspenseNode.endTime === getVirtualEndTime(ioInfo)) {
+            // This may be the only remaining entry at this end time. Recompute the end time.
+            mayHaveChangedEndTime = true;
+          }
 
           if (
             suspendedBySet === undefined ||
@@ -3014,7 +3205,11 @@ export function attach(
           }
         }
       }
-      if (changedEnvironment) {
+      const newEndTime = mayHaveChangedEndTime
+        ? computeEndTime(suspenseNode)
+        : suspenseNode.endTime;
+      if (changedEnvironment || newEndTime !== suspenseNode.endTime) {
+        suspenseNode.endTime = newEndTime;
         recordSuspenseSuspenders(suspenseNode);
       }
     }
@@ -3144,12 +3339,30 @@ export function attach(
     }
   }
 
+  /**
+   * Offscreen of suspended Suspense
+   */
+  function isSuspendedOffscreen(fiber: Fiber): boolean {
+    switch (fiber.tag) {
+      case LegacyHiddenComponent:
+      // fallthrough since all published implementations currently implement the same state as Offscreen.
+      case OffscreenComponent:
+        return (
+          fiber.memoizedState !== null &&
+          fiber.return !== null &&
+          fiber.return.tag === SuspenseComponent
+        );
+      default:
+        return false;
+    }
+  }
+
   function unmountRemainingChildren() {
     if (
       reconcilingParent !== null &&
       (reconcilingParent.kind === FIBER_INSTANCE ||
         reconcilingParent.kind === FILTERED_FIBER_INSTANCE) &&
-      isHiddenOffscreen(reconcilingParent.data) &&
+      isSuspendedOffscreen(reconcilingParent.data) &&
       !isInDisconnectedSubtree
     ) {
       // This is a hidden offscreen, we need to execute this in the context of a disconnected subtree.
@@ -3244,14 +3457,22 @@ export function attach(
       // We don't update rects inside disconnected subtrees.
       return;
     }
-    const nextRects = measureInstance(suspenseNode.instance);
-    const prevRects = suspenseNode.rects;
-    if (areEqualRects(prevRects, nextRects)) {
-      return; // Unchanged
+    const instance = suspenseNode.instance;
+
+    const isSuspendedSuspenseComponent =
+      (instance.kind === FIBER_INSTANCE ||
+        instance.kind === FILTERED_FIBER_INSTANCE) &&
+      instance.data.tag === SuspenseComponent &&
+      instance.data.memoizedState !== null;
+    if (isSuspendedSuspenseComponent) {
+      // This boundary itself was suspended and we don't measure those since that would measure
+      // the fallback. We want to keep a ghost of the rectangle of the content not currently shown.
+      return;
     }
-    // The rect has changed. While the bailed out root wasn't in a disconnected subtree,
+
+    // While this boundary wasn't suspended and the bailed out root and wasn't in a disconnected subtree,
     // it's possible that this node was in one. So we need to check if we're offscreen.
-    let parent = suspenseNode.instance.parent;
+    let parent = instance.parent;
     while (parent !== null) {
       if (
         (parent.kind === FIBER_INSTANCE ||
@@ -3267,6 +3488,13 @@ export function attach(
       }
       parent = parent.parent;
     }
+
+    const nextRects = measureInstance(suspenseNode.instance);
+    const prevRects = suspenseNode.rects;
+    if (areEqualRects(prevRects, nextRects)) {
+      return; // Unchanged
+    }
+
     // We changed inside a visible tree.
     // Since this boundary changed, it's possible it also affected its children so lets
     // measure them as well.
@@ -3855,11 +4083,23 @@ export function attach(
     fiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): void {
+    const isFocusedActivityEntry =
+      focusedActivity !== null &&
+      (fiber === focusedActivity || fiber.alternate === focusedActivity);
+    if (isFocusedActivityEntry) {
+      isInFocusedActivity = true;
+    }
+
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     let newInstance = null;
     let newSuspenseNode = null;
     if (shouldIncludeInTree) {
       newInstance = recordMount(fiber, reconcilingParent);
+      if (isFocusedActivityEntry) {
+        focusedActivityID = newInstance.id;
+        pushOperation(TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE);
+        pushOperation(newInstance.id);
+      }
       if (fiber.tag === SuspenseComponent || fiber.tag === HostRoot) {
         newSuspenseNode = createSuspenseNode(newInstance);
         // Measure this Suspense node. In general we shouldn't do this until we have
@@ -3975,6 +4215,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const stashedIsInActivitySlice = isInFocusedActivity;
     if (newInstance !== null) {
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = newInstance;
@@ -3987,6 +4228,17 @@ export function attach(
       previouslyReconciledSiblingSuspenseNode = null;
       remainingReconcilingChildrenSuspenseNodes = null;
       shouldPopSuspenseNode = true;
+    }
+    if (
+      !isFocusedActivityEntry &&
+      focusedActivity !== null &&
+      fiber.tag === ActivityComponent
+    ) {
+      // We're not filtering how Activity within the focused activity.
+      // We cut of the bottom in the Frontend if we want to just show the
+      // Activity slice instead of all Activity descendants.
+      // The filtering in the backend only happens because filtering out
+      // everything above the focused Activity is hard to implement in the frontend.
     }
     try {
       if (traceUpdatesEnabled) {
@@ -4026,7 +4278,7 @@ export function attach(
         trackDebugInfoFromHostComponent(nearestInstance, fiber);
       }
 
-      if (isHiddenOffscreen(fiber)) {
+      if (isSuspendedOffscreen(fiber)) {
         // If an Offscreen component is hidden, mount its children as disconnected.
         const stashedDisconnected = isInDisconnectedSubtree;
         isInDisconnectedSubtree = true;
@@ -4037,6 +4289,9 @@ export function attach(
         } finally {
           isInDisconnectedSubtree = stashedDisconnected;
         }
+      } else if (isHiddenOffscreen(fiber)) {
+        // hidden Activity is noisy.
+        // Including it may show overlapping Suspense rects
       } else if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
         // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
         // Offscreen wrapper itself specially.
@@ -4112,6 +4367,7 @@ export function attach(
         }
       }
     } finally {
+      isInFocusedActivity = stashedIsInActivitySlice;
       if (newInstance !== null) {
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
@@ -4143,6 +4399,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const stashedIsInActivitySlice = isInFocusedActivity;
     const previousSuspendedBy = instance.suspendedBy;
     // Push a new DevTools instance parent while reconciling this subtree.
     reconcilingParent = instance;
@@ -4159,6 +4416,19 @@ export function attach(
         instance.suspenseNode.firstChild;
 
       shouldPopSuspenseNode = true;
+    }
+
+    if (focusedActivity !== null) {
+      if (instance.id === focusedActivityID) {
+        isInFocusedActivity = true;
+      } else if (
+        instance.kind === FIBER_INSTANCE &&
+        instance.data !== null &&
+        instance.data.tag === ActivityComponent
+      ) {
+        // Filtering nested Activity components inside the focused activity
+        // is done in the frontend.
+      }
     }
 
     try {
@@ -4211,6 +4481,7 @@ export function attach(
         previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
         remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
       }
+      isInFocusedActivity = stashedIsInActivitySlice;
     }
     if (instance.kind === FIBER_INSTANCE) {
       recordUnmount(instance);
@@ -4579,7 +4850,10 @@ export function attach(
               }
               let previousSiblingOfBestMatch = null;
               let bestMatch = remainingReconcilingChildren;
-              if (componentInfo.key != null) {
+              if (
+                componentInfo.key != null &&
+                componentInfo.key !== REACT_OPTIMISTIC_KEY
+              ) {
                 // If there is a key try to find a matching key in the set.
                 bestMatch = remainingReconcilingChildren;
                 while (bestMatch !== null) {
@@ -4891,6 +5165,7 @@ export function attach(
     const stashedSuspenseParent = reconcilingParentSuspenseNode;
     const stashedSuspensePrevious = previouslyReconciledSiblingSuspenseNode;
     const stashedSuspenseRemaining = remainingReconcilingChildrenSuspenseNodes;
+    const stashedIsInActivitySlice = isInFocusedActivity;
     let updateFlags = NoUpdate;
     let shouldMeasureSuspenseNode = false;
     let shouldPopSuspenseNode = false;
@@ -4929,6 +5204,15 @@ export function attach(
         suspenseNode.firstChild = null;
         shouldMeasureSuspenseNode = true;
         shouldPopSuspenseNode = true;
+      }
+
+      if (focusedActivity !== null) {
+        if (fiberInstance.id === focusedActivityID) {
+          isInFocusedActivity = true;
+        } else if (nextFiber.tag === ActivityComponent) {
+          // Filtering nested Activity components inside the focused activity
+          // is done in the frontend.
+        }
       }
     }
     try {
@@ -4981,17 +5265,28 @@ export function attach(
 
       const prevWasHidden = isHiddenOffscreen(prevFiber);
       const nextIsHidden = isHiddenOffscreen(nextFiber);
+      const prevWasSuspended = isSuspendedOffscreen(prevFiber);
+      const nextIsSuspended = isSuspendedOffscreen(nextFiber);
 
       if (isLegacySuspense) {
-        if (
-          fiberInstance !== null &&
-          fiberInstance.suspenseNode !== null &&
-          (prevFiber.stateNode === null) !== (nextFiber.stateNode === null)
-        ) {
-          trackThrownPromisesFromRetryCache(
-            fiberInstance.suspenseNode,
-            nextFiber.stateNode,
-          );
+        if (fiberInstance !== null && fiberInstance.suspenseNode !== null) {
+          const suspenseNode = fiberInstance.suspenseNode;
+          if (
+            (prevFiber.stateNode === null) !==
+            (nextFiber.stateNode === null)
+          ) {
+            trackThrownPromisesFromRetryCache(
+              suspenseNode,
+              nextFiber.stateNode,
+            );
+          }
+          if (
+            (prevFiber.memoizedState === null) !==
+            (nextFiber.memoizedState === null)
+          ) {
+            // Toggle suspended state.
+            recordSuspenseSuspenders(suspenseNode);
+          }
         }
       }
       // The logic below is inspired by the code paths in updateSuspenseComponent()
@@ -5058,8 +5353,8 @@ export function attach(
           );
           updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
-      } else if (nextIsHidden) {
-        if (!prevWasHidden) {
+      } else if (nextIsSuspended) {
+        if (!prevWasSuspended) {
           // We're hiding the children. Disconnect them from the front end but keep state.
           if (fiberInstance !== null && !isInDisconnectedSubtree) {
             disconnectChildrenRecursively(remainingReconcilingChildren);
@@ -5077,7 +5372,7 @@ export function attach(
         } finally {
           isInDisconnectedSubtree = stashedDisconnected;
         }
-      } else if (prevWasHidden && !nextIsHidden) {
+      } else if (prevWasSuspended && !nextIsSuspended) {
         // We're revealing the hidden children. We now need to update them to the latest state.
         // We do this while still in the disconnected state and then we reconnect the new ones.
         // This avoids reconnecting things that are about to be removed anyway.
@@ -5102,6 +5397,13 @@ export function attach(
           reconnectChildrenRecursively(fiberInstance);
           // Children may have reordered while they were hidden.
           updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
+        }
+      } else if (nextIsHidden) {
+        if (prevWasHidden) {
+          // still hidden. Nothing to do.
+        } else {
+          // We're hiding the children. Remove them from the Frontend
+          unmountRemainingChildren();
         }
       } else if (
         nextFiber.tag === SuspenseComponent &&
@@ -5132,6 +5434,14 @@ export function attach(
             );
           }
 
+          if (
+            (prevFiber.memoizedState === null) !==
+            (nextFiber.memoizedState === null)
+          ) {
+            // Toggle suspended state.
+            recordSuspenseSuspenders(suspenseNode);
+          }
+
           shouldMeasureSuspenseNode = false;
           updateFlags |= updateSuspenseChildrenRecursively(
             nextContentFiber,
@@ -5158,6 +5468,8 @@ export function attach(
           }
 
           trackThrownPromisesFromRetryCache(suspenseNode, nextFiber.stateNode);
+          // Toggle suspended state.
+          recordSuspenseSuspenders(suspenseNode);
 
           mountSuspenseChildrenRecursively(
             nextContentFiber,
@@ -5259,7 +5571,7 @@ export function attach(
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
         if (fiberInstance !== null && fiberInstance.kind === FIBER_INSTANCE) {
-          if (!nextIsHidden && !isInDisconnectedSubtree) {
+          if (!nextIsSuspended && !isInDisconnectedSubtree) {
             recordResetChildren(fiberInstance);
           }
 
@@ -5326,6 +5638,7 @@ export function attach(
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
           remainingReconcilingChildrenSuspenseNodes = stashedSuspenseRemaining;
         }
+        isInFocusedActivity = stashedIsInActivitySlice;
       }
     }
   }
@@ -5335,7 +5648,7 @@ export function attach(
       if (
         (child.kind === FIBER_INSTANCE ||
           child.kind === FILTERED_FIBER_INSTANCE) &&
-        isHiddenOffscreen(child.data)
+        isSuspendedOffscreen(child.data)
       ) {
         // This instance's children are already disconnected.
       } else {
@@ -5440,11 +5753,12 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
-        flushPendingEvents();
-
-        needsToFlushComponentLogs = false;
         currentRoot = (null: any);
       });
+
+      flushPendingEvents();
+
+      needsToFlushComponentLogs = false;
     }
   }
 
@@ -5697,7 +6011,28 @@ export function attach(
       return null;
     }
     if (devtoolsInstance.kind === FIBER_INSTANCE) {
-      return getDisplayNameForFiber(devtoolsInstance.data);
+      const fiber = devtoolsInstance.data;
+      if (fiber.tag === HostRoot) {
+        // The only reason you'd inspect a HostRoot is to show it as a SuspenseNode.
+        return 'Initial Paint';
+      }
+      if (fiber.tag === SuspenseComponent || fiber.tag === ActivityComponent) {
+        // For Suspense and Activity components, we can show a better name
+        // by using the name prop or their owner.
+        const props = fiber.memoizedProps;
+        if (props.name != null) {
+          return props.name;
+        }
+        const owner = getUnfilteredOwner(fiber);
+        if (owner != null) {
+          if (typeof owner.tag === 'number') {
+            return getDisplayNameForFiber((owner: any));
+          } else {
+            return owner.name || '';
+          }
+        }
+      }
+      return getDisplayNameForFiber(fiber);
     } else {
       return devtoolsInstance.data.name || '';
     }
@@ -5734,6 +6069,28 @@ export function attach(
         return ((instance.parent: any): VirtualInstance).id;
       }
       return instance.id;
+    }
+    return null;
+  }
+
+  function getSuspenseNodeIDForHostInstance(
+    publicInstance: HostInstance,
+  ): number | null {
+    const instance = publicInstanceToDevToolsInstanceMap.get(publicInstance);
+    if (instance !== undefined) {
+      // Pick nearest unfiltered SuspenseNode instance.
+      let suspenseInstance = instance;
+      while (
+        suspenseInstance.suspenseNode === null ||
+        suspenseInstance.kind === FILTERED_FIBER_INSTANCE
+      ) {
+        if (suspenseInstance.parent === null) {
+          // We shouldn't get here since we'll always have a suspenseNode at the root.
+          return null;
+        }
+        suspenseInstance = suspenseInstance.parent;
+      }
+      return suspenseInstance.id;
     }
     return null;
   }
@@ -5792,7 +6149,7 @@ export function attach(
       return {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
-        key: fiber.key,
+        key: fiber.key === REACT_OPTIMISTIC_KEY ? null : fiber.key,
         env: null,
         stack:
           fiber._debugOwner == null || fiber._debugStack == null
@@ -5805,7 +6162,11 @@ export function attach(
       return {
         displayName: componentInfo.name || 'Anonymous',
         id: instance.id,
-        key: componentInfo.key == null ? null : componentInfo.key,
+        key:
+          componentInfo.key == null ||
+          componentInfo.key === REACT_OPTIMISTIC_KEY
+            ? null
+            : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
         stack:
           componentInfo.owner == null || componentInfo.debugStack == null
@@ -6029,7 +6390,10 @@ export function attach(
             }
           }
           const newIO = asyncInfo.awaited;
-          if (newIO.name === 'RSC stream' && newIO.value != null) {
+          if (
+            (newIO.name === 'RSC stream' || newIO.name === 'rsc stream') &&
+            newIO.value != null
+          ) {
             const streamPromise = newIO.value;
             // Special case RSC stream entries to pick the last entry keyed by the stream.
             const existingEntry = streamEntries.get(streamPromise);
@@ -6088,7 +6452,10 @@ export function attach(
         continue;
       }
       foundIOEntries.add(ioInfo);
-      if (ioInfo.name === 'RSC stream' && ioInfo.value != null) {
+      if (
+        (ioInfo.name === 'RSC stream' || ioInfo.name === 'rsc stream') &&
+        ioInfo.value != null
+      ) {
         const streamPromise = ioInfo.value;
         // Special case RSC stream entries to pick the last entry keyed by the stream.
         const existingEntry = streamEntries.get(streamPromise);
@@ -6723,7 +7090,7 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
-      key: key != null ? key : null,
+      key: key != null && key !== REACT_OPTIMISTIC_KEY ? key : null,
 
       type: elementType,
 
@@ -8282,7 +8649,7 @@ export function attach(
     }
     return {
       displayName,
-      key,
+      key: key === REACT_OPTIMISTIC_KEY ? null : key,
       index,
     };
   }
@@ -8290,7 +8657,11 @@ export function attach(
   function getVirtualPathFrame(virtualInstance: VirtualInstance): PathFrame {
     return {
       displayName: virtualInstance.data.name || '',
-      key: virtualInstance.data.key == null ? null : virtualInstance.data.key,
+      key:
+        virtualInstance.data.key == null ||
+        virtualInstance.data.key === REACT_OPTIMISTIC_KEY
+          ? null
+          : virtualInstance.data.key,
       index: -1, // We use -1 to indicate that this is a virtual path frame.
     };
   }
@@ -8534,6 +8905,7 @@ export function attach(
     getDisplayNameForElementID,
     getNearestMountedDOMNode,
     getElementIDForHostInstance,
+    getSuspenseNodeIDForHostInstance,
     getInstanceAndStyle,
     getOwnersList,
     getPathForElement,

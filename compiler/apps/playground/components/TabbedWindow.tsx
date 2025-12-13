@@ -17,15 +17,11 @@ export default function TabbedWindow({
   tabs,
   activeTab,
   onTabChange,
-  activeTabOverride,
 }: {
   tabs: Map<string, React.ReactNode>;
   activeTab: string;
   onTabChange: (tab: string) => void;
-  activeTabOverride?: string;
 }): React.ReactElement {
-  const currentActiveTab = activeTabOverride ? activeTabOverride : activeTab;
-
   const id = useId();
   const transitionName = `tab-highlight-${id}`;
 
@@ -41,7 +37,7 @@ export default function TabbedWindow({
       <div className="flex flex-col h-full max-w-full">
         <div className="flex p-2 flex-shrink-0">
           {Array.from(tabs.keys()).map(tab => {
-            const isActive = currentActiveTab === tab;
+            const isActive = activeTab === tab;
             return (
               <button
                 key={tab}
@@ -77,7 +73,7 @@ export default function TabbedWindow({
           })}
         </div>
         <div className="flex-1 overflow-hidden w-full h-full">
-          {tabs.get(currentActiveTab)}
+          {tabs.get(activeTab)}
         </div>
       </div>
     </div>

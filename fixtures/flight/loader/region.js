@@ -3,7 +3,7 @@ import {
   load as reactLoad,
   getSource as getSourceImpl,
   transformSource as reactTransformSource,
-} from 'react-server-dom-webpack/node-loader';
+} from 'react-server-dom-unbundled/node-loader';
 
 export {resolve};
 

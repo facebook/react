@@ -52,6 +52,8 @@ export type Options = {
   encodeFormAction?: EncodeFormActionCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
+  startTime?: number,
+  endTime?: number,
   // For the Node.js client we only support a single-direction debug channel.
   debugChannel?: Readable,
 };
@@ -84,10 +86,7 @@ export function createFromNodeStream<T>(
 ): Thenable<T> {
   const debugChannel: void | DebugChannel =
     __DEV__ && options && options.debugChannel !== undefined
-      ? {
-          hasReadable: options.debugChannel.readable !== undefined,
-          callback: null,
-        }
+      ? {hasReadable: true, callback: null}
       : undefined;
 
   const response: Response = createResponse(
@@ -103,6 +102,10 @@ export function createFromNodeStream<T>(
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    __DEV__ && options && options.startTime != null
+      ? options.startTime
+      : undefined,
+    __DEV__ && options && options.endTime != null ? options.endTime : undefined,
     debugChannel,
   );
 

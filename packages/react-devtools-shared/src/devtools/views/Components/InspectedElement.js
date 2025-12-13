@@ -194,7 +194,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
   }
 
   let strictModeBadge = null;
-  if (element.isStrictModeNonCompliant) {
+  if (element.isStrictModeNonCompliant && element.parentID !== 0) {
     strictModeBadge = (
       <Tooltip label="This component is not running in StrictMode. Click to learn more.">
         <a
@@ -237,7 +237,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         <div className={styles.SelectedComponentName}>
           <div
             className={
-              element.isStrictModeNonCompliant
+              element.isStrictModeNonCompliant && element.parentID !== 0
                 ? `${styles.ComponentName} ${styles.StrictModeNonCompliantComponentName}`
                 : styles.ComponentName
             }

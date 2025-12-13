@@ -53,6 +53,8 @@ export {
   REACT_PROFILER_TYPE as Profiler,
   REACT_STRICT_MODE_TYPE as StrictMode,
   REACT_SUSPENSE_TYPE as Suspense,
+  REACT_VIEW_TRANSITION_TYPE as ViewTransition,
+  REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
   cloneElement,
   createElement,
   createRef,
@@ -71,5 +73,4 @@ export {
   captureOwnerStack, // DEV-only
   // Experimental
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
-  REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
 };

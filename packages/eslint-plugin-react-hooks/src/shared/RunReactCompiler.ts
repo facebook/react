@@ -17,11 +17,12 @@ import BabelPluginReactCompiler, {
   LoggerEvent,
 } from 'babel-plugin-react-compiler';
 import type {SourceCode} from 'eslint';
+import * as HermesParser from 'hermes-parser';
 import {isDeepStrictEqual} from 'util';
 import type {ParseResult} from '@babel/parser';
 
 const COMPILER_OPTIONS: PluginOptions = {
-  noEmit: true,
+  outputMode: 'lint',
   panicThreshold: 'none',
   // Don't emit errors on Flow suppressions--Flow already gave a signal
   flowSuppressions: false,
@@ -38,6 +39,9 @@ const COMPILER_OPTIONS: PluginOptions = {
     validateNoCapitalizedCalls: [],
     validateHooksUsage: true,
     validateNoDerivedComputationsInEffects: true,
+    // Temporarily enabled for internal testing
+    enableUseKeyedState: true,
+    enableVerboseNoSetStateInEffect: true,
   },
 };
 
@@ -113,14 +117,28 @@ function runReactCompilerImpl({
   }
 
   let babelAST: ParseResult<File> | null = null;
-  try {
-    babelAST = babelParse(sourceCode.text, {
-      sourceFilename: filename,
-      sourceType: 'unambiguous',
-      plugins: ['typescript', 'jsx'],
-    });
-  } catch (err: unknown) {
-    /* empty */
+
+  if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
+    try {
+      babelAST = babelParse(sourceCode.text, {
+        sourceFilename: filename,
+        sourceType: 'unambiguous',
+        plugins: ['typescript', 'jsx'],
+      });
+    } catch {
+      /* empty */
+    }
+  } else {
+    try {
+      babelAST = HermesParser.parse(sourceCode.text, {
+        babel: true,
+        enableExperimentalComponentSyntax: true,
+        sourceFilename: filename,
+        sourceType: 'module',
+      });
+    } catch {
+      /* empty */
+    }
   }
 
   if (babelAST != null) {

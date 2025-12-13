@@ -1568,20 +1568,6 @@ function lowerObjectPropertyKey(
       name: key.node.value,
     };
   } else if (property.node.computed && key.isExpression()) {
-    if (!key.isIdentifier() && !key.isMemberExpression()) {
-      /*
-       * NOTE: allowing complex key expressions can trigger a bug where a mutation is made conditional
-       * see fixture
-       * error.object-expression-computed-key-modified-during-after-construction.js
-       */
-      builder.errors.push({
-        reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
-        category: ErrorCategory.Todo,
-        loc: key.node.loc ?? null,
-        suggestions: null,
-      });
-      return null;
-    }
     const place = lowerExpressionToTemporary(builder, key);
     return {
       kind: 'computed',
@@ -4040,6 +4026,7 @@ function lowerAssignment(
           pattern: {
             kind: 'ArrayPattern',
             items,
+            loc: lvalue.node.loc ?? GeneratedSource,
           },
         },
         value,
@@ -4217,6 +4204,7 @@ function lowerAssignment(
           pattern: {
             kind: 'ObjectPattern',
             properties,
+            loc: lvalue.node.loc ?? GeneratedSource,
           },
         },
         value,

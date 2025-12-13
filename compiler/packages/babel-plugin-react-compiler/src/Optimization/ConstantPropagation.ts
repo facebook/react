@@ -609,6 +609,19 @@ function evaluateInstruction(
       constantPropagationImpl(value.loweredFunc.func, constants);
       return null;
     }
+    case 'StartMemoize': {
+      if (value.deps != null) {
+        for (const dep of value.deps) {
+          if (dep.root.kind === 'NamedLocal') {
+            const placeValue = read(constants, dep.root.value);
+            if (placeValue != null && placeValue.kind === 'Primitive') {
+              dep.root.constant = true;
+            }
+          }
+        }
+      }
+      return null;
+    }
     default: {
       // TODO: handle more cases
       return null;

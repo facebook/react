@@ -33,13 +33,14 @@ export default function ConfigEditor({
 }): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // TODO: Add back <Activity> after upgrading next.js
   return (
-    // TODO: Use <Activity> when it is compatible with Monaco: https://github.com/suren-atoyan/monaco-react/issues/753
     <>
       <div
         style={{
           display: isExpanded ? 'block' : 'none',
         }}>
+        {/* <Activity mode={isExpanded ? 'visible' : 'hidden'}> */}
         <ExpandedEditor
           onToggle={() => {
             startTransition(() => {
@@ -54,6 +55,8 @@ export default function ConfigEditor({
         style={{
           display: !isExpanded ? 'block' : 'none',
         }}>
+        {/* </Activity>
+        <Activity mode={isExpanded ? 'hidden' : 'visible'}></Activity> */}
         <CollapsedEditor
           onToggle={() => {
             startTransition(() => {
@@ -63,6 +66,7 @@ export default function ConfigEditor({
           }}
         />
       </div>
+      {/* </Activity> */}
     </>
   );
 }
@@ -123,6 +127,8 @@ function ExpandedEditor({
   return (
     <ViewTransition
       update={{[CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none'}}>
+      {/* enter={{[CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none'}}
+      exit={{[CONFIG_PANEL_TRANSITION]: 'slide-out', default: 'none'}}> */}
       <Resizable
         minWidth={300}
         maxWidth={600}

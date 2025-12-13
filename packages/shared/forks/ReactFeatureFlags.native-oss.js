@@ -38,10 +38,10 @@ export const enableLegacyFBSupport: boolean = false;
 export const enableLegacyHidden: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
 export const enableObjectFiber: boolean = false;
-export const enablePostpone: boolean = false;
 export const enableReactTestRendererWarning: boolean = false;
 export const enableRetryLaneExpiration: boolean = false;
 export const enableComponentPerformanceTrack: boolean = true;
+export const enablePerformanceIssueReporting: boolean = false;
 export const enableSchedulingProfiler: boolean =
   !enableComponentPerformanceTrack && __PROFILE__;
 export const enableScopeAPI: boolean = false;
@@ -62,7 +62,7 @@ export const enableHydrationLaneScheduling: boolean = true;
 export const enableYieldingBeforePassive: boolean = false;
 
 export const enableThrottledScheduling: boolean = false;
-export const enableViewTransition: boolean = false;
+export const enableViewTransition: boolean = true;
 export const enableGestureTransition: boolean = false;
 export const enableScrollEndPolyfill: boolean = true;
 export const enableSuspenseyImages: boolean = false;
@@ -72,8 +72,13 @@ export const enableHydrationChangeEvent: boolean = false;
 export const enableDefaultTransitionIndicator: boolean = false;
 export const ownerStackLimit = 1e4;
 
-export const enableFragmentRefs: boolean = false;
+export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
+export const enableFragmentRefsInstanceHandles: boolean = false;
+
+export const enableInternalInstanceMap: boolean = false;
+
+export const enableOptimisticKey: boolean = false;
 
 // Profiling Only
 export const enableProfilerTimer: boolean = __PROFILE__;

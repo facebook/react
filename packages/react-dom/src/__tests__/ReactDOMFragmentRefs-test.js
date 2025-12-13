@@ -110,6 +110,53 @@ describe('FragmentRefs', () => {
     await act(() => root.render(<Test />));
   });
 
+  // @gate enableFragmentRefs && enableFragmentRefsInstanceHandles
+  it('attaches fragment handles to nodes', async () => {
+    const fragmentParentRef = React.createRef();
+    const fragmentRef = React.createRef();
+
+    function Test({show}) {
+      return (
+        <Fragment ref={fragmentParentRef}>
+          <Fragment ref={fragmentRef}>
+            <div id="childA">A</div>
+            <div id="childB">B</div>
+          </Fragment>
+          <div id="childC">C</div>
+          {show && <div id="childD">D</div>}
+        </Fragment>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<Test show={false} />));
+
+    const childA = document.querySelector('#childA');
+    const childB = document.querySelector('#childB');
+    const childC = document.querySelector('#childC');
+
+    expect(childA.unstable_reactFragments.has(fragmentRef.current)).toBe(true);
+    expect(childB.unstable_reactFragments.has(fragmentRef.current)).toBe(true);
+    expect(childC.unstable_reactFragments.has(fragmentRef.current)).toBe(false);
+    expect(childA.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
+      true,
+    );
+    expect(childB.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
+      true,
+    );
+    expect(childC.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
+      true,
+    );
+
+    await act(() => root.render(<Test show={true} />));
+
+    const childD = document.querySelector('#childD');
+    expect(childD.unstable_reactFragments.has(fragmentRef.current)).toBe(false);
+    expect(childD.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
+      true,
+    );
+  });
+
   describe('focus methods', () => {
     describe('focus()', () => {
       // @gate enableFragmentRefs
@@ -1045,6 +1092,126 @@ describe('FragmentRefs', () => {
         {withoutStack: true},
       );
     });
+
+    // @gate enableFragmentRefs && enableFragmentRefsInstanceHandles
+    it('attaches handles to observed elements to allow caching of observers', async () => {
+      const targetToCallbackMap = new WeakMap();
+      let cachedObserver = null;
+      function createObserverIfNeeded(fragmentInstance, onIntersection) {
+        const callbacks = targetToCallbackMap.get(fragmentInstance);
+        targetToCallbackMap.set(
+          fragmentInstance,
+          callbacks ? [...callbacks, onIntersection] : [onIntersection],
+        );
+        if (cachedObserver !== null) {
+          return cachedObserver;
+        }
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            const fragmentInstances = entry.target.unstable_reactFragments;
+            if (fragmentInstances) {
+              Array.from(fragmentInstances).forEach(fInstance => {
+                const cbs = targetToCallbackMap.get(fInstance) || [];
+                cbs.forEach(callback => {
+                  callback(entry);
+                });
+              });
+            }
+
+            targetToCallbackMap.get(entry.target)?.forEach(callback => {
+              callback(entry);
+            });
+          });
+        });
+        cachedObserver = observer;
+        return observer;
+      }
+
+      function IntersectionObserverFragment({onIntersection, children}) {
+        const fragmentRef = React.useRef(null);
+        React.useLayoutEffect(() => {
+          const observer = createObserverIfNeeded(
+            fragmentRef.current,
+            onIntersection,
+          );
+          fragmentRef.current.observeUsing(observer);
+          const lastRefValue = fragmentRef.current;
+          return () => {
+            lastRefValue.unobserveUsing(observer);
+          };
+        }, []);
+        return <React.Fragment ref={fragmentRef}>{children}</React.Fragment>;
+      }
+
+      let logs = [];
+      function logIntersection(id) {
+        logs.push(`observe: ${id}`);
+      }
+
+      function ChildWithManualIO({id}) {
+        const divRef = React.useRef(null);
+        React.useLayoutEffect(() => {
+          const observer = createObserverIfNeeded(divRef.current, entry => {
+            logIntersection(id);
+          });
+          observer.observe(divRef.current);
+          return () => {
+            observer.unobserve(divRef.current);
+          };
+        }, []);
+        return (
+          <div id={id} ref={divRef}>
+            {id}
+          </div>
+        );
+      }
+
+      function Test() {
+        return (
+          <>
+            <IntersectionObserverFragment
+              onIntersection={() => logIntersection('grandparent')}>
+              <IntersectionObserverFragment
+                onIntersection={() => logIntersection('parentA')}>
+                <div id="childA">A</div>
+              </IntersectionObserverFragment>
+            </IntersectionObserverFragment>
+            <IntersectionObserverFragment
+              onIntersection={() => logIntersection('parentB')}>
+              <div id="childB">B</div>
+              <ChildWithManualIO id="childC" />
+            </IntersectionObserverFragment>
+          </>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => root.render(<Test />));
+
+      simulateIntersection([
+        container.querySelector('#childA'),
+        {y: 0, x: 0, width: 1, height: 1},
+        1,
+      ]);
+      expect(logs).toEqual(['observe: grandparent', 'observe: parentA']);
+
+      logs = [];
+
+      simulateIntersection([
+        container.querySelector('#childB'),
+        {y: 0, x: 0, width: 1, height: 1},
+        1,
+      ]);
+      expect(logs).toEqual(['observe: parentB']);
+
+      logs = [];
+      simulateIntersection([
+        container.querySelector('#childC'),
+        {y: 0, x: 0, width: 1, height: 1},
+        1,
+      ]);
+      expect(logs).toEqual(['observe: parentB', 'observe: childC']);
+    });
   });
 
   describe('getClientRects', () => {
@@ -1960,9 +2127,9 @@ describe('FragmentRefs', () => {
       });
 
       expect(() => {
-        fragmentRef.current.experimental_scrollIntoView({block: 'start'});
+        fragmentRef.current.scrollIntoView({block: 'start'});
       }).toThrowError(
-        'FragmentInstance.experimental_scrollIntoView() does not support ' +
+        'FragmentInstance.scrollIntoView() does not support ' +
           'scrollIntoViewOptions. Use the alignToTop boolean instead.',
       );
     });
@@ -1996,11 +2163,11 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expectLast(logs, 'childA');
         logs = [];
         // alignToTop=true
-        fragmentRef.current.experimental_scrollIntoView(true);
+        fragmentRef.current.scrollIntoView(true);
         expectLast(logs, 'childA');
       });
 
@@ -2027,7 +2194,7 @@ describe('FragmentRefs', () => {
           logs.push('childB');
         });
 
-        fragmentRef.current.experimental_scrollIntoView(false);
+        fragmentRef.current.scrollIntoView(false);
         expectLast(logs, 'childB');
       });
 
@@ -2068,7 +2235,7 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expectLast(logs, 'childA');
       });
 
@@ -2157,7 +2324,7 @@ describe('FragmentRefs', () => {
         });
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expectLast(logs, 'header');
 
         childARef.current.scrollIntoView.mockClear();
@@ -2167,7 +2334,7 @@ describe('FragmentRefs', () => {
         logs = [];
 
         // // alignToTop=false
-        fragmentRef.current.experimental_scrollIntoView(false);
+        fragmentRef.current.scrollIntoView(false);
         expectLast(logs, 'C');
       });
     });
@@ -2195,14 +2362,14 @@ describe('FragmentRefs', () => {
         siblingBRef.current.scrollIntoView = jest.fn();
 
         // Default call
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
 
         siblingBRef.current.scrollIntoView.mockClear();
 
         // alignToTop=true
-        fragmentRef.current.experimental_scrollIntoView(true);
+        fragmentRef.current.scrollIntoView(true);
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(0);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
@@ -2239,7 +2406,7 @@ describe('FragmentRefs', () => {
         siblingBRef.current.scrollIntoView = jest.fn();
 
         // alignToTop=false
-        fragmentRef.current.experimental_scrollIntoView(false);
+        fragmentRef.current.scrollIntoView(false);
         expect(siblingARef.current.scrollIntoView).toHaveBeenCalledTimes(1);
         expect(siblingBRef.current.scrollIntoView).toHaveBeenCalledTimes(0);
       });
@@ -2260,7 +2427,7 @@ describe('FragmentRefs', () => {
         });
 
         parentRef.current.scrollIntoView = jest.fn();
-        fragmentRef.current.experimental_scrollIntoView();
+        fragmentRef.current.scrollIntoView();
         expect(parentRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
     });

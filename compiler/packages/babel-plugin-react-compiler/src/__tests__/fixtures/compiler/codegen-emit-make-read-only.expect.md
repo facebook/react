@@ -29,7 +29,6 @@ function MyComponentName(props) {
     const x = {};
     foo(x, props.a);
     foo(x, props.b);
-
     y = [];
     y.push(x);
     $[0] = props.a;

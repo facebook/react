@@ -111,11 +111,27 @@ async function readInputFixtures(
   } else {
     inputFiles = (
       await Promise.all(
-        filter.paths.map(pattern =>
-          glob.glob(`${pattern}{${INPUT_EXTENSIONS.join(',')}}`, {
+        filter.paths.map(pattern => {
+          // If the pattern already has an extension other than .expect.md,
+          // search for the pattern directly. Otherwise, search for the
+          // pattern with the expected input extensions added.
+          // Eg
+          // `alias-while` => search for `alias-while{.js,.jsx,.ts,.tsx}`
+          // `alias-while.js` => search as-is
+          // `alias-while.expect.md` => search for `alias-while{.js,.jsx,.ts,.tsx}`
+          const patternWithoutExt = stripExtension(pattern, [
+            ...INPUT_EXTENSIONS,
+            SNAPSHOT_EXTENSION,
+          ]);
+          const hasExtension = pattern !== patternWithoutExt;
+          const globPattern =
+            hasExtension && !pattern.endsWith(SNAPSHOT_EXTENSION)
+              ? pattern
+              : `${patternWithoutExt}{${INPUT_EXTENSIONS.join(',')}}`;
+          return glob.glob(globPattern, {
             cwd: rootDir,
-          }),
-        ),
+          });
+        }),
       )
     ).flat();
   }
@@ -150,11 +166,16 @@ async function readOutputFixtures(
   } else {
     outputFiles = (
       await Promise.all(
-        filter.paths.map(pattern =>
-          glob.glob(`${pattern}${SNAPSHOT_EXTENSION}`, {
+        filter.paths.map(pattern => {
+          // Strip all extensions and find matching .expect.md files
+          const basenameWithoutExt = stripExtension(pattern, [
+            ...INPUT_EXTENSIONS,
+            SNAPSHOT_EXTENSION,
+          ]);
+          return glob.glob(`${basenameWithoutExt}${SNAPSHOT_EXTENSION}`, {
             cwd: rootDir,
-          }),
-        ),
+          });
+        }),
       )
     ).flat();
   }

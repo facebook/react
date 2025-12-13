@@ -11,10 +11,10 @@ import {
   allRules,
   mapErrorSeverityToESlint,
   recommendedRules,
+  recommendedLatestRules,
 } from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
 
-// All rules
 const rules = {
   'exhaustive-deps': ExhaustiveDeps,
   'rules-of-hooks': RulesOfHooks,
@@ -23,13 +23,12 @@ const rules = {
   ),
 } satisfies Record<string, Rule.RuleModule>;
 
-// Basic hooks rules (for recommended config)
 const basicRuleConfigs = {
   'react-hooks/rules-of-hooks': 'error',
   'react-hooks/exhaustive-deps': 'warn',
 } as const satisfies Linter.RulesRecord;
 
-const compilerRuleConfigs = Object.fromEntries(
+const recommendedCompilerRuleConfigs = Object.fromEntries(
   Object.entries(recommendedRules).map(([name, ruleConfig]) => {
     return [
       `react-hooks/${name}` as const,
@@ -38,69 +37,64 @@ const compilerRuleConfigs = Object.fromEntries(
   }),
 ) as Record<`react-hooks/${string}`, Linter.RuleEntry>;
 
-// All rules including compiler rules (for recommended-latest config)
-const allRuleConfigs: Linter.RulesRecord = {
+const recommendedLatestCompilerRuleConfigs = Object.fromEntries(
+  Object.entries(recommendedLatestRules).map(([name, ruleConfig]) => {
+    return [
+      `react-hooks/${name}` as const,
+      mapErrorSeverityToESlint(ruleConfig.severity),
+    ] as const;
+  }),
+) as Record<`react-hooks/${string}`, Linter.RuleEntry>;
+
+const recommendedRuleConfigs: Linter.RulesRecord = {
   ...basicRuleConfigs,
-  ...compilerRuleConfigs,
+  ...recommendedCompilerRuleConfigs,
+};
+const recommendedLatestRuleConfigs: Linter.RulesRecord = {
+  ...basicRuleConfigs,
+  ...recommendedLatestCompilerRuleConfigs,
+};
+
+const plugins = ['react-hooks'];
+
+type ReactHooksFlatConfig = {
+  plugins: {react: any};
+  rules: Linter.RulesRecord;
+};
+
+const configs = {
+  recommended: {
+    plugins,
+    rules: recommendedRuleConfigs,
+  },
+  'recommended-latest': {
+    plugins,
+    rules: recommendedLatestRuleConfigs,
+  },
+  flat: {} as {
+    recommended: ReactHooksFlatConfig;
+    'recommended-latest': ReactHooksFlatConfig;
+  },
 };
 
 const plugin = {
   meta: {
     name: 'eslint-plugin-react-hooks',
+    version: '7.0.0',
   },
   rules,
-  configs: {} as {
-    'recommended-legacy': {
-      plugins: Array<string>;
-      rules: Linter.RulesRecord;
-    };
-    'recommended-latest-legacy': {
-      plugins: Array<string>;
-      rules: Linter.RulesRecord;
-    };
-    'flat/recommended': Array<Linter.Config>;
-    'recommended-latest': Array<Linter.Config>;
-    recommended: Array<Linter.Config>;
-  },
+  configs,
 };
 
-Object.assign(plugin.configs, {
-  'recommended-legacy': {
-    plugins: ['react-hooks'],
-    rules: basicRuleConfigs,
+Object.assign(configs.flat, {
+  'recommended-latest': {
+    plugins: {'react-hooks': plugin},
+    rules: configs['recommended-latest'].rules,
   },
-
-  'recommended-latest-legacy': {
-    plugins: ['react-hooks'],
-    rules: allRuleConfigs,
+  recommended: {
+    plugins: {'react-hooks': plugin},
+    rules: configs.recommended.rules,
   },
-
-  'flat/recommended': [
-    {
-      plugins: {
-        'react-hooks': plugin,
-      },
-      rules: basicRuleConfigs,
-    },
-  ],
-
-  'recommended-latest': [
-    {
-      plugins: {
-        'react-hooks': plugin,
-      },
-      rules: allRuleConfigs,
-    },
-  ],
-
-  recommended: [
-    {
-      plugins: {
-        'react-hooks': plugin,
-      },
-      rules: basicRuleConfigs,
-    },
-  ],
 });
 
 export default plugin;

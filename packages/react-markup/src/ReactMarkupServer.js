@@ -91,6 +91,9 @@ export function experimental_renderToHTML(
       undefined,
       undefined,
       false,
+      undefined,
+      undefined,
+      undefined,
     );
     const streamState = createFlightStreamState(flightResponse, null);
     const flightDestination = {
@@ -181,7 +184,6 @@ export function experimental_renderToHTML(
       handleFlightError,
       options ? options.identifierPrefix : undefined,
       undefined,
-      undefined,
       'Markup',
       undefined,
       false,
@@ -206,7 +208,6 @@ export function experimental_renderToHTML(
       createRootFormatContext(),
       Infinity,
       handleError,
-      undefined,
       undefined,
       undefined,
       undefined,

@@ -16,11 +16,11 @@ export const enableProfilerTimer: boolean = __PROFILE__;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
 export const enableProfilerNestedUpdatePhase: boolean = __PROFILE__;
 export const enableComponentPerformanceTrack: boolean = true;
+export const enablePerformanceIssueReporting: boolean = false;
 export const enableUpdaterTracking: boolean = false;
 export const enableLegacyCache: boolean = __EXPERIMENTAL__;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableTaint: boolean = true;
-export const enablePostpone: boolean = false;
 export const enableHalt: boolean = true;
 export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
@@ -73,8 +73,11 @@ export const enableHydrationChangeEvent: boolean = false;
 export const enableDefaultTransitionIndicator: boolean = false;
 export const ownerStackLimit = 1e4;
 
-export const enableFragmentRefs: boolean = false;
-export const enableFragmentRefsScrollIntoView: boolean = false;
+export const enableFragmentRefs: boolean = true;
+export const enableFragmentRefsScrollIntoView: boolean = true;
+export const enableFragmentRefsInstanceHandles: boolean = false;
+
+export const enableInternalInstanceMap: boolean = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
@@ -89,6 +92,8 @@ export const disableLegacyContextForFunctionComponents: boolean = true;
 export const enableReactTestRendererWarning: boolean = true;
 
 export const enableObjectFiber: boolean = false;
+
+export const enableOptimisticKey: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

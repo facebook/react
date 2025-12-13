@@ -217,9 +217,15 @@ export type BackendEvents = {
   selectElement: [number],
   shutdown: [],
   stopInspectingHost: [boolean],
-  syncSelectionFromBuiltinElementsPanel: [],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
   syncSelectionToBuiltinElementsPanel: [],
   unsupportedRendererVersion: [],
+
+  extensionComponentsPanelShown: [],
+  extensionComponentsPanelHidden: [],
+
+  resumeElementPolling: [],
+  pauseElementPolling: [],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
@@ -240,8 +246,6 @@ type FrontendEvents = {
   clearWarningsForElementID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
-  extensionComponentsPanelShown: [],
-  extensionComponentsPanelHidden: [],
   getBackendVersion: [],
   getBridgeProtocol: [],
   getIfHasUnsupportedRendererVersion: [],
@@ -263,10 +267,12 @@ type FrontendEvents = {
   savedPreferences: [SavedPreferencesParams],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
-  startInspectingHost: [],
+  startInspectingHost: [boolean],
   startProfiling: [StartProfilingParams],
-  stopInspectingHost: [boolean],
+  stopInspectingHost: [],
   scrollToHostInstance: [ScrollToHostInstance],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
+  requestScrollPosition: [],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
@@ -274,6 +280,8 @@ type FrontendEvents = {
   updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
+
+  syncSelectionFromBuiltinElementsPanel: [],
 
   // React Native style editor plug-in.
   NativeStyleEditor_measure: [ElementAndRendererID],
@@ -295,19 +303,13 @@ type FrontendEvents = {
   overrideProps: [OverrideValue],
   overrideState: [OverrideValue],
 
-  resumeElementPolling: [],
-  pauseElementPolling: [],
-
   getHookSettings: [],
 };
 
 class Bridge<
   OutgoingEvents: Object,
   IncomingEvents: Object,
-> extends EventEmitter<{
-  ...IncomingEvents,
-  ...OutgoingEvents,
-}> {
+> extends EventEmitter<IncomingEvents> {
   _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];
   _scheduledFlush: boolean = false;
@@ -417,7 +419,8 @@ class Bridge<
     try {
       if (this._messageQueue.length) {
         for (let i = 0; i < this._messageQueue.length; i += 2) {
-          this._wall.send(this._messageQueue[i], ...this._messageQueue[i + 1]);
+          // This only supports one argument in practice but the types suggests it should support multiple.
+          this._wall.send(this._messageQueue[i], this._messageQueue[i + 1][0]);
         }
         this._messageQueue.length = 0;
       }

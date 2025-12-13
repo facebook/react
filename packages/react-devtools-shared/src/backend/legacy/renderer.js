@@ -417,6 +417,7 @@ export function attach(
       pushOperation(id);
       pushOperation(parentID);
       pushOperation(getStringID(null)); // name
+      pushOperation(0); // isSuspended
       // TODO: Measure rect of root
       pushOperation(-1);
     } else {
@@ -1268,6 +1269,9 @@ export function attach(
     getDisplayNameForElementID,
     getNearestMountedDOMNode,
     getElementIDForHostInstance,
+    getSuspenseNodeIDForHostInstance(id: number): null {
+      return null;
+    },
     getInstanceAndStyle,
     findHostInstancesForElementID: (id: number) => {
       const hostInstance = findHostInstanceForInternalID(id);

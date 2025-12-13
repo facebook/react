@@ -16,7 +16,7 @@ import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import type {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
-import {z} from 'zod';
+import {z} from 'zod/v4';
 import type {AliasingEffect} from '../Inference/AliasingEffects';
 import {isReservedWord} from '../Utils/Keyword';
 import {Err, Ok, Result} from '../Utils/Result';
@@ -694,11 +694,13 @@ export type SpreadPattern = {
 export type ArrayPattern = {
   kind: 'ArrayPattern';
   items: Array<Place | SpreadPattern | Hole>;
+  loc: SourceLocation;
 };
 
 export type ObjectPattern = {
   kind: 'ObjectPattern';
   properties: Array<ObjectProperty | SpreadPattern>;
+  loc: SourceLocation;
 };
 
 export type ObjectPropertyKey =
@@ -803,9 +805,11 @@ export type ManualMemoDependency = {
     | {
         kind: 'NamedLocal';
         value: Place;
+        constant: boolean;
       }
     | {kind: 'Global'; identifierName: string};
   path: DependencyPath;
+  loc: SourceLocation;
 };
 
 export type StartMemoize = {
@@ -817,6 +821,11 @@ export type StartMemoize = {
    * (e.g. useMemo without a second arg)
    */
   deps: Array<ManualMemoDependency> | null;
+  /**
+   * The source location of the dependencies argument. Used for
+   * emitting diagnostics with a suggested replacement
+   */
+  depsLoc: SourceLocation | null;
   loc: SourceLocation;
 };
 export type FinishMemoize = {
@@ -1680,6 +1689,28 @@ export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
     )
   );
 }
+export function isSubPath(
+  subpath: DependencyPath,
+  path: DependencyPath,
+): boolean {
+  return (
+    subpath.length <= path.length &&
+    subpath.every(
+      (item, ix) =>
+        item.property === path[ix].property &&
+        item.optional === path[ix].optional,
+    )
+  );
+}
+export function isSubPathIgnoringOptionals(
+  subpath: DependencyPath,
+  path: DependencyPath,
+): boolean {
+  return (
+    subpath.length <= path.length &&
+    subpath.every((item, ix) => item.property === path[ix].property)
+  );
+}
 
 export function getPlaceScope(
   id: InstructionId,
@@ -1823,6 +1854,10 @@ export function isPrimitiveType(id: Identifier): boolean {
   return id.type.kind === 'Primitive';
 }
 
+export function isPlainObjectType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInObject';
+}
+
 export function isArrayType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
 }
@@ -1887,6 +1922,18 @@ export function isStartTransitionType(id: Identifier): boolean {
   );
 }
 
+export function isUseOptimisticType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseOptimistic'
+  );
+}
+
+export function isSetOptimisticType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetOptimistic'
+  );
+}
+
 export function isSetActionStateType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetActionState'
@@ -1920,7 +1967,8 @@ export function isStableType(id: Identifier): boolean {
     isSetActionStateType(id) ||
     isDispatcherType(id) ||
     isUseRefType(id) ||
-    isStartTransitionType(id)
+    isStartTransitionType(id) ||
+    isSetOptimisticType(id)
   );
 }
 
@@ -1931,8 +1979,9 @@ export function isStableTypeContainer(id: Identifier): boolean {
   }
   return (
     isUseStateType(id) || // setState
-    type_.shapeId === 'BuiltInUseActionState' || // setActionState
+    isUseActionStateType(id) || // setActionState
     isUseReducerType(id) || // dispatcher
+    isUseOptimisticType(id) || // setOptimistic
     type_.shapeId === 'BuiltInUseTransition' // startTransition
   );
 }
@@ -1952,6 +2001,7 @@ export function evaluatesToStableTypeOrContainer(
       case 'useActionState':
       case 'useRef':
       case 'useTransition':
+      case 'useOptimistic':
         return true;
     }
   }
@@ -1973,6 +2023,11 @@ export function isUseInsertionEffectHookType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' &&
     id.type.shapeId === 'BuiltInUseInsertionEffectHook'
+  );
+}
+export function isUseEffectEventType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectEvent'
   );
 }
 

@@ -79,10 +79,7 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
       node.tag === SuspenseListComponent &&
       // Independent revealOrder can't be trusted because it doesn't
       // keep track of whether it suspended or not.
-      (node.memoizedProps.revealOrder === 'forwards' ||
-        node.memoizedProps.revealOrder === 'backwards' ||
-        node.memoizedProps.revealOrder === 'unstable_legacy-backwards' ||
-        node.memoizedProps.revealOrder === 'together')
+      node.memoizedProps.revealOrder !== 'independent'
     ) {
       const didSuspend = (node.flags & DidCapture) !== NoFlags;
       if (didSuspend) {

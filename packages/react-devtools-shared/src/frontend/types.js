@@ -82,8 +82,9 @@ export const ComponentFilterDisplayName = 2;
 export const ComponentFilterLocation = 3;
 export const ComponentFilterHOC = 4;
 export const ComponentFilterEnvironmentName = 5;
+export const ComponentFilterActivitySlice = 6;
 
-export type ComponentFilterType = 1 | 2 | 3 | 4 | 5;
+export type ComponentFilterType = 1 | 2 | 3 | 4 | 5 | 6;
 
 // Hide all elements of types in this Set.
 // We hide host components only by default.
@@ -115,11 +116,20 @@ export type EnvironmentNameComponentFilter = {
   value: string,
 };
 
+export type ActivitySliceFilter = {
+  type: 6,
+  activityID: Element['id'],
+  rendererID: number,
+  isValid: boolean,
+  isEnabled: boolean,
+};
+
 export type ComponentFilter =
   | BooleanComponentFilter
   | ElementTypeComponentFilter
   | RegExpComponentFilter
-  | EnvironmentNameComponentFilter;
+  | EnvironmentNameComponentFilter
+  | ActivitySliceFilter;
 
 export type HookName = string | null;
 // Map of hook source ("<filename>:<line-number>:<column-number>") to name.
@@ -193,6 +203,16 @@ export type Rect = {
   height: number,
 };
 
+export type SuspenseTimelineStep = {
+  /**
+   * The first step is either a host root (initial paint) or Activity (Transition).
+   * Subsequent steps are always Suspense nodes.
+   */
+  id: SuspenseNode['id'] | Element['id'], // TODO: Will become a group.
+  environment: null | string,
+  endTime: number,
+};
+
 export type SuspenseNode = {
   id: Element['id'],
   parentID: SuspenseNode['id'] | 0,
@@ -200,6 +220,9 @@ export type SuspenseNode = {
   name: string | null,
   rects: null | Array<Rect>,
   hasUniqueSuspenders: boolean,
+  isSuspended: boolean,
+  environments: Array<string>,
+  endTime: number,
 };
 
 // Serialized version of ReactIOInfo

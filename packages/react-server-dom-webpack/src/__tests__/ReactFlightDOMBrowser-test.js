@@ -1934,52 +1934,6 @@ describe('ReactFlightDOMBrowser', () => {
     );
   });
 
-  // @gate enablePostpone
-  it('supports postpone in Server Components', async () => {
-    function Server() {
-      React.unstable_postpone('testing postpone');
-      return 'Not shown';
-    }
-
-    let postponed = null;
-
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
-        <Suspense fallback="Loading...">
-          <Server />
-        </Suspense>,
-        null,
-        {
-          onPostpone(reason) {
-            postponed = reason;
-          },
-        },
-      ),
-    );
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
-      root.render(
-        <div>
-          Shell: <Client />
-        </div>,
-      );
-    });
-    // We should have reserved the shell already. Which means that the Server
-    // Component should've been a lazy component.
-    expect(container.innerHTML).toContain('Shell:');
-    expect(container.innerHTML).toContain('Loading...');
-    expect(container.innerHTML).not.toContain('Not shown');
-
-    expect(postponed).toBe('testing postpone');
-  });
-
   it('should not continue rendering after the reader cancels', async () => {
     let hasLoaded = false;
     let resolve;
@@ -2029,66 +1983,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
     ]);
-  });
-
-  // @gate enablePostpone
-  it('postpones when abort passes a postpone signal', async () => {
-    const infinitePromise = new Promise(() => {});
-    function Server() {
-      return infinitePromise;
-    }
-
-    let postponed = null;
-    let error = null;
-
-    const controller = new AbortController();
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
-        <Suspense fallback="Loading...">
-          <Server />
-        </Suspense>,
-        null,
-        {
-          onError(x) {
-            error = x;
-          },
-          onPostpone(reason) {
-            postponed = reason;
-          },
-          signal: controller.signal,
-        },
-      ),
-    );
-
-    try {
-      React.unstable_postpone('testing postpone');
-    } catch (reason) {
-      controller.abort(reason);
-    }
-
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(
-        <div>
-          Shell: <Client />
-        </div>,
-      );
-    });
-    // We should have reserved the shell already. Which means that the Server
-    // Component should've been a lazy component.
-    expect(container.innerHTML).toContain('Shell:');
-    expect(container.innerHTML).toContain('Loading...');
-    expect(container.innerHTML).not.toContain('Not shown');
-
-    expect(postponed).toBe('testing postpone');
-    expect(error).toBe(null);
   });
 
   function passThrough(stream) {
@@ -2495,7 +2389,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([reason]);
   });
 
-  // @gate enableHalt || enablePostpone
+  // @gate enableHalt
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2926,15 +2820,16 @@ describe('ReactFlightDOMBrowser', () => {
       },
     });
 
+    const app = ReactServer.createElement(
+      ReactServer.Fragment,
+      null,
+      ReactServer.createElement(Paragraph, null, 'foo'),
+      ReactServer.createElement(Paragraph, null, 'bar'),
+    );
     const stream = await serverAct(() =>
       ReactServerDOMServer.renderToReadableStream(
         {
-          root: ReactServer.createElement(
-            ReactServer.Fragment,
-            null,
-            ReactServer.createElement(Paragraph, null, 'foo'),
-            ReactServer.createElement(Paragraph, null, 'bar'),
-          ),
+          root: app,
         },
         webpackMap,
         {
@@ -3007,27 +2902,11 @@ describe('ReactFlightDOMBrowser', () => {
             "props": {},
             "stack": [
               [
-                "",
-                "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2935,
-                27,
-                2929,
-                34,
-              ],
-              [
-                "serverAct",
-                "/packages/internal-test-utils/internalAct.js",
-                270,
-                19,
-                231,
-                1,
-              ],
-              [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2929,
-                18,
-                2916,
+                2826,
+                19,
+                2810,
                 89,
               ],
             ],
@@ -3035,20 +2914,64 @@ describe('ReactFlightDOMBrowser', () => {
           {
             "time": 0,
           },
-          {
-            "awaited": {
-              "byteSize": 0,
-              "end": 0,
-              "name": "RSC stream",
-              "owner": null,
-              "start": 0,
-              "value": {
-                "value": "stream",
-              },
-            },
-          },
         ]
       `);
     }
+  });
+
+  it('should resolve a cycle between debug info and the value it produces when using a debug channel', async () => {
+    // Same as `should resolve a cycle between debug info and the value it produces`, but using a debug channel.
+
+    function Inner({style}) {
+      return <div style={style} />;
+    }
+
+    function Component({style}) {
+      return <Inner style={style} />;
+    }
+
+    const style = {};
+    const element = <Component style={style} />;
+    style.element = element;
+
+    let debugReadableStreamController;
+
+    const debugReadableStream = new ReadableStream({
+      start(controller) {
+        debugReadableStreamController = controller;
+      },
+    });
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(element, webpackMap, {
+        debugChannel: {
+          writable: new WritableStream({
+            write(chunk) {
+              debugReadableStreamController.enqueue(chunk);
+            },
+            close() {
+              debugReadableStreamController.close();
+            },
+          }),
+        },
+      }),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      debugChannel: {readable: debugReadableStream},
+    });
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('<div></div>');
   });
 });
