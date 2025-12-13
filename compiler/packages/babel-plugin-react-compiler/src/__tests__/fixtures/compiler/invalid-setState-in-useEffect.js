@@ -1,4 +1,4 @@
-// @loggerTestOnly @validateNoSetStateInEffects
+// @loggerTestOnly @validateNoSetStateInEffects @outputMode:"lint"
 import React, {useEffect, useState} from 'react';
 
 function Component() {
