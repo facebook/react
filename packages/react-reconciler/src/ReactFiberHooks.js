@@ -3268,14 +3268,18 @@ export function startHostTransition<F>(
     // concerns to avoid the extra lambda.
 
     action === null
-      ? // No action was provided, but we still call `startTransition` to
-        // set the pending form status.
-        noop
+      ? noop  
       : () => {
-          // Automatically reset the form when the action completes.
-          requestFormReset(formFiber);
-          return action(formData);
+          try {
+            const result = action(formData);
+            requestFormReset(formFiber);
+            return result;
+          } catch (error) {
+            // Don't reset on sync errors
+            throw error;
+          }
         },
+
   );
 }
 
