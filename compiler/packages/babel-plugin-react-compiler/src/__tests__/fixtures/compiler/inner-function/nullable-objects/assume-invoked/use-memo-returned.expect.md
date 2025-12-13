@@ -48,7 +48,6 @@ import { useIdentity } from "shared-runtime";
 function useMakeCallback(t0) {
   const $ = _c(2);
   const { obj, shouldSynchronizeState } = t0;
-
   const [, setState] = useState(0);
   let t1;
   if ($[0] !== obj.value) {
