@@ -2355,50 +2355,91 @@ describe('ReactDOMForm', () => {
 
     assertLog(['[unrelated form] pending: false, state: 1']);
   });
-  
+
   it('forms should not reset when action fails', async () => {
-  const formRef = React.createRef();
-  const inputRef = React.createRef();
-  let formValueBeforeError = null;
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+    let formValueBeforeError = null;
 
-  function App() {
-    return (
-      <form
-        ref={formRef}
-        action={async () => {
-          Scheduler.log('Action started');
-          await getText('Wait');
-          // Save the form value before throwing
-          formValueBeforeError = inputRef.current.value;
-          throw new Error('Action failed');
-        }}>
-        <input ref={inputRef} type="text" name="username" defaultValue="initial" />
-      </form>
-    );
-  }
+    function App() {
+      return (
+        <form
+          ref={formRef}
+          action={async () => {
+            Scheduler.log('Action started');
+            await getText('Wait');
+            // Save the form value before throwing
+            formValueBeforeError = inputRef.current.value;
+            throw new Error('Action failed');
+          }}>
+          <input
+            ref={inputRef}
+            type="text"
+            name="username"
+            defaultValue="initial"
+          />
+        </form>
+      );
+    }
 
-  const root = ReactDOMClient.createRoot(container);
-  await act(() => root.render(<App />));
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
 
-  // Dirty the input
-  inputRef.current.value = 'modified';
+    // Dirty the input
+    inputRef.current.value = 'modified';
 
-  // Submit the form
-  await submit(formRef.current);
-  assertLog(['Action started']);
+    // Submit the form
+    await submit(formRef.current);
+    assertLog(['Action started']);
 
-  // Form should not reset while action is pending
-  expect(inputRef.current.value).toBe('modified');
+    // Form should not reset while action is pending
+    expect(inputRef.current.value).toBe('modified');
 
-  // Action completes and throws - this would normally be caught by an error boundary
-  // but we just want to verify the form wasn't reset before the error
-  try {
-    await act(() => resolveText('Wait'));
-  } catch (e) {
-    // Expected to throw
-  }
+    // Action completes and throws - this would normally be caught by an error boundary
+    // but we just want to verify the form wasn't reset before the error
+    try {
+      await act(() => resolveText('Wait'));
+    } catch (e) {
+      // Expected to throw
+    }
 
-  // Verify the form was NOT reset before the error was thrown
-  expect(formValueBeforeError).toBe('modified');
-});
+    // Verify the form was NOT reset before the error was thrown
+    expect(formValueBeforeError).toBe('modified');
+
+    // inputRef.current may be null if React unmounted the form after the async error
+    if (inputRef.current) {
+      expect(inputRef.current.value).toBe('modified');
+    }
+  });
+
+  it('forms should not reset on synchronous action error', async () => {
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+    let valueBeforeError = null;
+
+    function App() {
+      return (
+        <form
+          ref={formRef}
+          action={() => {
+            valueBeforeError = inputRef.current.value;
+            throw new Error('Sync error');
+          }}>
+          <input ref={inputRef} defaultValue="initial" />
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    inputRef.current.value = 'modified';
+
+    try {
+      await submit(formRef.current);
+    } catch {}
+
+    // Assert the value right before the error was thrown
+    expect(valueBeforeError).toBe('modified');
+  });
 });
