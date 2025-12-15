@@ -2442,4 +2442,141 @@ describe('ReactDOMForm', () => {
     // Assert the value right before the error was thrown
     expect(valueBeforeError).toBe('modified');
   });
+
+  it('controlled checkboxes should not reset on form submission', async () => {
+    const formRef = React.createRef();
+    const checkboxRef = React.createRef();
+
+    function App() {
+      const [isChecked, setIsChecked] = React.useState(false);
+
+      return (
+        <form
+          ref={formRef}
+          action={() => {
+            Scheduler.log('Form submitted');
+          }}>
+          <input
+            ref={checkboxRef}
+            type="checkbox"
+            checked={isChecked}
+            onChange={e => setIsChecked(e.target.checked)}
+          />
+          <button type="submit">Submit</button>
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    // Initially unchecked
+    expect(checkboxRef.current.checked).toBe(false);
+
+    // Check the checkbox (wrap in act because it updates state)
+    await act(() => {
+      checkboxRef.current.click();
+    });
+    expect(checkboxRef.current.checked).toBe(true);
+
+    // Submit form
+    await submit(formRef.current);
+    assertLog(['Form submitted']);
+
+    // Controlled checkbox should NOT reset
+    expect(checkboxRef.current.checked).toBe(true);
+  });
+
+  it('controlled radio buttons should not reset on form submission', async () => {
+    const formRef = React.createRef();
+    const radio1Ref = React.createRef();
+    const radio2Ref = React.createRef();
+
+    function App() {
+      const [selected, setSelected] = React.useState('option1');
+
+      return (
+        <form
+          ref={formRef}
+          action={() => {
+            Scheduler.log('Form submitted');
+          }}>
+          <input
+            ref={radio1Ref}
+            type="radio"
+            name="choice"
+            value="option1"
+            checked={selected === 'option1'}
+            onChange={e => setSelected(e.target.value)}
+          />
+          <input
+            ref={radio2Ref}
+            type="radio"
+            name="choice"
+            value="option2"
+            checked={selected === 'option2'}
+            onChange={e => setSelected(e.target.value)}
+          />
+          <button type="submit">Submit</button>
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    // Initially option1 is checked
+    expect(radio1Ref.current.checked).toBe(true);
+    expect(radio2Ref.current.checked).toBe(false);
+
+    // Select option2 (wrap in act because it updates state)
+    await act(() => {
+      radio2Ref.current.click();
+    });
+    expect(radio1Ref.current.checked).toBe(false);
+    expect(radio2Ref.current.checked).toBe(true);
+
+    // Submit form
+    await submit(formRef.current);
+    assertLog(['Form submitted']);
+
+    // Controlled radios should NOT reset
+    expect(radio1Ref.current.checked).toBe(false);
+    expect(radio2Ref.current.checked).toBe(true);
+  });
+
+  it('uncontrolled checkboxes should still reset on form submission', async () => {
+    const formRef = React.createRef();
+    const checkboxRef = React.createRef();
+
+    function App() {
+      return (
+        <form
+          ref={formRef}
+          action={() => {
+            Scheduler.log('Form submitted');
+          }}>
+          <input ref={checkboxRef} type="checkbox" defaultChecked={false} />
+          <button type="submit">Submit</button>
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    // Initially unchecked
+    expect(checkboxRef.current.checked).toBe(false);
+
+    // Check the checkbox
+    checkboxRef.current.click();
+    expect(checkboxRef.current.checked).toBe(true);
+
+    // Submit form
+    await submit(formRef.current);
+    assertLog(['Form submitted']);
+
+    // Uncontrolled checkbox SHOULD reset
+    expect(checkboxRef.current.checked).toBe(false);
+  });
 });
