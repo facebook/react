@@ -39,10 +39,33 @@ import {TypeConfig} from './TypeSchema';
  * The React team is open to collaborating with library authors to help develop compatible versions of these APIs,
  * and we have already reached out to the teams who own any API listed here to ensure they are aware of the issue.
  */
+
+const RELAY_HOOK_TYPE: TypeConfig = {
+  kind: 'hook',
+  positionalParams: [],
+  restParam: Effect.Freeze,
+  returnType: {kind: 'type', name: 'BuiltInUseFragment'},
+  returnValueKind: ValueKind.Frozen,
+  noAlias: true,
+};
+
 export function defaultModuleTypeProvider(
   moduleName: string,
 ): TypeConfig | null {
   switch (moduleName) {
+    case 'react-relay':
+    case 'shared-runtime': {
+      return {
+        kind: 'object',
+        properties: {
+          useFragment: RELAY_HOOK_TYPE,
+          usePaginationFragment: RELAY_HOOK_TYPE,
+          useRefetchableFragment: RELAY_HOOK_TYPE,
+          useLazyLoadQuery: RELAY_HOOK_TYPE,
+          usePreloadedQuery: RELAY_HOOK_TYPE,
+        },
+      };
+    }
     case 'react-hook-form': {
       return {
         kind: 'object',

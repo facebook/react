@@ -20,6 +20,7 @@ import {
   BuiltInUseContextHookId,
   BuiltInUseEffectEventId,
   BuiltInUseEffectHookId,
+  BuiltInUseFragmentId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
   BuiltInUseOperatorId,
@@ -979,6 +980,9 @@ export function installTypeConfig(
         }
         case 'MixedReadonly': {
           return {kind: 'Object', shapeId: BuiltInMixedReadonlyId};
+        }
+        case 'BuiltInUseFragment': {
+          return {kind: 'Object', shapeId: BuiltInUseFragmentId};
         }
         case 'Primitive': {
           return {kind: 'Primitive'};
