@@ -24,6 +24,11 @@ async function messageListener(event: MessageEvent) {
       if (typeof settings.hideConsoleLogsInStrictMode !== 'boolean') {
         settings.hideConsoleLogsInStrictMode = false;
       }
+      if (
+        typeof settings.disableSecondConsoleLogDimmingInStrictMode !== 'boolean'
+      ) {
+        settings.disableSecondConsoleLogDimmingInStrictMode = false;
+      }
 
       window.postMessage({
         source: 'react-devtools-hook-settings-injector',
