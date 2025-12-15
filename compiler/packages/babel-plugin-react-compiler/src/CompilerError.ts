@@ -850,7 +850,7 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         name: 'exhaustive-effect-dependencies',
         description:
           'Validates that effect dependencies are exhaustive and without extraneous values',
-        preset: LintRulePreset.Recommended,
+        preset: LintRulePreset.Off,
       };
     }
     case ErrorCategory.EffectDerivationsOfState: {

@@ -177,6 +177,6 @@ function InvalidEffectDeps({a, b}) {
 
   useEffect(() => {
     console.log(a);
-    // eslint-disable-next-line react-hooks/exhaustive-effect-dependencies
+    // TODO: eslint-disable-next-line react-hooks/exhaustive-effect-dependencies
   }, [a, b]);
 }
