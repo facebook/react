@@ -1,4 +1,4 @@
-// @validateExhaustiveEffectDependencies:"all"
+// @validateExhaustiveEffectDependencies:"missing-only"
 import {useEffect} from 'react';
 
 function Component({x, y, z}) {
@@ -7,12 +7,12 @@ function Component({x, y, z}) {
     log(x);
   }, []);
 
-  // error: extra dep - y
+  // no error: extra dep not reported in missing-only mode
   useEffect(() => {
     log(x);
   }, [x, y]);
 
-  // error: missing dep - z; extra dep - y
+  // error: missing dep - z (extra dep - y not reported)
   useEffect(() => {
     log(x, z);
   }, [x, y]);
