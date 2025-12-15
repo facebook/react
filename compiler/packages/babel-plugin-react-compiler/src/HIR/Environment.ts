@@ -41,6 +41,7 @@ import {
 } from './HIR';
 import {
   BuiltInMixedReadonlyId,
+  BuiltInUseFragmentId,
   DefaultMutatingHook,
   DefaultNonmutatingHook,
   FunctionSignature,
@@ -648,6 +649,12 @@ export const EnvironmentConfigSchema = z.object({
    */
   enableTreatSetIdentifiersAsStateSetters: z.boolean().default(false),
 
+  /**
+   * Treat hook calls named "useFragment" as returning BuiltInUseFragment type.
+   * This enables tracking of Relay fragment-derived values through the program.
+   */
+  enableTreatUseFragmentAsRelay: z.boolean().default(false),
+
   /*
    * If specified a value, the compiler lowers any calls to `useContext` to use
    * this value as the callee.
@@ -819,14 +826,22 @@ export class Environment {
         ],
         suggestions: null,
       });
+      // Use BuiltInUseFragmentId for useFragment to enable tracking of fragment-derived values
+      const returnTypeShapeId =
+        hookName === 'useFragment'
+          ? BuiltInUseFragmentId
+          : hook.transitiveMixedData
+            ? BuiltInMixedReadonlyId
+            : null;
       this.#globals.set(
         hookName,
         addHook(this.#shapes, {
           positionalParams: [],
           restParam: hook.effectKind,
-          returnType: hook.transitiveMixedData
-            ? {kind: 'Object', shapeId: BuiltInMixedReadonlyId}
-            : {kind: 'Poly'},
+          returnType:
+            returnTypeShapeId != null
+              ? {kind: 'Object', shapeId: returnTypeShapeId}
+              : {kind: 'Poly'},
           returnValueKind: hook.valueKind,
           calleeEffect: Effect.Read,
           hookKind: 'Custom',
