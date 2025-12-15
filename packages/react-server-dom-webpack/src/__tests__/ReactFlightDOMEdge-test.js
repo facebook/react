@@ -39,6 +39,10 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+function normalizeSerializedContent(str) {
+  return str.replaceAll(__REACT_ROOT_PATH_TEST__, '**');
+}
+
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
     // Mock performance.now for timing tests
@@ -481,8 +485,10 @@ describe('ReactFlightDOMEdge', () => {
     );
     const [stream1, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(1100);
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream1),
+    );
+    expect(serializedContent.length).toBeLessThan(1075);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
@@ -551,9 +557,11 @@ describe('ReactFlightDOMEdge', () => {
     );
     const [stream1, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream1),
+    );
 
-    expect(serializedContent.length).toBeLessThan(490);
+    expect(serializedContent.length).toBeLessThan(465);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
@@ -623,8 +631,10 @@ describe('ReactFlightDOMEdge', () => {
     );
     const [stream1, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(__DEV__ ? 680 : 400);
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream1),
+    );
+    expect(serializedContent.length).toBeLessThan(__DEV__ ? 630 : 400);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await serverAct(() =>
@@ -657,8 +667,10 @@ describe('ReactFlightDOMEdge', () => {
         <ServerComponent recurse={20} />,
       ),
     );
-    const serializedContent = await readResult(stream);
-    const expectedDebugInfoSize = __DEV__ ? 320 * 20 : 0;
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const expectedDebugInfoSize = __DEV__ ? 295 * 20 : 0;
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
