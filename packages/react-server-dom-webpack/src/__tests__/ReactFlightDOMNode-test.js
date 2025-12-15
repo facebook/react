@@ -140,7 +140,7 @@ describe('ReactFlightDOMNode', () => {
 
   async function createBufferedUnclosingStream(
     stream: ReadableStream<Uint8Array>,
-  ): ReadableStream<Uint8Array> {
+  ): Promise<ReadableStream<Uint8Array>> {
     const chunks: Array<Uint8Array> = [];
     const reader = stream.getReader();
     while (true) {
@@ -407,7 +407,7 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  it('should cancels the underlying ReadableStream when we are cancelled', async () => {
+  it('should cancel the underlying and transported ReadableStreams when we are cancelled', async () => {
     let controller;
     let cancelReason;
     const s = new ReadableStream({
@@ -431,16 +431,30 @@ describe('ReactFlightDOMNode', () => {
       ),
     );
 
-    const writable = new Stream.PassThrough(streamOptions);
-    rscStream.pipe(writable);
+    const readable = new Stream.PassThrough(streamOptions);
+    rscStream.pipe(readable);
+
+    const result = await ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: webpackModuleLoading,
+    });
+    const reader = result.getReader();
 
     controller.enqueue('hi');
 
+    await serverAct(async () => {
+      // We should be able to read the part we already emitted before the abort
+      expect(await reader.read()).toEqual({
+        value: 'hi',
+        done: false,
+      });
+    });
+
     const reason = new Error('aborted');
-    writable.destroy(reason);
+    readable.destroy(reason);
 
     await new Promise(resolve => {
-      writable.on('error', () => {
+      readable.on('error', () => {
         resolve();
       });
     });
@@ -448,9 +462,17 @@ describe('ReactFlightDOMNode', () => {
     expect(cancelReason.message).toBe(
       'The destination stream errored while writing data.',
     );
+
+    let error = null;
+    try {
+      await reader.read();
+    } catch (x) {
+      error = x;
+    }
+    expect(error).toBe(reason);
   });
 
-  it('should cancels the underlying ReadableStream when we abort', async () => {
+  it('should cancel the underlying and transported ReadableStreams when we abort', async () => {
     const errors = [];
     let controller;
     let cancelReason;
@@ -1342,12 +1364,12 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in Dynamic' +
             (gate(flags => flags.enableAsyncDebugInfo)
-              ? ' (file://ReactFlightDOMNode-test.js:1216:27)\n'
+              ? ' (file://ReactFlightDOMNode-test.js:1238:27)\n'
               : '\n') +
             '    in body\n' +
             '    in html\n' +
-            '    in App (file://ReactFlightDOMNode-test.js:1229:25)\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1304:16)',
+            '    in App (file://ReactFlightDOMNode-test.js:1251:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1326:16)',
         );
       } else {
         expect(
@@ -1356,7 +1378,7 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1304:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1326:16)',
         );
       }
 
@@ -1366,8 +1388,8 @@ describe('ReactFlightDOMNode', () => {
             normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
           ).toBe(
             '\n' +
-              '    in Dynamic (file://ReactFlightDOMNode-test.js:1216:27)\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1229:25)',
+              '    in Dynamic (file://ReactFlightDOMNode-test.js:1238:27)\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1251:25)',
           );
         } else {
           expect(
@@ -1375,7 +1397,7 @@ describe('ReactFlightDOMNode', () => {
           ).toBe(
             '' +
               '\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1229:25)',
+              '    in App (file://ReactFlightDOMNode-test.js:1251:25)',
           );
         }
       } else {

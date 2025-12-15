@@ -224,6 +224,11 @@ export const EnvironmentConfigSchema = z.object({
   validateExhaustiveMemoizationDependencies: z.boolean().default(true),
 
   /**
+   * Validate that dependencies supplied to effect hooks are exhaustive.
+   */
+  validateExhaustiveEffectDependencies: z.boolean().default(false),
+
+  /**
    * When this is true, rather than pruning existing manual memoization but ensuring or validating
    * that the memoized values remain memoized, the compiler will simply not prune existing calls to
    * useMemo/useCallback.
@@ -694,6 +699,16 @@ export const EnvironmentConfigSchema = z.object({
    *   for meaningful changes before setting state.
    */
   enableAllowSetStateFromRefsInEffects: z.boolean().default(true),
+
+  /**
+   * When enabled, provides verbose error messages for setState calls within effects,
+   * presenting multiple possible fixes to the user/agent since we cannot statically
+   * determine which specific use-case applies:
+   * 1. Non-local derived data - requires restructuring state ownership
+   * 2. Derived event pattern - detecting when a prop changes
+   * 3. Force update / external sync - should use useSyncExternalStore
+   */
+  enableVerboseNoSetStateInEffect: z.boolean().default(false),
 
   /**
    * Enables inference of event handler types for JSX props on built-in DOM elements.

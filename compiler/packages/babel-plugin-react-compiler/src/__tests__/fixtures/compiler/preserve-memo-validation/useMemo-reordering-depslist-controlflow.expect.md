@@ -47,7 +47,6 @@ function Foo(t0) {
   let val1;
   if ($[0] !== arr1 || $[1] !== arr2 || $[2] !== foo) {
     const x = [arr1];
-
     let y = [];
     let t2;
     if ($[5] === Symbol.for("react.memo_cache_sentinel")) {

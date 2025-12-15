@@ -156,6 +156,23 @@ describe('ReactFlightDOM', () => {
     };
   }
 
+  function createUnclosingStream(
+    stream: ReadableStream<Uint8Array>,
+  ): ReadableStream<Uint8Array> {
+    const reader = stream.getReader();
+
+    const s = new ReadableStream({
+      async pull(controller) {
+        const {done, value} = await reader.read();
+        if (!done) {
+          controller.enqueue(value);
+        }
+      },
+    });
+
+    return s;
+  }
+
   const theInfinitePromise = new Promise(() => {});
   function InfiniteSuspend() {
     throw theInfinitePromise;
@@ -2970,7 +2987,7 @@ describe('ReactFlightDOM', () => {
     const {prelude} = await pendingResult;
 
     const result = await ReactServerDOMClient.createFromReadableStream(
-      Readable.toWeb(prelude),
+      createUnclosingStream(Readable.toWeb(prelude)),
     );
 
     const iterator = result.multiShotIterable[Symbol.asyncIterator]();
