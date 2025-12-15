@@ -33,6 +33,7 @@ import {
   BuiltInPropsId,
   BuiltInRefValueId,
   BuiltInSetStateId,
+  BuiltInUseFragmentId,
   BuiltInUseRefId,
 } from '../HIR/ObjectShape';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
@@ -859,12 +860,19 @@ function tryUnionTypes(ty1: Type, ty2: Type): Type | null {
   } else if (ty2.kind === 'Object' && ty2.shapeId === BuiltInMixedReadonlyId) {
     readonlyType = ty2;
     otherType = ty1;
+  } else if (ty1.kind === 'Object' && ty1.shapeId === BuiltInUseFragmentId) {
+    readonlyType = ty1;
+    otherType = ty2;
+  } else if (ty2.kind === 'Object' && ty2.shapeId === BuiltInUseFragmentId) {
+    readonlyType = ty2;
+    otherType = ty1;
   } else {
     return null;
   }
   if (otherType.kind === 'Primitive') {
     /**
      * Union(Primitive | MixedReadonly) = MixedReadonly
+     * Union(Primitive | UseFragment) = UseFragment
      *
      * For example, `data ?? null` could return `data`, the fact that RHS
      * is a primitive doesn't guarantee the result is a primitive.
@@ -876,6 +884,7 @@ function tryUnionTypes(ty1: Type, ty2: Type): Type | null {
   ) {
     /**
      * Union(Array | MixedReadonly) = Array
+     * Union(Array | UseFragment) = Array
      *
      * In practice this pattern means the result is always an array. Given
      * that this behavior requires opting-in to the mixedreadonly type

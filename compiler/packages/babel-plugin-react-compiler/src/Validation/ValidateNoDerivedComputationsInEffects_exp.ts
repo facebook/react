@@ -15,6 +15,7 @@ import {
   IdentifierId,
   isSetStateType,
   isUseEffectHookType,
+  isUseFragmentType,
   Place,
   CallExpression,
   Instruction,
@@ -28,7 +29,12 @@ import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {assertExhaustive} from '../Utils/utils';
 
-type TypeOfValue = 'ignored' | 'fromProps' | 'fromState' | 'fromPropsAndState';
+type TypeOfValue =
+  | 'ignored'
+  | 'fromProps'
+  | 'fromState'
+  | 'fromPropsAndState'
+  | 'fromRelay';
 
 type DerivationMetadata = {
   typeOfValue: TypeOfValue;
@@ -299,6 +305,9 @@ function joinValue(
   if (lvalueType === 'ignored') return valueType;
   if (valueType === 'ignored') return lvalueType;
   if (lvalueType === valueType) return lvalueType;
+  if (lvalueType === 'fromRelay' || valueType === 'fromRelay') {
+    return 'fromRelay';
+  }
   return 'fromPropsAndState';
 }
 
@@ -390,6 +399,16 @@ function recordInstructionDerivations(
       }
     } else if (isUseStateType(lvalue.identifier)) {
       typeOfValue = 'fromState';
+      context.derivationCache.addDerivationEntry(
+        lvalue,
+        new Set(),
+        typeOfValue,
+        true,
+      );
+      return;
+    } else if (isUseFragmentType(lvalue.identifier)) {
+      console.log('relay');
+      typeOfValue = 'fromRelay';
       context.derivationCache.addDerivationEntry(
         lvalue,
         new Set(),
@@ -796,6 +815,26 @@ function validateEffect(
         );
 
         if (argMetadata !== undefined) {
+          console.log(argMetadata.typeOfValue);
+          // Check if the value being set is derived from useFragment (Relay)
+          if (argMetadata.typeOfValue === 'fromRelay') {
+            context.errors.pushDiagnostic(
+              CompilerDiagnostic.create({
+                description:
+                  'Deriving value from Relay store. Instead of holding it in a local state, use a client schema extension to store the value directly in the Relay store.',
+                category: ErrorCategory.EffectDerivationsOfState,
+                reason:
+                  'Avoid storing Relay data in React state. Use client schema extensions instead.',
+              }).withDetails({
+                kind: 'error',
+                loc: instr.value.callee.loc,
+                message:
+                  'setState with Relay-derived value. Use client schema instead.',
+              }),
+            );
+            continue;
+          }
+
           effectDerivedSetStateCalls.push({
             value: instr.value,
             id: instr.value.callee.identifier.id,
