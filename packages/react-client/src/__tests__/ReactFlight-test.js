@@ -10,8 +10,6 @@
 
 'use strict';
 
-const path = require('path');
-
 if (typeof Blob === 'undefined') {
   global.Blob = require('buffer').Blob;
 }
@@ -33,9 +31,8 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
-const repoRoot = path.resolve(__dirname, '../../../../');
 function normalizeReactCodeLocInfo(str) {
-  const repoRootForRegexp = repoRoot.replace(/\//g, '\\/');
+  const repoRootForRegexp = __REACT_ROOT_PATH_TEST__.replace(/\//g, '\\/');
   const repoFileLocMatch = new RegExp(`${repoRootForRegexp}.+?:\\d+:\\d+`, 'g');
   return str && str.replace(repoFileLocMatch, '**');
 }
