@@ -385,7 +385,12 @@ function validateDependencies(
 
   if (filteredMissing.length !== 0 || filteredExtra.length !== 0) {
     let suggestion: CompilerSuggestion | null = null;
-    if (manualMemoLoc != null && typeof manualMemoLoc !== 'symbol') {
+    if (
+      manualMemoLoc != null &&
+      typeof manualMemoLoc !== 'symbol' &&
+      manualMemoLoc.start.index != null &&
+      manualMemoLoc.end.index != null
+    ) {
       suggestion = {
         description: 'Update dependencies',
         range: [manualMemoLoc.start.index, manualMemoLoc.end.index],
