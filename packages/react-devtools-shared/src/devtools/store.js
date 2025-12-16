@@ -1690,13 +1690,17 @@ export default class Store extends EventEmitter<{
 
           const children = element.children;
           if (children.length !== numChildren) {
-            this._throwAndEmitError(
-              Error(
-                `Children cannot be added or removed during a reorder operation.`,
-              ),
+            console.warn(
+              `Children cannot be added or removed during a reorder operation. ` +
+                `Expected ${children.length} children but got ${numChildren}.`,
             );
-          }
 
+            // We need to safely skip over the rest of this operation's data
+            // so we don't desync the rest of the operations.
+            i += numChildren;
+
+            break;
+          }
           for (let j = 0; j < numChildren; j++) {
             const childID = operations[i + j];
             children[j] = childID;
