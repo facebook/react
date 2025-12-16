@@ -223,7 +223,6 @@ export type Effect = {
   inst: EffectInstance,
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
-  next: Effect,
 };
 
 type StoreInstance<T> = {
@@ -245,7 +244,7 @@ type EventFunctionPayload<Args, Return, F: (...Array<Args>) => Return> = {
 };
 
 export type FunctionComponentUpdateQueue = {
-  lastEffect: Effect | null,
+  effects: Array<Effect> | null,
   events: Array<EventFunctionPayload<any, any, any>> | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
   memoCache: MemoCache | null,
@@ -1071,7 +1070,7 @@ function updateWorkInProgressHook(): Hook {
 
 function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
   return {
-    lastEffect: null,
+    effects: null,
     events: null,
     stores: null,
     memoCache: null,
@@ -1081,7 +1080,7 @@ function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
 function resetFunctionComponentUpdateQueue(
   updateQueue: FunctionComponentUpdateQueue,
 ): void {
-  updateQueue.lastEffect = null;
+  updateQueue.effects = null;
   updateQueue.events = null;
   updateQueue.stores = null;
   if (updateQueue.memoCache != null) {
@@ -2571,8 +2570,6 @@ function pushSimpleEffect(
     create,
     deps,
     inst,
-    // Circular
-    next: (null: any),
   };
   return pushEffectImpl(effect);
 }
@@ -2584,15 +2581,11 @@ function pushEffectImpl(effect: Effect): Effect {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
     currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
   }
-  const lastEffect = componentUpdateQueue.lastEffect;
-  if (lastEffect === null) {
-    componentUpdateQueue.lastEffect = effect.next = effect;
-  } else {
-    const firstEffect = lastEffect.next;
-    lastEffect.next = effect;
-    effect.next = firstEffect;
-    componentUpdateQueue.lastEffect = effect;
+  let effects = componentUpdateQueue.effects;
+  if (effects === null) {
+    componentUpdateQueue.effects = effects = [];
   }
+  effects.push(effect);
   return effect;
 }
 
