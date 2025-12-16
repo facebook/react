@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<e0c89d9d6b2410b3ece5a19d87d83bc6>>
+ * @generated SignedSource<<e12ac8ae47fbe11d71e620561e05fd62>>
  */
 
 'use strict';
@@ -32049,7 +32049,9 @@ const EnvironmentConfigSchema = v4.z.object({
     enablePreserveExistingMemoizationGuarantees: v4.z.boolean().default(true),
     validatePreserveExistingMemoizationGuarantees: v4.z.boolean().default(true),
     validateExhaustiveMemoizationDependencies: v4.z.boolean().default(true),
-    validateExhaustiveEffectDependencies: v4.z.boolean().default(false),
+    validateExhaustiveEffectDependencies: v4.z
+        .enum(['off', 'all', 'missing-only', 'extra-only'])
+        .default('off'),
     enablePreserveExistingManualUseMemo: v4.z.boolean().default(false),
     enableForest: v4.z.boolean().default(false),
     enableUseTypeAnnotations: v4.z.boolean().default(false),
@@ -53449,7 +53451,7 @@ function validateExhaustiveDependencies(fn) {
         if (env.config.validateExhaustiveMemoizationDependencies) {
             visitCandidateDependency(value.decl, temporaries, dependencies, locals);
             const inferred = Array.from(dependencies);
-            const diagnostic = validateDependencies(inferred, (_a = startMemo.deps) !== null && _a !== void 0 ? _a : [], reactive, startMemo.depsLoc, ErrorCategory.MemoDependencies);
+            const diagnostic = validateDependencies(inferred, (_a = startMemo.deps) !== null && _a !== void 0 ? _a : [], reactive, startMemo.depsLoc, ErrorCategory.MemoDependencies, 'all');
             if (diagnostic != null) {
                 error.pushDiagnostic(diagnostic);
             }
@@ -53462,7 +53464,7 @@ function validateExhaustiveDependencies(fn) {
         onStartMemoize,
         onFinishMemoize,
         onEffect: (inferred, manual, manualMemoLoc) => {
-            if (env.config.validateExhaustiveEffectDependencies === false) {
+            if (env.config.validateExhaustiveEffectDependencies === 'off') {
                 return;
             }
             const manualDeps = [];
@@ -53495,7 +53497,10 @@ function validateExhaustiveDependencies(fn) {
                     });
                 }
             }
-            const diagnostic = validateDependencies(Array.from(inferred), manualDeps, reactive, manualMemoLoc, ErrorCategory.EffectExhaustiveDependencies);
+            const effectReportMode = typeof env.config.validateExhaustiveEffectDependencies === 'string'
+                ? env.config.validateExhaustiveEffectDependencies
+                : 'all';
+            const diagnostic = validateDependencies(Array.from(inferred), manualDeps, reactive, manualMemoLoc, ErrorCategory.EffectExhaustiveDependencies, effectReportMode);
             if (diagnostic != null) {
                 error.pushDiagnostic(diagnostic);
             }
@@ -53503,7 +53508,7 @@ function validateExhaustiveDependencies(fn) {
     }, false);
     return error.asResult();
 }
-function validateDependencies(inferred, manualDependencies, reactive, manualMemoLoc, category) {
+function validateDependencies(inferred, manualDependencies, reactive, manualMemoLoc, category, exhaustiveDepsReportMode) {
     var _a, _b, _c, _d;
     inferred.sort((a, b) => {
         var _a, _b;
@@ -53609,9 +53614,14 @@ function validateDependencies(inferred, manualDependencies, reactive, manualMemo
         }
         extra.push(dep);
     }
-    if (missing.length !== 0 || extra.length !== 0) {
+    const filteredMissing = exhaustiveDepsReportMode === 'extra-only' ? [] : missing;
+    const filteredExtra = exhaustiveDepsReportMode === 'missing-only' ? [] : extra;
+    if (filteredMissing.length !== 0 || filteredExtra.length !== 0) {
         let suggestion = null;
-        if (manualMemoLoc != null && typeof manualMemoLoc !== 'symbol') {
+        if (manualMemoLoc != null &&
+            typeof manualMemoLoc !== 'symbol' &&
+            manualMemoLoc.start.index != null &&
+            manualMemoLoc.end.index != null) {
             suggestion = {
                 description: 'Update dependencies',
                 range: [manualMemoLoc.start.index, manualMemoLoc.end.index],
@@ -53624,8 +53634,8 @@ function validateDependencies(inferred, manualDependencies, reactive, manualMemo
                     .join(', ')}]`,
             };
         }
-        const diagnostic = createDiagnostic(category, missing, extra, suggestion);
-        for (const dep of missing) {
+        const diagnostic = createDiagnostic(category, filteredMissing, filteredExtra, suggestion);
+        for (const dep of filteredMissing) {
             let reactiveStableValueHint = '';
             if (isStableType(dep.identifier)) {
                 reactiveStableValueHint =
@@ -53638,7 +53648,7 @@ function validateDependencies(inferred, manualDependencies, reactive, manualMemo
                 loc: dep.loc,
             });
         }
-        for (const dep of extra) {
+        for (const dep of filteredExtra) {
             if (dep.root.kind === 'Global') {
                 diagnostic.withDetails({
                     kind: 'error',
@@ -56210,6 +56220,7 @@ const COMPILER_OPTIONS = {
         validateNoDerivedComputationsInEffects: true,
         enableUseKeyedState: true,
         enableVerboseNoSetStateInEffect: true,
+        validateExhaustiveEffectDependencies: 'extra-only',
     },
 };
 const FLOW_SUPPRESSION_REGEX = /\$FlowFixMe\[([^\]]*)\]/g;
