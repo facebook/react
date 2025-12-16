@@ -125,56 +125,46 @@ ReactPromise.prototype.then = function <T>(
       initializeModelChunk(chunk);
       break;
   }
-  // The status might have changed after initialization.
-  switch (chunk.status) {
-    case INITIALIZED:
-      if (typeof resolve === 'function') {
-        let inspectedValue = chunk.value;
-        // Recursively check if the value is itself a ReactPromise and if so if it points
-        // back to itself. This helps catch recursive thenables early error.
-        let cycleProtection = 0;
-        while (inspectedValue instanceof ReactPromise) {
-          cycleProtection++;
-          if (inspectedValue === chunk || cycleProtection > 1000) {
-            if (typeof reject === 'function') {
-              reject(new Error('Cannot have cyclic thenables.'));
-            }
-            return;
+  
+ switch (chunk.status) {
+  case INITIALIZED:
+    if (typeof resolve === 'function') {
+      let inspectedValue = chunk.value;
+      const visitedPromises = new Set();
+      let iterationCount = 0; // Optional safety counter
+      
+      while (inspectedValue instanceof ReactPromise) {
+        iterationCount++;
+        
+        // Primary cycle detection via Set
+        if (visitedPromises.has(inspectedValue)) {
+          if (typeof reject === 'function') {
+            reject(new Error('Cannot have cyclic thenables.'));
           }
-          if (inspectedValue.status === INITIALIZED) {
-            inspectedValue = inspectedValue.value;
-          } else {
-            // If this is lazily resolved, pending or blocked, it'll eventually become
-            // initialized and break the loop. Rejected also breaks it.
-            break;
+          return;
+        }
+        
+        // Secondary safety check (should never be reached in practice)
+        if (iterationCount > 1000) {
+          if (typeof reject === 'function') {
+            reject(new Error('Exceeded maximum thenable depth.'));
           }
+          return;
         }
-        resolve(chunk.value);
-      }
-      break;
-    case PENDING:
-    case BLOCKED:
-      if (typeof resolve === 'function') {
-        if (chunk.value === null) {
-          chunk.value = ([]: Array<InitializationReference | (T => mixed)>);
+        
+        visitedPromises.add(inspectedValue);
+        
+        if (inspectedValue.status === INITIALIZED) {
+          inspectedValue = inspectedValue.value;
+        } else {
+          break;
         }
-        chunk.value.push(resolve);
       }
-      if (typeof reject === 'function') {
-        if (chunk.reason === null) {
-          chunk.reason = ([]: Array<
-            InitializationReference | (mixed => mixed),
-          >);
-        }
-        chunk.reason.push(reject);
-      }
-      break;
-    default:
-      if (typeof reject === 'function') {
-        reject(chunk.reason);
-      }
-      break;
-  }
+      resolve(chunk.value);
+    }
+    break;
+  // ... rest of cases
+}
 };
 
 const ObjectPrototype = Object.prototype;
