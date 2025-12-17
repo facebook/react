@@ -145,7 +145,9 @@ export function trackUsedThenable<T>(
           console.error(
             'A component was suspended by an uncached promise. Creating ' +
               'promises inside a Client Component or hook is not yet ' +
-              'supported, except via a Suspense-compatible library or framework.',
+              'supported, except via a Suspense-compatible library or framework. ' +
+              'If you are calling a function that returns a promise, make sure ' +
+              'it is not marked as async.',
           );
         }
       }
