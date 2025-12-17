@@ -36,7 +36,7 @@ function Component() {
   const $ = _c(8);
   const [state, setState] = useState(0);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = <Stringify text="Counter" />;
     $[0] = t0;
   } else {

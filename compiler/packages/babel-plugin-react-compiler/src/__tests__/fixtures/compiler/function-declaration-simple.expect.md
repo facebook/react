@@ -29,7 +29,7 @@ function component(a) {
   if ($[0] !== a) {
     t = { a };
     let t0;
-    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t0 = function x(p) {
         p.foo();
       };

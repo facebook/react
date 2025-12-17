@@ -22,7 +22,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo() {
   const $ = _c(1);
   let y;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const a = {};
     y = a;
     const x = [];

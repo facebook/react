@@ -31,7 +31,7 @@ function Component(props) {
     const y = x;
     if (props.p1) {
       let t1;
-      if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[4] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t1 = [];
         $[4] = t1;
       } else {

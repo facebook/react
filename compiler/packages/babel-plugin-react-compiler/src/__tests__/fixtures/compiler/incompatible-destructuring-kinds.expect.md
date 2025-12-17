@@ -32,7 +32,7 @@ function Component(t0) {
   let a;
   let b;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     a = "a";
     const [t2, t3] = [null, null];
     t1 = t3;
@@ -47,7 +47,7 @@ function Component(t0) {
   }
   b = t1;
   let t2;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = <Stringify a={a} b={b} onClick={() => a} />;
     $[3] = t2;
   } else {

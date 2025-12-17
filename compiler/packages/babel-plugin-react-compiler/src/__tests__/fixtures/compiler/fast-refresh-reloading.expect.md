@@ -33,7 +33,7 @@ function Component(props) {
     $[0] !== "20945b0193e529df490847c66111b38d7b02485d5b53d0829ff3b23af87b105c"
   ) {
     for (let $i = 0; $i < 8; $i += 1) {
-      $[$i] = Symbol.for("react.memo_cache_sentinel");
+      $[$i] = globalThis.Symbol.for("react.memo_cache_sentinel");
     }
     $[0] = "20945b0193e529df490847c66111b38d7b02485d5b53d0829ff3b23af87b105c";
   }

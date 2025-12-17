@@ -74,7 +74,7 @@ function Component(props) {
 
   maybeMutate(item);
   let t3;
-  if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[6] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = <div />;
     $[6] = t3;
   } else {

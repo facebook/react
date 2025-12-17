@@ -26,7 +26,7 @@ import { identity } from "shared-runtime";
 function Component(props) {
   const $0 = _c(1);
   let t0;
-  if ($0[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($0[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const $ = identity("jQuery");
     t0 = identity([$]);
     $0[0] = t0;

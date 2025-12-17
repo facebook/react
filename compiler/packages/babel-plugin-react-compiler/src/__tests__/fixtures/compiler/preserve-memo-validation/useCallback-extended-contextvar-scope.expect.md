@@ -59,7 +59,7 @@ function useBar(t0, cond) {
   const $ = _c(6);
   const { a, b } = t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = { val: 3 };
     $[0] = t1;
   } else {

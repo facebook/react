@@ -49,7 +49,7 @@ function Component() {
   const ref = useRef(null);
   const [state, setState] = useState(false);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = [];
     $[0] = t0;
   } else {
@@ -58,7 +58,7 @@ function Component() {
   useEffect(_temp, t0);
   let t1;
   let t2;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       setState(true);
     };

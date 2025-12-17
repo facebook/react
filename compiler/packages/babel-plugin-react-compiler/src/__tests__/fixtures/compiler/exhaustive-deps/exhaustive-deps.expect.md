@@ -136,7 +136,7 @@ function useHook7(x) {
   const $ = _c(2);
   const [, setState] = useState(true);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       setState(_temp);
     };
@@ -146,7 +146,7 @@ function useHook7(x) {
   }
   const f = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       f();
     };

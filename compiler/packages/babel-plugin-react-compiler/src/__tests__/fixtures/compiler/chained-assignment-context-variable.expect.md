@@ -31,7 +31,7 @@ function Component() {
   const $ = _c(3);
   let x;
   let y;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     y = x = {};
     const foo = () => {
       x = makeArray();
@@ -45,7 +45,7 @@ function Component() {
     y = $[1];
   }
   let t0;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = [y, x];
     $[2] = t0;
   } else {

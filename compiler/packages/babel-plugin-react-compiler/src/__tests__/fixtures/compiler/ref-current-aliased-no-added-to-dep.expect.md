@@ -24,7 +24,7 @@ function VideoTab() {
   const ref = useRef();
   const t = ref.current;
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const x = () => {
       console.log(t);
     };

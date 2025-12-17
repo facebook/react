@@ -49,7 +49,7 @@ const FooContext = React.createContext(null);
 function Component(props) {
   const $ = _c(3);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = <Inner />;
     $[0] = t0;
   } else {

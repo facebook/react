@@ -49,7 +49,7 @@ function Example() {
   const $ = _c(6);
   const fooRef = useRef();
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = function updateStyles() {
       const foo = fooRef.current;
 
@@ -67,7 +67,7 @@ function Example() {
 
   const barRef = useRef(null);
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = (rect) => {
       const { width } = rect;
 
@@ -80,7 +80,7 @@ function Example() {
   const resizeRef = useResizeObserver(t1);
   let t2;
   let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = () => {
       const observer = new ResizeObserver((_) => {
         updateStyles();

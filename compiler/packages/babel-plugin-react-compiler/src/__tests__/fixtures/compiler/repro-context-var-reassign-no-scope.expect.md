@@ -47,7 +47,7 @@ function Content() {
   const $ = _c(8);
   const [announcement, setAnnouncement] = useState("");
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = [{ name: "John Doe" }, { name: "Jane Doe" }];
     $[0] = t0;
   } else {

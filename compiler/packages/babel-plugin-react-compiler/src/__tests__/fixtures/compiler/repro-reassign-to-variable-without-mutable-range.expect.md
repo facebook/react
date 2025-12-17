@@ -23,7 +23,7 @@ import { c as _c } from "react/compiler-runtime"; // @debug
 function Component(a, b) {
   const $ = _c(11);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = [];
     $[0] = t0;
   } else {
@@ -31,7 +31,7 @@ function Component(a, b) {
   }
   let x = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = [];
     $[1] = t1;
   } else {

@@ -33,7 +33,7 @@ function Component() {
   const $ = _c(1);
   const changeF = _temp2;
   let x;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     x = { f: _temp3 };
 
     (console.log("A"), x)[(console.log("B"), "f")](

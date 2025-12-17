@@ -68,7 +68,7 @@ function Component() {
   const $ = _c(1);
   const ref = useRef(null);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const onSubmit = (data) => {
       if (ref.current !== null) {
         console.log(ref.current.value);

@@ -26,7 +26,7 @@ function Component(props) {
   const $ = _c(2);
   const [, setValue] = useState(null);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = (e) => setValue((value_0) => value_0 + e.target.value);
     $[0] = t0;
   } else {
@@ -36,7 +36,7 @@ function Component(props) {
 
   useOtherHook();
   let x;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     x = {};
     foo(x, onChange);
     $[1] = x;

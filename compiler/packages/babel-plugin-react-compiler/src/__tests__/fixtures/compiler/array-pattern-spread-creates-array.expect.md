@@ -43,7 +43,7 @@ import { makeObject_Primitives, ValidateMemoization } from "shared-runtime";
 function Component(props) {
   const $ = _c(9);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = makeObject_Primitives();
     $[0] = t0;
   } else {
@@ -62,7 +62,7 @@ function Component(props) {
   }
   const rest_0 = rest;
   let t1;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = <ValidateMemoization inputs={[]} output={x} />;
     $[3] = t1;
   } else {

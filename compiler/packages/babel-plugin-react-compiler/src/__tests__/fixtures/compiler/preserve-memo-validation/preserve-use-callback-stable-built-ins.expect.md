@@ -61,7 +61,7 @@ function useFoo() {
   const [, dispatch] = useReducer(_temp, null);
   const [, dispatchAction] = useActionState(_temp2, null);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       dispatch();
       startTransition(_temp3);
