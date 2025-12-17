@@ -724,6 +724,25 @@ describe('ReactFlight', () => {
     });
   });
 
+  it('can transport cyclic arrays', async () => {
+    function ComponentClient({prop, obj}) {
+      expect(prop[1]).toBe(prop);
+      expect(prop[0]).toBe(obj);
+    }
+    const Component = clientReference(ComponentClient);
+
+    const obj = {};
+    const cyclic = [obj];
+    cyclic[1] = cyclic;
+    const model = <Component prop={cyclic} obj={obj} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+  });
+
   it('can render a lazy component as a shared component on the server', async () => {
     function SharedComponent({text}) {
       return (
