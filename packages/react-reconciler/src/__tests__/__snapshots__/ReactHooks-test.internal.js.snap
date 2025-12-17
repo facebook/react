@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactHooks works with ReactDOMServer calls inside a component 1`] = `"<p>hello</p>0<p>bye</p>"`;

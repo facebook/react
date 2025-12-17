@@ -1,0 +1,7 @@
+.ExpandCollapseToggle {
+  flex: 0 0 1rem;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  color: var(--color-expand-collapse-toggle);
+}

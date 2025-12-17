@@ -1,0 +1,20 @@
+{
+  "name": "react-suspense-test-utils",
+  "version": "0.1.0",
+  "private": true,
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/react-suspense-test-utils"
+  },
+  "license": "MIT",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "cjs/"
+  ],
+  "peerDependencies": {
+    "react": "^17.0.0"
+  }
+}

@@ -1,0 +1,37 @@
+body {
+  font-family: sans-serif;
+  font-size: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+h2 {
+  margin: 1rem 0 0;
+}
+
+iframe {
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+}
+
+code {
+  white-space: nowrap;
+}
+
+.Feature {
+  margin: 1rem 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+.FeatureHeader {
+  font-size: 16px;
+  margin-bottom: 0.5rem;
+}
+.FeatureCode {
+  background-color: #eee;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}

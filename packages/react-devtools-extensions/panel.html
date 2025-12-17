@@ -1,0 +1,65 @@
+<!doctype html>
+<html style="display: flex">
+    <head>
+        <meta charset="utf8">
+        <style>
+            html {
+                display: flex;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                flex: 1;
+                display: flex;
+            }
+            #container {
+                display: flex;
+                flex: 1;
+                width: 100%;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+            .no-react-disclaimer {
+              margin: 16px;
+              font-family: Courier, monospace, serif;
+              font-size: 16px;
+              animation: fadeIn .5s ease-in-out forwards;
+            }
+
+            @keyframes fadeIn {
+              0% {
+                opacity: 0;
+              }
+              100% {
+                opacity: 1;
+              }
+            }
+
+            @media (prefers-color-scheme: dark) {
+              :root {
+                color-scheme: dark;
+              }
+
+              @supports (-moz-appearance:none) {
+                :root {
+                  background: black;
+                }
+
+                body {
+                  color: white;
+                }
+              }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- main react mount point -->
+        <div id="container">
+          <h1 class="no-react-disclaimer">Looks like this page doesn't have React, or it hasn't been loaded yet.</h1>
+        </div>
+        <script src="./build/panel.js"></script>
+    </body>
+</html>

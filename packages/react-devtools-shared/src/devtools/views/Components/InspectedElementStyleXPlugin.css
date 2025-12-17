@@ -1,0 +1,6 @@
+.Source {
+  color: var(--color-dim);
+  margin-left: 1rem;
+  overflow: auto;
+  text-overflow: ellipsis;
+}
