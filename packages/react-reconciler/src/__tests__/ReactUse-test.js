@@ -2189,4 +2189,68 @@ describe('ReactUse', () => {
       expect(root).toMatchRenderedOutput('Updated');
     },
   );
+
+  it('regression: does not get stuck after resolving nested Suspense', async () => {
+    let resolve;
+    const promiseA = Promise.resolve({
+      text: 'A',
+      inner: new Promise(r => {
+        resolve = r;
+      }),
+    });
+    const promiseB = Promise.resolve({
+      text: 'B',
+      inner: new Promise(() => {}),
+    });
+
+    function AsyncOuter({promise}) {
+      const data = use(promise);
+      return (
+        <>
+          <Text text={data.text} />
+          <Suspense fallback={<Text text="(loading inner)" />}>
+            <AsyncInner promise={data.inner} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function AsyncInner({promise}) {
+      use(promise);
+      return <Text text="(inner)" />;
+    }
+
+    let update;
+    function App() {
+      const [promise, setPromise] = useState(promiseA);
+      update = setPromise;
+      return (
+        <Suspense fallback={<Text text="(loading outer)" />}>
+          <AsyncOuter promise={promise} />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+    });
+    assertLog(['A', '(loading inner)']);
+    expect(root).toMatchRenderedOutput('A(loading inner)');
+
+    // Resolve inner data
+    await act(() => resolve());
+    assertLog(['(inner)']);
+    expect(root).toMatchRenderedOutput('A(inner)');
+
+    // Switch to B. Should show B, but inner is pending again.
+    // BUG: The UI gets stuck on A.
+    await act(() => {
+      startTransition(() => update(promiseB));
+    });
+    assertLog(['B', '(loading inner)']);
+    expect(root).toMatchRenderedOutput('B(loading inner)');
+  });
 });
