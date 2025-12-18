@@ -261,6 +261,20 @@ const allTests = {
     },
     {
       code: normalizeIndent`
+        // Valid because this is not a React component class.
+        // Hooks can be called in regular class methods.
+        class Store {
+          use() {
+            return React.useState(4);
+          }
+          useHook() {
+            return useState(0);
+          }
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
         // Valid -- this is a regression test.
         jest.useFakeTimers();
         beforeEach(() => {
@@ -1539,6 +1553,26 @@ const allTests = {
     },
     {
       code: normalizeIndent`
+        class MyComponent extends React.Component {
+          componentDidMount() {
+            useState(0);
+          }
+        }
+      `,
+      errors: [classError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        class MyComponent extends Component {
+          useCustomHook() {
+            return useHook();
+          }
+        }
+      `,
+      errors: [classError('useHook')],
+    },
+    {
+      code: normalizeIndent`
         (class {useHook = () => { useState(); }});
       `,
       errors: [classError('useState')],
@@ -1788,7 +1822,7 @@ const allTests = {
           })} />;
         }
       `,
-      errors: [{...useEffectEventError(null, false), line: 4}],
+      errors: [{ ...useEffectEventError(null, false), line: 4 }],
     },
     {
       syntax: 'flow',
@@ -1801,7 +1835,7 @@ const allTests = {
           })} />;
         }
       `,
-      errors: [{...useEffectEventError(null, false), line: 5}],
+      errors: [{ ...useEffectEventError(null, false), line: 5 }],
     },
     {
       code: normalizeIndent`
@@ -1834,8 +1868,8 @@ const allTests = {
         }
       `,
       errors: [
-        {...useEffectEventError('onClick', false), line: 7},
-        {...useEffectEventError('onClick', true), line: 15},
+        { ...useEffectEventError('onClick', false), line: 7 },
+        { ...useEffectEventError('onClick', true), line: 15 },
       ],
     },
     {
@@ -1871,8 +1905,8 @@ const allTests = {
         }
       `,
       errors: [
-        {...useEffectEventError('onClick', false), line: 8},
-        {...useEffectEventError('onClick', true), line: 16},
+        { ...useEffectEventError('onClick', false), line: 8 },
+        { ...useEffectEventError('onClick', true), line: 16 },
       ],
     },
     {
@@ -1897,7 +1931,7 @@ const allTests = {
           return <Bar onClick={foo} />
         }
       `,
-      errors: [{...useEffectEventError('onClick', false), line: 7}],
+      errors: [{ ...useEffectEventError('onClick', false), line: 7 }],
     },
     {
       syntax: 'flow',
@@ -1912,7 +1946,7 @@ const allTests = {
           return <Bar onClick={foo} />
         }
       `,
-      errors: [{...useEffectEventError('onClick', false), line: 8}],
+      errors: [{ ...useEffectEventError('onClick', false), line: 8 }],
     },
     {
       code: normalizeIndent`
@@ -1972,15 +2006,15 @@ const allTests = {
       // Explicitly test error messages here for various cases
       errors: [
         `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          'Effects and Effect Events in the same component.',
+        'Effects and Effect Events in the same component.',
         `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          'Effects and Effect Events in the same component.',
+        'Effects and Effect Events in the same component.',
         `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          `Effects and Effect Events in the same component. ` +
-          `It cannot be assigned to a variable or passed down.`,
+        `Effects and Effect Events in the same component. ` +
+        `It cannot be assigned to a variable or passed down.`,
         `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          `Effects and Effect Events in the same component. ` +
-          `It cannot be assigned to a variable or passed down.`,
+        `Effects and Effect Events in the same component. ` +
+        `It cannot be assigned to a variable or passed down.`,
       ],
     },
     {
@@ -2009,15 +2043,15 @@ const allTests = {
       // Explicitly test error messages here for various cases
       errors: [
         `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          'Effects and Effect Events in the same component.',
+        'Effects and Effect Events in the same component.',
         `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          'Effects and Effect Events in the same component.',
+        'Effects and Effect Events in the same component.',
         `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          `Effects and Effect Events in the same component. ` +
-          `It cannot be assigned to a variable or passed down.`,
+        `Effects and Effect Events in the same component. ` +
+        `It cannot be assigned to a variable or passed down.`,
         `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          `Effects and Effect Events in the same component. ` +
-          `It cannot be assigned to a variable or passed down.`,
+        `Effects and Effect Events in the same component. ` +
+        `It cannot be assigned to a variable or passed down.`,
       ],
     },
   ],
