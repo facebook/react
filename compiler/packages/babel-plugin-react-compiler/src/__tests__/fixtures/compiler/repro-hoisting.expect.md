@@ -32,7 +32,7 @@ function Component(props) {
   const pathname_0 = props.wat;
   const deeplinkItemId = pathname_0 ? props.itemID : null;
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => wat();
     $[0] = t0;
   } else {

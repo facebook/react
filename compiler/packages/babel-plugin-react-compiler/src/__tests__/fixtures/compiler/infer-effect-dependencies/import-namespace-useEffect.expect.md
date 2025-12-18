@@ -24,7 +24,7 @@ import * as SharedRuntime from "shared-runtime";
 function NonReactiveDepInEffect() {
   const $ = _c(4);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = makeObject_Primitives();
     $[0] = t0;
   } else {
@@ -32,7 +32,7 @@ function NonReactiveDepInEffect() {
   }
   const obj = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => print(obj);
     $[1] = t1;
   } else {
@@ -41,7 +41,7 @@ function NonReactiveDepInEffect() {
   React.useEffect(t1, [obj]);
   let t2;
   let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = () => print(obj);
     t3 = [obj];
     $[2] = t2;

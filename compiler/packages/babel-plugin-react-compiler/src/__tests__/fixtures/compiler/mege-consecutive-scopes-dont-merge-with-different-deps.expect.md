@@ -26,7 +26,7 @@ const { getNumber, identity } = require("shared-runtime");
 function Component(props) {
   const $ = _c(6);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = getNumber();
     $[0] = t0;
   } else {
@@ -41,7 +41,7 @@ function Component(props) {
     t1 = $[2];
   }
   let t2;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = ["static"];
     $[3] = t2;
   } else {

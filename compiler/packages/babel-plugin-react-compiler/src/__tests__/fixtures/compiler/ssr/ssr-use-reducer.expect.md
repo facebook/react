@@ -32,7 +32,7 @@ function Component() {
   const [state, dispatch] = useReducer(_temp, 0);
   const ref = useRef(null);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = (e) => {
       dispatch(e.target.value);
     };
@@ -42,7 +42,7 @@ function Component() {
   }
   const onChange = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       log(ref.current.value);
     };

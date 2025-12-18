@@ -31,7 +31,7 @@ function Component(t0) {
   const $ = _c(6);
   const { val } = t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = identity(Foo);
     $[0] = t1;
   } else {
@@ -48,7 +48,7 @@ function Component(t0) {
   }
   const x = t2;
   let t3;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = new MyClass();
     $[3] = t3;
   } else {

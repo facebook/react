@@ -28,7 +28,7 @@ import { identity, mutate, mutateAndReturn } from "shared-runtime";
 function Component(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const key = {};
     t0 = mutateAndReturn(key);
     $[0] = t0;

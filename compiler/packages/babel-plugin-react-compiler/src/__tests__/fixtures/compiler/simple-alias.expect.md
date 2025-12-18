@@ -25,7 +25,7 @@ function foo() {
   const $ = _c(2);
   let a;
   let c;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     let b = {};
     c = {};
     a = b;

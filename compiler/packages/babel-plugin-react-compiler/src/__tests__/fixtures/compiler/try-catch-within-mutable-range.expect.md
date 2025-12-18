@@ -35,7 +35,7 @@ function Component(props) {
     x = [];
     try {
       let t0;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t0 = throwErrorWithMessage("oops");
         $[2] = t0;
       } else {
@@ -44,7 +44,7 @@ function Component(props) {
       x.push(t0);
     } catch {
       let t0;
-      if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t0 = shallowCopy({});
         $[3] = t0;
       } else {

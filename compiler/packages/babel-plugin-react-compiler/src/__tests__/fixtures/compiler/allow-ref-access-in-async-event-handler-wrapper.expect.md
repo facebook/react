@@ -80,7 +80,7 @@ function handleSubmit(callback) {
 async function upload(file) {
   const $ = _c(1);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = { blob: { url: "https://example.com/file.jpg" } };
     $[0] = t0;
   } else {
@@ -112,7 +112,7 @@ function Component() {
   const t0 = handleSubmit(onSubmit);
   let t1;
   let t2;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = <input type="text" name="signature" />;
     t2 = <button type="submit">Submit</button>;
     $[0] = t1;

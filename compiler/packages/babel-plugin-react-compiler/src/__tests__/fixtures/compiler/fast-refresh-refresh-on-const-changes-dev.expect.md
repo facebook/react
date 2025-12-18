@@ -66,7 +66,7 @@ function Component() {
     $[0] !== "36c02976ff5bc474b7510128ea8220ffe31d92cd5d245148ed0a43146d18ded4"
   ) {
     for (let $i = 0; $i < 3; $i += 1) {
-      $[$i] = Symbol.for("react.memo_cache_sentinel");
+      $[$i] = globalThis.Symbol.for("react.memo_cache_sentinel");
     }
     $[0] = "36c02976ff5bc474b7510128ea8220ffe31d92cd5d245148ed0a43146d18ded4";
   }
@@ -74,7 +74,7 @@ function Component() {
 
   unsafeUpdateConst();
   let t0;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = [{ pretendConst }];
     $[1] = t0;
   } else {
@@ -82,7 +82,7 @@ function Component() {
   }
   const value = t0;
   let t1;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = <ValidateMemoization inputs={[pretendConst]} output={value} />;
     $[2] = t1;
   } else {

@@ -43,7 +43,7 @@ function Component(t0) {
   const { value } = t0;
   let t1;
   let t2;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = { value: "foo" };
     t2 = { value: "bar" };
     $[0] = t1;

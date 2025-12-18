@@ -26,14 +26,14 @@ import { c as _c } from "react/compiler-runtime";
 function f(a) {
   const $ = _c(2);
   let x;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     x = {};
     $[0] = x;
   } else {
     x = $[0];
   }
   let t0;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = <div x={x} />;
     $[1] = t0;
   } else {

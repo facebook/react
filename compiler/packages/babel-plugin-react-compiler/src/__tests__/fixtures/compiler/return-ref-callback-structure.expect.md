@@ -37,7 +37,7 @@ function Foo(t0) {
   const { cond, cond2 } = t0;
   const ref = useRef();
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => ref.current;
     $[0] = t1;
   } else {
@@ -47,7 +47,7 @@ function Foo(t0) {
 
   if (cond) {
     let t2;
-    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t2 = [s];
       $[1] = t2;
     } else {
@@ -57,7 +57,7 @@ function Foo(t0) {
   } else {
     if (cond2) {
       let t2;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t2 = { s };
         $[2] = t2;
       } else {
@@ -66,7 +66,7 @@ function Foo(t0) {
       return t2;
     } else {
       let t2;
-      if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t2 = { s: [s] };
         $[3] = t2;
       } else {

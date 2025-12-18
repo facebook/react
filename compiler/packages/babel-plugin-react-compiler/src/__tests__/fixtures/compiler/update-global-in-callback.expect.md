@@ -31,7 +31,7 @@ function Foo() {
   const $ = _c(1);
   const cb = _temp;
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = <Stringify cb={cb} shouldInvokeFns={true} />;
     $[0] = t0;
   } else {

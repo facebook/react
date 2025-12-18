@@ -24,7 +24,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(3);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};
     $[0] = t0;
   } else {
@@ -32,7 +32,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = (e) => {
       maybeMutate(x, e.target.value);
     };
@@ -45,7 +45,7 @@ function Component(props) {
   if (props.cond) {
   }
   let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = <Foo value={x} onChange={onChange} />;
     $[2] = t2;
   } else {

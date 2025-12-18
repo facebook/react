@@ -68,7 +68,7 @@ function useFoo(cond) {
   const $ = _c(5);
   let x;
   if (cond) {
-    if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       x = {};
       setPropertyByKey(x, "a", { b: 2 });
       $[0] = x;
@@ -78,7 +78,7 @@ function useFoo(cond) {
 
     Math.max(x.a.b, 0);
   } else {
-    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       x = makeObject_Primitives();
       setPropertyByKey(x, "a", { b: 3 });
       $[1] = x;

@@ -26,7 +26,7 @@ import { c as _c } from "react/compiler-runtime";
 function Foo() {
   const $ = _c(2);
   let getX;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     getX = () => x;
     console.log(getX());
 
@@ -38,7 +38,7 @@ function Foo() {
   }
   x;
   let t0;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = <Stringify getX={getX} shouldInvokeFns={true} />;
     $[1] = t0;
   } else {
