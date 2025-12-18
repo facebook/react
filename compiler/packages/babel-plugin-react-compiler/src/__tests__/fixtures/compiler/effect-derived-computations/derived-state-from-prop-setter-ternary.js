@@ -1,4 +1,4 @@
-// @validateNoDerivedComputationsInEffects_exp
+// @validateNoDerivedComputationsInEffects_exp @outputMode:"lint"
 
 function Component({value}) {
   const [checked, setChecked] = useState('');
