@@ -39,6 +39,7 @@ import {TypeConfig} from './TypeSchema';
  * The React team is open to collaborating with library authors to help develop compatible versions of these APIs,
  * and we have already reached out to the teams who own any API listed here to ensure they are aware of the issue.
  */
+
 export function defaultModuleTypeProvider(
   moduleName: string,
 ): TypeConfig | null {
