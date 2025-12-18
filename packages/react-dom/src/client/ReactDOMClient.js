@@ -54,7 +54,14 @@ export {ReactVersion as version, createRoot, hydrateRoot};
 const foundDevTools = injectIntoDevTools();
 
 if (__DEV__) {
-  if (!foundDevTools && canUseDOM && window.top === window.self) {
+  if (
+    !foundDevTools &&
+    canUseDOM &&
+    window.top === window.self &&
+    // Allow suppressing this message via __REACT_DEVTOOLS_HIDE_CONSOLE__ in
+    // environments like CEP or nwjs where the DevTools extension cannot be installed.
+    typeof __REACT_DEVTOOLS_HIDE_CONSOLE__ === 'undefined'
+  ) {
     // If we're in Chrome or Firefox, provide a download link if not installed.
     if (
       (navigator.userAgent.indexOf('Chrome') > -1 &&

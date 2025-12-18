@@ -477,6 +477,26 @@ describe('ReactDOM', () => {
     }
   });
 
+  it('should suppress DevTools console message when __REACT_DEVTOOLS_HIDE_CONSOLE__ is set', () => {
+    try {
+      global.__REACT_DEVTOOLS_HIDE_CONSOLE__ = true;
+      jest.resetModules();
+
+      const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+
+      require('react-dom/client');
+
+      const devToolsMessage = infoSpy.mock.calls.find(call =>
+        call[0]?.includes?.('Download the React DevTools'),
+      );
+      expect(devToolsMessage).toBeUndefined();
+
+      infoSpy.mockRestore();
+    } finally {
+      delete global.__REACT_DEVTOOLS_HIDE_CONSOLE__;
+    }
+  });
+
   it('should not crash calling findDOMNode inside a function component', async () => {
     class Component extends React.Component {
       render() {
