@@ -15494,16 +15494,6 @@ function coerceFormActionProp(actionProp) {
           enableTrustedTypesIntegration ? actionProp : "" + actionProp
         );
 }
-function createFormDataWithSubmitter(form, submitter) {
-  var temp = submitter.ownerDocument.createElement("input");
-  temp.name = submitter.name;
-  temp.value = submitter.value;
-  form.id && temp.setAttribute("form", form.id);
-  submitter.parentNode.insertBefore(temp, submitter);
-  form = new FormData(form);
-  temp.parentNode.removeChild(temp);
-  return form;
-}
 function extractEvents$2(
   dispatchQueue,
   domEventName,
@@ -15540,9 +15530,7 @@ function extractEvents$2(
           listener: function () {
             if (nativeEvent.defaultPrevented) {
               if (0 !== currentEventTransitionLane) {
-                var formData = submitter
-                  ? createFormDataWithSubmitter(nativeEventTarget, submitter)
-                  : new FormData(nativeEventTarget);
+                var formData = new FormData(nativeEventTarget, submitter);
                 startHostTransition(
                   maybeTargetInst,
                   {
@@ -15558,9 +15546,7 @@ function extractEvents$2(
             } else
               "function" === typeof action &&
                 (event.preventDefault(),
-                (formData = submitter
-                  ? createFormDataWithSubmitter(nativeEventTarget, submitter)
-                  : new FormData(nativeEventTarget)),
+                (formData = new FormData(nativeEventTarget, submitter)),
                 startHostTransition(
                   maybeTargetInst,
                   {
@@ -20449,14 +20435,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2096 = React.version;
 if (
-  "19.3.0-www-classic-f93b9fd4-20251217" !==
+  "19.3.0-www-classic-65eec428-20251218" !==
   isomorphicReactPackageVersion$jscomp$inline_2096
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2096,
-      "19.3.0-www-classic-f93b9fd4-20251217"
+      "19.3.0-www-classic-65eec428-20251218"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20474,10 +20460,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2695 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-f93b9fd4-20251217",
+  version: "19.3.0-www-classic-65eec428-20251218",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-f93b9fd4-20251217"
+  reconcilerVersion: "19.3.0-www-classic-65eec428-20251218"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2696 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -21057,4 +21043,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-f93b9fd4-20251217";
+exports.version = "19.3.0-www-classic-65eec428-20251218";
