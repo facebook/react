@@ -392,6 +392,15 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<ScrollView row={1} />);
       await waitForAll(['Scrolling down: false']);
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in ScrollView (at **)',
+        ]);
+      }
       expect(ReactNoop).toMatchRenderedOutput(
         <span prop="Scrolling down: false" />,
       );
@@ -493,6 +502,15 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<Counter />);
       await waitForAll(['Render: 0', 'Render: 1', 'Render: 2', 'Render: 3', 3]);
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in Counter (at **)',
+        ]);
+      }
       expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
     });
 
@@ -518,6 +536,15 @@ describe('ReactHooksWithNoopRenderer', () => {
         'Render: 12',
         12,
       ]);
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in Counter (at **)',
+        ]);
+      }
       expect(ReactNoop).toMatchRenderedOutput(<span prop={12} />);
     });
 
@@ -533,6 +560,15 @@ describe('ReactHooksWithNoopRenderer', () => {
         'Too many re-renders. React limits the number of renders to prevent ' +
           'an infinite loop.',
       );
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in Counter (at **)',
+        ]);
+      }
     });
 
     it('works with useReducer', async () => {
@@ -550,6 +586,15 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<Counter />);
       await waitForAll(['Render: 0', 'Render: 1', 'Render: 2', 'Render: 3', 3]);
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in Counter (at **)',
+        ]);
+      }
       expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
     });
 
@@ -602,6 +647,15 @@ describe('ReactHooksWithNoopRenderer', () => {
         'Render: 21',
         21,
       ]);
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in Counter (at **)',
+        ]);
+      }
       expect(ReactNoop).toMatchRenderedOutput(<span prop={21} />);
 
       // Test that it works on update, too. This time the log is a bit different
@@ -758,6 +812,15 @@ describe('ReactHooksWithNoopRenderer', () => {
         root.render(<ScrollView row={10} />);
       });
       assertLog(['Up']);
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in ScrollView (at **)',
+        ]);
+      }
       expect(root).toMatchRenderedOutput(<span prop="Up" />);
 
       await act(() => {
@@ -789,6 +852,15 @@ describe('ReactHooksWithNoopRenderer', () => {
       const root = ReactNoop.createRoot();
       root.render(<App />);
       await waitForAll([1]);
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in App (at **)',
+        ]);
+      }
       expect(root).toMatchRenderedOutput(<span prop={1} />);
     });
   });
@@ -3460,6 +3532,15 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<LazyCompute compute={compute} input="A" />);
       await waitForAll(['compute A', 'A']);
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in LazyCompute (at **)',
+        ]);
+      }
 
       ReactNoop.render(<LazyCompute compute={compute} input="A" />);
       await waitForAll(['A']);
@@ -4151,6 +4232,15 @@ describe('ReactHooksWithNoopRenderer', () => {
       'Step: 4, Shadow: 0',
       'Step: 5, Shadow: 0',
     ]);
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in App (at **)',
+      ]);
+    }
     expect(ReactNoop).toMatchRenderedOutput('0');
 
     await act(() => dispatch());

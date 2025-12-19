@@ -18,6 +18,7 @@ let useState;
 let useMemoCache;
 let MemoCacheSentinel;
 let ErrorBoundary;
+let assertConsoleErrorDev;
 
 describe('useMemoCache()', () => {
   beforeEach(() => {
@@ -28,6 +29,8 @@ describe('useMemoCache()', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     useMemo = React.useMemo;
     useMemoCache = require('react/compiler-runtime').c;
     useState = React.useState;
@@ -657,6 +660,15 @@ describe('useMemoCache()', () => {
     await act(() => {
       root.render(<CompilerMemoComponent value={2} />);
     });
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in Component (at **)',
+      ]);
+    }
     expect(root).toMatchRenderedOutput(<div>2</div>);
 
     /**

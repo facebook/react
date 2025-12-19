@@ -6493,6 +6493,15 @@ describe('ReactDOMFizzServer', () => {
     );
 
     await act(() => resolveText('Child'));
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in App (at **)',
+      ]);
+    }
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <div id="child">Child:0:3</div>
@@ -6505,6 +6514,15 @@ describe('ReactDOMFizzServer', () => {
     await clientAct(() => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in App (at **)',
+      ]);
+    }
     expect(childRef.current).toBe(child);
   });
 
