@@ -2579,4 +2579,194 @@ describe('ReactDOMForm', () => {
     // Uncontrolled checkbox SHOULD reset
     expect(checkboxRef.current.checked).toBe(false);
   });
+
+  it('controlled select elements should not reset on form submission', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      const [value, setValue] = React.useState('2');
+      return (
+        <form
+          action={() => {
+            // Simulate form action
+          }}>
+          <select value={value} onChange={e => setValue(e.target.value)}>
+            <option value="1">Option 1</option>
+            <option value="2">Option 2</option>
+            <option value="3">Option 3</option>
+          </select>
+          <button type="submit">Submit</button>
+        </form>
+      );
+    }
+
+    await act(() => {
+      root.render(<App />);
+    });
+
+    const select = container.querySelector('select');
+    const button = container.querySelector('button');
+
+    // Change value to 3
+    await act(() => {
+      select.value = '3';
+      select.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+
+    expect(select.value).toBe('3');
+
+    // Submit form
+    await act(() => {
+      button.click();
+    });
+
+    // Controlled select should NOT reset
+    expect(select.value).toBe('3');
+  });
+  it('controlled select elements should not reset on form submission', async () => {
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      const [value, setValue] = React.useState('2');
+      return (
+        <form action={() => {}}>
+          <select value={value} onChange={e => setValue(e.target.value)}>
+            <option value="1">Option 1</option>
+            <option value="2">Option 2</option>
+            <option value="3">Option 3</option>
+          </select>
+          <button type="submit">Submit</button>
+        </form>
+      );
+    }
+
+    await act(() => {
+      root.render(<App />);
+    });
+
+    const select = container.querySelector('select');
+    const button = container.querySelector('button');
+
+    // Change to option 3
+    await act(() => {
+      select.value = '3';
+      select.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+
+    expect(select.value).toBe('3');
+
+    // Submit form
+    await act(() => {
+      button.click();
+    });
+
+    // Controlled select should NOT reset
+    expect(select.value).toBe('3');
+  });
+
+  it('controlled textarea elements should not reset on form submission', async () => {
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      const [text, setText] = React.useState('initial text');
+      return (
+        <form action={() => {}}>
+          <textarea value={text} onChange={e => setText(e.target.value)} />
+          <button type="submit">Submit</button>
+        </form>
+      );
+    }
+
+    await act(() => {
+      root.render(<App />);
+    });
+
+    const textarea = container.querySelector('textarea');
+    const button = container.querySelector('button');
+
+    // Change value
+    await act(() => {
+      textarea.value = 'updated text';
+      textarea.dispatchEvent(new Event('input', {bubbles: true}));
+    });
+
+    expect(textarea.value).toBe('updated text');
+
+    // Submit form
+    await act(() => {
+      button.click();
+    });
+
+    // Controlled textarea should NOT reset
+    expect(textarea.value).toBe('updated text');
+  });
+
+  it('uncontrolled select elements should still reset on form submission', async () => {
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      return (
+        <form action={() => {}}>
+          <select defaultValue="2">
+            <option value="1">Option 1</option>
+            <option value="2">Option 2</option>
+            <option value="3">Option 3</option>
+          </select>
+          <button type="submit">Submit</button>
+        </form>
+      );
+    }
+
+    await act(() => {
+      root.render(<App />);
+    });
+
+    const select = container.querySelector('select');
+    const button = container.querySelector('button');
+
+    // Change to option 3
+    select.value = '3';
+    expect(select.value).toBe('3');
+
+    // Submit form
+    await act(() => {
+      button.click();
+    });
+
+    // Uncontrolled select SHOULD reset to defaultValue
+    expect(select.value).toBe('2');
+  });
+
+  it('uncontrolled textarea elements should still reset on form submission', async () => {
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      return (
+        <form action={() => {}}>
+          <textarea defaultValue="initial text" />
+          <button type="submit">Submit</button>
+        </form>
+      );
+    }
+
+    await act(() => {
+      root.render(<App />);
+    });
+
+    const textarea = container.querySelector('textarea');
+    const button = container.querySelector('button');
+
+    // Change value
+    textarea.value = 'updated text';
+    expect(textarea.value).toBe('updated text');
+
+    // Submit form
+    await act(() => {
+      button.click();
+    });
+
+    // Uncontrolled textarea SHOULD reset to defaultValue
+    expect(textarea.value).toBe('initial text');
+  });
 });
