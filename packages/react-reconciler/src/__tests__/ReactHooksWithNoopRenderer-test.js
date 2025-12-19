@@ -666,7 +666,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       React.startTransition(() => {
         root.render(<Foo signal={false} />);
       });
-      await waitForAll(['Suspend!']);
+      await waitForAll([
+        'Suspend!',
+        // TODO: why does it render again?
+        ...(gate('enableParallelTransitions') ? ['Suspend!'] : []),
+      ]);
     });
 
     it('discards render phase updates if something suspends, but not other updates in the same component', async () => {
@@ -723,7 +727,11 @@ describe('ReactHooksWithNoopRenderer', () => {
         React.startTransition(() => {
           root.render(<Foo signal={false} />);
         });
-        await waitForAll(['Suspend!']);
+        await waitForAll([
+          'Suspend!',
+          // TODO: why does it render again?
+          ...(gate('enableParallelTransitions') ? ['Suspend!'] : []),
+        ]);
 
         // Flip the signal back to "cancel" the update. However, the update to
         // label should still proceed. It shouldn't have been dropped.

@@ -85,6 +85,7 @@ export const enableProfilerTimer: boolean = __PROFILE__;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
 export const enableProfilerNestedUpdatePhase: boolean = __PROFILE__;
 export const enableUpdaterTracking: boolean = __PROFILE__;
+export const enableParallelTransitions: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
