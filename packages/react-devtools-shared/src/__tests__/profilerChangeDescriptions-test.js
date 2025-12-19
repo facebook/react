@@ -76,8 +76,7 @@ describe('Profiler change descriptions', () => {
         ▾ <App>
           ▾ <Context.Provider>
               <Child>
-            ▾ <Child> [Memo]
-                <Child>
+              <Child> [Memo]
             ▾ <RefForwardingComponent> [ForwardRef]
                 <Child>
     `);
