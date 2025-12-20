@@ -120,7 +120,10 @@ import {
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
 import {isRootDehydrated} from './ReactFiberShellHydration';
-import {getIsHydrating} from './ReactFiberHydrationContext';
+import {
+  getIsHydrating,
+  popHydrationStateOnInterruptedWork,
+} from './ReactFiberHydrationContext';
 import {
   NoMode,
   ProfileMode,
@@ -3109,6 +3112,10 @@ function replayBeginWork(unitOfWork: Fiber): null | Fiber {
       // promises that a host component might suspend on are definitely cached
       // because they are controlled by us. So don't bother.
       resetHooksOnUnwind(unitOfWork);
+      // We are about to retry this host component and need to ensure the hydration
+      // state is appropriate for hydrating this unit. Other fiber types hydrate differently
+      // and aren't reliant on the cursor positioning so this function is only for HostComponent
+      popHydrationStateOnInterruptedWork(unitOfWork);
       // Fallthrough to the next branch.
     }
     default: {
