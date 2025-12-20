@@ -167,3 +167,16 @@ function InvalidUseMemo({items}) {
   const sorted = useMemo(() => [...items].sort(), []);
   return <div>{sorted.length}</div>;
 }
+
+// Invalid: missing/extra deps in useEffect
+function InvalidEffectDeps({a, b}) {
+  useEffect(() => {
+    console.log(a);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    console.log(a);
+    // TODO: eslint-disable-next-line react-hooks/exhaustive-effect-dependencies
+  }, [a, b]);
+}

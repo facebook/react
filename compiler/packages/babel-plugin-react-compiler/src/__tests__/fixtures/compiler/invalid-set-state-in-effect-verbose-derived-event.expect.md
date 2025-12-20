@@ -42,7 +42,6 @@ function VideoPlayer(t0) {
         console.log("Play state changed!");
       }
     };
-
     t2 = [isPlaying, wasPlaying];
     $[0] = isPlaying;
     $[1] = wasPlaying;
