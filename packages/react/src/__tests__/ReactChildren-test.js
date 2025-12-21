@@ -114,6 +114,40 @@ describe('ReactChildren', () => {
     expect(mappedChildren[0]).toEqual(<span key=".$simple" />);
   });
 
+  it('should use the same key pattern for single child and array with one item', () => {
+    const unkeyedSingleChild = <span />;
+    const unkeyedArrayChild = <span />;
+
+    const unkeyedSingleInstance = <div>{unkeyedSingleChild}</div>;
+    const unkeyedArrayInstance = <div>{[unkeyedArrayChild]}</div>;
+
+    const mappedUnkeyedSingle = React.Children.map(
+      unkeyedSingleInstance.props.children,
+      child => child,
+    );
+    const mappedUnkeyedArray = React.Children.map(
+      unkeyedArrayInstance.props.children,
+      child => child,
+    );
+    expect(mappedUnkeyedSingle[0].key).toBe(mappedUnkeyedArray[0].key);
+
+    const keyedSingleChild = <span key="simple" />;
+    const keyedArrayChild = <span key="simple" />;
+
+    const keyedSingleInstance = <div>{keyedSingleChild}</div>;
+    const keyedArrayInstance = <div>{[keyedArrayChild]}</div>;
+
+    const mappedKeyedSingle = React.Children.map(
+      keyedSingleInstance.props.children,
+      child => child,
+    );
+    const mappedKeyedArray = React.Children.map(
+      keyedArrayInstance.props.children,
+      child => child,
+    );
+    expect(mappedKeyedSingle[0].key).toBe(mappedKeyedArray[0].key);
+  });
+
   it('should be called for each child', () => {
     const zero = <div key="keyZero" />;
     const one = null;
