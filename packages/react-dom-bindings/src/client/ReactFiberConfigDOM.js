@@ -126,6 +126,7 @@ import {
   enableHydrationChangeEvent,
   enableFragmentRefsScrollIntoView,
   enableProfilerTimer,
+  enableFragmentRefsInstanceHandles,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -213,6 +214,10 @@ export type Container =
   | interface extends DocumentFragment {_reactRootContainer?: FiberRoot};
 export type Instance = Element;
 export type TextInstance = Text;
+
+type InstanceWithFragmentHandles = Instance & {
+  unstable_reactFragments?: Set<FragmentInstanceType>,
+};
 
 declare class ActivityInterface extends Comment {}
 declare class SuspenseInterface extends Comment {
@@ -1430,8 +1435,13 @@ export function applyViewTransitionName(
   className: ?string,
 ): void {
   instance = ((instance: any): HTMLElement);
+  // If the name isn't valid CSS identifier, base64 encode the name instead.
+  // This doesn't let you select it in custom CSS selectors but it does work in current
+  // browsers.
+  const escapedName =
+    CSS.escape(name) !== name ? 'r-' + btoa(name).replace(/=/g, '') : name;
   // $FlowFixMe[prop-missing]
-  instance.style.viewTransitionName = name;
+  instance.style.viewTransitionName = escapedName;
   if (className != null) {
     // $FlowFixMe[prop-missing]
     instance.style.viewTransitionClass = className;
@@ -1986,26 +1996,6 @@ export function hasInstanceAffectedParent(
   return oldRect.height !== newRect.height || oldRect.width !== newRect.width;
 }
 
-function cancelAllViewTransitionAnimations(scope: Element) {
-  // In Safari, we need to manually cancel all manually start animations
-  // or it'll block or interfer with future transitions.
-  // $FlowFixMe[prop-missing]
-  const animations = scope.getAnimations({subtree: true});
-  for (let i = 0; i < animations.length; i++) {
-    const anim = animations[i];
-    const effect: KeyframeEffect = (anim.effect: any);
-    // $FlowFixMe
-    const pseudo: ?string = effect.pseudoElement;
-    if (
-      pseudo != null &&
-      pseudo.startsWith('::view-transition') &&
-      effect.target === scope
-    ) {
-      anim.cancel();
-    }
-  }
-}
-
 // How long to wait for new fonts to load before just committing anyway.
 // This freezes the screen. It needs to be short enough that it doesn't cause too much of
 // an issue when it's a new load and slow, yet long enough that you have a chance to load
@@ -2200,6 +2190,8 @@ export function startViewTransition(
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
 
+    const viewTransitionAnimations: Array<Animation> = [];
+
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
@@ -2214,6 +2206,7 @@ export function startViewTransition(
           pseudoElement != null &&
           pseudoElement.startsWith('::view-transition')
         ) {
+          viewTransitionAnimations.push(animation);
           const keyframes = effect.getKeyframes();
           // Next, we're going to try to optimize this animation in case the auto-generated
           // width/height keyframes are unnecessary.
@@ -2305,7 +2298,12 @@ export function startViewTransition(
     };
     transition.ready.then(readyCallback, handleError);
     transition.finished.finally(() => {
-      cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
+      for (let i = 0; i < viewTransitionAnimations.length; i++) {
+        // In Safari, we need to manually cancel all manually started animations
+        // or it'll block or interfer with future transitions.
+        // We can't use getAnimations() due to #35336 so we collect them in an array.
+        viewTransitionAnimations[i].cancel();
+      }
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
@@ -2539,6 +2537,7 @@ export function startGestureTransition(
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
     const customTimelineCleanup: Array<() => void> = []; // Cleanup Animations started in a CustomTimeline
+    const viewTransitionAnimations: Array<Animation> = [];
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
@@ -2556,6 +2555,7 @@ export function startGestureTransition(
         const pseudoElement: ?string = effect.pseudoElement;
         if (pseudoElement == null) {
         } else if (pseudoElement.startsWith('::view-transition')) {
+          viewTransitionAnimations.push(animations[i]);
           const timing = effect.getTiming();
           const duration =
             // $FlowFixMe[prop-missing]
@@ -2733,7 +2733,12 @@ export function startGestureTransition(
     };
     transition.ready.then(readyForAnimations, handleError);
     transition.finished.finally(() => {
-      cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
+      for (let i = 0; i < viewTransitionAnimations.length; i++) {
+        // In Safari, we need to manually cancel all manually started animations
+        // or it'll block or interfer with future transitions.
+        // We can't use getAnimations() due to #35336 so we collect them in an array.
+        viewTransitionAnimations[i].cancel();
+      }
       for (let i = 0; i < customTimelineCleanup.length; i++) {
         const cleanup = customTimelineCleanup[i];
         cleanup();
@@ -3390,10 +3395,44 @@ if (enableFragmentRefsScrollIntoView) {
   };
 }
 
+function addFragmentHandleToFiber(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+): boolean {
+  if (enableFragmentRefsInstanceHandles) {
+    const instance =
+      getInstanceFromHostFiber<InstanceWithFragmentHandles>(child);
+    if (instance != null) {
+      addFragmentHandleToInstance(instance, fragmentInstance);
+    }
+  }
+  return false;
+}
+
+function addFragmentHandleToInstance(
+  instance: InstanceWithFragmentHandles,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  if (enableFragmentRefsInstanceHandles) {
+    if (instance.unstable_reactFragments == null) {
+      instance.unstable_reactFragments = new Set();
+    }
+    instance.unstable_reactFragments.add(fragmentInstance);
+  }
+}
+
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
-  return new (FragmentInstance: any)(fragmentFiber);
+  const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
+  if (enableFragmentRefsInstanceHandles) {
+    traverseFragmentInstance(
+      fragmentFiber,
+      addFragmentHandleToFiber,
+      fragmentInstance,
+    );
+  }
+  return fragmentInstance;
 }
 
 export function updateFragmentInstanceFiber(
@@ -3404,7 +3443,7 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childInstance: Instance,
+  childInstance: InstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
@@ -3419,17 +3458,25 @@ export function commitNewChildToFragmentInstance(
       observer.observe(childInstance);
     });
   }
+  if (enableFragmentRefsInstanceHandles) {
+    addFragmentHandleToInstance(childInstance, fragmentInstance);
+  }
 }
 
 export function deleteChildFromFragmentInstance(
-  childElement: Instance,
+  childInstance: InstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childElement.removeEventListener(type, listener, optionsOrUseCapture);
+      childInstance.removeEventListener(type, listener, optionsOrUseCapture);
+    }
+  }
+  if (enableFragmentRefsInstanceHandles) {
+    if (childInstance.unstable_reactFragments != null) {
+      childInstance.unstable_reactFragments.delete(fragmentInstance);
     }
   }
 }

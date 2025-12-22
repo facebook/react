@@ -1,4 +1,4 @@
-// @validateNoDerivedComputationsInEffects_exp
+// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly @outputMode:"lint"
 import {useEffect, useState} from 'react';
 
 function Component({propValue, onChange}) {

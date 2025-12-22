@@ -22,7 +22,7 @@ import {isDeepStrictEqual} from 'util';
 import type {ParseResult} from '@babel/parser';
 
 const COMPILER_OPTIONS: PluginOptions = {
-  noEmit: true,
+  outputMode: 'lint',
   panicThreshold: 'none',
   // Don't emit errors on Flow suppressions--Flow already gave a signal
   flowSuppressions: false,
@@ -39,6 +39,10 @@ const COMPILER_OPTIONS: PluginOptions = {
     validateNoCapitalizedCalls: [],
     validateHooksUsage: true,
     validateNoDerivedComputationsInEffects: true,
+    // Temporarily enabled for internal testing
+    enableUseKeyedState: true,
+    enableVerboseNoSetStateInEffect: true,
+    validateExhaustiveEffectDependencies: 'extra-only',
   },
 };
 

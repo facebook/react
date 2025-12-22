@@ -208,10 +208,29 @@ export function initAsyncDebugInfo(): void {
           switch (node.tag) {
             case IO_NODE: {
               lastRanAwait = null;
-              // Log the end time when we resolved the I/O. This can happen
-              // more than once if it's a recurring resource like a connection.
+              // Log the end time when we resolved the I/O.
               const ioNode: IONode = (node: any);
-              ioNode.end = performance.now();
+              if (ioNode.end < 0) {
+                ioNode.end = performance.now();
+              } else {
+                // This can happen more than once if it's a recurring resource like a connection.
+                // Even for single events like setTimeout, this can happen three times due to ticks
+                // and microtasks each running its own scope.
+                // To preserve each operation's separate end time, we create a clone of the IO node.
+                // Any pre-existing reference will refer to the first resolution and any new resolutions
+                // will refer to the new node.
+                const clonedNode: IONode = {
+                  tag: IO_NODE,
+                  owner: ioNode.owner,
+                  stack: ioNode.stack,
+                  start: ioNode.start,
+                  end: performance.now(),
+                  promise: ioNode.promise,
+                  awaited: ioNode.awaited,
+                  previous: ioNode.previous,
+                };
+                pendingOperations.set(asyncId, clonedNode);
+              }
               break;
             }
             case UNRESOLVED_AWAIT_NODE: {

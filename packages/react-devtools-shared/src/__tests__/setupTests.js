@@ -116,6 +116,16 @@ function shouldIgnoreConsoleErrorOrWarn(args) {
     return false;
   }
 
+  const maybeError = args[1];
+  if (
+    maybeError !== null &&
+    typeof maybeError === 'object' &&
+    maybeError.message === 'Simulated error coming from DevTools'
+  ) {
+    // Error from forcing an error boundary.
+    return true;
+  }
+
   return global._ignoredErrorOrWarningMessages.some(errorOrWarningMessage => {
     return firstArg.indexOf(errorOrWarningMessage) !== -1;
   });
@@ -238,6 +248,7 @@ beforeEach(() => {
     breakOnConsoleErrors: false,
     showInlineWarningsAndErrors: true,
     hideConsoleLogsInStrictMode: false,
+    disableSecondConsoleLogDimmingInStrictMode: false,
   });
 
   const bridgeListeners = [];
