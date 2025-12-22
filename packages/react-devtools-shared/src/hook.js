@@ -367,17 +367,22 @@ export function installHook(
           return;
         }
 
-        // Dim the text color of the double logs if we're not hiding them.
-        // Firefox doesn't support ANSI escape sequences
-        if (__IS_FIREFOX__) {
-          originalMethod(
-            ...formatWithStyles(args, FIREFOX_CONSOLE_DIMMING_COLOR),
-          );
+        if (settings.disableSecondConsoleLogDimmingInStrictMode) {
+          // Don't dim the console logs
+          originalMethod(...args);
         } else {
-          originalMethod(
-            ANSI_STYLE_DIMMING_TEMPLATE,
-            ...formatConsoleArguments(...args),
-          );
+          // Dim the text color of the double logs if we're not hiding them.
+          // Firefox doesn't support ANSI escape sequences
+          if (__IS_FIREFOX__) {
+            originalMethod(
+              ...formatWithStyles(args, FIREFOX_CONSOLE_DIMMING_COLOR),
+            );
+          } else {
+            originalMethod(
+              ANSI_STYLE_DIMMING_TEMPLATE,
+              ...formatConsoleArguments(...args),
+            );
+          }
         }
       };
 
@@ -579,7 +584,10 @@ export function installHook(
           debugger;
         }
 
-        if (isRunningDuringStrictModeInvocation) {
+        if (
+          isRunningDuringStrictModeInvocation &&
+          !settings.disableSecondConsoleLogDimmingInStrictMode
+        ) {
           // Dim the text color of the double logs if we're not hiding them.
           // Firefox doesn't support ANSI escape sequences
           if (__IS_FIREFOX__) {
@@ -667,6 +675,7 @@ export function installHook(
       breakOnConsoleErrors: false,
       showInlineWarningsAndErrors: true,
       hideConsoleLogsInStrictMode: false,
+      disableSecondConsoleLogDimmingInStrictMode: false,
     };
     patchConsoleForErrorsAndWarnings();
   } else {

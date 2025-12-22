@@ -39,6 +39,10 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+function normalizeSerializedContent(str) {
+  return str.replaceAll(__REACT_ROOT_PATH_TEST__, '**');
+}
+
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
     // Mock performance.now for timing tests
@@ -228,7 +232,7 @@ describe('ReactFlightDOMEdge', () => {
 
   async function createBufferedUnclosingStream(
     stream: ReadableStream<Uint8Array>,
-  ): ReadableStream<Uint8Array> {
+  ): Promise<ReadableStream<Uint8Array>> {
     const chunks: Array<Uint8Array> = [];
     const reader = stream.getReader();
     while (true) {
@@ -481,8 +485,10 @@ describe('ReactFlightDOMEdge', () => {
     );
     const [stream1, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(1100);
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream1),
+    );
+    expect(serializedContent.length).toBeLessThan(1075);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
@@ -551,9 +557,11 @@ describe('ReactFlightDOMEdge', () => {
     );
     const [stream1, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream1),
+    );
 
-    expect(serializedContent.length).toBeLessThan(490);
+    expect(serializedContent.length).toBeLessThan(465);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
@@ -623,8 +631,10 @@ describe('ReactFlightDOMEdge', () => {
     );
     const [stream1, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(__DEV__ ? 680 : 400);
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream1),
+    );
+    expect(serializedContent.length).toBeLessThan(__DEV__ ? 630 : 400);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await serverAct(() =>
@@ -657,8 +667,10 @@ describe('ReactFlightDOMEdge', () => {
         <ServerComponent recurse={20} />,
       ),
     );
-    const serializedContent = await readResult(stream);
-    const expectedDebugInfoSize = __DEV__ ? 320 * 20 : 0;
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const expectedDebugInfoSize = __DEV__ ? 295 * 20 : 0;
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
@@ -2308,5 +2320,35 @@ describe('ReactFlightDOMEdge', () => {
 
     const result = await response;
     expect(result).toEqual({obj: obj, node: 'hi'});
+  });
+
+  it('does not leak the server reference code', async () => {
+    function foo() {
+      return 'foo';
+    }
+
+    const bar = () => {
+      return 'bar';
+    };
+
+    const anonymous = (
+      () => () =>
+        'anonymous'
+    )();
+
+    expect(
+      ReactServerDOMServer.registerServerReference(foo, 'foo-id').toString(),
+    ).toBe('function () { [omitted code] }');
+
+    expect(
+      ReactServerDOMServer.registerServerReference(bar, 'bar-id').toString(),
+    ).toBe('function () { [omitted code] }');
+
+    expect(
+      ReactServerDOMServer.registerServerReference(
+        anonymous,
+        'anonymous-id',
+      ).toString(),
+    ).toBe('function () { [omitted code] }');
   });
 });

@@ -650,6 +650,17 @@ describe('ReactFlightDOMReply', () => {
     expect(root.prop.obj).toBe(root.prop);
   });
 
+  it('can transport cyclic arrays', async () => {
+    const obj = {};
+    const cyclic = [obj];
+    cyclic[1] = cyclic;
+
+    const body = await ReactServerDOMClient.encodeReply({prop: cyclic, obj});
+    const root = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+    expect(root.prop[1]).toBe(root.prop);
+    expect(root.prop[0]).toBe(root.obj);
+  });
+
   it('can abort an unresolved model and get the partial result', async () => {
     const promise = new Promise(r => {});
     const controller = new AbortController();

@@ -1,4 +1,4 @@
-// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly
+// @validateNoDerivedComputationsInEffects_exp @loggerTestOnly @outputMode:"lint"
 import {useEffect, useState} from 'react';
 
 export default function Component(props) {
