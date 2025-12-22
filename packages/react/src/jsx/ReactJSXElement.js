@@ -259,7 +259,7 @@ function ReactElement(type, key, props, owner, debugStack, debugTask) {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: null,
+      value: [],
     });
     Object.defineProperty(element, '_debugStack', {
       configurable: false,
