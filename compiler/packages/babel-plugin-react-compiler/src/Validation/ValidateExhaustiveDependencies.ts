@@ -141,6 +141,7 @@ export function validateExhaustiveDependencies(
         reactive,
         startMemo.depsLoc,
         ErrorCategory.MemoDependencies,
+        'all',
       );
       if (diagnostic != null) {
         error.pushDiagnostic(diagnostic);
@@ -159,7 +160,7 @@ export function validateExhaustiveDependencies(
       onStartMemoize,
       onFinishMemoize,
       onEffect: (inferred, manual, manualMemoLoc) => {
-        if (env.config.validateExhaustiveEffectDependencies === false) {
+        if (env.config.validateExhaustiveEffectDependencies === 'off') {
           return;
         }
         if (DEBUG) {
@@ -195,12 +196,17 @@ export function validateExhaustiveDependencies(
             });
           }
         }
+        const effectReportMode =
+          typeof env.config.validateExhaustiveEffectDependencies === 'string'
+            ? env.config.validateExhaustiveEffectDependencies
+            : 'all';
         const diagnostic = validateDependencies(
           Array.from(inferred),
           manualDeps,
           reactive,
           manualMemoLoc,
           ErrorCategory.EffectExhaustiveDependencies,
+          effectReportMode,
         );
         if (diagnostic != null) {
           error.pushDiagnostic(diagnostic);
@@ -220,6 +226,7 @@ function validateDependencies(
   category:
     | ErrorCategory.MemoDependencies
     | ErrorCategory.EffectExhaustiveDependencies,
+  exhaustiveDepsReportMode: 'all' | 'missing-only' | 'extra-only',
 ): CompilerDiagnostic | null {
   // Sort dependencies by name and path, with shorter/non-optional paths first
   inferred.sort((a, b) => {
@@ -370,9 +377,20 @@ function validateDependencies(
     extra.push(dep);
   }
 
-  if (missing.length !== 0 || extra.length !== 0) {
+  // Filter based on report mode
+  const filteredMissing =
+    exhaustiveDepsReportMode === 'extra-only' ? [] : missing;
+  const filteredExtra =
+    exhaustiveDepsReportMode === 'missing-only' ? [] : extra;
+
+  if (filteredMissing.length !== 0 || filteredExtra.length !== 0) {
     let suggestion: CompilerSuggestion | null = null;
-    if (manualMemoLoc != null && typeof manualMemoLoc !== 'symbol') {
+    if (
+      manualMemoLoc != null &&
+      typeof manualMemoLoc !== 'symbol' &&
+      manualMemoLoc.start.index != null &&
+      manualMemoLoc.end.index != null
+    ) {
       suggestion = {
         description: 'Update dependencies',
         range: [manualMemoLoc.start.index, manualMemoLoc.end.index],
@@ -388,8 +406,13 @@ function validateDependencies(
           .join(', ')}]`,
       };
     }
-    const diagnostic = createDiagnostic(category, missing, extra, suggestion);
-    for (const dep of missing) {
+    const diagnostic = createDiagnostic(
+      category,
+      filteredMissing,
+      filteredExtra,
+      suggestion,
+    );
+    for (const dep of filteredMissing) {
       let reactiveStableValueHint = '';
       if (isStableType(dep.identifier)) {
         reactiveStableValueHint =
@@ -402,7 +425,7 @@ function validateDependencies(
         loc: dep.loc,
       });
     }
-    for (const dep of extra) {
+    for (const dep of filteredExtra) {
       if (dep.root.kind === 'Global') {
         diagnostic.withDetails({
           kind: 'error',

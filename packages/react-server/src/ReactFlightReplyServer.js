@@ -133,14 +133,20 @@ ReactPromise.prototype.then = function <T>(
         // Recursively check if the value is itself a ReactPromise and if so if it points
         // back to itself. This helps catch recursive thenables early error.
         let cycleProtection = 0;
+        const visited = new Set<typeof ReactPromise>();
         while (inspectedValue instanceof ReactPromise) {
           cycleProtection++;
-          if (inspectedValue === chunk || cycleProtection > 1000) {
+          if (
+            inspectedValue === chunk ||
+            visited.has(inspectedValue) ||
+            cycleProtection > 1000
+          ) {
             if (typeof reject === 'function') {
               reject(new Error('Cannot have cyclic thenables.'));
             }
             return;
           }
+          visited.add(inspectedValue);
           if (inspectedValue.status === INITIALIZED) {
             inspectedValue = inspectedValue.value;
           } else {
