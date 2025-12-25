@@ -378,6 +378,12 @@ describe('ProfilingCache', () => {
       ),
     );
 
+    // Save references to the real dispatch/setState functions.
+    // inspectHooks() re-runs the component with a mock dispatcher,
+    // which would overwrite these variables with mock functions that do nothing.
+    const realDispatch = dispatch;
+    const realSetState = setState;
+
     // Second render has no changed hooks, only changed props.
     utils.act(() =>
       render(
@@ -388,10 +394,10 @@ describe('ProfilingCache', () => {
     );
 
     // Third render has a changed reducer hook.
-    utils.act(() => dispatch({type: 'invert'}));
+    utils.act(() => realDispatch({type: 'invert'}));
 
     // Fourth render has a changed state hook.
-    utils.act(() => setState('def'));
+    utils.act(() => realSetState('def'));
 
     // Fifth render has a changed context value, but no changed hook.
     utils.act(() =>
@@ -553,6 +559,11 @@ describe('ProfilingCache', () => {
       ),
     );
 
+    // Save reference to the real setState function before profiling starts.
+    // inspectHooks() re-runs the component with a mock dispatcher,
+    // which would overwrite setState with a mock function that does nothing.
+    const realSetState = setState;
+
     utils.act(() => store.profilerStore.startProfiling());
 
     // First render changes Context.
@@ -567,7 +578,7 @@ describe('ProfilingCache', () => {
     );
 
     // Second render has no changed Context, only changed state.
-    utils.act(() => setState('def'));
+    utils.act(() => realSetState('def'));
 
     utils.act(() => store.profilerStore.stopProfiling());
 
