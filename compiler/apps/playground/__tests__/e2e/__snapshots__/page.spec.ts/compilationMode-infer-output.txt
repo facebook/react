@@ -1,4 +1,0 @@
-// @compilationMode:"infer"
-function nonReactFn() {
-  return {};
-}
