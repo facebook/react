@@ -1,4 +1,0 @@
-"use no memo";
-export default function TestComponent({ x }) {
-  return <Button>{x}</Button>;
-}
