@@ -3083,7 +3083,6 @@ body {
   });
 
   it('can delay commit until css resources error', async () => {
-    // TODO: This test fails and crashes jest. need to figure out why before unskipping.
     const root = ReactDOMClient.createRoot(container);
     expect(getMeaningfulChildren(container)).toBe(undefined);
     React.startTransition(() => {
