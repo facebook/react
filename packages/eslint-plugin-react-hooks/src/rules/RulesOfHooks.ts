@@ -767,6 +767,25 @@ const rule = {
           reactHooks.push(node.callee);
         }
 
+        if (isInsideComponentOrHook(node)) {
+          for (const argument of node.arguments) {
+            if (
+              argument &&
+              argument.type !== 'SpreadElement' &&
+              isHook(argument)
+            ) {
+              context.report({
+                node: argument,
+                message:
+                  `React Hook "${getSourceCode().getText(
+                    argument,
+                  )}" cannot be passed as an argument. React Hooks ` +
+                  'must be called in a React function component or a custom React Hook function.',
+              });
+            }
+          }
+        }
+
         // useEffectEvent: useEffectEvent functions can be passed by reference within useEffect as well as in
         // another useEffectEvent
         // Check all `useEffect` and `React.useEffect`, `useEffectEvent`, and `React.useEffectEvent`
