@@ -35,10 +35,12 @@ function isHookName(s: string): boolean {
  * containing a hook name.
  */
 function isHook(node: Node): boolean {
-  if (node.type === 'Identifier') {
+  if (node.type === 'ChainExpression') {
+    return isHook(node.expression);
+  } else if (node.type === 'Identifier') {
     return isHookName(node.name);
   } else if (
-    node.type === 'MemberExpression' &&
+    (node.type === 'MemberExpression' || node.type === 'OptionalMemberExpression') &&
     !node.computed &&
     isHook(node.property)
   ) {
@@ -48,6 +50,25 @@ function isHook(node: Node): boolean {
   } else {
     return false;
   }
+}
+
+function hasOptionalChain(node: Node): boolean {
+  if (node.type === 'ChainExpression') {
+    return true;
+  }
+  if (node.type === 'OptionalMemberExpression') {
+    return true;
+  }
+  if ('optional' in node && node.optional) {
+    return true;
+  }
+  if (
+    node.type === 'MemberExpression' ||
+    node.type === 'OptionalMemberExpression'
+  ) {
+    return hasOptionalChain(node.object);
+  }
+  return false;
 }
 
 /**
@@ -136,16 +157,18 @@ function isInsideTryCatch(
 function getNodeWithoutReactNamespace(
   node: Expression | Super,
 ): Expression | Identifier | Super {
+  const callee = node.type === 'ChainExpression' ? node.expression : node;
   if (
-    node.type === 'MemberExpression' &&
-    node.object.type === 'Identifier' &&
-    node.object.name === 'React' &&
-    node.property.type === 'Identifier' &&
-    !node.computed
+    (callee.type === 'MemberExpression' ||
+      callee.type === 'OptionalMemberExpression') &&
+    callee.object.type === 'Identifier' &&
+    callee.object.name === 'React' &&
+    callee.property.type === 'Identifier' &&
+    !callee.computed
   ) {
-    return node.property;
+    return callee.property;
   }
-  return node;
+  return callee;
 }
 
 function isEffectIdentifier(node: Node, additionalHooks?: RegExp): boolean {
@@ -217,12 +240,13 @@ const rule = {
     const additionalEffectHooks =
       getAdditionalEffectHooksFromSettings(settings);
 
-    let lastEffect: CallExpression | null = null;
+    let lastEffect: Node | null = null;
     const codePathReactHooksMapStack: Array<
       Map<Rule.CodePathSegment, Array<Node>>
     > = [];
     const codePathSegmentStack: Array<Rule.CodePathSegment> = [];
     const useEffectEventFunctions = new WeakSet();
+    const optionalHookCalls = new WeakSet<Node>();
 
     // For a given scope, iterate through the references and add all useEffectEvent definitions. We can
     // do this in non-Program nodes because we can rely on the assumption that useEffectEvent functions
@@ -651,6 +675,7 @@ const rule = {
             // Pick a special message depending on the scope this hook was
             // called in.
             if (isDirectlyInsideComponentOrHook) {
+              const isOptionalHookCall = optionalHookCalls.has(hook);
               // Report an error if the hook is called inside an async function.
               // @ts-expect-error the above check hasn't properly type-narrowed `codePathNode` (async doesn't exist on Node)
               const isAsyncFunction = codePathNode.async;
@@ -668,6 +693,15 @@ const rule = {
               //
               // Special case when we think there might be an early return.
               if (
+                isOptionalHookCall &&
+                !isUseIdentifier(hook)
+              ) {
+                const message =
+                  `React Hook "${getSourceCode().getText(hook)}" is called ` +
+                  'conditionally. React Hooks must be called in the exact ' +
+                  'same order in every component render.';
+                context.report({node: hook, message});
+              } else if (
                 !cycled &&
                 pathsFromStartToEnd !== allPathsFromStartToEnd &&
                 !isUseIdentifier(hook) && // `use(...)` can be called conditionally.
@@ -740,6 +774,54 @@ const rule = {
       },
     });
 
+    function handleCallExpression(node: CallExpression) {
+      if (isHook(node.callee)) {
+        // Add the hook node to a map keyed by the code path segment. We will
+        // do full code path analysis at the end of our code path.
+        const reactHooksMap = last(codePathReactHooksMapStack);
+        const codePathSegment = last(codePathSegmentStack);
+        let reactHooks = reactHooksMap.get(codePathSegment);
+        if (!reactHooks) {
+          reactHooks = [];
+          reactHooksMap.set(codePathSegment, reactHooks);
+        }
+        reactHooks.push(node.callee);
+        if (hasOptionalChain(node.callee)) {
+          optionalHookCalls.add(node.callee);
+        }
+      }
+
+      // useEffectEvent: useEffectEvent functions can be passed by reference within useEffect as well as in
+      // another useEffectEvent
+      // Check all `useEffect` and `React.useEffect`, `useEffectEvent`, and `React.useEffectEvent`
+      const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
+      if (
+        (isEffectIdentifier(nodeWithoutNamespace, additionalEffectHooks) ||
+          isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
+        node.arguments.length > 0
+      ) {
+        // Denote that we have traversed into a useEffect call, and stash the CallExpr for
+        // comparison later when we exit
+        lastEffect = node;
+      }
+
+      // Specifically disallow <Child onClick={useEffectEvent(...)} /> because this
+      // case can't be caught by `recordAllUseEffectEventFunctions` as it isn't assigned to a variable
+      if (
+        isUseEffectEventIdentifier(nodeWithoutNamespace) &&
+        node.parent?.type !== 'VariableDeclarator' &&
+        // like in other hooks, calling useEffectEvent at component's top level without assignment is valid
+        node.parent?.type !== 'ExpressionStatement'
+      ) {
+        const message = useEffectEventError(null, false);
+
+        context.report({
+          node,
+          message,
+        });
+      }
+    }
+
     return {
       '*'(node: any) {
         analyzer.enterNode(node);
@@ -754,48 +836,12 @@ const rule = {
       // But that gets complicated and enters type-system territory, so we're
       // only being strict about hook calls for now.
       CallExpression(node) {
-        if (isHook(node.callee)) {
-          // Add the hook node to a map keyed by the code path segment. We will
-          // do full code path analysis at the end of our code path.
-          const reactHooksMap = last(codePathReactHooksMapStack);
-          const codePathSegment = last(codePathSegmentStack);
-          let reactHooks = reactHooksMap.get(codePathSegment);
-          if (!reactHooks) {
-            reactHooks = [];
-            reactHooksMap.set(codePathSegment, reactHooks);
-          }
-          reactHooks.push(node.callee);
-        }
+        handleCallExpression(node);
+      },
 
-        // useEffectEvent: useEffectEvent functions can be passed by reference within useEffect as well as in
-        // another useEffectEvent
-        // Check all `useEffect` and `React.useEffect`, `useEffectEvent`, and `React.useEffectEvent`
-        const nodeWithoutNamespace = getNodeWithoutReactNamespace(node.callee);
-        if (
-          (isEffectIdentifier(nodeWithoutNamespace, additionalEffectHooks) ||
-            isUseEffectEventIdentifier(nodeWithoutNamespace)) &&
-          node.arguments.length > 0
-        ) {
-          // Denote that we have traversed into a useEffect call, and stash the CallExpr for
-          // comparison later when we exit
-          lastEffect = node;
-        }
-
-        // Specifically disallow <Child onClick={useEffectEvent(...)} /> because this
-        // case can't be caught by `recordAllUseEffectEventFunctions` as it isn't assigned to a variable
-        if (
-          isUseEffectEventIdentifier(nodeWithoutNamespace) &&
-          node.parent?.type !== 'VariableDeclarator' &&
-          // like in other hooks, calling useEffectEvent at component's top level without assignment is valid
-          node.parent?.type !== 'ExpressionStatement'
-        ) {
-          const message = useEffectEventError(null, false);
-
-          context.report({
-            node,
-            message,
-          });
-        }
+      // @ts-expect-error parser-babel produces this node type
+      OptionalCallExpression(node) {
+        handleCallExpression(node as CallExpression);
       },
 
       Identifier(node) {
@@ -815,6 +861,13 @@ const rule = {
       },
 
       'CallExpression:exit'(node) {
+        if (node === lastEffect) {
+          lastEffect = null;
+        }
+      },
+
+      // @ts-expect-error parser-babel produces this node type
+      'OptionalCallExpression:exit'(node) {
         if (node === lastEffect) {
           lastEffect = null;
         }
