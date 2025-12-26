@@ -3103,7 +3103,7 @@ body {
 
     loadPreloads(['foo']);
     errorPreloads(['bar']);
-    assertLog(['error preload: bar', 'load preload: foo']);
+    assertLog(['load preload: foo', 'error preload: bar']);
 
     // We expect that the stylesheet is inserted now but the commit has not happened yet.
     expect(getMeaningfulChildren(container)).toBe(undefined);
