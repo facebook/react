@@ -1486,6 +1486,13 @@ const tests = {
       `,
     },
     {
+      code: normalizeIndent`
+        function MyComponent({byId}) {
+          return useMemo(() => Object.keys(byId), undefined);
+        }
+      `,
+    },
+    {
       // Test settings-based additionalHooks - should work with settings
       code: normalizeIndent`
         function MyComponent(props) {
