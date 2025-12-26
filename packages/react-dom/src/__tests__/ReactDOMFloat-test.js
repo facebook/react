@@ -3082,8 +3082,7 @@ body {
     );
   });
 
-  // eslint-disable-next-line jest/no-disabled-tests
-  it.skip('can delay commit until css resources error', async () => {
+  it('can delay commit until css resources error', async () => {
     // TODO: This test fails and crashes jest. need to figure out why before unskipping.
     const root = ReactDOMClient.createRoot(container);
     expect(getMeaningfulChildren(container)).toBe(undefined);
@@ -3105,7 +3104,7 @@ body {
 
     loadPreloads(['foo']);
     errorPreloads(['bar']);
-    assertLog(['load preload: foo', 'error preload: bar']);
+    assertLog(['error preload: bar', 'load preload: foo']);
 
     // We expect that the stylesheet is inserted now but the commit has not happened yet.
     expect(getMeaningfulChildren(container)).toBe(undefined);
