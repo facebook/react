@@ -3117,7 +3117,7 @@ body {
     errorStylesheets(['bar']);
 
     loadStylesheets(['foo']);
-    assertLog(['load preload: foo', 'error preload: bar']);
+    assertLog(['error stylesheet: bar', 'load stylesheet: foo']);
 
     // We expect that the commit finishes synchronously after the stylesheet loads.
     expect(getMeaningfulChildren(container)).toEqual(<div>hello</div>);
