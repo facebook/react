@@ -951,6 +951,23 @@ const allTests = {
     },
     {
       code: normalizeIndent`
+        function Component() {
+          const items = [1, 2];
+          items.map(useCustomHook);
+        }
+      `,
+      errors: [hookArgumentError('useCustomHook')],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          doSomething(React.useState);
+        }
+      `,
+      errors: [hookArgumentError('React.useState')],
+    },
+    {
+      code: normalizeIndent`
         Hook.useState();
         Hook._useState();
         Hook.use42();
@@ -2059,6 +2076,14 @@ function genericError(hook) {
       `React Hook "${hook}" cannot be called inside a callback. React Hooks ` +
       'must be called in a React function component or a custom React ' +
       'Hook function.',
+  };
+}
+
+function hookArgumentError(hook) {
+  return {
+    message:
+      `React Hook "${hook}" cannot be passed as an argument. React Hooks ` +
+      'must be called in a React function component or a custom React Hook function.',
   };
 }
 
