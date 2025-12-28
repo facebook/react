@@ -694,11 +694,13 @@ export type SpreadPattern = {
 export type ArrayPattern = {
   kind: 'ArrayPattern';
   items: Array<Place | SpreadPattern | Hole>;
+  loc: SourceLocation;
 };
 
 export type ObjectPattern = {
   kind: 'ObjectPattern';
   properties: Array<ObjectProperty | SpreadPattern>;
+  loc: SourceLocation;
 };
 
 export type ObjectPropertyKey =
@@ -803,9 +805,11 @@ export type ManualMemoDependency = {
     | {
         kind: 'NamedLocal';
         value: Place;
+        constant: boolean;
       }
     | {kind: 'Global'; identifierName: string};
   path: DependencyPath;
+  loc: SourceLocation;
 };
 
 export type StartMemoize = {
@@ -2019,6 +2023,11 @@ export function isUseInsertionEffectHookType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' &&
     id.type.shapeId === 'BuiltInUseInsertionEffectHook'
+  );
+}
+export function isUseEffectEventType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectEvent'
   );
 }
 

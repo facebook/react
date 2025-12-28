@@ -27,7 +27,11 @@ import {Result} from '../Utils/Result';
 
 /**
  * Some common node types that are important for coverage tracking.
- * Based on istanbul-lib-instrument
+ * Based on istanbul-lib-instrument + some other common nodes we expect to be present in the generated AST.
+ *
+ * Note: For VariableDeclaration, VariableDeclarator, and Identifier, we enforce stricter validation
+ * that requires both the source location AND node type to match in the generated AST. This ensures
+ * that variable declarations maintain their structural integrity through compilation.
  */
 const IMPORTANT_INSTRUMENTED_TYPES = new Set([
   'ArrowFunctionExpression',
@@ -54,6 +58,14 @@ const IMPORTANT_INSTRUMENTED_TYPES = new Set([
   'LabeledStatement',
   'ConditionalExpression',
   'LogicalExpression',
+
+  /**
+   * Note: these aren't important for coverage tracking,
+   * but we still want to track them to ensure we aren't regressing them when
+   * we fix the source location tracking for other nodes.
+   */
+  'VariableDeclaration',
+  'Identifier',
 ]);
 
 /**
@@ -114,10 +126,13 @@ export function validateSourceLocations(
 ): Result<void, CompilerError> {
   const errors = new CompilerError();
 
-  // Step 1: Collect important locations from the original source
+  /*
+   * Step 1: Collect important locations from the original source
+   * Note: Multiple node types can share the same location (e.g. VariableDeclarator and Identifier)
+   */
   const importantOriginalLocations = new Map<
     string,
-    {loc: t.SourceLocation; nodeType: string}
+    {loc: t.SourceLocation; nodeTypes: Set<string>}
   >();
 
   func.traverse({
@@ -137,20 +152,31 @@ export function validateSourceLocations(
       // Collect the location if it exists
       if (node.loc) {
         const key = locationKey(node.loc);
-        importantOriginalLocations.set(key, {
-          loc: node.loc,
-          nodeType: node.type,
-        });
+        const existing = importantOriginalLocations.get(key);
+        if (existing) {
+          existing.nodeTypes.add(node.type);
+        } else {
+          importantOriginalLocations.set(key, {
+            loc: node.loc,
+            nodeTypes: new Set([node.type]),
+          });
+        }
       }
     },
   });
 
-  // Step 2: Collect all locations from the generated AST
-  const generatedLocations = new Set<string>();
+  // Step 2: Collect all locations from the generated AST with their node types
+  const generatedLocations = new Map<string, Set<string>>();
 
   function collectGeneratedLocations(node: t.Node): void {
     if (node.loc) {
-      generatedLocations.add(locationKey(node.loc));
+      const key = locationKey(node.loc);
+      const nodeTypes = generatedLocations.get(key);
+      if (nodeTypes) {
+        nodeTypes.add(node.type);
+      } else {
+        generatedLocations.set(key, new Set([node.type]));
+      }
     }
 
     // Use Babel's VISITOR_KEYS to traverse only actual node properties
@@ -183,22 +209,86 @@ export function validateSourceLocations(
     collectGeneratedLocations(outlined.fn.body);
   }
 
-  // Step 3: Validate that all important locations are preserved
-  for (const [key, {loc, nodeType}] of importantOriginalLocations) {
-    if (!generatedLocations.has(key)) {
-      errors.pushDiagnostic(
-        CompilerDiagnostic.create({
-          category: ErrorCategory.Todo,
-          reason: 'Important source location missing in generated code',
-          description:
-            `Source location for ${nodeType} is missing in the generated output. This can cause coverage instrumentation ` +
-            `to fail to track this code properly, resulting in inaccurate coverage reports.`,
-        }).withDetails({
-          kind: 'error',
-          loc,
-          message: null,
-        }),
-      );
+  /*
+   * Step 3: Validate that all important locations are preserved
+   * For certain node types, also validate that the node type matches
+   */
+  const strictNodeTypes = new Set([
+    'VariableDeclaration',
+    'VariableDeclarator',
+    'Identifier',
+  ]);
+
+  const reportMissingLocation = (
+    loc: t.SourceLocation,
+    nodeType: string,
+  ): void => {
+    errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Todo,
+        reason: 'Important source location missing in generated code',
+        description:
+          `Source location for ${nodeType} is missing in the generated output. This can cause coverage instrumentation ` +
+          `to fail to track this code properly, resulting in inaccurate coverage reports.`,
+      }).withDetails({
+        kind: 'error',
+        loc,
+        message: null,
+      }),
+    );
+  };
+
+  const reportWrongNodeType = (
+    loc: t.SourceLocation,
+    expectedType: string,
+    actualTypes: Set<string>,
+  ): void => {
+    errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Todo,
+        reason:
+          'Important source location has wrong node type in generated code',
+        description:
+          `Source location for ${expectedType} exists in the generated output but with wrong node type(s): ${Array.from(actualTypes).join(', ')}. ` +
+          `This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports.`,
+      }).withDetails({
+        kind: 'error',
+        loc,
+        message: null,
+      }),
+    );
+  };
+
+  for (const [key, {loc, nodeTypes}] of importantOriginalLocations) {
+    const generatedNodeTypes = generatedLocations.get(key);
+
+    if (!generatedNodeTypes) {
+      // Location is completely missing
+      reportMissingLocation(loc, Array.from(nodeTypes).join(', '));
+    } else {
+      // Location exists, check each node type
+      for (const nodeType of nodeTypes) {
+        if (
+          strictNodeTypes.has(nodeType) &&
+          !generatedNodeTypes.has(nodeType)
+        ) {
+          /*
+           * For strict node types, the specific node type must be present
+           * Check if any generated node type is also an important original node type
+           */
+          const hasValidNodeType = Array.from(generatedNodeTypes).some(
+            genType => nodeTypes.has(genType),
+          );
+
+          if (hasValidNodeType) {
+            // At least one generated node type is valid (also in original), so this is just missing
+            reportMissingLocation(loc, nodeType);
+          } else {
+            // None of the generated node types are in original - this is wrong node type
+            reportWrongNodeType(loc, nodeType, generatedNodeTypes);
+          }
+        }
+      }
     }
   }
 
