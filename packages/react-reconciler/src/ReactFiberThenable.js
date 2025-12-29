@@ -294,22 +294,26 @@ export function suspendCommit(): void {
   throw SuspenseyCommitException;
 }
 
+function initLazy<T>(lazyType: LazyComponentType<T, any>): T {
+  if (__DEV__) {
+    return callLazyInitInDEV(lazyType);
+  }
+  const payload = lazyType._payload;
+  const init = lazyType._init;
+  return init(payload);
+}
+
 export function resolveLazy<T>(lazyType: LazyComponentType<T, any>): T {
   try {
-    if (__DEV__) {
-      return callLazyInitInDEV(lazyType);
-    }
-    const payload = lazyType._payload;
-    const init = lazyType._init;
-    return init(payload);
+    return initLazy(lazyType);
   } catch (x) {
     if (x !== null && typeof x === 'object' && typeof x.then === 'function') {
-      // This lazy Suspended. Treat this as if we called use() to unwrap it.
-      suspendedThenable = x;
-      if (__DEV__) {
-        needsToResetSuspendedThenableDEV = true;
-      }
-      throw SuspenseException;
+      // This lazy suspended. Treat this as if we called use() to unwrap it,
+      // so we attach the same thenable bookkeeping immediately.
+      const thenableState = createThenableState();
+      trackUsedThenable(thenableState, (x: any), 0);
+      // If the thenable resolved synchronously, try again.
+      return initLazy(lazyType);
     }
     throw x;
   }
