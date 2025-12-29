@@ -42,6 +42,7 @@ const COMPILER_OPTIONS: PluginOptions = {
     // Temporarily enabled for internal testing
     enableUseKeyedState: true,
     enableVerboseNoSetStateInEffect: true,
+    validateExhaustiveEffectDependencies: 'extra-only',
   },
 };
 

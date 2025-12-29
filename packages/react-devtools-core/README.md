@@ -32,7 +32,7 @@ if (process.env.NODE_ENV !== 'production') {
 #### `Settings`
 | Spec                                                                                                                                                                           | Default value                                                                                                                                                        |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| <pre>{<br>  appendComponentStack: boolean,<br>  breakOnConsoleErrors: boolean,<br>  showInlineWarningsAndErrors: boolean,<br>  hideConsoleLogsInStrictMode: boolean<br>}</pre> | <pre>{<br>  appendComponentStack: true,<br>  breakOnConsoleErrors: false,<br>  showInlineWarningsAndErrors: true,<br>  hideConsoleLogsInStrictMode: false<br>}</pre> |
+| <pre>{<br>  appendComponentStack: boolean,<br>  breakOnConsoleErrors: boolean,<br>  showInlineWarningsAndErrors: boolean,<br>  hideConsoleLogsInStrictMode: boolean,<br>  disableSecondConsoleLogDimmingInStrictMode: boolean<br>}</pre> | <pre>{<br>  appendComponentStack: true,<br>  breakOnConsoleErrors: false,<br>  showInlineWarningsAndErrors: true,<br>  hideConsoleLogsInStrictMode: false,<br>  disableSecondConsoleLogDimmingInStrictMode: false<br>}</pre> |
 
 ### `connectToDevTools` options
 | Prop                   | Default       | Description                                                                                                               |
@@ -53,7 +53,7 @@ if (process.env.NODE_ENV !== 'production') {
 | `onSubscribe`       | Function, which receives listener (function, with a single argument) as an argument. Called when backend subscribes to messages from the other end (frontend). |
 | `onUnsubscribe`     | Function, which receives listener (function) as an argument. Called when backend unsubscribes to messages from the other end (frontend).                       |
 | `onMessage`         | Function, which receives 2 arguments: event (string) and payload (any). Called when backend emits a message, which should be sent to the frontend.             |
-| `onSettingsUpdated` | A callback that will be called when the user updates the settings in the UI. You can use it for persisting user settings.                                      |       
+| `onSettingsUpdated` | A callback that will be called when the user updates the settings in the UI. You can use it for persisting user settings.                                      |
 
 Unlike `connectToDevTools`, `connectWithCustomMessagingProtocol` returns a callback, which can be used for unsubscribing the backend from the global DevTools hook.
 

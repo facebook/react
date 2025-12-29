@@ -10,8 +10,6 @@
 
 'use strict';
 
-const path = require('path');
-
 if (typeof Blob === 'undefined') {
   global.Blob = require('buffer').Blob;
 }
@@ -33,9 +31,8 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
-const repoRoot = path.resolve(__dirname, '../../../../');
 function normalizeReactCodeLocInfo(str) {
-  const repoRootForRegexp = repoRoot.replace(/\//g, '\\/');
+  const repoRootForRegexp = __REACT_ROOT_PATH_TEST__.replace(/\//g, '\\/');
   const repoFileLocMatch = new RegExp(`${repoRootForRegexp}.+?:\\d+:\\d+`, 'g');
   return str && str.replace(repoFileLocMatch, '**');
 }
@@ -719,6 +716,25 @@ describe('ReactFlight', () => {
     const cyclic = {obj: null};
     cyclic.obj = cyclic;
     const model = <Component prop={cyclic} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+  });
+
+  it('can transport cyclic arrays', async () => {
+    function ComponentClient({prop, obj}) {
+      expect(prop[1]).toBe(prop);
+      expect(prop[0]).toBe(obj);
+    }
+    const Component = clientReference(ComponentClient);
+
+    const obj = {};
+    const cyclic = [obj];
+    cyclic[1] = cyclic;
+    const model = <Component prop={cyclic} obj={obj} />;
 
     const transport = ReactNoopFlightServer.render(model);
 

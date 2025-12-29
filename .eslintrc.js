@@ -635,6 +635,7 @@ module.exports = {
     FocusOptions: 'readonly',
     OptionalEffectTiming: 'readonly',
 
+    __REACT_ROOT_PATH_TEST__: 'readonly',
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
     spyOnProd: 'readonly',

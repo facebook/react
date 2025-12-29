@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateExhaustiveEffectDependencies
+// @validateExhaustiveEffectDependencies:"all"
 import {useEffect, useEffectEvent} from 'react';
 
 function Component({x, y, z}) {
@@ -30,7 +30,7 @@ function Component({x, y, z}) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateExhaustiveEffectDependencies
+import { c as _c } from "react/compiler-runtime"; // @validateExhaustiveEffectDependencies:"all"
 import { useEffect, useEffectEvent } from "react";
 
 function Component(t0) {

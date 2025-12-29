@@ -1,4 +1,4 @@
-// @validateExhaustiveMemoizationDependencies @validateExhaustiveEffectDependencies
+// @validateExhaustiveMemoizationDependencies @validateExhaustiveEffectDependencies:"all"
 import {
   useCallback,
   useTransition,
