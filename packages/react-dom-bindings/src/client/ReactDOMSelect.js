@@ -152,7 +152,7 @@ export function initSelect(
   const node: HTMLSelectElement = (element: any);
   node.multiple = !!multiple;
   if (value != null) {
-    updateOptions(node, !!multiple, value, false);
+    updateOptions(node, !!multiple, value, true);
   } else if (defaultValue != null) {
     updateOptions(node, !!multiple, defaultValue, true);
   }
@@ -221,7 +221,7 @@ export function updateSelect(
   const node: HTMLSelectElement = (element: any);
 
   if (value != null) {
-    updateOptions(node, !!multiple, value, false);
+    updateOptions(node, !!multiple, value, true);
   } else if (!!wasMultiple !== !!multiple) {
     // For simplicity, reapply `defaultValue` if `multiple` is toggled.
     if (defaultValue != null) {
@@ -238,6 +238,6 @@ export function restoreControlledSelectState(element: Element, props: Object) {
   const value = props.value;
 
   if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
+    updateOptions(node, !!props.multiple, value, true);
   }
 }
