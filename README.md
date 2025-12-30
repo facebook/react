@@ -38,10 +38,6 @@ The documentation is divided into several sections:
 
 You can improve it by sending pull requests to [this repository](https://github.com/reactjs/react.dev).
 
-## Learning this Repository
-
-If you want to learn React by reading this codebase, start with docs/LEARNING_PLAN.md for a structured, hands‑on path through the packages, build scripts, fixtures, and the React Compiler.
-
 ## Examples
 
 We have several examples [on the website](https://react.dev/). Here is the first one to get you started:
