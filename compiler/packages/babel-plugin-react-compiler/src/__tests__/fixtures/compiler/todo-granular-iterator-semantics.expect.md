@@ -70,7 +70,7 @@ function useFoo(input) {
   "use memo";
   const $ = _c(6);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = [{}];
     $[0] = t0;
   } else {

@@ -30,7 +30,7 @@ function Component() {
   const $ = _c(4);
   const [state, setState] = useState(0);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       setState(_temp);
     };
@@ -40,7 +40,7 @@ function Component() {
   }
   const onClick = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = <button onClick={onClick}>Increment</button>;
     $[1] = t1;
   } else {

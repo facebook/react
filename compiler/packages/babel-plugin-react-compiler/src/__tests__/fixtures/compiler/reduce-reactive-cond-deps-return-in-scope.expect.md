@@ -54,7 +54,7 @@ function useFoo(t0) {
     t1 = $[2];
     x = $[3];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+  if (t1 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t1;
   }
   return x;

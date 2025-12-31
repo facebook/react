@@ -228,7 +228,10 @@ export function codegenFunction(
                     ),
                     t.callExpression(
                       t.memberExpression(
-                        t.identifier('Symbol'),
+                        t.memberExpression(
+                          t.identifier('globalThis'),
+                          t.identifier('Symbol'),
+                        ),
                         t.identifier('for'),
                       ),
                       [t.stringLiteral(MEMO_CACHE_SENTINEL)],
@@ -748,7 +751,10 @@ function codegenReactiveScope(
         true,
       ),
       t.callExpression(
-        t.memberExpression(t.identifier('Symbol'), t.identifier('for')),
+        t.memberExpression(
+          t.memberExpression(t.identifier('globalThis'), t.identifier('Symbol')),
+          t.identifier('for'),
+        ),
         [t.stringLiteral(MEMO_CACHE_SENTINEL)],
       ),
     );
@@ -968,7 +974,10 @@ function codegenReactiveScope(
           '!==',
           t.identifier(name),
           t.callExpression(
-            t.memberExpression(t.identifier('Symbol'), t.identifier('for')),
+            t.memberExpression(
+              t.memberExpression(t.identifier('globalThis'), t.identifier('Symbol')),
+              t.identifier('for'),
+            ),
             [t.stringLiteral(EARLY_RETURN_SENTINEL)],
           ),
         ),

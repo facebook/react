@@ -58,7 +58,7 @@ function Component(props) {
         break bb0;
       } else {
         let t1;
-        if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+        if ($[6] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
           t1 = foo();
           $[6] = t1;
         } else {
@@ -75,7 +75,7 @@ function Component(props) {
   } else {
     t0 = $[3];
   }
-  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+  if (t0 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t0;
   }
 }

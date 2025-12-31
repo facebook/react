@@ -76,7 +76,7 @@ function Component(props) {
   } else {
     t0 = $[3];
   }
-  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+  if (t0 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t0;
   }
 }

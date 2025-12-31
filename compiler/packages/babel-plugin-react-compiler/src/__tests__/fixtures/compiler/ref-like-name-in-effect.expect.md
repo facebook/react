@@ -36,7 +36,7 @@ import { useRef, useEffect } from "react";
 function useCustomRef() {
   const $ = _c(1);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = { click: _temp };
     $[0] = t0;
   } else {
@@ -60,7 +60,7 @@ function Foo() {
     t0 = $[1];
   }
   let t1;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = [];
     $[2] = t1;
   } else {
@@ -68,7 +68,7 @@ function Foo() {
   }
   useEffect(t0, t1);
   let t2;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = <div>foo</div>;
     $[3] = t2;
   } else {

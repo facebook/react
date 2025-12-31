@@ -49,7 +49,7 @@ function Foo(t0) {
     const x = [arr1];
     let y = [];
     let t2;
-    if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[5] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t2 = { x: 2 };
       $[5] = t2;
     } else {

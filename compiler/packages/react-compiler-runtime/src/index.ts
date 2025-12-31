@@ -16,7 +16,7 @@ const ReactSecretInternals =
 
 type MemoCache = Array<number | typeof $empty>;
 
-const $empty = Symbol.for('react.memo_cache_sentinel');
+const $empty = globalThis.Symbol.for('react.memo_cache_sentinel');
 
 // Re-export React.c if present, otherwise fallback to the userspace polyfill for versions of React
 // < 19.

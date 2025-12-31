@@ -49,7 +49,7 @@ function Component() {
       const filteredItems = items.filter(_temp);
       if (filteredItems.length === 0) {
         let t2;
-        if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+        if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
           t2 = (
             <div>
               <span />
@@ -71,7 +71,7 @@ function Component() {
     t0 = $[1];
     t1 = $[2];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+  if (t1 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t1;
   }
   let t2;

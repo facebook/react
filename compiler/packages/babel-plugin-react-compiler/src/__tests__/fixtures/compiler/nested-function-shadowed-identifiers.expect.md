@@ -29,7 +29,7 @@ function Component(props) {
   const $ = _c(3);
   const [x, setX] = useState(null);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = (e) => {
       setX(_temp);
     };

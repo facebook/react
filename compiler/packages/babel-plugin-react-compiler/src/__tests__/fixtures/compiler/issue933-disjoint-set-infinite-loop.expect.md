@@ -43,7 +43,7 @@ function makeObj() {
 function MyApp(props) {
   const $ = _c(1);
   let y;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     y = makeObj();
     const tmp = y.a;
     const tmp2 = tmp.b;

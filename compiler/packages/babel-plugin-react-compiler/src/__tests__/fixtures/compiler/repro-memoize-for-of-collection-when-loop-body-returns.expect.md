@@ -48,11 +48,11 @@ function useHook(nodeID, condition) {
   } else {
     t1 = $[5];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+  if (t1 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t1;
   }
   let t2;
-  if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[6] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = new Class();
     $[6] = t2;
   } else {

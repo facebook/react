@@ -80,7 +80,7 @@ function useFoo(t0) {
   const $ = _c(9);
   const { val1, val2 } = t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = [];
     $[0] = t1;
   } else {

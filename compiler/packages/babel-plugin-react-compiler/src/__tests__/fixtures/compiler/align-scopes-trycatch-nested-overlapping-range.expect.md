@@ -34,7 +34,7 @@ function Foo() {
   const $ = _c(1);
   try {
     let thing;
-    if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       thing = null;
       if (cond) {
         thing = makeObject_Primitives();

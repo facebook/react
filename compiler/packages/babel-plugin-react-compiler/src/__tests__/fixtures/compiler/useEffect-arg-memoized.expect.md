@@ -56,7 +56,7 @@ function Component(props) {
   }
   useEffect(t1, t2);
   let t3;
-  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[5] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = <div />;
     $[5] = t3;
   } else {

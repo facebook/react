@@ -30,7 +30,7 @@ import { c as _c } from "react/compiler-runtime";
 function Test() {
   const $ = _c(2);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = { 21: "dimaMachina" };
     $[0] = t0;
   } else {
@@ -40,7 +40,7 @@ function Test() {
 
   const { 21: myVar } = obj;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = (
       <div>
         {obj[21]}

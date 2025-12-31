@@ -66,7 +66,7 @@ function Component(props) {
     t0 = $[1];
     t1 = $[2];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+  if (t1 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t1;
   }
   let t2;
@@ -78,7 +78,7 @@ function Component(props) {
     let t5;
     let t6;
     let t7;
-    if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[5] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t3 = [1];
       t4 = [2];
       t5 = [3];
