@@ -29,6 +29,11 @@ export const supportsComponentStorage = false;
 export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
   (null: any);
 
+// No AsyncLocalStorage support in custom environment
+export function createAsyncContextSnapshot(): <T>(fn: () => T) => T {
+  return <T>(fn: () => T): T => fn();
+}
+
 export function createHints(): any {
   return null;
 }

@@ -16,3 +16,16 @@ export * from 'react-client/src/ReactClientConsoleConfigServer';
 export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
 export const requestStorage: AsyncLocalStorage<Request | void> =
   supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
+
+// AsyncLocalStorage.snapshot() captures the entire async context stack.
+const supportsAsyncContextSnapshot: boolean =
+  // $FlowFixMe[prop-missing]
+  supportsRequestStorage && typeof AsyncLocalStorage.snapshot === 'function';
+
+export function createAsyncContextSnapshot(): <T>(fn: () => T) => T {
+  if (supportsAsyncContextSnapshot) {
+    // $FlowFixMe[prop-missing]
+    return AsyncLocalStorage.snapshot();
+  }
+  return <T>(fn: () => T): T => fn();
+}

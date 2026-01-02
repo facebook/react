@@ -22,6 +22,19 @@ export const supportsComponentStorage: boolean =
 export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
   supportsComponentStorage ? new AsyncLocalStorage() : (null: any);
 
+// AsyncLocalStorage.snapshot() captures the entire async context stack.
+const supportsAsyncContextSnapshot: boolean =
+  // $FlowFixMe[prop-missing]
+  supportsRequestStorage && typeof AsyncLocalStorage.snapshot === 'function';
+
+export function createAsyncContextSnapshot(): <T>(fn: () => T) => T {
+  if (supportsAsyncContextSnapshot) {
+    // $FlowFixMe[prop-missing]
+    return AsyncLocalStorage.snapshot();
+  }
+  return <T>(fn: () => T): T => fn();
+}
+
 export * from '../ReactFlightServerConfigDebugNoop';
 
 export * from '../ReactFlightStackConfigV8';

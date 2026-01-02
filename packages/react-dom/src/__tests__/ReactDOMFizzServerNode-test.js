@@ -700,4 +700,64 @@ describe('ReactDOMFizzServerNode', () => {
       '<div>' + Array(700).fill('ののの').join('<!-- -->') + '</div>',
     );
   });
+
+  it('should preserve third-party AsyncLocalStorage context after promise resolution', async () => {
+    // This test verifies that when a component suspends and later resumes,
+    // third-party AsyncLocalStorage contexts (like Next.js's workUnitAsyncStorage)
+    // are preserved. The fix uses AsyncLocalStorage.snapshot() to capture and
+    // restore the full async context stack.
+    const {AsyncLocalStorage} = require('async_hooks');
+    const thirdPartyStorage = new AsyncLocalStorage();
+
+    let hasLoaded = false;
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    let contextValueDuringRender = 'not-set';
+    let contextValueAfterSuspense = 'not-set';
+
+    function Wait() {
+      if (!hasLoaded) {
+        contextValueDuringRender = thirdPartyStorage.getStore();
+        throw promise;
+      }
+      // After promise resolves: context should still be available
+      contextValueAfterSuspense = thirdPartyStorage.getStore();
+      return 'Done';
+    }
+
+    const {writable, output} = getTestWritable();
+
+    // Start render inside third-party AsyncLocalStorage context
+    const {pipe} = thirdPartyStorage.run({type: 'test-context'}, () => {
+      return ReactDOMFizzServer.renderToPipeableStream(
+        <div>
+          <Suspense fallback="Loading">
+            <Wait />
+          </Suspense>
+        </div>,
+      );
+    });
+
+    pipe(writable);
+
+    // Wait for initial render to complete (shows fallback)
+    await jest.runAllTimers();
+
+    // Verify context was available during initial render
+    expect(contextValueDuringRender).toEqual({type: 'test-context'});
+
+    // Resolve the loading - this triggers pingTask which should preserve context
+    hasLoaded = true;
+    await resolve();
+
+    // Wait for React to re-render after promise resolution
+    await jest.runAllTimers();
+
+    // The key assertion: context should be preserved after suspension
+    // Without the fix, this would be undefined because pingTask didn't
+    // restore the async context
+    expect(contextValueAfterSuspense).toEqual({type: 'test-context'});
+    expect(output.result).toContain('Done');
+  });
 });

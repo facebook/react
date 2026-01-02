@@ -14,3 +14,8 @@ export * from 'react-client/src/ReactClientConsoleConfigBrowser';
 
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
+
+// No AsyncLocalStorage support in browser environment
+export function createAsyncContextSnapshot(): <T>(fn: () => T) => T {
+  return <T>(fn: () => T): T => fn();
+}

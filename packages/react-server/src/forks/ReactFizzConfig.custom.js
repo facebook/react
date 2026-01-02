@@ -43,6 +43,11 @@ export const supportsClientAPIs = true;
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
+// No AsyncLocalStorage support in custom environment
+export function createAsyncContextSnapshot(): <T>(fn: () => T) => T {
+  return <T>(fn: () => T): T => fn();
+}
+
 export const bindToConsole = $$$config.bindToConsole;
 
 export const resetResumableState = $$$config.resetResumableState;
