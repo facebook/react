@@ -760,4 +760,56 @@ describe('ReactDOMFizzServerNode', () => {
     expect(contextValueAfterSuspense).toEqual({type: 'test-context'});
     expect(output.result).toContain('Done');
   });
+
+  it('should not leak async context between requests after cleanup', async () => {
+    // This test verifies that the async context snapshot is properly cleaned up
+    // between requests, ensuring no context leakage.
+    const {AsyncLocalStorage} = require('async_hooks');
+    const thirdPartyStorage = new AsyncLocalStorage();
+
+    const capturedContexts = [];
+
+    function CaptureContext({id}) {
+      capturedContexts.push({
+        id,
+        context: thirdPartyStorage.getStore(),
+      });
+      return <div>Request {id}</div>;
+    }
+
+    // First request with context A
+    const {writable: writable1, completed: completed1} = getTestWritable();
+    const {pipe: pipe1} = thirdPartyStorage.run({name: 'context-A'}, () => {
+      return ReactDOMFizzServer.renderToPipeableStream(
+        <CaptureContext id="1" />,
+      );
+    });
+    pipe1(writable1);
+    await completed1;
+
+    // Second request with context B (outside any context)
+    const {writable: writable2, completed: completed2} = getTestWritable();
+    const {pipe: pipe2} = thirdPartyStorage.run({name: 'context-B'}, () => {
+      return ReactDOMFizzServer.renderToPipeableStream(
+        <CaptureContext id="2" />,
+      );
+    });
+    pipe2(writable2);
+    await completed2;
+
+    // Third request with no context
+    const {writable: writable3, completed: completed3} = getTestWritable();
+    const {pipe: pipe3} = ReactDOMFizzServer.renderToPipeableStream(
+      <CaptureContext id="3" />,
+    );
+    pipe3(writable3);
+    await completed3;
+
+    // Verify each request saw its own context (no leakage)
+    expect(capturedContexts).toEqual([
+      {id: '1', context: {name: 'context-A'}},
+      {id: '2', context: {name: 'context-B'}},
+      {id: '3', context: undefined},
+    ]);
+  });
 });
