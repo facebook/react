@@ -64,6 +64,11 @@ const ReactNoopFlightServer = ReactFlightServer({
   ) {
     return saveModule(reference.value);
   },
+
+  // AsyncLocalStorage context snapshot - noop implementation
+  createAsyncContextSnapshot<T>(): (fn: () => T) => T {
+    return (fn: () => T): T => fn();
+  },
 });
 
 type Options = {

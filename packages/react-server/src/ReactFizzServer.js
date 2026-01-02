@@ -800,7 +800,7 @@ function pingTask(request: Request, task: Task): void {
     const runInAsyncContext = request.asyncContextSnapshot;
 
     if (request.trackedPostpones !== null || request.status === OPENING) {
-      if (runInAsyncContext !== null) {
+      if (runInAsyncContext !== null && supportsRequestStorage) {
         // Use the snapshot to restore the full async context, then run with React's requestStorage
         scheduleMicrotask(() =>
           runInAsyncContext(() =>
@@ -815,7 +815,7 @@ function pingTask(request: Request, task: Task): void {
         scheduleMicrotask(() => performWork(request));
       }
     } else {
-      if (runInAsyncContext !== null) {
+      if (runInAsyncContext !== null && supportsRequestStorage) {
         scheduleWork(() =>
           runInAsyncContext(() =>
             requestStorage.run(request, performWork, request),

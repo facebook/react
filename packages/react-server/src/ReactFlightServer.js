@@ -2682,7 +2682,7 @@ function pingTask(request: Request, task: Task): void {
     const runInAsyncContext = request.asyncContextSnapshot;
 
     if (request.type === PRERENDER || request.status === OPENING) {
-      if (runInAsyncContext !== null) {
+      if (runInAsyncContext !== null && supportsRequestStorage) {
         scheduleMicrotask(() =>
           runInAsyncContext(() =>
             requestStorage.run(request, performWork, request),
@@ -2696,7 +2696,7 @@ function pingTask(request: Request, task: Task): void {
         scheduleMicrotask(() => performWork(request));
       }
     } else {
-      if (runInAsyncContext !== null) {
+      if (runInAsyncContext !== null && supportsRequestStorage) {
         scheduleWork(() =>
           runInAsyncContext(() =>
             requestStorage.run(request, performWork, request),

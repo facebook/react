@@ -344,6 +344,11 @@ const ReactNoopServer = ReactFizzServer({
   isPreambleContext() {
     return false;
   },
+
+  // AsyncLocalStorage context snapshot - noop implementation
+  createAsyncContextSnapshot<T>(): (fn: () => T) => T {
+    return (fn: () => T): T => fn();
+  },
 });
 
 type Options = {
