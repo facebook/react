@@ -10,8 +10,14 @@
 import type {ReactStore} from 'shared/ReactTypes';
 import {enableStore} from 'shared/ReactFeatureFlags';
 
-function defaultReducer<S>(state: S, action: (prev: S) => S): S {
-  return action(state);
+function defaultReducer<S>(state: S, action: S | ((prev: S) => S)): S {
+  if (typeof action === 'function') {
+    // State value itself is not allowed to be a function, so we can safely
+    // assume we are in the `(prev: S) => S` case here.
+    // $FlowFixMe[incompatible-use]
+    return action(state);
+  }
+  return action;
 }
 
 declare function createStore<S>(initialValue: S): ReactStore<S, (prev: S) => S>;

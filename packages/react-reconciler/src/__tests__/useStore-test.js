@@ -64,6 +64,41 @@ describe('useStore', () => {
 
     await act(async () => {
       startTransition(() => {
+        store.dispatch(3);
+      });
+    });
+    assertLog([{kind: 'render', value: 3}]);
+    expect(root).toMatchRenderedOutput('3');
+
+    await act(async () => {
+      startTransition(() => {
+        store.dispatch(4);
+      });
+    });
+    assertLog([{kind: 'render', value: 4}]);
+    expect(root).toMatchRenderedOutput('4');
+  });
+
+  it('simplest use (updater function)', async () => {
+    const store = createStore(2);
+
+    function App() {
+      const value = useStore(store);
+      Scheduler.log({kind: 'render', value});
+      return <>{value}</>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+      await waitFor([{kind: 'render', value: 2}]);
+    });
+    expect(root).toMatchRenderedOutput('2');
+
+    await act(async () => {
+      startTransition(() => {
         store.dispatch(n => n + 1);
       });
     });
