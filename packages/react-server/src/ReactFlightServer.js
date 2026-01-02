@@ -4127,6 +4127,8 @@ function fatalError(request: Request, error: mixed): void {
   // This is called outside error handling code such as if an error happens in React internals.
   if (request.destination !== null) {
     request.status = CLOSED;
+    // Clean up the async context snapshot to allow GC of captured contexts
+    request.asyncContextSnapshot = null;
     closeWithError(request.destination, error);
   } else {
     request.status = CLOSING;
@@ -6094,6 +6096,8 @@ function flushCompletedChunks(request: Request): void {
     }
     if (request.destination !== null) {
       request.status = CLOSED;
+      // Clean up the async context snapshot to allow GC of captured contexts
+      request.asyncContextSnapshot = null;
       close(request.destination);
       request.destination = null;
     }

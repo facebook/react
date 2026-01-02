@@ -1274,6 +1274,8 @@ function fatalError(
   }
   if (request.destination !== null) {
     request.status = CLOSED;
+    // Clean up the async context snapshot to allow GC of captured contexts
+    request.asyncContextSnapshot = null;
     closeWithError(request.destination, error);
   } else {
     request.status = CLOSING;
@@ -5950,6 +5952,8 @@ function flushCompletedQueues(
       }
       // We're done.
       request.status = CLOSED;
+      // Clean up the async context snapshot to allow GC of captured contexts
+      request.asyncContextSnapshot = null;
       close(destination);
       // We need to stop flowing now because we do not want any async contexts which might call
       // float methods to initiate any flushes after this point
