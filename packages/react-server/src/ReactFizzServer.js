@@ -794,18 +794,17 @@ function pingTask(request: Request, task: Task): void {
   if (request.pingedTasks.length === 1) {
     request.flushScheduled = request.destination !== null;
 
-    // Use the captured async context snapshot to restore the full async context
-    // (including third-party AsyncLocalStorage contexts like Next.js's workUnitAsyncStorage).
-    // This is captured in startWork() when the request is first processed.
+    // Use the captured async context snapshot to restore the full async context.
+    // The snapshot includes both third-party AsyncLocalStorage contexts (like Next.js's
+    // workUnitAsyncStorage) AND React's own requestStorage context, since it was
+    // captured inside requestStorage.run() in startWork().
     const runInAsyncContext = request.asyncContextSnapshot;
 
     if (request.trackedPostpones !== null || request.status === OPENING) {
-      if (runInAsyncContext !== null && supportsRequestStorage) {
-        // Use the snapshot to restore the full async context, then run with React's requestStorage
+      if (runInAsyncContext !== null) {
+        // Use the snapshot to restore the full async context (including requestStorage)
         scheduleMicrotask(() =>
-          runInAsyncContext(() =>
-            requestStorage.run(request, performWork, request),
-          ),
+          runInAsyncContext(performWork.bind(null, request)),
         );
       } else if (supportsRequestStorage) {
         scheduleMicrotask(() =>
@@ -815,12 +814,8 @@ function pingTask(request: Request, task: Task): void {
         scheduleMicrotask(() => performWork(request));
       }
     } else {
-      if (runInAsyncContext !== null && supportsRequestStorage) {
-        scheduleWork(() =>
-          runInAsyncContext(() =>
-            requestStorage.run(request, performWork, request),
-          ),
-        );
+      if (runInAsyncContext !== null) {
+        scheduleWork(() => runInAsyncContext(performWork.bind(null, request)));
       } else if (supportsRequestStorage) {
         scheduleWork(() => requestStorage.run(request, performWork, request));
       } else {
@@ -5968,16 +5963,23 @@ function flushCompletedQueues(
 export function startWork(request: Request): void {
   request.flushScheduled = request.destination !== null;
 
-  // Capture the current async context snapshot. This preserves ALL AsyncLocalStorage
-  // contexts (including third-party ones like Next.js's workUnitAsyncStorage),
-  // allowing them to be restored when work continues after promise resolution.
-  request.asyncContextSnapshot = createAsyncContextSnapshot();
-
-  // When prerendering we use microtasks for pinging work
+  // When prerendering we use microtasks for pinging work.
+  // We capture the async context snapshot INSIDE requestStorage.run() so that
+  // the snapshot includes both third-party AsyncLocalStorage contexts AND
+  // React's own requestStorage context. This ensures correct context nesting
+  // when the snapshot is restored in pingTask.
   if (supportsRequestStorage) {
-    scheduleMicrotask(() => requestStorage.run(request, performWork, request));
+    scheduleMicrotask(() =>
+      requestStorage.run(request, () => {
+        request.asyncContextSnapshot = createAsyncContextSnapshot();
+        performWork(request);
+      }),
+    );
   } else {
-    scheduleMicrotask(() => performWork(request));
+    scheduleMicrotask(() => {
+      request.asyncContextSnapshot = createAsyncContextSnapshot();
+      performWork(request);
+    });
   }
   scheduleWork(() => {
     if (request.status === OPENING) {

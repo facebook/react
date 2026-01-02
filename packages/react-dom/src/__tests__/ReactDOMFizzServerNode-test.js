@@ -761,6 +761,132 @@ describe('ReactDOMFizzServerNode', () => {
     expect(output.result).toContain('Done');
   });
 
+  it('should preserve third-party AsyncLocalStorage context across macrotask boundaries', async () => {
+    // This test verifies that AsyncLocalStorage context is preserved even when
+    // the promise resolves in a completely separate macrotask (setImmediate/setTimeout).
+    // This is the key case for Next.js's workUnitAsyncStorage - the context must
+    // survive across the scheduler boundary where React's pingTask resumes work.
+    const {AsyncLocalStorage} = require('async_hooks');
+    const thirdPartyStorage = new AsyncLocalStorage();
+
+    let contextBeforeSuspense = 'not-set';
+    let contextAfterSuspense = 'not-set';
+
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    let suspended = false;
+
+    function AsyncComponent() {
+      if (!suspended) {
+        suspended = true;
+        contextBeforeSuspense = thirdPartyStorage.getStore();
+        throw promise;
+      }
+      // This runs after promise resolves, in a NEW macrotask scheduled by pingTask
+      contextAfterSuspense = thirdPartyStorage.getStore();
+      return <div>Done</div>;
+    }
+
+    const {writable, output, completed} = getTestWritable();
+
+    // Start render inside third-party context
+    const {pipe} = thirdPartyStorage.run({type: 'request-context'}, () => {
+      return ReactDOMFizzServer.renderToPipeableStream(
+        <Suspense fallback="Loading">
+          <AsyncComponent />
+        </Suspense>,
+      );
+    });
+
+    pipe(writable);
+
+    // Let React's initial performWork complete
+    await jest.runAllTimers();
+
+    // Verify context was available before suspension
+    expect(contextBeforeSuspense).toEqual({type: 'request-context'});
+
+    // Resolve in a completely new macrotask - this forces pingTask to schedule
+    // new work via setImmediate/scheduleMicrotask, which must restore context
+    await new Promise(r => setImmediate(r));
+    resolve();
+
+    // Let React process the resolved promise
+    await jest.runAllTimers();
+    await completed;
+
+    // KEY ASSERTION: Context must be preserved after suspension
+    expect(contextAfterSuspense).toEqual({type: 'request-context'});
+    expect(output.result).toContain('Done');
+  });
+
+  it('should preserve nested AsyncLocalStorage contexts with correct nesting order', async () => {
+    // This test verifies that multiple nested AsyncLocalStorage contexts are
+    // preserved with the correct nesting order after suspension. This is important
+    // because the snapshot must capture the complete context stack.
+    const {AsyncLocalStorage} = require('async_hooks');
+    const outerStorage = new AsyncLocalStorage();
+    const innerStorage = new AsyncLocalStorage();
+
+    let contextsBefore = null;
+    let contextsAfter = null;
+
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    let suspended = false;
+
+    function AsyncComponent() {
+      if (!suspended) {
+        suspended = true;
+        contextsBefore = {
+          outer: outerStorage.getStore(),
+          inner: innerStorage.getStore(),
+        };
+        throw promise;
+      }
+      contextsAfter = {
+        outer: outerStorage.getStore(),
+        inner: innerStorage.getStore(),
+      };
+      return <div>Done</div>;
+    }
+
+    const {writable, output, completed} = getTestWritable();
+
+    // Nested ALS contexts: outer -> inner -> render
+    const {pipe} = outerStorage.run({level: 'outer', id: 1}, () => {
+      return innerStorage.run({level: 'inner', id: 2}, () => {
+        return ReactDOMFizzServer.renderToPipeableStream(
+          <Suspense fallback="Loading">
+            <AsyncComponent />
+          </Suspense>,
+        );
+      });
+    });
+
+    pipe(writable);
+    await jest.runAllTimers();
+
+    // Both contexts should be available before suspension
+    expect(contextsBefore).toEqual({
+      outer: {level: 'outer', id: 1},
+      inner: {level: 'inner', id: 2},
+    });
+
+    // Resolve in a new macrotask
+    await new Promise(r => setImmediate(r));
+    resolve();
+    await jest.runAllTimers();
+    await completed;
+
+    // Both contexts must be preserved after suspension with correct values
+    expect(contextsAfter).toEqual({
+      outer: {level: 'outer', id: 1},
+      inner: {level: 'inner', id: 2},
+    });
+    expect(output.result).toContain('Done');
+  });
+
   it('should not leak async context between requests after cleanup', async () => {
     // This test verifies that the async context snapshot is properly cleaned up
     // between requests, ensuring no context leakage.
