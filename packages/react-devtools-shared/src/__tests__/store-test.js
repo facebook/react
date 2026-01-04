@@ -3186,12 +3186,11 @@ describe('Store', () => {
         <Suspense name="main" rects={null}>
     `);
 
-    await expect(actAsync(() => resolveContent('content'))).rejects.toThrow(
-      'We are cleaning up async info that was not on the parent Suspense boundary. This is a bug in React.',
-    );
+    await actAsync(() => resolveContent('content'));
     expect(store).toMatchInlineSnapshot(`
       [root]
-          <Suspense name="main">
+        ▾ <Suspense name="main">
+            <Component>
       [suspense-root]  rects={null}
         <Suspense name="main" rects={null}>
     `);
