@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic} from '../CompilerError';
+import {CompilerDiagnostic, ErrorCategory} from '../CompilerError';
 import {
   FunctionExpression,
   GeneratedSource,
@@ -162,7 +162,15 @@ export type AliasingEffect =
   /**
    * Indicates a side-effect that is not safe during render
    */
-  | {kind: 'Impure'; into: Place; reason: string; description: string}
+  | {
+      kind: 'Impure';
+      into: Place;
+      category: ErrorCategory;
+      reason: string;
+      description: string;
+      usageMessage: string;
+      sourceMessage: string;
+    }
   /**
    * Indicates that a given place is accessed during render. Used to distingush
    * hook arguments that are known to be called immediately vs those used for
@@ -227,6 +235,8 @@ export function hashEffect(effect: AliasingEffect): string {
         effect.into.identifier.id,
         effect.reason,
         effect.description,
+        effect.usageMessage,
+        effect.sourceMessage,
       ].join(':');
     case 'Render': {
       return [effect.kind, effect.place.identifier.id].join(':');
