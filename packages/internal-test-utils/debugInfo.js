@@ -1,9 +1,5 @@
 'use strict';
 
-const path = require('path');
-
-const repoRoot = path.resolve(__dirname, '../../');
-
 type DebugInfoConfig = {
   ignoreProps?: boolean,
   ignoreRscStreamInfo?: boolean,
@@ -34,7 +30,7 @@ function normalizeStack(stack) {
     const [name, file, line, col, enclosingLine, enclosingCol] = stack[i];
     copy.push([
       name,
-      file.replace(repoRoot, ''),
+      file.replace(__REACT_ROOT_PATH_TEST__, ''),
       line,
       col,
       enclosingLine,

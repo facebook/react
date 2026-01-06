@@ -702,7 +702,7 @@ function codegenReactiveScope(
     outputComments.push(name.name);
     if (!cx.hasDeclared(identifier)) {
       statements.push(
-        t.variableDeclaration('let', [t.variableDeclarator(name)]),
+        t.variableDeclaration('let', [createVariableDeclarator(name, null)]),
       );
     }
     cacheLoads.push({name, index, value: wrapCacheDep(cx, name)});
@@ -1387,7 +1387,7 @@ function codegenInstructionNullable(
           suggestions: null,
         });
         return createVariableDeclaration(instr.loc, 'const', [
-          t.variableDeclarator(codegenLValue(cx, lvalue), value),
+          createVariableDeclarator(codegenLValue(cx, lvalue), value),
         ]);
       }
       case InstructionKind.Function: {
@@ -1451,7 +1451,7 @@ function codegenInstructionNullable(
           suggestions: null,
         });
         return createVariableDeclaration(instr.loc, 'let', [
-          t.variableDeclarator(codegenLValue(cx, lvalue), value),
+          createVariableDeclarator(codegenLValue(cx, lvalue), value),
         ]);
       }
       case InstructionKind.Reassign: {
@@ -1691,6 +1691,9 @@ function withLoc<T extends (...args: Array<any>) => t.Node>(
   };
 }
 
+const createIdentifier = withLoc(t.identifier);
+const createArrayPattern = withLoc(t.arrayPattern);
+const createObjectPattern = withLoc(t.objectPattern);
 const createBinaryExpression = withLoc(t.binaryExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
 const _createLabelledStatement = withLoc(t.labeledStatement);
@@ -1721,6 +1724,31 @@ const createThrowStatement = withLoc(t.throwStatement);
 const createTryStatement = withLoc(t.tryStatement);
 const createBreakStatement = withLoc(t.breakStatement);
 const createContinueStatement = withLoc(t.continueStatement);
+
+function createVariableDeclarator(
+  id: t.LVal,
+  init?: t.Expression | null,
+): t.VariableDeclarator {
+  const node = t.variableDeclarator(id, init);
+
+  /*
+   * The variable declarator location is not preserved in HIR, however, we can use the
+   * start location of the id and the end location of the init to recreate the
+   * exact original variable declarator location.
+   *
+   * Or if init is null, we likely have a declaration without an initializer, so we can use the id.loc.end as the end location.
+   */
+  if (id.loc && (init === null || init?.loc)) {
+    node.loc = {
+      start: id.loc.start,
+      end: init?.loc?.end ?? id.loc.end,
+      filename: id.loc.filename,
+      identifierName: undefined,
+    };
+  }
+
+  return node;
+}
 
 function createHookGuard(
   guard: ExternalFunction,
@@ -1829,7 +1857,7 @@ function codegenInstruction(
       );
     } else {
       return createVariableDeclaration(instr.loc, 'const', [
-        t.variableDeclarator(
+        createVariableDeclarator(
           convertIdentifier(instr.lvalue.identifier),
           expressionValue,
         ),
@@ -2756,7 +2784,7 @@ function codegenArrayPattern(
 ): t.ArrayPattern {
   const hasHoles = !pattern.items.every(e => e.kind !== 'Hole');
   if (hasHoles) {
-    const result = t.arrayPattern([]);
+    const result = createArrayPattern(pattern.loc, []);
     /*
      * Older versions of babel have a validation bug fixed by
      * https://github.com/babel/babel/pull/10917
@@ -2777,7 +2805,8 @@ function codegenArrayPattern(
     }
     return result;
   } else {
-    return t.arrayPattern(
+    return createArrayPattern(
+      pattern.loc,
       pattern.items.map(item => {
         if (item.kind === 'Hole') {
           return null;
@@ -2797,7 +2826,8 @@ function codegenLValue(
       return codegenArrayPattern(cx, pattern);
     }
     case 'ObjectPattern': {
-      return t.objectPattern(
+      return createObjectPattern(
+        pattern.loc,
         pattern.properties.map(property => {
           if (property.kind === 'ObjectProperty') {
             const key = codegenObjectPropertyKey(cx, property.key);
@@ -2916,7 +2946,7 @@ function convertIdentifier(identifier: Identifier): t.Identifier {
       suggestions: null,
     },
   );
-  return t.identifier(identifier.name.value);
+  return createIdentifier(identifier.loc, identifier.name.value);
 }
 
 function compareScopeDependency(

@@ -275,17 +275,20 @@ function runWithEnvironment(
       validateNoSetStateInRender(hir).unwrap();
     }
 
-    if (env.config.validateNoDerivedComputationsInEffects_exp) {
+    if (
+      env.config.validateNoDerivedComputationsInEffects_exp &&
+      env.outputMode === 'lint'
+    ) {
       env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
     } else if (env.config.validateNoDerivedComputationsInEffects) {
       validateNoDerivedComputationsInEffects(hir);
     }
 
-    if (env.config.validateNoSetStateInEffects) {
+    if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
       env.logErrors(validateNoSetStateInEffects(hir, env));
     }
 
-    if (env.config.validateNoJSXInTryStatements) {
+    if (env.config.validateNoJSXInTryStatements && env.outputMode === 'lint') {
       env.logErrors(validateNoJSXInTryStatement(hir));
     }
 
@@ -307,7 +310,10 @@ function runWithEnvironment(
   log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
 
   if (env.enableValidations) {
-    if (env.config.validateExhaustiveMemoizationDependencies) {
+    if (
+      env.config.validateExhaustiveMemoizationDependencies ||
+      env.config.validateExhaustiveEffectDependencies
+    ) {
       // NOTE: this relies on reactivity inference running first
       validateExhaustiveDependencies(hir).unwrap();
     }
@@ -320,7 +326,11 @@ function runWithEnvironment(
     value: hir,
   });
 
-  if (env.enableValidations && env.config.validateStaticComponents) {
+  if (
+    env.enableValidations &&
+    env.config.validateStaticComponents &&
+    env.outputMode === 'lint'
+  ) {
     env.logErrors(validateStaticComponents(hir));
   }
 

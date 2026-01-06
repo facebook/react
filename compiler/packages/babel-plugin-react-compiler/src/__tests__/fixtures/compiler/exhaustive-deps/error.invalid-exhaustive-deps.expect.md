@@ -51,7 +51,7 @@ function Component({x, y, z}) {
 ## Error
 
 ```
-Found 5 errors:
+Found 4 errors:
 
 Error: Found missing/extra memoization dependencies
 
@@ -101,7 +101,7 @@ error.invalid-exhaustive-deps.ts:17:6
 
 Inferred dependencies: `[x?.y.z.a?.b]`
 
-Error: Found missing/extra memoization dependencies
+Error: Found extra memoization dependencies
 
 Extra dependencies can cause a value to update more often than it should, resulting in performance problems such as excessive renders or effects firing too often.
 
@@ -143,49 +143,7 @@ error.invalid-exhaustive-deps.ts:31:23
 
 Inferred dependencies: `[]`
 
-Error: Found missing/extra memoization dependencies
-
-Extra dependencies can cause a value to update more often than it should, resulting in performance problems such as excessive renders or effects firing too often.
-
-error.invalid-exhaustive-deps.ts:31:6
-  29 |     return [];
-  30 |     // error: unnecessary
-> 31 |   }, [x, y.z, z?.y?.a, UNUSED_GLOBAL]);
-     |       ^ Unnecessary dependency `x`
-  32 |   const ref1 = useRef(null);
-  33 |   const ref2 = useRef(null);
-  34 |   const ref = z ? ref1 : ref2;
-
-error.invalid-exhaustive-deps.ts:31:9
-  29 |     return [];
-  30 |     // error: unnecessary
-> 31 |   }, [x, y.z, z?.y?.a, UNUSED_GLOBAL]);
-     |          ^^^ Unnecessary dependency `y.z`
-  32 |   const ref1 = useRef(null);
-  33 |   const ref2 = useRef(null);
-  34 |   const ref = z ? ref1 : ref2;
-
-error.invalid-exhaustive-deps.ts:31:14
-  29 |     return [];
-  30 |     // error: unnecessary
-> 31 |   }, [x, y.z, z?.y?.a, UNUSED_GLOBAL]);
-     |               ^^^^^^^ Unnecessary dependency `z?.y?.a`
-  32 |   const ref1 = useRef(null);
-  33 |   const ref2 = useRef(null);
-  34 |   const ref = z ? ref1 : ref2;
-
-error.invalid-exhaustive-deps.ts:31:23
-  29 |     return [];
-  30 |     // error: unnecessary
-> 31 |   }, [x, y.z, z?.y?.a, UNUSED_GLOBAL]);
-     |                        ^^^^^^^^^^^^^ Unnecessary dependency `UNUSED_GLOBAL`. Values declared outside of a component/hook should not be listed as dependencies as the component will not re-render if they change
-  32 |   const ref1 = useRef(null);
-  33 |   const ref2 = useRef(null);
-  34 |   const ref = z ? ref1 : ref2;
-
-Inferred dependencies: `[]`
-
-Error: Found missing/extra memoization dependencies
+Error: Found missing memoization dependencies
 
 Missing dependencies can cause a value to update less often than it should, resulting in stale UI.
 
