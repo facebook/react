@@ -603,11 +603,6 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
-
-        // TODO: why does it render again?
-        ...(gate('enableParallelTransitions')
-          ? ['C label', 'Suspend! [C content]', 'Loading...']
-          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -733,11 +728,6 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
-
-        // TODO: why does it render again?
-        ...(gate('enableParallelTransitions')
-          ? ['C label', 'Suspend! [C content]', 'Loading...']
-          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -833,14 +823,7 @@ describe('ReactTransition', () => {
           setShowB(true);
         });
       });
-      assertLog([
-        'Suspend! [B]',
-        'Loading...',
-        // TODO: why does it render again?
-        ...(gate('enableParallelTransitions')
-          ? ['Suspend! [B]', 'Loading...']
-          : []),
-      ]);
+      assertLog(['Suspend! [B]', 'Loading...']);
       expect(root).toMatchRenderedOutput(null);
 
       // Before A or B loads, switch to C. This should entangle C with B, and
@@ -851,17 +834,7 @@ describe('ReactTransition', () => {
           setShowC(true);
         });
       });
-      assertLog([
-        'Suspend! [C]',
-        'Loading...',
-        // TODO: why does it render again?
-        ...(gate('enableParallelTransitions')
-          ? ['Suspend! [C]', 'Loading...']
-          : []),
-        ...(gate('enableParallelTransitions')
-          ? ['Suspend! [C]', 'Loading...']
-          : []),
-      ]);
+      assertLog(['Suspend! [C]', 'Loading...']);
       expect(root).toMatchRenderedOutput(null);
 
       // Now the data starts resolving out of order.
@@ -873,14 +846,7 @@ describe('ReactTransition', () => {
           resolveText('B');
         });
       });
-      assertLog([
-        'Suspend! [C]',
-        'Loading...',
-        // TODO: why does it render again?
-        ...(gate('enableParallelTransitions')
-          ? ['Suspend! [C]', 'Loading...']
-          : []),
-      ]);
+      assertLog(['Suspend! [C]', 'Loading...']);
       expect(root).toMatchRenderedOutput(null);
 
       // Now resolve A. Again, this will attempt to render C, since everything

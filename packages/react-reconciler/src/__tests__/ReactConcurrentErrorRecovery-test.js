@@ -344,11 +344,7 @@ describe('ReactConcurrentErrorRecovery', () => {
         );
       });
     });
-    assertLog([
-      'Suspend! [Async]',
-      // TODO: why does it render again?
-      ...(gate('enableParallelTransitions') ? ['Suspend! [Async]'] : []),
-    ]);
+    assertLog(['Suspend! [Async]']);
     expect(root).toMatchRenderedOutput(null);
 
     // Continues rendering once data resolves
@@ -422,14 +418,7 @@ describe('ReactConcurrentErrorRecovery', () => {
           );
         });
       });
-      assertLog([
-        'Suspend! [Async]',
-        'Caught an error: Oops!',
-        // TODO: why does it render again?
-        ...(gate('enableParallelTransitions')
-          ? ['Suspend! [Async]', 'Caught an error: Oops!']
-          : []),
-      ]);
+      assertLog(['Suspend! [Async]', 'Caught an error: Oops!']);
       expect(root).toMatchRenderedOutput(null);
 
       await act(async () => {

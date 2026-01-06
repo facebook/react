@@ -636,16 +636,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'B',
       // end pre-warming
       'Loading...',
-      // TODO: why does it render again?
-      ...(gate('enableParallelTransitions')
-        ? [
-            'Suspend! [A]',
-            // pre-warming
-            'B',
-            // end pre-warming
-            'Loading...',
-          ]
-        : []),
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
@@ -1034,14 +1024,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Schedule another low priority update.
     React.startTransition(() => ReactNoop.render(<App text="B" />));
     // This update should also suspend.
-    await waitForAll([
-      'Suspend! [B]',
-      'Loading...',
-      // TODO: why does it render again?
-      ...(gate('enableParallelTransitions')
-        ? ['Suspend! [B]', 'Loading...']
-        : []),
-    ]);
+    await waitForAll(['Suspend! [B]', 'Loading...']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="S" />);
 
     // Schedule a regular update. Its expiration time will fall between
@@ -3815,10 +3798,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         '',
         'Suspend! [b]',
         'Loading...',
-        // TODO: why does it render again?
-        ...(gate('enableParallelTransitions')
-          ? ['Suspend! [b]', 'Loading...']
-          : []),
       ]);
     });
     assertLog([]);
