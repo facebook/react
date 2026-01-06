@@ -5,8 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic, CompilerError, Effect, ErrorCategory} from '..';
-import {HIRFunction, IdentifierId, isUseRefType} from '../HIR';
+import {CompilerDiagnostic, CompilerError, Effect} from '..';
+import {
+  areEqualSourceLocations,
+  HIRFunction,
+  IdentifierId,
+  isUseRefType,
+} from '../HIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
@@ -246,23 +251,23 @@ function inferImpureValues(
           continue;
         }
         const impureEffect = impure.get(effect.place.identifier.id)!;
-        error.pushDiagnostic(
-          CompilerDiagnostic.create({
-            category: ErrorCategory.Purity,
-            reason: 'Cannot access impure value during render',
-            description: impureEffect.description,
-          })
-            .withDetails({
-              kind: 'error',
-              loc: effect.place.loc,
-              message: 'Cannot access impure value during render',
-            })
-            .withDetails({
-              kind: 'error',
-              loc: impureEffect.into.loc,
-              message: impureEffect.reason,
-            }),
-        );
+        const diagnostic = CompilerDiagnostic.create({
+          category: impureEffect.category,
+          reason: impureEffect.reason,
+          description: impureEffect.description,
+        }).withDetails({
+          kind: 'error',
+          loc: effect.place.loc,
+          message: impureEffect.usageMessage,
+        });
+        if (!areEqualSourceLocations(effect.place.loc, impureEffect.into.loc)) {
+          diagnostic.withDetails({
+            kind: 'error',
+            loc: impureEffect.into.loc,
+            message: impureEffect.sourceMessage,
+          });
+        }
+        error.pushDiagnostic(diagnostic);
       }
     }
   }
@@ -274,8 +279,11 @@ function inferImpureValues(
       impureEffects.push({
         kind: 'Impure',
         into: {...place},
+        category: impureEffect.category,
         reason: impureEffect.reason,
         description: impureEffect.description,
+        sourceMessage: impureEffect.sourceMessage,
+        usageMessage: impureEffect.usageMessage,
       });
     }
   }

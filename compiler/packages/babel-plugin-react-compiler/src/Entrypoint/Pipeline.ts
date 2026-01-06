@@ -271,10 +271,6 @@ function runWithEnvironment(
       assertValidMutableRanges(hir);
     }
 
-    if (env.config.validateRefAccessDuringRender) {
-      validateNoRefAccessInRender(hir).unwrap();
-    }
-
     if (env.config.validateNoSetStateInRender) {
       validateNoSetStateInRender(hir).unwrap();
     }
@@ -293,8 +289,15 @@ function runWithEnvironment(
       env.logErrors(validateNoJSXInTryStatement(hir));
     }
 
-    if (env.config.validateNoImpureFunctionsInRender) {
+    if (
+      env.config.validateNoImpureFunctionsInRender ||
+      env.config.validateRefAccessDuringRender
+    ) {
       validateNoImpureValuesInRender(hir).unwrap();
+    }
+
+    if (env.config.validateRefAccessDuringRender) {
+      validateNoRefAccessInRender(hir).unwrap();
     }
 
     validateNoFreezingKnownMutableFunctions(hir).unwrap();
