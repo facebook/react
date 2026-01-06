@@ -27,6 +27,7 @@ import {
   InstructionKind,
   InstructionValue,
   isArrayType,
+  isJsxOrJsxUnionType,
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
@@ -1988,8 +1989,11 @@ function computeSignatureForInstruction(
         effects.push({
           kind: 'Impure',
           into: lvalue,
+          category: ErrorCategory.Refs,
           reason: `Cannot access ref value during render`,
           description: REF_ERROR_DESCRIPTION,
+          sourceMessage: `Ref is initially accessed`,
+          usageMessage: `Ref value is used during render`,
         });
       }
       break;
@@ -2156,6 +2160,15 @@ function computeSignatureForInstruction(
           into: lvalue,
         });
       }
+      if (value.children != null) {
+        // Children are typically called during render, not used as an event/effect callback
+        for (const child of value.children) {
+          effects.push({
+            kind: 'Render',
+            place: child,
+          });
+        }
+      }
       if (value.kind === 'JsxExpression') {
         if (value.tag.kind === 'Identifier') {
           // Tags are render function, by definition they're called during render
@@ -2164,23 +2177,22 @@ function computeSignatureForInstruction(
             place: value.tag,
           });
         }
-        if (value.children != null) {
-          // Children are typically called during render, not used as an event/effect callback
-          for (const child of value.children) {
+        for (const prop of value.props) {
+          const place =
+            prop.kind === 'JsxAttribute' ? prop.place : prop.argument;
+          if (place.identifier.type.kind === 'Function') {
+            if (isJsxOrJsxUnionType(place.identifier.type.return)) {
+              effects.push({
+                kind: 'Render',
+                place,
+              });
+            }
+          } else {
             effects.push({
               kind: 'Render',
-              place: child,
+              place,
             });
           }
-        }
-        for (const prop of value.props) {
-          if (prop.kind === 'JsxAttribute' && /^on[A-Z]/.test(prop.name)) {
-            continue;
-          }
-          effects.push({
-            kind: 'Render',
-            place: prop.kind === 'JsxAttribute' ? prop.place : prop.argument,
-          });
         }
       }
       break;
@@ -2448,14 +2460,17 @@ function computeEffectsForLegacySignature(
     effects.push({
       kind: 'Impure',
       into: lvalue,
-      reason:
-        signature.canonicalName != null
-          ? `\`${signature.canonicalName}\` is an impure function.`
-          : 'This function is impure',
+      category: ErrorCategory.Purity,
+      reason: 'Cannot access impure value during render',
       description:
         'Calling an impure function can produce unstable results that update ' +
         'unpredictably when the component happens to re-render. ' +
         '(https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
+      sourceMessage:
+        signature.canonicalName != null
+          ? `\`${signature.canonicalName}\` is an impure function.`
+          : 'This function is impure',
+      usageMessage: 'Cannot access impure value during render',
     });
   }
   if (signature.knownIncompatible != null && state.env.enableValidations) {
@@ -2755,14 +2770,19 @@ function computeEffectsForSignature(
         break;
       }
       case 'Impure': {
-        const values = substitutions.get(effect.into.identifier.id) ?? [];
-        for (const value of values) {
-          effects.push({
-            kind: effect.kind,
-            into: value,
-            reason: effect.reason,
-            description: effect.description,
-          });
+        if (env.config.validateNoImpureFunctionsInRender) {
+          const values = substitutions.get(effect.into.identifier.id) ?? [];
+          for (const value of values) {
+            effects.push({
+              kind: effect.kind,
+              into: value,
+              category: effect.category,
+              reason: effect.reason,
+              description: effect.description,
+              sourceMessage: effect.sourceMessage,
+              usageMessage: effect.usageMessage,
+            });
+          }
         }
         break;
       }
