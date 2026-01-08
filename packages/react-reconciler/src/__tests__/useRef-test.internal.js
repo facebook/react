@@ -22,6 +22,7 @@ describe('useRef', () => {
   let useState;
   let waitForAll;
   let assertLog;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     React = require('react');
@@ -29,6 +30,8 @@ describe('useRef', () => {
     Scheduler = require('scheduler');
 
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     useCallback = React.useCallback;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
@@ -123,6 +126,15 @@ describe('useRef', () => {
 
     ReactNoop.render(<Counter />);
     await waitForAll([3]);
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in Counter (at **)',
+      ]);
+    }
 
     ReactNoop.render(<Counter />);
     await waitForAll([3]);

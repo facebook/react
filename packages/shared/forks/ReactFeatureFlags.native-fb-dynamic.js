@@ -27,3 +27,4 @@ export const enableFragmentRefs = __VARIANT__;
 export const enableFragmentRefsScrollIntoView = __VARIANT__;
 export const enableFragmentRefsInstanceHandles = __VARIANT__;
 export const enableComponentPerformanceTrack = __VARIANT__;
+export const disableSetStateInRenderOnMount = __VARIANT__;
