@@ -51,7 +51,7 @@ function Component() {
   const ref = useRef(null);
   const [state, setState] = useState(false);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       ref.current = "Ok";
     };
@@ -62,7 +62,7 @@ function Component() {
   const setRef = t0;
   let t1;
   let t2;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       setRef();
     };
@@ -76,7 +76,7 @@ function Component() {
   useEffect(t1, t2);
   let t3;
   let t4;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = () => {
       setState(true);
     };

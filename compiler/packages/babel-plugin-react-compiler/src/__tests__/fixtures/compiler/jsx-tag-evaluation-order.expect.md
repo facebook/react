@@ -33,7 +33,7 @@ function Component(props) {
 
   const t0 = props.value;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = <StaticText2 />;
     $[0] = t1;
   } else {

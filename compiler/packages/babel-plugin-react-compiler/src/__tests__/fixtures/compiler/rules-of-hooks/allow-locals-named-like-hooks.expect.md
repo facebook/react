@@ -40,7 +40,7 @@ function Component(props) {
   let x;
   if (useFeature) {
     let t0;
-    if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t0 = [useFeature + useFeature].push(-useFeature);
       $[0] = t0;
     } else {
@@ -52,7 +52,7 @@ function Component(props) {
   const y = useFeature;
   const z = useFeature.useProperty;
   let t0;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = (
       <Stringify val={useFeature}>
         {x}

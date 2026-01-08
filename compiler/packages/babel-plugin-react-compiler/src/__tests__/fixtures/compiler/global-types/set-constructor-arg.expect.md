@@ -40,7 +40,7 @@ function useFoo(t0) {
   const $ = _c(15);
   const { propArr } = t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = [1, 2, 3];
     $[0] = t1;
   } else {

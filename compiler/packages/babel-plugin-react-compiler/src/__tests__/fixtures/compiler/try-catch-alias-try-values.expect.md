@@ -34,7 +34,7 @@ const { throwInput } = require("shared-runtime");
 function Component(props) {
   const $ = _c(1);
   let x;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     let y;
     x = [];
     try {

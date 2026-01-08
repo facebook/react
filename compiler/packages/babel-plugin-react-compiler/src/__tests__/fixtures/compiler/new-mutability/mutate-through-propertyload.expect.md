@@ -20,7 +20,7 @@ import { c as _c } from "react/compiler-runtime"; // @enableNewMutationAliasingM
 function Component(t0) {
   const $ = _c(1);
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const x = {};
     const y = { x };
     const z = y.x;

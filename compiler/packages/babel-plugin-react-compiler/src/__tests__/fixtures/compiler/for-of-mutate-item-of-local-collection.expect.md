@@ -29,7 +29,7 @@ import { makeObject_Primitives } from "shared-runtime";
 function Component(props) {
   const $ = _c(1);
   let items;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     items = [makeObject_Primitives(), makeObject_Primitives()];
     for (const x of items) {
       x.a = x.a + 1;

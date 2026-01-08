@@ -75,7 +75,7 @@ function useFoo() {
   const $ = _c(5);
   const count = useRef(0);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       count.current = count.current + 1;
       const id = count.current;
@@ -87,7 +87,7 @@ function useFoo() {
   }
   const updateCountPostfix = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       const id_0 = (count.current = count.current + 1);
       return id_0;
@@ -99,7 +99,7 @@ function useFoo() {
   const updateCountPrefix = t1;
   let t2;
   let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = () => {
       const id_1 = updateCountPostfix();
       console.log(`id = ${id_1}`);
@@ -114,7 +114,7 @@ function useFoo() {
   }
   useEffect(t2, t3);
   let t4;
-  if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[4] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t4 = { count, updateCountPostfix, updateCountPrefix };
     $[4] = t4;
   } else {

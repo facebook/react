@@ -34,7 +34,7 @@ function Component(props) {
   const ref = React.useRef();
   const [, setX] = React.useState(false);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       setX(true);
       ref.current = true;

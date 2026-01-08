@@ -33,7 +33,7 @@ function foo(a) {
     x = {};
     if (a) {
       let t0;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t0 = {};
         $[2] = t0;
       } else {
@@ -43,7 +43,7 @@ function foo(a) {
       x.y = y;
     } else {
       let t0;
-      if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t0 = {};
         $[3] = t0;
       } else {

@@ -29,7 +29,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component() {
   const $ = _c(1);
   let ret;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const x = [0, 1, 2, 3];
     ret = [];
     for (const item of x) {

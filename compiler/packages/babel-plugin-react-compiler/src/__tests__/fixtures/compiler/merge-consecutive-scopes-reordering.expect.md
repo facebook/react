@@ -53,7 +53,7 @@ function Component() {
     t1 = $[2];
   }
   let t2;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = <Stringify text="Counter" />;
     $[3] = t2;
   } else {

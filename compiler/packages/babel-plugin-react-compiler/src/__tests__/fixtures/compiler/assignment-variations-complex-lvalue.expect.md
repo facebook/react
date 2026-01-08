@@ -24,7 +24,7 @@ import { c as _c } from "react/compiler-runtime";
 function g() {
   const $ = _c(1);
   let x;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     x = { y: { z: 1 } };
     x.y.z = x.y.z + 1;
     x.y.z = x.y.z * 2;

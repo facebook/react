@@ -23,7 +23,7 @@ function Component(props) {
   const $ = _c(4);
   let t0;
   let value;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const pattern = /foo/g;
     value = makeValue();
     t0 = pattern.test(value);
@@ -35,7 +35,7 @@ function Component(props) {
   }
   if (t0) {
     let t1;
-    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t1 = <div>{value}</div>;
       $[2] = t1;
     } else {
@@ -44,7 +44,7 @@ function Component(props) {
     return t1;
   }
   let t1;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = <div>Default</div>;
     $[3] = t1;
   } else {

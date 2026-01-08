@@ -77,7 +77,7 @@ function Component() {
 
   const y = useHook();
   let z;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     z = [];
     for (let i = 0; i < 10; i++) {
       const obj = makeObject_Primitives();
@@ -106,7 +106,7 @@ const Context = createContext();
 function Wrapper() {
   const $ = _c(1);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = (
       <Context value={42}>
         <Component />

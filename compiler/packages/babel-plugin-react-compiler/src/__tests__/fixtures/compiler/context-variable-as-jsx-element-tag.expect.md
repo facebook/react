@@ -33,7 +33,7 @@ import { Stringify } from "shared-runtime";
 function Component(props) {
   const $ = _c(3);
   let Component;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     Component = Stringify;
 
     Component;

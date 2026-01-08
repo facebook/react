@@ -69,7 +69,7 @@ function Component(t0) {
     t3 = $[5];
   }
   let t4;
-  if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[6] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t4 = [];
     $[6] = t4;
   } else {

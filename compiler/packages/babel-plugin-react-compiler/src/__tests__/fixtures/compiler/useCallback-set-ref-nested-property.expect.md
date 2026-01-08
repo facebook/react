@@ -36,7 +36,7 @@ import { useCallback, useRef } from "react";
 function Component(t0) {
   const $ = _c(3);
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = { inner: null };
     $[0] = t1;
   } else {
@@ -44,7 +44,7 @@ function Component(t0) {
   }
   const ref = useRef(t1);
   let t2;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = (event) => {
       ref.current.inner = event.target.value;
     };
@@ -54,7 +54,7 @@ function Component(t0) {
   }
   const onChange = t2;
   let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = <input onChange={onChange} />;
     $[2] = t3;
   } else {

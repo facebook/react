@@ -52,7 +52,7 @@ const externalStore = {
 function ExternalDataComponent() {
   const $ = _c(4);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};
     $[0] = t0;
   } else {
@@ -61,7 +61,7 @@ function ExternalDataComponent() {
   const [, forceUpdate] = useState(t0);
   let t1;
   let t2;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       const unsubscribe = externalStore.subscribe(() => {
         forceUpdate({});
@@ -77,7 +77,7 @@ function ExternalDataComponent() {
   }
   useEffect(t1, t2);
   let t3;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = <div>{externalStore.getValue()}</div>;
     $[3] = t3;
   } else {

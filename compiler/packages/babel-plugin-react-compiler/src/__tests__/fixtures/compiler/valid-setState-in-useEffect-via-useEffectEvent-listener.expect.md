@@ -46,7 +46,7 @@ function Component() {
   const $ = _c(7);
   const [state, setState] = useState(0);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       setState(10);
     };
@@ -67,7 +67,7 @@ function Component() {
   }
   useEffect(t1);
   let t2;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = () => {
       setTimeout(() => {
         setState(20);
@@ -89,7 +89,7 @@ function Component() {
     t3 = $[5];
   }
   let t4;
-  if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[6] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t4 = [];
     $[6] = t4;
   } else {

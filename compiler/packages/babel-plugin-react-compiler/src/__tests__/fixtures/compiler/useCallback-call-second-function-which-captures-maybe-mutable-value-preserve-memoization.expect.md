@@ -51,7 +51,7 @@ import {
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = makeObject_Primitives();
     $[0] = t0;
   } else {
@@ -61,7 +61,7 @@ function Component(props) {
 
   useHook();
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       logValue(object);
     };
@@ -71,7 +71,7 @@ function Component(props) {
   }
   const log = t1;
   let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = () => {
       log();
     };
@@ -83,7 +83,7 @@ function Component(props) {
 
   identity(object);
   let t3;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = <div onClick={onClick} />;
     $[3] = t3;
   } else {

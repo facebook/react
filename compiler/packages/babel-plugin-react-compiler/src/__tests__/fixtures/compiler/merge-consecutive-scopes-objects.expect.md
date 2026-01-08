@@ -47,7 +47,7 @@ function Component(props) {
   const $ = _c(11);
   const [state, setState] = useState(0);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = { component: Stringify, props: { text: "Counter" } };
     $[0] = t0;
   } else {
@@ -70,7 +70,7 @@ function Component(props) {
     t2 = $[4];
   }
   let t3;
-  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[5] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = ["increment"];
     $[5] = t3;
   } else {

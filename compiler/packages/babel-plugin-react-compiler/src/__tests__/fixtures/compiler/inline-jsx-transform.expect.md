@@ -135,7 +135,7 @@ function GrandChild(t0) {
   const $ = _c2(3);
   const { className } = t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     if (DEV) {
       t1 = <React.Fragment key="fragmentKey">Hello world</React.Fragment>;
     } else {
@@ -176,7 +176,7 @@ function ParentAndRefAndKey(props) {
   const $ = _c2(1);
   const testRef = useRef();
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     if (DEV) {
       t0 = <Parent a="a" b={{ b: "b" }} c={C} key="testKey" ref={testRef} />;
     } else {
@@ -321,7 +321,7 @@ const propsToSpread = { a: "a", b: "b", c: "c" };
 function PropsSpread() {
   const $ = _c2(1);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     let t1;
     if (DEV) {
       t1 = <Test key="a" {...propsToSpread} />;
@@ -373,7 +373,7 @@ function ConditionalJsx(t0) {
   const $ = _c2(2);
   const { shouldWrap } = t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     if (DEV) {
       t1 = <div>Hello</div>;
     } else {
@@ -394,7 +394,7 @@ function ConditionalJsx(t0) {
   if (shouldWrap) {
     const t2 = content;
     let t3;
-    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       if (DEV) {
         t3 = <Parent>{t2}</Parent>;
       } else {

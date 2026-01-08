@@ -38,21 +38,21 @@ import { StaticText1 } from "shared-runtime";
 function Component() {
   const $ = _c(3);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = <StaticText1 />;
     $[0] = t0;
   } else {
     t0 = $[0];
   }
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = <StaticText1 />;
     $[1] = t1;
   } else {
     t1 = $[1];
   }
   let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = (
       <div>
         Before text{t0}Middle text

@@ -43,7 +43,7 @@ function useFoo(t0) {
   const { input, cond } = t0;
   if (cond) {
     let t1;
-    if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t1 = { result: "early return" };
       $[0] = t1;
     } else {

@@ -29,7 +29,7 @@ import { invoke } from "shared-runtime";
 function Foo() {
   const $ = _c(1);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const x = [{ value: 0 }, { value: 1 }, { value: 2 }];
     const foo = (param) => x[param].value;
     t0 = invoke(foo, 1);

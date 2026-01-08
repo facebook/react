@@ -49,7 +49,7 @@ function Component(props) {
   const $ = _c(6);
   let t0;
   if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.cond) {
-    t0 = Symbol.for("react.early_return_sentinel");
+    t0 = globalThis.Symbol.for("react.early_return_sentinel");
     bb0: {
       const x = [];
       if (props.cond) {
@@ -76,7 +76,7 @@ function Component(props) {
   } else {
     t0 = $[3];
   }
-  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+  if (t0 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t0;
   }
 }

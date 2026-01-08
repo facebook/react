@@ -74,7 +74,7 @@ function ComponentA(props) {
   let a_DEBUG;
   let t0;
   if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.d) {
-    t0 = Symbol.for("react.early_return_sentinel");
+    t0 = globalThis.Symbol.for("react.early_return_sentinel");
     bb0: {
       a_DEBUG = [];
       a_DEBUG.push(props.a);
@@ -94,7 +94,7 @@ function ComponentA(props) {
     a_DEBUG = $[3];
     t0 = $[4];
   }
-  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+  if (t0 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t0;
   }
   return a_DEBUG;
@@ -143,7 +143,7 @@ function ComponentC(props) {
     $[2] !== props.c ||
     $[3] !== props.d
   ) {
-    t0 = Symbol.for("react.early_return_sentinel");
+    t0 = globalThis.Symbol.for("react.early_return_sentinel");
     bb0: {
       a = [];
       a.push(props.a);
@@ -165,7 +165,7 @@ function ComponentC(props) {
     a = $[4];
     t0 = $[5];
   }
-  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+  if (t0 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t0;
   }
   return a;
@@ -184,7 +184,7 @@ function ComponentD(props) {
     $[2] !== props.c ||
     $[3] !== props.d
   ) {
-    t0 = Symbol.for("react.early_return_sentinel");
+    t0 = globalThis.Symbol.for("react.early_return_sentinel");
     bb0: {
       a = [];
       a.push(props.a);
@@ -206,7 +206,7 @@ function ComponentD(props) {
     a = $[4];
     t0 = $[5];
   }
-  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+  if (t0 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t0;
   }
   return a;

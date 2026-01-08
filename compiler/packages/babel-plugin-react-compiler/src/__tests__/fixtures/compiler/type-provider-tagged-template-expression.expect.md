@@ -43,7 +43,7 @@ export function Component(t0) {
     }
   `;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = <div>{fragment}</div>;
     $[0] = t1;
   } else {

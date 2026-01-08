@@ -35,7 +35,7 @@ function Foo(props, ref) {
   let t0;
   let value;
   if ($[0] !== ref) {
-    t0 = Symbol.for("react.early_return_sentinel");
+    t0 = globalThis.Symbol.for("react.early_return_sentinel");
     bb0: {
       value = {};
       if (CONST_TRUE) {
@@ -53,7 +53,7 @@ function Foo(props, ref) {
     t0 = $[1];
     value = $[2];
   }
-  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+  if (t0 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t0;
   }
   if (CONST_TRUE) {
