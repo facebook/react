@@ -73,7 +73,11 @@ function calculateInitialScrollOffset(
   return (inspectedElementIndex - 3) * elementHeight;
 }
 
-export default function Tree(): React.Node {
+export type TreeProps = {
+  toggleActivityList: React.Node,
+};
+
+export default function Tree({toggleActivityList}: TreeProps): React.Node {
   const dispatch = useContext(TreeDispatcherContext);
   const {
     activityID,
@@ -453,6 +457,7 @@ export default function Tree(): React.Node {
     <TreeFocusedContext.Provider value={treeFocused}>
       <div className={styles.Tree} ref={treeRef}>
         <div className={styles.SearchInput}>
+          {toggleActivityList}
           {store.supportsClickToInspect && (
             <Fragment>
               <InspectHostNodesToggle />
