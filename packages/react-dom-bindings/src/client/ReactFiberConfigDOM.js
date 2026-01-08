@@ -2892,7 +2892,7 @@ export type FragmentInstanceType = {
   addEventListener(
     type: string,
     listener: EventListener,
-    optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+    optionsOrUseCapture?: AddEventListenerOptionsOrUseCapture,
   ): void,
   removeEventListener(
     type: string,
@@ -2951,7 +2951,7 @@ function addEventListenerToChild(
   child: Fiber,
   type: string,
   listener: EventListener,
-  optionsOrUseCapture?: EventListenerOptionsOrUseCapture,
+  optionsOrUseCapture?: AddEventListenerOptionsOrUseCapture,
 ): boolean {
   const instance = getInstanceFromHostFiber<Instance>(child);
   instance.addEventListener(type, listener, optionsOrUseCapture);
@@ -2998,7 +2998,7 @@ function removeEventListenerFromChild(
   return false;
 }
 function normalizeListenerOptions(
-  opts: ?EventListenerOptionsOrUseCapture,
+  opts: ?AddEventListenerOptionsOrUseCapture,
 ): string {
   if (opts == null) {
     return '0';
@@ -3014,7 +3014,7 @@ function indexOfEventListener(
   eventListeners: Array<StoredEventListener>,
   type: string,
   listener: EventListener,
-  optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
+  optionsOrUseCapture: void | AddEventListenerOptionsOrUseCapture,
 ): number {
   for (let i = 0; i < eventListeners.length; i++) {
     const item = eventListeners[i];
