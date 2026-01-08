@@ -12,7 +12,13 @@ import type {GestureOptions} from 'shared/ReactTypes';
 import type {GestureTimeline, RunningViewTransition} from './ReactFiberConfig';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
-import {GestureLane, markRootFinished, NoLane, NoLanes} from './ReactFiberLane';
+import {
+  GestureLane,
+  markRootPinged,
+  markRootFinished,
+  NoLane,
+  NoLanes,
+} from './ReactFiberLane';
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
 import {getCurrentGestureOffset, stopViewTransition} from './ReactFiberConfig';
 
@@ -118,7 +124,7 @@ export function cancelScheduledGesture(
   root: FiberRoot,
   gesture: ScheduledGesture,
 ): void {
-  const shouldCommit = false; // TODO: Determine if this was released to snap back or commit forward.
+  const shouldCommit = true; // TODO: Determine if this was released to snap back or commit forward.
   gesture.count--;
   if (gesture.count === 0) {
     // TODO: If we're currently rendering this gesture, we need to restart the render
@@ -127,31 +133,33 @@ export function cancelScheduledGesture(
     // no longer be able to update the position of anything but it might be better to
     // just commit the gesture state.
     const runningTransition = gesture.running;
-    if (runningTransition !== null) {
-      if (shouldCommit) {
-        // If we are going to commit this gesture in its to state, we need to wait to
-        // stop it until it commits. We should now schedule a render at the gesture
-        // lane to actually commit it.
-        gesture.committing = true;
-        // TODO: Treat this the same as pinging a Transition.
-      } else {
-        // If we're not going to commit this gesture we can stop the View Transition
-        // right away and delete the scheduled gesture from the pending queue.
-        markRootFinished(
-          root,
-          GestureLane,
-          root.pendingLanes,
-          NoLane,
-          NoLane,
-          NoLanes,
-        );
-        deleteScheduledGesture(root, gesture);
-        gesture.running = null;
+    if (runningTransition !== null && shouldCommit) {
+      // If we are going to commit this gesture in its to state, we need to wait to
+      // stop it until it commits. We should now schedule a render at the gesture
+      // lane to actually commit it.
+      gesture.committing = true;
+      // Ping the root to actually commmit. This is similar to pingSuspendedRoot.
+      markRootPinged(root, GestureLane);
+      ensureRootIsScheduled(root);
+    } else {
+      // If we're not going to commit this gesture we can stop the View Transition
+      // right away and delete the scheduled gesture from the pending queue.
+      markRootFinished(
+        root,
+        GestureLane,
+        root.pendingLanes,
+        NoLane,
+        NoLane,
+        NoLanes,
+      );
+      deleteScheduledGesture(root, gesture);
+      gesture.running = null;
+      if (runningTransition !== null) {
         stopViewTransition(runningTransition);
-        // If we have any more gestures to pick up after this, make sure they're scheduled.
-        if (root.pendingGestures !== null) {
-          ensureRootIsScheduled(root);
-        }
+      }
+      // If we have any more gestures to pick up after this, make sure they're scheduled.
+      if (root.pendingGestures !== null) {
+        ensureRootIsScheduled(root);
       }
     }
   }
@@ -186,6 +194,8 @@ export function stopCommittedGesture(root: FiberRoot) {
   // and stop its View Transition now.
   const committedGesture = root.pendingGestures;
   if (committedGesture !== null) {
+    // Mark it as no longer committing and should no longer be included in rerenders.
+    committedGesture.committing = false;
     const nextGesture = committedGesture.next;
     if (nextGesture === null) {
       // Gestures don't clear their lanes while the gesture is still active but it
