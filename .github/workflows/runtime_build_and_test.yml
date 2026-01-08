@@ -382,9 +382,6 @@ jobs:
           -r=experimental --env=development,
           -r=experimental --env=production,
 
-          # Dev Tools
-          --project=devtools -r=experimental,
-
           # TODO: Update test config to support www build tests
           # - "-r=www-classic --env=development --variant=false"
           # - "-r=www-classic --env=production --variant=false"
@@ -449,6 +446,50 @@ jobs:
       - name: Display structure of build
         run: ls -R build
       - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci
+
+  test_build_devtools:
+    name: yarn test-build (devtools)
+    needs: [build_and_lint, runtime_node_modules_cache]
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+          - 1/5
+          - 2/5
+          - 3/5
+          - 4/5
+          - 5/5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache/restore@v4
+        id: node_modules
+        with:
+          path: |
+            **/node_modules
+          key: runtime-node_modules-v7-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
+      - name: Ensure clean build directory
+        run: rm -rf build
+      - run: yarn install --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - run: yarn test --build --project=devtools -r=experimental --shard=${{ matrix.shard }} --ci
 
   process_artifacts_combined:
     name: Process artifacts combined
