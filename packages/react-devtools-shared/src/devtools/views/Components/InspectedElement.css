@@ -77,3 +77,11 @@
   padding: 0.25rem;
   color: var(--color-console-error-icon);
 }
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  flex: 0 0 1px;
+  margin: 0 0.5rem;
+  background-color: var(--color-border);
+}
