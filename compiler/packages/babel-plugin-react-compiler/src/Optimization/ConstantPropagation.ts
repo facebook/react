@@ -117,7 +117,11 @@ function applyConstantPropagation(
     for (const phi of block.phis) {
       let value = evaluatePhi(phi, constants);
       if (value !== null) {
+        const previousValue = constants.get(phi.place.identifier.id);
         constants.set(phi.place.identifier.id, value);
+        if (previousValue !== value) {
+          hasChanges = true;
+        }
       }
     }
 
@@ -130,9 +134,19 @@ function applyConstantPropagation(
         continue;
       }
       const instr = block.instructions[i]!;
-      const value = evaluateInstruction(constants, instr);
+      const previousConstant = constants.get(instr.lvalue.identifier.id);
+      const value = evaluateInstruction(constants, instr, () => {
+        // Track when constants are invalidated by StoreGlobal
+        hasChanges = true;
+      });
       if (value !== null) {
         constants.set(instr.lvalue.identifier.id, value);
+        if (previousConstant !== value) {
+          hasChanges = true;
+        }
+      } else if (previousConstant !== undefined) {
+        // Constant was invalidated (e.g., by StoreGlobal)
+        hasChanges = true;
       }
     }
 
@@ -239,6 +253,7 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
 function evaluateInstruction(
   constants: Constants,
   instr: Instruction,
+  onInvalidate?: () => void,
 ): Constant | null {
   const value = instr.value;
   switch (value.kind) {
@@ -603,6 +618,32 @@ function evaluateInstruction(
         constants.set(value.lvalue.place.identifier.id, placeValue);
       }
       return placeValue;
+    }
+    case 'StoreGlobal': {
+      // When a global is mutated, we need to invalidate all constants that
+      // are LoadGlobal values for that same global. This prevents the compiler
+      // from optimizing away local variables that captured the global before
+      // the mutation (e.g., `const runNumber = i; i += 1;` where runNumber
+      // should not be replaced with i in the cleanup function).
+      const globalName = value.name;
+      const invalidatedIds: Array<IdentifierId> = [];
+      for (const [identifierId, constant] of constants.entries()) {
+        if (
+          constant.kind === 'LoadGlobal' &&
+          constant.binding.name === globalName
+        ) {
+          invalidatedIds.push(identifierId);
+        }
+      }
+      // Delete after iteration to avoid modifying map during iteration
+      for (const id of invalidatedIds) {
+        constants.delete(id);
+      }
+      // Notify that constants were invalidated
+      if (invalidatedIds.length > 0 && onInvalidate) {
+        onInvalidate();
+      }
+      return null;
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
