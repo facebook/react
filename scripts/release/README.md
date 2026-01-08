@@ -84,28 +84,26 @@ scripts/release/publish.js --tags experimental
 
 ## Publishing a Stable Release
 
-Stable releases should always be created from the "next" channel. This encourages better testing of the actual release artifacts and reduces the chance of unintended changes accidentally being included in a stable release.
+Stable releases should always be created from the "canary" channel. This encourages better testing of the actual release artifacts and reduces the chance of unintended changes accidentally being included in a stable release.
 
-To prepare a stable release, choose a "next" version and run the [`prepare-release-from-npm`](#prepare-release-from-npm) script <sup>1</sup>:
+To prepare a stable release, choose a "canary" version that's published on NPM.
 
-```sh
-scripts/release/prepare-release-from-npm.js --version=0.0.0-241c4467e-20200129
-```
+Use the prerelease part of that version as the `prerelease` parameter in https://github.com/facebook/react/actions/workflows/runtime_releases_from_npm_manual.yml.
+E.g. Use `fd524fe0-20251121` when the published Canary version is `19.3.0-canary-fd524fe0-20251121`.
 
-This script will prompt you to select stable version numbers for each of the packages. It will update the package JSON versions (and dependencies) based on the numbers you select.
+Make sure to also include dependencies in the included packages.
+E.g. `react-dom` has a dependency on `react` and `scheduler` and  
 
-Once this step is complete, you're ready to publish the release:
+### Backport
 
-```sh
-scripts/release/publish.js --tags latest
-
-# Or, if you want to bump "next" as well:
-scripts/release/publish.js --tags latest next
-```
-
-After successfully publishing the release, follow the on-screen instructions to ensure that all of the appropriate post-release steps are executed.
-
-<sup>1: You can omit the `version` param if you just want to promote the latest "next" candidate to stable.</sup>
+1. Pick a release commit to which you want to backport
+1. Create new branch off of that commit
+1. Push new branch to facebook/react
+1. Make sure [ReactVersions.js](./ReactVersions.js) matches the designated versions and doesn't conflict with already published stable versions
+1. Cherry-pick desired commits
+1. Push
+1. [Publish prerelease](./actions/workflows/runtime_prereleases_manual.yml) (`commit` is the newly pushed commit containing cherry-picked changes)
+1. (running the workflow on the commit that should be published) [Promote prerelease from npm](./actions/workflows/runtime_releases_from_npm_manual.yml) 
 
 ## Creating a Patch Release
 

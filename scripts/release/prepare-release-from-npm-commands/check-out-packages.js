@@ -5,19 +5,10 @@
 const {exec} = require('child-process-promise');
 const {existsSync} = require('fs');
 const {join} = require('path');
-const {execRead, logPromise} = require('../utils');
+const {execRead} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, local, packages, version}) => {
-  if (local) {
-    // Sanity test
-    if (!existsSync(join(cwd, 'build', 'node_modules', 'react'))) {
-      console.error(theme.error`No local build exists.`);
-      process.exit(1);
-    }
-    return;
-  }
-
+const run = async (packages, versionsMap, {cwd, prerelease}) => {
   if (!existsSync(join(cwd, 'build'))) {
     await exec(`mkdir ./build`, {cwd});
   }
@@ -31,6 +22,14 @@ const run = async ({cwd, local, packages, version}) => {
   // Checkout "next" release from NPM for all local packages
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
+    if (!(packageName in versionsMap)) {
+      throw Error(
+        `Package "${packageName}" has no version specified. Only ${JSON.stringify(
+          Object.keys(versionsMap)
+        )} are supported are valid package names.`
+      );
+    }
+    const version = versionsMap[packageName] + '-canary-' + prerelease;
 
     // We previously used `npm install` for this,
     // but in addition to checking out a lot of transient dependencies that we don't care about–
@@ -49,12 +48,12 @@ const run = async ({cwd, local, packages, version}) => {
     await exec(`tar -xvzf ${filePath} -C ${nodeModulesPath}`, {cwd});
     await exec(`mv ${tempPackagePath} ${packagePath}`, {cwd});
     await exec(`rm ${filePath}`, {cwd});
+
+    console.log(
+      theme`{green ✔} NPM checkout {package ${packageName}}@{version ${version}}`
+    );
   }
 };
 
-module.exports = async params => {
-  return logPromise(
-    run(params),
-    theme`Checking out "next" from NPM {version ${params.version}}`
-  );
-};
+// Run this directly because logPromise would interfere with printing package dependencies.
+module.exports = run;
