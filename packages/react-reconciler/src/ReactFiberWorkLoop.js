@@ -395,10 +395,7 @@ import {
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberLegacyContext';
 import {logUncaughtError} from './ReactFiberErrorLogger';
-import {
-  deleteScheduledGesture,
-  stopCompletedGestures,
-} from './ReactFiberGestureScheduler';
+import {stopCommittedGesture} from './ReactFiberGestureScheduler';
 import {claimQueuedTransitionTypes} from './ReactFiberTransitionTypes';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
@@ -1537,12 +1534,18 @@ function commitRootWhenReady(
     // This will also track any newly added or appearing ViewTransition
     // components for the purposes of forming pairs.
     accumulateSuspenseyCommit(finishedWork, lanes, suspendedState);
-    if (isViewTransitionEligible || isGestureTransition) {
-      // If we're stopping gestures we don't have to wait for any pending
-      // view transition. We'll stop it when we commit.
-      if (!enableGestureTransition || root.stoppingGestures === null) {
-        suspendOnActiveViewTransition(suspendedState, root.containerInfo);
-      }
+    if (
+      isViewTransitionEligible ||
+      (isGestureRender &&
+        root.pendingGestures !== null &&
+        // If we're committing this gesture and it already has a View Transition
+        // running, then we don't have to wait for that gesture. We'll stop it
+        // when we commit.
+        (root.pendingGestures.running === null ||
+          !root.pendingGestures.committing))
+    ) {
+      // Wait for any pending View Transition (including gestures) to finish.
+      suspendOnActiveViewTransition(suspendedState, root.containerInfo);
     }
     // For timeouts we use the previous fallback commit for retries and
     // the start time of the transition for transitions. This offset
@@ -3489,9 +3492,9 @@ function commitRoot(
       markCommitStopped();
     }
     if (enableGestureTransition) {
-      // Stop any gestures that were completed and is now being reverted.
-      if (root.stoppingGestures !== null) {
-        stopCompletedGestures(root);
+      // Stop any gestures that were committed.
+      if (isGestureRender(lanes)) {
+        stopCommittedGesture(root);
       }
     }
     return;
@@ -3705,20 +3708,19 @@ function commitRoot(
     }
   }
 
-  let willStartViewTransition = shouldStartViewTransition;
   if (enableGestureTransition) {
-    // Stop any gestures that were completed and is now being committed.
-    if (root.stoppingGestures !== null) {
-      stopCompletedGestures(root);
-      // If we are in the process of stopping some gesture we shouldn't start
-      // a View Transition because that would start from the previous state to
-      // the next state.
-      willStartViewTransition = false;
+    // Stop any gestures that were committed.
+    if (isGestureRender(lanes)) {
+      stopCommittedGesture(root);
+      // Note that shouldStartViewTransition should always be false here because
+      // committing a gesture never starts a new View Transition itself since it's
+      // not a View Transition eligible lane. Only follow up Transition commits can
+      // cause animate.
     }
   }
 
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
-  if (enableViewTransition && willStartViewTransition) {
+  if (enableViewTransition && shouldStartViewTransition) {
     if (enableProfilerTimer && enableComponentPerformanceTrack) {
       startAnimating(lanes);
     }
@@ -4252,7 +4254,6 @@ function commitGestureOnRoot(
     ensureRootIsScheduled(root);
     return;
   }
-  deleteScheduledGesture(root, finishedGesture);
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     startAnimating(pendingEffectsLanes);

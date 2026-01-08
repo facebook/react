@@ -12,11 +12,7 @@ import type {GestureOptions} from 'shared/ReactTypes';
 import type {GestureTimeline, RunningViewTransition} from './ReactFiberConfig';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
-import {
-  GestureLane,
-  includesBlockingLane,
-  includesTransitionLane,
-} from './ReactFiberLane';
+import {GestureLane} from './ReactFiberLane';
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
 import {getCurrentGestureOffset, stopViewTransition} from './ReactFiberConfig';
 
@@ -28,6 +24,7 @@ export type ScheduledGesture = {
   rangeEnd: number, // The percentage along the timeline where the "destination" state is reached.
   types: null | TransitionTypes, // Any addTransitionType call made during startGestureTransition.
   running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
+  committing: boolean, // If the gesture was released in a committed state and should actually commit.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
 };
@@ -55,6 +52,7 @@ export function scheduleGesture(
     rangeEnd: 100, // Uninitialized
     types: null,
     running: null,
+    committing: false,
     prev: prev,
     next: null,
   };
@@ -120,10 +118,9 @@ export function cancelScheduledGesture(
   root: FiberRoot,
   gesture: ScheduledGesture,
 ): void {
+  const shouldCommit = false; // TODO: Determine if this was released to snap back or commit forward.
   gesture.count--;
   if (gesture.count === 0) {
-    // Delete the scheduled gesture from the pending queue.
-    deleteScheduledGesture(root, gesture);
     // TODO: If we're currently rendering this gesture, we need to restart the render
     // on a different gesture or cancel the render..
     // TODO: We might want to pause the View Transition at this point since you should
@@ -131,30 +128,24 @@ export function cancelScheduledGesture(
     // just commit the gesture state.
     const runningTransition = gesture.running;
     if (runningTransition !== null) {
-      const pendingLanesExcludingGestureLane = root.pendingLanes & ~GestureLane;
-      if (
-        includesBlockingLane(pendingLanesExcludingGestureLane) ||
-        includesTransitionLane(pendingLanesExcludingGestureLane)
-      ) {
-        // If we have pending work we schedule the gesture to be stopped at the next commit.
-        // This ensures that we don't snap back to the previous state until we have
-        // had a chance to commit any resulting updates.
-        const existing = root.stoppingGestures;
-        if (existing !== null) {
-          gesture.next = existing;
-          existing.prev = gesture;
-        }
-        root.stoppingGestures = gesture;
+      if (shouldCommit) {
+        // If we are going to commit this gesture in its to state, we need to wait to
+        // stop it until it commits. We should now schedule a render at the gesture
+        // lane to actually commit it.
+        gesture.committing = true;
+        // TODO: Treat this the same as pinging a Transition.
       } else {
+        // If we're not going to commit this gesture we can stop the View Transition
+        // right away and delete the scheduled gesture from the pending queue.
+        deleteScheduledGesture(root, gesture);
         gesture.running = null;
-        // If there's no work scheduled so we can stop the View Transition right away.
         stopViewTransition(runningTransition);
       }
     }
   }
 }
 
-export function deleteScheduledGesture(
+function deleteScheduledGesture(
   root: FiberRoot,
   gesture: ScheduledGesture,
 ): void {
@@ -168,10 +159,6 @@ export function deleteScheduledGesture(
         root.pendingLanes &= ~GestureLane;
       }
     }
-    if (root.stoppingGestures === gesture) {
-      // This should not really happen the way we use it now but just in case we start.
-      root.stoppingGestures = gesture.next;
-    }
   } else {
     gesture.prev.next = gesture.next;
     if (gesture.next !== null) {
@@ -182,17 +169,25 @@ export function deleteScheduledGesture(
   }
 }
 
-export function stopCompletedGestures(root: FiberRoot) {
-  let gesture = root.stoppingGestures;
-  root.stoppingGestures = null;
-  while (gesture !== null) {
-    if (gesture.running !== null) {
-      stopViewTransition(gesture.running);
-      gesture.running = null;
+export function stopCommittedGesture(root: FiberRoot) {
+  // The top was just committed. We can delete it from the queue
+  // and stop its View Transition now.
+  const committedGesture = root.pendingGestures;
+  if (committedGesture !== null) {
+    const nextGesture = committedGesture.next;
+    if (nextGesture === null) {
+      // Gestures don't clear their lanes while the gesture is still active but it
+      // might not be scheduled to do any more renders and so we shouldn't schedule
+      // any more gesture lane work until a new gesture is scheduled.
+      root.pendingLanes &= ~GestureLane;
+    } else {
+      nextGesture.prev = null;
     }
-    const nextGesture = gesture.next;
-    gesture.next = null;
-    gesture.prev = null;
-    gesture = nextGesture;
+    root.pendingGestures = nextGesture;
+    const runningTransition = committedGesture.running;
+    if (runningTransition !== null) {
+      committedGesture.running = null;
+      stopViewTransition(runningTransition);
+    }
   }
 }
