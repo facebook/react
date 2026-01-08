@@ -1401,7 +1401,7 @@ function finishConcurrentRender(
 
   if (shouldForceFlushFallbacksInDEV()) {
     // We're inside an `act` scope. Commit immediately.
-    commitRoot(
+    completeRoot(
       root,
       finishedWork,
       lanes,
@@ -1411,6 +1411,7 @@ function finishConcurrentRender(
       workInProgressDeferredLane,
       workInProgressRootInterleavedUpdatedLanes,
       workInProgressSuspendedRetryLanes,
+      workInProgressRootDidSkipSuspendedSiblings,
       exitStatus,
       null,
       null,
@@ -1452,7 +1453,7 @@ function finishConcurrentRender(
         // run one after the other.
         pendingEffectsLanes = lanes;
         root.timeoutHandle = scheduleTimeout(
-          commitRootWhenReady.bind(
+          completeRootWhenReady.bind(
             null,
             root,
             finishedWork,
@@ -1474,7 +1475,7 @@ function finishConcurrentRender(
         return;
       }
     }
-    commitRootWhenReady(
+    completeRootWhenReady(
       root,
       finishedWork,
       workInProgressRootRecoverableErrors,
@@ -1493,7 +1494,7 @@ function finishConcurrentRender(
   }
 }
 
-function commitRootWhenReady(
+function completeRootWhenReady(
   root: FiberRoot,
   finishedWork: Fiber,
   recoverableErrors: Array<CapturedValue<mixed>> | null,
@@ -1572,7 +1573,7 @@ function commitRootWhenReady(
       // root again.
       pendingEffectsLanes = lanes;
       root.cancelPendingCommit = schedulePendingCommit(
-        commitRoot.bind(
+        completeRoot.bind(
           null,
           root,
           finishedWork,
@@ -1583,6 +1584,7 @@ function commitRootWhenReady(
           spawnedLane,
           updatedLanes,
           suspendedRetryLanes,
+          didSkipSuspendedSiblings,
           exitStatus,
           suspendedState,
           enableProfilerTimer
@@ -1599,7 +1601,7 @@ function commitRootWhenReady(
   }
 
   // Otherwise, commit immediately.;
-  commitRoot(
+  completeRoot(
     root,
     finishedWork,
     lanes,
@@ -1609,6 +1611,7 @@ function commitRootWhenReady(
     spawnedLane,
     updatedLanes,
     suspendedRetryLanes,
+    didSkipSuspendedSiblings,
     exitStatus,
     suspendedState,
     suspendedCommitReason,
@@ -3416,7 +3419,7 @@ function unwindUnitOfWork(unitOfWork: Fiber, skipSiblings: boolean): void {
   workInProgress = null;
 }
 
-function commitRoot(
+function completeRoot(
   root: FiberRoot,
   finishedWork: null | Fiber,
   lanes: Lanes,
@@ -3426,6 +3429,7 @@ function commitRoot(
   spawnedLane: Lane,
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
+  didSkipSuspendedSiblings: boolean,
   exitStatus: RootExitStatus,
   suspendedState: null | SuspendedState,
   suspendedCommitReason: SuspendedCommitReason, // Profiling-only
@@ -3516,9 +3520,94 @@ function commitRoot(
     );
   }
 
+  if (root === workInProgressRoot) {
+    // We can reset these now that they are finished.
+    workInProgressRoot = null;
+    workInProgress = null;
+    workInProgressRootRenderLanes = NoLanes;
+  } else {
+    // This indicates that the last root we worked on is not the same one that
+    // we're committing now. This most commonly happens when a suspended root
+    // times out.
+  }
+
+  // workInProgressX might be overwritten, so we want
+  // to store it in pendingPassiveX until they get processed
+  // We need to pass this through as an argument to completeRoot
+  // because workInProgressX might have changed between
+  // the previous render and commit if we throttle the commit
+  // with setTimeout
+  pendingFinishedWork = finishedWork;
+  pendingEffectsRoot = root;
+  pendingEffectsLanes = lanes;
+  pendingPassiveTransitions = transitions;
+  pendingRecoverableErrors = recoverableErrors;
+  pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
+  if (enableProfilerTimer) {
+    pendingEffectsRenderEndTime = completedRenderEndTime;
+    pendingSuspendedCommitReason = suspendedCommitReason;
+    pendingDelayedCommitReason = IMMEDIATE_COMMIT;
+    pendingSuspendedViewTransitionReason = null;
+  }
+
+  if (enableGestureTransition && isGestureRender(lanes)) {
+    const committingGesture = root.pendingGestures;
+    if (committingGesture !== null && !committingGesture.committing) {
+      // This gesture is not ready to commit yet. We'll mark it as suspended and
+      // start a gesture transition which isn't really a side-effect. Then later
+      // we might come back around to actually committing the root.
+      const didAttemptEntireTree = !didSkipSuspendedSiblings;
+      markRootSuspended(root, lanes, spawnedLane, didAttemptEntireTree);
+      if (committingGesture.running === null) {
+        applyGestureOnRoot(
+          root,
+          finishedWork,
+          recoverableErrors,
+          suspendedState,
+          enableProfilerTimer
+            ? suspendedCommitReason === null
+              ? completedRenderEndTime
+              : commitStartTime
+            : 0,
+        );
+      } else {
+        // If we already have a gesture running, we don't update it in place
+        // even if we have a new tree. Instead we wait until we can commit.
+      }
+      return;
+    }
+  }
+
+  // If we're not starting a gesture we now actually commit the root.
+  commitRoot(
+    root,
+    finishedWork,
+    lanes,
+    spawnedLane,
+    updatedLanes,
+    suspendedRetryLanes,
+    suspendedState,
+    suspendedCommitReason,
+    completedRenderEndTime,
+  );
+}
+
+function commitRoot(
+  root: FiberRoot,
+  finishedWork: Fiber,
+  lanes: Lanes,
+  spawnedLane: Lane,
+  updatedLanes: Lanes,
+  suspendedRetryLanes: Lanes,
+  suspendedState: null | SuspendedState,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
+) {
   // Check which lanes no longer have any work scheduled on them, and mark
   // those as finished.
   let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
+
+  pendingEffectsRemainingLanes = remainingLanes;
 
   // Make sure to account for lanes that were updated by a concurrent event
   // during the render phase; don't mark them as finished.
@@ -3548,53 +3637,6 @@ function commitRoot(
 
   // Reset this before firing side effects so we can detect recursive updates.
   didIncludeCommitPhaseUpdate = false;
-
-  if (root === workInProgressRoot) {
-    // We can reset these now that they are finished.
-    workInProgressRoot = null;
-    workInProgress = null;
-    workInProgressRootRenderLanes = NoLanes;
-  } else {
-    // This indicates that the last root we worked on is not the same one that
-    // we're committing now. This most commonly happens when a suspended root
-    // times out.
-  }
-
-  // workInProgressX might be overwritten, so we want
-  // to store it in pendingPassiveX until they get processed
-  // We need to pass this through as an argument to commitRoot
-  // because workInProgressX might have changed between
-  // the previous render and commit if we throttle the commit
-  // with setTimeout
-  pendingFinishedWork = finishedWork;
-  pendingEffectsRoot = root;
-  pendingEffectsLanes = lanes;
-  pendingEffectsRemainingLanes = remainingLanes;
-  pendingPassiveTransitions = transitions;
-  pendingRecoverableErrors = recoverableErrors;
-  pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
-  if (enableProfilerTimer) {
-    pendingEffectsRenderEndTime = completedRenderEndTime;
-    pendingSuspendedCommitReason = suspendedCommitReason;
-    pendingDelayedCommitReason = IMMEDIATE_COMMIT;
-    pendingSuspendedViewTransitionReason = null;
-  }
-
-  if (enableGestureTransition && isGestureRender(lanes)) {
-    // This is a special kind of render that doesn't commit regular effects.
-    commitGestureOnRoot(
-      root,
-      finishedWork,
-      recoverableErrors,
-      suspendedState,
-      enableProfilerTimer
-        ? suspendedCommitReason === null
-          ? completedRenderEndTime
-          : commitStartTime
-        : 0,
-    );
-    return;
-  }
 
   // If there are pending passive effects, schedule a callback to process them.
   // Do this as early as possible, so it is queued before anything else that
@@ -4150,7 +4192,7 @@ function flushSpawnedWork(): void {
     flushPendingEffects();
   }
 
-  // Always call this before exiting `commitRoot`, to ensure that any
+  // Always call this before exiting `completeRoot`, to ensure that any
   // additional work on this root is scheduled.
   ensureRootIsScheduled(root);
 
@@ -4239,7 +4281,7 @@ function flushSpawnedWork(): void {
   }
 }
 
-function commitGestureOnRoot(
+function applyGestureOnRoot(
   root: FiberRoot,
   finishedWork: Fiber,
   recoverableErrors: null | Array<CapturedValue<mixed>>,
@@ -4462,7 +4504,7 @@ function flushPassiveEffects(): boolean {
   // flushPassiveEffectsImpl
   const root = pendingEffectsRoot;
   // Cache and clear the remaining lanes flag; it must be reset since this
-  // method can be called from various places, not always from commitRoot
+  // method can be called from various places, not always from completeRoot
   // where the remaining lanes are known
   const remainingLanes = pendingEffectsRemainingLanes;
   pendingEffectsRemainingLanes = NoLanes;

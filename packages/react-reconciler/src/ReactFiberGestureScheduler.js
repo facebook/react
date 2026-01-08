@@ -12,7 +12,7 @@ import type {GestureOptions} from 'shared/ReactTypes';
 import type {GestureTimeline, RunningViewTransition} from './ReactFiberConfig';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 
-import {GestureLane} from './ReactFiberLane';
+import {GestureLane, markRootFinished, NoLane, NoLanes} from './ReactFiberLane';
 import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
 import {getCurrentGestureOffset, stopViewTransition} from './ReactFiberConfig';
 
@@ -137,9 +137,21 @@ export function cancelScheduledGesture(
       } else {
         // If we're not going to commit this gesture we can stop the View Transition
         // right away and delete the scheduled gesture from the pending queue.
+        markRootFinished(
+          root,
+          GestureLane,
+          root.pendingLanes,
+          NoLane,
+          NoLane,
+          NoLanes,
+        );
         deleteScheduledGesture(root, gesture);
         gesture.running = null;
         stopViewTransition(runningTransition);
+        // If we have any more gestures to pick up after this, make sure they're scheduled.
+        if (root.pendingGestures !== null) {
+          ensureRootIsScheduled(root);
+        }
       }
     }
   }
