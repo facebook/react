@@ -152,7 +152,7 @@ describe('create-react-class-integration', () => {
 
   it('should warn when misspelling componentWillReceiveProps', () => {
     createReactClass({
-      componentWillRecieveProps: function () {
+      componentWillReceiveProps: function () {
         return false;
       },
       render: function () {
@@ -161,7 +161,7 @@ describe('create-react-class-integration', () => {
     });
     assertConsoleErrorDev(
       [
-        'Warning: A component has a method called componentWillRecieveProps(). Did you ' +
+        'Warning: A component has a method called componentWillReceiveProps(). Did you ' +
           'mean componentWillReceiveProps()?',
       ],
       {withoutStack: true},
@@ -170,7 +170,7 @@ describe('create-react-class-integration', () => {
 
   it('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
     createReactClass({
-      UNSAFE_componentWillRecieveProps: function () {
+      UNSAFE_componentWillReceiveProps: function () {
         return false;
       },
       render: function () {
@@ -179,7 +179,7 @@ describe('create-react-class-integration', () => {
     });
     assertConsoleErrorDev(
       [
-        'Warning: A component has a method called UNSAFE_componentWillRecieveProps(). ' +
+        'Warning: A component has a method called UNSAFE_componentWillReceiveProps(). ' +
           'Did you mean UNSAFE_componentWillReceiveProps()?',
       ],
       {withoutStack: true},
