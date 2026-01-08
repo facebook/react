@@ -1722,18 +1722,26 @@ function moveOutOfViewport(
   // other transforms. That's why we need to merge the long form properties.
   // TODO: Ideally we'd adjust for the parent's rotate/scale. Otherwise when
   // we move back the ::view-transition-group we might overshoot or undershoot.
-  element.style.transform = 'translate(-20000px, -20000px) ' + transform;
+  const ownerDoc = element.ownerDocument;
+  const isRTL = ownerDoc && ownerDoc.documentElement && ownerDoc.documentElement.dir === 'rtl';
+  const translateX = isRTL ? '20000px' : '-20000px';
+  element.style.transform = 'translate(' + translateX + ', -20000px) ' + transform; 
 }
 
-function moveOldFrameIntoViewport(keyframe: any): void {
+export function moveOldFrameIntoViewport(keyframe: any, targetElement: ?HTMLElement): void {
   // In the resulting View Transition Animation, the first frame will be offset.
   const computedTransform: ?string = keyframe.transform;
   if (computedTransform != null) {
     let transform = computedTransform === 'none' ? '' : computedTransform;
-    transform = 'translate(20000px, 20000px) ' + transform;
+    const isRTL =
+      targetElement &&
+      targetElement.ownerDocument &&
+      targetElement.ownerDocument.documentElement.dir === 'rtl';
+    const dx = isRTL ? '-20000px' : '20000px';
+    transform = 'translate(' + dx + ', 20000px) ' + transform;
     keyframe.transform = transform;
   }
-}
+} 
 
 export function cloneRootViewTransitionContainer(
   rootContainer: Container,
@@ -1942,8 +1950,12 @@ export function measureClonedInstance(instance: Instance): InstanceMeasurement {
   const measuredRect = instance.getBoundingClientRect();
   // Adjust the DOMRect based on the translate that put it outside the viewport.
   // TODO: This might not be completely correct if the parent also has a transform.
+  const isRTL =
+    instance &&
+    instance.ownerDocument &&
+    instance.ownerDocument.documentElement.dir === 'rtl';
   const rect = new DOMRect(
-    measuredRect.x + 20000,
+    measuredRect.x + (isRTL ? -20000 : 20000),
     measuredRect.y + 20000,
     measuredRect.width,
     measuredRect.height,
@@ -2426,14 +2438,24 @@ function animateGesture(
             targetElement,
             pseudoElement,
           ): any).translate;
+          const isRTL =
+            targetElement &&
+            targetElement.ownerDocument &&
+            targetElement.ownerDocument.documentElement.dir === 'rtl';
+          const translateToAdd = isRTL ? '-20000px 20000px' : '20000px 20000px';
           keyframe.translate = mergeTranslate(
             elementTranslate,
-            '20000px 20000px',
+            translateToAdd,
           );
         } else {
+          const isRTL =
+            targetElement &&
+            targetElement.ownerDocument &&
+            targetElement.ownerDocument.documentElement.dir === 'rtl';
+          const translateToAdd = isRTL ? '-20000px 20000px' : '20000px 20000px';
           keyframe.translate = mergeTranslate(
             keyframe.translate,
-            '20000px 20000px',
+            translateToAdd,
           );
         }
       }
@@ -2444,7 +2466,7 @@ function animateGesture(
     // from the old position, we need to adjust it from the out of viewport
     // position. If this is going from old to new it only applies to first
     // keyframe. Otherwise it applies to every keyframe.
-    moveOldFrameIntoViewport(keyframes[0]);
+    moveOldFrameIntoViewport(keyframes[0], targetElement);
   }
   if (unchangedDimensions && width !== undefined && height !== undefined) {
     // Read the underlying width/height of the pseudo-element. The previous animation
