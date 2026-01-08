@@ -1886,6 +1886,10 @@ export function isUseStateType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseState';
 }
 
+export function isUseFragmentType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseFragment';
+}
+
 export function isJsxType(type: Type): boolean {
   return type.kind === 'Object' && type.shapeId === 'BuiltInJsx';
 }
