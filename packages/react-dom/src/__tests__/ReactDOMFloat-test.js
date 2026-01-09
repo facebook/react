@@ -3628,7 +3628,24 @@ body {
     assertLog(['load stylesheet: foo']);
     await waitForAll([]);
     assertConsoleErrorDev([
-      "Hydration failed because the server rendered HTML didn't match the client.",
+      "Error: Hydration failed because the server rendered HTML didn't match the client. " +
+        'As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n' +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\n' +
+        'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
+        'https://react.dev/link/hydration-mismatch\n\n' +
+        '  <html>\n' +
+        '    <body>\n' +
+        '      <div>\n' +
+        '      <div>\n' +
+        '        <Suspense fallback="loading 2...">\n' +
+        '          <Component>\n' +
+        '            <link>\n' +
+        '+           <div>' +
+        '\n    in <stack>',
     ]);
     jest.runAllTimers();
 
