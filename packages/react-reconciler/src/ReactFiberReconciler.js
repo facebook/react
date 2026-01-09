@@ -460,18 +460,6 @@ function updateContainerImpl(
   }
 }
 
-if (__DEV__) {
-  Object.defineProperty(exports, 'flushSync', {
-    get() {
-      console.warn(
-        'flushSync has been removed in react-reconciler v0.31+. ' +
-        'Please use updateContainerSync() and flushSyncWork() instead.'
-      );
-      return undefined;
-    }
-  });
-}
-
 export {
   batchedUpdates,
   deferredUpdates,
