@@ -888,7 +888,12 @@ describe('ReactChildren', () => {
         'Check the render method of `ComponentRenderingMappedChildren`.' +
         ' See https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)\n' +
-        '    in **/ReactChildren-test.js:**:** (at **)',
+        '    in **/ReactChildren-test.js:**:** (at **)\n' +
+        '    in **/ReactChildren.js:**:** (at **)\n' +
+        '    in mapIntoArray (at **)\n' +
+        '    in mapIntoArray (at **)\n' +
+        '    in Object.mapChildren (at **)\n' +
+        '    in ComponentRenderingMappedChildren (at **)',
     ]);
   });
 
