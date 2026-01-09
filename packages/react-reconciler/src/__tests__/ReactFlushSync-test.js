@@ -343,3 +343,27 @@ describe('ReactFlushSync', () => {
     expect(error.errors[1]).toBe(nooo);
   });
 });
+
+describe('flushSync deprecation warning', () => {
+  let consoleErrorSpy;
+
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('warns that flushSync is deprecated in favor of flushAsyncWork', () => {
+    const ReactDOM = require('react-dom');
+
+    ReactDOM.flushSync(() => {});
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'flushSync is deprecated and will be removed. Use flushAsyncWork instead.'
+      )
+    );
+  });
+});

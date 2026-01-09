@@ -351,3 +351,18 @@ If you use the persistent mode instead of the mutation mode, you would still nee
 You can optionally implement hydration to "attach" to the existing tree during the initial render instead of creating it from scratch. For example, the DOM renderer uses this to attach to an HTML markup.
 
 To support hydration, you need to declare `supportsHydration: true` and then implement the methods in the "Hydration" section [listed in this file](https://github.com/facebook/react/blob/main/packages/react-reconciler/src/forks/ReactFiberConfig.custom.js). File an issue if you need help.
+
+### Deprecated APIs
+
+#### `flushSync`
+
+The `flushSync` API has been removed in react-reconciler v0.31+.  
+Use `updateContainerSync()` and `flushSyncWork()` instead.
+
+```js
+// Before
+flushSync(() => { ... });
+
+// After
+updateContainerSync(element, container);
+flushSyncWork();
