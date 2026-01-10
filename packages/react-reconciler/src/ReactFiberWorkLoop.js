@@ -4892,6 +4892,57 @@ function pingSuspendedRoot(
   ensureRootIsScheduled(root);
 }
 
+export function pingGestureRoot(root: FiberRoot): void {
+  const gesture = root.pendingGestures;
+  if (gesture === null) {
+    return;
+  }
+  if (
+    root.cancelPendingCommit !== null &&
+    isGestureRender(pendingEffectsLanes)
+  ) {
+    // We have a suspended commit which we'll discard and rerender.
+    // TODO: Just use this commit since it's ready to go.
+    const cancelPendingCommit = root.cancelPendingCommit;
+    if (cancelPendingCommit !== null) {
+      root.cancelPendingCommit = null;
+      cancelPendingCommit();
+    }
+  }
+  // Ping it for rerender and commit.
+  markRootPinged(root, GestureLane);
+  ensureRootIsScheduled(root);
+}
+
+export function restartGestureRoot(root: FiberRoot): void {
+  if (
+    workInProgressRoot === root &&
+    isGestureRender(workInProgressRootRenderLanes)
+  ) {
+    // The current render was a gesture but it's now defunct. We need to restart the render.
+    if ((executionContext & RenderContext) === NoContext) {
+      prepareFreshStack(root, NoLanes);
+    } else {
+      // TODO: Throw interruption when supported again.
+    }
+  } else if (
+    root.cancelPendingCommit !== null &&
+    isGestureRender(pendingEffectsLanes)
+  ) {
+    // We have a suspended commit which we'll discard.
+    const cancelPendingCommit = root.cancelPendingCommit;
+    if (cancelPendingCommit !== null) {
+      root.cancelPendingCommit = null;
+      cancelPendingCommit();
+    }
+  }
+  if (root.pendingGestures !== null) {
+    // We still have gestures to work on. Let's schedule a restart.
+    markRootPinged(root, GestureLane);
+  }
+  ensureRootIsScheduled(root);
+}
+
 function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   // The boundary fiber (a Suspense component or SuspenseList component)
   // previously was rendered in its fallback state. One of the promises that
