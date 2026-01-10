@@ -3143,6 +3143,59 @@ describe('Store', () => {
     expect(store).toMatchInlineSnapshot(``);
   });
 
+  // @reactVersion >= 17.0
+  it('should track suspended by in filtered fallback', async () => {
+    function IgnoreMe({promise}) {
+      return readValue(promise);
+    }
+
+    function Component({promise}) {
+      return readValue(promise);
+    }
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [createDisplayNameFilter('^IgnoreMe', true)]),
+    );
+
+    let resolveFallback;
+    const fallbackPromise = new Promise(resolve => {
+      resolveFallback = resolve;
+    });
+    let resolveContent;
+    const contentPromise = new Promise(resolve => {
+      resolveContent = resolve;
+    });
+
+    await actAsync(() =>
+      render(
+        <React.Suspense
+          name="main"
+          fallback={<IgnoreMe promise={fallbackPromise} />}>
+          <Component promise={contentPromise} />
+        </React.Suspense>,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(``);
+
+    await actAsync(() => resolveFallback('loading'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Suspense name="main">
+      [suspense-root]  rects={null}
+        <Suspense name="main" rects={null}>
+    `);
+
+    await actAsync(() => resolveContent('content'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="main">
+            <Component>
+      [suspense-root]  rects={null}
+        <Suspense name="main" rects={null}>
+    `);
+  });
+
   // @reactVersion >= 19
   it('should keep suspended boundaries in the Suspense tree but not hidden Activity', async () => {
     const Activity = React.Activity || React.unstable_Activity;
