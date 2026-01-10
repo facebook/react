@@ -321,6 +321,74 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toEqual('<span>Client Component</span>');
   });
 
+  it('should resolve cyclic references in client component props after two rounds of serialization and deserialization', async () => {
+    const ClientComponent = clientExports(function ClientComponent({data}) {
+      return (
+        <div>{data.self === data ? 'Cycle resolved' : 'Cycle broken'}</div>
+      );
+    });
+    const clientModuleMetadata = webpackMap[ClientComponent.$$id];
+    const consumerModuleId = 'consumer-' + clientModuleMetadata.id;
+    const clientReference = Object.defineProperties(ClientComponent, {
+      $$typeof: {value: Symbol.for('react.client.reference')},
+      $$id: {value: ClientComponent.$$id},
+    });
+    webpackModules[consumerModuleId] = clientReference;
+
+    const cyclic = {self: null};
+    cyclic.self = cyclic;
+
+    const stream1 = ReactServerDOMServer.renderToReadableStream(
+      <React.Fragment key="this-key-is-important-to-repro-a-prior-cycle-serialization-bug">
+        <ClientComponent data={cyclic} />
+      </React.Fragment>,
+      webpackMap,
+    );
+
+    const promise = ReactServerDOMClient.createFromReadableStream(stream1, {
+      serverConsumerManifest: {
+        moduleMap: {
+          [clientModuleMetadata.id]: {
+            '*': {
+              id: consumerModuleId,
+              chunks: [],
+              name: '*',
+            },
+          },
+        },
+        moduleLoading: webpackModuleLoading,
+        serverModuleMap: null,
+      },
+    });
+
+    const errors = [];
+    const stream2 = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(promise, webpackMap, {
+        onError(error) {
+          errors.push(error);
+        },
+      }),
+    );
+
+    expect(errors).toEqual([]);
+
+    const element = await serverAct(() =>
+      ReactServerDOMClient.createFromReadableStream(stream2, {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      }),
+    );
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(element),
+    );
+    const result = await readResult(ssrStream);
+
+    expect(result).toBe('<div>Cycle resolved</div>');
+  });
+
   it('should be able to load a server reference on a consuming server if a mapping exists', async () => {
     function greet(name) {
       return 'hi, ' + name;
