@@ -499,8 +499,7 @@ describe('ReactFlightDOMEdge', () => {
         },
       },
     );
-    // TODO: Cyclic references currently cause a Lazy wrapper which is not ideal.
-    const resultElement = result.root._init(result.root._payload);
+    const resultElement = result.root;
     // Should still match the result when parsed
     expect(resultElement).toEqual(props.root);
     expect(resultElement.props.children[5]).toBe(
@@ -702,7 +701,7 @@ describe('ReactFlightDOMEdge', () => {
     const [stream2, drip] = dripStream(stream);
 
     // Allow some of the content through.
-    drip(__DEV__ ? 7500 : 5000);
+    drip(__DEV__ ? 30000 : 5000);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
