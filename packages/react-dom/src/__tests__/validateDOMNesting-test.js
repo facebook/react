@@ -51,6 +51,8 @@ function expectWarnings(tags, warnings = [], withoutStack = 0) {
     const Tag = tags.pop();
     if (Tag === '#text') {
       element = 'text';
+    } else if (Tag === 'option') {
+      element = <Tag value={'value'}>{element}</Tag>;
     } else {
       element = <Tag>{element}</Tag>;
     }
@@ -77,6 +79,7 @@ describe('validateDOMNesting', () => {
     expectWarnings(['div', 'p', 'button', 'p']);
     expectWarnings(['p', 'svg', 'foreignObject', 'p']);
     expectWarnings(['html', 'body', 'div']);
+    expectWarnings(['select', 'div', 'optgroup', 'div', 'option', 'span']);
 
     // Invalid, but not changed by browser parsing so we allow them
     expectWarnings(['div', 'ul', 'ul', 'li']);
@@ -203,6 +206,14 @@ describe('validateDOMNesting', () => {
           '>   <body>\n' +
           '\n' +
           '    in body (at **)',
+      ],
+    );
+    expectWarnings(
+      ['select', 'input'],
+      [
+        'In HTML, <input> cannot be a child of <select>.\n' +
+          'This will cause a hydration error.\n' +
+          '    in input (at **)',
       ],
     );
   });
