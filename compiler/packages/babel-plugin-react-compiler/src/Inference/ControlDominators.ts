@@ -8,7 +8,7 @@
 import {BlockId, computePostDominatorTree, HIRFunction, Place} from '../HIR';
 import {PostDominator} from '../HIR/Dominator';
 
-export type ControlDominators = (id: BlockId) => boolean;
+export type ControlDominators = (id: BlockId) => Place | null;
 
 /**
  * Returns an object that lazily calculates whether particular blocks are controlled
@@ -23,7 +23,7 @@ export function createControlDominators(
   });
   const postDominatorFrontierCache = new Map<BlockId, Set<BlockId>>();
 
-  function isControlledBlock(id: BlockId): boolean {
+  function isControlledBlock(id: BlockId): Place | null {
     let controlBlocks = postDominatorFrontierCache.get(id);
     if (controlBlocks === undefined) {
       controlBlocks = postDominatorFrontier(fn, postDominators, id);
@@ -35,24 +35,24 @@ export function createControlDominators(
         case 'if':
         case 'branch': {
           if (isControlVariable(controlBlock.terminal.test)) {
-            return true;
+            return controlBlock.terminal.test;
           }
           break;
         }
         case 'switch': {
           if (isControlVariable(controlBlock.terminal.test)) {
-            return true;
+            return controlBlock.terminal.test;
           }
           for (const case_ of controlBlock.terminal.cases) {
             if (case_.test !== null && isControlVariable(case_.test)) {
-              return true;
+              return case_.test;
             }
           }
           break;
         }
       }
     }
-    return false;
+    return null;
   }
 
   return isControlledBlock;

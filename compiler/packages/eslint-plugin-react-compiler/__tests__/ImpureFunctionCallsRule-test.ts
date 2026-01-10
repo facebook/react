@@ -29,9 +29,9 @@ testRule(
       }
     `,
         errors: [
-          makeTestCaseError('Cannot call impure function during render'),
-          makeTestCaseError('Cannot call impure function during render'),
-          makeTestCaseError('Cannot call impure function during render'),
+          makeTestCaseError('Cannot access impure value during render'),
+          makeTestCaseError('Cannot access impure value during render'),
+          makeTestCaseError('Cannot access impure value during render'),
         ],
       },
     ],

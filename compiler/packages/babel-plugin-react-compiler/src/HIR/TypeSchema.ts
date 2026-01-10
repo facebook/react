@@ -185,11 +185,25 @@ export const ApplyEffectSchema: z.ZodType<ApplyEffectConfig> = z.object({
 
 export type ImpureEffectConfig = {
   kind: 'Impure';
-  place: string;
+  into: string;
+  reason: string;
+  description: string;
 };
 
 export const ImpureEffectSchema: z.ZodType<ImpureEffectConfig> = z.object({
   kind: z.literal('Impure'),
+  into: LifetimeIdSchema,
+  reason: z.string(),
+  description: z.string(),
+});
+
+export type RenderEffectConfig = {
+  kind: 'Render';
+  place: string;
+};
+
+export const RenderEffectSchema: z.ZodType<RenderEffectConfig> = z.object({
+  kind: z.literal('Render'),
   place: LifetimeIdSchema,
 });
 
@@ -204,7 +218,8 @@ export type AliasingEffectConfig =
   | ImpureEffectConfig
   | MutateEffectConfig
   | MutateTransitiveConditionallyConfig
-  | ApplyEffectConfig;
+  | ApplyEffectConfig
+  | RenderEffectConfig;
 
 export const AliasingEffectSchema: z.ZodType<AliasingEffectConfig> = z.union([
   FreezeEffectSchema,
