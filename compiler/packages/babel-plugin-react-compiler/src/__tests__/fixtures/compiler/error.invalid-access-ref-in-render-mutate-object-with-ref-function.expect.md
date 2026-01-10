@@ -20,18 +20,26 @@ function Component() {
 ```
 Found 1 error:
 
-Error: Cannot access refs during render
+Error: Cannot access ref value during render
 
 React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
 
-error.invalid-access-ref-in-render-mutate-object-with-ref-function.ts:7:19
-   5 |   const object = {};
+error.invalid-access-ref-in-render-mutate-object-with-ref-function.ts:8:15
    6 |   object.foo = () => ref.current;
->  7 |   const refValue = object.foo();
-     |                    ^^^^^^^^^^ This function accesses a ref value
-   8 |   return <div>{refValue}</div>;
+   7 |   const refValue = object.foo();
+>  8 |   return <div>{refValue}</div>;
+     |                ^^^^^^^^ Ref value is used during render
    9 | }
   10 |
+
+error.invalid-access-ref-in-render-mutate-object-with-ref-function.ts:6:15
+  4 |   const ref = useRef(null);
+  5 |   const object = {};
+> 6 |   object.foo = () => ref.current;
+    |                ^^^^^^^^^^^^^^^^^ Ref is initially accessed
+  7 |   const refValue = object.foo();
+  8 |   return <div>{refValue}</div>;
+  9 | }
 ```
           
       
