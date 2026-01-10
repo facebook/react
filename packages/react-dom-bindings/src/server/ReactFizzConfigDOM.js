@@ -4573,6 +4573,24 @@ export function pushEndActivityBoundary(
   target.push(endActivityBoundary);
 }
 
+// SuspenseList with hidden tails are encoded as comments.
+const startSuspenseListBoundary = stringToPrecomputedChunk('<!--~-->');
+const endSuspenseListBoundary = stringToPrecomputedChunk('<!--/~-->');
+
+export function pushStartSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  target.push(startSuspenseListBoundary);
+}
+
+export function pushEndSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  target.push(endSuspenseListBoundary);
+}
+
 // Suspense boundaries are encoded as comments.
 const startCompletedSuspenseBoundary = stringToPrecomputedChunk('<!--$-->');
 const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
