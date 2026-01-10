@@ -24,7 +24,7 @@ The goal of mutability and aliasing inference is to understand the set of instru
 
 In code, the mutability and aliasing model is compromised of the following phases:
 
-* `InferMutationAliasingEffects`. Infers a set of mutation and aliasing effects for each instruction. The approach is to generate a set of candidate effects based purely on the semantics of each instruction and the types of the operands, then use abstract interpretation to determine the actual effects (or errros) that would apply. For example, an instruction that by default has a Capture effect might downgrade to an ImmutableCapture effect if the value is known to be frozen.
+* `InferMutationAliasingEffects`. Infers a set of mutation and aliasing effects for each instruction. The approach is to generate a set of candidate effects based purely on the semantics of each instruction and the types of the operands, then use abstract interpretation to determine the actual effects (or errors) that would apply. For example, an instruction that by default has a Capture effect might downgrade to an ImmutableCapture effect if the value is known to be frozen.
 * `InferMutationAliasingRanges`. Infers a mutable range (start:end instruction ids) for each value in the program, and annotates each Place with its effect type for usage in later passes. This builds a graph of data flow through the program over time in order to understand which mutations effect which values.
 * `InferReactiveScopeVariables`. Given the per-Place effects, determines disjoint sets of values that mutate together and assigns all identifiers in each set to a unique scope, and updates the range to include the ranges of all constituent values.
 
@@ -69,7 +69,7 @@ Describes the creation of new function value, capturing the given set of mutable
     kind: 'Apply';
     receiver: Place;
     function: Place; // same as receiver for function calls
-    mutatesFunction: boolean; // indicates if this is a type that we consdier to mutate the function itself by default
+    mutatesFunction: boolean; // indicates if this is a type that we consider to mutate the function itself by default
     args: Array<Place | SpreadPattern | Hole>;
     into: Place; // where result is stored
     signature: FunctionSignature | null;
@@ -234,7 +234,7 @@ Finally, there are a few effects that describe error, or potential error, condit
 - `MutateGlobal` indicates known mutation of a global value, which is not safe during render. This effect is an error if reachable during render, but allowed if only reachable via an event handler or useEffect.
 - `Impure` indicates calling some other logic that is impure/side-effecting. This is an error if reachable during render, but allowed if only reachable via an event handler or useEffect.
   - TODO: we could probably merge this and MutateGlobal
-- `Render` indicates a value that is not mutated, but is known to be called during render. It's used for a few particular places like JSX tags and JSX children, which we assume are accessed during render (while other props may be event handlers etc). This helps to detect more MutateGlobal/Impure effects and reject more invalid programs.
+- `Render` indicates a value that is not mutated, but is known to be called during render. Its used for a few particular places like JSX tags and JSX children, which we assume are accessed during render (while other props may be event handlers etc). This helps to detect more MutateGlobal/Impure effects and reject more invalid programs.
 
 
 ## Rules
@@ -526,7 +526,7 @@ Capture c <- a
 
 Intuition: these effects are inverses of each other (capturing into an object, extracting from an object). The result is based on the order of operations:
 
-Capture then CreatFrom is equivalent to Alias: we have to assume that the result _is_ the original value and that a local mutation of the result could mutate the original.
+Capture then CreateFrom is equivalent to Alias: we have to assume that the result _is_ the original value and that a local mutation of the result could mutate the original.
 
 ```js
 const b = [a]; // capture
