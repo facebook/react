@@ -421,8 +421,10 @@ describe('ReactDeferredValue', () => {
         // also suspends.
         'Suspend! [Final]',
         // pre-warming
-        'Suspend! [Loading...]',
-        'Suspend! [Final]',
+        ...(gate('enableParallelTransitions')
+          ? // TODO: this loses pre-warming, maybe that's fine?
+            []
+          : ['Suspend! [Loading...]', 'Suspend! [Final]']),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -463,8 +465,10 @@ describe('ReactDeferredValue', () => {
         // also suspends.
         'Suspend! [Final]',
         // pre-warming
-        'Suspend! [Loading...]',
-        'Suspend! [Final]',
+        ...(gate('enableParallelTransitions')
+          ? // TODO: this loses pre-warming, maybe that's fine?
+            []
+          : ['Suspend! [Loading...]', 'Suspend! [Final]']),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -540,8 +544,10 @@ describe('ReactDeferredValue', () => {
         // also suspends.
         'Suspend! [Final]',
         // pre-warming
-        'Suspend! [Loading...]',
-        'Suspend! [Final]',
+        ...(gate('enableParallelTransitions')
+          ? // TODO: this loses pre-warming, maybe that's fine?
+            []
+          : ['Suspend! [Loading...]', 'Suspend! [Final]']),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
