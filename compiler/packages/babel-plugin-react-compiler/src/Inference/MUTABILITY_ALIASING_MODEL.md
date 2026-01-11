@@ -234,7 +234,7 @@ Finally, there are a few effects that describe error, or potential error, condit
 - `MutateGlobal` indicates known mutation of a global value, which is not safe during render. This effect is an error if reachable during render, but allowed if only reachable via an event handler or useEffect.
 - `Impure` indicates calling some other logic that is impure/side-effecting. This is an error if reachable during render, but allowed if only reachable via an event handler or useEffect.
   - TODO: we could probably merge this and MutateGlobal
-- `Render` indicates a value that is not mutated, but is known to be called during render. Its used for a few particular places like JSX tags and JSX children, which we assume are accessed during render (while other props may be event handlers etc). This helps to detect more MutateGlobal/Impure effects and reject more invalid programs.
+- `Render` indicates a value that is not mutated, but is known to be called during render. It's used for a few particular places like JSX tags and JSX children, which we assume are accessed during render (while other props may be event handlers etc). This helps to detect more MutateGlobal/Impure effects and reject more invalid programs.
 
 
 ## Rules
