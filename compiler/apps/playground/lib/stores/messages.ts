@@ -6,22 +6,22 @@
  */
 
 export enum MessageSource {
-  Babel,
-  Forget,
-  Playground,
+  Babel = 'Babel',
+  Forget = 'Forget',
+  Playground = 'Playground',
 }
 
 export enum MessageLevel {
-  Info,
-  Warning,
-  Error,
+  Info = 'info',
+  Warning = 'warning',
+  Error = 'error',
 }
 
 export interface Message {
-  title: string;
-  level: MessageLevel;
-  source: MessageSource; // Can be used to further style messages differently.
-  codeframe: string | undefined;
+  readonly title: string;
+  readonly level: MessageLevel;
+  readonly source: MessageSource; // Can be used to further style messages differently.
+  readonly codeframe?: string;
 }
 
 export function createMessage(
@@ -29,8 +29,11 @@ export function createMessage(
   level: MessageLevel,
   source: MessageSource,
 ): Message {
-  const [title, ...body] = message.split('\n');
-  const codeframe = body.length > 0 ? body.join('\n') : undefined;
+  const normalized = message.replace(/\r\n/g, '\n').trimEnd();
+  const [titleRaw, ...body] = normalized.split('\n');
+  const title = titleRaw.trim();
+  const codeframeRaw = body.join('\n').trim();
+  const codeframe = codeframeRaw === '' ? undefined : codeframeRaw;
 
   return {
     source,
