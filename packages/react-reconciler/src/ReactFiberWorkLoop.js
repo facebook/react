@@ -1537,7 +1537,7 @@ function completeRootWhenReady(
     accumulateSuspenseyCommit(finishedWork, lanes, suspendedState);
     if (
       isViewTransitionEligible ||
-      (isGestureRender &&
+      (isGestureTransition &&
         root.pendingGestures !== null &&
         // If we're committing this gesture and it already has a View Transition
         // running, then we don't have to wait for that gesture. We'll stop it
