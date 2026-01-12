@@ -1606,7 +1606,7 @@ describe('ReactInternalTestUtils console assertions', () => {
     it('fails if component stack is passed twice', () => {
       const message = expectToThrowFailure(() => {
         console.warn('Hi %s%s', '\n    in div', '\n    in div');
-        assertConsoleWarnDev(['Hi']);
+        assertConsoleWarnDev(['Hi \n    in div (at **)']);
       });
       expect(message).toMatchInlineSnapshot(`
         "assertConsoleWarnDev(expected)
@@ -1621,7 +1621,10 @@ describe('ReactInternalTestUtils console assertions', () => {
       const message = expectToThrowFailure(() => {
         console.warn('Hi %s%s', '\n    in div', '\n    in div');
         console.warn('Bye %s%s', '\n    in div', '\n    in div');
-        assertConsoleWarnDev(['Hi', 'Bye']);
+        assertConsoleWarnDev([
+          'Hi \n    in div (at **)',
+          'Bye \n    in div (at **)',
+        ]);
       });
       expect(message).toMatchInlineSnapshot(`
         "assertConsoleWarnDev(expected)
@@ -2678,7 +2681,7 @@ describe('ReactInternalTestUtils console assertions', () => {
     it('fails if component stack is passed twice', () => {
       const message = expectToThrowFailure(() => {
         console.error('Hi %s%s', '\n    in div', '\n    in div');
-        assertConsoleErrorDev(['Hi']);
+        assertConsoleErrorDev(['Hi \n    in div (at **)']);
       });
       expect(message).toMatchInlineSnapshot(`
         "assertConsoleErrorDev(expected)
@@ -2693,7 +2696,10 @@ describe('ReactInternalTestUtils console assertions', () => {
       const message = expectToThrowFailure(() => {
         console.error('Hi %s%s', '\n    in div', '\n    in div');
         console.error('Bye %s%s', '\n    in div', '\n    in div');
-        assertConsoleErrorDev(['Hi', 'Bye']);
+        assertConsoleErrorDev([
+          'Hi \n    in div (at **)',
+          'Bye \n    in div (at **)',
+        ]);
       });
       expect(message).toMatchInlineSnapshot(`
         "assertConsoleErrorDev(expected)
