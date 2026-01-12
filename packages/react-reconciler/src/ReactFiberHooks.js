@@ -3792,7 +3792,14 @@ function dispatchOptimisticSetState<S, A>(
         if (provider !== null) {
           // If this was a gesture, ensure we have a scheduled gesture and that
           // we associate this update with this specific gesture instance.
-          update.gesture = scheduleGesture(root, provider);
+          const gesture = (update.gesture = scheduleGesture(root, provider));
+          // Ensure the gesture always uses the same revert lane. This can happen for
+          // two startGestureTransition calls to the same provider in different events.
+          if (gesture.revertLane === NoLane) {
+            gesture.revertLane = update.revertLane;
+          } else {
+            update.revertLane = gesture.revertLane;
+          }
         }
       }
     }
