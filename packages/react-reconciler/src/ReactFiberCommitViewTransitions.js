@@ -711,7 +711,11 @@ function measureViewTransitionHostInstancesRecursive(
         }
         viewTransitionCancelableChildren.push(
           instance,
-          oldName,
+          viewTransitionHostInstanceIdx === 0
+            ? oldName
+            : // If we have multiple Host Instances below, we add a suffix to the name to give
+              // each one a unique name.
+              oldName + '_' + viewTransitionHostInstanceIdx,
           child.memoizedProps,
         );
       }
