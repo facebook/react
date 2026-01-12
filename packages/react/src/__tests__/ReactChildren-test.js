@@ -889,7 +889,9 @@ describe('ReactChildren', () => {
         ' See https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)\n' +
         '    in **/ReactChildren-test.js:**:** (at **)\n' +
-        '    in **/ReactChildren.js:**:** (at **)\n' +
+        (gate('build') === 'development'
+          ? '    in **/ReactChildren.js:**:** (at **)\n'
+          : 'in **/react.development.js:**:** (at **)\n') +
         '    in mapIntoArray (at **)\n' +
         '    in mapIntoArray (at **)\n' +
         '    in Object.mapChildren (at **)\n' +
