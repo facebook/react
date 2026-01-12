@@ -441,10 +441,7 @@ export function createLogAssertion(
         const hasErrorStack = isLikelyAnErrorStackTrace(message);
 
         if (typeof expectedMessage === 'string') {
-          if (
-            normalizedMessage === expectedMessage ||
-            normalizedMessage.startsWith(expectedMessage)
-          ) {
+          if (normalizedMessage === expectedMessage) {
             matchesExpectedMessage = true;
           } else if (expectedMessage.includes('\n    in <stack>')) {
             expectsErrorStack = true;
@@ -494,13 +491,7 @@ export function createLogAssertion(
             !expectedMessage.includes('\n    in <stack>') &&
             normalizedMessage.startsWith(expectedMessage)
           ) {
-            // When the actual message has an error stack but \n    in <stack> was not expected,
-            // allow partial matching so we can report unexpectedIncludingErrorStack.
-            const remainder = normalizedMessage.slice(expectedMessage.length);
-            if (isLikelyAComponentStack(remainder)) {
-              // After normalization, error stacks look like component stacks
-              matchesExpectedMessage = true;
-            }
+            matchesExpectedMessage = true;
           }
         }
 
