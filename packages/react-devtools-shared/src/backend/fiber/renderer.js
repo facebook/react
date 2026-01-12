@@ -2992,6 +2992,30 @@ export function attach(
     ) {
       parentInstance = parentInstance.parent;
     }
+    if (parentInstance.kind === FIBER_INSTANCE) {
+      const fiber = parentInstance.data;
+
+      if (
+        fiber.tag === SuspenseComponent &&
+        parentInstance !== parentSuspenseNode.instance
+      ) {
+        // We're about to attach async info to a Suspense boundary we're not
+        // actually considering the parent Suspense boundary for this async info.
+        // We must have not found a suitable Fiber inside the fallback (e.g. due to filtering).
+        // Use the parent of this instance instead since we treat async info
+        // attached to a Suspense boundary as that async info triggering the
+        // fallback of that boundary.
+        const parent = parentInstance.parent;
+        if (parent === null) {
+          // This shouldn't happen. Any <Suspense> would have at least have the
+          // host root as the parent which can't have a fallback.
+          throw new Error(
+            'Did not find a suitable instance for this async info. This is a bug in React.',
+          );
+        }
+        parentInstance = parent;
+      }
+    }
 
     const suspenseNodeSuspendedBy = parentSuspenseNode.suspendedBy;
     const ioInfo = asyncInfo.awaited;
@@ -5255,9 +5279,9 @@ export function attach(
       // It might even result in a bad user experience for e.g. node selection in the Elements panel.
       // The easiest fix is to strip out the intermediate Fragment fibers,
       // so the Elements panel and Profiler don't need to special case them.
-      // Suspense components only have a non-null memoizedState if they're timed-out.
       const isLegacySuspense =
         nextFiber.tag === SuspenseComponent && OffscreenComponent === -1;
+      // Suspense components only have a non-null memoizedState if they're timed-out.
       const prevDidTimeout =
         isLegacySuspense && prevFiber.memoizedState !== null;
       const nextDidTimeOut =
