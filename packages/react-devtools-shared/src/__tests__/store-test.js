@@ -3143,8 +3143,9 @@ describe('Store', () => {
     expect(store).toMatchInlineSnapshot(``);
   });
 
-  // @reactVersion >= 17.0
-  it('should track suspended by in filtered fallback', async () => {
+  // Can't suspend the root in React 17.
+  // @reactVersion >= 18.0
+  it('should track suspended-by in filtered fallback suspending the root', async () => {
     function IgnoreMe({promise}) {
       return readValue(promise);
     }
@@ -3193,6 +3194,152 @@ describe('Store', () => {
             <Component>
       [suspense-root]  rects={null}
         <Suspense name="main" rects={null}>
+    `);
+  });
+
+  // Only difference between React 17 and 18 are snapshots.
+  // @reactVersion >= 17.0
+  // @reactVersion < 18.0
+  it('should track suspended-by in filtered fallback in React 17', async () => {
+    function IgnoreMe({promise}) {
+      return readValue(promise);
+    }
+
+    function Component({promise}) {
+      if (promise) {
+        return readValue(promise);
+      }
+      return null;
+    }
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [createDisplayNameFilter('^IgnoreMe', true)]),
+    );
+
+    let resolveFallback;
+    const fallbackPromise = new Promise(resolve => {
+      resolveFallback = resolve;
+    });
+    let resolveContent;
+    const contentPromise = new Promise(resolve => {
+      resolveContent = resolve;
+    });
+
+    await actAsync(() =>
+      render(
+        <React.Suspense
+          fallback={<Component key="root-fallback" />}
+          name="root">
+          <React.Suspense
+            name="main"
+            fallback={<IgnoreMe promise={fallbackPromise} />}>
+            <Component promise={contentPromise} />
+          </React.Suspense>
+        </React.Suspense>,
+      ),
+    );
+    // React 18 would not show the "main" Suspense boundary yet since it hasn't
+    // finished completely. React 17 commits partial trees as hidden so "main"
+    // shows up in the Suspense tree.
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+            <Component key="root-fallback">
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+          <Suspense name="main" rects={null}>
+    `);
+
+    await actAsync(() => resolveFallback('loading'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+            <Suspense name="main">
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+          <Suspense name="main" rects={null}>
+    `);
+
+    await actAsync(() => resolveContent('content'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+          ▾ <Suspense name="main">
+              <Component>
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+          <Suspense name="main" rects={null}>
+    `);
+  });
+
+  // @reactVersion >= 18.0
+  it('should track suspended-by in filtered fallback in React 18', async () => {
+    function IgnoreMe({promise}) {
+      return readValue(promise);
+    }
+
+    function Component({promise}) {
+      if (promise) {
+        return readValue(promise);
+      }
+      return null;
+    }
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [createDisplayNameFilter('^IgnoreMe', true)]),
+    );
+
+    let resolveFallback;
+    const fallbackPromise = new Promise(resolve => {
+      resolveFallback = resolve;
+    });
+    let resolveContent;
+    const contentPromise = new Promise(resolve => {
+      resolveContent = resolve;
+    });
+
+    await actAsync(() =>
+      render(
+        <React.Suspense
+          fallback={<Component key="root-fallback" />}
+          name="root">
+          <React.Suspense
+            name="main"
+            fallback={<IgnoreMe promise={fallbackPromise} />}>
+            <Component promise={contentPromise} />
+          </React.Suspense>
+        </React.Suspense>,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+            <Component key="root-fallback">
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+    `);
+
+    await actAsync(() => resolveFallback('loading'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+            <Suspense name="main">
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+          <Suspense name="main" rects={null}>
+    `);
+
+    await actAsync(() => resolveContent('content'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+          ▾ <Suspense name="main">
+              <Component>
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+          <Suspense name="main" rects={null}>
     `);
   });
 
