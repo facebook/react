@@ -13248,6 +13248,14 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       break;
     case 5:
       resetHooksOnUnwind(next);
+      var fiber = next;
+      fiber === hydrationParentFiber &&
+        (isHydrating
+          ? (popToNextHostParent(fiber),
+            5 === fiber.tag &&
+              null != fiber.stateNode &&
+              (nextHydratableInstance = fiber.stateNode))
+          : (popToNextHostParent(fiber), (isHydrating = !0)));
     default:
       unwindInterruptedWork(current, next),
         (next = workInProgress =
@@ -20164,14 +20172,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2086 = React.version;
 if (
-  "19.3.0-www-modern-65eec428-20251218" !==
+  "19.3.0-www-modern-c1866240-20260113" !==
   isomorphicReactPackageVersion$jscomp$inline_2086
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2086,
-      "19.3.0-www-modern-65eec428-20251218"
+      "19.3.0-www-modern-c1866240-20260113"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20187,24 +20195,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2677 = {
+var internals$jscomp$inline_2679 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-65eec428-20251218",
+  version: "19.3.0-www-modern-c1866240-20260113",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-65eec428-20251218"
+  reconcilerVersion: "19.3.0-www-modern-c1866240-20260113"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2678 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2680 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2678.isDisabled &&
-    hook$jscomp$inline_2678.supportsFiber
+    !hook$jscomp$inline_2680.isDisabled &&
+    hook$jscomp$inline_2680.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2678.inject(
-        internals$jscomp$inline_2677
+      (rendererID = hook$jscomp$inline_2680.inject(
+        internals$jscomp$inline_2679
       )),
-        (injectedHook = hook$jscomp$inline_2678);
+        (injectedHook = hook$jscomp$inline_2680);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -20772,4 +20780,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-65eec428-20251218";
+exports.version = "19.3.0-www-modern-c1866240-20260113";

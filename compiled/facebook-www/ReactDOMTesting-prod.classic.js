@@ -13507,7 +13507,15 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       );
       break;
     case 5:
-      resetHooksOnUnwind(next);
+      resetHooksOnUnwind(next),
+        (Component = next),
+        Component === hydrationParentFiber &&
+          (isHydrating
+            ? (popToNextHostParent(Component),
+              5 === Component.tag &&
+                null != Component.stateNode &&
+                (nextHydratableInstance = Component.stateNode))
+            : (popToNextHostParent(Component), (isHydrating = !0)));
     default:
       unwindInterruptedWork(current, next),
         (next = workInProgress =
@@ -20435,14 +20443,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2096 = React.version;
 if (
-  "19.3.0-www-classic-65eec428-20251218" !==
+  "19.3.0-www-classic-c1866240-20260113" !==
   isomorphicReactPackageVersion$jscomp$inline_2096
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2096,
-      "19.3.0-www-classic-65eec428-20251218"
+      "19.3.0-www-classic-c1866240-20260113"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20458,24 +20466,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2695 = {
+var internals$jscomp$inline_2697 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-65eec428-20251218",
+  version: "19.3.0-www-classic-c1866240-20260113",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-65eec428-20251218"
+  reconcilerVersion: "19.3.0-www-classic-c1866240-20260113"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2696 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2698 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2696.isDisabled &&
-    hook$jscomp$inline_2696.supportsFiber
+    !hook$jscomp$inline_2698.isDisabled &&
+    hook$jscomp$inline_2698.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2696.inject(
-        internals$jscomp$inline_2695
+      (rendererID = hook$jscomp$inline_2698.inject(
+        internals$jscomp$inline_2697
       )),
-        (injectedHook = hook$jscomp$inline_2696);
+        (injectedHook = hook$jscomp$inline_2698);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -21043,4 +21051,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-65eec428-20251218";
+exports.version = "19.3.0-www-classic-c1866240-20260113";
