@@ -147,7 +147,7 @@ export default class Store extends EventEmitter<{
   enableSuspenseTab: [],
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
-  hostInstanceSelected: [Element['id']],
+  hostInstanceSelected: [Element['id'] | null],
   settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
   mutated: [
     [
@@ -2381,7 +2381,7 @@ export default class Store extends EventEmitter<{
     this._bridge.send('getHookSettings'); // Warm up cached hook settings
   };
 
-  onHostInstanceSelected: (elementId: number) => void = elementId => {
+  onHostInstanceSelected: (elementId: number | null) => void = elementId => {
     if (this._lastSelectedHostInstanceElementId === elementId) {
       return;
     }

@@ -967,7 +967,7 @@ function TreeContextController({
 
   // Listen for host element selections.
   useEffect(() => {
-    const handler = (id: Element['id']) =>
+    const handler = (id: Element['id'] | null) =>
       transitionDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: id});
 
     store.addListener('hostInstanceSelected', handler);
