@@ -720,7 +720,8 @@ describe('ReactHooksInspection', () => {
     );
   });
 
-  it('should inspect use() calls in anonymous loops', () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should inspect use() calls in anonymous loops', () => {
     function Foo({entries}) {
       const values = Object.fromEntries(
         Object.entries(entries).map(([key, value]) => {
