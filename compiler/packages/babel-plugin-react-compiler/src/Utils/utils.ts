@@ -167,6 +167,14 @@ export function Set_filter<T>(
   return result;
 }
 
+export function Set_subtract<T>(
+  source: ReadonlySet<T>,
+  other: Iterable<T>,
+): Set<T> {
+  const otherSet = other instanceof Set ? other : new Set(other);
+  return Set_filter(source, item => !otherSet.has(item));
+}
+
 export function hasNode<T>(
   input: NodePath<T | null | undefined>,
 ): input is NodePath<NonNullable<T>> {
