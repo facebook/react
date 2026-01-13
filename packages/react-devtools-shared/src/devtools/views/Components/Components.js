@@ -159,7 +159,9 @@ function Components(_: {}) {
             <div className={styles.InspectedElementWrapper}>
               <NativeStyleContextController>
                 <InspectedElementErrorBoundary>
-                  <InspectedElement />
+                  <InspectedElement
+                    fallbackEmpty={'No React element selected.'}
+                  />
                 </InspectedElementErrorBoundary>
               </NativeStyleContextController>
             </div>

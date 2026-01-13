@@ -72,6 +72,12 @@
   border-left: 1px solid var(--color-border);
 }
 
+.NoInspectionFallback {
+  padding: 0.25rem;
+  font-style: italic;
+  border-left: 1px solid var(--color-border);
+}
+
 .StrictModeNonCompliant {
   display: inline-flex;
   padding: 0.25rem;

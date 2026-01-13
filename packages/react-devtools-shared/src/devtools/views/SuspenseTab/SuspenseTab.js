@@ -543,7 +543,7 @@ function SuspenseTab(_: {}) {
           className={styles.InspectedElementWrapper}
           hidden={inspectedElementHidden}>
           <InspectedElementErrorBoundary>
-            <InspectedElement />
+            <InspectedElement fallbackEmpty={'No React element selected.'} />
           </InspectedElementErrorBoundary>
         </div>
         <SettingsModal />

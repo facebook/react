@@ -25,6 +25,7 @@ function InspectedElementPane() {
       <div className={styles.InspectedElementPane}>
         <InspectedElement
           actionButtons={!hideSettings && <SettingsModalContextToggle />}
+          fallbackEmpty={'No element rendered by React selected.'}
         />
         <SettingsModal />
       </div>
