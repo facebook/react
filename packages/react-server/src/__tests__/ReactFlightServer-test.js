@@ -196,7 +196,8 @@ describe('ReactFlight', () => {
           "The props of this element may help locate this element: { children: 'Free!', [key]: [Getter] }",
         {withoutStack: true},
       ],
-      "TypeError: Cannot read properties of undefined (reading 'stack')",
+      "TypeError: Cannot read properties of undefined (reading 'stack')" +
+        '\n    in <stack>',
     ]);
   });
 });

@@ -278,6 +278,7 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: node --version
       - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
 
   # Hardcoded to improve parallelism
@@ -445,6 +446,7 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
+      - run: node --version
       - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci
 
   test_build_devtools:
@@ -489,6 +491,7 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
+      - run: node --version
       - run: yarn test --build --project=devtools -r=experimental --shard=${{ matrix.shard }} --ci
 
   process_artifacts_combined:
