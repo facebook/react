@@ -33,6 +33,15 @@ error.invalid-impure-functions-in-render-indirect-via-mutation.ts:10:23
      |                        ^^^^^ Cannot access impure value during render
   11 | }
   12 |
+
+error.invalid-impure-functions-in-render-indirect-via-mutation.ts:6:18
+  4 |
+  5 | function Component() {
+> 6 |   const getDate = () => Date.now();
+    |                   ^^^^^^^^^^^^^^^^ `Date.now` is an impure function.
+  7 |   const now = getDate();
+  8 |   const array = [];
+  9 |   arrayPush(array, now);
 ```
           
       
