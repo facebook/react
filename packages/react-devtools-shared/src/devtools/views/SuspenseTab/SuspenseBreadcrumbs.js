@@ -12,7 +12,10 @@ import typeof {SyntheticMouseEvent} from 'react-dom-bindings/src/events/Syntheti
 
 import * as React from 'react';
 import {useContext} from 'react';
-import {TreeDispatcherContext} from '../Components/TreeContext';
+import {
+  TreeDispatcherContext,
+  TreeStateContext,
+} from '../Components/TreeContext';
 import {StoreContext} from '../context';
 import {useHighlightHostInstance} from '../hooks';
 import styles from './SuspenseBreadcrumbs.css';
@@ -23,6 +26,7 @@ import {
 
 export default function SuspenseBreadcrumbs(): React$Node {
   const store = useContext(StoreContext);
+  const {activityID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   const {selectedSuspenseID, lineage, roots} = useContext(
@@ -42,8 +46,8 @@ export default function SuspenseBreadcrumbs(): React$Node {
     <ol className={styles.SuspenseBreadcrumbsList}>
       {lineage === null ? null : lineage.length === 0 ? (
         // We selected the root. This means that we're currently viewing the Transition
-        // that rendered the whole screen. In laymans terms this is really "Initial Paint".
-        // TODO: Once we add subtree selection, then the equivalent should be called
+        // that rendered the whole screen. In laymans terms this is really "Initial Paint" .
+        // When we're looking at a subtree selection, then the equivalent is a
         // "Transition" since in that case it's really about a Transition within the page.
         roots.length > 0 ? (
           <li
@@ -51,9 +55,12 @@ export default function SuspenseBreadcrumbs(): React$Node {
             aria-current="true">
             <button
               className={styles.SuspenseBreadcrumbsButton}
-              onClick={handleClick.bind(null, roots[0])}
+              onClick={handleClick.bind(
+                null,
+                activityID === null ? roots[0] : activityID,
+              )}
               type="button">
-              Initial Paint
+              {activityID === null ? 'Initial Paint' : 'Transition'}
             </button>
           </li>
         ) : null

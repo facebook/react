@@ -120,6 +120,7 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
   LAZY_SYMBOL_STRING,
+  REACT_OPTIMISTIC_KEY,
 } from '../shared/ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
@@ -2991,6 +2992,30 @@ export function attach(
     ) {
       parentInstance = parentInstance.parent;
     }
+    if (parentInstance.kind === FIBER_INSTANCE) {
+      const fiber = parentInstance.data;
+
+      if (
+        fiber.tag === SuspenseComponent &&
+        parentInstance !== parentSuspenseNode.instance
+      ) {
+        // We're about to attach async info to a Suspense boundary we're not
+        // actually considering the parent Suspense boundary for this async info.
+        // We must have not found a suitable Fiber inside the fallback (e.g. due to filtering).
+        // Use the parent of this instance instead since we treat async info
+        // attached to a Suspense boundary as that async info triggering the
+        // fallback of that boundary.
+        const parent = parentInstance.parent;
+        if (parent === null) {
+          // This shouldn't happen. Any <Suspense> would have at least have the
+          // host root as the parent which can't have a fallback.
+          throw new Error(
+            'Did not find a suitable instance for this async info. This is a bug in React.',
+          );
+        }
+        parentInstance = parent;
+      }
+    }
 
     const suspenseNodeSuspendedBy = parentSuspenseNode.suspendedBy;
     const ioInfo = asyncInfo.awaited;
@@ -4849,7 +4874,10 @@ export function attach(
               }
               let previousSiblingOfBestMatch = null;
               let bestMatch = remainingReconcilingChildren;
-              if (componentInfo.key != null) {
+              if (
+                componentInfo.key != null &&
+                componentInfo.key !== REACT_OPTIMISTIC_KEY
+              ) {
                 // If there is a key try to find a matching key in the set.
                 bestMatch = remainingReconcilingChildren;
                 while (bestMatch !== null) {
@@ -5251,9 +5279,9 @@ export function attach(
       // It might even result in a bad user experience for e.g. node selection in the Elements panel.
       // The easiest fix is to strip out the intermediate Fragment fibers,
       // so the Elements panel and Profiler don't need to special case them.
-      // Suspense components only have a non-null memoizedState if they're timed-out.
       const isLegacySuspense =
         nextFiber.tag === SuspenseComponent && OffscreenComponent === -1;
+      // Suspense components only have a non-null memoizedState if they're timed-out.
       const prevDidTimeout =
         isLegacySuspense && prevFiber.memoizedState !== null;
       const nextDidTimeOut =
@@ -6145,7 +6173,7 @@ export function attach(
       return {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
-        key: fiber.key,
+        key: fiber.key === REACT_OPTIMISTIC_KEY ? null : fiber.key,
         env: null,
         stack:
           fiber._debugOwner == null || fiber._debugStack == null
@@ -6158,7 +6186,11 @@ export function attach(
       return {
         displayName: componentInfo.name || 'Anonymous',
         id: instance.id,
-        key: componentInfo.key == null ? null : componentInfo.key,
+        key:
+          componentInfo.key == null ||
+          componentInfo.key === REACT_OPTIMISTIC_KEY
+            ? null
+            : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
         stack:
           componentInfo.owner == null || componentInfo.debugStack == null
@@ -7082,7 +7114,7 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
-      key: key != null ? key : null,
+      key: key != null && key !== REACT_OPTIMISTIC_KEY ? key : null,
 
       type: elementType,
 
@@ -8641,7 +8673,7 @@ export function attach(
     }
     return {
       displayName,
-      key,
+      key: key === REACT_OPTIMISTIC_KEY ? null : key,
       index,
     };
   }
@@ -8649,7 +8681,11 @@ export function attach(
   function getVirtualPathFrame(virtualInstance: VirtualInstance): PathFrame {
     return {
       displayName: virtualInstance.data.name || '',
-      key: virtualInstance.data.key == null ? null : virtualInstance.data.key,
+      key:
+        virtualInstance.data.key == null ||
+        virtualInstance.data.key === REACT_OPTIMISTIC_KEY
+          ? null
+          : virtualInstance.data.key,
       index: -1, // We use -1 to indicate that this is a virtual path frame.
     };
   }

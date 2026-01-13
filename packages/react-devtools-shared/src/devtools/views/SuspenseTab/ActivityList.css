@@ -1,20 +1,33 @@
-.ActivityList {
+.ActivityListContaier {
+  display: flex;
+  flex-direction: column;
+}
+
+.ActivityListHeader {
+  /* even if empty, provides layout alignment with the main view */
+  display: flex;
+  flex: 0 0 42px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ActivityListList {
   cursor: default;
   list-style-type: none;
   margin: 0;
   padding: 0;
 }
 
-.ActivityList[data-pending-activity-slice-selection="true"] {
+.ActivityListList[data-pending-activity-slice-selection="true"] {
   cursor: wait;
 }
 
-.ActivityList:focus {
+.ActivityListList:focus {
   outline: none;
 }
 
 .ActivityListItem {
   color: var(--color-component-name);
+  line-height: var(--line-height-data);
   padding: 0 0.25rem;
   user-select: none;
 }
@@ -27,7 +40,7 @@
   background-color: var(--color-background-inactive);
 }
 
-.ActivityList:focus .ActivityListItem[aria-selected="true"] {
+.ActivityListList:focus .ActivityListItem[aria-selected="true"] {
   background-color: var(--color-background-selected);
   color: var(--color-text-selected);
 
