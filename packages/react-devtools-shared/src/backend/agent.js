@@ -938,8 +938,8 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  selectNode(target: HostInstance): void {
-    const match = this.getIDForHostInstance(target);
+  selectNode(target: HostInstance | null): void {
+    const match = target !== null ? this.getIDForHostInstance(target) : null;
     this._bridge.send(
       'selectElement',
       match !== null
@@ -996,10 +996,7 @@ export default class Agent extends EventEmitter<{
 
   syncSelectionFromBuiltinElementsPanel: () => void = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
-    if (target == null) {
-      return;
-    }
-    this.selectNode(target);
+    this.selectNode(target == null ? null : target);
   };
 
   shutdown: () => void = () => {
