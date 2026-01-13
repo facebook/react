@@ -2714,9 +2714,9 @@ describe('ReactInternalTestUtils console assertions', () => {
       ]);
     });
 
-    describe('\\n    in <stack> placeholder', () => {
+    describe('in <stack> placeholder', () => {
       // @gate __DEV__
-      it('fails if \\n    in <stack> is used for a component stack instead of an error stack', () => {
+      it('fails if `in <stack>` is used for a component stack instead of an error stack', () => {
         const message = expectToThrowFailure(() => {
           console.error('Warning message\n    in div');
           assertConsoleErrorDev(['Warning message\n    in <stack>']);
@@ -2736,7 +2736,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
 
       // @gate __DEV__
-      it('fails if \\n    in <stack> is used for multiple component stacks', () => {
+      it('fails if `in <stack>` is used for multiple component stacks', () => {
         const message = expectToThrowFailure(() => {
           console.error('First warning\n    in span');
           console.error('Second warning\n    in div');
@@ -2769,35 +2769,27 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
 
       // @gate __DEV__
-      it('allows \\n    in <stack> for actual error stack traces', () => {
+      it('allows `in <stack>` for actual error stack traces', () => {
         // This should pass - \n    in <stack> is correctly used for an error stack
-        console.error(
-          'Error: Something went wrong\n    at someFunction (file.js:10:5)\n    at anotherFunction (file.js:20:10)'
-        );
+        console.error(new Error('Something went wrong'));
         assertConsoleErrorDev(['Error: Something went wrong\n    in <stack>']);
       });
 
       // @gate __DEV__
       it('fails if error stack trace is present but \\n    in <stack> is not expected', () => {
         const message = expectToThrowFailure(() => {
-          console.error(
-            'Error: Something went wrong\n    at someFunction (file.js:10:5)'
-          );
+          console.error(new Error('Something went wrong'));
           assertConsoleErrorDev(['Error: Something went wrong']);
         });
-        expect(message).toMatchInlineSnapshot(`
-          "assertConsoleErrorDev(expected)
-
-          Unexpected error stack trace for:
-            "Error: Something went wrong
-              in someFunction (at **)"
-
-          If this error should include an error stack trace, add \\n    in <stack> to your expected message (e.g., "Error: message\\n    in <stack>")."
-        `);
+        expect(message).toMatch(`Unexpected error stack trace for:`);
+        expect(message).toMatch(`Error: Something went wrong`);
+        expect(message).toMatch(
+          'If this error should include an error stack trace, add \\n    in <stack> to your expected message'
+        );
       });
 
       // @gate __DEV__
-      it('fails if \\n    in <stack> is expected but no stack is present', () => {
+      it('fails if `in <stack>` is expected but no stack is present', () => {
         const message = expectToThrowFailure(() => {
           console.error('Error: Something went wrong');
           assertConsoleErrorDev([
@@ -2816,13 +2808,31 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
     });
 
-    describe('[Server] placeholder', () => {
+    describe('[Environment] placeholder', () => {
       // @gate __DEV__
       it('expands [Server] to ANSI escape sequence for server badge', () => {
-        const serverBadge = '\u001b[0m\u001b[7m Server \u001b[0m';
-        console.error(serverBadge + 'Error: something went wrong');
+        const badge = '\u001b[0m\u001b[7m Server \u001b[0m';
+        console.error(badge + 'Error: something went wrong');
         assertConsoleErrorDev([
           ['[Server] Error: something went wrong', {withoutStack: true}],
+        ]);
+      });
+
+      // @gate __DEV__
+      it('expands [Prerender] to ANSI escape sequence for server badge', () => {
+        const badge = '\u001b[0m\u001b[7m Prerender \u001b[0m';
+        console.error(badge + 'Error: something went wrong');
+        assertConsoleErrorDev([
+          ['[Prerender] Error: something went wrong', {withoutStack: true}],
+        ]);
+      });
+
+      // @gate __DEV__
+      it('expands [Cache] to ANSI escape sequence for server badge', () => {
+        const badge = '\u001b[0m\u001b[7m Cache \u001b[0m';
+        console.error(badge + 'Error: something went wrong');
+        assertConsoleErrorDev([
+          ['[Cache] Error: something went wrong', {withoutStack: true}],
         ]);
       });
     });

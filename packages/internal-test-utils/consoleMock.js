@@ -175,9 +175,12 @@ function expandEnvironmentPlaceholders(str) {
   if (typeof str !== 'string') {
     return str;
   }
-  // [Server] -> ANSI escape sequence for server badge
-  // The format is: reset + inverse + " Server " + reset
-  return str.replace(/\[Server\] /g, '\u001b[0m\u001b[7m Server \u001b[0m');
+  // [Environment] -> ANSI escape sequence for environment badge
+  // The format is: reset + inverse + " Environment " + reset
+  return str.replace(
+    /\[(\w+)] /g,
+    (match, env) => '\u001b[0m\u001b[7m ' + env + ' \u001b[0m',
+  );
 }
 
 // The error stack placeholder that can be used in expected messages
@@ -231,7 +234,7 @@ const isLikelyAComponentStack = message =>
     message.includes('\n    in ') ||
     message.includes('\n    at '));
 
-// Error stack traces start with "Error:" and contain "at" frames with file paths
+// Error stack traces start with "*Error:" and contain "at" frames with file paths
 // Component stacks contain "in ComponentName" patterns
 // This helps validate that \n    in <stack> is used correctly
 const isLikelyAnErrorStackTrace = message =>
