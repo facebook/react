@@ -178,7 +178,7 @@ function expandEnvironmentPlaceholders(str) {
   // [Environment] -> ANSI escape sequence for environment badge
   // The format is: reset + inverse + " Environment " + reset
   return str.replace(
-    /\[(\w+)] /g,
+    /^\[(\w+)] /g,
     (match, env) => '\u001b[0m\u001b[7m ' + env + ' \u001b[0m',
   );
 }
