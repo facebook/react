@@ -2768,7 +2768,6 @@ describe('ReactInternalTestUtils console assertions', () => {
         `);
       });
 
-      // @gate __DEV__
       it('allows `in <stack>` for actual error stack traces', () => {
         // This should pass - \n    in <stack> is correctly used for an error stack
         console.error(new Error('Something went wrong'));
