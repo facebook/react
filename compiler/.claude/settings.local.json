@@ -8,7 +8,8 @@
       "Bash(echo:*)",
       "Bash(done)",
       "Bash(cat:*)",
-      "Bash(sl revert:*)"
+      "Bash(sl revert:*)",
+      "Bash(yarn workspace snap run build:*)"
     ],
     "deny": [],
     "ask": []

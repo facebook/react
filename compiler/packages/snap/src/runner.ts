@@ -36,6 +36,7 @@ type RunnerOptions = {
   filter: boolean;
   update: boolean;
   pattern?: string;
+  nodebug: boolean;
 };
 
 const opts: RunnerOptions = yargs
@@ -71,6 +72,12 @@ const opts: RunnerOptions = yargs
     'pattern',
     'Optional glob pattern to filter fixtures (e.g., "error.*", "use-memo")',
   )
+  .boolean('nodebug')
+  .describe(
+    'nodebug',
+    'Do not enable debug logging, even if only one test is matched',
+  )
+  .default('nodebug', false)
   .help('help')
   .strict()
   .parseSync(hideBin(process.argv)) as RunnerOptions;
@@ -236,7 +243,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
               let testFilter: TestFilter | null = null;
               if (opts.pattern) {
                 testFilter = {
-                  debug: true,
+                  debug: !opts.nodebug,
                   paths: [opts.pattern],
                 };
               } else if (opts.filter) {
