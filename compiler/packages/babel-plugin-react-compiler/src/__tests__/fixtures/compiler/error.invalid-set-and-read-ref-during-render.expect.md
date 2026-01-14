@@ -19,7 +19,7 @@ Found 1 error:
 
 Error: Cannot access ref value during render
 
-React refs are mutable containers that should only be mutated outside of render, such as in event handlers or effects. Mutating a ref during render can cause bugs because the mutation may not be associated with a particular render. See https://react.dev/reference/react/useRef.
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
 
 error.invalid-set-and-read-ref-during-render.ts:5:9
   3 |   const ref = useRef(null);

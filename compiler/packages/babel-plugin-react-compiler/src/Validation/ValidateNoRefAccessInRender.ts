@@ -348,7 +348,7 @@ function processInstruction(
           if (isTopLevel) {
             // Direct mutation at top level - error immediately
             errors.pushDiagnostic(
-              makeRefMutationError(mutation.place, mutation.isCurrentProperty),
+              makeRefMutationError(mutation.place),
             );
           }
           return mutation;
@@ -366,7 +366,7 @@ function processInstruction(
       if (mutationInfo != null && isTopLevel) {
         // Calling a ref-mutating function at top level - error
         errors.pushDiagnostic(
-          makeRefMutationError(mutationInfo.place, mutationInfo.isCurrentProperty),
+          makeRefMutationError(mutationInfo.place),
         );
       }
       break;
@@ -397,33 +397,20 @@ function processInstruction(
   return null;
 }
 
-function makeRefMutationError(
-  place: Place,
-  isCurrentProperty: boolean,
-): CompilerDiagnostic {
-  const diagnostic = CompilerDiagnostic.create({
+function makeRefMutationError(place: Place): CompilerDiagnostic {
+  return CompilerDiagnostic.create({
     category: ErrorCategory.Refs,
-    reason: 'Mutating refs during render is not allowed',
+    reason: 'Cannot access refs during render',
     description: REF_ERROR_DESCRIPTION,
   }).withDetails({
     kind: 'error',
     loc: place.loc,
-    message: 'Cannot mutate ref during render',
+    message: 'Cannot update ref during render',
   });
-
-  if (isCurrentProperty) {
-    diagnostic.withDetails({
-      kind: 'hint',
-      message:
-        'Refs may be mutated during render if initialized with `if (ref.current == null)`',
-    });
-  }
-
-  return diagnostic;
 }
 
 export const REF_ERROR_DESCRIPTION =
-  'React refs are mutable containers that should only be mutated outside of render, ' +
-  'such as in event handlers or effects. Mutating a ref during render can cause ' +
-  'bugs because the mutation may not be associated with a particular render. ' +
-  'See https://react.dev/reference/react/useRef';
+  'React refs are values that are not needed for rendering. Refs should only be accessed ' +
+  'outside of render, such as in event handlers or effects. ' +
+  'Accessing a ref value (the `current` property) during render can cause your component ' +
+  'not to update as expected (https://react.dev/reference/react/useRef)';
