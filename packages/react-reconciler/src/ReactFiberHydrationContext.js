@@ -173,6 +173,7 @@ function enterHydrationState(fiber: Fiber): boolean {
   didSuspendOrErrorDEV = false;
   hydrationDiffRootDEV = null;
   rootOrSingletonContext = true;
+
   return true;
 }
 
@@ -834,6 +835,43 @@ function resetHydrationState(): void {
   didSuspendOrErrorDEV = false;
 }
 
+// Restore the hydration cursor when unwinding a HostComponent that already
+// claimed a DOM node. This is a fork of popHydrationState that does all the
+// same validity checks but restores the cursor to this fiber's DOM node
+// instead of advancing past it. It also does NOT clear unhydrated tail nodes
+// or throw on mismatches since we're unwinding, not completing.
+//
+// This is needed when replaySuspendedUnitOfWork calls unwindInterruptedWork
+// before re-running beginWork on the same fiber, or when throwAndUnwindWorkLoop
+// calls unwindWork on ancestor fibers.
+function popHydrationStateOnInterruptedWork(fiber: Fiber): void {
+  if (!supportsHydration) {
+    return;
+  }
+  if (fiber !== hydrationParentFiber) {
+    // We're deeper than the current hydration context, inside an inserted
+    // tree. Don't touch the cursor.
+    return;
+  }
+  if (!isHydrating) {
+    // If we're not currently hydrating but we're in a hydration context, then
+    // we were an insertion and now need to pop up to reenter hydration of our
+    // siblings. Same as popHydrationState.
+    popToNextHostParent(fiber);
+    isHydrating = true;
+    return;
+  }
+
+  // We're in a valid hydration context. Restore the cursor to this fiber's
+  // DOM node so that when beginWork re-runs, it can claim the same node.
+  // Unlike popHydrationState, we do NOT check for unhydrated tail nodes
+  // or advance the cursor - we're restoring, not completing.
+  popToNextHostParent(fiber);
+  if (fiber.tag === HostComponent && fiber.stateNode != null) {
+    nextHydratableInstance = fiber.stateNode;
+  }
+}
+
 export function upgradeHydrationErrorsToRecoverable(): Array<
   CapturedValue<mixed>,
 > | null {
@@ -905,6 +943,7 @@ export {
   reenterHydrationStateFromDehydratedActivityInstance,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
+  popHydrationStateOnInterruptedWork,
   claimHydratableSingleton,
   tryToClaimNextHydratableInstance,
   tryToClaimNextHydratableTextInstance,

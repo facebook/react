@@ -2145,7 +2145,8 @@ describe('ReactFlightDOM', () => {
       pipe(flightWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     const response =
@@ -2169,9 +2170,12 @@ describe('ReactFlightDOM', () => {
       ).pipe(fizzWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(shellErrors).toEqual([]);
@@ -2235,7 +2239,8 @@ describe('ReactFlightDOM', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     const response =
@@ -2260,9 +2265,12 @@ describe('ReactFlightDOM', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(shellErrors).toEqual([]);
@@ -2327,7 +2335,8 @@ describe('ReactFlightDOM', () => {
       pipe(flightWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     const response =
@@ -2351,9 +2360,12 @@ describe('ReactFlightDOM', () => {
       ).pipe(fizzWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(shellErrors).toEqual([]);
@@ -2416,7 +2428,8 @@ describe('ReactFlightDOM', () => {
       pipe(flightWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     const response =
@@ -2440,9 +2453,12 @@ describe('ReactFlightDOM', () => {
       ).pipe(fizzWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(shellErrors).toEqual([]);
@@ -2504,7 +2520,8 @@ describe('ReactFlightDOM', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     const response =
@@ -2528,9 +2545,12 @@ describe('ReactFlightDOM', () => {
       ).pipe(fizzWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(shellErrors).toEqual([]);
@@ -2596,7 +2616,8 @@ describe('ReactFlightDOM', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     const response =
@@ -2620,8 +2641,10 @@ describe('ReactFlightDOM', () => {
       ).pipe(fizzWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(shellErrors).toEqual([]);
@@ -2668,7 +2691,8 @@ describe('ReactFlightDOM', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     const response =
@@ -2692,7 +2716,8 @@ describe('ReactFlightDOM', () => {
       ).pipe(fizzWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(shellErrors).toEqual([]);
@@ -2760,8 +2785,9 @@ describe('ReactFlightDOM', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'bam!',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: bam!\n    in <stack>',
     ]);
 
     const response =
@@ -2785,8 +2811,9 @@ describe('ReactFlightDOM', () => {
       ).pipe(fizzWritable);
     });
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'bam!',
+      '[Server] Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      '[Server] Error: bam!\n    in <stack>',
     ]);
 
     expect(shellErrors).toEqual([]);
