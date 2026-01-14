@@ -2059,14 +2059,20 @@ export function attach(
         const prevHook = prevTree[i];
         const nextHook = nextTree[i];
 
-        if (prevHook?.subHooks || nextHook?.subHooks) {
-          traverse(prevHook.subHooks, nextHook.subHooks);
-        } else {
-          if (didStatefulHookChange(prevHook, nextHook)) {
-            indices.push(index);
-          }
-          index++;
+        if (prevHook === null || nextHook === null) {
+          continue;
         }
+
+        if (prevHook.subHooks.length > 0 && nextHook.subHooks.length > 0) {
+          traverse(prevHook.subHooks, nextHook.subHooks);
+          continue;
+        }
+
+        if (didStatefulHookChange(prevHook, nextHook)) {
+          indices.push(index);
+        }
+
+        index++;
       }
     }
 
