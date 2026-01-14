@@ -20,4 +20,9 @@ export {
   registerServerReference,
   registerClientReference,
   createTemporaryReferenceSet,
+  setServerActionBoundArgsEncryption,
+  encryptActionBoundArgs,
+  decryptActionBoundArgs,
+  createServerEntry,
+  ensureServerActions,
 } from './ReactFlightDOMServerNode';

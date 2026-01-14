@@ -12,7 +12,15 @@ import type {
   ReactClientValue,
 } from 'react-server/src/ReactFlightServer';
 import type {Thenable} from 'shared/ReactTypes';
-import type {ClientManifest} from './ReactFlightServerConfigRspackBundler';
+import {
+  type ClientManifest,
+  setServerActionBoundArgsEncryption,
+  encryptActionBoundArgs,
+  decryptActionBoundArgs,
+  loadServerAction,
+  createServerEntry,
+  ensureServerActions,
+} from './ReactFlightServerConfigRspackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
 import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
@@ -114,7 +122,7 @@ function startReadingFromDebugChannelReadableStream(
 declare const __rspack_rsc_manifest__: {
   clientManifest: ClientManifest,
   serverManifest: ServerManifest,
-}
+};
 
 function renderToReadableStream(
   model: ReactClientValue,
@@ -314,4 +322,14 @@ export {
   decodeReplyFromAsyncIterable,
   decodeAction,
   decodeFormState,
+
+  // server action bound args encryption
+  setServerActionBoundArgsEncryption,
+  encryptActionBoundArgs,
+  decryptActionBoundArgs,
+
+  // Rspack specific
+  loadServerAction,
+  createServerEntry,
+  ensureServerActions,
 };

@@ -12,10 +12,16 @@ import type {
   ReactClientValue,
 } from 'react-server/src/ReactFlightServer';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
-import type {
-  BoundArgsEncryptionStrategy,
-  ClientManifest,
-} from "./ReactFlightServerConfigRspackBundler";
+import type {ServerManifest} from 'react-client/src/forks/ReactFlightClientConfig.dom-node-rspack';
+import {
+  type ClientManifest,
+  setServerActionBoundArgsEncryption,
+  encryptActionBoundArgs,
+  decryptActionBoundArgs,
+  loadServerAction,
+  createServerEntry,
+  ensureServerActions,
+} from './ReactFlightServerConfigRspackBundler';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {Thenable} from 'shared/ReactTypes';
@@ -54,7 +60,6 @@ import {
   decodeAction,
   decodeFormState,
 } from 'react-server/src/ReactFlightActionServer';
-import type { ServerManifest } from "react-client/src/forks/ReactFlightClientConfig.dom-node-rspack";
 
 export {
   registerServerReference,
@@ -328,8 +333,8 @@ function startReadingFromDebugChannelReadableStream(
 
 declare const __rspack_rsc_manifest__: {
   clientManifest: ClientManifest,
-  serverManifest: ServerManifest
-}
+  serverManifest: ServerManifest,
+};
 
 function renderToReadableStream(
   model: ReactClientValue,
@@ -682,34 +687,6 @@ function decodeReplyFromAsyncIterable<T>(
   return getRoot(response);
 }
 
-const defaultStrategy: BoundArgsEncryptionStrategy<any> = {
-  encrypt: async (_actionId: string, ...args: any[]) => args,
-  decrypt: async (_actionId: string, payloadPromise: Promise<any>) =>
-    payloadPromise,
-};
-
-let currentStrategy = defaultStrategy;
-
-function setServerActionBoundArgsEncryption<T>(
-  strategy: BoundArgsEncryptionStrategy<T>,
-) {
-  currentStrategy = strategy;
-}
-
-async function encryptActionBoundArgs(
-  actionId: string,
-  ...args: any[]
-): Promise<any> {
-  return currentStrategy.encrypt(actionId, ...args);
-}
-
-async function decryptActionBoundArgs(
-  actionId: string,
-  encryptedPromise: Promise<any>,
-): Promise<any> {
-  return currentStrategy.decrypt(actionId, encryptedPromise);
-}
-
 export {
   renderToReadableStream,
   renderToPipeableStream,
@@ -720,8 +697,14 @@ export {
   decodeReplyFromAsyncIterable,
   decodeAction,
   decodeFormState,
+
   // server action bound args encryption
   setServerActionBoundArgsEncryption,
   encryptActionBoundArgs,
-  decryptActionBoundArgs
+  decryptActionBoundArgs,
+
+  // Rspack specific
+  loadServerAction,
+  createServerEntry,
+  ensureServerActions,
 };

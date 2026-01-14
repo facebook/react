@@ -233,7 +233,7 @@ module.exports = [
     isFlowTyped: true,
     isServerSupported: true,
   },
-    {
+  {
     shortName: 'dom-node-rspack',
     entryPoints: [
       'react-server-dom-rspack/src/client/react-flight-dom-client.node',

@@ -36,9 +36,7 @@ import {
 
 import type {ServerReferenceId} from '../client/ReactFlightClientConfigBundlerRspack';
 
-export {
-  registerServerReference,
-} from 'react-client/src/ReactFlightReplyClient';
+export {registerServerReference} from 'react-client/src/ReactFlightReplyClient';
 
 import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 
@@ -325,7 +323,26 @@ function encodeReply(
   });
 }
 
-export {createFromFetch, createFromReadableStream, encodeReply};
+declare const __rspack_rsc_hot_reloader__: {
+  on: (callback: () => void) => () => void,
+};
+
+function onServerComponentChanges(callback: () => void) {
+  if (!module.hot) {
+    return;
+  }
+  const off = __rspack_rsc_hot_reloader__.on(() => {
+    callback();
+  });
+  module.hot.dispose(off);
+}
+
+export {
+  createFromFetch,
+  createFromReadableStream,
+  encodeReply,
+  onServerComponentChanges,
+};
 
 if (__DEV__) {
   injectIntoDevTools();

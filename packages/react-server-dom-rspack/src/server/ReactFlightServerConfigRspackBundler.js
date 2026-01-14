@@ -17,6 +17,7 @@ import type {
   ClientReference,
   ServerReference,
 } from '../ReactFlightRspackReferences';
+import type {ServerManifest} from 'react-client/src/forks/ReactFlightClientConfig.dom-edge-rspack';
 
 export type {ClientReference, ServerReference};
 
@@ -31,9 +32,19 @@ export opaque type ClientReferenceManifestEntry = ImportManifestEntry;
 
 export type ClientReferenceKey = string;
 
-export type BoundArgsEncryptionStrategy<T> = {
+export type BoundArgsEncryption<T> = {
   encrypt: (actionId: string, ...args: Array<any>) => Promise<T>,
-  decrypt: (actionId: string, payloadPromise: Promise<T>) => Promise<Array<any>>,
+  decrypt: (
+    actionId: string,
+    payloadPromise: Promise<T>,
+  ) => Promise<Array<any>>,
+};
+
+export type ServerEntry<T> = {
+  ...T,
+  entryJsFiles: ?Array<string>,
+  entryCssFiles: ?Array<string>,
+  ...
 };
 
 export {
@@ -110,4 +121,88 @@ export function getServerReferenceLocation<T>(
   serverReference: ServerReference<T>,
 ): void | Error {
   return serverReference.$$location;
+}
+
+const defaultStrategy: BoundArgsEncryption<any> = {
+  encrypt: (_actionId: string, ...args: any[]) => Promise.resolve(args),
+  decrypt: (_actionId: string, payloadPromise: Promise<any>) => payloadPromise,
+};
+
+let currentStrategy = defaultStrategy;
+
+export function setServerActionBoundArgsEncryption<T>(
+  strategy: BoundArgsEncryption<T>,
+) {
+  currentStrategy = strategy;
+}
+
+export function encryptActionBoundArgs(
+  actionId: string,
+  ...args: any[]
+): Promise<> {
+  return currentStrategy.encrypt(actionId, ...args);
+}
+
+export function decryptActionBoundArgs(
+  actionId: string,
+  encryptedPromise: Promise<any>,
+): Promise<any> {
+  return currentStrategy.decrypt(actionId, encryptedPromise);
+}
+
+declare const __rspack_rsc_manifest__: {
+  entryJsFiles: Array<string>,
+  entryCssFiles: {[resourceId: string]: Array<string>, ...},
+  serverManifest: ServerManifest,
+};
+
+export function loadServerAction(actionId: string): Function {
+  const actionModId = __rspack_rsc_manifest__.serverManifest[actionId].id;
+
+  if (!actionModId) {
+    throw new Error(
+      `Failed to find Server Action "${actionId}". This request might be from an older or newer deployment.`,
+    );
+  }
+
+  const moduleExports = __webpack_require__(actionModId);
+  const fn = moduleExports[actionId];
+  if (typeof fn !== 'function') {
+    throw new Error('Server actions must be functions');
+  }
+  return fn;
+}
+
+export function createServerEntry<T>(
+  value: T,
+  resourceId: string,
+): ServerEntry<T> {
+  const entryJsFiles = __rspack_rsc_manifest__.entryJsFiles || [];
+  const entryCssFiles = __rspack_rsc_manifest__.entryCssFiles[resourceId] || [];
+  if (
+    typeof value === 'function' ||
+    (typeof value === 'object' && value !== null)
+  ) {
+    // $FlowFixMe: We're dynamically adding properties to create ServerEntry
+    Object.assign(value, {
+      entryJsFiles,
+      entryCssFiles,
+    });
+  }
+  // $FlowFixMe: After Object.assign, value conforms to ServerEntry<T>
+  return (value: ServerEntry<T>);
+}
+
+// This function ensures that all the exported values are valid server actions,
+// during the runtime. By definition all actions are required to be async
+// functions, but here we can only check that they are functions.
+export function ensureServerActions(actions: any[]) {
+  for (let i = 0; i < actions.length; i++) {
+    const action = actions[i];
+    if (typeof action !== 'function') {
+      throw new Error(
+        `A "use server" file can only export async functions, found ${typeof action}.`,
+      );
+    }
+  }
 }

@@ -92,7 +92,7 @@ declare const __rspack_rsc_manifest__: {
   serverConsumerModuleMap: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
   serverManifest: ServerManifest,
-}
+};
 
 function createFromNodeStream<T>(
   stream: Readable,

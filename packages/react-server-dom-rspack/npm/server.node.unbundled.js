@@ -17,3 +17,11 @@ exports.decodeFormState = s.decodeFormState;
 exports.registerServerReference = s.registerServerReference;
 exports.registerClientReference = s.registerClientReference;
 exports.createTemporaryReferenceSet = s.createTemporaryReferenceSet;
+
+exports.setServerActionBoundArgsEncryption =
+  s.setServerActionBoundArgsEncryption;
+exports.encryptActionBoundArgs = s.encryptActionBoundArgs;
+exports.decryptActionBoundArgs = s.decryptActionBoundArgs;
+exports.loadServerAction = s.loadServerAction;
+exports.createServerEntry = s.createServerEntry;
+exports.ensureServerActions = s.ensureServerActions;

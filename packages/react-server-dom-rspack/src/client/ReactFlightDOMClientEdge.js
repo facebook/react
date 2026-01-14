@@ -82,7 +82,7 @@ declare const __rspack_rsc_manifest__: {
   serverConsumerModuleMap: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
   serverManifest: ServerManifest,
-}
+};
 
 function createResponseFromOptions(options: Options) {
   const debugChannel: void | DebugChannel =
@@ -149,7 +149,7 @@ function startReadingFromStream(
 
 function createFromReadableStream<T>(
   stream: ReadableStream,
-  options: Options,
+  options?: Options = {},
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
 
@@ -181,7 +181,7 @@ function createFromReadableStream<T>(
 
 function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
-  options: Options,
+  options?: Options = {},
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(
