@@ -2059,7 +2059,7 @@ export function attach(
         const prevHook = prevTree[i];
         const nextHook = nextTree[i];
 
-        if (prevHook?.subHooks?.length > 0 && nextHook?.subHooks?.length > 0) {
+        if (prevHook.subHooks?.length > 0 && nextHook.subHooks?.length > 0) {
           traverse(prevHook.subHooks, nextHook.subHooks);
           continue;
         }
