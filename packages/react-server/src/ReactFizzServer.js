@@ -362,6 +362,7 @@ const OPEN = 11;
 const ABORTING = 12;
 const CLOSING = 13;
 const CLOSED = 14;
+const STALLED_DEV = 15;
 
 export opaque type Request = {
   destination: null | Destination,
@@ -370,7 +371,7 @@ export opaque type Request = {
   +renderState: RenderState,
   +rootFormatContext: FormatContext,
   +progressiveChunkSize: number,
-  status: 10 | 11 | 12 | 13 | 14,
+  status: 10 | 11 | 12 | 13 | 14 | 15,
   fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
@@ -1032,6 +1033,9 @@ function pushHaltedAwaitOnComponentStack(
 
 // performWork + retryTask without mutation
 function rerenderStalledTask(request: Request, task: Task): void {
+  const prevStatus = request.status;
+  request.status = STALLED_DEV;
+
   const prevContext = getActiveContext();
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
@@ -1073,6 +1077,7 @@ function rerenderStalledTask(request: Request, task: Task): void {
       switchContext(prevContext);
     }
     currentRequest = prevRequest;
+    request.status = prevStatus;
   }
 }
 
@@ -2802,9 +2807,7 @@ function renderLazyComponent(
   ref: any,
 ): void {
   let Component;
-  let previouslyAbortingDEV;
   if (__DEV__) {
-    previouslyAbortingDEV = request.status === ABORTING;
     Component = callLazyInitInDEV(lazyComponent);
   } else {
     const payload = lazyComponent._payload;
@@ -2813,11 +2816,9 @@ function renderLazyComponent(
   }
   if (
     request.status === ABORTING &&
-    // If we already started rendering the Lazy Componentn in an aborting state
-    // and reach this point, the lazy was already resolved.
-    // We don't bail here again since this is most likely a discarded rerender
-    // to get the stack where we suspended in dev.
-    (!__DEV__ || !previouslyAbortingDEV)
+    // We're going to discard this render anyway.
+    // We just need to reach the point where we suspended in dev.
+    (!__DEV__ || request.status !== STALLED_DEV)
   ) {
     // eslint-disable-next-line no-throw-literal
     throw null;
