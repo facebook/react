@@ -478,6 +478,14 @@ function useSyncExternalStore<T>(
     debugInfo: null,
     dispatcherHookName: 'SyncExternalStore',
   });
+  hookLog.push({
+    displayName: null,
+    primitive: 'SyncExternalStore',
+    stackError: new Error(),
+    value,
+    debugInfo: null,
+    dispatcherHookName: 'SyncExternalStore',
+  });
   return value;
 }
 
@@ -492,6 +500,15 @@ function useTransition(): [
   nextHook(); // Callback
 
   const isPending = stateHook !== null ? stateHook.memoizedState : false;
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'Transition',
+    stackError: new Error(),
+    value: isPending,
+    debugInfo: null,
+    dispatcherHookName: 'Transition',
+  });
 
   hookLog.push({
     displayName: null,
@@ -642,6 +659,24 @@ function useFormState<S, P>(
     dispatcherHookName: 'FormState',
   });
 
+  hookLog.push({
+    displayName: null,
+    primitive: 'FormState',
+    stackError: stackError,
+    value: value,
+    debugInfo: debugInfo,
+    dispatcherHookName: 'FormState',
+  });
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'FormState',
+    stackError: stackError,
+    value: value,
+    debugInfo: debugInfo,
+    dispatcherHookName: 'FormState',
+  });
+
   if (error !== null) {
     throw error;
   }
@@ -702,6 +737,24 @@ function useActionState<S, P>(
   } else {
     value = initialState;
   }
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'ActionState',
+    stackError: stackError,
+    value: value,
+    debugInfo: debugInfo,
+    dispatcherHookName: 'ActionState',
+  });
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'ActionState',
+    stackError: stackError,
+    value: value,
+    debugInfo: debugInfo,
+    dispatcherHookName: 'ActionState',
+  });
 
   hookLog.push({
     displayName: null,
