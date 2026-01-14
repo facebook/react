@@ -393,6 +393,24 @@ describe('utils', () => {
         165558,
       ]);
     });
+
+    it('should handle malicious input without ReDoS vulnerability', () => {
+      // This test ensures the Firefox stack regex doesn't exhibit catastrophic
+      // backtracking (ReDoS) when processing malicious input patterns.
+      // See: https://github.com/facebook/react/issues/35490
+      const nullChar = String.fromCharCode(0);
+      const maliciousInput =
+        ' ' + ('"' + nullChar).repeat(2000) + '\r!\r!' + '\n';
+
+      const startTime = Date.now();
+      // This should complete quickly (< 100ms) instead of hanging for seconds
+      const result = extractLocationFromComponentStack(maliciousInput);
+      const elapsedTime = Date.now() - startTime;
+
+      // The result should be null (no valid stack frame) and complete quickly
+      expect(result).toEqual(null);
+      expect(elapsedTime).toBeLessThan(100);
+    });
   });
 
   describe('symbolicateSource', () => {
