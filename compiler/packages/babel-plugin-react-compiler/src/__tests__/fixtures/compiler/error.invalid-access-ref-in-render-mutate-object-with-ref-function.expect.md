@@ -32,11 +32,11 @@ error.invalid-access-ref-in-render-mutate-object-with-ref-function.ts:8:15
    9 | }
   10 |
 
-error.invalid-access-ref-in-render-mutate-object-with-ref-function.ts:6:15
+error.invalid-access-ref-in-render-mutate-object-with-ref-function.ts:6:21
   4 |   const ref = useRef(null);
   5 |   const object = {};
 > 6 |   object.foo = () => ref.current;
-    |                ^^^^^^^^^^^^^^^^^ Ref is initially accessed
+    |                      ^^^^^^^^^^^ Ref is initially accessed
   7 |   const refValue = object.foo();
   8 |   return <div>{refValue}</div>;
   9 | }

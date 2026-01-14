@@ -37,14 +37,14 @@ error.invalid-impure-functions-in-render-via-function-call.ts:13:23
   14 | }
   15 |
 
-error.invalid-impure-functions-in-render-via-function-call.ts:8:28
-   6 |   const now = Date.now();
-   7 |   const f = () => {
->  8 |     const array = makeArray(now);
-     |                             ^^^ `Date.now` is an impure function.
-   9 |     const hasDate = identity(array);
-  10 |     return hasDate;
-  11 |   };
+error.invalid-impure-functions-in-render-via-function-call.ts:6:14
+  4 |
+  5 | function Component() {
+> 6 |   const now = Date.now();
+    |               ^^^^^^^^^^ `Date.now` is an impure function.
+  7 |   const f = () => {
+  8 |     const array = makeArray(now);
+  9 |     const hasDate = identity(array);
 ```
           
       

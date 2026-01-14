@@ -29,6 +29,7 @@ import {
   isArrayType,
   isJsxOrJsxUnionType,
   isMapType,
+  isMutableEffect,
   isPrimitiveType,
   isRefOrRefValue,
   isSetType,
@@ -587,6 +588,17 @@ function inferBlock(
         }),
       );
     }
+    if (
+      context.fn.fnType === 'Component' ||
+      isJsxOrJsxUnionType(context.fn.returns.identifier.type)
+    ) {
+      terminal.effects.push(
+        context.internEffect({
+          kind: 'Render',
+          place: terminal.value,
+        }),
+      );
+    }
   }
 }
 
@@ -758,17 +770,7 @@ function applyEffect(
       break;
     }
     case 'ImmutableCapture': {
-      const kind = state.kind(effect.from).kind;
-      switch (kind) {
-        case ValueKind.Global:
-        case ValueKind.Primitive: {
-          // no-op: we don't need to track data flow for copy types
-          break;
-        }
-        default: {
-          effects.push(effect);
-        }
-      }
+      effects.push(effect);
       break;
     }
     case 'CreateFrom': {
@@ -1070,6 +1072,17 @@ function applyEffect(
             reason: new Set(fromValue.reason),
           });
           state.define(effect.into, value);
+          applyEffect(
+            context,
+            state,
+            {
+              kind: 'ImmutableCapture',
+              from: effect.from,
+              into: effect.into,
+            },
+            initialized,
+            effects,
+          );
           break;
         }
         default: {
@@ -1975,6 +1988,11 @@ function computeSignatureForInstruction(
           value: ValueKind.Primitive,
           reason: ValueReason.Other,
         });
+        effects.push({
+          kind: 'ImmutableCapture',
+          from: value.object,
+          into: lvalue,
+        });
       } else {
         effects.push({
           kind: 'CreateFrom',
@@ -2180,6 +2198,9 @@ function computeSignatureForInstruction(
         for (const prop of value.props) {
           const place =
             prop.kind === 'JsxAttribute' ? prop.place : prop.argument;
+          if (isUseRefType(place.identifier)) {
+            continue;
+          }
           if (place.identifier.type.kind === 'Function') {
             if (isJsxOrJsxUnionType(place.identifier.type.return)) {
               effects.push({
@@ -2225,6 +2246,11 @@ function computeSignatureForInstruction(
             into: place,
             value: ValueKind.Primitive,
             reason: ValueReason.Other,
+          });
+          effects.push({
+            kind: 'ImmutableCapture',
+            from: value.value,
+            into: place,
           });
         } else if (patternItem.kind === 'Identifier') {
           effects.push({
@@ -2407,15 +2433,46 @@ function computeSignatureForInstruction(
       });
       break;
     }
+    case 'BinaryExpression': {
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        value: ValueKind.Primitive,
+        reason: ValueReason.Other,
+      });
+      effects.push({
+        kind: 'ImmutableCapture',
+        into: lvalue,
+        from: value.left,
+      });
+      effects.push({
+        kind: 'ImmutableCapture',
+        into: lvalue,
+        from: value.right,
+      });
+      break;
+    }
+    case 'UnaryExpression': {
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        value: ValueKind.Primitive,
+        reason: ValueReason.Other,
+      });
+      effects.push({
+        kind: 'ImmutableCapture',
+        into: lvalue,
+        from: value.value,
+      });
+      break;
+    }
     case 'TaggedTemplateExpression':
-    case 'BinaryExpression':
     case 'Debugger':
     case 'JSXText':
     case 'MetaProperty':
     case 'Primitive':
     case 'RegExpLiteral':
     case 'TemplateLiteral':
-    case 'UnaryExpression':
     case 'UnsupportedNode': {
       effects.push({
         kind: 'Create',

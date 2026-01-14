@@ -1879,7 +1879,15 @@ export function isRefValueType(id: Identifier): boolean {
 }
 
 export function isUseRefType(id: Identifier): boolean {
-  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseRefId';
+  return isUseRefType_(id.type);
+}
+
+export function isUseRefType_(type: Type): boolean {
+  return (
+    (type.kind === 'Object' && type.shapeId === 'BuiltInUseRefId') ||
+    (type.kind === 'Phi' &&
+      type.operands.some(operand => isUseRefType_(operand)))
+  );
 }
 
 export function isUseStateType(id: Identifier): boolean {

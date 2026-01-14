@@ -33,11 +33,11 @@ error.invalid-impure-functions-in-render-indirect.ts:9:23
   10 | }
   11 |
 
-error.invalid-impure-functions-in-render-indirect.ts:6:18
+error.invalid-impure-functions-in-render-indirect.ts:6:24
   4 |
   5 | function Component() {
 > 6 |   const getDate = () => Date.now();
-    |                   ^^^^^^^^^^^^^^^^ `Date.now` is an impure function.
+    |                         ^^^^^^^^^^ `Date.now` is an impure function.
   7 |   const array = makeArray(getDate());
   8 |   const hasDate = identity(array);
   9 |   return <Foo hasDate={hasDate} />;

@@ -5,11 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import prettyFormat from 'pretty-format';
 import {CompilerDiagnostic, CompilerError, Effect} from '..';
 import {
   areEqualSourceLocations,
   HIRFunction,
   IdentifierId,
+  InstructionId,
+  isJsxType,
+  isRefValueType,
   isUseRefType,
 } from '../HIR';
 import {
@@ -20,9 +24,16 @@ import {AliasingEffect} from '../Inference/AliasingEffects';
 import {createControlDominators} from '../Inference/ControlDominators';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {Err, Ok, Result} from '../Utils/Result';
-import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
+import {
+  assertExhaustive,
+  getOrInsertWith,
+  Set_filter,
+  Set_subtract,
+} from '../Utils/utils';
+import {printInstruction} from '../HIR/PrintHIR';
 
 type ImpureEffect = Extract<AliasingEffect, {kind: 'Impure'}>;
+type RenderEffect = Extract<AliasingEffect, {kind: 'Render'}>;
 type FunctionCache = Map<HIRFunction, Map<string, ImpuritySignature>>;
 type ImpuritySignature = {effects: Array<ImpureEffect>; error: CompilerError};
 
@@ -49,10 +60,104 @@ function inferFunctionExpressionMemo(
   return getOrInsertWith(
     getOrInsertWith(cache, fn, () => new Map()),
     key,
-    () => {
-      return inferImpureValues(fn, impure, cache);
-    },
+    () => inferImpureValues(fn, impure, cache),
   );
+}
+
+function processEffects(
+  id: InstructionId,
+  effects: Array<AliasingEffect>,
+  impure: Map<IdentifierId, ImpureEffect>,
+  cache: FunctionCache,
+): boolean {
+  let hasChanges = false;
+  const rendered: Set<IdentifierId> = new Set();
+  for (const effect of effects) {
+    if (effect.kind === 'Render') {
+      rendered.add(effect.place.identifier.id);
+    }
+  }
+  for (const effect of effects) {
+    switch (effect.kind) {
+      case 'Alias':
+      case 'Assign':
+      case 'Capture':
+      case 'CreateFrom':
+      case 'ImmutableCapture': {
+        const sourceEffect = impure.get(effect.from.identifier.id);
+        if (
+          sourceEffect != null &&
+          !impure.has(effect.into.identifier.id) &&
+          !rendered.has(effect.from.identifier.id) &&
+          !isUseRefType(effect.into.identifier) &&
+          !isJsxType(effect.into.identifier.type)
+        ) {
+          impure.set(effect.into.identifier.id, sourceEffect);
+          hasChanges = true;
+        }
+        if (
+          sourceEffect == null &&
+          (effect.kind === 'Assign' || effect.kind === 'Capture') &&
+          !impure.has(effect.from.identifier.id) &&
+          !rendered.has(effect.from.identifier.id) &&
+          !isUseRefType(effect.from.identifier) &&
+          isMutable({id}, effect.into)
+        ) {
+          const destinationEffect = impure.get(effect.into.identifier.id);
+          if (destinationEffect != null) {
+            impure.set(effect.from.identifier.id, destinationEffect);
+            hasChanges = true;
+          }
+        }
+        break;
+      }
+      case 'Impure': {
+        if (!impure.has(effect.into.identifier.id)) {
+          impure.set(effect.into.identifier.id, effect);
+          hasChanges = true;
+        }
+        break;
+      }
+      case 'Render': {
+        break;
+      }
+      case 'CreateFunction': {
+        const result = inferFunctionExpressionMemo(
+          effect.function.loweredFunc.func,
+          impure,
+          cache,
+        );
+        if (result.error.hasAnyErrors()) {
+          break;
+        }
+        const impureEffect: ImpureEffect | null =
+          result.effects.find(
+            (functionEffect: AliasingEffect): functionEffect is ImpureEffect =>
+              functionEffect.kind === 'Impure' &&
+              functionEffect.into.identifier.id ===
+                effect.function.loweredFunc.func.returns.identifier.id,
+          ) ?? null;
+        if (impureEffect != null) {
+          impure.set(effect.into.identifier.id, impureEffect);
+          hasChanges = true;
+        }
+        break;
+      }
+      case 'MaybeAlias':
+      case 'Apply':
+      case 'Create':
+      case 'Freeze':
+      case 'Mutate':
+      case 'MutateConditionally':
+      case 'MutateFrozen':
+      case 'MutateGlobal':
+      case 'MutateTransitive':
+      case 'MutateTransitiveConditionally': {
+        break;
+      }
+    }
+  }
+  return hasChanges;
 }
 
 function inferImpureValues(
@@ -105,128 +210,53 @@ function inferImpureValues(
       }
 
       for (const instr of block.instructions) {
-        let impureEffect: ImpureEffect | undefined = instr.effects?.find(
-          (effect: AliasingEffect): effect is ImpureEffect =>
-            effect.kind === 'Impure',
-        );
-
-        if (
-          impureEffect == null &&
-          (instr.value.kind === 'FunctionExpression' ||
-            instr.value.kind === 'ObjectMethod')
-        ) {
-          impureEffect = instr.value.loweredFunc.func.aliasingEffects?.find(
-            (effect: AliasingEffect): effect is ImpureEffect =>
-              effect.kind === 'Impure',
-          );
-          if (impureEffect == null) {
-            const result = inferFunctionExpressionMemo(
-              instr.value.loweredFunc.func,
-              impure,
-              cache,
-            );
-            if (!result.error.hasAnyErrors()) {
-              impureEffect = result.effects[0];
-            }
-          }
-        }
-
-        if (impureEffect == null) {
-          for (const operand of eachInstructionValueOperand(instr.value)) {
-            const operandEffect = impure.get(operand.identifier.id);
-            if (operandEffect != null) {
-              impureEffect = operandEffect;
-              break;
-            }
-          }
-        }
-
-        if (impureEffect != null) {
-          for (const lvalue of eachInstructionLValue(instr)) {
-            if (isUseRefType(lvalue.identifier)) {
-              continue;
-            }
-            if (!impure.has(lvalue.identifier.id)) {
-              impure.set(lvalue.identifier.id, impureEffect);
-              hasChanges = true;
-            }
-          }
-        }
-        if (impureEffect != null || controlImpureEffect != null) {
-          for (const operand of eachInstructionValueOperand(instr.value)) {
-            switch (operand.effect) {
-              case Effect.Capture:
-              case Effect.Store:
-              case Effect.ConditionallyMutate:
-              case Effect.ConditionallyMutateIterator:
-              case Effect.Mutate: {
-                if (
-                  !impure.has(operand.identifier.id) &&
-                  isMutable(instr, operand)
-                ) {
-                  impure.set(
-                    operand.identifier.id,
-                    (impureEffect ?? controlImpureEffect)!,
-                  );
-                  hasChanges = true;
-                }
-                break;
-              }
-              case Effect.Freeze:
-              case Effect.Read: {
-                // no-op
-                break;
-              }
-              case Effect.Unknown: {
-                CompilerError.invariant(false, {
-                  reason: 'Unexpected unknown effect',
-                  description: null,
-                  details: [
-                    {
-                      kind: 'error',
-                      loc: operand.loc,
-                      message: null,
-                    },
-                  ],
-                  suggestions: null,
-                });
-              }
-              default: {
-                assertExhaustive(
-                  operand.effect,
-                  `Unexpected effect kind \`${operand.effect}\``,
-                );
-              }
-            }
-          }
-        }
-        if (impureEffect == null) {
-          const lvalueEffect = impure.get(instr.lvalue.identifier.id)!;
-          if (lvalueEffect != null) {
-            for (const operand of eachInstructionValueOperand(instr.value)) {
-              if (
-                isMutable(instr, operand) &&
-                !impure.has(operand.identifier.id)
-              ) {
-                impure.set(operand.identifier.id, lvalueEffect);
-                hasChanges = true;
-              }
-            }
-          }
-        }
+        const _impure = new Set(impure.keys());
+        hasChanges =
+          processEffects(instr.id, instr.effects ?? [], impure, cache) ||
+          hasChanges;
       }
-
-      if (block.terminal.kind === 'return') {
-        const terminalEffect = impure.get(block.terminal.value.identifier.id);
-        if (terminalEffect != null && !impure.has(fn.returns.identifier.id)) {
-          impure.set(fn.returns.identifier.id, terminalEffect);
-          hasChanges = true;
-        }
+      if (block.terminal.kind === 'return' && block.terminal.effects != null) {
+        hasChanges =
+          processEffects(
+            block.terminal.id,
+            block.terminal.effects,
+            impure,
+            cache,
+          ) || hasChanges;
       }
     }
   } while (hasChanges);
 
+  fn.env.logger?.debugLogIRs?.({
+    kind: 'debug',
+    name: 'ValidateNoImpureValuesInRender',
+    value: JSON.stringify(Array.from(impure.keys()).sort(), null, 2),
+  });
+
   const error = new CompilerError();
+  function validateRenderEffect(effect: RenderEffect): void {
+    const impureEffect = impure.get(effect.place.identifier.id);
+    if (impureEffect == null) {
+      return;
+    }
+    const diagnostic = CompilerDiagnostic.create({
+      category: impureEffect.category,
+      reason: impureEffect.reason,
+      description: impureEffect.description,
+    }).withDetails({
+      kind: 'error',
+      loc: effect.place.loc,
+      message: impureEffect.usageMessage,
+    });
+    if (!areEqualSourceLocations(effect.place.loc, impureEffect.into.loc)) {
+      diagnostic.withDetails({
+        kind: 'error',
+        loc: impureEffect.into.loc,
+        message: impureEffect.sourceMessage,
+      });
+    }
+    error.pushDiagnostic(diagnostic);
+  }
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
       const value = instr.value;
@@ -244,30 +274,16 @@ function inferImpureValues(
         }
       }
       for (const effect of instr.effects ?? []) {
-        if (
-          effect.kind !== 'Render' ||
-          !impure.has(effect.place.identifier.id)
-        ) {
-          continue;
+        if (effect.kind === 'Render') {
+          validateRenderEffect(effect);
         }
-        const impureEffect = impure.get(effect.place.identifier.id)!;
-        const diagnostic = CompilerDiagnostic.create({
-          category: impureEffect.category,
-          reason: impureEffect.reason,
-          description: impureEffect.description,
-        }).withDetails({
-          kind: 'error',
-          loc: effect.place.loc,
-          message: impureEffect.usageMessage,
-        });
-        if (!areEqualSourceLocations(effect.place.loc, impureEffect.into.loc)) {
-          diagnostic.withDetails({
-            kind: 'error',
-            loc: impureEffect.into.loc,
-            message: impureEffect.sourceMessage,
-          });
+      }
+    }
+    if (block.terminal.kind === 'return' && block.terminal.effects != null) {
+      for (const effect of block.terminal.effects) {
+        if (effect.kind === 'Render') {
+          validateRenderEffect(effect);
         }
-        error.pushDiagnostic(diagnostic);
       }
     }
   }
@@ -278,7 +294,7 @@ function inferImpureValues(
     if (impureEffect != null) {
       impureEffects.push({
         kind: 'Impure',
-        into: {...place},
+        into: impureEffect.into,
         category: impureEffect.category,
         reason: impureEffect.reason,
         description: impureEffect.description,

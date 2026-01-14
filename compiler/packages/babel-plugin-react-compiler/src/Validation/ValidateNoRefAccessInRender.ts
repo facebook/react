@@ -397,16 +397,10 @@ function validateNoRefAccessInRenderImpl(
         switch (instr.value.kind) {
           case 'JsxExpression':
           case 'JsxFragment': {
-            for (const operand of eachInstructionValueOperand(instr.value)) {
-              validateNoDirectRefValueAccess(errors, operand, env);
-            }
             break;
           }
           case 'ComputedLoad':
           case 'PropertyLoad': {
-            if (instr.value.kind === 'ComputedLoad') {
-              validateNoDirectRefValueAccess(errors, instr.value.property, env);
-            }
             const objType = env.get(instr.value.object.identifier.id);
             let lookupType: null | RefAccessType = null;
             if (objType?.kind === 'Structure') {
@@ -499,73 +493,10 @@ function validateNoRefAccessInRenderImpl(
               instr.value.kind === 'CallExpression'
                 ? instr.value.callee
                 : instr.value.property;
-            const hookKind = getHookKindForType(fn.env, callee.identifier.type);
             let returnType: RefAccessType = {kind: 'None'};
             const fnType = env.get(callee.identifier.id);
-            let didError = false;
             if (fnType?.kind === 'Structure' && fnType.fn !== null) {
               returnType = fnType.fn.returnType;
-              if (fnType.fn.readRefEffect) {
-                didError = true;
-                errors.pushDiagnostic(
-                  CompilerDiagnostic.create({
-                    category: ErrorCategory.Refs,
-                    reason: 'Cannot access refs during render',
-                    description: REF_ERROR_DESCRIPTION,
-                  }).withDetails({
-                    kind: 'error',
-                    loc: callee.loc,
-                    message: `This function accesses a ref value`,
-                  }),
-                );
-              }
-            }
-            /*
-             * If we already reported an error on this instruction, don't report
-             * duplicate errors
-             */
-            if (!didError) {
-              const isRefLValue = isUseRefType(instr.lvalue.identifier);
-              const isEventHandlerLValue = isEventHandlerType(
-                instr.lvalue.identifier,
-              );
-              for (const operand of eachInstructionValueOperand(instr.value)) {
-                /**
-                 * By default we check that function call operands are not refs,
-                 * ref values, or functions that can access refs.
-                 */
-                if (
-                  isRefLValue ||
-                  isEventHandlerLValue ||
-                  (hookKind != null &&
-                    hookKind !== 'useState' &&
-                    hookKind !== 'useReducer')
-                ) {
-                  /**
-                   * Allow passing refs or ref-accessing functions when:
-                   * 1. lvalue is a ref (mergeRefs pattern: `mergeRefs(ref1, ref2)`)
-                   * 2. lvalue is an event handler (DOM events execute outside render)
-                   * 3. calling hooks (independently validated for ref safety)
-                   */
-                  validateNoDirectRefValueAccess(errors, operand, env);
-                } else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
-                  /**
-                   * Special case: the lvalue is passed as a jsx child
-                   *
-                   * For example `<Foo>{renderHelper(ref)}</Foo>`. Here we have more
-                   * context and infer that the ref is being passed to a component-like
-                   * render function which attempts to obey the rules.
-                   */
-                  validateNoRefValueAccess(errors, env, operand);
-                } else {
-                  validateNoRefPassedToFunction(
-                    errors,
-                    env,
-                    operand,
-                    operand.loc,
-                  );
-                }
-              }
             }
             env.set(instr.lvalue.identifier.id, returnType);
             break;
@@ -574,7 +505,6 @@ function validateNoRefAccessInRenderImpl(
           case 'ArrayExpression': {
             const types: Array<RefAccessType> = [];
             for (const operand of eachInstructionValueOperand(instr.value)) {
-              validateNoDirectRefValueAccess(errors, operand, env);
               types.push(env.get(operand.identifier.id) ?? {kind: 'None'});
             }
             const value = joinRefAccessTypes(...types);
@@ -612,16 +542,9 @@ function validateNoRefAccessInRenderImpl(
               validateNoRefUpdate(errors, env, instr.value.object, instr.loc);
             }
             if (
-              instr.value.kind === 'ComputedDelete' ||
-              instr.value.kind === 'ComputedStore'
-            ) {
-              validateNoRefValueAccess(errors, env, instr.value.property);
-            }
-            if (
               instr.value.kind === 'ComputedStore' ||
               instr.value.kind === 'PropertyStore'
             ) {
-              validateNoDirectRefValueAccess(errors, instr.value.value, env);
               const type = env.get(instr.value.value.identifier.id);
               if (type != null && type.kind === 'Structure') {
                 let objectType: RefAccessType = type;
@@ -662,27 +585,9 @@ function validateNoRefAccessInRenderImpl(
                  * error for the write to the ref
                  */
                 env.set(instr.lvalue.identifier.id, {kind: 'Guard', refId});
-                errors.pushDiagnostic(
-                  CompilerDiagnostic.create({
-                    category: ErrorCategory.Refs,
-                    reason: 'Cannot access refs during render',
-                    description: REF_ERROR_DESCRIPTION,
-                  })
-                    .withDetails({
-                      kind: 'error',
-                      loc: instr.value.value.loc,
-                      message: `Cannot access ref value during render`,
-                    })
-                    .withDetails({
-                      kind: 'hint',
-                      message:
-                        'To initialize a ref only once, check that the ref is null with the pattern `if (ref.current == null) { ref.current = ... }`',
-                    }),
-                );
                 break;
               }
             }
-            validateNoRefValueAccess(errors, env, instr.value.value);
             break;
           }
           case 'BinaryExpression': {
@@ -704,24 +609,12 @@ function validateNoRefAccessInRenderImpl(
 
             if (refId !== null && nullish) {
               env.set(instr.lvalue.identifier.id, {kind: 'Guard', refId});
-            } else {
-              for (const operand of eachInstructionValueOperand(instr.value)) {
-                validateNoRefValueAccess(errors, env, operand);
-              }
             }
             break;
           }
           default: {
-            for (const operand of eachInstructionValueOperand(instr.value)) {
-              validateNoRefValueAccess(errors, env, operand);
-            }
             break;
           }
-        }
-
-        // Guard values are derived from ref.current, so they can only be used in if statement targets
-        for (const operand of eachInstructionOperand(instr)) {
-          guardCheck(errors, operand, env);
         }
 
         if (
@@ -761,15 +654,8 @@ function validateNoRefAccessInRenderImpl(
       }
 
       for (const operand of eachTerminalOperand(block.terminal)) {
-        if (block.terminal.kind !== 'return') {
-          validateNoRefValueAccess(errors, env, operand);
-          if (block.terminal.kind !== 'if') {
-            guardCheck(errors, operand, env);
-          }
-        } else {
+        if (block.terminal.kind === 'return') {
           // Allow functions containing refs to be returned, but not direct ref values
-          validateNoDirectRefValueAccess(errors, operand, env);
-          guardCheck(errors, operand, env);
           returnValues.push(env.get(operand.identifier.id));
         }
       }
@@ -808,72 +694,6 @@ function destructure(
   return type;
 }
 
-function guardCheck(errors: CompilerError, operand: Place, env: Env): void {
-  if (env.get(operand.identifier.id)?.kind === 'Guard') {
-    errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        category: ErrorCategory.Refs,
-        reason: 'Cannot access refs during render',
-        description: REF_ERROR_DESCRIPTION,
-      }).withDetails({
-        kind: 'error',
-        loc: operand.loc,
-        message: `Cannot access ref value during render`,
-      }),
-    );
-  }
-}
-
-function validateNoRefValueAccess(
-  errors: CompilerError,
-  env: Env,
-  operand: Place,
-): void {
-  const type = destructure(env.get(operand.identifier.id));
-  if (
-    type?.kind === 'RefValue' ||
-    (type?.kind === 'Structure' && type.fn?.readRefEffect)
-  ) {
-    errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        category: ErrorCategory.Refs,
-        reason: 'Cannot access refs during render',
-        description: REF_ERROR_DESCRIPTION,
-      }).withDetails({
-        kind: 'error',
-        loc: (type.kind === 'RefValue' && type.loc) || operand.loc,
-        message: `Cannot access ref value during render`,
-      }),
-    );
-  }
-}
-
-function validateNoRefPassedToFunction(
-  errors: CompilerError,
-  env: Env,
-  operand: Place,
-  loc: SourceLocation,
-): void {
-  const type = destructure(env.get(operand.identifier.id));
-  if (
-    type?.kind === 'Ref' ||
-    type?.kind === 'RefValue' ||
-    (type?.kind === 'Structure' && type.fn?.readRefEffect)
-  ) {
-    errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        category: ErrorCategory.Refs,
-        reason: 'Cannot access refs during render',
-        description: REF_ERROR_DESCRIPTION,
-      }).withDetails({
-        kind: 'error',
-        loc: (type.kind === 'RefValue' && type.loc) || loc,
-        message: `Passing a ref to a function may read its value during render`,
-      }),
-    );
-  }
-}
-
 function validateNoRefUpdate(
   errors: CompilerError,
   env: Env,
@@ -891,27 +711,6 @@ function validateNoRefUpdate(
         kind: 'error',
         loc: (type.kind === 'RefValue' && type.loc) || loc,
         message: `Cannot update ref during render`,
-      }),
-    );
-  }
-}
-
-function validateNoDirectRefValueAccess(
-  errors: CompilerError,
-  operand: Place,
-  env: Env,
-): void {
-  const type = destructure(env.get(operand.identifier.id));
-  if (type?.kind === 'RefValue') {
-    errors.pushDiagnostic(
-      CompilerDiagnostic.create({
-        category: ErrorCategory.Refs,
-        reason: 'Cannot access refs during render',
-        description: REF_ERROR_DESCRIPTION,
-      }).withDetails({
-        kind: 'error',
-        loc: type.loc ?? operand.loc,
-        message: `Cannot access ref value during render`,
       }),
     );
   }

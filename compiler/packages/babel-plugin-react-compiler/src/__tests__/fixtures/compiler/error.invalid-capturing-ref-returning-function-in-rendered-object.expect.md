@@ -38,11 +38,11 @@ error.invalid-capturing-ref-returning-function-in-rendered-object.ts:8:28
   10 |
   11 | export const FIXTURE_ENTRYPOINT = {
 
-error.invalid-capturing-ref-returning-function-in-rendered-object.ts:7:15
+error.invalid-capturing-ref-returning-function-in-rendered-object.ts:7:21
    5 |   const ref = useRef(props.value);
    6 |   const object = {};
 >  7 |   object.foo = () => ref.current;
-     |                ^^^^^^^^^^^^^^^^^ Ref is initially accessed
+     |                      ^^^^^^^^^^^ Ref is initially accessed
    8 |   return <Stringify object={object} shouldInvokeFns={true} />;
    9 | }
   10 |
