@@ -398,7 +398,10 @@ import {
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberLegacyContext';
 import {logUncaughtError} from './ReactFiberErrorLogger';
-import {stopCommittedGesture} from './ReactFiberGestureScheduler';
+import {
+  scheduleGestureCommit,
+  stopCommittedGesture,
+} from './ReactFiberGestureScheduler';
 import {claimQueuedTransitionTypes} from './ReactFiberTransitionTypes';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
@@ -1542,11 +1545,10 @@ function completeRootWhenReady(
       isViewTransitionEligible ||
       (isGestureTransition &&
         root.pendingGestures !== null &&
-        // If we're committing this gesture and it already has a View Transition
-        // running, then we don't have to wait for that gesture. We'll stop it
-        // when we commit.
-        (root.pendingGestures.running === null ||
-          !root.pendingGestures.committing))
+        // If this gesture already has a View Transition running then we don't
+        // have to wait on that one before proceeding. We may hold the commit
+        // on the gesture committing later on in completeRoot.
+        root.pendingGestures.running === null)
     ) {
       // Wait for any pending View Transition (including gestures) to finish.
       suspendOnActiveViewTransition(suspendedState, root.containerInfo);
@@ -3581,6 +3583,28 @@ function completeRoot(
         // If we already have a gesture running, we don't update it in place
         // even if we have a new tree. Instead we wait until we can commit.
       }
+      // Schedule the root to be committed when the gesture completes.
+      root.cancelPendingCommit = scheduleGestureCommit(
+        committingGesture,
+        completeRoot.bind(
+          null,
+          root,
+          finishedWork,
+          lanes,
+          recoverableErrors,
+          transitions,
+          didIncludeRenderPhaseUpdate,
+          spawnedLane,
+          updatedLanes,
+          suspendedRetryLanes,
+          didSkipSuspendedSiblings,
+          exitStatus,
+          suspendedState,
+          'Waiting for the Gesture to finish' /* suspendedCommitReason */,
+          completedRenderStartTime,
+          completedRenderEndTime,
+        ),
+      );
       return;
     }
   }
@@ -4903,18 +4927,6 @@ export function pingGestureRoot(root: FiberRoot): void {
   const gesture = root.pendingGestures;
   if (gesture === null) {
     return;
-  }
-  if (
-    root.cancelPendingCommit !== null &&
-    isGestureRender(pendingEffectsLanes)
-  ) {
-    // We have a suspended commit which we'll discard and rerender.
-    // TODO: Just use this commit since it's ready to go.
-    const cancelPendingCommit = root.cancelPendingCommit;
-    if (cancelPendingCommit !== null) {
-      root.cancelPendingCommit = null;
-      cancelPendingCommit();
-    }
   }
   // Ping it for rerender and commit.
   markRootPinged(root, GestureLane);
