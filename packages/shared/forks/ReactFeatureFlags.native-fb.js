@@ -22,7 +22,6 @@ export const {
   alwaysThrottleRetries,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
-  enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
   renameElementSymbol,
   enableFragmentRefs,
