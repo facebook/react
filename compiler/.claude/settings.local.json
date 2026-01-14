@@ -6,7 +6,9 @@
       "Bash(for test in \"error.invalid-access-ref-during-render\" \"error.invalid-ref-in-callback-invoked-during-render\" \"error.invalid-impure-functions-in-render-via-render-helper\")",
       "Bash(do)",
       "Bash(echo:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(cat:*)",
+      "Bash(sl revert:*)"
     ],
     "deny": [],
     "ask": []

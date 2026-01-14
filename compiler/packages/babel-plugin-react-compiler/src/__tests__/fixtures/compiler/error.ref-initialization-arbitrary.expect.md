@@ -27,17 +27,19 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Error: Cannot access refs during render
+Error: Mutating refs during render is not allowed
 
-React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+React refs are mutable containers that should only be mutated outside of render, such as in event handlers or effects. Mutating a ref during render can cause bugs because the mutation may not be associated with a particular render. See https://react.dev/reference/react/useRef.
 
    7 |   const r = useRef(DEFAULT_VALUE);
    8 |   if (r.current == DEFAULT_VALUE) {
 >  9 |     r.current = 1;
-     |     ^^^^^^^^^ Cannot update ref during render
+     |     ^ Cannot mutate ref during render
   10 |   }
   11 | }
   12 |
+
+Refs may be mutated during render if initialized with `if (ref.current == null)`
 ```
           
       

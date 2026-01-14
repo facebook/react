@@ -32,33 +32,22 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-Found 2 errors:
+Found 1 error:
 
-Error: Cannot access refs during render
+Error: Mutating refs during render is not allowed
 
-React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+React refs are mutable containers that should only be mutated outside of render, such as in event handlers or effects. Mutating a ref during render can cause bugs because the mutation may not be associated with a particular render. See https://react.dev/reference/react/useRef.
 
-error.capture-ref-for-mutation.ts:12:13
+error.capture-ref-for-mutation.ts:9:4
+   7 |     const position = currentPosition.current;
+   8 |     const nextPosition = direction === 'left' ? addOne(position) : position;
+>  9 |     currentPosition.current = nextPosition;
+     |     ^^^^^^^^^^^^^^^ Cannot mutate ref during render
   10 |   };
   11 |   const moveLeft = {
-> 12 |     handler: handleKey('left')(),
-     |              ^^^^^^^^^^^^^^^^^ This function accesses a ref value
-  13 |   };
-  14 |   const moveRight = {
-  15 |     handler: handleKey('right')(),
+  12 |     handler: handleKey('left')(),
 
-Error: Cannot access refs during render
-
-React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
-
-error.capture-ref-for-mutation.ts:15:13
-  13 |   };
-  14 |   const moveRight = {
-> 15 |     handler: handleKey('right')(),
-     |              ^^^^^^^^^^^^^^^^^^ This function accesses a ref value
-  16 |   };
-  17 |   return [moveLeft, moveRight];
-  18 | }
+Refs may be mutated during render if initialized with `if (ref.current == null)`
 ```
           
       
