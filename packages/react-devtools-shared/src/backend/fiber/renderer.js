@@ -2043,21 +2043,6 @@ export function attach(
     return false;
   }
 
-  function flattenHooksTree(hooksTree: HooksTree): HooksTree {
-    const flattened: HooksTree = [];
-    for (let i = 0; i < hooksTree.length; i++) {
-      const currentHook = hooksTree[i];
-      // If the hook has subHooks, flatten them recursively
-      if (currentHook.subHooks && currentHook.subHooks.length > 0) {
-        flattened.push(...flattenHooksTree(currentHook.subHooks));
-        continue;
-      }
-      // If the hook doesn't have subHooks, add it to the flattened list
-      flattened.push(currentHook);
-    }
-    return flattened;
-  }
-
   function getChangedHooksIndices(
     prevHooks: HooksTree | null,
     nextHooks: HooksTree | null,
@@ -2066,24 +2051,26 @@ export function attach(
       return null;
     }
 
-    const prevFlattened = flattenHooksTree(prevHooks);
-    const nextFlattened = flattenHooksTree(nextHooks);
-
     const indices: Array<number> = [];
+    let index = 0;
 
-    for (let index = 0; index < prevFlattened.length; index++) {
-      const prevHook = prevFlattened[index];
-      const nextHook = nextFlattened[index];
+    function traverse(prevTree: HooksTree, nextTree: HooksTree): void {
+      for (let i = 0; i < prevTree.length; i++) {
+        const prevHook = prevTree[i];
+        const nextHook = nextTree[i];
 
-      if (prevHook === null || nextHook === null) {
-        continue;
-      }
-
-      if (didStatefulHookChange(prevHook, nextHook)) {
-        indices.push(index);
+        if (prevHook?.subHooks || nextHook?.subHooks) {
+          traverse(prevHook.subHooks, nextHook.subHooks);
+        } else {
+          if (didStatefulHookChange(prevHook, nextHook)) {
+            indices.push(index);
+          }
+          index++;
+        }
       }
     }
 
+    traverse(prevHooks, nextHooks);
     return indices;
   }
 
