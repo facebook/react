@@ -294,8 +294,13 @@ function createElementsInspectPanel() {
   }
 
   const elementsPanel = chrome.devtools.panels.elements;
-  if (!elementsPanel || !elementsPanel.createSidebarPane) {
-    // TODO: Does Firefox support elements panel extensions?
+  if (__IS_FIREFOX__ || !elementsPanel || !elementsPanel.createSidebarPane) {
+    // Firefox will not pass the window to the onShown listener despite setPage
+    // being called.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=2010549
+
+    // May not be supported in some browsers.
+    // See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/devtools/panels/ElementsPanel/createSidebarPane#browser_compatibility
     return;
   }
 
