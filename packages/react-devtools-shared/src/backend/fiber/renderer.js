@@ -18,7 +18,7 @@ import type {
   Wakeable,
 } from 'shared/ReactTypes';
 
-import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
+import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
 import {
   ComponentFilterDisplayName,
@@ -127,7 +127,6 @@ import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import {componentInfoToComponentLogsMap} from '../shared/DevToolsServerComponentLogs';
 
 import is from 'shared/objectIs';
-import hasOwnProperty from 'shared/hasOwnProperty';
 
 import {getIODescription} from 'shared/ReactIODescription';
 
@@ -1976,10 +1975,9 @@ export function attach(
             state: null,
           };
         } else {
-          const indices = getChangedHooksIndices(
-            prevFiber.memoizedState,
-            nextFiber.memoizedState,
-          );
+          const prevHooks = inspectHooks(prevFiber);
+          const nextHooks = inspectHooks(nextFiber);
+          const indices = getChangedHooksIndices(prevHooks, nextHooks);
           const data: ChangeDescription = {
             context: getContextChanged(prevFiber, nextFiber),
             didHooksChange: indices !== null && indices.length > 0,
@@ -2028,74 +2026,53 @@ export function attach(
     return false;
   }
 
-  function isUseSyncExternalStoreHook(hookObject: any): boolean {
-    const queue = hookObject.queue;
-    if (!queue) {
-      return false;
-    }
+  function didStatefulHookChange(prev: HooksNode, next: HooksNode): boolean {
+    // Detect the shape of useState() / useReducer() / useTransition() / useSyncExternalStore() / useActionState()
+    const isStatefulHook =
+      prev.isStateEditable === true ||
+      prev.name === 'SyncExternalStore' ||
+      prev.name === 'Transition' ||
+      prev.name === 'ActionState' ||
+      prev.name === 'FormState';
 
-    const boundHasOwnProperty = hasOwnProperty.bind(queue);
-    return (
-      boundHasOwnProperty('value') &&
-      boundHasOwnProperty('getSnapshot') &&
-      typeof queue.getSnapshot === 'function'
-    );
-  }
-
-  function isHookThatCanScheduleUpdate(hookObject: any) {
-    const queue = hookObject.queue;
-    if (!queue) {
-      return false;
-    }
-
-    const boundHasOwnProperty = hasOwnProperty.bind(queue);
-
-    // Detect the shape of useState() / useReducer() / useTransition()
-    // using the attributes that are unique to these hooks
-    // but also stable (e.g. not tied to current Lanes implementation)
-    // We don't check for dispatch property, because useTransition doesn't have it
-    if (boundHasOwnProperty('pending')) {
-      return true;
-    }
-
-    return isUseSyncExternalStoreHook(hookObject);
-  }
-
-  function didStatefulHookChange(prev: any, next: any): boolean {
-    const prevMemoizedState = prev.memoizedState;
-    const nextMemoizedState = next.memoizedState;
-
-    if (isHookThatCanScheduleUpdate(prev)) {
-      return prevMemoizedState !== nextMemoizedState;
+    // Compare the values to see if they changed
+    if (isStatefulHook) {
+      return prev.value !== next.value;
     }
 
     return false;
   }
 
-  function getChangedHooksIndices(prev: any, next: any): null | Array<number> {
-    if (prev == null || next == null) {
+  function getChangedHooksIndices(
+    prevHooks: HooksTree | null,
+    nextHooks: HooksTree | null,
+  ): null | Array<number> {
+    if (prevHooks == null || nextHooks == null) {
       return null;
     }
 
-    const indices = [];
+    const indices: Array<number> = [];
     let index = 0;
 
-    while (next !== null) {
-      if (didStatefulHookChange(prev, next)) {
-        indices.push(index);
-      }
+    function traverse(prevTree: HooksTree, nextTree: HooksTree): void {
+      for (let i = 0; i < prevTree.length; i++) {
+        const prevHook = prevTree[i];
+        const nextHook = nextTree[i];
 
-      // useSyncExternalStore creates 2 internal hooks, but we only count it as 1 user-facing hook
-      if (isUseSyncExternalStoreHook(next)) {
-        next = next.next;
-        prev = prev.next;
-      }
+        if (prevHook.subHooks.length > 0 && nextHook.subHooks.length > 0) {
+          traverse(prevHook.subHooks, nextHook.subHooks);
+          continue;
+        }
 
-      next = next.next;
-      prev = prev.next;
-      index++;
+        if (didStatefulHookChange(prevHook, nextHook)) {
+          indices.push(index);
+        }
+
+        index++;
+      }
     }
 
+    traverse(prevHooks, nextHooks);
     return indices;
   }
 
