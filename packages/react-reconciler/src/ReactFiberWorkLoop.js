@@ -3598,6 +3598,10 @@ function completeRoot(
           // of this commit or apply yet.
           finalizeRender(lanes, completedRenderEndTime);
         }
+        // We are no longer committing.
+        pendingEffectsRoot = (null: any); // Clear for GC purposes.
+        pendingFinishedWork = (null: any); // Clear for GC purposes.
+        pendingEffectsLanes = NoLanes;
       }
       // Schedule the root to be committed when the gesture completes.
       root.cancelPendingCommit = scheduleGestureCommit(
