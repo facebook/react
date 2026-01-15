@@ -185,6 +185,7 @@ import {
   enableAsyncIterableChildren,
   enableViewTransition,
   enableFizzBlockingRender,
+  enableFizzSuspenseListTail,
   enableAsyncDebugInfo,
   enableCPUSuspense,
 } from 'shared/ReactFeatureFlags';
@@ -1979,7 +1980,7 @@ function renderSuspenseListRows(
       revealOrder !== 'backwards' &&
       revealOrder !== 'unstable_legacy-backwards';
 
-    if (tailMode !== 'visible') {
+    if (enableFizzSuspenseListTail && tailMode !== 'visible') {
       // For hidden tails, we need to create an instance to keep track of adding rows to
       // the end. For visible tails, there's no need to represent the list itself.
       const suspenseList = createSuspenseList(forwards);

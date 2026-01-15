@@ -133,7 +133,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     return Component;
   }
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && enableFizzSuspenseListTail
   it('shows content forwards but hidden tail by default', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -979,7 +979,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(hasCompleted).toBe(true);
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && enableFizzSuspenseListTail
   it('can stream in "forwards" with tail "hidden" with boundaries', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1042,7 +1042,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && enableFizzSuspenseListTail
   it('can stream in "forwards" with tail "hidden" without boundaries', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1096,7 +1096,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && enableFizzSuspenseListTail
   it('can stream in "backwards" with tail "hidden" with boundaries', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1159,7 +1159,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && enableFizzSuspenseListTail
   it('can stream in "backwards" with tail "hidden" without boundaries', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1213,7 +1213,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && enableFizzSuspenseListTail
   it('can stream in "forwards" with tail "collapsed"', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1301,7 +1301,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && enableFizzSuspenseListTail
   it('can stream in "backwards" with tail "collapsed"', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1439,7 +1439,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && enableFizzSuspenseListTail
   it('can stream in sync rows "forwards" with tail "collapsed"', async () => {
     // Notably, this doesn't currently work if the fallbacks are blocked.
     // We need the fallbacks to unblock previous rows and we don't know we won't
@@ -1525,9 +1525,15 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(getVisibleChildren(container)).toEqual(<div>{['A', 'B', 'C']}</div>);
 
     const textNodes = 3;
-    const boundaryComments = 2 * textNodes; // TODO: One we remove the comments around boundaries this should be zero.
-    const textSeparators = textNodes; // One after each node.
-    const suspenseListComments = 2;
+    const boundaryComments = gate(flags => flags.enableFizzSuspenseListTail)
+      ? 2 * textNodes // TODO: One we remove the comments around boundaries this should be zero.
+      : 0;
+    const textSeparators = gate(flags => flags.enableFizzSuspenseListTail)
+      ? textNodes // One after each node.
+      : textNodes - 1; // One between each node
+    const suspenseListComments = gate(flags => flags.enableFizzSuspenseListTail)
+      ? 2
+      : 0;
     expect(container.firstChild.childNodes.length).toBe(
       textNodes + textSeparators + boundaryComments + suspenseListComments,
     );
@@ -1550,9 +1556,13 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(getVisibleChildren(container)).toEqual(<div>{['A', 'B', 'C']}</div>);
 
     const textNodes = 3;
-    const boundaryComments = 2 * textNodes; // TODO: One we remove the comments around boundaries this should be zero.
+    const boundaryComments = gate(flags => flags.enableFizzSuspenseListTail)
+      ? 2 * textNodes // TODO: One we remove the comments around boundaries this should be zero.
+      : 0;
     const textSeparators = textNodes; // One after each node.
-    const suspenseListComments = 2;
+    const suspenseListComments = gate(flags => flags.enableFizzSuspenseListTail)
+      ? 2
+      : 0;
     expect(container.firstChild.childNodes.length).toBe(
       textNodes + textSeparators + boundaryComments + suspenseListComments,
     );
@@ -1577,9 +1587,13 @@ describe('ReactDOMFizzSuspenseList', () => {
     expect(getVisibleChildren(container)).toEqual(<div>{['A', 'B', 'C']}</div>);
 
     const textNodes = 3;
-    const boundaryComments = 2 * textNodes; // TODO: One we remove the comments around boundaries this should be zero.
+    const boundaryComments = gate(flags => flags.enableFizzSuspenseListTail)
+      ? 2 * textNodes // TODO: One we remove the comments around boundaries this should be zero.
+      : 0;
     const textSeparators = textNodes; // One after each node.
-    const suspenseListComments = 2;
+    const suspenseListComments = gate(flags => flags.enableFizzSuspenseListTail)
+      ? 2
+      : 0;
     expect(container.firstChild.childNodes.length).toBe(
       textNodes + textSeparators + boundaryComments + suspenseListComments,
     );
