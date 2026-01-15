@@ -92,6 +92,7 @@ import {
   logSuspendedYieldTime,
   setCurrentTrackFromLanes,
   markAllLanesInOrder,
+  logApplyGesturePhase,
 } from './ReactFiberPerformanceTrack';
 
 import {
@@ -4392,6 +4393,15 @@ function flushGestureMutations(): void {
     ReactSharedInternals.T = prevTransition;
   }
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    recordCommitEndTime();
+    logApplyGesturePhase(
+      pendingEffectsRenderEndTime,
+      commitEndTime,
+      animatingTask,
+    );
+  }
+
   pendingEffectsStatus = PENDING_GESTURE_ANIMATION_PHASE;
 }
 
@@ -4409,10 +4419,11 @@ function flushGestureAnimations(): void {
   const lanes = pendingEffectsLanes;
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    const startViewTransitionStartTime = commitEndTime;
     // Update the new commitEndTime to when we started the animation.
     recordCommitEndTime();
     logStartViewTransitionYieldPhase(
-      pendingEffectsRenderEndTime,
+      startViewTransitionStartTime,
       commitEndTime,
       pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
       animatingTask,
