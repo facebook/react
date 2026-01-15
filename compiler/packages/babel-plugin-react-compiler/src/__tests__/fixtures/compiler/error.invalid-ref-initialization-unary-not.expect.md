@@ -32,7 +32,7 @@ React refs are values that are not needed for rendering. Refs should only be acc
    5 |   const r = useRef(null);
    6 |   if (!r.current) {
 >  7 |     r.current = 1;
-     |     ^ Cannot update ref during render
+     |     ^^^^^^^^^ Cannot update ref during render
    8 |   }
    9 | }
   10 |

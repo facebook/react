@@ -27,7 +27,7 @@ error.invalid-write-but-dont-read-ref-in-render.ts:5:2
   3 |   const ref = useRef(null);
   4 |   // Writing to a ref in render is against the rules:
 > 5 |   ref.current = value;
-    |   ^^^ Cannot update ref during render
+    |   ^^^^^^^^^^^ Cannot update ref during render
   6 |   // returning a ref is allowed, so this alone doesn't trigger an error:
   7 |   return ref;
   8 | }

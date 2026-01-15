@@ -18,8 +18,8 @@ function Component() {
   const ref = useRef<HTMLInputElement>(null);
 
   const onSubmit = (data: any) => {
-    // This should error: passing function with ref access to custom component
-    // event handler, even though it would be safe on a native <form>
+    // Allowed: we aren't sure that the ref.current value flows into the render
+    // output, so we optimistically assume it's safe
     if (ref.current !== null) {
       console.log(ref.current.value);
     }

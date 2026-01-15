@@ -44,7 +44,7 @@ error.useCallback-accesses-ref-mutated-later-via-function-preserve-memoization.t
   13 |   // The ref is modified later, extending its range and preventing memoization of onChange
   14 |   const reset = () => {
 > 15 |     ref.current.inner = null;
-     |     ^^^^^^^^^^^ Cannot update ref during render
+     |     ^^^^^^^^^^^^^^^^^ Cannot update ref during render
   16 |   };
   17 |   reset();
   18 |

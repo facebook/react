@@ -26,7 +26,7 @@ error.invalid-disallow-mutating-ref-in-render.ts:4:2
   2 | function Component() {
   3 |   const ref = useRef(null);
 > 4 |   ref.current = false;
-    |   ^^^ Cannot update ref during render
+    |   ^^^^^^^^^^^ Cannot update ref during render
   5 |
   6 |   return <button ref={ref} />;
   7 | }

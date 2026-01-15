@@ -34,7 +34,7 @@ React refs are values that are not needed for rendering. Refs should only be acc
    7 |   const r = useRef(DEFAULT_VALUE);
    8 |   if (r.current == DEFAULT_VALUE) {
 >  9 |     r.current = 1;
-     |     ^ Cannot update ref during render
+     |     ^^^^^^^^^ Cannot update ref during render
   10 |   }
   11 | }
   12 |

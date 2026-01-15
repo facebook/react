@@ -27,7 +27,7 @@ React refs are values that are not needed for rendering. Refs should only be acc
   4 | component Example() {
   5 |   const fooRef = makeObject_Primitives();
 > 6 |   fooRef.current = true;
-    |   ^^^^^^ Cannot update ref during render
+    |   ^^^^^^^^^^^^^^ Cannot update ref during render
   7 |
   8 |   return <Stringify foo={fooRef} />;
   9 | }

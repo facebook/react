@@ -1,6 +1,10 @@
 import {useRef} from 'react';
 import {addOne} from 'shared-runtime';
 
+/**
+ * Allowed: we don't have sufficient type information to be sure that
+ * this accesses an impure value during render.
+ */
 function useKeyCommand() {
   const currentPosition = useRef(0);
   const handleKey = direction => () => {

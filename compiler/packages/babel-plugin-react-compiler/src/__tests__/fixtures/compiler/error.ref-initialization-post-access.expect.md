@@ -33,7 +33,7 @@ React refs are values that are not needed for rendering. Refs should only be acc
    7 |     r.current = 1;
    8 |   }
 >  9 |   r.current = 1;
-     |   ^ Cannot update ref during render
+     |   ^^^^^^^^^ Cannot update ref during render
   10 | }
   11 |
   12 | export const FIXTURE_ENTRYPOINT = {

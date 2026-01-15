@@ -11,7 +11,7 @@ import {
   HIRFunction,
   IdentifierId,
   Instruction,
-  Place,
+  SourceLocation,
   isRefValueType,
   isUseRefType,
 } from '../HIR';
@@ -64,7 +64,7 @@ type GuardInfo = {
 
 // Information about a mutation found in a function
 type MutationInfo = {
-  place: Place;
+  loc: SourceLocation;
   isCurrentProperty: boolean;
 };
 
@@ -77,7 +77,10 @@ export function validateNoRefAccessInRender(
   // Track which identifiers are functions that mutate refs
   const refMutatingFunctions = new Map<IdentifierId, MutationInfo>();
 
-  validateFunction(fn, refs, refMutatingFunctions, true, errors);
+  // Track first initialization location for each ref (by refId)
+  const refInitLocations = new Map<number, SourceLocation>();
+
+  validateFunction(fn, refs, refMutatingFunctions, refInitLocations, true, errors);
 
   if (errors.hasAnyErrors()) {
     return Err(errors);
@@ -89,6 +92,7 @@ function validateFunction(
   fn: HIRFunction,
   refs: Map<IdentifierId, RefInfo>,
   refMutatingFunctions: Map<IdentifierId, MutationInfo>,
+  refInitLocations: Map<number, SourceLocation>,
   isTopLevel: boolean,
   errors: CompilerError,
 ): MutationInfo | null {
@@ -159,6 +163,7 @@ function validateFunction(
         nullables,
         guards,
         refMutatingFunctions,
+        refInitLocations,
         safeRefIds,
         isTopLevel,
         errors,
@@ -217,6 +222,7 @@ function processInstruction(
   nullables: Set<IdentifierId>,
   guards: Map<IdentifierId, GuardInfo>,
   refMutatingFunctions: Map<IdentifierId, MutationInfo>,
+  refInitLocations: Map<number, SourceLocation>,
   safeRefIds: Set<number>,
   isTopLevel: boolean,
   errors: CompilerError,
@@ -339,17 +345,27 @@ function processInstruction(
         const isNullGuardInit =
           isCurrentProperty && refId != null && safeRefIds.has(refId);
 
-        if (!isNullGuardInit) {
+        if (isNullGuardInit && refId != null) {
+          // Check if this ref was already initialized
+          const firstInitLoc = refInitLocations.get(refId);
+          if (firstInitLoc != null) {
+            // Error: duplicate initialization
+            errors.pushDiagnostic(
+              makeDuplicateRefInitError(instr.loc, firstInitLoc),
+            );
+            return {loc: instr.loc, isCurrentProperty};
+          }
+          // Track this as the first initialization
+          refInitLocations.set(refId, instr.loc);
+        } else if (!isNullGuardInit) {
           const mutation: MutationInfo = {
-            place: value.object,
+            loc: instr.loc,
             isCurrentProperty,
           };
 
           if (isTopLevel) {
             // Direct mutation at top level - error immediately
-            errors.pushDiagnostic(
-              makeRefMutationError(mutation.place),
-            );
+            errors.pushDiagnostic(makeRefMutationError(mutation.loc));
           }
           return mutation;
         }
@@ -365,9 +381,7 @@ function processInstruction(
       const mutationInfo = refMutatingFunctions.get(callee.identifier.id);
       if (mutationInfo != null && isTopLevel) {
         // Calling a ref-mutating function at top level - error
-        errors.pushDiagnostic(
-          makeRefMutationError(mutationInfo.place),
-        );
+        errors.pushDiagnostic(makeRefMutationError(mutationInfo.loc));
       }
       break;
     }
@@ -380,6 +394,7 @@ function processInstruction(
         value.loweredFunc.func,
         refs,
         refMutatingFunctions,
+        refInitLocations,
         false,
         errors,
       );
@@ -397,16 +412,37 @@ function processInstruction(
   return null;
 }
 
-function makeRefMutationError(place: Place): CompilerDiagnostic {
+function makeRefMutationError(loc: SourceLocation): CompilerDiagnostic {
   return CompilerDiagnostic.create({
     category: ErrorCategory.Refs,
     reason: 'Cannot access refs during render',
     description: REF_ERROR_DESCRIPTION,
   }).withDetails({
     kind: 'error',
-    loc: place.loc,
+    loc,
     message: 'Cannot update ref during render',
   });
+}
+
+function makeDuplicateRefInitError(
+  loc: SourceLocation,
+  firstInitLoc: SourceLocation,
+): CompilerDiagnostic {
+  return CompilerDiagnostic.create({
+    category: ErrorCategory.Refs,
+    reason: 'Cannot access refs during render',
+    description: REF_ERROR_DESCRIPTION,
+  })
+    .withDetails({
+      kind: 'error',
+      loc,
+      message: 'Ref is initialized more than once during render',
+    })
+    .withDetails({
+      kind: 'error',
+      loc: firstInitLoc,
+      message: 'Ref was first initialized here',
+    });
 }
 
 export const REF_ERROR_DESCRIPTION =

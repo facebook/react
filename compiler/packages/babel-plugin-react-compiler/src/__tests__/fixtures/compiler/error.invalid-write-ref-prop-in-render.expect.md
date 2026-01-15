@@ -25,7 +25,7 @@ error.invalid-write-ref-prop-in-render.ts:4:2
   2 | function Component(props) {
   3 |   const ref = props.ref;
 > 4 |   ref.current = true;
-    |   ^^^ Cannot update ref during render
+    |   ^^^^^^^^^^^ Cannot update ref during render
   5 |   return <div>{value}</div>;
   6 | }
   7 |

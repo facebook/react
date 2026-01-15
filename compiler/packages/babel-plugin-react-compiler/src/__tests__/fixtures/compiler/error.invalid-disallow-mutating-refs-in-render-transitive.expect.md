@@ -31,7 +31,7 @@ error.invalid-disallow-mutating-refs-in-render-transitive.ts:6:4
   4 |
   5 |   const setRef = () => {
 > 6 |     ref.current = false;
-    |     ^^^ Cannot update ref during render
+    |     ^^^^^^^^^^^ Cannot update ref during render
   7 |   };
   8 |   const changeRef = setRef;
   9 |   changeRef();

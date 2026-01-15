@@ -11,8 +11,8 @@ function handleClick(value: any) {
 function Component() {
   const ref = useRef(null);
 
-  // This should still error: passing ref.current directly to a wrapper
-  // The ref value is accessed during render, not in the event handler
+  // Allowed: we aren't sure that the ref.current value flows into the render
+  // output, so we optimistically assume it's safe
   return (
     <>
       <input ref={ref} />
