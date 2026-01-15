@@ -74,7 +74,7 @@ export const currentBridgeProtocol: BridgeProtocol =
 
 type ElementAndRendererID = {id: number, rendererID: RendererID};
 
-type Message = {
+export type Message = {
   event: string,
   payload: any,
 };
@@ -239,7 +239,7 @@ export type BackendEvents = {
 type StartProfilingParams = ProfilingSettings;
 type ReloadAndProfilingParams = ProfilingSettings;
 
-type FrontendEvents = {
+export type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForElementID: [ElementAndRendererID],
   clearHostInstanceHighlight: [],
