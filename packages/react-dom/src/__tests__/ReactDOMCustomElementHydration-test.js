@@ -32,7 +32,7 @@ describe('ReactDOMCustomElementHydration', () => {
   describe('custom element event listener hydration', () => {
     it('should attach custom element event listeners during hydration', async () => {
       const container = document.createElement('div');
-      const eventLog = [];
+      const myEventHandler = jest.fn();
 
       // Mock custom element class
       class CustomElement extends HTMLElement {}
@@ -40,98 +40,72 @@ describe('ReactDOMCustomElementHydration', () => {
 
       // Server-side render
       const serverHTML = ReactDOMServer.renderToString(
-        React.createElement('ce-event-test', {
-          'onmy-event': () => {
-            eventLog.push('handler-called');
-          },
-        })
+        <ce-event-test onmy-event={myEventHandler} />,
       );
 
       // Inject markup
       container.innerHTML = serverHTML;
-      const element = container.firstChild;
+      const customElement = container.querySelector('ce-event-test');
 
       // Try to dispatch custom event before hydration (should not fire)
-      element.dispatchEvent(new CustomEvent('my-event'));
-      expect(eventLog).toEqual([]);
+      customElement.dispatchEvent(new CustomEvent('my-event'));
+      expect(myEventHandler).not.toHaveBeenCalled();
 
       // Hydrate with event handler
-      const root = ReactDOMClient.hydrateRoot(
-        container,
-        React.createElement('ce-event-test', {
-          'onmy-event': () => {
-            eventLog.push('handler-called');
-          },
-        }),
-        {
-          onRecoverableError(error) {
-            // Suppress hydration mismatch warnings
-          },
-        }
-      );
-
       await act(async () => {
-        // Dispatch event after hydration
-        element.dispatchEvent(new CustomEvent('my-event'));
+        ReactDOMClient.hydrateRoot(
+          container,
+          <ce-event-test onmy-event={myEventHandler} />,
+        );
       });
 
+      // Dispatch event after hydration
+      customElement.dispatchEvent(new CustomEvent('my-event'));
+
       // Event handler should be attached during hydration
-      expect(eventLog).toContain('handler-called');
+      expect(myEventHandler).toHaveBeenCalledTimes(1);
     });
 
     it('should attach multiple custom event listeners during hydration', async () => {
       const container = document.createElement('div');
-      const eventLog = [];
+      const moduleLoadedHandler = jest.fn();
+      const moduleErrorHandler = jest.fn();
+      const moduleUpdatedHandler = jest.fn();
 
       class CustomElement extends HTMLElement {}
       customElements.define('ce-multi-event', CustomElement);
 
       // Server-side render
       const serverHTML = ReactDOMServer.renderToString(
-        React.createElement('ce-multi-event', {
-          'onmodule-loaded': () => {
-            eventLog.push('module-loaded');
-          },
-          'onmodule-error': () => {
-            eventLog.push('module-error');
-          },
-          'onmodule-updated': () => {
-            eventLog.push('module-updated');
-          },
-        })
+        <ce-multi-event
+          onmodule-loaded={moduleLoadedHandler}
+          onmodule-error={moduleErrorHandler}
+          onmodule-updated={moduleUpdatedHandler}
+        />,
       );
 
       container.innerHTML = serverHTML;
-      const element = container.firstChild;
+      const customElement = container.querySelector('ce-multi-event');
 
       // Hydrate with event handlers
-      const root = ReactDOMClient.hydrateRoot(
-        container,
-        React.createElement('ce-multi-event', {
-          'onmodule-loaded': () => {
-            eventLog.push('module-loaded');
-          },
-          'onmodule-error': () => {
-            eventLog.push('module-error');
-          },
-          'onmodule-updated': () => {
-            eventLog.push('module-updated');
-          },
-        }),
-        {
-          onRecoverableError() {},
-        }
-      );
-
       await act(async () => {
-        element.dispatchEvent(new CustomEvent('module-loaded'));
-        element.dispatchEvent(new CustomEvent('module-error'));
-        element.dispatchEvent(new CustomEvent('module-updated'));
+        ReactDOMClient.hydrateRoot(
+          container,
+          <ce-multi-event
+            onmodule-loaded={moduleLoadedHandler}
+            onmodule-error={moduleErrorHandler}
+            onmodule-updated={moduleUpdatedHandler}
+          />,
+        );
       });
 
-      expect(eventLog).toContain('module-loaded');
-      expect(eventLog).toContain('module-error');
-      expect(eventLog).toContain('module-updated');
+      customElement.dispatchEvent(new CustomEvent('module-loaded'));
+      customElement.dispatchEvent(new CustomEvent('module-error'));
+      customElement.dispatchEvent(new CustomEvent('module-updated'));
+
+      expect(moduleLoadedHandler).toHaveBeenCalledTimes(1);
+      expect(moduleErrorHandler).toHaveBeenCalledTimes(1);
+      expect(moduleUpdatedHandler).toHaveBeenCalledTimes(1);
     });
 
     it('should hydrate primitive prop types on custom elements', async () => {
@@ -142,48 +116,44 @@ describe('ReactDOMCustomElementHydration', () => {
 
       // Server-side render with primitive props
       const serverHTML = ReactDOMServer.renderToString(
-        React.createElement('ce-primitive-props', {
-          stringValue: 'test',
-          numberValue: 42,
-          trueProp: true,
-        })
+        <ce-primitive-props
+          stringValue="test"
+          numberValue={42}
+          trueProp={true}
+        />,
       );
 
       container.innerHTML = serverHTML;
-      const element = container.firstChild;
+      const customElement = container.querySelector('ce-primitive-props');
 
       // Hydrate
-      const root = ReactDOMClient.hydrateRoot(
-        container,
-        React.createElement('ce-primitive-props', {
-          stringValue: 'test',
-          numberValue: 42,
-          trueProp: true,
-        }),
-        {
-          onRecoverableError() {},
-        }
-      );
-
       await act(async () => {
-        // Hydration complete
+        ReactDOMClient.hydrateRoot(
+          container,
+          <ce-primitive-props
+            stringValue="test"
+            numberValue={42}
+            trueProp={true}
+          />,
+        );
       });
 
-      // After hydration, attributes should be present
-      expect(
-        element.hasAttribute('stringValue') ||
-        element.getAttribute('stringValue') === 'test'
-      ).toBe(true);
+      // After hydration, primitive attributes should be present
+      expect(customElement.hasAttribute('stringValue')).toBe(true);
+      expect(customElement.getAttribute('stringValue')).toBe('test');
+      expect(customElement.hasAttribute('numberValue')).toBe(true);
+      expect(customElement.getAttribute('numberValue')).toBe('42');
+      expect(customElement.hasAttribute('trueProp')).toBe(true);
     });
 
     it('should not set non-primitive props as attributes during SSR', async () => {
       // Server-side render with non-primitive props
       const serverHTML = ReactDOMServer.renderToString(
-        React.createElement('ce-advanced-props', {
-          objectProp: {key: 'value'},
-          functionProp: () => {},
-          falseProp: false,
-        })
+        <ce-advanced-props
+          objectProp={{key: 'value'}}
+          functionProp={() => {}}
+          falseProp={false}
+        />,
       );
 
       // Non-primitive values should not appear as attributes in server HTML
@@ -194,195 +164,158 @@ describe('ReactDOMCustomElementHydration', () => {
 
     it('should handle updating custom element event listeners after hydration', async () => {
       const container = document.createElement('div');
-      const eventLog = [];
+      const initialHandler = jest.fn();
+      const updatedHandler = jest.fn();
 
       class CustomElementForUpdate extends HTMLElement {}
       customElements.define('ce-update-test', CustomElementForUpdate);
 
       // Server-side render with initial event handler
       const serverHTML = ReactDOMServer.renderToString(
-        React.createElement('ce-update-test', {
-          onmyevent: () => {
-            eventLog.push('initial-handler');
-          },
-        })
+        <ce-update-test onmyevent={initialHandler} />,
       );
 
       container.innerHTML = serverHTML;
-      const element = container.firstChild;
+      const customElement = container.querySelector('ce-update-test');
 
       // Hydrate
-      const root = ReactDOMClient.hydrateRoot(
-        container,
-        React.createElement('ce-update-test', {
-          onmyevent: () => {
-            eventLog.push('initial-handler');
-          },
-        }),
-        {
-          onRecoverableError() {},
-        }
-      );
-
+      let root;
       await act(async () => {
-        element.dispatchEvent(new CustomEvent('myevent'));
-      });
-
-      expect(eventLog).toContain('initial-handler');
-      eventLog.length = 0;
-
-      // Update the event handler
-      await act(async () => {
-        root.render(
-          React.createElement('ce-update-test', {
-            onmyevent: () => {
-              eventLog.push('updated-handler');
-            },
-          })
+        root = ReactDOMClient.hydrateRoot(
+          container,
+          <ce-update-test onmyevent={initialHandler} />,
         );
       });
 
+      customElement.dispatchEvent(new CustomEvent('myevent'));
+      expect(initialHandler).toHaveBeenCalledTimes(1);
+
+      // Update the event handler
       await act(async () => {
-        element.dispatchEvent(new CustomEvent('myevent'));
+        root.render(<ce-update-test onmyevent={updatedHandler} />);
       });
 
-      // The updated handler should be called
-      expect(eventLog).toContain('updated-handler');
-      expect(eventLog).not.toContain('initial-handler');
+      customElement.dispatchEvent(new CustomEvent('myevent'));
+
+      // The updated handler should be called, not the initial one
+      expect(updatedHandler).toHaveBeenCalledTimes(1);
+      expect(initialHandler).toHaveBeenCalledTimes(1); // Still only called once
     });
 
-    it('should handle undefined custom element during hydration', async () => {
+    it('should handle custom element registered after hydration', async () => {
       const container = document.createElement('div');
-      const eventLog = [];
+      const myEventHandler = jest.fn();
 
-      // Server-side render with event handler for unregistered element
+      // Server-side render with event handler for element not yet registered
       const serverHTML = ReactDOMServer.renderToString(
-        React.createElement('ce-not-registered', {
-          'onmy-event': () => {
-            eventLog.push('event-fired');
-          },
-        })
+        <ce-registered-after-hydration onmy-event={myEventHandler} />,
       );
 
       container.innerHTML = serverHTML;
-      const element = container.firstChild;
+      const customElement = container.querySelector(
+        'ce-registered-after-hydration',
+      );
 
       // Hydrate - the element is not yet registered
       // Event listeners should still be attached
-      const root = ReactDOMClient.hydrateRoot(
-        container,
-        React.createElement('ce-not-registered', {
-          'onmy-event': () => {
-            eventLog.push('event-fired');
-          },
-        }),
-        {
-          onRecoverableError() {},
-        }
-      );
-
       await act(async () => {
-        // Register the element after hydration
-        class UnregisteredElement extends HTMLElement {}
-        customElements.define('ce-not-registered', UnregisteredElement);
-
-        // Dispatch event after registration
-        element.dispatchEvent(new CustomEvent('my-event'));
+        ReactDOMClient.hydrateRoot(
+          container,
+          <ce-registered-after-hydration onmy-event={myEventHandler} />,
+        );
       });
 
+      // Register the element after hydration
+      class CustomElementRegisteredAfterHydration extends HTMLElement {}
+      customElements.define(
+        'ce-registered-after-hydration',
+        CustomElementRegisteredAfterHydration,
+      );
+
+      // Dispatch event after registration
+      customElement.dispatchEvent(new CustomEvent('my-event'));
+
       // Event listener should work even if element wasn't registered during hydration
-      expect(eventLog).toContain('event-fired');
+      expect(myEventHandler).toHaveBeenCalledTimes(1);
     });
 
     it('should properly hydrate custom elements with mixed props', async () => {
       const container = document.createElement('div');
-      const eventLog = [];
+      const myEventHandler = jest.fn();
 
       class MixedPropsElement extends HTMLElement {}
       customElements.define('ce-mixed-props', MixedPropsElement);
 
       // Server-side render with mixed prop types
       const serverHTML = ReactDOMServer.renderToString(
-        React.createElement('ce-mixed-props', {
-          stringAttr: 'value',
-          numberAttr: 123,
-          onmyevent: () => {
-            eventLog.push('mixed-event');
-          },
-          className: 'custom-class',
-        })
+        <ce-mixed-props
+          stringAttr="value"
+          numberAttr={123}
+          onmyevent={myEventHandler}
+          className="custom-class"
+        />,
       );
 
       container.innerHTML = serverHTML;
-      const element = container.firstChild;
+      const customElement = container.querySelector('ce-mixed-props');
 
       // Hydrate
-      const root = ReactDOMClient.hydrateRoot(
-        container,
-        React.createElement('ce-mixed-props', {
-          stringAttr: 'value',
-          numberAttr: 123,
-          onmyevent: () => {
-            eventLog.push('mixed-event');
-          },
-          className: 'custom-class',
-        }),
-        {
-          onRecoverableError() {},
-        }
-      );
-
       await act(async () => {
-        element.dispatchEvent(new CustomEvent('myevent'));
+        ReactDOMClient.hydrateRoot(
+          container,
+          <ce-mixed-props
+            stringAttr="value"
+            numberAttr={123}
+            onmyevent={myEventHandler}
+            className="custom-class"
+          />,
+        );
       });
 
+      customElement.dispatchEvent(new CustomEvent('myevent'));
+
       // Event should be fired
-      expect(eventLog).toContain('mixed-event');
+      expect(myEventHandler).toHaveBeenCalledTimes(1);
+      // Attributes should be present
+      expect(customElement.hasAttribute('stringAttr')).toBe(true);
+      expect(customElement.getAttribute('stringAttr')).toBe('value');
+      expect(customElement.hasAttribute('class')).toBe(true);
+      expect(customElement.getAttribute('class')).toBe('custom-class');
     });
 
     it('should remove custom element event listeners when prop is removed', async () => {
       const container = document.createElement('div');
-      const eventLog = [];
+      const myEventHandler = jest.fn();
 
       class CustomElementRemovalTest extends HTMLElement {}
       customElements.define('ce-removal-test', CustomElementRemovalTest);
 
       // Server-side render with event handler
       const serverHTML = ReactDOMServer.renderToString(
-        React.createElement('ce-removal-test', {
-          onmyevent: () => {
-            eventLog.push('should-not-fire');
-          },
-        })
+        <ce-removal-test onmyevent={myEventHandler} />,
       );
 
       container.innerHTML = serverHTML;
-      const element = container.firstChild;
+      const customElement = container.querySelector('ce-removal-test');
 
       // Hydrate
-      const root = ReactDOMClient.hydrateRoot(
-        container,
-        React.createElement('ce-removal-test', {
-          onmyevent: () => {
-            eventLog.push('should-not-fire');
-          },
-        }),
-        {
-          onRecoverableError() {},
-        }
-      );
+      let root;
+      await act(async () => {
+        root = ReactDOMClient.hydrateRoot(
+          container,
+          <ce-removal-test onmyevent={myEventHandler} />,
+        );
+      });
 
       // Remove the event handler
       await act(async () => {
-        root.render(React.createElement('ce-removal-test'));
+        root.render(<ce-removal-test />);
       });
 
-      await act(async () => {
-        element.dispatchEvent(new CustomEvent('myevent'));
-      });
+      customElement.dispatchEvent(new CustomEvent('myevent'));
 
       // Event should not fire after handler removal
-      expect(eventLog).not.toContain('should-not-fire');
+      expect(myEventHandler).not.toHaveBeenCalled();
     });
   });
 
@@ -409,31 +342,22 @@ describe('ReactDOMCustomElementHydration', () => {
 
       // Server-side render
       const serverHTML = ReactDOMServer.renderToString(
-        React.createElement('ce-with-property', {
-          'data-attr': 'test',
-        })
+        <ce-with-property data-attr="test" />,
       );
 
       container.innerHTML = serverHTML;
-      const element = container.firstChild;
+      const customElement = container.querySelector('ce-with-property');
 
       // Hydrate
-      const root = ReactDOMClient.hydrateRoot(
-        container,
-        React.createElement('ce-with-property', {
-          'data-attr': 'test',
-        }),
-        {
-          onRecoverableError() {},
-        }
-      );
-
       await act(async () => {
-        // Hydration complete
+        ReactDOMClient.hydrateRoot(
+          container,
+          <ce-with-property data-attr="test" />,
+        );
       });
 
       // Verify the element is properly hydrated
-      expect(element.getAttribute('data-attr')).toBe('test');
+      expect(customElement.getAttribute('data-attr')).toBe('test');
     });
   });
 });

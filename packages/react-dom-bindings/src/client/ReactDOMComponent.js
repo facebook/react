@@ -3231,7 +3231,7 @@ export function hydrateProperties(
         undefined,
       );
     }
-    return true;
+    // Don't return early - let it continue to text content validation below
   }
 
   const children = props.children;
