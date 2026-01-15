@@ -3466,6 +3466,16 @@ function completeRoot(
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // Log the previous render phase once we commit. I.e. we weren't interrupted.
     setCurrentTrackFromLanes(lanes);
+    if (isGestureRender(lanes)) {
+      // Clamp the render start time in case if something else on this lane was committed
+      // (such as this same tree before).
+      if (completedRenderStartTime < gestureClampTime) {
+        completedRenderStartTime = gestureClampTime;
+      }
+      if (completedRenderEndTime < gestureClampTime) {
+        completedRenderEndTime = gestureClampTime;
+      }
+    }
     if (exitStatus === RootErrored) {
       logErroredRenderPhase(
         completedRenderStartTime,
@@ -3583,6 +3593,11 @@ function completeRoot(
       } else {
         // If we already have a gesture running, we don't update it in place
         // even if we have a new tree. Instead we wait until we can commit.
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          // Clamp at the render time since we're not going to finish the rest
+          // of this commit or apply yet.
+          finalizeRender(lanes, completedRenderEndTime);
+        }
       }
       // Schedule the root to be committed when the gesture completes.
       root.cancelPendingCommit = scheduleGestureCommit(
