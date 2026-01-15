@@ -160,7 +160,9 @@ function Components(_: {}) {
               <NativeStyleContextController>
                 <InspectedElementErrorBoundary>
                   <InspectedElement
-                    fallbackEmpty={'No React element selected.'}
+                    fallbackEmpty={
+                      'No React element selected. Select an element in the tree to inspect.'
+                    }
                   />
                 </InspectedElementErrorBoundary>
               </NativeStyleContextController>
