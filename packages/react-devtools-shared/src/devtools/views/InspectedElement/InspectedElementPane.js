@@ -18,9 +18,7 @@ import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
 import styles from './InspectedElementPane.css';
 
-export type Props = {};
-
-function InspectedElementPane(_: Props) {
+function InspectedElementPane() {
   const {hideSettings} = useContext(OptionsContext);
   return (
     <SettingsModalContextController>
