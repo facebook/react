@@ -16,8 +16,8 @@ import type {ServerManifest} from 'react-client/src/forks/ReactFlightClientConfi
 import {
   type ClientManifest,
   setServerActionBoundArgsEncryption,
-  encryptActionBoundArgs,
-  decryptActionBoundArgs,
+  encryptServerActionBoundArgs,
+  decryptServerActionBoundArgs,
   loadServerAction,
   createServerEntry,
   ensureServerActions,
@@ -700,8 +700,8 @@ export {
 
   // server action bound args encryption
   setServerActionBoundArgsEncryption,
-  encryptActionBoundArgs,
-  decryptActionBoundArgs,
+  encryptServerActionBoundArgs,
+  decryptServerActionBoundArgs,
 
   // Rspack specific
   loadServerAction,

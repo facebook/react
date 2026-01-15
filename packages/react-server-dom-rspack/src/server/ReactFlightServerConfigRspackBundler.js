@@ -136,14 +136,14 @@ export function setServerActionBoundArgsEncryption<T>(
   currentStrategy = strategy;
 }
 
-export function encryptActionBoundArgs(
+export function encryptServerActionBoundArgs(
   actionId: string,
   ...args: any[]
 ): Promise<> {
   return currentStrategy.encrypt(actionId, ...args);
 }
 
-export function decryptActionBoundArgs(
+export function decryptServerActionBoundArgs(
   actionId: string,
   encryptedPromise: Promise<any>,
 ): Promise<any> {

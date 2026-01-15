@@ -17,8 +17,8 @@ exports.createTemporaryReferenceSet = s.createTemporaryReferenceSet;
 
 exports.setServerActionBoundArgsEncryption =
   s.setServerActionBoundArgsEncryption;
-exports.encryptActionBoundArgs = s.encryptActionBoundArgs;
-exports.decryptActionBoundArgs = s.decryptActionBoundArgs;
+exports.encryptServerActionBoundArgs = s.encryptServerActionBoundArgs;
+exports.decryptServerActionBoundArgs = s.decryptServerActionBoundArgs;
 exports.loadServerAction = s.loadServerAction;
 exports.createServerEntry = s.createServerEntry;
 exports.ensureServerActions = s.ensureServerActions;
