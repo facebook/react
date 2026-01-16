@@ -9,7 +9,10 @@
       "Bash(done)",
       "Bash(cat:*)",
       "Bash(sl revert:*)",
-      "Bash(yarn workspace snap run build:*)"
+      "Bash(yarn workspace snap run build:*)",
+      "Bash(yarn tsc:*)",
+      "Bash(yarn snap:build)",
+      "Bash(timeout 30 yarn snap:*)"
     ],
     "deny": [],
     "ask": []
