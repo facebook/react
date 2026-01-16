@@ -27,11 +27,12 @@ import {
   InstructionKind,
   InstructionValue,
   isArrayType,
-  isJsxType,
+  isJsxOrJsxUnionType,
   isMapType,
   isPrimitiveType,
   isRefOrRefValue,
   isSetType,
+  isUseRefType,
   makeIdentifierId,
   Phi,
   Place,
@@ -70,6 +71,7 @@ import {
   MutationReason,
 } from './AliasingEffects';
 import {ErrorCategory} from '../CompilerError';
+import {REF_ERROR_DESCRIPTION} from '../Validation/ValidateNoRefAccessInRender';
 
 const DEBUG = false;
 
@@ -569,14 +571,32 @@ function inferBlock(
       terminal.effects = effects.length !== 0 ? effects : null;
     }
   } else if (terminal.kind === 'return') {
+    terminal.effects = [
+      context.internEffect({
+        kind: 'Alias',
+        from: terminal.value,
+        into: context.fn.returns,
+      }),
+    ];
     if (!context.isFuctionExpression) {
-      terminal.effects = [
+      terminal.effects.push(
         context.internEffect({
           kind: 'Freeze',
           value: terminal.value,
           reason: ValueReason.JsxCaptured,
         }),
-      ];
+      );
+    }
+    if (
+      context.fn.fnType === 'Component' ||
+      isJsxOrJsxUnionType(context.fn.returns.identifier.type)
+    ) {
+      terminal.effects.push(
+        context.internEffect({
+          kind: 'Render',
+          place: terminal.value,
+        }),
+      );
     }
   }
 }
@@ -749,17 +769,7 @@ function applyEffect(
       break;
     }
     case 'ImmutableCapture': {
-      const kind = state.kind(effect.from).kind;
-      switch (kind) {
-        case ValueKind.Global:
-        case ValueKind.Primitive: {
-          // no-op: we don't need to track data flow for copy types
-          break;
-        }
-        default: {
-          effects.push(effect);
-        }
-      }
+      effects.push(effect);
       break;
     }
     case 'CreateFrom': {
@@ -1061,6 +1071,17 @@ function applyEffect(
             reason: new Set(fromValue.reason),
           });
           state.define(effect.into, value);
+          applyEffect(
+            context,
+            state,
+            {
+              kind: 'ImmutableCapture',
+              from: effect.from,
+              into: effect.into,
+            },
+            initialized,
+            effects,
+          );
           break;
         }
         default: {
@@ -1072,6 +1093,8 @@ function applyEffect(
       break;
     }
     case 'Apply': {
+      effects.push(effect);
+
       const functionValues = state.values(effect.function);
       if (
         functionValues.length === 1 &&
@@ -1966,11 +1989,30 @@ function computeSignatureForInstruction(
           value: ValueKind.Primitive,
           reason: ValueReason.Other,
         });
+        effects.push({
+          kind: 'ImmutableCapture',
+          from: value.object,
+          into: lvalue,
+        });
       } else {
         effects.push({
           kind: 'CreateFrom',
           from: value.object,
           into: lvalue,
+        });
+      }
+      if (
+        env.config.validateRefAccessDuringRender &&
+        isUseRefType(value.object.identifier)
+      ) {
+        effects.push({
+          kind: 'Impure',
+          into: lvalue,
+          category: ErrorCategory.Refs,
+          reason: `Cannot access ref value during render`,
+          description: REF_ERROR_DESCRIPTION,
+          sourceMessage: `Ref is initially accessed`,
+          usageMessage: `Ref value is used during render`,
         });
       }
       break;
@@ -2137,6 +2179,15 @@ function computeSignatureForInstruction(
           into: lvalue,
         });
       }
+      if (value.children != null) {
+        // Children are typically called during render, not used as an event/effect callback
+        for (const child of value.children) {
+          effects.push({
+            kind: 'Render',
+            place: child,
+          });
+        }
+      }
       if (value.kind === 'JsxExpression') {
         if (value.tag.kind === 'Identifier') {
           // Tags are render function, by definition they're called during render
@@ -2145,29 +2196,17 @@ function computeSignatureForInstruction(
             place: value.tag,
           });
         }
-        if (value.children != null) {
-          // Children are typically called during render, not used as an event/effect callback
-          for (const child of value.children) {
-            effects.push({
-              kind: 'Render',
-              place: child,
-            });
-          }
-        }
         for (const prop of value.props) {
-          if (
-            prop.kind === 'JsxAttribute' &&
-            prop.place.identifier.type.kind === 'Function' &&
-            (isJsxType(prop.place.identifier.type.return) ||
-              (prop.place.identifier.type.return.kind === 'Phi' &&
-                prop.place.identifier.type.return.operands.some(operand =>
-                  isJsxType(operand),
-                )))
-          ) {
-            // Any props which return jsx are assumed to be called during render
+          const place =
+            prop.kind === 'JsxAttribute' ? prop.place : prop.argument;
+          if (isUseRefType(place.identifier)) {
+            continue;
+          }
+          if (place.identifier.type.kind !== 'Function') {
+            // Functions are checked independently
             effects.push({
               kind: 'Render',
-              place: prop.place,
+              place,
             });
           }
         }
@@ -2202,6 +2241,11 @@ function computeSignatureForInstruction(
             into: place,
             value: ValueKind.Primitive,
             reason: ValueReason.Other,
+          });
+          effects.push({
+            kind: 'ImmutableCapture',
+            from: value.value,
+            into: place,
           });
         } else if (patternItem.kind === 'Identifier') {
           effects.push({
@@ -2384,15 +2428,46 @@ function computeSignatureForInstruction(
       });
       break;
     }
+    case 'BinaryExpression': {
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        value: ValueKind.Primitive,
+        reason: ValueReason.Other,
+      });
+      effects.push({
+        kind: 'ImmutableCapture',
+        into: lvalue,
+        from: value.left,
+      });
+      effects.push({
+        kind: 'ImmutableCapture',
+        into: lvalue,
+        from: value.right,
+      });
+      break;
+    }
+    case 'UnaryExpression': {
+      effects.push({
+        kind: 'Create',
+        into: lvalue,
+        value: ValueKind.Primitive,
+        reason: ValueReason.Other,
+      });
+      effects.push({
+        kind: 'ImmutableCapture',
+        into: lvalue,
+        from: value.value,
+      });
+      break;
+    }
     case 'TaggedTemplateExpression':
-    case 'BinaryExpression':
     case 'Debugger':
     case 'JSXText':
     case 'MetaProperty':
     case 'Primitive':
     case 'RegExpLiteral':
     case 'TemplateLiteral':
-    case 'UnaryExpression':
     case 'UnsupportedNode': {
       effects.push({
         kind: 'Create',
@@ -2423,7 +2498,7 @@ function computeEffectsForLegacySignature(
   lvalue: Place,
   receiver: Place,
   args: Array<Place | SpreadPattern | Hole>,
-  loc: SourceLocation,
+  _loc: SourceLocation,
 ): Array<AliasingEffect> {
   const returnValueReason = signature.returnValueReason ?? ValueReason.Other;
   const effects: Array<AliasingEffect> = [];
@@ -2436,20 +2511,18 @@ function computeEffectsForLegacySignature(
   if (signature.impure && state.env.config.validateNoImpureFunctionsInRender) {
     effects.push({
       kind: 'Impure',
-      place: receiver,
-      error: CompilerDiagnostic.create({
-        category: ErrorCategory.Purity,
-        reason: 'Cannot call impure function during render',
-        description:
-          (signature.canonicalName != null
-            ? `\`${signature.canonicalName}\` is an impure function. `
-            : '') +
-          'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-      }).withDetails({
-        kind: 'error',
-        loc,
-        message: 'Cannot call impure function',
-      }),
+      into: lvalue,
+      category: ErrorCategory.Purity,
+      reason: 'Cannot access impure value during render',
+      description:
+        'Calling an impure function can produce unstable results that update ' +
+        'unpredictably when the component happens to re-render. ' +
+        '(https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
+      sourceMessage:
+        signature.canonicalName != null
+          ? `\`${signature.canonicalName}\` is an impure function.`
+          : 'This function is impure',
+      usageMessage: 'Cannot access impure value during render',
     });
   }
   if (signature.knownIncompatible != null && state.env.enableValidations) {
@@ -2748,7 +2821,23 @@ function computeEffectsForSignature(
         }
         break;
       }
-      case 'Impure':
+      case 'Impure': {
+        if (env.config.validateNoImpureFunctionsInRender) {
+          const values = substitutions.get(effect.into.identifier.id) ?? [];
+          for (const value of values) {
+            effects.push({
+              kind: effect.kind,
+              into: value,
+              category: effect.category,
+              reason: effect.reason,
+              description: effect.description,
+              sourceMessage: effect.sourceMessage,
+              usageMessage: effect.usageMessage,
+            });
+          }
+        }
+        break;
+      }
       case 'MutateFrozen':
       case 'MutateGlobal': {
         const values = substitutions.get(effect.place.identifier.id) ?? [];

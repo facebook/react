@@ -1,3 +1,7 @@
+## Pending
+
+* Improve impurity and ref validation, reducing false positives [#35298](https://github.com/facebook/react/pull/35298) by [@josephsavona](https://github.com/josephsavona)
+
 ## 19.1.0-rc.2 (May 14, 2025)
 
 ## babel-plugin-react-compiler
