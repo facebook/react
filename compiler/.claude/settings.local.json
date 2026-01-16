@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node scripts/enable-feature-flag.js:*)"
+      "Bash(node scripts/enable-feature-flag.js:*)",
+      "Bash(yarn snap:*)",
+      "Bash(for test in \"error.invalid-access-ref-during-render\" \"error.invalid-ref-in-callback-invoked-during-render\" \"error.invalid-impure-functions-in-render-via-render-helper\")",
+      "Bash(do)",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(cat:*)",
+      "Bash(sl revert:*)",
+      "Bash(yarn workspace snap run build:*)",
+      "Bash(yarn tsc:*)",
+      "Bash(yarn snap:build)",
+      "Bash(timeout 30 yarn snap:*)"
     ],
     "deny": [],
     "ask": []
