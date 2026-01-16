@@ -1384,7 +1384,7 @@ function updateReducerImpl<S, A>(
         // ScheduledGesture.
         const scheduledGesture = update.gesture;
         if (scheduledGesture !== null) {
-          if (scheduledGesture.count === 0) {
+          if (scheduledGesture.count === 0 && !scheduledGesture.committing) {
             // This gesture has already been cancelled. We can clean up this update.
             update = update.next;
             continue;
