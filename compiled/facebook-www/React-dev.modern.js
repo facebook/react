@@ -551,12 +551,10 @@ __DEV__ &&
         var thenable = ioInfo();
         thenable.then(
           function (moduleObject) {
-            if (0 === payload._status || -1 === payload._status)
-              if (
-                ((payload._status = 1),
-                (payload._result = moduleObject),
-                enableAsyncDebugInfo)
-              ) {
+            if (0 === payload._status || -1 === payload._status) {
+              payload._status = 1;
+              payload._result = moduleObject;
+              if (enableAsyncDebugInfo) {
                 var _ioInfo = payload._ioInfo;
                 if (null != _ioInfo) {
                   _ioInfo.end = performance.now();
@@ -566,18 +564,17 @@ __DEV__ &&
                   _ioInfo.value.status = "fulfilled";
                   _ioInfo.value.value = debugValue;
                 }
-                void 0 === thenable.status &&
-                  ((thenable.status = "fulfilled"),
-                  (thenable.value = moduleObject));
               }
+              void 0 === thenable.status &&
+                ((thenable.status = "fulfilled"),
+                (thenable.value = moduleObject));
+            }
           },
           function (error) {
-            if (0 === payload._status || -1 === payload._status)
-              if (
-                ((payload._status = 2),
-                (payload._result = error),
-                enableAsyncDebugInfo)
-              ) {
+            if (0 === payload._status || -1 === payload._status) {
+              payload._status = 2;
+              payload._result = error;
+              if (enableAsyncDebugInfo) {
                 var _ioInfo2 = payload._ioInfo;
                 null != _ioInfo2 &&
                   ((_ioInfo2.end = performance.now()),
@@ -585,9 +582,10 @@ __DEV__ &&
                   rejectDebugValue(error),
                   (_ioInfo2.value.status = "rejected"),
                   (_ioInfo2.value.reason = error));
-                void 0 === thenable.status &&
-                  ((thenable.status = "rejected"), (thenable.reason = error));
               }
+              void 0 === thenable.status &&
+                ((thenable.status = "rejected"), (thenable.reason = error));
+            }
           }
         );
         if (
@@ -1499,7 +1497,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.3.0-www-modern-eac3c955-20260115";
+    exports.version = "19.3.0-www-modern-db71391c-20260115";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
