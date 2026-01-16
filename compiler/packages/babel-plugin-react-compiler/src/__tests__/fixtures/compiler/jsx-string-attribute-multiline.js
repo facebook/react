@@ -30,7 +30,7 @@ function Component() {
 /**
  * Test with tabs in className - should also be normalized
  */
-function ComponentWithTabs() {
+export function ComponentWithTabs() {
   return (
     <div className="flex	items-center	justify-center">
       Content
@@ -41,7 +41,7 @@ function ComponentWithTabs() {
 /**
  * Test that non-className attributes with newlines are preserved
  */
-function ComponentWithOtherAttrs() {
+export function ComponentWithOtherAttrs() {
   return (
     <div
       data-testid="
@@ -59,7 +59,7 @@ function ComponentWithOtherAttrs() {
 /**
  * Test with class attribute (lowercase, for SVG compatibility)
  */
-function SvgComponent() {
+export function SvgComponent() {
   return (
     <svg
       class="
