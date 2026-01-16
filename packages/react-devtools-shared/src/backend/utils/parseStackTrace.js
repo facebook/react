@@ -94,7 +94,7 @@ function parseStackTraceFromFirefoxStack(
   return parsedFrames;
 }
 
-const CHROME_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
+const CHROME_STACK_REGEXP = /^\s*at .*(?:\(|:\d+)/m;
 export function parseStackTraceFromString(
   stack: string,
   skipFrames: number,
