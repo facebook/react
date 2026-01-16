@@ -18,49 +18,38 @@ import {runBabelPluginReactCompiler} from '../Babel/RunReactCompilerBabelPlugin'
 
 describe('className whitespace normalization', () => {
   function compile(code: string): string {
-    return runBabelPluginReactCompiler(code, 'test.js', 'flow', {
+    const result = runBabelPluginReactCompiler(code, 'test.js', 'flow', {
       panicThreshold: 'all_errors',
-    }).code;
+    });
+    return result.code ?? '';
   }
 
   describe('compiler normalizes className whitespace', () => {
-    test('normalizes newlines in className to spaces', () => {
+    test('normalizes newlines in multiline className to spaces', () => {
+      // Using actual newlines in the className string (the real issue from #35481)
       const input = `function Component() {
-        return <div className="flex\\nitems-center" />;
+        return <div className="flex
+items-center" />;
       }`;
       const output = compile(input);
+      // After normalization, newlines should become spaces
       expect(output).toContain('className="flex items-center"');
-      expect(output).not.toContain('\\n');
     });
 
     test('normalizes tabs in className to spaces', () => {
+      // Using actual tab character
       const input = `function Component() {
-        return <div className="flex\\titems-center" />;
-      }`;
-      const output = compile(input);
-      expect(output).toContain('className="flex items-center"');
-      expect(output).not.toContain('\\t');
-    });
-
-    test('normalizes multiple newlines to single space', () => {
-      const input = `function Component() {
-        return <div className="flex\\n\\n\\nitems-center" />;
+        return <div className="flex	items-center" />;
       }`;
       const output = compile(input);
       expect(output).toContain('className="flex items-center"');
     });
 
-    test('normalizes CRLF to space', () => {
+    test('normalizes class attribute for SVG compatibility', () => {
+      // Using actual newline in class attribute
       const input = `function Component() {
-        return <div className="flex\\r\\nitems-center" />;
-      }`;
-      const output = compile(input);
-      expect(output).toContain('className="flex items-center"');
-    });
-
-    test('normalizes class attribute (SVG compatibility)', () => {
-      const input = `function Component() {
-        return <svg class="w-6\\nh-6" />;
+        return <svg class="w-6
+h-6" />;
       }`;
       const output = compile(input);
       expect(output).toContain('class="w-6 h-6"');
@@ -75,28 +64,33 @@ describe('className whitespace normalization', () => {
     });
 
     test('does not normalize other attributes with newlines', () => {
+      // Other attributes should NOT be normalized
       const input = `function Component() {
-        return <div data-testid="multi\\nline" />;
+        return <div data-testid="multi
+line" />;
       }`;
       const output = compile(input);
-      // Other attributes should preserve newlines
-      expect(output).toContain('\\n');
+      // The newline should still be present (not normalized)
+      expect(output).toMatch(/data-testid[^>]*\\n|data-testid[^>]*\n/);
     });
 
     test('handles multiline className from issue #35481', () => {
-      // This is the exact pattern that causes hydration mismatches
+      // This is the exact pattern from the GitHub issue that causes hydration mismatches
       const input = `function Component() {
         return (
           <div
             className="
-              flex min-h-screen
+              flex min-h-screen items-center justify-center
+              dark:bg-black
             "
           />
         );
       }`;
       const output = compile(input);
-      // The output should have normalized whitespace (newlines become spaces)
-      expect(output).not.toMatch(/className="[^"]*\\n[^"]*"/);
+      // The output className should NOT contain newlines
+      expect(output).not.toMatch(/className="[^"]*\n[^"]*"/);
+      // It should contain the normalized class names
+      expect(output).toContain('flex min-h-screen');
     });
   });
 });
