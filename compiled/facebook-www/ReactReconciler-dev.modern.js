@@ -5914,7 +5914,7 @@ __DEV__ &&
           null;
       hookTypesUpdateIndexDev = -1;
       null !== current &&
-        (current.flags & 132120576) !== (workInProgress.flags & 132120576) &&
+        (current.flags & 133169152) !== (workInProgress.flags & 133169152) &&
         console.error(
           "Internal React error: Expected static flag was missing. Please notify the React team."
         );
@@ -9365,7 +9365,7 @@ __DEV__ &&
             children: nextProps.children
           })),
           (nextProps.subtreeFlags =
-            nextFallbackChildren.subtreeFlags & 132120576),
+            nextFallbackChildren.subtreeFlags & 133169152),
           null !== didSuspend
             ? (nextPrimaryChildren = createWorkInProgress(
                 didSuspend,
@@ -11123,8 +11123,8 @@ __DEV__ &&
 
           )
             (newChildLanes |= _child2.lanes | _child2.childLanes),
-              (subtreeFlags |= _child2.subtreeFlags & 132120576),
-              (subtreeFlags |= _child2.flags & 132120576),
+              (subtreeFlags |= _child2.subtreeFlags & 133169152),
+              (subtreeFlags |= _child2.flags & 133169152),
               (_treeBaseDuration += _child2.treeBaseDuration),
               (_child2 = _child2.sibling);
           completedWork.treeBaseDuration = _treeBaseDuration;
@@ -11136,8 +11136,8 @@ __DEV__ &&
           )
             (newChildLanes |=
               _treeBaseDuration.lanes | _treeBaseDuration.childLanes),
-              (subtreeFlags |= _treeBaseDuration.subtreeFlags & 132120576),
-              (subtreeFlags |= _treeBaseDuration.flags & 132120576),
+              (subtreeFlags |= _treeBaseDuration.subtreeFlags & 133169152),
+              (subtreeFlags |= _treeBaseDuration.flags & 133169152),
               (_treeBaseDuration.return = completedWork),
               (_treeBaseDuration = _treeBaseDuration.sibling);
       else if ((completedWork.mode & 2) !== NoMode) {
@@ -19607,7 +19607,7 @@ __DEV__ &&
           (workInProgress.deletions = null),
           (workInProgress.actualDuration = -0),
           (workInProgress.actualStartTime = -1.1));
-      workInProgress.flags = current.flags & 132120576;
+      workInProgress.flags = current.flags & 133169152;
       workInProgress.childLanes = current.childLanes;
       workInProgress.lanes = current.lanes;
       workInProgress.child = current.child;
@@ -19645,7 +19645,7 @@ __DEV__ &&
       return workInProgress;
     }
     function resetWorkInProgress(workInProgress, renderLanes) {
-      workInProgress.flags &= 132120578;
+      workInProgress.flags &= 133169154;
       var current = workInProgress.alternate;
       null === current
         ? ((workInProgress.childLanes = 0),
@@ -22920,7 +22920,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-4a3d993e-20260114"
+        reconcilerVersion: "19.3.0-www-modern-f0fbb0d1-20260115"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -5396,7 +5396,7 @@ module.exports = function ($$$config) {
           children: nextProps.children
         })),
         (nextProps.subtreeFlags =
-          nextFallbackChildren.subtreeFlags & 132120576),
+          nextFallbackChildren.subtreeFlags & 133169152),
         null !== didSuspend
           ? (nextPrimaryChildren = createWorkInProgress(
               didSuspend,
@@ -6808,8 +6808,8 @@ module.exports = function ($$$config) {
     if (didBailout)
       for (var child$104 = completedWork.child; null !== child$104; )
         (newChildLanes |= child$104.lanes | child$104.childLanes),
-          (subtreeFlags |= child$104.subtreeFlags & 132120576),
-          (subtreeFlags |= child$104.flags & 132120576),
+          (subtreeFlags |= child$104.subtreeFlags & 133169152),
+          (subtreeFlags |= child$104.flags & 133169152),
           (child$104.return = completedWork),
           (child$104 = child$104.sibling);
     else
@@ -12457,7 +12457,7 @@ module.exports = function ($$$config) {
         (workInProgress.flags = 0),
         (workInProgress.subtreeFlags = 0),
         (workInProgress.deletions = null));
-    workInProgress.flags = current.flags & 132120576;
+    workInProgress.flags = current.flags & 133169152;
     workInProgress.childLanes = current.childLanes;
     workInProgress.lanes = current.lanes;
     workInProgress.child = current.child;
@@ -12479,7 +12479,7 @@ module.exports = function ($$$config) {
     return workInProgress;
   }
   function resetWorkInProgress(workInProgress, renderLanes) {
-    workInProgress.flags &= 132120578;
+    workInProgress.flags &= 133169154;
     var current = workInProgress.alternate;
     null === current
       ? ((workInProgress.childLanes = 0),
@@ -14094,7 +14094,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-4a3d993e-20260114"
+      reconcilerVersion: "19.3.0-www-modern-f0fbb0d1-20260115"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

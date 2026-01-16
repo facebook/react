@@ -5480,7 +5480,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       mode: "hidden",
       children: nextProps.children
     });
-    nextProps.subtreeFlags = didSuspend.subtreeFlags & 132120576;
+    nextProps.subtreeFlags = didSuspend.subtreeFlags & 133169152;
     null !== currentFallbackChildFragment
       ? (showFallback = createWorkInProgress(
           currentFallbackChildFragment,
@@ -6523,8 +6523,8 @@ function bubbleProperties(completedWork) {
   if (didBailout)
     for (var child$83 = completedWork.child; null !== child$83; )
       (newChildLanes |= child$83.lanes | child$83.childLanes),
-        (subtreeFlags |= child$83.subtreeFlags & 132120576),
-        (subtreeFlags |= child$83.flags & 132120576),
+        (subtreeFlags |= child$83.subtreeFlags & 133169152),
+        (subtreeFlags |= child$83.flags & 133169152),
         (child$83.return = completedWork),
         (child$83 = child$83.sibling);
   else
@@ -10855,7 +10855,7 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.flags = 0),
       (workInProgress.subtreeFlags = 0),
       (workInProgress.deletions = null));
-  workInProgress.flags = current.flags & 132120576;
+  workInProgress.flags = current.flags & 133169152;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
@@ -10874,7 +10874,7 @@ function createWorkInProgress(current, pendingProps) {
   return workInProgress;
 }
 function resetWorkInProgress(workInProgress, renderLanes) {
-  workInProgress.flags &= 132120578;
+  workInProgress.flags &= 133169154;
   var current = workInProgress.alternate;
   null === current
     ? ((workInProgress.childLanes = 0),
@@ -11260,10 +11260,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1598 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-4a3d993e-20260114",
+  version: "19.3.0-www-modern-f0fbb0d1-20260115",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-4a3d993e-20260114"
+  reconcilerVersion: "19.3.0-www-modern-f0fbb0d1-20260115"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1599 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11289,4 +11289,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-modern-4a3d993e-20260114";
+exports.version = "19.3.0-www-modern-f0fbb0d1-20260115";
