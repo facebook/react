@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5e073b77dc402374cb14e07c33dcf452>>
+ * @generated SignedSource<<953b6ecd3ce61bc3b48b0933ae96a660>>
  */
 
 "use strict";
@@ -5518,7 +5518,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           (nextProps.treeBaseDuration = didSuspend.treeBaseDuration)),
         (workInProgress.deletions = null))
       : ((nextProps = createWorkInProgress(didSuspend, primaryChildProps)),
-        (nextProps.subtreeFlags = didSuspend.subtreeFlags & 132120576));
+        (nextProps.subtreeFlags = didSuspend.subtreeFlags & 133169152));
     null !== currentFallbackChildFragment
       ? (showFallback = createWorkInProgress(
           currentFallbackChildFragment,
@@ -6454,8 +6454,8 @@ function bubbleProperties(completedWork) {
 
       )
         (newChildLanes |= child$86.lanes | child$86.childLanes),
-          (subtreeFlags |= child$86.subtreeFlags & 132120576),
-          (subtreeFlags |= child$86.flags & 132120576),
+          (subtreeFlags |= child$86.subtreeFlags & 133169152),
+          (subtreeFlags |= child$86.flags & 133169152),
           (treeBaseDuration$85 += child$86.treeBaseDuration),
           (child$86 = child$86.sibling);
       completedWork.treeBaseDuration = treeBaseDuration$85;
@@ -6467,8 +6467,8 @@ function bubbleProperties(completedWork) {
       )
         (newChildLanes |=
           treeBaseDuration$85.lanes | treeBaseDuration$85.childLanes),
-          (subtreeFlags |= treeBaseDuration$85.subtreeFlags & 132120576),
-          (subtreeFlags |= treeBaseDuration$85.flags & 132120576),
+          (subtreeFlags |= treeBaseDuration$85.subtreeFlags & 133169152),
+          (subtreeFlags |= treeBaseDuration$85.flags & 133169152),
           (treeBaseDuration$85.return = completedWork),
           (treeBaseDuration$85 = treeBaseDuration$85.sibling);
   else if (0 !== (completedWork.mode & 2)) {
@@ -10228,7 +10228,7 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.deletions = null),
       (workInProgress.actualDuration = -0),
       (workInProgress.actualStartTime = -1.1));
-  workInProgress.flags = current.flags & 132120576;
+  workInProgress.flags = current.flags & 133169152;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
@@ -10249,7 +10249,7 @@ function createWorkInProgress(current, pendingProps) {
   return workInProgress;
 }
 function resetWorkInProgress(workInProgress, renderLanes) {
-  workInProgress.flags &= 132120578;
+  workInProgress.flags &= 133169154;
   var current = workInProgress.alternate;
   null === current
     ? ((workInProgress.childLanes = 0),
@@ -10829,10 +10829,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1262 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-c1866240-20260113",
+  version: "19.3.0-native-fb-f0fbb0d1-20260115",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-c1866240-20260113",
+  reconcilerVersion: "19.3.0-native-fb-f0fbb0d1-20260115",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$151 = 0;
@@ -10983,4 +10983,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.3.0-native-fb-c1866240-20260113";
+exports.version = "19.3.0-native-fb-f0fbb0d1-20260115";

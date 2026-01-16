@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a3a783b9e238d08b3cbca8c7d576f14b>>
+ * @generated SignedSource<<82c219df53eb2d29e995973287e2e9f3>>
  */
 
 /*
@@ -2973,7 +2973,7 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.deletions = null),
       (workInProgress.actualDuration = -0),
       (workInProgress.actualStartTime = -1.1));
-  workInProgress.flags = current.flags & 132120576;
+  workInProgress.flags = current.flags & 133169152;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
@@ -2994,7 +2994,7 @@ function createWorkInProgress(current, pendingProps) {
   return workInProgress;
 }
 function resetWorkInProgress(workInProgress, renderLanes) {
-  workInProgress.flags &= 132120578;
+  workInProgress.flags &= 133169154;
   var current = workInProgress.alternate;
   null === current
     ? ((workInProgress.childLanes = 0),
@@ -7989,7 +7989,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           (workInProgress.deletions = null))
         : ((nextProps = createWorkInProgress(nextFallbackChildren, didSuspend)),
           (nextProps.subtreeFlags =
-            nextFallbackChildren.subtreeFlags & 132120576)),
+            nextFallbackChildren.subtreeFlags & 133169152)),
       null !== digest
         ? (nextPrimaryChildren = createWorkInProgress(
             digest,
@@ -9060,8 +9060,8 @@ function bubbleProperties(completedWork) {
 
       )
         (newChildLanes |= child$134.lanes | child$134.childLanes),
-          (subtreeFlags |= child$134.subtreeFlags & 132120576),
-          (subtreeFlags |= child$134.flags & 132120576),
+          (subtreeFlags |= child$134.subtreeFlags & 133169152),
+          (subtreeFlags |= child$134.flags & 133169152),
           (treeBaseDuration$133 += child$134.treeBaseDuration),
           (child$134 = child$134.sibling);
       completedWork.treeBaseDuration = treeBaseDuration$133;
@@ -9073,8 +9073,8 @@ function bubbleProperties(completedWork) {
       )
         (newChildLanes |=
           treeBaseDuration$133.lanes | treeBaseDuration$133.childLanes),
-          (subtreeFlags |= treeBaseDuration$133.subtreeFlags & 132120576),
-          (subtreeFlags |= treeBaseDuration$133.flags & 132120576),
+          (subtreeFlags |= treeBaseDuration$133.subtreeFlags & 133169152),
+          (subtreeFlags |= treeBaseDuration$133.flags & 133169152),
           (treeBaseDuration$133.return = completedWork),
           (treeBaseDuration$133 = treeBaseDuration$133.sibling);
   else if (0 !== (completedWork.mode & 2)) {
@@ -19848,14 +19848,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2370 = React.version;
 if (
-  "19.3.0-native-fb-c1866240-20260113" !==
+  "19.3.0-native-fb-f0fbb0d1-20260115" !==
   isomorphicReactPackageVersion$jscomp$inline_2370
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2370,
-      "19.3.0-native-fb-c1866240-20260113"
+      "19.3.0-native-fb-f0fbb0d1-20260115"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19877,10 +19877,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2377 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-c1866240-20260113",
+  version: "19.3.0-native-fb-f0fbb0d1-20260115",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-c1866240-20260113",
+  reconcilerVersion: "19.3.0-native-fb-f0fbb0d1-20260115",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$336 = 0;
@@ -20156,7 +20156,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-native-fb-c1866240-20260113";
+exports.version = "19.3.0-native-fb-f0fbb0d1-20260115";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
