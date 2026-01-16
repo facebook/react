@@ -92,6 +92,7 @@ import {
   logSuspendedYieldTime,
   setCurrentTrackFromLanes,
   markAllLanesInOrder,
+  logApplyGesturePhase,
 } from './ReactFiberPerformanceTrack';
 
 import {
@@ -398,7 +399,10 @@ import {
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberLegacyContext';
 import {logUncaughtError} from './ReactFiberErrorLogger';
-import {stopCommittedGesture} from './ReactFiberGestureScheduler';
+import {
+  scheduleGestureCommit,
+  stopCommittedGesture,
+} from './ReactFiberGestureScheduler';
 import {claimQueuedTransitionTypes} from './ReactFiberTransitionTypes';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
@@ -1542,11 +1546,10 @@ function completeRootWhenReady(
       isViewTransitionEligible ||
       (isGestureTransition &&
         root.pendingGestures !== null &&
-        // If we're committing this gesture and it already has a View Transition
-        // running, then we don't have to wait for that gesture. We'll stop it
-        // when we commit.
-        (root.pendingGestures.running === null ||
-          !root.pendingGestures.committing))
+        // If this gesture already has a View Transition running then we don't
+        // have to wait on that one before proceeding. We may hold the commit
+        // on the gesture committing later on in completeRoot.
+        root.pendingGestures.running === null)
     ) {
       // Wait for any pending View Transition (including gestures) to finish.
       suspendOnActiveViewTransition(suspendedState, root.containerInfo);
@@ -3463,6 +3466,16 @@ function completeRoot(
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // Log the previous render phase once we commit. I.e. we weren't interrupted.
     setCurrentTrackFromLanes(lanes);
+    if (isGestureRender(lanes)) {
+      // Clamp the render start time in case if something else on this lane was committed
+      // (such as this same tree before).
+      if (completedRenderStartTime < gestureClampTime) {
+        completedRenderStartTime = gestureClampTime;
+      }
+      if (completedRenderEndTime < gestureClampTime) {
+        completedRenderEndTime = gestureClampTime;
+      }
+    }
     if (exitStatus === RootErrored) {
       logErroredRenderPhase(
         completedRenderStartTime,
@@ -3580,7 +3593,38 @@ function completeRoot(
       } else {
         // If we already have a gesture running, we don't update it in place
         // even if we have a new tree. Instead we wait until we can commit.
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          // Clamp at the render time since we're not going to finish the rest
+          // of this commit or apply yet.
+          finalizeRender(lanes, completedRenderEndTime);
+        }
+        // We are no longer committing.
+        pendingEffectsRoot = (null: any); // Clear for GC purposes.
+        pendingFinishedWork = (null: any); // Clear for GC purposes.
+        pendingEffectsLanes = NoLanes;
       }
+      // Schedule the root to be committed when the gesture completes.
+      root.cancelPendingCommit = scheduleGestureCommit(
+        committingGesture,
+        completeRoot.bind(
+          null,
+          root,
+          finishedWork,
+          lanes,
+          recoverableErrors,
+          transitions,
+          didIncludeRenderPhaseUpdate,
+          spawnedLane,
+          updatedLanes,
+          suspendedRetryLanes,
+          didSkipSuspendedSiblings,
+          exitStatus,
+          suspendedState,
+          'Waiting for the Gesture to finish' /* suspendedCommitReason */,
+          completedRenderStartTime,
+          completedRenderEndTime,
+        ),
+      );
       return;
     }
   }
@@ -4368,6 +4412,15 @@ function flushGestureMutations(): void {
     ReactSharedInternals.T = prevTransition;
   }
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    recordCommitEndTime();
+    logApplyGesturePhase(
+      pendingEffectsRenderEndTime,
+      commitEndTime,
+      animatingTask,
+    );
+  }
+
   pendingEffectsStatus = PENDING_GESTURE_ANIMATION_PHASE;
 }
 
@@ -4385,10 +4438,11 @@ function flushGestureAnimations(): void {
   const lanes = pendingEffectsLanes;
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    const startViewTransitionStartTime = commitEndTime;
     // Update the new commitEndTime to when we started the animation.
     recordCommitEndTime();
     logStartViewTransitionYieldPhase(
-      pendingEffectsRenderEndTime,
+      startViewTransitionStartTime,
       commitEndTime,
       pendingDelayedCommitReason === ABORTED_VIEW_TRANSITION_COMMIT,
       animatingTask,
@@ -4903,18 +4957,6 @@ export function pingGestureRoot(root: FiberRoot): void {
   const gesture = root.pendingGestures;
   if (gesture === null) {
     return;
-  }
-  if (
-    root.cancelPendingCommit !== null &&
-    isGestureRender(pendingEffectsLanes)
-  ) {
-    // We have a suspended commit which we'll discard and rerender.
-    // TODO: Just use this commit since it's ready to go.
-    const cancelPendingCommit = root.cancelPendingCommit;
-    if (cancelPendingCommit !== null) {
-      root.cancelPendingCommit = null;
-      cancelPendingCommit();
-    }
   }
   // Ping it for rerender and commit.
   markRootPinged(root, GestureLane);

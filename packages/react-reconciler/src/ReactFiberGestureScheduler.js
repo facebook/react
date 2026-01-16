@@ -35,6 +35,7 @@ export type ScheduledGesture = {
   rangeEnd: number, // The percentage along the timeline where the "destination" state is reached.
   types: null | TransitionTypes, // Any addTransitionType call made during startGestureTransition.
   running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
+  commit: null | (() => void), // Callback to run to commit if there's a pending commit.
   committing: boolean, // If the gesture was released in a committed state and should actually commit.
   revertLane: Lane, // The Lane that we'll use to schedule the revert.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
@@ -64,6 +65,7 @@ export function scheduleGesture(
     rangeEnd: 100, // Uninitialized
     types: null,
     running: null,
+    commit: null,
     committing: false,
     revertLane: NoLane, // Starts uninitialized.
     prev: prev,
@@ -164,9 +166,17 @@ export function cancelScheduledGesture(
       // lane to actually commit it.
       gesture.committing = true;
       if (root.pendingGestures === gesture) {
-        // Ping the root given the new state. This is similar to pingSuspendedRoot.
-        // This will either schedule the gesture lane to be committed possibly from its current state.
-        pingGestureRoot(root);
+        const commitCallback = gesture.commit;
+        if (commitCallback !== null) {
+          gesture.commit = null;
+          // If we already have a commit prepared we can immediately commit the tree
+          // without rerendering.
+          // TODO: Consider scheduling this in a task instead of synchronously inside the last cancellation.s
+          commitCallback();
+        } else {
+          // Ping the root given the new state. This is similar to pingSuspendedRoot.
+          pingGestureRoot(root);
+        }
       }
     } else {
       // If we're not going to commit this gesture we can stop the View Transition
@@ -234,4 +244,14 @@ export function stopCommittedGesture(root: FiberRoot) {
       stopViewTransition(runningTransition);
     }
   }
+}
+
+export function scheduleGestureCommit(
+  gesture: ScheduledGesture,
+  callback: () => void,
+): () => void {
+  gesture.commit = callback;
+  return function () {
+    gesture.commit = null;
+  };
 }
