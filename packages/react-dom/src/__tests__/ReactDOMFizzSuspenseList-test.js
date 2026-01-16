@@ -1508,6 +1508,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('inserts text separators (comments) for text nodes (forwards)', async () => {
     function Foo() {
       return (
@@ -1539,6 +1540,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('inserts text separators (comments) for text nodes (backwards)', async () => {
     function Foo() {
       return (
@@ -1568,6 +1570,7 @@ describe('ReactDOMFizzSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('inserts text separators (comments) for text nodes (legacy)', async () => {
     function Foo() {
       return (
