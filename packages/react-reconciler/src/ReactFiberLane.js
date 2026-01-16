@@ -621,7 +621,8 @@ export function includesOnlyRetries(lanes: Lanes): boolean {
 export function includesOnlyNonUrgentLanes(lanes: Lanes): boolean {
   // TODO: Should hydration lanes be included here? This function is only
   // used in `updateDeferredValueImpl`.
-  const UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
+  const UrgentLanes =
+    SyncLane | InputContinuousLane | DefaultLane | GestureLane;
   return (lanes & UrgentLanes) === NoLanes;
 }
 export function includesOnlyTransitions(lanes: Lanes): boolean {

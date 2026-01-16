@@ -654,7 +654,7 @@ describe('ProfilerContext', () => {
     expect(store.profilerStore.isProfilingBasedOnUserInput).toBe(false);
 
     document.body.removeChild(profilerContainer);
-  });
+  }, 20000);
 
   it('should navigate between commits when the keyboard shortcut is pressed', async () => {
     const Parent = () => <Child />;

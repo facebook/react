@@ -641,11 +641,21 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
               'The result of getSnapshot should be cached to avoid an infinite loop',
               {withoutStack: true},
             ],
-            'Error: Maximum update depth exceeded',
-            'The above error occurred i',
+            [
+              'Error: Maximum update depth exceeded. ' +
+                'This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. ' +
+                'React limits the number of nested updates to prevent infinite loops.' +
+                '\n    in <stack>',
+              {withoutStack: true},
+            ],
+            'The above error occurred in the <App> component:\n\n' +
+              '    in App (at **)\n\n' +
+              'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+              'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.',
           ]
         : [
-            'The result of getSnapshot should be cached to avoid an infinite loop',
+            'The result of getSnapshot should be cached to avoid an infinite loop' +
+              '\n    in App (at **)',
           ],
     );
   });
@@ -839,7 +849,12 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         await act(() => {
           ReactDOM.hydrate(React.createElement(App, null), container);
         });
-        assertConsoleErrorDev(['Text content did not match']);
+        assertConsoleErrorDev([
+          'Warning: Text content did not match. Server: "server" Client: "client"\n' +
+            '    in Text (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)',
+        ]);
         assertLog(['client', 'Passive effect: client']);
       }
       expect(container.textContent).toEqual('client');

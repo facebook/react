@@ -349,10 +349,13 @@ describe('create-react-class-integration', () => {
     });
     assertConsoleErrorDev([
       [
-        'Component uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'Component uses the legacy childContextTypes API which will soon be removed. ' +
+          'Use React.createContext() instead. (https://react.dev/link/legacy-context)',
         {withoutStack: true},
       ],
-      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'Component uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)' +
+        '\n    in ReactClassComponent (at **)',
     ]);
     expect(container.firstChild.className).toBe('foo');
   });
