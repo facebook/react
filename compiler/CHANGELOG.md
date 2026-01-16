@@ -2,7 +2,7 @@
 
 ## babel-plugin-react-compiler
 
-* Fix hydration error with multiline className strings [#35481](https://github.com/facebook/react/pull/35481) by [@contributor](https://github.com/contributor)
+* Fix hydration error with multiline className strings [#35481](https://github.com/facebook/react/pull/35481) by [@shiva-kar](https://github.com/shiva-kar)
 * Fix for string attribute values with emoji [#33096](https://github.com/facebook/react/pull/33096) by [@josephsavona](https://github.com/josephsavona)
 
 ## 19.1.0-rc.1 (April 21, 2025)
