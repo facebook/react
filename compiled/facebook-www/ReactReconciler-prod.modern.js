@@ -3713,7 +3713,7 @@ module.exports = function ($$$config) {
         hook
       );
     if (
-      0 === (renderLanes & 42) ||
+      0 === (renderLanes & 106) ||
       (0 !== (renderLanes & 1073741824) &&
         0 === (workInProgressRootRenderLanes & 261930))
     )
@@ -14115,7 +14115,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-4028aaa5-20260115"
+      reconcilerVersion: "19.3.0-www-modern-eac3c955-20260115"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
