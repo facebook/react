@@ -2,7 +2,7 @@
 
 import {useRef} from 'react';
 
-component Foo() {
+hook useFoo() {
   const ref = useRef();
 
   const s = () => {
@@ -10,6 +10,10 @@ component Foo() {
   };
 
   return s;
+}
+
+component Foo() {
+  useFoo();
 }
 
 export const FIXTURE_ENTRYPOINT = {

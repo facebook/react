@@ -188,6 +188,8 @@ export type ImpureEffectConfig = {
   into: string;
   reason: string;
   description: string;
+  sourceMessage: string;
+  usageMessage: string;
 };
 
 export const ImpureEffectSchema: z.ZodType<ImpureEffectConfig> = z.object({
@@ -195,6 +197,8 @@ export const ImpureEffectSchema: z.ZodType<ImpureEffectConfig> = z.object({
   into: LifetimeIdSchema,
   reason: z.string(),
   description: z.string(),
+  sourceMessage: z.string(),
+  usageMessage: z.string(),
 });
 
 export type RenderEffectConfig = {

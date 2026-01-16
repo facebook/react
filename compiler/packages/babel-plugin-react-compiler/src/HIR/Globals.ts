@@ -664,7 +664,7 @@ const RenderHookAliasing: (
 
 const EffectHookAliasing: AliasingSignatureConfig = {
   receiver: '@receiver',
-  params: [],
+  params: ['@fn', '@deps'],
   rest: '@rest',
   returns: '@returns',
   temporaries: ['@effect'],
@@ -674,6 +674,21 @@ const EffectHookAliasing: AliasingSignatureConfig = {
       kind: 'Freeze',
       value: '@rest',
       reason: ValueReason.Effect,
+    },
+    {
+      kind: 'Freeze',
+      value: '@fn',
+      reason: ValueReason.Effect,
+    },
+    {
+      kind: 'Freeze',
+      value: '@deps',
+      reason: ValueReason.Effect,
+    },
+    // Deps are accessed during render
+    {
+      kind: 'Render',
+      place: '@deps',
     },
     // Internally creates an effect object that captures the function and deps
     {
@@ -686,6 +701,11 @@ const EffectHookAliasing: AliasingSignatureConfig = {
     {
       kind: 'Capture',
       from: '@rest',
+      into: '@effect',
+    },
+    {
+      kind: 'Capture',
+      from: '@fn',
       into: '@effect',
     },
     // Returns undefined
@@ -703,6 +723,39 @@ const EffectHookAliasing: AliasingSignatureConfig = {
  * now that FeatureFlag `enableTreatHooksAsFunctions` is removed we can
  * use positional params too (?)
  */
+const useEffectEvent = addHook(
+  DEFAULT_SHAPES,
+  {
+    positionalParams: [],
+    restParam: Effect.Freeze,
+    returnType: {
+      kind: 'Function',
+      return: {kind: 'Poly'},
+      shapeId: BuiltInEffectEventId,
+      isConstructor: false,
+    },
+    calleeEffect: Effect.Read,
+    hookKind: 'useEffectEvent',
+    // Frozen because it should not mutate any locally-bound values
+    returnValueKind: ValueKind.Frozen,
+    aliasing: {
+      receiver: '@receiver',
+      params: ['@value'],
+      rest: null,
+      returns: '@return',
+      temporaries: [],
+      effects: [
+        {kind: 'Assign', from: '@value', into: '@return'},
+        {
+          kind: 'Freeze',
+          value: '@value',
+          reason: ValueReason.HookCaptured,
+        },
+      ],
+    },
+  },
+  BuiltInUseEffectEventId,
+);
 const REACT_APIS: Array<[string, BuiltInType]> = [
   [
     'useContext',
@@ -769,6 +822,22 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       calleeEffect: Effect.Read,
       hookKind: 'useRef',
       returnValueKind: ValueKind.Mutable,
+      aliasing: {
+        receiver: '@receiver',
+        params: [],
+        rest: '@rest',
+        returns: '@return',
+        temporaries: [],
+        effects: [
+          {
+            kind: 'Create',
+            into: '@return',
+            value: ValueKind.Mutable,
+            reason: ValueReason.KnownReturnSignature,
+          },
+          {kind: 'Capture', from: '@rest', into: '@return'},
+        ],
+      },
     }),
   ],
   [
@@ -799,7 +868,12 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
     addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Freeze,
-      returnType: {kind: 'Poly'},
+      returnType: {
+        kind: 'Function',
+        isConstructor: false,
+        return: {kind: 'Poly'},
+        shapeId: null,
+      },
       calleeEffect: Effect.Read,
       hookKind: 'useCallback',
       returnValueKind: ValueKind.Frozen,
@@ -915,27 +989,8 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       BuiltInFireId,
     ),
   ],
-  [
-    'useEffectEvent',
-    addHook(
-      DEFAULT_SHAPES,
-      {
-        positionalParams: [],
-        restParam: Effect.Freeze,
-        returnType: {
-          kind: 'Function',
-          return: {kind: 'Poly'},
-          shapeId: BuiltInEffectEventId,
-          isConstructor: false,
-        },
-        calleeEffect: Effect.Read,
-        hookKind: 'useEffectEvent',
-        // Frozen because it should not mutate any locally-bound values
-        returnValueKind: ValueKind.Frozen,
-      },
-      BuiltInUseEffectEventId,
-    ),
-  ],
+  ['useEffectEvent', useEffectEvent],
+  ['experimental_useEffectEvent', useEffectEvent],
   ['AUTODEPS', addObject(DEFAULT_SHAPES, BuiltInAutodepsId, [])],
 ];
 

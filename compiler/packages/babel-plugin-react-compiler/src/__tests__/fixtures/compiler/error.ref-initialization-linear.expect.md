@@ -33,10 +33,18 @@ React refs are values that are not needed for rendering. Refs should only be acc
    6 |   if (r.current == null) {
    7 |     r.current = 42;
 >  8 |     r.current = 42;
-     |     ^^^^^^^^^ Cannot update ref during render
+     |     ^^^^^^^^^ Ref is initialized more than once during render
    9 |   }
   10 | }
   11 |
+
+   5 |   const r = useRef(null);
+   6 |   if (r.current == null) {
+>  7 |     r.current = 42;
+     |     ^^^^^^^^^ Ref was first initialized here
+   8 |     r.current = 42;
+   9 |   }
+  10 | }
 ```
           
       

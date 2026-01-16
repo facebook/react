@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '../CompilerError';
+import {CompilerError, ErrorCategory} from '../CompilerError';
 import {AliasingEffect, AliasingSignature} from '../Inference/AliasingEffects';
 import {assertExhaustive} from '../Utils/utils';
 import {
@@ -194,8 +194,11 @@ function parseAliasingSignatureConfig(
           return {
             kind: 'Impure',
             into,
+            category: ErrorCategory.Purity,
             description: effect.description,
             reason: effect.reason,
+            sourceMessage: effect.sourceMessage,
+            usageMessage: effect.usageMessage,
           };
         }
         case 'Render': {

@@ -20,6 +20,7 @@ import {
   Place,
   isPrimitiveType,
   isUseRefType,
+  isJsxOrJsxUnionType,
 } from '../HIR/HIR';
 import {
   eachInstructionLValue,
@@ -224,17 +225,20 @@ export function inferMutationAliasingRanges(
         if (effect.kind === 'Alias') {
           state.assign(index++, effect.from, effect.into);
         } else {
-          CompilerError.invariant(effect.kind === 'Freeze', {
-            reason: `Unexpected '${effect.kind}' effect for MaybeThrow terminal`,
-            description: null,
-            details: [
-              {
-                kind: 'error',
-                loc: block.terminal.loc,
-                message: null,
-              },
-            ],
-          });
+          CompilerError.invariant(
+            effect.kind === 'Freeze' || effect.kind === 'Render',
+            {
+              reason: `Unexpected '${effect.kind}' effect for MaybeThrow terminal`,
+              description: null,
+              details: [
+                {
+                  kind: 'error',
+                  loc: block.terminal.loc,
+                  message: null,
+                },
+              ],
+            },
+          );
         }
       }
     }
@@ -393,17 +397,7 @@ export function inferMutationAliasingRanges(
             break;
           }
           case 'Apply': {
-            CompilerError.invariant(false, {
-              reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
-              description: null,
-              details: [
-                {
-                  kind: 'error',
-                  loc: effect.function.loc,
-                  message: null,
-                },
-              ],
-            });
+            break;
           }
           case 'MutateTransitive':
           case 'MutateConditionally':
@@ -585,7 +579,12 @@ export function inferMutationAliasingRanges(
     }
   }
 
-  if (errors.hasAnyErrors() && !isFunctionExpression) {
+  if (
+    errors.hasAnyErrors() &&
+    (fn.fnType === 'Component' ||
+      isJsxOrJsxUnionType(fn.returns.identifier.type) ||
+      !isFunctionExpression)
+  ) {
     return Err(errors);
   }
   return Ok(functionEffects);
