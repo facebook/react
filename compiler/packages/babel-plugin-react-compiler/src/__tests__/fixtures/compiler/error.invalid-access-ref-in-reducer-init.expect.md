@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Error: Cannot access refs during render
+Error: Cannot access ref value during render
 
 React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
 
@@ -36,7 +36,16 @@ error.invalid-access-ref-in-reducer-init.ts:8:4
    6 |     (state, action) => state + action,
    7 |     0,
 >  8 |     init => ref.current
-     |     ^^^^^^^^^^^^^^^^^^^ Passing a ref to a function may read its value during render
+     |     ^^^^^^^^^^^^^^^^^^^ Ref value is used during render
+   9 |   );
+  10 |
+  11 |   return <Stringify state={state} />;
+
+error.invalid-access-ref-in-reducer-init.ts:8:12
+   6 |     (state, action) => state + action,
+   7 |     0,
+>  8 |     init => ref.current
+     |             ^^^^^^^^^^^ Ref is initially accessed
    9 |   );
   10 |
   11 |   return <Stringify state={state} />;
