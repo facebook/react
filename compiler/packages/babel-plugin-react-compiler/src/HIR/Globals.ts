@@ -822,6 +822,22 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       calleeEffect: Effect.Read,
       hookKind: 'useRef',
       returnValueKind: ValueKind.Mutable,
+      aliasing: {
+        receiver: '@receiver',
+        params: [],
+        rest: '@rest',
+        returns: '@return',
+        temporaries: [],
+        effects: [
+          {
+            kind: 'Create',
+            into: '@return',
+            value: ValueKind.Mutable,
+            reason: ValueReason.KnownReturnSignature,
+          },
+          {kind: 'Capture', from: '@rest', into: '@return'},
+        ],
+      },
     }),
   ],
   [
@@ -852,7 +868,12 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
     addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Freeze,
-      returnType: {kind: 'Poly'},
+      returnType: {
+        kind: 'Function',
+        isConstructor: false,
+        return: {kind: 'Poly'},
+        shapeId: null,
+      },
       calleeEffect: Effect.Read,
       hookKind: 'useCallback',
       returnValueKind: ValueKind.Frozen,

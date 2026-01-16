@@ -1094,6 +1094,8 @@ function applyEffect(
       break;
     }
     case 'Apply': {
+      effects.push(effect);
+
       const functionValues = state.values(effect.function);
       if (
         functionValues.length === 1 &&
@@ -2201,14 +2203,8 @@ function computeSignatureForInstruction(
           if (isUseRefType(place.identifier)) {
             continue;
           }
-          if (place.identifier.type.kind === 'Function') {
-            if (isJsxOrJsxUnionType(place.identifier.type.return)) {
-              effects.push({
-                kind: 'Render',
-                place,
-              });
-            }
-          } else {
+          if (place.identifier.type.kind !== 'Function') {
+            // Functions are checked independently
             effects.push({
               kind: 'Render',
               place,
