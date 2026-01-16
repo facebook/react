@@ -9551,33 +9551,20 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
 
     // Create fresh lazy components for CLIENT
     let resolveClientInner;
-    const clientLazyInner = React.lazy(() => {
+    const clientLazyInner = React.lazy(async () => {
       Scheduler.log('client lazy inner initializer');
-      const payload = {default: <InnerComponent />};
-      const promise = new Promise(r => {
-        resolveClientInner = () => {
-          promise.status = 'fulfilled';
-          promise.value = payload;
-          r(payload);
-        };
+      return new Promise(r => {
+        resolveClientInner = () => r({default: <InnerComponent />});
       });
-      return promise;
     });
 
     let resolveClientOuter;
-    const clientLazyOuter = React.lazy(() => {
+    const clientLazyOuter = React.lazy(async () => {
       Scheduler.log('client lazy outer initializer');
-      const payload = {
-        default: <OuterComponent innerElement={clientLazyInner} />,
-      };
-      const promise = new Promise(r => {
-        resolveClientOuter = () => {
-          promise.status = 'fulfilled';
-          promise.value = payload;
-          r(payload);
-        };
+      return new Promise(r => {
+        resolveClientOuter = () =>
+          r({default: <OuterComponent innerElement={clientLazyInner} />});
       });
-      return promise;
     });
 
     const hydrationErrors = [];
