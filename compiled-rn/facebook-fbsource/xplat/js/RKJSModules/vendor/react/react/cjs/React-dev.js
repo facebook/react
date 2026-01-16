@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5416afdb4b4a0d97ae7b4bb350a38e55>>
+ * @generated SignedSource<<c2b4722e95dccbb91b069cbffa85cdb2>>
  */
 
 "use strict";
@@ -532,20 +532,27 @@ __DEV__ &&
     }
     function lazyInitializer(payload) {
       if (-1 === payload._status) {
-        var ctor = payload._result;
-        ctor = ctor();
-        ctor.then(
+        var ctor = payload._result,
+          thenable = ctor();
+        thenable.then(
           function (moduleObject) {
             if (0 === payload._status || -1 === payload._status)
-              (payload._status = 1), (payload._result = moduleObject);
+              (payload._status = 1),
+                (payload._result = moduleObject),
+                void 0 === thenable.status &&
+                  ((thenable.status = "fulfilled"),
+                  (thenable.value = moduleObject));
           },
           function (error) {
             if (0 === payload._status || -1 === payload._status)
-              (payload._status = 2), (payload._result = error);
+              (payload._status = 2),
+                (payload._result = error),
+                void 0 === thenable.status &&
+                  ((thenable.status = "rejected"), (thenable.reason = error));
           }
         );
         -1 === payload._status &&
-          ((payload._status = 0), (payload._result = ctor));
+          ((payload._status = 0), (payload._result = thenable));
       }
       if (1 === payload._status)
         return (
@@ -1414,7 +1421,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.3.0-native-fb-4cf90638-20260115";
+    exports.version = "19.3.0-native-fb-db71391c-20260115";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
