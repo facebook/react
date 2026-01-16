@@ -330,6 +330,7 @@ function createElementsInspectPanel() {
       inspectedElementPortalContainer = portal.container;
       if (inspectedElementPortalContainer != null && render) {
         ensureInitialHTMLIsCleared(inspectedElementPortalContainer);
+        bridge.send('syncSelectionFromBuiltinElementsPanel');
 
         render();
         portal.injectStyles(cloneStyleTags);

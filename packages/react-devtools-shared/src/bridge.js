@@ -214,7 +214,7 @@ export type BackendEvents = {
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
   saveToClipboard: [string],
-  selectElement: [number],
+  selectElement: [number | null],
   shutdown: [],
   stopInspectingHost: [boolean],
   scrollTo: [{left: number, top: number, right: number, bottom: number}],
