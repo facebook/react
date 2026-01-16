@@ -8,8 +8,8 @@
 import watcher from '@parcel/watcher';
 import path from 'path';
 import ts from 'typescript';
-import {FILTER_FILENAME, FIXTURES_PATH, PROJECT_ROOT} from './constants';
-import {TestFilter, readTestFilter} from './fixture-utils';
+import {FIXTURES_PATH, PROJECT_ROOT} from './constants';
+import {TestFilter} from './fixture-utils';
 import {execSync} from 'child_process';
 
 export function watchSrc(
@@ -117,6 +117,10 @@ export type RunnerState = {
   lastUpdate: number;
   mode: RunnerMode;
   filter: TestFilter | null;
+  debug: boolean;
+  // Input mode for interactive pattern entry
+  inputMode: 'none' | 'pattern';
+  inputBuffer: string;
 };
 
 function subscribeFixtures(
@@ -138,26 +142,6 @@ function subscribeFixtures(
       // Fixtures changed, re-run tests
       state.mode.action = RunnerAction.Test;
       onChange(state);
-    }
-  });
-}
-
-function subscribeFilterFile(
-  state: RunnerState,
-  onChange: (state: RunnerState) => void,
-) {
-  watcher.subscribe(PROJECT_ROOT, async (err, events) => {
-    if (err) {
-      console.error(err);
-      process.exit(1);
-    } else if (
-      events.findIndex(event => event.path.includes(FILTER_FILENAME)) !== -1
-    ) {
-      if (state.mode.filter) {
-        state.filter = await readTestFilter();
-        state.mode.action = RunnerAction.Test;
-        onChange(state);
-      }
     }
   });
 }
@@ -200,15 +184,67 @@ function subscribeKeyEvents(
   onChange: (state: RunnerState) => void,
 ) {
   process.stdin.on('keypress', async (str, key) => {
+    // Handle input mode (pattern entry)
+    if (state.inputMode !== 'none') {
+      if (key.name === 'return') {
+        // Enter pressed - process input
+        const pattern = state.inputBuffer.trim();
+        state.inputMode = 'none';
+        state.inputBuffer = '';
+        process.stdout.write('\n');
+
+        if (pattern !== '') {
+          // Set the pattern as filter
+          state.filter = {paths: [pattern]};
+          state.mode.filter = true;
+          state.mode.action = RunnerAction.Test;
+          onChange(state);
+        }
+        // If empty, just exit input mode without changes
+        return;
+      } else if (key.name === 'escape') {
+        // Cancel input mode
+        state.inputMode = 'none';
+        state.inputBuffer = '';
+        process.stdout.write(' (cancelled)\n');
+        return;
+      } else if (key.name === 'backspace') {
+        if (state.inputBuffer.length > 0) {
+          state.inputBuffer = state.inputBuffer.slice(0, -1);
+          // Erase character: backspace, space, backspace
+          process.stdout.write('\b \b');
+        }
+        return;
+      } else if (str && !key.ctrl && !key.meta) {
+        // Regular character - accumulate and echo
+        state.inputBuffer += str;
+        process.stdout.write(str);
+        return;
+      }
+      return; // Ignore other keys in input mode
+    }
+
+    // Normal mode keypress handling
     if (key.name === 'u') {
       // u => update fixtures
       state.mode.action = RunnerAction.Update;
     } else if (key.name === 'q') {
       process.exit(0);
-    } else if (key.name === 'f') {
-      state.mode.filter = !state.mode.filter;
-      state.filter = state.mode.filter ? await readTestFilter() : null;
+    } else if (key.name === 'a') {
+      // a => exit filter mode and run all tests
+      state.mode.filter = false;
+      state.filter = null;
       state.mode.action = RunnerAction.Test;
+    } else if (key.name === 'd') {
+      // d => toggle debug logging
+      state.debug = !state.debug;
+      state.mode.action = RunnerAction.Test;
+    } else if (key.name === 'p') {
+      // p => enter pattern input mode
+      state.inputMode = 'pattern';
+      state.inputBuffer = '';
+      process.stdout.write('Pattern: ');
+      return; // Don't trigger onChange yet
     } else {
       // any other key re-runs tests
       state.mode.action = RunnerAction.Test;
@@ -219,21 +255,33 @@ function subscribeKeyEvents(
 
 export async function makeWatchRunner(
   onChange: (state: RunnerState) => void,
-  filterMode: boolean,
+  debugMode: boolean,
+  initialPattern?: string,
 ): Promise<void> {
-  const state = {
+  // Determine initial filter state
+  let filter: TestFilter | null = null;
+  let filterEnabled = false;
+
+  if (initialPattern) {
+    filter = {paths: [initialPattern]};
+    filterEnabled = true;
+  }
+
+  const state: RunnerState = {
     compilerVersion: 0,
     isCompilerBuildValid: false,
     lastUpdate: -1,
     mode: {
       action: RunnerAction.Test,
-      filter: filterMode,
+      filter: filterEnabled,
     },
-    filter: filterMode ? await readTestFilter() : null,
+    filter,
+    debug: debugMode,
+    inputMode: 'none',
+    inputBuffer: '',
   };
 
   subscribeTsc(state, onChange);
   subscribeFixtures(state, onChange);
   subscribeKeyEvents(state, onChange);
-  subscribeFilterFile(state, onChange);
 }
