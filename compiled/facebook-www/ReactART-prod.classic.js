@@ -10001,7 +10001,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           if (0 !== getNextLanes(shouldTimeSlice, 0, !0)) break a;
           pendingEffectsLanes = lanes;
           shouldTimeSlice.timeoutHandle = scheduleTimeout(
-            commitRootWhenReady.bind(
+            completeRootWhenReady.bind(
               null,
               shouldTimeSlice,
               forceSync,
@@ -10022,7 +10022,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           );
           break a;
         }
-        commitRootWhenReady(
+        completeRootWhenReady(
           shouldTimeSlice,
           forceSync,
           workInProgressRootRecoverableErrors,
@@ -10039,7 +10039,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
   } while (1);
   ensureRootIsScheduled(root$jscomp$0);
 }
-function commitRootWhenReady(
+function completeRootWhenReady(
   root,
   finishedWork,
   recoverableErrors,
@@ -10064,17 +10064,30 @@ function commitRootWhenReady(
         : (lanes & 4194048) === lanes
           ? globalMostRecentTransitionTime - now()
           : 0;
-  commitRoot(
-    root,
-    finishedWork,
-    lanes,
-    recoverableErrors,
-    transitions,
-    didIncludeRenderPhaseUpdate,
-    spawnedLane,
-    updatedLanes,
-    suspendedRetryLanes
-  );
+  root.cancelPendingCommit = null;
+  do flushPendingEffects();
+  while (0 !== pendingEffectsStatus);
+  if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
+  if (null !== finishedWork) {
+    if (finishedWork === root.current) throw Error(formatProdErrorMessage(177));
+    root === workInProgressRoot &&
+      ((workInProgress = workInProgressRoot = null),
+      (workInProgressRootRenderLanes = 0));
+    pendingFinishedWork = finishedWork;
+    pendingEffectsRoot = root;
+    pendingEffectsLanes = lanes;
+    pendingPassiveTransitions = transitions;
+    pendingRecoverableErrors = recoverableErrors;
+    pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
+    commitRoot(
+      root,
+      finishedWork,
+      lanes,
+      spawnedLane,
+      updatedLanes,
+      suspendedRetryLanes
+    );
+  }
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
   for (var node = finishedWork; ; ) {
@@ -10603,78 +10616,58 @@ function commitRoot(
   root,
   finishedWork,
   lanes,
-  recoverableErrors,
-  transitions,
-  didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
   suspendedRetryLanes
 ) {
-  root.cancelPendingCommit = null;
-  do flushPendingEffects();
-  while (0 !== pendingEffectsStatus);
-  if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
-  if (null !== finishedWork) {
-    if (finishedWork === root.current) throw Error(formatProdErrorMessage(177));
-    var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
-    remainingLanes |= concurrentlyUpdatedLanes;
-    markRootFinished(
-      root,
-      lanes,
-      remainingLanes,
-      spawnedLane,
-      updatedLanes,
-      suspendedRetryLanes
-    );
-    didIncludeCommitPhaseUpdate = !1;
-    root === workInProgressRoot &&
-      ((workInProgress = workInProgressRoot = null),
-      (workInProgressRootRenderLanes = 0));
-    pendingFinishedWork = finishedWork;
-    pendingEffectsRoot = root;
-    pendingEffectsLanes = lanes;
-    pendingEffectsRemainingLanes = remainingLanes;
-    pendingPassiveTransitions = transitions;
-    pendingRecoverableErrors = recoverableErrors;
-    pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
-    enableViewTransition
-      ? ((pendingViewTransitionEvents = null),
-        (lanes & 335544064) === lanes
-          ? ((pendingTransitionTypes = claimQueuedTransitionTypes(root)),
-            (recoverableErrors = 10262))
-          : ((pendingTransitionTypes = null), (recoverableErrors = 10256)))
-      : (recoverableErrors = 10256);
-    0 !== (finishedWork.subtreeFlags & recoverableErrors) ||
-    0 !== (finishedWork.flags & recoverableErrors)
-      ? ((root.callbackNode = null),
-        (root.callbackPriority = 0),
-        scheduleCallback(NormalPriority$1, function () {
-          flushPassiveEffects();
-          return null;
-        }))
-      : ((root.callbackNode = null), (root.callbackPriority = 0));
-    shouldStartViewTransition = !1;
-    recoverableErrors = 0 !== (finishedWork.flags & 13878);
-    if (0 !== (finishedWork.subtreeFlags & 13878) || recoverableErrors) {
-      recoverableErrors = ReactSharedInternals.T;
-      ReactSharedInternals.T = null;
-      transitions = currentUpdatePriority;
-      currentUpdatePriority = 2;
-      didIncludeRenderPhaseUpdate = executionContext;
-      executionContext |= 4;
-      try {
-        commitBeforeMutationEffects(root, finishedWork, lanes);
-      } finally {
-        (executionContext = didIncludeRenderPhaseUpdate),
-          (currentUpdatePriority = transitions),
-          (ReactSharedInternals.T = recoverableErrors);
-      }
+  var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
+  pendingEffectsRemainingLanes = remainingLanes;
+  remainingLanes |= concurrentlyUpdatedLanes;
+  markRootFinished(
+    root,
+    lanes,
+    remainingLanes,
+    spawnedLane,
+    updatedLanes,
+    suspendedRetryLanes
+  );
+  didIncludeCommitPhaseUpdate = !1;
+  enableViewTransition
+    ? ((pendingViewTransitionEvents = null),
+      (lanes & 335544064) === lanes
+        ? ((pendingTransitionTypes = claimQueuedTransitionTypes(root)),
+          (spawnedLane = 10262))
+        : ((pendingTransitionTypes = null), (spawnedLane = 10256)))
+    : (spawnedLane = 10256);
+  0 !== (finishedWork.subtreeFlags & spawnedLane) ||
+  0 !== (finishedWork.flags & spawnedLane)
+    ? ((root.callbackNode = null),
+      (root.callbackPriority = 0),
+      scheduleCallback(NormalPriority$1, function () {
+        flushPassiveEffects();
+        return null;
+      }))
+    : ((root.callbackNode = null), (root.callbackPriority = 0));
+  shouldStartViewTransition = !1;
+  spawnedLane = 0 !== (finishedWork.flags & 13878);
+  if (0 !== (finishedWork.subtreeFlags & 13878) || spawnedLane) {
+    spawnedLane = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    updatedLanes = currentUpdatePriority;
+    currentUpdatePriority = 2;
+    suspendedRetryLanes = executionContext;
+    executionContext |= 4;
+    try {
+      commitBeforeMutationEffects(root, finishedWork, lanes);
+    } finally {
+      (executionContext = suspendedRetryLanes),
+        (currentUpdatePriority = updatedLanes),
+        (ReactSharedInternals.T = spawnedLane);
     }
-    root = shouldStartViewTransition;
-    pendingEffectsStatus = 1;
-    (enableViewTransition && root) ||
-      (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
   }
+  pendingEffectsStatus = 1;
+  (enableViewTransition && shouldStartViewTransition) ||
+    (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
 }
 function flushMutationEffects() {
   if (1 === pendingEffectsStatus) {
@@ -11546,24 +11539,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1625 = {
+var internals$jscomp$inline_1641 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-f0fbb0d1-20260115",
+  version: "19.3.0-www-classic-4028aaa5-20260115",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-f0fbb0d1-20260115"
+  reconcilerVersion: "19.3.0-www-classic-4028aaa5-20260115"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1626 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1642 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1626.isDisabled &&
-    hook$jscomp$inline_1626.supportsFiber
+    !hook$jscomp$inline_1642.isDisabled &&
+    hook$jscomp$inline_1642.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1626.inject(
-        internals$jscomp$inline_1625
+      (rendererID = hook$jscomp$inline_1642.inject(
+        internals$jscomp$inline_1641
       )),
-        (injectedHook = hook$jscomp$inline_1626);
+        (injectedHook = hook$jscomp$inline_1642);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11577,4 +11570,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-classic-f0fbb0d1-20260115";
+exports.version = "19.3.0-www-classic-4028aaa5-20260115";

@@ -1658,38 +1658,6 @@ __DEV__ &&
                   errors
                 ));
     }
-    function logRenderPhase(startTime, endTime, lanes, debugTask) {
-      if (supportsUserTiming && !(endTime <= startTime)) {
-        var color =
-          (lanes & 738197653) === lanes ? "tertiary-dark" : "primary-dark";
-        lanes =
-          (lanes & 536870912) === lanes
-            ? "Prepared"
-            : (lanes & 201326741) === lanes
-              ? "Hydrated"
-              : "Render";
-        debugTask
-          ? debugTask.run(
-              console.timeStamp.bind(
-                console,
-                lanes,
-                startTime,
-                endTime,
-                currentTrack,
-                "Scheduler \u269b",
-                color
-              )
-            )
-          : console.timeStamp(
-              lanes,
-              startTime,
-              endTime,
-              currentTrack,
-              "Scheduler \u269b",
-              color
-            );
-      }
-    }
     function logSuspendedRenderPhase(startTime, endTime, lanes, debugTask) {
       !supportsUserTiming ||
         endTime <= startTime ||
@@ -1741,50 +1709,6 @@ __DEV__ &&
               "Scheduler \u269b",
               lanes
             ));
-    }
-    function logRecoveredRenderPhase(
-      startTime,
-      endTime,
-      lanes,
-      recoverableErrors,
-      hydrationFailed,
-      debugTask
-    ) {
-      if (supportsUserTiming && !(endTime <= startTime)) {
-        lanes = [];
-        for (var i = 0; i < recoverableErrors.length; i++) {
-          var error = recoverableErrors[i].value;
-          lanes.push([
-            "Recoverable Error",
-            "object" === typeof error &&
-            null !== error &&
-            "string" === typeof error.message
-              ? String(error.message)
-              : String(error)
-          ]);
-        }
-        startTime = {
-          start: startTime,
-          end: endTime,
-          detail: {
-            devtools: {
-              color: "primary-dark",
-              track: currentTrack,
-              trackGroup: "Scheduler \u269b",
-              tooltipText: hydrationFailed
-                ? "Hydration Failed"
-                : "Recovered after Error",
-              properties: lanes
-            }
-          }
-        };
-        debugTask
-          ? debugTask.run(
-              performance.measure.bind(performance, "Recovered", startTime)
-            )
-          : performance.measure("Recovered", startTime);
-        performance.clearMeasures("Recovered");
-      }
     }
     function logErroredRenderPhase(startTime, endTime, lanes, debugTask) {
       !supportsUserTiming ||
@@ -17366,7 +17290,7 @@ __DEV__ &&
                 throw Error("Unknown root exit status.");
             }
             if (null !== ReactSharedInternals.actQueue)
-              commitRoot(
+              completeRoot(
                 yieldEndTime,
                 yieldedFiber,
                 lanes,
@@ -17376,6 +17300,7 @@ __DEV__ &&
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
+                workInProgressRootDidSkipSuspendedSiblings,
                 startTime,
                 null,
                 null,
@@ -17401,7 +17326,7 @@ __DEV__ &&
                 if (0 !== getNextLanes(yieldEndTime, 0, !0)) break a;
                 pendingEffectsLanes = lanes;
                 yieldEndTime.timeoutHandle = scheduleTimeout(
-                  commitRootWhenReady.bind(
+                  completeRootWhenReady.bind(
                     null,
                     yieldEndTime,
                     yieldedFiber,
@@ -17422,7 +17347,7 @@ __DEV__ &&
                 );
                 break a;
               }
-              commitRootWhenReady(
+              completeRootWhenReady(
                 yieldEndTime,
                 yieldedFiber,
                 workInProgressRootRecoverableErrors,
@@ -17445,7 +17370,7 @@ __DEV__ &&
       } while (1);
       ensureRootIsScheduled(root);
     }
-    function commitRootWhenReady(
+    function completeRootWhenReady(
       root,
       finishedWork,
       recoverableErrors,
@@ -17488,7 +17413,7 @@ __DEV__ &&
         ) {
           pendingEffectsLanes = lanes;
           root.cancelPendingCommit = subtreeFlags(
-            commitRoot.bind(
+            completeRoot.bind(
               null,
               root,
               finishedWork,
@@ -17499,6 +17424,7 @@ __DEV__ &&
               spawnedLane,
               updatedLanes,
               suspendedRetryLanes,
+              didSkipSuspendedSiblings,
               exitStatus,
               suspendedState,
               getSuspendedCommitReason(suspendedState, root.containerInfo),
@@ -17514,7 +17440,7 @@ __DEV__ &&
           );
           return;
         }
-      commitRoot(
+      completeRoot(
         root,
         finishedWork,
         lanes,
@@ -17524,6 +17450,7 @@ __DEV__ &&
         spawnedLane,
         updatedLanes,
         suspendedRetryLanes,
+        didSkipSuspendedSiblings,
         exitStatus,
         suspendedState,
         suspendedCommitReason,
@@ -18622,7 +18549,7 @@ __DEV__ &&
       workInProgressRootExitStatus = RootSuspendedAtTheShell;
       workInProgress = null;
     }
-    function commitRoot(
+    function completeRoot(
       root,
       finishedWork,
       lanes,
@@ -18632,6 +18559,7 @@ __DEV__ &&
       spawnedLane,
       updatedLanes,
       suspendedRetryLanes,
+      didSkipSuspendedSiblings,
       exitStatus,
       suspendedState,
       suspendedCommitReason,
@@ -18645,33 +18573,100 @@ __DEV__ &&
       ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
       if ((executionContext & (RenderContext | CommitContext)) !== NoContext)
         throw Error("Should not already be working.");
-      enableComponentPerformanceTrack &&
-        (setCurrentTrackFromLanes(lanes),
-        exitStatus === RootErrored
-          ? logErroredRenderPhase(
-              completedRenderStartTime,
-              completedRenderEndTime,
-              lanes,
-              workInProgressUpdateTask
-            )
-          : null !== recoverableErrors
-            ? logRecoveredRenderPhase(
-                completedRenderStartTime,
-                completedRenderEndTime,
-                lanes,
-                recoverableErrors,
-                null !== finishedWork &&
-                  null !== finishedWork.alternate &&
-                  finishedWork.alternate.memoizedState.isDehydrated &&
-                  0 !== (finishedWork.flags & 256),
-                workInProgressUpdateTask
-              )
-            : logRenderPhase(
-                completedRenderStartTime,
-                completedRenderEndTime,
-                lanes,
-                workInProgressUpdateTask
-              ));
+      if (enableComponentPerformanceTrack)
+        if ((setCurrentTrackFromLanes(lanes), exitStatus === RootErrored))
+          logErroredRenderPhase(
+            completedRenderStartTime,
+            completedRenderEndTime,
+            lanes,
+            workInProgressUpdateTask
+          );
+        else if (null !== recoverableErrors) {
+          if (
+            ((exitStatus =
+              null !== finishedWork &&
+              null !== finishedWork.alternate &&
+              finishedWork.alternate.memoizedState.isDehydrated &&
+              0 !== (finishedWork.flags & 256)),
+            (didSkipSuspendedSiblings = workInProgressUpdateTask),
+            supportsUserTiming &&
+              !(completedRenderEndTime <= completedRenderStartTime))
+          ) {
+            for (
+              var properties = [], i = 0;
+              i < recoverableErrors.length;
+              i++
+            ) {
+              var error = recoverableErrors[i].value;
+              properties.push([
+                "Recoverable Error",
+                "object" === typeof error &&
+                null !== error &&
+                "string" === typeof error.message
+                  ? String(error.message)
+                  : String(error)
+              ]);
+            }
+            completedRenderStartTime = {
+              start: completedRenderStartTime,
+              end: completedRenderEndTime,
+              detail: {
+                devtools: {
+                  color: "primary-dark",
+                  track: currentTrack,
+                  trackGroup: "Scheduler \u269b",
+                  tooltipText: exitStatus
+                    ? "Hydration Failed"
+                    : "Recovered after Error",
+                  properties: properties
+                }
+              }
+            };
+            didSkipSuspendedSiblings
+              ? didSkipSuspendedSiblings.run(
+                  performance.measure.bind(
+                    performance,
+                    "Recovered",
+                    completedRenderStartTime
+                  )
+                )
+              : performance.measure("Recovered", completedRenderStartTime);
+            performance.clearMeasures("Recovered");
+          }
+        } else
+          (didSkipSuspendedSiblings = workInProgressUpdateTask),
+            !supportsUserTiming ||
+              completedRenderEndTime <= completedRenderStartTime ||
+              ((exitStatus =
+                (lanes & 738197653) === lanes
+                  ? "tertiary-dark"
+                  : "primary-dark"),
+              (properties =
+                (lanes & 536870912) === lanes
+                  ? "Prepared"
+                  : (lanes & 201326741) === lanes
+                    ? "Hydrated"
+                    : "Render"),
+              didSkipSuspendedSiblings
+                ? didSkipSuspendedSiblings.run(
+                    console.timeStamp.bind(
+                      console,
+                      properties,
+                      completedRenderStartTime,
+                      completedRenderEndTime,
+                      currentTrack,
+                      "Scheduler \u269b",
+                      exitStatus
+                    )
+                  )
+                : console.timeStamp(
+                    properties,
+                    completedRenderStartTime,
+                    completedRenderEndTime,
+                    currentTrack,
+                    "Scheduler \u269b",
+                    exitStatus
+                  ));
       enableSchedulingProfiler &&
         enableSchedulingProfiler &&
         null !== injectedProfilingHooks &&
@@ -18688,24 +18683,12 @@ __DEV__ &&
           throw Error(
             "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
           );
-        exitStatus = finishedWork.lanes | finishedWork.childLanes;
-        exitStatus |= concurrentlyUpdatedLanes;
-        markRootFinished(
-          root,
-          lanes,
-          exitStatus,
-          spawnedLane,
-          updatedLanes,
-          suspendedRetryLanes
-        );
-        didIncludeCommitPhaseUpdate = !1;
         root === workInProgressRoot &&
           ((workInProgress = workInProgressRoot = null),
           (workInProgressRootRenderLanes = 0));
         pendingFinishedWork = finishedWork;
         pendingEffectsRoot = root;
         pendingEffectsLanes = lanes;
-        pendingEffectsRemainingLanes = exitStatus;
         pendingPassiveTransitions = transitions;
         pendingRecoverableErrors = recoverableErrors;
         pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
@@ -18713,77 +18696,107 @@ __DEV__ &&
         pendingSuspendedCommitReason = suspendedCommitReason;
         pendingDelayedCommitReason = IMMEDIATE_COMMIT;
         pendingSuspendedViewTransitionReason = null;
-        enableViewTransition
-          ? ((pendingViewTransitionEvents = null),
-            (lanes & 335544064) === lanes
-              ? ((pendingTransitionTypes = claimQueuedTransitionTypes(root)),
-                (recoverableErrors = 10262))
-              : ((pendingTransitionTypes = null), (recoverableErrors = 10256)))
-          : (recoverableErrors = 10256);
-        (enableComponentPerformanceTrack &&
-          0 !== finishedWork.actualDuration) ||
-        0 !== (finishedWork.subtreeFlags & recoverableErrors) ||
-        0 !== (finishedWork.flags & recoverableErrors)
-          ? ((root.callbackNode = null),
-            (root.callbackPriority = 0),
-            scheduleCallback(NormalPriority$1, function () {
-              enableComponentPerformanceTrack && trackSchedulerEvent();
-              pendingDelayedCommitReason === IMMEDIATE_COMMIT &&
-                (pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT);
-              flushPassiveEffects();
-              return null;
-            }))
-          : ((root.callbackNode = null), (root.callbackPriority = 0));
-        commitErrors = null;
-        commitStartTime = now();
-        enableComponentPerformanceTrack &&
-          null !== suspendedCommitReason &&
-          logSuspendedCommitPhase(
-            completedRenderEndTime,
-            commitStartTime,
-            suspendedCommitReason,
-            workInProgressUpdateTask
-          );
-        shouldStartViewTransition = !1;
-        suspendedCommitReason = 0 !== (finishedWork.flags & 13878);
-        if (
-          0 !== (finishedWork.subtreeFlags & 13878) ||
-          suspendedCommitReason
-        ) {
-          suspendedCommitReason = ReactSharedInternals.T;
-          ReactSharedInternals.T = null;
-          completedRenderEndTime = getCurrentUpdatePriority();
-          setCurrentUpdatePriority(2);
-          recoverableErrors = executionContext;
-          executionContext |= CommitContext;
-          try {
-            commitBeforeMutationEffects(root, finishedWork, lanes);
-          } finally {
-            (executionContext = recoverableErrors),
-              setCurrentUpdatePriority(completedRenderEndTime),
-              (ReactSharedInternals.T = suspendedCommitReason);
-          }
-        }
-        finishedWork = shouldStartViewTransition;
-        pendingEffectsStatus = PENDING_MUTATION_PHASE;
-        enableViewTransition && finishedWork
-          ? (enableComponentPerformanceTrack &&
-              ((animatingLanes |= lanes), (animatingTask = null)),
-            (pendingViewTransition = startViewTransition(
-              suspendedState,
-              root.containerInfo,
-              pendingTransitionTypes,
-              flushMutationEffects,
-              flushLayoutEffects,
-              flushAfterMutationEffects,
-              flushSpawnedWork,
-              flushPassiveEffects,
-              reportViewTransitionError,
-              suspendedViewTransition,
-              finishedViewTransition.bind(null, lanes)
-            )))
-          : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
+        commitRoot(
+          root,
+          finishedWork,
+          lanes,
+          spawnedLane,
+          updatedLanes,
+          suspendedRetryLanes,
+          suspendedState,
+          suspendedCommitReason,
+          completedRenderEndTime
+        );
       }
+    }
+    function commitRoot(
+      root,
+      finishedWork,
+      lanes,
+      spawnedLane,
+      updatedLanes,
+      suspendedRetryLanes,
+      suspendedState,
+      suspendedCommitReason,
+      completedRenderEndTime
+    ) {
+      var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
+      pendingEffectsRemainingLanes = remainingLanes;
+      remainingLanes |= concurrentlyUpdatedLanes;
+      markRootFinished(
+        root,
+        lanes,
+        remainingLanes,
+        spawnedLane,
+        updatedLanes,
+        suspendedRetryLanes
+      );
+      didIncludeCommitPhaseUpdate = !1;
+      enableViewTransition
+        ? ((pendingViewTransitionEvents = null),
+          (lanes & 335544064) === lanes
+            ? ((pendingTransitionTypes = claimQueuedTransitionTypes(root)),
+              (spawnedLane = 10262))
+            : ((pendingTransitionTypes = null), (spawnedLane = 10256)))
+        : (spawnedLane = 10256);
+      (enableComponentPerformanceTrack && 0 !== finishedWork.actualDuration) ||
+      0 !== (finishedWork.subtreeFlags & spawnedLane) ||
+      0 !== (finishedWork.flags & spawnedLane)
+        ? ((root.callbackNode = null),
+          (root.callbackPriority = 0),
+          scheduleCallback(NormalPriority$1, function () {
+            enableComponentPerformanceTrack && trackSchedulerEvent();
+            pendingDelayedCommitReason === IMMEDIATE_COMMIT &&
+              (pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT);
+            flushPassiveEffects();
+            return null;
+          }))
+        : ((root.callbackNode = null), (root.callbackPriority = 0));
+      commitErrors = null;
+      commitStartTime = now();
+      enableComponentPerformanceTrack &&
+        null !== suspendedCommitReason &&
+        logSuspendedCommitPhase(
+          completedRenderEndTime,
+          commitStartTime,
+          suspendedCommitReason,
+          workInProgressUpdateTask
+        );
+      shouldStartViewTransition = !1;
+      suspendedCommitReason = 0 !== (finishedWork.flags & 13878);
+      if (0 !== (finishedWork.subtreeFlags & 13878) || suspendedCommitReason) {
+        suspendedCommitReason = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
+        completedRenderEndTime = getCurrentUpdatePriority();
+        setCurrentUpdatePriority(2);
+        spawnedLane = executionContext;
+        executionContext |= CommitContext;
+        try {
+          commitBeforeMutationEffects(root, finishedWork, lanes);
+        } finally {
+          (executionContext = spawnedLane),
+            setCurrentUpdatePriority(completedRenderEndTime),
+            (ReactSharedInternals.T = suspendedCommitReason);
+        }
+      }
+      pendingEffectsStatus = PENDING_MUTATION_PHASE;
+      enableViewTransition && shouldStartViewTransition
+        ? (enableComponentPerformanceTrack &&
+            ((animatingLanes |= lanes), (animatingTask = null)),
+          (pendingViewTransition = startViewTransition(
+            suspendedState,
+            root.containerInfo,
+            pendingTransitionTypes,
+            flushMutationEffects,
+            flushLayoutEffects,
+            flushAfterMutationEffects,
+            flushSpawnedWork,
+            flushPassiveEffects,
+            reportViewTransitionError,
+            suspendedViewTransition,
+            finishedViewTransition.bind(null, lanes)
+          )))
+        : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
     }
     function reportViewTransitionError(error) {
       if (pendingEffectsStatus !== NO_PENDING_EFFECTS) {
@@ -23140,7 +23153,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-f0fbb0d1-20260115"
+        reconcilerVersion: "19.3.0-www-classic-4028aaa5-20260115"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
