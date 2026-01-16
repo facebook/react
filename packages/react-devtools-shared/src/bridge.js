@@ -191,7 +191,7 @@ type NativeStyleEditor_SetValueParams = {
   value: string,
 };
 
-type SavedPreferencesParams = {
+export type SavedPreferencesParams = {
   componentFilters: Array<ComponentFilter>,
 };
 
