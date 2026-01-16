@@ -31,24 +31,32 @@ type UninitializedPayload<T> = {
   _status: -1,
   _result: () => Thenable<{default: T, ...}>,
   _ioInfo?: ReactIOInfo, // DEV-only
+  _debugValueResolve?: null | ((value: mixed) => void),
+  _debugValueReject?: null | ((error: mixed) => void),
 };
 
 type PendingPayload = {
   _status: 0,
   _result: Wakeable,
   _ioInfo?: ReactIOInfo, // DEV-only
+  _debugValueResolve?: null | ((value: mixed) => void),
+  _debugValueReject?: null | ((error: mixed) => void),
 };
 
 type ResolvedPayload<T> = {
   _status: 1,
   _result: {default: T, ...},
   _ioInfo?: ReactIOInfo, // DEV-only
+  _debugValueResolve?: null | ((value: mixed) => void),
+  _debugValueReject?: null | ((error: mixed) => void),
 };
 
 type RejectedPayload = {
   _status: 2,
   _result: mixed,
   _ioInfo?: ReactIOInfo, // DEV-only
+  _debugValueResolve?: null | ((value: mixed) => void),
+  _debugValueReject?: null | ((error: mixed) => void),
 };
 
 type Payload<T> =
@@ -68,6 +76,62 @@ export type LazyComponent<T, P> = {
 };
 
 function lazyInitializer<T>(payload: Payload<T>): T {
+  if (payload._status === Pending) {
+    const thenable: Thenable<{default: T, ...}> = (payload._result: any);
+    switch (thenable.status) {
+      case 'fulfilled': {
+        const fulfilledThenable: FulfilledThenable<{default: T, ...}> =
+          (thenable: any);
+        const resolved: ResolvedPayload<T> = (payload: any);
+        resolved._status = Resolved;
+        resolved._result = fulfilledThenable.value;
+        if (__DEV__ && enableAsyncDebugInfo) {
+          const ioInfo = payload._ioInfo;
+          if (ioInfo != null) {
+            const ioInfoMutable: any = ioInfo;
+            ioInfoMutable.end = performance.now();
+            const debugValue =
+              fulfilledThenable.value == null
+                ? undefined
+                : fulfilledThenable.value.default;
+            const ioInfoValue: any = ioInfoMutable.value;
+            ioInfoValue.status = 'fulfilled';
+            ioInfoValue.value = debugValue;
+            const debugValueResolve = payload._debugValueResolve;
+            if (debugValueResolve != null) {
+              payload._debugValueResolve = null;
+              debugValueResolve(debugValue);
+            }
+          }
+        }
+        break;
+      }
+      case 'rejected': {
+        const rejectedThenable: RejectedThenable<{default: T, ...}> =
+          (thenable: any);
+        const rejected: RejectedPayload = (payload: any);
+        rejected._status = Rejected;
+        rejected._result = rejectedThenable.reason;
+        if (__DEV__ && enableAsyncDebugInfo) {
+          const ioInfo = payload._ioInfo;
+          if (ioInfo != null) {
+            const ioInfoMutable: any = ioInfo;
+            ioInfoMutable.end = performance.now();
+            const ioInfoValue: any = ioInfoMutable.value;
+            ioInfoValue.then(noop, noop);
+            ioInfoValue.status = 'rejected';
+            ioInfoValue.reason = rejectedThenable.reason;
+            const debugValueReject = payload._debugValueReject;
+            if (debugValueReject != null) {
+              payload._debugValueReject = null;
+              debugValueReject(rejectedThenable.reason);
+            }
+          }
+        }
+        break;
+      }
+    }
+  }
   if (payload._status === Uninitialized) {
     let resolveDebugValue: (void | T) => void = (null: any);
     let rejectDebugValue: mixed => void = (null: any);
@@ -83,6 +147,8 @@ function lazyInitializer<T>(payload: Payload<T>): T {
           resolveDebugValue = resolve;
           rejectDebugValue = reject;
         });
+        payload._debugValueResolve = resolveDebugValue;
+        payload._debugValueReject = rejectDebugValue;
       }
     }
     const ctor = payload._result;
@@ -169,6 +235,53 @@ function lazyInitializer<T>(payload: Payload<T>): T {
         if (typeof displayName === 'string') {
           // $FlowFixMe[cannot-write]
           ioInfo.name = displayName;
+        }
+      }
+    }
+    if (payload._status === Uninitialized || payload._status === Pending) {
+      switch ((thenable: Thenable<{default: T, ...}>).status) {
+        case 'fulfilled': {
+          const fulfilledThenable: FulfilledThenable<{default: T, ...}> =
+            (thenable: any);
+          const resolved: ResolvedPayload<T> = (payload: any);
+          resolved._status = Resolved;
+          resolved._result = fulfilledThenable.value;
+          if (__DEV__ && enableAsyncDebugInfo) {
+            const ioInfo = payload._ioInfo;
+            if (ioInfo != null) {
+              const ioInfoMutable: any = ioInfo;
+              ioInfoMutable.end = performance.now();
+              const debugValue =
+                fulfilledThenable.value == null
+                  ? undefined
+                  : fulfilledThenable.value.default;
+              resolveDebugValue(debugValue);
+              const ioInfoValue: any = ioInfoMutable.value;
+              ioInfoValue.status = 'fulfilled';
+              ioInfoValue.value = debugValue;
+            }
+          }
+          break;
+        }
+        case 'rejected': {
+          const rejectedThenable: RejectedThenable<{default: T, ...}> =
+            (thenable: any);
+          const rejected: RejectedPayload = (payload: any);
+          rejected._status = Rejected;
+          rejected._result = rejectedThenable.reason;
+          if (__DEV__ && enableAsyncDebugInfo) {
+            const ioInfo = payload._ioInfo;
+            if (ioInfo != null) {
+              const ioInfoMutable: any = ioInfo;
+              ioInfoMutable.end = performance.now();
+              const ioInfoValue: any = ioInfoMutable.value;
+              ioInfoValue.then(noop, noop);
+              rejectDebugValue(rejectedThenable.reason);
+              ioInfoValue.status = 'rejected';
+              ioInfoValue.reason = rejectedThenable.reason;
+            }
+          }
+          break;
         }
       }
     }
