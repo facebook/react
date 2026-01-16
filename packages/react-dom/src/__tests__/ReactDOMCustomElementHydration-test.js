@@ -323,11 +323,11 @@ describe('ReactDOMCustomElementHydration', () => {
     it('should handle custom properties during hydration when element is defined', async () => {
       const container = document.createElement('div');
 
-      // Create and register a custom element with custom properties
+      // Create and register a custom element with a writable property
       class CustomElementWithProperty extends HTMLElement {
         constructor() {
           super();
-          this._internalValue = undefined;
+          this._internalValue = 'unset';
         }
 
         set customProperty(value) {
@@ -340,24 +340,33 @@ describe('ReactDOMCustomElementHydration', () => {
       }
       customElements.define('ce-with-property', CustomElementWithProperty);
 
-      // Server-side render
+      // Server-side render (attribute emitted; property applied during hydration)
       const serverHTML = ReactDOMServer.renderToString(
-        <ce-with-property data-attr="test" />,
+        <ce-with-property data-attr="test" customProperty="hydrated-value" />,
       );
 
       container.innerHTML = serverHTML;
       const customElement = container.querySelector('ce-with-property');
 
-      // Hydrate
+      // Before hydration, the attribute exists but the property is still default
+      expect(customElement.getAttribute('customProperty')).toBe('hydrated-value');
+      expect(customElement.customProperty).toBe('unset');
+
+      // Hydrate and apply the custom property
       await act(async () => {
         ReactDOMClient.hydrateRoot(
           container,
-          <ce-with-property data-attr="test" />,
+          <ce-with-property
+            data-attr="test"
+            customProperty="hydrated-value"
+          />,
         );
       });
 
-      // Verify the element is properly hydrated
+      // Verify hydration applied both attributes and property setter
       expect(customElement.getAttribute('data-attr')).toBe('test');
+      expect(customElement.customProperty).toBe('hydrated-value');
+      expect(customElement._internalValue).toBe('hydrated-value');
     });
   });
 });
