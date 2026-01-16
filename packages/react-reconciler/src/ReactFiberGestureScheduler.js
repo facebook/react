@@ -11,9 +11,19 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {GestureOptions} from 'shared/ReactTypes';
 import type {GestureTimeline, RunningViewTransition} from './ReactFiberConfig';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
+import type {Lane} from './ReactFiberLane';
 
-import {GestureLane, markRootFinished, NoLane, NoLanes} from './ReactFiberLane';
-import {ensureRootIsScheduled} from './ReactFiberRootScheduler';
+import {
+  GestureLane,
+  markRootEntangled,
+  markRootFinished,
+  NoLane,
+  NoLanes,
+} from './ReactFiberLane';
+import {
+  ensureRootIsScheduled,
+  requestTransitionLane,
+} from './ReactFiberRootScheduler';
 import {getCurrentGestureOffset, stopViewTransition} from './ReactFiberConfig';
 import {pingGestureRoot, restartGestureRoot} from './ReactFiberWorkLoop';
 
@@ -26,6 +36,7 @@ export type ScheduledGesture = {
   types: null | TransitionTypes, // Any addTransitionType call made during startGestureTransition.
   running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
   committing: boolean, // If the gesture was released in a committed state and should actually commit.
+  revertLane: Lane, // The Lane that we'll use to schedule the revert.
   prev: null | ScheduledGesture, // The previous scheduled gesture in the queue for this root.
   next: null | ScheduledGesture, // The next scheduled gesture in the queue for this root.
 };
@@ -54,6 +65,7 @@ export function scheduleGesture(
     types: null,
     running: null,
     committing: false,
+    revertLane: NoLane, // Starts uninitialized.
     prev: prev,
     next: null,
   };
@@ -119,6 +131,13 @@ export function cancelScheduledGesture(
   root: FiberRoot,
   gesture: ScheduledGesture,
 ): void {
+  // Entangle any Transitions started in this event with the revertLane of the gesture
+  // so that we commit them all together.
+  if (gesture.revertLane !== NoLane) {
+    const entangledLanes = gesture.revertLane | requestTransitionLane(null);
+    markRootEntangled(root, entangledLanes);
+  }
+
   gesture.count--;
   if (gesture.count === 0) {
     // If the end state is closer to the end than the beginning then we commit into the
