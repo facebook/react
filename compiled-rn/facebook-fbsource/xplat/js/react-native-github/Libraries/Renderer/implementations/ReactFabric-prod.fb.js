@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b3bc0ca771b73317836505b0786e0d1f>>
+ * @generated SignedSource<<5e96e01d2e7179fd7ff0062e5e7b90cf>>
  */
 
 "use strict";
@@ -9732,7 +9732,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           if (0 !== getNextLanes(shouldTimeSlice, 0, !0)) break a;
           pendingEffectsLanes = lanes;
           shouldTimeSlice.timeoutHandle = scheduleTimeout(
-            commitRootWhenReady.bind(
+            completeRootWhenReady.bind(
               null,
               shouldTimeSlice,
               forceSync,
@@ -9753,7 +9753,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           );
           break a;
         }
-        commitRootWhenReady(
+        completeRootWhenReady(
           shouldTimeSlice,
           forceSync,
           workInProgressRootRecoverableErrors,
@@ -9770,7 +9770,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
   } while (1);
   ensureRootIsScheduled(root$jscomp$0);
 }
-function commitRootWhenReady(
+function completeRootWhenReady(
   root,
   finishedWork,
   recoverableErrors,
@@ -9782,25 +9782,44 @@ function commitRootWhenReady(
   suspendedRetryLanes
 ) {
   root.timeoutHandle = -1;
-  var subtreeFlags = finishedWork.subtreeFlags;
-  if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
+  didIncludeRenderPhaseUpdate = finishedWork.subtreeFlags;
+  if (
+    didIncludeRenderPhaseUpdate & 8192 ||
+    16785408 === (didIncludeRenderPhaseUpdate & 16785408)
+  )
     accumulateSuspenseyCommitOnFiber(finishedWork),
       (lanes & 62914560) === lanes
         ? globalMostRecentFallbackTime - now()
         : (lanes & 4194048) === lanes
           ? globalMostRecentTransitionTime - now()
           : 0;
-  commitRoot(
-    root,
-    finishedWork,
-    lanes,
-    recoverableErrors,
-    transitions,
-    didIncludeRenderPhaseUpdate,
-    spawnedLane,
-    updatedLanes,
-    suspendedRetryLanes
-  );
+  root.cancelPendingCommit = null;
+  do flushPendingEffects();
+  while (0 !== pendingEffectsStatus);
+  if (0 !== (executionContext & 6))
+    throw Error("Should not already be working.");
+  if (null !== finishedWork) {
+    if (finishedWork === root.current)
+      throw Error(
+        "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
+      );
+    root === workInProgressRoot &&
+      ((workInProgress = workInProgressRoot = null),
+      (workInProgressRootRenderLanes = 0));
+    pendingFinishedWork = finishedWork;
+    pendingEffectsRoot = root;
+    pendingEffectsLanes = lanes;
+    pendingPassiveTransitions = transitions;
+    pendingRecoverableErrors = recoverableErrors;
+    commitRoot(
+      root,
+      finishedWork,
+      lanes,
+      spawnedLane,
+      updatedLanes,
+      suspendedRetryLanes
+    );
+  }
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
   for (var node = finishedWork; ; ) {
@@ -10312,72 +10331,50 @@ function commitRoot(
   root,
   finishedWork,
   lanes,
-  recoverableErrors,
-  transitions,
-  didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
   suspendedRetryLanes
 ) {
-  root.cancelPendingCommit = null;
-  do flushPendingEffects();
-  while (0 !== pendingEffectsStatus);
-  if (0 !== (executionContext & 6))
-    throw Error("Should not already be working.");
-  if (null !== finishedWork) {
-    if (finishedWork === root.current)
-      throw Error(
-        "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
-      );
-    didIncludeRenderPhaseUpdate = finishedWork.lanes | finishedWork.childLanes;
-    didIncludeRenderPhaseUpdate |= concurrentlyUpdatedLanes;
-    markRootFinished(
-      root,
-      lanes,
-      didIncludeRenderPhaseUpdate,
-      spawnedLane,
-      updatedLanes,
-      suspendedRetryLanes
-    );
-    root === workInProgressRoot &&
-      ((workInProgress = workInProgressRoot = null),
-      (workInProgressRootRenderLanes = 0));
-    pendingFinishedWork = finishedWork;
-    pendingEffectsRoot = root;
-    pendingEffectsLanes = lanes;
-    pendingEffectsRemainingLanes = didIncludeRenderPhaseUpdate;
-    pendingPassiveTransitions = transitions;
-    pendingRecoverableErrors = recoverableErrors;
-    0 !== (finishedWork.subtreeFlags & 10256) ||
-    0 !== (finishedWork.flags & 10256)
-      ? ((root.callbackNode = null),
-        (root.callbackPriority = 0),
-        scheduleCallback(NormalPriority$1, function () {
-          flushPassiveEffects();
-          return null;
-        }))
-      : ((root.callbackNode = null), (root.callbackPriority = 0));
-    recoverableErrors = 0 !== (finishedWork.flags & 13878);
-    if (0 !== (finishedWork.subtreeFlags & 13878) || recoverableErrors) {
-      recoverableErrors = ReactSharedInternals.T;
-      ReactSharedInternals.T = null;
-      transitions = currentUpdatePriority;
-      currentUpdatePriority = 2;
-      spawnedLane = executionContext;
-      executionContext |= 4;
-      try {
-        commitBeforeMutationEffects(root, finishedWork, lanes);
-      } finally {
-        (executionContext = spawnedLane),
-          (currentUpdatePriority = transitions),
-          (ReactSharedInternals.T = recoverableErrors);
-      }
+  var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
+  pendingEffectsRemainingLanes = remainingLanes;
+  remainingLanes |= concurrentlyUpdatedLanes;
+  markRootFinished(
+    root,
+    lanes,
+    remainingLanes,
+    spawnedLane,
+    updatedLanes,
+    suspendedRetryLanes
+  );
+  0 !== (finishedWork.subtreeFlags & 10256) ||
+  0 !== (finishedWork.flags & 10256)
+    ? ((root.callbackNode = null),
+      (root.callbackPriority = 0),
+      scheduleCallback(NormalPriority$1, function () {
+        flushPassiveEffects();
+        return null;
+      }))
+    : ((root.callbackNode = null), (root.callbackPriority = 0));
+  spawnedLane = 0 !== (finishedWork.flags & 13878);
+  if (0 !== (finishedWork.subtreeFlags & 13878) || spawnedLane) {
+    spawnedLane = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    updatedLanes = currentUpdatePriority;
+    currentUpdatePriority = 2;
+    suspendedRetryLanes = executionContext;
+    executionContext |= 4;
+    try {
+      commitBeforeMutationEffects(root, finishedWork, lanes);
+    } finally {
+      (executionContext = suspendedRetryLanes),
+        (currentUpdatePriority = updatedLanes),
+        (ReactSharedInternals.T = spawnedLane);
     }
-    pendingEffectsStatus = 1;
-    flushMutationEffects();
-    flushLayoutEffects();
-    flushSpawnedWork();
   }
+  pendingEffectsStatus = 1;
+  flushMutationEffects();
+  flushLayoutEffects();
+  flushSpawnedWork();
 }
 function flushMutationEffects() {
   if (1 === pendingEffectsStatus) {
@@ -11404,26 +11401,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1303 = {
+  internals$jscomp$inline_1319 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-f0fbb0d1-20260115",
+    version: "19.3.0-native-fb-4028aaa5-20260115",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-f0fbb0d1-20260115"
+    reconcilerVersion: "19.3.0-native-fb-4028aaa5-20260115"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1303.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1319.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1628 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1644 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1628.isDisabled &&
-    hook$jscomp$inline_1628.supportsFiber
+    !hook$jscomp$inline_1644.isDisabled &&
+    hook$jscomp$inline_1644.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1628.inject(
-        internals$jscomp$inline_1303
+      (rendererID = hook$jscomp$inline_1644.inject(
+        internals$jscomp$inline_1319
       )),
-        (injectedHook = hook$jscomp$inline_1628);
+        (injectedHook = hook$jscomp$inline_1644);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

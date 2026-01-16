@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3a509f8bc4b9b67709b02ff4e7f361ad>>
+ * @generated SignedSource<<1e67dcc1ecc50e817a630b5b83921372>>
  */
 
 "use strict";
@@ -209,4 +209,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-native-fb-f0fbb0d1-20260115";
+exports.version = "19.3.0-native-fb-4028aaa5-20260115";
