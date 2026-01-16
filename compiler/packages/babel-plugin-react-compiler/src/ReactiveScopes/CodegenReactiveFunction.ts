@@ -2598,6 +2598,52 @@ function codegenInstructionValue(
  */
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
   /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}\u{010000}-\u{10FFFF}]|"|\\/u;
+
+/**
+ * Pattern to detect whitespace sequences that should be normalized in className/class
+ * attributes to prevent hydration mismatches. HTML attribute parsing may normalize
+ * certain whitespace differently than JavaScript string literals, causing server/client
+ * mismatches during hydration.
+ *
+ * This pattern matches:
+ * - Newlines (\n, \r, \r\n)
+ * - Tabs (\t)
+ * - Multiple consecutive spaces
+ * - Leading/trailing whitespace that includes newlines
+ *
+ * See: https://github.com/facebook/react/issues/35481
+ */
+const CLASS_WHITESPACE_NORMALIZE_PATTERN = /[\t\n\r]+/g;
+
+/**
+ * Normalizes whitespace in className/class attribute values to prevent hydration
+ * mismatches between server and client rendering.
+ *
+ * When a className contains literal newlines or tabs (e.g., from multiline template
+ * strings or string literals), different parts of the build pipeline may handle
+ * these characters inconsistently, leading to hydration errors where the server
+ * renders one value and the client expects another.
+ *
+ * This function normalizes:
+ * - Newlines (\n, \r, \r\n) → single space
+ * - Tabs (\t) → single space
+ * - Preserves single spaces as-is
+ *
+ * @param value - The className string value to normalize
+ * @returns The normalized className string
+ */
+function normalizeClassNameWhitespace(value: string): string {
+  return value.replace(CLASS_WHITESPACE_NORMALIZE_PATTERN, ' ');
+}
+
+/**
+ * Checks if an attribute name is a className/class attribute that should have
+ * its whitespace normalized.
+ */
+function isClassNameAttribute(name: string): boolean {
+  return name === 'className' || name === 'class';
+}
+
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute,
@@ -2620,6 +2666,19 @@ function codegenJsxAttribute(
       switch (innerValue.type) {
         case 'StringLiteral': {
           value = innerValue;
+          /*
+           * Normalize whitespace in className/class attributes to prevent hydration
+           * mismatches. When className contains literal newlines or tabs, different
+           * parts of the build pipeline may handle these inconsistently between
+           * server and client bundles.
+           * See: https://github.com/facebook/react/issues/35481
+           */
+          if (isClassNameAttribute(attribute.name)) {
+            const normalizedValue = normalizeClassNameWhitespace(value.value);
+            if (normalizedValue !== value.value) {
+              value = createStringLiteral(value.loc, normalizedValue);
+            }
+          }
           if (
             STRING_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value) &&
             !cx.fbtOperands.has(attribute.place.identifier.id)
