@@ -323,26 +323,7 @@ function encodeReply(
   });
 }
 
-declare const __rspack_rsc_hot_reloader__: {
-  on: (callback: () => void) => () => void,
-};
-
-function onServerComponentChanges(callback: () => void) {
-  if (!module.hot) {
-    return;
-  }
-  const off = __rspack_rsc_hot_reloader__.on(() => {
-    callback();
-  });
-  module.hot.dispose(off);
-}
-
-export {
-  createFromFetch,
-  createFromReadableStream,
-  encodeReply,
-  onServerComponentChanges,
-};
+export {createFromFetch, createFromReadableStream, encodeReply};
 
 if (__DEV__) {
   injectIntoDevTools();
