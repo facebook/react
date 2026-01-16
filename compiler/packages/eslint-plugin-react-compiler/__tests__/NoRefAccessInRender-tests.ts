@@ -27,7 +27,7 @@ testRule(
         return value;
       }
     `,
-        errors: [makeTestCaseError('Cannot access refs during render')],
+        errors: [makeTestCaseError('Cannot access ref value during render')],
       },
     ],
   },

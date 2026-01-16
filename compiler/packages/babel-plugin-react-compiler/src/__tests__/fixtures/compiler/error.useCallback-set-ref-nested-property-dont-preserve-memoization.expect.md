@@ -40,7 +40,7 @@ error.useCallback-set-ref-nested-property-dont-preserve-memoization.ts:13:2
   11 |   });
   12 |
 > 13 |   ref.current.inner = null;
-     |   ^^^^^^^^^^^ Cannot update ref during render
+     |   ^^^^^^^^^^^^^^^^^ Cannot update ref during render
   14 |
   15 |   return <input onChange={onChange} />;
   16 | }

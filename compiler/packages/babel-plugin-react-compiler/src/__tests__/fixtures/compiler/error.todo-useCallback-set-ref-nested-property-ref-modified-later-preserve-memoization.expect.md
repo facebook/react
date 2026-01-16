@@ -41,7 +41,7 @@ error.todo-useCallback-set-ref-nested-property-ref-modified-later-preserve-memoi
   12 |
   13 |   // The ref is modified later, extending its range and preventing memoization of onChange
 > 14 |   ref.current.inner = null;
-     |   ^^^^^^^^^^^ Cannot update ref during render
+     |   ^^^^^^^^^^^^^^^^^ Cannot update ref during render
   15 |
   16 |   return <input onChange={onChange} />;
   17 | }
