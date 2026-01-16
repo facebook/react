@@ -8,7 +8,7 @@
 import fs from 'fs/promises';
 import * as glob from 'glob';
 import path from 'path';
-import {FILTER_PATH, FIXTURES_PATH, SNAPSHOT_EXTENSION} from './constants';
+import {FIXTURES_PATH, SNAPSHOT_EXTENSION} from './constants';
 
 const INPUT_EXTENSIONS = [
   '.js',
@@ -22,18 +22,8 @@ const INPUT_EXTENSIONS = [
 ];
 
 export type TestFilter = {
-  debug: boolean;
   paths: Array<string>;
 };
-
-async function exists(file: string): Promise<boolean> {
-  try {
-    await fs.access(file);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 function stripExtension(filename: string, extensions: Array<string>): string {
   for (const ext of extensions) {
@@ -42,37 +32,6 @@ function stripExtension(filename: string, extensions: Array<string>): string {
     }
   }
   return filename;
-}
-
-export async function readTestFilter(): Promise<TestFilter | null> {
-  if (!(await exists(FILTER_PATH))) {
-    throw new Error(`testfilter file not found at \`${FILTER_PATH}\``);
-  }
-
-  const input = await fs.readFile(FILTER_PATH, 'utf8');
-  const lines = input.trim().split('\n');
-
-  let debug: boolean = false;
-  const line0 = lines[0];
-  if (line0 != null) {
-    // Try to parse pragmas
-    let consumedLine0 = false;
-    if (line0.indexOf('@only') !== -1) {
-      consumedLine0 = true;
-    }
-    if (line0.indexOf('@debug') !== -1) {
-      debug = true;
-      consumedLine0 = true;
-    }
-
-    if (consumedLine0) {
-      lines.shift();
-    }
-  }
-  return {
-    debug,
-    paths: lines.filter(line => !line.trimStart().startsWith('//')),
-  };
 }
 
 export function getBasename(fixture: TestFixture): string {
