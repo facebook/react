@@ -488,10 +488,10 @@ function performInTabNavigationCleanup() {
   // Do not clean mostRecentOverrideTab on purpose, so we remember last opened
   // React DevTools tab, when user does in-tab navigation
 
-  store = (null: any);
-  bridge = (null: any);
-  render = (null: any);
-  root = (null: any);
+  store = (null: $FlowFixMe);
+  bridge = (null: $FlowFixMe);
+  render = (null: $FlowFixMe);
+  root = (null: $FlowFixMe);
 }
 
 function performFullCleanup() {
@@ -513,15 +513,15 @@ function performFullCleanup() {
   componentsPortalContainer = null;
   profilerPortalContainer = null;
   suspensePortalContainer = null;
-  root = (null: any);
+  root = (null: $FlowFixMe);
 
   mostRecentOverrideTab = null;
-  store = (null: any);
-  bridge = (null: any);
-  render = (null: any);
+  store = (null: $FlowFixMe);
+  bridge = (null: $FlowFixMe);
+  render = (null: $FlowFixMe);
 
   port?.disconnect();
-  port = (null: any);
+  port = (null: $FlowFixMe);
 }
 
 function connectExtensionPort(): void {
@@ -548,7 +548,7 @@ function connectExtensionPort(): void {
   // so, when we call `port.disconnect()` from this script,
   // this should not trigger this callback and port reconnection
   port.onDisconnect.addListener(() => {
-    port = (null: any);
+    port = (null: $FlowFixMe);
     connectExtensionPort();
   });
 }
@@ -602,9 +602,9 @@ function mountReactDevToolsWhenReactHasLoaded() {
   );
 }
 
-let bridge: FrontendBridge = (null: any);
+let bridge: FrontendBridge = (null: $FlowFixMe);
 let lastSubscribedBridgeListener = null;
-let store: Store = (null: any);
+let store: Store = (null: $FlowFixMe);
 
 let profilingData = null;
 
@@ -620,8 +620,8 @@ let editorPortalContainer = null;
 let inspectedElementPortalContainer = null;
 
 let mostRecentOverrideTab: null | TabID = null;
-let render: (overrideTab?: TabID) => void = (null: any);
-let root: RootType = (null: any);
+let render: (overrideTab?: TabID) => void = (null: $FlowFixMe);
+let root: RootType = (null: $FlowFixMe);
 
 let currentSelectedSource: null | SourceSelection = null;
 
@@ -640,7 +640,7 @@ type ExtensionPort = {
   disconnect(): void,
 };
 
-let port: ExtensionPort = (null: any);
+let port: ExtensionPort = (null: $FlowFixMe);
 
 // In case when multiple navigation events emitted in a short period of time
 // This debounced callback primarily used to avoid mounting React DevTools multiple times, which results
