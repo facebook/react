@@ -42,7 +42,6 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import isArray from 'shared/isArray';
 import {
   enableSchedulingProfiler,
-  enableHydrationLaneScheduling,
   disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -340,9 +339,7 @@ export function createHydrationContainer(
   // enqueue the callback if one is provided).
   const current = root.current;
   let lane = requestUpdateLane(current);
-  if (enableHydrationLaneScheduling) {
-    lane = getBumpedLaneForHydrationByLane(lane);
-  }
+  lane = getBumpedLaneForHydrationByLane(lane);
   const update = createUpdate(lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
@@ -557,9 +554,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     return;
   }
   let lane = requestUpdateLane(fiber);
-  if (enableHydrationLaneScheduling) {
-    lane = getBumpedLaneForHydrationByLane(lane);
-  }
+  lane = getBumpedLaneForHydrationByLane(lane);
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     scheduleUpdateOnFiber(root, fiber, lane);
