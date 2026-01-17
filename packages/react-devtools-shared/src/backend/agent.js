@@ -938,11 +938,19 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  selectNode(target: HostInstance): void {
-    const match = this.getIDForHostInstance(target);
-    if (match !== null) {
-      this._bridge.send('selectElement', match.id);
-    }
+  selectNode(target: HostInstance | null): void {
+    const match = target !== null ? this.getIDForHostInstance(target) : null;
+    this._bridge.send(
+      'selectElement',
+      match !== null
+        ? match.id
+        : // If you click outside a React root in the Elements panel, we want to give
+          // feedback that no selection is possible so we clear the selection.
+          // Otherwise clicking outside a React root is indistinguishable from clicking
+          // a different host node that leads to the same selected React element
+          // due to Component filters
+          null,
+    );
   }
 
   registerRendererInterface(
@@ -988,10 +996,7 @@ export default class Agent extends EventEmitter<{
 
   syncSelectionFromBuiltinElementsPanel: () => void = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
-    if (target == null) {
-      return;
-    }
-    this.selectNode(target);
+    this.selectNode(target == null ? null : target);
   };
 
   shutdown: () => void = () => {

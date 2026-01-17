@@ -6879,9 +6879,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(finished).toBe(true);
@@ -6943,9 +6946,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(finished).toBe(true);
@@ -7007,9 +7013,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(finished).toBe(true);
@@ -7069,9 +7078,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(finished).toBe(true);
@@ -9024,7 +9036,8 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0mR4nd0m". When React manages style rules using `precedence` it will only include rules if the nonce matches the style nonce "R4nd0m" that was included with this render.',
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0mR4nd0m". When React manages style rules using `precedence` it will only include rules if the nonce matches the style nonce "R4nd0m" that was included with this render.' +
+        '\n    in style (at **)',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -9054,7 +9067,8 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.' +
+        '\n    in style (at **)',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -9085,7 +9099,8 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.' +
+        '\n    in style (at **)',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -9462,5 +9477,147 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
         <span>hello</span>
       </div>,
     );
+  });
+
+  it('useId is consistent for siblings when component suspends with nested lazy', async () => {
+    // Inner component uses useId
+    function InnerComponent() {
+      const id = React.useId();
+      Scheduler.log('InnerComponent id: ' + id);
+      return <span id={id}>inner</span>;
+    }
+
+    // Outer component uses useId and renders a lazy inner
+    function OuterComponent({innerElement}) {
+      const id = React.useId();
+      Scheduler.log('OuterComponent id: ' + id);
+      return <div id={id}>{innerElement}</div>;
+    }
+
+    // This sibling also has useId - its ID must be consistent with server
+    function Sibling() {
+      const id = React.useId();
+      Scheduler.log('Sibling id: ' + id);
+      return <span id={id}>sibling</span>;
+    }
+
+    // Create fresh lazy components for SERVER (resolve immediately)
+    const serverLazyInner = React.lazy(async () => {
+      Scheduler.log('server lazy inner initializer');
+      return {default: <InnerComponent />};
+    });
+
+    const serverLazyOuter = React.lazy(async () => {
+      Scheduler.log('server lazy outer initializer');
+      return {
+        default: <OuterComponent key="outer" innerElement={serverLazyInner} />,
+      };
+    });
+
+    // Server render with lazy (resolves immediately)
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <html>
+          <body>
+            <>{serverLazyOuter}</>
+            <>
+              <Sibling />
+            </>
+          </body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="_R_1_">
+            <span id="_R_5_">inner</span>
+          </div>
+          <span id="_R_2_">sibling</span>
+        </body>
+      </html>,
+    );
+
+    assertLog([
+      'server lazy outer initializer',
+      'Sibling id: _R_2_',
+      'OuterComponent id: _R_1_',
+      'server lazy inner initializer',
+      'InnerComponent id: _R_5_',
+    ]);
+
+    // Create fresh lazy components for CLIENT
+    let resolveClientInner;
+    const clientLazyInner = React.lazy(async () => {
+      Scheduler.log('client lazy inner initializer');
+      return new Promise(r => {
+        resolveClientInner = () => r({default: <InnerComponent />});
+      });
+    });
+
+    let resolveClientOuter;
+    const clientLazyOuter = React.lazy(async () => {
+      Scheduler.log('client lazy outer initializer');
+      return new Promise(r => {
+        resolveClientOuter = () =>
+          r({default: <OuterComponent innerElement={clientLazyInner} />});
+      });
+    });
+
+    const hydrationErrors = [];
+
+    // Client hydrates with nested lazy components
+    let root;
+    React.startTransition(() => {
+      root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <>{clientLazyOuter}</>
+            <>
+              <Sibling />
+            </>
+          </body>
+        </html>,
+        {
+          onRecoverableError(error) {
+            hydrationErrors.push(error.message);
+          },
+        },
+      );
+    });
+
+    // First suspension on outer lazy
+    await waitFor(['client lazy outer initializer']);
+    resolveClientOuter();
+
+    // Second suspension on inner lazy
+    await waitFor([
+      'OuterComponent id: _R_1_',
+      'client lazy inner initializer',
+    ]);
+    resolveClientInner();
+
+    await waitForAll(['InnerComponent id: _R_5_', 'Sibling id: _R_2_']);
+
+    // The IDs should match the server-generated IDs
+    expect(hydrationErrors).toEqual([]);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="_R_1_">
+            <span id="_R_5_">inner</span>
+          </div>
+          <span id="_R_2_">sibling</span>
+        </body>
+      </html>,
+    );
+
+    root.unmount();
   });
 });
