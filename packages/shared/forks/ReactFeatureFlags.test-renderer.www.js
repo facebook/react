@@ -64,6 +64,7 @@ export const renameElementSymbol: boolean = false;
 
 export const enableObjectFiber: boolean = false;
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
+export const enableEffectEventMutationPhase: boolean = false;
 
 export const enableHydrationLaneScheduling: boolean = true;
 
