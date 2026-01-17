@@ -58,7 +58,6 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
 
 export const renameElementSymbol: boolean = true;
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
-export const enableEffectEventMutationPhase: boolean = false;
 
 export const enableYieldingBeforePassive: boolean = true;
 
