@@ -279,6 +279,8 @@ describe('ReactDOMCustomElementHydration', () => {
       // Attributes should be present
       expect(customElement.hasAttribute('stringAttr')).toBe(true);
       expect(customElement.getAttribute('stringAttr')).toBe('value');
+      expect(customElement.hasAttribute('numberAttr')).toBe(true);
+      expect(customElement.getAttribute('numberAttr')).toBe('123');
       expect(customElement.hasAttribute('class')).toBe(true);
       expect(customElement.getAttribute('class')).toBe('custom-class');
     });
@@ -365,6 +367,9 @@ describe('ReactDOMCustomElementHydration', () => {
 
       // Verify hydration applied both attributes and property setter
       expect(customElement.getAttribute('data-attr')).toBe('test');
+      expect(customElement.getAttribute('customProperty')).toBe(
+        'hydrated-value',
+      );
       expect(customElement.customProperty).toBe('hydrated-value');
       expect(customElement._internalValue).toBe('hydrated-value');
     });
