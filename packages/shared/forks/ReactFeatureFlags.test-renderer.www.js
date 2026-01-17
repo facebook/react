@@ -62,6 +62,7 @@ export const disableLegacyMode: boolean = true;
 
 export const enableObjectFiber: boolean = false;
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
+export const enableEffectEventMutationPhase: boolean = false;
 
 export const enableYieldingBeforePassive: boolean = false;
 
