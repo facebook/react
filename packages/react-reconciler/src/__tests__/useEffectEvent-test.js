@@ -53,7 +53,6 @@ describe('useEffectEvent', () => {
     return <span prop={props.text} />;
   }
 
-  // @gate enableUseEffectEventHook
   it('memoizes basic case correctly', async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -129,7 +128,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('can be defined more than once', async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -191,7 +189,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('does not preserve `this` in event functions', async () => {
     class GreetButton extends React.PureComponent {
       greet = () => {
@@ -241,7 +238,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('throws when called in render', async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -275,7 +271,6 @@ describe('useEffectEvent', () => {
     assertLog([]);
   });
 
-  // @gate enableUseEffectEventHook
   it("useLayoutEffect shouldn't re-fire when event handlers change", async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -375,7 +370,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it("useEffect shouldn't re-fire when event handlers change", async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -474,7 +468,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('is stable in a custom hook', async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -579,7 +572,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('is mutated before all other effects', async () => {
     function Counter({value}) {
       useInsertionEffect(() => {
@@ -603,7 +595,214 @@ describe('useEffectEvent', () => {
     assertLog(['Effect value: 2', 'Event value: 2']);
   });
 
-  // @gate enableUseEffectEventHook
+  it('updates parent and child event effects before their respective effect lifecycles', async () => {
+    function Parent({value}) {
+      const parentEvent = useEffectEvent(() => {
+        Scheduler.log('Parent event: ' + value);
+      });
+
+      useInsertionEffect(() => {
+        Scheduler.log('Parent insertion');
+        parentEvent();
+      }, [value]);
+
+      return <Child value={value} />;
+    }
+
+    function Child({value}) {
+      const childEvent = useEffectEvent(() => {
+        Scheduler.log('Child event: ' + value);
+      });
+
+      useInsertionEffect(() => {
+        Scheduler.log('Child insertion');
+        childEvent();
+      }, [value]);
+
+      return null;
+    }
+
+    ReactNoop.render(<Parent value={1} />);
+    await waitForAll([
+      'Child insertion',
+      'Child event: 1',
+      'Parent insertion',
+      'Parent event: 1',
+    ]);
+
+    await act(() => ReactNoop.render(<Parent value={2} />));
+    // Each component's event is updated before its own insertion effect runs
+    assertLog([
+      'Child insertion',
+      'Child event: 2',
+      'Parent insertion',
+      'Parent event: 2',
+    ]);
+  });
+
+  it('fires all insertion effects (interleaved) with useEffectEvent before firing any layout effects', async () => {
+    // This test mirrors the 'fires all insertion effects (interleaved) before firing any layout effects'
+    // test in ReactHooksWithNoopRenderer-test.js, but adds useEffectEvent to verify that
+    // event payloads are updated before each component's insertion effects run.
+    // It also includes passive effects to verify the full effect lifecycle.
+    let committedA = '(empty)';
+    let committedB = '(empty)';
+
+    function CounterA(props) {
+      const onEvent = useEffectEvent(() => {
+        return `Event A [A: ${committedA}, B: ${committedB}]`;
+      });
+
+      useInsertionEffect(() => {
+        // Call the event function to verify it sees the latest value
+        Scheduler.log(
+          `Create Insertion A [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+        );
+        committedA = String(props.count);
+        return () => {
+          Scheduler.log(
+            `Destroy Insertion A [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+          );
+        };
+      });
+
+      useLayoutEffect(() => {
+        Scheduler.log(
+          `Create Layout A [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+        );
+        return () => {
+          Scheduler.log(
+            `Destroy Layout A [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+          );
+        };
+      });
+
+      useEffect(() => {
+        Scheduler.log(
+          `Create Passive A [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+        );
+        return () => {
+          Scheduler.log(
+            `Destroy Passive A [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+          );
+        };
+      });
+
+      return null;
+    }
+
+    function CounterB(props) {
+      const onEvent = useEffectEvent(() => {
+        return `Event B [A: ${committedA}, B: ${committedB}]`;
+      });
+
+      useInsertionEffect(() => {
+        // Call the event function to verify it sees the latest value
+        Scheduler.log(
+          `Create Insertion B [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+        );
+        committedB = String(props.count);
+        return () => {
+          Scheduler.log(
+            `Destroy Insertion B [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+          );
+        };
+      });
+
+      useLayoutEffect(() => {
+        Scheduler.log(
+          `Create Layout B [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+        );
+        return () => {
+          Scheduler.log(
+            `Destroy Layout B [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+          );
+        };
+      });
+
+      useEffect(() => {
+        Scheduler.log(
+          `Create Passive B [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+        );
+        return () => {
+          Scheduler.log(
+            `Destroy Passive B [A: ${committedA}, B: ${committedB}], event: ${onEvent()}`,
+          );
+        };
+      });
+
+      return null;
+    }
+
+    await act(async () => {
+      ReactNoop.render(
+        <React.Fragment>
+          <CounterA count={0} />
+          <CounterB count={0} />
+        </React.Fragment>,
+      );
+      // All insertion effects fire before all layout effects, then passive effects
+      // Event functions should see the state AT THE TIME they're called
+      await waitForAll([
+        // Insertion effects (mutation phase)
+        'Create Insertion A [A: (empty), B: (empty)], event: Event A [A: (empty), B: (empty)]',
+        'Create Insertion B [A: 0, B: (empty)], event: Event B [A: 0, B: (empty)]',
+        // Layout effects
+        'Create Layout A [A: 0, B: 0], event: Event A [A: 0, B: 0]',
+        'Create Layout B [A: 0, B: 0], event: Event B [A: 0, B: 0]',
+        // Passive effects
+        'Create Passive A [A: 0, B: 0], event: Event A [A: 0, B: 0]',
+        'Create Passive B [A: 0, B: 0], event: Event B [A: 0, B: 0]',
+      ]);
+      expect([committedA, committedB]).toEqual(['0', '0']);
+    });
+
+    await act(async () => {
+      ReactNoop.render(
+        <React.Fragment>
+          <CounterA count={1} />
+          <CounterB count={1} />
+        </React.Fragment>,
+      );
+      await waitForAll([
+        // Component A: insertion destroy, then create
+        'Destroy Insertion A [A: 0, B: 0], event: Event A [A: 0, B: 0]',
+        'Create Insertion A [A: 0, B: 0], event: Event A [A: 0, B: 0]',
+        // Component A: layout destroy (after insertion updated committedA)
+        'Destroy Layout A [A: 1, B: 0], event: Event A [A: 1, B: 0]',
+        // Component B: insertion destroy, then create
+        'Destroy Insertion B [A: 1, B: 0], event: Event B [A: 1, B: 0]',
+        'Create Insertion B [A: 1, B: 0], event: Event B [A: 1, B: 0]',
+        // Component B: layout destroy (after insertion updated committedB)
+        'Destroy Layout B [A: 1, B: 1], event: Event B [A: 1, B: 1]',
+        // Layout creates
+        'Create Layout A [A: 1, B: 1], event: Event A [A: 1, B: 1]',
+        'Create Layout B [A: 1, B: 1], event: Event B [A: 1, B: 1]',
+        // Passive destroys then creates
+        'Destroy Passive A [A: 1, B: 1], event: Event A [A: 1, B: 1]',
+        'Destroy Passive B [A: 1, B: 1], event: Event B [A: 1, B: 1]',
+        'Create Passive A [A: 1, B: 1], event: Event A [A: 1, B: 1]',
+        'Create Passive B [A: 1, B: 1], event: Event B [A: 1, B: 1]',
+      ]);
+      expect([committedA, committedB]).toEqual(['1', '1']);
+    });
+
+    // Unmount everything
+    await act(async () => {
+      ReactNoop.render(null);
+      await waitForAll([
+        // Insertion and layout destroys (mutation/layout phase)
+        'Destroy Insertion A [A: 1, B: 1], event: Event A [A: 1, B: 1]',
+        'Destroy Layout A [A: 1, B: 1], event: Event A [A: 1, B: 1]',
+        'Destroy Insertion B [A: 1, B: 1], event: Event B [A: 1, B: 1]',
+        'Destroy Layout B [A: 1, B: 1], event: Event B [A: 1, B: 1]',
+        // Passive destroys
+        'Destroy Passive A [A: 1, B: 1], event: Event A [A: 1, B: 1]',
+        'Destroy Passive B [A: 1, B: 1], event: Event B [A: 1, B: 1]',
+      ]);
+    });
+  });
+
   it("doesn't provide a stable identity", async () => {
     function Counter({shouldRender, value}) {
       const onClick = useEffectEvent(() => {
@@ -642,7 +841,6 @@ describe('useEffectEvent', () => {
     ]);
   });
 
-  // @gate enableUseEffectEventHook
   it('event handlers always see the latest committed value', async () => {
     let committedEventHandler = null;
 
@@ -692,7 +890,6 @@ describe('useEffectEvent', () => {
     expect(committedEventHandler()).toBe('Value seen by useEffectEvent: 2');
   });
 
-  // @gate enableUseEffectEventHook
   it('integration: implements docs chat room example', async () => {
     function createConnection() {
       let connectedCallback;
@@ -781,7 +978,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('integration: implements the docs logVisit example', async () => {
     class AddToCartButton extends React.PureComponent {
       addToCart = () => {

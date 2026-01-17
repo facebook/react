@@ -20,6 +20,7 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
+  enableEffectEventMutationPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
   enableEagerAlternateStateNodeCleanup,
@@ -64,7 +65,6 @@ export const enableTaint: boolean = true;
 export const enableTransitionTracing: boolean = false;
 export const enableTrustedTypesIntegration: boolean = false;
 export const enableUpdaterTracking: boolean = __PROFILE__;
-export const enableUseEffectEventHook: boolean = true;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;

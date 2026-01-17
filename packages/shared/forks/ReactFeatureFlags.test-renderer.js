@@ -32,7 +32,6 @@ export const disableTextareaChildren: boolean = false;
 export const enableSuspenseAvoidThisFallback: boolean = false;
 export const enableCPUSuspense: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
-export const enableUseEffectEventHook: boolean = true;
 export const enableLegacyFBSupport: boolean = false;
 export const enableMoveBefore: boolean = false;
 export const enableHiddenSubtreeInsertionEffectCleanup: boolean = false;
@@ -59,6 +58,7 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
 
 export const renameElementSymbol: boolean = true;
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
+export const enableEffectEventMutationPhase: boolean = false;
 
 export const enableYieldingBeforePassive: boolean = true;
 
