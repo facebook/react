@@ -292,7 +292,6 @@ type BaseFiberRootProperties = {
   transitionTypes: null | TransitionTypes, // TODO: Make this a LaneMap.
   // enableGestureTransition only
   pendingGestures: null | ScheduledGesture,
-  stoppingGestures: null | ScheduledGesture,
   gestureClone: null | Instance,
 };
 

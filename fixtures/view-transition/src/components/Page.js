@@ -171,17 +171,20 @@ export default function Page({url, navigate}) {
               }}>
               <h1>{!show ? 'A' + counter : 'B'}</h1>
             </ViewTransition>
-            {show ? (
-              <div>
-                {a}
-                {b}
-              </div>
-            ) : (
-              <div>
-                {b}
-                {a}
-              </div>
-            )}
+            {
+              // Using url instead of renderedUrl here lets us only update this on commit.
+              url === '/?b' ? (
+                <div>
+                  {a}
+                  {b}
+                </div>
+              ) : (
+                <div>
+                  {b}
+                  {a}
+                </div>
+              )
+            }
             <ViewTransition>
               {show ? (
                 <div>hello{exclamation}</div>
