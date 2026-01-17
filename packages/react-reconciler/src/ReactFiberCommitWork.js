@@ -47,7 +47,6 @@ import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import {
   alwaysThrottleRetries,
   enableCreateEventHandleAPI,
-  enableEffectEventMutationPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableProfilerTimer,
   enableProfilerCommitHooks,
@@ -500,7 +499,7 @@ function commitBeforeMutationEffectsOnFiber(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
-      if (!enableEffectEventMutationPhase && (flags & Update) !== NoFlags) {
+      if ((flags & Update) !== NoFlags) {
         const updateQueue: FunctionComponentUpdateQueue | null =
           (finishedWork.updateQueue: any);
         const eventPayloads = updateQueue !== null ? updateQueue.events : null;
@@ -2047,19 +2046,6 @@ function commitMutationEffectsOnFiber(
       commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Update) {
-        // Mutate event effect callbacks before insertion effects.
-        if (enableEffectEventMutationPhase) {
-          const updateQueue: FunctionComponentUpdateQueue | null =
-            (finishedWork.updateQueue: any);
-          const eventPayloads =
-            updateQueue !== null ? updateQueue.events : null;
-          if (eventPayloads !== null) {
-            for (let ii = 0; ii < eventPayloads.length; ii++) {
-              const {ref, nextImpl} = eventPayloads[ii];
-              ref.impl = nextImpl;
-            }
-          }
-        }
         commitHookEffectListUnmount(
           HookInsertion | HookHasEffect,
           finishedWork,
