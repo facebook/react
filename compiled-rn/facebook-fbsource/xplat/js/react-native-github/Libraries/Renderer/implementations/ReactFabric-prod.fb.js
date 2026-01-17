@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<40b535a15266c3f36bceb40918f892a2>>
+ * @generated SignedSource<<bdba47a8abb12ce53e4ef5f64e71bde3>>
  */
 
 "use strict";
@@ -20,8 +20,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-  enableEffectEventMutationPhase =
-    dynamicFlagsUntyped.enableEffectEventMutationPhase,
   enableHiddenSubtreeInsertionEffectCleanup =
     dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
@@ -1246,7 +1244,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_286 = {
+var injectedNamesToPlugins$jscomp$inline_285 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1292,32 +1290,32 @@ var injectedNamesToPlugins$jscomp$inline_286 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_287 = !1,
-  pluginName$jscomp$inline_288;
-for (pluginName$jscomp$inline_288 in injectedNamesToPlugins$jscomp$inline_286)
+  isOrderingDirty$jscomp$inline_286 = !1,
+  pluginName$jscomp$inline_287;
+for (pluginName$jscomp$inline_287 in injectedNamesToPlugins$jscomp$inline_285)
   if (
-    injectedNamesToPlugins$jscomp$inline_286.hasOwnProperty(
-      pluginName$jscomp$inline_288
+    injectedNamesToPlugins$jscomp$inline_285.hasOwnProperty(
+      pluginName$jscomp$inline_287
     )
   ) {
-    var pluginModule$jscomp$inline_289 =
-      injectedNamesToPlugins$jscomp$inline_286[pluginName$jscomp$inline_288];
+    var pluginModule$jscomp$inline_288 =
+      injectedNamesToPlugins$jscomp$inline_285[pluginName$jscomp$inline_287];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_288) ||
-      namesToPlugins[pluginName$jscomp$inline_288] !==
-        pluginModule$jscomp$inline_289
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_287) ||
+      namesToPlugins[pluginName$jscomp$inline_287] !==
+        pluginModule$jscomp$inline_288
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_288])
+      if (namesToPlugins[pluginName$jscomp$inline_287])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_288 + "`.")
+            (pluginName$jscomp$inline_287 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_288] =
-        pluginModule$jscomp$inline_289;
-      isOrderingDirty$jscomp$inline_287 = !0;
+      namesToPlugins[pluginName$jscomp$inline_287] =
+        pluginModule$jscomp$inline_288;
+      isOrderingDirty$jscomp$inline_286 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_287 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_286 && recomputePluginOrdering();
 function batchedUpdatesImpl(fn, bookkeeping) {
   return fn(bookkeeping);
 }
@@ -1394,8 +1392,7 @@ function dispatchEvent(target, topLevelType, nativeEvent) {
     }
   });
 }
-var BeforeMutationMask = 1024 | (enableEffectEventMutationPhase ? 0 : 4),
-  scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
+var scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
   requestPaint = Scheduler.unstable_requestPaint,
@@ -8237,7 +8234,7 @@ function commitBeforeMutationEffects(root, firstChild) {
     if (
       ((root = nextEffect),
       (firstChild = root.child),
-      0 !== (root.subtreeFlags & BeforeMutationMask) && null !== firstChild)
+      0 !== (root.subtreeFlags & 1028) && null !== firstChild)
     )
       (firstChild.return = root), (nextEffect = firstChild);
     else
@@ -8250,7 +8247,6 @@ function commitBeforeMutationEffects(root, firstChild) {
           case 11:
           case 15:
             if (
-              !enableEffectEventMutationPhase &&
               0 !== (firstChild & 4) &&
               ((firstChild = root.updateQueue),
               (firstChild = null !== firstChild ? firstChild.events : null),
@@ -8643,19 +8639,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
     case 15:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
-      if (flags & 4) {
-        if (
-          enableEffectEventMutationPhase &&
-          ((flags = finishedWork.updateQueue),
-          (flags = null !== flags ? flags.events : null),
-          null !== flags)
-        )
-          for (root = 0; root < flags.length; root++)
-            (lanes = flags[root]), (lanes.ref.impl = lanes.nextImpl);
-        commitHookEffectListUnmount(3, finishedWork, finishedWork.return);
-        commitHookEffectListMount(3, finishedWork);
-        commitHookEffectListUnmount(5, finishedWork, finishedWork.return);
-      }
+      flags & 4 &&
+        (commitHookEffectListUnmount(3, finishedWork, finishedWork.return),
+        commitHookEffectListMount(3, finishedWork),
+        commitHookEffectListUnmount(5, finishedWork, finishedWork.return));
       break;
     case 1:
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -10048,8 +10035,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$130) {
-      handleThrow(root, thrownValue$130);
+    } catch (thrownValue$129) {
+      handleThrow(root, thrownValue$129);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10164,8 +10151,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrentByScheduler();
       break;
-    } catch (thrownValue$132) {
-      handleThrow(root, thrownValue$132);
+    } catch (thrownValue$131) {
+      handleThrow(root, thrownValue$131);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -10368,11 +10355,8 @@ function commitRoot(
         return null;
       }))
     : ((root.callbackNode = null), (root.callbackPriority = 0));
-  spawnedLane = 0 !== (finishedWork.flags & (BeforeMutationMask | 13878));
-  if (
-    0 !== (finishedWork.subtreeFlags & (BeforeMutationMask | 13878)) ||
-    spawnedLane
-  ) {
+  spawnedLane = 0 !== (finishedWork.flags & 13878);
+  if (0 !== (finishedWork.subtreeFlags & 13878) || spawnedLane) {
     spawnedLane = ReactSharedInternals.T;
     ReactSharedInternals.T = null;
     updatedLanes = currentUpdatePriority;
@@ -11417,26 +11401,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1320 = {
+  internals$jscomp$inline_1319 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-23e5edd0-20260117",
+    version: "19.3.0-native-fb-be3fb299-20260117",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-23e5edd0-20260117"
+    reconcilerVersion: "19.3.0-native-fb-be3fb299-20260117"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1320.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1319.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1645 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1644 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1645.isDisabled &&
-    hook$jscomp$inline_1645.supportsFiber
+    !hook$jscomp$inline_1644.isDisabled &&
+    hook$jscomp$inline_1644.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1645.inject(
-        internals$jscomp$inline_1320
+      (rendererID = hook$jscomp$inline_1644.inject(
+        internals$jscomp$inline_1319
       )),
-        (injectedHook = hook$jscomp$inline_1645);
+        (injectedHook = hook$jscomp$inline_1644);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

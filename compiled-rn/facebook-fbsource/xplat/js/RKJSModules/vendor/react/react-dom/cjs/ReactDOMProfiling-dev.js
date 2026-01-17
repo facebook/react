@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<339082a1203408e43e0db4529dea46c6>>
+ * @generated SignedSource<<c289961bea7b92da11940d462b7d1647>>
  */
 
 /*
@@ -14728,62 +14728,58 @@ __DEV__ &&
         selectionRange: JSCompiler_temp
       };
       _enabled = !1;
-      nextEffect = firstChild;
-      for (firstChild = BeforeMutationMask; null !== nextEffect; )
+      for (nextEffect = firstChild; null !== nextEffect; )
         if (
-          ((root = nextEffect),
-          (JSCompiler_temp = root.child),
-          0 !== (root.subtreeFlags & firstChild) && null !== JSCompiler_temp)
+          ((firstChild = nextEffect),
+          (root = firstChild.child),
+          0 !== (firstChild.subtreeFlags & 1028) && null !== root)
         )
-          (JSCompiler_temp.return = root), (nextEffect = JSCompiler_temp);
+          (root.return = firstChild), (nextEffect = root);
         else
           for (; null !== nextEffect; ) {
-            JSCompiler_temp = root = nextEffect;
-            anchorOffset = JSCompiler_temp.alternate;
-            focusNode = JSCompiler_temp.flags;
-            switch (JSCompiler_temp.tag) {
+            root = firstChild = nextEffect;
+            JSCompiler_temp = root.alternate;
+            anchorOffset = root.flags;
+            switch (root.tag) {
               case 0:
               case 11:
               case 15:
                 if (
-                  !enableEffectEventMutationPhase &&
-                  0 !== (focusNode & 4) &&
-                  ((JSCompiler_temp = JSCompiler_temp.updateQueue),
-                  (JSCompiler_temp =
-                    null !== JSCompiler_temp ? JSCompiler_temp.events : null),
-                  null !== JSCompiler_temp)
+                  0 !== (anchorOffset & 4) &&
+                  ((root = root.updateQueue),
+                  (root = null !== root ? root.events : null),
+                  null !== root)
                 )
                   for (
-                    anchorOffset = 0;
-                    anchorOffset < JSCompiler_temp.length;
-                    anchorOffset++
+                    JSCompiler_temp = 0;
+                    JSCompiler_temp < root.length;
+                    JSCompiler_temp++
                   )
-                    (focusNode = JSCompiler_temp[anchorOffset]),
-                      (focusNode.ref.impl = focusNode.nextImpl);
+                    (anchorOffset = root[JSCompiler_temp]),
+                      (anchorOffset.ref.impl = anchorOffset.nextImpl);
                 break;
               case 1:
-                0 !== (focusNode & 1024) &&
-                  null !== anchorOffset &&
-                  commitClassSnapshot(JSCompiler_temp, anchorOffset);
+                0 !== (anchorOffset & 1024) &&
+                  null !== JSCompiler_temp &&
+                  commitClassSnapshot(root, JSCompiler_temp);
                 break;
               case 3:
-                if (0 !== (focusNode & 1024))
+                if (0 !== (anchorOffset & 1024))
                   if (
-                    ((JSCompiler_temp =
-                      JSCompiler_temp.stateNode.containerInfo),
-                    (anchorOffset = JSCompiler_temp.nodeType),
-                    9 === anchorOffset)
+                    ((root = root.stateNode.containerInfo),
+                    (JSCompiler_temp = root.nodeType),
+                    9 === JSCompiler_temp)
                   )
-                    clearContainerSparingly(JSCompiler_temp);
-                  else if (1 === anchorOffset)
-                    switch (JSCompiler_temp.nodeName) {
+                    clearContainerSparingly(root);
+                  else if (1 === JSCompiler_temp)
+                    switch (root.nodeName) {
                       case "HEAD":
                       case "HTML":
                       case "BODY":
-                        clearContainerSparingly(JSCompiler_temp);
+                        clearContainerSparingly(root);
                         break;
                       default:
-                        JSCompiler_temp.textContent = "";
+                        root.textContent = "";
                     }
                 break;
               case 5:
@@ -14794,18 +14790,18 @@ __DEV__ &&
               case 17:
                 break;
               default:
-                if (0 !== (focusNode & 1024))
+                if (0 !== (anchorOffset & 1024))
                   throw Error(
                     "This unit of work tag should not have side-effects. This error is likely caused by a bug in React. Please file an issue."
                   );
             }
-            JSCompiler_temp = root.sibling;
-            if (null !== JSCompiler_temp) {
-              JSCompiler_temp.return = root.return;
-              nextEffect = JSCompiler_temp;
+            root = firstChild.sibling;
+            if (null !== root) {
+              root.return = firstChild.return;
+              nextEffect = root;
               break;
             }
-            nextEffect = root.return;
+            nextEffect = firstChild.return;
           }
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
@@ -15627,27 +15623,18 @@ __DEV__ &&
         case 15:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
-          if (flags & 4) {
-            if (
-              enableEffectEventMutationPhase &&
-              ((current = finishedWork.updateQueue),
-              (current = null !== current ? current.events : null),
-              null !== current)
-            )
-              for (flags = 0; flags < current.length; flags++)
-                (root = current[flags]), (root.ref.impl = root.nextImpl);
-            commitHookEffectListUnmount(
+          flags & 4 &&
+            (commitHookEffectListUnmount(
               Insertion | HasEffect,
               finishedWork,
               finishedWork.return
-            );
-            commitHookEffectListMount(Insertion | HasEffect, finishedWork);
+            ),
+            commitHookEffectListMount(Insertion | HasEffect, finishedWork),
             commitHookLayoutUnmountEffects(
               finishedWork,
               finishedWork.return,
               Layout | HasEffect
-            );
-          }
+            ));
           break;
         case 1:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -19253,11 +19240,8 @@ __DEV__ &&
           suspendedCommitReason,
           workInProgressUpdateTask
         );
-      spawnedLane = 0 !== (finishedWork.flags & (BeforeMutationMask | 13878));
-      if (
-        0 !== (finishedWork.subtreeFlags & (BeforeMutationMask | 13878)) ||
-        spawnedLane
-      ) {
+      spawnedLane = 0 !== (finishedWork.flags & 13878);
+      if (0 !== (finishedWork.subtreeFlags & 13878) || spawnedLane) {
         spawnedLane = ReactSharedInternals.T;
         ReactSharedInternals.T = null;
         updatedLanes = ReactDOMSharedInternals.p;
@@ -26242,8 +26226,6 @@ __DEV__ &&
       React = require("react"),
       ReactDOM = require("react-dom"),
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-      enableEffectEventMutationPhase =
-        dynamicFlagsUntyped.enableEffectEventMutationPhase,
       enableHiddenSubtreeInsertionEffectCleanup =
         dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
@@ -26256,7 +26238,6 @@ __DEV__ &&
       enableComponentPerformanceTrack =
         dynamicFlagsUntyped.enableComponentPerformanceTrack,
       enablePerformanceIssueReporting = enableComponentPerformanceTrack,
-      BeforeMutationMask = 1024 | (enableEffectEventMutationPhase ? 0 : 4),
       searchTarget = null,
       searchBoundary = null,
       assign = Object.assign,
@@ -30357,11 +30338,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-23e5edd0-20260117" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-be3fb299-20260117" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-23e5edd0-20260117\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-be3fb299-20260117\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30398,10 +30379,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-23e5edd0-20260117",
+          version: "19.3.0-native-fb-be3fb299-20260117",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-23e5edd0-20260117"
+          reconcilerVersion: "19.3.0-native-fb-be3fb299-20260117"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30867,7 +30848,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-native-fb-23e5edd0-20260117";
+    exports.version = "19.3.0-native-fb-be3fb299-20260117";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

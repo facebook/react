@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9f3a9227c23acf1db889e50ef7a29325>>
+ * @generated SignedSource<<1ea29f73de487b7db5ef60d109e08bad>>
  */
 
 "use strict";
@@ -11594,35 +11594,36 @@ __DEV__ &&
             : !1;
     }
     function commitBeforeMutationEffects(root, firstChild) {
-      nextEffect = firstChild;
-      for (root = BeforeMutationMask; null !== nextEffect; ) {
-        firstChild = nextEffect;
-        var child = firstChild.child;
-        if (0 !== (firstChild.subtreeFlags & root) && null !== child)
-          (child.return = firstChild), (nextEffect = child);
+      for (nextEffect = firstChild; null !== nextEffect; )
+        if (
+          ((root = nextEffect),
+          (firstChild = root.child),
+          0 !== (root.subtreeFlags & 1028) && null !== firstChild)
+        )
+          (firstChild.return = root), (nextEffect = firstChild);
         else
           for (; null !== nextEffect; ) {
-            child = firstChild = nextEffect;
-            var current = child.alternate,
-              flags = child.flags;
-            switch (child.tag) {
+            firstChild = root = nextEffect;
+            var current = firstChild.alternate,
+              flags = firstChild.flags;
+            switch (firstChild.tag) {
               case 0:
               case 11:
               case 15:
                 if (
-                  !enableEffectEventMutationPhase &&
                   0 !== (flags & 4) &&
-                  ((child = child.updateQueue),
-                  (child = null !== child ? child.events : null),
-                  null !== child)
+                  ((firstChild = firstChild.updateQueue),
+                  (firstChild = null !== firstChild ? firstChild.events : null),
+                  null !== firstChild)
                 )
-                  for (current = 0; current < child.length; current++)
-                    (flags = child[current]), (flags.ref.impl = flags.nextImpl);
+                  for (current = 0; current < firstChild.length; current++)
+                    (flags = firstChild[current]),
+                      (flags.ref.impl = flags.nextImpl);
                 break;
               case 1:
                 0 !== (flags & 1024) &&
                   null !== current &&
-                  commitClassSnapshot(child, current);
+                  commitClassSnapshot(firstChild, current);
                 break;
               case 3:
                 break;
@@ -11639,15 +11640,14 @@ __DEV__ &&
                     "This unit of work tag should not have side-effects. This error is likely caused by a bug in React. Please file an issue."
                   );
             }
-            child = firstChild.sibling;
-            if (null !== child) {
-              child.return = firstChild.return;
-              nextEffect = child;
+            firstChild = root.sibling;
+            if (null !== firstChild) {
+              firstChild.return = root.return;
+              nextEffect = firstChild;
               break;
             }
-            nextEffect = firstChild.return;
+            nextEffect = root.return;
           }
-      }
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var prevEffectStart = pushComponentEffectStart(),
@@ -12192,27 +12192,18 @@ __DEV__ &&
         case 15:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
-          if (flags & 4) {
-            if (
-              enableEffectEventMutationPhase &&
-              ((root = finishedWork.updateQueue),
-              (root = null !== root ? root.events : null),
-              null !== root)
-            )
-              for (lanes = 0; lanes < root.length; lanes++)
-                (flags = root[lanes]), (flags.ref.impl = flags.nextImpl);
-            commitHookEffectListUnmount(
+          flags & 4 &&
+            (commitHookEffectListUnmount(
               Insertion | HasEffect,
               finishedWork,
               finishedWork.return
-            );
-            commitHookEffectListMount(Insertion | HasEffect, finishedWork);
+            ),
+            commitHookEffectListMount(Insertion | HasEffect, finishedWork),
             commitHookLayoutUnmountEffects(
               finishedWork,
               finishedWork.return,
               Layout | HasEffect
-            );
-          }
+            ));
           break;
         case 1:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -15400,11 +15391,8 @@ __DEV__ &&
           suspendedCommitReason,
           workInProgressUpdateTask
         );
-      spawnedLane = 0 !== (finishedWork.flags & (BeforeMutationMask | 13878));
-      if (
-        0 !== (finishedWork.subtreeFlags & (BeforeMutationMask | 13878)) ||
-        spawnedLane
-      ) {
+      spawnedLane = 0 !== (finishedWork.flags & 13878);
+      if (0 !== (finishedWork.subtreeFlags & 13878) || spawnedLane) {
         spawnedLane = ReactSharedInternals.T;
         ReactSharedInternals.T = null;
         updatedLanes = currentUpdatePriority;
@@ -17221,8 +17209,6 @@ __DEV__ &&
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-      enableEffectEventMutationPhase =
-        dynamicFlagsUntyped.enableEffectEventMutationPhase,
       enableHiddenSubtreeInsertionEffectCleanup =
         dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
@@ -17911,7 +17897,6 @@ __DEV__ &&
     });
     var isInsideEventHandler = !1,
       eventQueue = null,
-      BeforeMutationMask = 1024 | (enableEffectEventMutationPhase ? 0 : 4),
       scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
       cancelCallback$1 = Scheduler.unstable_cancelCallback,
       shouldYield = Scheduler.unstable_shouldYield,
@@ -20245,10 +20230,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-23e5edd0-20260117",
+        version: "19.3.0-native-fb-be3fb299-20260117",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-23e5edd0-20260117"
+        reconcilerVersion: "19.3.0-native-fb-be3fb299-20260117"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
