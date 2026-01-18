@@ -1270,4 +1270,56 @@ describe('useEffectEvent', () => {
     logContextValue();
     assertLog(['ContextReader (Effect event): second']);
   });
+
+  // @gate enableActivity
+  it('effect events are fresh in deeply nested hidden Activities', async () => {
+    function Child({value}) {
+      const logValue = useEffectEvent(() => {
+        Scheduler.log('effect event: ' + value);
+      });
+      useInsertionEffect(() => {
+        logValue();
+        return () => {
+          logValue();
+        };
+      });
+      Scheduler.log('render: ' + value);
+      return null;
+    }
+
+    function App({value}) {
+      return (
+        <React.Activity mode="hidden">
+          <React.Activity mode="hidden">
+            <React.Activity mode="hidden">
+              <Child value={value} />
+            </React.Activity>
+          </React.Activity>
+        </React.Activity>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Initial mount with value=1
+    await act(() => root.render(<App value={1} />));
+    assertLog([
+      'render: 1',
+      'effect event: 1', // Insertion effect mount should see fresh value
+    ]);
+
+    // Update to value=2
+    await act(() => root.render(<App value={2} />));
+
+    // Bug in enableViewTransition.
+    assertLog([
+      'render: 2',
+      gate('enableViewTransition') && !gate('enableEffectEventMutationPhase')
+        ? 'effect event: 1'
+        : 'effect event: 2',
+      gate('enableViewTransition') && !gate('enableEffectEventMutationPhase')
+        ? 'effect event: 1'
+        : 'effect event: 2',
+    ]);
+  });
 });
