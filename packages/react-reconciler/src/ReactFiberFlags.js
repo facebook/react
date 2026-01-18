@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  enableCreateEventHandleAPI,
-  enableUseEffectEventHook,
-} from 'shared/ReactFeatureFlags';
+import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
 export type Flags = number;
 
@@ -102,12 +99,10 @@ export const BeforeMutationMask: number =
       // TODO: Only need to visit Deletions during BeforeMutation phase if an
       // element is focused.
       Update | ChildDeletion | Visibility
-    : enableUseEffectEventHook
-      ? // TODO: The useEffectEvent hook uses the snapshot phase for clean up but it
-        // really should use the mutation phase for this or at least schedule an
-        // explicit Snapshot phase flag for this.
-        Update
-      : 0);
+    : // TODO: The useEffectEvent hook uses the snapshot phase for clean up but it
+      // really should use the mutation phase for this or at least schedule an
+      // explicit Snapshot phase flag for this.
+      Update);
 
 // For View Transition support we use the snapshot phase to scan the tree for potentially
 // affected ViewTransition components.

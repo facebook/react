@@ -49,7 +49,6 @@ export const enableTaint = true;
 export const enableTransitionTracing = false;
 export const enableTrustedTypesIntegration = false;
 export const enableUpdaterTracking = false;
-export const enableUseEffectEventHook = true;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
