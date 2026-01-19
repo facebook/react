@@ -82,8 +82,12 @@ export default function Page({url, navigate}) {
       {rotate: '0deg', transformOrigin: '30px 8px'},
       {rotate: '360deg', transformOrigin: '30px 8px'},
     ];
-    viewTransition.old.animate(keyframes, 250);
-    viewTransition.new.animate(keyframes, 250);
+    const animation1 = viewTransition.old.animate(keyframes, 250);
+    const animation2 = viewTransition.new.animate(keyframes, 250);
+    return () => {
+      animation1.cancel();
+      animation2.cancel();
+    };
   }
 
   function onGestureTransition(
@@ -105,8 +109,12 @@ export default function Page({url, navigate}) {
         rangeStart: (reverse ? rangeEnd : rangeStart) + '%',
         rangeEnd: (reverse ? rangeStart : rangeEnd) + '%',
       };
-      viewTransition.old.animate(keyframes, options);
-      viewTransition.new.animate(keyframes, options);
+      const animation1 = viewTransition.old.animate(keyframes, options);
+      const animation2 = viewTransition.new.animate(keyframes, options);
+      return () => {
+        animation1.cancel();
+        animation2.cancel();
+      };
     } else {
       // Custom Timeline
       const options = {
@@ -120,11 +128,10 @@ export default function Page({url, navigate}) {
       // Let the custom timeline take control of driving the animations.
       const cleanup1 = timeline.animate(animation1);
       const cleanup2 = timeline.animate(animation2);
-      // TODO: Support returning a clean up function from ViewTransition events.
-      // return () => {
-      //   cleanup1();
-      //   cleanup2();
-      // };
+      return () => {
+        cleanup1();
+        cleanup2();
+      };
     }
   }
 
