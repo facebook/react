@@ -669,7 +669,6 @@ describe('ReactComponentLifeCycle', () => {
           'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
           'Please update the following components: Component',
       ],
-      {withoutStack: true},
     );
   });
 
@@ -735,7 +734,6 @@ describe('ReactComponentLifeCycle', () => {
           'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
           'Please update the following components: Component',
       ],
-      {withoutStack: true},
     );
 
     await act(() => {
@@ -827,7 +825,6 @@ describe('ReactComponentLifeCycle', () => {
           'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
           'Please update the following components: AllLegacyLifecycles',
       ],
-      {withoutStack: true},
     );
 
     class WillMount extends React.Component {
@@ -887,7 +884,6 @@ describe('ReactComponentLifeCycle', () => {
           'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
           'Please update the following components: WillMountAndUpdate',
       ],
-      {withoutStack: true},
     );
 
     class WillReceiveProps extends React.Component {
@@ -925,9 +921,6 @@ describe('ReactComponentLifeCycle', () => {
           'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
           'Please update the following components: WillReceiveProps',
       ],
-      {
-        withoutStack: true,
-      },
     );
   });
 
@@ -975,7 +968,6 @@ describe('ReactComponentLifeCycle', () => {
           'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
           'Please update the following components: AllLegacyLifecycles',
       ],
-      {withoutStack: true},
     );
 
     class WillMount extends React.Component {
@@ -1033,9 +1025,6 @@ describe('ReactComponentLifeCycle', () => {
           'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
           'Please update the following components: WillMountAndUpdate',
       ],
-      {
-        withoutStack: true,
-      },
     );
 
     class WillReceiveProps extends React.Component {
@@ -1072,9 +1061,6 @@ describe('ReactComponentLifeCycle', () => {
           'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
           'Please update the following components: WillReceiveProps',
       ],
-      {
-        withoutStack: true,
-      },
     );
   });
 
@@ -1189,7 +1175,6 @@ describe('ReactComponentLifeCycle', () => {
           'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
           'Please update the following components: MyComponent',
       ],
-      {withoutStack: true},
     );
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
 
@@ -1510,7 +1495,6 @@ Please update the following components: MyComponent`,
 
 Please update the following components: MyComponent`,
       ],
-      {withoutStack: true},
     );
 
     // Dedupe check (update and instantiate new)

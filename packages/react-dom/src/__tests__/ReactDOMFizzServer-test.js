@@ -3590,14 +3590,11 @@ describe('ReactDOMFizzServer', () => {
         onRecoverableError(error, errorInfo) {
           expect(error.digest).toBe('a digest');
           expect(errorInfo.digest).toBe(undefined);
-          assertConsoleErrorDev(
-            [
-              'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-                ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
-                ' of the Error instance itself.',
-            ],
-            {withoutStack: true},
-          );
+          assertConsoleErrorDev([
+            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+              ' of the Error instance itself.',
+          ]);
         },
       },
     );
@@ -7770,10 +7767,7 @@ describe('ReactDOMFizzServer', () => {
       </html>,
     );
     assertConsoleErrorDev([
-      [
-        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
       'In HTML, <meta> cannot be a child of <html>.\nThis will cause a hydration error.' +
         '\n' +
         '\n  <App>' +
@@ -7788,10 +7782,7 @@ describe('ReactDOMFizzServer', () => {
       '<html> cannot contain a nested <meta>.\nSee this log for the ancestor stack trace.' +
         '\n    in html (at **)' +
         '\n    in App (at **)',
-      [
-        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
     ]);
 
     await root.unmount();
@@ -7886,10 +7877,7 @@ describe('ReactDOMFizzServer', () => {
       </html>,
     );
     assertConsoleErrorDev([
-      [
-        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
       'In HTML, <meta> cannot be a child of <html>.\nThis will cause a hydration error.' +
         '\n' +
         '\n  <App>' +
@@ -7904,10 +7892,7 @@ describe('ReactDOMFizzServer', () => {
       '<html> cannot contain a nested <meta>.\nSee this log for the ancestor stack trace.' +
         '\n    in html (at **)' +
         '\n    in App (at **)',
-      [
-        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
     ]);
 
     await root.unmount();

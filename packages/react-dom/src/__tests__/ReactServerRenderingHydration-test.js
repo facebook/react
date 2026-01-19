@@ -390,9 +390,6 @@ describe('ReactDOMServerHydration', () => {
           '\n' +
           'Please update the following components: ComponentWithWarning',
       ],
-      {
-        withoutStack: true,
-      },
     );
     expect(element.textContent).toBe('Hi');
   });
