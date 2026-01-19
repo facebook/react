@@ -14,7 +14,6 @@ import type {ReactNativeType} from './ReactNativeTypes';
 
 let ReactNative: ReactNativeType;
 
-// TODO: Delete the legacy renderer. Only ReactFabric is used now.
 if (__DEV__) {
   ReactNative = require('../implementations/ReactNativeRenderer-dev');
 } else {
