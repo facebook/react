@@ -3791,6 +3791,7 @@ __DEV__ &&
               throw thenable.reason;
           }
           suspendedThenable = thenable;
+          shouldCaptureSuspendedCallSite && captureSuspendedCallSite();
           throw SuspenseException;
       }
     }
@@ -3802,6 +3803,50 @@ __DEV__ &&
       var thenable = suspendedThenable;
       suspendedThenable = null;
       return thenable;
+    }
+    function captureSuspendedCallSite() {
+      var currentTask = currentTaskInDEV;
+      if (null === currentTask)
+        throw Error(
+          "Expected to have a current task when tracking a suspend call site. This is a bug in React."
+        );
+      var currentComponentStack = currentTask.componentStack;
+      if (null === currentComponentStack)
+        throw Error(
+          "Expected to have a component stack on the current task when tracking a suspended call site. This is a bug in React."
+        );
+      suspendedCallSiteStack = {
+        parent: currentComponentStack.parent,
+        type: currentComponentStack.type,
+        owner: currentComponentStack.owner,
+        stack: Error("react-stack-top-frame")
+      };
+      suspendedCallSiteDebugTask = currentTask.debugTask;
+    }
+    function ensureSuspendableThenableStateDEV(thenableState) {
+      var lastThenable = thenableState[thenableState.length - 1];
+      switch (lastThenable.status) {
+        case "fulfilled":
+          var previousThenableValue = lastThenable.value,
+            previousThenableThen = lastThenable.then.bind(lastThenable);
+          delete lastThenable.value;
+          delete lastThenable.status;
+          lastThenable.then = noop;
+          return function () {
+            lastThenable.then = previousThenableThen;
+            lastThenable.value = previousThenableValue;
+            lastThenable.status = "fulfilled";
+          };
+        case "rejected":
+          var previousThenableReason = lastThenable.reason;
+          delete lastThenable.reason;
+          delete lastThenable.status;
+          return function () {
+            lastThenable.reason = previousThenableReason;
+            lastThenable.status = "rejected";
+          };
+      }
+      return noop;
     }
     function is(x, y) {
       return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -4670,6 +4715,61 @@ __DEV__ &&
             }
           }
         }
+    }
+    function pushSuspendedCallSiteOnComponentStack(request, task) {
+      shouldCaptureSuspendedCallSite = !0;
+      var restoreThenableState = ensureSuspendableThenableStateDEV(
+        task.thenableState
+      );
+      try {
+        var prevStatus = request.status;
+        request.status = 15;
+        var prevContext = currentActiveSnapshot,
+          prevDispatcher = ReactSharedInternals.H;
+        ReactSharedInternals.H = HooksDispatcher;
+        var prevAsyncDispatcher = ReactSharedInternals.A;
+        ReactSharedInternals.A = DefaultAsyncDispatcher;
+        var prevRequest = currentRequest;
+        currentRequest = request;
+        var prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+        ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+        var prevResumableState = currentResumableState;
+        currentResumableState = request.resumableState;
+        switchContext(task.context);
+        var prevTaskInDEV = currentTaskInDEV;
+        currentTaskInDEV = task;
+        try {
+          retryNode(request, task);
+        } catch (x) {
+          resetHooksState();
+        } finally {
+          (currentTaskInDEV = prevTaskInDEV),
+            (currentResumableState = prevResumableState),
+            (ReactSharedInternals.H = prevDispatcher),
+            (ReactSharedInternals.A = prevAsyncDispatcher),
+            (ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl),
+            prevDispatcher === HooksDispatcher && switchContext(prevContext),
+            (currentRequest = prevRequest),
+            (request.status = prevStatus);
+        }
+      } finally {
+        restoreThenableState(), (shouldCaptureSuspendedCallSite = !1);
+      }
+      null === suspendedCallSiteStack
+        ? (request = null)
+        : ((request = suspendedCallSiteStack), (suspendedCallSiteStack = null));
+      null === suspendedCallSiteDebugTask
+        ? (restoreThenableState = null)
+        : ((restoreThenableState = suspendedCallSiteDebugTask),
+          (suspendedCallSiteDebugTask = null));
+      null !== request &&
+        (task.componentStack = {
+          owner: task.componentStack,
+          parent: request.parent,
+          stack: request.stack,
+          type: request.type
+        });
+      task.debugTask = restoreThenableState;
     }
     function pushServerComponentStack(task, debugInfo) {
       if (null != debugInfo)
@@ -6143,7 +6243,7 @@ __DEV__ &&
               return;
             case REACT_LAZY_TYPE:
               var Component = callLazyInitInDEV(type);
-              if (12 === request.status) throw null;
+              if (12 === request.status && 15 !== request.status) throw null;
               renderElement(request, task, keyPath, Component, props, ref);
               return;
           }
@@ -7133,6 +7233,8 @@ __DEV__ &&
             isArrayImpl(node._debugInfo) &&
             (debugInfo = node._debugInfo);
           pushHaltedAwaitOnComponentStack(task, debugInfo);
+          null !== task.thenableState &&
+            pushSuspendedCallSiteOnComponentStack(request, task);
         }
       }
       if (null === boundary) {
@@ -9395,10 +9497,14 @@ __DEV__ &&
       clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
       log = Math.log,
       LN2 = Math.LN2,
+      currentTaskInDEV = null,
       SuspenseException = Error(
         "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`."
       ),
       suspendedThenable = null,
+      shouldCaptureSuspendedCallSite = !1,
+      suspendedCallSiteStack = null,
+      suspendedCallSiteDebugTask = null,
       objectIs = "function" === typeof Object.is ? Object.is : is,
       currentlyRenderingComponent = null,
       currentlyRenderingTask = null,
@@ -9513,7 +9619,6 @@ __DEV__ &&
         }
       },
       currentResumableState = null,
-      currentTaskInDEV = null,
       DefaultAsyncDispatcher = {
         getCacheForType: function () {
           throw Error("Not implemented.");
