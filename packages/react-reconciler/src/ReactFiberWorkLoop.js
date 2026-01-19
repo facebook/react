@@ -120,6 +120,7 @@ import {
   startViewTransition,
   startGestureTransition,
   stopViewTransition,
+  addViewTransitionFinishedListener,
   createViewTransitionInstance,
   flushHydrationEvents,
 } from './ReactFiberConfig';
@@ -4147,6 +4148,7 @@ function flushSpawnedWork(): void {
 
   pendingEffectsStatus = NO_PENDING_EFFECTS;
 
+  const committedViewTransition = pendingViewTransition;
   pendingViewTransition = null; // The view transition has now fully started.
 
   // Tell Scheduler to yield at the end of the frame, so the browser has an
@@ -4266,16 +4268,12 @@ function flushSpawnedWork(): void {
         // Normalize the type. This is lazily created only for events.
         pendingTypes = [];
       }
-      const committedGesture = root.pendingGestures;
-      if (committedGesture !== null && committedGesture.running !== null) {
+      if (committedViewTransition !== null) {
         for (let i = 0; i < pendingEvents.length; i++) {
           const viewTransitionEvent = pendingEvents[i];
           const cleanup = viewTransitionEvent(pendingTypes);
           if (cleanup !== undefined) {
-            if (committedGesture.stopCallbacks === null) {
-              committedGesture.stopCallbacks = [];
-            }
-            committedGesture.stopCallbacks.push(cleanup);
+            addViewTransitionFinishedListener(committedViewTransition, cleanup);
           }
         }
       }
@@ -4546,15 +4544,15 @@ function flushGestureAnimations(): void {
         pendingTypes = [];
       }
       const appliedGesture = root.pendingGestures;
-      if (appliedGesture !== null && appliedGesture.running !== null) {
-        for (let i = 0; i < pendingEvents.length; i++) {
-          const viewTransitionEvent = pendingEvents[i];
-          const cleanup = viewTransitionEvent(pendingTypes);
-          if (cleanup !== undefined) {
-            if (appliedGesture.stopCallbacks === null) {
-              appliedGesture.stopCallbacks = [];
+      if (appliedGesture !== null) {
+        const runningTransition = appliedGesture.running;
+        if (runningTransition !== null) {
+          for (let i = 0; i < pendingEvents.length; i++) {
+            const viewTransitionEvent = pendingEvents[i];
+            const cleanup = viewTransitionEvent(pendingTypes);
+            if (cleanup !== undefined) {
+              addViewTransitionFinishedListener(runningTransition, cleanup);
             }
-            appliedGesture.stopCallbacks.push(cleanup);
           }
         }
       }

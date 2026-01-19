@@ -2337,6 +2337,7 @@ export function startViewTransition(
 
 export type RunningViewTransition = {
   skipTransition(): void,
+  finished: Promise<void>,
   ...
 };
 
@@ -2782,6 +2783,13 @@ export function startGestureTransition(
 
 export function stopViewTransition(transition: RunningViewTransition) {
   transition.skipTransition();
+}
+
+export function addViewTransitionFinishedListener(
+  transition: RunningViewTransition,
+  callback: () => void,
+) {
+  transition.finished.finally(callback);
 }
 
 interface ViewTransitionPseudoElementType extends mixin$Animatable {

@@ -162,6 +162,8 @@ export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;
 export const startViewTransition = $$$config.startViewTransition;
 export const startGestureTransition = $$$config.startGestureTransition;
 export const stopViewTransition = $$$config.stopViewTransition;
+export const addViewTransitionFinishedListener =
+  $$$config.addViewTransitionFinishedListener;
 export const getCurrentGestureOffset = $$$config.getCurrentGestureOffset;
 export const createViewTransitionInstance =
   $$$config.createViewTransitionInstance;
