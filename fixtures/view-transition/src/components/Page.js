@@ -4,6 +4,7 @@ import React, {
   Activity,
   useLayoutEffect,
   useEffect,
+  useInsertionEffect,
   useState,
   useId,
   useOptimistic,
@@ -41,6 +42,26 @@ const b = (
 );
 
 function Component() {
+  // Test inserting fonts with style tags using useInsertionEffect. This is not recommended but
+  // used to test that gestures etc works with useInsertionEffect so that stylesheet based
+  // libraries can be properly supported.
+  useInsertionEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .roboto-font {
+        font-family: "Roboto", serif;
+        font-optical-sizing: auto;
+        font-weight: 100;
+        font-style: normal;
+        font-variation-settings:
+          "wdth" 100;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   return (
     <ViewTransition
       default={
