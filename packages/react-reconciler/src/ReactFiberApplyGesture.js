@@ -52,6 +52,14 @@ import {
   AffectedParentLayout,
 } from './ReactFiberFlags';
 import {
+  HasEffect as HookHasEffect,
+  Insertion as HookInsertion,
+} from './ReactHookEffectTags';
+import {
+  FunctionComponent,
+  ForwardRef,
+  MemoComponent,
+  SimpleMemoComponent,
   HostComponent,
   HostHoistable,
   HostSingleton,
@@ -72,6 +80,7 @@ import {
   pushViewTransitionCancelableScope,
   popViewTransitionCancelableScope,
 } from './ReactFiberCommitViewTransitions';
+import {commitHookEffectListMount} from './ReactFiberCommitEffects';
 import {
   getViewTransitionName,
   getViewTransitionClassName,
@@ -395,6 +404,28 @@ function recursivelyInsertNewFiber(
   visitPhase: VisitPhase,
 ): void {
   switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case MemoComponent:
+    case SimpleMemoComponent: {
+      recursivelyInsertNew(
+        finishedWork,
+        hostParentClone,
+        parentViewTransition,
+        visitPhase,
+      );
+      if (finishedWork.flags & Update) {
+        // Insertion Effects are mounted temporarily during the rendering of the snapshot.
+        // This does not affect cloned Offscreen content since those would've been mounted
+        // while inside the offscreen tree already.
+        // Note that because we are mounting a clone of the DOM tree and the previous DOM
+        // tree remains mounted during the snapshot, we can't unmount any previous insertion
+        // effects. This can lead to conflicts but that is similar to what can happen with
+        // conflicts for two mounted Activity boundaries.
+        commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
+      }
+      break;
+    }
     case HostHoistable: {
       if (supportsResources) {
         // TODO: Hoistables should get optimistically inserted and then removed.
