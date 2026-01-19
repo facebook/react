@@ -74,7 +74,7 @@ export const currentBridgeProtocol: BridgeProtocol =
 
 type ElementAndRendererID = {id: number, rendererID: RendererID};
 
-type Message = {
+export type Message = {
   event: string,
   payload: any,
 };
@@ -191,7 +191,7 @@ type NativeStyleEditor_SetValueParams = {
   value: string,
 };
 
-type SavedPreferencesParams = {
+export type SavedPreferencesParams = {
   componentFilters: Array<ComponentFilter>,
 };
 
@@ -214,7 +214,7 @@ export type BackendEvents = {
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
   saveToClipboard: [string],
-  selectElement: [number],
+  selectElement: [number | null],
   shutdown: [],
   stopInspectingHost: [boolean],
   scrollTo: [{left: number, top: number, right: number, bottom: number}],
@@ -239,7 +239,7 @@ export type BackendEvents = {
 type StartProfilingParams = ProfilingSettings;
 type ReloadAndProfilingParams = ProfilingSettings;
 
-type FrontendEvents = {
+export type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForElementID: [ElementAndRendererID],
   clearHostInstanceHighlight: [],

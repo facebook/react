@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  enableCreateEventHandleAPI,
-  enableUseEffectEventHook,
-} from 'shared/ReactFeatureFlags';
+import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
 export type Flags = number;
 
@@ -62,13 +59,13 @@ export const ShouldCapture = /*                */ 0b0000000000000010000000000000
 export const ForceUpdateForLegacySuspense = /* */ 0b0000000000000100000000000000000;
 export const DidPropagateContext = /*          */ 0b0000000000001000000000000000000;
 export const NeedsPropagation = /*             */ 0b0000000000010000000000000000000;
-export const Forked = /*                       */ 0b0000000000100000000000000000000;
 
 // Static tags describe aspects of a fiber that are not specific to a render,
 // e.g. a fiber uses a passive effect (even if there are no updates on this particular render).
 // This enables us to defer more work in the unmount case,
 // since we can defer traversing the tree during layout to look for Passive effects,
 // and instead rely on the static flag as a signal that there may be cleanup work.
+export const Forked = /*                       */ 0b0000000000100000000000000000000;
 export const SnapshotStatic = /*               */ 0b0000000001000000000000000000000;
 export const LayoutStatic = /*                 */ 0b0000000010000000000000000000000;
 export const RefStatic = LayoutStatic;
@@ -102,12 +99,10 @@ export const BeforeMutationMask: number =
       // TODO: Only need to visit Deletions during BeforeMutation phase if an
       // element is focused.
       Update | ChildDeletion | Visibility
-    : enableUseEffectEventHook
-      ? // TODO: The useEffectEvent hook uses the snapshot phase for clean up but it
-        // really should use the mutation phase for this or at least schedule an
-        // explicit Snapshot phase flag for this.
-        Update
-      : 0);
+    : // TODO: The useEffectEvent hook uses the snapshot phase for clean up but it
+      // really should use the mutation phase for this or at least schedule an
+      // explicit Snapshot phase flag for this.
+      Update);
 
 // For View Transition support we use the snapshot phase to scan the tree for potentially
 // affected ViewTransition components.
@@ -142,4 +137,5 @@ export const StaticMask =
   MaySuspendCommit |
   ViewTransitionStatic |
   ViewTransitionNamedStatic |
-  PortalStatic;
+  PortalStatic |
+  Forked;

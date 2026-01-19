@@ -292,7 +292,6 @@ type BaseFiberRootProperties = {
   transitionTypes: null | TransitionTypes, // TODO: Make this a LaneMap.
   // enableGestureTransition only
   pendingGestures: null | ScheduledGesture,
-  stoppingGestures: null | ScheduledGesture,
   gestureClone: null | Instance,
 };
 
@@ -410,8 +409,7 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
-  // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
-  useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
+  useEffectEvent: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,

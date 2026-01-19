@@ -34,7 +34,6 @@ export const disableTextareaChildren: boolean = false;
 export const enableSuspenseAvoidThisFallback: boolean = true;
 export const enableCPUSuspense: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
-export const enableUseEffectEventHook: boolean = true;
 export const enableLegacyFBSupport: boolean = false;
 export const enableMoveBefore: boolean = false;
 export const enableHiddenSubtreeInsertionEffectCleanup: boolean = true;
