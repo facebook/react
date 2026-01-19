@@ -633,14 +633,14 @@ describe('ReactDOMFloat', () => {
       </>,
     );
     await waitForAll([]);
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
           'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
           'somewhere in the <body>.',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     return;
   });
 

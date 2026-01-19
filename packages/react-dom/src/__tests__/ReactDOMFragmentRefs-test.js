@@ -1073,24 +1073,24 @@ describe('FragmentRefs', () => {
 
       // Warning when there is no attached observer
       fragmentRef.current.unobserveUsing(observer);
-      assertConsoleErrorDev(
+      assertConsoleErrorDev([
         [
           'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
             'instance. First attach the observer with observeUsing()',
+          {withoutStack: true},
         ],
-        {withoutStack: true},
-      );
+      ]);
 
       // Warning when the attached observer does not match
       fragmentRef.current.observeUsing(observer);
       fragmentRef.current.unobserveUsing(observer2);
-      assertConsoleErrorDev(
+      assertConsoleErrorDev([
         [
           'You are calling unobserveUsing() with an observer that is not being observed with this fragment ' +
             'instance. First attach the observer with observeUsing()',
+          {withoutStack: true},
         ],
-        {withoutStack: true},
-      );
+      ]);
     });
 
     // @gate enableFragmentRefs && enableFragmentRefsInstanceHandles

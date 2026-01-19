@@ -1120,20 +1120,20 @@ describe('ReactFlightDOMEdge', () => {
     };
 
     ServerModule.greet.bind({}, 'hi');
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
 
     ServerModuleImportedOnClient.greet.bind({}, 'hi');
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
   });
 
   it('should supports ReadableStreams with typed arrays', async () => {

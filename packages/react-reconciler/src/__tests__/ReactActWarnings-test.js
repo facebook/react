@@ -219,10 +219,12 @@ describe('act warnings', () => {
     act(() => {
       setState(1);
     });
-    assertConsoleErrorDev(
-      ['The current testing environment is not configured to support act(...)'],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      [
+        'The current testing environment is not configured to support act(...)',
+        {withoutStack: true},
+      ],
+    ]);
     assertLog([1]);
     expect(root).toMatchRenderedOutput('1');
 
@@ -240,12 +242,12 @@ describe('act warnings', () => {
       act(() => {
         setState(1);
       });
-      assertConsoleErrorDev(
+      assertConsoleErrorDev([
         [
           'The current testing environment is not configured to support act(...)',
+          {withoutStack: true},
         ],
-        {withoutStack: true},
-      );
+      ]);
       assertLog([1]);
       expect(root).toMatchRenderedOutput('1');
     });
@@ -255,7 +257,7 @@ describe('act warnings', () => {
     await withActEnvironment(true, () => {
       const root = ReactNoop.createRoot();
       root.render('Hi');
-      assertConsoleErrorDev(
+      assertConsoleErrorDev([
         [
           // TODO: Better error message that doesn't make it look like "Root" is
           // the name of a custom component
@@ -270,9 +272,9 @@ describe('act warnings', () => {
             '\n' +
             "This ensures that you're testing the behavior the user would see in the browser. " +
             'Learn more at https://react.dev/link/wrap-tests-with-act',
+          {withoutStack: true},
         ],
-        {withoutStack: true},
-      );
+      ]);
     });
   });
 
@@ -374,7 +376,7 @@ describe('act warnings', () => {
 
       // This is a retry, not a ping, because we already showed a fallback.
       resolveText('Async');
-      assertConsoleErrorDev(
+      assertConsoleErrorDev([
         [
           'A suspended resource finished loading inside a test, but the event was not wrapped in act(...).\n' +
             '\n' +
@@ -387,9 +389,12 @@ describe('act warnings', () => {
             '\n' +
             "This ensures that you're testing the behavior the user would see in the browser. " +
             'Learn more at https://react.dev/link/wrap-tests-with-act',
+          {withoutStack: true},
+        ],
 
-          // pre-warming
+        // pre-warming
 
+        [
           'A suspended resource finished loading inside a test, but the event was not wrapped in act(...).\n' +
             '\n' +
             'When testing, code that resolves suspended data should be wrapped into act(...):\n' +
@@ -401,10 +406,9 @@ describe('act warnings', () => {
             '\n' +
             "This ensures that you're testing the behavior the user would see in the browser. " +
             'Learn more at https://react.dev/link/wrap-tests-with-act',
+          {withoutStack: true},
         ],
-
-        {withoutStack: true},
-      );
+      ]);
     });
   });
 
@@ -437,7 +441,7 @@ describe('act warnings', () => {
 
       // This is a ping, not a retry, because no fallback is showing.
       resolveText('Async');
-      assertConsoleErrorDev(
+      assertConsoleErrorDev([
         [
           'A suspended resource finished loading inside a test, but the event was not wrapped in act(...).\n' +
             '\n' +
@@ -450,9 +454,9 @@ describe('act warnings', () => {
             '\n' +
             "This ensures that you're testing the behavior the user would see in the browser. " +
             'Learn more at https://react.dev/link/wrap-tests-with-act',
+          {withoutStack: true},
         ],
-        {withoutStack: true},
-      );
+      ]);
     });
   });
 });

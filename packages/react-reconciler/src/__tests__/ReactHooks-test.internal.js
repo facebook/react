@@ -244,15 +244,15 @@ describe('ReactHooks', () => {
         throw new Error('Expected to ignore the callback.');
       }),
     );
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'State updates from the useState() and useReducer() Hooks ' +
           "don't support the second callback argument. " +
           'To execute a side effect after rendering, ' +
           'declare it in the component body with useEffect().',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     assertLog(['Count: 1']);
     expect(root).toMatchRenderedOutput('1');
   });
@@ -279,15 +279,15 @@ describe('ReactHooks', () => {
         throw new Error('Expected to ignore the callback.');
       }),
     );
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'State updates from the useState() and useReducer() Hooks ' +
           "don't support the second callback argument. " +
           'To execute a side effect after rendering, ' +
           'declare it in the component body with useEffect().',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     assertLog(['Count: 1']);
     expect(root).toMatchRenderedOutput('1');
   });

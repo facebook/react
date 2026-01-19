@@ -1967,15 +1967,13 @@ describe('ReactDOMForm', () => {
 
     // This triggers a synchronous requestFormReset, and a warning
     await act(() => resolveText('Wait 1'));
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'requestFormReset was called outside a transition or action. ' +
           'To fix, move to an action, or wrap with startTransition.',
+        {withoutStack: true},
       ],
-      {
-        withoutStack: true,
-      },
-    );
+    ]);
     assertLog(['Request form reset']);
 
     // The form was reset even though the action didn't finish.

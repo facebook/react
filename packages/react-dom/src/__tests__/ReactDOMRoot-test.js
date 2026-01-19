@@ -52,13 +52,13 @@ describe('ReactDOMRoot', () => {
     const callback = jest.fn();
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>, callback);
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'does not support the second callback argument. ' +
           'To execute a side effect after rendering, declare it in a component body with useEffect().',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     await waitForAll([]);
     expect(callback).not.toHaveBeenCalled();
   });
@@ -70,15 +70,13 @@ describe('ReactDOMRoot', () => {
 
     const root = ReactDOMClient.createRoot(container);
     root.render(<App />, {});
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'You passed a second argument to root.render(...) but it only accepts ' +
           'one argument.',
+        {withoutStack: true},
       ],
-      {
-        withoutStack: true,
-      },
-    );
+    ]);
   });
 
   it('warn if a container is passed to root.render(...)', async () => {
@@ -88,16 +86,14 @@ describe('ReactDOMRoot', () => {
 
     const root = ReactDOMClient.createRoot(container);
     root.render(<App />, container);
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'You passed a container to the second argument of root.render(...). ' +
           "You don't need to pass it again since you already passed it to create " +
           'the root.',
+        {withoutStack: true},
       ],
-      {
-        withoutStack: true,
-      },
-    );
+    ]);
   });
 
   it('warns if a callback parameter is provided to unmount', async () => {
@@ -105,13 +101,13 @@ describe('ReactDOMRoot', () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
     root.unmount(callback);
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'does not support a callback argument. ' +
           'To execute a side effect after rendering, declare it in a component body with useEffect().',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     await waitForAll([]);
     expect(callback).not.toHaveBeenCalled();
   });
@@ -216,14 +212,14 @@ describe('ReactDOMRoot', () => {
   it('warns when creating two roots managing the same container', () => {
     ReactDOMClient.createRoot(container);
     ReactDOMClient.createRoot(container);
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'You are calling ReactDOMClient.createRoot() on a container that ' +
           'has already been passed to createRoot() before. Instead, call ' +
           'root.render() on the existing root instead if you want to update it.',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
   });
 
   it('does not warn when creating second root after first one is unmounted', async () => {
@@ -413,13 +409,13 @@ describe('ReactDOMRoot', () => {
 
   it('warn if no children passed to hydrateRoot', async () => {
     ReactDOMClient.hydrateRoot(container);
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Must provide initial children as second argument to hydrateRoot. ' +
           'Example usage: hydrateRoot(domContainer, <App />)',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
   });
 
   it('warn if JSX passed to createRoot', async () => {
@@ -428,18 +424,16 @@ describe('ReactDOMRoot', () => {
     }
 
     ReactDOMClient.createRoot(container, <App />);
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'You passed a JSX element to createRoot. You probably meant to call root.render instead. ' +
           'Example usage:\n' +
           '\n' +
           '  let root = createRoot(domContainer);\n' +
           '  root.render(<App />);',
+        {withoutStack: true},
       ],
-      {
-        withoutStack: true,
-      },
-    );
+    ]);
   });
 
   it('warns when given a function', () => {
@@ -452,15 +446,15 @@ describe('ReactDOMRoot', () => {
     ReactDOM.flushSync(() => {
       root.render(Component);
     });
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Functions are not valid as a React child. ' +
           'This may happen if you return Component instead of <Component /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '  root.render(Component)',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
   });
 
   it('warns when given a symbol', () => {
@@ -469,12 +463,12 @@ describe('ReactDOMRoot', () => {
     ReactDOM.flushSync(() => {
       root.render(Symbol('foo'));
     });
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Symbols are not valid as a React child.\n' +
           '  root.render(Symbol(foo))',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
   });
 });

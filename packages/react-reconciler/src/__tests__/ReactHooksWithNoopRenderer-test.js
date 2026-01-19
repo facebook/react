@@ -236,7 +236,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(() => useState(0)).toThrow(
       "Cannot read property 'useState' of null",
     );
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
           ' one of the following reasons:\n' +
@@ -244,9 +244,9 @@ describe('ReactHooksWithNoopRenderer', () => {
           '2. You might be breaking the Rules of Hooks\n' +
           '3. You might have more than one copy of React in the same app\n' +
           'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
   });
 
   describe('useState', () => {

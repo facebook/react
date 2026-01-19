@@ -1063,13 +1063,13 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -1084,13 +1084,13 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Expected the last optional `callback` argument to be ' +
           "a function. Instead received: { foo: 'bar' }.",
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -1136,13 +1136,13 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -1157,13 +1157,13 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'Expected the last optional `callback` argument to be ' +
           "a function. Instead received: { foo: 'bar' }.",
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     // Make sure the warning is deduplicated and doesn't fire again
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);

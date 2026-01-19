@@ -3590,14 +3590,14 @@ describe('ReactDOMFizzServer', () => {
         onRecoverableError(error, errorInfo) {
           expect(error.digest).toBe('a digest');
           expect(errorInfo.digest).toBe(undefined);
-          assertConsoleErrorDev(
+          assertConsoleErrorDev([
             [
               'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
                 ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
                 ' of the Error instance itself.',
+              {withoutStack: true},
             ],
-            {withoutStack: true},
-          );
+          ]);
         },
       },
     );

@@ -1237,14 +1237,14 @@ describe('ReactAsyncActions', () => {
       setLoadingProgress('25%');
       startTransition(() => setText('B'));
     });
-    assertConsoleErrorDev(
+    assertConsoleErrorDev([
       [
         'An optimistic state update occurred outside a transition or ' +
           'action. To fix, move the update to an action, or wrap ' +
           'with startTransition.',
+        {withoutStack: true},
       ],
-      {withoutStack: true},
-    );
+    ]);
     assertLog(['Loading... (25%)', 'A', 'B']);
     expect(root).toMatchRenderedOutput(<div>B</div>);
   });

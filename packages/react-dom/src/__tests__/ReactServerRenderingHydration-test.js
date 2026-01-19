@@ -379,20 +379,20 @@ describe('ReactDOMServerHydration', () => {
     });
     assertConsoleWarnDev(
       [
-        'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n' +
-          '\n' +
-          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
-          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. ' +
-          'To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
-          '\n' +
-          'Please update the following components: ComponentWithWarning',
+        [
+          'componentWillMount has been renamed, and is not recommended for use. ' +
+            'See https://react.dev/link/unsafe-component-lifecycles for details.\n' +
+            '\n' +
+            '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+            '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
+            'In React 18.x, only the UNSAFE_ name will work. ' +
+            'To rename all deprecated lifecycles to their new names, ' +
+            'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
+            '\n' +
+            'Please update the following components: ComponentWithWarning',
+          {withoutStack: true},
+        ],
       ],
-      {
-        withoutStack: true,
-      },
     );
     expect(element.textContent).toBe('Hi');
   });
