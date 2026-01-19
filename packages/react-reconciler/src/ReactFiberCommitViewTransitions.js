@@ -34,7 +34,10 @@ import {
   hasInstanceAffectedParent,
   wasInstanceInViewport,
 } from './ReactFiberConfig';
-import {scheduleViewTransitionEvent} from './ReactFiberWorkLoop';
+import {
+  scheduleViewTransitionEvent,
+  scheduleGestureTransitionEvent,
+} from './ReactFiberWorkLoop';
 import {
   getViewTransitionName,
   getViewTransitionClassName,
@@ -312,7 +315,7 @@ export function commitEnterViewTransitions(
 
         if (!state.paired) {
           if (gesture) {
-            // TODO: Schedule gesture events.
+            scheduleGestureTransitionEvent(placement, props.onGestureEnter);
           } else {
             scheduleViewTransitionEvent(placement, props.onEnter);
           }
@@ -848,7 +851,7 @@ export function measureNestedViewTransitions(
         // Nothing changed.
       } else {
         if (gesture) {
-          // TODO: Schedule gesture events.
+          scheduleGestureTransitionEvent(child, props.onGestureUpdate);
         } else {
           scheduleViewTransitionEvent(child, props.onUpdate);
         }
