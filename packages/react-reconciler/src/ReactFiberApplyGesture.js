@@ -83,8 +83,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {trackAnimatingTask} from './ReactProfilerTimer';
 
-let didWarnForRootClone = false;
-
 // Used during the apply phase to track whether a parent ViewTransition component
 // might have been affected by any mutations / relayouts below.
 let viewTransitionContextChanged: boolean = false;
@@ -990,17 +988,6 @@ export function insertDestinationClones(
   // we cancel the root view transition name.
   const needsClone = detectMutationOrInsertClones(finishedWork);
   if (needsClone) {
-    if (__DEV__) {
-      if (!didWarnForRootClone) {
-        didWarnForRootClone = true;
-        console.warn(
-          'startGestureTransition() caused something to mutate or relayout the root. ' +
-            'This currently requires a clone of the whole document. Make sure to ' +
-            'add a <ViewTransition> directly around an absolutely positioned DOM node ' +
-            'to minimize the impact of any changes caused by the Gesture Transition.',
-        );
-      }
-    }
     // Clone the whole root
     const rootClone = cloneRootViewTransitionContainer(root.containerInfo);
     root.gestureClone = rootClone;
