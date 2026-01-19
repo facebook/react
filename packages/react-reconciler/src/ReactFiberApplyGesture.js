@@ -1136,7 +1136,6 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
 }
 
 function applyViewTransitionsOnFiber(finishedWork: Fiber, current: Fiber) {
-  const flags = finishedWork.flags;
   // The effect flag should be checked *after* we refine the type of fiber,
   // because the fiber tag is more specific. An exception is any flag related
   // to reconciliation, because those can be set on all fiber types.
@@ -1152,8 +1151,10 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber, current: Fiber) {
       if (!isHidden) {
         if (wasHidden) {
           measureExitViewTransitions(finishedWork);
+          recursivelyRestoreNew(finishedWork, finishedWork);
+        } else {
+          recursivelyApplyViewTransitions(finishedWork);
         }
-        recursivelyRestoreNew(finishedWork, finishedWork);
       } else {
         if (!wasHidden) {
           // Was previously mounted as visible but is now hidden.
