@@ -42,8 +42,9 @@ export type BoundArgsEncryption<T> = {
 
 export type ServerEntry<T> = {
   ...T,
-  entryJsFiles: ?Array<string>,
-  entryCssFiles: ?Array<string>,
+  resource: string,
+  entryJsFiles: Array<string>,
+  entryCssFiles: Array<string>,
   ...
 };
 
@@ -175,16 +176,17 @@ export function loadServerAction(actionId: string): Function {
 
 export function createServerEntry<T>(
   value: T,
-  resourceId: string,
+  resource: string,
 ): ServerEntry<T> {
   const entryJsFiles = __rspack_rsc_manifest__.entryJsFiles || [];
-  const entryCssFiles = __rspack_rsc_manifest__.entryCssFiles[resourceId] || [];
+  const entryCssFiles = __rspack_rsc_manifest__.entryCssFiles[resource] || [];
   if (
     typeof value === 'function' ||
     (typeof value === 'object' && value !== null)
   ) {
     // $FlowFixMe: We're dynamically adding properties to create ServerEntry
     Object.assign(value, {
+      resource,
       entryJsFiles,
       entryCssFiles,
     });
