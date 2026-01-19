@@ -43,6 +43,7 @@ import {
 } from './ReactFiberMutationTracking';
 import {
   MutationMask,
+  Placement,
   Update,
   ContentReset,
   NoFlags,
@@ -80,7 +81,10 @@ import {
   pushViewTransitionCancelableScope,
   popViewTransitionCancelableScope,
 } from './ReactFiberCommitViewTransitions';
-import {commitHookEffectListMount} from './ReactFiberCommitEffects';
+import {
+  commitHookEffectListMount,
+  commitHookEffectListUnmount,
+} from './ReactFiberCommitEffects';
 import {
   getViewTransitionName,
   getViewTransitionClassName,
@@ -380,9 +384,10 @@ function recursivelyInsertNew(
   if (
     visitPhase === INSERT_APPEARING_PAIR &&
     parentViewTransition === null &&
-    (parentFiber.subtreeFlags & ViewTransitionNamedStatic) === NoFlags
+    (parentFiber.subtreeFlags & (ViewTransitionNamedStatic | Placement)) ===
+      NoFlags
   ) {
-    // We're just searching for pairs but we have reached the end.
+    // We're just searching for pairs or insertion effects but we have reached the end.
     return;
   }
   let child = parentFiber.child;
@@ -1063,6 +1068,40 @@ function measureExitViewTransitions(placement: Fiber): void {
   }
 }
 
+function recursivelyRestoreNew(
+  finishedWork: Fiber,
+  nearestMountedAncestor: Fiber,
+): void {
+  // There has to be move a Placement AND an Update flag somewhere below for this
+  // pass to be relevant since we only apply insertion effects for new components here.
+  if (((Placement | Update) & finishedWork.subtreeFlags) !== NoFlags) {
+    let child = finishedWork.child;
+    while (child !== null) {
+      recursivelyRestoreNew(child, nearestMountedAncestor);
+      child = child.sibling;
+    }
+  }
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case MemoComponent:
+    case SimpleMemoComponent: {
+      const current = finishedWork.alternate;
+      if (current === null && finishedWork.flags & Update) {
+        // Insertion Effects are mounted temporarily during the rendering of the snapshot.
+        // We have now already takes a snapshot of the inserted state so we can now unmount
+        // them to get back into the original state before starting the animation.
+        commitHookEffectListUnmount(
+          HookInsertion | HookHasEffect,
+          finishedWork,
+          nearestMountedAncestor,
+        );
+      }
+      break;
+    }
+  }
+}
+
 function recursivelyApplyViewTransitions(parentFiber: Fiber) {
   const deletions = parentFiber.deletions;
   if (deletions !== null) {
@@ -1079,7 +1118,13 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
     // If we have mutations or if this is a newly inserted tree, clone as we go.
     let child = parentFiber.child;
     while (child !== null) {
-      applyViewTransitionsOnFiber(child);
+      const current = child.alternate;
+      if (current === null) {
+        measureExitViewTransitions(child);
+        recursivelyRestoreNew(child, parentFiber);
+      } else {
+        applyViewTransitionsOnFiber(child, current);
+      }
       child = child.sibling;
     }
   } else {
@@ -1090,13 +1135,7 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
   }
 }
 
-function applyViewTransitionsOnFiber(finishedWork: Fiber) {
-  const current = finishedWork.alternate;
-  if (current === null) {
-    measureExitViewTransitions(finishedWork);
-    return;
-  }
-
+function applyViewTransitionsOnFiber(finishedWork: Fiber, current: Fiber) {
   const flags = finishedWork.flags;
   // The effect flag should be checked *after* we refine the type of fiber,
   // because the fiber tag is more specific. An exception is any flag related
@@ -1107,12 +1146,16 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
       break;
     }
     case OffscreenComponent: {
-      if (flags & Visibility) {
-        const newState: OffscreenState | null = finishedWork.memoizedState;
-        const isHidden = newState !== null;
-        if (!isHidden) {
+      const newState: OffscreenState | null = finishedWork.memoizedState;
+      const isHidden = newState !== null;
+      const wasHidden = current.memoizedState !== null;
+      if (!isHidden) {
+        if (wasHidden) {
           measureExitViewTransitions(finishedWork);
-        } else if (current !== null && current.memoizedState === null) {
+        }
+        recursivelyRestoreNew(finishedWork, finishedWork);
+      } else {
+        if (!wasHidden) {
           // Was previously mounted as visible but is now hidden.
           commitEnterViewTransitions(current, true);
         }
