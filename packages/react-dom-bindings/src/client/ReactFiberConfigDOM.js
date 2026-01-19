@@ -607,10 +607,32 @@ export function createInstance(
   return domElement;
 }
 
+let didWarnForClone = false;
+
 export function cloneMutableInstance(
   instance: Instance,
   keepChildren: boolean,
 ): Instance {
+  if (__DEV__) {
+    // Warn for problematic
+    const tagName = instance.tagName;
+    switch (tagName) {
+      case 'VIDEO':
+      case 'IFRAME':
+        if (!didWarnForClone) {
+          didWarnForClone = true;
+          // TODO: Once we have the ability to avoid cloning the root, suggest an absolutely
+          // positioned ViewTransition instead as the solution.
+          console.warn(
+            'startGestureTransition() required cloning a <%s> element since it exists in ' +
+              'both states of the gesture. This can be problematic since it will load it twice ' +
+              'Try removing or hiding it with <Activity mode="offscreen"> in the optimistic state.',
+            tagName.toLowerCase(),
+          );
+        }
+        break;
+    }
+  }
   return instance.cloneNode(keepChildren);
 }
 
