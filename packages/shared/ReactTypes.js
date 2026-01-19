@@ -303,34 +303,46 @@ export type ViewTransitionProps = {
   exit?: ViewTransitionClass,
   share?: ViewTransitionClass,
   update?: ViewTransitionClass,
-  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onEnter?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onExit?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onShare?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onUpdate?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
   onGestureEnter?: (
     timeline: GestureProvider,
     options: GestureOptionsRequired,
     instance: ViewTransitionInstance,
     types: Array<string>,
-  ) => void,
+  ) => void | (() => void),
   onGestureExit?: (
     timeline: GestureProvider,
     options: GestureOptionsRequired,
     instance: ViewTransitionInstance,
     types: Array<string>,
-  ) => void,
+  ) => void | (() => void),
   onGestureShare?: (
     timeline: GestureProvider,
     options: GestureOptionsRequired,
     instance: ViewTransitionInstance,
     types: Array<string>,
-  ) => void,
+  ) => void | (() => void),
   onGestureUpdate?: (
     timeline: GestureProvider,
     options: GestureOptionsRequired,
     instance: ViewTransitionInstance,
     types: Array<string>,
-  ) => void,
+  ) => void | (() => void),
 };
 
 export type ActivityProps = {

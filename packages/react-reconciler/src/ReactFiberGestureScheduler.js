@@ -35,6 +35,7 @@ export type ScheduledGesture = {
   rangeEnd: number, // The percentage along the timeline where the "destination" state is reached.
   types: null | TransitionTypes, // Any addTransitionType call made during startGestureTransition.
   running: null | RunningViewTransition, // Used to cancel the running transition after we're done.
+  stopCallbacks: null | Array<() => void>, // Custom clean up callbacks to invoke when we stop the animation.
   commit: null | (() => void), // Callback to run to commit if there's a pending commit.
   committing: boolean, // If the gesture was released in a committed state and should actually commit.
   revertLane: Lane, // The Lane that we'll use to schedule the revert.
@@ -65,6 +66,7 @@ export function scheduleGesture(
     rangeEnd: 100, // Uninitialized
     types: null,
     running: null,
+    stopCallbacks: null,
     commit: null,
     committing: false,
     revertLane: NoLane, // Starts uninitialized.
@@ -208,6 +210,14 @@ export function cancelScheduledGesture(
         if (runningTransition !== null) {
           stopViewTransition(runningTransition);
         }
+        const stopCallbacks = gesture.stopCallbacks;
+        if (stopCallbacks !== null) {
+          gesture.stopCallbacks = null;
+          for (let i = 0; i < stopCallbacks.length; i++) {
+            const stop = stopCallbacks[i];
+            stop();
+          }
+        }
       } else {
         // This was not the current gesture so it doesn't affect the current render.
         gesture.prev.next = gesture.next;
@@ -242,6 +252,14 @@ export function stopCommittedGesture(root: FiberRoot) {
     if (runningTransition !== null) {
       committedGesture.running = null;
       stopViewTransition(runningTransition);
+    }
+    const stopCallbacks = committedGesture.stopCallbacks;
+    if (stopCallbacks !== null) {
+      committedGesture.stopCallbacks = null;
+      for (let i = 0; i < stopCallbacks.length; i++) {
+        const stop = stopCallbacks[i];
+        stop();
+      }
     }
   }
 }

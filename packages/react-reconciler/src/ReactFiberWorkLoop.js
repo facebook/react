@@ -733,8 +733,9 @@ let pendingEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
 let pendingViewTransition: null | RunningViewTransition = null;
-let pendingViewTransitionEvents: Array<(types: Array<string>) => void> | null =
-  null;
+let pendingViewTransitionEvents: Array<
+  (types: Array<string>) => void | (() => void),
+> | null = null;
 let pendingTransitionTypes: null | TransitionTypes = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
 let pendingSuspendedCommitReason: SuspendedCommitReason = null; // Profiling-only
@@ -899,7 +900,10 @@ export function requestDeferredLane(): Lane {
 
 export function scheduleViewTransitionEvent(
   fiber: Fiber,
-  callback: ?(instance: ViewTransitionInstance, types: Array<string>) => void,
+  callback: ?(
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
 ): void {
   if (enableViewTransition) {
     if (callback != null) {
@@ -925,7 +929,7 @@ export function scheduleGestureTransitionEvent(
     options: GestureOptionsRequired,
     instance: ViewTransitionInstance,
     types: Array<string>,
-  ) => void,
+  ) => void | (() => void),
 ): void {
   if (enableGestureTransition) {
     if (callback != null) {
@@ -4262,9 +4266,18 @@ function flushSpawnedWork(): void {
         // Normalize the type. This is lazily created only for events.
         pendingTypes = [];
       }
-      for (let i = 0; i < pendingEvents.length; i++) {
-        const viewTransitionEvent = pendingEvents[i];
-        viewTransitionEvent(pendingTypes);
+      const committedGesture = root.pendingGestures;
+      if (committedGesture !== null && committedGesture.running !== null) {
+        for (let i = 0; i < pendingEvents.length; i++) {
+          const viewTransitionEvent = pendingEvents[i];
+          const cleanup = viewTransitionEvent(pendingTypes);
+          if (cleanup !== undefined) {
+            if (committedGesture.stopCallbacks === null) {
+              committedGesture.stopCallbacks = [];
+            }
+            committedGesture.stopCallbacks.push(cleanup);
+          }
+        }
       }
     }
   }
@@ -4532,9 +4545,18 @@ function flushGestureAnimations(): void {
         // Normalize the type. This is lazily created only for events.
         pendingTypes = [];
       }
-      for (let i = 0; i < pendingEvents.length; i++) {
-        const viewTransitionEvent = pendingEvents[i];
-        viewTransitionEvent(pendingTypes);
+      const appliedGesture = root.pendingGestures;
+      if (appliedGesture !== null && appliedGesture.running !== null) {
+        for (let i = 0; i < pendingEvents.length; i++) {
+          const viewTransitionEvent = pendingEvents[i];
+          const cleanup = viewTransitionEvent(pendingTypes);
+          if (cleanup !== undefined) {
+            if (appliedGesture.stopCallbacks === null) {
+              appliedGesture.stopCallbacks = [];
+            }
+            appliedGesture.stopCallbacks.push(cleanup);
+          }
+        }
       }
     }
   }
