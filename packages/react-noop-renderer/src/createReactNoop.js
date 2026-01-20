@@ -888,6 +888,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         stopViewTransition(transition: RunningViewTransition) {},
 
+        addViewTransitionFinishedListener(
+          transition: RunningViewTransition,
+          callback: () => void,
+        ) {
+          callback();
+        },
+
         createViewTransitionInstance(name: string): ViewTransitionInstance {
           return null;
         },
