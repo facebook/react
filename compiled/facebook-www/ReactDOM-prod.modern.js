@@ -19892,14 +19892,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2061 = React.version;
 if (
-  "19.3.0-www-modern-1ecd99c7-20260119" !==
+  "19.3.0-www-modern-d2908752-20260119" !==
   isomorphicReactPackageVersion$jscomp$inline_2061
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2061,
-      "19.3.0-www-modern-1ecd99c7-20260119"
+      "19.3.0-www-modern-d2908752-20260119"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19917,10 +19917,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2649 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-1ecd99c7-20260119",
+  version: "19.3.0-www-modern-d2908752-20260119",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-1ecd99c7-20260119"
+  reconcilerVersion: "19.3.0-www-modern-d2908752-20260119"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2650 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20349,4 +20349,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-1ecd99c7-20260119";
+exports.version = "19.3.0-www-modern-d2908752-20260119";
