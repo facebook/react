@@ -290,6 +290,11 @@ export type ViewTransitionClass =
   | string
   | ViewTransitionClassPerType;
 
+export type GestureOptionsRequired = {
+  rangeStart: number,
+  rangeEnd: number,
+};
+
 export type ViewTransitionProps = {
   name?: string,
   children?: ReactNodeList,
@@ -302,6 +307,30 @@ export type ViewTransitionProps = {
   onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
   onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
   onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onGestureEnter?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void,
+  onGestureExit?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void,
+  onGestureShare?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void,
+  onGestureUpdate?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void,
 };
 
 export type ActivityProps = {

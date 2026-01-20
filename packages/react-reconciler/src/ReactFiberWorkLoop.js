@@ -9,7 +9,11 @@
 
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 
-import type {Wakeable, Thenable} from 'shared/ReactTypes';
+import type {
+  Wakeable,
+  Thenable,
+  GestureOptionsRequired,
+} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {ActivityState} from './ReactFiberActivityComponent';
@@ -26,6 +30,7 @@ import type {
   Resource,
   ViewTransitionInstance,
   RunningViewTransition,
+  GestureTimeline,
   SuspendedState,
 } from './ReactFiberConfig';
 import type {RootState} from './ReactFiberRoot';
@@ -909,6 +914,42 @@ export function scheduleViewTransitionEvent(
         pendingViewTransitionEvents = [];
       }
       pendingViewTransitionEvents.push(callback.bind(null, instance));
+    }
+  }
+}
+
+export function scheduleGestureTransitionEvent(
+  fiber: Fiber,
+  callback: ?(
+    timeline: GestureTimeline,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void,
+): void {
+  if (enableGestureTransition) {
+    if (callback != null) {
+      const applyingGesture = pendingEffectsRoot.pendingGestures;
+      if (applyingGesture !== null) {
+        const state: ViewTransitionState = fiber.stateNode;
+        let instance = state.ref;
+        if (instance === null) {
+          instance = state.ref = createViewTransitionInstance(
+            getViewTransitionName(fiber.memoizedProps, state),
+          );
+        }
+        const timeline = applyingGesture.provider;
+        const options = {
+          rangeStart: applyingGesture.rangeStart,
+          rangeEnd: applyingGesture.rangeEnd,
+        };
+        if (pendingViewTransitionEvents === null) {
+          pendingViewTransitionEvents = [];
+        }
+        pendingViewTransitionEvents.push(
+          callback.bind(null, timeline, options, instance),
+        );
+      }
     }
   }
 }
@@ -4352,6 +4393,8 @@ function applyGestureOnRoot(
     startAnimating(pendingEffectsLanes);
   }
 
+  pendingViewTransitionEvents = null;
+
   const prevTransition = ReactSharedInternals.T;
   ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
@@ -4474,6 +4517,26 @@ function flushGestureAnimations(): void {
     executionContext = prevExecutionContext;
     setCurrentUpdatePriority(previousPriority);
     ReactSharedInternals.T = prevTransition;
+  }
+
+  if (enableViewTransition) {
+    // We should now be after the startGestureTransition's .ready call which is late enough
+    // to start animating any pseudo-elements. We have also already applied any adjustments
+    // we do to the built-in animations which can now be read by the refs.
+    const pendingEvents = pendingViewTransitionEvents;
+    let pendingTypes = pendingTransitionTypes;
+    pendingTransitionTypes = null;
+    if (pendingEvents !== null) {
+      pendingViewTransitionEvents = null;
+      if (pendingTypes === null) {
+        // Normalize the type. This is lazily created only for events.
+        pendingTypes = [];
+      }
+      for (let i = 0; i < pendingEvents.length; i++) {
+        const viewTransitionEvent = pendingEvents[i];
+        viewTransitionEvent(pendingTypes);
+      }
+    }
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {

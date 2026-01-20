@@ -82,6 +82,7 @@ import {
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 import {trackAnimatingTask} from './ReactProfilerTimer';
+import {scheduleGestureTransitionEvent} from './ReactFiberWorkLoop';
 
 let didWarnForRootClone = false;
 
@@ -280,6 +281,7 @@ function applyAppearingPairViewTransition(child: Fiber): void {
         if (clones !== null) {
           applyViewTransitionToClones(name, className, clones, child);
         }
+        scheduleGestureTransitionEvent(child, props.onGestureShare);
       }
     }
   }
@@ -309,6 +311,11 @@ function applyExitViewTransition(placement: Fiber): void {
     // HostComponent children in this ViewTransition.
     if (clones !== null) {
       applyViewTransitionToClones(name, className, clones, placement);
+    }
+    if (state.paired) {
+      scheduleGestureTransitionEvent(placement, props.onGestureShare);
+    } else {
+      scheduleGestureTransitionEvent(placement, props.onGestureExit);
     }
   }
 }
@@ -1123,7 +1130,8 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
         // TODO: If this doesn't end up canceled, because a parent animates,
         // then we should probably issue an event since this instance is part of it.
       } else {
-        // TODO: Schedule gesture events.
+        const props: ViewTransitionProps = finishedWork.memoizedProps;
+        scheduleGestureTransitionEvent(finishedWork, props.onGestureUpdate);
         // If this boundary did update, we cannot cancel its children so those are dropped.
         popViewTransitionCancelableScope(prevCancelableChildren);
       }
