@@ -77,6 +77,10 @@ module.exports = {
     prepareInjection: './src/contentScripts/prepareInjection.js',
     installHook: './src/contentScripts/installHook.js',
     hookSettingsInjector: './src/contentScripts/hookSettingsInjector.js',
+    standaloneInspector: './src/contentScripts/standaloneInspector.js',
+    standaloneInspectorProxy:
+      './src/contentScripts/standaloneInspectorProxy.js',
+    inspectionLoading: './src/contentScripts/inspectionLoading.js',
   },
   output: {
     path: __dirname + '/build',

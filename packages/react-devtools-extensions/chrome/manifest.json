@@ -41,6 +41,7 @@
     "service_worker": "build/background.js"
   },
   "permissions": [
+    "contextMenus",
     "scripting",
     "storage",
     "tabs"

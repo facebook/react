@@ -48,6 +48,7 @@
     ]
   },
   "permissions": [
+    "contextMenus",
     "scripting",
     "storage",
     "tabs",

@@ -4,6 +4,7 @@
 
 import './dynamicallyInjectContentScripts';
 import './tabsManager';
+import './contextMenuManager';
 
 import {
   handleDevToolsPageMessage,
@@ -11,6 +12,7 @@ import {
   handleReactDevToolsHookMessage,
   handleFetchResourceContentScriptMessage,
 } from './messageHandlers';
+import {handleStandaloneInspectorMessage} from './contextMenuManager';
 
 /*
   {
@@ -192,6 +194,11 @@ chrome.runtime.onMessage.addListener((message, sender) => {
     }
     case 'react-devtools-hook': {
       handleReactDevToolsHookMessage(message, sender);
+      break;
+    }
+    case 'react-devtools-standalone-inspector': {
+      handleStandaloneInspectorMessage(message, sender);
+      break;
     }
   }
 });
