@@ -2372,6 +2372,7 @@ function animateGesture(
   targetElement: Element,
   pseudoElement: string,
   timeline: GestureTimeline,
+  viewTransitionAnimations: Array<Animation>,
   customTimelineCleanup: Array<() => void>,
   rangeStart: number,
   rangeEnd: number,
@@ -2464,7 +2465,7 @@ function animateGesture(
   if (timeline instanceof AnimationTimeline) {
     // Native Timeline
     // $FlowFixMe[incompatible-call]
-    targetElement.animate(keyframes, {
+    const animation = targetElement.animate(keyframes, {
       pseudoElement: pseudoElement,
       // Set the timeline to the current gesture timeline to drive the updates.
       timeline: timeline,
@@ -2482,6 +2483,7 @@ function animateGesture(
       rangeStart: (reverse ? rangeEnd : rangeStart) + '%',
       rangeEnd: (reverse ? rangeStart : rangeEnd) + '%',
     });
+    viewTransitionAnimations.push(animation);
   } else {
     // Custom Timeline
     // $FlowFixMe[incompatible-call]
@@ -2554,8 +2556,10 @@ export function startGestureTransition(
         // $FlowFixMe
         const pseudoElement: ?string = effect.pseudoElement;
         if (pseudoElement == null) {
-        } else if (pseudoElement.startsWith('::view-transition')) {
-          viewTransitionAnimations.push(animations[i]);
+        } else if (
+          pseudoElement.startsWith('::view-transition') &&
+          effect.target === documentElement
+        ) {
           const timing = effect.getTiming();
           const duration =
             // $FlowFixMe[prop-missing]
@@ -2648,6 +2652,7 @@ export function startGestureTransition(
             effect.target,
             pseudoElement,
             timeline,
+            viewTransitionAnimations,
             customTimelineCleanup,
             adjustedRangeStart,
             adjustedRangeEnd,
@@ -2675,6 +2680,7 @@ export function startGestureTransition(
                 effect.target,
                 pseudoElementName,
                 timeline,
+                viewTransitionAnimations,
                 customTimelineCleanup,
                 rangeStart,
                 rangeEnd,
@@ -2696,6 +2702,7 @@ export function startGestureTransition(
         duration: 1,
       });
       blockingAnim.pause();
+      viewTransitionAnimations.push(blockingAnim);
       animateCallback();
     };
     // In Chrome, "new" animations are not ready in the ready callback. We have to wait
