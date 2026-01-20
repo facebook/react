@@ -16779,6 +16779,7 @@ __DEV__ &&
             (pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT);
         }
         pendingEffectsStatus = NO_PENDING_EFFECTS;
+        var committedViewTransition = pendingViewTransition;
         pendingViewTransition = null;
         requestPaint();
         startViewTransitionStartTime = pendingEffectsRoot;
@@ -16880,16 +16881,20 @@ __DEV__ &&
           ((onRecoverableError = pendingViewTransitionEvents),
           (recoverableError = pendingTransitionTypes),
           (pendingTransitionTypes = null),
-          null !== onRecoverableError)
+          null !== onRecoverableError &&
+            ((pendingViewTransitionEvents = null),
+            null === recoverableError && (recoverableError = []),
+            null !== committedViewTransition))
         )
           for (
-            pendingViewTransitionEvents = null,
-              null === recoverableError && (recoverableError = []),
-              errorInfo = 0;
+            errorInfo = 0;
             errorInfo < onRecoverableError.length;
             errorInfo++
           )
-            (0, onRecoverableError[errorInfo])(recoverableError);
+            (committedViewTransition = (0, onRecoverableError[errorInfo])(
+              recoverableError
+            )),
+              void 0 !== committedViewTransition && committedViewTransition();
         0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
         ensureRootIsScheduled(startViewTransitionStartTime);
         remainingLanes = startViewTransitionStartTime.pendingLanes;
@@ -20260,10 +20265,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-modern-41b3e9a6-20260119",
+        version: "19.3.0-www-modern-c55ffb5c-20260119",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-41b3e9a6-20260119"
+        reconcilerVersion: "19.3.0-www-modern-c55ffb5c-20260119"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20298,7 +20303,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.3.0-www-modern-41b3e9a6-20260119";
+    exports.version = "19.3.0-www-modern-c55ffb5c-20260119";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

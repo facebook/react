@@ -15601,10 +15601,11 @@ function flushSpawnedWork() {
       1 !== pendingDelayedCommitReason && (pendingDelayedCommitReason = 3);
     }
     pendingEffectsStatus = 0;
+    startViewTransitionStartTime = pendingViewTransition;
     pendingViewTransition = null;
     requestPaint();
-    startViewTransitionStartTime = pendingEffectsRoot;
-    var finishedWork = pendingFinishedWork,
+    var root = pendingEffectsRoot,
+      finishedWork = pendingFinishedWork,
       lanes = pendingEffectsLanes,
       recoverableErrors = pendingRecoverableErrors,
       didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate,
@@ -15617,15 +15618,12 @@ function flushSpawnedWork() {
       ? (pendingEffectsStatus = 5)
       : ((pendingEffectsStatus = 0),
         (pendingFinishedWork = pendingEffectsRoot = null),
-        releaseRootPooledCache(
-          startViewTransitionStartTime,
-          startViewTransitionStartTime.pendingLanes
-        ));
-    var remainingLanes = startViewTransitionStartTime.pendingLanes;
+        releaseRootPooledCache(root, root.pendingLanes));
+    var remainingLanes = root.pendingLanes;
     0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
     remainingLanes = lanesToEventPriority(lanes);
     onCommitRoot(finishedWork.stateNode, remainingLanes);
-    isDevToolsPresent && startViewTransitionStartTime.memoizedUpdaters.clear();
+    isDevToolsPresent && root.memoizedUpdaters.clear();
     if (null !== recoverableErrors) {
       finishedWork = ReactSharedInternals.T;
       remainingLanes = Internals.p;
@@ -15633,9 +15631,7 @@ function flushSpawnedWork() {
       ReactSharedInternals.T = null;
       try {
         for (
-          var onRecoverableError =
-              startViewTransitionStartTime.onRecoverableError,
-            i = 0;
+          var onRecoverableError = root.onRecoverableError, i = 0;
           i < recoverableErrors.length;
           i++
         ) {
@@ -15653,35 +15649,38 @@ function flushSpawnedWork() {
       ((onRecoverableError = pendingViewTransitionEvents),
       (recoverableError = pendingTransitionTypes),
       (pendingTransitionTypes = null),
-      null !== onRecoverableError)
+      null !== onRecoverableError &&
+        ((pendingViewTransitionEvents = null),
+        null === recoverableError && (recoverableError = []),
+        null !== startViewTransitionStartTime))
     )
       for (
-        pendingViewTransitionEvents = null,
-          null === recoverableError && (recoverableError = []),
-          recoverableErrors = 0;
+        recoverableErrors = 0;
         recoverableErrors < onRecoverableError.length;
         recoverableErrors++
       )
-        (0, onRecoverableError[recoverableErrors])(recoverableError);
+        (finishedWork = (0, onRecoverableError[recoverableErrors])(
+          recoverableError
+        )),
+          void 0 !== finishedWork &&
+            startViewTransitionStartTime.finished.finally(finishedWork);
     0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
-    ensureRootIsScheduled(startViewTransitionStartTime);
-    remainingLanes = startViewTransitionStartTime.pendingLanes;
+    ensureRootIsScheduled(root);
+    remainingLanes = root.pendingLanes;
     (enableInfiniteRenderLoopDetection &&
       (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
     (0 !== (lanes & 261930) && 0 !== (remainingLanes & 42))
       ? ((nestedUpdateScheduled = !0),
-        startViewTransitionStartTime === rootWithNestedUpdates
+        root === rootWithNestedUpdates
           ? nestedUpdateCount++
-          : ((nestedUpdateCount = 0),
-            (rootWithNestedUpdates = startViewTransitionStartTime)))
+          : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
       : (nestedUpdateCount = 0);
     enableComponentPerformanceTrack &&
       (passiveSubtreeMask || finalizeRender(lanes, commitEndTime));
     flushSyncWorkAcrossRoots_impl(0, !1);
     enableSchedulingProfiler && markCommitStopped();
     if (enableTransitionTracing) {
-      var prevRootTransitionCallbacks =
-        startViewTransitionStartTime.transitionCallbacks;
+      var prevRootTransitionCallbacks = root.transitionCallbacks;
       null !== prevRootTransitionCallbacks &&
         schedulePostPaintCallback(function (endTime) {
           var prevPendingTransitionCallbacks =
@@ -17398,20 +17397,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_2144 = 0;
-  i$jscomp$inline_2144 < simpleEventPluginEvents.length;
-  i$jscomp$inline_2144++
+  var i$jscomp$inline_2147 = 0;
+  i$jscomp$inline_2147 < simpleEventPluginEvents.length;
+  i$jscomp$inline_2147++
 ) {
-  var eventName$jscomp$inline_2145 =
-      simpleEventPluginEvents[i$jscomp$inline_2144],
-    domEventName$jscomp$inline_2146 =
-      eventName$jscomp$inline_2145.toLowerCase(),
-    capitalizedEvent$jscomp$inline_2147 =
-      eventName$jscomp$inline_2145[0].toUpperCase() +
-      eventName$jscomp$inline_2145.slice(1);
+  var eventName$jscomp$inline_2148 =
+      simpleEventPluginEvents[i$jscomp$inline_2147],
+    domEventName$jscomp$inline_2149 =
+      eventName$jscomp$inline_2148.toLowerCase(),
+    capitalizedEvent$jscomp$inline_2150 =
+      eventName$jscomp$inline_2148[0].toUpperCase() +
+      eventName$jscomp$inline_2148.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_2146,
-    "on" + capitalizedEvent$jscomp$inline_2147
+    domEventName$jscomp$inline_2149,
+    "on" + capitalizedEvent$jscomp$inline_2150
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -22208,16 +22207,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2375 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2378 = React.version;
 if (
-  "19.3.0-www-modern-41b3e9a6-20260119" !==
-  isomorphicReactPackageVersion$jscomp$inline_2375
+  "19.3.0-www-modern-c55ffb5c-20260119" !==
+  isomorphicReactPackageVersion$jscomp$inline_2378
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2375,
-      "19.3.0-www-modern-41b3e9a6-20260119"
+      isomorphicReactPackageVersion$jscomp$inline_2378,
+      "19.3.0-www-modern-c55ffb5c-20260119"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22233,27 +22232,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2377 = {
+var internals$jscomp$inline_2380 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-41b3e9a6-20260119",
+  version: "19.3.0-www-modern-c55ffb5c-20260119",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-41b3e9a6-20260119"
+  reconcilerVersion: "19.3.0-www-modern-c55ffb5c-20260119"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2377.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2377.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2380.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2380.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2959 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2962 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2959.isDisabled &&
-    hook$jscomp$inline_2959.supportsFiber
+    !hook$jscomp$inline_2962.isDisabled &&
+    hook$jscomp$inline_2962.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2959.inject(
-        internals$jscomp$inline_2377
+      (rendererID = hook$jscomp$inline_2962.inject(
+        internals$jscomp$inline_2380
       )),
-        (injectedHook = hook$jscomp$inline_2959);
+        (injectedHook = hook$jscomp$inline_2962);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -22671,7 +22670,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-41b3e9a6-20260119";
+exports.version = "19.3.0-www-modern-c55ffb5c-20260119";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -9806,6 +9806,7 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   pendingEffectsRemainingLanes = 0,
   pendingPassiveTransitions = null,
   pendingRecoverableErrors = null,
+  pendingViewTransition = null,
   pendingViewTransitionEvents = null,
   pendingTransitionTypes = null,
   pendingDidIncludeRenderPhaseUpdate = !1,
@@ -10673,8 +10674,9 @@ function commitRoot(
     }
   }
   pendingEffectsStatus = 1;
-  (enableViewTransition && shouldStartViewTransition) ||
-    (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
+  enableViewTransition && shouldStartViewTransition
+    ? (pendingViewTransition = null)
+    : (flushMutationEffects(), flushLayoutEffects(), flushSpawnedWork());
 }
 function flushMutationEffects() {
   if (1 === pendingEffectsStatus) {
@@ -10748,6 +10750,8 @@ function flushLayoutEffects() {
 function flushSpawnedWork() {
   if (4 === pendingEffectsStatus || 3 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
+    var committedViewTransition = pendingViewTransition;
+    pendingViewTransition = null;
     requestPaint();
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
@@ -10801,16 +10805,20 @@ function flushSpawnedWork() {
       ((recoverableErrors = pendingViewTransitionEvents),
       (onRecoverableError = pendingTransitionTypes),
       (pendingTransitionTypes = null),
-      null !== recoverableErrors)
+      null !== recoverableErrors &&
+        ((pendingViewTransitionEvents = null),
+        null === onRecoverableError && (onRecoverableError = []),
+        null !== committedViewTransition))
     )
       for (
-        pendingViewTransitionEvents = null,
-          null === onRecoverableError && (onRecoverableError = []),
-          recoverableError = 0;
-        recoverableError < recoverableErrors.length;
-        recoverableError++
+        committedViewTransition = 0;
+        committedViewTransition < recoverableErrors.length;
+        committedViewTransition++
       )
-        (0, recoverableErrors[recoverableError])(onRecoverableError);
+        (recoverableError = (0, recoverableErrors[committedViewTransition])(
+          onRecoverableError
+        )),
+          void 0 !== recoverableError && recoverableError();
     0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
     ensureRootIsScheduled(root);
     passiveSubtreeMask = root.pendingLanes;
@@ -10831,6 +10839,9 @@ function releaseRootPooledCache(root, remainingLanes) {
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
 function flushPendingEffects() {
+  enableViewTransition &&
+    null !== pendingViewTransition &&
+    (pendingViewTransition = null);
   flushMutationEffects();
   flushLayoutEffects();
   flushSpawnedWork();
@@ -11546,24 +11557,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1642 = {
+var internals$jscomp$inline_1645 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-41b3e9a6-20260119",
+  version: "19.3.0-www-classic-c55ffb5c-20260119",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-41b3e9a6-20260119"
+  reconcilerVersion: "19.3.0-www-classic-c55ffb5c-20260119"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1643 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1646 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1643.isDisabled &&
-    hook$jscomp$inline_1643.supportsFiber
+    !hook$jscomp$inline_1646.isDisabled &&
+    hook$jscomp$inline_1646.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1643.inject(
-        internals$jscomp$inline_1642
+      (rendererID = hook$jscomp$inline_1646.inject(
+        internals$jscomp$inline_1645
       )),
-        (injectedHook = hook$jscomp$inline_1643);
+        (injectedHook = hook$jscomp$inline_1646);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11577,4 +11588,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-classic-41b3e9a6-20260119";
+exports.version = "19.3.0-www-classic-c55ffb5c-20260119";

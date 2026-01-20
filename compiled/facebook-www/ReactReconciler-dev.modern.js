@@ -18839,10 +18839,11 @@ __DEV__ &&
             (pendingDelayedCommitReason = ANIMATION_STARTED_COMMIT);
         }
         pendingEffectsStatus = NO_PENDING_EFFECTS;
+        startViewTransitionStartTime = pendingViewTransition;
         pendingViewTransition = null;
         requestPaint();
-        startViewTransitionStartTime = pendingEffectsRoot;
-        var finishedWork = pendingFinishedWork,
+        var root = pendingEffectsRoot,
+          finishedWork = pendingFinishedWork,
           lanes = pendingEffectsLanes,
           recoverableErrors = pendingRecoverableErrors,
           didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate,
@@ -18858,20 +18859,15 @@ __DEV__ &&
           ? (pendingEffectsStatus = PENDING_PASSIVE_PHASE)
           : ((pendingEffectsStatus = NO_PENDING_EFFECTS),
             (pendingFinishedWork = pendingEffectsRoot = null),
-            releaseRootPooledCache(
-              startViewTransitionStartTime,
-              startViewTransitionStartTime.pendingLanes
-            ),
+            releaseRootPooledCache(root, root.pendingLanes),
             (nestedPassiveUpdateCount = 0),
             (rootWithPassiveNestedUpdates = null));
-        var remainingLanes = startViewTransitionStartTime.pendingLanes;
+        var remainingLanes = root.pendingLanes;
         0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
-        passiveSubtreeMask ||
-          commitDoubleInvokeEffectsInDEV(startViewTransitionStartTime);
+        passiveSubtreeMask || commitDoubleInvokeEffectsInDEV(root);
         remainingLanes = lanesToEventPriority(lanes);
         onCommitRoot$1(finishedWork.stateNode, remainingLanes);
-        isDevToolsPresent &&
-          startViewTransitionStartTime.memoizedUpdaters.clear();
+        isDevToolsPresent && root.memoizedUpdaters.clear();
         onCommitRoot();
         if (null !== recoverableErrors) {
           finishedWork = ReactSharedInternals.T;
@@ -18880,9 +18876,7 @@ __DEV__ &&
           ReactSharedInternals.T = null;
           try {
             for (
-              var onRecoverableError =
-                  startViewTransitionStartTime.onRecoverableError,
-                i = 0;
+              var onRecoverableError = root.onRecoverableError, i = 0;
               i < recoverableErrors.length;
               i++
             ) {
@@ -18905,27 +18899,34 @@ __DEV__ &&
           ((onRecoverableError = pendingViewTransitionEvents),
           (recoverableError = pendingTransitionTypes),
           (pendingTransitionTypes = null),
-          null !== onRecoverableError)
+          null !== onRecoverableError &&
+            ((pendingViewTransitionEvents = null),
+            null === recoverableError && (recoverableError = []),
+            null !== startViewTransitionStartTime))
         )
           for (
-            pendingViewTransitionEvents = null,
-              null === recoverableError && (recoverableError = []),
-              errorInfo = 0;
+            errorInfo = 0;
             errorInfo < onRecoverableError.length;
             errorInfo++
           )
-            (0, onRecoverableError[errorInfo])(recoverableError);
+            (recoverableErrors = (0, onRecoverableError[errorInfo])(
+              recoverableError
+            )),
+              void 0 !== recoverableErrors &&
+                addViewTransitionFinishedListener(
+                  startViewTransitionStartTime,
+                  recoverableErrors
+                );
         0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
-        ensureRootIsScheduled(startViewTransitionStartTime);
-        remainingLanes = startViewTransitionStartTime.pendingLanes;
+        ensureRootIsScheduled(root);
+        remainingLanes = root.pendingLanes;
         (enableInfiniteRenderLoopDetection &&
           (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
         (0 !== (lanes & 261930) && 0 !== (remainingLanes & 42))
           ? ((nestedUpdateScheduled = !0),
-            startViewTransitionStartTime === rootWithNestedUpdates
+            root === rootWithNestedUpdates
               ? nestedUpdateCount++
-              : ((nestedUpdateCount = 0),
-                (rootWithNestedUpdates = startViewTransitionStartTime)))
+              : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
           : (nestedUpdateCount = 0);
         enableComponentPerformanceTrack &&
           (passiveSubtreeMask || finalizeRender(lanes, commitEndTime));
@@ -18933,8 +18934,7 @@ __DEV__ &&
         flushSyncWorkAcrossRoots_impl(0, !1);
         enableSchedulingProfiler && markCommitStopped();
         if (enableTransitionTracing) {
-          var prevRootTransitionCallbacks =
-            startViewTransitionStartTime.transitionCallbacks;
+          var prevRootTransitionCallbacks = root.transitionCallbacks;
           null !== prevRootTransitionCallbacks &&
             schedulePostPaintCallback(function (endTime) {
               var prevPendingTransitionCallbacks =
@@ -20285,7 +20285,9 @@ __DEV__ &&
       hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
       startViewTransition = $$$config.startViewTransition;
     $$$config.startGestureTransition;
-    var stopViewTransition = $$$config.stopViewTransition;
+    var stopViewTransition = $$$config.stopViewTransition,
+      addViewTransitionFinishedListener =
+        $$$config.addViewTransitionFinishedListener;
     $$$config.getCurrentGestureOffset;
     var createViewTransitionInstance = $$$config.createViewTransitionInstance,
       clearContainer = $$$config.clearContainer,
@@ -22940,7 +22942,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-41b3e9a6-20260119"
+        reconcilerVersion: "19.3.0-www-modern-c55ffb5c-20260119"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

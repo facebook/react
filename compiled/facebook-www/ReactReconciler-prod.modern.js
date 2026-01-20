@@ -12108,6 +12108,7 @@ module.exports = function ($$$config) {
   function flushSpawnedWork() {
     if (4 === pendingEffectsStatus || 3 === pendingEffectsStatus) {
       pendingEffectsStatus = 0;
+      var committedViewTransition = pendingViewTransition;
       pendingViewTransition = null;
       requestPaint();
       var root = pendingEffectsRoot,
@@ -12154,16 +12155,24 @@ module.exports = function ($$$config) {
         ((recoverableErrors = pendingViewTransitionEvents),
         (onRecoverableError = pendingTransitionTypes),
         (pendingTransitionTypes = null),
-        null !== recoverableErrors)
+        null !== recoverableErrors &&
+          ((pendingViewTransitionEvents = null),
+          null === onRecoverableError && (onRecoverableError = []),
+          null !== committedViewTransition))
       )
         for (
-          pendingViewTransitionEvents = null,
-            null === onRecoverableError && (onRecoverableError = []),
-            recoverableError = 0;
+          recoverableError = 0;
           recoverableError < recoverableErrors.length;
           recoverableError++
         )
-          (0, recoverableErrors[recoverableError])(onRecoverableError);
+          (finishedWork = (0, recoverableErrors[recoverableError])(
+            onRecoverableError
+          )),
+            void 0 !== finishedWork &&
+              addViewTransitionFinishedListener(
+                committedViewTransition,
+                finishedWork
+              );
       0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
       ensureRootIsScheduled(root);
       passiveSubtreeMask = root.pendingLanes;
@@ -13007,7 +13016,9 @@ module.exports = function ($$$config) {
     hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent,
     startViewTransition = $$$config.startViewTransition;
   $$$config.startGestureTransition;
-  var stopViewTransition = $$$config.stopViewTransition;
+  var stopViewTransition = $$$config.stopViewTransition,
+    addViewTransitionFinishedListener =
+      $$$config.addViewTransitionFinishedListener;
   $$$config.getCurrentGestureOffset;
   var createViewTransitionInstance = $$$config.createViewTransitionInstance,
     clearContainer = $$$config.clearContainer,
@@ -14122,7 +14133,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-41b3e9a6-20260119"
+      reconcilerVersion: "19.3.0-www-modern-c55ffb5c-20260119"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
