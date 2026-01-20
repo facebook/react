@@ -409,8 +409,7 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
-  // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
-  useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
+  useEffectEvent: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
