@@ -18,7 +18,6 @@ import BabelPluginReactCompiler, {
 } from 'babel-plugin-react-compiler';
 import type {SourceCode} from 'eslint';
 import * as HermesParser from 'hermes-parser';
-import {isDeepStrictEqual} from 'util';
 import type {ParseResult} from '@babel/parser';
 
 const COMPILER_OPTIONS: PluginOptions = {
@@ -52,6 +51,7 @@ export type RunCacheEntry = {
   userOpts: PluginOptions;
   flowSuppressions: Array<{line: number; code: string}>;
   events: Array<LoggerEvent>;
+  eventsByCategory: Map<string, Array<LoggerEvent>>;
 };
 
 type RunParams = {
@@ -102,12 +102,22 @@ function runReactCompilerImpl({
     userOpts,
     flowSuppressions: [],
     events: [],
+    eventsByCategory: new Map(),
   };
   const userLogger: Logger | null = options.logger;
   options.logger = {
     logEvent: (eventFilename, event): void => {
       userLogger?.logEvent(eventFilename, event);
       results.events.push(event);
+
+      // Pre-group events by category for faster rule lookup
+      if (event.kind === 'CompileError') {
+        const category = event.detail.category;
+        if (!results.eventsByCategory.has(category)) {
+          results.eventsByCategory.set(category, []);
+        }
+        results.eventsByCategory.get(category)!.push(event);
+      }
     },
   };
 
@@ -164,7 +174,29 @@ function runReactCompilerImpl({
 
 const SENTINEL = Symbol();
 
-// Array backed LRU cache -- should be small < 10 elements
+// Simple hash function for creating cache keys
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash;
+}
+
+// Create a cache key that includes filename, source hash, and options hash
+function createCacheKey(
+  filename: string,
+  sourceCode: string,
+  userOpts: PluginOptions,
+): string {
+  const sourceHash = simpleHash(sourceCode);
+  const optsHash = simpleHash(JSON.stringify(userOpts));
+  return `${filename}:${sourceHash}:${optsHash}`;
+}
+
+// Array backed LRU cache -- increased size for better hit rate
 class LRUCache<K, T> {
   // newest at headIdx, then headIdx + 1, ..., tailIdx
   #values: Array<[K, T | Error] | [typeof SENTINEL, void]>;
@@ -200,19 +232,19 @@ class LRUCache<K, T> {
     this.#values[this.#headIdx] = [key, value];
   }
 }
-const cache = new LRUCache<string, RunCacheEntry>(10);
+// Increased cache size from 10 to 100 for better hit rate on large codebases
+const cache = new LRUCache<string, RunCacheEntry>(100);
 
 export default function runReactCompiler({
   sourceCode,
   filename,
   userOpts,
 }: RunParams): RunCacheEntry {
-  const entry = cache.get(filename);
-  if (
-    entry != null &&
-    entry.sourceCode === sourceCode.text &&
-    isDeepStrictEqual(entry.userOpts, userOpts)
-  ) {
+  const cacheKey = createCacheKey(filename, sourceCode.text, userOpts);
+  const entry = cache.get(cacheKey);
+
+  // With the improved cache key, we don't need expensive deep equality checks
+  if (entry != null) {
     return entry;
   }
 
@@ -221,11 +253,7 @@ export default function runReactCompiler({
     filename,
     userOpts,
   });
-  // If we have a cache entry, we can update it
-  if (entry != null) {
-    Object.assign(entry, runEntry);
-  } else {
-    cache.push(filename, runEntry);
-  }
+
+  cache.push(cacheKey, runEntry);
   return {...runEntry};
 }

@@ -111,35 +111,36 @@ function makeRule(rule: LintRule): Rule.RuleModule {
   const create = (context: Rule.RuleContext): Rule.RuleListener => {
     const result = getReactCompilerResult(context);
 
-    for (const event of result.events) {
+    // Use pre-grouped events for O(1) category lookup instead of O(n) filtering
+    const categoryEvents = result.eventsByCategory.get(rule.category) ?? [];
+
+    for (const event of categoryEvents) {
       if (event.kind === 'CompileError') {
         const detail = event.detail;
-        if (detail.category === rule.category) {
-          const loc = detail.primaryLocation();
-          if (loc == null || typeof loc === 'symbol') {
-            continue;
-          }
-          if (
-            hasFlowSuppression(result, loc, [
-              'react-rule-hook',
-              'react-rule-unsafe-ref',
-            ])
-          ) {
-            // If Flow already caught this error, we don't need to report it again.
-            continue;
-          }
-          /*
-           * TODO: if multiple rules report the same linter category,
-           * we should deduplicate them with a "reported" set
-           */
-          context.report({
-            message: detail.printErrorMessage(result.sourceCode, {
-              eslint: true,
-            }),
-            loc,
-            suggest: makeSuggestions(detail.options),
-          });
+        const loc = detail.primaryLocation();
+        if (loc == null || typeof loc === 'symbol') {
+          continue;
         }
+        if (
+          hasFlowSuppression(result, loc, [
+            'react-rule-hook',
+            'react-rule-unsafe-ref',
+          ])
+        ) {
+          // If Flow already caught this error, we don't need to report it again.
+          continue;
+        }
+        /*
+         * TODO: if multiple rules report the same linter category,
+         * we should deduplicate them with a "reported" set
+         */
+        context.report({
+          message: detail.printErrorMessage(result.sourceCode, {
+            eslint: true,
+          }),
+          loc,
+          suggest: makeSuggestions(detail.options),
+        });
       }
     }
     return {};
