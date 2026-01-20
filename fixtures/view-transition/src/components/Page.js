@@ -150,6 +150,8 @@ export default function Page({url, navigate}) {
       const cleanup1 = timeline.animate(animation1);
       const cleanup2 = timeline.animate(animation2);
       return () => {
+        animation1.cancel();
+        animation2.cancel();
         cleanup1();
         cleanup2();
       };

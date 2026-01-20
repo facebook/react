@@ -2525,6 +2525,7 @@ function animateGesture(
       delay: reverse ? rangeEnd : rangeStart,
       duration: reverse ? rangeStart - rangeEnd : rangeEnd - rangeStart,
     });
+    viewTransitionAnimations.push(animation);
     // Let the custom timeline take control of driving the animation.
     const cleanup = timeline.animate(animation);
     if (cleanup) {
