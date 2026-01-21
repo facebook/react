@@ -7,12 +7,36 @@
  * @flow strict
  */
 
-export type PriorityLevel = 0 | 1 | 2 | 3 | 4 | 5;
+export opaque type NoPriorityType: symbol = symbol;
+export opaque type ImmediatePriorityType: symbol = symbol;
+export opaque type UserBlockingPriorityType: symbol = symbol;
+export opaque type NormalPriorityType: symbol = symbol;
+export opaque type LowPriorityType: symbol = symbol;
+export opaque type IdlePriorityType: symbol = symbol;
 
-// TODO: Use symbols?
-export const NoPriority = 0;
-export const ImmediatePriority = 1;
-export const UserBlockingPriority = 2;
-export const NormalPriority = 3;
-export const LowPriority = 4;
-export const IdlePriority = 5;
+export const NoPriority: NoPriorityType = (Symbol.for(
+  'scheduler.no_priority',
+): any);
+export const ImmediatePriority: ImmediatePriorityType = (Symbol.for(
+  'scheduler.immediate_priority',
+): any);
+export const UserBlockingPriority: UserBlockingPriorityType = (Symbol.for(
+  'scheduler.user_blocking_priority',
+): any);
+export const NormalPriority: NormalPriorityType = (Symbol.for(
+  'scheduler.normal_priority',
+): any);
+export const LowPriority: LowPriorityType = (Symbol.for(
+  'scheduler.low_priority',
+): any);
+export const IdlePriority: IdlePriorityType = (Symbol.for(
+  'scheduler.idle_priority',
+): any);
+
+export type PriorityLevel =
+  | NoPriorityType
+  | ImmediatePriorityType
+  | UserBlockingPriorityType
+  | NormalPriorityType
+  | LowPriorityType
+  | IdlePriorityType;
