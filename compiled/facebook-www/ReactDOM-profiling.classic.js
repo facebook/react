@@ -66,18 +66,12 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableInternalInstanceMap = dynamicFeatureFlags.enableInternalInstanceMap,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
 function getNearestMountedFiber(fiber) {
-  var node = fiber,
-    nearestMounted = fiber;
-  if (fiber.alternate) for (; node.return; ) node = node.return;
-  else {
-    fiber = node;
-    do
-      (node = fiber),
-        0 !== (node.flags & 4098) && (nearestMounted = node.return),
-        (fiber = node.return);
-    while (fiber);
-  }
-  return 3 === node.tag ? nearestMounted : null;
+  for (var node = fiber, nextNode = node; nextNode && !nextNode.alternate; )
+    (node = nextNode),
+      0 !== (node.flags & 4098) && (fiber = node.return),
+      (nextNode = node.return);
+  for (; node.return; ) node = node.return;
+  return 3 === node.tag ? fiber : null;
 }
 function getSuspenseInstanceFromFiber(fiber) {
   if (13 === fiber.tag) {
@@ -22415,14 +22409,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2388 = React.version;
 if (
-  "19.3.0-www-classic-d2908752-20260119" !==
+  "19.3.0-www-classic-b546603b-20260121" !==
   isomorphicReactPackageVersion$jscomp$inline_2388
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2388,
-      "19.3.0-www-classic-d2908752-20260119"
+      "19.3.0-www-classic-b546603b-20260121"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22440,10 +22434,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2390 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-d2908752-20260119",
+  version: "19.3.0-www-classic-b546603b-20260121",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-d2908752-20260119"
+  reconcilerVersion: "19.3.0-www-classic-b546603b-20260121"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2390.getLaneLabelMap = getLaneLabelMap),
@@ -22876,7 +22870,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-d2908752-20260119";
+exports.version = "19.3.0-www-classic-b546603b-20260121";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
