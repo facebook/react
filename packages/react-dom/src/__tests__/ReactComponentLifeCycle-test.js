@@ -642,34 +642,32 @@ describe('ReactComponentLifeCycle', () => {
         'https://react.dev/link/unsafe-component-lifecycles\n' +
         '    in Component (at **)',
     ]);
-    assertConsoleWarnDev(
-      [
-        'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
-          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: Component',
-        'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          "* If you're updating state whenever props change, refactor your code to use " +
-          'memoization techniques or move it to static getDerivedStateFromProps. ' +
-          'Learn more at: https://react.dev/link/derived-state\n' +
-          '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: Component',
-        'componentWillUpdate has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: Component',
-      ],
-    );
+    assertConsoleWarnDev([
+      'componentWillMount has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+        '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: Component',
+      'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        "* If you're updating state whenever props change, refactor your code to use " +
+        'memoization techniques or move it to static getDerivedStateFromProps. ' +
+        'Learn more at: https://react.dev/link/derived-state\n' +
+        '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: Component',
+      'componentWillUpdate has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: Component',
+    ]);
   });
 
   it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', async () => {
@@ -707,34 +705,32 @@ describe('ReactComponentLifeCycle', () => {
         'https://react.dev/link/unsafe-component-lifecycles\n' +
         '    in Component (at **)',
     ]);
-    assertConsoleWarnDev(
-      [
-        'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
-          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: Component',
-        'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          "* If you're updating state whenever props change, refactor your code to use " +
-          'memoization techniques or move it to static getDerivedStateFromProps. ' +
-          'Learn more at: https://react.dev/link/derived-state\n' +
-          '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: Component',
-        'componentWillUpdate has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: Component',
-      ],
-    );
+    assertConsoleWarnDev([
+      'componentWillMount has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+        '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: Component',
+      'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        "* If you're updating state whenever props change, refactor your code to use " +
+        'memoization techniques or move it to static getDerivedStateFromProps. ' +
+        'Learn more at: https://react.dev/link/derived-state\n' +
+        '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: Component',
+      'componentWillUpdate has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: Component',
+    ]);
 
     await act(() => {
       root.render(<Component value={2} />);
@@ -808,24 +804,22 @@ describe('ReactComponentLifeCycle', () => {
         'https://react.dev/link/unsafe-component-lifecycles\n' +
         '    in AllLegacyLifecycles (at **)',
     ]);
-    assertConsoleWarnDev(
-      [
-        'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
-          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: AllLegacyLifecycles',
-        'componentWillUpdate has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: AllLegacyLifecycles',
-      ],
-    );
+    assertConsoleWarnDev([
+      'componentWillMount has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+        '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: AllLegacyLifecycles',
+      'componentWillUpdate has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: AllLegacyLifecycles',
+    ]);
 
     class WillMount extends React.Component {
       state = {};
@@ -874,17 +868,15 @@ describe('ReactComponentLifeCycle', () => {
         'https://react.dev/link/unsafe-component-lifecycles\n' +
         '    in WillMountAndUpdate (at **)',
     ]);
-    assertConsoleWarnDev(
-      [
-        'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
-          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: WillMountAndUpdate',
-      ],
-    );
+    assertConsoleWarnDev([
+      'componentWillMount has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+        '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: WillMountAndUpdate',
+    ]);
 
     class WillReceiveProps extends React.Component {
       state = {};
@@ -908,20 +900,18 @@ describe('ReactComponentLifeCycle', () => {
         'https://react.dev/link/unsafe-component-lifecycles\n' +
         '    in WillReceiveProps (at **)',
     ]);
-    assertConsoleWarnDev(
-      [
-        'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          "* If you're updating state whenever props change, refactor your code to use " +
-          'memoization techniques or move it to static getDerivedStateFromProps. ' +
-          'Learn more at: https://react.dev/link/derived-state\n' +
-          '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: WillReceiveProps',
-      ],
-    );
+    assertConsoleWarnDev([
+      'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        "* If you're updating state whenever props change, refactor your code to use " +
+        'memoization techniques or move it to static getDerivedStateFromProps. ' +
+        'Learn more at: https://react.dev/link/derived-state\n' +
+        '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: WillReceiveProps',
+    ]);
   });
 
   it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', async () => {
@@ -951,24 +941,22 @@ describe('ReactComponentLifeCycle', () => {
         'https://react.dev/link/unsafe-component-lifecycles\n' +
         '    in AllLegacyLifecycles (at **)',
     ]);
-    assertConsoleWarnDev(
-      [
-        'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
-          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: AllLegacyLifecycles',
-        'componentWillUpdate has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: AllLegacyLifecycles',
-      ],
-    );
+    assertConsoleWarnDev([
+      'componentWillMount has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+        '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: AllLegacyLifecycles',
+      'componentWillUpdate has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: AllLegacyLifecycles',
+    ]);
 
     class WillMount extends React.Component {
       state = {};
@@ -1015,17 +1003,15 @@ describe('ReactComponentLifeCycle', () => {
         'https://react.dev/link/unsafe-component-lifecycles\n' +
         '    in WillMountAndUpdate (at **)',
     ]);
-    assertConsoleWarnDev(
-      [
-        'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
-          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: WillMountAndUpdate',
-      ],
-    );
+    assertConsoleWarnDev([
+      'componentWillMount has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+        '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: WillMountAndUpdate',
+    ]);
 
     class WillReceiveProps extends React.Component {
       state = {};
@@ -1048,20 +1034,18 @@ describe('ReactComponentLifeCycle', () => {
         'https://react.dev/link/unsafe-component-lifecycles\n' +
         '    in WillReceiveProps (at **)',
     ]);
-    assertConsoleWarnDev(
-      [
-        'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          "* If you're updating state whenever props change, refactor your code to use " +
-          'memoization techniques or move it to static getDerivedStateFromProps. ' +
-          'Learn more at: https://react.dev/link/derived-state\n' +
-          '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: WillReceiveProps',
-      ],
-    );
+    assertConsoleWarnDev([
+      'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        "* If you're updating state whenever props change, refactor your code to use " +
+        'memoization techniques or move it to static getDerivedStateFromProps. ' +
+        'Learn more at: https://react.dev/link/derived-state\n' +
+        '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: WillReceiveProps',
+    ]);
   });
 
   it('should warn if getDerivedStateFromProps returns undefined', async () => {
@@ -1148,34 +1132,32 @@ describe('ReactComponentLifeCycle', () => {
     await act(() => {
       root.render(<MyComponent foo="bar" />);
     });
-    assertConsoleWarnDev(
-      [
-        'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
-          '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: MyComponent',
-        'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          "* If you're updating state whenever props change, refactor your code to use " +
-          'memoization techniques or move it to static getDerivedStateFromProps. ' +
-          'Learn more at: https://react.dev/link/derived-state\n' +
-          '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: MyComponent',
-        'componentWillUpdate has been renamed, and is not recommended for use. ' +
-          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
-          '* Move data fetching code or side effects to componentDidUpdate.\n' +
-          '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
-          'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
-          'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
-          'Please update the following components: MyComponent',
-      ],
-    );
+    assertConsoleWarnDev([
+      'componentWillMount has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
+        '* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: MyComponent',
+      'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        "* If you're updating state whenever props change, refactor your code to use " +
+        'memoization techniques or move it to static getDerivedStateFromProps. ' +
+        'Learn more at: https://react.dev/link/derived-state\n' +
+        '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: MyComponent',
+      'componentWillUpdate has been renamed, and is not recommended for use. ' +
+        'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+        '* Move data fetching code or side effects to componentDidUpdate.\n' +
+        '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. ' +
+        'In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, ' +
+        'you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n\n' +
+        'Please update the following components: MyComponent',
+    ]);
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
 
     log.length = 0;
@@ -1473,29 +1455,27 @@ describe('ReactComponentLifeCycle', () => {
     await act(() => {
       root.render(<MyComponent x={1} />);
     });
-    assertConsoleWarnDev(
-      [
-        `componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
+    assertConsoleWarnDev([
+      `componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 * Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        `componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
+      `componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 * Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        `componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
+      `componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-      ],
-    );
+    ]);
 
     // Dedupe check (update and instantiate new)
     await act(() => {

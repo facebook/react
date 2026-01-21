@@ -276,7 +276,7 @@ export function createLogAssertion(
       if (!Array.isArray(expectedMessages)) {
         throwFormattedError(
           `Expected messages should be an array of strings ` +
-          `but was given type "${typeof expectedMessages}".`,
+            `but was given type "${typeof expectedMessages}".`,
         );
       }
 
@@ -285,7 +285,7 @@ export function createLogAssertion(
         if (typeof options !== 'object' || Array.isArray(options)) {
           throwFormattedError(
             `The second argument should be an object. ` +
-            'Did you forget to wrap the messages into an array?',
+              'Did you forget to wrap the messages into an array?',
           );
         }
       }
@@ -325,7 +325,7 @@ export function createLogAssertion(
         } else if (expectedMessageOrArray != null) {
           throwFormattedError(
             `The expected message for ${matcherName}() must be a string. ` +
-            `Instead received ${JSON.stringify(expectedMessageOrArray)}.`,
+              `Instead received ${JSON.stringify(expectedMessageOrArray)}.`,
           );
         }
 
@@ -501,7 +501,7 @@ export function createLogAssertion(
             .join(
               '\n\n',
             )}\n\nIf this ${logName()} should include an error stack trace, add \\n    in <stack> to your expected message ` +
-          `(e.g., "Error: message\\n    in <stack>").`,
+            `(e.g., "Error: message\\n    in <stack>").`,
         );
       }
 
@@ -516,7 +516,7 @@ export function createLogAssertion(
             .join(
               '\n\n',
             )}\n\nThe expected message uses \\n    in <stack> but the actual ${logName()} doesn't include an error stack trace.` +
-          `\nIf this ${logName()} should not have an error stack trace, remove \\n    in <stack> from your expected message.`,
+            `\nIf this ${logName()} should not have an error stack trace, remove \\n    in <stack> from your expected message.`,
         );
       }
 

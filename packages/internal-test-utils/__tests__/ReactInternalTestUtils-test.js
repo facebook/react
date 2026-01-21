@@ -1892,7 +1892,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.error('Hi');
         console.error(
           "TypeError: Cannot read properties of undefined (reading 'stack')\n" +
-          '    in Foo (at **)'
+            '    in Foo (at **)'
         );
         assertConsoleErrorDev(['Hi']);
       });
