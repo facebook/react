@@ -25,14 +25,29 @@ if (process.env.NODE_ENV !== 'production') {
 > **NOTE** that this API (`connectToDevTools`) must be (1) run in the same context as React and (2) must be called before React packages are imported (e.g. `react`, `react-dom`, `react-native`).
 
 ### `initialize` arguments
-| Argument   | Description                                                                                                                                                                                                                                                                                   |
-|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `settings` | Optional. If not specified, or received as null, then default settings are used. Can be plain object or a Promise that resolves with the [plain settings object](#Settings). If Promise rejects, the console will not be patched and some console features from React DevTools will not work. |
+| Argument                  | Description |
+|---------------------------|-------------|
+| `settings`                | Optional. If not specified, or received as null, then default settings are used. Can be plain object or a Promise that resolves with the [plain settings object](#Settings). If Promise rejects, the console will not be patched and some console features from React DevTools will not work. |
+| `shouldStartProfilingNow` | Optional. Whether to start profiling immediately after installing the hook. Defaults to `false`. |
+| `profilingSettings`       | Optional. Profiling settings used when `shouldStartProfilingNow` is `true`. Defaults to `{ recordChangeDescriptions: false, recordTimeline: false }`. |
+| `componentFilters`        | Optional. Array or Promise that resolves to an array of component filters to apply before DevTools connects. Defaults to the built-in host component filter. See [Component filters](#component-filters) for the full spec. |
 
 #### `Settings`
 | Spec                                                                                                                                                                           | Default value                                                                                                                                                        |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | <pre>{<br>  appendComponentStack: boolean,<br>  breakOnConsoleErrors: boolean,<br>  showInlineWarningsAndErrors: boolean,<br>  hideConsoleLogsInStrictMode: boolean,<br>  disableSecondConsoleLogDimmingInStrictMode: boolean<br>}</pre> | <pre>{<br>  appendComponentStack: true,<br>  breakOnConsoleErrors: false,<br>  showInlineWarningsAndErrors: true,<br>  hideConsoleLogsInStrictMode: false,<br>  disableSecondConsoleLogDimmingInStrictMode: false<br>}</pre> |
+
+#### Component filters
+Each filter object must include `type` and `isEnabled`. Some filters also require `value` or `isValid`.
+
+| Type | Required fields | Description |
+|------|-----------------|-------------|
+| `ComponentFilterElementType` (`1`) | `type`, `isEnabled`, `value: ElementType` | Hides elements of the given element type. DevTools defaults to hiding host components. |
+| `ComponentFilterDisplayName` (`2`) | `type`, `isEnabled`, `isValid`, `value: string` | Hides components whose display name matches the provided RegExp string. |
+| `ComponentFilterLocation` (`3`) | `type`, `isEnabled`, `isValid`, `value: string` | Hides components whose source location matches the provided RegExp string. |
+| `ComponentFilterHOC` (`4`) | `type`, `isEnabled`, `isValid` | Hides higher-order components. |
+| `ComponentFilterEnvironmentName` (`5`) | `type`, `isEnabled`, `isValid`, `value: string` | Hides components whose environment name matches the provided string. |
+| `ComponentFilterActivitySlice` (`6`) | `type`, `isEnabled`, `isValid`, `activityID`, `rendererID` | Filters activity slices; usually managed by DevTools rather than user code. |
 
 ### `connectToDevTools` options
 | Prop                   | Default       | Description                                                                                                               |
