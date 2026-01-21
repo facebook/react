@@ -1272,54 +1272,64 @@ describe('useEffectEvent', () => {
   });
 
   // @gate enableActivity
-  it('effect events are fresh in deeply nested hidden Activities', async () => {
+  it('effect events are fresh inside Activity', async () => {
     function Child({value}) {
-      const logValue = useEffectEvent(() => {
-        Scheduler.log('effect event: ' + value);
+      const getValue = useEffectEvent(effectName => {
+        return value;
       });
       useInsertionEffect(() => {
-        logValue();
+        Scheduler.log('insertion create: ' + getValue());
         return () => {
-          logValue();
+          Scheduler.log('insertion destroy: ' + getValue());
         };
       });
+      useLayoutEffect(() => {
+        Scheduler.log('layout create: ' + getValue());
+        return () => {
+          Scheduler.log('layout destroy: ' + getValue());
+        };
+      });
+
       Scheduler.log('render: ' + value);
       return null;
     }
 
-    function App({value}) {
+    function App({value, mode}) {
       return (
-        <React.Activity mode="hidden">
-          <React.Activity mode="hidden">
-            <React.Activity mode="hidden">
-              <Child value={value} />
-            </React.Activity>
-          </React.Activity>
+        <React.Activity mode={mode}>
+          <Child value={value} />
         </React.Activity>
       );
     }
 
     const root = ReactNoop.createRoot();
 
-    // Initial mount with value=1
-    await act(() => root.render(<App value={1} />));
-    assertLog([
-      'render: 1',
-      'effect event: 1', // Insertion effect mount should see fresh value
-    ]);
+    // Mount hidden
+    await act(async () => root.render(<App value={1} mode="hidden" />));
+    assertLog(['render: 1', 'insertion create: 1']);
 
-    // Update to value=2
-    await act(() => root.render(<App value={2} />));
+    // Update, still hidden
+    await act(async () => root.render(<App value={2} mode="hidden" />));
 
-    // Bug in enableViewTransition.
+    // Bug in enableViewTransition. Insertion and layout see stale closure.
     assertLog([
       'render: 2',
-      gate('enableViewTransition') && !gate('enableEffectEventMutationPhase')
-        ? 'effect event: 1'
-        : 'effect event: 2',
-      gate('enableViewTransition') && !gate('enableEffectEventMutationPhase')
-        ? 'effect event: 1'
-        : 'effect event: 2',
+      ...(gate('enableViewTransition') &&
+      !gate('enableEffectEventMutationPhase')
+        ? ['insertion destroy: 1', 'insertion create: 1']
+        : ['insertion destroy: 2', 'insertion create: 2']),
+    ]);
+
+    // Switch to visible
+    await act(async () => root.render(<App value={2} mode="visible" />));
+
+    // Bug in enableViewTransition. Even when switching to visible, sees stale closure.
+    assertLog([
+      'render: 2',
+      ...(gate('enableViewTransition') &&
+      !gate('enableEffectEventMutationPhase')
+        ? ['insertion destroy: 1', 'insertion create: 1', 'layout create: 1']
+        : ['insertion destroy: 2', 'insertion create: 2', 'layout create: 2']),
     ]);
   });
 });
