@@ -1,7 +1,6 @@
 /** @flow */
 
 import type {DevToolsHookSettings} from 'react-devtools-shared/src/backend/types';
-import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
 
 export function postMessage(event: UnknownMessageEventData): void {
   window.postMessage(event);
@@ -11,7 +10,7 @@ export interface UnknownMessageEvent
   extends MessageEvent<UnknownMessageEventData> {}
 
 export type UnknownMessageEventData =
-  | SettingsInjectorEventData
+  | HookSettingsInjectorEventData
   | HookInstallerEventData;
 
 export type HookInstallerEventData = {
@@ -25,20 +24,19 @@ export type HookInstallerEventPayloadHandshake = {
   handshake: true,
 };
 
-export type SettingsInjectorEventData = {
-  source: 'react-devtools-settings-injector',
-  payload: SettingsInjectorEventPayload,
+export type HookSettingsInjectorEventData = {
+  source: 'react-devtools-hook-settings-injector',
+  payload: HookSettingsInjectorEventPayload,
 };
 
-export type SettingsInjectorEventPayload =
-  | SettingsInjectorEventPayloadHandshake
-  | SettingsInjectorEventPayloadSettings;
+export type HookSettingsInjectorEventPayload =
+  | HookSettingsInjectorEventPayloadHandshake
+  | HookSettingsInjectorEventPayloadSettings;
 
-export type SettingsInjectorEventPayloadHandshake = {
+export type HookSettingsInjectorEventPayloadHandshake = {
   handshake: true,
 };
 
-export type SettingsInjectorEventPayloadSettings = {
-  hookSettings: DevToolsHookSettings,
-  componentFilters: Array<ComponentFilter>,
+export type HookSettingsInjectorEventPayloadSettings = {
+  settings: DevToolsHookSettings,
 };

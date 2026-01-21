@@ -148,7 +148,7 @@ export default class Store extends EventEmitter<{
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
   hostInstanceSelected: [Element['id'] | null],
-  settingsUpdated: [$ReadOnly<DevToolsHookSettings>, Array<ComponentFilter>],
+  settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
   mutated: [
     [
       Array<Element['id']>,
@@ -437,22 +437,8 @@ export default class Store extends EventEmitter<{
 
     this._componentFilters = value;
 
-    // Update persisted filter preferences
-    if (this._hookSettings === null) {
-      // We changed filters before we got the hook settings.
-      // Wait for hook settings before persisting component filters to not overwrite
-      // persisted hook settings with defaults.
-      // This exists purely as a type safety check; in practice the hook settings
-      // should have arrived before any filter changes could be made.
-      const onHookSettings = (settings: $ReadOnly<DevToolsHookSettings>) => {
-        this._bridge.removeListener('hookSettings', onHookSettings);
-        this.emit('settingsUpdated', settings, value);
-      };
-      this._bridge.addListener('hookSettings', onHookSettings);
-      this._bridge.send('getHookSettings');
-    } else {
-      this.emit('settingsUpdated', this._hookSettings, value);
-    }
+    // Update persisted filter preferences stored in localStorage.
+    setSavedComponentFilters(value);
 
     // Notify the renderer that filter preferences have changed.
     // This is an expensive operation; it unmounts and remounts the entire tree,
@@ -2433,7 +2419,7 @@ export default class Store extends EventEmitter<{
       this._hookSettings = settings;
 
       this._bridge.send('updateHookSettings', settings);
-      this.emit('settingsUpdated', settings, this._componentFilters);
+      this.emit('settingsUpdated', settings);
     };
 
   onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =

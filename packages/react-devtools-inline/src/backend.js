@@ -10,21 +10,13 @@ import type {
   BackendBridge,
   SavedPreferencesParams,
 } from 'react-devtools-shared/src/bridge';
-import type {
-  ComponentFilter,
-  Wall,
-} from 'react-devtools-shared/src/frontend/types';
+import type {Wall} from 'react-devtools-shared/src/frontend/types';
 import {
   getIfReloadedAndProfiling,
   getIsReloadAndProfileSupported,
   onReloadAndProfile,
   onReloadAndProfileFlagsReset,
 } from 'react-devtools-shared/src/utils';
-
-let resolveComponentFiltersInjection: (filters: Array<ComponentFilter>) => void;
-const componentFiltersPromise = new Promise<Array<ComponentFilter>>(resolve => {
-  resolveComponentFiltersInjection = resolve;
-});
 
 function startActivation(contentWindow: any, bridge: BackendBridge) {
   const onSavedPreferences = (data: SavedPreferencesParams) => {
@@ -34,12 +26,20 @@ function startActivation(contentWindow: any, bridge: BackendBridge) {
 
     const {componentFilters} = data;
 
-    resolveComponentFiltersInjection(componentFilters);
-  };
+    contentWindow.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = componentFilters;
 
-  componentFiltersPromise.then(
-    finishActivation.bind(null, contentWindow, bridge),
-  );
+    // TRICKY
+    // The backend entry point may be required in the context of an iframe or the parent window.
+    // If it's required within the parent window, store the saved values on it as well,
+    // since the injected renderer interface will read from window.
+    // Technically we don't need to store them on the contentWindow in this case,
+    // but it doesn't really hurt anything to store them there too.
+    if (contentWindow !== window) {
+      window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = componentFilters;
+    }
+
+    finishActivation(contentWindow, bridge);
+  };
 
   bridge.addListener('savedPreferences', onSavedPreferences);
 
@@ -113,5 +113,5 @@ export function createBridge(contentWindow: any, wall?: Wall): BackendBridge {
 }
 
 export function initialize(contentWindow: any): void {
-  installHook(contentWindow, componentFiltersPromise);
+  installHook(contentWindow);
 }

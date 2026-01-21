@@ -5,14 +5,8 @@
 // This is the only purpose of this script - to send persisted settings to installHook.js content script
 
 import type {UnknownMessageEvent} from './messages';
-import type {
-  DevToolsHookSettings,
-  DevToolsSettings,
-} from 'react-devtools-shared/src/backend/types';
-import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
+import type {DevToolsHookSettings} from 'react-devtools-shared/src/backend/types';
 import {postMessage} from './messages';
-
-import {getDefaultComponentFilters} from 'react-devtools-shared/src/utils';
 
 async function messageListener(event: UnknownMessageEvent) {
   if (event.source !== window) {
@@ -21,7 +15,7 @@ async function messageListener(event: UnknownMessageEvent) {
 
   if (event.data.source === 'react-devtools-hook-installer') {
     if (event.data.payload.handshake) {
-      const settings: Partial<DevToolsSettings> =
+      const settings: Partial<DevToolsHookSettings> =
         await chrome.storage.local.get();
       // If storage was empty (first installation), define default settings
       const hookSettings: DevToolsHookSettings = {
@@ -47,15 +41,10 @@ async function messageListener(event: UnknownMessageEvent) {
             ? settings.disableSecondConsoleLogDimmingInStrictMode
             : false,
       };
-      const componentFilters: Array<ComponentFilter> = Array.isArray(
-        settings.componentFilters,
-      )
-        ? settings.componentFilters
-        : getDefaultComponentFilters();
 
       postMessage({
-        source: 'react-devtools-settings-injector',
-        payload: {hookSettings, componentFilters},
+        source: 'react-devtools-hook-settings-injector',
+        payload: {settings: hookSettings},
       });
 
       window.removeEventListener('message', messageListener);
@@ -65,6 +54,6 @@ async function messageListener(event: UnknownMessageEvent) {
 
 window.addEventListener('message', messageListener);
 postMessage({
-  source: 'react-devtools-settings-injector',
+  source: 'react-devtools-hook-settings-injector',
   payload: {handshake: true},
 });

@@ -48,11 +48,13 @@ import {
   deletePathInObject,
   getDisplayName,
   getWrappedDisplayName,
+  getDefaultComponentFilters,
   getInObject,
   getUID,
   renamePathInObject,
   setInObject,
   utfEncodeString,
+  persistableComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {
   formatConsoleArgumentsToSingleString,
@@ -1008,9 +1010,6 @@ export function attach(
   global: Object,
   shouldStartProfilingNow: boolean,
   profilingSettings: ProfilingSettings,
-  componentFiltersOrComponentFiltersPromise:
-    | Array<ComponentFilter>
-    | Promise<Array<ComponentFilter>>,
 ): RendererInterface {
   // Newer versions of the reconciler package also specific reconciler version.
   // If that version number is present, use it.
@@ -1517,12 +1516,21 @@ export function attach(
     });
   }
 
-  if (Array.isArray(componentFiltersOrComponentFiltersPromise)) {
-    applyComponentFilters(componentFiltersOrComponentFiltersPromise, null);
+  // The renderer interface can't read saved component filters directly,
+  // because they are stored in localStorage within the context of the extension.
+  // Instead it relies on the extension to pass filters through.
+  if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
+    const restoredComponentFilters: Array<ComponentFilter> =
+      persistableComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
+    applyComponentFilters(restoredComponentFilters, null);
   } else {
-    componentFiltersOrComponentFiltersPromise.then(componentFilters => {
-      applyComponentFilters(componentFilters, null);
-    });
+    // Unfortunately this feature is not expected to work for React Native for now.
+    // It would be annoying for us to spam YellowBox warnings with unactionable stuff,
+    // so for now just skip this message...
+    //console.warn('⚛ DevTools: Could not locate saved component filters');
+
+    // Fallback to assuming the default filters in this case.
+    applyComponentFilters(getDefaultComponentFilters(), null);
   }
 
   // If necessary, we can revisit optimizing this operation.

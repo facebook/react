@@ -29,6 +29,7 @@ import {logEvent} from 'react-devtools-shared/src/Logger';
 import {
   getAlwaysOpenInEditor,
   getOpenInEditorURL,
+  getSavedComponentFilters,
   normalizeUrlIfValid,
 } from 'react-devtools-shared/src/utils';
 import {checkConditions} from 'react-devtools-shared/src/devtools/views/Editor/utils';
@@ -76,6 +77,23 @@ function createBridge() {
       port?.postMessage({event, payload}, transferable);
     },
   });
+
+  const onGetSavedPreferences = () => {
+    // This is the only message we're listening for,
+    // so it's safe to cleanup after we've received it.
+    bridge.removeListener('getSavedPreferences', onGetSavedPreferences);
+
+    const data = {
+      componentFilters: getSavedComponentFilters(),
+    };
+
+    // The renderer interface can't read saved preferences directly,
+    // because they are stored in localStorage within the context of the extension.
+    // Instead it relies on the extension to pass them through.
+    bridge.send('savedPreferences', data);
+  };
+
+  bridge.addListener('getSavedPreferences', onGetSavedPreferences);
 
   bridge.addListener('reloadAppForProfiling', () => {
     localStorageSetItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
@@ -171,8 +189,8 @@ function createBridgeAndStore() {
     createSuspensePanel();
   });
 
-  store.addListener('settingsUpdated', (hookSettings, componentFilters) => {
-    chrome.storage.local.set({...hookSettings, componentFilters});
+  store.addListener('settingsUpdated', settings => {
+    chrome.storage.local.set(settings);
   });
 
   if (!isProfiling) {
