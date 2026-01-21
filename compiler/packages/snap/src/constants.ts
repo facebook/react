@@ -26,5 +26,3 @@ export const FIXTURES_PATH = path.join(
   'compiler',
 );
 export const SNAPSHOT_EXTENSION = '.expect.md';
-export const FILTER_FILENAME = 'testfilter.txt';
-export const FILTER_PATH = path.join(PROJECT_ROOT, FILTER_FILENAME);
