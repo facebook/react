@@ -1630,7 +1630,7 @@ const tests = {
         {
           message:
             "The 'logCount' function makes the dependencies of useEffect Hook " +
-            "(at line 11) change on every render. " +
+            '(at line 11) change on every render. ' +
             "Move it inside the useEffect callback. Alternatively, wrap the definition of 'logCount' in its own useCallback() Hook.",
           suggestions: undefined,
         },
@@ -1651,7 +1651,7 @@ const tests = {
         {
           message:
             "React Hook useEffect has a missing dependency: 'count'. " +
-            "Either include it or remove the dependency array.",
+            'Either include it or remove the dependency array.',
           suggestions: [
             {
               desc: 'Update the dependencies array to be: [count]',
