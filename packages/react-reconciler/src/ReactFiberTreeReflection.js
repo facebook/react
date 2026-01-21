@@ -33,25 +33,24 @@ import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
   let nearestMounted: null | Fiber = fiber;
-  if (!fiber.alternate) {
-    // If there is no alternate, this might be a new tree that isn't inserted
-    // yet. If it is, then it will have a pending insertion effect on it.
-    let nextNode: Fiber = node;
-    do {
-      node = nextNode;
-      if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
-        // This is an insertion or in-progress hydration. The nearest possible
-        // mounted fiber is the parent but we need to continue to figure out
-        // if that one is still mounted.
-        nearestMounted = node.return;
-      }
-      // $FlowFixMe[incompatible-type] we bail out when we get a null
-      nextNode = node.return;
-    } while (nextNode);
-  } else {
-    while (node.return) {
-      node = node.return;
+  // If there is no alternate, this might be a new tree that isn't inserted
+  // yet. If it is, then it will have a pending insertion effect on it.
+  let nextNode: Fiber = node;
+  while (nextNode && !nextNode.alternate) {
+    node = nextNode;
+    if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
+      // This is an insertion or in-progress hydration. The nearest possible
+      // mounted fiber is the parent but we need to continue to figure out
+      // if that one is still mounted.
+      nearestMounted = node.return;
     }
+    // $FlowFixMe[incompatible-type] we bail out when we get a null
+    nextNode = node.return;
+  }
+  // After we've reached an alternate, go the rest of the way to see if the
+  // tree is still mounted. If it's not, its return pointer will be disconnected.
+  while (node.return) {
+    node = node.return;
   }
   if (node.tag === HostRoot) {
     // TODO: Check if this was a nested HostRoot when used with
