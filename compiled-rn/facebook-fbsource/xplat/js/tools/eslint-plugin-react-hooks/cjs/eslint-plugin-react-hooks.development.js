@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<01a322ebd457fb967ee79a8db5a50847>>
+ * @generated SignedSource<<cdd919a996c2a017a2fcc6a34059c2c7>>
  */
 
 'use strict';
@@ -56423,6 +56423,68 @@ function BabelPluginReactCompiler(_babel) {
 }
 
 var _LRUCache_values, _LRUCache_headIdx;
+const COMPONENT_NAME_PATTERN = /^[A-Z]/;
+const HOOK_NAME_PATTERN = /^use[A-Z0-9]/;
+function mayContainReactCode(sourceCode) {
+    const ast = sourceCode.ast;
+    for (const node of ast.body) {
+        if (checkTopLevelNode(node)) {
+            return true;
+        }
+    }
+    return false;
+}
+function checkTopLevelNode(node) {
+    if (node.type === 'ComponentDeclaration' || node.type === 'HookDeclaration') {
+        return true;
+    }
+    if (node.type === 'ExportNamedDeclaration') {
+        const decl = node.declaration;
+        if (decl != null) {
+            return checkTopLevelNode(decl);
+        }
+        return false;
+    }
+    if (node.type === 'ExportDefaultDeclaration') {
+        const decl = node.declaration;
+        if (decl.type === 'FunctionExpression' ||
+            decl.type === 'ArrowFunctionExpression' ||
+            (decl.type === 'FunctionDeclaration' &&
+                decl.id == null)) {
+            return true;
+        }
+        return checkTopLevelNode(decl);
+    }
+    if (node.type === 'FunctionDeclaration') {
+        if ('__componentDeclaration' in node ||
+            '__hookDeclaration' in node) {
+            return true;
+        }
+        const id = node.id;
+        if (id != null) {
+            const name = id.name;
+            if (COMPONENT_NAME_PATTERN.test(name) || HOOK_NAME_PATTERN.test(name)) {
+                return true;
+            }
+        }
+    }
+    if (node.type === 'VariableDeclaration') {
+        for (const decl of node.declarations) {
+            if (decl.id.type === 'Identifier') {
+                const init = decl.init;
+                if (init != null &&
+                    (init.type === 'ArrowFunctionExpression' ||
+                        init.type === 'FunctionExpression')) {
+                    const name = decl.id.name;
+                    if (COMPONENT_NAME_PATTERN.test(name) || HOOK_NAME_PATTERN.test(name)) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
 const COMPILER_OPTIONS = {
     outputMode: 'lint',
     panicThreshold: 'none',
@@ -56564,6 +56626,22 @@ function runReactCompiler({ sourceCode, filename, userOpts, }) {
         entry.sourceCode === sourceCode.text &&
         util.isDeepStrictEqual(entry.userOpts, userOpts)) {
         return entry;
+    }
+    if (!mayContainReactCode(sourceCode)) {
+        const emptyResult = {
+            sourceCode: sourceCode.text,
+            filename,
+            userOpts,
+            flowSuppressions: [],
+            events: [],
+        };
+        if (entry != null) {
+            Object.assign(entry, emptyResult);
+        }
+        else {
+            cache.push(filename, emptyResult);
+        }
+        return Object.assign({}, emptyResult);
     }
     const runEntry = runReactCompilerImpl({
         sourceCode,
