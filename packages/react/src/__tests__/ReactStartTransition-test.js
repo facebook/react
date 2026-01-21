@@ -62,9 +62,9 @@ describe('ReactStartTransition', () => {
       });
     });
     assertConsoleWarnDev([
-      ['Detected a large number of updates inside startTransition. ' +
+      'Detected a large number of updates inside startTransition. ' +
         'If this is due to a subscription please re-write it to use React provided hooks. ' +
-        'Otherwise concurrent mode guarantees are off the table.', {withoutStack: true}],
+        'Otherwise concurrent mode guarantees are off the table.',
     ]);
 
     await act(() => {
@@ -75,9 +75,9 @@ describe('ReactStartTransition', () => {
       });
     });
     assertConsoleWarnDev([
-      ['Detected a large number of updates inside startTransition. ' +
+      'Detected a large number of updates inside startTransition. ' +
         'If this is due to a subscription please re-write it to use React provided hooks. ' +
-        'Otherwise concurrent mode guarantees are off the table.', {withoutStack: true}],
+        'Otherwise concurrent mode guarantees are off the table.',
     ]);
   });
 });

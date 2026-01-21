@@ -60,7 +60,7 @@ describe('Profiler', () => {
               root.render(<React.Profiler />);
             });
             assertConsoleErrorDev([
-              ['Profiler must specify an "id" of type `string` as a prop. Received the type `undefined` instead.', {withoutStack: true}],
+              'Profiler must specify an "id" of type `string` as a prop. Received the type `undefined` instead.',
             ]);
           });
         }
