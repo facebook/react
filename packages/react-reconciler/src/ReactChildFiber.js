@@ -228,9 +228,10 @@ if (__DEV__) {
   };
 }
 
-// Given a fragment, validate that it can only be provided with fragment props
-// We do this here instead of BeginWork because the Fragment fiber doesn't have
-// the whole props object, only the children and is shared with arrays.
+// Given a Fragment, validate that it is only provided with Fragment-specific props.
+// We do this here instead of BeginWork because the Fragment fiber does not have
+// access to the full props object; it only has children and is shared with arrays.
+
 function validateFragmentProps(
   element: ReactElement,
   fiber: null | Fiber,
