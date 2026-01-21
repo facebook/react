@@ -24,33 +24,6 @@ Check out the [Getting Started](https://react.dev/learn) page for a quick overvi
 
 The documentation is divided into several sections:
 
-* [Quick Start](https://react.dev/learn)
-* [Tutorial](https://react.dev/learn/tutorial-tic-tac-toe)
-* [Thinking in React](https://react.dev/learn/thinking-in-react)
-* [Installation](https://react.dev/learn/installation)
-* [Describing the UI](https://react.dev/learn/describing-the-ui)
-* [Adding Interactivity](https://react.dev/learn/adding-interactivity)
-* [Managing State](https://react.dev/learn/managing-state)
-* [Advanced Guides](https://react.dev/learn/escape-hatches)
-* [API Reference](https://react.dev/reference/react)
-* [Where to Get Support](https://react.dev/community)
-* [Contributing Guide](https://legacy.reactjs.org/docs/how-to-contribute.html)
-
-You can improve it by sending pull requests to [this repository](https://github.com/reactjs/react.dev).
-
-## Examples
-
-We have several examples [on the website](https://react.dev/). Here is the first one to get you started:
-
-```jsx
-import { createRoot } from 'react-dom/client';
-
-function HelloMessage({ name }) {
-  return <div>Hello {name}</div>;
-}
-
-const root = createRoot(document.getElementById('container'));
-root.render(<HelloMessage name="Taylor" />);
 ```
 
 This example will render "Hello Taylor" into a container on the page.
