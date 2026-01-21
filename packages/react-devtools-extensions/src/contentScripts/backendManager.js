@@ -12,7 +12,6 @@ import type {
   ReactRenderer,
 } from 'react-devtools-shared/src/backend/types';
 import {hasAssignedBackend} from 'react-devtools-shared/src/backend/utils';
-import type {SavedPreferencesParams} from 'react-devtools-shared/src/bridge';
 import {COMPACT_VERSION_NAME} from 'react-devtools-extensions/src/utils';
 import {getIsReloadAndProfileSupported} from 'react-devtools-shared/src/utils';
 import {
@@ -145,24 +144,6 @@ function activateBackend(version: string, hook: DevToolsHook) {
       );
     },
   });
-
-  const onSavedPreferences = (data: SavedPreferencesParams) => {
-    // This is the only message we're listening for,
-    // so it's safe to cleanup after we've received it.
-    bridge.removeListener('savedPreferences', onSavedPreferences);
-
-    const {componentFilters} = data;
-
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const rendererInterface of hook.rendererInterfaces.values()) {
-      rendererInterface.updateComponentFilters(componentFilters);
-    }
-  };
-  bridge.addListener('savedPreferences', onSavedPreferences);
-  // The backend is unable to read saved preferences directly,
-  // because they are stored in localStorage within the context of the extension (on the frontend).
-  // Instead it relies on the extension to pass preferences through.
-  bridge.send('getSavedPreferences');
 
   const agent = new Agent(
     bridge,
