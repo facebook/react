@@ -593,6 +593,7 @@ module.exports = {
     mixin$Animatable: 'readonly',
     MouseEventHandler: 'readonly',
     NavigateEvent: 'readonly',
+    Partial: 'readonly',
     PerformanceMeasureOptions: 'readonly',
     PropagationPhases: 'readonly',
     PropertyDescriptor: 'readonly',
