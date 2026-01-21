@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Bash(yarn snap:*)",
+      "Bash(yarn snap:build)",
       "Bash(node scripts/enable-feature-flag.js:*)"
     ],
     "deny": [],
