@@ -1569,7 +1569,7 @@ describe('Activity', () => {
         Scheduler.log('componentWillUnmount');
       }
       render() {
-        Scheduler.log(`render: ${this.props.value} `);
+        Scheduler.log(`render: ${this.props.value}`);
         return <span prop={this.props.value} />;
       }
     }
