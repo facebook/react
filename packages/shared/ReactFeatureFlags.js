@@ -22,8 +22,6 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-export const enableHydrationLaneScheduling: boolean = true;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //

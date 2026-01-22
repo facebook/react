@@ -57,8 +57,6 @@ export const enableYieldingBeforePassive: boolean = false;
 
 export const enableThrottledScheduling: boolean = false;
 
-export const enableHydrationLaneScheduling: boolean = true;
-
 export const enablePerformanceIssueReporting: boolean = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
