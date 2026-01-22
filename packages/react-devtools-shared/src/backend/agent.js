@@ -953,8 +953,8 @@ export default class Agent extends EventEmitter<{
     );
   }
 
-  selectNodeWithViewData(viewData: TouchedViewDataAtPoint): void => {
-    if (viewData !== null) {
+  selectNodeWithViewData(viewData?: TouchedViewDataAtPoint): void {
+    if (viewData) {
       this._bridge.send('viewDataAtPoint', viewData);
     }
   }
