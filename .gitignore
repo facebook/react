@@ -24,7 +24,7 @@ chrome-user-data
 *.swp
 *.swo
 /tmp
-/worktrees
+/.worktrees
 .claude/*.local.*
 
 packages/react-devtools-core/dist
