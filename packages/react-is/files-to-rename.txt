@@ -1,0 +1,2 @@
+src/ReactIs.js -> src/ReactIs.ts
+src/__tests__/ReactIs-test.js -> src/__tests__/ReactIs-test.tsx (contains JSX)

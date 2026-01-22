@@ -3,8 +3,6 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
 'use strict';
@@ -37,12 +35,12 @@ import {
 
 const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
 
-export function typeOf(object: any): mixed {
+export function typeOf(object: unknown): symbol | undefined {
   if (typeof object === 'object' && object !== null) {
-    const $$typeof = object.$$typeof;
+    const $$typeof = (object as any).$$typeof;
     switch ($$typeof) {
       case REACT_ELEMENT_TYPE:
-        const type = object.type;
+        const type = (object as any).type;
 
         switch (type) {
           case REACT_FRAGMENT_TYPE:
@@ -89,7 +87,7 @@ export const StrictMode = REACT_STRICT_MODE_TYPE;
 export const Suspense = REACT_SUSPENSE_TYPE;
 export const SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 
-export function isValidElementType(type: mixed): boolean {
+export function isValidElementType(type: unknown): boolean {
   if (typeof type === 'string' || typeof type === 'function') {
     return true;
   }
@@ -111,17 +109,17 @@ export function isValidElementType(type: mixed): boolean {
 
   if (typeof type === 'object' && type !== null) {
     if (
-      type.$$typeof === REACT_LAZY_TYPE ||
-      type.$$typeof === REACT_MEMO_TYPE ||
-      type.$$typeof === REACT_CONTEXT_TYPE ||
-      type.$$typeof === REACT_CONSUMER_TYPE ||
-      type.$$typeof === REACT_FORWARD_REF_TYPE ||
+      (type as any).$$typeof === REACT_LAZY_TYPE ||
+      (type as any).$$typeof === REACT_MEMO_TYPE ||
+      (type as any).$$typeof === REACT_CONTEXT_TYPE ||
+      (type as any).$$typeof === REACT_CONSUMER_TYPE ||
+      (type as any).$$typeof === REACT_FORWARD_REF_TYPE ||
       // This needs to include all possible module reference object
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used
       // with.
-      type.$$typeof === REACT_CLIENT_REFERENCE ||
-      type.getModuleId !== undefined
+      (type as any).$$typeof === REACT_CLIENT_REFERENCE ||
+      (type as any).getModuleId !== undefined
     ) {
       return true;
     }
@@ -130,43 +128,43 @@ export function isValidElementType(type: mixed): boolean {
   return false;
 }
 
-export function isContextConsumer(object: any): boolean {
+export function isContextConsumer(object: unknown): boolean {
   return typeOf(object) === REACT_CONSUMER_TYPE;
 }
-export function isContextProvider(object: any): boolean {
+export function isContextProvider(object: unknown): boolean {
   return typeOf(object) === REACT_CONTEXT_TYPE;
 }
-export function isElement(object: any): boolean {
+export function isElement(object: unknown): boolean {
   return (
     typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_ELEMENT_TYPE
+    (object as any).$$typeof === REACT_ELEMENT_TYPE
   );
 }
-export function isForwardRef(object: any): boolean {
+export function isForwardRef(object: unknown): boolean {
   return typeOf(object) === REACT_FORWARD_REF_TYPE;
 }
-export function isFragment(object: any): boolean {
+export function isFragment(object: unknown): boolean {
   return typeOf(object) === REACT_FRAGMENT_TYPE;
 }
-export function isLazy(object: any): boolean {
+export function isLazy(object: unknown): boolean {
   return typeOf(object) === REACT_LAZY_TYPE;
 }
-export function isMemo(object: any): boolean {
+export function isMemo(object: unknown): boolean {
   return typeOf(object) === REACT_MEMO_TYPE;
 }
-export function isPortal(object: any): boolean {
+export function isPortal(object: unknown): boolean {
   return typeOf(object) === REACT_PORTAL_TYPE;
 }
-export function isProfiler(object: any): boolean {
+export function isProfiler(object: unknown): boolean {
   return typeOf(object) === REACT_PROFILER_TYPE;
 }
-export function isStrictMode(object: any): boolean {
+export function isStrictMode(object: unknown): boolean {
   return typeOf(object) === REACT_STRICT_MODE_TYPE;
 }
-export function isSuspense(object: any): boolean {
+export function isSuspense(object: unknown): boolean {
   return typeOf(object) === REACT_SUSPENSE_TYPE;
 }
-export function isSuspenseList(object: any): boolean {
+export function isSuspenseList(object: unknown): boolean {
   return typeOf(object) === REACT_SUSPENSE_LIST_TYPE;
 }
