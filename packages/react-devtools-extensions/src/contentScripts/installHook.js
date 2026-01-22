@@ -1,39 +1,46 @@
+/** @flow */
+
+import type {UnknownMessageEvent} from './messages';
+import type {DevToolsHookSettings} from 'react-devtools-shared/src/backend/types';
+
 import {installHook} from 'react-devtools-shared/src/hook';
 import {
   getIfReloadedAndProfiling,
   getProfilingSettings,
 } from 'react-devtools-shared/src/utils';
+import {postMessage} from './messages';
 
-let resolveHookSettingsInjection;
+let resolveHookSettingsInjection: (settings: DevToolsHookSettings) => void;
 
-function messageListener(event: MessageEvent) {
+function messageListener(event: UnknownMessageEvent) {
   if (event.source !== window) {
     return;
   }
 
   if (event.data.source === 'react-devtools-hook-settings-injector') {
+    const payload = event.data.payload;
     // In case handshake message was sent prior to hookSettingsInjector execution
     // We can't guarantee order
-    if (event.data.payload.handshake) {
-      window.postMessage({
+    if (payload.handshake) {
+      postMessage({
         source: 'react-devtools-hook-installer',
         payload: {handshake: true},
       });
-    } else if (event.data.payload.settings) {
+    } else if (payload.settings) {
       window.removeEventListener('message', messageListener);
-      resolveHookSettingsInjection(event.data.payload.settings);
+      resolveHookSettingsInjection(payload.settings);
     }
   }
 }
 
 // Avoid double execution
 if (!window.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
-  const hookSettingsPromise = new Promise(resolve => {
+  const hookSettingsPromise = new Promise<DevToolsHookSettings>(resolve => {
     resolveHookSettingsInjection = resolve;
   });
 
   window.addEventListener('message', messageListener);
-  window.postMessage({
+  postMessage({
     source: 'react-devtools-hook-installer',
     payload: {handshake: true},
   });

@@ -147,7 +147,7 @@ export default class Store extends EventEmitter<{
   enableSuspenseTab: [],
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
-  hostInstanceSelected: [Element['id']],
+  hostInstanceSelected: [Element['id'] | null],
   settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
   mutated: [
     [
@@ -2381,8 +2381,15 @@ export default class Store extends EventEmitter<{
     this._bridge.send('getHookSettings'); // Warm up cached hook settings
   };
 
-  onHostInstanceSelected: (elementId: number) => void = elementId => {
-    if (this._lastSelectedHostInstanceElementId === elementId) {
+  onHostInstanceSelected: (elementId: number | null) => void = elementId => {
+    if (
+      this._lastSelectedHostInstanceElementId === elementId &&
+      // Force clear selection e.g. when we inspect an element in the Components panel
+      // and then switch to the browser's Elements panel.
+      // We wouldn't want to stay on the inspected element if we're inspecting
+      // an element not owned by React when switching to the browser's Elements panel.
+      elementId !== null
+    ) {
       return;
     }
 

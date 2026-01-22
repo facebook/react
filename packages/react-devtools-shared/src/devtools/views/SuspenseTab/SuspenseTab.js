@@ -543,7 +543,11 @@ function SuspenseTab(_: {}) {
           className={styles.InspectedElementWrapper}
           hidden={inspectedElementHidden}>
           <InspectedElementErrorBoundary>
-            <InspectedElement />
+            <InspectedElement
+              fallbackEmpty={
+                'No React element selected. Select a Suspense boundary in the minimap to inspect.'
+              }
+            />
           </InspectedElementErrorBoundary>
         </div>
         <SettingsModal />

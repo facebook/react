@@ -240,9 +240,6 @@ beforeEach(() => {
   setSavedComponentFilters(getDefaultComponentFilters());
   global.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = getDefaultComponentFilters();
 
-  // Also initialize inline warnings so that we can test them.
-  global.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = true;
-
   installHook(global, {
     appendComponentStack: true,
     breakOnConsoleErrors: false,
