@@ -10,6 +10,16 @@
 let didWarnAboutMessageChannel = false;
 let enqueueTaskImpl = null;
 
+/**
+ * Enqueues a task to be executed asynchronously.
+ * 
+ * In Node.js environments, this uses `setImmediate` to bypass fake timers.
+ * In browser environments, this uses `MessageChannel` to ensure the task
+ * runs asynchronously even when timers are faked (e.g., in tests).
+ * 
+ * @param {() => void} task - The function to execute asynchronously.
+ * @returns {void}
+ */
 export default function enqueueTask(task: () => void): void {
   if (enqueueTaskImpl === null) {
     try {
