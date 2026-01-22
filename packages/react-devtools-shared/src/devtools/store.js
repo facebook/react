@@ -434,6 +434,7 @@ export default class Store extends EventEmitter<{
     this._componentFilters = value;
 
     // Update persisted filter preferences
+    setSavedComponentFilters(value);
     if (this._hookSettings === null) {
       // We changed filters before we got the hook settings.
       // Wait for hook settings before persisting component filters to not overwrite
