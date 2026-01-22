@@ -121,11 +121,6 @@
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sbuggay/react.git"
-  },
-  "version": "1.0.0",
   "scripts": {
     "prebuild": "./scripts/react-compiler/link-compiler.sh",
     "build": "node ./scripts/rollup/build-all-release-channels.js",
