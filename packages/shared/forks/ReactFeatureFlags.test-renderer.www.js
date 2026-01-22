@@ -63,7 +63,6 @@ export const disableLegacyMode: boolean = true;
 export const renameElementSymbol: boolean = false;
 
 export const enableObjectFiber: boolean = false;
-export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
 export const enableYieldingBeforePassive: boolean = false;
 
