@@ -4,6 +4,8 @@ This document contains knowledge about the React Compiler gathered during develo
 
 ## Project Structure
 
+When modifying the compiler, you MUST read the documentation about that pass in `compiler/packages/babel-plugin-react-compiler/docs/passes/` to learn more about the role of that pass within the compiler.
+
 - `packages/babel-plugin-react-compiler/` - Main compiler package
   - `src/HIR/` - High-level Intermediate Representation types and utilities
   - `src/Inference/` - Effect inference passes (aliasing, mutation, etc.)
