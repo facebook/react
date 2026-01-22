@@ -583,6 +583,10 @@ function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
             testBlock = fn.body.blocks.get(terminal.fallthrough)!;
             break;
           }
+          case 'maybe-throw': {
+            testBlock = fn.body.blocks.get(terminal.continuation)!;
+            break;
+          }
           default: {
             CompilerError.invariant(false, {
               reason: `Unexpected terminal in optional`,

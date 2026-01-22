@@ -19,6 +19,7 @@ import {
 } from '../HIR';
 import {
   HIRFunction,
+  isStatementBlockKind,
   ReactiveBreakTerminal,
   ReactiveContinueTerminal,
   ReactiveFunction,
@@ -60,6 +61,51 @@ class Driver {
 
   constructor(cx: Context) {
     this.cx = cx;
+  }
+
+  /*
+   * Extracts the result value from instructions at the end of a value block.
+   * Value blocks generally end in a StoreLocal to assign the value of the
+   * expression. These StoreLocal instructions can be pruned since we represent
+   * value blocks as compound values in ReactiveFunction (no phis). However,
+   * it's also possible to have a value block that ends in an AssignmentExpression,
+   * which we need to keep. So we only prune StoreLocal for temporaries.
+   */
+  extractValueBlockResult(
+    instructions: BasicBlock['instructions'],
+    blockId: BlockId,
+    loc: SourceLocation,
+  ): {block: BlockId; place: Place; value: ReactiveValue; id: InstructionId} {
+    CompilerError.invariant(instructions.length !== 0, {
+      reason: `Expected non-empty instructions in extractValueBlockResult`,
+      description: null,
+      loc,
+    });
+    const instr = instructions.at(-1)!;
+    let place: Place = instr.lvalue;
+    let value: ReactiveValue = instr.value;
+    if (
+      value.kind === 'StoreLocal' &&
+      value.lvalue.place.identifier.name === null
+    ) {
+      place = value.lvalue.place;
+      value = {
+        kind: 'LoadLocal',
+        place: value.value,
+        loc: value.value.loc,
+      };
+    }
+    if (instructions.length === 1) {
+      return {block: blockId, place, value, id: instr.id};
+    }
+    const sequence: ReactiveSequenceValue = {
+      kind: 'SequenceExpression',
+      instructions: instructions.slice(0, -1),
+      id: instr.id,
+      value,
+      loc,
+    };
+    return {block: blockId, place, value: sequence, id: instr.id};
   }
 
   traverseBlock(block: BasicBlock): ReactiveBlock {
@@ -899,78 +945,118 @@ class Driver {
     } else if (defaultBlock.terminal.kind === 'goto') {
       const instructions = defaultBlock.instructions;
       if (instructions.length === 0) {
-        CompilerError.invariant(false, {
-          reason: 'Expected goto value block to have at least one instruction',
-          loc: GeneratedSource,
+        /*
+         * Empty goto blocks just forward to the next block.
+         * Follow the goto to get the actual value.
+         */
+        return this.visitValueBlock(defaultBlock.terminal.block, loc);
+      }
+      return this.extractValueBlockResult(instructions, defaultBlock.id, loc);
+    } else if (defaultBlock.terminal.kind === 'maybe-throw') {
+      /*
+       * ReactiveFunction does not explicitly model maybe-throw semantics,
+       * so maybe-throw terminals in value blocks flatten away. We continue
+       * to the continuation block if it's still part of the value block
+       * (expression-level), but stop if it's a statement-level block.
+       */
+      const continuationBlock = this.cx.ir.blocks.get(
+        defaultBlock.terminal.continuation,
+      )!;
+      if (isStatementBlockKind(continuationBlock.kind)) {
+        /*
+         * The continuation is a statement-level block. The value block ends at this block.
+         * Process this block's instructions like a goto case.
+         */
+        const instructions = defaultBlock.instructions;
+        CompilerError.invariant(instructions.length !== 0, {
+          reason: `Unexpected empty maybe-throw block with statement-level continuation`,
+          description: null,
+          loc: defaultBlock.terminal.loc,
         });
-      } else if (defaultBlock.instructions.length === 1) {
-        const instr = defaultBlock.instructions[0]!;
-        let place: Place = instr.lvalue;
-        let value: ReactiveValue = instr.value;
-        if (
+        return this.extractValueBlockResult(instructions, defaultBlock.id, loc);
+      }
+      /*
+       * The continuation is expression-level. If it's empty (just has a terminal
+       * like branch/optional/logical), we need to follow to it and include the
+       * current block's instructions in a sequence. If it has instructions, we
+       * recursively visit and merge.
+       */
+      const isContinuationEmpty = continuationBlock.instructions.length === 0;
+      if (isContinuationEmpty && defaultBlock.instructions.length === 0) {
+        /*
+         * Both the current block and continuation are empty. Just follow to
+         * the continuation block.
+         */
+        return this.visitValueBlock(defaultBlock.terminal.continuation, loc);
+      } else if (isContinuationEmpty) {
+        /*
+         * The continuation block is empty but has a terminal.
+         * If the terminal is also maybe-throw, we need to follow through to find
+         * the actual terminal (branch/optional/logical/etc).
+         */
+        if (continuationBlock.terminal.kind === 'maybe-throw') {
           /*
-           * Value blocks generally end in a StoreLocal to assign the value of the
-           * expression for this branch. These StoreLocal instructions can be pruned,
-           * since we represent the value blocks as a compund value in ReactiveFunction
-           * (no phis). However, it's also possible to have a value block that ends in
-           * an AssignmentExpression, which we need to keep. So we only prune
-           * StoreLocal for temporaries — any named/promoted values must be used
-           * elsewhere and aren't safe to prune.
+           * The continuation is also a maybe-throw. Follow through recursively
+           * to find the final block with the actual terminal.
            */
-          value.kind === 'StoreLocal' &&
-          value.lvalue.place.identifier.name === null
-        ) {
-          place = value.lvalue.place;
-          value = {
-            kind: 'LoadLocal',
-            place: value.value,
-            loc: value.value.loc,
-          };
+          const nextContinuation = this.visitValueBlock(
+            continuationBlock.terminal.continuation,
+            loc,
+          );
+          if (defaultBlock.instructions.length > 0) {
+            const innerSequence: ReactiveSequenceValue = {
+              kind: 'SequenceExpression',
+              instructions: defaultBlock.instructions,
+              id: nextContinuation.id,
+              value: nextContinuation.value,
+              loc,
+            };
+            return {
+              block: nextContinuation.block,
+              value: innerSequence,
+              place: nextContinuation.place,
+              id: nextContinuation.id,
+            };
+          }
+          return nextContinuation;
         }
-        return {
-          block: defaultBlock.id,
-          place,
-          value,
-          id: instr.id,
-        };
-      } else {
-        const instr = defaultBlock.instructions.at(-1)!;
-        let place: Place = instr.lvalue;
-        let value: ReactiveValue = instr.value;
-        if (
-          /*
-           * Value blocks generally end in a StoreLocal to assign the value of the
-           * expression for this branch. These StoreLocal instructions can be pruned,
-           * since we represent the value blocks as a compund value in ReactiveFunction
-           * (no phis). However, it's also possible to have a value block that ends in
-           * an AssignmentExpression, which we need to keep. So we only prune
-           * StoreLocal for temporaries — any named/promoted values must be used
-           * elsewhere and aren't safe to prune.
-           */
-          value.kind === 'StoreLocal' &&
-          value.lvalue.place.identifier.name === null
-        ) {
-          place = value.lvalue.place;
-          value = {
-            kind: 'LoadLocal',
-            place: value.value,
-            loc: value.value.loc,
-          };
-        }
-        const sequence: ReactiveSequenceValue = {
+        /*
+         * The continuation block is empty with a non-maybe-throw terminal
+         * (branch/optional/logical/etc). Extract the result from the current
+         * block's instructions but return the continuation block's ID so that
+         * visitValueBlockTerminal can find the terminal.
+         */
+        const result = this.extractValueBlockResult(
+          defaultBlock.instructions,
+          continuationBlock.id,
+          loc,
+        );
+        return result;
+      }
+      /*
+       * The continuation is still expression-level with instructions, so continue visiting.
+       * Include any instructions from this block in a sequence.
+       */
+      const continuation = this.visitValueBlock(
+        defaultBlock.terminal.continuation,
+        loc,
+      );
+      if (defaultBlock.instructions.length > 0) {
+        const innerSequence: ReactiveSequenceValue = {
           kind: 'SequenceExpression',
-          instructions: defaultBlock.instructions.slice(0, -1),
-          id: instr.id,
-          value,
-          loc: loc,
+          instructions: defaultBlock.instructions,
+          id: continuation.id,
+          value: continuation.value,
+          loc,
         };
         return {
-          block: defaultBlock.id,
-          place,
-          value: sequence,
-          id: instr.id,
+          block: continuation.block,
+          value: innerSequence,
+          place: continuation.place,
+          id: continuation.id,
         };
       }
+      return continuation;
     } else {
       /*
        * The value block ended in a value terminal, recurse to get the value
@@ -996,7 +1082,7 @@ class Driver {
         loc,
       };
       return {
-        block: init.fallthrough,
+        block: final.block,
         value: sequence,
         place: final.place,
         id: final.id,
@@ -1145,11 +1231,10 @@ class Driver {
         };
       }
       case 'maybe-throw': {
-        CompilerError.throwTodo({
-          reason: `Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement`,
+        CompilerError.invariant(false, {
+          reason: `Unexpected maybe-throw in visitValueBlockTerminal - should be handled in visitValueBlock`,
           description: null,
           loc: terminal.loc,
-          suggestions: null,
         });
       }
       case 'label': {
