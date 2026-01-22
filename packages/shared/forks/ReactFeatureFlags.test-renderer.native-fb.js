@@ -50,7 +50,6 @@ export const enableTransitionTracing = false;
 export const enableTrustedTypesIntegration = false;
 export const enableUpdaterTracking = false;
 export const passChildrenWhenCloningPersistedNodes = false;
-export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;

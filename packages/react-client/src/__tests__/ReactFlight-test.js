@@ -1085,7 +1085,6 @@ describe('ReactFlight', () => {
     });
   });
 
-  // @gate renameElementSymbol
   it('should emit descriptions of errors in dev', async () => {
     const ClientErrorBoundary = clientReference(ErrorBoundary);
 

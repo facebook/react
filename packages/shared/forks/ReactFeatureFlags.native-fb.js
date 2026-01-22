@@ -24,7 +24,6 @@ export const {
   enableObjectFiber,
   enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
-  renameElementSymbol,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
   enableFragmentRefsInstanceHandles,
