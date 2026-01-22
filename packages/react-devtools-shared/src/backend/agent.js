@@ -20,6 +20,9 @@ import {
 } from './views/TraceUpdates';
 import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
+import type {
+  TouchedViewDataAtPoint,
+} from './ReactNativeTypes';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
   InstanceAndStyle,
@@ -955,7 +958,7 @@ export default class Agent extends EventEmitter<{
 
   selectNodeWithViewData(viewData?: TouchedViewDataAtPoint): void {
     if (viewData) {
-      this._bridge.send('viewDataAtPoint', viewData);
+      this._bridge.send('selectElementWithViewData', viewData);
     }
   }
 
