@@ -118,8 +118,6 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache: boolean = false;
 
-export const enableUseEffectEventHook: boolean = true;
-
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts

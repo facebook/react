@@ -69,6 +69,7 @@ module.exports = {
     backend: './src/backend.js',
     background: './src/background/index.js',
     backendManager: './src/contentScripts/backendManager.js',
+    fallbackEvalContext: './src/contentScripts/fallbackEvalContext.js',
     fileFetcher: './src/contentScripts/fileFetcher.js',
     main: './src/main/index.js',
     panel: './src/panel.js',
