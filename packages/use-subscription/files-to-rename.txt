@@ -1,0 +1,2 @@
+src/__tests__/useSubscription-test.js -> src/__tests__/useSubscription-test.tsx (contains JSX)
+src/useSubscription.js -> src/useSubscription.tsx (contains JSX)

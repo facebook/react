@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './src/useSubscription';
+export * from './src/useSubscription.tsx';

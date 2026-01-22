@@ -3,8 +3,6 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
 import {useSyncExternalStore} from 'use-sync-external-store/shim';
@@ -15,16 +13,13 @@ import {useSyncExternalStore} from 'use-sync-external-store/shim';
 // the parameters passed to this hook should be memoized in some way–
 // either by wrapping the entire params object with useMemo()
 // or by wrapping the individual callbacks with useCallback().
-export function useSubscription<Value>({
+export function useSubscription<Value>(config: {
   // (Synchronously) returns the current value of our subscription.
-  getCurrentValue,
+  getCurrentValue: () => Value;
 
   // This function is passed an event handler to attach to the subscription.
   // It should return an unsubscribe function that removes the handler.
-  subscribe,
-}: {
-  getCurrentValue: () => Value,
-  subscribe: (callback: Function) => () => void,
+  subscribe: (callback: () => void) => () => void;
 }): Value {
-  return useSyncExternalStore(subscribe, getCurrentValue);
+  return useSyncExternalStore(config.subscribe, config.getCurrentValue);
 }
