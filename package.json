@@ -46,7 +46,9 @@
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-replace": "^5.0.2",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@tsconfig/strictest": "^2.0.8",
     "@types/invariant": "^2.2.35",
+    "@types/node": "^25.0.10",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "abortcontroller-polyfill": "^1.7.5",
@@ -113,7 +115,7 @@
     "tmp": "^0.1.0",
     "to-fast-properties": "^2.0.0",
     "tsup": "^8.4.0",
-    "typescript": "^5.4.3",
+    "typescript": "^5.9.3",
     "undici": "^5.28.4",
     "web-streams-polyfill": "^3.1.1",
     "yargs": "^15.3.1"
