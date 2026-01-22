@@ -9,7 +9,7 @@ import watcher from '@parcel/watcher';
 import path from 'path';
 import ts from 'typescript';
 import {FIXTURES_PATH, PROJECT_ROOT} from './constants';
-import {TestFilter} from './fixture-utils';
+import {TestFilter, getFixtures} from './fixture-utils';
 import {execSync} from 'child_process';
 
 export function watchSrc(
@@ -121,6 +121,12 @@ export type RunnerState = {
   // Input mode for interactive pattern entry
   inputMode: 'none' | 'pattern';
   inputBuffer: string;
+  // Autocomplete state
+  allFixtureNames: Array<string>;
+  matchingFixtures: Array<string>;
+  selectedIndex: number;
+  // Track last run status of each fixture (for autocomplete suggestions)
+  fixtureLastRunStatus: Map<string, 'pass' | 'fail'>;
 };
 
 function subscribeFixtures(
@@ -179,46 +185,187 @@ function subscribeTsc(
   );
 }
 
+/**
+ * Levenshtein edit distance between two strings
+ */
+function editDistance(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+
+  // Create a 2D array for memoization
+  const dp: number[][] = Array.from({length: m + 1}, () =>
+    Array(n + 1).fill(0),
+  );
+
+  // Base cases
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  // Fill in the rest
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+    }
+  }
+
+  return dp[m][n];
+}
+
+function filterFixtures(
+  allNames: Array<string>,
+  pattern: string,
+): Array<string> {
+  if (pattern === '') {
+    return allNames;
+  }
+  const lowerPattern = pattern.toLowerCase();
+  const matches = allNames.filter(name =>
+    name.toLowerCase().includes(lowerPattern),
+  );
+  // Sort by edit distance (lower = better match)
+  matches.sort((a, b) => {
+    const distA = editDistance(lowerPattern, a.toLowerCase());
+    const distB = editDistance(lowerPattern, b.toLowerCase());
+    return distA - distB;
+  });
+  return matches;
+}
+
+const MAX_DISPLAY = 15;
+
+function renderAutocomplete(state: RunnerState): void {
+  // Clear terminal
+  console.log('\u001Bc');
+
+  // Show current input
+  console.log(`Pattern: ${state.inputBuffer}`);
+  console.log('');
+
+  // Get current filter pattern if active
+  const currentFilterPattern =
+    state.mode.filter && state.filter ? state.filter.paths[0] : null;
+
+  // Show matching fixtures (limit to MAX_DISPLAY)
+  const toShow = state.matchingFixtures.slice(0, MAX_DISPLAY);
+
+  toShow.forEach((name, i) => {
+    const isSelected = i === state.selectedIndex;
+    const matchesCurrentFilter =
+      currentFilterPattern != null &&
+      name.toLowerCase().includes(currentFilterPattern.toLowerCase());
+
+    let prefix: string;
+    if (isSelected) {
+      prefix = '> ';
+    } else if (matchesCurrentFilter) {
+      prefix = '* ';
+    } else {
+      prefix = '  ';
+    }
+    console.log(`${prefix}${name}`);
+  });
+
+  if (state.matchingFixtures.length > MAX_DISPLAY) {
+    console.log(
+      `  ... and ${state.matchingFixtures.length - MAX_DISPLAY} more`,
+    );
+  }
+
+  console.log('');
+  console.log('↑/↓/Tab navigate | Enter select | Esc cancel');
+}
+
 function subscribeKeyEvents(
   state: RunnerState,
   onChange: (state: RunnerState) => void,
 ) {
   process.stdin.on('keypress', async (str, key) => {
-    // Handle input mode (pattern entry)
+    // Handle input mode (pattern entry with autocomplete)
     if (state.inputMode !== 'none') {
       if (key.name === 'return') {
-        // Enter pressed - process input
-        const pattern = state.inputBuffer.trim();
+        // Enter pressed - use selected fixture or typed text
+        let pattern: string;
+        if (
+          state.selectedIndex >= 0 &&
+          state.selectedIndex < state.matchingFixtures.length
+        ) {
+          pattern = state.matchingFixtures[state.selectedIndex];
+        } else {
+          pattern = state.inputBuffer.trim();
+        }
+
         state.inputMode = 'none';
         state.inputBuffer = '';
-        process.stdout.write('\n');
+        state.allFixtureNames = [];
+        state.matchingFixtures = [];
+        state.selectedIndex = -1;
 
         if (pattern !== '') {
-          // Set the pattern as filter
           state.filter = {paths: [pattern]};
           state.mode.filter = true;
           state.mode.action = RunnerAction.Test;
           onChange(state);
         }
-        // If empty, just exit input mode without changes
         return;
       } else if (key.name === 'escape') {
         // Cancel input mode
         state.inputMode = 'none';
         state.inputBuffer = '';
-        process.stdout.write(' (cancelled)\n');
+        state.allFixtureNames = [];
+        state.matchingFixtures = [];
+        state.selectedIndex = -1;
+        // Redraw normal UI
+        onChange(state);
+        return;
+      } else if (key.name === 'up' || (key.name === 'tab' && key.shift)) {
+        // Navigate up in autocomplete list
+        if (state.matchingFixtures.length > 0) {
+          if (state.selectedIndex <= 0) {
+            state.selectedIndex =
+              Math.min(state.matchingFixtures.length, MAX_DISPLAY) - 1;
+          } else {
+            state.selectedIndex--;
+          }
+          renderAutocomplete(state);
+        }
+        return;
+      } else if (key.name === 'down' || (key.name === 'tab' && !key.shift)) {
+        // Navigate down in autocomplete list
+        if (state.matchingFixtures.length > 0) {
+          const maxIndex =
+            Math.min(state.matchingFixtures.length, MAX_DISPLAY) - 1;
+          if (state.selectedIndex >= maxIndex) {
+            state.selectedIndex = 0;
+          } else {
+            state.selectedIndex++;
+          }
+          renderAutocomplete(state);
+        }
         return;
       } else if (key.name === 'backspace') {
         if (state.inputBuffer.length > 0) {
           state.inputBuffer = state.inputBuffer.slice(0, -1);
-          // Erase character: backspace, space, backspace
-          process.stdout.write('\b \b');
+          state.matchingFixtures = filterFixtures(
+            state.allFixtureNames,
+            state.inputBuffer,
+          );
+          state.selectedIndex = -1;
+          renderAutocomplete(state);
         }
         return;
       } else if (str && !key.ctrl && !key.meta) {
-        // Regular character - accumulate and echo
+        // Regular character - accumulate, filter, and render
         state.inputBuffer += str;
-        process.stdout.write(str);
+        state.matchingFixtures = filterFixtures(
+          state.allFixtureNames,
+          state.inputBuffer,
+        );
+        state.selectedIndex = -1;
+        renderAutocomplete(state);
         return;
       }
       return; // Ignore other keys in input mode
@@ -240,10 +387,23 @@ function subscribeKeyEvents(
       state.debug = !state.debug;
       state.mode.action = RunnerAction.Test;
     } else if (key.name === 'p') {
-      // p => enter pattern input mode
+      // p => enter pattern input mode with autocomplete
       state.inputMode = 'pattern';
       state.inputBuffer = '';
-      process.stdout.write('Pattern: ');
+
+      // Load all fixtures for autocomplete
+      const fixtures = await getFixtures(null);
+      state.allFixtureNames = Array.from(fixtures.keys()).sort();
+      // Show failed fixtures first when no pattern entered
+      const failedFixtures = Array.from(state.fixtureLastRunStatus.entries())
+        .filter(([_, status]) => status === 'fail')
+        .map(([name]) => name)
+        .sort();
+      state.matchingFixtures =
+        failedFixtures.length > 0 ? failedFixtures : state.allFixtureNames;
+      state.selectedIndex = -1;
+
+      renderAutocomplete(state);
       return; // Don't trigger onChange yet
     } else {
       // any other key re-runs tests
@@ -279,6 +439,10 @@ export async function makeWatchRunner(
     debug: debugMode,
     inputMode: 'none',
     inputBuffer: '',
+    allFixtureNames: [],
+    matchingFixtures: [],
+    selectedIndex: -1,
+    fixtureLastRunStatus: new Map(),
   };
 
   subscribeTsc(state, onChange);
