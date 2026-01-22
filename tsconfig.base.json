@@ -1,0 +1,66 @@
+{
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2020", "DOM"],
+    "jsx": "react-jsx",
+    
+    // Strict type checking
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    
+    // Additional checks
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    
+    // Module resolution
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Emit
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "removeComments": false,
+    
+    // Paths for monorepo packages
+    "baseUrl": ".",
+    "paths": {
+      "react": ["./packages/react"],
+      "react-dom": ["./packages/react-dom"],
+      "react-dom/client": ["./packages/react-dom/client"],
+      "react-dom/server": ["./packages/react-dom/server"],
+      "react-is": ["./packages/react-is"],
+      "scheduler": ["./packages/scheduler"],
+      "use-subscription": ["./packages/use-subscription"],
+      "use-sync-external-store": ["./packages/use-sync-external-store"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/__tests__/**",
+    "**/__mocks__/**",
+    "fixtures/**"
+  ]
+}
