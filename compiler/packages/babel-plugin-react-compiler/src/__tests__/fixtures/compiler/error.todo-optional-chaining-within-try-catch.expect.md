@@ -19,13 +19,13 @@ const Foo = ({json}) => {
 ```
 Found 1 error:
 
-Invariant: Unexpected terminal in optional
+Todo: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement
 
-error.bug-invariant-unexpected-terminal-in-optional.ts:3:16
+error.todo-optional-chaining-within-try-catch.ts:3:16
   1 | const Foo = ({json}) => {
   2 |   try {
 > 3 |     const foo = JSON.parse(json)?.foo;
-    |                 ^^^^ Unexpected maybe-throw in optional
+    |                 ^^^^ Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement
   4 |     return <span>{foo}</span>;
   5 |   } catch {
   6 |     return null;
