@@ -142,6 +142,14 @@ async function onChange(
       true, // requireSingleFixture in watch mode
     );
     const end = performance.now();
+
+    // Track fixture status for autocomplete suggestions
+    for (const [basename, result] of results) {
+      const failed =
+        result.actual !== result.expected || result.unexpectedError != null;
+      state.fixtureLastRunStatus.set(basename, failed ? 'fail' : 'pass');
+    }
+
     if (mode.action === RunnerAction.Update) {
       update(results);
       state.lastUpdate = end;
