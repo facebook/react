@@ -7,16 +7,11 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0e0dfec3b8f082dc851f344fd79f7c4c>>
+ * @generated SignedSource<<f1c83ae35fbfec30e843d066d6e82775>>
  */
 
 "use strict";
-var renameElementSymbol =
-    require("ReactNativeInternalFeatureFlags").renameElementSymbol,
-  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-  REACT_ELEMENT_TYPE = renameElementSymbol
-    ? Symbol.for("react.transitional.element")
-    : REACT_LEGACY_ELEMENT_TYPE,
+var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -594,4 +589,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.3.0-native-fb-03ee29da-20260121";
+exports.version = "19.3.0-native-fb-94913cbf-20260123";

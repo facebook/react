@@ -7,16 +7,11 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<54cf771c835c47a9b7a7eef69b8e06d3>>
+ * @generated SignedSource<<9f3807607700ffd830d21bb690075c27>>
  */
 
 "use strict";
-var renameElementSymbol =
-    require("ReactNativeInternalFeatureFlags").renameElementSymbol,
-  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-  REACT_ELEMENT_TYPE = renameElementSymbol
-    ? Symbol.for("react.transitional.element")
-    : REACT_LEGACY_ELEMENT_TYPE,
+var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
 function jsxProd(type, config, maybeKey) {
   var key = null;
