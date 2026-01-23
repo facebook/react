@@ -86,14 +86,7 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
     const hoistables = hoistablePropertyLoads.get(scope.id);
     CompilerError.invariant(hoistables != null, {
       reason: '[PropagateScopeDependencies] Scope not found in tracked blocks',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: GeneratedSource,
-          message: null,
-        },
-      ],
+      loc: GeneratedSource,
     });
     /**
      * Step 2: Calculate hoistable dependencies.
@@ -435,14 +428,7 @@ export class DependencyCollectionContext {
     const scopedDependencies = this.#dependencies.value;
     CompilerError.invariant(scopedDependencies != null, {
       reason: '[PropagateScopeDeps]: Unexpected scope mismatch',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: scope.loc,
-          message: null,
-        },
-      ],
+      loc: scope.loc,
     });
 
     // Restore context of previous scope

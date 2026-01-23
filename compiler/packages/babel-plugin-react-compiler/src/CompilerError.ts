@@ -304,11 +304,12 @@ export class CompilerError extends Error {
   disabledDetails: Array<CompilerErrorDetail | CompilerDiagnostic> = [];
   printedMessage: string | null = null;
 
-  static simpleInvariant(
+  static invariant(
     condition: unknown,
     options: {
       reason: CompilerDiagnosticOptions['reason'];
       description?: CompilerDiagnosticOptions['description'];
+      message?: string | null;
       loc: SourceLocation;
     },
   ): asserts condition {
@@ -322,24 +323,8 @@ export class CompilerError extends Error {
         }).withDetails({
           kind: 'error',
           loc: options.loc,
-          message: options.reason,
+          message: options.message ?? options.reason,
         }),
-      );
-      throw errors;
-    }
-  }
-  static invariant(
-    condition: unknown,
-    options: Omit<CompilerDiagnosticOptions, 'category'>,
-  ): asserts condition {
-    if (!condition) {
-      const errors = new CompilerError();
-      errors.pushDiagnostic(
-        CompilerDiagnostic.create({
-          reason: options.reason,
-          description: options.description,
-          category: ErrorCategory.Invariant,
-        }).withDetails(...options.details),
       );
       throw errors;
     }
