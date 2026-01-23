@@ -25,7 +25,6 @@ export const {
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
@@ -49,7 +48,6 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseAvoidThisFallback: boolean = true;
 
 export const enableCPUSuspense: boolean = true;
-export const enableUseEffectEventHook: boolean = true;
 export const enableMoveBefore: boolean = false;
 export const disableInputAttributeSyncing: boolean = false;
 export const enableLegacyFBSupport: boolean = true;
@@ -57,8 +55,6 @@ export const enableLegacyFBSupport: boolean = true;
 export const enableYieldingBeforePassive: boolean = false;
 
 export const enableThrottledScheduling: boolean = false;
-
-export const enableHydrationLaneScheduling: boolean = true;
 
 export const enablePerformanceIssueReporting: boolean = false;
 

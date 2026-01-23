@@ -108,6 +108,28 @@ describe('ReactFlightDOMNode', () => {
     );
   }
 
+  /**
+   * Removes all stackframes not pointing into this file
+   */
+  function ignoreListStack(str) {
+    if (!str) {
+      return str;
+    }
+
+    let ignoreListedStack = '';
+    const lines = str.split('\n');
+
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const line of lines) {
+      if (line.indexOf(__filename) === -1) {
+      } else {
+        ignoreListedStack += '\n' + line.replace(__dirname, '.');
+      }
+    }
+
+    return ignoreListedStack;
+  }
+
   function readResult(stream) {
     return new Promise((resolve, reject) => {
       let buffer = '';
@@ -785,6 +807,165 @@ describe('ReactFlightDOMNode', () => {
   });
 
   // @gate enableHalt
+  it('includes source locations in component and owner stacks for halted Client components', async () => {
+    function SharedComponent({p1, p2, p3}) {
+      use(p1);
+      use(p2);
+      use(p3);
+      return <div>Hello, Dave!</div>;
+    }
+    const ClientComponentOnTheServer = clientExports(SharedComponent);
+    const ClientComponentOnTheClient = clientExports(
+      SharedComponent,
+      123,
+      'path/to/chunk.js',
+    );
+
+    let resolvePendingPromise;
+    function ServerComponent() {
+      const p1 = Promise.resolve();
+      const p2 = new Promise(resolve => {
+        resolvePendingPromise = value => {
+          p2.status = 'fulfilled';
+          p2.value = value;
+          resolve(value);
+        };
+      });
+      const p3 = new Promise(() => {});
+      return ReactServer.createElement(ClientComponentOnTheClient, {
+        p1: p1,
+        p2: p2,
+        p3: p3,
+      });
+    }
+
+    function App() {
+      return ReactServer.createElement(
+        'html',
+        null,
+        ReactServer.createElement(
+          'body',
+          null,
+          ReactServer.createElement(
+            ReactServer.Suspense,
+            {fallback: 'Loading...'},
+            ReactServer.createElement(ServerComponent, null),
+          ),
+        ),
+      );
+    }
+
+    const errors = [];
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        ReactServer.createElement(App, null),
+        webpackMap,
+      ),
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+    rscStream.pipe(readable);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const serverConsumerManifest = {
+      moduleMap: {
+        [webpackMap[ClientComponentOnTheClient.$$id].id]: {
+          '*': webpackMap[ClientComponentOnTheServer.$$id],
+        },
+      },
+      moduleLoading: webpackModuleLoading,
+    };
+
+    expect(errors).toEqual([]);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      serverConsumerManifest,
+    );
+
+    let componentStack;
+    let ownerStack;
+
+    const clientAbortController = new AbortController();
+
+    const fizzPrerenderStreamResult = ReactDOMFizzStatic.prerender(
+      React.createElement(ClientRoot, {response}),
+      {
+        signal: clientAbortController.signal,
+        onError(error, errorInfo) {
+          componentStack = errorInfo.componentStack;
+          ownerStack = React.captureOwnerStack
+            ? React.captureOwnerStack()
+            : null;
+        },
+      },
+    );
+
+    resolvePendingPromise('custom-instrum-resolve');
+    await serverAct(
+      async () =>
+        new Promise(resolve => {
+          setImmediate(() => {
+            clientAbortController.abort();
+            resolve();
+          });
+        }),
+    );
+
+    const fizzPrerenderStream = await fizzPrerenderStreamResult;
+    const prerenderHTML = await readWebResult(fizzPrerenderStream.prelude);
+
+    expect(prerenderHTML).toContain('Loading...');
+
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n' +
+          '    in SharedComponent (at **)\n' +
+          '    in ServerComponent' +
+          (gate(flags => flags.enableAsyncDebugInfo) ? ' (at **)' : '') +
+          '\n' +
+          '    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in App (at **)\n' +
+          '    in ClientRoot (at **)',
+      );
+    } else {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n' +
+          '    in SharedComponent (at **)\n' +
+          '    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in ClientRoot (at **)',
+      );
+    }
+
+    if (__DEV__) {
+      expect(ignoreListStack(ownerStack)).toBe(
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        '' +
+          // The concrete location may change as this test is updated.
+          // Just make sure they still point at React.use(p2)
+          (gate(flags => flags.enableAsyncDebugInfo)
+            ? '\n    at SharedComponent (./ReactFlightDOMNode-test.js:813:7)'
+            : '') +
+          '\n    at ServerComponent (file://./ReactFlightDOMNode-test.js:835:26)' +
+          '\n    at App (file://./ReactFlightDOMNode-test.js:852:25)',
+      );
+    } else {
+      expect(ownerStack).toBeNull();
+    }
+  });
+
+  // @gate enableHalt
   it('includes deeper location for aborted stacks', async () => {
     async function getData() {
       const signal = ReactServer.cacheSignal();
@@ -1364,12 +1545,12 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in Dynamic' +
             (gate(flags => flags.enableAsyncDebugInfo)
-              ? ' (file://ReactFlightDOMNode-test.js:1238:27)\n'
+              ? ' (file://ReactFlightDOMNode-test.js:1419:27)\n'
               : '\n') +
             '    in body\n' +
             '    in html\n' +
-            '    in App (file://ReactFlightDOMNode-test.js:1251:25)\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1326:16)',
+            '    in App (file://ReactFlightDOMNode-test.js:1432:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1507:16)',
         );
       } else {
         expect(
@@ -1378,7 +1559,7 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1326:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1507:16)',
         );
       }
 
@@ -1388,8 +1569,8 @@ describe('ReactFlightDOMNode', () => {
             normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
           ).toBe(
             '\n' +
-              '    in Dynamic (file://ReactFlightDOMNode-test.js:1238:27)\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1251:25)',
+              '    in Dynamic (file://ReactFlightDOMNode-test.js:1419:27)\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1432:25)',
           );
         } else {
           expect(
@@ -1397,7 +1578,7 @@ describe('ReactFlightDOMNode', () => {
           ).toBe(
             '' +
               '\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1251:25)',
+              '    in App (file://ReactFlightDOMNode-test.js:1432:25)',
           );
         }
       } else {

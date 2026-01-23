@@ -549,6 +549,13 @@ export function startGestureTransition() {
 
 export function stopViewTransition(transition: RunningViewTransition) {}
 
+export function addViewTransitionFinishedListener(
+  transition: RunningViewTransition,
+  callback: () => void,
+) {
+  callback();
+}
+
 export type ViewTransitionInstance = null | {name: string, ...};
 
 export function createViewTransitionInstance(

@@ -1085,7 +1085,6 @@ describe('ReactFlight', () => {
     });
   });
 
-  // @gate renameElementSymbol
   it('should emit descriptions of errors in dev', async () => {
     const ClientErrorBoundary = clientReference(ErrorBoundary);
 
@@ -1729,7 +1728,8 @@ describe('ReactFlight', () => {
       'Only plain objects can be passed to Client Components from Server Components. ' +
         'Objects with symbol properties like Symbol.iterator are not supported.\n' +
         '  <... value={{}}>\n' +
-        '             ^^^^\n',
+        '             ^^^^\n' +
+        '    in  (at **)',
     ]);
   });
 
@@ -3258,7 +3258,7 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render({
       root: ReactServer.createElement(App),
     });
-    assertConsoleErrorDev(['Error: err']);
+    assertConsoleErrorDev(['Error: err' + '\n    in <stack>']);
 
     expect(mockConsoleLog).toHaveBeenCalledTimes(1);
     expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');

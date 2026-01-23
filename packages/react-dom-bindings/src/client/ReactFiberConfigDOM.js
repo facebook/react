@@ -607,10 +607,32 @@ export function createInstance(
   return domElement;
 }
 
+let didWarnForClone = false;
+
 export function cloneMutableInstance(
   instance: Instance,
   keepChildren: boolean,
 ): Instance {
+  if (__DEV__) {
+    // Warn for problematic
+    const tagName = instance.tagName;
+    switch (tagName) {
+      case 'VIDEO':
+      case 'IFRAME':
+        if (!didWarnForClone) {
+          didWarnForClone = true;
+          // TODO: Once we have the ability to avoid cloning the root, suggest an absolutely
+          // positioned ViewTransition instead as the solution.
+          console.warn(
+            'startGestureTransition() required cloning a <%s> element since it exists in ' +
+              'both states of the gesture. This can be problematic since it will load it twice ' +
+              'Try removing or hiding it with <Activity mode="offscreen"> in the optimistic state.',
+            tagName.toLowerCase(),
+          );
+        }
+        break;
+    }
+  }
   return instance.cloneNode(keepChildren);
 }
 
@@ -2337,6 +2359,7 @@ export function startViewTransition(
 
 export type RunningViewTransition = {
   skipTransition(): void,
+  finished: Promise<void>,
   ...
 };
 
@@ -2372,6 +2395,7 @@ function animateGesture(
   targetElement: Element,
   pseudoElement: string,
   timeline: GestureTimeline,
+  viewTransitionAnimations: Array<Animation>,
   customTimelineCleanup: Array<() => void>,
   rangeStart: number,
   rangeEnd: number,
@@ -2464,7 +2488,7 @@ function animateGesture(
   if (timeline instanceof AnimationTimeline) {
     // Native Timeline
     // $FlowFixMe[incompatible-call]
-    targetElement.animate(keyframes, {
+    const animation = targetElement.animate(keyframes, {
       pseudoElement: pseudoElement,
       // Set the timeline to the current gesture timeline to drive the updates.
       timeline: timeline,
@@ -2482,6 +2506,7 @@ function animateGesture(
       rangeStart: (reverse ? rangeEnd : rangeStart) + '%',
       rangeEnd: (reverse ? rangeStart : rangeEnd) + '%',
     });
+    viewTransitionAnimations.push(animation);
   } else {
     // Custom Timeline
     // $FlowFixMe[incompatible-call]
@@ -2500,6 +2525,7 @@ function animateGesture(
       delay: reverse ? rangeEnd : rangeStart,
       duration: reverse ? rangeStart - rangeEnd : rangeEnd - rangeStart,
     });
+    viewTransitionAnimations.push(animation);
     // Let the custom timeline take control of driving the animation.
     const cleanup = timeline.animate(animation);
     if (cleanup) {
@@ -2554,8 +2580,10 @@ export function startGestureTransition(
         // $FlowFixMe
         const pseudoElement: ?string = effect.pseudoElement;
         if (pseudoElement == null) {
-        } else if (pseudoElement.startsWith('::view-transition')) {
-          viewTransitionAnimations.push(animations[i]);
+        } else if (
+          pseudoElement.startsWith('::view-transition') &&
+          effect.target === documentElement
+        ) {
           const timing = effect.getTiming();
           const duration =
             // $FlowFixMe[prop-missing]
@@ -2648,6 +2676,7 @@ export function startGestureTransition(
             effect.target,
             pseudoElement,
             timeline,
+            viewTransitionAnimations,
             customTimelineCleanup,
             adjustedRangeStart,
             adjustedRangeEnd,
@@ -2675,6 +2704,7 @@ export function startGestureTransition(
                 effect.target,
                 pseudoElementName,
                 timeline,
+                viewTransitionAnimations,
                 customTimelineCleanup,
                 rangeStart,
                 rangeEnd,
@@ -2696,6 +2726,7 @@ export function startGestureTransition(
         duration: 1,
       });
       blockingAnim.pause();
+      viewTransitionAnimations.push(blockingAnim);
       animateCallback();
     };
     // In Chrome, "new" animations are not ready in the ready callback. We have to wait
@@ -2775,6 +2806,13 @@ export function startGestureTransition(
 
 export function stopViewTransition(transition: RunningViewTransition) {
   transition.skipTransition();
+}
+
+export function addViewTransitionFinishedListener(
+  transition: RunningViewTransition,
+  callback: () => void,
+) {
+  transition.finished.finally(callback);
 }
 
 interface ViewTransitionPseudoElementType extends mixin$Animatable {

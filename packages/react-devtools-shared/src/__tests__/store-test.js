@@ -7,7 +7,12 @@
  * @flow
  */
 
+import semver from 'semver';
+
 import {getVersionedRenderImplementation} from './utils';
+import {ReactVersion} from '../../../../ReactVersions';
+
+const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
 
 describe('Store', () => {
   let React;
@@ -3143,8 +3148,9 @@ describe('Store', () => {
     expect(store).toMatchInlineSnapshot(``);
   });
 
-  // @reactVersion >= 17.0
-  it('should track suspended by in filtered fallback', async () => {
+  // Can't suspend the root in React 17.
+  // @reactVersion >= 18.0
+  it('should track suspended-by in filtered fallback suspending the root', async () => {
     function IgnoreMe({promise}) {
       return readValue(promise);
     }
@@ -3193,6 +3199,91 @@ describe('Store', () => {
             <Component>
       [suspense-root]  rects={null}
         <Suspense name="main" rects={null}>
+    `);
+  });
+
+  // @reactVersion >= 17.0
+  it('should track suspended-by in filtered fallback', async () => {
+    function IgnoreMe({promise}) {
+      return readValue(promise);
+    }
+
+    function Component({promise}) {
+      if (promise) {
+        return readValue(promise);
+      }
+      return null;
+    }
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [createDisplayNameFilter('^IgnoreMe', true)]),
+    );
+
+    let resolveFallback;
+    const fallbackPromise = new Promise(resolve => {
+      resolveFallback = resolve;
+    });
+    let resolveContent;
+    const contentPromise = new Promise(resolve => {
+      resolveContent = resolve;
+    });
+
+    await actAsync(() =>
+      render(
+        <React.Suspense
+          fallback={<Component key="root-fallback" />}
+          name="root">
+          <React.Suspense
+            name="main"
+            fallback={<IgnoreMe promise={fallbackPromise} />}>
+            <Component promise={contentPromise} />
+          </React.Suspense>
+        </React.Suspense>,
+      ),
+    );
+
+    if (semver.lt(ReactVersionTestingAgainst, '18.0.0')) {
+      // React 17 commits partial trees hidden which causes the "main"
+      // Suspense boundary to be included.
+      // React 18 and upwards excluded partial tree entirely.
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Suspense name="root">
+              <Component key="root-fallback">
+        [suspense-root]  rects={null}
+          <Suspense name="root" rects={null}>
+            <Suspense name="main" rects={null}>
+      `);
+    } else {
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Suspense name="root">
+              <Component key="root-fallback">
+        [suspense-root]  rects={null}
+          <Suspense name="root" rects={null}>
+      `);
+    }
+
+    await actAsync(() => resolveFallback('loading'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+            <Suspense name="main">
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+          <Suspense name="main" rects={null}>
+    `);
+
+    await actAsync(() => resolveContent('content'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+          ▾ <Suspense name="main">
+              <Component>
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+          <Suspense name="main" rects={null}>
     `);
   });
 
