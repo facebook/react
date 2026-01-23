@@ -37,6 +37,7 @@ function useFoo(t0) {
   const { value } = t0;
   let items;
   if ($[0] !== value) {
+    items = null;
     try {
       items = [];
       arrayPush(items, value);

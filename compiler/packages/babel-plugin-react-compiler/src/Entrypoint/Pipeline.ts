@@ -96,7 +96,6 @@ import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHI
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 import {transformFire} from '../Transform';
-import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureFunctionsInRender';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
 import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
@@ -107,6 +106,7 @@ import {nameAnonymousFunctions} from '../Transform/NameAnonymousFunctions';
 import {optimizeForSSR} from '../Optimization/OptimizeForSSR';
 import {validateExhaustiveDependencies} from '../Validation/ValidateExhaustiveDependencies';
 import {validateSourceLocations} from '../Validation/ValidateSourceLocations';
+import {validateNoImpureValuesInRender} from '../Validation/ValidateNoImpureValuesInRender';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -271,10 +271,6 @@ function runWithEnvironment(
       assertValidMutableRanges(hir);
     }
 
-    if (env.config.validateRefAccessDuringRender) {
-      validateNoRefAccessInRender(hir).unwrap();
-    }
-
     if (env.config.validateNoSetStateInRender) {
       validateNoSetStateInRender(hir).unwrap();
     }
@@ -296,8 +292,15 @@ function runWithEnvironment(
       env.logErrors(validateNoJSXInTryStatement(hir));
     }
 
-    if (env.config.validateNoImpureFunctionsInRender) {
-      validateNoImpureFunctionsInRender(hir).unwrap();
+    if (
+      env.config.validateNoImpureFunctionsInRender ||
+      env.config.validateRefAccessDuringRender
+    ) {
+      validateNoImpureValuesInRender(hir).unwrap();
+    }
+
+    if (env.config.validateRefAccessDuringRender) {
+      validateNoRefAccessInRender(hir).unwrap();
     }
 
     validateNoFreezingKnownMutableFunctions(hir).unwrap();

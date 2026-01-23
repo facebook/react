@@ -273,7 +273,8 @@ export type ReactiveTryTerminal = {
   kind: 'try';
   block: ReactiveBlock;
   handlerBinding: Place | null;
-  handler: ReactiveBlock;
+  handler: ReactiveBlock | null;
+  finalizer: ReactiveBlock | null;
   id: InstructionId;
   loc: SourceLocation;
 };
@@ -602,8 +603,8 @@ export type TryTerminal = {
   kind: 'try';
   block: BlockId;
   handlerBinding: Place | null;
-  handler: BlockId;
-  // TODO: support `finally`
+  handler: BlockId | null;
+  finalizer: BlockId | null;
   fallthrough: BlockId;
   id: InstructionId;
   loc: SourceLocation;
@@ -1879,7 +1880,15 @@ export function isRefValueType(id: Identifier): boolean {
 }
 
 export function isUseRefType(id: Identifier): boolean {
-  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseRefId';
+  return isUseRefType_(id.type);
+}
+
+export function isUseRefType_(type: Type): boolean {
+  return (
+    (type.kind === 'Object' && type.shapeId === 'BuiltInUseRefId') ||
+    (type.kind === 'Phi' &&
+      type.operands.some(operand => isUseRefType_(operand)))
+  );
 }
 
 export function isUseStateType(id: Identifier): boolean {
@@ -1888,6 +1897,13 @@ export function isUseStateType(id: Identifier): boolean {
 
 export function isJsxType(type: Type): boolean {
   return type.kind === 'Object' && type.shapeId === 'BuiltInJsx';
+}
+
+export function isJsxOrJsxUnionType(type: Type): boolean {
+  return (
+    (type.kind === 'Object' && type.shapeId === 'BuiltInJsx') ||
+    (type.kind === 'Phi' && type.operands.some(op => isJsxOrJsxUnionType(op)))
+  );
 }
 
 export function isRefOrRefValue(id: Identifier): boolean {
@@ -2056,6 +2072,25 @@ export function getHookKindForType(
     return signature?.hookKind ?? null;
   }
   return null;
+}
+
+export function areEqualSourceLocations(
+  loc1: SourceLocation,
+  loc2: SourceLocation,
+): boolean {
+  if (typeof loc1 === 'symbol' || typeof loc2 === 'symbol') {
+    return false;
+  }
+  return (
+    loc1.filename === loc2.filename &&
+    loc1.identifierName === loc2.identifierName &&
+    loc1.start.line === loc2.start.line &&
+    loc1.start.column === loc2.start.column &&
+    loc1.start.index === loc2.start.index &&
+    loc1.end.line === loc2.end.line &&
+    loc1.end.column === loc2.end.column &&
+    loc1.end.index === loc2.end.index
+  );
 }
 
 export * from './Types';

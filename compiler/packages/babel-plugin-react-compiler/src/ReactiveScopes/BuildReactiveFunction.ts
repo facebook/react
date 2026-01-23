@@ -844,14 +844,33 @@ class Driver {
           const scheduleId = this.cx.schedule(fallthroughId, 'if');
           scheduleIds.push(scheduleId);
         }
-        this.cx.scheduleCatchHandler(terminal.handler);
+        if (terminal.handler !== null) {
+          this.cx.scheduleCatchHandler(terminal.handler);
+        }
+        let finalizerScheduleId: number | null = null;
+        if (terminal.finalizer !== null) {
+          finalizerScheduleId = this.cx.schedule(terminal.finalizer, 'if');
+          scheduleIds.push(finalizerScheduleId);
+        }
 
         const block = this.traverseBlock(
           this.cx.ir.blocks.get(terminal.block)!,
         );
-        const handler = this.traverseBlock(
-          this.cx.ir.blocks.get(terminal.handler)!,
-        );
+        const handler =
+          terminal.handler !== null
+            ? this.traverseBlock(this.cx.ir.blocks.get(terminal.handler)!)
+            : null;
+
+        // Unschedule finalizer before traversing it, so its own goto
+        // doesn't become a break to itself
+        if (finalizerScheduleId !== null) {
+          this.cx.unschedule(finalizerScheduleId);
+          scheduleIds.pop();
+        }
+        const finalizer =
+          terminal.finalizer !== null
+            ? this.traverseBlock(this.cx.ir.blocks.get(terminal.finalizer)!)
+            : null;
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
@@ -864,6 +883,7 @@ class Driver {
             block,
             handlerBinding: terminal.handlerBinding,
             handler,
+            finalizer,
             id: terminal.id,
           },
         });
@@ -1104,7 +1124,7 @@ class Driver {
         loc,
       };
       return {
-        block: init.fallthrough,
+        block: final.block,
         value: sequence,
         place: final.place,
         id: final.id,

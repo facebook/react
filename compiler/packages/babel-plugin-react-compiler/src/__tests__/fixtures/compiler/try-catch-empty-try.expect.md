@@ -22,7 +22,12 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function Component(props) {
-  const x = props.default;
+  let x = props.default;
+  try {
+  } catch (t0) {
+    const e = t0;
+    x = e;
+  }
   return x;
 }
 

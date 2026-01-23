@@ -6,7 +6,7 @@
 
 import {useRef} from 'react';
 
-component Foo() {
+hook useFoo() {
   const ref = useRef();
 
   const s = () => {
@@ -14,6 +14,10 @@ component Foo() {
   };
 
   return s;
+}
+
+component Foo() {
+  useFoo();
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -30,7 +34,7 @@ import { c as _c } from "react/compiler-runtime";
 
 import { useRef } from "react";
 
-function Foo() {
+function useFoo() {
   const $ = _c(1);
   const ref = useRef();
   let t0;
@@ -44,6 +48,10 @@ function Foo() {
   return s;
 }
 
+function Foo() {
+  useFoo();
+}
+
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
   params: [],
@@ -52,4 +60,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) "[[ function params=0 ]]"
+(kind: ok) 

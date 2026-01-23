@@ -310,12 +310,14 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case 'try': {
-      value = `[${terminal.id}] Try block=bb${terminal.block} handler=bb${
-        terminal.handler
+      value = `[${terminal.id}] Try block=bb${terminal.block}${
+        terminal.handler !== null ? ` handler=bb${terminal.handler}` : ''
       }${
         terminal.handlerBinding !== null
           ? ` handlerBinding=(${printPlace(terminal.handlerBinding)})`
           : ''
+      }${
+        terminal.finalizer !== null ? ` finalizer=bb${terminal.finalizer}` : ''
       } fallthrough=${
         terminal.fallthrough != null ? `bb${terminal.fallthrough}` : ''
       }`;
@@ -983,15 +985,7 @@ export function printAliasingEffect(effect: AliasingEffect): string {
           return `...${printPlaceForAliasEffect(arg.place)}`;
         })
         .join(', ');
-      let signature = '';
-      if (effect.signature != null) {
-        if (effect.signature.aliasing != null) {
-          signature = printAliasingSignature(effect.signature.aliasing);
-        } else {
-          signature = JSON.stringify(effect.signature, null, 2);
-        }
-      }
-      return `Apply ${printPlaceForAliasEffect(effect.into)} = ${receiverCallee}(${args})${signature != '' ? '\n     ' : ''}${signature}`;
+      return `Apply ${printPlaceForAliasEffect(effect.into)} = ${receiverCallee}(${args})`;
     }
     case 'Freeze': {
       return `Freeze ${printPlaceForAliasEffect(effect.value)} ${effect.reason}`;
@@ -1009,7 +1003,7 @@ export function printAliasingEffect(effect: AliasingEffect): string {
       return `MutateGlobal ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
     }
     case 'Impure': {
-      return `Impure ${printPlaceForAliasEffect(effect.place)} reason=${JSON.stringify(effect.error.reason)}`;
+      return `Impure ${printPlaceForAliasEffect(effect.into)} reason=${effect.reason} description=${effect.description}`;
     }
     case 'Render': {
       return `Render ${printPlaceForAliasEffect(effect.place)}`;
