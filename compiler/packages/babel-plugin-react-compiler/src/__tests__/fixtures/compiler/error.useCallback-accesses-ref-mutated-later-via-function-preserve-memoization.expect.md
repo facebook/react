@@ -40,14 +40,14 @@ Error: Cannot access refs during render
 
 React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
 
-error.useCallback-accesses-ref-mutated-later-via-function-preserve-memoization.ts:17:2
-  15 |     ref.current.inner = null;
+error.useCallback-accesses-ref-mutated-later-via-function-preserve-memoization.ts:15:4
+  13 |   // The ref is modified later, extending its range and preventing memoization of onChange
+  14 |   const reset = () => {
+> 15 |     ref.current.inner = null;
+     |     ^^^^^^^^^^^^^^^^^ Cannot update ref during render
   16 |   };
-> 17 |   reset();
-     |   ^^^^^ This function accesses a ref value
+  17 |   reset();
   18 |
-  19 |   return <input onChange={onChange} />;
-  20 | }
 ```
           
       
