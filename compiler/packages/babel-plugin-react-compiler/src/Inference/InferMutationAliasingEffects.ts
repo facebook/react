@@ -134,15 +134,7 @@ export function inferMutationAliasingEffects(
     CompilerError.invariant(fn.params.length <= 2, {
       reason:
         'Expected React component to have not more than two parameters: one for props and for ref',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: fn.loc,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: fn.loc,
     });
     const [props, ref] = fn.params;
     if (props != null) {
@@ -209,13 +201,7 @@ export function inferMutationAliasingEffects(
       CompilerError.invariant(false, {
         reason: `[InferMutationAliasingEffects] Potential infinite loop`,
         description: `A value, temporary place, or effect was not cached properly`,
-        details: [
-          {
-            kind: 'error',
-            loc: fn.loc,
-            message: null,
-          },
-        ],
+        loc: fn.loc,
       });
     }
     for (const [blockId, block] of fn.body.blocks) {
@@ -528,14 +514,7 @@ function inferBlock(
       CompilerError.invariant(state.kind(handlerParam) != null, {
         reason:
           'Expected catch binding to be intialized with a DeclareLocal Catch instruction',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: terminal.loc,
-            message: null,
-          },
-        ],
+        loc: terminal.loc,
       });
       const effects: Array<AliasingEffect> = [];
       for (const instr of block.instructions) {
@@ -685,14 +664,7 @@ function applySignature(
   ) {
     CompilerError.invariant(false, {
       reason: `Expected instruction lvalue to be initialized`,
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: instruction.loc,
-          message: null,
-        },
-      ],
+      loc: instruction.loc,
     });
   }
   return effects.length !== 0 ? effects : null;
@@ -721,13 +693,7 @@ function applyEffect(
       CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
         reason: `Cannot re-initialize variable within an instruction`,
         description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
-        details: [
-          {
-            kind: 'error',
-            loc: effect.into.loc,
-            message: null,
-          },
-        ],
+        loc: effect.into.loc,
       });
       initialized.add(effect.into.identifier.id);
 
@@ -766,13 +732,7 @@ function applyEffect(
       CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
         reason: `Cannot re-initialize variable within an instruction`,
         description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
-        details: [
-          {
-            kind: 'error',
-            loc: effect.into.loc,
-            message: null,
-          },
-        ],
+        loc: effect.into.loc,
       });
       initialized.add(effect.into.identifier.id);
 
@@ -832,13 +792,7 @@ function applyEffect(
       CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
         reason: `Cannot re-initialize variable within an instruction`,
         description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
-        details: [
-          {
-            kind: 'error',
-            loc: effect.into.loc,
-            message: null,
-          },
-        ],
+        loc: effect.into.loc,
       });
       initialized.add(effect.into.identifier.id);
 
@@ -916,13 +870,7 @@ function applyEffect(
           description:
             `Destination ${printPlace(effect.into)} is not initialized in this ` +
             `instruction for effect ${printAliasingEffect(effect)}`,
-          details: [
-            {
-              kind: 'error',
-              loc: effect.into.loc,
-              message: null,
-            },
-          ],
+          loc: effect.into.loc,
         },
       );
       /*
@@ -1000,13 +948,7 @@ function applyEffect(
       CompilerError.invariant(!initialized.has(effect.into.identifier.id), {
         reason: `Cannot re-initialize variable within an instruction`,
         description: `Re-initialized ${printPlace(effect.into)} in ${printAliasingEffect(effect)}`,
-        details: [
-          {
-            kind: 'error',
-            loc: effect.into.loc,
-            message: null,
-          },
-        ],
+        loc: effect.into.loc,
       });
       initialized.add(effect.into.identifier.id);
 
@@ -1406,15 +1348,7 @@ class InferenceState {
     CompilerError.invariant(value.kind !== 'LoadLocal', {
       reason:
         '[InferMutationAliasingEffects] Expected all top-level identifiers to be defined as variables, not values',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: value.loc,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: value.loc,
     });
     this.#values.set(value, kind);
   }
@@ -1424,14 +1358,8 @@ class InferenceState {
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value kind to be initialized`,
       description: `${printPlace(place)}`,
-      details: [
-        {
-          kind: 'error',
-          loc: place.loc,
-          message: 'this is uninitialized',
-        },
-      ],
-      suggestions: null,
+      message: 'this is uninitialized',
+      loc: place.loc,
     });
     return Array.from(values);
   }
@@ -1442,14 +1370,8 @@ class InferenceState {
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value kind to be initialized`,
       description: `${printPlace(place)}`,
-      details: [
-        {
-          kind: 'error',
-          loc: place.loc,
-          message: 'this is uninitialized',
-        },
-      ],
-      suggestions: null,
+      message: 'this is uninitialized',
+      loc: place.loc,
     });
     let mergedKind: AbstractValue | null = null;
     for (const value of values) {
@@ -1460,14 +1382,7 @@ class InferenceState {
     CompilerError.invariant(mergedKind !== null, {
       reason: `[InferMutationAliasingEffects] Expected at least one value`,
       description: `No value found at \`${printPlace(place)}\``,
-      details: [
-        {
-          kind: 'error',
-          loc: place.loc,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: place.loc,
     });
     return mergedKind;
   }
@@ -1478,14 +1393,8 @@ class InferenceState {
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value for identifier to be initialized`,
       description: `${printIdentifier(value.identifier)}`,
-      details: [
-        {
-          kind: 'error',
-          loc: value.loc,
-          message: 'Expected value for identifier to be initialized',
-        },
-      ],
-      suggestions: null,
+      message: 'Expected value for identifier to be initialized',
+      loc: value.loc,
     });
     this.#variables.set(place.identifier.id, new Set(values));
   }
@@ -1495,14 +1404,8 @@ class InferenceState {
     CompilerError.invariant(values != null, {
       reason: `[InferMutationAliasingEffects] Expected value for identifier to be initialized`,
       description: `${printIdentifier(value.identifier)}`,
-      details: [
-        {
-          kind: 'error',
-          loc: value.loc,
-          message: 'Expected value for identifier to be initialized',
-        },
-      ],
-      suggestions: null,
+      message: 'Expected value for identifier to be initialized',
+      loc: value.loc,
     });
     const prevValues = this.values(place);
     this.#variables.set(
@@ -1516,14 +1419,7 @@ class InferenceState {
     CompilerError.invariant(this.#values.has(value), {
       reason: `[InferMutationAliasingEffects] Expected value to be initialized`,
       description: printInstructionValue(value),
-      details: [
-        {
-          kind: 'error',
-          loc: value.loc,
-          message: 'Expected value for identifier to be initialized',
-        },
-      ],
-      suggestions: null,
+      loc: value.loc,
     });
     this.#variables.set(place.identifier.id, new Set([value]));
   }
@@ -2963,15 +2859,7 @@ export function isKnownMutableEffect(effect: Effect): boolean {
     case Effect.Unknown: {
       CompilerError.invariant(false, {
         reason: 'Unexpected unknown effect',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: GeneratedSource,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: GeneratedSource,
       });
     }
     case Effect.Read:
@@ -3079,13 +2967,7 @@ function mergeValueKinds(a: ValueKind, b: ValueKind): ValueKind {
       {
         reason: `Unexpected value kind in mergeValues()`,
         description: `Found kinds ${a} and ${b}`,
-        details: [
-          {
-            kind: 'error',
-            loc: GeneratedSource,
-            message: null,
-          },
-        ],
+        loc: GeneratedSource,
       },
     );
     return ValueKind.Primitive;
