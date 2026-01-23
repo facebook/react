@@ -1307,15 +1307,26 @@ function codegenTerminal(
       return codegenBlock(cx, terminal.block);
     }
     case 'try': {
-      let catchParam = null;
-      if (terminal.handlerBinding !== null) {
-        catchParam = convertIdentifier(terminal.handlerBinding.identifier);
-        cx.temp.set(terminal.handlerBinding.identifier.declarationId, null);
+      let catchClause: t.CatchClause | null = null;
+      if (terminal.handler !== null) {
+        let catchParam = null;
+        if (terminal.handlerBinding !== null) {
+          catchParam = convertIdentifier(terminal.handlerBinding.identifier);
+          cx.temp.set(terminal.handlerBinding.identifier.declarationId, null);
+        }
+        catchClause = t.catchClause(catchParam, codegenBlock(cx, terminal.handler));
       }
+
+      const finalizer =
+        terminal.finalizer !== null
+          ? codegenBlock(cx, terminal.finalizer)
+          : null;
+
       return createTryStatement(
         terminal.loc,
         codegenBlock(cx, terminal.block),
-        t.catchClause(catchParam, codegenBlock(cx, terminal.handler)),
+        catchClause,
+        finalizer,
       );
     }
     default: {
