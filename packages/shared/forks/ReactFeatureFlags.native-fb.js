@@ -67,7 +67,6 @@ export const enableUpdaterTracking: boolean = __PROFILE__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableHydrationLaneScheduling: boolean = true;
 export const enableYieldingBeforePassive: boolean = false;
 export const enableThrottledScheduling: boolean = false;
 export const enableViewTransition: boolean = false;

@@ -54,7 +54,6 @@ export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
 export const enableViewTransition = false;

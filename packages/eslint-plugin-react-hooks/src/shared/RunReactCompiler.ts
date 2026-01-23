@@ -17,9 +17,106 @@ import BabelPluginReactCompiler, {
   LoggerEvent,
 } from 'babel-plugin-react-compiler';
 import type {SourceCode} from 'eslint';
+import type * as ESTree from 'estree';
 import * as HermesParser from 'hermes-parser';
 import {isDeepStrictEqual} from 'util';
 import type {ParseResult} from '@babel/parser';
+
+// Pattern for component names: starts with uppercase letter
+const COMPONENT_NAME_PATTERN = /^[A-Z]/;
+// Pattern for hook names: starts with 'use' followed by uppercase letter or digit
+const HOOK_NAME_PATTERN = /^use[A-Z0-9]/;
+
+/**
+ * Quick heuristic using ESLint's already-parsed AST to detect if the file
+ * may contain React components or hooks based on function naming patterns.
+ * Only checks top-level declarations since components/hooks are declared at module scope.
+ * Returns true if compilation should proceed, false to skip.
+ */
+function mayContainReactCode(sourceCode: SourceCode): boolean {
+  const ast = sourceCode.ast;
+
+  // Only check top-level statements - components/hooks are declared at module scope
+  for (const node of ast.body) {
+    if (checkTopLevelNode(node)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function checkTopLevelNode(node: ESTree.Node): boolean {
+  // Handle Flow component/hook declarations (hermes-eslint produces these node types)
+  // @ts-expect-error not part of ESTree spec
+  if (node.type === 'ComponentDeclaration' || node.type === 'HookDeclaration') {
+    return true;
+  }
+
+  // Handle: export function MyComponent() {} or export const useHook = () => {}
+  if (node.type === 'ExportNamedDeclaration') {
+    const decl = (node as ESTree.ExportNamedDeclaration).declaration;
+    if (decl != null) {
+      return checkTopLevelNode(decl);
+    }
+    return false;
+  }
+
+  // Handle: export default function MyComponent() {} or export default () => {}
+  if (node.type === 'ExportDefaultDeclaration') {
+    const decl = (node as ESTree.ExportDefaultDeclaration).declaration;
+    // Anonymous default function export - compile conservatively
+    if (
+      decl.type === 'FunctionExpression' ||
+      decl.type === 'ArrowFunctionExpression' ||
+      (decl.type === 'FunctionDeclaration' &&
+        (decl as ESTree.FunctionDeclaration).id == null)
+    ) {
+      return true;
+    }
+    return checkTopLevelNode(decl as ESTree.Node);
+  }
+
+  // Handle: function MyComponent() {}
+  // Also handles Flow component/hook syntax transformed to FunctionDeclaration with flags
+  if (node.type === 'FunctionDeclaration') {
+    // Check for Hermes-added flags indicating Flow component/hook syntax
+    if (
+      '__componentDeclaration' in node ||
+      '__hookDeclaration' in node
+    ) {
+      return true;
+    }
+    const id = (node as ESTree.FunctionDeclaration).id;
+    if (id != null) {
+      const name = id.name;
+      if (COMPONENT_NAME_PATTERN.test(name) || HOOK_NAME_PATTERN.test(name)) {
+        return true;
+      }
+    }
+  }
+
+  // Handle: const MyComponent = () => {} or const useHook = function() {}
+  if (node.type === 'VariableDeclaration') {
+    for (const decl of (node as ESTree.VariableDeclaration).declarations) {
+      if (decl.id.type === 'Identifier') {
+        const init = decl.init;
+        if (
+          init != null &&
+          (init.type === 'ArrowFunctionExpression' ||
+            init.type === 'FunctionExpression')
+        ) {
+          const name = decl.id.name;
+          if (COMPONENT_NAME_PATTERN.test(name) || HOOK_NAME_PATTERN.test(name)) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
+}
 
 const COMPILER_OPTIONS: PluginOptions = {
   outputMode: 'lint',
@@ -214,6 +311,24 @@ export default function runReactCompiler({
     isDeepStrictEqual(entry.userOpts, userOpts)
   ) {
     return entry;
+  }
+
+  // Quick heuristic: skip files that don't appear to contain React code.
+  // We still cache the empty result so subsequent rules don't re-run the check.
+  if (!mayContainReactCode(sourceCode)) {
+    const emptyResult: RunCacheEntry = {
+      sourceCode: sourceCode.text,
+      filename,
+      userOpts,
+      flowSuppressions: [],
+      events: [],
+    };
+    if (entry != null) {
+      Object.assign(entry, emptyResult);
+    } else {
+      cache.push(filename, emptyResult);
+    }
+    return {...emptyResult};
   }
 
   const runEntry = runReactCompilerImpl({
