@@ -48,7 +48,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
@@ -936,9 +935,7 @@ function getStackByFiberInDevAndProd(workInProgress) {
   }
 }
 var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-  REACT_ELEMENT_TYPE = renameElementSymbol
-    ? Symbol.for("react.transitional.element")
-    : REACT_LEGACY_ELEMENT_TYPE,
+  REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -20157,14 +20154,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2071 = React.version;
 if (
-  "19.3.0-www-classic-03ee29da-20260121" !==
+  "19.3.0-www-classic-94913cbf-20260123" !==
   isomorphicReactPackageVersion$jscomp$inline_2071
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2071,
-      "19.3.0-www-classic-03ee29da-20260121"
+      "19.3.0-www-classic-94913cbf-20260123"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20182,10 +20179,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2667 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-03ee29da-20260121",
+  version: "19.3.0-www-classic-94913cbf-20260123",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-03ee29da-20260121"
+  reconcilerVersion: "19.3.0-www-classic-94913cbf-20260123"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2668 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20614,4 +20611,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-03ee29da-20260121";
+exports.version = "19.3.0-www-classic-94913cbf-20260123";

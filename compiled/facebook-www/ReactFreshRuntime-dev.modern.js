@@ -107,7 +107,6 @@ __DEV__ &&
       type = allSignaturesByType.get(type);
       void 0 !== type && computeFullKey(type);
     }
-    require("ReactFeatureFlags");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,

@@ -781,15 +781,7 @@ __DEV__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-    var dynamicFeatureFlags = require("ReactFeatureFlags"),
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
-      enableAsyncDebugInfo = dynamicFeatureFlags.enableAsyncDebugInfo;
-    dynamicFeatureFlags = Symbol.for("react.element");
-    var REACT_ELEMENT_TYPE = renameElementSymbol
-        ? Symbol.for("react.transitional.element")
-        : dynamicFeatureFlags,
+    var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -800,11 +792,11 @@ __DEV__ &&
       REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
       REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
-      REACT_LAZY_TYPE = Symbol.for("react.lazy");
-    renameElementSymbol = Symbol.for("react.scope");
-    var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
-    dynamicFeatureFlags = Symbol.for("react.legacy_hidden");
-    var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
+      REACT_LAZY_TYPE = Symbol.for("react.lazy"),
+      REACT_SCOPE_TYPE = Symbol.for("react.scope"),
+      REACT_ACTIVITY_TYPE = Symbol.for("react.activity"),
+      REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
+      REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
       didWarnStateUpdateForUnmountedComponent = {},
@@ -854,11 +846,15 @@ __DEV__ &&
       deprecatedAPIs.hasOwnProperty(fnName) &&
         defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
     ComponentDummy.prototype = Component.prototype;
-    var fnName = (PureComponent.prototype = new ComponentDummy());
-    fnName.constructor = PureComponent;
-    assign(fnName, Component.prototype);
-    fnName.isPureReactComponent = !0;
-    var isArrayImpl = Array.isArray,
+    deprecatedAPIs = PureComponent.prototype = new ComponentDummy();
+    deprecatedAPIs.constructor = PureComponent;
+    assign(deprecatedAPIs, Component.prototype);
+    deprecatedAPIs.isPureReactComponent = !0;
+    var isArrayImpl = Array.isArray;
+    deprecatedAPIs = require("ReactFeatureFlags");
+    var enableTransitionTracing = deprecatedAPIs.enableTransitionTracing,
+      enableViewTransition = deprecatedAPIs.enableViewTransition,
+      enableAsyncDebugInfo = deprecatedAPIs.enableAsyncDebugInfo,
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       ReactSharedInternals = {
         H: null,
@@ -880,15 +876,15 @@ __DEV__ &&
         : function () {
             return null;
           };
-    fnName = {
+    deprecatedAPIs = {
       react_stack_bottom_frame: function (callStackForError) {
         return callStackForError();
       }
     };
     var specialPropKeyWarningShown, didWarnAboutOldJSXRuntime;
     var didWarnAboutElementRef = {};
-    var unknownOwnerDebugStack = fnName.react_stack_bottom_frame.bind(
-      fnName,
+    var unknownOwnerDebugStack = deprecatedAPIs.react_stack_bottom_frame.bind(
+      deprecatedAPIs,
       UnknownOwner
     )();
     var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
@@ -937,8 +933,8 @@ __DEV__ &&
               });
             }
           : enqueueTask;
-    fnName = Object.freeze({ __proto__: null, c: useMemoCache });
-    deprecatedAPIs = {
+    deprecatedAPIs = Object.freeze({ __proto__: null, c: useMemoCache });
+    var fnName = {
       map: mapChildren,
       forEach: function (children, forEachFunc, forEachContext) {
         mapChildren(
@@ -977,7 +973,7 @@ __DEV__ &&
       return null === getCurrentStack ? null : getCurrentStack();
     };
     exports.Activity = REACT_ACTIVITY_TYPE;
-    exports.Children = deprecatedAPIs;
+    exports.Children = fnName;
     exports.Component = Component;
     exports.Fragment = REACT_FRAGMENT_TYPE;
     exports.Profiler = REACT_PROFILER_TYPE;
@@ -987,7 +983,7 @@ __DEV__ &&
     exports.ViewTransition = REACT_VIEW_TRANSITION_TYPE;
     exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
       ReactSharedInternals;
-    exports.__COMPILER_RUNTIME = fnName;
+    exports.__COMPILER_RUNTIME = deprecatedAPIs;
     exports.act = function (callback) {
       var prevActQueue = ReactSharedInternals.actQueue,
         prevActScopeDepth = actScopeDepth;
@@ -1397,8 +1393,8 @@ __DEV__ &&
     };
     exports.startTransition = startTransition;
     exports.unstable_Activity = REACT_ACTIVITY_TYPE;
-    exports.unstable_LegacyHidden = dynamicFeatureFlags;
-    exports.unstable_Scope = renameElementSymbol;
+    exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
+    exports.unstable_Scope = REACT_SCOPE_TYPE;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
@@ -1497,7 +1493,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.3.0-www-modern-03ee29da-20260121";
+    exports.version = "19.3.0-www-modern-94913cbf-20260123";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

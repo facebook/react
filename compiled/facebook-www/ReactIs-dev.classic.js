@@ -44,14 +44,7 @@ __DEV__ &&
         }
       }
     }
-    var dynamicFeatureFlags = require("ReactFeatureFlags"),
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition;
-    dynamicFeatureFlags = Symbol.for("react.element");
-    var REACT_ELEMENT_TYPE = renameElementSymbol
-        ? Symbol.for("react.transitional.element")
-        : dynamicFeatureFlags,
+    var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -67,6 +60,9 @@ __DEV__ &&
       REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
       REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
+      dynamicFeatureFlags = require("ReactFeatureFlags"),
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
     exports.ContextConsumer = REACT_CONSUMER_TYPE;
     exports.ContextProvider = REACT_CONTEXT_TYPE;

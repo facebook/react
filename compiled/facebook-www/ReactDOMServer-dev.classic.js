@@ -8953,17 +8953,7 @@ __DEV__ &&
     }
     var React = require("react"),
       ReactDOM = require("react-dom"),
-      dynamicFeatureFlags = require("ReactFeatureFlags"),
-      disableLegacyContextForFunctionComponents =
-        dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
-      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
-      enableAsyncDebugInfo = dynamicFeatureFlags.enableAsyncDebugInfo,
-      REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-      REACT_ELEMENT_TYPE = renameElementSymbol
-        ? Symbol.for("react.transitional.element")
-        : REACT_LEGACY_ELEMENT_TYPE,
+      REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -8985,6 +8975,12 @@ __DEV__ &&
       ASYNC_ITERATOR = Symbol.asyncIterator,
       REACT_OPTIMISTIC_KEY = Symbol.for("react.optimistic_key"),
       isArrayImpl = Array.isArray,
+      dynamicFeatureFlags = require("ReactFeatureFlags"),
+      disableLegacyContextForFunctionComponents =
+        dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableViewTransition = dynamicFeatureFlags.enableViewTransition,
+      enableAsyncDebugInfo = dynamicFeatureFlags.enableAsyncDebugInfo,
       jsxPropsParents = new WeakMap(),
       jsxChildrenParents = new WeakMap(),
       CLIENT_REFERENCE_TAG = Symbol.for("react.client.reference"),
@@ -10459,5 +10455,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-classic-03ee29da-20260121";
+    exports.version = "19.3.0-www-classic-94913cbf-20260123";
   })();
