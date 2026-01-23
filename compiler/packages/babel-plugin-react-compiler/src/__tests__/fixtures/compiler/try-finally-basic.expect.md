@@ -2,18 +2,19 @@
 ## Input
 
 ```javascript
-function Component(props) {
-  let x = props.default;
+function Component() {
+  let x;
   try {
-  } catch (e) {
-    x = e;
+    x = 1;
+  } finally {
+    console.log('cleanup');
   }
   return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{default: 42}],
+  params: [],
 };
 
 ```
@@ -21,22 +22,23 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-function Component(props) {
-  let x = props.default;
+function Component() {
+  let x;
   try {
-  } catch (t0) {
-    const e = t0;
-    x = e;
+    x = 1;
+  } finally {
+    console.log("cleanup");
   }
   return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ default: 42 }],
+  params: [],
 };
 
 ```
       
 ### Eval output
-(kind: ok) 42
+(kind: ok) 1
+logs: ['cleanup']

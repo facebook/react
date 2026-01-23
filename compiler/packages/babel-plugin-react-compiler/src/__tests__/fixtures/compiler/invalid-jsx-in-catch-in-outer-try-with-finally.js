@@ -1,4 +1,4 @@
-// @validateNoJSXInTryStatements @outputMode:"lint"
+// @loggerTestOnly @validateNoJSXInTryStatements @outputMode:"lint"
 import {identity} from 'shared-runtime';
 
 function Component(props) {
