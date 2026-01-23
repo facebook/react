@@ -14,12 +14,12 @@ WORKTREE_PATH=""
 
 # --- Usage ---
 usage() {
-  echo "Usage: $0 <name> [--claude] [--compiler]"
+  echo "Usage: $0 [name] [--claude] [--compiler]"
   echo ""
   echo "Creates a new git worktree with dependencies installed."
   echo ""
   echo "Arguments:"
-  echo "  <name>        Name for the worktree (also used as branch name)"
+  echo "  [name]        Name for the worktree (auto-generated if not provided)"
   echo ""
   echo "Options:"
   echo "  --claude      Launch Claude Code after setup"
@@ -75,13 +75,42 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Generate worktree name with timestamp prefix
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
+
 if [[ -z "$NAME" ]]; then
-  usage
+  # Word lists for random name generation
+  ADJECTIVES=(
+    "quick" "bright" "calm" "dark" "eager" "fair" "gentle" "happy" "idle" "jolly"
+    "keen" "lively" "merry" "noble" "orange" "proud" "quiet" "rapid" "silent" "tall"
+    "unique" "vivid" "warm" "young" "zealous" "ancient" "bold" "clever" "daring" "elegant"
+    "fancy" "grand" "humble" "icy" "jagged" "kind" "loud" "magic" "narrow" "odd"
+    "plain" "quaint" "rough" "sharp" "tender" "ultra" "vast" "wild" "xeric" "youthful"
+    "zesty" "agile" "brave" "crisp" "deep"
+  )
+  NOUNS=(
+    "apple" "bear" "cloud" "dragon" "eagle" "flame" "garden" "hill" "island" "jungle"
+    "kettle" "lemon" "mountain" "night" "ocean" "panda" "quartz" "river" "storm" "tiger"
+    "umbrella" "valley" "whale" "xenon" "yarn" "zebra" "anchor" "bridge" "canyon" "desert"
+    "ember" "forest" "glacier" "harbor" "igloo" "jewel" "knight" "lantern" "meadow" "nebula"
+    "oasis" "phoenix" "quest" "rocket" "shadow" "thunder" "unity" "vortex" "willow" "xylophone"
+    "yonder" "zenith" "aurora" "beacon" "coral"
+  )
+
+  # Generate random name: worktree-yyyy-mm-dd-hh-mm-ss-<adjective>-<noun>
+  RANDOM_ADJ=${ADJECTIVES[$RANDOM % ${#ADJECTIVES[@]}]}
+  RANDOM_NOUN=${NOUNS[$RANDOM % ${#NOUNS[@]}]}
+  NAME="worktree-${TIMESTAMP}-${RANDOM_ADJ}-${RANDOM_NOUN}"
+  echo "Auto-generated worktree name: $NAME"
+else
+  # Use provided name: worktree-yyyy-mm-dd-hh-mm-ss-<name>
+  NAME="worktree-${TIMESTAMP}-${NAME}"
+  echo "Worktree name: $NAME"
 fi
 
 # --- Check .gitignore ---
-if ! grep -qE '^/?worktrees/?$' "$REPO_ROOT/.gitignore" 2>/dev/null; then
-  error "'worktrees' is not in .gitignore. Add it before creating worktrees."
+if ! grep -qE '^/?\.worktrees/?$' "$REPO_ROOT/.gitignore" 2>/dev/null; then
+  error "'.worktrees' is not in .gitignore. Add it before creating worktrees."
 fi
 
 # --- Check if worktree already exists ---
@@ -90,7 +119,7 @@ if git worktree list | grep -q "\[$NAME\]"; then
 fi
 
 # --- Set up worktree path ---
-WORKTREES_DIR="$REPO_ROOT/worktrees"
+WORKTREES_DIR="$REPO_ROOT/.worktrees"
 WORKTREE_PATH="$WORKTREES_DIR/$NAME"
 
 if [[ -d "$WORKTREE_PATH" ]]; then
