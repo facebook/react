@@ -8,7 +8,7 @@
  * @flow
  */
 
-import type {ReactStackTrace, ReactFunctionLocation} from 'shared/ReactTypes';
+import type { ReactStackTrace, ReactFunctionLocation } from 'shared/ReactTypes';
 
 function parseStackTraceFromChromeStack(
   stack: string,
@@ -59,7 +59,7 @@ function parseStackTraceFromChromeStack(
   return parsedFrames;
 }
 
-const firefoxFrameRegExp = /^((?:.*".+")?[^@]*)@(.+):(\d+):(\d+)$/;
+const firefoxFrameRegExp = /^((?:"[^"]+")?[^@]*)@(.+):(\d+):(\d+)$/;
 function parseStackTraceFromFirefoxStack(
   stack: string,
   skipFrames: number,
