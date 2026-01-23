@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateExhaustiveMemoizationDependencies
+// @validateExhaustiveMemoizationDependencies @validateRefAccessDuringRender:false
 import {useMemo} from 'react';
 import {Stringify} from 'shared-runtime';
 

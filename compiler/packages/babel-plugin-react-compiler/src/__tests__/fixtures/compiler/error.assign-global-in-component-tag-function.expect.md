@@ -5,6 +5,7 @@
 function Component() {
   const Foo = () => {
     someGlobal = true;
+    return <div />;
   };
   return <Foo />;
 }
@@ -26,9 +27,9 @@ error.assign-global-in-component-tag-function.ts:3:4
   2 |   const Foo = () => {
 > 3 |     someGlobal = true;
     |     ^^^^^^^^^^ `someGlobal` cannot be reassigned
-  4 |   };
-  5 |   return <Foo />;
-  6 | }
+  4 |     return <div />;
+  5 |   };
+  6 |   return <Foo />;
 ```
           
       
