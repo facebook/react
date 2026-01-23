@@ -49,20 +49,35 @@ import { fire } from "react";
 /**
  * Compilation of this file should succeed.
  */
-function NonFireComponent({ prop1 }) {
-  /**
-   * This component bails out but does not use fire
-   */
-  const foo = () => {
-    try {
-      console.log(prop1);
-    } finally {
-      console.log("jbrown215");
-    }
-  };
-  useEffect(() => {
-    foo();
-  });
+function NonFireComponent(t0) {
+  const $ = _c(4);
+  const { prop1 } = t0;
+  let t1;
+  if ($[0] !== prop1) {
+    t1 = () => {
+      try {
+        console.log(prop1);
+      } finally {
+        console.log("jbrown215");
+      }
+    };
+    $[0] = prop1;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const foo = t1;
+  let t2;
+  if ($[2] !== foo) {
+    t2 = () => {
+      foo();
+    };
+    $[2] = foo;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  useEffect(t2);
 }
 
 function FireComponent(props) {

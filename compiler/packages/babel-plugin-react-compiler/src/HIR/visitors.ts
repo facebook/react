@@ -921,13 +921,17 @@ export function mapTerminalSuccessors(
     }
     case 'try': {
       const block = fn(terminal.block);
-      const handler = fn(terminal.handler);
+      const handler =
+        terminal.handler !== null ? fn(terminal.handler) : null;
+      const finalizer =
+        terminal.finalizer !== null ? fn(terminal.finalizer) : null;
       const fallthrough = fn(terminal.fallthrough);
       return {
         kind: 'try',
         block,
         handlerBinding: terminal.handlerBinding,
         handler,
+        finalizer,
         fallthrough,
         id: makeInstructionId(0),
         loc: terminal.loc,
@@ -1088,6 +1092,12 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
     }
     case 'try': {
       yield terminal.block;
+      if (terminal.handler !== null) {
+        yield terminal.handler;
+      }
+      if (terminal.finalizer !== null) {
+        yield terminal.finalizer;
+      }
       break;
     }
     case 'scope':

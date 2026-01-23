@@ -954,6 +954,7 @@ export function removeUnnecessaryTryCatch(fn: HIR): void {
   for (const [, block] of fn.blocks) {
     if (
       block.terminal.kind === 'try' &&
+      block.terminal.handler !== null &&
       !fn.blocks.has(block.terminal.handler)
     ) {
       const handlerId = block.terminal.handler;

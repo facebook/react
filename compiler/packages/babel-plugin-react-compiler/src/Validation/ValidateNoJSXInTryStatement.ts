@@ -27,9 +27,8 @@ export function validateNoJSXInTryStatement(
   const activeTryBlocks: Array<BlockId> = [];
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
-    retainWhere(activeTryBlocks, id => id !== block.id);
-
-    if (activeTryBlocks.length !== 0) {
+    // Check for JSX BEFORE removing the current block from activeTryBlocks
+    if (activeTryBlocks.includes(block.id)) {
       for (const instr of block.instructions) {
         const {value} = instr;
         switch (value.kind) {
@@ -52,8 +51,16 @@ export function validateNoJSXInTryStatement(
       }
     }
 
+    // Remove the current block from activeTryBlocks after checking
+    retainWhere(activeTryBlocks, id => id !== block.id);
+
     if (block.terminal.kind === 'try') {
-      activeTryBlocks.push(block.terminal.handler);
+      // Add the try block itself to activeTryBlocks
+      activeTryBlocks.push(block.terminal.block);
+      // Also add handler if present
+      if (block.terminal.handler !== null) {
+        activeTryBlocks.push(block.terminal.handler);
+      }
     }
   }
   return errors.asResult();

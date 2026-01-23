@@ -34,21 +34,21 @@ function Component(props) {
     x = [];
     try {
       let t0;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
         t0 = throwErrorWithMessage("oops");
-        $[2] = t0;
+        $[4] = t0;
       } else {
-        t0 = $[2];
+        t0 = $[4];
       }
       x.push(t0);
     } catch {
       let t0;
-      if ($[3] !== props.a) {
+      if ($[2] !== props.a) {
         t0 = shallowCopy({ a: props.a });
-        $[3] = props.a;
-        $[4] = t0;
+        $[2] = props.a;
+        $[3] = t0;
       } else {
-        t0 = $[4];
+        t0 = $[3];
       }
       x.push(t0);
     }

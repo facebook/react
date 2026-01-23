@@ -844,14 +844,21 @@ class Driver {
           const scheduleId = this.cx.schedule(fallthroughId, 'if');
           scheduleIds.push(scheduleId);
         }
-        this.cx.scheduleCatchHandler(terminal.handler);
+        if (terminal.handler !== null) {
+          this.cx.scheduleCatchHandler(terminal.handler);
+        }
 
         const block = this.traverseBlock(
           this.cx.ir.blocks.get(terminal.block)!,
         );
-        const handler = this.traverseBlock(
-          this.cx.ir.blocks.get(terminal.handler)!,
-        );
+        const handler =
+          terminal.handler !== null
+            ? this.traverseBlock(this.cx.ir.blocks.get(terminal.handler)!)
+            : null;
+        const finalizer =
+          terminal.finalizer !== null
+            ? this.traverseBlock(this.cx.ir.blocks.get(terminal.finalizer)!)
+            : null;
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
@@ -864,6 +871,7 @@ class Driver {
             block,
             handlerBinding: terminal.handlerBinding,
             handler,
+            finalizer,
             id: terminal.id,
           },
         });

@@ -310,12 +310,14 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case 'try': {
-      value = `[${terminal.id}] Try block=bb${terminal.block} handler=bb${
-        terminal.handler
+      value = `[${terminal.id}] Try block=bb${terminal.block}${
+        terminal.handler !== null ? ` handler=bb${terminal.handler}` : ''
       }${
         terminal.handlerBinding !== null
           ? ` handlerBinding=(${printPlace(terminal.handlerBinding)})`
           : ''
+      }${
+        terminal.finalizer !== null ? ` finalizer=bb${terminal.finalizer}` : ''
       } fallthrough=${
         terminal.fallthrough != null ? `bb${terminal.fallthrough}` : ''
       }`;
