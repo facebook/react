@@ -273,7 +273,8 @@ export type ReactiveTryTerminal = {
   kind: 'try';
   block: ReactiveBlock;
   handlerBinding: Place | null;
-  handler: ReactiveBlock;
+  handler: ReactiveBlock | null;
+  finalizer: ReactiveBlock | null;
   id: InstructionId;
   loc: SourceLocation;
 };
@@ -602,8 +603,8 @@ export type TryTerminal = {
   kind: 'try';
   block: BlockId;
   handlerBinding: Place | null;
-  handler: BlockId;
-  // TODO: support `finally`
+  handler: BlockId | null;
+  finalizer: BlockId | null;
   fallthrough: BlockId;
   id: InstructionId;
   loc: SourceLocation;

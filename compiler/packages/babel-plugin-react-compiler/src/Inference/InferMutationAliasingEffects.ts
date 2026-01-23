@@ -522,7 +522,11 @@ function inferBlock(
     instr.effects = effects;
   }
   const terminal = block.terminal;
-  if (terminal.kind === 'try' && terminal.handlerBinding != null) {
+  if (
+    terminal.kind === 'try' &&
+    terminal.handler !== null &&
+    terminal.handlerBinding != null
+  ) {
     context.catchHandlers.set(terminal.handler, terminal.handlerBinding);
   } else if (terminal.kind === 'maybe-throw') {
     const handlerParam = context.catchHandlers.get(terminal.handler);

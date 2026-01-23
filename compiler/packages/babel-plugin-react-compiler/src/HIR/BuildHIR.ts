@@ -1329,82 +1329,102 @@ function lowerStatement(
       const continuationBlock = builder.reserve('block');
 
       const handlerPath = stmt.get('handler');
-      if (!hasNode(handlerPath)) {
+      const finalizerPath = stmt.get('finalizer');
+
+      // Must have at least a catch or finally clause
+      if (!hasNode(handlerPath) && !hasNode(finalizerPath)) {
         builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle TryStatement without a catch clause`,
+          reason: `(BuildHIR::lowerStatement) Handle TryStatement without a catch or finally clause`,
           category: ErrorCategory.Todo,
           loc: stmt.node.loc ?? null,
           suggestions: null,
         });
         return;
       }
-      if (hasNode(stmt.get('finalizer'))) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause`,
-          category: ErrorCategory.Todo,
-          loc: stmt.node.loc ?? null,
-          suggestions: null,
-        });
-      }
 
-      const handlerBindingPath = handlerPath.get('param');
+      // Build handler (catch) block if present
+      let handler: BlockId | null = null;
       let handlerBinding: {
         place: Place;
         path: NodePath<t.Identifier | t.ArrayPattern | t.ObjectPattern>;
       } | null = null;
-      if (hasNode(handlerBindingPath)) {
-        const place: Place = {
-          kind: 'Identifier',
-          identifier: builder.makeTemporary(
-            handlerBindingPath.node.loc ?? GeneratedSource,
-          ),
-          effect: Effect.Unknown,
-          reactive: false,
-          loc: handlerBindingPath.node.loc ?? GeneratedSource,
-        };
-        promoteTemporary(place.identifier);
-        lowerValueToTemporary(builder, {
-          kind: 'DeclareLocal',
-          lvalue: {
-            kind: InstructionKind.Catch,
-            place: {...place},
-          },
-          type: null,
-          loc: handlerBindingPath.node.loc ?? GeneratedSource,
-        });
 
-        handlerBinding = {
-          path: handlerBindingPath,
-          place,
-        };
+      if (hasNode(handlerPath)) {
+        const handlerBindingPath = handlerPath.get('param');
+        if (hasNode(handlerBindingPath)) {
+          const place: Place = {
+            kind: 'Identifier',
+            identifier: builder.makeTemporary(
+              handlerBindingPath.node.loc ?? GeneratedSource,
+            ),
+            effect: Effect.Unknown,
+            reactive: false,
+            loc: handlerBindingPath.node.loc ?? GeneratedSource,
+          };
+          promoteTemporary(place.identifier);
+          lowerValueToTemporary(builder, {
+            kind: 'DeclareLocal',
+            lvalue: {
+              kind: InstructionKind.Catch,
+              place: {...place},
+            },
+            type: null,
+            loc: handlerBindingPath.node.loc ?? GeneratedSource,
+          });
+
+          handlerBinding = {
+            path: handlerBindingPath,
+            place,
+          };
+        }
+
+        handler = builder.enter('catch', _blockId => {
+          if (handlerBinding !== null) {
+            lowerAssignment(
+              builder,
+              handlerBinding.path.node.loc ?? GeneratedSource,
+              InstructionKind.Catch,
+              handlerBinding.path,
+              {...handlerBinding.place},
+              'Assignment',
+            );
+          }
+          lowerStatement(builder, handlerPath.get('body'));
+          return {
+            kind: 'goto',
+            block: continuationBlock.id,
+            variant: GotoVariant.Break,
+            id: makeInstructionId(0),
+            loc: handlerPath.node.loc ?? GeneratedSource,
+          };
+        });
       }
 
-      const handler = builder.enter('catch', _blockId => {
-        if (handlerBinding !== null) {
-          lowerAssignment(
-            builder,
-            handlerBinding.path.node.loc ?? GeneratedSource,
-            InstructionKind.Catch,
-            handlerBinding.path,
-            {...handlerBinding.place},
-            'Assignment',
-          );
-        }
-        lowerStatement(builder, handlerPath.get('body'));
-        return {
-          kind: 'goto',
-          block: continuationBlock.id,
-          variant: GotoVariant.Break,
-          id: makeInstructionId(0),
-          loc: handlerPath.node.loc ?? GeneratedSource,
-        };
-      });
+      // Build finalizer (finally) block if present
+      let finalizer: BlockId | null = null;
+      if (hasNode(finalizerPath)) {
+        finalizer = builder.enter('block', _blockId => {
+          lowerStatement(builder, finalizerPath);
+          return {
+            kind: 'goto',
+            block: continuationBlock.id,
+            variant: GotoVariant.Break,
+            id: makeInstructionId(0),
+            loc: finalizerPath.node.loc ?? GeneratedSource,
+          };
+        });
+      }
 
       const block = builder.enter('block', _blockId => {
         const block = stmt.get('block');
-        builder.enterTryCatch(handler, () => {
+        // If there's a handler, exceptions go there; otherwise they propagate normally
+        if (handler !== null) {
+          builder.enterTryCatch(handler, () => {
+            lowerStatement(builder, block);
+          });
+        } else {
           lowerStatement(builder, block);
-        });
+        }
         return {
           kind: 'goto',
           block: continuationBlock.id,
@@ -1421,6 +1441,7 @@ function lowerStatement(
           handlerBinding:
             handlerBinding !== null ? {...handlerBinding.place} : null,
           handler,
+          finalizer,
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
           loc: stmt.node.loc ?? GeneratedSource,

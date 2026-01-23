@@ -169,7 +169,12 @@ export class ReactiveFunctionVisitor<TState = void> {
       }
       case 'try': {
         this.visitBlock(terminal.block, state);
-        this.visitBlock(terminal.handler, state);
+        if (terminal.handler !== null) {
+          this.visitBlock(terminal.handler, state);
+        }
+        if (terminal.finalizer !== null) {
+          this.visitBlock(terminal.finalizer, state);
+        }
         break;
       }
       default: {
@@ -559,7 +564,12 @@ export class ReactiveFunctionTransform<
         if (terminal.handlerBinding !== null) {
           this.visitPlace(terminal.id, terminal.handlerBinding, state);
         }
-        this.visitBlock(terminal.handler, state);
+        if (terminal.handler !== null) {
+          this.visitBlock(terminal.handler, state);
+        }
+        if (terminal.finalizer !== null) {
+          this.visitBlock(terminal.finalizer, state);
+        }
         break;
       }
       default: {
@@ -653,7 +663,12 @@ export function mapTerminalBlocks(
     }
     case 'try': {
       terminal.block = fn(terminal.block);
-      terminal.handler = fn(terminal.handler);
+      if (terminal.handler !== null) {
+        terminal.handler = fn(terminal.handler);
+      }
+      if (terminal.finalizer !== null) {
+        terminal.finalizer = fn(terminal.finalizer);
+      }
       break;
     }
     default: {
