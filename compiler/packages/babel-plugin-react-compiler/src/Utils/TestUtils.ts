@@ -14,6 +14,7 @@ import {
   PluginOptions,
 } from '../Entrypoint';
 import {EnvironmentConfig} from '..';
+import {GeneratedSource} from '../HIR/HIR';
 import {
   EnvironmentConfigSchema,
   PartialEnvironmentConfig,
@@ -155,14 +156,7 @@ function parseConfigPragmaEnvironmentForTest(
   CompilerError.invariant(false, {
     reason: 'Internal error, could not parse config from pragma string',
     description: `${fromZodError(config.error)}`,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
 }
 

@@ -159,9 +159,6 @@ export const enableInternalInstanceMap: boolean = false;
 
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
-// Renames the internal symbol for elements since they have changed signature/constructor
-export const renameElementSymbol: boolean = true;
-
 /**
  * Enables a fix to run insertion effect cleanup on hidden subtrees.
  */

@@ -12,6 +12,7 @@ import {
 } from '../CompilerError';
 import {
   BlockId,
+  GeneratedSource,
   HIRFunction,
   IdentifierId,
   Identifier,
@@ -58,15 +59,7 @@ type RefId = number & {[opaqueRefId]: 'RefId'};
 function makeRefId(id: number): RefId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected identifier id to be a non-negative integer',
-    description: null,
-    suggestions: null,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
+    loc: GeneratedSource,
   });
   return id as RefId;
 }
@@ -204,40 +197,19 @@ function tyEqual(a: RefAccessType, b: RefAccessType): boolean {
     case 'Guard':
       CompilerError.invariant(b.kind === 'Guard', {
         reason: 'Expected ref value',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: null,
-            message: null,
-          },
-        ],
+        loc: GeneratedSource,
       });
       return a.refId === b.refId;
     case 'RefValue':
       CompilerError.invariant(b.kind === 'RefValue', {
         reason: 'Expected ref value',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: null,
-            message: null,
-          },
-        ],
+        loc: GeneratedSource,
       });
       return a.loc == b.loc;
     case 'Structure': {
       CompilerError.invariant(b.kind === 'Structure', {
         reason: 'Expected structure',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: null,
-            message: null,
-          },
-        ],
+        loc: GeneratedSource,
       });
       const fnTypesEqual =
         (a.fn === null && b.fn === null) ||
@@ -276,14 +248,7 @@ function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
         a.kind === 'Structure' && b.kind === 'Structure',
         {
           reason: 'Expected structure',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: null,
-              message: null,
-            },
-          ],
+          loc: GeneratedSource,
         },
       );
       const fn =
@@ -782,14 +747,7 @@ function validateNoRefAccessInRenderImpl(
 
   CompilerError.invariant(!env.hasChanged(), {
     reason: 'Ref type environment did not converge',
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
+    loc: GeneratedSource,
   });
 
   return Ok(
