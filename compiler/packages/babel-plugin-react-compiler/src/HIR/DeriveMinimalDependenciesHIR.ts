@@ -54,14 +54,7 @@ export class ReactiveScopeDependencyTreeHIR {
           prevAccessType == null || prevAccessType === accessType,
           {
             reason: 'Conflicting access types',
-            description: null,
-            details: [
-              {
-                kind: 'error',
-                loc: GeneratedSource,
-                message: null,
-              },
-            ],
+            loc: GeneratedSource,
           },
         );
         let nextNode = currNode.properties.get(path[i].property);
@@ -97,13 +90,7 @@ export class ReactiveScopeDependencyTreeHIR {
       CompilerError.invariant(reactive === rootNode.reactive, {
         reason: '[DeriveMinimalDependenciesHIR] Conflicting reactive root flag',
         description: `Identifier ${printIdentifier(identifier)}`,
-        details: [
-          {
-            kind: 'error',
-            loc: GeneratedSource,
-            message: null,
-          },
-        ],
+        loc: GeneratedSource,
       });
     }
     return rootNode;

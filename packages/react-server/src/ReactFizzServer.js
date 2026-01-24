@@ -190,7 +190,14 @@ import assign from 'shared/assign';
 import noop from 'shared/noop';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
-import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
+import {
+  SuspenseException,
+  getSuspendedThenable,
+  ensureSuspendableThenableStateDEV,
+  getSuspendedCallSiteStackDEV,
+  getSuspendedCallSiteDebugTaskDEV,
+  setCaptureSuspendedCallSiteDEV,
+} from './ReactFizzThenable';
 
 // Linked list representing the identity of a component given the component/tag name and key.
 // The name might be minified but we assume that it's going to be the same generated name. Typically
@@ -355,6 +362,7 @@ const OPEN = 11;
 const ABORTING = 12;
 const CLOSING = 13;
 const CLOSED = 14;
+const STALLED_DEV = 15;
 
 export opaque type Request = {
   destination: null | Destination,
@@ -363,7 +371,7 @@ export opaque type Request = {
   +renderState: RenderState,
   +rootFormatContext: FormatContext,
   +progressiveChunkSize: number,
-  status: 10 | 11 | 12 | 13 | 14,
+  status: 10 | 11 | 12 | 13 | 14 | 15,
   fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
@@ -1021,6 +1029,89 @@ function pushHaltedAwaitOnComponentStack(
       }
     }
   }
+}
+
+// performWork + retryTask without mutation
+function rerenderStalledTask(request: Request, task: Task): void {
+  const prevStatus = request.status;
+  request.status = STALLED_DEV;
+
+  const prevContext = getActiveContext();
+  const prevDispatcher = ReactSharedInternals.H;
+  ReactSharedInternals.H = HooksDispatcher;
+  const prevAsyncDispatcher = ReactSharedInternals.A;
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
+
+  const prevRequest = currentRequest;
+  currentRequest = request;
+
+  const prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+  ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+
+  const prevResumableState = currentResumableState;
+  setCurrentResumableState(request.resumableState);
+  switchContext(task.context);
+  const prevTaskInDEV = currentTaskInDEV;
+  setCurrentTaskInDEV(task);
+  try {
+    retryNode(request, task);
+  } catch (x) {
+    // Suspended again.
+    resetHooksState();
+  } finally {
+    setCurrentTaskInDEV(prevTaskInDEV);
+    setCurrentResumableState(prevResumableState);
+
+    ReactSharedInternals.H = prevDispatcher;
+    ReactSharedInternals.A = prevAsyncDispatcher;
+
+    ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
+    if (prevDispatcher === HooksDispatcher) {
+      // This means that we were in a reentrant work loop. This could happen
+      // in a renderer that supports synchronous work like renderToString,
+      // when it's called from within another renderer.
+      // Normally we don't bother switching the contexts to their root/default
+      // values when leaving because we'll likely need the same or similar
+      // context again. However, when we're inside a synchronous loop like this
+      // we'll to restore the context to what it was before returning.
+      switchContext(prevContext);
+    }
+    currentRequest = prevRequest;
+    request.status = prevStatus;
+  }
+}
+
+function pushSuspendedCallSiteOnComponentStack(
+  request: Request,
+  task: Task,
+): void {
+  setCaptureSuspendedCallSiteDEV(true);
+  const restoreThenableState = ensureSuspendableThenableStateDEV(
+    // refined at the callsite
+    ((task.thenableState: any): ThenableState),
+  );
+  try {
+    rerenderStalledTask(request, task);
+  } finally {
+    restoreThenableState();
+    setCaptureSuspendedCallSiteDEV(false);
+  }
+
+  const suspendCallSiteStack = getSuspendedCallSiteStackDEV();
+  const suspendCallSiteDebugTask = getSuspendedCallSiteDebugTaskDEV();
+
+  if (suspendCallSiteStack !== null) {
+    const ownerStack = task.componentStack;
+    task.componentStack = {
+      // The owner of the suspended call site would be the owner of this task.
+      // We need the task itself otherwise we'd miss a frame.
+      owner: ownerStack,
+      parent: suspendCallSiteStack.parent,
+      stack: suspendCallSiteStack.stack,
+      type: suspendCallSiteStack.type,
+    };
+  }
+  task.debugTask = suspendCallSiteDebugTask;
 }
 
 function pushServerComponentStack(
@@ -2723,7 +2814,12 @@ function renderLazyComponent(
     const init = lazyComponent._init;
     Component = init(payload);
   }
-  if (request.status === ABORTING) {
+  if (
+    request.status === ABORTING &&
+    // We're going to discard this render anyway.
+    // We just need to reach the point where we suspended in dev.
+    (!__DEV__ || request.status !== STALLED_DEV)
+  ) {
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
@@ -4535,12 +4631,9 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         debugInfo = node._debugInfo;
       }
       pushHaltedAwaitOnComponentStack(task, debugInfo);
-      /*
       if (task.thenableState !== null) {
-        // TODO: If we were stalled inside use() of a Client Component then we should
-        // rerender to get the stack trace from the use() call.
+        pushSuspendedCallSiteOnComponentStack(request, task);
       }
-      */
     }
   }
 

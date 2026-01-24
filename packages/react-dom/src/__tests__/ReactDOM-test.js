@@ -548,16 +548,23 @@ describe('ReactDOM', () => {
         '    in App (at **)',
       // ReactDOM(App > div > ServerEntry) >>> ReactDOMServer(Child) >>> ReactDOMServer(App2) >>> ReactDOMServer(blink)
       'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in blink (at **)',
+        '    in blink (at **)\n' +
+        '    in App2 (at **)\n' +
+        '    in Child (at **)\n' +
+        '    in ServerEntry (at **)',
       // ReactDOM(App > div > ServerEntry) >>> ReactDOMServer(Child) >>> ReactDOMServer(App2 > Child2 > span)
       'Invalid ARIA attribute `ariaTypo3`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +
         '    in Child2 (at **)\n' +
-        '    in App2 (at **)',
+        '    in App2 (at **)\n' +
+        '    in Child (at **)\n' +
+        '    in ServerEntry (at **)',
       // ReactDOM(App > div > ServerEntry) >>> ReactDOMServer(Child > span)
       'Invalid ARIA attribute `ariaTypo4`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +
-        '    in Child (at **)',
+        '    in Child (at **)\n' +
+        '    in ServerEntry (at **)',
+
       // ReactDOM(App > div > font)
       'Invalid ARIA attribute `ariaTypo5`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in font (at **)\n' +
@@ -775,7 +782,11 @@ describe('ReactDOM', () => {
 
     // @TODO remove this warning check when we loosen the tag nesting restrictions to allow arbitrary tags at the
     // root of the application
-    assertConsoleErrorDev(['In HTML, <head> cannot be a child of <main>']);
+    assertConsoleErrorDev([
+      'In HTML, <head> cannot be a child of <main>.\nThis will cause a hydration error.\n' +
+        '    in head (at **)\n' +
+        '    in App (at **)',
+    ]);
 
     await act(() => {
       root.render(<App phase={1} />);

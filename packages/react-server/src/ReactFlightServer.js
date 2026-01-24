@@ -3622,8 +3622,8 @@ function renderModelDestructive(
         return renderModelDestructive(
           request,
           task,
-          emptyRoot,
-          '',
+          parent,
+          parentPropertyName,
           resolvedModel,
         );
       }

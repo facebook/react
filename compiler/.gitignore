@@ -8,7 +8,9 @@ dist
 .vscode
 !packages/playground/.vscode
 testfilter.txt
+.claude/settings.local.json
 
 # forgive
 *.vsix
 .vscode-test
+

@@ -22,8 +22,6 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-export const enableHydrationLaneScheduling: boolean = true;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -118,8 +116,6 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache: boolean = false;
 
-export const enableUseEffectEventHook: boolean = true;
-
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
@@ -162,9 +158,6 @@ export const enableInternalInstanceMap: boolean = false;
 // different section of this file.
 
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-
-// Renames the internal symbol for elements since they have changed signature/constructor
-export const renameElementSymbol: boolean = true;
 
 /**
  * Enables a fix to run insertion effect cleanup on hidden subtrees.

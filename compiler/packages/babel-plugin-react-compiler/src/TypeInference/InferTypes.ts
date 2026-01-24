@@ -10,6 +10,7 @@ import {CompilerError} from '../CompilerError';
 import {Environment} from '../HIR';
 import {lowerType} from '../HIR/BuildHIR';
 import {
+  GeneratedSource,
   HIRFunction,
   Identifier,
   IdentifierId,
@@ -659,15 +660,7 @@ class Unifier {
     if (type.kind === 'Phi') {
       CompilerError.invariant(type.operands.length > 0, {
         reason: 'there should be at least one operand',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: null,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: GeneratedSource,
       });
 
       let candidateType: Type | null = null;

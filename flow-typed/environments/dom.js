@@ -151,7 +151,7 @@ type TransitionEventHandler = (event: TransitionEvent) => mixed;
 type TransitionEventListener =
   | {handleEvent: TransitionEventHandler, ...}
   | TransitionEventHandler;
-type MessageEventHandler = (event: MessageEvent) => mixed;
+type MessageEventHandler = (event: MessageEvent<>) => mixed;
 type MessageEventListener =
   | {handleEvent: MessageEventHandler, ...}
   | MessageEventHandler;
@@ -845,8 +845,8 @@ declare class PageTransitionEvent extends Event {
 // https://www.w3.org/TR/2008/WD-html5-20080610/comms.html
 // and
 // https://html.spec.whatwg.org/multipage/comms.html#the-messageevent-interfaces
-declare class MessageEvent extends Event {
-  data: mixed;
+declare class MessageEvent<Data = mixed> extends Event {
+  data: Data;
   origin: string;
   lastEventId: string;
   source: WindowProxy;
