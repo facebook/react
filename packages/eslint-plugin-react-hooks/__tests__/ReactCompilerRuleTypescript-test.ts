@@ -195,7 +195,55 @@ const tests: CompilerTestCases = {
   ],
 };
 
+const setStateInEffectTests: CompilerTestCases = {
+  valid: [],
+  invalid: [
+    {
+      name: 'setState in useEffect',
+      filename: 'test.tsx',
+      code: normalizeIndent`
+        import { useEffect, useState } from 'react';
+        function Component() {
+          const [, setState] = useState('');
+          useEffect(() => {
+            setState('test');
+          }, []);
+          return null;
+        }
+      `,
+      errors: [
+        {
+          message: /Avoid calling setState\(\) directly within an effect/,
+        },
+      ],
+    },
+    {
+      name: 'setState in useEffect via useEffectEvent',
+      filename: 'test.tsx',
+      code: normalizeIndent`
+        import { useEffect, useEffectEvent, useState } from 'react';
+        function Component() {
+          const [, setState] = useState('');
+          const onSetState = useEffectEvent(() => {
+            setState('test');
+          });
+          useEffect(() => {
+            onSetState();
+          }, []);
+          return null;
+        }
+      `,
+      errors: [
+        {
+          message: /Avoid calling setState\(\) directly within an effect/,
+        },
+      ],
+    },
+  ],
+};
+
 const eslintTester = new ESLintTesterV8({
   parser: require.resolve('@typescript-eslint/parser-v5'),
 });
 eslintTester.run('react-compiler', allRules['immutability'].rule, tests);
+eslintTester.run('react-compiler', allRules['set-state-in-effect'].rule, setStateInEffectTests);
