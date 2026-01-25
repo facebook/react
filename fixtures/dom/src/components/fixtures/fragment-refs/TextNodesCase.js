@@ -1,6 +1,9 @@
 import TestCase from '../../TestCase';
 import Fixture from '../../Fixture';
 import PrintRectsFragmentContainer from './PrintRectsFragmentContainer';
+import CompareDocumentPositionFragmentContainer from './CompareDocumentPositionFragmentContainer';
+import EventFragmentContainer from './EventFragmentContainer';
+import GetRootNodeFragmentContainer from './GetRootNodeFragmentContainer';
 
 const React = window.React;
 const {Fragment, useRef, useState} = React;
@@ -242,6 +245,28 @@ function ScrollIntoViewMixed() {
   );
 }
 
+function CompareDocumentPositionTextNodes() {
+  return (
+    <TestCase title="compareDocumentPosition - Text Only">
+      <TestCase.Steps>
+        <li>Click the "Compare All Positions" button</li>
+      </TestCase.Steps>
+      <TestCase.ExpectedResult>
+        compareDocumentPosition should work correctly even when the fragment
+        contains only text nodes. The "Before" element should be PRECEDING the
+        fragment, and the "After" element should be FOLLOWING.
+      </TestCase.ExpectedResult>
+      <Fixture>
+        <Fixture.Controls>
+          <CompareDocumentPositionFragmentContainer>
+            This is text-only content inside the fragment.
+          </CompareDocumentPositionFragmentContainer>
+        </Fixture.Controls>
+      </Fixture>
+    </TestCase>
+  );
+}
+
 function ObserveTextOnlyWarning() {
   const fragmentRef = useRef(null);
   const [message, setMessage] = useState('');
@@ -287,6 +312,126 @@ function ObserveTextOnlyWarning() {
   );
 }
 
+function EventTextOnly() {
+  return (
+    <TestCase title="Event Operations - Text Only">
+      <TestCase.Steps>
+        <li>
+          Click "Add event listener" to attach a click handler to the fragment
+        </li>
+        <li>Click "Dispatch click event" to dispatch a click event</li>
+        <li>Observe that the fragment's event listener fires</li>
+        <li>Click "Remove event listener" and dispatch again</li>
+      </TestCase.Steps>
+      <TestCase.ExpectedResult>
+        Event operations (addEventListener, removeEventListener, dispatchEvent)
+        work on fragments with text-only content. The event is dispatched on the
+        fragment's parent element since text nodes cannot be event targets.
+      </TestCase.ExpectedResult>
+      <Fixture>
+        <Fixture.Controls>
+          <EventFragmentContainer>
+            This fragment contains only text. Events are handled via the parent.
+          </EventFragmentContainer>
+        </Fixture.Controls>
+      </Fixture>
+    </TestCase>
+  );
+}
+
+function EventMixed() {
+  return (
+    <TestCase title="Event Operations - Mixed Content">
+      <TestCase.Steps>
+        <li>
+          Click "Add event listener" to attach a click handler to the fragment
+        </li>
+        <li>Click "Dispatch click event" to dispatch a click event</li>
+        <li>Observe that the fragment's event listener fires</li>
+        <li>Click directly on the element or text content to see bubbling</li>
+      </TestCase.Steps>
+      <TestCase.ExpectedResult>
+        Event operations work on fragments with mixed text and element content.
+        dispatchEvent forwards to the parent element. Clicks on child elements
+        or text bubble up through the DOM as normal.
+      </TestCase.ExpectedResult>
+      <Fixture>
+        <Fixture.Controls>
+          <EventFragmentContainer>
+            Text node before element.
+            <span
+              style={{
+                display: 'inline-block',
+                padding: '5px 10px',
+                margin: '0 5px',
+                backgroundColor: 'lightblue',
+                border: '1px solid blue',
+              }}>
+              Element
+            </span>
+            Text node after element.
+          </EventFragmentContainer>
+        </Fixture.Controls>
+      </Fixture>
+    </TestCase>
+  );
+}
+
+function GetRootNodeTextOnly() {
+  return (
+    <TestCase title="getRootNode - Text Only">
+      <TestCase.Steps>
+        <li>Click the "Get Root Node" button</li>
+      </TestCase.Steps>
+      <TestCase.ExpectedResult>
+        getRootNode should return the root of the DOM tree containing the
+        fragment's text content. For a fragment in the main document, this
+        should return the Document node.
+      </TestCase.ExpectedResult>
+      <Fixture>
+        <Fixture.Controls>
+          <GetRootNodeFragmentContainer>
+            This fragment contains only text. getRootNode returns the document.
+          </GetRootNodeFragmentContainer>
+        </Fixture.Controls>
+      </Fixture>
+    </TestCase>
+  );
+}
+
+function GetRootNodeMixed() {
+  return (
+    <TestCase title="getRootNode - Mixed Content">
+      <TestCase.Steps>
+        <li>Click the "Get Root Node" button</li>
+      </TestCase.Steps>
+      <TestCase.ExpectedResult>
+        getRootNode should return the root of the DOM tree for fragments with
+        mixed text and element content. The result is the same whether checking
+        from text nodes or element nodes within the fragment.
+      </TestCase.ExpectedResult>
+      <Fixture>
+        <Fixture.Controls>
+          <GetRootNodeFragmentContainer>
+            Text before element.
+            <span
+              style={{
+                display: 'inline-block',
+                padding: '5px 10px',
+                margin: '0 5px',
+                backgroundColor: 'lightyellow',
+                border: '1px solid #cc0',
+              }}>
+              Element
+            </span>
+            Text after element.
+          </GetRootNodeFragmentContainer>
+        </Fixture.Controls>
+      </Fixture>
+    </TestCase>
+  );
+}
+
 export default function TextNodesCase() {
   return (
     <TestCase title="Text Node Support">
@@ -297,7 +442,8 @@ export default function TextNodesCase() {
         </p>
         <p>
           <strong>Supported:</strong> getClientRects, compareDocumentPosition,
-          scrollIntoView
+          scrollIntoView, getRootNode, addEventListener, removeEventListener,
+          dispatchEvent
         </p>
         <p>
           <strong>No-op (silent):</strong> focus, focusLast (text nodes cannot
@@ -310,10 +456,15 @@ export default function TextNodesCase() {
       </TestCase.ExpectedResult>
       <GetClientRectsTextOnly />
       <GetClientRectsMixed />
+      <CompareDocumentPositionTextNodes />
       <FocusTextOnlyNoop />
       <ScrollIntoViewTextOnly />
       <ScrollIntoViewMixed />
       <ObserveTextOnlyWarning />
+      <EventTextOnly />
+      <EventMixed />
+      <GetRootNodeTextOnly />
+      <GetRootNodeMixed />
     </TestCase>
   );
 }
