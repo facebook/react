@@ -20,6 +20,7 @@ let Activity;
 let mockIntersectionObserver;
 let simulateIntersection;
 let setClientRects;
+let mockRangeClientRects;
 let assertConsoleErrorDev;
 
 function Wrapper({children}) {
@@ -40,6 +41,7 @@ describe('FragmentRefs', () => {
     mockIntersectionObserver = IntersectionMocks.mockIntersectionObserver;
     simulateIntersection = IntersectionMocks.simulateIntersection;
     setClientRects = IntersectionMocks.setClientRects;
+    mockRangeClientRects = IntersectionMocks.mockRangeClientRects;
     assertConsoleErrorDev =
       require('internal-test-utils').assertConsoleErrorDev;
 
@@ -2424,6 +2426,171 @@ describe('FragmentRefs', () => {
         fragmentRef.current.scrollIntoView();
         expect(parentRef.current.scrollIntoView).toHaveBeenCalledTimes(1);
       });
+    });
+  });
+
+  describe('with text nodes', () => {
+    // @gate enableFragmentRefs && enableFragmentRefsTextNodes
+    it('getClientRects includes text node bounds', async () => {
+      const restoreRange = mockRangeClientRects([
+        {x: 0, y: 0, width: 80, height: 16},
+      ]);
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() =>
+        root.render(
+          <div>
+            <Fragment ref={fragmentRef}>Hello World</Fragment>
+          </div>,
+        ),
+      );
+
+      const rects = fragmentRef.current.getClientRects();
+      expect(rects.length).toBe(1);
+      expect(rects[0].width).toBe(80);
+      restoreRange();
+    });
+
+    // @gate enableFragmentRefs && enableFragmentRefsTextNodes
+    it('getClientRects includes both text and element bounds', async () => {
+      const restoreRange = mockRangeClientRects([
+        {x: 0, y: 0, width: 60, height: 16},
+      ]);
+      const fragmentRef = React.createRef();
+      const childRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() =>
+        root.render(
+          <div>
+            <Fragment ref={fragmentRef}>
+              Text before
+              <div ref={childRef}>Element</div>
+              Text after
+            </Fragment>
+          </div>,
+        ),
+      );
+
+      setClientRects(childRef.current, [
+        {x: 10, y: 10, width: 100, height: 20},
+      ]);
+      const rects = fragmentRef.current.getClientRects();
+      // Should have rects from 2 text nodes + 1 element = 3 total
+      expect(rects.length).toBe(3);
+      restoreRange();
+    });
+
+    // @gate enableFragmentRefs
+    it('compareDocumentPosition works with text children', async () => {
+      const fragmentRef = React.createRef();
+      const beforeRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() =>
+        root.render(
+          <div>
+            <div ref={beforeRef} />
+            <Fragment ref={fragmentRef}>Text content</Fragment>
+          </div>,
+        ),
+      );
+
+      const position = fragmentRef.current.compareDocumentPosition(
+        beforeRef.current,
+      );
+      expect(position & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+    });
+
+    // @gate enableFragmentRefs
+    it('focus is a no-op on text-only fragment', async () => {
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() =>
+        root.render(
+          <div>
+            <Fragment ref={fragmentRef}>Text only content</Fragment>
+          </div>,
+        ),
+      );
+
+      // Should not throw or warn - just a silent no-op
+      fragmentRef.current.focus();
+      // Test passes if no error is thrown
+    });
+
+    // @gate enableFragmentRefs
+    it('focusLast is a no-op on text-only fragment', async () => {
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() =>
+        root.render(
+          <div>
+            <Fragment ref={fragmentRef}>Text only content</Fragment>
+          </div>,
+        ),
+      );
+
+      // Should not throw or warn - just a silent no-op
+      fragmentRef.current.focusLast();
+    });
+
+    // @gate enableFragmentRefs && enableFragmentRefsTextNodes
+    it('warns when observeUsing is called on text-only fragment', async () => {
+      mockIntersectionObserver();
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() =>
+        root.render(
+          <div>
+            <Fragment ref={fragmentRef}>Text only content</Fragment>
+          </div>,
+        ),
+      );
+
+      const observer = new IntersectionObserver(() => {});
+      fragmentRef.current.observeUsing(observer);
+      assertConsoleErrorDev(
+        [
+          'observeUsing() was called on a FragmentInstance with only text children. ' +
+            'Observers do not work on text nodes.',
+        ],
+        {withoutStack: true},
+      );
+    });
+
+    // @gate enableFragmentRefs && enableFragmentRefsScrollIntoView
+    it('scrollIntoView works on text-only fragment using Range API', async () => {
+      const restoreRange = mockRangeClientRects([
+        {x: 100, y: 200, width: 80, height: 16},
+      ]);
+      const fragmentRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() =>
+        root.render(
+          <div>
+            <Fragment ref={fragmentRef}>Text content</Fragment>
+          </div>,
+        ),
+      );
+
+      // Mock window.scrollTo to verify it was called
+      const originalScrollTo = window.scrollTo;
+      const scrollToMock = jest.fn();
+      window.scrollTo = scrollToMock;
+
+      fragmentRef.current.scrollIntoView();
+
+      // Should have called window.scrollTo for the text node
+      expect(scrollToMock).toHaveBeenCalled();
+
+      window.scrollTo = originalScrollTo;
+      restoreRange();
     });
   });
 });

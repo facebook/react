@@ -6,6 +6,7 @@ import ResizeObserverCase from './ResizeObserverCase';
 import FocusCase from './FocusCase';
 import GetClientRectsCase from './GetClientRectsCase';
 import ScrollIntoViewCase from './ScrollIntoViewCase';
+import TextNodesCase from './TextNodesCase';
 
 const React = window.React;
 
@@ -19,6 +20,7 @@ export default function FragmentRefsPage() {
       <FocusCase />
       <GetClientRectsCase />
       <ScrollIntoViewCase />
+      <TextNodesCase />
     </FixtureSet>
   );
 }

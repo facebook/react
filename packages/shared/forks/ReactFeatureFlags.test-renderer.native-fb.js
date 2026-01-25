@@ -65,6 +65,8 @@ export const enableHydrationChangeEvent = false;
 export const enableDefaultTransitionIndicator = true;
 export const enableFragmentRefs = false;
 export const enableFragmentRefsScrollIntoView = false;
+export const enableFragmentRefsInstanceHandles = false;
+export const enableFragmentRefsTextNodes = false;
 export const ownerStackLimit = 1e4;
 export const enableOptimisticKey = false;
 
