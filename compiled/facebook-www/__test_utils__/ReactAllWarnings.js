@@ -159,6 +159,7 @@ export default [
   "Expected currently replaying event to be null. This error is likely caused by a bug in React. Please file an issue.",
   "Expected currently replaying event to not be null. This error is likely caused by a bug in React. Please file an issue.",
   "Expected host context to exist. This error is likely caused by a bug in React. Please file an issue.",
+  "Expected not to serialize an object with own property `__proto__`. When parsed this property will be omitted.%s",
   "Expected the last optional `callback` argument to be a function. Instead received: %s.",
   "Expected to be hydrating. This is a bug in React. Please file an issue.",
   "Expected to find a StrictMode component in a strict mode tree. This error is likely caused by a bug in React. Please file an issue.",
