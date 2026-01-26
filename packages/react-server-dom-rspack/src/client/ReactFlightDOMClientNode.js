@@ -21,12 +21,6 @@ import type {
   ServerManifest,
 } from 'react-client/src/ReactFlightClientConfig';
 
-type ServerConsumerManifest = {
-  moduleMap: ServerConsumerModuleMap,
-  moduleLoading: ModuleLoading,
-  serverModuleMap: null | ServerManifest,
-};
-
 import type {Readable} from 'stream';
 
 import {
@@ -96,7 +90,6 @@ declare const __rspack_rsc_manifest__: {
 
 function createFromNodeStream<T>(
   stream: Readable,
-  serverConsumerManifest: ServerConsumerManifest,
   options?: Options,
 ): Thenable<T> {
   const debugChannel: void | DebugChannel =

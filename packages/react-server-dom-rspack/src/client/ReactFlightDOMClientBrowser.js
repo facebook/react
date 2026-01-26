@@ -44,16 +44,26 @@ export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporary
 
 export type {TemporaryReferenceSet};
 
-function findSourceMapURL(filename: string, environmentName: string) {
-  const url = new URL('/__rspack_source_map', window.location.origin);
-  url.searchParams.set('filename', filename);
-  url.searchParams.set('environmentName', environmentName);
-  return url.toString();
+let findSourceMapURLCallback: FindSourceMapURLCallback | null = null;
+
+function setFindSourceMapURLCallback(fn: FindSourceMapURLCallback) {
+  findSourceMapURLCallback = fn;
+}
+
+function callCurrentFindSourceMapURLCallback(
+  fileName: string,
+  environmentName: string,
+): null | string {
+  if (findSourceMapURLCallback) {
+    return findSourceMapURLCallback(fileName, environmentName);
+  }
+  return null;
 }
 
 type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
 let callServer: CallServerCallback | null = null;
+
 export function setServerCallback(fn: CallServerCallback) {
   callServer = fn;
 }
@@ -78,7 +88,7 @@ export function createServerReference<A: Iterable<any>, T>(
     id + '#' + exportName,
     callCurrentServerCallback,
     undefined,
-    findSourceMapURL,
+    __DEV__ ? callCurrentFindSourceMapURLCallback : undefined,
     exportName,
   );
 }
@@ -86,7 +96,6 @@ export function createServerReference<A: Iterable<any>, T>(
 export type Options = {
   debugChannel?: {writable?: WritableStream, readable?: ReadableStream, ...},
   temporaryReferences?: TemporaryReferenceSet,
-  findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
   startTime?: number,
@@ -135,9 +144,7 @@ function createResponseFromOptions(options: void | Options) {
     options && options.temporaryReferences
       ? options.temporaryReferences
       : undefined,
-    __DEV__ && options && options.findSourceMapURL
-      ? options.findSourceMapURL
-      : undefined,
+    __DEV__ ? callCurrentFindSourceMapURLCallback : undefined,
     __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
     __DEV__ && options && options.environmentName
       ? options.environmentName
@@ -323,7 +330,12 @@ function encodeReply(
   });
 }
 
-export {createFromFetch, createFromReadableStream, encodeReply};
+export {
+  createFromFetch,
+  createFromReadableStream,
+  encodeReply,
+  setFindSourceMapURLCallback,
+};
 
 if (__DEV__) {
   injectIntoDevTools();
