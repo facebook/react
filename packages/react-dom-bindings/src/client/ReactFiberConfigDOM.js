@@ -3544,40 +3544,48 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childInstance: InstanceWithFragmentHandles,
+  childInstance: InstanceWithFragmentHandles | Text,
   fragmentInstance: FragmentInstanceType,
 ): void {
+  if (childInstance.nodeType === TEXT_NODE) {
+    return;
+  }
+  const instance: InstanceWithFragmentHandles = (childInstance: any);
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childInstance.addEventListener(type, listener, optionsOrUseCapture);
+      instance.addEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (fragmentInstance._observers !== null) {
     fragmentInstance._observers.forEach(observer => {
-      observer.observe(childInstance);
+      observer.observe(instance);
     });
   }
   if (enableFragmentRefsInstanceHandles) {
-    addFragmentHandleToInstance(childInstance, fragmentInstance);
+    addFragmentHandleToInstance(instance, fragmentInstance);
   }
 }
 
 export function deleteChildFromFragmentInstance(
-  childInstance: InstanceWithFragmentHandles,
+  childInstance: InstanceWithFragmentHandles | Text,
   fragmentInstance: FragmentInstanceType,
 ): void {
+  if (childInstance.nodeType === TEXT_NODE) {
+    return;
+  }
+  const instance: InstanceWithFragmentHandles = (childInstance: any);
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childInstance.removeEventListener(type, listener, optionsOrUseCapture);
+      instance.removeEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (enableFragmentRefsInstanceHandles) {
-    if (childInstance.unstable_reactFragments != null) {
-      childInstance.unstable_reactFragments.delete(fragmentInstance);
+    if (instance.unstable_reactFragments != null) {
+      instance.unstable_reactFragments.delete(fragmentInstance);
     }
   }
 }
