@@ -3328,46 +3328,45 @@ FragmentInstance.prototype.compareDocumentPosition = function (
     );
   }
 
-  const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
-  const lastElement = getInstanceFromHostFiber<Instance>(
+  const firstNode = getInstanceFromHostFiber<Instance>(children[0]);
+  const lastNode = getInstanceFromHostFiber<Instance>(
     children[children.length - 1],
   );
 
   // If the fragment has been portaled into another host instance, we need to
   // our best guess is to use the parent of the child instance, rather than
   // the fiber tree host parent.
-  const firstInstance = getInstanceFromHostFiber<Instance>(children[0]);
   const parentHostInstanceFromDOM = fiberIsPortaledIntoHost(this._fragmentFiber)
-    ? (firstInstance.parentElement: ?Instance)
+    ? (firstNode.parentElement: ?Instance)
     : parentHostInstance;
 
   if (parentHostInstanceFromDOM == null) {
     return Node.DOCUMENT_POSITION_DISCONNECTED;
   }
 
-  // Check if first and last element are actually in the expected document position
-  // before relying on them as source of truth for other contained elements
-  const firstElementIsContained =
-    parentHostInstanceFromDOM.compareDocumentPosition(firstElement) &
+  // Check if first and last node are actually in the expected document position
+  // before relying on them as source of truth for other contained nodes
+  const firstNodeIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(firstNode) &
     Node.DOCUMENT_POSITION_CONTAINED_BY;
-  const lastElementIsContained =
-    parentHostInstanceFromDOM.compareDocumentPosition(lastElement) &
+  const lastNodeIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(lastNode) &
     Node.DOCUMENT_POSITION_CONTAINED_BY;
-  const firstResult = firstElement.compareDocumentPosition(otherNode);
-  const lastResult = lastElement.compareDocumentPosition(otherNode);
+  const firstResult = firstNode.compareDocumentPosition(otherNode);
+  const lastResult = lastNode.compareDocumentPosition(otherNode);
 
   const otherNodeIsFirstOrLastChild =
-    (firstElementIsContained && firstElement === otherNode) ||
-    (lastElementIsContained && lastElement === otherNode);
+    (firstNodeIsContained && firstNode === otherNode) ||
+    (lastNodeIsContained && lastNode === otherNode);
   const otherNodeIsFirstOrLastChildDisconnected =
-    (!firstElementIsContained && firstElement === otherNode) ||
-    (!lastElementIsContained && lastElement === otherNode);
+    (!firstNodeIsContained && firstNode === otherNode) ||
+    (!lastNodeIsContained && lastNode === otherNode);
   const otherNodeIsWithinFirstOrLastChild =
     firstResult & Node.DOCUMENT_POSITION_CONTAINED_BY ||
     lastResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
   const otherNodeIsBetweenFirstAndLastChildren =
-    firstElementIsContained &&
-    lastElementIsContained &&
+    firstNodeIsContained &&
+    lastNodeIsContained &&
     firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
     lastResult & Node.DOCUMENT_POSITION_PRECEDING;
 
