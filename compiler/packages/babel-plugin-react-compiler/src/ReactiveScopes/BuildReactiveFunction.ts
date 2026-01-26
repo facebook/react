@@ -19,11 +19,10 @@ import {
 } from '../HIR';
 import {
   HIRFunction,
-  isStatementBlockKind,
-  MaybeThrowTerminal,
   ReactiveBreakTerminal,
   ReactiveContinueTerminal,
   ReactiveFunction,
+  ReactiveInstruction,
   ReactiveLogicalValue,
   ReactiveSequenceValue,
   ReactiveTerminalStatement,
@@ -62,6 +61,39 @@ class Driver {
 
   constructor(cx: Context) {
     this.cx = cx;
+  }
+
+  /*
+   * Wraps a continuation result with preceding instructions. If there are no
+   * instructions, returns the continuation as-is. Otherwise, wraps the continuation's
+   * value in a SequenceExpression with the instructions prepended.
+   */
+  wrapWithSequence(
+    instructions: Array<ReactiveInstruction>,
+    continuation: {
+      block: BlockId;
+      value: ReactiveValue;
+      place: Place;
+      id: InstructionId;
+    },
+    loc: SourceLocation,
+  ): {block: BlockId; value: ReactiveValue; place: Place; id: InstructionId} {
+    if (instructions.length === 0) {
+      return continuation;
+    }
+    const sequence: ReactiveSequenceValue = {
+      kind: 'SequenceExpression',
+      instructions,
+      id: continuation.id,
+      value: continuation.value,
+      loc,
+    };
+    return {
+      block: continuation.block,
+      value: sequence,
+      place: continuation.place,
+      id: continuation.id,
+    };
   }
 
   /*
@@ -895,7 +927,14 @@ class Driver {
   visitValueBlock(
     id: BlockId,
     loc: SourceLocation,
+    fallthrough: BlockId | null = null,
   ): {block: BlockId; value: ReactiveValue; place: Place; id: InstructionId} {
+    // If we've reached the fallthrough block, stop recursing
+    if (fallthrough !== null && id === fallthrough) {
+      const block = this.cx.ir.blocks.get(id)!;
+      // The fallthrough block should have instructions that we extract the value from
+      return this.extractValueBlockResult(block.instructions, id, loc);
+    }
     const defaultBlock = this.cx.ir.blocks.get(id)!;
     if (defaultBlock.terminal.kind === 'branch') {
       if (defaultBlock.instructions.length === 0) {
@@ -921,7 +960,7 @@ class Driver {
          * Empty goto blocks just forward to the next block.
          * Follow the goto to get the actual value.
          */
-        return this.visitValueBlock(defaultBlock.terminal.block, loc);
+        return this.visitValueBlock(defaultBlock.terminal.block, loc, fallthrough);
       }
       return this.extractValueBlockResult(
         defaultBlock.instructions,
@@ -932,91 +971,43 @@ class Driver {
       /*
        * ReactiveFunction does not explicitly model maybe-throw semantics,
        * so maybe-throw terminals in value blocks flatten away. We continue
-       * to the continuation block if it's still part of the value block
-       * (expression-level), but stop if it's a statement-level block.
-       *
-       * NOTE: The isStatementBlockKind check below is essential - it prevents
-       * recursing into statement-level blocks (return, scope, etc.) that would
-       * cause visitValueBlockTerminal to throw unsupported terminal errors.
+       * to the continuation block if it's still part of the value block.
+       * The fallthrough parameter tells us when to stop recursing.
        */
-      const continuationBlock = this.cx.ir.blocks.get(
-        defaultBlock.terminal.continuation,
-      )!;
-      if (isStatementBlockKind(continuationBlock.kind)) {
-        /*
-         * The continuation is a statement-level block. The value block ends at this block.
-         * Process this block's instructions like a goto case.
-         */
+      const continuationId = defaultBlock.terminal.continuation;
+
+      // If the continuation is the fallthrough, we've reached the end of the value block
+      if (fallthrough !== null && continuationId === fallthrough) {
         const instructions = defaultBlock.instructions;
         CompilerError.invariant(instructions.length !== 0, {
-          reason: `Unexpected empty maybe-throw block with statement-level continuation`,
+          reason: `Unexpected empty maybe-throw block at value block boundary`,
           description: null,
           loc: defaultBlock.terminal.loc,
         });
         return this.extractValueBlockResult(instructions, defaultBlock.id, loc);
       }
+
+      const continuationBlock = this.cx.ir.blocks.get(continuationId)!;
+
       /*
-       * The continuation is expression-level. If it's empty (just has a terminal
-       * like branch/optional/logical), we need to follow to it and include the
-       * current block's instructions in a sequence. If it has instructions, we
-       * recursively visit and merge.
+       * If the continuation block is empty with a non-maybe-throw terminal,
+       * extract the result from this block's instructions using the continuation
+       * block's ID so visitValueBlockTerminal can find the terminal.
        */
-      const isContinuationEmpty = continuationBlock.instructions.length === 0;
-      if (isContinuationEmpty) {
-        /*
-         * The continuation block is empty but has a terminal.
-         * If the terminal is also maybe-throw, we need to follow through to find
-         * the actual terminal (branch/optional/logical/etc). Otherwise, extract
-         * the result from this block's instructions.
-         */
-        if (continuationBlock.terminal.kind !== 'maybe-throw') {
-          /*
-           * The continuation block is empty with a value terminal (branch/optional/
-           * logical/etc) that consumes a value. Unlike maybe-throw which is a
-           * pass-through, value terminals consume the value from defaultBlock's
-           * instructions. We must use continuationBlock.id so visitValueBlockTerminal
-           * can find the terminal - downstream passes rely on this block ID coupling.
-           */
-          return this.extractValueBlockResult(
-            defaultBlock.instructions,
-            continuationBlock.id,
-            loc,
-          );
-        }
-        /*
-         * The continuation is also a maybe-throw. Fall through to recurse,
-         * but skip the empty continuation block.
-         */
+      if (
+        continuationBlock.instructions.length === 0 &&
+        continuationBlock.terminal.kind !== 'maybe-throw'
+      ) {
+        return this.extractValueBlockResult(
+          defaultBlock.instructions,
+          continuationBlock.id,
+          loc,
+        );
       }
-      /*
-       * Recurse to the continuation. If the continuation block is empty, we know
-       * from the early return above that it must have a maybe-throw terminal, so
-       * skip directly to its continuation. Otherwise, recurse to the continuation
-       * block normally. Wrap the result with any instructions from the current block.
-       *
-       * NOTE: The cast to MaybeThrowTerminal is safe because we already returned
-       * for all non-maybe-throw terminals when isContinuationEmpty is true.
-       */
-      const effectiveContinuation = isContinuationEmpty
-        ? (continuationBlock.terminal as MaybeThrowTerminal).continuation
-        : defaultBlock.terminal.continuation;
-      const continuation = this.visitValueBlock(effectiveContinuation, loc);
-      if (defaultBlock.instructions.length === 0) {
-        return continuation;
-      }
-      const sequence: ReactiveSequenceValue = {
-        kind: 'SequenceExpression',
-        instructions: defaultBlock.instructions,
-        id: continuation.id,
-        value: continuation.value,
-        loc,
-      };
-      return {
-        block: continuation.block,
-        value: sequence,
-        place: continuation.place,
-        id: continuation.id,
-      };
+
+      // Recurse to the continuation, passing through the fallthrough
+      const continuation = this.visitValueBlock(continuationId, loc, fallthrough);
+      return this.wrapWithSequence(defaultBlock.instructions, continuation, loc);
     } else {
       /*
        * The value block ended in a value terminal, recurse to get the value
@@ -1024,22 +1015,48 @@ class Driver {
        */
       const init = this.visitValueBlockTerminal(defaultBlock.terminal);
       const final = this.visitValueBlock(init.fallthrough, loc);
-      return {
-        block: final.block,
-        place: final.place,
-        id: final.id,
-        value: {
-          kind: 'SequenceExpression',
-          instructions: [
-            ...defaultBlock.instructions,
-            {id: init.id, loc, lvalue: init.place, value: init.value},
-          ],
-          id: final.id,
-          value: final.value,
-          loc,
-        },
-      };
+      return this.wrapWithSequence(
+        [
+          ...defaultBlock.instructions,
+          {id: init.id, loc, lvalue: init.place, value: init.value},
+        ],
+        final,
+        loc,
+      );
     }
+  }
+
+  /*
+   * Visits the test block of a value terminal (optional, logical, ternary) and
+   * returns the result along with the branch terminal. Throws a todo error if
+   * the test block does not end in a branch terminal.
+   */
+  visitTestBlock(
+    testBlockId: BlockId,
+    loc: SourceLocation,
+    terminalKind: string,
+  ): {
+    test: {block: BlockId; value: ReactiveValue; place: Place; id: InstructionId};
+    branch: {consequent: BlockId; alternate: BlockId; loc: SourceLocation};
+  } {
+    const test = this.visitValueBlock(testBlockId, loc);
+    const testBlock = this.cx.ir.blocks.get(test.block)!;
+    if (testBlock.terminal.kind !== 'branch') {
+      CompilerError.throwTodo({
+        reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for ${terminalKind} test block`,
+        description: null,
+        loc: testBlock.terminal.loc,
+        suggestions: null,
+      });
+    }
+    return {
+      test,
+      branch: {
+        consequent: testBlock.terminal.consequent,
+        alternate: testBlock.terminal.alternate,
+        loc: testBlock.terminal.loc,
+      },
+    };
   }
 
   visitValueBlockTerminal(terminal: Terminal): {
@@ -1050,7 +1067,11 @@ class Driver {
   } {
     switch (terminal.kind) {
       case 'sequence': {
-        const block = this.visitValueBlock(terminal.block, terminal.loc);
+        const block = this.visitValueBlock(
+          terminal.block,
+          terminal.loc,
+          terminal.fallthrough,
+        );
         return {
           value: block.value,
           place: block.place,
@@ -1059,26 +1080,22 @@ class Driver {
         };
       }
       case 'optional': {
-        const test = this.visitValueBlock(terminal.test, terminal.loc);
-        const testBlock = this.cx.ir.blocks.get(test.block)!;
-        if (testBlock.terminal.kind !== 'branch') {
-          CompilerError.throwTodo({
-            reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional test block`,
-            description: null,
-            loc: testBlock.terminal.loc,
-            suggestions: null,
-          });
-        }
-        const consequent = this.visitValueBlock(
-          testBlock.terminal.consequent,
+        const {test, branch} = this.visitTestBlock(
+          terminal.test,
           terminal.loc,
+          'optional',
+        );
+        const consequent = this.visitValueBlock(
+          branch.consequent,
+          terminal.loc,
+          terminal.fallthrough,
         );
         const call: ReactiveSequenceValue = {
           kind: 'SequenceExpression',
           instructions: [
             {
               id: test.id,
-              loc: testBlock.terminal.loc,
+              loc: branch.loc,
               lvalue: test.place,
               value: test.value,
             },
@@ -1101,20 +1118,15 @@ class Driver {
         };
       }
       case 'logical': {
-        const test = this.visitValueBlock(terminal.test, terminal.loc);
-        const testBlock = this.cx.ir.blocks.get(test.block)!;
-        if (testBlock.terminal.kind !== 'branch') {
-          CompilerError.throwTodo({
-            reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for logical test block`,
-            description: null,
-            loc: testBlock.terminal.loc,
-            suggestions: null,
-          });
-        }
-
-        const leftFinal = this.visitValueBlock(
-          testBlock.terminal.consequent,
+        const {test, branch} = this.visitTestBlock(
+          terminal.test,
           terminal.loc,
+          'logical',
+        );
+        const leftFinal = this.visitValueBlock(
+          branch.consequent,
+          terminal.loc,
+          terminal.fallthrough,
         );
         const left: ReactiveSequenceValue = {
           kind: 'SequenceExpression',
@@ -1131,8 +1143,9 @@ class Driver {
           loc: terminal.loc,
         };
         const right = this.visitValueBlock(
-          testBlock.terminal.alternate,
+          branch.alternate,
           terminal.loc,
+          terminal.fallthrough,
         );
         const value: ReactiveLogicalValue = {
           kind: 'LogicalExpression',
@@ -1149,23 +1162,20 @@ class Driver {
         };
       }
       case 'ternary': {
-        const test = this.visitValueBlock(terminal.test, terminal.loc);
-        const testBlock = this.cx.ir.blocks.get(test.block)!;
-        if (testBlock.terminal.kind !== 'branch') {
-          CompilerError.throwTodo({
-            reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for ternary test block`,
-            description: null,
-            loc: testBlock.terminal.loc,
-            suggestions: null,
-          });
-        }
-        const consequent = this.visitValueBlock(
-          testBlock.terminal.consequent,
+        const {test, branch} = this.visitTestBlock(
+          terminal.test,
           terminal.loc,
+          'ternary',
+        );
+        const consequent = this.visitValueBlock(
+          branch.consequent,
+          terminal.loc,
+          terminal.fallthrough,
         );
         const alternate = this.visitValueBlock(
-          testBlock.terminal.alternate,
+          branch.alternate,
           terminal.loc,
+          terminal.fallthrough,
         );
         const value: ReactiveTernaryValue = {
           kind: 'ConditionalExpression',
