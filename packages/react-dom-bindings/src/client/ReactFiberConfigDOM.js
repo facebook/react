@@ -3154,18 +3154,34 @@ function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
-  // TODO: When we have a parent element reference, we can skip traversal if the fragment's parent
-  //   does not contain document.activeElement
+  // Early exit if activeElement is not within the fragment's parent
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return;
+  }
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
+  const activeElement = parentHostInstance.ownerDocument.activeElement;
+  if (activeElement === null || !parentHostInstance.contains(activeElement)) {
+    return;
+  }
+
   traverseFragmentInstance(
     this._fragmentFiber,
     blurActiveElementWithinFragment,
+    activeElement,
   );
 };
-function blurActiveElementWithinFragment(child: Fiber): boolean {
-  // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
+function blurActiveElementWithinFragment(
+  child: Fiber,
+  activeElement: Element,
+): boolean {
+  // Skip text nodes - they can't be focused
+  if (enableFragmentRefsTextNodes && child.tag === HostText) {
+    return false;
+  }
   const instance = getInstanceFromHostFiber<Instance>(child);
-  const ownerDocument = instance.ownerDocument;
-  if (instance === ownerDocument.activeElement) {
+  if (instance === activeElement) {
     // $FlowFixMe[prop-missing]
     instance.blur();
     return true;
