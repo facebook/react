@@ -46,7 +46,7 @@ function bindArgs(fn: any, args: any) {
 function loadServerReference<T>(
   bundlerConfig: ServerManifest,
   metaData: {
-    id: string,
+    id: ServerReferenceId,
     bound: null | Promise<Array<any>>,
   },
 ): Promise<T> {
