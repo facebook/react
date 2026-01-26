@@ -66,9 +66,17 @@ export function initialize(
     | Promise<DevToolsHookSettings>,
   shouldStartProfilingNow: boolean = false,
   profilingSettings?: ProfilingSettings,
+  maybeComponentFiltersOrComponentFiltersPromise?:
+    | Array<ComponentFilter>
+    | Promise<Array<ComponentFilter>>,
 ) {
+  const componentFiltersOrComponentFiltersPromise =
+    maybeComponentFiltersOrComponentFiltersPromise
+      ? maybeComponentFiltersOrComponentFiltersPromise
+      : savedComponentFilters;
   installHook(
     window,
+    componentFiltersOrComponentFiltersPromise,
     maybeSettingsOrSettingsPromise,
     shouldStartProfilingNow,
     profilingSettings,
@@ -173,19 +181,6 @@ export function connectToDevTools(options: ?ConnectOptions) {
         savedComponentFilters = componentFilters;
       },
     );
-
-    // The renderer interface doesn't read saved component filters directly,
-    // because they are generally stored in localStorage within the context of the extension.
-    // Because of this it relies on the extension to pass filters.
-    // In the case of the standalone DevTools being used with a website,
-    // saved filters are injected along with the backend script tag so we shouldn't override them here.
-    // This injection strategy doesn't work for React Native though.
-    // Ideally the backend would save the filters itself, but RN doesn't provide a sync storage solution.
-    // So for now we just fall back to using the default filters...
-    if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ == null) {
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      bridge.send('overrideComponentFilters', savedComponentFilters);
-    }
 
     // TODO (npm-packages) Warn if "isBackendStorageAPISupported"
     // $FlowFixMe[incompatible-call] found when upgrading Flow
@@ -380,10 +375,6 @@ export function connectWithCustomMessagingProtocol({
       savedComponentFilters = componentFilters;
     },
   );
-
-  if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ == null) {
-    bridge.send('overrideComponentFilters', savedComponentFilters);
-  }
 
   const agent = new Agent(bridge, isProfiling, onReloadAndProfile);
   if (typeof onReloadAndProfileFlagsReset === 'function') {

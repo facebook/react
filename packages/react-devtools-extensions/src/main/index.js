@@ -171,8 +171,8 @@ function createBridgeAndStore() {
     createSuspensePanel();
   });
 
-  store.addListener('settingsUpdated', settings => {
-    chrome.storage.local.set(settings);
+  store.addListener('settingsUpdated', (hookSettings, componentFilters) => {
+    chrome.storage.local.set({...hookSettings, componentFilters});
   });
 
   if (!isProfiling) {

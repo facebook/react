@@ -599,3 +599,7 @@ export type DevToolsHookSettings = {
   hideConsoleLogsInStrictMode: boolean,
   disableSecondConsoleLogDimmingInStrictMode: boolean,
 };
+
+export type DevToolsSettings = DevToolsHookSettings & {
+  componentFilters: Array<ComponentFilter>,
+};
