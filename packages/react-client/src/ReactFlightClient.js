@@ -90,6 +90,8 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
 
+import hasOwnProperty from 'shared/hasOwnProperty';
+
 import {injectInternals} from './ReactFlightClientDevToolsHook';
 
 import ReactVersion from 'shared/ReactVersion';
@@ -151,6 +153,8 @@ const RESOLVED_MODEL = 'resolved_model';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
+
+const __PROTO__ = '__proto__';
 
 type PendingChunk<T> = {
   status: 'pending',
@@ -969,10 +973,21 @@ function waitForReference<T>(
           return;
         }
       }
-      value = value[path[i]];
+      const name = path[i];
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        hasOwnProperty.call(value, name)
+      ) {
+        value = value[name];
+      } else {
+        throw new Error('Invalid reference.');
+      }
     }
     const mappedValue = map(response, value, parentObject, key);
-    parentObject[key] = mappedValue;
+    if (key !== __PROTO__) {
+      parentObject[key] = mappedValue;
+    }
 
     // If this is the root object for a model reference, where `handler.value`
     // is a stale `null`, the resolved value can be used directly.
@@ -1151,7 +1166,9 @@ function loadServerReference<A: Iterable<any>, T>(
       response._encodeFormAction,
     );
 
-    parentObject[key] = resolvedValue;
+    if (key !== __PROTO__) {
+      parentObject[key] = resolvedValue;
+    }
 
     // If this is the root object for a model reference, where `handler.value`
     // is a stale `null`, the resolved value can be used directly.
@@ -1574,18 +1591,20 @@ function parseModelString(
           // In DEV mode we encode omitted objects in logs as a getter that throws
           // so that when you try to access it on the client, you know why that
           // happened.
-          Object.defineProperty(parentObject, key, {
-            get: function () {
-              // TODO: We should ideally throw here to indicate a difference.
-              return (
-                'This object has been omitted by React in the console log ' +
-                'to avoid sending too much data from the server. Try logging smaller ' +
-                'or more specific objects.'
-              );
-            },
-            enumerable: true,
-            configurable: false,
-          });
+          if (key !== __PROTO__) {
+            Object.defineProperty(parentObject, key, {
+              get: function () {
+                // TODO: We should ideally throw here to indicate a difference.
+                return (
+                  'This object has been omitted by React in the console log ' +
+                  'to avoid sending too much data from the server. Try logging smaller ' +
+                  'or more specific objects.'
+                );
+              },
+              enumerable: true,
+              configurable: false,
+            });
+          }
           return null;
         }
         // Fallthrough
@@ -3375,6 +3394,9 @@ function parseModel<T>(response: Response, json: UninitializedModel): T {
 function createFromJSONCallback(response: Response) {
   // $FlowFixMe[missing-this-annot]
   return function (key: string, value: JSONValue) {
+    if (key === __PROTO__) {
+      return undefined;
+    }
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
       return parseModelString(response, this, key, value);
