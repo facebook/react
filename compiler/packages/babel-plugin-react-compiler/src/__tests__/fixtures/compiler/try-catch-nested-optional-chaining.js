@@ -10,7 +10,9 @@ function Component({data, fallback}) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{data: {nested: {deeply: {value: 'found'}}}, fallback: {default: 'none'}}],
+  params: [
+    {data: {nested: {deeply: {value: 'found'}}}, fallback: {default: 'none'}},
+  ],
   sequentialRenders: [
     {data: {nested: {deeply: {value: 'found'}}}, fallback: {default: 'none'}},
     {data: {nested: {deeply: {value: 'found'}}}, fallback: {default: 'none'}},

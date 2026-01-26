@@ -960,7 +960,11 @@ class Driver {
          * Empty goto blocks just forward to the next block.
          * Follow the goto to get the actual value.
          */
-        return this.visitValueBlock(defaultBlock.terminal.block, loc, fallthrough);
+        return this.visitValueBlock(
+          defaultBlock.terminal.block,
+          loc,
+          fallthrough,
+        );
       }
       return this.extractValueBlockResult(
         defaultBlock.instructions,
@@ -1006,8 +1010,16 @@ class Driver {
       }
 
       // Recurse to the continuation, passing through the fallthrough
-      const continuation = this.visitValueBlock(continuationId, loc, fallthrough);
-      return this.wrapWithSequence(defaultBlock.instructions, continuation, loc);
+      const continuation = this.visitValueBlock(
+        continuationId,
+        loc,
+        fallthrough,
+      );
+      return this.wrapWithSequence(
+        defaultBlock.instructions,
+        continuation,
+        loc,
+      );
     } else {
       /*
        * The value block ended in a value terminal, recurse to get the value
@@ -1036,7 +1048,12 @@ class Driver {
     loc: SourceLocation,
     terminalKind: string,
   ): {
-    test: {block: BlockId; value: ReactiveValue; place: Place; id: InstructionId};
+    test: {
+      block: BlockId;
+      value: ReactiveValue;
+      place: Place;
+      id: InstructionId;
+    };
     branch: {consequent: BlockId; alternate: BlockId; loc: SourceLocation};
   } {
     const test = this.visitValueBlock(testBlockId, loc);
