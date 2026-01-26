@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {
   CompilerDiagnostic,
   CompilerError,
@@ -23,6 +30,27 @@ import {
 } from '../HIR/visitors';
 import { Err, Ok, Result } from '../Utils/Result';
 import { retainWhere } from '../Utils/utils';
+
+/**
+ * Validates that a function does not access a ref value during render. This includes a partial check
+ * for ref values which are accessed indirectly via function expressions.
+ *
+ * ```javascript
+ * // ERROR
+ * const ref = useRef();
+ * ref.current;
+ *
+ * const ref = useRef();
+ * foo(ref); // may access .current
+ *
+ * // ALLOWED
+ * const ref = useHookThatReturnsRef();
+ * ref.current;
+ * ```
+ *
+ * In the future we may reject more cases, based on either object names (`fooRef.current` is likely a ref)
+ * or based on property name alone (`foo.current` might be a ref).
+ */
 
 const opaqueRefId = Symbol();
 type RefId = number & { [opaqueRefId]: 'RefId' };
@@ -492,10 +520,10 @@ function validateNoRefAccessInRenderImpl(
                     hookKind !== 'useState' &&
                     hookKind !== 'useReducer')
                 ) {
-                  
+
                   validateNoDirectRefValueAccess(errors, operand, env);
                 } else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
-                  
+
                   validateNoRefValueAccess(errors, env, operand);
                 } else {
                   validateNoRefPassedToFunction(
@@ -596,7 +624,7 @@ function validateNoRefAccessInRenderImpl(
                   ? value.refId
                   : null;
               if (refId !== null) {
-               
+
                 env.set(instr.lvalue.identifier.id, { kind: 'Guard', refId });
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
