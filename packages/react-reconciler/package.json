@@ -26,7 +26,7 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "react": "^19.0.3"
+    "react": "^19.0.4"
   },
   "dependencies": {
     "scheduler": "^0.23.0"
