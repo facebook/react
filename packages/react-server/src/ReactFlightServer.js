@@ -71,6 +71,7 @@ import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   AsyncSequence,
+  AwaitNode,
   IONode,
   PromiseNode,
   UnresolvedPromiseNode,
@@ -2320,7 +2321,23 @@ function renderElement(
   return renderClientElement(request, task, type, key, props, validated);
 }
 
-// Frame phases for iterative traversal
+// Stack frame types for iterative traversal. Using discriminated unions
+// allows Flow to automatically narrow the type based on the phase.
+type VisitNodeFrame = {
+  phase: 0,
+  node: AsyncSequence,
+};
+type ProcessPreviousFrame = {
+  phase: 1,
+  node: AsyncSequence,
+};
+type ProcessAwaitedFrame = {
+  phase: 2,
+  node: PromiseNode | AwaitNode,
+  previousIONode: void | null | PromiseNode | IONode,
+};
+type StackFrame = VisitNodeFrame | ProcessPreviousFrame | ProcessAwaitedFrame;
+
 const VISIT_NODE = 0;
 const PROCESS_PREVIOUS = 1;
 const PROCESS_AWAITED = 2;
@@ -2337,21 +2354,17 @@ function visitAsyncNode(
 ): void | null | PromiseNode | IONode {
   // Explicit stack to avoid recursion. Each frame tracks the node being processed,
   // the current phase, and intermediate results.
-  const stack: Array<{
-    node: AsyncSequence,
-    phase: number,
-    previousIONode: void | null | PromiseNode | IONode,
-  }> = [];
+  const stack: Array<StackFrame> = [];
   // Result passed between frames (simulates return values from recursive calls)
   let result: void | null | PromiseNode | IONode;
 
-  stack.push({node: startNode, phase: VISIT_NODE, previousIONode: null});
+  stack.push({phase: VISIT_NODE, node: startNode});
 
   while (stack.length > 0) {
     const frame = stack[stack.length - 1];
-    const node = frame.node;
 
     if (frame.phase === VISIT_NODE) {
+      const node = frame.node;
       // Check memoization
       if (visited.has(node)) {
         // It's possible to visit the same node twice when it's part of both an "awaited" path
@@ -2373,24 +2386,22 @@ function visitAsyncNode(
         continue;
       }
 
+      // Transition to PROCESS_PREVIOUS phase
+      stack[stack.length - 1] = {phase: PROCESS_PREVIOUS, node};
       // Visit previous if it exists
       if (node.previous !== null) {
-        frame.phase = PROCESS_PREVIOUS;
-        stack.push({node: node.previous, phase: VISIT_NODE, previousIONode: null});
+        stack.push({phase: VISIT_NODE, node: node.previous});
         continue;
       } else {
-        frame.previousIONode = null;
-        frame.phase = PROCESS_PREVIOUS;
+        result = null;
         // Fall through to PROCESS_PREVIOUS
       }
     }
 
     if (frame.phase === PROCESS_PREVIOUS) {
-      // Get result from visiting previous (if we visited it)
-      if (node.previous !== null) {
-        frame.previousIONode = result;
-      }
-      const previousIONode = frame.previousIONode;
+      const node = frame.node;
+      // result contains the value from visiting previous (or null if no previous)
+      const previousIONode = result;
 
       if (previousIONode === undefined) {
         // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
@@ -2421,8 +2432,13 @@ function visitAsyncNode(
         case PROMISE_NODE: {
           const awaited = node.awaited;
           if (awaited !== null) {
-            frame.phase = PROCESS_AWAITED;
-            stack.push({node: awaited, phase: VISIT_NODE, previousIONode: null});
+            // Transition to PROCESS_AWAITED phase
+            stack[stack.length - 1] = {
+              phase: PROCESS_AWAITED,
+              node,
+              previousIONode,
+            };
+            stack.push({phase: VISIT_NODE, node: awaited});
             continue;
           } else {
             // No awaited - check aborting case and forward debug info
@@ -2467,8 +2483,13 @@ function visitAsyncNode(
         case AWAIT_NODE: {
           const awaited = node.awaited;
           if (awaited !== null) {
-            frame.phase = PROCESS_AWAITED;
-            stack.push({node: awaited, phase: VISIT_NODE, previousIONode: null});
+            // Transition to PROCESS_AWAITED phase
+            stack[stack.length - 1] = {
+              phase: PROCESS_AWAITED,
+              node,
+              previousIONode,
+            };
+            stack.push({phase: VISIT_NODE, node: awaited});
             continue;
           } else {
             // No awaited - just forward debug info
@@ -2496,6 +2517,7 @@ function visitAsyncNode(
     }
 
     if (frame.phase === PROCESS_AWAITED) {
+      const node = frame.node;
       const previousIONode = frame.previousIONode;
       const ioNode = result; // Result from visiting awaited
 
@@ -2573,8 +2595,9 @@ function visitAsyncNode(
         continue;
       } else {
         // AWAIT_NODE processing with awaited result
+        const awaitNode: AwaitNode = node;
         let match: void | null | PromiseNode | IONode = previousIONode;
-        const awaited = node.awaited;
+        const awaited = awaitNode.awaited;
 
         if (ioNode === undefined) {
           // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
@@ -2583,8 +2606,8 @@ function visitAsyncNode(
           stack.pop();
           continue;
         } else if (ioNode !== null) {
-          const startTime: number = node.start;
-          const endTime: number = node.end;
+          const startTime: number = awaitNode.start;
+          const endTime: number = awaitNode.end;
           if (startTime < cutOff) {
             // We started awaiting this node before we started rendering this sequence.
             // This means that this particular await was never part of the current sequence.
@@ -2594,8 +2617,8 @@ function visitAsyncNode(
             // just part of a previous component's rendering.
             match = ioNode;
             if (
-              node.stack !== null &&
-              isAwaitInUserspace(request, node.stack)
+              awaitNode.stack !== null &&
+              isAwaitInUserspace(request, awaitNode.stack)
             ) {
               // This await happened earlier but it was done in user space. This is the first time
               // that user space saw the value of the I/O. We know we'll emit the I/O eventually
@@ -2603,16 +2626,16 @@ function visitAsyncNode(
               // one observed by this await which will be a better value than the internals of
               // the I/O entry. If it's still alive that is.
               if (awaited !== null && awaited.promise !== null) {
-                const promise = awaited.promise.deref();
-                if (promise !== undefined) {
+                const awaitedPromise = awaited.promise.deref();
+                if (awaitedPromise !== undefined) {
                   serializeIONode(request, ioNode, awaited.promise);
                 }
               }
             }
           } else {
             if (
-              node.stack === null ||
-              !isAwaitInUserspace(request, node.stack)
+              awaitNode.stack === null ||
+              !isAwaitInUserspace(request, awaitNode.stack)
             ) {
               // If this await was fully filtered out, then it was inside third party code
               // such as in an external library. We return the I/O node and try another await.
@@ -2638,8 +2661,8 @@ function visitAsyncNode(
               visited.set(ioNode, null);
 
               // Ensure the owner is already outlined.
-              if (node.owner != null) {
-                outlineComponentInfo(request, node.owner);
+              if (awaitNode.owner != null) {
+                outlineComponentInfo(request, awaitNode.owner);
               }
 
               // We log the environment at the time when the last promise pigned ping which may
@@ -2651,11 +2674,11 @@ function visitAsyncNode(
               emitDebugChunk(request, task.id, {
                 awaited: ((ioNode: any): ReactIOInfo), // This is deduped by this reference.
                 env: env,
-                owner: node.owner,
+                owner: awaitNode.owner,
                 stack:
-                  node.stack === null
+                  awaitNode.stack === null
                     ? null
-                    : filterStackTrace(request, node.stack),
+                    : filterStackTrace(request, awaitNode.stack),
               });
               // Mark the end time of the await. If we're aborting then we don't emit this
               // to signal that this never resolved inside this render.
@@ -2670,20 +2693,17 @@ function visitAsyncNode(
         }
         // We need to forward after we visit awaited nodes because what ever I/O we requested that's
         // the thing that generated this node and its virtual children.
-        // Note: node.promise is non-null for AWAIT_NODE (and PROMISE_NODE) but we need the check for Flow.
-        if (node.promise !== null) {
-          const promise = node.promise.deref();
-          if (promise !== undefined) {
-            const debugInfo = promise._debugInfo;
-            if (debugInfo != null && !visited.has(debugInfo)) {
-              visited.set(debugInfo, null);
-              forwardDebugInfo(request, task, debugInfo);
-            }
+        const promise = awaitNode.promise.deref();
+        if (promise !== undefined) {
+          const debugInfo = promise._debugInfo;
+          if (debugInfo != null && !visited.has(debugInfo)) {
+            visited.set(debugInfo, null);
+            forwardDebugInfo(request, task, debugInfo);
           }
         }
         result = match;
         if (result !== null) {
-          visited.set(node, result);
+          visited.set(awaitNode, result);
         }
         stack.pop();
         continue;
