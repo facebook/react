@@ -18,7 +18,7 @@ export * from 'react-client/src/ReactClientConsoleConfigPlain';
 export type ModuleLoading = null;
 export type ServerConsumerModuleMap = null;
 export opaque type ServerManifest = null;
-export opaque type ServerReferenceId = string;
+export type ServerReferenceId = string;
 export opaque type ClientReferenceMetadata = null;
 export opaque type ClientReference<T> = null; // eslint-disable-line no-unused-vars
 
@@ -43,7 +43,7 @@ export function resolveClientReference<T>(
 
 export function resolveServerReference<T>(
   config: ServerManifest,
-  id: mixed,
+  id: ServerReferenceId,
 ): ClientReference<T> {
   throw new Error(
     'renderToHTML should not have emitted Server References. This is a bug in React.',
