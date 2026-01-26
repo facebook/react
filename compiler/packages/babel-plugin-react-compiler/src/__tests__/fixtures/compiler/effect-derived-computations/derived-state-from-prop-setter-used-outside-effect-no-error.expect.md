@@ -54,8 +54,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":126},"end":{"line":6,"column":1,"index":230},"filename":"derived-state-from-prop-setter-used-outside-effect-no-error.ts"},"fnName":"MockComponent","memoSlots":2,"memoBlocks":1,"memoValues":1,"prunedMemoBlocks":0,"prunedMemoValues":0}
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":8,"column":0,"index":232},"end":{"line":15,"column":1,"index":421},"filename":"derived-state-from-prop-setter-used-outside-effect-no-error.ts"},"fnName":"Component","memoSlots":4,"memoBlocks":2,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":129},"end":{"line":6,"column":1,"index":235},"filename":"derived-state-from-prop-setter-used-outside-effect-no-error.ts"},"fnName":"MockComponent","memoSlots":2,"memoBlocks":1,"memoValues":1,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":8,"column":0,"index":239},"end":{"line":15,"column":1,"index":435},"filename":"derived-state-from-prop-setter-used-outside-effect-no-error.ts"},"fnName":"Component","memoSlots":4,"memoBlocks":2,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

@@ -42,7 +42,7 @@ import { identity } from "shared-runtime";
 function Bar(props) {
   "use forget";
   if (DEV && _shouldInstrument3)
-    useRenderCounter("Bar", "/conflict-codegen-instrument-forget.ts");
+    useRenderCounter("Bar", "C:\\conflict-codegen-instrument-forget.ts");
   const $ = _c(4);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -78,7 +78,7 @@ function Bar(props) {
 function Foo(props) {
   "use forget";
   if (DEV && _shouldInstrument3)
-    useRenderCounter("Foo", "/conflict-codegen-instrument-forget.ts");
+    useRenderCounter("Foo", "C:\\conflict-codegen-instrument-forget.ts");
   const $ = _c(2);
   let t0;
   if ($[0] !== props.bar) {

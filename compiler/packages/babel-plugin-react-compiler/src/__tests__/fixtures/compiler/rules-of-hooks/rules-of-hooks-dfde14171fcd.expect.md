@@ -27,3 +27,5 @@ class C {
 
 ```
       
+### Eval output
+(kind: exception) Fixture not implemented

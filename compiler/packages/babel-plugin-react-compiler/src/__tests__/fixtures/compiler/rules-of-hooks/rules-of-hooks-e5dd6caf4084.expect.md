@@ -23,3 +23,5 @@ function normalFunctionWithConditionalFunction() {
 
 ```
       
+### Eval output
+(kind: exception) Fixture not implemented

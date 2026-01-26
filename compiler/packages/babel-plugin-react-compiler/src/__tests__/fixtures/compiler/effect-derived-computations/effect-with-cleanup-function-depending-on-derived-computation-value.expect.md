@@ -56,7 +56,7 @@ function Component(file: File) {
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":5,"column":0,"index":127},"end":{"line":21,"column":1,"index":719},"filename":"effect-with-cleanup-function-depending-on-derived-computation-value.ts"},"fnName":"Component","memoSlots":5,"memoBlocks":2,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":5,"column":0,"index":131},"end":{"line":21,"column":1,"index":739},"filename":"effect-with-cleanup-function-depending-on-derived-computation-value.ts"},"fnName":"Component","memoSlots":5,"memoBlocks":2,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

@@ -183,7 +183,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":179},"end":{"line":41,"column":1,"index":1116},"filename":"valid-setState-in-useEffect-via-useEffectEvent-with-ref.ts"},"fnName":"Component","memoSlots":18,"memoBlocks":6,"memoValues":6,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":182},"end":{"line":41,"column":1,"index":1156},"filename":"valid-setState-in-useEffect-via-useEffectEvent-with-ref.ts"},"fnName":"Component","memoSlots":18,"memoBlocks":6,"memoValues":6,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

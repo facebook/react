@@ -28,7 +28,7 @@ error.invalid-access-ref-in-render-mutate-object-with-ref-function.ts:7:19
    5 |   const object = {};
    6 |   object.foo = () => ref.current;
 >  7 |   const refValue = object.foo();
-     |                    ^^^^^^^^^^ This function accesses a ref value
+     |                    ^^^^^^ Passing a ref to a function may read its value during render
    8 |   return <div>{refValue}</div>;
    9 | }
   10 |

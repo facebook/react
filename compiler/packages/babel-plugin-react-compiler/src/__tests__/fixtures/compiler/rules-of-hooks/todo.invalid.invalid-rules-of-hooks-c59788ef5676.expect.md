@@ -31,3 +31,5 @@ function normalFunctionWithHook() {
 
 ```
       
+### Eval output
+(kind: exception) Fixture not implemented

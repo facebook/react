@@ -30,12 +30,12 @@ import { ValidateMemoization } from "shared-runtime";
 function Component(props) {
   const $ = _c(8);
   if (
-    $[0] !== "20945b0193e529df490847c66111b38d7b02485d5b53d0829ff3b23af87b105c"
+    $[0] !== "7670bf1abd97bc670ca7d4d1f4a2bee38ef85e927476deff21f35e3237ed3368"
   ) {
     for (let $i = 0; $i < 8; $i += 1) {
       $[$i] = Symbol.for("react.memo_cache_sentinel");
     }
-    $[0] = "20945b0193e529df490847c66111b38d7b02485d5b53d0829ff3b23af87b105c";
+    $[0] = "7670bf1abd97bc670ca7d4d1f4a2bee38ef85e927476deff21f35e3237ed3368";
   }
   const [state] = useState(0);
   const t0 = state * 2;

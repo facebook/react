@@ -22,7 +22,7 @@ import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze @enableEm
 
 function useFoo(props) {
   if (DEV && shouldInstrument)
-    useRenderCounter("useFoo", "/codegen-emit-imports-same-source.ts");
+    useRenderCounter("useFoo", "C:\\codegen-emit-imports-same-source.ts");
   const $ = _c(2);
   let t0;
   if ($[0] !== props.x) {

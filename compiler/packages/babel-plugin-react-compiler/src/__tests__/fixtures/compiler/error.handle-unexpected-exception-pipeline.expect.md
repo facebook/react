@@ -17,7 +17,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-unexpected error
+C:\error.handle-unexpected-exception-pipeline.ts: unexpected error
 ```
           
       
