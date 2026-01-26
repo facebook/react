@@ -29,7 +29,7 @@ import type {
   SuspenseListRevealOrder,
   ReactKey,
 } from 'shared/ReactTypes';
-import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
+import type { LazyComponent as LazyComponentType } from 'react/src/ReactLazy';
 import type {
   RenderState,
   ResumableState,
@@ -37,12 +37,12 @@ import type {
   FormatContext,
   HoistableState,
 } from './ReactFizzConfig';
-import type {ContextSnapshot} from './ReactFizzNewContext';
-import type {ComponentStackNode} from './ReactFizzComponentStack';
-import type {TreeContext} from './ReactFizzTreeContext';
-import type {ThenableState} from './ReactFizzThenable';
+import type { ContextSnapshot } from './ReactFizzNewContext';
+import type { ComponentStackNode } from './ReactFizzComponentStack';
+import type { TreeContext } from './ReactFizzTreeContext';
+import type { ThenableState } from './ReactFizzThenable';
 
-import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
+import { describeObjectForErrorMessage } from 'shared/ReactSerializationErrors';
 
 import {
   scheduleWork,
@@ -134,13 +134,13 @@ import {
   getActionStateCount,
   getActionStateMatchingIndex,
 } from './ReactFizzHooks';
-import {DefaultAsyncDispatcher} from './ReactFizzAsyncDispatcher';
+import { DefaultAsyncDispatcher } from './ReactFizzAsyncDispatcher';
 import {
   getStackByComponentStackNode,
   getOwnerStackByComponentStackNodeInDev,
 } from './ReactFizzComponentStack';
-import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
-import {currentTaskInDEV, setCurrentTaskInDEV} from './ReactFizzCurrentTask';
+import { emptyTreeContext, pushTreeContext } from './ReactFizzTreeContext';
+import { currentTaskInDEV, setCurrentTaskInDEV } from './ReactFizzCurrentTask';
 import {
   callLazyInitInDEV,
   callComponentInDEV,
@@ -151,7 +151,7 @@ import {
   getViewTransitionName,
 } from './ReactFizzViewTransitionComponent';
 
-import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
+import { resetOwnerStackLimit } from 'shared/ReactOwnerStackReset';
 import {
   getIteratorFn,
   ASYNC_ITERATOR,
@@ -211,7 +211,7 @@ export type KeyNode = [
 type ResumeSlots =
   | null // nothing to resume
   | number // resume with segment ID at the root position
-  | {[index: number]: number}; // resume with segmentID at the index
+  | { [index: number]: number }; // resume with segmentID at the index
 
 type ReplaySuspenseBoundary = [
   string | null /* name */,
@@ -224,11 +224,11 @@ type ReplaySuspenseBoundary = [
 
 type ReplayNode =
   | [
-      string | null /* name */,
-      string | number /* key */,
-      Array<ReplayNode> /* keyed children */,
-      ResumeSlots /* resumable slots */,
-    ]
+    string | null /* name */,
+    string | number /* key */,
+    Array<ReplayNode> /* keyed children */,
+    ResumeSlots /* resumable slots */,
+  ]
   | ReplaySuspenseBoundary;
 
 type PostponedHoles = {
@@ -345,16 +345,16 @@ type Segment = {
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
   id: number, // starts as 0 and is lazily assigned if the parent flushes early
   +index: number, // the index within the parent's chunks or 0 at the root
-  +chunks: Array<Chunk | PrecomputedChunk>,
-  +children: Array<Segment>,
-  +preambleChildren: Array<Segment>,
-  // The context that this segment was created in.
-  parentFormatContext: FormatContext,
-  // If this segment represents a fallback, this is the content that will replace that fallback.
-  boundary: null | SuspenseBoundary,
-  // used to discern when text separator boundaries are needed
-  lastPushedText: boolean,
-  textEmbedded: boolean,
+  +chunks: Array < Chunk | PrecomputedChunk >,
+    +children: Array < Segment >,
+      +preambleChildren: Array < Segment >,
+        // The context that this segment was created in.
+        parentFormatContext: FormatContext,
+          // If this segment represents a fallback, this is the content that will replace that fallback.
+          boundary: null | SuspenseBoundary,
+            // used to discern when text separator boundaries are needed
+            lastPushedText: boolean,
+              textEmbedded: boolean,
 };
 
 const OPENING = 10;
@@ -369,42 +369,42 @@ export opaque type Request = {
   flushScheduled: boolean,
   +resumableState: ResumableState,
   +renderState: RenderState,
-  +rootFormatContext: FormatContext,
-  +progressiveChunkSize: number,
-  status: 10 | 11 | 12 | 13 | 14 | 15,
-  fatalError: mixed,
-  nextSegmentId: number,
-  allPendingTasks: number, // when it reaches zero, we can close the connection.
-  pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
-  completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
-  completedPreambleSegments: null | Array<Array<Segment>>, // contains the ready-to-flush segments that make up the preamble
-  byteSize: number, // counts the number of bytes accumulated in the shell
-  abortableTasks: Set<Task>,
-  pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
-  // Queues to flush in order of priority
-  clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
-  completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
-  partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
-  trackedPostpones: null | PostponedHoles, // Gets set to non-null while we want to track postponed holes. I.e. during a prerender.
-  // onError is called when an error happens anywhere in the tree. It might recover.
-  // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
-  // Returning null/undefined will cause a defualt error message in production
-  onError: (error: mixed, errorInfo: ThrownInfo) => ?string,
-  // onAllReady is called when all pending task is done but it may not have flushed yet.
-  // This is a good time to start writing if you want only HTML and no intermediate steps.
-  onAllReady: () => void,
-  // onShellReady is called when there is at least a root fallback ready to show.
-  // Typically you don't need this callback because it's best practice to always have a
-  // root fallback ready so there's no need to wait.
-  onShellReady: () => void,
-  // onShellError is called when the shell didn't complete. That means you probably want to
-  // emit a different response to the stream instead.
-  onShellError: (error: mixed) => void,
-  onFatalError: (error: mixed) => void,
-  // Form state that was the result of an MPA submission, if it was provided.
-  formState: null | ReactFormState<any, any>,
-  // DEV-only, warning dedupe
-  didWarnForKey?: null | WeakSet<ComponentStackNode>,
+    +rootFormatContext: FormatContext,
+      +progressiveChunkSize: number,
+        status: 10 | 11 | 12 | 13 | 14 | 15,
+          fatalError: mixed,
+            nextSegmentId: number,
+              allPendingTasks: number, // when it reaches zero, we can close the connection.
+                pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
+                  completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
+                    completedPreambleSegments: null | Array < Array < Segment >>, // contains the ready-to-flush segments that make up the preamble
+                      byteSize: number, // counts the number of bytes accumulated in the shell
+                        abortableTasks: Set < Task >,
+                          pingedTasks: Array < Task >, // High priority tasks that should be worked on first.
+                            // Queues to flush in order of priority
+                            clientRenderedBoundaries: Array < SuspenseBoundary >, // Errored or client rendered but not yet flushed.
+                              completedBoundaries: Array < SuspenseBoundary >, // Completed but not yet fully flushed boundaries to show.
+                                partialBoundaries: Array < SuspenseBoundary >, // Partially completed boundaries that can flush its segments early.
+                                  trackedPostpones: null | PostponedHoles, // Gets set to non-null while we want to track postponed holes. I.e. during a prerender.
+                                    // onError is called when an error happens anywhere in the tree. It might recover.
+                                    // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
+                                    // Returning null/undefined will cause a defualt error message in production
+                                    onError: (error: mixed, errorInfo: ThrownInfo) => ? string,
+                                      // onAllReady is called when all pending task is done but it may not have flushed yet.
+                                      // This is a good time to start writing if you want only HTML and no intermediate steps.
+                                      onAllReady: () => void,
+                                        // onShellReady is called when there is at least a root fallback ready to show.
+                                        // Typically you don't need this callback because it's best practice to always have a
+                                        // root fallback ready so there's no need to wait.
+                                        onShellReady: () => void,
+                                          // onShellError is called when the shell didn't complete. That means you probably want to
+                                          // emit a different response to the stream instead.
+                                          onShellError: (error: mixed) => void,
+                                            onFatalError: (error: mixed) => void,
+                                              // Form state that was the result of an MPA submission, if it was provided.
+                                              formState: null | ReactFormState < any, any >,
+                                                // DEV-only, warning dedupe
+                                                didWarnForKey ?: null | WeakSet < ComponentStackNode >,
 };
 
 type Preamble = {
@@ -538,9 +538,9 @@ function RequestInstance(
   this.byteSize = 0;
   this.abortableTasks = abortSet;
   this.pingedTasks = pingedTasks;
-  this.clientRenderedBoundaries = ([]: Array<SuspenseBoundary>);
-  this.completedBoundaries = ([]: Array<SuspenseBoundary>);
-  this.partialBoundaries = ([]: Array<SuspenseBoundary>);
+  this.clientRenderedBoundaries = ([]: Array < SuspenseBoundary >);
+  this.completedBoundaries = ([]: Array < SuspenseBoundary >);
+  this.partialBoundaries = ([]: Array < SuspenseBoundary >);
   this.trackedPostpones = null;
   this.onError = onError === undefined ? defaultErrorHandler : onError;
   this.onAllReady = onAllReady === undefined ? noop : onAllReady;
@@ -1439,7 +1439,7 @@ function renderSuspenseBoundary(
       const fallbackReplayNode: ReplayNode = [
         fallbackKeyPath[1],
         fallbackKeyPath[2],
-        ([]: Array<ReplayNode>),
+        ([]: Array < ReplayNode >),
         null,
       ];
       trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
@@ -1707,7 +1707,7 @@ function replaySuspenseBoundary(
     prevContext,
   );
   task.row = null;
-  task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
+  task.replay = { nodes: childNodes, slots: childSlots, pendingTasks: 1 };
 
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
@@ -1716,7 +1716,7 @@ function replaySuspenseBoundary(
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
       throw new Error(
         "Couldn't find all resumable slots by key/index during replaying. " +
-          "The tree doesn't match so React will fallback to client rendering.",
+        "The tree doesn't match so React will fallback to client rendering.",
       );
     }
     task.replay.pendingTasks--;
@@ -1958,7 +1958,7 @@ function renderSuspenseListRows(
         // render order.
         const i =
           revealOrder !== 'backwards' &&
-          revealOrder !== 'unstable_legacy-backwards'
+            revealOrder !== 'unstable_legacy-backwards'
             ? n
             : totalChildren - 1 - n;
         const node = rows[i];
@@ -1987,7 +1987,7 @@ function renderSuspenseListRows(
         // render order.
         const i =
           revealOrder !== 'backwards' &&
-          revealOrder !== 'unstable_legacy-backwards'
+            revealOrder !== 'unstable_legacy-backwards'
             ? n
             : totalChildren - 1 - n;
         const node = rows[i];
@@ -2398,7 +2398,7 @@ function finishClassComponent(
       if (!didWarnAboutReassigningProps) {
         console.error(
           'It looks like %s is reassigning its own `this.props` while rendering. ' +
-            'This is not supported and can lead to confusing bugs.',
+          'This is not supported and can lead to confusing bugs.',
           getComponentNameFromType(Component) || 'a component',
         );
       }
@@ -2491,10 +2491,10 @@ function renderClassComponent(
   );
 }
 
-const didWarnAboutBadClass: {[string]: boolean} = {};
-const didWarnAboutContextTypes: {[string]: boolean} = {};
-const didWarnAboutContextTypeOnFunctionComponent: {[string]: boolean} = {};
-const didWarnAboutGetDerivedStateOnFunctionComponent: {[string]: boolean} = {};
+const didWarnAboutBadClass: { [string]: boolean } = {};
+const didWarnAboutContextTypes: { [string]: boolean } = {};
+const didWarnAboutContextTypeOnFunctionComponent: { [string]: boolean } = {};
+const didWarnAboutGetDerivedStateOnFunctionComponent: { [string]: boolean } = {};
 let didWarnAboutReassigningProps = false;
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
@@ -2520,7 +2520,7 @@ function renderFunctionComponent(
       if (!didWarnAboutBadClass[componentName]) {
         console.error(
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
-            'This is likely to cause errors. Change %s to extend React.Component instead.',
+          'This is likely to cause errors. Change %s to extend React.Component instead.',
           componentName,
           componentName,
         );
@@ -2554,15 +2554,15 @@ function renderFunctionComponent(
         if (disableLegacyContext) {
           console.error(
             '%s uses the legacy contextTypes API which was removed in React 19. ' +
-              'Use React.createContext() with React.useContext() instead. ' +
-              '(https://react.dev/link/legacy-context)',
+            'Use React.createContext() with React.useContext() instead. ' +
+            '(https://react.dev/link/legacy-context)',
             componentName,
           );
         } else {
           console.error(
             '%s uses the legacy contextTypes API which will be removed soon. ' +
-              'Use React.createContext() with React.useContext() instead. ' +
-              '(https://react.dev/link/legacy-context)',
+            'Use React.createContext() with React.useContext() instead. ' +
+            '(https://react.dev/link/legacy-context)',
             componentName,
           );
         }
@@ -2647,7 +2647,7 @@ function validateFunctionComponentInDev(Component: any): void {
     if (Component && Component.childContextTypes) {
       console.error(
         'childContextTypes cannot be defined on a function component.\n' +
-          '  %s.childContextTypes = ...',
+        '  %s.childContextTypes = ...',
         Component.displayName || Component.name || 'Component',
       );
     }
@@ -2694,7 +2694,7 @@ function renderForwardRef(
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
-    propsWithoutRef = ({}: {[string]: any});
+    propsWithoutRef = ({}: { [string]: any });
     for (const key in props) {
       // Since `ref` should only appear in props via the JSX transform, we can
       // assume that this is a plain object. So we don't need a
@@ -2754,9 +2754,9 @@ function renderContextConsumer(
     if (typeof render !== 'function') {
       console.error(
         'A context consumer was rendered with multiple children, or a child ' +
-          "that isn't a function. A context consumer expects a single child " +
-          'that is a function. If you did pass a function, make sure there ' +
-          'is no trailing or leading whitespace around it.',
+        "that isn't a function. A context consumer expects a single child " +
+        'that is a function. If you did pass a function, make sure there ' +
+        'is no trailing or leading whitespace around it.',
       );
     }
   }
@@ -3033,8 +3033,8 @@ function renderElement(
 
   throw new Error(
     'Element type is invalid: expected a string (for built-in ' +
-      'components) or a class/function (for composite components) ' +
-      `but got: ${type == null ? type : typeof type}.${info}`,
+    'components) or a class/function (for composite components) ' +
+    `but got: ${type == null ? type : typeof type}.${info}`,
   );
 }
 
@@ -3106,17 +3106,17 @@ function replayElement(
       if (name !== null && name !== node[0]) {
         throw new Error(
           'Expected the resume to render <' +
-            (node[0]: any) +
-            '> in this slot but instead it rendered <' +
-            name +
-            '>. ' +
-            "The tree doesn't match so React will fallback to client rendering.",
+          (node[0]: any) +
+        '> in this slot but instead it rendered <' +
+        name +
+        '>. ' +
+        "The tree doesn't match so React will fallback to client rendering.",
         );
       }
       const childNodes = node[2];
       const childSlots = node[3];
       const currentNode = task.node;
-      task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
+      task.replay = { nodes: childNodes, slots: childSlots, pendingTasks: 1 };
       try {
         renderElement(request, task, keyPath, type, props, ref);
         if (
@@ -3126,7 +3126,7 @@ function replayElement(
         ) {
           throw new Error(
             "Couldn't find all resumable slots by key/index during replaying. " +
-              "The tree doesn't match so React will fallback to client rendering.",
+            "The tree doesn't match so React will fallback to client rendering.",
           );
         }
         task.replay.pendingTasks--;
@@ -3170,11 +3170,11 @@ function replayElement(
         const expectedType = 'Suspense';
         throw new Error(
           'Expected the resume to render <' +
-            expectedType +
-            '> in this slot but instead it rendered <' +
-            (getComponentNameFromType(type) || 'Unknown') +
-            '>. ' +
-            "The tree doesn't match so React will fallback to client rendering.",
+          expectedType +
+          '> in this slot but instead it rendered <' +
+          (getComponentNameFromType(type) || 'Unknown') +
+          '>. ' +
+          "The tree doesn't match so React will fallback to client rendering.",
         );
       }
       // Matched a replayable path.
@@ -3219,17 +3219,17 @@ function validateIterable(
         typeof task.componentStack.type === 'function' && // FunctionComponent
         // $FlowFixMe[method-unbinding]
         Object.prototype.toString.call(task.componentStack.type) ===
-          '[object GeneratorFunction]' &&
+        '[object GeneratorFunction]' &&
         // $FlowFixMe[method-unbinding]
         Object.prototype.toString.call(iterator) === '[object Generator]';
       if (!isGeneratorComponent) {
         if (!didWarnAboutGenerators) {
           console.error(
             'Using Iterators as children is unsupported and will likely yield ' +
-              'unexpected results because enumerating a generator mutates it. ' +
-              'You may convert it to an array with `Array.from()` or the ' +
-              '`[...spread]` operator before rendering. You can also use an ' +
-              'Iterable that can iterate multiple times over the same items.',
+            'unexpected results because enumerating a generator mutates it. ' +
+            'You may convert it to an array with `Array.from()` or the ' +
+            '`[...spread]` operator before rendering. You can also use an ' +
+            'Iterable that can iterate multiple times over the same items.',
           );
         }
         didWarnAboutGenerators = true;
@@ -3239,7 +3239,7 @@ function validateIterable(
       if (!didWarnAboutMaps) {
         console.error(
           'Using Maps as children is not supported. ' +
-            'Use an array of keyed ReactElements instead.',
+          'Use an array of keyed ReactElements instead.',
         );
         didWarnAboutMaps = true;
       }
@@ -3266,16 +3266,16 @@ function validateAsyncIterable(
         typeof task.componentStack.type === 'function' && // FunctionComponent
         // $FlowFixMe[method-unbinding]
         Object.prototype.toString.call(task.componentStack.type) ===
-          '[object AsyncGeneratorFunction]' &&
+        '[object AsyncGeneratorFunction]' &&
         // $FlowFixMe[method-unbinding]
         Object.prototype.toString.call(iterator) === '[object AsyncGenerator]';
       if (!isGeneratorComponent) {
         if (!didWarnAboutGenerators) {
           console.error(
             'Using AsyncIterators as children is unsupported and will likely yield ' +
-              'unexpected results because enumerating a generator mutates it. ' +
-              'You can use an AsyncIterable that can iterate multiple times over ' +
-              'the same items.',
+            'unexpected results because enumerating a generator mutates it. ' +
+            'You can use an AsyncIterable that can iterate multiple times over ' +
+            'the same items.',
           );
         }
         didWarnAboutGenerators = true;
@@ -3289,8 +3289,8 @@ function warnOnFunctionType(invalidChild: Function) {
     const name = invalidChild.displayName || invalidChild.name || 'Component';
     console.error(
       'Functions are not valid as a React child. This may happen if ' +
-        'you return %s instead of <%s /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
+      'you return %s instead of <%s /> from render. ' +
+      'Or maybe you meant to call this function rather than return it.',
       name,
       name,
     );
@@ -3423,10 +3423,10 @@ function retryNode(request: Request, task: Task): void {
         return;
       }
       case REACT_PORTAL_TYPE:
-        throw new Error(
-          'Portals are not currently supported by the server renderer. ' +
-            'Render them conditionally so that they only appear on the client render.',
-        );
+      throw new Error(
+        'Portals are not currently supported by the server renderer. ' +
+        'Render them conditionally so that they only appear on the client render.',
+      );
       case REACT_LAZY_TYPE: {
         const lazyNode: LazyComponentType<any, any> = (node: any);
         let resolvedNode;
@@ -3571,13 +3571,12 @@ function retryNode(request: Request, task: Task): void {
     const childString = Object.prototype.toString.call(node);
 
     throw new Error(
-      `Objects are not valid as a React child (found: ${
-        childString === '[object Object]'
-          ? 'object with keys {' + Object.keys(node).join(', ') + '}'
-          : childString
+      `Objects are not valid as a React child (found: ${childString === '[object Object]'
+        ? 'object with keys {' + Object.keys(node).join(', ') + '}'
+        : childString
       }). ` +
-        'If you meant to render a collection of children, use an array ' +
-        'instead.',
+      'If you meant to render a collection of children, use an array ' +
+      'instead.',
     );
   }
 
@@ -3641,13 +3640,13 @@ function replayFragment(
     // Matched a replayable path.
     const childNodes = node[2];
     const childSlots = node[3];
-    task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
+    task.replay = { nodes: childNodes, slots: childSlots, pendingTasks: 1 };
     try {
       renderChildrenArray(request, task, children, -1);
       if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
         throw new Error(
           "Couldn't find all resumable slots by key/index during replaying. " +
-            "The tree doesn't match so React will fallback to client rendering.",
+          "The tree doesn't match so React will fallback to client rendering.",
         );
       }
       task.replay.pendingTasks--;
@@ -3708,7 +3707,7 @@ function warnForMissingKey(request: Request, task: Task, child: mixed): void {
     if (typeof child._store !== 'object') {
       throw new Error(
         'React Component in warnForMissingKey should have a _store. ' +
-          'This error is likely caused by a bug in React. Please file an issue.',
+        'This error is likely caused by a bug in React. Please file an issue.',
       );
     }
 
@@ -3772,7 +3771,7 @@ function warnForMissingKey(request: Request, task: Task, child: mixed): void {
     task.componentStack = stackFrame;
     console.error(
       'Each child in a list should have a unique "key" prop.' +
-        '%s%s See https://react.dev/link/warning-keys for more information.',
+      '%s%s See https://react.dev/link/warning-keys for more information.',
       currentComponentErrorInfo,
       childOwnerAppendix,
     );
@@ -3991,7 +3990,7 @@ function trackPostpone(
         resumableNode = [
           keyPath[1],
           keyPath[2],
-          ([]: Array<ReplayNode>),
+          ([]: Array < ReplayNode >),
           segment.id,
         ];
         addToReplayParent(resumableNode, keyPath[0], trackedPostpones);
@@ -4004,22 +4003,22 @@ function trackPostpone(
     if (keyPath === null) {
       slots = trackedPostpones.rootSlots;
       if (slots === null) {
-        slots = trackedPostpones.rootSlots = ({}: {[index: number]: number});
+        slots = trackedPostpones.rootSlots = ({}: { [index: number]: number });
       } else if (typeof slots === 'number') {
         throw new Error(
           'It should not be possible to postpone both at the root of an element ' +
-            'as well as a slot below. This is a bug in React.',
+          'as well as a slot below. This is a bug in React.',
         );
       }
     } else {
       const workingMap = trackedPostpones.workingMap;
       let resumableNode = workingMap.get(keyPath);
       if (resumableNode === undefined) {
-        slots = ({}: {[index: number]: number});
+        slots = ({}: { [index: number]: number });
         resumableNode = ([
           keyPath[1],
           keyPath[2],
-          ([]: Array<ReplayNode>),
+          ([]: Array < ReplayNode >),
           slots,
         ]: ReplayNode);
         workingMap.set(keyPath, resumableNode);
@@ -4027,11 +4026,11 @@ function trackPostpone(
       } else {
         slots = resumableNode[3];
         if (slots === null) {
-          slots = resumableNode[3] = ({}: {[index: number]: number});
+          slots = resumableNode[3] = ({}: { [index: number]: number });
         } else if (typeof slots === 'number') {
           throw new Error(
             'It should not be possible to postpone both at the root of an element ' +
-              'as well as a slot below. This is a bug in React.',
+            'as well as a slot below. This is a bug in React.',
           );
         }
       }
@@ -4174,11 +4173,11 @@ function renderNode(
       x =
         thrownValue === SuspenseException
           ? // This is a special type of exception used for Suspense. For historical
-            // reasons, the rest of the Suspense implementation expects the thrown
-            // value to be a thenable, because before `use` existed that was the
-            // (unstable) API for suspending. This implementation detail can change
-            // later, once we deprecate the old API in favor of `use`.
-            getSuspendedThenable()
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
           : thrownValue;
 
       if (request.status === ABORTING) {
@@ -4275,11 +4274,11 @@ function renderNode(
       x =
         thrownValue === SuspenseException
           ? // This is a special type of exception used for Suspense. For historical
-            // reasons, the rest of the Suspense implementation expects the thrown
-            // value to be a thenable, because before `use` existed that was the
-            // (unstable) API for suspending. This implementation detail can change
-            // later, once we deprecate the old API in favor of `use`.
-            getSuspendedThenable()
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
           : thrownValue;
 
       if (request.status === ABORTING) {
@@ -4564,7 +4563,7 @@ function abortRemainingReplayNodes(
     if (boundary === null) {
       throw new Error(
         'We should not have any resumable nodes in the shell. ' +
-          'This is a bug in React.',
+        'This is a bug in React.',
       );
     } else if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
@@ -4834,10 +4833,10 @@ function completeAll(request: Request) {
   const shellComplete =
     request.trackedPostpones === null
       ? // Render, we assume it is completed
-        true
+      true
       : // Prerender Request, we use the state of the root segment
-        request.completedRootSegment === null ||
-        request.completedRootSegment.status !== POSTPONED;
+      request.completedRootSegment === null ||
+      request.completedRootSegment.status !== POSTPONED;
   safelyEmitEarlyPreloads(request, shellComplete);
 
   // When the shell is complete it will be possible to flush. We attempt to prepre
@@ -5101,11 +5100,11 @@ function retryRenderTask(
     const x =
       thrownValue === SuspenseException
         ? // This is a special type of exception used for Suspense. For historical
-          // reasons, the rest of the Suspense implementation expects the thrown
-          // value to be a thenable, because before `use` existed that was the
-          // (unstable) API for suspending. This implementation detail can change
-          // later, once we deprecate the old API in favor of `use`.
-          getSuspendedThenable()
+        // reasons, the rest of the Suspense implementation expects the thrown
+        // value to be a thenable, because before `use` existed that was the
+        // (unstable) API for suspending. This implementation detail can change
+        // later, once we deprecate the old API in favor of `use`.
+        getSuspendedThenable()
         : request.status === ABORTING
           ? request.fatalError
           : thrownValue;
@@ -5197,7 +5196,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
       throw new Error(
         "Couldn't find all resumable slots by key/index during replaying. " +
-          "The tree doesn't match so React will fallback to client rendering.",
+        "The tree doesn't match so React will fallback to client rendering.",
       );
     }
     task.replay.pendingTasks--;
@@ -5210,11 +5209,11 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     const x =
       thrownValue === SuspenseException
         ? // This is a special type of exception used for Suspense. For historical
-          // reasons, the rest of the Suspense implementation expects the thrown
-          // value to be a thenable, because before `use` existed that was the
-          // (unstable) API for suspending. This implementation detail can change
-          // later, once we deprecate the old API in favor of `use`.
-          getSuspendedThenable()
+        // reasons, the rest of the Suspense implementation expects the thrown
+        // value to be a thenable, because before `use` existed that was the
+        // (unstable) API for suspending. This implementation detail can change
+        // later, once we deprecate the old API in favor of `use`.
+        getSuspendedThenable()
         : thrownValue;
 
     if (typeof x === 'object' && x !== null) {
@@ -5603,9 +5602,7 @@ function flushSegment(
     // blocked on something later in the stream anyway.
     !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
-    (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
-      hasSuspenseyContent(boundary.contentState) ||
-      boundary.defer)
+    (hasSuspenseyContent(boundary.contentState) || boundary.defer)
   ) {
     // Inlining this boundary would make the current sequence being written too large
     // and block the parent for too long. Instead, it will be emitted separately so that we
@@ -5877,13 +5874,13 @@ function flushCompletedQueues(
           const maxSizeKb = Math.round(blockingRenderMaxSize / 1000);
           const error = new Error(
             'This rendered a large document (>' +
-              maxSizeKb +
-              ' kB) without any Suspense ' +
-              'boundaries around most of it. That can delay initial paint longer than ' +
-              'necessary. To improve load performance, add a <Suspense> or <SuspenseList> ' +
-              'around the content you expect to be below the header or below the fold. ' +
-              'In the meantime, the content will deopt to paint arbitrary incomplete ' +
-              'pieces of HTML.',
+            maxSizeKb +
+            ' kB) without any Suspense ' +
+            'boundaries around most of it. That can delay initial paint longer than ' +
+            'necessary. To improve load performance, add a <Suspense> or <SuspenseList> ' +
+            'around the content you expect to be below the header or below the fold. ' +
+            'In the meantime, the content will deopt to paint arbitrary incomplete ' +
+            'pieces of HTML.',
           );
           const errorInfo: ThrownInfo = {};
           logRecoverableError(request, error, errorInfo, null);
@@ -6094,9 +6091,9 @@ export function prepareForStartFlowingIfBeforeAllReady(request: Request) {
   const shellComplete =
     request.trackedPostpones === null
       ? // Render Request, we define shell complete by the pending root tasks
-        request.pendingRootTasks === 0
+      request.pendingRootTasks === 0
       : // Prerender Request, we define shell complete by completedRootSegemtn
-        request.completedRootSegment === null
+      request.completedRootSegment === null
         ? request.pendingRootTasks === 0
         : request.completedRootSegment.status !== POSTPONED;
   safelyEmitEarlyPreloads(request, shellComplete);
@@ -6143,8 +6140,8 @@ export function abort(request: Request, reason: mixed): void {
         reason === undefined
           ? new Error('The render was aborted by the server without a reason.')
           : typeof reason === 'object' &&
-              reason !== null &&
-              typeof reason.then === 'function'
+            reason !== null &&
+            typeof reason.then === 'function'
             ? new Error('The render was aborted by the server with a promise.')
             : reason;
       // This error isn't necessarily fatal in this case but we need to stash it
@@ -6199,7 +6196,7 @@ function addToReplayParent(
       parentNode = ([
         parentKeyPath[1],
         parentKeyPath[2],
-        ([]: Array<ReplayNode>),
+        ([]: Array < ReplayNode >),
         null,
       ]: ReplayNode);
       workingMap.set(parentKeyPath, parentNode);
