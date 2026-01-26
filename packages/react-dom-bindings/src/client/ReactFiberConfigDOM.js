@@ -3056,13 +3056,13 @@ function indexOfEventListener(
   listener: EventListener,
   optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
 ): number {
+  const normalizedOptions = normalizeListenerOptions(optionsOrUseCapture);
   for (let i = 0; i < eventListeners.length; i++) {
     const item = eventListeners[i];
     if (
       item.type === type &&
       item.listener === listener &&
-      normalizeListenerOptions(item.optionsOrUseCapture) ===
-        normalizeListenerOptions(optionsOrUseCapture)
+      normalizeListenerOptions(item.optionsOrUseCapture) === normalizedOptions
     ) {
       return i;
     }
