@@ -1,10 +1,3 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
 import {
   CompilerDiagnostic,
   CompilerError,
@@ -21,39 +14,18 @@ import {
   isRefValueType,
   isUseRefType,
 } from '../HIR';
-import {BuiltInEventHandlerId} from '../HIR/ObjectShape';
+import { BuiltInEventHandlerId } from '../HIR/ObjectShape';
 import {
   eachInstructionOperand,
   eachInstructionValueOperand,
   eachPatternOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
-import {Err, Ok, Result} from '../Utils/Result';
-import {retainWhere} from '../Utils/utils';
-
-/**
- * Validates that a function does not access a ref value during render. This includes a partial check
- * for ref values which are accessed indirectly via function expressions.
- *
- * ```javascript
- * // ERROR
- * const ref = useRef();
- * ref.current;
- *
- * const ref = useRef();
- * foo(ref); // may access .current
- *
- * // ALLOWED
- * const ref = useHookThatReturnsRef();
- * ref.current;
- * ```
- *
- * In the future we may reject more cases, based on either object names (`fooRef.current` is likely a ref)
- * or based on property name alone (`foo.current` might be a ref).
- */
+import { Err, Ok, Result } from '../Utils/Result';
+import { retainWhere } from '../Utils/utils';
 
 const opaqueRefId = Symbol();
-type RefId = number & {[opaqueRefId]: 'RefId'};
+type RefId = number & { [opaqueRefId]: 'RefId' };
 
 function makeRefId(id: number): RefId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
@@ -76,17 +48,17 @@ function nextRefId(): RefId {
 }
 
 type RefAccessType =
-  | {kind: 'None'}
-  | {kind: 'Nullable'}
-  | {kind: 'Guard'; refId: RefId}
+  | { kind: 'None' }
+  | { kind: 'Nullable' }
+  | { kind: 'Guard'; refId: RefId }
   | RefAccessRefType;
 
 type RefAccessRefType =
-  | {kind: 'Ref'; refId: RefId}
-  | {kind: 'RefValue'; loc?: SourceLocation; refId?: RefId}
-  | {kind: 'Structure'; value: null | RefAccessRefType; fn: null | RefFnType};
+  | { kind: 'Ref'; refId: RefId }
+  | { kind: 'RefValue'; loc?: SourceLocation; refId?: RefId }
+  | { kind: 'Structure'; value: null | RefAccessRefType; fn: null | RefFnType };
 
-type RefFnType = {readRefEffect: boolean; returnType: RefAccessType};
+type RefFnType = { readRefEffect: boolean; returnType: RefAccessType };
 
 class Env {
   #changed = false;
@@ -117,7 +89,7 @@ class Env {
   set(key: IdentifierId, value: RefAccessType): this {
     const operandId = this.#temporaries.get(key)?.identifier.id ?? key;
     const cur = this.#data.get(operandId);
-    const widenedValue = joinRefAccessTypes(value, cur ?? {kind: 'None'});
+    const widenedValue = joinRefAccessTypes(value, cur ?? { kind: 'None' });
     if (
       !(cur == null && widenedValue.kind === 'None') &&
       (cur == null || !tyEqual(cur, widenedValue))
@@ -140,7 +112,7 @@ export function validateNoRefAccessInRender(
 function collectTemporariesSidemap(fn: HIRFunction, env: Env): void {
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
-      const {lvalue, value} = instr;
+      const { lvalue, value } = instr;
       switch (value.kind) {
         case 'LoadLocal': {
           const temp = env.lookup(value.place);
@@ -157,19 +129,6 @@ function collectTemporariesSidemap(fn: HIRFunction, env: Env): void {
           }
           break;
         }
-        case 'PropertyLoad': {
-          if (
-            isUseRefType(value.object.identifier) &&
-            value.property === 'current'
-          ) {
-            continue;
-          }
-          const temp = env.lookup(value.object);
-          if (temp != null) {
-            env.define(lvalue, temp);
-          }
-          break;
-        }
       }
     }
   }
@@ -177,11 +136,11 @@ function collectTemporariesSidemap(fn: HIRFunction, env: Env): void {
 
 function refTypeOfType(place: Place): RefAccessType {
   if (isRefValueType(place.identifier)) {
-    return {kind: 'RefValue'};
+    return { kind: 'RefValue' };
   } else if (isUseRefType(place.identifier)) {
-    return {kind: 'Ref', refId: nextRefId()};
+    return { kind: 'Ref', refId: nextRefId() };
   } else {
-    return {kind: 'None'};
+    return { kind: 'None' };
   }
 }
 
@@ -263,14 +222,14 @@ function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
       if (b.kind === 'RefValue' && a.refId === b.refId) {
         return a;
       }
-      return {kind: 'RefValue'};
+      return { kind: 'RefValue' };
     } else if (b.kind === 'RefValue') {
       return b;
     } else if (a.kind === 'Ref' || b.kind === 'Ref') {
       if (a.kind === 'Ref' && b.kind === 'Ref' && a.refId === b.refId) {
         return a;
       }
-      return {kind: 'Ref', refId: nextRefId()};
+      return { kind: 'Ref', refId: nextRefId() };
     } else {
       CompilerError.invariant(
         a.kind === 'Structure' && b.kind === 'Structure',
@@ -292,12 +251,12 @@ function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
           : b.fn === null
             ? a.fn
             : {
-                readRefEffect: a.fn.readRefEffect || b.fn.readRefEffect,
-                returnType: joinRefAccessTypes(
-                  a.fn.returnType,
-                  b.fn.returnType,
-                ),
-              };
+              readRefEffect: a.fn.readRefEffect || b.fn.readRefEffect,
+              returnType: joinRefAccessTypes(
+                a.fn.returnType,
+                b.fn.returnType,
+              ),
+            };
       const value =
         a.value === null
           ? b.value
@@ -322,13 +281,13 @@ function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
         if (b.kind === 'Guard' && a.refId === b.refId) {
           return a;
         } else if (b.kind === 'Nullable' || b.kind === 'Guard') {
-          return {kind: 'None'};
+          return { kind: 'None' };
         } else {
           return b;
         }
       } else if (b.kind === 'Guard') {
         if (a.kind === 'Nullable') {
-          return {kind: 'None'};
+          return { kind: 'None' };
         } else {
           return b;
         }
@@ -340,7 +299,7 @@ function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
         return joinRefAccessRefTypes(a, b);
       }
     },
-    {kind: 'None'},
+    { kind: 'None' },
   );
 }
 
@@ -363,7 +322,7 @@ function validateNoRefAccessInRenderImpl(
   const interpolatedAsJsx = new Set<IdentifierId>();
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
-      const {value} = instr;
+      const { value } = instr;
       if (value.kind === 'JsxExpression' || value.kind === 'JsxFragment') {
         if (value.children != null) {
           for (const child of value.children) {
@@ -377,7 +336,7 @@ function validateNoRefAccessInRenderImpl(
   for (let i = 0; (i == 0 || env.hasChanged()) && i < 10; i++) {
     env.resetChanged();
     returnValues = [];
-    const safeBlocks: Array<{block: BlockId; ref: RefId}> = [];
+    const safeBlocks: Array<{ block: BlockId; ref: RefId }> = [];
     const errors = new CompilerError();
     for (const [, block] of fn.body.blocks) {
       retainWhere(safeBlocks, entry => entry.block !== block.id);
@@ -387,7 +346,7 @@ function validateNoRefAccessInRenderImpl(
           joinRefAccessTypes(
             ...Array(...phi.operands.values()).map(
               operand =>
-                env.get(operand.identifier.id) ?? ({kind: 'None'} as const),
+                env.get(operand.identifier.id) ?? ({ kind: 'None' } as const),
             ),
           ),
         );
@@ -428,7 +387,7 @@ function validateNoRefAccessInRenderImpl(
             env.set(
               instr.lvalue.identifier.id,
               env.get(instr.value.value.identifier.id) ??
-                refTypeOfType(instr.lvalue),
+              refTypeOfType(instr.lvalue),
             );
             break;
           }
@@ -437,7 +396,7 @@ function validateNoRefAccessInRenderImpl(
             env.set(
               instr.lvalue.identifier.id,
               env.get(instr.value.place.identifier.id) ??
-                refTypeOfType(instr.lvalue),
+              refTypeOfType(instr.lvalue),
             );
             break;
           }
@@ -446,12 +405,12 @@ function validateNoRefAccessInRenderImpl(
             env.set(
               instr.value.lvalue.place.identifier.id,
               env.get(instr.value.value.identifier.id) ??
-                refTypeOfType(instr.value.lvalue.place),
+              refTypeOfType(instr.value.lvalue.place),
             );
             env.set(
               instr.lvalue.identifier.id,
               env.get(instr.value.value.identifier.id) ??
-                refTypeOfType(instr.lvalue),
+              refTypeOfType(instr.lvalue),
             );
             break;
           }
@@ -472,7 +431,7 @@ function validateNoRefAccessInRenderImpl(
           }
           case 'ObjectMethod':
           case 'FunctionExpression': {
-            let returnType: RefAccessType = {kind: 'None'};
+            let returnType: RefAccessType = { kind: 'None' };
             let readRefEffect = false;
             const result = validateNoRefAccessInRenderImpl(
               instr.value.loweredFunc.func,
@@ -500,7 +459,7 @@ function validateNoRefAccessInRenderImpl(
                 ? instr.value.callee
                 : instr.value.property;
             const hookKind = getHookKindForType(fn.env, callee.identifier.type);
-            let returnType: RefAccessType = {kind: 'None'};
+            let returnType: RefAccessType = { kind: 'None' };
             const fnType = env.get(callee.identifier.id);
             let didError = false;
             if (fnType?.kind === 'Structure' && fnType.fn !== null) {
@@ -520,20 +479,12 @@ function validateNoRefAccessInRenderImpl(
                 );
               }
             }
-            /*
-             * If we already reported an error on this instruction, don't report
-             * duplicate errors
-             */
             if (!didError) {
               const isRefLValue = isUseRefType(instr.lvalue.identifier);
               const isEventHandlerLValue = isEventHandlerType(
                 instr.lvalue.identifier,
               );
               for (const operand of eachInstructionValueOperand(instr.value)) {
-                /**
-                 * By default we check that function call operands are not refs,
-                 * ref values, or functions that can access refs.
-                 */
                 if (
                   isRefLValue ||
                   isEventHandlerLValue ||
@@ -541,21 +492,10 @@ function validateNoRefAccessInRenderImpl(
                     hookKind !== 'useState' &&
                     hookKind !== 'useReducer')
                 ) {
-                  /**
-                   * Allow passing refs or ref-accessing functions when:
-                   * 1. lvalue is a ref (mergeRefs pattern: `mergeRefs(ref1, ref2)`)
-                   * 2. lvalue is an event handler (DOM events execute outside render)
-                   * 3. calling hooks (independently validated for ref safety)
-                   */
+                  
                   validateNoDirectRefValueAccess(errors, operand, env);
                 } else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
-                  /**
-                   * Special case: the lvalue is passed as a jsx child
-                   *
-                   * For example `<Foo>{renderHelper(ref)}</Foo>`. Here we have more
-                   * context and infer that the ref is being passed to a component-like
-                   * render function which attempts to obey the rules.
-                   */
+                  
                   validateNoRefValueAccess(errors, env, operand);
                 } else {
                   validateNoRefPassedToFunction(
@@ -575,7 +515,7 @@ function validateNoRefAccessInRenderImpl(
             const types: Array<RefAccessType> = [];
             for (const operand of eachInstructionValueOperand(instr.value)) {
               validateNoDirectRefValueAccess(errors, operand, env);
-              types.push(env.get(operand.identifier.id) ?? {kind: 'None'});
+              types.push(env.get(operand.identifier.id) ?? { kind: 'None' });
             }
             const value = joinRefAccessTypes(...types);
             if (
@@ -583,7 +523,7 @@ function validateNoRefAccessInRenderImpl(
               value.kind === 'Guard' ||
               value.kind === 'Nullable'
             ) {
-              env.set(instr.lvalue.identifier.id, {kind: 'None'});
+              env.set(instr.lvalue.identifier.id, { kind: 'None' });
             } else {
               env.set(instr.lvalue.identifier.id, {
                 kind: 'Structure',
@@ -638,13 +578,13 @@ function validateNoRefAccessInRenderImpl(
             break;
           case 'LoadGlobal': {
             if (instr.value.binding.name === 'undefined') {
-              env.set(instr.lvalue.identifier.id, {kind: 'Nullable'});
+              env.set(instr.lvalue.identifier.id, { kind: 'Nullable' });
             }
             break;
           }
           case 'Primitive': {
             if (instr.value.value == null) {
-              env.set(instr.lvalue.identifier.id, {kind: 'Nullable'});
+              env.set(instr.lvalue.identifier.id, { kind: 'Nullable' });
             }
             break;
           }
@@ -656,12 +596,8 @@ function validateNoRefAccessInRenderImpl(
                   ? value.refId
                   : null;
               if (refId !== null) {
-                /*
-                 * Record an error suggesting the `if (ref.current == null)` pattern,
-                 * but also record the lvalue as a guard so that we don't emit a second
-                 * error for the write to the ref
-                 */
-                env.set(instr.lvalue.identifier.id, {kind: 'Guard', refId});
+               
+                env.set(instr.lvalue.identifier.id, { kind: 'Guard', refId });
                 errors.pushDiagnostic(
                   CompilerDiagnostic.create({
                     category: ErrorCategory.Refs,
@@ -703,7 +639,7 @@ function validateNoRefAccessInRenderImpl(
             }
 
             if (refId !== null && nullish) {
-              env.set(instr.lvalue.identifier.id, {kind: 'Guard', refId});
+              env.set(instr.lvalue.identifier.id, { kind: 'Guard', refId });
             } else {
               for (const operand of eachInstructionValueOperand(instr.value)) {
                 validateNoRefValueAccess(errors, env, operand);
@@ -719,7 +655,7 @@ function validateNoRefAccessInRenderImpl(
           }
         }
 
-        // Guard values are derived from ref.current, so they can only be used in if statement targets
+
         for (const operand of eachInstructionOperand(instr)) {
           guardCheck(errors, operand, env);
         }
@@ -731,8 +667,8 @@ function validateNoRefAccessInRenderImpl(
           env.set(
             instr.lvalue.identifier.id,
             joinRefAccessTypes(
-              env.get(instr.lvalue.identifier.id) ?? {kind: 'None'},
-              {kind: 'Ref', refId: nextRefId()},
+              env.get(instr.lvalue.identifier.id) ?? { kind: 'None' },
+              { kind: 'Ref', refId: nextRefId() },
             ),
           );
         }
@@ -743,8 +679,8 @@ function validateNoRefAccessInRenderImpl(
           env.set(
             instr.lvalue.identifier.id,
             joinRefAccessTypes(
-              env.get(instr.lvalue.identifier.id) ?? {kind: 'None'},
-              {kind: 'RefValue', loc: instr.loc},
+              env.get(instr.lvalue.identifier.id) ?? { kind: 'None' },
+              { kind: 'RefValue', loc: instr.loc },
             ),
           );
         }
@@ -756,7 +692,7 @@ function validateNoRefAccessInRenderImpl(
           test?.kind === 'Guard' &&
           safeBlocks.find(entry => entry.ref === test.refId) == null
         ) {
-          safeBlocks.push({block: block.terminal.fallthrough, ref: test.refId});
+          safeBlocks.push({ block: block.terminal.fallthrough, ref: test.refId });
         }
       }
 
