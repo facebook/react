@@ -562,12 +562,17 @@ export function registerServerActions(manifest: ServerManifest) {
 
 export function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   const response = createResponse(
     serverManifest,
     '',
     options ? options.temporaryReferences : undefined,
+    undefined,
+    options ? options.arraySizeLimit : undefined,
   );
   let pendingFiles = 0;
   const queuedFields: Array<string> = [];
@@ -632,7 +637,10 @@ export function decodeReplyFromBusboy<T>(
 
 export function decodeReply<T>(
   body: string | FormData,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
@@ -644,6 +652,7 @@ export function decodeReply<T>(
     '',
     options ? options.temporaryReferences : undefined,
     body,
+    options ? options.arraySizeLimit : undefined,
   );
   const root = getRoot<T>(response);
   close(response);
@@ -652,7 +661,10 @@ export function decodeReply<T>(
 
 export function decodeReplyFromAsyncIterable<T>(
   iterable: AsyncIterable<[string, string | File]>,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   const iterator: AsyncIterator<[string, string | File]> =
     iterable[ASYNC_ITERATOR]();
@@ -661,6 +673,8 @@ export function decodeReplyFromAsyncIterable<T>(
     serverManifest,
     '',
     options ? options.temporaryReferences : undefined,
+    undefined,
+    options ? options.arraySizeLimit : undefined,
   );
 
   function progress(

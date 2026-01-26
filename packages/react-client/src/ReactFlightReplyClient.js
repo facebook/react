@@ -95,6 +95,8 @@ export type ReactServerValue =
 
 type ReactServerObject = {+[key: string]: ReactServerValue};
 
+const __PROTO__ = '__proto__';
+
 function serializeByValueID(id: number): string {
   return '$' + id.toString(16);
 }
@@ -360,6 +362,15 @@ export function processReply(
     value: ReactServerValue,
   ): ReactJSONValue {
     const parent = this;
+
+    if (__DEV__) {
+      if (key === __PROTO__) {
+        console.error(
+          'Expected not to serialize an object with own property `__proto__`. When parsed this property will be omitted.%s',
+          describeObjectForErrorMessage(parent, key),
+        );
+      }
+    }
 
     // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
     if (__DEV__) {
@@ -780,6 +791,10 @@ export function processReply(
     if (typeof value === 'function') {
       const referenceClosure = knownServerReferences.get(value);
       if (referenceClosure !== undefined) {
+        const existingReference = writtenObjects.get(value);
+        if (existingReference !== undefined) {
+          return existingReference;
+        }
         const {id, bound} = referenceClosure;
         const referenceClosureJSON = JSON.stringify({id, bound}, resolveToJSON);
         if (formData === null) {
@@ -789,7 +804,10 @@ export function processReply(
         // The reference to this function came from the same client so we can pass it back.
         const refId = nextPartId++;
         formData.set(formFieldPrefix + refId, referenceClosureJSON);
-        return serializeServerReferenceID(refId);
+        const serverReferenceId = serializeServerReferenceID(refId);
+        // Store the server reference ID for deduplication.
+        writtenObjects.set(value, serverReferenceId);
+        return serverReferenceId;
       }
       if (temporaryReferences !== undefined && key.indexOf(':') === -1) {
         // TODO: If the property name contains a colon, we don't dedupe. Escape instead.

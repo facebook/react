@@ -98,6 +98,8 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
 
+import hasOwnProperty from 'shared/hasOwnProperty';
+
 import {injectInternals} from './ReactFlightClientDevToolsHook';
 
 import {OMITTED_PROP_ERROR} from 'shared/ReactFlightPropertyAccess';
@@ -162,6 +164,8 @@ const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 const HALTED = 'halted'; // DEV-only. Means it never resolves even if connection closes.
+
+const __PROTO__ = '__proto__';
 
 type PendingChunk<T> = {
   status: 'pending',
@@ -1496,7 +1500,16 @@ function fulfillReference(
           }
         }
       }
-      value = value[path[i]];
+      const name = path[i];
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        hasOwnProperty.call(value, name)
+      ) {
+        value = value[name];
+      } else {
+        throw new Error('Invalid reference.');
+      }
     }
 
     while (
@@ -1532,7 +1545,9 @@ function fulfillReference(
     }
 
     const mappedValue = map(response, value, parentObject, key);
-    parentObject[key] = mappedValue;
+    if (key !== __PROTO__) {
+      parentObject[key] = mappedValue;
+    }
 
     // If this is the root object for a model reference, where `handler.value`
     // is a stale `null`, the resolved value can be used directly.
@@ -1799,7 +1814,9 @@ function loadServerReference<A: Iterable<any>, T>(
       response._encodeFormAction,
     );
 
-    parentObject[key] = resolvedValue;
+    if (key !== __PROTO__) {
+      parentObject[key] = resolvedValue;
+    }
 
     // If this is the root object for a model reference, where `handler.value`
     // is a stale `null`, the resolved value can be used directly.
@@ -2177,29 +2194,31 @@ function defineLazyGetter<T>(
 ): any {
   // We don't immediately initialize it even if it's resolved.
   // Instead, we wait for the getter to get accessed.
-  Object.defineProperty(parentObject, key, {
-    get: function () {
-      if (chunk.status === RESOLVED_MODEL) {
-        // If it was now resolved, then we initialize it. This may then discover
-        // a new set of lazy references that are then asked for eagerly in case
-        // we get that deep.
-        initializeModelChunk(chunk);
-      }
-      switch (chunk.status) {
-        case INITIALIZED: {
-          return chunk.value;
+  if (key !== __PROTO__) {
+    Object.defineProperty(parentObject, key, {
+      get: function () {
+        if (chunk.status === RESOLVED_MODEL) {
+          // If it was now resolved, then we initialize it. This may then discover
+          // a new set of lazy references that are then asked for eagerly in case
+          // we get that deep.
+          initializeModelChunk(chunk);
         }
-        case ERRORED:
-          throw chunk.reason;
-      }
-      // Otherwise, we didn't have enough time to load the object before it was
-      // accessed or the connection closed. So we just log that it was omitted.
-      // TODO: We should ideally throw here to indicate a difference.
-      return OMITTED_PROP_ERROR;
-    },
-    enumerable: true,
-    configurable: false,
-  });
+        switch (chunk.status) {
+          case INITIALIZED: {
+            return chunk.value;
+          }
+          case ERRORED:
+            throw chunk.reason;
+        }
+        // Otherwise, we didn't have enough time to load the object before it was
+        // accessed or the connection closed. So we just log that it was omitted.
+        // TODO: We should ideally throw here to indicate a difference.
+        return OMITTED_PROP_ERROR;
+      },
+      enumerable: true,
+      configurable: false,
+    });
+  }
   return null;
 }
 
@@ -2510,14 +2529,16 @@ function parseModelString(
           // In DEV mode we encode omitted objects in logs as a getter that throws
           // so that when you try to access it on the client, you know why that
           // happened.
-          Object.defineProperty(parentObject, key, {
-            get: function () {
-              // TODO: We should ideally throw here to indicate a difference.
-              return OMITTED_PROP_ERROR;
-            },
-            enumerable: true,
-            configurable: false,
-          });
+          if (key !== __PROTO__) {
+            Object.defineProperty(parentObject, key, {
+              get: function () {
+                // TODO: We should ideally throw here to indicate a difference.
+                return OMITTED_PROP_ERROR;
+              },
+              enumerable: true,
+              configurable: false,
+            });
+          }
           return null;
         }
         // Fallthrough
@@ -5143,6 +5164,9 @@ function parseModel<T>(response: Response, json: UninitializedModel): T {
 function createFromJSONCallback(response: Response) {
   // $FlowFixMe[missing-this-annot]
   return function (key: string, value: JSONValue) {
+    if (key === __PROTO__) {
+      return undefined;
+    }
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
       return parseModelString(response, this, key, value);
