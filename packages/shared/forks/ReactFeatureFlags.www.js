@@ -29,7 +29,6 @@ export const {
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
   enableViewTransition,
-  enableComponentPerformanceTrack,
   enableScrollEndPolyfill,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
@@ -55,6 +54,8 @@ export const enableLegacyFBSupport: boolean = true;
 export const enableYieldingBeforePassive: boolean = false;
 
 export const enableThrottledScheduling: boolean = false;
+
+export const enableComponentPerformanceTrack: boolean = true;
 
 export const enablePerformanceIssueReporting: boolean = false;
 
