@@ -46,6 +46,14 @@ const allTests = {
       `,
     },
     {
+      code: normalizeIndent`
+        // Valid because components with underscore prefix followed by uppercase are components.
+        function _PrivateComponent() {
+          useHook();
+        }
+      `,
+    },
+    {
       syntax: 'flow',
       code: normalizeIndent`
         // Component syntax
