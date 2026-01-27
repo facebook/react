@@ -233,4 +233,87 @@ describe('ProfilerStore', () => {
     utils.act(() => render(<App />));
     utils.act(() => store.profilerStore.startProfiling());
   });
+
+  // @reactVersion >= 18.2
+  // Verifies that cached JSX children (via useMemoCache) are not reported as rendered.
+  it('should not report cached/memoized children as rendered when parent re-renders', () => {
+    const Scheduler = require('scheduler');
+    const useMemoCache = require('react/compiler-runtime').c;
+    let forceTextUpdate;
+
+    function Child({count}: {count: number}) {
+      Scheduler.unstable_advanceTime(10);
+      return <div>Count: {count}</div>;
+    }
+
+    function Parent() {
+      const $ = useMemoCache(4);
+
+      const [count] = React.useState(0);
+      const [text, setText] = React.useState('');
+
+      forceTextUpdate = setText;
+
+      Scheduler.unstable_advanceTime(5);
+
+      let t0;
+      if ($[0] !== count) {
+        t0 = (
+          <div>
+            <Child count={count} />
+          </div>
+        );
+        $[0] = count;
+        $[1] = t0;
+      } else {
+        t0 = $[1];
+      }
+
+      let t1;
+      if ($[2] !== text || $[3] !== t0) {
+        t1 = (
+          <div>
+            <span>{text}</span>
+            {t0}
+          </div>
+        );
+        $[2] = text;
+        $[3] = t0;
+      } else {
+        t1 = $[3];
+      }
+
+      return t1;
+    }
+
+    utils.act(() => render(<Parent />));
+    utils.act(() => store.profilerStore.startProfiling());
+
+    // Updating text should not cause Child to be reported as rendered,
+    // because the cached child JSX (t0) stays the same.
+    utils.act(() => forceTextUpdate('a'));
+
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+    const data = store.profilerStore.getDataForRoot(rootID);
+
+    expect(data.commitData).toHaveLength(1);
+
+    const commit = data.commitData[0];
+    const renderedFiberIds = Array.from(commit.fiberActualDurations.keys());
+
+    let childElementId = null;
+    for (let i = 0; i < store.numElements; i++) {
+      const element = store.getElementAtIndex(i);
+      if (element?.displayName === 'Child') {
+        childElementId = element.id;
+        break;
+      }
+    }
+
+    expect(childElementId).not.toBeNull();
+    // Child should NOT be in fiberActualDurations because the fiber was never visited.
+    expect(renderedFiberIds).not.toContain(childElementId);
+  });
 });

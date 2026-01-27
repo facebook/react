@@ -2086,6 +2086,12 @@ export function attach(
   }
 
   function didFiberRender(prevFiber: Fiber, nextFiber: Fiber): boolean {
+    // Note: prevFiber === nextFiber means the fiber was never visited this render.
+    // Any PerformedWork flag is stale because the parent bailed out entirely.
+    if (prevFiber === nextFiber) {
+      return false;
+    }
+
     switch (nextFiber.tag) {
       case ClassComponent:
       case FunctionComponent:
