@@ -29,6 +29,7 @@ import {
   Fragment,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
+import {enableFragmentRefsTextNodes} from 'shared/ReactFeatureFlags';
 
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
@@ -373,7 +374,10 @@ function traverseVisibleHostChildren<A, B, C>(
   c: C,
 ): boolean {
   while (child !== null) {
-    if (child.tag === HostComponent && fn(child, a, b, c)) {
+    const isHostNode =
+      child.tag === HostComponent ||
+      (enableFragmentRefsTextNodes && child.tag === HostText);
+    if (isHostNode && fn(child, a, b, c)) {
       return true;
     } else if (
       child.tag === OffscreenComponent &&
@@ -473,6 +477,7 @@ function findFragmentInstanceSiblings(
 export function getInstanceFromHostFiber<I>(fiber: Fiber): I {
   switch (fiber.tag) {
     case HostComponent:
+    case HostText:
       return fiber.stateNode;
     case HostRoot:
       return fiber.stateNode.containerInfo;
