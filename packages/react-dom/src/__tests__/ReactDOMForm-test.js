@@ -1505,13 +1505,10 @@ describe('ReactDOMForm', () => {
     // Dispatch outside of a transition.
     await act(() => dispatch());
     assertConsoleErrorDev([
-      [
-        'An async function with useActionState was called outside of a transition. ' +
-          'This is likely not what you intended (for example, isPending will not update ' +
-          'correctly). Either call the returned function inside startTransition, or pass it ' +
-          'to an `action` or `formAction` prop.',
-        {withoutStack: true},
-      ],
+      'An async function with useActionState was called outside of a transition. ' +
+        'This is likely not what you intended (for example, isPending will not update ' +
+        'correctly). Either call the returned function inside startTransition, or pass it ' +
+        'to an `action` or `formAction` prop.',
     ]);
     assertLog([
       'Suspend! [Count: 1]',
@@ -1967,15 +1964,10 @@ describe('ReactDOMForm', () => {
 
     // This triggers a synchronous requestFormReset, and a warning
     await act(() => resolveText('Wait 1'));
-    assertConsoleErrorDev(
-      [
-        'requestFormReset was called outside a transition or action. ' +
-          'To fix, move to an action, or wrap with startTransition.',
-      ],
-      {
-        withoutStack: true,
-      },
-    );
+    assertConsoleErrorDev([
+      'requestFormReset was called outside a transition or action. ' +
+        'To fix, move to an action, or wrap with startTransition.',
+    ]);
     assertLog(['Request form reset']);
 
     // The form was reset even though the action didn't finish.

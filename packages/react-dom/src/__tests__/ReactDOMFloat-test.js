@@ -520,10 +520,7 @@ describe('ReactDOMFloat', () => {
     );
     await waitForAll([]);
     assertConsoleErrorDev([
-      [
-        'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
-        {withoutStack: true},
-      ],
+      'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
     ]);
 
     root.render(
@@ -580,11 +577,8 @@ describe('ReactDOMFloat', () => {
     );
     await waitForAll([]);
     assertConsoleErrorDev([
-      [
-        'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. ' +
-          'Consider adding precedence="default" or moving it into the root <head> tag.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. ' +
+        'Consider adding precedence="default" or moving it into the root <head> tag.',
     ]);
 
     root.render(
@@ -633,14 +627,11 @@ describe('ReactDOMFloat', () => {
       </>,
     );
     await waitForAll([]);
-    assertConsoleErrorDev(
-      [
-        'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
-          'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
-          'somewhere in the <body>.',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
+        'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
+        'somewhere in the <body>.',
+    ]);
     return;
   });
 
