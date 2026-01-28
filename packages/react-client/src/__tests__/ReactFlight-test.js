@@ -3711,9 +3711,9 @@ describe('ReactFlight', () => {
 
         expect(normalizedErrorStack).toEqual(
           'Error: boom' +
-            '\n    in fn (at **)' +
-            '\n    in fn (at **)' +
-            '\n    in fn (at **)',
+            '\n    in c (at **)' +
+            '\n    in b (at **)' +
+            '\n    in a (at **)',
         );
       } else {
         expect(receivedError.message).toEqual(

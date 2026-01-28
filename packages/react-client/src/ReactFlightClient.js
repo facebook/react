@@ -3730,6 +3730,20 @@ function createFakeFunction<T>(
     fn = function (_) {
       return _();
     };
+    try {
+      // Using the usual {[name]: _() => _()}.bind() trick to avoid minifiers
+      // doesn't work here since this will produce `Object.*` names.
+      // This is just a fallback for misconfigured (no eval) dev environments
+      // so it should be acceptable to not always have a proper name.
+      Object.defineProperty(
+        fn,
+        // $FlowFixMe[cannot-write] -- `name` is configurable though.
+        'name',
+        {value: name},
+      );
+    } catch (e) {
+      // Handle non-standard, pre-ES2015 environments.
+    }
   }
   return fn;
 }
