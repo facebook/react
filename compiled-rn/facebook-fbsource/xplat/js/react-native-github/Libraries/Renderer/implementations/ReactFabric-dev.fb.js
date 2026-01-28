@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9e7a7da479b054127c4e058c46edf267>>
+ * @generated SignedSource<<23546bce7049bcc916e98e2146e2cf77>>
  */
 
 "use strict";
@@ -1835,7 +1835,9 @@ __DEV__ &&
     ) {
       for (; null !== child; ) {
         if (
-          (5 === child.tag && fn(child, a, b, c)) ||
+          ((5 === child.tag ||
+            (enableFragmentRefsTextNodes && 6 === child.tag)) &&
+            fn(child, a, b, c)) ||
           ((22 !== child.tag || null === child.memoizedState) &&
             (searchWithinHosts || 5 !== child.tag) &&
             traverseVisibleHostChildren(
@@ -17087,6 +17089,8 @@ __DEV__ &&
       enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
       enableFragmentRefsInstanceHandles =
         dynamicFlagsUntyped.enableFragmentRefsInstanceHandles,
+      enableFragmentRefsTextNodes =
+        dynamicFlagsUntyped.enableFragmentRefsTextNodes,
       assign = Object.assign,
       disabledDepth = 0,
       prevLog,
@@ -20088,10 +20092,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-87ae75b3-20260128",
+        version: "19.3.0-native-fb-875b0648-20260128",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-87ae75b3-20260128"
+        reconcilerVersion: "19.3.0-native-fb-875b0648-20260128"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

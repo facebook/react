@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1915b11a8e8b2f694c103c6d68d7eaf0>>
+ * @generated SignedSource<<0e058d835579f705b2a2e530dce9bc69>>
  */
 
 "use strict";
@@ -30,6 +30,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enableFragmentRefs = dynamicFlagsUntyped.enableFragmentRefs,
   enableFragmentRefsInstanceHandles =
     dynamicFlagsUntyped.enableFragmentRefsInstanceHandles,
+  enableFragmentRefsTextNodes = dynamicFlagsUntyped.enableFragmentRefsTextNodes,
   assign = Object.assign,
   prefix,
   suffix;
@@ -1802,7 +1803,8 @@ function findCurrentHostFiberImpl(node) {
 function traverseVisibleHostChildren(child, searchWithinHosts, fn, a, b, c) {
   for (; null !== child; ) {
     if (
-      (5 === child.tag && fn(child, a, b, c)) ||
+      ((5 === child.tag || (enableFragmentRefsTextNodes && 6 === child.tag)) &&
+        fn(child, a, b, c)) ||
       ((22 !== child.tag || null === child.memoizedState) &&
         (searchWithinHosts || 5 !== child.tag) &&
         traverseVisibleHostChildren(
@@ -11394,10 +11396,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1319 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-87ae75b3-20260128",
+    version: "19.3.0-native-fb-875b0648-20260128",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-87ae75b3-20260128"
+    reconcilerVersion: "19.3.0-native-fb-875b0648-20260128"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1319.rendererConfig = extraDevToolsConfig);
