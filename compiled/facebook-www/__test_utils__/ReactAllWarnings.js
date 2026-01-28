@@ -398,6 +398,7 @@ export default [
   "lazy: Expected the result of a dynamic import() call. Instead received: %s\n\nYour code should look like: \n  const MyComponent = lazy(() => import('./MyComponent'))",
   "lazy: Expected the result of a dynamic import() call. Instead received: %s\n\nYour code should look like: \n  const MyComponent = lazy(() => import('./MyComponent'))\n\nDid you accidentally put curly braces around the import?",
   "memo: The first argument must be a component. Instead received: %s",
+  "observeUsing() was called on a FragmentInstance with only text children. Observers do not work on text nodes.",
   "onError returned something with a type other than \"string\". onError should return a string and may return null or undefined but must not return anything else. It received something of type \"%s\" instead",
   "precomputed chunks must be smaller than the view size configured for this host. This is a bug in React.",
   "react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer",

@@ -60,6 +60,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
   enableFragmentRefsScrollIntoView =
     dynamicFeatureFlags.enableFragmentRefsScrollIntoView,
+  enableFragmentRefsTextNodes = dynamicFeatureFlags.enableFragmentRefsTextNodes,
   enableInternalInstanceMap = dynamicFeatureFlags.enableInternalInstanceMap,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
 function getNearestMountedFiber(fiber) {
@@ -195,7 +196,8 @@ function doesFiberContain(parentFiber, childFiber) {
 function traverseVisibleHostChildren(child, searchWithinHosts, fn, a, b, c) {
   for (; null !== child; ) {
     if (
-      (5 === child.tag && fn(child, a, b, c)) ||
+      ((5 === child.tag || (enableFragmentRefsTextNodes && 6 === child.tag)) &&
+        fn(child, a, b, c)) ||
       ((22 !== child.tag || null === child.memoizedState) &&
         (searchWithinHosts || 5 !== child.tag) &&
         traverseVisibleHostChildren(
@@ -244,6 +246,7 @@ function findFragmentInstanceSiblings(result, self, child) {
 function getInstanceFromHostFiber(fiber) {
   switch (fiber.tag) {
     case 5:
+    case 6:
       return fiber.stateNode;
     case 3:
       return fiber.stateNode.containerInfo;
@@ -20087,6 +20090,7 @@ FragmentInstance.prototype.focus = function (focusOptions) {
   );
 };
 function setFocusOnFiberIfFocusable(fiber, focusOptions) {
+  if (enableFragmentRefsTextNodes && 6 === fiber.tag) return !1;
   fiber = getInstanceFromHostFiber(fiber);
   return setFocusIfFocusable(fiber, focusOptions);
 }
@@ -20137,6 +20141,7 @@ FragmentInstance.prototype.observeUsing = function (observer) {
   );
 };
 function observeChild(child, observer) {
+  if (enableFragmentRefsTextNodes && 6 === child.tag) return !1;
   child = getInstanceFromHostFiber(child);
   observer.observe(child);
   return !1;
@@ -20156,6 +20161,7 @@ FragmentInstance.prototype.unobserveUsing = function (observer) {
     ));
 };
 function unobserveChild(child, observer) {
+  if (enableFragmentRefsTextNodes && 6 === child.tag) return !1;
   child = getInstanceFromHostFiber(child);
   observer.unobserve(child);
   return !1;
@@ -20173,8 +20179,14 @@ FragmentInstance.prototype.getClientRects = function () {
   return rects;
 };
 function collectClientRects(child, rects) {
-  child = getInstanceFromHostFiber(child);
-  rects.push.apply(rects, child.getClientRects());
+  if (enableFragmentRefsTextNodes && 6 === child.tag) {
+    child = child.stateNode;
+    var range = child.ownerDocument.createRange();
+    range.selectNodeContents(child);
+    rects.push.apply(rects, range.getClientRects());
+  } else
+    (child = getInstanceFromHostFiber(child)),
+      rects.push.apply(rects, child.getClientRects());
   return !1;
 }
 FragmentInstance.prototype.getRootNode = function (getRootNodeOptions) {
@@ -20404,9 +20416,23 @@ enableFragmentRefsScrollIntoView &&
         result = resolvedAlignToTop ? children.length - 1 : 0;
         result !== (resolvedAlignToTop ? -1 : children.length);
 
-      )
-        getInstanceFromHostFiber(children[result]).scrollIntoView(alignToTop),
-          (result += resolvedAlignToTop ? -1 : 1);
+      ) {
+        parentHostFiber = children[result];
+        if (enableFragmentRefsTextNodes && 6 === parentHostFiber.tag) {
+          parentHostFiber = parentHostFiber.stateNode;
+          var range = parentHostFiber.ownerDocument.createRange();
+          range.selectNodeContents(parentHostFiber);
+          parentHostFiber = range.getBoundingClientRect();
+          window.scrollTo(
+            window.scrollX + parentHostFiber.left,
+            resolvedAlignToTop
+              ? window.scrollY + parentHostFiber.top
+              : window.scrollY + parentHostFiber.bottom - window.innerHeight
+          );
+        } else
+          getInstanceFromHostFiber(parentHostFiber).scrollIntoView(alignToTop);
+        result += resolvedAlignToTop ? -1 : 1;
+      }
   });
 function addFragmentHandleToFiber(child, fragmentInstance) {
   child = getInstanceFromHostFiber(child);
@@ -22264,14 +22290,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2417 = React.version;
 if (
-  "19.3.0-www-classic-87ae75b3-20260128" !==
+  "19.3.0-www-classic-875b0648-20260128" !==
   isomorphicReactPackageVersion$jscomp$inline_2417
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2417,
-      "19.3.0-www-classic-87ae75b3-20260128"
+      "19.3.0-www-classic-875b0648-20260128"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22289,10 +22315,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2419 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-87ae75b3-20260128",
+  version: "19.3.0-www-classic-875b0648-20260128",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-87ae75b3-20260128"
+  reconcilerVersion: "19.3.0-www-classic-875b0648-20260128"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2419.getLaneLabelMap = getLaneLabelMap),
@@ -22725,7 +22751,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-87ae75b3-20260128";
+exports.version = "19.3.0-www-classic-875b0648-20260128";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
