@@ -103,12 +103,12 @@ export type PluginOptions = Partial<{
   panicThreshold: PanicThresholdOptions;
 
   /**
-   * @deprecated
+   * @deprecated Use `outputMode` instead. This option will be removed in a future version.
    *
-   * When enabled, Forget will continue statically analyzing and linting code, but skip over codegen
-   * passes.
+   * When enabled, the compiler will continue statically analyzing and linting code, but skip over
+   * codegen passes.
    *
-   * NOTE: ignored if `outputMode` is specified
+   * NOTE: This option is ignored if `outputMode` is specified.
    *
    * Defaults to false
    */
