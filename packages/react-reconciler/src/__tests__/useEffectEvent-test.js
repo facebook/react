@@ -1274,7 +1274,7 @@ describe('useEffectEvent', () => {
   // @gate enableActivity
   it('effect events are fresh inside Activity', async () => {
     function Child({value}) {
-      const getValue = useEffectEvent(effectName => {
+      const getValue = useEffectEvent(() => {
         return value;
       });
       useInsertionEffect(() => {
