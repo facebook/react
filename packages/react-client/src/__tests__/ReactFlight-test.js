@@ -3677,6 +3677,56 @@ describe('ReactFlight', () => {
     expect(caughtError.digest).toBe('digest("my-error")');
   });
 
+  it('can transport function names in stackframes in dev even without eval', async () => {
+    function a() {
+      return b();
+    }
+    function b() {
+      return c();
+    }
+    function c() {
+      return new Error('boom');
+    }
+
+    // eslint-disable-next-line no-eval
+    const previousEval = globalThis.eval.bind(globalThis);
+    // eslint-disable-next-line no-eval
+    globalThis.eval = () => {
+      throw new Error('eval is disabled');
+    };
+
+    try {
+      const transport = ReactNoopFlightServer.render(
+        {model: a()},
+        {onError: () => 'digest'},
+      );
+
+      const root = await ReactNoopFlightClient.read(transport);
+      const receivedError = await root.model;
+
+      if (__DEV__) {
+        const normalizedErrorStack = normalizeCodeLocInfo(
+          receivedError.stack.split('\n').slice(0, 4).join('\n'),
+        );
+
+        expect(normalizedErrorStack).toEqual(
+          'Error: boom' +
+            '\n    in c (at **)' +
+            '\n    in b (at **)' +
+            '\n    in a (at **)',
+        );
+      } else {
+        expect(receivedError.message).toEqual(
+          'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.',
+        );
+        expect(receivedError).not.toHaveProperty('digest');
+      }
+    } finally {
+      // eslint-disable-next-line no-eval
+      globalThis.eval = previousEval;
+    }
+  });
+
   // @gate __DEV__  && enableComponentPerformanceTrack
   it('can render deep but cut off JSX in debug info', async () => {
     function createDeepJSX(n) {

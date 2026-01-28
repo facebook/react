@@ -3730,6 +3730,14 @@ function createFakeFunction<T>(
     fn = function (_) {
       return _();
     };
+    // Using the usual {[name]: _() => _()}.bind() trick to avoid minifiers
+    // doesn't work here since this will produce `Object.*` names.
+    Object.defineProperty(
+      fn,
+      // $FlowFixMe[cannot-write] -- `name` is configurable though.
+      'name',
+      {value: name},
+    );
   }
   return fn;
 }
