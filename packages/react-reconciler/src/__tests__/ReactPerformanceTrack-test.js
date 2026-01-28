@@ -231,7 +231,7 @@ describe('ReactPerformanceTracks', () => {
               properties: [
                 ['Changed Props', ''],
                 ['  data', ''],
-                ['–   buffer', 'null'],
+                ['-   buffer', 'null'],
                 ['+   buffer', 'Uint8Array'],
                 ['+     0', '0'],
                 ['+     1', '0'],
@@ -422,7 +422,7 @@ describe('ReactPerformanceTracks', () => {
               color: 'error',
               properties: [
                 ['Changed Props', ''],
-                ['– value', '1'],
+                ['- value', '1'],
                 ['+ value', '2'],
               ],
               tooltipText: 'Left',
@@ -510,7 +510,7 @@ describe('ReactPerformanceTracks', () => {
                 ['  data', ''],
                 ['    deeply', ''],
                 ['      nested', ''],
-                ['–       numbers', 'Array'],
+                ['-       numbers', 'Array'],
                 ['+       numbers', 'Array'],
               ],
               tooltipText: 'App',
