@@ -1266,7 +1266,7 @@ __DEV__ &&
         }
         key in next ||
           (properties.push([
-            "\u2013\u00a0" + "\u00a0\u00a0".repeat(indent) + key,
+            "-\u00a0" + "\u00a0\u00a0".repeat(indent) + key,
             "\u2026"
           ]),
           (isDeeplyEqual = !1));
@@ -1289,7 +1289,7 @@ __DEV__ &&
             if (0 === indent && "children" === _key) {
               isDeeplyEqual = "\u00a0\u00a0".repeat(indent) + _key;
               properties.push(
-                ["\u2013\u00a0" + isDeeplyEqual, "\u2026"],
+                ["-\u00a0" + isDeeplyEqual, "\u2026"],
                 ["+\u00a0" + isDeeplyEqual, "\u2026"]
               );
               isDeeplyEqual = !1;
@@ -1312,7 +1312,7 @@ __DEV__ &&
                     isDeeplyEqual = "\u00a0\u00a0".repeat(indent) + _key;
                     key = "<" + key + " \u2026 />";
                     properties.push(
-                      ["\u2013\u00a0" + isDeeplyEqual, key],
+                      ["-\u00a0" + isDeeplyEqual, key],
                       ["+\u00a0" + isDeeplyEqual, key]
                     );
                     isDeeplyEqual = !1;
@@ -1363,7 +1363,7 @@ __DEV__ &&
                 ]);
                 continue;
               }
-            addValueToProperties(_key, key, properties, indent, "\u2013\u00a0");
+            addValueToProperties(_key, key, properties, indent, "-\u00a0");
             addValueToProperties(
               _key,
               nextValue,
@@ -23014,7 +23014,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-ff191f24-20260128"
+        reconcilerVersion: "19.3.0-www-classic-87ae75b3-20260128"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

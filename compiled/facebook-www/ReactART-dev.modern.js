@@ -1256,7 +1256,7 @@ __DEV__ &&
         }
         key in next ||
           (properties.push([
-            "\u2013\u00a0" + "\u00a0\u00a0".repeat(indent) + key,
+            "-\u00a0" + "\u00a0\u00a0".repeat(indent) + key,
             "\u2026"
           ]),
           (isDeeplyEqual = !1));
@@ -1279,7 +1279,7 @@ __DEV__ &&
             if (0 === indent && "children" === _key) {
               isDeeplyEqual = "\u00a0\u00a0".repeat(indent) + _key;
               properties.push(
-                ["\u2013\u00a0" + isDeeplyEqual, "\u2026"],
+                ["-\u00a0" + isDeeplyEqual, "\u2026"],
                 ["+\u00a0" + isDeeplyEqual, "\u2026"]
               );
               isDeeplyEqual = !1;
@@ -1302,7 +1302,7 @@ __DEV__ &&
                     isDeeplyEqual = "\u00a0\u00a0".repeat(indent) + _key;
                     key = "<" + key + " \u2026 />";
                     properties.push(
-                      ["\u2013\u00a0" + isDeeplyEqual, key],
+                      ["-\u00a0" + isDeeplyEqual, key],
                       ["+\u00a0" + isDeeplyEqual, key]
                     );
                     isDeeplyEqual = !1;
@@ -1353,7 +1353,7 @@ __DEV__ &&
                 ]);
                 continue;
               }
-            addValueToProperties(_key, key, properties, indent, "\u2013\u00a0");
+            addValueToProperties(_key, key, properties, indent, "-\u00a0");
             addValueToProperties(
               _key,
               nextValue,
@@ -20127,10 +20127,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-modern-ff191f24-20260128",
+        version: "19.3.0-www-modern-87ae75b3-20260128",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-ff191f24-20260128"
+        reconcilerVersion: "19.3.0-www-modern-87ae75b3-20260128"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20165,7 +20165,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.3.0-www-modern-ff191f24-20260128";
+    exports.version = "19.3.0-www-modern-87ae75b3-20260128";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
