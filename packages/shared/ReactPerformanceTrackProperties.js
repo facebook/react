@@ -16,7 +16,7 @@ import getComponentNameFromType from './getComponentNameFromType';
 
 const EMPTY_ARRAY = 0;
 const COMPLEX_ARRAY = 1;
-const PRIMITIVE_ARRAY = 2; // Primitive values only
+const PRIMITIVE_ARRAY = 2; // Primitive values only that are accepted by JSON.stringify
 const ENTRIES_ARRAY = 3; // Tuple arrays of string and value (like Headers, Map, etc)
 
 // Showing wider objects in the devtools is not useful.
@@ -45,6 +45,8 @@ function getArrayKind(array: Object): 0 | 1 | 2 | 3 {
     } else if (typeof value === 'string' && value.length > 50) {
       return COMPLEX_ARRAY;
     } else if (kind !== EMPTY_ARRAY && kind !== PRIMITIVE_ARRAY) {
+      return COMPLEX_ARRAY;
+    } else if (typeof value === 'bigint') {
       return COMPLEX_ARRAY;
     } else {
       kind = PRIMITIVE_ARRAY;
