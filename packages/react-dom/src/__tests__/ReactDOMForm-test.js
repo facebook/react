@@ -2277,15 +2277,21 @@ describe('ReactDOMForm', () => {
     await submit(formRef.current);
     assertLog([actionFn]);
 
-    // Everything else is toString-ed
+    // Everything else is toString-ed, unless trusted types are enabled.
     class MyAction {
       toString() {
         return 'stringified action';
       }
     }
-    await act(() => root.render(<Form action={new MyAction()} />));
+    const instance = new MyAction();
+
+    await act(() => root.render(<Form action={instance} />));
     await submit(formRef.current);
-    assertLog(['stringified action']);
+    assertLog(
+      gate('enableTrustedTypesIntegration')
+        ? [instance]
+        : ['stringified action'],
+    );
   });
 
   it('form actions should retain status when nested state changes', async () => {
