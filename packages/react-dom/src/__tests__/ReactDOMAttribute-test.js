@@ -171,7 +171,13 @@ describe('ReactDOM unknown attribute', () => {
       const test = () =>
         testUnknownAttributeAssignment(new TemporalLike(), null);
 
-      await expect(test).rejects.toThrowError(new TypeError('prod message'));
+      if (gate('enableTrustedTypesIntegration') && !__DEV__) {
+        // TODO: this still throws in DEV even though it's not toString'd in prod.
+        await expect(test).rejects.toThrowError('2020-01-01');
+      } else {
+        await expect(test).rejects.toThrowError(new TypeError('prod message'));
+      }
+
       assertConsoleErrorDev([
         'The provided `unknown` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.\n' +
