@@ -279,7 +279,7 @@ export function addValueToProperties(
   properties.push([prefix + '\xa0\xa0'.repeat(indent) + propertyName, desc]);
 }
 
-const REMOVED = '\u2013\xa0';
+const REMOVED = '-\xa0';
 const ADDED = '+\xa0';
 const UNCHANGED = '\u2007\xa0';
 
