@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2fae972124f8581945a3c01b68ccc9c6>>
+ * @generated SignedSource<<12f191b78fd7f28f047ce8e4834b0b7f>>
  */
 
 /*
@@ -27427,7 +27427,7 @@ __DEV__ &&
       PRIMITIVE_ARRAY = 2,
       ENTRIES_ARRAY = 3,
       OBJECT_WIDTH_LIMIT = 100,
-      REMOVED = "\u2013\u00a0",
+      REMOVED = "-\u00a0",
       ADDED = "+\u00a0",
       UNCHANGED = "\u2007\u00a0",
       supportsUserTiming =
@@ -30187,11 +30187,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-ff191f24-20260128" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-87ae75b3-20260128" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-ff191f24-20260128\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-87ae75b3-20260128\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30228,10 +30228,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-ff191f24-20260128",
+          version: "19.3.0-native-fb-87ae75b3-20260128",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-ff191f24-20260128"
+          reconcilerVersion: "19.3.0-native-fb-87ae75b3-20260128"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30697,7 +30697,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-native-fb-ff191f24-20260128";
+    exports.version = "19.3.0-native-fb-87ae75b3-20260128";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
