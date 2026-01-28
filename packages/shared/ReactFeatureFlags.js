@@ -205,7 +205,7 @@ export const disableLegacyMode: boolean = true;
 // in open source, but www codebase still relies on it. Need to remove.
 export const disableCommentsAsDOMContainers: boolean = true;
 
-export const enableTrustedTypesIntegration: boolean = __EXPERIMENTAL__;
+export const enableTrustedTypesIntegration: boolean = false;
 
 // Prevent the value and checked attributes from syncing with their related
 // DOM properties
