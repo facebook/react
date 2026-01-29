@@ -31,6 +31,7 @@ function Component() {
   while ((value = queue.pop()) != null) {
     sum = sum + value;
   }
+
   return sum;
 }
 

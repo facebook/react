@@ -41,6 +41,7 @@ function Component(t0) {
     t1();
     t2();
   });
+
   return CapitalizedCall();
 }
 

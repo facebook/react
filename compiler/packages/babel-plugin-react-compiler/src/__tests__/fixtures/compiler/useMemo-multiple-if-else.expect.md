@@ -65,6 +65,7 @@ function Component(props) {
     t0 = $[4];
   }
   const x = t0;
+
   return x;
 }
 
