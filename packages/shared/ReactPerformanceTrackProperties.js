@@ -253,10 +253,15 @@ export function addValueToProperties(
         return;
       }
     case 'function':
-      if (value.name === '') {
+      const functionName = value.name;
+      if (
+        functionName === '' ||
+        // e.g. proxied functions or classes with a static property "name" that's not a string
+        typeof functionName !== 'string'
+      ) {
         desc = '() => {}';
       } else {
-        desc = value.name + '() {}';
+        desc = functionName + '() {}';
       }
       break;
     case 'string':
