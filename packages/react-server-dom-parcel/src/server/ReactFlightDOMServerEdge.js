@@ -12,6 +12,8 @@ import type {
   ReactClientValue,
 } from 'react-server/src/ReactFlightServer';
 import type {ReactFormState, Thenable} from 'shared/ReactTypes';
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+
 import {
   preloadModule,
   requireModule,
@@ -72,6 +74,7 @@ type Options = {
   signal?: AbortSignal,
   temporaryReferences?: TemporaryReferenceSet,
   onError?: (error: mixed) => void,
+  startTime?: number,
 };
 
 function startReadingFromDebugChannelReadableStream(
@@ -133,6 +136,7 @@ export function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    enableProfilerTimer && options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -220,6 +224,7 @@ export function prerender(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      enableProfilerTimer && options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,

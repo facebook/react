@@ -12,6 +12,7 @@ import type {
   ReactClientValue,
 } from 'react-server/src/ReactFlightServer';
 import type {Thenable} from 'shared/ReactTypes';
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import type {ClientManifest} from './ReactFlightServerConfigTurbopackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
@@ -64,6 +65,7 @@ type Options = {
   signal?: AbortSignal,
   temporaryReferences?: TemporaryReferenceSet,
   onError?: (error: mixed) => void,
+  startTime?: number,
 };
 
 function startReadingFromDebugChannelReadableStream(
@@ -126,6 +128,7 @@ function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    enableProfilerTimer && options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -214,6 +217,7 @@ function prerender(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      enableProfilerTimer && options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
