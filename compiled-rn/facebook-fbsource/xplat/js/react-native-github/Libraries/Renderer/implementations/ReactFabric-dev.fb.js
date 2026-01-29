@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<23546bce7049bcc916e98e2146e2cf77>>
+ * @generated SignedSource<<a0be6a3df6a7f56d733b1de94ac02bb5>>
  */
 
 "use strict";
@@ -2191,7 +2191,11 @@ __DEV__ &&
             return;
           }
         case "function":
-          value = "" === value.name ? "() => {}" : value.name + "() {}";
+          value = value.name;
+          value =
+            "" === value || "string" !== typeof value
+              ? "() => {}"
+              : value + "() {}";
           break;
         case "string":
           value =
@@ -20092,10 +20096,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-875b0648-20260128",
+        version: "19.3.0-native-fb-da641178-20260129",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-875b0648-20260128"
+        reconcilerVersion: "19.3.0-native-fb-da641178-20260129"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
