@@ -614,7 +614,7 @@ export type Request = {
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
   writtenDebugObjects: WeakMap<Reference, string>,
   deferredDebugObjects: null | DeferredDebugStore,
-  earlyDebugInfoEntries: null | WeakSet<ReactDebugInfoEntry>,
+  partialDebugInfoProgress: null | WeakMap<ReactDebugInfo, number>,
 };
 
 const {
@@ -739,7 +739,7 @@ function RequestInstance(
           existing: new Map(),
         }
       : null;
-    this.earlyDebugInfoEntries = null;
+    this.forwardedDebugInfos = null;
   }
 
   let timeOrigin: number;
@@ -3532,7 +3532,7 @@ function renderModelDestructive(
               // (before the lazy resolved), so we shouldn't do it again.
               // The consumer of this stream will once again transfer the debug info from
               // the lazy chunk onto the element itself, thus recombining them into one array.
-              forwardDebugInfoOnce(request, task, debugInfo);
+              forwardDebugInfoProgressive(request, task, debugInfo);
             }
           }
         }
@@ -3624,7 +3624,7 @@ function renderModelDestructive(
               return outlineTask(request, task);
             } else {
               // Forward any debug info we have the first time we see it.
-              forwardDebugInfoOnce(request, task, debugInfo);
+              forwardDebugInfoProgressive(request, task, debugInfo);
             }
           }
 
@@ -3646,14 +3646,21 @@ function renderModelDestructive(
         if (__DEV__) {
           const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
           if (debugInfo) {
-            // If this came from Flight, forward any debug info into this new row.
-            if (!canEmitDebugInfo) {
-              // We don't have a chunk to assign debug info. We need to outline this
-              // component to assign it an ID.
-              return outlineTask(request, task);
-            } else {
-              // Forward any debug info we have the first time we see it.
-              forwardDebugInfoOnce(request, task, debugInfo);
+            // We don't need to outlineTask -- if we needed outlining, we would've done it above.
+            const progress = forwardDebugInfoProgressive(
+              request,
+              task,
+              debugInfo,
+            );
+            // The debug info array may have been moved onto the resolved value
+            // by `moveDebugInfoFromChunkToInnerValue`.
+            // If it was, we have to make sure we skip the elements we've already emitted.
+            if (progress > 0 && debugInfo.length === 0) {
+              copyDebugInfoProgressToResolvedValue(
+                request,
+                progress,
+                resolvedModel,
+              );
             }
           }
         }
@@ -5350,20 +5357,55 @@ function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
   request.completedDebugChunks.push(processedChunk);
 }
 
-function forwardDebugInfoOnce(
+function copyDebugInfoProgressToResolvedValue(
+  request: Request,
+  index: number,
+  resolvedValue: ReactClientValue,
+) {
+  const partialDebugInfoProgress = request.partialDebugInfoProgress;
+  // Defensive check. If we're here, this should be initialized.
+  if (!partialDebugInfoProgress) return;
+
+  if (
+    // NOTE: Keep this condition in sync with `moveDebugInfoFromChunkToInnerValue` from `ReactFlightClient`.
+    typeof resolvedValue === 'object' &&
+    resolvedValue !== null &&
+    (isArray(resolvedValue) ||
+      typeof (resolvedValue: any)[ASYNC_ITERATOR] === 'function' ||
+      resolvedValue.$$typeof === REACT_ELEMENT_TYPE ||
+      resolvedValue.$$typeof === REACT_LAZY_TYPE)
+  ) {
+    const debugInfo = (resolvedValue: any)._debugInfo;
+    // Defensive check. If the outer lazy had debug info, then the resolved value should have it too.
+    if (isArray(debugInfo)) {
+      partialDebugInfoProgress.set(debugInfo, index);
+    }
+  }
+}
+
+function forwardDebugInfoProgressive(
   request: Request,
   task: Task,
   debugInfo: ReactDebugInfo,
-) {
-  // Track which items from this array have already been forwarded,
-  // and don't emit them again. Note that elements can sometimes move
-  // from one array to another, e.g. when a lazy chunk's debug info is
-  // transferred to the element it resolves to in `initializeElement`.
-  let earlyDebugInfoEntries = request.earlyDebugInfoEntries;
-  if (!earlyDebugInfoEntries) {
-    earlyDebugInfoEntries = request.earlyDebugInfoEntries = new WeakSet();
+): number {
+  // Track how many items from this array have already been forwarded.
+  // If new ones get appended later, we won't emit them again.
+  let partialDebugInfoProgress = request.partialDebugInfoProgress;
+  if (!partialDebugInfoProgress) {
+    partialDebugInfoProgress = request.partialDebugInfoProgress = new WeakMap();
   }
-  forwardDebugInfoImpl(request, task, debugInfo, earlyDebugInfoEntries);
+
+  const startIndex = partialDebugInfoProgress.get(debugInfo) || 0;
+  if (startIndex >= debugInfo.length) {
+    // Nothing new to emit. Note that the length might be less than what we have saved
+    // if `moveDebugInfoFromChunkToInnerValue` emptied the array.
+    return startIndex;
+  }
+
+  forwardDebugInfoFromIndex(request, task, debugInfo, startIndex);
+  const newIndex = debugInfo.length;
+  partialDebugInfoProgress.set(debugInfo, newIndex);
+  return newIndex;
 }
 
 function forwardDebugInfo(
@@ -5371,24 +5413,18 @@ function forwardDebugInfo(
   task: Task,
   debugInfo: ReactDebugInfo,
 ) {
-  forwardDebugInfoImpl(request, task, debugInfo, null);
+  forwardDebugInfoFromIndex(request, task, debugInfo, 0);
 }
 
-function forwardDebugInfoImpl(
+function forwardDebugInfoFromIndex(
   request: Request,
   task: Task,
   debugInfo: ReactDebugInfo,
-  seenInfos: WeakSet<ReactDebugInfoEntry> | null,
+  startIndex: number,
 ) {
   const id = task.id;
-  for (let i = 0; i < debugInfo.length; i++) {
+  for (let i = startIndex; i < debugInfo.length; i++) {
     const info = debugInfo[i];
-    if (seenInfos !== null) {
-      if (seenInfos.has(info)) {
-        continue;
-      }
-      seenInfos.add(info);
-    }
 
     if (typeof info.time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
