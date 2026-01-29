@@ -7,6 +7,7 @@
 
 import {CompilerError} from '../CompilerError';
 import {
+  GeneratedSource,
   PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveScope,
@@ -322,15 +323,7 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
             const block = case_.block;
             CompilerError.invariant(block != null, {
               reason: 'Expected case to have a block',
-              description: null,
-              details: [
-                {
-                  kind: 'error',
-                  loc: case_.test?.loc ?? null,
-                  message: null,
-                },
-              ],
-              suggestions: null,
+              loc: case_.test?.loc ?? GeneratedSource,
             });
             writeReactiveInstructions(writer, block);
           });

@@ -24,10 +24,10 @@ export const {
   enableObjectFiber,
   enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
-  renameElementSymbol,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
   enableFragmentRefsInstanceHandles,
+  enableFragmentRefsTextNodes,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -67,7 +67,6 @@ export const enableUpdaterTracking: boolean = __PROFILE__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableHydrationLaneScheduling: boolean = true;
 export const enableYieldingBeforePassive: boolean = false;
 export const enableThrottledScheduling: boolean = false;
 export const enableViewTransition: boolean = false;
@@ -79,8 +78,7 @@ export const enableSrcObject: boolean = false;
 export const enableHydrationChangeEvent: boolean = true;
 export const enableDefaultTransitionIndicator: boolean = true;
 export const ownerStackLimit = 1e4;
-export const enableComponentPerformanceTrack: boolean =
-  __PROFILE__ && dynamicFlags.enableComponentPerformanceTrack;
+export const enableComponentPerformanceTrack: boolean = true;
 export const enablePerformanceIssueReporting: boolean =
   enableComponentPerformanceTrack;
 export const enableInternalInstanceMap: boolean = false;

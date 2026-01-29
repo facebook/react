@@ -22,8 +22,6 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-export const enableHydrationLaneScheduling: boolean = true;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -146,6 +144,7 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
 export const enableFragmentRefsInstanceHandles: boolean = false;
+export const enableFragmentRefsTextNodes: boolean = true;
 
 export const enableInternalInstanceMap: boolean = false;
 
@@ -160,9 +159,6 @@ export const enableInternalInstanceMap: boolean = false;
 // different section of this file.
 
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-
-// Renames the internal symbol for elements since they have changed signature/constructor
-export const renameElementSymbol: boolean = true;
 
 /**
  * Enables a fix to run insertion effect cleanup on hidden subtrees.

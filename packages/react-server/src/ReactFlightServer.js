@@ -557,6 +557,8 @@ type DeferredDebugStore = {
   existing: Map<ReactClientReference | string, number>,
 };
 
+const __PROTO__ = '__proto__';
+
 const OPENING = 10;
 const OPEN = 11;
 const ABORTING = 12;
@@ -3446,6 +3448,17 @@ function renderModelDestructive(
 ): ReactJSONValue {
   // Set the currently rendering model
   task.model = value;
+
+  if (__DEV__) {
+    if (parentPropertyName === __PROTO__) {
+      callWithDebugContextInDEV(request, task, () => {
+        console.error(
+          'Expected not to serialize an object with own property `__proto__`. When parsed this property will be omitted.%s',
+          describeObjectForErrorMessage(parent, parentPropertyName),
+        );
+      });
+    }
+  }
 
   // Special Symbol, that's very common.
   if (value === REACT_ELEMENT_TYPE) {

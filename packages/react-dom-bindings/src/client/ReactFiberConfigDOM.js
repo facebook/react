@@ -127,6 +127,7 @@ import {
   enableFragmentRefsScrollIntoView,
   enableProfilerTimer,
   enableFragmentRefsInstanceHandles,
+  enableFragmentRefsTextNodes,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -2956,6 +2957,7 @@ function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
   this._eventListeners = null;
   this._observers = null;
 }
+
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.addEventListener = function (
   this: FragmentInstanceType,
@@ -3119,6 +3121,12 @@ function setFocusOnFiberIfFocusable(
   fiber: Fiber,
   focusOptions?: FocusOptions,
 ): boolean {
+  if (enableFragmentRefsTextNodes) {
+    // Skip text nodes - they are not focusable
+    if (fiber.tag === HostText) {
+      return false;
+    }
+  }
   const instance = getInstanceFromHostFiber<Instance>(fiber);
   return setFocusIfFocusable(instance, focusOptions);
 }
@@ -3169,6 +3177,28 @@ FragmentInstance.prototype.observeUsing = function (
   this: FragmentInstanceType,
   observer: IntersectionObserver | ResizeObserver,
 ): void {
+  if (__DEV__) {
+    if (enableFragmentRefsTextNodes) {
+      let hasText = false;
+      let hasElement = false;
+      traverseFragmentInstance(this._fragmentFiber, (child: Fiber) => {
+        if (child.tag === HostText) {
+          hasText = true;
+        } else {
+          // Stop traversal, found element
+          hasElement = true;
+          return true;
+        }
+        return false;
+      });
+      if (hasText && !hasElement) {
+        console.error(
+          'observeUsing() was called on a FragmentInstance with only text children. ' +
+            'Observers do not work on text nodes.',
+        );
+      }
+    }
+  }
   if (this._observers === null) {
     this._observers = new Set();
   }
@@ -3179,6 +3209,12 @@ function observeChild(
   child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
+  if (enableFragmentRefsTextNodes) {
+    // Skip text nodes - observers don't work on them
+    if (child.tag === HostText) {
+      return false;
+    }
+  }
   const instance = getInstanceFromHostFiber<Instance>(child);
   observer.observe(instance);
   return false;
@@ -3205,6 +3241,12 @@ function unobserveChild(
   child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
+  if (enableFragmentRefsTextNodes) {
+    // Skip text nodes - they were never observed
+    if (child.tag === HostText) {
+      return false;
+    }
+  }
   const instance = getInstanceFromHostFiber<Instance>(child);
   observer.unobserve(instance);
   return false;
@@ -3218,9 +3260,17 @@ FragmentInstance.prototype.getClientRects = function (
   return rects;
 };
 function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
-  const instance = getInstanceFromHostFiber<Instance>(child);
-  // $FlowFixMe[method-unbinding]
-  rects.push.apply(rects, instance.getClientRects());
+  if (enableFragmentRefsTextNodes && child.tag === HostText) {
+    const textNode: Text = child.stateNode;
+    const range = textNode.ownerDocument.createRange();
+    range.selectNodeContents(textNode);
+    // $FlowFixMe[method-unbinding]
+    rects.push.apply(rects, range.getClientRects());
+  } else {
+    const instance = getInstanceFromHostFiber<Instance>(child);
+    // $FlowFixMe[method-unbinding]
+    rects.push.apply(rects, instance.getClientRects());
+  }
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -3426,6 +3476,19 @@ if (enableFragmentRefsScrollIntoView) {
     let i = resolvedAlignToTop ? children.length - 1 : 0;
     while (i !== (resolvedAlignToTop ? -1 : children.length)) {
       const child = children[i];
+      // For text nodes, use Range API to scroll to their position
+      if (enableFragmentRefsTextNodes && child.tag === HostText) {
+        const textNode: Text = child.stateNode;
+        const range = textNode.ownerDocument.createRange();
+        range.selectNodeContents(textNode);
+        const rect = range.getBoundingClientRect();
+        const scrollY = resolvedAlignToTop
+          ? window.scrollY + rect.top
+          : window.scrollY + rect.bottom - window.innerHeight;
+        window.scrollTo(window.scrollX + rect.left, scrollY);
+        i += resolvedAlignToTop ? -1 : 1;
+        continue;
+      }
       const instance = getInstanceFromHostFiber<Instance>(child);
       instance.scrollIntoView(alignToTop);
       i += resolvedAlignToTop ? -1 : 1;
