@@ -1016,6 +1016,14 @@ export function findOptionalPlaces(
             testBlock = fn.body.blocks.get(terminal.block)!;
             break;
           }
+          case 'maybe-throw': {
+            CompilerError.throwTodo({
+              reason: `Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement`,
+              description: null,
+              loc: terminal.loc,
+              suggestions: null,
+            });
+          }
           default: {
             CompilerError.invariant(false, {
               reason: `Unexpected terminal in optional`,
