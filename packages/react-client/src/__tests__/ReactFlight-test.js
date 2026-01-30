@@ -3715,6 +3715,12 @@ describe('ReactFlight', () => {
             '\n    in b (at **)' +
             '\n    in a (at **)',
         );
+        assertConsoleErrorDev([
+          'eval() is not supported in this environment. ' +
+            'React requires eval() in development mode for various debugging features ' +
+            'like reconstructing callstacks from a different environment.\n' +
+            'React will never use eval() in production mode',
+        ]);
       } else {
         expect(receivedError.message).toEqual(
           'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.',
