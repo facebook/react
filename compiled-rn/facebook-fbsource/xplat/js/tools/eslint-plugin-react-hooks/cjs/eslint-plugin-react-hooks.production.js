@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<bd2d858facffac13fd37b54485313aac>>
+ * @generated SignedSource<<6e3a5e6ee4c5dd51006366d0bbdaa8ed>>
  */
 
 'use strict';
@@ -37100,9 +37100,9 @@ function codegenTerminal(cx, terminal) {
         case 'return': {
             const value = codegenPlaceToExpression(cx, terminal.value);
             if (value.type === 'Identifier' && value.name === 'undefined') {
-                return libExports$1.returnStatement();
+                return createReturnStatement(terminal.loc);
             }
-            return libExports$1.returnStatement(value);
+            return createReturnStatement(terminal.loc, value);
         }
         case 'switch': {
             return createSwitchStatement(terminal.loc, codegenPlaceToExpression(cx, terminal.test), terminal.cases.map(case_ => {
@@ -37415,6 +37415,7 @@ const createThrowStatement = withLoc(libExports$1.throwStatement);
 const createTryStatement = withLoc(libExports$1.tryStatement);
 const createBreakStatement = withLoc(libExports$1.breakStatement);
 const createContinueStatement = withLoc(libExports$1.continueStatement);
+const createReturnStatement = withLoc(libExports$1.returnStatement);
 function createVariableDeclarator(id, init) {
     var _a, _b;
     const node = libExports$1.variableDeclarator(id, init);
@@ -48711,6 +48712,16 @@ function validateSourceLocations(func, generatedAst) {
             }
             if (isManualMemoization(node)) {
                 return;
+            }
+            if (libExports$1.isReturnStatement(node) && node.argument != null) {
+                const parentBody = path.parentPath;
+                const parentFunc = parentBody === null || parentBody === void 0 ? void 0 : parentBody.parentPath;
+                if ((parentBody === null || parentBody === void 0 ? void 0 : parentBody.isBlockStatement()) &&
+                    (parentFunc === null || parentFunc === void 0 ? void 0 : parentFunc.isArrowFunctionExpression()) &&
+                    parentBody.node.body.length === 1 &&
+                    parentBody.node.directives.length === 0) {
+                    return;
+                }
             }
             if (node.loc) {
                 const key = locationKey(node.loc);
