@@ -149,6 +149,23 @@ export function validateSourceLocations(
         return;
       }
 
+      /*
+       * Skip return statements inside arrow functions that will be simplified to expression body.
+       * The compiler transforms `() => { return expr }` to `() => expr` in CodegenReactiveFunction
+       */
+      if (t.isReturnStatement(node) && node.argument != null) {
+        const parentBody = path.parentPath;
+        const parentFunc = parentBody?.parentPath;
+        if (
+          parentBody?.isBlockStatement() &&
+          parentFunc?.isArrowFunctionExpression() &&
+          parentBody.node.body.length === 1 &&
+          parentBody.node.directives.length === 0
+        ) {
+          return;
+        }
+      }
+
       // Collect the location if it exists
       if (node.loc) {
         const key = locationKey(node.loc);

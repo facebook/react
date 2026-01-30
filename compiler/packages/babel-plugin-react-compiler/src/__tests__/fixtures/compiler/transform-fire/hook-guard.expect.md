@@ -57,6 +57,7 @@ function Component(props) {
         $dispatcherGuard(3);
       }
     })();
+
     return null;
   } finally {
     $dispatcherGuard(1);

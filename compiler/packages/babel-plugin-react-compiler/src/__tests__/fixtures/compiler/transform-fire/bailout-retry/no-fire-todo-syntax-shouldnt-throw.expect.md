@@ -82,6 +82,7 @@ function FireComponent(props) {
     t1 = $[2];
   }
   useEffect(t1);
+
   return null;
 }
 function _temp(props_0) {
