@@ -3646,21 +3646,27 @@ function renderModelDestructive(
         if (__DEV__) {
           const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
           if (debugInfo) {
-            // We don't need to outlineTask -- if we needed outlining, we would've done it above.
-            const progress = forwardDebugInfoProgressive(
-              request,
-              task,
-              debugInfo,
-            );
-            // The debug info array may have been moved onto the resolved value
-            // by `moveDebugInfoFromChunkToInnerValue`.
-            // If it was, we have to make sure we skip the elements we've already emitted.
-            if (progress > 0 && debugInfo.length === 0) {
-              copyDebugInfoProgressToResolvedValue(
+            // If this came from Flight, forward any debug info into this new row.
+            if (!canEmitDebugInfo) {
+              // We don't have a chunk to assign debug info. We need to outline this
+              // component to assign it an ID.
+              return outlineTask(request, task);
+            } else {
+              const progress = forwardDebugInfoProgressive(
                 request,
-                progress,
-                resolvedModel,
+                task,
+                debugInfo,
               );
+              // The debug info array may have been moved onto the resolved value
+              // by `moveDebugInfoFromChunkToInnerValue`.
+              // If it was, we have to make sure we skip the elements we've already emitted.
+              if (progress > 0 && debugInfo.length === 0) {
+                copyDebugInfoProgressToResolvedValue(
+                  request,
+                  progress,
+                  resolvedModel,
+                );
+              }
             }
           }
         }
