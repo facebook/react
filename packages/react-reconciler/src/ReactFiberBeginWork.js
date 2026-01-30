@@ -46,6 +46,7 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {RootState} from './ReactFiberRoot';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 
 import {
   markComponentRenderStarted,
@@ -116,7 +117,6 @@ import {
   enableLegacyHidden,
   enableCPUSuspense,
   disableLegacyMode,
-  enableHydrationLaneScheduling,
   enableViewTransition,
   enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
@@ -154,7 +154,6 @@ import {
   NoLanes,
   OffscreenLane,
   DefaultLane,
-  DefaultHydrationLane,
   SomeRetryLane,
   includesSomeLane,
   includesOnlyRetries,
@@ -2918,9 +2917,7 @@ function mountDehydratedSuspenseComponent(
     // wrong priority associated with it and will prevent hydration of parent path.
     // Instead, we'll leave work left on it to render it in a separate commit.
     // Schedule a normal pri update to render this content.
-    workInProgress.lanes = laneToLanes(
-      enableHydrationLaneScheduling ? DefaultLane : DefaultHydrationLane,
-    );
+    workInProgress.lanes = laneToLanes(DefaultLane);
   } else {
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
@@ -3566,6 +3563,18 @@ function updateViewTransition(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
+  if (workInProgress.stateNode === null) {
+    // We previously reset the work-in-progress.
+    // We need to create a new ViewTransitionState instance.
+    const instance: ViewTransitionState = {
+      autoName: null,
+      paired: null,
+      clones: null,
+      ref: null,
+    };
+    workInProgress.stateNode = instance;
+  }
+
   const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
   if (pendingProps.name != null && pendingProps.name !== 'auto') {
     // Explicitly named boundary. We track it so that we can pair it up with another explicit

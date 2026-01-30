@@ -17,7 +17,6 @@ import {
 } from 'shared/ReactSymbols';
 import {createThenableState, trackUsedThenable} from './ReactFlightThenable';
 import {isClientReference} from './ReactFlightServerConfig';
-import {enableUseEffectEventHook} from 'shared/ReactFeatureFlags';
 
 let currentRequest = null;
 let thenableIndexCounter = 0;
@@ -101,10 +100,8 @@ export const HooksDispatcher: Dispatcher = {
   useCacheRefresh(): <T>(?() => T, ?T) => void {
     return unsupportedRefresh;
   },
+  useEffectEvent: (unsupportedHook: any),
 };
-if (enableUseEffectEventHook) {
-  HooksDispatcher.useEffectEvent = (unsupportedHook: any);
-}
 
 function unsupportedHook(): void {
   throw new Error('This Hook is not supported in Server Components.');

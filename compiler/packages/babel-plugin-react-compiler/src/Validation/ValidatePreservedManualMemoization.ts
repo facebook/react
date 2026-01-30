@@ -248,15 +248,7 @@ function validateInferredDep(
     CompilerError.invariant(dep.identifier.name?.kind === 'named', {
       reason:
         'ValidatePreservedManualMemoization: expected scope dependency to be named',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: GeneratedSource,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: GeneratedSource,
     });
     normalizedDep = {
       root: {
@@ -504,14 +496,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       CompilerError.invariant(state.manualMemoState == null, {
         reason: 'Unexpected nested StartMemoize instructions',
         description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${value.manualMemoId}`,
-        details: [
-          {
-            kind: 'error',
-            loc: value.loc,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: value.loc,
       });
 
       state.manualMemoState = {
@@ -571,14 +556,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         {
           reason: 'Unexpected mismatch between StartMemoize and FinishMemoize',
           description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${value.manualMemoId}`,
-          details: [
-            {
-              kind: 'error',
-              loc: value.loc,
-              message: null,
-            },
-          ],
-          suggestions: null,
+          loc: value.loc,
         },
       );
       const reassignments = state.manualMemoState.reassignments;

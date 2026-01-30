@@ -38,7 +38,6 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableSchedulingProfiler,
   enableTransitionTracing,
-  enableUseEffectEventHook,
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
@@ -1384,7 +1383,7 @@ function updateReducerImpl<S, A>(
         // ScheduledGesture.
         const scheduledGesture = update.gesture;
         if (scheduledGesture !== null) {
-          if (scheduledGesture.count === 0) {
+          if (scheduledGesture.count === 0 && !scheduledGesture.committing) {
             // This gesture has already been cancelled. We can clean up this update.
             update = update.next;
             continue;
@@ -3792,7 +3791,14 @@ function dispatchOptimisticSetState<S, A>(
         if (provider !== null) {
           // If this was a gesture, ensure we have a scheduled gesture and that
           // we associate this update with this specific gesture instance.
-          update.gesture = scheduleGesture(root, provider);
+          const gesture = (update.gesture = scheduleGesture(root, provider));
+          // Ensure the gesture always uses the same revert lane. This can happen for
+          // two startGestureTransition calls to the same provider in different events.
+          if (gesture.revertLane === NoLane) {
+            gesture.revertLane = update.revertLane;
+          } else {
+            update.revertLane = gesture.revertLane;
+          }
         }
       }
     }
@@ -3886,10 +3892,8 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useOptimistic: throwInvalidHookError,
   useMemoCache: throwInvalidHookError,
   useCacheRefresh: throwInvalidHookError,
+  useEffectEvent: throwInvalidHookError,
 };
-if (enableUseEffectEventHook) {
-  (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
-}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -3916,10 +3920,8 @@ const HooksDispatcherOnMount: Dispatcher = {
   useOptimistic: mountOptimistic,
   useMemoCache,
   useCacheRefresh: mountRefresh,
+  useEffectEvent: mountEvent,
 };
-if (enableUseEffectEventHook) {
-  (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
-}
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
@@ -3946,10 +3948,8 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useOptimistic: updateOptimistic,
   useMemoCache,
   useCacheRefresh: updateRefresh,
+  useEffectEvent: updateEvent,
 };
-if (enableUseEffectEventHook) {
-  (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
-}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -3976,10 +3976,8 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useOptimistic: rerenderOptimistic,
   useMemoCache,
   useCacheRefresh: updateRefresh,
+  useEffectEvent: updateEvent,
 };
-if (enableUseEffectEventHook) {
-  (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
-}
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
 let HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | null = null;
@@ -4169,17 +4167,14 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountRefresh();
     },
+    useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+      callback: F,
+    ): F {
+      currentHookNameInDev = 'useEffectEvent';
+      mountHookTypesDev();
+      return mountEvent(callback);
+    },
   };
-  if (enableUseEffectEventHook) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent =
-      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
-        callback: F,
-      ): F {
-        currentHookNameInDev = 'useEffectEvent';
-        mountHookTypesDev();
-        return mountEvent(callback);
-      };
-  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4336,17 +4331,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountRefresh();
     },
+    useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+      callback: F,
+    ): F {
+      currentHookNameInDev = 'useEffectEvent';
+      updateHookTypesDev();
+      return mountEvent(callback);
+    },
   };
-  if (enableUseEffectEventHook) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEffectEvent =
-      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
-        callback: F,
-      ): F {
-        currentHookNameInDev = 'useEffectEvent';
-        updateHookTypesDev();
-        return mountEvent(callback);
-      };
-  }
 
   HooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4503,17 +4495,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateRefresh();
     },
+    useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+      callback: F,
+    ): F {
+      currentHookNameInDev = 'useEffectEvent';
+      updateHookTypesDev();
+      return updateEvent(callback);
+    },
   };
-  if (enableUseEffectEventHook) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent =
-      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
-        callback: F,
-      ): F {
-        currentHookNameInDev = 'useEffectEvent';
-        updateHookTypesDev();
-        return updateEvent(callback);
-      };
-  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4670,17 +4659,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateRefresh();
     },
+    useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+      callback: F,
+    ): F {
+      currentHookNameInDev = 'useEffectEvent';
+      updateHookTypesDev();
+      return updateEvent(callback);
+    },
   };
-  if (enableUseEffectEventHook) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent =
-      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
-        callback: F,
-      ): F {
-        currentHookNameInDev = 'useEffectEvent';
-        updateHookTypesDev();
-        return updateEvent(callback);
-      };
-  }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4861,18 +4847,15 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountRefresh();
     },
+    useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+      callback: F,
+    ): F {
+      currentHookNameInDev = 'useEffectEvent';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountEvent(callback);
+    },
   };
-  if (enableUseEffectEventHook) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent =
-      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
-        callback: F,
-      ): F {
-        currentHookNameInDev = 'useEffectEvent';
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return mountEvent(callback);
-      };
-  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5053,18 +5036,15 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateRefresh();
     },
+    useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+      callback: F,
+    ): F {
+      currentHookNameInDev = 'useEffectEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEvent(callback);
+    },
   };
-  if (enableUseEffectEventHook) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent =
-      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
-        callback: F,
-      ): F {
-        currentHookNameInDev = 'useEffectEvent';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateEvent(callback);
-      };
-  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5245,16 +5225,13 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateRefresh();
     },
+    useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+      callback: F,
+    ): F {
+      currentHookNameInDev = 'useEffectEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEvent(callback);
+    },
   };
-  if (enableUseEffectEventHook) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent =
-      function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
-        callback: F,
-      ): F {
-        currentHookNameInDev = 'useEffectEvent';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateEvent(callback);
-      };
-  }
 }

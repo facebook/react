@@ -1260,14 +1260,7 @@ export class ScopeBlockTraversal {
       CompilerError.invariant(blockInfo.scope.id === top, {
         reason:
           'Expected traversed block fallthrough to match top-most active scope',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: block.instructions[0]?.loc ?? block.terminal.id,
-            message: null,
-          },
-        ],
+        loc: block.instructions[0]?.loc ?? block.terminal.loc,
       });
       this.#activeScopes.pop();
     }
@@ -1281,14 +1274,7 @@ export class ScopeBlockTraversal {
           !this.blockInfos.has(block.terminal.fallthrough),
         {
           reason: 'Expected unique scope blocks and fallthroughs',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: block.terminal.loc,
-              message: null,
-            },
-          ],
+          loc: block.terminal.loc,
         },
       );
       this.blockInfos.set(block.terminal.block, {

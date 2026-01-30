@@ -269,14 +269,7 @@ class PropertyPathRegistry {
       CompilerError.invariant(reactive === rootNode.fullPath.reactive, {
         reason:
           '[HoistablePropertyLoads] Found inconsistencies in `reactive` flag when deduping identifier reads within the same scope',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: identifier.loc,
-            message: null,
-          },
-        ],
+        loc: identifier.loc,
       });
     }
     return rootNode;
@@ -531,14 +524,7 @@ function propagateNonNull(
     if (node == null) {
       CompilerError.invariant(false, {
         reason: `Bad node ${nodeId}, kind: ${direction}`,
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: GeneratedSource,
-            message: null,
-          },
-        ],
+        loc: GeneratedSource,
       });
     }
     const neighbors = Array.from(
@@ -610,14 +596,7 @@ function propagateNonNull(
     CompilerError.invariant(i++ < 100, {
       reason:
         '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 100 loops',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: GeneratedSource,
-          message: null,
-        },
-      ],
+      loc: GeneratedSource,
     });
 
     changed = false;
@@ -649,13 +628,7 @@ export function assertNonNull<T extends NonNullable<U>, U>(
   CompilerError.invariant(value != null, {
     reason: 'Unexpected null',
     description: source != null ? `(from ${source})` : null,
-    details: [
-      {
-        kind: 'error',
-        loc: GeneratedSource,
-        message: null,
-      },
-    ],
+    loc: GeneratedSource,
   });
   return value;
 }

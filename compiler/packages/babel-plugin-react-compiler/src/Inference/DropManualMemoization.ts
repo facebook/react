@@ -586,14 +586,8 @@ function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
           default: {
             CompilerError.invariant(false, {
               reason: `Unexpected terminal in optional`,
-              description: null,
-              details: [
-                {
-                  kind: 'error',
-                  loc: terminal.loc,
-                  message: `Unexpected ${terminal.kind} in optional`,
-                },
-              ],
+              message: `Unexpected ${terminal.kind} in optional`,
+              loc: terminal.loc,
             });
           }
         }

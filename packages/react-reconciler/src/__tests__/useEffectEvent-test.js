@@ -53,7 +53,6 @@ describe('useEffectEvent', () => {
     return <span prop={props.text} />;
   }
 
-  // @gate enableUseEffectEventHook
   it('memoizes basic case correctly', async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -129,7 +128,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('can be defined more than once', async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -191,7 +189,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('does not preserve `this` in event functions', async () => {
     class GreetButton extends React.PureComponent {
       greet = () => {
@@ -241,7 +238,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('throws when called in render', async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -275,7 +271,6 @@ describe('useEffectEvent', () => {
     assertLog([]);
   });
 
-  // @gate enableUseEffectEventHook
   it("useLayoutEffect shouldn't re-fire when event handlers change", async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -375,7 +370,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it("useEffect shouldn't re-fire when event handlers change", async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -474,7 +468,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('is stable in a custom hook', async () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -579,7 +572,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('is mutated before all other effects', async () => {
     function Counter({value}) {
       useInsertionEffect(() => {
@@ -603,7 +595,6 @@ describe('useEffectEvent', () => {
     assertLog(['Effect value: 2', 'Event value: 2']);
   });
 
-  // @gate enableUseEffectEventHook
   it("doesn't provide a stable identity", async () => {
     function Counter({shouldRender, value}) {
       const onClick = useEffectEvent(() => {
@@ -642,7 +633,6 @@ describe('useEffectEvent', () => {
     ]);
   });
 
-  // @gate enableUseEffectEventHook
   it('event handlers always see the latest committed value', async () => {
     let committedEventHandler = null;
 
@@ -692,7 +682,6 @@ describe('useEffectEvent', () => {
     expect(committedEventHandler()).toBe('Value seen by useEffectEvent: 2');
   });
 
-  // @gate enableUseEffectEventHook
   it('integration: implements docs chat room example', async () => {
     function createConnection() {
       let connectedCallback;
@@ -781,7 +770,6 @@ describe('useEffectEvent', () => {
     );
   });
 
-  // @gate enableUseEffectEventHook
   it('integration: implements the docs logVisit example', async () => {
     class AddToCartButton extends React.PureComponent {
       addToCart = () => {

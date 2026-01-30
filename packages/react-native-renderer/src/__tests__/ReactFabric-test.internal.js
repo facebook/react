@@ -477,9 +477,7 @@ describe('ReactFabric', () => {
 
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
     ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
-    assertConsoleErrorDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
-      withoutStack: true,
-    });
+    assertConsoleErrorDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT]);
 
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
   });
@@ -542,9 +540,7 @@ describe('ReactFabric', () => {
 
     expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
     ReactFabric.sendAccessibilityEvent(viewRef, 'eventTypeName');
-    assertConsoleErrorDev([SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT], {
-      withoutStack: true,
-    });
+    assertConsoleErrorDev([SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT]);
 
     expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
   });

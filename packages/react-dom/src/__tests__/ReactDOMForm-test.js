@@ -14,8 +14,8 @@ global.IS_REACT_ACT_ENVIRONMENT = true;
 // Our current version of JSDOM doesn't implement the event dispatching
 // so we polyfill it.
 const NativeFormData = global.FormData;
-const FormDataPolyfill = function FormData(form) {
-  const formData = new NativeFormData(form);
+const FormDataPolyfill = function FormData(form, submitter) {
+  const formData = new NativeFormData(form, submitter);
   const formDataEvent = new Event('formdata', {
     bubbles: true,
     cancelable: false,
@@ -489,11 +489,16 @@ describe('ReactDOMForm', () => {
     const inputRef = React.createRef();
     const buttonRef = React.createRef();
     const outsideButtonRef = React.createRef();
+    const imageButtonRef = React.createRef();
     let button;
+    let buttonX;
+    let buttonY;
     let title;
 
     function action(formData) {
       button = formData.get('button');
+      buttonX = formData.get('button.x');
+      buttonY = formData.get('button.y');
       title = formData.get('title');
     }
 
@@ -508,6 +513,12 @@ describe('ReactDOMForm', () => {
             <button name="button" value="edit" ref={buttonRef}>
               Edit
             </button>
+            <input
+              type="image"
+              name="button"
+              href="/some/image.png"
+              ref={imageButtonRef}
+            />
           </form>
           <form id="form" action={action}>
             <input type="text" name="title" defaultValue="hello" />
@@ -546,9 +557,12 @@ describe('ReactDOMForm', () => {
     expect(button).toBe('outside');
     expect(title).toBe('hello');
 
-    // Ensure that the type field got correctly restored
-    expect(inputRef.current.getAttribute('type')).toBe('submit');
-    expect(buttonRef.current.getAttribute('type')).toBe(null);
+    await submit(imageButtonRef.current);
+
+    expect(button).toBe(null);
+    expect(buttonX).toBe('0');
+    expect(buttonY).toBe('0');
+    expect(title).toBe('hello');
   });
 
   it('excludes the submitter name when the submitter is a function action', async () => {
@@ -1491,13 +1505,10 @@ describe('ReactDOMForm', () => {
     // Dispatch outside of a transition.
     await act(() => dispatch());
     assertConsoleErrorDev([
-      [
-        'An async function with useActionState was called outside of a transition. ' +
-          'This is likely not what you intended (for example, isPending will not update ' +
-          'correctly). Either call the returned function inside startTransition, or pass it ' +
-          'to an `action` or `formAction` prop.',
-        {withoutStack: true},
-      ],
+      'An async function with useActionState was called outside of a transition. ' +
+        'This is likely not what you intended (for example, isPending will not update ' +
+        'correctly). Either call the returned function inside startTransition, or pass it ' +
+        'to an `action` or `formAction` prop.',
     ]);
     assertLog([
       'Suspend! [Count: 1]',
@@ -1953,15 +1964,10 @@ describe('ReactDOMForm', () => {
 
     // This triggers a synchronous requestFormReset, and a warning
     await act(() => resolveText('Wait 1'));
-    assertConsoleErrorDev(
-      [
-        'requestFormReset was called outside a transition or action. ' +
-          'To fix, move to an action, or wrap with startTransition.',
-      ],
-      {
-        withoutStack: true,
-      },
-    );
+    assertConsoleErrorDev([
+      'requestFormReset was called outside a transition or action. ' +
+        'To fix, move to an action, or wrap with startTransition.',
+    ]);
     assertLog(['Request form reset']);
 
     // The form was reset even though the action didn't finish.
@@ -2271,15 +2277,21 @@ describe('ReactDOMForm', () => {
     await submit(formRef.current);
     assertLog([actionFn]);
 
-    // Everything else is toString-ed
+    // Everything else is toString-ed, unless trusted types are enabled.
     class MyAction {
       toString() {
         return 'stringified action';
       }
     }
-    await act(() => root.render(<Form action={new MyAction()} />));
+    const instance = new MyAction();
+
+    await act(() => root.render(<Form action={instance} />));
     await submit(formRef.current);
-    assertLog(['stringified action']);
+    assertLog(
+      gate('enableTrustedTypesIntegration')
+        ? [instance]
+        : ['stringified action'],
+    );
   });
 
   it('form actions should retain status when nested state changes', async () => {

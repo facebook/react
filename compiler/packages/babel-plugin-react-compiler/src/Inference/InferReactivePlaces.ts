@@ -310,15 +310,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               case Effect.Unknown: {
                 CompilerError.invariant(false, {
                   reason: 'Unexpected unknown effect',
-                  description: null,
-                  details: [
-                    {
-                      kind: 'error',
-                      loc: operand.loc,
-                      message: null,
-                    },
-                  ],
-                  suggestions: null,
+                  loc: operand.loc,
                 });
               }
               default: {

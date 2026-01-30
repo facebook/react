@@ -10,8 +10,6 @@
 
 'use strict';
 
-const path = require('path');
-
 if (typeof Blob === 'undefined') {
   global.Blob = require('buffer').Blob;
 }
@@ -33,9 +31,8 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
-const repoRoot = path.resolve(__dirname, '../../../../');
 function normalizeReactCodeLocInfo(str) {
-  const repoRootForRegexp = repoRoot.replace(/\//g, '\\/');
+  const repoRootForRegexp = __REACT_ROOT_PATH_TEST__.replace(/\//g, '\\/');
   const repoFileLocMatch = new RegExp(`${repoRootForRegexp}.+?:\\d+:\\d+`, 'g');
   return str && str.replace(repoFileLocMatch, '**');
 }
@@ -727,6 +724,25 @@ describe('ReactFlight', () => {
     });
   });
 
+  it('can transport cyclic arrays', async () => {
+    function ComponentClient({prop, obj}) {
+      expect(prop[1]).toBe(prop);
+      expect(prop[0]).toBe(obj);
+    }
+    const Component = clientReference(ComponentClient);
+
+    const obj = {};
+    const cyclic = [obj];
+    cyclic[1] = cyclic;
+    const model = <Component prop={cyclic} obj={obj} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+  });
+
   it('can render a lazy component as a shared component on the server', async () => {
     function SharedComponent({text}) {
       return (
@@ -1069,7 +1085,6 @@ describe('ReactFlight', () => {
     });
   });
 
-  // @gate renameElementSymbol
   it('should emit descriptions of errors in dev', async () => {
     const ClientErrorBoundary = clientReference(ErrorBoundary);
 
@@ -1499,16 +1514,13 @@ describe('ReactFlight', () => {
       },
     };
     const transport = ReactNoopFlightServer.render(<input value={obj} />);
-    assertConsoleErrorDev(
-      [
-        'Only plain objects can be passed to Client Components from Server Components. ' +
-          'Objects with toJSON methods are not supported. ' +
-          'Convert it manually to a simple value before passing it to props.\n' +
-          '  <input value={{toJSON: ...}}>\n' +
-          '               ^^^^^^^^^^^^^^^',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  <input value={{toJSON: ...}}>\n' +
+        '               ^^^^^^^^^^^^^^^',
+    ]);
 
     ReactNoopFlightClient.read(transport);
     assertConsoleErrorDev([
@@ -1530,14 +1542,11 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(
       <div>Womp womp: {new MyError('spaghetti')}</div>,
     );
-    assertConsoleErrorDev(
-      [
-        'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
-          '  <div>Womp womp: {Error}</div>\n' +
-          '                  ^^^^^^^',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
+        '  <div>Womp womp: {Error}</div>\n' +
+        '                  ^^^^^^^',
+    ]);
 
     ReactNoopFlightClient.read(transport);
     assertConsoleErrorDev([
@@ -1550,15 +1559,12 @@ describe('ReactFlight', () => {
 
   it('should warn in DEV if a special object is passed to a host component', () => {
     const transport = ReactNoopFlightServer.render(<input value={Math} />);
-    assertConsoleErrorDev(
-      [
-        'Only plain objects can be passed to Client Components from Server Components. ' +
-          'Math objects are not supported.\n' +
-          '  <input value={Math}>\n' +
-          '               ^^^^^^',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Math objects are not supported.\n' +
+        '  <input value={Math}>\n' +
+        '               ^^^^^^',
+    ]);
 
     ReactNoopFlightClient.read(transport);
     assertConsoleErrorDev([
@@ -1574,15 +1580,12 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(
       <input value={{[Symbol.iterator]: {}}} />,
     );
-    assertConsoleErrorDev(
-      [
-        'Only plain objects can be passed to Client Components from Server Components. ' +
-          'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-          '  <input value={{}}>\n' +
-          '               ^^^^',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with symbol properties like Symbol.iterator are not supported.\n' +
+        '  <input value={{}}>\n' +
+        '               ^^^^',
+    ]);
 
     ReactNoopFlightClient.read(transport);
     assertConsoleErrorDev([
@@ -1605,16 +1608,13 @@ describe('ReactFlight', () => {
     }
     const Client = clientReference(ClientImpl);
     const transport = ReactNoopFlightServer.render(<Client value={obj} />);
-    assertConsoleErrorDev(
-      [
-        'Only plain objects can be passed to Client Components from Server Components. ' +
-          'Objects with toJSON methods are not supported. ' +
-          'Convert it manually to a simple value before passing it to props.\n' +
-          '  <... value={{toJSON: ...}}>\n' +
-          '             ^^^^^^^^^^^^^^^',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  <... value={{toJSON: ...}}>\n' +
+        '             ^^^^^^^^^^^^^^^',
+    ]);
 
     ReactNoopFlightClient.read(transport);
     assertConsoleErrorDev([
@@ -1640,16 +1640,13 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(
       <Client>Current date: {obj}</Client>,
     );
-    assertConsoleErrorDev(
-      [
-        'Only plain objects can be passed to Client Components from Server Components. ' +
-          'Objects with toJSON methods are not supported. ' +
-          'Convert it manually to a simple value before passing it to props.\n' +
-          '  <>Current date: {{toJSON: ...}}</>\n' +
-          '                  ^^^^^^^^^^^^^^^',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  <>Current date: {{toJSON: ...}}</>\n' +
+        '                  ^^^^^^^^^^^^^^^',
+    ]);
 
     ReactNoopFlightClient.read(transport);
     assertConsoleErrorDev([
@@ -1668,15 +1665,12 @@ describe('ReactFlight', () => {
     }
     const Client = clientReference(ClientImpl);
     const transport = ReactNoopFlightServer.render(<Client value={Math} />);
-    assertConsoleErrorDev(
-      [
-        'Only plain objects can be passed to Client Components from Server Components. ' +
-          'Math objects are not supported.\n' +
-          '  <... value={Math}>\n' +
-          '             ^^^^^^',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Math objects are not supported.\n' +
+        '  <... value={Math}>\n' +
+        '             ^^^^^^',
+    ]);
 
     ReactNoopFlightClient.read(transport);
     assertConsoleErrorDev([
@@ -1697,15 +1691,12 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(
       <Client value={{[Symbol.iterator]: {}}} />,
     );
-    assertConsoleErrorDev(
-      [
-        'Only plain objects can be passed to Client Components from Server Components. ' +
-          'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-          '  <... value={{}}>\n' +
-          '             ^^^^',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with symbol properties like Symbol.iterator are not supported.\n' +
+        '  <... value={{}}>\n' +
+        '             ^^^^',
+    ]);
 
     ReactNoopFlightClient.read(transport);
 
@@ -1713,7 +1704,8 @@ describe('ReactFlight', () => {
       'Only plain objects can be passed to Client Components from Server Components. ' +
         'Objects with symbol properties like Symbol.iterator are not supported.\n' +
         '  <... value={{}}>\n' +
-        '             ^^^^\n',
+        '             ^^^^\n' +
+        '    in  (at **)',
     ]);
   });
 
@@ -1728,13 +1720,10 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient.read(transport);
 
     assertConsoleErrorDev([
-      [
-        'Only plain objects can be passed to Client Components from Server Components. ' +
-          'Objects with symbol properties like Symbol.iterator are not supported.\n' +
-          '  <... value={{}}>\n' +
-          '             ^^^^',
-        {withoutStack: true},
-      ],
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with symbol properties like Symbol.iterator are not supported.\n' +
+        '  <... value={{}}>\n' +
+        '             ^^^^',
       'Only plain objects can be passed to Client Components from Server Components. ' +
         'Objects with symbol properties like Symbol.iterator are not supported.\n' +
         '  <... value={{}}>\n' +
@@ -1753,13 +1742,10 @@ describe('ReactFlight', () => {
     );
     ReactNoopFlightClient.read(transport);
     assertConsoleErrorDev([
-      [
-        'Only plain objects can be passed to Client Components from Server Components. ' +
-          'Math objects are not supported.\n' +
-          '  [..., Math, <h1/>]\n' +
-          '        ^^^^',
-        {withoutStack: true},
-      ],
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Math objects are not supported.\n' +
+        '  [..., Math, <h1/>]\n' +
+        '        ^^^^',
       'Only plain objects can be passed to Client Components from Server Components. ' +
         'Math objects are not supported.\n' +
         '  [..., Math, <h1/>]\n' +
@@ -3242,7 +3228,7 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render({
       root: ReactServer.createElement(App),
     });
-    assertConsoleErrorDev(['Error: err']);
+    assertConsoleErrorDev(['Error: err' + '\n    in <stack>']);
 
     expect(mockConsoleLog).toHaveBeenCalledTimes(1);
     expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
@@ -3689,6 +3675,56 @@ describe('ReactFlight', () => {
         '\n    in foo (at **)',
     );
     expect(caughtError.digest).toBe('digest("my-error")');
+  });
+
+  it('can transport function names in stackframes in dev even without eval', async () => {
+    function a() {
+      return b();
+    }
+    function b() {
+      return c();
+    }
+    function c() {
+      return new Error('boom');
+    }
+
+    // eslint-disable-next-line no-eval
+    const previousEval = globalThis.eval.bind(globalThis);
+    // eslint-disable-next-line no-eval
+    globalThis.eval = () => {
+      throw new Error('eval is disabled');
+    };
+
+    try {
+      const transport = ReactNoopFlightServer.render(
+        {model: a()},
+        {onError: () => 'digest'},
+      );
+
+      const root = await ReactNoopFlightClient.read(transport);
+      const receivedError = await root.model;
+
+      if (__DEV__) {
+        const normalizedErrorStack = normalizeCodeLocInfo(
+          receivedError.stack.split('\n').slice(0, 4).join('\n'),
+        );
+
+        expect(normalizedErrorStack).toEqual(
+          'Error: boom' +
+            '\n    in c (at **)' +
+            '\n    in b (at **)' +
+            '\n    in a (at **)',
+        );
+      } else {
+        expect(receivedError.message).toEqual(
+          'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.',
+        );
+        expect(receivedError).not.toHaveProperty('digest');
+      }
+    } finally {
+      // eslint-disable-next-line no-eval
+      globalThis.eval = previousEval;
+    }
   });
 
   // @gate __DEV__  && enableComponentPerformanceTrack

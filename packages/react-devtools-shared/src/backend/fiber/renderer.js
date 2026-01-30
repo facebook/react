@@ -18,7 +18,7 @@ import type {
   Wakeable,
 } from 'shared/ReactTypes';
 
-import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
+import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
 import {
   ComponentFilterDisplayName,
@@ -48,13 +48,11 @@ import {
   deletePathInObject,
   getDisplayName,
   getWrappedDisplayName,
-  getDefaultComponentFilters,
   getInObject,
   getUID,
   renamePathInObject,
   setInObject,
   utfEncodeString,
-  persistableComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {
   formatConsoleArgumentsToSingleString,
@@ -127,7 +125,6 @@ import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import {componentInfoToComponentLogsMap} from '../shared/DevToolsServerComponentLogs';
 
 import is from 'shared/objectIs';
-import hasOwnProperty from 'shared/hasOwnProperty';
 
 import {getIODescription} from 'shared/ReactIODescription';
 
@@ -1011,6 +1008,9 @@ export function attach(
   global: Object,
   shouldStartProfilingNow: boolean,
   profilingSettings: ProfilingSettings,
+  componentFiltersOrComponentFiltersPromise:
+    | Array<ComponentFilter>
+    | Promise<Array<ComponentFilter>>,
 ): RendererInterface {
   // Newer versions of the reconciler package also specific reconciler version.
   // If that version number is present, use it.
@@ -1517,21 +1517,12 @@ export function attach(
     });
   }
 
-  // The renderer interface can't read saved component filters directly,
-  // because they are stored in localStorage within the context of the extension.
-  // Instead it relies on the extension to pass filters through.
-  if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
-    const restoredComponentFilters: Array<ComponentFilter> =
-      persistableComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
-    applyComponentFilters(restoredComponentFilters, null);
+  if (Array.isArray(componentFiltersOrComponentFiltersPromise)) {
+    applyComponentFilters(componentFiltersOrComponentFiltersPromise, null);
   } else {
-    // Unfortunately this feature is not expected to work for React Native for now.
-    // It would be annoying for us to spam YellowBox warnings with unactionable stuff,
-    // so for now just skip this message...
-    //console.warn('⚛ DevTools: Could not locate saved component filters');
-
-    // Fallback to assuming the default filters in this case.
-    applyComponentFilters(getDefaultComponentFilters(), null);
+    componentFiltersOrComponentFiltersPromise.then(componentFilters => {
+      applyComponentFilters(componentFilters, null);
+    });
   }
 
   // If necessary, we can revisit optimizing this operation.
@@ -1976,10 +1967,9 @@ export function attach(
             state: null,
           };
         } else {
-          const indices = getChangedHooksIndices(
-            prevFiber.memoizedState,
-            nextFiber.memoizedState,
-          );
+          const prevHooks = inspectHooks(prevFiber);
+          const nextHooks = inspectHooks(nextFiber);
+          const indices = getChangedHooksIndices(prevHooks, nextHooks);
           const data: ChangeDescription = {
             context: getContextChanged(prevFiber, nextFiber),
             didHooksChange: indices !== null && indices.length > 0,
@@ -2028,74 +2018,53 @@ export function attach(
     return false;
   }
 
-  function isUseSyncExternalStoreHook(hookObject: any): boolean {
-    const queue = hookObject.queue;
-    if (!queue) {
-      return false;
-    }
+  function didStatefulHookChange(prev: HooksNode, next: HooksNode): boolean {
+    // Detect the shape of useState() / useReducer() / useTransition() / useSyncExternalStore() / useActionState()
+    const isStatefulHook =
+      prev.isStateEditable === true ||
+      prev.name === 'SyncExternalStore' ||
+      prev.name === 'Transition' ||
+      prev.name === 'ActionState' ||
+      prev.name === 'FormState';
 
-    const boundHasOwnProperty = hasOwnProperty.bind(queue);
-    return (
-      boundHasOwnProperty('value') &&
-      boundHasOwnProperty('getSnapshot') &&
-      typeof queue.getSnapshot === 'function'
-    );
-  }
-
-  function isHookThatCanScheduleUpdate(hookObject: any) {
-    const queue = hookObject.queue;
-    if (!queue) {
-      return false;
-    }
-
-    const boundHasOwnProperty = hasOwnProperty.bind(queue);
-
-    // Detect the shape of useState() / useReducer() / useTransition()
-    // using the attributes that are unique to these hooks
-    // but also stable (e.g. not tied to current Lanes implementation)
-    // We don't check for dispatch property, because useTransition doesn't have it
-    if (boundHasOwnProperty('pending')) {
-      return true;
-    }
-
-    return isUseSyncExternalStoreHook(hookObject);
-  }
-
-  function didStatefulHookChange(prev: any, next: any): boolean {
-    const prevMemoizedState = prev.memoizedState;
-    const nextMemoizedState = next.memoizedState;
-
-    if (isHookThatCanScheduleUpdate(prev)) {
-      return prevMemoizedState !== nextMemoizedState;
+    // Compare the values to see if they changed
+    if (isStatefulHook) {
+      return prev.value !== next.value;
     }
 
     return false;
   }
 
-  function getChangedHooksIndices(prev: any, next: any): null | Array<number> {
-    if (prev == null || next == null) {
+  function getChangedHooksIndices(
+    prevHooks: HooksTree | null,
+    nextHooks: HooksTree | null,
+  ): null | Array<number> {
+    if (prevHooks == null || nextHooks == null) {
       return null;
     }
 
-    const indices = [];
+    const indices: Array<number> = [];
     let index = 0;
 
-    while (next !== null) {
-      if (didStatefulHookChange(prev, next)) {
-        indices.push(index);
-      }
+    function traverse(prevTree: HooksTree, nextTree: HooksTree): void {
+      for (let i = 0; i < prevTree.length; i++) {
+        const prevHook = prevTree[i];
+        const nextHook = nextTree[i];
 
-      // useSyncExternalStore creates 2 internal hooks, but we only count it as 1 user-facing hook
-      if (isUseSyncExternalStoreHook(next)) {
-        next = next.next;
-        prev = prev.next;
-      }
+        if (prevHook.subHooks.length > 0 && nextHook.subHooks.length > 0) {
+          traverse(prevHook.subHooks, nextHook.subHooks);
+          continue;
+        }
 
-      next = next.next;
-      prev = prev.next;
-      index++;
+        if (didStatefulHookChange(prevHook, nextHook)) {
+          indices.push(index);
+        }
+
+        index++;
+      }
     }
 
+    traverse(prevHooks, nextHooks);
     return indices;
   }
 
@@ -2991,6 +2960,30 @@ export function attach(
       parentInstance !== parentSuspenseNode.instance
     ) {
       parentInstance = parentInstance.parent;
+    }
+    if (parentInstance.kind === FIBER_INSTANCE) {
+      const fiber = parentInstance.data;
+
+      if (
+        fiber.tag === SuspenseComponent &&
+        parentInstance !== parentSuspenseNode.instance
+      ) {
+        // We're about to attach async info to a Suspense boundary we're not
+        // actually considering the parent Suspense boundary for this async info.
+        // We must have not found a suitable Fiber inside the fallback (e.g. due to filtering).
+        // Use the parent of this instance instead since we treat async info
+        // attached to a Suspense boundary as that async info triggering the
+        // fallback of that boundary.
+        const parent = parentInstance.parent;
+        if (parent === null) {
+          // This shouldn't happen. Any <Suspense> would have at least have the
+          // host root as the parent which can't have a fallback.
+          throw new Error(
+            'Did not find a suitable instance for this async info. This is a bug in React.',
+          );
+        }
+        parentInstance = parent;
+      }
     }
 
     const suspenseNodeSuspendedBy = parentSuspenseNode.suspendedBy;
@@ -5255,9 +5248,9 @@ export function attach(
       // It might even result in a bad user experience for e.g. node selection in the Elements panel.
       // The easiest fix is to strip out the intermediate Fragment fibers,
       // so the Elements panel and Profiler don't need to special case them.
-      // Suspense components only have a non-null memoizedState if they're timed-out.
       const isLegacySuspense =
         nextFiber.tag === SuspenseComponent && OffscreenComponent === -1;
+      // Suspense components only have a non-null memoizedState if they're timed-out.
       const prevDidTimeout =
         isLegacySuspense && prevFiber.memoizedState !== null;
       const nextDidTimeOut =

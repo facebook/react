@@ -593,6 +593,7 @@ module.exports = {
     mixin$Animatable: 'readonly',
     MouseEventHandler: 'readonly',
     NavigateEvent: 'readonly',
+    Partial: 'readonly',
     PerformanceMeasureOptions: 'readonly',
     PropagationPhases: 'readonly',
     PropertyDescriptor: 'readonly',
@@ -635,6 +636,7 @@ module.exports = {
     FocusOptions: 'readonly',
     OptionalEffectTiming: 'readonly',
 
+    __REACT_ROOT_PATH_TEST__: 'readonly',
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
     spyOnProd: 'readonly',

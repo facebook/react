@@ -54,7 +54,6 @@ import {
   enableScopeAPI,
   enableUpdaterTracking,
   enableTransitionTracing,
-  enableUseEffectEventHook,
   enableLegacyHidden,
   disableLegacyMode,
   enableComponentPerformanceTrack,
@@ -500,17 +499,14 @@ function commitBeforeMutationEffectsOnFiber(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
-      if (enableUseEffectEventHook) {
-        if ((flags & Update) !== NoFlags) {
-          const updateQueue: FunctionComponentUpdateQueue | null =
-            (finishedWork.updateQueue: any);
-          const eventPayloads =
-            updateQueue !== null ? updateQueue.events : null;
-          if (eventPayloads !== null) {
-            for (let ii = 0; ii < eventPayloads.length; ii++) {
-              const {ref, nextImpl} = eventPayloads[ii];
-              ref.impl = nextImpl;
-            }
+      if ((flags & Update) !== NoFlags) {
+        const updateQueue: FunctionComponentUpdateQueue | null =
+          (finishedWork.updateQueue: any);
+        const eventPayloads = updateQueue !== null ? updateQueue.events : null;
+        if (eventPayloads !== null) {
+          for (let ii = 0; ii < eventPayloads.length; ii++) {
+            const {ref, nextImpl} = eventPayloads[ii];
+            ref.impl = nextImpl;
           }
         }
       }
