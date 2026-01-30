@@ -925,111 +925,92 @@ class Driver {
   }
 
   visitValueBlock(
-    id: BlockId,
+    blockId: BlockId,
     loc: SourceLocation,
     fallthrough: BlockId | null = null,
   ): {block: BlockId; value: ReactiveValue; place: Place; id: InstructionId} {
+    const block = this.cx.ir.blocks.get(blockId)!;
     // If we've reached the fallthrough block, stop recursing
-    if (fallthrough !== null && id === fallthrough) {
-      const block = this.cx.ir.blocks.get(id)!;
-      // The fallthrough block should have instructions that we extract the value from
-      return this.extractValueBlockResult(block.instructions, id, loc);
+    if (fallthrough !== null && blockId === fallthrough) {
+      CompilerError.invariant(false, {
+        reason: 'Did not expect to reach the fallthrough of a value block',
+        description: `Reached bb${blockId}, which is the fallthrough for this value block`,
+        loc,
+      });
     }
-    const defaultBlock = this.cx.ir.blocks.get(id)!;
-    if (defaultBlock.terminal.kind === 'branch') {
-      if (defaultBlock.instructions.length === 0) {
+    if (block.terminal.kind === 'branch') {
+      if (block.instructions.length === 0) {
         return {
-          block: defaultBlock.id,
-          place: defaultBlock.terminal.test,
+          block: block.id,
+          place: block.terminal.test,
           value: {
             kind: 'LoadLocal',
-            place: defaultBlock.terminal.test,
-            loc: defaultBlock.terminal.test.loc,
+            place: block.terminal.test,
+            loc: block.terminal.test.loc,
           },
-          id: defaultBlock.terminal.id,
+          id: block.terminal.id,
         };
       }
-      return this.extractValueBlockResult(
-        defaultBlock.instructions,
-        defaultBlock.id,
-        loc,
-      );
-    } else if (defaultBlock.terminal.kind === 'goto') {
-      if (defaultBlock.instructions.length === 0) {
-        /*
-         * Empty goto blocks just forward to the next block.
-         * Follow the goto to get the actual value.
-         */
-        return this.visitValueBlock(
-          defaultBlock.terminal.block,
+      return this.extractValueBlockResult(block.instructions, block.id, loc);
+    } else if (block.terminal.kind === 'goto') {
+      if (block.instructions.length === 0) {
+        CompilerError.invariant(false, {
+          reason: 'Unexpected empty block with `goto` terminal',
+          description: `Block bb${block.id} is empty`,
           loc,
-          fallthrough,
-        );
+        });
       }
-      return this.extractValueBlockResult(
-        defaultBlock.instructions,
-        defaultBlock.id,
-        loc,
-      );
-    } else if (defaultBlock.terminal.kind === 'maybe-throw') {
+      return this.extractValueBlockResult(block.instructions, block.id, loc);
+    } else if (block.terminal.kind === 'maybe-throw') {
       /*
        * ReactiveFunction does not explicitly model maybe-throw semantics,
-       * so maybe-throw terminals in value blocks flatten away. We continue
-       * to the continuation block if it's still part of the value block.
-       * The fallthrough parameter tells us when to stop recursing.
+       * so maybe-throw terminals in value blocks flatten away. In general
+       * we recurse to the continuation block.
+       *
+       * However, if the last portion
+       * of the value block is a potentially throwing expression, then the
+       * value block could be of the form
+       * ```
+       * bb1:
+       *   ...StoreLocal for the value block...
+       *   maybe-throw continuation=bb2
+       * bb2:
+       *   goto (exit the value block)
+       * ```
+       *
+       * Ie what would have been a StoreLocal+goto is split up because of
+       * the maybe-throw. We detect this case and return the value of the
+       * current block as the result of the value block
        */
-      const continuationId = defaultBlock.terminal.continuation;
-
-      // If the continuation is the fallthrough, we've reached the end of the value block
-      if (fallthrough !== null && continuationId === fallthrough) {
-        const instructions = defaultBlock.instructions;
-        CompilerError.invariant(instructions.length !== 0, {
-          reason: `Unexpected empty maybe-throw block at value block boundary`,
-          description: null,
-          loc: defaultBlock.terminal.loc,
-        });
-        return this.extractValueBlockResult(instructions, defaultBlock.id, loc);
-      }
-
+      const continuationId = block.terminal.continuation;
       const continuationBlock = this.cx.ir.blocks.get(continuationId)!;
-
-      /*
-       * If the continuation block is empty with a non-maybe-throw terminal,
-       * extract the result from this block's instructions using the continuation
-       * block's ID so visitValueBlockTerminal can find the terminal.
-       */
       if (
         continuationBlock.instructions.length === 0 &&
-        continuationBlock.terminal.kind !== 'maybe-throw'
+        continuationBlock.terminal.kind === 'goto'
       ) {
         return this.extractValueBlockResult(
-          defaultBlock.instructions,
+          block.instructions,
           continuationBlock.id,
           loc,
         );
       }
 
-      // Recurse to the continuation, passing through the fallthrough
       const continuation = this.visitValueBlock(
         continuationId,
         loc,
         fallthrough,
       );
-      return this.wrapWithSequence(
-        defaultBlock.instructions,
-        continuation,
-        loc,
-      );
+      return this.wrapWithSequence(block.instructions, continuation, loc);
     } else {
       /*
        * The value block ended in a value terminal, recurse to get the value
        * of that terminal and stitch them together in a sequence.
        */
-      const init = this.visitValueBlockTerminal(defaultBlock.terminal);
+      const init = this.visitValueBlockTerminal(block.terminal);
       const final = this.visitValueBlock(init.fallthrough, loc);
       return this.wrapWithSequence(
         [
-          ...defaultBlock.instructions,
+          ...block.instructions,
           {id: init.id, loc, lvalue: init.place, value: init.value},
         ],
         final,

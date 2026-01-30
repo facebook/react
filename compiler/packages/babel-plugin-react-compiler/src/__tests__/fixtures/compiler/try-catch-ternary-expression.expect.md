@@ -37,6 +37,7 @@ function Component(props) {
   } catch (t0) {
     result = "error";
   }
+
   return result;
 }
 

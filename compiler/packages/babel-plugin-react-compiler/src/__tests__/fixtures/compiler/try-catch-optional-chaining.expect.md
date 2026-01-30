@@ -32,19 +32,27 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Foo(t0) {
-  const $ = _c(2);
+  const $ = _c(4);
   const { json } = t0;
   try {
-    const foo = JSON.parse(json)?.foo;
     let t1;
-    if ($[0] !== foo) {
-      t1 = <span>{foo}</span>;
-      $[0] = foo;
+    if ($[0] !== json) {
+      t1 = JSON.parse(json)?.foo;
+      $[0] = json;
       $[1] = t1;
     } else {
       t1 = $[1];
     }
-    return t1;
+    const foo = t1;
+    let t2;
+    if ($[2] !== foo) {
+      t2 = <span>{foo}</span>;
+      $[2] = foo;
+      $[3] = t2;
+    } else {
+      t2 = $[3];
+    }
+    return t2;
   } catch {
     return null;
   }
