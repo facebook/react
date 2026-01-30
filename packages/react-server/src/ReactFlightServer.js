@@ -614,6 +614,7 @@ export type Request = {
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
   writtenDebugObjects: WeakMap<Reference, string>,
   deferredDebugObjects: null | DeferredDebugStore,
+  partialDebugInfoProgress: null | WeakMap<ReactDebugInfo, number>,
 };
 
 const {
@@ -738,6 +739,7 @@ function RequestInstance(
           existing: new Map(),
         }
       : null;
+    this.forwardedDebugInfos = null;
   }
 
   let timeOrigin: number;
@@ -2357,6 +2359,7 @@ function visitAsyncNodeImpl(
   >,
   cutOff: number,
 ): void | null | PromiseNode | IONode {
+  // TODO: add a way to preserve IO nodes from before the request started
   if (node.end >= 0 && node.end <= request.timeOrigin) {
     // This was already resolved when we started this render. It must have been either something
     // that's part of a start up sequence or externally cached data. We exclude that information.
@@ -3523,7 +3526,13 @@ function renderModelDestructive(
               return outlineTask(request, task);
             } else {
               // Forward any debug info we have the first time we see it.
-              forwardDebugInfo(request, task, debugInfo);
+              // If this element came from a lazy chunk, then the Flight Client transferred
+              // the lazy chunk's debug info onto the inner element in `initializeElement`.
+              // We might have already written some of that debug info out into the stream
+              // (before the lazy resolved), so we shouldn't do it again.
+              // The consumer of this stream will once again transfer the debug info from
+              // the lazy chunk onto the element itself, thus recombining them into one array.
+              forwardDebugInfoProgressive(request, task, debugInfo);
             }
           }
         }
@@ -3602,7 +3611,23 @@ function renderModelDestructive(
 
         const lazy: LazyComponent<any, any> = (value: any);
         let resolvedModel;
+
         if (__DEV__) {
+          // Check if we already have some debug info before initializing.
+          // If we do, we want to emit it as soon as possible, without waiting for initialization.
+          const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
+          if (debugInfo) {
+            // If this came from Flight, forward any debug info into this new row.
+            if (!canEmitDebugInfo) {
+              // We don't have a chunk to assign debug info. We need to outline this
+              // component to assign it an ID.
+              return outlineTask(request, task);
+            } else {
+              // Forward any debug info we have the first time we see it.
+              forwardDebugInfoProgressive(request, task, debugInfo);
+            }
+          }
+
           resolvedModel = callLazyInitInDEV(lazy);
         } else {
           const payload = lazy._payload;
@@ -3616,6 +3641,8 @@ function renderModelDestructive(
           // eslint-disable-next-line no-throw-literal
           throw null;
         }
+
+        // Check for new debug info that may have arrived after initializing.
         if (__DEV__) {
           const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
           if (debugInfo) {
@@ -3625,10 +3652,21 @@ function renderModelDestructive(
               // component to assign it an ID.
               return outlineTask(request, task);
             } else {
-              // Forward any debug info we have the first time we see it.
-              // We do this after init so that we have received all the debug info
-              // from the server by the time we emit it.
-              forwardDebugInfo(request, task, debugInfo);
+              const progress = forwardDebugInfoProgressive(
+                request,
+                task,
+                debugInfo,
+              );
+              // The debug info array may have been moved onto the resolved value
+              // by `moveDebugInfoFromChunkToInnerValue`.
+              // If it was, we have to make sure we skip the elements we've already emitted.
+              if (progress > 0 && debugInfo.length === 0) {
+                copyDebugInfoProgressToResolvedValue(
+                  request,
+                  progress,
+                  resolvedModel,
+                );
+              }
             }
           }
         }
@@ -5325,14 +5363,75 @@ function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
   request.completedDebugChunks.push(processedChunk);
 }
 
+function copyDebugInfoProgressToResolvedValue(
+  request: Request,
+  index: number,
+  resolvedValue: ReactClientValue,
+) {
+  const partialDebugInfoProgress = request.partialDebugInfoProgress;
+  // Defensive check. If we're here, this should be initialized.
+  if (!partialDebugInfoProgress) return;
+
+  if (
+    // NOTE: Keep this condition in sync with `moveDebugInfoFromChunkToInnerValue` from `ReactFlightClient`.
+    typeof resolvedValue === 'object' &&
+    resolvedValue !== null &&
+    (isArray(resolvedValue) ||
+      typeof (resolvedValue: any)[ASYNC_ITERATOR] === 'function' ||
+      resolvedValue.$$typeof === REACT_ELEMENT_TYPE ||
+      resolvedValue.$$typeof === REACT_LAZY_TYPE)
+  ) {
+    const debugInfo = (resolvedValue: any)._debugInfo;
+    // Defensive check. If the outer lazy had debug info, then the resolved value should have it too.
+    if (isArray(debugInfo)) {
+      partialDebugInfoProgress.set(debugInfo, index);
+    }
+  }
+}
+
+function forwardDebugInfoProgressive(
+  request: Request,
+  task: Task,
+  debugInfo: ReactDebugInfo,
+): number {
+  // Track how many items from this array have already been forwarded.
+  // If new ones get appended later, we won't emit them again.
+  let partialDebugInfoProgress = request.partialDebugInfoProgress;
+  if (!partialDebugInfoProgress) {
+    partialDebugInfoProgress = request.partialDebugInfoProgress = new WeakMap();
+  }
+
+  const startIndex = partialDebugInfoProgress.get(debugInfo) || 0;
+  if (startIndex >= debugInfo.length) {
+    // Nothing new to emit. Note that the length might be less than what we have saved
+    // if `moveDebugInfoFromChunkToInnerValue` emptied the array.
+    return startIndex;
+  }
+
+  forwardDebugInfoFromIndex(request, task, debugInfo, startIndex);
+  const newIndex = debugInfo.length;
+  partialDebugInfoProgress.set(debugInfo, newIndex);
+  return newIndex;
+}
+
 function forwardDebugInfo(
   request: Request,
   task: Task,
   debugInfo: ReactDebugInfo,
 ) {
+  forwardDebugInfoFromIndex(request, task, debugInfo, 0);
+}
+
+function forwardDebugInfoFromIndex(
+  request: Request,
+  task: Task,
+  debugInfo: ReactDebugInfo,
+  startIndex: number,
+) {
   const id = task.id;
-  for (let i = 0; i < debugInfo.length; i++) {
+  for (let i = startIndex; i < debugInfo.length; i++) {
     const info = debugInfo[i];
+
     if (typeof info.time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
       // We clamp the time to the starting render of the current component. It's as if it took
@@ -5349,6 +5448,7 @@ function forwardDebugInfo(
         emitDebugChunk(request, id, info);
       } else if (info.awaited) {
         const ioInfo = info.awaited;
+        // TODO: add a way to preserve IO nodes from before the request started
         if (ioInfo.end <= request.timeOrigin) {
           // This was already resolved when we started this render. It must have been some
           // externally cached data. We exclude that information but we keep components and

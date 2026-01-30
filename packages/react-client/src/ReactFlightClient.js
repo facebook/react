@@ -536,6 +536,7 @@ function moveDebugInfoFromChunkToInnerValue<T>(
   // value instead. This can be a React element, an array, or an uninitialized
   // Lazy.
   const resolvedValue = resolveLazy(value);
+  // NOTE: Keep this condition in sync with `copyDebugInfoProgressToResolvedValue` from `ReactFlightServer`.
   if (
     typeof resolvedValue === 'object' &&
     resolvedValue !== null &&
