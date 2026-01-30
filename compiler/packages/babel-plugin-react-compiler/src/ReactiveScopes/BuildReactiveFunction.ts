@@ -996,7 +996,7 @@ class Driver {
         loc,
       };
       return {
-        block: init.fallthrough,
+        block: final.block,
         value: sequence,
         place: final.place,
         id: final.id,
