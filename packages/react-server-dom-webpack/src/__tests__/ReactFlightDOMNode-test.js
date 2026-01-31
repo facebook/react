@@ -101,7 +101,7 @@ describe('ReactFlightDOMNode', () => {
           return (
             '    in ' +
             name +
-            (/\d/.test(m)
+            (/:\d+:\d+/.test(m)
               ? preserveLocation
                 ? ' ' + location.replace(__filename, relativeFilename)
                 : ' (at **)'
@@ -1588,6 +1588,296 @@ describe('ReactFlightDOMNode', () => {
       } else {
         expect(ownerStack).toBeNull();
       }
+    });
+
+    function createReadableWithLateRelease(initialChunks, lateChunks, signal) {
+      // Create a new Readable and push all initial chunks immediately.
+      const readable = new Stream.Readable({...streamOptions, read() {}});
+      for (let i = 0; i < initialChunks.length; i++) {
+        readable.push(initialChunks[i]);
+      }
+
+      // When prerendering is aborted, push all dynamic chunks. They won't be
+      // considered for rendering, but they include debug info we want to use.
+      signal.addEventListener(
+        'abort',
+        () => {
+          for (let i = 0; i < lateChunks.length; i++) {
+            readable.push(lateChunks[i]);
+          }
+          setImmediate(() => {
+            readable.push(null);
+          });
+        },
+        {once: true},
+      );
+
+      return readable;
+    }
+
+    async function reencodeFlightStream(
+      staticChunks,
+      dynamicChunks,
+      startTime,
+      serverConsumerManifest,
+    ) {
+      let staticEndTime = -1;
+      const chunks = {
+        static: [],
+        dynamic: [],
+      };
+      await new Promise(async resolve => {
+        const renderStageController = new AbortController();
+
+        const serverStream = createReadableWithLateRelease(
+          staticChunks,
+          dynamicChunks,
+          renderStageController.signal,
+        );
+        const decoded = await ReactServerDOMClient.createFromNodeStream(
+          serverStream,
+          serverConsumerManifest,
+          {
+            // We're re-encoding the whole stream, so we don't want to filter out any debug info.
+            endTime: undefined,
+          },
+        );
+
+        setTimeout(async () => {
+          const stream = ReactServerDOMServer.renderToPipeableStream(
+            decoded,
+            webpackMap,
+            {
+              filterStackFrame,
+              // Pass in the original render's startTime to avoid omitting its IO info.
+              startTime,
+            },
+          );
+
+          const passThrough = new Stream.PassThrough(streamOptions);
+
+          passThrough.on('data', chunk => {
+            if (!renderStageController.signal.aborted) {
+              chunks.static.push(chunk);
+            } else {
+              chunks.dynamic.push(chunk);
+            }
+          });
+          passThrough.on('end', resolve);
+
+          stream.pipe(passThrough);
+        });
+
+        setTimeout(() => {
+          staticEndTime = performance.now() + performance.timeOrigin;
+          renderStageController.abort();
+        });
+      });
+
+      return {chunks, staticEndTime};
+    }
+
+    // @gate __DEV__
+    it('can preserve old IO info when decoding and re-encoding a stream with options.startTime', async () => {
+      let resolveDynamicData;
+
+      function getDynamicData() {
+        return new Promise(resolve => {
+          resolveDynamicData = resolve;
+        });
+      }
+
+      async function Dynamic() {
+        const data = await getDynamicData();
+        return ReactServer.createElement('p', null, data);
+      }
+
+      function App() {
+        return ReactServer.createElement(
+          'html',
+          null,
+          ReactServer.createElement(
+            'body',
+            null,
+            ReactServer.createElement(
+              ReactServer.Suspense,
+              {fallback: 'Loading...'},
+              // TODO: having a wrapper <section> here seems load-bearing.
+              // ReactServer.createElement(ReactServer.createElement(Dynamic)),
+              ReactServer.createElement(
+                'section',
+                null,
+                ReactServer.createElement(Dynamic),
+              ),
+            ),
+          ),
+        );
+      }
+
+      const resolveDynamic = () => {
+        resolveDynamicData('Hi Janka');
+      };
+
+      // 1. Render <App />, dividing the output into static and dynamic content.
+
+      let startTime = -1;
+
+      let isStatic = true;
+      const chunks1 = {
+        static: [],
+        dynamic: [],
+      };
+
+      await new Promise(resolve => {
+        setTimeout(async () => {
+          startTime = performance.now() + performance.timeOrigin;
+
+          const stream = ReactServerDOMServer.renderToPipeableStream(
+            ReactServer.createElement(App),
+            webpackMap,
+            {
+              filterStackFrame,
+              startTime,
+              environmentName() {
+                return isStatic ? 'Prerender' : 'Server';
+              },
+            },
+          );
+
+          const passThrough = new Stream.PassThrough(streamOptions);
+
+          passThrough.on('data', chunk => {
+            if (isStatic) {
+              chunks1.static.push(chunk);
+            } else {
+              chunks1.dynamic.push(chunk);
+            }
+          });
+          passThrough.on('end', resolve);
+
+          stream.pipe(passThrough);
+        });
+        setTimeout(() => {
+          isStatic = false;
+          resolveDynamic();
+        });
+      });
+
+      //===============================================
+      // 2. Decode the stream from the previous step and render it again.
+      // This should preserve existing debug info.
+
+      const serverConsumerManifest = {
+        moduleMap: null,
+        moduleLoading: null,
+      };
+
+      const {chunks: chunks2, staticEndTime: reencodeStaticEndTime} =
+        await reencodeFlightStream(
+          chunks1.static,
+          chunks1.dynamic,
+          // This is load-bearing. If we don't pass a startTime, IO info
+          // from the initial render will be skipped (because it finished in the past)
+          // and we won't get the precise location of the blocking await in the owner stack.
+          startTime,
+          serverConsumerManifest,
+        );
+
+      //===============================================
+      // 3. SSR the stream from the previous step and abort it after the static stage
+      // (which should trigger `onError` for each "hole" that hasn't resolved yet)
+
+      function ClientRoot({response}) {
+        return use(response);
+      }
+
+      let ssrStream;
+      let ownerStack;
+      let componentStack;
+
+      await new Promise(async (resolve, reject) => {
+        const renderController = new AbortController();
+
+        const serverStream = createReadableWithLateRelease(
+          chunks2.static,
+          chunks2.dynamic,
+          renderController.signal,
+        );
+
+        const decodedPromise = ReactServerDOMClient.createFromNodeStream(
+          serverStream,
+          serverConsumerManifest,
+          {
+            endTime: reencodeStaticEndTime,
+          },
+        );
+
+        setTimeout(() => {
+          ssrStream = ReactDOMServer.renderToPipeableStream(
+            React.createElement(ClientRoot, {
+              response: decodedPromise,
+            }),
+            {
+              onError(err, errorInfo) {
+                componentStack = errorInfo.componentStack;
+                ownerStack = React.captureOwnerStack
+                  ? React.captureOwnerStack()
+                  : null;
+                return null;
+              },
+            },
+          );
+
+          renderController.signal.addEventListener(
+            'abort',
+            () => {
+              const {reason} = renderController.signal;
+              ssrStream.abort(reason);
+            },
+            {
+              once: true,
+            },
+          );
+        });
+
+        setTimeout(() => {
+          renderController.abort(new Error('ssr-abort'));
+          resolve();
+        });
+      });
+
+      const result = await readResult(ssrStream);
+
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n' +
+          // TODO:
+          // when we reencode a stream, the component stack doesn't have server frames for the dynamic content
+          // (which is what causes the dynamic hole here)
+          // because Flight delays forwarding debug info for lazies until they resolve.
+          // (the owner stack is filled in `pushHaltedAwaitOnComponentStack`, so it works fine)
+          //
+          // '    in Dynamic (at **)\n'
+          '    in section\n' +
+          '    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in App (at **)\n' +
+          '    in ClientRoot (at **)',
+      );
+      expect(normalizeCodeLocInfo(ownerStack)).toBe(
+        '\n' +
+          gate(flags =>
+            flags.enableAsyncDebugInfo
+              ? '    in Dynamic (at **)\n'
+              : '    in section\n',
+          ) +
+          '    in App (at **)',
+      );
+
+      expect(result).toContain(
+        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+          'ssr-abort',
+      );
     });
   });
 
