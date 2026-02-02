@@ -61,6 +61,7 @@ import {
   bindToConsole,
   rendererVersion,
   rendererPackageName,
+  checkEvalAvailabilityOnceDev,
 } from './ReactFlightClientConfig';
 
 import {
@@ -2768,6 +2769,14 @@ export function createResponse(
   debugEndTime: void | number, // DEV-only
   debugChannel: void | DebugChannel, // DEV-only
 ): WeakResponse {
+  if (__DEV__) {
+    // We use eval to create fake function stacks which includes Component stacks.
+    // A warning would be noise if you used Flight without Components and don't encounter
+    // errors. We're warning eagerly so that you configure your environment accordingly
+    // before you encounter an error.
+    checkEvalAvailabilityOnceDev();
+  }
+
   return getWeakResponse(
     // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
     new ResponseInstance(

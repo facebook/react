@@ -28,6 +28,7 @@ let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
+let assertConsoleErrorDev;
 let serverAct;
 
 // We test pass-through without encoding strings but it should work without it too.
@@ -73,6 +74,9 @@ describe('ReactFlightDOMNode', () => {
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     Stream = require('stream');
     use = React.use;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function filterStackFrame(filename, functionName) {
@@ -955,10 +959,10 @@ describe('ReactFlightDOMNode', () => {
           // The concrete location may change as this test is updated.
           // Just make sure they still point at React.use(p2)
           (gate(flags => flags.enableAsyncDebugInfo)
-            ? '\n    at SharedComponent (./ReactFlightDOMNode-test.js:813:7)'
+            ? '\n    at SharedComponent (./ReactFlightDOMNode-test.js:817:7)'
             : '') +
-          '\n    at ServerComponent (file://./ReactFlightDOMNode-test.js:835:26)' +
-          '\n    at App (file://./ReactFlightDOMNode-test.js:852:25)',
+          '\n    at ServerComponent (file://./ReactFlightDOMNode-test.js:839:26)' +
+          '\n    at App (file://./ReactFlightDOMNode-test.js:856:25)',
       );
     } else {
       expect(ownerStack).toBeNull();
@@ -1545,12 +1549,12 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in Dynamic' +
             (gate(flags => flags.enableAsyncDebugInfo)
-              ? ' (file://ReactFlightDOMNode-test.js:1419:27)\n'
+              ? ' (file://ReactFlightDOMNode-test.js:1423:27)\n'
               : '\n') +
             '    in body\n' +
             '    in html\n' +
-            '    in App (file://ReactFlightDOMNode-test.js:1432:25)\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1507:16)',
+            '    in App (file://ReactFlightDOMNode-test.js:1436:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1511:16)',
         );
       } else {
         expect(
@@ -1559,7 +1563,7 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1507:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1511:16)',
         );
       }
 
@@ -1569,8 +1573,8 @@ describe('ReactFlightDOMNode', () => {
             normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
           ).toBe(
             '\n' +
-              '    in Dynamic (file://ReactFlightDOMNode-test.js:1419:27)\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1432:25)',
+              '    in Dynamic (file://ReactFlightDOMNode-test.js:1423:27)\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1436:25)',
           );
         } else {
           expect(
@@ -1578,12 +1582,48 @@ describe('ReactFlightDOMNode', () => {
           ).toBe(
             '' +
               '\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1432:25)',
+              '    in App (file://ReactFlightDOMNode-test.js:1436:25)',
           );
         }
       } else {
         expect(ownerStack).toBeNull();
       }
     });
+  });
+
+  it('warns with a tailored message if eval is not available in dev', async () => {
+    // eslint-disable-next-line no-eval
+    const previousEval = globalThis.eval.bind(globalThis);
+    // eslint-disable-next-line no-eval
+    globalThis.eval = () => {
+      throw new Error('eval is disabled');
+    };
+
+    try {
+      const readable = await serverAct(() =>
+        ReactServerDOMServer.renderToReadableStream({}, webpackMap),
+      );
+
+      assertConsoleErrorDev([]);
+
+      await ReactServerDOMClient.createFromReadableStream(readable, {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      });
+
+      assertConsoleErrorDev([
+        'eval() is not supported in this environment. ' +
+          'This can happen if you started the Node.js process with --disallow-code-generation-from-strings, ' +
+          'or if `eval` was patched by other means. ' +
+          'React requires eval() in development mode for various debugging features ' +
+          'like reconstructing callstacks from a different environment.\n' +
+          'React will never use eval() in production mode',
+      ]);
+    } finally {
+      // eslint-disable-next-line no-eval
+      globalThis.eval = previousEval;
+    }
   });
 });
