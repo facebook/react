@@ -24,7 +24,6 @@ import {
   resolveServerReference,
   preloadModule,
   requireModule,
-  checkEvalAvailabilityOnceDev,
 } from 'react-client/src/ReactFlightClientConfig';
 
 import {
@@ -1849,13 +1848,6 @@ export function createResponse(
   backingFormData?: FormData = new FormData(),
   arraySizeLimit?: number = DEFAULT_MAX_ARRAY_NESTING,
 ): Response {
-  if (__DEV__) {
-    // We use eval to create fake function stacks which includes Component stacks.
-    // A warning would be noise if you used Flight without Components and don't encounter
-    // errors. We're warning eagerly so that you configure your environment accordingly
-    // before you encounter an error.
-    checkEvalAvailabilityOnceDev();
-  }
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
     _bundlerConfig: bundlerConfig,

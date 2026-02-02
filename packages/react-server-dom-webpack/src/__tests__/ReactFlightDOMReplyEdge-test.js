@@ -389,16 +389,16 @@ describe('ReactFlightDOMReplyEdge', () => {
     try {
       const body = await ReactServerDOMClient.encodeReply({some: 'object'});
 
-      assertConsoleErrorDev([]);
-
-      await ReactServerDOMServer.decodeReply(body, webpackServerMap);
-
       assertConsoleErrorDev([
         'eval() is not supported in this environment. ' +
           'React requires eval() in development mode for various debugging features ' +
           'like reconstructing callstacks from a different environment.\n' +
           'React will never use eval() in production mode',
       ]);
+
+      await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+
+      assertConsoleErrorDev([]);
     } finally {
       // eslint-disable-next-line no-eval
       globalThis.eval = previousEval;

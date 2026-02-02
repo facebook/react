@@ -67,11 +67,6 @@ describe('ReactFlightTurbopackDOMReply', () => {
 
     try {
       const body = await ReactServerDOMClient.encodeReply({some: 'object'});
-
-      assertConsoleErrorDev([]);
-
-      await ReactServerDOMServer.decodeReply(body, turbopackServerMap);
-
       assertConsoleErrorDev([
         'eval() is not supported in this environment. ' +
           'If this page was served with a `Content-Security-Policy` header, ' +
@@ -80,6 +75,10 @@ describe('ReactFlightTurbopackDOMReply', () => {
           'like reconstructing callstacks from a different environment.\n' +
           'React will never use eval() in production mode',
       ]);
+
+      await ReactServerDOMServer.decodeReply(body, turbopackServerMap);
+
+      assertConsoleErrorDev([]);
     } finally {
       // eslint-disable-next-line no-eval
       globalThis.eval = previousEval;
