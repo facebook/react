@@ -770,7 +770,7 @@ describe('ReactFlightDOMEdge', () => {
     const [stream2, drip] = dripStream(stream);
 
     // Allow some of the content through.
-    drip(__DEV__ ? 7500 : 5000);
+    drip(__DEV__ ? 17500 : 15000);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
@@ -804,7 +804,7 @@ describe('ReactFlightDOMEdge', () => {
   });
 
   it('regression: should not leak serialized size', async () => {
-    const MAX_ROW_SIZE = 3200;
+    const MAX_ROW_SIZE = 12800;
     // This test case is a bit convoluted and may no longer trigger the original bug.
     // Originally, the size of `promisedText` was not cleaned up so the sync portion
     // ended up being deferred immediately when we called `renderToReadableStream` again

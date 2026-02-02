@@ -146,6 +146,7 @@ type Options = {
   onError?: (error: mixed) => void,
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
+  progressiveChunkSize?: number,
 };
 
 type PipeableStream = {
@@ -183,6 +184,7 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.progressiveChunkSize : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannel !== undefined,
@@ -271,6 +273,7 @@ type PrerenderOptions = {
   onError?: (error: mixed) => void,
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
+  progressiveChunkSize?: number,
   signal?: AbortSignal,
 };
 
@@ -303,6 +306,7 @@ function prerenderToNodeStream(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      options ? options.progressiveChunkSize : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,

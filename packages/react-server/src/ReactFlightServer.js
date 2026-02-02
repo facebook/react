@@ -623,6 +623,9 @@ const {
   TaintRegistryPendingRequests,
 } = ReactSharedInternals;
 
+// Use the same value as ReactFizzServer
+const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
+
 function throwTaintViolation(message: string) {
   // eslint-disable-next-line react-internal/prod-error-codes
   throw new Error(message);
@@ -660,6 +663,7 @@ function RequestInstance(
   onFatalError: (error: mixed) => void,
   identifierPrefix?: string,
   temporaryReferences: void | TemporaryReferenceSet,
+  progressiveChunkSize: void | number,
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
@@ -711,6 +715,10 @@ function RequestInstance(
   this.temporaryReferences = temporaryReferences;
   this.identifierPrefix = identifierPrefix || '';
   this.identifierCount = 1;
+  this.progressiveChunkSize =
+    progressiveChunkSize === undefined
+      ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
+      : progressiveChunkSize;
   this.taintCleanupQueue = cleanupQueue;
   this.onError = onError === undefined ? defaultErrorHandler : onError;
   this.onAllReady = onAllReady;
@@ -784,6 +792,7 @@ export function createRequest(
   onError: void | ((error: mixed) => ?string),
   identifierPrefix: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
+  progressiveChunkSize: void | number,
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
@@ -802,6 +811,7 @@ export function createRequest(
     noop,
     identifierPrefix,
     temporaryReferences,
+    progressiveChunkSize,
     environmentName,
     filterStackFrame,
     keepDebugAlive,
@@ -816,6 +826,7 @@ export function createPrerenderRequest(
   onError: void | ((error: mixed) => ?string),
   identifierPrefix: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
+  progressiveChunkSize: void | number,
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
@@ -834,6 +845,7 @@ export function createPrerenderRequest(
     onFatalError,
     identifierPrefix,
     temporaryReferences,
+    progressiveChunkSize,
     environmentName,
     filterStackFrame,
     keepDebugAlive,
@@ -2100,7 +2112,6 @@ let canEmitDebugInfo: boolean = false;
 // Approximate string length of the currently serializing row.
 // Used to power outlining heuristics.
 let serializedSize = 0;
-const MAX_ROW_SIZE = 3200;
 
 function deferTask(request: Request, task: Task): ReactJSONValue {
   // Like outlineTask but instead the item is scheduled to be serialized
@@ -3509,7 +3520,7 @@ function renderModelDestructive(
 
         const element: ReactElement = (value: any);
 
-        if (serializedSize > MAX_ROW_SIZE) {
+        if (serializedSize > request.progressiveChunkSize) {
           return deferTask(request, task);
         }
 
@@ -3592,7 +3603,7 @@ function renderModelDestructive(
         return newChild;
       }
       case REACT_LAZY_TYPE: {
-        if (serializedSize > MAX_ROW_SIZE) {
+        if (serializedSize > request.progressiveChunkSize) {
           return deferTask(request, task);
         }
 
