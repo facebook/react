@@ -3267,13 +3267,16 @@ export function startHostTransition<F>(
     // concerns to avoid the extra lambda.
 
     action === null
-      ? // No action was provided, but we still call `startTransition` to
-        // set the pending form status.
-        noop
+      ? noop
       : () => {
-          // Automatically reset the form when the action completes.
-          requestFormReset(formFiber);
-          return action(formData);
+          try {
+            const result = action(formData);
+            requestFormReset(formFiber, result);
+            return result;
+          } catch (error) {
+            // Don't reset on sync errors
+            throw error;
+          }
         },
   );
 }
@@ -3346,7 +3349,7 @@ function ensureFormComponentIsStateful(formFiber: Fiber) {
   return stateHook;
 }
 
-export function requestFormReset(formFiber: Fiber) {
+export function requestFormReset(formFiber: Fiber, actionResult: mixed) {
   const transition = requestCurrentTransition();
 
   if (transition === null) {
@@ -3386,12 +3389,36 @@ export function requestFormReset(formFiber: Fiber) {
   }
   const resetStateHook: Hook = (stateHook.next: any);
   const resetStateQueue = resetStateHook.queue;
-  dispatchSetStateInternal(
-    formFiber,
-    resetStateQueue,
-    newResetState,
-    requestUpdateLane(formFiber),
-  );
+  const lane = requestUpdateLane(formFiber);
+
+  // If the action returned a promise, only reset on success
+  if (
+    actionResult !== null &&
+    typeof actionResult === 'object' &&
+    typeof actionResult.then === 'function'
+  ) {
+    // Capture references at scheduling time
+    const fiber = formFiber;
+    const queue = resetStateQueue;
+    const resetState = newResetState;
+    const laneToUse = lane;
+
+    actionResult.then(
+      () => {
+        // Only dispatch if the fiber is still mounted
+        if (fiber.alternate || fiber.memoizedState) {
+          dispatchSetStateInternal(fiber, queue, resetState, laneToUse);
+        }
+      },
+      () => {
+        // Async failure: do not reset
+      },
+    );
+    return;
+  }
+
+  // Synchronous action result: reset immediately
+  dispatchSetStateInternal(formFiber, resetStateQueue, newResetState, lane);
 }
 
 function mountTransition(): [

@@ -6562,5 +6562,68 @@ export const HostTransitionContext: ReactContext<TransitionStatus> = {
 
 export type FormInstance = HTMLFormElement;
 export function resetFormInstance(form: FormInstance): void {
-  form.reset();
+  const elements = form.elements;
+
+  for (let i = 0; i < elements.length; i++) {
+    const element = elements[i];
+
+    if (
+      !(
+        element instanceof HTMLInputElement ||
+        element instanceof HTMLTextAreaElement ||
+        element instanceof HTMLSelectElement
+      )
+    ) {
+      continue;
+    }
+
+    // Get the React instance for this element
+    const inst = getInstanceFromNodeDOMTree(element);
+
+    // Check if React is controlling this input
+    let isControlled = false;
+    if (inst !== null && inst.memoizedProps != null) {
+      const props = inst.memoizedProps;
+
+      // Check if controlled by 'value' prop
+      if (
+        'value' in props &&
+        props.value !== undefined &&
+        props.value !== null
+      ) {
+        isControlled = true;
+      }
+
+      // Check if controlled by 'checked' prop
+      if (
+        'checked' in props &&
+        props.checked !== undefined &&
+        props.checked !== null
+      ) {
+        isControlled = true;
+      }
+    }
+
+    // Skip controlled inputs
+    if (isControlled) {
+      continue;
+    }
+
+    // Reset uncontrolled inputs
+    if (element instanceof HTMLInputElement) {
+      if (element.type === 'checkbox' || element.type === 'radio') {
+        element.checked = element.defaultChecked;
+      } else {
+        element.value = element.defaultValue;
+      }
+    } else if (element instanceof HTMLTextAreaElement) {
+      element.value = element.defaultValue;
+    } else if (element instanceof HTMLSelectElement) {
+      element.selectedIndex = -1;
+      const options = element.options;
+      for (let j = 0; j < options.length; j++) {
+        options[j].selected = options[j].defaultSelected;
+      }
+    }
+  }
 }
