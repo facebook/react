@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<6e3a5e6ee4c5dd51006366d0bbdaa8ed>>
+ * @generated SignedSource<<4566d14bf6e7287dcef2c59133a96dbc>>
  */
 
 'use strict';
@@ -35153,6 +35153,54 @@ class Driver {
     constructor(cx) {
         this.cx = cx;
     }
+    wrapWithSequence(instructions, continuation, loc) {
+        if (instructions.length === 0) {
+            return continuation;
+        }
+        const sequence = {
+            kind: 'SequenceExpression',
+            instructions,
+            id: continuation.id,
+            value: continuation.value,
+            loc,
+        };
+        return {
+            block: continuation.block,
+            value: sequence,
+            place: continuation.place,
+            id: continuation.id,
+        };
+    }
+    extractValueBlockResult(instructions, blockId, loc) {
+        CompilerError.invariant(instructions.length !== 0, {
+            reason: `Expected non-empty instructions in extractValueBlockResult`,
+            description: null,
+            loc,
+        });
+        const instr = instructions.at(-1);
+        let place = instr.lvalue;
+        let value = instr.value;
+        if (value.kind === 'StoreLocal' &&
+            value.lvalue.place.identifier.name === null) {
+            place = value.lvalue.place;
+            value = {
+                kind: 'LoadLocal',
+                place: value.value,
+                loc: value.value.loc,
+            };
+        }
+        if (instructions.length === 1) {
+            return { block: blockId, place, value, id: instr.id };
+        }
+        const sequence = {
+            kind: 'SequenceExpression',
+            instructions: instructions.slice(0, -1),
+            id: instr.id,
+            value,
+            loc,
+        };
+        return { block: blockId, place, value: sequence, id: instr.id };
+    }
     traverseBlock(block) {
         const blockValue = [];
         this.visitBlock(block, blockValue);
@@ -35816,139 +35864,83 @@ class Driver {
             }
         }
     }
-    visitValueBlock(id, loc) {
-        const defaultBlock = this.cx.ir.blocks.get(id);
-        if (defaultBlock.terminal.kind === 'branch') {
-            const instructions = defaultBlock.instructions;
-            if (instructions.length === 0) {
+    visitValueBlock(blockId, loc, fallthrough = null) {
+        const block = this.cx.ir.blocks.get(blockId);
+        if (fallthrough !== null && blockId === fallthrough) {
+            CompilerError.invariant(false, {
+                reason: 'Did not expect to reach the fallthrough of a value block',
+                description: `Reached bb${blockId}, which is the fallthrough for this value block`,
+                loc,
+            });
+        }
+        if (block.terminal.kind === 'branch') {
+            if (block.instructions.length === 0) {
                 return {
-                    block: defaultBlock.id,
-                    place: defaultBlock.terminal.test,
+                    block: block.id,
+                    place: block.terminal.test,
                     value: {
                         kind: 'LoadLocal',
-                        place: defaultBlock.terminal.test,
-                        loc: defaultBlock.terminal.test.loc,
+                        place: block.terminal.test,
+                        loc: block.terminal.test.loc,
                     },
-                    id: defaultBlock.terminal.id,
+                    id: block.terminal.id,
                 };
             }
-            else if (defaultBlock.instructions.length === 1) {
-                const instr = defaultBlock.instructions[0];
-                CompilerError.invariant(instr.lvalue.identifier.id ===
-                    defaultBlock.terminal.test.identifier.id, {
-                    reason: 'Expected branch block to end in an instruction that sets the test value',
-                    loc: instr.lvalue.loc,
-                });
-                return {
-                    block: defaultBlock.id,
-                    place: instr.lvalue,
-                    value: instr.value,
-                    id: instr.id,
-                };
-            }
-            else {
-                const instr = defaultBlock.instructions.at(-1);
-                const sequence = {
-                    kind: 'SequenceExpression',
-                    instructions: defaultBlock.instructions.slice(0, -1),
-                    id: instr.id,
-                    value: instr.value,
-                    loc: loc,
-                };
-                return {
-                    block: defaultBlock.id,
-                    place: defaultBlock.terminal.test,
-                    value: sequence,
-                    id: defaultBlock.terminal.id,
-                };
-            }
+            return this.extractValueBlockResult(block.instructions, block.id, loc);
         }
-        else if (defaultBlock.terminal.kind === 'goto') {
-            const instructions = defaultBlock.instructions;
-            if (instructions.length === 0) {
+        else if (block.terminal.kind === 'goto') {
+            if (block.instructions.length === 0) {
                 CompilerError.invariant(false, {
-                    reason: 'Expected goto value block to have at least one instruction',
-                    loc: GeneratedSource,
+                    reason: 'Unexpected empty block with `goto` terminal',
+                    description: `Block bb${block.id} is empty`,
+                    loc,
                 });
             }
-            else if (defaultBlock.instructions.length === 1) {
-                const instr = defaultBlock.instructions[0];
-                let place = instr.lvalue;
-                let value = instr.value;
-                if (value.kind === 'StoreLocal' &&
-                    value.lvalue.place.identifier.name === null) {
-                    place = value.lvalue.place;
-                    value = {
-                        kind: 'LoadLocal',
-                        place: value.value,
-                        loc: value.value.loc,
-                    };
-                }
-                return {
-                    block: defaultBlock.id,
-                    place,
-                    value,
-                    id: instr.id,
-                };
+            return this.extractValueBlockResult(block.instructions, block.id, loc);
+        }
+        else if (block.terminal.kind === 'maybe-throw') {
+            const continuationId = block.terminal.continuation;
+            const continuationBlock = this.cx.ir.blocks.get(continuationId);
+            if (continuationBlock.instructions.length === 0 &&
+                continuationBlock.terminal.kind === 'goto') {
+                return this.extractValueBlockResult(block.instructions, continuationBlock.id, loc);
             }
-            else {
-                const instr = defaultBlock.instructions.at(-1);
-                let place = instr.lvalue;
-                let value = instr.value;
-                if (value.kind === 'StoreLocal' &&
-                    value.lvalue.place.identifier.name === null) {
-                    place = value.lvalue.place;
-                    value = {
-                        kind: 'LoadLocal',
-                        place: value.value,
-                        loc: value.value.loc,
-                    };
-                }
-                const sequence = {
-                    kind: 'SequenceExpression',
-                    instructions: defaultBlock.instructions.slice(0, -1),
-                    id: instr.id,
-                    value,
-                    loc: loc,
-                };
-                return {
-                    block: defaultBlock.id,
-                    place,
-                    value: sequence,
-                    id: instr.id,
-                };
-            }
+            const continuation = this.visitValueBlock(continuationId, loc, fallthrough);
+            return this.wrapWithSequence(block.instructions, continuation, loc);
         }
         else {
-            const init = this.visitValueBlockTerminal(defaultBlock.terminal);
+            const init = this.visitValueBlockTerminal(block.terminal);
             const final = this.visitValueBlock(init.fallthrough, loc);
-            const sequence = {
-                kind: 'SequenceExpression',
-                instructions: [
-                    ...defaultBlock.instructions,
-                    {
-                        id: init.id,
-                        loc,
-                        lvalue: init.place,
-                        value: init.value,
-                    },
-                ],
-                id: final.id,
-                value: final.value,
-                loc,
-            };
-            return {
-                block: init.fallthrough,
-                value: sequence,
-                place: final.place,
-                id: final.id,
-            };
+            return this.wrapWithSequence([
+                ...block.instructions,
+                { id: init.id, loc, lvalue: init.place, value: init.value },
+            ], final, loc);
         }
+    }
+    visitTestBlock(testBlockId, loc, terminalKind) {
+        const test = this.visitValueBlock(testBlockId, loc);
+        const testBlock = this.cx.ir.blocks.get(test.block);
+        if (testBlock.terminal.kind !== 'branch') {
+            CompilerError.throwTodo({
+                reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for ${terminalKind} test block`,
+                description: null,
+                loc: testBlock.terminal.loc,
+                suggestions: null,
+            });
+        }
+        return {
+            test,
+            branch: {
+                consequent: testBlock.terminal.consequent,
+                alternate: testBlock.terminal.alternate,
+                loc: testBlock.terminal.loc,
+            },
+        };
     }
     visitValueBlockTerminal(terminal) {
         switch (terminal.kind) {
             case 'sequence': {
-                const block = this.visitValueBlock(terminal.block, terminal.loc);
+                const block = this.visitValueBlock(terminal.block, terminal.loc, terminal.fallthrough);
                 return {
                     value: block.value,
                     place: block.place,
@@ -35957,23 +35949,14 @@ class Driver {
                 };
             }
             case 'optional': {
-                const test = this.visitValueBlock(terminal.test, terminal.loc);
-                const testBlock = this.cx.ir.blocks.get(test.block);
-                if (testBlock.terminal.kind !== 'branch') {
-                    CompilerError.throwTodo({
-                        reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional test block`,
-                        description: null,
-                        loc: testBlock.terminal.loc,
-                        suggestions: null,
-                    });
-                }
-                const consequent = this.visitValueBlock(testBlock.terminal.consequent, terminal.loc);
+                const { test, branch } = this.visitTestBlock(terminal.test, terminal.loc, 'optional');
+                const consequent = this.visitValueBlock(branch.consequent, terminal.loc, terminal.fallthrough);
                 const call = {
                     kind: 'SequenceExpression',
                     instructions: [
                         {
                             id: test.id,
-                            loc: testBlock.terminal.loc,
+                            loc: branch.loc,
                             lvalue: test.place,
                             value: test.value,
                         },
@@ -35996,17 +35979,8 @@ class Driver {
                 };
             }
             case 'logical': {
-                const test = this.visitValueBlock(terminal.test, terminal.loc);
-                const testBlock = this.cx.ir.blocks.get(test.block);
-                if (testBlock.terminal.kind !== 'branch') {
-                    CompilerError.throwTodo({
-                        reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for logical test block`,
-                        description: null,
-                        loc: testBlock.terminal.loc,
-                        suggestions: null,
-                    });
-                }
-                const leftFinal = this.visitValueBlock(testBlock.terminal.consequent, terminal.loc);
+                const { test, branch } = this.visitTestBlock(terminal.test, terminal.loc, 'logical');
+                const leftFinal = this.visitValueBlock(branch.consequent, terminal.loc, terminal.fallthrough);
                 const left = {
                     kind: 'SequenceExpression',
                     instructions: [
@@ -36021,7 +35995,7 @@ class Driver {
                     value: leftFinal.value,
                     loc: terminal.loc,
                 };
-                const right = this.visitValueBlock(testBlock.terminal.alternate, terminal.loc);
+                const right = this.visitValueBlock(branch.alternate, terminal.loc, terminal.fallthrough);
                 const value = {
                     kind: 'LogicalExpression',
                     operator: terminal.operator,
@@ -36037,18 +36011,9 @@ class Driver {
                 };
             }
             case 'ternary': {
-                const test = this.visitValueBlock(terminal.test, terminal.loc);
-                const testBlock = this.cx.ir.blocks.get(test.block);
-                if (testBlock.terminal.kind !== 'branch') {
-                    CompilerError.throwTodo({
-                        reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for ternary test block`,
-                        description: null,
-                        loc: testBlock.terminal.loc,
-                        suggestions: null,
-                    });
-                }
-                const consequent = this.visitValueBlock(testBlock.terminal.consequent, terminal.loc);
-                const alternate = this.visitValueBlock(testBlock.terminal.alternate, terminal.loc);
+                const { test, branch } = this.visitTestBlock(terminal.test, terminal.loc, 'ternary');
+                const consequent = this.visitValueBlock(branch.consequent, terminal.loc, terminal.fallthrough);
+                const alternate = this.visitValueBlock(branch.alternate, terminal.loc, terminal.fallthrough);
                 const value = {
                     kind: 'ConditionalExpression',
                     test: test.value,
@@ -36064,11 +36029,10 @@ class Driver {
                 };
             }
             case 'maybe-throw': {
-                CompilerError.throwTodo({
-                    reason: `Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement`,
+                CompilerError.invariant(false, {
+                    reason: `Unexpected maybe-throw in visitValueBlockTerminal - should be handled in visitValueBlock`,
                     description: null,
                     loc: terminal.loc,
-                    suggestions: null,
                 });
             }
             case 'label': {
@@ -43405,6 +43369,10 @@ function findOptionalPlaces$1(fn) {
                     case 'sequence':
                     case 'ternary': {
                         testBlock = fn.body.blocks.get(terminal.fallthrough);
+                        break;
+                    }
+                    case 'maybe-throw': {
+                        testBlock = fn.body.blocks.get(terminal.continuation);
                         break;
                     }
                     default: {
@@ -52342,6 +52310,10 @@ function findOptionalPlaces(fn) {
                     }
                     case 'sequence': {
                         testBlock = fn.body.blocks.get(terminal.block);
+                        break;
+                    }
+                    case 'maybe-throw': {
+                        testBlock = fn.body.blocks.get(terminal.continuation);
                         break;
                     }
                     default: {
