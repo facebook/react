@@ -532,12 +532,8 @@ describe('ReactPerformanceTracks', () => {
     };
 
     class Window {}
-
-    class OpaqueOriginHTMLIFrameElement {
-      constructor(textContent) {
-        this.textContent = textContent;
-      }
-      contentWindow = new Proxy(new Window(), {
+    const createOpaqueOriginWindow = () => {
+      return new Proxy(new Window(), {
         get(target, prop) {
           if (prop === Symbol.toStringTag) {
             return target[Symbol.toStringTag];
@@ -550,6 +546,13 @@ describe('ReactPerformanceTracks', () => {
           );
         },
       });
+    };
+
+    class OpaqueOriginHTMLIFrameElement {
+      constructor(textContent) {
+        this.textContent = textContent;
+      }
+      contentWindow = createOpaqueOriginWindow();
       nodeType = 1;
       [Symbol.toStringTag] = 'HTMLIFrameElement';
     }
@@ -557,7 +560,10 @@ describe('ReactPerformanceTracks', () => {
     Scheduler.unstable_advanceTime(1);
     await act(() => {
       ReactNoop.render(
-        <App container={new OpaqueOriginHTMLIFrameElement('foo')} />,
+        <App
+          container={new OpaqueOriginHTMLIFrameElement('foo')}
+          contentWindow={createOpaqueOriginWindow()}
+        />,
       );
     });
 
@@ -584,7 +590,10 @@ describe('ReactPerformanceTracks', () => {
 
     await act(() => {
       ReactNoop.render(
-        <App container={new OpaqueOriginHTMLIFrameElement('bar')} />,
+        <App
+          container={new OpaqueOriginHTMLIFrameElement('bar')}
+          contentWindow={createOpaqueOriginWindow()}
+        />,
       );
     });
 
@@ -605,6 +614,10 @@ describe('ReactPerformanceTracks', () => {
                 ['+   contentWindow', 'Window'],
                 ['+   nodeType', '1'],
                 ['+   textContent', '"bar"'],
+                [
+                  '  contentWindow',
+                  'Referentially unequal but deeply equal objects. Consider memoization.',
+                ],
               ],
               tooltipText: 'App',
               track: 'Components ⚛',
