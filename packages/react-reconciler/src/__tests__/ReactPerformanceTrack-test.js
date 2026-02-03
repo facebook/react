@@ -523,4 +523,61 @@ describe('ReactPerformanceTracks', () => {
       ],
     ]);
   });
+
+  // @gate __DEV__ && enableComponentPerformanceTrack
+  it('handles proxies that throw when accessing properties', async () => {
+    // This test verifies that React handles proxy objects (like tRPC clients)
+    // that throw errors when their properties are accessed during diffing.
+    const createThrowingProxy = () =>
+      new Proxy(
+        {},
+        {
+          get() {
+            throw new Error('Proxy property access not allowed');
+          },
+          has() {
+            return true;
+          },
+          ownKeys() {
+            return ['foo', 'bar'];
+          },
+          getOwnPropertyDescriptor(target, prop) {
+            return {
+              configurable: true,
+              enumerable: true,
+            };
+          },
+        },
+      );
+
+    const App = function App({client, value}) {
+      Scheduler.unstable_advanceTime(10);
+      React.useEffect(() => {}, [client, value]);
+      return value;
+    };
+
+    Scheduler.unstable_advanceTime(1);
+    const proxy1 = createThrowingProxy();
+    await act(() => {
+      ReactNoop.render(<App client={proxy1} value={1} />);
+    });
+
+    performanceMeasureCalls.length = 0;
+
+    Scheduler.unstable_advanceTime(10);
+    const proxy2 = createThrowingProxy();
+    // This should not throw even though the proxy throws when accessing properties
+    await act(() => {
+      ReactNoop.render(<App client={proxy2} value={2} />);
+    });
+
+    // The component should still render and we should get a performance measure
+    // The properties that throw are simply skipped, but the value prop change is logged
+    expect(performanceMeasureCalls.length).toBeGreaterThan(0);
+    expect(performanceMeasureCalls[0][0]).toBe('\u200bApp');
+    // The value prop change should be logged
+    const properties = performanceMeasureCalls[0][1].detail.devtools.properties;
+    expect(properties).toContainEqual(['-\xa0value', '1']);
+    expect(properties).toContainEqual(['+\xa0value', '2']);
+  });
 });
