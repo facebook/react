@@ -139,7 +139,10 @@ export async function update(results: TestResults): Promise<void> {
  * Report test results to the user
  * @returns boolean indicatig whether all tests passed
  */
-export function report(results: TestResults, verbose: boolean = false): boolean {
+export function report(
+  results: TestResults,
+  verbose: boolean = false,
+): boolean {
   const failures: Array<[string, TestResult]> = [];
   for (const [basename, result] of results) {
     if (result.actual === result.expected && result.unexpectedError == null) {
@@ -150,7 +153,9 @@ export function report(results: TestResults, verbose: boolean = false): boolean 
       }
     } else {
       if (verbose) {
-        console.log(chalk.red.inverse.bold(' FAIL ') + ' ' + chalk.dim(basename));
+        console.log(
+          chalk.red.inverse.bold(' FAIL ') + ' ' + chalk.dim(basename),
+        );
       }
       failures.push([basename, result]);
     }

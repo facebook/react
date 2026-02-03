@@ -17,7 +17,7 @@
     "build": "yarn workspaces run build",
     "dev": "cd apps/playground && yarn dev",
     "test": "yarn workspaces run test",
-    "snap": "node packages/snap/dist/main.js",
+    "snap": "yarn workspace babel-plugin-react-compiler run snap",
     "snap:build": "yarn workspace snap run build",
     "npm:publish": "node scripts/release/publish",
     "eslint-docs": "yarn workspace babel-plugin-react-compiler build && node scripts/build-eslint-docs.js"

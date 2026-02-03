@@ -168,10 +168,12 @@ class Driver {
       innerValue = innerValue.value;
     }
 
-    // Only add the final instruction if the innermost value is not just a LoadLocal
-    // of the same place we're storing to (which would be a no-op).
-    // This happens when MaybeThrow blocks cause the sequence to already contain
-    // all the necessary instructions.
+    /*
+     * Only add the final instruction if the innermost value is not just a LoadLocal
+     * of the same place we're storing to (which would be a no-op).
+     * This happens when MaybeThrow blocks cause the sequence to already contain
+     * all the necessary instructions.
+     */
     const isLoadOfSamePlace =
       innerValue.kind === 'LoadLocal' &&
       innerValue.place.identifier.id === result.place.identifier.id;
@@ -496,7 +498,10 @@ class Driver {
         const init = this.visitValueBlock(terminal.init, terminal.loc);
         const initValue = this.valueBlockResultToSequence(init, terminal.loc);
 
-        const testValue = this.visitValueBlock(terminal.test, terminal.loc).value;
+        const testValue = this.visitValueBlock(
+          terminal.test,
+          terminal.loc,
+        ).value;
 
         const updateValue =
           terminal.update !== null

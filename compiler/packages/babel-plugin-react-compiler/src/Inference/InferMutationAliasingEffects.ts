@@ -508,7 +508,7 @@ function inferBlock(
   const terminal = block.terminal;
   if (terminal.kind === 'try' && terminal.handlerBinding != null) {
     context.catchHandlers.set(terminal.handler, terminal.handlerBinding);
-  } else if (terminal.kind === 'maybe-throw') {
+  } else if (terminal.kind === 'maybe-throw' && terminal.handler !== null) {
     const handlerParam = context.catchHandlers.get(terminal.handler);
     if (handlerParam != null) {
       CompilerError.invariant(state.kind(handlerParam) != null, {
