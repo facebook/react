@@ -96,65 +96,6 @@ export function addValueToProperties(
         desc = 'null';
         break;
       } else {
-        if (value.$$typeof === REACT_ELEMENT_TYPE) {
-          // JSX
-          const typeName = getComponentNameFromType(value.type) || '\u2026';
-          const key = value.key;
-          const props: any = value.props;
-          const propsKeys = Object.keys(props);
-          const propsLength = propsKeys.length;
-          if (key == null && propsLength === 0) {
-            desc = '<' + typeName + ' />';
-            break;
-          }
-          if (
-            indent < 3 ||
-            (propsLength === 1 && propsKeys[0] === 'children' && key == null)
-          ) {
-            desc = '<' + typeName + ' \u2026 />';
-            break;
-          }
-          properties.push([
-            prefix + '\xa0\xa0'.repeat(indent) + propertyName,
-            '<' + typeName,
-          ]);
-          if (key !== null) {
-            addValueToProperties('key', key, properties, indent + 1, prefix);
-          }
-          let hasChildren = false;
-          let addedProperties = 0;
-          for (const propKey in props) {
-            addedProperties++;
-            if (propKey === 'children') {
-              if (
-                props.children != null &&
-                (!isArray(props.children) || props.children.length > 0)
-              ) {
-                hasChildren = true;
-              }
-            } else if (
-              hasOwnProperty.call(props, propKey) &&
-              propKey[0] !== '_'
-            ) {
-              addValueToProperties(
-                propKey,
-                props[propKey],
-                properties,
-                indent + 1,
-                prefix,
-              );
-            }
-
-            if (addedProperties >= OBJECT_WIDTH_LIMIT) {
-              break;
-            }
-          }
-          properties.push([
-            '',
-            hasChildren ? '>\u2026</' + typeName + '>' : '/>',
-          ]);
-          return;
-        }
         // $FlowFixMe[method-unbinding]
         const objectToString = Object.prototype.toString.call(value);
         let objectName = objectToString.slice(8, objectToString.length - 1);
@@ -238,19 +179,74 @@ export function addValueToProperties(
           return;
         }
         if (objectName === 'Object') {
+          if (
+            '$$typeof' in value &&
+            hasOwnProperty.call(value, '$$typeof') &&
+            value.$$typeof === REACT_ELEMENT_TYPE
+          ) {
+            // JSX
+            const typeName = getComponentNameFromType(value.type) || '\u2026';
+            const key = value.key;
+            const props: any = value.props;
+            const propsKeys = Object.keys(props);
+            const propsLength = propsKeys.length;
+            if (key == null && propsLength === 0) {
+              desc = '<' + typeName + ' />';
+              break;
+            }
+            if (
+              indent < 3 ||
+              (propsLength === 1 && propsKeys[0] === 'children' && key == null)
+            ) {
+              desc = '<' + typeName + ' \u2026 />';
+              break;
+            }
+            properties.push([
+              prefix + '\xa0\xa0'.repeat(indent) + propertyName,
+              '<' + typeName,
+            ]);
+            if (key !== null) {
+              addValueToProperties('key', key, properties, indent + 1, prefix);
+            }
+            let hasChildren = false;
+            let addedProperties = 0;
+            for (const propKey in props) {
+              addedProperties++;
+              if (propKey === 'children') {
+                if (
+                  props.children != null &&
+                  (!isArray(props.children) || props.children.length > 0)
+                ) {
+                  hasChildren = true;
+                }
+              } else if (
+                hasOwnProperty.call(props, propKey) &&
+                propKey[0] !== '_'
+              ) {
+                addValueToProperties(
+                  propKey,
+                  props[propKey],
+                  properties,
+                  indent + 1,
+                  prefix,
+                );
+              }
+
+              if (addedProperties >= OBJECT_WIDTH_LIMIT) {
+                break;
+              }
+            }
+            properties.push([
+              '',
+              hasChildren ? '>\u2026</' + typeName + '>' : '/>',
+            ]);
+            return;
+          }
+
           const proto: any = Object.getPrototypeOf(value);
           if (proto && typeof proto.constructor === 'function') {
             objectName = proto.constructor.name;
           }
-        } else if ('nodeType' in value && value.nodeType === 1) {
-          // Looks like a DOM node. Using nodeType check over objectName.startsWith('HTML')
-          // for presumed better performance characteristics.
-          // Bail out of diffing since DOM nodes are mutable boxes
-          // anyway. Also prevents accesing potential cross-origin properties on
-          // iframes.
-          // TODO: Move check to host config since not all renderers target DOM.
-          desc = objectName;
-          break;
         }
         properties.push([
           prefix + '\xa0\xa0'.repeat(indent) + propertyName,
