@@ -191,14 +191,7 @@ function getContextReassignment(
           for (const operand of operands) {
             CompilerError.invariant(operand.effect !== Effect.Unknown, {
               reason: `Expected effects to be inferred prior to ValidateLocalsNotReassignedAfterRender`,
-              description: null,
-              details: [
-                {
-                  kind: 'error',
-                  loc: operand.loc,
-                  message: '',
-                },
-              ],
+              loc: operand.loc,
             });
             const reassignment = reassigningFunctions.get(
               operand.identifier.id,

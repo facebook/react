@@ -110,7 +110,8 @@ describe('ReactFlushSync', () => {
       assertConsoleErrorDev([
         'flushSync was called from inside a lifecycle method. React ' +
           'cannot flush when React is already rendering. Consider moving this ' +
-          'call to a scheduler task or micro task.',
+          'call to a scheduler task or micro task.' +
+          '\n    in App',
       ]);
 
       await waitForPaint([]);

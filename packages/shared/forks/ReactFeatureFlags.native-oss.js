@@ -51,13 +51,10 @@ export const enableSuspenseCallback: boolean = false;
 export const enableTaint: boolean = true;
 export const enableTransitionTracing: boolean = false;
 export const enableTrustedTypesIntegration: boolean = false;
-export const enableUseEffectEventHook: boolean = true;
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
-export const renameElementSymbol: boolean = true;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableHydrationLaneScheduling: boolean = true;
 
 export const enableYieldingBeforePassive: boolean = false;
 
@@ -75,6 +72,7 @@ export const ownerStackLimit = 1e4;
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
 export const enableFragmentRefsInstanceHandles: boolean = false;
+export const enableFragmentRefsTextNodes: boolean = false;
 
 export const enableInternalInstanceMap: boolean = false;
 

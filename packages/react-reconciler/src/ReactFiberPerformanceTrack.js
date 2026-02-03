@@ -1569,6 +1569,41 @@ export function logPaintYieldPhase(
   }
 }
 
+export function logApplyGesturePhase(
+  startTime: number,
+  endTime: number,
+  debugTask: null | ConsoleTask,
+): void {
+  if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Create Ghost Tree',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary-dark',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Create Ghost Tree',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary-dark',
+      );
+    }
+  }
+}
+
 export function logStartViewTransitionYieldPhase(
   startTime: number,
   endTime: number,

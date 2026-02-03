@@ -18,13 +18,15 @@ function Foo() {
 ```
 Found 1 error:
 
-Todo: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement
+Invariant: Expected a variable declaration
 
-error.todo-repro-declaration-for-all-identifiers.ts:5:20
+Got ExpressionStatement.
+
+error.todo-repro-declaration-for-all-identifiers.ts:5:4
   3 |     // NOTE: this fixture previously failed during LeaveSSA;
   4 |     // double-check this code when supporting value blocks in try/catch
 > 5 |     for (let i = 0; i < 2; i++) {}
-    |                     ^ Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected a variable declaration
   6 |   } catch {}
   7 | }
   8 |

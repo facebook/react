@@ -12,8 +12,8 @@ import * as readline from 'readline';
 import ts from 'typescript';
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
-import {FILTER_PATH, PROJECT_ROOT} from './constants';
-import {TestFilter, getFixtures, readTestFilter} from './fixture-utils';
+import {PROJECT_ROOT} from './constants';
+import {TestFilter, getFixtures} from './fixture-utils';
 import {TestResult, TestResults, report, update} from './reporter';
 import {
   RunnerAction,
@@ -23,6 +23,7 @@ import {
 } from './runner-watch';
 import * as runnerWorker from './runner-worker';
 import {execSync} from 'child_process';
+import {runMinimize} from './minimize';
 
 const WORKER_PATH = require.resolve('./runner-worker.js');
 const NUM_WORKERS = cpus().length - 1;
@@ -33,47 +34,81 @@ type RunnerOptions = {
   sync: boolean;
   workerThreads: boolean;
   watch: boolean;
-  filter: boolean;
   update: boolean;
   pattern?: string;
+  debug: boolean;
 };
 
-const opts: RunnerOptions = yargs
-  .boolean('sync')
-  .describe(
-    'sync',
-    'Run compiler in main thread (instead of using worker threads or subprocesses). Defaults to false.',
+async function runTestCommand(opts: RunnerOptions): Promise<void> {
+  await main(opts);
+}
+
+async function runMinimizeCommand(path: string): Promise<void> {
+  await runMinimize({path});
+}
+
+yargs(hideBin(process.argv))
+  .command(
+    ['test', '$0'],
+    'Run compiler tests',
+    yargs => {
+      return yargs
+        .boolean('sync')
+        .describe(
+          'sync',
+          'Run compiler in main thread (instead of using worker threads or subprocesses). Defaults to false.',
+        )
+        .default('sync', false)
+        .boolean('worker-threads')
+        .describe(
+          'worker-threads',
+          'Run compiler in worker threads (instead of subprocesses). Defaults to true.',
+        )
+        .default('worker-threads', true)
+        .boolean('watch')
+        .describe(
+          'watch',
+          'Run compiler in watch mode, re-running after changes',
+        )
+        .alias('w', 'watch')
+        .default('watch', false)
+        .boolean('update')
+        .alias('u', 'update')
+        .describe('update', 'Update fixtures')
+        .default('update', false)
+        .string('pattern')
+        .alias('p', 'pattern')
+        .describe(
+          'pattern',
+          'Optional glob pattern to filter fixtures (e.g., "error.*", "use-memo")',
+        )
+        .boolean('debug')
+        .alias('d', 'debug')
+        .describe('debug', 'Enable debug logging to print HIR for each pass')
+        .default('debug', false);
+    },
+    async argv => {
+      await runTestCommand(argv as RunnerOptions);
+    },
   )
-  .default('sync', false)
-  .boolean('worker-threads')
-  .describe(
-    'worker-threads',
-    'Run compiler in worker threads (instead of subprocesses). Defaults to true.',
-  )
-  .default('worker-threads', true)
-  .boolean('watch')
-  .describe('watch', 'Run compiler in watch mode, re-running after changes')
-  .alias('w', 'watch')
-  .default('watch', false)
-  .boolean('update')
-  .alias('u', 'update')
-  .describe('update', 'Update fixtures')
-  .default('update', false)
-  .boolean('filter')
-  .describe(
-    'filter',
-    'Only run fixtures which match the contents of testfilter.txt',
-  )
-  .default('filter', false)
-  .string('pattern')
-  .alias('p', 'pattern')
-  .describe(
-    'pattern',
-    'Optional glob pattern to filter fixtures (e.g., "error.*", "use-memo")',
+  .command(
+    'minimize',
+    'Minimize a test case to reproduce a compiler error',
+    yargs => {
+      return yargs
+        .string('path')
+        .alias('p', 'path')
+        .describe('path', 'Path to the file to minimize')
+        .demandOption('path');
+    },
+    async argv => {
+      await runMinimizeCommand(argv.path as string);
+    },
   )
   .help('help')
   .strict()
-  .parseSync(hideBin(process.argv)) as RunnerOptions;
+  .demandCommand()
+  .parse();
 
 /**
  * Do a test run and return the test results
@@ -82,26 +117,25 @@ async function runFixtures(
   worker: Worker & typeof runnerWorker,
   filter: TestFilter | null,
   compilerVersion: number,
+  debug: boolean,
+  requireSingleFixture: boolean,
+  sync: boolean,
 ): Promise<TestResults> {
   // We could in theory be fancy about tracking the contents of the fixtures
   // directory via our file subscription, but it's simpler to just re-read
   // the directory each time.
   const fixtures = await getFixtures(filter);
   const isOnlyFixture = filter !== null && fixtures.size === 1;
+  const shouldLog = debug && (!requireSingleFixture || isOnlyFixture);
 
   let entries: Array<[string, TestResult]>;
-  if (!opts.sync) {
+  if (!sync) {
     // Note: promise.all to ensure parallelism when enabled
     const work: Array<Promise<[string, TestResult]>> = [];
     for (const [fixtureName, fixture] of fixtures) {
       work.push(
         worker
-          .transformFixture(
-            fixture,
-            compilerVersion,
-            (filter?.debug ?? false) && isOnlyFixture,
-            true,
-          )
+          .transformFixture(fixture, compilerVersion, shouldLog, true)
           .then(result => [fixtureName, result]),
       );
     }
@@ -113,7 +147,7 @@ async function runFixtures(
       let output = await runnerWorker.transformFixture(
         fixture,
         compilerVersion,
-        (filter?.debug ?? false) && isOnlyFixture,
+        shouldLog,
         true,
       );
       entries.push([fixtureName, output]);
@@ -127,8 +161,9 @@ async function runFixtures(
 async function onChange(
   worker: Worker & typeof runnerWorker,
   state: RunnerState,
+  sync: boolean,
 ) {
-  const {compilerVersion, isCompilerBuildValid, mode, filter} = state;
+  const {compilerVersion, isCompilerBuildValid, mode, filter, debug} = state;
   if (isCompilerBuildValid) {
     const start = performance.now();
 
@@ -142,8 +177,19 @@ async function onChange(
       worker,
       mode.filter ? filter : null,
       compilerVersion,
+      debug,
+      true, // requireSingleFixture in watch mode
+      sync,
     );
     const end = performance.now();
+
+    // Track fixture status for autocomplete suggestions
+    for (const [basename, result] of results) {
+      const failed =
+        result.actual !== result.expected || result.unexpectedError != null;
+      state.fixtureLastRunStatus.set(basename, failed ? 'fail' : 'pass');
+    }
+
     if (mode.action === RunnerAction.Update) {
       update(results);
       state.lastUpdate = end;
@@ -159,11 +205,13 @@ async function onChange(
   console.log(
     '\n' +
       (mode.filter
-        ? `Current mode = FILTER, filter test fixtures by "${FILTER_PATH}".`
+        ? `Current mode = FILTER, pattern = "${filter?.paths[0] ?? ''}".`
         : 'Current mode = NORMAL, run all test fixtures.') +
       '\nWaiting for input or file changes...\n' +
       'u     - update all fixtures\n' +
-      `f     - toggle (turn ${mode.filter ? 'off' : 'on'}) filter mode\n` +
+      `d     - toggle (turn ${debug ? 'off' : 'on'}) debug logging\n` +
+      'p     - enter pattern to filter fixtures\n' +
+      (mode.filter ? 'a     - run all tests (exit filter mode)\n' : '') +
       'q     - quit\n' +
       '[any] - rerun tests\n',
   );
@@ -180,15 +228,16 @@ export async function main(opts: RunnerOptions): Promise<void> {
   worker.getStderr().pipe(process.stderr);
   worker.getStdout().pipe(process.stdout);
 
-  // If pattern is provided, force watch mode off and use pattern filter
-  const shouldWatch = opts.watch && opts.pattern == null;
-  if (opts.watch && opts.pattern != null) {
-    console.warn('NOTE: --watch is ignored when a --pattern is supplied');
-  }
+  // Check if watch mode should be enabled
+  const shouldWatch = opts.watch;
 
   if (shouldWatch) {
-    makeWatchRunner(state => onChange(worker, state), opts.filter);
-    if (opts.filter) {
+    makeWatchRunner(
+      state => onChange(worker, state, opts.sync),
+      opts.debug,
+      opts.pattern,
+    );
+    if (opts.pattern) {
       /**
        * Warm up wormers when in watch mode. Loading the Forget babel plugin
        * and all of its transitive dependencies takes 1-3s (per worker) on a M1.
@@ -236,14 +285,18 @@ export async function main(opts: RunnerOptions): Promise<void> {
               let testFilter: TestFilter | null = null;
               if (opts.pattern) {
                 testFilter = {
-                  debug: true,
                   paths: [opts.pattern],
                 };
-              } else if (opts.filter) {
-                testFilter = await readTestFilter();
               }
 
-              const results = await runFixtures(worker, testFilter, 0);
+              const results = await runFixtures(
+                worker,
+                testFilter,
+                0,
+                opts.debug,
+                false, // no requireSingleFixture in non-watch mode
+                opts.sync,
+              );
               if (opts.update) {
                 update(results);
                 isSuccess = true;
@@ -261,5 +314,3 @@ export async function main(opts: RunnerOptions): Promise<void> {
       );
   }
 }
-
-main(opts).catch(error => console.error(error));

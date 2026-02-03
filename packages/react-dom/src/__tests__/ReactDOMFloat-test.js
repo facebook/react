@@ -520,10 +520,7 @@ describe('ReactDOMFloat', () => {
     );
     await waitForAll([]);
     assertConsoleErrorDev([
-      [
-        'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
-        {withoutStack: true},
-      ],
+      'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
     ]);
 
     root.render(
@@ -580,11 +577,8 @@ describe('ReactDOMFloat', () => {
     );
     await waitForAll([]);
     assertConsoleErrorDev([
-      [
-        'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. ' +
-          'Consider adding precedence="default" or moving it into the root <head> tag.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. ' +
+        'Consider adding precedence="default" or moving it into the root <head> tag.',
     ]);
 
     root.render(
@@ -608,6 +602,14 @@ describe('ReactDOMFloat', () => {
         '>   <script href="foo">\n' +
         '\n' +
         '    in script (at **)',
+      ...(gate('enableTrustedTypesIntegration')
+        ? [
+            'Encountered a script tag while rendering React component. ' +
+              'Scripts inside React components are never executed when rendering on the client. ' +
+              'Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n' +
+              '     in script (at **)',
+          ]
+        : []),
     ]);
 
     root.render(
@@ -633,14 +635,11 @@ describe('ReactDOMFloat', () => {
       </>,
     );
     await waitForAll([]);
-    assertConsoleErrorDev(
-      [
-        'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
-          'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
-          'somewhere in the <body>.',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
+        'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
+        'somewhere in the <body>.',
+    ]);
     return;
   });
 
@@ -2754,6 +2753,14 @@ body {
         '>   <script itemProp="foo">\n' +
         '\n' +
         '    in script (at **)',
+      ...(gate('enableTrustedTypesIntegration')
+        ? [
+            'Encountered a script tag while rendering React component. ' +
+              'Scripts inside React components are never executed when rendering on the client. ' +
+              'Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n' +
+              '     in script (at **)',
+          ]
+        : []),
     ]);
   });
 
@@ -3628,7 +3635,24 @@ body {
     assertLog(['load stylesheet: foo']);
     await waitForAll([]);
     assertConsoleErrorDev([
-      "Hydration failed because the server rendered HTML didn't match the client.",
+      "Error: Hydration failed because the server rendered HTML didn't match the client. " +
+        'As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n' +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\n' +
+        'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
+        'https://react.dev/link/hydration-mismatch\n\n' +
+        '  <html>\n' +
+        '    <body>\n' +
+        '      <div>\n' +
+        '      <div>\n' +
+        '        <Suspense fallback="loading 2...">\n' +
+        '          <Component>\n' +
+        '            <link>\n' +
+        '+           <div>' +
+        '\n    in <stack>',
     ]);
     jest.runAllTimers();
 

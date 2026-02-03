@@ -229,14 +229,7 @@ export function inferMutationAliasingRanges(
         } else {
           CompilerError.invariant(effect.kind === 'Freeze', {
             reason: `Unexpected '${effect.kind}' effect for MaybeThrow terminal`,
-            description: null,
-            details: [
-              {
-                kind: 'error',
-                loc: block.terminal.loc,
-                message: null,
-              },
-            ],
+            loc: block.terminal.loc,
           });
         }
       }
@@ -385,14 +378,7 @@ export function inferMutationAliasingRanges(
           case 'Apply': {
             CompilerError.invariant(false, {
               reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
-              description: null,
-              details: [
-                {
-                  kind: 'error',
-                  loc: effect.function.loc,
-                  message: null,
-                },
-              ],
+              loc: effect.function.loc,
             });
           }
           case 'MutateTransitive':
@@ -539,14 +525,7 @@ export function inferMutationAliasingRanges(
       const fromNode = state.nodes.get(from.identifier);
       CompilerError.invariant(fromNode != null, {
         reason: `Expected a node to exist for all parameters and context variables`,
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: into.loc,
-            message: null,
-          },
-        ],
+        loc: into.loc,
       });
       if (fromNode.lastMutated === mutationIndex) {
         if (into.identifier.id === fn.returns.identifier.id) {

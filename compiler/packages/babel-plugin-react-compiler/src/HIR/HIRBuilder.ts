@@ -506,15 +506,7 @@ export default class HIRBuilder {
         last.breakBlock === breakBlock,
       {
         reason: 'Mismatched label',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: null,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: GeneratedSource,
       },
     );
     return value;
@@ -535,15 +527,7 @@ export default class HIRBuilder {
         last.breakBlock === breakBlock,
       {
         reason: 'Mismatched label',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: null,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: GeneratedSource,
       },
     );
     return value;
@@ -577,15 +561,7 @@ export default class HIRBuilder {
         last.breakBlock === breakBlock,
       {
         reason: 'Mismatched loops',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: null,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: GeneratedSource,
       },
     );
     return value;
@@ -608,15 +584,7 @@ export default class HIRBuilder {
     }
     CompilerError.invariant(false, {
       reason: 'Expected a loop or switch to be in scope',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: null,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: GeneratedSource,
     });
   }
 
@@ -635,29 +603,13 @@ export default class HIRBuilder {
       } else if (label !== null && scope.label === label) {
         CompilerError.invariant(false, {
           reason: 'Continue may only refer to a labeled loop',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: null,
-              message: null,
-            },
-          ],
-          suggestions: null,
+          loc: GeneratedSource,
         });
       }
     }
     CompilerError.invariant(false, {
       reason: 'Expected a loop to be in scope',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: null,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: GeneratedSource,
     });
   }
 }
@@ -678,15 +630,7 @@ function _shrink(func: HIR): void {
     const block = func.blocks.get(blockId);
     CompilerError.invariant(block != null, {
       reason: `expected block ${blockId} to exist`,
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: null,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: GeneratedSource,
     });
     target = getTargetIfIndirection(block);
     if (target !== null) {
@@ -817,13 +761,7 @@ function getReversePostorderedBlocks(func: HIR): HIR['blocks'] {
     CompilerError.invariant(block != null, {
       reason: '[HIRBuilder] Unexpected null block',
       description: `expected block ${blockId} to exist`,
-      details: [
-        {
-          kind: 'error',
-          loc: GeneratedSource,
-          message: null,
-        },
-      ],
+      loc: GeneratedSource,
     });
     const successors = [...eachTerminalSuccessor(block.terminal)].reverse();
     const fallthrough = terminalFallthrough(block.terminal);
@@ -878,15 +816,7 @@ export function markInstructionIds(func: HIR): void {
     for (const instr of block.instructions) {
       CompilerError.invariant(!visited.has(instr), {
         reason: `${printInstruction(instr)} already visited!`,
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: instr.loc,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: instr.loc,
       });
       visited.add(instr);
       instr.id = makeInstructionId(++id);
@@ -908,13 +838,7 @@ export function markPredecessors(func: HIR): void {
     CompilerError.invariant(block != null, {
       reason: 'unexpected missing block',
       description: `block ${blockId}`,
-      details: [
-        {
-          kind: 'error',
-          loc: GeneratedSource,
-          message: null,
-        },
-      ],
+      loc: GeneratedSource,
     });
     if (prevBlock) {
       block.preds.add(prevBlock.id);

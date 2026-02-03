@@ -1505,13 +1505,10 @@ describe('ReactDOMForm', () => {
     // Dispatch outside of a transition.
     await act(() => dispatch());
     assertConsoleErrorDev([
-      [
-        'An async function with useActionState was called outside of a transition. ' +
-          'This is likely not what you intended (for example, isPending will not update ' +
-          'correctly). Either call the returned function inside startTransition, or pass it ' +
-          'to an `action` or `formAction` prop.',
-        {withoutStack: true},
-      ],
+      'An async function with useActionState was called outside of a transition. ' +
+        'This is likely not what you intended (for example, isPending will not update ' +
+        'correctly). Either call the returned function inside startTransition, or pass it ' +
+        'to an `action` or `formAction` prop.',
     ]);
     assertLog([
       'Suspend! [Count: 1]',
@@ -1597,6 +1594,57 @@ describe('ReactDOMForm', () => {
     // The form was reset to the new value from the server.
     expect(inputRef.current.value).toBe('acdlite');
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
+  });
+
+  it('should fire onReset on automatic form reset', async () => {
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+
+    let setValue;
+    const defaultValue = 0;
+    function App({promiseForUsername}) {
+      const [value, _setValue] = useState(defaultValue);
+      setValue = _setValue;
+
+      return (
+        <form
+          ref={formRef}
+          action={async formData => {
+            Scheduler.log(`Async action started`);
+            await getText('Wait');
+          }}
+          onReset={() => {
+            setValue(defaultValue);
+          }}>
+          <input
+            ref={inputRef}
+            text="text"
+            name="amount"
+            value={value}
+            onChange={event => setValue(event.currentTarget.value)}
+          />
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    // Dirty the controlled input
+    await act(() => setValue('3'));
+    expect(inputRef.current.value).toEqual('3');
+
+    // Submit the form. This will trigger an async action.
+    await submit(formRef.current);
+    assertLog(['Async action started']);
+
+    // We haven't reset yet.
+    expect(inputRef.current.value).toEqual('3');
+
+    // Action completes. onReset has been fired and values reset manually.
+    await act(() => resolveText('Wait'));
+    assertLog([]);
+    expect(inputRef.current.value).toEqual('0');
   });
 
   it('requestFormReset schedules a form reset after transition completes', async () => {
@@ -1967,15 +2015,10 @@ describe('ReactDOMForm', () => {
 
     // This triggers a synchronous requestFormReset, and a warning
     await act(() => resolveText('Wait 1'));
-    assertConsoleErrorDev(
-      [
-        'requestFormReset was called outside a transition or action. ' +
-          'To fix, move to an action, or wrap with startTransition.',
-      ],
-      {
-        withoutStack: true,
-      },
-    );
+    assertConsoleErrorDev([
+      'requestFormReset was called outside a transition or action. ' +
+        'To fix, move to an action, or wrap with startTransition.',
+    ]);
     assertLog(['Request form reset']);
 
     // The form was reset even though the action didn't finish.
@@ -2285,15 +2328,21 @@ describe('ReactDOMForm', () => {
     await submit(formRef.current);
     assertLog([actionFn]);
 
-    // Everything else is toString-ed
+    // Everything else is toString-ed, unless trusted types are enabled.
     class MyAction {
       toString() {
         return 'stringified action';
       }
     }
-    await act(() => root.render(<Form action={new MyAction()} />));
+    const instance = new MyAction();
+
+    await act(() => root.render(<Form action={instance} />));
     await submit(formRef.current);
-    assertLog(['stringified action']);
+    assertLog(
+      gate('enableTrustedTypesIntegration')
+        ? [instance]
+        : ['stringified action'],
+    );
   });
 
   it('form actions should retain status when nested state changes', async () => {
