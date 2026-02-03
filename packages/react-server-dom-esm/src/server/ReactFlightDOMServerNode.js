@@ -17,7 +17,6 @@ import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {Thenable} from 'shared/ReactTypes';
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 import type {Duplex} from 'stream';
 
@@ -185,7 +184,7 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
-    enableProfilerTimer && options ? options.startTime : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannel !== undefined,
@@ -307,7 +306,7 @@ function prerenderToNodeStream(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
-      enableProfilerTimer && options ? options.startTime : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,

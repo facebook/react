@@ -15,7 +15,6 @@ import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {ReactFormState, Thenable} from 'shared/ReactTypes';
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import type {
   ServerManifest,
   ServerReferenceId,
@@ -197,7 +196,7 @@ export function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
-    enableProfilerTimer && options ? options.startTime : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannel !== undefined,
@@ -355,7 +354,7 @@ export function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
-    enableProfilerTimer && options ? options.startTime : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -469,7 +468,7 @@ export function prerenderToNodeStream(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
-      enableProfilerTimer && options ? options.startTime : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
@@ -532,7 +531,7 @@ export function prerender(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
-      enableProfilerTimer && options ? options.startTime : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,

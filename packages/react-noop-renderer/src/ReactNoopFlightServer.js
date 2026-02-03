@@ -85,7 +85,7 @@ function render(model: ReactClientValue, options?: Options): Destination {
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     undefined,
-    __PROFILE__ && options ? options.startTime : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     __DEV__ && options && options.debugChannel !== undefined,

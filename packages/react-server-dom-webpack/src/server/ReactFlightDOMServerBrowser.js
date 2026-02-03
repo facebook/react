@@ -15,8 +15,6 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
-
 import {
   createRequest,
   createPrerenderRequest,
@@ -129,7 +127,7 @@ function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
-    enableProfilerTimer && options ? options.startTime : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -218,7 +216,7 @@ function prerender(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
-      enableProfilerTimer && options ? options.startTime : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
