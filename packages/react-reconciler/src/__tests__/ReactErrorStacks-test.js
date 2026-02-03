@@ -202,7 +202,6 @@ describe('ReactFragment', () => {
     ]);
   });
 
-  // @gate enableActivity
   it('includes built-in for Activity', async () => {
     ReactNoop.createRoot({
       onCaughtError,

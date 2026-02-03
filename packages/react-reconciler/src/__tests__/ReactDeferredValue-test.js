@@ -696,7 +696,6 @@ describe('ReactDeferredValue', () => {
     expect(root).toMatchRenderedOutput('Content');
   });
 
-  // @gate enableActivity
   it('useDeferredValue can spawn a deferred task while prerendering a hidden tree', async () => {
     function App() {
       const text = useDeferredValue('Final', 'Preview');
@@ -742,7 +741,6 @@ describe('ReactDeferredValue', () => {
     expect(root).toMatchRenderedOutput(<div>Final</div>);
   });
 
-  // @gate enableActivity
   it('useDeferredValue can prerender the initial value inside a hidden tree', async () => {
     function App({text}) {
       const renderedText = useDeferredValue(text, `Preview [${text}]`);
@@ -805,7 +803,6 @@ describe('ReactDeferredValue', () => {
     expect(root).toMatchRenderedOutput(<div>B</div>);
   });
 
-  // @gate enableActivity
   it(
     'useDeferredValue skips the preview state when revealing a hidden tree ' +
       'if the final value is referentially identical',
@@ -845,7 +842,6 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // @gate enableActivity
   it(
     'useDeferredValue does not skip the preview state when revealing a ' +
       'hidden tree if the final value is different from the currently rendered one',
@@ -890,7 +886,6 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // @gate enableActivity
   it(
     'useDeferredValue does not show "previous" value when revealing a hidden ' +
       'tree (no initial value)',
