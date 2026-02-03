@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c9142574c251446f43a79a17a9a45730>>
+ * @generated SignedSource<<0abfbc8db539e4b52264fbd2b867b9e2>>
  */
 
 "use strict";
@@ -532,42 +532,74 @@ __DEV__ &&
     }
     function lazyInitializer(payload) {
       if (-1 === payload._status) {
-        var ctor = payload._result,
-          thenable = ctor();
+        var resolveDebugValue = null,
+          rejectDebugValue = null,
+          ioInfo = payload._ioInfo;
+        null != ioInfo &&
+          ((ioInfo.start = ioInfo.end = performance.now()),
+          (ioInfo.value = new Promise(function (resolve, reject) {
+            resolveDebugValue = resolve;
+            rejectDebugValue = reject;
+          })));
+        ioInfo = payload._result;
+        var thenable = ioInfo();
         thenable.then(
           function (moduleObject) {
-            if (0 === payload._status || -1 === payload._status)
-              (payload._status = 1),
-                (payload._result = moduleObject),
-                void 0 === thenable.status &&
-                  ((thenable.status = "fulfilled"),
-                  (thenable.value = moduleObject));
+            if (0 === payload._status || -1 === payload._status) {
+              payload._status = 1;
+              payload._result = moduleObject;
+              var _ioInfo = payload._ioInfo;
+              if (null != _ioInfo) {
+                _ioInfo.end = performance.now();
+                var debugValue =
+                  null == moduleObject ? void 0 : moduleObject.default;
+                resolveDebugValue(debugValue);
+                _ioInfo.value.status = "fulfilled";
+                _ioInfo.value.value = debugValue;
+              }
+              void 0 === thenable.status &&
+                ((thenable.status = "fulfilled"),
+                (thenable.value = moduleObject));
+            }
           },
           function (error) {
-            if (0 === payload._status || -1 === payload._status)
-              (payload._status = 2),
-                (payload._result = error),
-                void 0 === thenable.status &&
-                  ((thenable.status = "rejected"), (thenable.reason = error));
+            if (0 === payload._status || -1 === payload._status) {
+              payload._status = 2;
+              payload._result = error;
+              var _ioInfo2 = payload._ioInfo;
+              null != _ioInfo2 &&
+                ((_ioInfo2.end = performance.now()),
+                _ioInfo2.value.then(noop, noop),
+                rejectDebugValue(error),
+                (_ioInfo2.value.status = "rejected"),
+                (_ioInfo2.value.reason = error));
+              void 0 === thenable.status &&
+                ((thenable.status = "rejected"), (thenable.reason = error));
+            }
           }
         );
+        ioInfo = payload._ioInfo;
+        if (null != ioInfo) {
+          var displayName = thenable.displayName;
+          "string" === typeof displayName && (ioInfo.name = displayName);
+        }
         -1 === payload._status &&
           ((payload._status = 0), (payload._result = thenable));
       }
       if (1 === payload._status)
         return (
-          (ctor = payload._result),
-          void 0 === ctor &&
+          (ioInfo = payload._result),
+          void 0 === ioInfo &&
             console.error(
               "lazy: Expected the result of a dynamic import() call. Instead received: %s\n\nYour code should look like: \n  const MyComponent = lazy(() => import('./MyComponent'))\n\nDid you accidentally put curly braces around the import?",
-              ctor
+              ioInfo
             ),
-          "default" in ctor ||
+          "default" in ioInfo ||
             console.error(
               "lazy: Expected the result of a dynamic import() call. Instead received: %s\n\nYour code should look like: \n  const MyComponent = lazy(() => import('./MyComponent'))",
-              ctor
+              ioInfo
             ),
-          ctor.default
+          ioInfo.default
         );
       throw payload._result;
     }
@@ -1243,11 +1275,24 @@ __DEV__ &&
       );
     };
     exports.lazy = function (ctor) {
-      return {
-        $$typeof: REACT_LAZY_TYPE,
-        _payload: { _status: -1, _result: ctor },
-        _init: lazyInitializer
-      };
+      ctor = { _status: -1, _result: ctor };
+      var lazyType = {
+          $$typeof: REACT_LAZY_TYPE,
+          _payload: ctor,
+          _init: lazyInitializer
+        },
+        ioInfo = {
+          name: "lazy",
+          start: -1,
+          end: -1,
+          value: null,
+          owner: null,
+          debugStack: Error("react-stack-top-frame"),
+          debugTask: console.createTask ? console.createTask("lazy()") : null
+        };
+      ctor._ioInfo = ioInfo;
+      lazyType._debugInfo = [{ awaited: ioInfo }];
+      return lazyType;
     };
     exports.memo = function (type, compare) {
       null == type &&
@@ -1416,7 +1461,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.3.0-native-fb-3e00319b-20260203";
+    exports.version = "19.3.0-native-fb-e32c1261-20260203";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
