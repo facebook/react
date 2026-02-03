@@ -82,6 +82,14 @@ export function addObjectToProperties(
   }
 }
 
+function readTypeof(value: any): any {
+  try {
+    return value.$$typeof;
+  } catch (error) {
+    return undefined;
+  }
+}
+
 export function addValueToProperties(
   propertyName: string,
   value: mixed,
@@ -96,7 +104,7 @@ export function addValueToProperties(
         desc = 'null';
         break;
       } else {
-        if (value.$$typeof === REACT_ELEMENT_TYPE) {
+        if (readTypeof(value) === REACT_ELEMENT_TYPE) {
           // JSX
           const typeName = getComponentNameFromType(value.type) || '\u2026';
           const key = value.key;
@@ -352,9 +360,9 @@ export function addObjectDiffToProperties(
           typeof nextValue === 'object' &&
           prevValue !== null &&
           nextValue !== null &&
-          prevValue.$$typeof === nextValue.$$typeof
+          readTypeof(prevValue) === readTypeof(nextValue)
         ) {
-          if (nextValue.$$typeof === REACT_ELEMENT_TYPE) {
+          if (readTypeof(nextValue) === REACT_ELEMENT_TYPE) {
             if (
               prevValue.type === nextValue.type &&
               prevValue.key === nextValue.key
