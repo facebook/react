@@ -128,6 +128,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
+  REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 import {setCurrentFiber} from './ReactCurrentFiber';
 import {
@@ -2140,6 +2141,10 @@ function mountLazyComponent(
         props,
         renderLanes,
       );
+    } else if ($$typeof === REACT_CONTEXT_TYPE) {
+      workInProgress.tag = ContextProvider;
+      workInProgress.type = Component;
+      return updateContextProvider(null, workInProgress, renderLanes);
     }
   }
 
