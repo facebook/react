@@ -152,6 +152,7 @@ type Options = {
   onError?: (error: mixed) => void,
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
+  startTime?: number,
 };
 
 type PipeableStream = {
@@ -189,6 +190,7 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannel !== undefined,
@@ -347,6 +349,7 @@ function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -429,6 +432,7 @@ type PrerenderOptions = {
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
   signal?: AbortSignal,
+  startTime?: number,
 };
 
 type StaticResult = {
@@ -460,6 +464,7 @@ function prerenderToNodeStream(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
@@ -523,6 +528,7 @@ function prerender(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
