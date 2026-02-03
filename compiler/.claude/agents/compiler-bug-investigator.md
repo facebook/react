@@ -17,36 +17,30 @@ Execute `yarn snap -d -p <fixture-name>` to compile the fixture with full debug 
 
 ### Step 3: Analyze Compilation Results
 
-**If the fixture compiles successfully:**
+### Step 3a: If the fixture compiles successfully
 - Compare the output against the user's expected behavior
 - Review each compilation pass output from the `-d` flag
 - Identify the first pass where the output diverges from expected behavior
 - Proceed to binary search simplification
 
-**If the fixture errors:**
-- Note the exact error message and the pass where it occurs
-- Proceed to binary search simplification
+### Step 3b: If the fixture errors
+Execute `yarn snap minimize --update <path-to-fixture>` to remove non-critical aspects of the failing test case. This **updates the fixture in place**.
 
-### Step 4: Binary Search Simplification
-Systematically simplify the fixture to isolate the minimal reproducing case:
+Re-read the fixture file to see the latest, minimal reproduction of the error.
 
-**Simplification strategies (in order of preference):**
-1. Remove entire statements that aren't directly related to the error
-2. Replace complex expressions with simpler equivalents:
-   - `a?.b` → `a.b`
-   - `a ?? b` → `a`
-   - `a ? b : c` → `a` or `b`
-   - `a && b` → `a`
-   - `fn(a, b, c)` → `fn(a)`
-3. Replace object/array literals with simpler values
-4. Remove function parameters
-5. Inline variables
+### Step 4: Iteratively adjust the fixture until it stops erroring
+After the previous step the fixture will have all extraneous aspects removed. Try to make further edits to determine the specific feature that is causing the error.
 
-**Process:**
-- After each simplification, run `yarn snap -d -p <fixture-name>`
-- Track which version errors and which doesn't
-- Continue until you have the minimal failing case
-- Keep the last non-failing version for comparison
+Ideas:
+* Replace immediately-invoked function expressions with labeled blocks
+* Remove statements
+* Simplify calls (remove arguments, replace the call with its lone argument)
+* Simplify control flow statements by picking a single branch. Try using a labeled block with just the selected block
+* Replace optional member/call expressions with non-optional versions
+* Remove items in array/object expressions
+* Remove properties from member expressions
+
+Try to make the minimal possible edit to get the fixture stop erroring.
 
 ### Step 5: Compare Debug Outputs
 With both minimal versions (failing and non-failing):
