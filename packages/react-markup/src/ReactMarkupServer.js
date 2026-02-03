@@ -11,8 +11,6 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {ErrorInfo} from 'react-server/src/ReactFizzServer';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
-
 import ReactVersion from 'shared/ReactVersion';
 
 import ReactSharedInternalsServer from 'react-server/src/ReactSharedInternalsServer';
@@ -70,7 +68,6 @@ type MarkupOptions = {
   identifierPrefix?: string,
   signal?: AbortSignal,
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
-  startTime?: number,
 };
 
 function noServerCallOrFormAction() {
@@ -187,7 +184,7 @@ export function experimental_renderToHTML(
       handleFlightError,
       options ? options.identifierPrefix : undefined,
       undefined,
-      enableProfilerTimer && options ? options.startTime : undefined,
+      undefined,
       'Markup',
       undefined,
       false,
