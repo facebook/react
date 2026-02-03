@@ -11,14 +11,8 @@ import generate from '@babel/generator';
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
 import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
-import fs from 'fs';
-import path from 'path';
-import {parseInput, parseLanguage, parseSourceType} from './compiler.js';
+import {parseInput} from './compiler.js';
 import {PARSE_CONFIG_PRAGMA_IMPORT, PROJECT_SRC} from './constants.js';
-
-type MinimizeOptions = {
-  path: string;
-};
 
 type CompileSuccess = {kind: 'success'};
 type CompileParseError = {kind: 'parse_error'; message: string};
@@ -2015,56 +2009,4 @@ export function minimize(
   }
 
   return {kind: 'minimized', source: currentCode};
-}
-
-/**
- * Main minimize function that reads the input file, runs minimization,
- * and reports results.
- */
-export async function runMinimize(options: MinimizeOptions): Promise<void> {
-  // Resolve the input path
-  const inputPath = path.isAbsolute(options.path)
-    ? options.path
-    : path.resolve(process.cwd(), options.path);
-
-  // Check if file exists
-  if (!fs.existsSync(inputPath)) {
-    console.error(`Error: File not found: ${inputPath}`);
-    process.exit(1);
-  }
-
-  // Read the input file
-  const input = fs.readFileSync(inputPath, 'utf-8');
-  const filename = path.basename(inputPath);
-  const firstLine = input.substring(0, input.indexOf('\n'));
-  const language = parseLanguage(firstLine);
-  const sourceType = parseSourceType(firstLine);
-
-  console.log(`Minimizing: ${inputPath}`);
-
-  const originalLines = input.split('\n').length;
-
-  // Run the minimization
-  const result = minimize(input, filename, language, sourceType);
-
-  if (result.kind === 'success') {
-    console.log('Could not minimize: the input compiles successfully.');
-    process.exit(0);
-  }
-
-  if (result.kind === 'minimal') {
-    console.log(
-      'Could not minimize: the input fails but is already minimal and cannot be reduced further.',
-    );
-    process.exit(0);
-  }
-
-  // Output the minimized code
-  console.log('--- Minimized Code ---');
-  console.log(result.source);
-
-  const minimizedLines = result.source.split('\n').length;
-  console.log(
-    `\nReduced from ${originalLines} lines to ${minimizedLines} lines`,
-  );
 }
