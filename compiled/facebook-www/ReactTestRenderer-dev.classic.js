@@ -2521,6 +2521,24 @@ __DEV__ &&
             )),
           thenable.then(noop, noop),
           (thenable = index));
+      if (void 0 === thenable._debugInfo) {
+        thenableState = performance.now();
+        trackedThenables = thenable.displayName;
+        var ioInfo = {
+          name:
+            "string" === typeof trackedThenables ? trackedThenables : "Promise",
+          start: thenableState,
+          end: thenableState,
+          value: thenable
+        };
+        thenable._debugInfo = [{ awaited: ioInfo }];
+        "fulfilled" !== thenable.status &&
+          "rejected" !== thenable.status &&
+          ((thenableState = function () {
+            ioInfo.end = performance.now();
+          }),
+          thenable.then(thenableState, thenableState));
+      }
       switch (thenable.status) {
         case "fulfilled":
           return thenable.value;
@@ -15809,10 +15827,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-classic-3e00319b-20260203",
+        version: "19.3.0-www-classic-e32c1261-20260203",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-3e00319b-20260203"
+        reconcilerVersion: "19.3.0-www-classic-e32c1261-20260203"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15948,5 +15966,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.3.0-www-classic-3e00319b-20260203";
+    exports.version = "19.3.0-www-classic-e32c1261-20260203";
   })();

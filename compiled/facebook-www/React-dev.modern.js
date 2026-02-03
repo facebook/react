@@ -537,16 +537,14 @@ __DEV__ &&
     function lazyInitializer(payload) {
       if (-1 === payload._status) {
         var resolveDebugValue = null,
-          rejectDebugValue = null;
-        if (enableAsyncDebugInfo) {
-          var ioInfo = payload._ioInfo;
-          null != ioInfo &&
-            ((ioInfo.start = ioInfo.end = performance.now()),
-            (ioInfo.value = new Promise(function (resolve, reject) {
-              resolveDebugValue = resolve;
-              rejectDebugValue = reject;
-            })));
-        }
+          rejectDebugValue = null,
+          ioInfo = payload._ioInfo;
+        null != ioInfo &&
+          ((ioInfo.start = ioInfo.end = performance.now()),
+          (ioInfo.value = new Promise(function (resolve, reject) {
+            resolveDebugValue = resolve;
+            rejectDebugValue = reject;
+          })));
         ioInfo = payload._result;
         var thenable = ioInfo();
         thenable.then(
@@ -554,16 +552,14 @@ __DEV__ &&
             if (0 === payload._status || -1 === payload._status) {
               payload._status = 1;
               payload._result = moduleObject;
-              if (enableAsyncDebugInfo) {
-                var _ioInfo = payload._ioInfo;
-                if (null != _ioInfo) {
-                  _ioInfo.end = performance.now();
-                  var debugValue =
-                    null == moduleObject ? void 0 : moduleObject.default;
-                  resolveDebugValue(debugValue);
-                  _ioInfo.value.status = "fulfilled";
-                  _ioInfo.value.value = debugValue;
-                }
+              var _ioInfo = payload._ioInfo;
+              if (null != _ioInfo) {
+                _ioInfo.end = performance.now();
+                var debugValue =
+                  null == moduleObject ? void 0 : moduleObject.default;
+                resolveDebugValue(debugValue);
+                _ioInfo.value.status = "fulfilled";
+                _ioInfo.value.value = debugValue;
               }
               void 0 === thenable.status &&
                 ((thenable.status = "fulfilled"),
@@ -574,24 +570,20 @@ __DEV__ &&
             if (0 === payload._status || -1 === payload._status) {
               payload._status = 2;
               payload._result = error;
-              if (enableAsyncDebugInfo) {
-                var _ioInfo2 = payload._ioInfo;
-                null != _ioInfo2 &&
-                  ((_ioInfo2.end = performance.now()),
-                  _ioInfo2.value.then(noop, noop),
-                  rejectDebugValue(error),
-                  (_ioInfo2.value.status = "rejected"),
-                  (_ioInfo2.value.reason = error));
-              }
+              var _ioInfo2 = payload._ioInfo;
+              null != _ioInfo2 &&
+                ((_ioInfo2.end = performance.now()),
+                _ioInfo2.value.then(noop, noop),
+                rejectDebugValue(error),
+                (_ioInfo2.value.status = "rejected"),
+                (_ioInfo2.value.reason = error));
               void 0 === thenable.status &&
                 ((thenable.status = "rejected"), (thenable.reason = error));
             }
           }
         );
-        if (
-          enableAsyncDebugInfo &&
-          ((ioInfo = payload._ioInfo), null != ioInfo)
-        ) {
+        ioInfo = payload._ioInfo;
+        if (null != ioInfo) {
           var displayName = thenable.displayName;
           "string" === typeof displayName && (ioInfo.name = displayName);
         }
@@ -854,7 +846,6 @@ __DEV__ &&
     deprecatedAPIs = require("ReactFeatureFlags");
     var enableTransitionTracing = deprecatedAPIs.enableTransitionTracing,
       enableViewTransition = deprecatedAPIs.enableViewTransition,
-      enableAsyncDebugInfo = deprecatedAPIs.enableAsyncDebugInfo,
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       ReactSharedInternals = {
         H: null,
@@ -1344,12 +1335,11 @@ __DEV__ &&
     exports.lazy = function (ctor) {
       ctor = { _status: -1, _result: ctor };
       var lazyType = {
-        $$typeof: REACT_LAZY_TYPE,
-        _payload: ctor,
-        _init: lazyInitializer
-      };
-      if (enableAsyncDebugInfo) {
-        var ioInfo = {
+          $$typeof: REACT_LAZY_TYPE,
+          _payload: ctor,
+          _init: lazyInitializer
+        },
+        ioInfo = {
           name: "lazy",
           start: -1,
           end: -1,
@@ -1358,9 +1348,8 @@ __DEV__ &&
           debugStack: Error("react-stack-top-frame"),
           debugTask: console.createTask ? console.createTask("lazy()") : null
         };
-        ctor._ioInfo = ioInfo;
-        lazyType._debugInfo = [{ awaited: ioInfo }];
-      }
+      ctor._ioInfo = ioInfo;
+      lazyType._debugInfo = [{ awaited: ioInfo }];
       return lazyType;
     };
     exports.memo = function (type, compare) {
@@ -1493,7 +1482,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.3.0-www-modern-3e00319b-20260203";
+    exports.version = "19.3.0-www-modern-e32c1261-20260203";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

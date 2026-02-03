@@ -4036,7 +4036,7 @@ __DEV__ &&
             )),
           thenable.then(noop$1, noop$1),
           (thenable = index));
-      if (enableAsyncDebugInfo && void 0 === thenable._debugInfo) {
+      if (void 0 === thenable._debugInfo) {
         thenableState = performance.now();
         trackedThenables = thenable.displayName;
         var ioInfo = {
@@ -20254,7 +20254,6 @@ __DEV__ &&
         dynamicFeatureFlags.transitionLaneExpirationMs,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition,
       enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
-      enableAsyncDebugInfo = dynamicFeatureFlags.enableAsyncDebugInfo,
       enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
@@ -23028,7 +23027,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-3e00319b-20260203"
+        reconcilerVersion: "19.3.0-www-classic-e32c1261-20260203"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7400,33 +7400,31 @@ __DEV__ &&
         if (6 === segment.status) return;
         segment.status = ABORTED;
       }
-      var errorInfo = getThrownInfo(task.componentStack);
-      if (enableAsyncDebugInfo) {
-        var node = task.node;
-        if (null !== node && "object" === typeof node) {
-          for (
-            var debugInfo = node._debugInfo;
-            "object" === typeof node &&
-            null !== node &&
-            node.$$typeof === REACT_LAZY_TYPE;
-
-          ) {
-            var payload = node._payload;
-            if ("fulfilled" === payload.status) node = payload.value;
-            else break;
-          }
+      var errorInfo = getThrownInfo(task.componentStack),
+        node = task.node;
+      if (null !== node && "object" === typeof node) {
+        for (
+          var debugInfo = node._debugInfo;
           "object" === typeof node &&
-            null !== node &&
-            (isArrayImpl(node) ||
-              "function" === typeof node[ASYNC_ITERATOR] ||
-              node.$$typeof === REACT_ELEMENT_TYPE ||
-              node.$$typeof === REACT_LAZY_TYPE) &&
-            isArrayImpl(node._debugInfo) &&
-            (debugInfo = node._debugInfo);
-          pushHaltedAwaitOnComponentStack(task, debugInfo);
-          null !== task.thenableState &&
-            pushSuspendedCallSiteOnComponentStack(request, task);
+          null !== node &&
+          node.$$typeof === REACT_LAZY_TYPE;
+
+        ) {
+          var payload = node._payload;
+          if ("fulfilled" === payload.status) node = payload.value;
+          else break;
         }
+        "object" === typeof node &&
+          null !== node &&
+          (isArrayImpl(node) ||
+            "function" === typeof node[ASYNC_ITERATOR] ||
+            node.$$typeof === REACT_ELEMENT_TYPE ||
+            node.$$typeof === REACT_LAZY_TYPE) &&
+          isArrayImpl(node._debugInfo) &&
+          (debugInfo = node._debugInfo);
+        pushHaltedAwaitOnComponentStack(task, debugInfo);
+        null !== task.thenableState &&
+          pushSuspendedCallSiteOnComponentStack(request, task);
       }
       if (null === boundary) {
         if (13 !== request.status && request.status !== CLOSED) {
@@ -8911,7 +8909,6 @@ __DEV__ &&
       dynamicFeatureFlags = require("ReactFeatureFlags"),
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition,
-      enableAsyncDebugInfo = dynamicFeatureFlags.enableAsyncDebugInfo,
       jsxPropsParents = new WeakMap(),
       jsxChildrenParents = new WeakMap(),
       CLIENT_REFERENCE_TAG = Symbol.for("react.client.reference"),
@@ -10384,5 +10381,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-3e00319b-20260203";
+    exports.version = "19.3.0-www-modern-e32c1261-20260203";
   })();
