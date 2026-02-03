@@ -16,6 +16,7 @@ import {
   Fragment,
 } from 'react';
 
+import {enableActivitySlices} from 'react-devtools-feature-flags';
 import {
   localStorageGetItem,
   localStorageSetItem,
@@ -284,7 +285,7 @@ function SuspenseTab(_: {}) {
   const {activities} = useContext(TreeStateContext);
   // If there are no named Activity boundaries, we don't have any tree list and we should hide
   // both the panel and the button to toggle it.
-  const activityListDisabled = activities.length === 0;
+  const activityListDisabled = !enableActivitySlices || activities.length === 0;
 
   const wrapperTreeRef = useRef<null | HTMLElement>(null);
   const resizeTreeRef = useRef<null | HTMLElement>(null);
