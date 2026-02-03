@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0be9dfed05e23efca468aa71c318ade0>>
+ * @generated SignedSource<<f656665a6d5df75ea68547e4156f0aae>>
  */
 
 "use strict";
@@ -1246,7 +1246,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_329 = {
+var injectedNamesToPlugins$jscomp$inline_328 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1292,32 +1292,32 @@ var injectedNamesToPlugins$jscomp$inline_329 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_330 = !1,
-  pluginName$jscomp$inline_331;
-for (pluginName$jscomp$inline_331 in injectedNamesToPlugins$jscomp$inline_329)
+  isOrderingDirty$jscomp$inline_329 = !1,
+  pluginName$jscomp$inline_330;
+for (pluginName$jscomp$inline_330 in injectedNamesToPlugins$jscomp$inline_328)
   if (
-    injectedNamesToPlugins$jscomp$inline_329.hasOwnProperty(
-      pluginName$jscomp$inline_331
+    injectedNamesToPlugins$jscomp$inline_328.hasOwnProperty(
+      pluginName$jscomp$inline_330
     )
   ) {
-    var pluginModule$jscomp$inline_332 =
-      injectedNamesToPlugins$jscomp$inline_329[pluginName$jscomp$inline_331];
+    var pluginModule$jscomp$inline_331 =
+      injectedNamesToPlugins$jscomp$inline_328[pluginName$jscomp$inline_330];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_331) ||
-      namesToPlugins[pluginName$jscomp$inline_331] !==
-        pluginModule$jscomp$inline_332
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_330) ||
+      namesToPlugins[pluginName$jscomp$inline_330] !==
+        pluginModule$jscomp$inline_331
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_331])
+      if (namesToPlugins[pluginName$jscomp$inline_330])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_331 + "`.")
+            (pluginName$jscomp$inline_330 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_331] =
-        pluginModule$jscomp$inline_332;
-      isOrderingDirty$jscomp$inline_330 = !0;
+      namesToPlugins[pluginName$jscomp$inline_330] =
+        pluginModule$jscomp$inline_331;
+      isOrderingDirty$jscomp$inline_329 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_330 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_329 && recomputePluginOrdering();
 function batchedUpdatesImpl(fn, bookkeeping) {
   return fn(bookkeeping);
 }
@@ -7099,6 +7099,12 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
     }
   return workInProgress.child;
 }
+function updateContextProvider(current, workInProgress, renderLanes) {
+  var newProps = workInProgress.pendingProps;
+  pushProvider(workInProgress, workInProgress.type, newProps.value);
+  reconcileChildren(current, workInProgress, newProps.children, renderLanes);
+  return workInProgress.child;
+}
 function resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress) {
   0 === (workInProgress.mode & 1) &&
     null !== current &&
@@ -7332,6 +7338,15 @@ function beginWork(current, workInProgress, renderLanes) {
               renderLanes
             );
             break a;
+          } else if ($$typeof === REACT_CONTEXT_TYPE) {
+            workInProgress.tag = 10;
+            workInProgress.type = elementType;
+            workInProgress = updateContextProvider(
+              null,
+              workInProgress,
+              renderLanes
+            );
+            break a;
           }
         }
         workInProgress = getComponentNameFromType(elementType) || elementType;
@@ -7482,17 +7497,7 @@ function beginWork(current, workInProgress, renderLanes) {
         workInProgress.child
       );
     case 10:
-      return (
-        (elementType = workInProgress.pendingProps),
-        pushProvider(workInProgress, workInProgress.type, elementType.value),
-        reconcileChildren(
-          current,
-          workInProgress,
-          elementType.children,
-          renderLanes
-        ),
-        workInProgress.child
-      );
+      return updateContextProvider(current, workInProgress, renderLanes);
     case 9:
       return (
         ($$typeof = workInProgress.type._context),
@@ -13317,16 +13322,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1644 = {
+  internals$jscomp$inline_1635 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-d4a325df-20260202",
+    version: "19.3.0-native-fb-3e00319b-20260203",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-d4a325df-20260202"
+    reconcilerVersion: "19.3.0-native-fb-3e00319b-20260203"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1644.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1644.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1635.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1635.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$177 = 0;
     31 > index$177;
@@ -13338,20 +13343,20 @@ internals$jscomp$inline_1644.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1644.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1635.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1997 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1988 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1997.isDisabled &&
-    hook$jscomp$inline_1997.supportsFiber
+    !hook$jscomp$inline_1988.isDisabled &&
+    hook$jscomp$inline_1988.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1997.inject(
-        internals$jscomp$inline_1644
+      (rendererID = hook$jscomp$inline_1988.inject(
+        internals$jscomp$inline_1635
       )),
-        (injectedHook = hook$jscomp$inline_1997);
+        (injectedHook = hook$jscomp$inline_1988);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

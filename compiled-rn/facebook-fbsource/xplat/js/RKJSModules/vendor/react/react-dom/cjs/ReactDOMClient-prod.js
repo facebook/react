@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7405ed270300cfed96b6ccda422f4df2>>
+ * @generated SignedSource<<fe11042115192604e288db4ef8ec9e72>>
  */
 
 /*
@@ -7763,6 +7763,12 @@ function updateSuspenseListComponent(current, workInProgress, renderLanes) {
     }
   return workInProgress.child;
 }
+function updateContextProvider(current, workInProgress, renderLanes) {
+  var newProps = workInProgress.pendingProps;
+  pushProvider(workInProgress, workInProgress.type, newProps.value);
+  reconcileChildren(current, workInProgress, newProps.children, renderLanes);
+  return workInProgress.child;
+}
 function resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress) {
   0 === (workInProgress.mode & 1) &&
     null !== current &&
@@ -7989,6 +7995,15 @@ function beginWork(current, workInProgress, renderLanes) {
               workInProgress,
               elementType,
               current,
+              renderLanes
+            );
+            break a;
+          } else if ($$typeof === REACT_CONTEXT_TYPE) {
+            workInProgress.tag = 10;
+            workInProgress.type = elementType;
+            workInProgress = updateContextProvider(
+              null,
+              workInProgress,
               renderLanes
             );
             break a;
@@ -8295,17 +8310,7 @@ function beginWork(current, workInProgress, renderLanes) {
         workInProgress.child
       );
     case 10:
-      return (
-        (elementType = workInProgress.pendingProps),
-        pushProvider(workInProgress, workInProgress.type, elementType.value),
-        reconcileChildren(
-          current,
-          workInProgress,
-          elementType.children,
-          renderLanes
-        ),
-        workInProgress.child
-      );
+      return updateContextProvider(current, workInProgress, renderLanes);
     case 9:
       return (
         ($$typeof = workInProgress.type._context),
@@ -13370,20 +13375,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1639 = 0;
-  i$jscomp$inline_1639 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1639++
+  var i$jscomp$inline_1630 = 0;
+  i$jscomp$inline_1630 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1630++
 ) {
-  var eventName$jscomp$inline_1640 =
-      simpleEventPluginEvents[i$jscomp$inline_1639],
-    domEventName$jscomp$inline_1641 =
-      eventName$jscomp$inline_1640.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1642 =
-      eventName$jscomp$inline_1640[0].toUpperCase() +
-      eventName$jscomp$inline_1640.slice(1);
+  var eventName$jscomp$inline_1631 =
+      simpleEventPluginEvents[i$jscomp$inline_1630],
+    domEventName$jscomp$inline_1632 =
+      eventName$jscomp$inline_1631.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1633 =
+      eventName$jscomp$inline_1631[0].toUpperCase() +
+      eventName$jscomp$inline_1631.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1641,
-    "on" + capitalizedEvent$jscomp$inline_1642
+    domEventName$jscomp$inline_1632,
+    "on" + capitalizedEvent$jscomp$inline_1633
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17744,16 +17749,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_2054 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2045 = React.version;
 if (
-  "19.3.0-native-fb-d4a325df-20260202" !==
-  isomorphicReactPackageVersion$jscomp$inline_2054
+  "19.3.0-native-fb-3e00319b-20260203" !==
+  isomorphicReactPackageVersion$jscomp$inline_2045
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2054,
-      "19.3.0-native-fb-d4a325df-20260202"
+      isomorphicReactPackageVersion$jscomp$inline_2045,
+      "19.3.0-native-fb-3e00319b-20260203"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17773,24 +17778,24 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2634 = {
+var internals$jscomp$inline_2625 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-d4a325df-20260202",
+  version: "19.3.0-native-fb-3e00319b-20260203",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-d4a325df-20260202"
+  reconcilerVersion: "19.3.0-native-fb-3e00319b-20260203"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2635 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2626 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2635.isDisabled &&
-    hook$jscomp$inline_2635.supportsFiber
+    !hook$jscomp$inline_2626.isDisabled &&
+    hook$jscomp$inline_2626.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2635.inject(
-        internals$jscomp$inline_2634
+      (rendererID = hook$jscomp$inline_2626.inject(
+        internals$jscomp$inline_2625
       )),
-        (injectedHook = hook$jscomp$inline_2635);
+        (injectedHook = hook$jscomp$inline_2626);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -17885,4 +17890,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.3.0-native-fb-d4a325df-20260202";
+exports.version = "19.3.0-native-fb-3e00319b-20260203";
