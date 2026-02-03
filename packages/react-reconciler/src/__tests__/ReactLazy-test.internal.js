@@ -966,7 +966,6 @@ describe('ReactLazy', () => {
     );
   });
 
-  // @gate enableActivity
   it('throws with a useful error when wrapping Activity with lazy()', async () => {
     const BadLazy = lazy(() => fakeImport(React.Activity));
 
