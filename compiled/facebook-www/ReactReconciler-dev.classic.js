@@ -1064,6 +1064,11 @@ __DEV__ &&
           break;
         }
     }
+    function readReactElementTypeof(value) {
+      return "$$typeof" in value && hasOwnProperty.call(value, "$$typeof")
+        ? value.$$typeof
+        : void 0;
+    }
     function addValueToProperties(
       propertyName,
       value,
@@ -1077,7 +1082,7 @@ __DEV__ &&
             value = "null";
             break;
           } else {
-            if (value.$$typeof === REACT_ELEMENT_TYPE) {
+            if (readReactElementTypeof(value) === REACT_ELEMENT_TYPE) {
               var typeName = getComponentNameFromType(value.type) || "\u2026",
                 key = value.key;
               value = value.props;
@@ -1305,9 +1310,10 @@ __DEV__ &&
                 "object" === typeof nextValue &&
                 null !== key &&
                 null !== nextValue &&
-                key.$$typeof === nextValue.$$typeof
+                readReactElementTypeof(key) ===
+                  readReactElementTypeof(nextValue)
               )
-                if (nextValue.$$typeof === REACT_ELEMENT_TYPE) {
+                if (readReactElementTypeof(nextValue) === REACT_ELEMENT_TYPE) {
                   if (
                     key.type === nextValue.type &&
                     key.key === nextValue.key
@@ -23027,7 +23033,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-e32c1261-20260203"
+        reconcilerVersion: "19.3.0-www-classic-cd0c4879-20260203"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

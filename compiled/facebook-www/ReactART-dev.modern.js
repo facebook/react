@@ -1054,6 +1054,11 @@ __DEV__ &&
           break;
         }
     }
+    function readReactElementTypeof(value) {
+      return "$$typeof" in value && hasOwnProperty.call(value, "$$typeof")
+        ? value.$$typeof
+        : void 0;
+    }
     function addValueToProperties(
       propertyName,
       value,
@@ -1067,7 +1072,7 @@ __DEV__ &&
             value = "null";
             break;
           } else {
-            if (value.$$typeof === REACT_ELEMENT_TYPE) {
+            if (readReactElementTypeof(value) === REACT_ELEMENT_TYPE) {
               var typeName = getComponentNameFromType(value.type) || "\u2026",
                 key = value.key;
               value = value.props;
@@ -1295,9 +1300,10 @@ __DEV__ &&
                 "object" === typeof nextValue &&
                 null !== key &&
                 null !== nextValue &&
-                key.$$typeof === nextValue.$$typeof
+                readReactElementTypeof(key) ===
+                  readReactElementTypeof(nextValue)
               )
-                if (nextValue.$$typeof === REACT_ELEMENT_TYPE) {
+                if (readReactElementTypeof(nextValue) === REACT_ELEMENT_TYPE) {
                   if (
                     key.type === nextValue.type &&
                     key.key === nextValue.key
@@ -20140,10 +20146,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-modern-e32c1261-20260203",
+        version: "19.3.0-www-modern-cd0c4879-20260203",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-e32c1261-20260203"
+        reconcilerVersion: "19.3.0-www-modern-cd0c4879-20260203"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20178,7 +20184,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.3.0-www-modern-e32c1261-20260203";
+    exports.version = "19.3.0-www-modern-cd0c4879-20260203";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
