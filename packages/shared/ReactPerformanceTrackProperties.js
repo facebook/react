@@ -242,6 +242,15 @@ export function addValueToProperties(
           if (proto && typeof proto.constructor === 'function') {
             objectName = proto.constructor.name;
           }
+        } else if ('nodeType' in value && value.nodeType === 1) {
+          // Looks like a DOM node. Using nodeType check over objectName.startsWith('HTML')
+          // for presumed better performance characteristics.
+          // Bail out of diffing since DOM nodes are mutable boxes
+          // anyway. Also prevents accesing potential cross-origin properties on
+          // iframes.
+          // TODO: Move check to host config since not all renderers target DOM.
+          desc = objectName;
+          break;
         }
         properties.push([
           prefix + '\xa0\xa0'.repeat(indent) + propertyName,

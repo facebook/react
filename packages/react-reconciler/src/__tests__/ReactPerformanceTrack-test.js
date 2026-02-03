@@ -525,7 +525,7 @@ describe('ReactPerformanceTracks', () => {
   });
 
   // @gate __DEV__ && enableComponentPerformanceTrack
-  it('diffs HTML-like objects', async () => {
+  it('skips diffing HTML-like objects', async () => {
     const App = function App({container}) {
       Scheduler.unstable_advanceTime(10);
       React.useEffect(() => {}, [container]);
@@ -598,13 +598,7 @@ describe('ReactPerformanceTracks', () => {
               properties: [
                 ['Changed Props', ''],
                 ['- container', 'HTMLIFrameElement'],
-                ['-   contentWindow', 'Window'],
-                ['-   nodeType', '1'],
-                ['-   textContent', '"foo"'],
                 ['+ container', 'HTMLIFrameElement'],
-                ['+   contentWindow', 'Window'],
-                ['+   nodeType', '1'],
-                ['+   textContent', '"bar"'],
               ],
               tooltipText: 'App',
               track: 'Components ⚛',
