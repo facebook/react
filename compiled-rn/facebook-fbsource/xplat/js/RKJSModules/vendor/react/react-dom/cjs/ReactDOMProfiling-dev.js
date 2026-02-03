@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0dfb1aa3fdc5bcf93bfaa12f7eb9fe71>>
+ * @generated SignedSource<<4149947d453060992fd80341700d854e>>
  */
 
 /*
@@ -3931,6 +3931,11 @@ __DEV__ &&
           break;
         }
     }
+    function readReactElementTypeof(value) {
+      return "$$typeof" in value && hasOwnProperty.call(value, "$$typeof")
+        ? value.$$typeof
+        : void 0;
+    }
     function addValueToProperties(
       propertyName,
       value,
@@ -3944,7 +3949,7 @@ __DEV__ &&
             value = "null";
             break;
           } else {
-            if (value.$$typeof === REACT_ELEMENT_TYPE) {
+            if (readReactElementTypeof(value) === REACT_ELEMENT_TYPE) {
               var typeName = getComponentNameFromType(value.type) || "\u2026",
                 key = value.key;
               value = value.props;
@@ -4176,9 +4181,10 @@ __DEV__ &&
                 "object" === typeof nextValue &&
                 null !== key &&
                 null !== nextValue &&
-                key.$$typeof === nextValue.$$typeof
+                readReactElementTypeof(key) ===
+                  readReactElementTypeof(nextValue)
               )
-                if (nextValue.$$typeof === REACT_ELEMENT_TYPE) {
+                if (readReactElementTypeof(nextValue) === REACT_ELEMENT_TYPE) {
                   if (
                     key.type === nextValue.type &&
                     key.key === nextValue.key
@@ -30238,11 +30244,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-e32c1261-20260203" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-cd0c4879-20260203" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-e32c1261-20260203\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-cd0c4879-20260203\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30279,10 +30285,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-e32c1261-20260203",
+          version: "19.3.0-native-fb-cd0c4879-20260203",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-e32c1261-20260203"
+          reconcilerVersion: "19.3.0-native-fb-cd0c4879-20260203"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30748,7 +30754,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-native-fb-e32c1261-20260203";
+    exports.version = "19.3.0-native-fb-cd0c4879-20260203";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
