@@ -8,7 +8,7 @@
 import watcher from '@parcel/watcher';
 import path from 'path';
 import ts from 'typescript';
-import {FIXTURES_PATH, PROJECT_ROOT} from './constants';
+import {FIXTURES_PATH, BABEL_PLUGIN_ROOT} from './constants';
 import {TestFilter, getFixtures} from './fixture-utils';
 import {execSync} from 'child_process';
 
@@ -17,7 +17,7 @@ export function watchSrc(
   onComplete: (isSuccess: boolean) => void,
 ): ts.WatchOfConfigFile<ts.SemanticDiagnosticsBuilderProgram> {
   const configPath = ts.findConfigFile(
-    /*searchPath*/ PROJECT_ROOT,
+    /*searchPath*/ BABEL_PLUGIN_ROOT,
     ts.sys.fileExists,
     'tsconfig.json',
   );
@@ -166,7 +166,7 @@ function subscribeTsc(
       let isCompilerBuildValid = false;
       if (isTypecheckSuccess) {
         try {
-          execSync('yarn build', {cwd: PROJECT_ROOT});
+          execSync('yarn build', {cwd: BABEL_PLUGIN_ROOT});
           console.log('Built compiler successfully with tsup');
           isCompilerBuildValid = true;
         } catch (e) {

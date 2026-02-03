@@ -13,7 +13,7 @@ You are an expert React Compiler debugging specialist with deep knowledge of com
 Create a new fixture file at `packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/<fixture-name>.js` containing the problematic code. Use a descriptive name that reflects the issue (e.g., `bug-optional-chain-in-effect.js`).
 
 ### Step 2: Run Debug Compilation
-Execute `yarn snap -d -p <fixture-name>` to compile the fixture with full debug output. This shows the state of the program after each compilation pass.
+Execute `yarn snap -d -p <fixture-name>` to compile the fixture with full debug output. This shows the state of the program after each compilation pass. You can also use `yarn snap compile -d <path-to-fixture>`.
 
 ### Step 3: Analyze Compilation Results
 

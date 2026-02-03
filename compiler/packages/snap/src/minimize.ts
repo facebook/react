@@ -12,7 +12,7 @@ import traverse from '@babel/traverse';
 import * as t from '@babel/types';
 import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
 import {parseInput} from './compiler.js';
-import {PARSE_CONFIG_PRAGMA_IMPORT, PROJECT_SRC} from './constants.js';
+import {PARSE_CONFIG_PRAGMA_IMPORT, BABEL_PLUGIN_SRC} from './constants.js';
 
 type CompileSuccess = {kind: 'success'};
 type CompileParseError = {kind: 'parse_error'; message: string};
@@ -1919,7 +1919,7 @@ export function minimize(
   sourceType: 'module' | 'script',
 ): MinimizeResult {
   // Load the compiler plugin
-  const importedCompilerPlugin = require(PROJECT_SRC) as Record<
+  const importedCompilerPlugin = require(BABEL_PLUGIN_SRC) as Record<
     string,
     unknown
   >;
