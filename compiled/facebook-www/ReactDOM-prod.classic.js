@@ -11231,7 +11231,12 @@ function recursivelyResetForms(parentFiber) {
     for (parentFiber = parentFiber.child; null !== parentFiber; ) {
       var fiber = parentFiber;
       recursivelyResetForms(fiber);
-      5 === fiber.tag && fiber.flags & 1024 && fiber.stateNode.reset();
+      5 === fiber.tag &&
+        fiber.flags & 1024 &&
+        ((fiber = fiber.stateNode),
+        (_enabled = !0),
+        fiber.reset(),
+        (_enabled = !1));
       parentFiber = parentFiber.sibling;
     }
 }
@@ -14833,6 +14838,8 @@ var KeyboardEventInterface = assign({}, UIEventInterface, {
     isPrimary: 0
   }),
   SyntheticPointerEvent = createSyntheticEvent(PointerEventInterface),
+  SubmitEventInterface = assign({}, EventInterface, { submitter: 0 }),
+  SyntheticSubmitEvent = createSyntheticEvent(SubmitEventInterface),
   TouchEventInterface = assign({}, UIEventInterface, {
     touches: 0,
     targetTouches: 0,
@@ -15740,6 +15747,9 @@ function dispatchEventForPluginEventSystem(
           case "pointerover":
           case "pointerup":
             SyntheticEventCtor = SyntheticPointerEvent;
+            break;
+          case "submit":
+            SyntheticEventCtor = SyntheticSubmitEvent;
             break;
           case "toggle":
           case "beforetoggle":
@@ -20180,14 +20190,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2071 = React.version;
 if (
-  "19.3.0-www-classic-b8a6bfa2-20260202" !==
+  "19.3.0-www-classic-d4a325df-20260202" !==
   isomorphicReactPackageVersion$jscomp$inline_2071
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2071,
-      "19.3.0-www-classic-b8a6bfa2-20260202"
+      "19.3.0-www-classic-d4a325df-20260202"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20203,24 +20213,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2667 = {
+var internals$jscomp$inline_2655 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-b8a6bfa2-20260202",
+  version: "19.3.0-www-classic-d4a325df-20260202",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-b8a6bfa2-20260202"
+  reconcilerVersion: "19.3.0-www-classic-d4a325df-20260202"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2668 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2656 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2668.isDisabled &&
-    hook$jscomp$inline_2668.supportsFiber
+    !hook$jscomp$inline_2656.isDisabled &&
+    hook$jscomp$inline_2656.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2668.inject(
-        internals$jscomp$inline_2667
+      (rendererID = hook$jscomp$inline_2656.inject(
+        internals$jscomp$inline_2655
       )),
-        (injectedHook = hook$jscomp$inline_2668);
+        (injectedHook = hook$jscomp$inline_2656);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -20637,4 +20647,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-b8a6bfa2-20260202";
+exports.version = "19.3.0-www-classic-d4a325df-20260202";

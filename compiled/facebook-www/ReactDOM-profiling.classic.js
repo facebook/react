@@ -12253,7 +12253,12 @@ function recursivelyResetForms(parentFiber) {
     for (parentFiber = parentFiber.child; null !== parentFiber; ) {
       var fiber = parentFiber;
       recursivelyResetForms(fiber);
-      5 === fiber.tag && fiber.flags & 1024 && fiber.stateNode.reset();
+      5 === fiber.tag &&
+        fiber.flags & 1024 &&
+        ((fiber = fiber.stateNode),
+        (_enabled = !0),
+        fiber.reset(),
+        (_enabled = !1));
       parentFiber = parentFiber.sibling;
     }
 }
@@ -16915,6 +16920,8 @@ var KeyboardEventInterface = assign({}, UIEventInterface, {
     isPrimary: 0
   }),
   SyntheticPointerEvent = createSyntheticEvent(PointerEventInterface),
+  SubmitEventInterface = assign({}, EventInterface, { submitter: 0 }),
+  SyntheticSubmitEvent = createSyntheticEvent(SubmitEventInterface),
   TouchEventInterface = assign({}, UIEventInterface, {
     touches: 0,
     targetTouches: 0,
@@ -17822,6 +17829,9 @@ function dispatchEventForPluginEventSystem(
           case "pointerover":
           case "pointerup":
             SyntheticEventCtor = SyntheticPointerEvent;
+            break;
+          case "submit":
+            SyntheticEventCtor = SyntheticSubmitEvent;
             break;
           case "toggle":
           case "beforetoggle":
@@ -22290,14 +22300,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2417 = React.version;
 if (
-  "19.3.0-www-classic-b8a6bfa2-20260202" !==
+  "19.3.0-www-classic-d4a325df-20260202" !==
   isomorphicReactPackageVersion$jscomp$inline_2417
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2417,
-      "19.3.0-www-classic-b8a6bfa2-20260202"
+      "19.3.0-www-classic-d4a325df-20260202"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22315,25 +22325,25 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2419 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-b8a6bfa2-20260202",
+  version: "19.3.0-www-classic-d4a325df-20260202",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-b8a6bfa2-20260202"
+  reconcilerVersion: "19.3.0-www-classic-d4a325df-20260202"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2419.getLaneLabelMap = getLaneLabelMap),
   (internals$jscomp$inline_2419.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_3013 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_3001 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_3013.isDisabled &&
-    hook$jscomp$inline_3013.supportsFiber
+    !hook$jscomp$inline_3001.isDisabled &&
+    hook$jscomp$inline_3001.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_3013.inject(
+      (rendererID = hook$jscomp$inline_3001.inject(
         internals$jscomp$inline_2419
       )),
-        (injectedHook = hook$jscomp$inline_3013);
+        (injectedHook = hook$jscomp$inline_3001);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -22751,7 +22761,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-b8a6bfa2-20260202";
+exports.version = "19.3.0-www-classic-d4a325df-20260202";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
