@@ -6562,5 +6562,7 @@ export const HostTransitionContext: ReactContext<TransitionStatus> = {
 
 export type FormInstance = HTMLFormElement;
 export function resetFormInstance(form: FormInstance): void {
+  ReactBrowserEventEmitterSetEnabled(true);
   form.reset();
+  ReactBrowserEventEmitterSetEnabled(false);
 }
