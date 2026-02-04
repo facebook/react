@@ -35,6 +35,31 @@ yarn snap -p <file-basename> -d
 yarn snap -u
 ```
 
+## Compiling Arbitrary Files
+
+Use `yarn snap compile` to compile any file (not just fixtures) with the React Compiler:
+
+```bash
+# Compile a file and see the output
+yarn snap compile <path>
+
+# Compile with debug logging to see the state after each compiler pass
+# This is an alternative to `yarn snap -d -p <pattern>` when you don't have a fixture file yet
+yarn snap compile --debug <path>
+```
+
+## Minimizing Test Cases
+
+Use `yarn snap minimize` to automatically reduce a failing test case to its minimal reproduction:
+
+```bash
+# Minimize a file that causes a compiler error
+yarn snap minimize <path>
+
+# Minimize and update the file in-place with the minimized version
+yarn snap minimize --update <path>
+```
+
 ## Version Control
 
 This repository uses Sapling (`sl`) for version control. Sapling is similar to Mercurial: there is not staging area, but new/deleted files must be explicitlyu added/removed.

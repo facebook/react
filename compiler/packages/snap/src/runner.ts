@@ -12,7 +12,7 @@ import * as readline from 'readline';
 import ts from 'typescript';
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
-import {PROJECT_ROOT} from './constants';
+import {BABEL_PLUGIN_ROOT, PROJECT_ROOT} from './constants';
 import {TestFilter, getFixtures} from './fixture-utils';
 import {TestResult, TestResults, report, update} from './reporter';
 import {
@@ -26,7 +26,14 @@ import {execSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import {minimize} from './minimize';
-import {parseLanguage, parseSourceType} from './compiler';
+import {parseInput, parseLanguage, parseSourceType} from './compiler';
+import {
+  PARSE_CONFIG_PRAGMA_IMPORT,
+  PRINT_HIR_IMPORT,
+  PRINT_REACTIVE_IR_IMPORT,
+  BABEL_PLUGIN_SRC,
+} from './constants';
+import chalk from 'chalk';
 
 const WORKER_PATH = require.resolve('./runner-worker.js');
 const NUM_WORKERS = cpus().length - 1;
@@ -46,6 +53,11 @@ type TestOptions = {
 type MinimizeOptions = {
   path: string;
   update: boolean;
+};
+
+type CompileOptions = {
+  path: string;
+  debug: boolean;
 };
 
 async function runTestCommand(opts: TestOptions): Promise<void> {
@@ -106,7 +118,7 @@ async function runTestCommand(opts: TestOptions): Promise<void> {
             );
           } else {
             try {
-              execSync('yarn build', {cwd: PROJECT_ROOT});
+              execSync('yarn build', {cwd: BABEL_PLUGIN_ROOT});
               console.log('Built compiler successfully with tsup');
 
               // Determine which filter to use
@@ -147,7 +159,7 @@ async function runMinimizeCommand(opts: MinimizeOptions): Promise<void> {
   // Resolve the input path
   const inputPath = path.isAbsolute(opts.path)
     ? opts.path
-    : path.resolve(process.cwd(), opts.path);
+    : path.resolve(PROJECT_ROOT, opts.path);
 
   // Check if file exists
   if (!fs.existsSync(inputPath)) {
@@ -193,6 +205,128 @@ async function runMinimizeCommand(opts: MinimizeOptions): Promise<void> {
   if (opts.update) {
     fs.writeFileSync(inputPath, result.source, 'utf-8');
     console.log(`\nUpdated ${inputPath} with minimized code.`);
+  }
+}
+
+async function runCompileCommand(opts: CompileOptions): Promise<void> {
+  // Resolve the input path
+  const inputPath = path.isAbsolute(opts.path)
+    ? opts.path
+    : path.resolve(PROJECT_ROOT, opts.path);
+
+  // Check if file exists
+  if (!fs.existsSync(inputPath)) {
+    console.error(`Error: File not found: ${inputPath}`);
+    process.exit(1);
+  }
+
+  // Read the input file
+  const input = fs.readFileSync(inputPath, 'utf-8');
+  const filename = path.basename(inputPath);
+  const firstLine = input.substring(0, input.indexOf('\n'));
+  const language = parseLanguage(firstLine);
+  const sourceType = parseSourceType(firstLine);
+
+  // Import the compiler
+  const importedCompilerPlugin = require(BABEL_PLUGIN_SRC) as Record<
+    string,
+    any
+  >;
+  const BabelPluginReactCompiler = importedCompilerPlugin['default'];
+  const parseConfigPragmaForTests =
+    importedCompilerPlugin[PARSE_CONFIG_PRAGMA_IMPORT];
+  const printFunctionWithOutlined = importedCompilerPlugin[PRINT_HIR_IMPORT];
+  const printReactiveFunctionWithOutlined =
+    importedCompilerPlugin[PRINT_REACTIVE_IR_IMPORT];
+  const EffectEnum = importedCompilerPlugin['Effect'];
+  const ValueKindEnum = importedCompilerPlugin['ValueKind'];
+  const ValueReasonEnum = importedCompilerPlugin['ValueReason'];
+
+  // Setup debug logger
+  let lastLogged: string | null = null;
+  const debugIRLogger = opts.debug
+    ? (value: any) => {
+        let printed: string;
+        switch (value.kind) {
+          case 'hir':
+            printed = printFunctionWithOutlined(value.value);
+            break;
+          case 'reactive':
+            printed = printReactiveFunctionWithOutlined(value.value);
+            break;
+          case 'debug':
+            printed = value.value;
+            break;
+          case 'ast':
+            printed = '(ast)';
+            break;
+          default:
+            printed = String(value);
+        }
+
+        if (printed !== lastLogged) {
+          lastLogged = printed;
+          console.log(`${chalk.green(value.name)}:\n${printed}\n`);
+        } else {
+          console.log(`${chalk.blue(value.name)}: (no change)\n`);
+        }
+      }
+    : () => {};
+
+  // Parse the input
+  let ast;
+  try {
+    ast = parseInput(input, filename, language, sourceType);
+  } catch (e: any) {
+    console.error(`Parse error: ${e.message}`);
+    process.exit(1);
+  }
+
+  // Build plugin options
+  const config = parseConfigPragmaForTests(firstLine, {compilationMode: 'all'});
+  const options = {
+    ...config,
+    environment: {
+      ...config.environment,
+    },
+    logger: {
+      logEvent: () => {},
+      debugLogIRs: debugIRLogger,
+    },
+    enableReanimatedCheck: false,
+  };
+
+  // Compile
+  const {transformFromAstSync} = require('@babel/core');
+  try {
+    const result = transformFromAstSync(ast, input, {
+      filename: '/' + filename,
+      highlightCode: false,
+      retainLines: true,
+      compact: true,
+      plugins: [[BabelPluginReactCompiler, options]],
+      sourceType: 'module',
+      ast: false,
+      cloneInputAst: true,
+      configFile: false,
+      babelrc: false,
+    });
+
+    if (result?.code != null) {
+      // Format the output
+      const prettier = require('prettier');
+      const formatted = await prettier.format(result.code, {
+        semi: true,
+        parser: language === 'typescript' ? 'babel-ts' : 'flow',
+      });
+      console.log(formatted);
+    } else {
+      console.error('Error: No code emitted from compiler');
+      process.exit(1);
+    }
+  } catch (e: any) {
+    console.error(e.message);
+    process.exit(1);
   }
 }
 
@@ -245,14 +379,15 @@ yargs(hideBin(process.argv))
     },
   )
   .command(
-    'minimize',
+    'minimize <path>',
     'Minimize a test case to reproduce a compiler error',
     yargs => {
       return yargs
-        .string('path')
-        .alias('p', 'path')
-        .describe('path', 'Path to the file to minimize')
-        .demandOption('path')
+        .positional('path', {
+          describe: 'Path to the file to minimize',
+          type: 'string',
+          demandOption: true,
+        })
         .boolean('update')
         .alias('u', 'update')
         .describe(
@@ -263,6 +398,25 @@ yargs(hideBin(process.argv))
     },
     async argv => {
       await runMinimizeCommand(argv as unknown as MinimizeOptions);
+    },
+  )
+  .command(
+    'compile <path>',
+    'Compile a file with the React Compiler',
+    yargs => {
+      return yargs
+        .positional('path', {
+          describe: 'Path to the file to compile',
+          type: 'string',
+          demandOption: true,
+        })
+        .boolean('debug')
+        .alias('d', 'debug')
+        .describe('debug', 'Enable debug logging to print HIR for each pass')
+        .default('debug', false);
+    },
+    async argv => {
+      await runCompileCommand(argv as unknown as CompileOptions);
     },
   )
   .help('help')
