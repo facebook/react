@@ -306,16 +306,25 @@ export class CompilerError extends Error {
 
   static invariant(
     condition: unknown,
-    options: Omit<CompilerDiagnosticOptions, 'category'>,
+    options: {
+      reason: CompilerDiagnosticOptions['reason'];
+      description?: CompilerDiagnosticOptions['description'];
+      message?: string | null;
+      loc: SourceLocation;
+    },
   ): asserts condition {
     if (!condition) {
       const errors = new CompilerError();
       errors.pushDiagnostic(
         CompilerDiagnostic.create({
           reason: options.reason,
-          description: options.description,
+          description: options.description ?? null,
           category: ErrorCategory.Invariant,
-        }).withDetails(...options.details),
+        }).withDetails({
+          kind: 'error',
+          loc: options.loc,
+          message: options.message ?? options.reason,
+        }),
       );
       throw errors;
     }
@@ -576,7 +585,9 @@ function printErrorSummary(category: ErrorCategory, message: string): string {
     case ErrorCategory.Suppression:
     case ErrorCategory.Syntax:
     case ErrorCategory.UseMemo:
-    case ErrorCategory.VoidUseMemo: {
+    case ErrorCategory.VoidUseMemo:
+    case ErrorCategory.MemoDependencies:
+    case ErrorCategory.EffectExhaustiveDependencies: {
       heading = 'Error';
       break;
     }
@@ -635,6 +646,10 @@ export enum ErrorCategory {
    */
   PreserveManualMemo = 'PreserveManualMemo',
   /**
+   * Checks for exhaustive useMemo/useCallback dependencies without extraneous values
+   */
+  MemoDependencies = 'MemoDependencies',
+  /**
    * Checks for known incompatible libraries
    */
   IncompatibleLibrary = 'IncompatibleLibrary',
@@ -654,6 +669,10 @@ export enum ErrorCategory {
    * Checks for memoized effect deps
    */
   EffectDependencies = 'EffectDependencies',
+  /**
+   * Checks for exhaustive and extraneous effect dependencies
+   */
+  EffectExhaustiveDependencies = 'EffectExhaustiveDependencies',
   /**
    * Checks for no setState in effect bodies
    */
@@ -809,6 +828,16 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         preset: LintRulePreset.Off,
       };
     }
+    case ErrorCategory.EffectExhaustiveDependencies: {
+      return {
+        category,
+        severity: ErrorSeverity.Error,
+        name: 'exhaustive-effect-dependencies',
+        description:
+          'Validates that effect dependencies are exhaustive and without extraneous values',
+        preset: LintRulePreset.Off,
+      };
+    }
     case ErrorCategory.EffectDerivationsOfState: {
       return {
         category,
@@ -825,7 +854,9 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         severity: ErrorSeverity.Error,
         name: 'set-state-in-effect',
         description:
-          'Validates against calling setState synchronously in an effect, which can lead to re-renders that degrade performance',
+          'Validates against calling setState synchronously in an effect. ' +
+          'This can indicate non-local derived data, a derived event pattern, or ' +
+          'improper external data synchronization.',
         preset: LintRulePreset.Recommended,
       };
     }
@@ -1029,6 +1060,24 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         description:
           'Validates that useMemos always return a value and that the result of the useMemo is used by the component/hook. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
         preset: LintRulePreset.RecommendedLatest,
+      };
+    }
+    case ErrorCategory.MemoDependencies: {
+      return {
+        category,
+        severity: ErrorSeverity.Error,
+        name: 'memo-dependencies',
+        description:
+          'Validates that useMemo() and useCallback() specify comprehensive dependencies without extraneous values. See [`useMemo()` docs](https://react.dev/reference/react/useMemo) for more information.',
+        /**
+         * TODO: the "MemoDependencies" rule largely reimplements the "exhaustive-deps" non-compiler rule,
+         * allowing the compiler to ensure it does not regress change behavior due to different dependencies.
+         * We previously relied on the source having ESLint suppressions for any exhaustive-deps violations,
+         * but it's more reliable to verify it within the compiler.
+         *
+         * Long-term we should de-duplicate these implementations.
+         */
+        preset: LintRulePreset.Off,
       };
     }
     case ErrorCategory.IncompatibleLibrary: {

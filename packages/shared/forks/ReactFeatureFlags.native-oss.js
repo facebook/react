@@ -21,10 +21,10 @@ export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const disableLegacyContext: boolean = true;
 export const disableLegacyContextForFunctionComponents: boolean = true;
-export const disableLegacyMode: boolean = true;
+export const disableLegacyMode: boolean = false;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
-export const enableAsyncDebugInfo: boolean = false;
+export const enableAsyncDebugInfo: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableCPUSuspense: boolean = false;
 export const enableCreateEventHandleAPI: boolean = false;
@@ -51,13 +51,10 @@ export const enableSuspenseCallback: boolean = false;
 export const enableTaint: boolean = true;
 export const enableTransitionTracing: boolean = false;
 export const enableTrustedTypesIntegration: boolean = false;
-export const enableUseEffectEventHook: boolean = true;
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
-export const renameElementSymbol: boolean = true;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableHydrationLaneScheduling: boolean = true;
 
 export const enableYieldingBeforePassive: boolean = false;
 
@@ -75,6 +72,11 @@ export const ownerStackLimit = 1e4;
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
 export const enableFragmentRefsInstanceHandles: boolean = false;
+export const enableFragmentRefsTextNodes: boolean = false;
+
+export const enableInternalInstanceMap: boolean = false;
+
+export const enableOptimisticKey: boolean = false;
 
 // Profiling Only
 export const enableProfilerTimer: boolean = __PROFILE__;

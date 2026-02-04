@@ -52,7 +52,11 @@ function makePluginOptions(
   EffectEnum: typeof Effect,
   ValueKindEnum: typeof ValueKind,
   ValueReasonEnum: typeof ValueReason,
-): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
+): {
+  options: PluginOptions;
+  loggerTestOnly: boolean;
+  logs: Array<{filename: string | null; event: LoggerEvent}>;
+} {
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
   let target: CompilerReactTarget = '19';
@@ -69,13 +73,12 @@ function makePluginOptions(
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
+  const loggerTestOnly = firstLine.includes('@loggerTestOnly');
   const logs: Array<{filename: string | null; event: LoggerEvent}> = [];
   const logger: Logger = {
-    logEvent: firstLine.includes('@loggerTestOnly')
-      ? (filename, event) => {
-          logs.push({filename, event});
-        }
-      : () => {},
+    logEvent: (filename, event) => {
+      logs.push({filename, event});
+    },
     debugLogIRs: debugIRLogger,
   };
 
@@ -96,7 +99,7 @@ function makePluginOptions(
     enableReanimatedCheck: false,
     target,
   };
-  return [options, logs];
+  return {options, loggerTestOnly, logs};
 }
 
 export function parseInput(
@@ -245,7 +248,7 @@ export async function transformFixtureInput(
   /**
    * Get Forget compiled code
    */
-  const [options, logs] = makePluginOptions(
+  const {options, loggerTestOnly, logs} = makePluginOptions(
     firstLine,
     parseConfigPragmaFn,
     debugIRLogger,
@@ -342,7 +345,7 @@ export async function transformFixtureInput(
   }
   const forgetOutput = await format(forgetCode, language);
   let formattedLogs = null;
-  if (logs.length !== 0) {
+  if (loggerTestOnly && logs.length !== 0) {
     formattedLogs = logs
       .map(({event}) => {
         return JSON.stringify(event, (key, value) => {
@@ -357,6 +360,23 @@ export async function transformFixtureInput(
         });
       })
       .join('\n');
+  }
+  const expectNothingCompiled =
+    firstLine.indexOf('@expectNothingCompiled') !== -1;
+  const successFailures = logs.filter(
+    log =>
+      log.event.kind === 'CompileSuccess' || log.event.kind === 'CompileError',
+  );
+  if (successFailures.length === 0 && !expectNothingCompiled) {
+    return {
+      kind: 'err',
+      msg: 'No success/failure events, add `// @expectNothingCompiled` to the first line if this is expected',
+    };
+  } else if (successFailures.length !== 0 && expectNothingCompiled) {
+    return {
+      kind: 'err',
+      msg: 'Expected nothing to be compiled (from `// @expectNothingCompiled`), but some functions compiled or errored',
+    };
   }
   return {
     kind: 'ok',

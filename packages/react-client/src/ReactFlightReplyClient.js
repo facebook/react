@@ -39,7 +39,10 @@ import getPrototypeOf from 'shared/getPrototypeOf';
 
 const ObjectPrototype = Object.prototype;
 
-import {usedWithSSR} from './ReactFlightClientConfig';
+import {
+  usedWithSSR,
+  checkEvalAvailabilityOnceDev,
+} from './ReactFlightClientConfig';
 
 type ReactJSONValue =
   | string
@@ -95,6 +98,8 @@ export type ReactServerValue =
 
 type ReactServerObject = {+[key: string]: ReactServerValue};
 
+const __PROTO__ = '__proto__';
+
 function serializeByValueID(id: number): string {
   return '$' + id.toString(16);
 }
@@ -104,7 +109,7 @@ function serializePromiseID(id: number): string {
 }
 
 function serializeServerReferenceID(id: number): string {
-  return '$F' + id.toString(16);
+  return '$h' + id.toString(16);
 }
 
 function serializeTemporaryReferenceMarker(): string {
@@ -112,7 +117,6 @@ function serializeTemporaryReferenceMarker(): string {
 }
 
 function serializeFormDataReference(id: number): string {
-  // Why K? F is "Function". D is "Date". What else?
   return '$K' + id.toString(16);
 }
 
@@ -188,6 +192,14 @@ export function processReply(
   let formData: null | FormData = null;
   const writtenObjects: WeakMap<Reference, string> = new WeakMap();
   let modelRoot: null | ReactServerValue = root;
+
+  if (__DEV__) {
+    // We use eval to create fake function stacks which includes Component stacks.
+    // A warning would be noise if you used Flight without Components and don't encounter
+    // errors. We're warning eagerly so that you configure your environment accordingly
+    // before you encounter an error.
+    checkEvalAvailabilityOnceDev();
+  }
 
   function serializeTypedArray(
     tag: string,
@@ -362,6 +374,15 @@ export function processReply(
   ): ReactJSONValue {
     const parent = this;
 
+    if (__DEV__) {
+      if (key === __PROTO__) {
+        console.error(
+          'Expected not to serialize an object with own property `__proto__`. When parsed this property will be omitted.%s',
+          describeObjectForErrorMessage(parent, key),
+        );
+      }
+    }
+
     // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
     if (__DEV__) {
       // $FlowFixMe[incompatible-use]
@@ -474,8 +495,22 @@ export function processReply(
         }
       }
 
+      const existingReference = writtenObjects.get(value);
+
       // $FlowFixMe[method-unbinding]
       if (typeof value.then === 'function') {
+        if (existingReference !== undefined) {
+          if (modelRoot === value) {
+            // This is the ID we're currently emitting so we need to write it
+            // once but if we discover it again, we refer to it by id.
+            modelRoot = null;
+          } else {
+            // We've already emitted this as an outlined object, so we can
+            // just refer to that by its existing ID.
+            return existingReference;
+          }
+        }
+
         // We assume that any object with a .then property is a "Thenable" type,
         // or a Promise type. Either of which can be represented by a Promise.
         if (formData === null) {
@@ -484,11 +519,19 @@ export function processReply(
         }
         pendingParts++;
         const promiseId = nextPartId++;
+        const promiseReference = serializePromiseID(promiseId);
+        writtenObjects.set(value, promiseReference);
         const thenable: Thenable<any> = (value: any);
         thenable.then(
           partValue => {
             try {
-              const partJSON = serializeModel(partValue, promiseId);
+              const previousReference = writtenObjects.get(partValue);
+              let partJSON;
+              if (previousReference !== undefined) {
+                partJSON = JSON.stringify(previousReference);
+              } else {
+                partJSON = serializeModel(partValue, promiseId);
+              }
               // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
               const data: FormData = formData;
               data.append(formFieldPrefix + promiseId, partJSON);
@@ -504,10 +547,9 @@ export function processReply(
           // that throws on the server instead.
           reject,
         );
-        return serializePromiseID(promiseId);
+        return promiseReference;
       }
 
-      const existingReference = writtenObjects.get(value);
       if (existingReference !== undefined) {
         if (modelRoot === value) {
           // This is the ID we're currently emitting so we need to write it
@@ -760,6 +802,10 @@ export function processReply(
     if (typeof value === 'function') {
       const referenceClosure = knownServerReferences.get(value);
       if (referenceClosure !== undefined) {
+        const existingReference = writtenObjects.get(value);
+        if (existingReference !== undefined) {
+          return existingReference;
+        }
         const {id, bound} = referenceClosure;
         const referenceClosureJSON = JSON.stringify({id, bound}, resolveToJSON);
         if (formData === null) {
@@ -769,7 +815,10 @@ export function processReply(
         // The reference to this function came from the same client so we can pass it back.
         const refId = nextPartId++;
         formData.set(formFieldPrefix + refId, referenceClosureJSON);
-        return serializeServerReferenceID(refId);
+        const serverReferenceId = serializeServerReferenceID(refId);
+        // Store the server reference ID for deduplication.
+        writtenObjects.set(value, serverReferenceId);
+        return serverReferenceId;
       }
       if (temporaryReferences !== undefined && key.indexOf(':') === -1) {
         // TODO: If the property name contains a colon, we don't dedupe. Escape instead.

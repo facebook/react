@@ -22,8 +22,6 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-export const enableHydrationLaneScheduling: boolean = true;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -98,6 +96,8 @@ export const enableHydrationChangeEvent = __EXPERIMENTAL__;
 
 export const enableDefaultTransitionIndicator = __EXPERIMENTAL__;
 
+export const enableOptimisticKey = __EXPERIMENTAL__;
+
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
  */
@@ -115,8 +115,6 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache: boolean = false;
-
-export const enableUseEffectEventHook: boolean = true;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
@@ -146,6 +144,9 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
 export const enableFragmentRefsInstanceHandles: boolean = false;
+export const enableFragmentRefsTextNodes: boolean = true;
+
+export const enableInternalInstanceMap: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -158,9 +159,6 @@ export const enableFragmentRefsInstanceHandles: boolean = false;
 // different section of this file.
 
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-
-// Renames the internal symbol for elements since they have changed signature/constructor
-export const renameElementSymbol: boolean = true;
 
 /**
  * Enables a fix to run insertion effect cleanup on hidden subtrees.

@@ -12,4 +12,5 @@ export {validateNoCapitalizedCalls} from './ValidateNoCapitalizedCalls';
 export {validateNoRefAccessInRender} from './ValidateNoRefAccessInRender';
 export {validateNoSetStateInRender} from './ValidateNoSetStateInRender';
 export {validatePreservedManualMemoization} from './ValidatePreservedManualMemoization';
+export {validateSourceLocations} from './ValidateSourceLocations';
 export {validateUseMemo} from './ValidateUseMemo';

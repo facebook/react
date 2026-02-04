@@ -18,6 +18,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
   REACT_ACTIVITY_TYPE,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 import {
   cloneElement,
@@ -81,4 +82,6 @@ export {
   version,
   // Experimental
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
+  // enableOptimisticKey
+  REACT_OPTIMISTIC_KEY as optimisticKey,
 };

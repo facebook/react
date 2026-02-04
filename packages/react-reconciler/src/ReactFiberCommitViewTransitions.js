@@ -34,7 +34,10 @@ import {
   hasInstanceAffectedParent,
   wasInstanceInViewport,
 } from './ReactFiberConfig';
-import {scheduleViewTransitionEvent} from './ReactFiberWorkLoop';
+import {
+  scheduleViewTransitionEvent,
+  scheduleGestureTransitionEvent,
+} from './ReactFiberWorkLoop';
 import {
   getViewTransitionName,
   getViewTransitionClassName,
@@ -233,7 +236,7 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
   }
   let child = placement.child;
   while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+    if (child.tag === OffscreenComponent && child.memoizedState !== null) {
       // This tree was already hidden so we skip it.
     } else {
       commitAppearingPairViewTransitions(child);
@@ -312,7 +315,7 @@ export function commitEnterViewTransitions(
 
         if (!state.paired) {
           if (gesture) {
-            // TODO: Schedule gesture events.
+            scheduleGestureTransitionEvent(placement, props.onGestureEnter);
           } else {
             scheduleViewTransitionEvent(placement, props.onEnter);
           }
@@ -347,7 +350,7 @@ function commitDeletedPairViewTransitions(deletion: Fiber): void {
   }
   let child = deletion.child;
   while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+    if (child.tag === OffscreenComponent && child.memoizedState !== null) {
       // This tree was already hidden so we skip it.
     } else {
       if (
@@ -550,7 +553,7 @@ function restorePairedViewTransitions(parent: Fiber): void {
   }
   let child = parent.child;
   while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+    if (child.tag === OffscreenComponent && child.memoizedState !== null) {
       // This tree was already hidden so we skip it.
     } else {
       if (
@@ -711,7 +714,11 @@ function measureViewTransitionHostInstancesRecursive(
         }
         viewTransitionCancelableChildren.push(
           instance,
-          oldName,
+          viewTransitionHostInstanceIdx === 0
+            ? oldName
+            : // If we have multiple Host Instances below, we add a suffix to the name to give
+              // each one a unique name.
+              oldName + '_' + viewTransitionHostInstanceIdx,
           child.memoizedProps,
         );
       }
@@ -844,7 +851,7 @@ export function measureNestedViewTransitions(
         // Nothing changed.
       } else {
         if (gesture) {
-          // TODO: Schedule gesture events.
+          scheduleGestureTransitionEvent(child, props.onGestureUpdate);
         } else {
           scheduleViewTransitionEvent(child, props.onUpdate);
         }

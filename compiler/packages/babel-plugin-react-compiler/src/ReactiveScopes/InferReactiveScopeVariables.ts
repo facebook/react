@@ -162,16 +162,10 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       });
       CompilerError.invariant(false, {
         reason: `Invalid mutable range for scope`,
-        details: [
-          {
-            kind: 'error',
-            loc: GeneratedSource,
-            message: null,
-          },
-        ],
         description: `Scope @${scope.id} has range [${scope.range.start}:${
           scope.range.end
         }] but the valid range is [1:${maxInstruction + 1}]`,
+        loc: GeneratedSource,
       });
     }
   }
@@ -389,14 +383,6 @@ export function findDisjointMutableValues(
              */
             operand.identifier.mutableRange.start > 0
           ) {
-            if (
-              instr.value.kind === 'FunctionExpression' ||
-              instr.value.kind === 'ObjectMethod'
-            ) {
-              if (operand.identifier.type.kind === 'Primitive') {
-                continue;
-              }
-            }
             operands.push(operand.identifier);
           }
         }

@@ -28,6 +28,7 @@ let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
+let assertConsoleErrorDev;
 let serverAct;
 
 // We test pass-through without encoding strings but it should work without it too.
@@ -45,12 +46,12 @@ describe('ReactFlightDOMNode', () => {
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
-      require('react-server-dom-webpack/server.node'),
+      jest.requireActual('react-server-dom-webpack/server.node'),
     );
     ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
     jest.mock('react-server-dom-webpack/static', () =>
-      require('react-server-dom-webpack/static.node'),
+      jest.requireActual('react-server-dom-webpack/static.node'),
     );
     ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
@@ -64,7 +65,7 @@ describe('ReactFlightDOMNode', () => {
     __unmockReact();
     jest.unmock('react-server-dom-webpack/server');
     jest.mock('react-server-dom-webpack/client', () =>
-      require('react-server-dom-webpack/client.node'),
+      jest.requireActual('react-server-dom-webpack/client.node'),
     );
 
     React = require('react');
@@ -73,6 +74,9 @@ describe('ReactFlightDOMNode', () => {
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     Stream = require('stream');
     use = React.use;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function filterStackFrame(filename, functionName) {
@@ -97,7 +101,7 @@ describe('ReactFlightDOMNode', () => {
           return (
             '    in ' +
             name +
-            (/\d/.test(m)
+            (/:\d+:\d+/.test(m)
               ? preserveLocation
                 ? ' ' + location.replace(__filename, relativeFilename)
                 : ' (at **)'
@@ -106,6 +110,28 @@ describe('ReactFlightDOMNode', () => {
         },
       )
     );
+  }
+
+  /**
+   * Removes all stackframes not pointing into this file
+   */
+  function ignoreListStack(str) {
+    if (!str) {
+      return str;
+    }
+
+    let ignoreListedStack = '';
+    const lines = str.split('\n');
+
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const line of lines) {
+      if (line.indexOf(__filename) === -1) {
+      } else {
+        ignoreListedStack += '\n' + line.replace(__dirname, '.');
+      }
+    }
+
+    return ignoreListedStack;
   }
 
   function readResult(stream) {
@@ -140,7 +166,7 @@ describe('ReactFlightDOMNode', () => {
 
   async function createBufferedUnclosingStream(
     stream: ReadableStream<Uint8Array>,
-  ): ReadableStream<Uint8Array> {
+  ): Promise<ReadableStream<Uint8Array>> {
     const chunks: Array<Uint8Array> = [];
     const reader = stream.getReader();
     while (true) {
@@ -407,7 +433,7 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  it('should cancels the underlying ReadableStream when we are cancelled', async () => {
+  it('should cancel the underlying and transported ReadableStreams when we are cancelled', async () => {
     let controller;
     let cancelReason;
     const s = new ReadableStream({
@@ -431,16 +457,30 @@ describe('ReactFlightDOMNode', () => {
       ),
     );
 
-    const writable = new Stream.PassThrough(streamOptions);
-    rscStream.pipe(writable);
+    const readable = new Stream.PassThrough(streamOptions);
+    rscStream.pipe(readable);
+
+    const result = await ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: webpackModuleLoading,
+    });
+    const reader = result.getReader();
 
     controller.enqueue('hi');
 
+    await serverAct(async () => {
+      // We should be able to read the part we already emitted before the abort
+      expect(await reader.read()).toEqual({
+        value: 'hi',
+        done: false,
+      });
+    });
+
     const reason = new Error('aborted');
-    writable.destroy(reason);
+    readable.destroy(reason);
 
     await new Promise(resolve => {
-      writable.on('error', () => {
+      readable.on('error', () => {
         resolve();
       });
     });
@@ -448,9 +488,17 @@ describe('ReactFlightDOMNode', () => {
     expect(cancelReason.message).toBe(
       'The destination stream errored while writing data.',
     );
+
+    let error = null;
+    try {
+      await reader.read();
+    } catch (x) {
+      error = x;
+    }
+    expect(error).toBe(reason);
   });
 
-  it('should cancels the underlying ReadableStream when we abort', async () => {
+  it('should cancel the underlying and transported ReadableStreams when we abort', async () => {
     const errors = [];
     let controller;
     let cancelReason;
@@ -757,6 +805,165 @@ describe('ReactFlightDOMNode', () => {
       } else {
         expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
       }
+    } else {
+      expect(ownerStack).toBeNull();
+    }
+  });
+
+  // @gate enableHalt
+  it('includes source locations in component and owner stacks for halted Client components', async () => {
+    function SharedComponent({p1, p2, p3}) {
+      use(p1);
+      use(p2);
+      use(p3);
+      return <div>Hello, Dave!</div>;
+    }
+    const ClientComponentOnTheServer = clientExports(SharedComponent);
+    const ClientComponentOnTheClient = clientExports(
+      SharedComponent,
+      123,
+      'path/to/chunk.js',
+    );
+
+    let resolvePendingPromise;
+    function ServerComponent() {
+      const p1 = Promise.resolve();
+      const p2 = new Promise(resolve => {
+        resolvePendingPromise = value => {
+          p2.status = 'fulfilled';
+          p2.value = value;
+          resolve(value);
+        };
+      });
+      const p3 = new Promise(() => {});
+      return ReactServer.createElement(ClientComponentOnTheClient, {
+        p1: p1,
+        p2: p2,
+        p3: p3,
+      });
+    }
+
+    function App() {
+      return ReactServer.createElement(
+        'html',
+        null,
+        ReactServer.createElement(
+          'body',
+          null,
+          ReactServer.createElement(
+            ReactServer.Suspense,
+            {fallback: 'Loading...'},
+            ReactServer.createElement(ServerComponent, null),
+          ),
+        ),
+      );
+    }
+
+    const errors = [];
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        ReactServer.createElement(App, null),
+        webpackMap,
+      ),
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+    rscStream.pipe(readable);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const serverConsumerManifest = {
+      moduleMap: {
+        [webpackMap[ClientComponentOnTheClient.$$id].id]: {
+          '*': webpackMap[ClientComponentOnTheServer.$$id],
+        },
+      },
+      moduleLoading: webpackModuleLoading,
+    };
+
+    expect(errors).toEqual([]);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      serverConsumerManifest,
+    );
+
+    let componentStack;
+    let ownerStack;
+
+    const clientAbortController = new AbortController();
+
+    const fizzPrerenderStreamResult = ReactDOMFizzStatic.prerender(
+      React.createElement(ClientRoot, {response}),
+      {
+        signal: clientAbortController.signal,
+        onError(error, errorInfo) {
+          componentStack = errorInfo.componentStack;
+          ownerStack = React.captureOwnerStack
+            ? React.captureOwnerStack()
+            : null;
+        },
+      },
+    );
+
+    resolvePendingPromise('custom-instrum-resolve');
+    await serverAct(
+      async () =>
+        new Promise(resolve => {
+          setImmediate(() => {
+            clientAbortController.abort();
+            resolve();
+          });
+        }),
+    );
+
+    const fizzPrerenderStream = await fizzPrerenderStreamResult;
+    const prerenderHTML = await readWebResult(fizzPrerenderStream.prelude);
+
+    expect(prerenderHTML).toContain('Loading...');
+
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n' +
+          '    in SharedComponent (at **)\n' +
+          '    in ServerComponent' +
+          (gate(flags => flags.enableAsyncDebugInfo) ? ' (at **)' : '') +
+          '\n' +
+          '    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in App (at **)\n' +
+          '    in ClientRoot (at **)',
+      );
+    } else {
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n' +
+          '    in SharedComponent (at **)\n' +
+          '    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in ClientRoot (at **)',
+      );
+    }
+
+    if (__DEV__) {
+      expect(ignoreListStack(ownerStack)).toBe(
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        '' +
+          // The concrete location may change as this test is updated.
+          // Just make sure they still point at React.use(p2)
+          (gate(flags => flags.enableAsyncDebugInfo)
+            ? '\n    at SharedComponent (./ReactFlightDOMNode-test.js:817:7)'
+            : '') +
+          '\n    at ServerComponent (file://./ReactFlightDOMNode-test.js:839:26)' +
+          '\n    at App (file://./ReactFlightDOMNode-test.js:856:25)',
+      );
     } else {
       expect(ownerStack).toBeNull();
     }
@@ -1216,11 +1423,7 @@ describe('ReactFlightDOMNode', () => {
         const data1 = await getDynamicData1();
         const data2 = await getDynamicData2();
 
-        return (
-          <p>
-            {data1} {data2}
-          </p>
-        );
+        return ReactServer.createElement('p', null, data1, ' ', data2);
       }
 
       function App() {
@@ -1346,12 +1549,12 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in Dynamic' +
             (gate(flags => flags.enableAsyncDebugInfo)
-              ? ' (file://ReactFlightDOMNode-test.js:1216:27)\n'
+              ? ' (file://ReactFlightDOMNode-test.js:1423:27)\n'
               : '\n') +
             '    in body\n' +
             '    in html\n' +
-            '    in App (file://ReactFlightDOMNode-test.js:1233:25)\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1308:16)',
+            '    in App (file://ReactFlightDOMNode-test.js:1436:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1511:16)',
         );
       } else {
         expect(
@@ -1360,7 +1563,7 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1308:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1511:16)',
         );
       }
 
@@ -1370,8 +1573,8 @@ describe('ReactFlightDOMNode', () => {
             normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
           ).toBe(
             '\n' +
-              '    in Dynamic (file://ReactFlightDOMNode-test.js:1216:27)\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1233:25)',
+              '    in Dynamic (file://ReactFlightDOMNode-test.js:1423:27)\n' +
+              '    in App (file://ReactFlightDOMNode-test.js:1436:25)',
           );
         } else {
           expect(
@@ -1379,12 +1582,338 @@ describe('ReactFlightDOMNode', () => {
           ).toBe(
             '' +
               '\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1233:25)',
+              '    in App (file://ReactFlightDOMNode-test.js:1436:25)',
           );
         }
       } else {
         expect(ownerStack).toBeNull();
       }
     });
+
+    function createReadableWithLateRelease(initialChunks, lateChunks, signal) {
+      // Create a new Readable and push all initial chunks immediately.
+      const readable = new Stream.Readable({...streamOptions, read() {}});
+      for (let i = 0; i < initialChunks.length; i++) {
+        readable.push(initialChunks[i]);
+      }
+
+      // When prerendering is aborted, push all dynamic chunks. They won't be
+      // considered for rendering, but they include debug info we want to use.
+      signal.addEventListener(
+        'abort',
+        () => {
+          for (let i = 0; i < lateChunks.length; i++) {
+            readable.push(lateChunks[i]);
+          }
+          setImmediate(() => {
+            readable.push(null);
+          });
+        },
+        {once: true},
+      );
+
+      return readable;
+    }
+
+    async function reencodeFlightStream(
+      staticChunks,
+      dynamicChunks,
+      startTime,
+      serverConsumerManifest,
+    ) {
+      let staticEndTime = -1;
+      const chunks = {
+        static: [],
+        dynamic: [],
+      };
+      await new Promise(async resolve => {
+        const renderStageController = new AbortController();
+
+        const serverStream = createReadableWithLateRelease(
+          staticChunks,
+          dynamicChunks,
+          renderStageController.signal,
+        );
+        const decoded = await ReactServerDOMClient.createFromNodeStream(
+          serverStream,
+          serverConsumerManifest,
+          {
+            // We're re-encoding the whole stream, so we don't want to filter out any debug info.
+            endTime: undefined,
+          },
+        );
+
+        setTimeout(async () => {
+          const stream = ReactServerDOMServer.renderToPipeableStream(
+            decoded,
+            webpackMap,
+            {
+              filterStackFrame,
+              // Pass in the original render's startTime to avoid omitting its IO info.
+              startTime,
+            },
+          );
+
+          const passThrough = new Stream.PassThrough(streamOptions);
+
+          passThrough.on('data', chunk => {
+            if (!renderStageController.signal.aborted) {
+              chunks.static.push(chunk);
+            } else {
+              chunks.dynamic.push(chunk);
+            }
+          });
+          passThrough.on('end', resolve);
+
+          stream.pipe(passThrough);
+        });
+
+        setTimeout(() => {
+          staticEndTime = performance.now() + performance.timeOrigin;
+          renderStageController.abort();
+        });
+      });
+
+      return {chunks, staticEndTime};
+    }
+
+    // @gate __DEV__
+    it('can preserve old IO info when decoding and re-encoding a stream with options.startTime', async () => {
+      let resolveDynamicData;
+
+      function getDynamicData() {
+        return new Promise(resolve => {
+          resolveDynamicData = resolve;
+        });
+      }
+
+      async function Dynamic() {
+        const data = await getDynamicData();
+        return ReactServer.createElement('p', null, data);
+      }
+
+      function App() {
+        return ReactServer.createElement(
+          'html',
+          null,
+          ReactServer.createElement(
+            'body',
+            null,
+            ReactServer.createElement(
+              ReactServer.Suspense,
+              {fallback: 'Loading...'},
+              // TODO: having a wrapper <section> here seems load-bearing.
+              // ReactServer.createElement(ReactServer.createElement(Dynamic)),
+              ReactServer.createElement(
+                'section',
+                null,
+                ReactServer.createElement(Dynamic),
+              ),
+            ),
+          ),
+        );
+      }
+
+      const resolveDynamic = () => {
+        resolveDynamicData('Hi Janka');
+      };
+
+      // 1. Render <App />, dividing the output into static and dynamic content.
+
+      let startTime = -1;
+
+      let isStatic = true;
+      const chunks1 = {
+        static: [],
+        dynamic: [],
+      };
+
+      await new Promise(resolve => {
+        setTimeout(async () => {
+          startTime = performance.now() + performance.timeOrigin;
+
+          const stream = ReactServerDOMServer.renderToPipeableStream(
+            ReactServer.createElement(App),
+            webpackMap,
+            {
+              filterStackFrame,
+              startTime,
+              environmentName() {
+                return isStatic ? 'Prerender' : 'Server';
+              },
+            },
+          );
+
+          const passThrough = new Stream.PassThrough(streamOptions);
+
+          passThrough.on('data', chunk => {
+            if (isStatic) {
+              chunks1.static.push(chunk);
+            } else {
+              chunks1.dynamic.push(chunk);
+            }
+          });
+          passThrough.on('end', resolve);
+
+          stream.pipe(passThrough);
+        });
+        setTimeout(() => {
+          isStatic = false;
+          resolveDynamic();
+        });
+      });
+
+      //===============================================
+      // 2. Decode the stream from the previous step and render it again.
+      // This should preserve existing debug info.
+
+      const serverConsumerManifest = {
+        moduleMap: null,
+        moduleLoading: null,
+      };
+
+      const {chunks: chunks2, staticEndTime: reencodeStaticEndTime} =
+        await reencodeFlightStream(
+          chunks1.static,
+          chunks1.dynamic,
+          // This is load-bearing. If we don't pass a startTime, IO info
+          // from the initial render will be skipped (because it finished in the past)
+          // and we won't get the precise location of the blocking await in the owner stack.
+          startTime,
+          serverConsumerManifest,
+        );
+
+      //===============================================
+      // 3. SSR the stream from the previous step and abort it after the static stage
+      // (which should trigger `onError` for each "hole" that hasn't resolved yet)
+
+      function ClientRoot({response}) {
+        return use(response);
+      }
+
+      let ssrStream;
+      let ownerStack;
+      let componentStack;
+
+      await new Promise(async (resolve, reject) => {
+        const renderController = new AbortController();
+
+        const serverStream = createReadableWithLateRelease(
+          chunks2.static,
+          chunks2.dynamic,
+          renderController.signal,
+        );
+
+        const decodedPromise = ReactServerDOMClient.createFromNodeStream(
+          serverStream,
+          serverConsumerManifest,
+          {
+            endTime: reencodeStaticEndTime,
+          },
+        );
+
+        setTimeout(() => {
+          ssrStream = ReactDOMServer.renderToPipeableStream(
+            React.createElement(ClientRoot, {
+              response: decodedPromise,
+            }),
+            {
+              onError(err, errorInfo) {
+                componentStack = errorInfo.componentStack;
+                ownerStack = React.captureOwnerStack
+                  ? React.captureOwnerStack()
+                  : null;
+                return null;
+              },
+            },
+          );
+
+          renderController.signal.addEventListener(
+            'abort',
+            () => {
+              const {reason} = renderController.signal;
+              ssrStream.abort(reason);
+            },
+            {
+              once: true,
+            },
+          );
+        });
+
+        setTimeout(() => {
+          renderController.abort(new Error('ssr-abort'));
+          resolve();
+        });
+      });
+
+      const result = await readResult(ssrStream);
+
+      expect(normalizeCodeLocInfo(componentStack)).toBe(
+        '\n' +
+          // TODO:
+          // when we reencode a stream, the component stack doesn't have server frames for the dynamic content
+          // (which is what causes the dynamic hole here)
+          // because Flight delays forwarding debug info for lazies until they resolve.
+          // (the owner stack is filled in `pushHaltedAwaitOnComponentStack`, so it works fine)
+          //
+          // '    in Dynamic (at **)\n'
+          '    in section\n' +
+          '    in Suspense\n' +
+          '    in body\n' +
+          '    in html\n' +
+          '    in App (at **)\n' +
+          '    in ClientRoot (at **)',
+      );
+      expect(normalizeCodeLocInfo(ownerStack)).toBe(
+        '\n' +
+          gate(flags =>
+            flags.enableAsyncDebugInfo
+              ? '    in Dynamic (at **)\n'
+              : '    in section\n',
+          ) +
+          '    in App (at **)',
+      );
+
+      expect(result).toContain(
+        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+          'ssr-abort',
+      );
+    });
+  });
+
+  it('warns with a tailored message if eval is not available in dev', async () => {
+    // eslint-disable-next-line no-eval
+    const previousEval = globalThis.eval.bind(globalThis);
+    // eslint-disable-next-line no-eval
+    globalThis.eval = () => {
+      throw new Error('eval is disabled');
+    };
+
+    try {
+      const readable = await serverAct(() =>
+        ReactServerDOMServer.renderToReadableStream({}, webpackMap),
+      );
+
+      assertConsoleErrorDev([]);
+
+      await ReactServerDOMClient.createFromReadableStream(readable, {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      });
+
+      assertConsoleErrorDev([
+        'eval() is not supported in this environment. ' +
+          'This can happen if you started the Node.js process with --disallow-code-generation-from-strings, ' +
+          'or if `eval` was patched by other means. ' +
+          'React requires eval() in development mode for various debugging features ' +
+          'like reconstructing callstacks from a different environment.\n' +
+          'React will never use eval() in production mode',
+      ]);
+    } finally {
+      // eslint-disable-next-line no-eval
+      globalThis.eval = previousEval;
+    }
   });
 });

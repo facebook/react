@@ -242,20 +242,13 @@ function validateInferredDep(
     normalizedDep = {
       root: maybeNormalizedRoot.root,
       path: [...maybeNormalizedRoot.path, ...dep.path],
+      loc: maybeNormalizedRoot.loc,
     };
   } else {
     CompilerError.invariant(dep.identifier.name?.kind === 'named', {
       reason:
         'ValidatePreservedManualMemoization: expected scope dependency to be named',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: GeneratedSource,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: GeneratedSource,
     });
     normalizedDep = {
       root: {
@@ -267,8 +260,10 @@ function validateInferredDep(
           effect: Effect.Read,
           reactive: false,
         },
+        constant: false,
       },
       path: [...dep.path],
+      loc: GeneratedSource,
     };
   }
   for (const decl of declsWithinMemoBlock) {
@@ -379,8 +374,10 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
                 root: {
                   kind: 'NamedLocal',
                   value: storeTarget,
+                  constant: false,
                 },
                 path: [],
+                loc: storeTarget.loc,
               });
             }
           }
@@ -408,8 +405,10 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         root: {
           kind: 'NamedLocal',
           value: {...lvalue},
+          constant: false,
         },
         path: [],
+        loc: lvalue.loc,
       });
     }
   }
@@ -497,14 +496,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       CompilerError.invariant(state.manualMemoState == null, {
         reason: 'Unexpected nested StartMemoize instructions',
         description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${value.manualMemoId}`,
-        details: [
-          {
-            kind: 'error',
-            loc: value.loc,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: value.loc,
       });
 
       state.manualMemoState = {
@@ -564,14 +556,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         {
           reason: 'Unexpected mismatch between StartMemoize and FinishMemoize',
           description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${value.manualMemoId}`,
-          details: [
-            {
-              kind: 'error',
-              loc: value.loc,
-              message: null,
-            },
-          ],
-          suggestions: null,
+          loc: value.loc,
         },
       );
       const reassignments = state.manualMemoState.reassignments;

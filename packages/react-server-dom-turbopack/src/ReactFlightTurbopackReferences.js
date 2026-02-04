@@ -102,6 +102,12 @@ function bind(this: ServerReference<any>): any {
   return newFn;
 }
 
+const serverReferenceToString = {
+  value: () => 'function () { [omitted code] }',
+  configurable: true,
+  writable: true,
+};
+
 export function registerServerReference<T: Function>(
   reference: T,
   id: string,
@@ -125,12 +131,14 @@ export function registerServerReference<T: Function>(
             configurable: true,
           },
           bind: {value: bind, configurable: true},
+          toString: serverReferenceToString,
         }
       : {
           $$typeof,
           $$id,
           $$bound,
           bind: {value: bind, configurable: true},
+          toString: serverReferenceToString,
         }) as PropertyDescriptorMap,
   );
 }
@@ -174,11 +182,10 @@ const deepProxyHandlers: Proxy$traps<mixed> = {
         // $FlowFixMe[prop-missing]
         return Object.prototype[Symbol.toStringTag];
       case 'Provider':
-        throw new Error(
-          `Cannot render a Client Context Provider on the Server. ` +
-            `Instead, you can export a Client Component wrapper ` +
-            `that itself renders a Client Context Provider.`,
-        );
+        // Context.Provider === Context in React, so return the same reference.
+        // This allows server components to render <ClientContext.Provider>
+        // which will be serialized and executed on the client.
+        return receiver;
       case 'then':
         throw new Error(
           `Cannot await or return from a thenable. ` +

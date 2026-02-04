@@ -597,4 +597,9 @@ export type DevToolsHookSettings = {
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
+  disableSecondConsoleLogDimmingInStrictMode: boolean,
+};
+
+export type DevToolsSettings = DevToolsHookSettings & {
+  componentFilters: Array<ComponentFilter>,
 };

@@ -152,6 +152,7 @@ type Options = {
   onError?: (error: mixed) => void,
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
+  startTime?: number,
 };
 
 type PipeableStream = {
@@ -189,6 +190,7 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -347,6 +349,7 @@ function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -429,6 +432,7 @@ type PrerenderOptions = {
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
   signal?: AbortSignal,
+  startTime?: number,
 };
 
 type StaticResult = {
@@ -460,6 +464,7 @@ function prerenderToNodeStream(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
@@ -523,6 +528,7 @@ function prerender(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
@@ -548,12 +554,17 @@ function prerender(
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
   webpackMap: ServerManifest,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   const response = createResponse(
     webpackMap,
     '',
     options ? options.temporaryReferences : undefined,
+    undefined,
+    options ? options.arraySizeLimit : undefined,
   );
   let pendingFiles = 0;
   const queuedFields: Array<string> = [];
@@ -564,16 +575,23 @@ function decodeReplyFromBusboy<T>(
       // we queue any fields we receive until the previous file is done.
       queuedFields.push(name, value);
     } else {
-      resolveField(response, name, value);
+      try {
+        resolveField(response, name, value);
+      } catch (error) {
+        busboyStream.destroy(error);
+      }
     }
   });
   busboyStream.on('file', (name, value, {filename, encoding, mimeType}) => {
     if (encoding.toLowerCase() === 'base64') {
-      throw new Error(
-        "React doesn't accept base64 encoded file uploads because we don't expect " +
-          "form data passed from a browser to ever encode data that way. If that's " +
-          'the wrong assumption, we can easily fix it.',
+      busboyStream.destroy(
+        new Error(
+          "React doesn't accept base64 encoded file uploads because we don't expect " +
+            "form data passed from a browser to ever encode data that way. If that's " +
+            'the wrong assumption, we can easily fix it.',
+        ),
       );
+      return;
     }
     pendingFiles++;
     const file = resolveFileInfo(response, name, filename, mimeType);
@@ -581,14 +599,18 @@ function decodeReplyFromBusboy<T>(
       resolveFileChunk(response, file, chunk);
     });
     value.on('end', () => {
-      resolveFileComplete(response, name, file);
-      pendingFiles--;
-      if (pendingFiles === 0) {
-        // Release any queued fields
-        for (let i = 0; i < queuedFields.length; i += 2) {
-          resolveField(response, queuedFields[i], queuedFields[i + 1]);
+      try {
+        resolveFileComplete(response, name, file);
+        pendingFiles--;
+        if (pendingFiles === 0) {
+          // Release any queued fields
+          for (let i = 0; i < queuedFields.length; i += 2) {
+            resolveField(response, queuedFields[i], queuedFields[i + 1]);
+          }
+          queuedFields.length = 0;
         }
-        queuedFields.length = 0;
+      } catch (error) {
+        busboyStream.destroy(error);
       }
     });
   });
@@ -608,7 +630,10 @@ function decodeReplyFromBusboy<T>(
 function decodeReply<T>(
   body: string | FormData,
   webpackMap: ServerManifest,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
@@ -620,6 +645,7 @@ function decodeReply<T>(
     '',
     options ? options.temporaryReferences : undefined,
     body,
+    options ? options.arraySizeLimit : undefined,
   );
   const root = getRoot<T>(response);
   close(response);
@@ -629,7 +655,10 @@ function decodeReply<T>(
 function decodeReplyFromAsyncIterable<T>(
   iterable: AsyncIterable<[string, string | File]>,
   webpackMap: ServerManifest,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   const iterator: AsyncIterator<[string, string | File]> =
     iterable[ASYNC_ITERATOR]();
@@ -638,6 +667,8 @@ function decodeReplyFromAsyncIterable<T>(
     webpackMap,
     '',
     options ? options.temporaryReferences : undefined,
+    undefined,
+    options ? options.arraySizeLimit : undefined,
   );
 
   function progress(

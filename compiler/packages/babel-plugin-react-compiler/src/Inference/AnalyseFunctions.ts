@@ -78,14 +78,7 @@ function lowerWithMutationAliasing(fn: HIRFunction): void {
       case 'Apply': {
         CompilerError.invariant(false, {
           reason: `[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects`,
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: effect.function.loc,
-              message: null,
-            },
-          ],
+          loc: effect.function.loc,
         });
       }
       case 'Mutate':

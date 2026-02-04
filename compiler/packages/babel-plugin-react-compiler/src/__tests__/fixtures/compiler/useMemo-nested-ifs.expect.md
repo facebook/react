@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateExhaustiveMemoizationDependencies:false
 function Component(props) {
   const x = useMemo(() => {
     if (props.cond) {
@@ -24,6 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+// @validateExhaustiveMemoizationDependencies:false
 function Component(props) {
   let t0;
   bb0: {
@@ -36,6 +38,7 @@ function Component(props) {
     t0 = undefined;
   }
   const x = t0;
+
   return x;
 }
 

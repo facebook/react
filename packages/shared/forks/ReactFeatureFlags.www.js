@@ -25,16 +25,15 @@ export const {
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
   enableViewTransition,
-  enableComponentPerformanceTrack,
   enableScrollEndPolyfill,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
-  enableAsyncDebugInfo,
+  enableFragmentRefsTextNodes,
+  enableInternalInstanceMap,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -47,8 +46,8 @@ export const enableUpdaterTracking = __PROFILE__;
 
 export const enableSuspenseAvoidThisFallback: boolean = true;
 
+export const enableAsyncDebugInfo: boolean = true;
 export const enableCPUSuspense: boolean = true;
-export const enableUseEffectEventHook: boolean = true;
 export const enableMoveBefore: boolean = false;
 export const disableInputAttributeSyncing: boolean = false;
 export const enableLegacyFBSupport: boolean = true;
@@ -57,7 +56,7 @@ export const enableYieldingBeforePassive: boolean = false;
 
 export const enableThrottledScheduling: boolean = false;
 
-export const enableHydrationLaneScheduling: boolean = true;
+export const enableComponentPerformanceTrack: boolean = true;
 
 export const enablePerformanceIssueReporting: boolean = false;
 
@@ -112,6 +111,8 @@ export const enableDefaultTransitionIndicator: boolean = true;
 export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefsInstanceHandles: boolean = true;
+
+export const enableOptimisticKey: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

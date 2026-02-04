@@ -24,6 +24,7 @@ import {
   validateRestrictedImports,
 } from './Imports';
 import {
+  CompilerOutputMode,
   CompilerReactTarget,
   ParsedPluginOptions,
   PluginOptions,
@@ -314,13 +315,7 @@ function insertNewOutlinedFunctionNode(
       CompilerError.invariant(insertedFuncDecl.isFunctionDeclaration(), {
         reason: 'Expected inserted function declaration',
         description: `Got: ${insertedFuncDecl}`,
-        details: [
-          {
-            kind: 'error',
-            loc: insertedFuncDecl.node?.loc ?? null,
-            message: null,
-          },
-        ],
+        loc: insertedFuncDecl.node?.loc ?? GeneratedSource,
       });
       return insertedFuncDecl;
     }
@@ -399,7 +394,15 @@ export function compileProgram(
    */
   const suppressions = findProgramSuppressions(
     pass.comments,
-    pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
+    /*
+     * If the compiler is validating hooks rules and exhaustive memo dependencies, we don't need to check
+     * for React ESLint suppressions
+     */
+    pass.opts.environment.validateExhaustiveMemoizationDependencies &&
+      pass.opts.environment.validateHooksUsage
+      ? null
+      : (pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS),
+    // Always bail on Flow suppressions
     pass.opts.flowSuppressions,
   );
 
@@ -421,22 +424,23 @@ export function compileProgram(
   );
   const compiledFns: Array<CompileResult> = [];
 
+  // outputMode takes precedence if specified
+  const outputMode: CompilerOutputMode =
+    pass.opts.outputMode ?? (pass.opts.noEmit ? 'lint' : 'client');
   while (queue.length !== 0) {
     const current = queue.shift()!;
-    const compiled = processFn(current.fn, current.fnType, programContext);
+    const compiled = processFn(
+      current.fn,
+      current.fnType,
+      programContext,
+      outputMode,
+    );
 
     if (compiled != null) {
       for (const outlined of compiled.outlined) {
         CompilerError.invariant(outlined.fn.outlined.length === 0, {
           reason: 'Unexpected nested outlined functions',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: outlined.fn.loc,
-              message: null,
-            },
-          ],
+          loc: outlined.fn.loc,
         });
         const fn = insertNewOutlinedFunctionNode(
           program,
@@ -581,6 +585,7 @@ function processFn(
   fn: BabelFn,
   fnType: ReactFunctionType,
   programContext: ProgramContext,
+  outputMode: CompilerOutputMode,
 ): null | CodegenFunction {
   let directives: {
     optIn: t.Directive | null;
@@ -616,18 +621,27 @@ function processFn(
   }
 
   let compiledFn: CodegenFunction;
-  const compileResult = tryCompileFunction(fn, fnType, programContext);
+  const compileResult = tryCompileFunction(
+    fn,
+    fnType,
+    programContext,
+    outputMode,
+  );
   if (compileResult.kind === 'error') {
     if (directives.optOut != null) {
       logError(compileResult.error, programContext, fn.node.loc ?? null);
     } else {
       handleError(compileResult.error, programContext, fn.node.loc ?? null);
     }
-    const retryResult = retryCompileFunction(fn, fnType, programContext);
-    if (retryResult == null) {
+    if (outputMode === 'client') {
+      const retryResult = retryCompileFunction(fn, fnType, programContext);
+      if (retryResult == null) {
+        return null;
+      }
+      compiledFn = retryResult;
+    } else {
       return null;
     }
-    compiledFn = retryResult;
   } else {
     compiledFn = compileResult.compiledFn;
   }
@@ -663,7 +677,7 @@ function processFn(
 
   if (programContext.hasModuleScopeOptOut) {
     return null;
-  } else if (programContext.opts.noEmit) {
+  } else if (programContext.opts.outputMode === 'lint') {
     /**
      * inferEffectDependencies + noEmit is currently only used for linting. In
      * this mode, add source locations for where the compiler *can* infer effect
@@ -693,6 +707,7 @@ function tryCompileFunction(
   fn: BabelFn,
   fnType: ReactFunctionType,
   programContext: ProgramContext,
+  outputMode: CompilerOutputMode,
 ):
   | {kind: 'compile'; compiledFn: CodegenFunction}
   | {kind: 'error'; error: unknown} {
@@ -719,7 +734,7 @@ function tryCompileFunction(
         fn,
         programContext.opts.environment,
         fnType,
-        'all_features',
+        outputMode,
         programContext,
         programContext.opts.logger,
         programContext.filename,
@@ -757,7 +772,7 @@ function retryCompileFunction(
       fn,
       environment,
       fnType,
-      'no_inferred_memo',
+      'client-no-memo',
       programContext,
       programContext.opts.logger,
       programContext.filename,
@@ -1423,15 +1438,7 @@ export function getReactCompilerRuntimeModule(
         typeof target.runtimeModule === 'string',
       {
         reason: 'Expected target to already be validated',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: null,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: GeneratedSource,
       },
     );
     return target.runtimeModule;

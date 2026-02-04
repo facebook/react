@@ -7,7 +7,12 @@
  * @flow
  */
 
+import semver from 'semver';
+
 import {getVersionedRenderImplementation} from './utils';
+import {ReactVersion} from '../../../../ReactVersions';
+
+const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
 
 describe('Store', () => {
   let React;
@@ -3143,6 +3148,145 @@ describe('Store', () => {
     expect(store).toMatchInlineSnapshot(``);
   });
 
+  // Can't suspend the root in React 17.
+  // @reactVersion >= 18.0
+  it('should track suspended-by in filtered fallback suspending the root', async () => {
+    function IgnoreMe({promise}) {
+      return readValue(promise);
+    }
+
+    function Component({promise}) {
+      return readValue(promise);
+    }
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [createDisplayNameFilter('^IgnoreMe', true)]),
+    );
+
+    let resolveFallback;
+    const fallbackPromise = new Promise(resolve => {
+      resolveFallback = resolve;
+    });
+    let resolveContent;
+    const contentPromise = new Promise(resolve => {
+      resolveContent = resolve;
+    });
+
+    await actAsync(() =>
+      render(
+        <React.Suspense
+          name="main"
+          fallback={<IgnoreMe promise={fallbackPromise} />}>
+          <Component promise={contentPromise} />
+        </React.Suspense>,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(``);
+
+    await actAsync(() => resolveFallback('loading'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Suspense name="main">
+      [suspense-root]  rects={null}
+        <Suspense name="main" rects={null}>
+    `);
+
+    await actAsync(() => resolveContent('content'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="main">
+            <Component>
+      [suspense-root]  rects={null}
+        <Suspense name="main" rects={null}>
+    `);
+  });
+
+  // @reactVersion >= 17.0
+  it('should track suspended-by in filtered fallback', async () => {
+    function IgnoreMe({promise}) {
+      return readValue(promise);
+    }
+
+    function Component({promise}) {
+      if (promise) {
+        return readValue(promise);
+      }
+      return null;
+    }
+
+    await actAsync(
+      async () =>
+        (store.componentFilters = [createDisplayNameFilter('^IgnoreMe', true)]),
+    );
+
+    let resolveFallback;
+    const fallbackPromise = new Promise(resolve => {
+      resolveFallback = resolve;
+    });
+    let resolveContent;
+    const contentPromise = new Promise(resolve => {
+      resolveContent = resolve;
+    });
+
+    await actAsync(() =>
+      render(
+        <React.Suspense
+          fallback={<Component key="root-fallback" />}
+          name="root">
+          <React.Suspense
+            name="main"
+            fallback={<IgnoreMe promise={fallbackPromise} />}>
+            <Component promise={contentPromise} />
+          </React.Suspense>
+        </React.Suspense>,
+      ),
+    );
+
+    if (semver.lt(ReactVersionTestingAgainst, '18.0.0')) {
+      // React 17 commits partial trees hidden which causes the "main"
+      // Suspense boundary to be included.
+      // React 18 and upwards excluded partial tree entirely.
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Suspense name="root">
+              <Component key="root-fallback">
+        [suspense-root]  rects={null}
+          <Suspense name="root" rects={null}>
+            <Suspense name="main" rects={null}>
+      `);
+    } else {
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Suspense name="root">
+              <Component key="root-fallback">
+        [suspense-root]  rects={null}
+          <Suspense name="root" rects={null}>
+      `);
+    }
+
+    await actAsync(() => resolveFallback('loading'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+            <Suspense name="main">
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+          <Suspense name="main" rects={null}>
+    `);
+
+    await actAsync(() => resolveContent('content'));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="root">
+          ▾ <Suspense name="main">
+              <Component>
+      [suspense-root]  rects={null}
+        <Suspense name="root" rects={null}>
+          <Suspense name="main" rects={null}>
+    `);
+  });
+
   // @reactVersion >= 19
   it('should keep suspended boundaries in the Suspense tree but not hidden Activity', async () => {
     const Activity = React.Activity || React.unstable_Activity;
@@ -3283,8 +3427,6 @@ describe('Store', () => {
         <Suspense name="Outer" rects={null}>
     `);
 
-    console.log('...........................');
-
     await actAsync(() => {
       resolve('loaded');
     });
@@ -3298,6 +3440,102 @@ describe('Store', () => {
       [suspense-root]  rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}
         <Suspense name="Outer" rects={[{x:1,y:2,width:6,height:1}, {x:1,y:2,width:6,height:1}]}>
           <Suspense name="Inner" rects={[{x:1,y:2,width:6,height:1}]}>
+    `);
+  });
+
+  // @reactVersion >= 19.0
+  it('measures rects when reconnecting', async () => {
+    function Component({children, promise}) {
+      let content = '';
+      if (promise) {
+        const value = readValue(promise);
+        if (typeof value === 'string') {
+          content += value;
+        }
+      }
+      return (
+        <div>
+          {content}
+          {children}
+        </div>
+      );
+    }
+
+    function App({outer, inner}) {
+      return (
+        <React.Suspense
+          name="outer"
+          fallback={<Component key="outer-fallback">loading outer</Component>}>
+          <Component key="outer-content" promise={outer}>
+            outer content
+          </Component>
+          <React.Suspense
+            name="inner"
+            fallback={
+              <Component key="inner-fallback">loading inner</Component>
+            }>
+            <Component key="inner-content" promise={inner}>
+              inner content
+            </Component>
+          </React.Suspense>
+        </React.Suspense>
+      );
+    }
+
+    await actAsync(() => {
+      render(<App outer={null} inner={null} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense name="outer">
+              <Component key="outer-content">
+            ▾ <Suspense name="inner">
+                <Component key="inner-content">
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}
+        <Suspense name="outer" rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:13,height:1}]}>
+    `);
+
+    let outerResolve;
+    const outerPromise = new Promise(resolve => {
+      outerResolve = resolve;
+    });
+
+    let innerResolve;
+    const innerPromise = new Promise(resolve => {
+      innerResolve = resolve;
+    });
+    await actAsync(() => {
+      render(<App outer={outerPromise} inner={innerPromise} />);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense name="outer">
+              <Component key="outer-fallback">
+      [suspense-root]  rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}
+        <Suspense name="outer" rects={[{x:1,y:2,width:13,height:1}, {x:1,y:2,width:13,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:13,height:1}]}>
+    `);
+
+    await actAsync(() => {
+      outerResolve('..');
+      innerResolve('.');
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Suspense name="outer">
+              <Component key="outer-content">
+            ▾ <Suspense name="inner">
+                <Component key="inner-content">
+      [suspense-root]  rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:14,height:1}]}
+        <Suspense name="outer" rects={[{x:1,y:2,width:15,height:1}, {x:1,y:2,width:14,height:1}]}>
+          <Suspense name="inner" rects={[{x:1,y:2,width:14,height:1}]}>
     `);
   });
 });

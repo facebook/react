@@ -3590,14 +3590,11 @@ describe('ReactDOMFizzServer', () => {
         onRecoverableError(error, errorInfo) {
           expect(error.digest).toBe('a digest');
           expect(errorInfo.digest).toBe(undefined);
-          assertConsoleErrorDev(
-            [
-              'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-                ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
-                ' of the Error instance itself.',
-            ],
-            {withoutStack: true},
-          );
+          assertConsoleErrorDev([
+            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+              ' of the Error instance itself.',
+          ]);
         },
       },
     );
@@ -6509,7 +6506,6 @@ describe('ReactDOMFizzServer', () => {
   });
 
   describe('useEffectEvent', () => {
-    // @gate enableUseEffectEventHook
     it('can server render a component with useEffectEvent', async () => {
       const ref = React.createRef();
       function App() {
@@ -6540,7 +6536,6 @@ describe('ReactDOMFizzServer', () => {
       expect(getVisibleChildren(container)).toEqual(<button>1</button>);
     });
 
-    // @gate enableUseEffectEventHook
     it('throws if useEffectEvent is called during a server render', async () => {
       const logs = [];
       function App() {
@@ -6572,7 +6567,6 @@ describe('ReactDOMFizzServer', () => {
       expect(reportedServerErrors).toEqual([caughtError]);
     });
 
-    // @gate enableUseEffectEventHook
     it('does not guarantee useEffectEvent return values during server rendering are distinct', async () => {
       function App() {
         const onClick1 = React.useEffectEvent(() => {});
@@ -6879,9 +6873,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(finished).toBe(true);
@@ -6943,9 +6940,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(finished).toBe(true);
@@ -7007,9 +7007,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(finished).toBe(true);
@@ -7069,9 +7072,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     assertConsoleErrorDev([
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
-      'The render was aborted by the server without a reason.',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
+      'Error: The render was aborted by the server without a reason.' +
+        '\n    in <stack>',
     ]);
 
     expect(finished).toBe(true);
@@ -7761,10 +7767,7 @@ describe('ReactDOMFizzServer', () => {
       </html>,
     );
     assertConsoleErrorDev([
-      [
-        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
       'In HTML, <meta> cannot be a child of <html>.\nThis will cause a hydration error.' +
         '\n' +
         '\n  <App>' +
@@ -7779,10 +7782,7 @@ describe('ReactDOMFizzServer', () => {
       '<html> cannot contain a nested <meta>.\nSee this log for the ancestor stack trace.' +
         '\n    in html (at **)' +
         '\n    in App (at **)',
-      [
-        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
     ]);
 
     await root.unmount();
@@ -7877,10 +7877,7 @@ describe('ReactDOMFizzServer', () => {
       </html>,
     );
     assertConsoleErrorDev([
-      [
-        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
       'In HTML, <meta> cannot be a child of <html>.\nThis will cause a hydration error.' +
         '\n' +
         '\n  <App>' +
@@ -7895,10 +7892,7 @@ describe('ReactDOMFizzServer', () => {
       '<html> cannot contain a nested <meta>.\nSee this log for the ancestor stack trace.' +
         '\n    in html (at **)' +
         '\n    in App (at **)',
-      [
-        'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <meta> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <meta> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
     ]);
 
     await root.unmount();
@@ -9024,7 +9018,8 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0mR4nd0m". When React manages style rules using `precedence` it will only include rules if the nonce matches the style nonce "R4nd0m" that was included with this render.',
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0mR4nd0m". When React manages style rules using `precedence` it will only include rules if the nonce matches the style nonce "R4nd0m" that was included with this render.' +
+        '\n    in style (at **)',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -9054,7 +9049,8 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.' +
+        '\n    in style (at **)',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -9085,7 +9081,8 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.',
+      'React encountered a style tag with `precedence` "default" and `nonce` "R4nd0m". When React manages style rules using `precedence` it will only include a nonce attributes if you also provide the same style nonce value as a render option.' +
+        '\n    in style (at **)',
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -9462,5 +9459,147 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
         <span>hello</span>
       </div>,
     );
+  });
+
+  it('useId is consistent for siblings when component suspends with nested lazy', async () => {
+    // Inner component uses useId
+    function InnerComponent() {
+      const id = React.useId();
+      Scheduler.log('InnerComponent id: ' + id);
+      return <span id={id}>inner</span>;
+    }
+
+    // Outer component uses useId and renders a lazy inner
+    function OuterComponent({innerElement}) {
+      const id = React.useId();
+      Scheduler.log('OuterComponent id: ' + id);
+      return <div id={id}>{innerElement}</div>;
+    }
+
+    // This sibling also has useId - its ID must be consistent with server
+    function Sibling() {
+      const id = React.useId();
+      Scheduler.log('Sibling id: ' + id);
+      return <span id={id}>sibling</span>;
+    }
+
+    // Create fresh lazy components for SERVER (resolve immediately)
+    const serverLazyInner = React.lazy(async () => {
+      Scheduler.log('server lazy inner initializer');
+      return {default: <InnerComponent />};
+    });
+
+    const serverLazyOuter = React.lazy(async () => {
+      Scheduler.log('server lazy outer initializer');
+      return {
+        default: <OuterComponent key="outer" innerElement={serverLazyInner} />,
+      };
+    });
+
+    // Server render with lazy (resolves immediately)
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <html>
+          <body>
+            <>{serverLazyOuter}</>
+            <>
+              <Sibling />
+            </>
+          </body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="_R_1_">
+            <span id="_R_5_">inner</span>
+          </div>
+          <span id="_R_2_">sibling</span>
+        </body>
+      </html>,
+    );
+
+    assertLog([
+      'server lazy outer initializer',
+      'Sibling id: _R_2_',
+      'OuterComponent id: _R_1_',
+      'server lazy inner initializer',
+      'InnerComponent id: _R_5_',
+    ]);
+
+    // Create fresh lazy components for CLIENT
+    let resolveClientInner;
+    const clientLazyInner = React.lazy(async () => {
+      Scheduler.log('client lazy inner initializer');
+      return new Promise(r => {
+        resolveClientInner = () => r({default: <InnerComponent />});
+      });
+    });
+
+    let resolveClientOuter;
+    const clientLazyOuter = React.lazy(async () => {
+      Scheduler.log('client lazy outer initializer');
+      return new Promise(r => {
+        resolveClientOuter = () =>
+          r({default: <OuterComponent innerElement={clientLazyInner} />});
+      });
+    });
+
+    const hydrationErrors = [];
+
+    // Client hydrates with nested lazy components
+    let root;
+    React.startTransition(() => {
+      root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <>{clientLazyOuter}</>
+            <>
+              <Sibling />
+            </>
+          </body>
+        </html>,
+        {
+          onRecoverableError(error) {
+            hydrationErrors.push(error.message);
+          },
+        },
+      );
+    });
+
+    // First suspension on outer lazy
+    await waitFor(['client lazy outer initializer']);
+    resolveClientOuter();
+
+    // Second suspension on inner lazy
+    await waitFor([
+      'OuterComponent id: _R_1_',
+      'client lazy inner initializer',
+    ]);
+    resolveClientInner();
+
+    await waitForAll(['InnerComponent id: _R_5_', 'Sibling id: _R_2_']);
+
+    // The IDs should match the server-generated IDs
+    expect(hydrationErrors).toEqual([]);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="_R_1_">
+            <span id="_R_5_">inner</span>
+          </div>
+          <span id="_R_2_">sibling</span>
+        </body>
+      </html>,
+    );
+
+    root.unmount();
   });
 });
