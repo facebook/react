@@ -450,14 +450,7 @@ function lowerStatement(
           CompilerError.invariant(binding != null, {
             reason: 'Expected to find binding for hoisted identifier',
             description: `Could not find a binding for ${id.node.name}`,
-            suggestions: null,
-            details: [
-              {
-                kind: 'error',
-                loc: id.node.loc ?? GeneratedSource,
-                message: null,
-              },
-            ],
+            loc: id.node.loc ?? GeneratedSource,
           });
           if (builder.environment.isHoistedIdentifier(binding.identifier)) {
             // Already hoisted
@@ -499,14 +492,7 @@ function lowerStatement(
           CompilerError.invariant(identifier.kind === 'Identifier', {
             reason:
               'Expected hoisted binding to be a local identifier, not a global',
-            description: null,
-            details: [
-              {
-                kind: 'error',
-                loc: id.node.loc ?? GeneratedSource,
-                message: null,
-              },
-            ],
+            loc: id.node.loc ?? GeneratedSource,
           });
           const place: Place = {
             effect: Effect.Unknown,
@@ -1038,15 +1024,7 @@ function lowerStatement(
       stmt.skip();
       CompilerError.invariant(stmt.get('id').type === 'Identifier', {
         reason: 'function declarations must have a name',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: stmt.node.loc ?? null,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: stmt.node.loc ?? GeneratedSource,
       });
       const id = stmt.get('id') as NodePath<t.Identifier>;
 
@@ -1144,15 +1122,7 @@ function lowerStatement(
         const declarations = left.get('declarations');
         CompilerError.invariant(declarations.length === 1, {
           reason: `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`,
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: left.node.loc ?? null,
-              message: null,
-            },
-          ],
-          suggestions: null,
+          loc: left.node.loc ?? GeneratedSource,
         });
         const id = declarations[0].get('id');
         const assign = lowerAssignment(
@@ -1167,14 +1137,7 @@ function lowerStatement(
       } else {
         CompilerError.invariant(left.isLVal(), {
           reason: 'Expected ForOf init to be a variable declaration or lval',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: leftLoc,
-              message: null,
-            },
-          ],
+          loc: leftLoc,
         });
         const assign = lowerAssignment(
           builder,
@@ -1250,15 +1213,7 @@ function lowerStatement(
         const declarations = left.get('declarations');
         CompilerError.invariant(declarations.length === 1, {
           reason: `Expected only one declaration in the init of a ForInStatement, got ${declarations.length}`,
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: left.node.loc ?? null,
-              message: null,
-            },
-          ],
-          suggestions: null,
+          loc: left.node.loc ?? GeneratedSource,
         });
         const id = declarations[0].get('id');
         const assign = lowerAssignment(
@@ -1273,14 +1228,7 @@ function lowerStatement(
       } else {
         CompilerError.invariant(left.isLVal(), {
           reason: 'Expected ForIn init to be a variable declaration or lval',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: leftLoc,
-              message: null,
-            },
-          ],
+          loc: leftLoc,
         });
         const assign = lowerAssignment(
           builder,
@@ -2244,15 +2192,7 @@ function lowerExpression(
         } else {
           CompilerError.invariant(namePath.isJSXNamespacedName(), {
             reason: 'Refinement',
-            description: null,
-            details: [
-              {
-                kind: 'error',
-                loc: namePath.node.loc ?? null,
-                message: null,
-              },
-            ],
-            suggestions: null,
+            loc: namePath.node.loc ?? GeneratedSource,
           });
           const namespace = namePath.node.namespace.name;
           const name = namePath.node.name.name;
@@ -2305,15 +2245,7 @@ function lowerExpression(
           // This is already checked in builder.resolveIdentifier
           CompilerError.invariant(tagIdentifier.kind !== 'Identifier', {
             reason: `<${tagName}> tags should be module-level imports`,
-            description: null,
-            details: [
-              {
-                kind: 'error',
-                loc: openingIdentifier.node.loc ?? GeneratedSource,
-                message: null,
-              },
-            ],
-            suggestions: null,
+            loc: openingIdentifier.node.loc ?? GeneratedSource,
           });
         }
         // see `error.todo-multiple-fbt-plural` fixture for explanation
@@ -2415,15 +2347,7 @@ function lowerExpression(
       CompilerError.invariant(expr.get('quasi').get('quasis').length == 1, {
         reason:
           "there should be only one quasi as we don't support interpolations yet",
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: expr.node.loc ?? null,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: expr.node.loc ?? GeneratedSource,
       });
       const value = expr.get('quasi').get('quasis').at(0)!.node.value;
       if (value.raw !== value.cooked) {
@@ -2819,15 +2743,7 @@ function lowerOptionalMemberExpression(
   });
   CompilerError.invariant(object !== null, {
     reason: 'Satisfy type checker',
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
 
   /*
@@ -3399,15 +3315,7 @@ function lowerJsxMemberExpression(
   } else {
     CompilerError.invariant(object.isJSXIdentifier(), {
       reason: `TypeScript refinement fail: expected 'JsxIdentifier', got \`${object.node.type}\``,
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: object.node.loc ?? null,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: object.node.loc ?? GeneratedSource,
     });
 
     const kind = getLoadKind(builder, object);
@@ -3447,15 +3355,7 @@ function lowerJsxElement(
     } else {
       CompilerError.invariant(expression.isExpression(), {
         reason: `(BuildHIR::lowerJsxElement) Expected Expression but found ${expression.type}!`,
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: expression.node.loc ?? null,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: expression.node.loc ?? GeneratedSource,
       });
       return lowerExpressionToTemporary(builder, expression);
     }
@@ -3851,15 +3751,7 @@ function lowerAssignment(
       // This can only occur because of a coding error, parsers enforce this condition
       CompilerError.invariant(kind === InstructionKind.Reassign, {
         reason: 'MemberExpression may only appear in an assignment expression',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: lvaluePath.node.loc ?? null,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: lvaluePath.node.loc ?? GeneratedSource,
       });
       const lvalue = lvaluePath as NodePath<t.MemberExpression>;
       const property = lvalue.get('property');

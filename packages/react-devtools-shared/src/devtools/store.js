@@ -148,7 +148,7 @@ export default class Store extends EventEmitter<{
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
   hostInstanceSelected: [Element['id'] | null],
-  settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
+  settingsUpdated: [$ReadOnly<DevToolsHookSettings>, Array<ComponentFilter>],
   mutated: [
     [
       Array<Element['id']>,
@@ -321,10 +321,6 @@ export default class Store extends EventEmitter<{
 
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
-    bridge.addListener(
-      'overrideComponentFilters',
-      this.onBridgeOverrideComponentFilters,
-    );
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isReloadAndProfileSupportedByBackend',
@@ -437,8 +433,23 @@ export default class Store extends EventEmitter<{
 
     this._componentFilters = value;
 
-    // Update persisted filter preferences stored in localStorage.
+    // Update persisted filter preferences
     setSavedComponentFilters(value);
+    if (this._hookSettings === null) {
+      // We changed filters before we got the hook settings.
+      // Wait for hook settings before persisting component filters to not overwrite
+      // persisted hook settings with defaults.
+      // This exists purely as a type safety check; in practice the hook settings
+      // should have arrived before any filter changes could be made.
+      const onHookSettings = (settings: $ReadOnly<DevToolsHookSettings>) => {
+        this._bridge.removeListener('hookSettings', onHookSettings);
+        this.emit('settingsUpdated', settings, value);
+      };
+      this._bridge.addListener('hookSettings', onHookSettings);
+      this._bridge.send('getHookSettings');
+    } else {
+      this.emit('settingsUpdated', this._hookSettings, value);
+    }
 
     // Notify the renderer that filter preferences have changed.
     // This is an expensive operation; it unmounts and remounts the entire tree,
@@ -2264,19 +2275,6 @@ export default class Store extends EventEmitter<{
     return didMutate;
   }
 
-  // Certain backends save filters on a per-domain basis.
-  // In order to prevent filter preferences and applied filters from being out of sync,
-  // this message enables the backend to override the frontend's current ("saved") filters.
-  // This action should also override the saved filters too,
-  // else reloading the frontend without reloading the backend would leave things out of sync.
-  onBridgeOverrideComponentFilters: (
-    componentFilters: Array<ComponentFilter>,
-  ) => void = componentFilters => {
-    this._componentFilters = componentFilters;
-
-    setSavedComponentFilters(componentFilters);
-  };
-
   onBridgeShutdown: () => void = () => {
     if (__DEBUG__) {
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
@@ -2284,10 +2282,6 @@ export default class Store extends EventEmitter<{
 
     const bridge = this._bridge;
     bridge.removeListener('operations', this.onBridgeOperations);
-    bridge.removeListener(
-      'overrideComponentFilters',
-      this.onBridgeOverrideComponentFilters,
-    );
     bridge.removeListener('shutdown', this.onBridgeShutdown);
     bridge.removeListener(
       'isReloadAndProfileSupportedByBackend',
@@ -2419,7 +2413,7 @@ export default class Store extends EventEmitter<{
       this._hookSettings = settings;
 
       this._bridge.send('updateHookSettings', settings);
-      this.emit('settingsUpdated', settings);
+      this.emit('settingsUpdated', settings, this._componentFilters);
     };
 
   onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =

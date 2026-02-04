@@ -22,8 +22,6 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-export const enableHydrationLaneScheduling: boolean = true;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -160,9 +158,6 @@ export const enableInternalInstanceMap: boolean = false;
 // different section of this file.
 
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-
-// Renames the internal symbol for elements since they have changed signature/constructor
-export const renameElementSymbol: boolean = true;
 
 /**
  * Enables a fix to run insertion effect cleanup on hidden subtrees.

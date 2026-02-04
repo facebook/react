@@ -35,7 +35,6 @@ export const enableNoCloningMemoCache: boolean = false;
 export const enableLegacyFBSupport: boolean = false;
 export const enableMoveBefore: boolean = false;
 export const enableHiddenSubtreeInsertionEffectCleanup: boolean = false;
-export const enableHydrationLaneScheduling: boolean = true;
 
 export const enableRetryLaneExpiration: boolean = false;
 export const retryLaneExpirationMs = 5000;
@@ -56,7 +55,6 @@ export const disableClientCache: boolean = true;
 
 export const enableInfiniteRenderLoopDetection: boolean = false;
 
-export const renameElementSymbol: boolean = true;
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
 export const enableYieldingBeforePassive: boolean = true;

@@ -111,7 +111,7 @@ export function validateExhaustiveDependencies(
     dependencies: Set<InferredDependency>,
     locals: Set<IdentifierId>,
   ): void {
-    CompilerError.simpleInvariant(startMemo == null, {
+    CompilerError.invariant(startMemo == null, {
       reason: 'Unexpected nested memo calls',
       loc: value.loc,
     });
@@ -124,7 +124,7 @@ export function validateExhaustiveDependencies(
     dependencies: Set<InferredDependency>,
     locals: Set<IdentifierId>,
   ): void {
-    CompilerError.simpleInvariant(
+    CompilerError.invariant(
       startMemo != null && startMemo.manualMemoId === value.manualMemoId,
       {
         reason: 'Found FinishMemoize without corresponding StartMemoize',
@@ -233,7 +233,7 @@ function validateDependencies(
     if (a.kind === 'Global' && b.kind == 'Global') {
       return a.binding.name.localeCompare(b.binding.name);
     } else if (a.kind == 'Local' && b.kind == 'Local') {
-      CompilerError.simpleInvariant(
+      CompilerError.invariant(
         a.identifier.name != null &&
           a.identifier.name.kind === 'named' &&
           b.identifier.name != null &&
@@ -320,7 +320,7 @@ function validateDependencies(
       }
       continue;
     }
-    CompilerError.simpleInvariant(inferredDependency.kind === 'Local', {
+    CompilerError.invariant(inferredDependency.kind === 'Local', {
       reason: 'Unexpected function dependency',
       loc: inferredDependency.loc,
     });
@@ -361,7 +361,7 @@ function validateDependencies(
       continue;
     }
     if (dep.root.kind === 'NamedLocal' && dep.root.constant) {
-      CompilerError.simpleInvariant(
+      CompilerError.invariant(
         !dep.root.value.reactive && isPrimitiveType(dep.root.value.identifier),
         {
           reason: 'Expected constant-folded dependency to be non-reactive',
@@ -871,7 +871,7 @@ function printInferredDependency(dep: InferredDependency): string {
       return dep.binding.name;
     }
     case 'Local': {
-      CompilerError.simpleInvariant(
+      CompilerError.invariant(
         dep.identifier.name != null && dep.identifier.name.kind === 'named',
         {
           reason: 'Expected dependencies to be named variables',
@@ -889,7 +889,7 @@ function printManualMemoDependency(dep: ManualMemoDependency): string {
     identifierName = dep.root.identifierName;
   } else {
     const name = dep.root.value.identifier.name;
-    CompilerError.simpleInvariant(name != null && name.kind === 'named', {
+    CompilerError.invariant(name != null && name.kind === 'named', {
       reason: 'Expected manual dependencies to be named variables',
       loc: dep.root.value.loc,
     });
@@ -976,7 +976,7 @@ export function findOptionalPlaces(
         switch (terminal.kind) {
           case 'branch': {
             const isOptional = queue.pop();
-            CompilerError.simpleInvariant(isOptional !== undefined, {
+            CompilerError.invariant(isOptional !== undefined, {
               reason:
                 'Expected an optional value for each optional test condition',
               loc: terminal.test.loc,
@@ -1017,14 +1017,15 @@ export function findOptionalPlaces(
             break;
           }
           default: {
-            CompilerError.simpleInvariant(false, {
+            CompilerError.invariant(false, {
               reason: `Unexpected terminal in optional`,
+              message: `Unexpected ${terminal.kind} in optional`,
               loc: terminal.loc,
             });
           }
         }
       }
-      CompilerError.simpleInvariant(queue.length === 0, {
+      CompilerError.invariant(queue.length === 0, {
         reason:
           'Expected a matching number of conditional blocks and branch points',
         loc: block.terminal.loc,
@@ -1091,7 +1092,7 @@ function createDiagnostic(
       break;
     }
     default: {
-      CompilerError.simpleInvariant(false, {
+      CompilerError.invariant(false, {
         reason: `Unexpected error category: ${category}`,
         loc: GeneratedSource,
       });

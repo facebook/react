@@ -102,14 +102,7 @@ function validateNoSetStateInRenderImpl(
         case 'StartMemoize': {
           CompilerError.invariant(activeManualMemoId === null, {
             reason: 'Unexpected nested StartMemoize instructions',
-            description: null,
-            details: [
-              {
-                kind: 'error',
-                loc: instr.value.loc,
-                message: null,
-              },
-            ],
+            loc: instr.value.loc,
           });
           activeManualMemoId = instr.value.manualMemoId;
           break;
@@ -120,14 +113,7 @@ function validateNoSetStateInRenderImpl(
             {
               reason:
                 'Expected FinishMemoize to align with previous StartMemoize instruction',
-              description: null,
-              details: [
-                {
-                  kind: 'error',
-                  loc: instr.value.loc,
-                  message: null,
-                },
-              ],
+              loc: instr.value.loc,
             },
           );
           activeManualMemoId = null;

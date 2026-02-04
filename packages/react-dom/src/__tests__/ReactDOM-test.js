@@ -195,13 +195,10 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be a function. Instead received: no.',
-        'Expected the last optional `callback` argument to be a function. Instead received: no.',
-      ],
-      {withoutStack: 2},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be a function. Instead received: no.',
+      'Expected the last optional `callback` argument to be a function. Instead received: no.',
+    ]);
 
     await expect(async () => {
       await act(() => {
@@ -211,13 +208,10 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
-      [
-        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }",
-        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
-      ],
-      {withoutStack: 2},
-    );
+    assertConsoleErrorDev([
+      "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }",
+      "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
+    ]);
 
     await expect(async () => {
       await act(() => {
@@ -227,13 +221,10 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
-        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
-      ],
-      {withoutStack: 2},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+      'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+    ]);
   });
 
   // @gate !disableLegacyMode
@@ -261,13 +252,10 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be a function. Instead received: no.',
-        'Expected the last optional `callback` argument to be a function. Instead received: no.',
-      ],
-      {withoutStack: 2},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be a function. Instead received: no.',
+      'Expected the last optional `callback` argument to be a function. Instead received: no.',
+    ]);
 
     ReactDOM.render(<A />, myDiv); // Re-mount
     await expect(async () => {
@@ -278,13 +266,10 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
-      [
-        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
-        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
-      ],
-      {withoutStack: 2},
-    );
+    assertConsoleErrorDev([
+      "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
+      "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
+    ]);
 
     ReactDOM.render(<A />, myDiv); // Re-mount
     await expect(async () => {
@@ -295,13 +280,10 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
-        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
-      ],
-      {withoutStack: 2},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+      'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+    ]);
   });
 
   it('preserves focus', async () => {

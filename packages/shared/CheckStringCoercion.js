@@ -76,6 +76,8 @@ export function checkAttributeStringCoercion(
   attributeName: string,
 ): void | string {
   if (__DEV__) {
+    // TODO: for enableTrustedTypesIntegration we don't toString this
+    //       so we shouldn't need the DEV warning.
     if (willCoercionThrow(value)) {
       console.error(
         'The provided `%s` attribute is an unsupported type %s.' +
