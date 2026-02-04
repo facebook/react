@@ -386,6 +386,73 @@ describe('ReactDOM', () => {
     }
   });
 
+  it('calls focus() on autoFocus anchor elements after they have been mounted to the DOM', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      let focusedElement;
+      let anchorFocusedAfterMount = false;
+
+      HTMLElement.prototype.focus = function () {
+        focusedElement = this;
+        anchorFocusedAfterMount = !!this.parentNode;
+      };
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <h1>Auto-focus Test</h1>
+            <a href="https://react.dev" autoFocus={true}>
+              Link
+            </a>
+            <p>The above anchor should be focused after mount.</p>
+          </div>,
+        );
+      });
+
+      expect(anchorFocusedAfterMount).toBe(true);
+      expect(focusedElement.tagName).toBe('A');
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+    }
+  });
+
+  it('calls focus() on autoFocus for any focusable element after mount', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      let focusedElement;
+      let elementFocusedAfterMount = false;
+
+      HTMLElement.prototype.focus = function () {
+        focusedElement = this;
+        elementFocusedAfterMount = !!this.parentNode;
+      };
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <div tabIndex={0} autoFocus={true} id="focusable-div">
+              Focusable div
+            </div>
+          </div>,
+        );
+      });
+
+      expect(elementFocusedAfterMount).toBe(true);
+      expect(focusedElement.tagName).toBe('DIV');
+      expect(focusedElement.id).toBe('focusable-div');
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+    }
+  });
+
   it("shouldn't fire duplicate event handler while handling other nested dispatch", async () => {
     const actual = [];
 
