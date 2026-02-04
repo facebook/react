@@ -15319,6 +15319,7 @@ __DEV__ &&
           case 11:
           case 15:
             if (
+              !enableEffectEventMutationPhase &&
               0 !== (flags & 4) &&
               ((finishedWork = finishedWork.updateQueue),
               (finishedWork =
@@ -16411,6 +16412,17 @@ __DEV__ &&
         case 11:
         case 14:
         case 15:
+          if (
+            enableEffectEventMutationPhase &&
+            flags & 4 &&
+            ((current = finishedWork.updateQueue),
+            (current = null !== current ? current.events : null),
+            null !== current)
+          )
+            for (var ii = 0; ii < current.length; ii++) {
+              var _eventPayloads$ii2 = current[ii];
+              _eventPayloads$ii2.ref.impl = _eventPayloads$ii2.nextImpl;
+            }
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           flags & 4 &&
@@ -16435,16 +16447,16 @@ __DEV__ &&
               safelyDetachRef(current, current.return));
           flags & 64 &&
             offscreenSubtreeIsHidden &&
-            ((current = finishedWork.updateQueue),
-            null !== current &&
-              ((root = current.callbacks),
-              null !== root &&
-                ((lanes = current.shared.hiddenCallbacks),
-                (current.shared.hiddenCallbacks =
-                  null === lanes ? root : lanes.concat(root)))));
+            ((root = finishedWork.updateQueue),
+            null !== root &&
+              ((lanes = root.callbacks),
+              null !== lanes &&
+                ((current = root.shared.hiddenCallbacks),
+                (root.shared.hiddenCallbacks =
+                  null === current ? lanes : current.concat(lanes)))));
           break;
         case 26:
-          var hoistableRoot = currentHoistableRoot;
+          ii = currentHoistableRoot;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
@@ -16460,119 +16472,125 @@ __DEV__ &&
               if (null === root)
                 if (null === finishedWork.stateNode) {
                   a: {
-                    current = finishedWork.type;
-                    root = finishedWork.memoizedProps;
-                    lanes = hoistableRoot.ownerDocument || hoistableRoot;
-                    b: switch (current) {
+                    root = finishedWork.type;
+                    lanes = finishedWork.memoizedProps;
+                    current = ii.ownerDocument || ii;
+                    b: switch (root) {
                       case "title":
-                        flags = lanes.getElementsByTagName("title")[0];
+                        flags = current.getElementsByTagName("title")[0];
                         if (
                           !flags ||
                           isOwnedInstance(flags) ||
                           flags.namespaceURI === SVG_NAMESPACE ||
                           flags.hasAttribute("itemprop")
                         )
-                          (flags = lanes.createElement(current)),
-                            lanes.head.insertBefore(
+                          (flags = current.createElement(root)),
+                            current.head.insertBefore(
                               flags,
-                              lanes.querySelector("head > title")
+                              current.querySelector("head > title")
                             );
-                        setInitialProperties(flags, current, root);
+                        setInitialProperties(flags, root, lanes);
                         precacheFiberNode(finishedWork, flags);
                         markNodeAsHoistable(flags);
-                        current = flags;
+                        root = flags;
                         break a;
                       case "link":
                         if (
-                          (hoistableRoot = getHydratableHoistableCache(
+                          (ii = getHydratableHoistableCache(
                             "link",
                             "href",
-                            lanes
-                          ).get(current + (root.href || "")))
+                            current
+                          ).get(root + (lanes.href || "")))
                         )
-                          for (var i = 0; i < hoistableRoot.length; i++)
+                          for (
+                            _eventPayloads$ii2 = 0;
+                            _eventPayloads$ii2 < ii.length;
+                            _eventPayloads$ii2++
+                          )
                             if (
-                              ((flags = hoistableRoot[i]),
+                              ((flags = ii[_eventPayloads$ii2]),
                               flags.getAttribute("href") ===
-                                (null == root.href || "" === root.href
+                                (null == lanes.href || "" === lanes.href
                                   ? null
-                                  : root.href) &&
+                                  : lanes.href) &&
                                 flags.getAttribute("rel") ===
-                                  (null == root.rel ? null : root.rel) &&
+                                  (null == lanes.rel ? null : lanes.rel) &&
                                 flags.getAttribute("title") ===
-                                  (null == root.title ? null : root.title) &&
+                                  (null == lanes.title ? null : lanes.title) &&
                                 flags.getAttribute("crossorigin") ===
-                                  (null == root.crossOrigin
+                                  (null == lanes.crossOrigin
                                     ? null
-                                    : root.crossOrigin))
+                                    : lanes.crossOrigin))
                             ) {
-                              hoistableRoot.splice(i, 1);
+                              ii.splice(_eventPayloads$ii2, 1);
                               break b;
                             }
-                        flags = lanes.createElement(current);
-                        setInitialProperties(flags, current, root);
-                        lanes.head.appendChild(flags);
+                        flags = current.createElement(root);
+                        setInitialProperties(flags, root, lanes);
+                        current.head.appendChild(flags);
                         break;
                       case "meta":
                         if (
-                          (hoistableRoot = getHydratableHoistableCache(
+                          (ii = getHydratableHoistableCache(
                             "meta",
                             "content",
-                            lanes
-                          ).get(current + (root.content || "")))
+                            current
+                          ).get(root + (lanes.content || "")))
                         )
-                          for (i = 0; i < hoistableRoot.length; i++)
+                          for (
+                            _eventPayloads$ii2 = 0;
+                            _eventPayloads$ii2 < ii.length;
+                            _eventPayloads$ii2++
+                          )
                             if (
-                              ((flags = hoistableRoot[i]),
+                              ((flags = ii[_eventPayloads$ii2]),
                               checkAttributeStringCoercion(
-                                root.content,
+                                lanes.content,
                                 "content"
                               ),
                               flags.getAttribute("content") ===
-                                (null == root.content
+                                (null == lanes.content
                                   ? null
-                                  : "" + root.content) &&
+                                  : "" + lanes.content) &&
                                 flags.getAttribute("name") ===
-                                  (null == root.name ? null : root.name) &&
+                                  (null == lanes.name ? null : lanes.name) &&
                                 flags.getAttribute("property") ===
-                                  (null == root.property
+                                  (null == lanes.property
                                     ? null
-                                    : root.property) &&
+                                    : lanes.property) &&
                                 flags.getAttribute("http-equiv") ===
-                                  (null == root.httpEquiv
+                                  (null == lanes.httpEquiv
                                     ? null
-                                    : root.httpEquiv) &&
+                                    : lanes.httpEquiv) &&
                                 flags.getAttribute("charset") ===
-                                  (null == root.charSet ? null : root.charSet))
+                                  (null == lanes.charSet
+                                    ? null
+                                    : lanes.charSet))
                             ) {
-                              hoistableRoot.splice(i, 1);
+                              ii.splice(_eventPayloads$ii2, 1);
                               break b;
                             }
-                        flags = lanes.createElement(current);
-                        setInitialProperties(flags, current, root);
-                        lanes.head.appendChild(flags);
+                        flags = current.createElement(root);
+                        setInitialProperties(flags, root, lanes);
+                        current.head.appendChild(flags);
                         break;
                       default:
                         throw Error(
                           'getNodesForType encountered a type it did not expect: "' +
-                            current +
+                            root +
                             '". This is a bug in React.'
                         );
                     }
                     precacheFiberNode(finishedWork, flags);
                     markNodeAsHoistable(flags);
-                    current = flags;
+                    root = flags;
                   }
-                  finishedWork.stateNode = current;
+                  finishedWork.stateNode = root;
                 } else
-                  mountHoistable(
-                    hoistableRoot,
-                    finishedWork.type,
-                    finishedWork.stateNode
-                  );
+                  mountHoistable(ii, finishedWork.type, finishedWork.stateNode);
               else
                 finishedWork.stateNode = acquireResource(
-                  hoistableRoot,
+                  ii,
                   root,
                   finishedWork.memoizedProps
                 );
@@ -16580,20 +16598,16 @@ __DEV__ &&
               lanes !== root
                 ? (null === lanes
                     ? null !== current.stateNode &&
-                      ((current = current.stateNode),
-                      current.parentNode.removeChild(current))
+                      ((lanes = current.stateNode),
+                      lanes.parentNode.removeChild(lanes))
                     : lanes.count--,
                   null === root
                     ? mountHoistable(
-                        hoistableRoot,
+                        ii,
                         finishedWork.type,
                         finishedWork.stateNode
                       )
-                    : acquireResource(
-                        hoistableRoot,
-                        root,
-                        finishedWork.memoizedProps
-                      ))
+                    : acquireResource(ii, root, finishedWork.memoizedProps))
                 : null === root &&
                   null !== finishedWork.stateNode &&
                   commitHostUpdate(
@@ -16618,10 +16632,10 @@ __DEV__ &&
             );
           break;
         case 5:
-          hoistableRoot = offscreenDirectParentIsHidden;
+          ii = offscreenDirectParentIsHidden;
           offscreenDirectParentIsHidden = !1;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-          offscreenDirectParentIsHidden = hoistableRoot;
+          offscreenDirectParentIsHidden = ii;
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
@@ -16660,14 +16674,14 @@ __DEV__ &&
                 "This should have a text node initialized. This error is likely caused by a bug in React. Please file an issue."
               );
             root = finishedWork.memoizedProps;
-            current = null !== current ? current.memoizedProps : root;
-            lanes = finishedWork.stateNode;
+            lanes = null !== current ? current.memoizedProps : root;
+            current = finishedWork.stateNode;
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitTextUpdate,
-                lanes,
                 current,
+                lanes,
                 root
               ),
                 trackHostMutation();
@@ -16677,14 +16691,14 @@ __DEV__ &&
           }
           break;
         case 3:
-          hoistableRoot = pushNestedEffectDurations();
+          ii = pushNestedEffectDurations();
           rootMutationContext = !1;
           enableViewTransition && (viewTransitionMutationContext = !1);
           tagCaches = null;
-          i = currentHoistableRoot;
+          _eventPayloads$ii2 = currentHoistableRoot;
           currentHoistableRoot = getHoistableRoot(root.containerInfo);
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-          currentHoistableRoot = i;
+          currentHoistableRoot = _eventPayloads$ii2;
           commitReconciliationEffects(finishedWork);
           if (
             flags & 4 &&
@@ -16702,7 +16716,7 @@ __DEV__ &&
             }
           needsFormReset &&
             ((needsFormReset = !1), recursivelyResetForms(finishedWork));
-          root.effectDuration += popNestedEffectDurations(hoistableRoot);
+          root.effectDuration += popNestedEffectDurations(ii);
           popMutationContext(!1);
           rootMutationContext &&
             0 !== (lanes & 34) &&
@@ -16713,13 +16727,13 @@ __DEV__ &&
           current = offscreenDirectParentIsHidden;
           offscreenDirectParentIsHidden = offscreenSubtreeIsHidden;
           flags = pushMutationContext();
-          hoistableRoot = currentHoistableRoot;
+          ii = currentHoistableRoot;
           currentHoistableRoot = getHoistableRoot(
             finishedWork.stateNode.containerInfo
           );
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
-          currentHoistableRoot = hoistableRoot;
+          currentHoistableRoot = ii;
           viewTransitionMutationContext &&
             inUpdateViewTransition &&
             (rootViewTransitionAffected = !0);
@@ -16737,55 +16751,57 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           flags & 4 &&
-            ((current = finishedWork.updateQueue),
-            null !== current &&
+            ((root = finishedWork.updateQueue),
+            null !== root &&
               ((finishedWork.updateQueue = null),
-              attachSuspenseRetryListeners(finishedWork, current)));
+              attachSuspenseRetryListeners(finishedWork, root)));
           break;
         case 13:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           finishedWork.child.flags & 8192 &&
             ((root = null !== finishedWork.memoizedState),
-            (current = null !== current && null !== current.memoizedState),
+            (lanes = null !== current && null !== current.memoizedState),
             alwaysThrottleRetries
-              ? root !== current && (globalMostRecentFallbackTime = now$1())
-              : root && !current && (globalMostRecentFallbackTime = now$1()));
+              ? root !== lanes && (globalMostRecentFallbackTime = now$1())
+              : root && !lanes && (globalMostRecentFallbackTime = now$1()));
           if (flags & 4) {
             try {
               null !== finishedWork.memoizedState &&
-                ((hoistableRoot = finishedWork.memoizedProps.suspenseCallback),
-                "function" === typeof hoistableRoot
-                  ? ((i = finishedWork.updateQueue),
-                    null !== i && hoistableRoot(new Set(i)))
-                  : void 0 !== hoistableRoot &&
+                ((ii = finishedWork.memoizedProps.suspenseCallback),
+                "function" === typeof ii
+                  ? ((_eventPayloads$ii2 = finishedWork.updateQueue),
+                    null !== _eventPayloads$ii2 &&
+                      ii(new Set(_eventPayloads$ii2)))
+                  : void 0 !== ii &&
                     console.error("Unexpected type for suspenseCallback."));
             } catch (error) {
               captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
-            current = finishedWork.updateQueue;
-            null !== current &&
+            root = finishedWork.updateQueue;
+            null !== root &&
               ((finishedWork.updateQueue = null),
-              attachSuspenseRetryListeners(finishedWork, current));
+              attachSuspenseRetryListeners(finishedWork, root));
           }
           break;
         case 22:
-          hoistableRoot = null !== finishedWork.memoizedState;
-          i = null !== current && null !== current.memoizedState;
+          ii = null !== finishedWork.memoizedState;
+          _eventPayloads$ii2 =
+            null !== current && null !== current.memoizedState;
           var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
             prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
             _prevOffscreenDirectParentIsHidden2 = offscreenDirectParentIsHidden;
-          offscreenSubtreeIsHidden =
-            prevOffscreenSubtreeIsHidden || hoistableRoot;
+          offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || ii;
           offscreenDirectParentIsHidden =
-            _prevOffscreenDirectParentIsHidden2 || hoistableRoot;
-          offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || i;
+            _prevOffscreenDirectParentIsHidden2 || ii;
+          offscreenSubtreeWasHidden =
+            prevOffscreenSubtreeWasHidden || _eventPayloads$ii2;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
           offscreenDirectParentIsHidden = _prevOffscreenDirectParentIsHidden2;
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
-          i &&
-            !hoistableRoot &&
+          _eventPayloads$ii2 &&
+            !ii &&
             !prevOffscreenSubtreeIsHidden &&
             !prevOffscreenSubtreeWasHidden &&
             (finishedWork.mode & ProfileMode) !== NoMode &&
@@ -16800,12 +16816,12 @@ __DEV__ &&
           commitReconciliationEffects(finishedWork);
           flags & 8192 &&
             ((root = finishedWork.stateNode),
-            (root._visibility = hoistableRoot
+            (root._visibility = ii
               ? root._visibility & ~OffscreenVisible
               : root._visibility | OffscreenVisible),
-            !hoistableRoot ||
+            !ii ||
               null === current ||
-              i ||
+              _eventPayloads$ii2 ||
               offscreenSubtreeIsHidden ||
               offscreenSubtreeWasHidden ||
               (recursivelyTraverseDisappearLayoutEffects(finishedWork),
@@ -16819,24 +16835,24 @@ __DEV__ &&
                   componentEffectEndTime,
                   "Disconnect"
                 )),
-            (!hoistableRoot && offscreenDirectParentIsHidden) ||
-              hideOrUnhideAllChildren(finishedWork, hoistableRoot));
+            (!ii && offscreenDirectParentIsHidden) ||
+              hideOrUnhideAllChildren(finishedWork, ii));
           flags & 4 &&
-            ((current = finishedWork.updateQueue),
-            null !== current &&
-              ((root = current.retryQueue),
-              null !== root &&
-                ((current.retryQueue = null),
-                attachSuspenseRetryListeners(finishedWork, root))));
+            ((root = finishedWork.updateQueue),
+            null !== root &&
+              ((lanes = root.retryQueue),
+              null !== lanes &&
+                ((root.retryQueue = null),
+                attachSuspenseRetryListeners(finishedWork, lanes))));
           break;
         case 19:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           flags & 4 &&
-            ((current = finishedWork.updateQueue),
-            null !== current &&
+            ((root = finishedWork.updateQueue),
+            null !== root &&
               ((finishedWork.updateQueue = null),
-              attachSuspenseRetryListeners(finishedWork, current)));
+              attachSuspenseRetryListeners(finishedWork, root)));
           break;
         case 30:
           enableViewTransition &&
@@ -16845,11 +16861,12 @@ __DEV__ &&
                 null === current ||
                 safelyDetachRef(current, current.return)),
             (flags = pushMutationContext()),
-            (hoistableRoot = inUpdateViewTransition),
-            (i = enableViewTransition && (lanes & 335544064) === lanes),
+            (ii = inUpdateViewTransition),
+            (_eventPayloads$ii2 =
+              enableViewTransition && (lanes & 335544064) === lanes),
             (prevOffscreenSubtreeIsHidden = finishedWork.memoizedProps),
             (inUpdateViewTransition =
-              i &&
+              _eventPayloads$ii2 &&
               "none" !==
                 getViewTransitionClassName(
                   prevOffscreenSubtreeIsHidden.default,
@@ -16857,11 +16874,11 @@ __DEV__ &&
                 )),
             recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork),
-            i &&
+            _eventPayloads$ii2 &&
               null !== current &&
               viewTransitionMutationContext &&
               (finishedWork.flags |= 4),
-            (inUpdateViewTransition = hoistableRoot),
+            (inUpdateViewTransition = ii),
             popMutationContext(flags));
           break;
         case 21:
@@ -28862,6 +28879,8 @@ __DEV__ &&
         dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+      enableEffectEventMutationPhase =
+        dynamicFeatureFlags.enableEffectEventMutationPhase,
       enableHiddenSubtreeInsertionEffectCleanup =
         dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
       enableInfiniteRenderLoopDetection =
@@ -33014,11 +33033,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-classic-087a3469-20260204" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-classic-3aaab92a-20260204" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-classic-087a3469-20260204\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-classic-3aaab92a-20260204\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33061,10 +33080,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-classic-087a3469-20260204",
+          version: "19.3.0-www-classic-3aaab92a-20260204",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-classic-087a3469-20260204"
+          reconcilerVersion: "19.3.0-www-classic-3aaab92a-20260204"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33677,7 +33696,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-classic-087a3469-20260204";
+    exports.version = "19.3.0-www-classic-3aaab92a-20260204";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
