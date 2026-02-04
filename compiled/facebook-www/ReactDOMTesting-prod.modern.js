@@ -55,7 +55,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableFragmentRefsScrollIntoView =
     dynamicFeatureFlags.enableFragmentRefsScrollIntoView,
   enableFragmentRefsTextNodes = dynamicFeatureFlags.enableFragmentRefsTextNodes,
-  enableInternalInstanceMap = dynamicFeatureFlags.enableInternalInstanceMap;
+  enableInternalInstanceMap = dynamicFeatureFlags.enableInternalInstanceMap,
+  enableParallelTransitions = dynamicFeatureFlags.enableParallelTransitions;
 function getNearestMountedFiber(fiber) {
   for (var node = fiber, nextNode = node; nextNode && !nextNode.alternate; )
     (node = nextNode),
@@ -363,7 +364,7 @@ function getHighestPriorityLanes(lanes) {
     case 32768:
     case 65536:
     case 131072:
-      return lanes & 261888;
+      return enableParallelTransitions ? lanes & -lanes : lanes & 261888;
     case 262144:
     case 524288:
     case 1048576:
@@ -435,6 +436,22 @@ function checkIfRootIsPrerendering(root, renderLanes) {
       ~(root.suspendedLanes & ~root.pingedLanes) &
       renderLanes)
   );
+}
+function getEntangledLanes(root, renderLanes) {
+  0 !== (renderLanes & 8) && (renderLanes |= renderLanes & 32);
+  var allEntangledLanes = root.entangledLanes;
+  if (0 !== allEntangledLanes)
+    for (
+      root = root.entanglements, allEntangledLanes &= renderLanes;
+      0 < allEntangledLanes;
+
+    ) {
+      var index$2 = 31 - clz32(allEntangledLanes),
+        lane = 1 << index$2;
+      renderLanes |= root[index$2];
+      allEntangledLanes &= ~lane;
+    }
+  return renderLanes;
 }
 function computeExpirationTime(lane, currentTime) {
   switch (lane) {
@@ -12903,6 +12920,8 @@ function markRootSuspended(
   spawnedLane,
   didAttemptEntireTree
 ) {
+  enableParallelTransitions &&
+    (suspendedLanes = getEntangledLanes(root, suspendedLanes));
   suspendedLanes &= ~workInProgressRootPingedLanes;
   suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
   root.suspendedLanes |= suspendedLanes;
@@ -12967,20 +12986,7 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-  0 !== (lanes & 8) && (lanes |= lanes & 32);
-  var allEntangledLanes = root.entangledLanes;
-  if (0 !== allEntangledLanes)
-    for (
-      root = root.entanglements, allEntangledLanes &= lanes;
-      0 < allEntangledLanes;
-
-    ) {
-      var index$2 = 31 - clz32(allEntangledLanes),
-        lane = 1 << index$2;
-      lanes |= root[index$2];
-      allEntangledLanes &= ~lane;
-    }
-  entangledRenderLanes = lanes;
+  entangledRenderLanes = getEntangledLanes(root, lanes);
   finishQueueingConcurrentUpdates();
   return timeoutHandle;
 }
@@ -15391,20 +15397,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_1850 = 0;
-  i$jscomp$inline_1850 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1850++
+  var i$jscomp$inline_1841 = 0;
+  i$jscomp$inline_1841 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1841++
 ) {
-  var eventName$jscomp$inline_1851 =
-      simpleEventPluginEvents[i$jscomp$inline_1850],
-    domEventName$jscomp$inline_1852 =
-      eventName$jscomp$inline_1851.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1853 =
-      eventName$jscomp$inline_1851[0].toUpperCase() +
-      eventName$jscomp$inline_1851.slice(1);
+  var eventName$jscomp$inline_1842 =
+      simpleEventPluginEvents[i$jscomp$inline_1841],
+    domEventName$jscomp$inline_1843 =
+      eventName$jscomp$inline_1842.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1844 =
+      eventName$jscomp$inline_1842[0].toUpperCase() +
+      eventName$jscomp$inline_1842.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1852,
-    "on" + capitalizedEvent$jscomp$inline_1853
+    domEventName$jscomp$inline_1843,
+    "on" + capitalizedEvent$jscomp$inline_1844
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -20243,16 +20249,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2081 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2072 = React.version;
 if (
-  "19.3.0-www-modern-c137dd6f-20260204" !==
-  isomorphicReactPackageVersion$jscomp$inline_2081
+  "19.3.0-www-modern-087a3469-20260204" !==
+  isomorphicReactPackageVersion$jscomp$inline_2072
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2081,
-      "19.3.0-www-modern-c137dd6f-20260204"
+      isomorphicReactPackageVersion$jscomp$inline_2072,
+      "19.3.0-www-modern-087a3469-20260204"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20268,24 +20274,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2662 = {
+var internals$jscomp$inline_2653 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-c137dd6f-20260204",
+  version: "19.3.0-www-modern-087a3469-20260204",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-c137dd6f-20260204"
+  reconcilerVersion: "19.3.0-www-modern-087a3469-20260204"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2663 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2654 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2663.isDisabled &&
-    hook$jscomp$inline_2663.supportsFiber
+    !hook$jscomp$inline_2654.isDisabled &&
+    hook$jscomp$inline_2654.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2663.inject(
-        internals$jscomp$inline_2662
+      (rendererID = hook$jscomp$inline_2654.inject(
+        internals$jscomp$inline_2653
       )),
-        (injectedHook = hook$jscomp$inline_2663);
+        (injectedHook = hook$jscomp$inline_2654);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -20853,4 +20859,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-c137dd6f-20260204";
+exports.version = "19.3.0-www-modern-087a3469-20260204";

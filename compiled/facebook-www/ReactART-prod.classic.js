@@ -79,7 +79,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
   enableViewTransition = dynamicFeatureFlags.enableViewTransition,
-  enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs;
+  enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
+  enableParallelTransitions = dynamicFeatureFlags.enableParallelTransitions;
 function isFiberSuspenseAndTimedOut(fiber) {
   var memoizedState = fiber.memoizedState;
   return (
@@ -336,7 +337,7 @@ function getHighestPriorityLanes(lanes) {
     case 32768:
     case 65536:
     case 131072:
-      return lanes & 261888;
+      return enableParallelTransitions ? lanes & -lanes : lanes & 261888;
     case 262144:
     case 524288:
     case 1048576:
@@ -408,6 +409,22 @@ function checkIfRootIsPrerendering(root, renderLanes) {
       ~(root.suspendedLanes & ~root.pingedLanes) &
       renderLanes)
   );
+}
+function getEntangledLanes(root, renderLanes) {
+  0 !== (renderLanes & 8) && (renderLanes |= renderLanes & 32);
+  var allEntangledLanes = root.entangledLanes;
+  if (0 !== allEntangledLanes)
+    for (
+      root = root.entanglements, allEntangledLanes &= renderLanes;
+      0 < allEntangledLanes;
+
+    ) {
+      var index$1 = 31 - clz32(allEntangledLanes),
+        lane = 1 << index$1;
+      renderLanes |= root[index$1];
+      allEntangledLanes &= ~lane;
+    }
+  return renderLanes;
 }
 function computeExpirationTime(lane, currentTime) {
   switch (lane) {
@@ -10155,6 +10172,8 @@ function markRootSuspended(
   spawnedLane,
   didAttemptEntireTree
 ) {
+  enableParallelTransitions &&
+    (suspendedLanes = getEntangledLanes(root, suspendedLanes));
   suspendedLanes &= ~workInProgressRootPingedLanes;
   suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
   root.suspendedLanes |= suspendedLanes;
@@ -10219,20 +10238,7 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-  0 !== (lanes & 8) && (lanes |= lanes & 32);
-  var allEntangledLanes = root.entangledLanes;
-  if (0 !== allEntangledLanes)
-    for (
-      root = root.entanglements, allEntangledLanes &= lanes;
-      0 < allEntangledLanes;
-
-    ) {
-      var index$1 = 31 - clz32(allEntangledLanes),
-        lane = 1 << index$1;
-      lanes |= root[index$1];
-      allEntangledLanes &= ~lane;
-    }
-  entangledRenderLanes = lanes;
+  entangledRenderLanes = getEntangledLanes(root, lanes);
   finishQueueingConcurrentUpdates();
   return timeoutHandle;
 }
@@ -11564,24 +11570,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1636 = {
+var internals$jscomp$inline_1627 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-c137dd6f-20260204",
+  version: "19.3.0-www-classic-087a3469-20260204",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-c137dd6f-20260204"
+  reconcilerVersion: "19.3.0-www-classic-087a3469-20260204"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1637 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1628 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1637.isDisabled &&
-    hook$jscomp$inline_1637.supportsFiber
+    !hook$jscomp$inline_1628.isDisabled &&
+    hook$jscomp$inline_1628.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1637.inject(
-        internals$jscomp$inline_1636
+      (rendererID = hook$jscomp$inline_1628.inject(
+        internals$jscomp$inline_1627
       )),
-        (injectedHook = hook$jscomp$inline_1637);
+        (injectedHook = hook$jscomp$inline_1628);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -11595,4 +11601,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-classic-c137dd6f-20260204";
+exports.version = "19.3.0-www-classic-087a3469-20260204";

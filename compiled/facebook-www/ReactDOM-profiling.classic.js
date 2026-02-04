@@ -62,6 +62,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.enableFragmentRefsScrollIntoView,
   enableFragmentRefsTextNodes = dynamicFeatureFlags.enableFragmentRefsTextNodes,
   enableInternalInstanceMap = dynamicFeatureFlags.enableInternalInstanceMap,
+  enableParallelTransitions = dynamicFeatureFlags.enableParallelTransitions,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
 function getNearestMountedFiber(fiber) {
   for (var node = fiber, nextNode = node; nextNode && !nextNode.alternate; )
@@ -446,7 +447,7 @@ function getHighestPriorityLanes(lanes) {
     case 32768:
     case 65536:
     case 131072:
-      return lanes & 261888;
+      return enableParallelTransitions ? lanes & -lanes : lanes & 261888;
     case 262144:
     case 524288:
     case 1048576:
@@ -518,6 +519,22 @@ function checkIfRootIsPrerendering(root, renderLanes) {
       ~(root.suspendedLanes & ~root.pingedLanes) &
       renderLanes)
   );
+}
+function getEntangledLanes(root, renderLanes) {
+  0 !== (renderLanes & 8) && (renderLanes |= renderLanes & 32);
+  var allEntangledLanes = root.entangledLanes;
+  if (0 !== allEntangledLanes)
+    for (
+      root = root.entanglements, allEntangledLanes &= renderLanes;
+      0 < allEntangledLanes;
+
+    ) {
+      var index$2 = 31 - clz32(allEntangledLanes),
+        lane = 1 << index$2;
+      renderLanes |= root[index$2];
+      allEntangledLanes &= ~lane;
+    }
+  return renderLanes;
 }
 function computeExpirationTime(lane, currentTime) {
   switch (lane) {
@@ -14400,6 +14417,8 @@ function markRootSuspended(
   spawnedLane,
   didAttemptEntireTree
 ) {
+  enableParallelTransitions &&
+    (suspendedLanes = getEntangledLanes(root, suspendedLanes));
   suspendedLanes &= ~workInProgressRootPingedLanes;
   suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
   root.suspendedLanes |= suspendedLanes;
@@ -14705,15 +14724,7 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-  0 !== (lanes & 8) && (lanes |= lanes & 32);
-  endTime = root.entangledLanes;
-  if (0 !== endTime)
-    for (root = root.entanglements, endTime &= lanes; 0 < endTime; )
-      (clampedRenderStartTime$237 = 31 - clz32(endTime)),
-        (eventIsRepeat = 1 << clampedRenderStartTime$237),
-        (lanes |= root[clampedRenderStartTime$237]),
-        (endTime &= ~eventIsRepeat);
-  entangledRenderLanes = lanes;
+  entangledRenderLanes = getEntangledLanes(root, lanes);
   finishQueueingConcurrentUpdates();
   return previousRenderStartTime;
 }
@@ -17467,20 +17478,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_2177 = 0;
-  i$jscomp$inline_2177 < simpleEventPluginEvents.length;
-  i$jscomp$inline_2177++
+  var i$jscomp$inline_2168 = 0;
+  i$jscomp$inline_2168 < simpleEventPluginEvents.length;
+  i$jscomp$inline_2168++
 ) {
-  var eventName$jscomp$inline_2178 =
-      simpleEventPluginEvents[i$jscomp$inline_2177],
-    domEventName$jscomp$inline_2179 =
-      eventName$jscomp$inline_2178.toLowerCase(),
-    capitalizedEvent$jscomp$inline_2180 =
-      eventName$jscomp$inline_2178[0].toUpperCase() +
-      eventName$jscomp$inline_2178.slice(1);
+  var eventName$jscomp$inline_2169 =
+      simpleEventPluginEvents[i$jscomp$inline_2168],
+    domEventName$jscomp$inline_2170 =
+      eventName$jscomp$inline_2169.toLowerCase(),
+    capitalizedEvent$jscomp$inline_2171 =
+      eventName$jscomp$inline_2169[0].toUpperCase() +
+      eventName$jscomp$inline_2169.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_2179,
-    "on" + capitalizedEvent$jscomp$inline_2180
+    domEventName$jscomp$inline_2170,
+    "on" + capitalizedEvent$jscomp$inline_2171
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -22308,16 +22319,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2408 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2399 = React.version;
 if (
-  "19.3.0-www-classic-c137dd6f-20260204" !==
-  isomorphicReactPackageVersion$jscomp$inline_2408
+  "19.3.0-www-classic-087a3469-20260204" !==
+  isomorphicReactPackageVersion$jscomp$inline_2399
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2408,
-      "19.3.0-www-classic-c137dd6f-20260204"
+      isomorphicReactPackageVersion$jscomp$inline_2399,
+      "19.3.0-www-classic-087a3469-20260204"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22333,27 +22344,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2410 = {
+var internals$jscomp$inline_2401 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-c137dd6f-20260204",
+  version: "19.3.0-www-classic-087a3469-20260204",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-c137dd6f-20260204"
+  reconcilerVersion: "19.3.0-www-classic-087a3469-20260204"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2410.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2410.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2401.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2401.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2992 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2983 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2992.isDisabled &&
-    hook$jscomp$inline_2992.supportsFiber
+    !hook$jscomp$inline_2983.isDisabled &&
+    hook$jscomp$inline_2983.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2992.inject(
-        internals$jscomp$inline_2410
+      (rendererID = hook$jscomp$inline_2983.inject(
+        internals$jscomp$inline_2401
       )),
-        (injectedHook = hook$jscomp$inline_2992);
+        (injectedHook = hook$jscomp$inline_2983);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -22771,7 +22782,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-c137dd6f-20260204";
+exports.version = "19.3.0-www-classic-087a3469-20260204";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

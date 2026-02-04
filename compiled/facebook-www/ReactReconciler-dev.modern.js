@@ -460,7 +460,7 @@ __DEV__ &&
         case 32768:
         case 65536:
         case 131072:
-          return lanes & 261888;
+          return enableParallelTransitions ? lanes & -lanes : lanes & 261888;
         case 262144:
         case 524288:
         case 1048576:
@@ -538,6 +538,22 @@ __DEV__ &&
           ~(root.suspendedLanes & ~root.pingedLanes) &
           renderLanes)
       );
+    }
+    function getEntangledLanes(root, renderLanes) {
+      0 !== (renderLanes & 8) && (renderLanes |= renderLanes & 32);
+      var allEntangledLanes = root.entangledLanes;
+      if (0 !== allEntangledLanes)
+        for (
+          root = root.entanglements, allEntangledLanes &= renderLanes;
+          0 < allEntangledLanes;
+
+        ) {
+          var index = 31 - clz32(allEntangledLanes),
+            lane = 1 << index;
+          renderLanes |= root[index];
+          allEntangledLanes &= ~lane;
+        }
+      return renderLanes;
     }
     function computeExpirationTime(lane, currentTime) {
       switch (lane) {
@@ -17263,6 +17279,8 @@ __DEV__ &&
       spawnedLane,
       didAttemptEntireTree
     ) {
+      enableParallelTransitions &&
+        (suspendedLanes = getEntangledLanes(root, suspendedLanes));
       suspendedLanes &= ~workInProgressRootPingedLanes;
       suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
       root.suspendedLanes |= suspendedLanes;
@@ -17683,15 +17701,7 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
         null;
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-      0 !== (lanes & 8) && (lanes |= lanes & 32);
-      endTime = root.entangledLanes;
-      if (0 !== endTime)
-        for (root = root.entanglements, endTime &= lanes; 0 < endTime; )
-          (debugTask = 31 - clz32(endTime)),
-            (color = 1 << debugTask),
-            (lanes |= root[debugTask]),
-            (endTime &= ~color);
-      entangledRenderLanes = lanes;
+      entangledRenderLanes = getEntangledLanes(root, lanes);
       finishQueueingConcurrentUpdates();
       root = getCurrentTime();
       1e3 < root - lastResetTime &&
@@ -20045,6 +20055,7 @@ __DEV__ &&
         dynamicFeatureFlags.transitionLaneExpirationMs,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition,
       enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
+      enableParallelTransitions = dynamicFeatureFlags.enableParallelTransitions,
       enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
@@ -22813,7 +22824,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-c137dd6f-20260204"
+        reconcilerVersion: "19.3.0-www-modern-087a3469-20260204"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -263,7 +263,7 @@ module.exports = function ($$$config) {
       case 32768:
       case 65536:
       case 131072:
-        return lanes & 261888;
+        return enableParallelTransitions ? lanes & -lanes : lanes & 261888;
       case 262144:
       case 524288:
       case 1048576:
@@ -335,6 +335,22 @@ module.exports = function ($$$config) {
         ~(root.suspendedLanes & ~root.pingedLanes) &
         renderLanes)
     );
+  }
+  function getEntangledLanes(root, renderLanes) {
+    0 !== (renderLanes & 8) && (renderLanes |= renderLanes & 32);
+    var allEntangledLanes = root.entangledLanes;
+    if (0 !== allEntangledLanes)
+      for (
+        root = root.entanglements, allEntangledLanes &= renderLanes;
+        0 < allEntangledLanes;
+
+      ) {
+        var index$2 = 31 - clz32(allEntangledLanes),
+          lane = 1 << index$2;
+        renderLanes |= root[index$2];
+        allEntangledLanes &= ~lane;
+      }
+    return renderLanes;
   }
   function computeExpirationTime(lane, currentTime) {
     switch (lane) {
@@ -11401,6 +11417,8 @@ module.exports = function ($$$config) {
     spawnedLane,
     didAttemptEntireTree
   ) {
+    enableParallelTransitions &&
+      (suspendedLanes = getEntangledLanes(root, suspendedLanes));
     suspendedLanes &= ~workInProgressRootPingedLanes;
     suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
     root.suspendedLanes |= suspendedLanes;
@@ -11465,20 +11483,7 @@ module.exports = function ($$$config) {
     workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
       null;
     workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-    0 !== (lanes & 8) && (lanes |= lanes & 32);
-    var allEntangledLanes = root.entangledLanes;
-    if (0 !== allEntangledLanes)
-      for (
-        root = root.entanglements, allEntangledLanes &= lanes;
-        0 < allEntangledLanes;
-
-      ) {
-        var index$2 = 31 - clz32(allEntangledLanes),
-          lane = 1 << index$2;
-        lanes |= root[index$2];
-        allEntangledLanes &= ~lane;
-      }
-    entangledRenderLanes = lanes;
+    entangledRenderLanes = getEntangledLanes(root, lanes);
     finishQueueingConcurrentUpdates();
     return timeoutHandle;
   }
@@ -12898,6 +12903,7 @@ module.exports = function ($$$config) {
     transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
     enableViewTransition = dynamicFeatureFlags.enableViewTransition,
     enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
+    enableParallelTransitions = dynamicFeatureFlags.enableParallelTransitions,
     REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
     REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
     REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -14129,7 +14135,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-c137dd6f-20260204"
+      reconcilerVersion: "19.3.0-www-modern-087a3469-20260204"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
