@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<1018bec9623aab7a763f232e2d0aaccc>>
+ * @generated SignedSource<<0a1c7b83185390f237a6237c40208b58>>
  */
 
 'use strict';
@@ -341,7 +341,7 @@ const rule$1 = {
             const optionalChains = new Map();
             gatherDependenciesRecursively(scope);
             function gatherDependenciesRecursively(currentScope) {
-                var _a, _b, _c, _d, _e;
+                var _a, _b, _c, _d, _e, _f;
                 for (const reference of currentScope.references) {
                     if (!reference.resolved) {
                         continue;
@@ -379,7 +379,8 @@ const rule$1 = {
                     if (def.node != null && def.node.init === node.parent) {
                         continue;
                     }
-                    if (def.type === 'TypeParameter') {
+                    if (def.type === 'TypeParameter' ||
+                        ((_e = dependencyNode.parent) === null || _e === void 0 ? void 0 : _e.type) === 'GenericTypeAnnotation') {
                         continue;
                     }
                     if (!dependencies.has(dependency)) {
@@ -392,7 +393,7 @@ const rule$1 = {
                         });
                     }
                     else {
-                        (_e = dependencies.get(dependency)) === null || _e === void 0 ? void 0 : _e.references.push(reference);
+                        (_f = dependencies.get(dependency)) === null || _f === void 0 ? void 0 : _f.references.push(reference);
                     }
                 }
                 for (const childScope of currentScope.childScopes) {

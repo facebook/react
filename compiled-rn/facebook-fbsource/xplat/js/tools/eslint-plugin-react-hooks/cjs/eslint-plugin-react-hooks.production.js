@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<e935f2a8b43ecf55e243b6e83fe0d103>>
+ * @generated SignedSource<<12b6c05fbf308de9b87dafd771922e27>>
  */
 
 'use strict';
@@ -331,7 +331,7 @@ const rule$1 = {
             const optionalChains = new Map();
             gatherDependenciesRecursively(scope);
             function gatherDependenciesRecursively(currentScope) {
-                var _a, _b, _c, _d, _e;
+                var _a, _b, _c, _d, _e, _f;
                 for (const reference of currentScope.references) {
                     if (!reference.resolved) {
                         continue;
@@ -369,7 +369,8 @@ const rule$1 = {
                     if (def.node != null && def.node.init === node.parent) {
                         continue;
                     }
-                    if (def.type === 'TypeParameter') {
+                    if (def.type === 'TypeParameter' ||
+                        ((_e = dependencyNode.parent) === null || _e === void 0 ? void 0 : _e.type) === 'GenericTypeAnnotation') {
                         continue;
                     }
                     if (!dependencies.has(dependency)) {
@@ -382,7 +383,7 @@ const rule$1 = {
                         });
                     }
                     else {
-                        (_e = dependencies.get(dependency)) === null || _e === void 0 ? void 0 : _e.references.push(reference);
+                        (_f = dependencies.get(dependency)) === null || _f === void 0 ? void 0 : _f.references.push(reference);
                     }
                 }
                 for (const childScope of currentScope.childScopes) {
