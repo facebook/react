@@ -32,8 +32,9 @@ export const {
   enableScrollEndPolyfill,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
-  enableAsyncDebugInfo,
+  enableFragmentRefsTextNodes,
   enableInternalInstanceMap,
+  enableParallelTransitions,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -46,6 +47,7 @@ export const enableUpdaterTracking = __PROFILE__;
 
 export const enableSuspenseAvoidThisFallback: boolean = true;
 
+export const enableAsyncDebugInfo: boolean = true;
 export const enableCPUSuspense: boolean = true;
 export const enableMoveBefore: boolean = false;
 export const disableInputAttributeSyncing: boolean = false;

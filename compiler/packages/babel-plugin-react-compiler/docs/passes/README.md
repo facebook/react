@@ -294,6 +294,15 @@ yarn snap -p <fixture-name>
 # Run with debug output (shows all passes)
 yarn snap -p <fixture-name> -d
 
+# Compile any file (not just fixtures) and see output
+yarn snap compile <path>
+
+# Compile any file with debug output (alternative to yarn snap -d -p when you don't have a fixture)
+yarn snap compile --debug <path>
+
+# Minimize a failing test case to its minimal reproduction
+yarn snap minimize <path>
+
 # Update expected outputs
 yarn snap -u
 ```

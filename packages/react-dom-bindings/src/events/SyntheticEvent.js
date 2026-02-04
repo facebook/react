@@ -523,6 +523,17 @@ export const SyntheticPointerEvent: $FlowFixMe = createSyntheticEvent(
 );
 
 /**
+ * @interface SubmitEvent
+ * @see https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-submitevent-interface
+ */
+const SubmitEventInterface: EventInterfaceType = {
+  ...EventInterface,
+  submitter: 0,
+};
+export const SyntheticSubmitEvent: $FlowFixMe =
+  createSyntheticEvent(SubmitEventInterface);
+
+/**
  * @interface TouchEvent
  * @see http://www.w3.org/TR/touch-events/
  */

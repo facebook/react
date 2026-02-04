@@ -27,6 +27,7 @@ export const {
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
   enableFragmentRefsInstanceHandles,
+  enableFragmentRefsTextNodes,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -38,7 +39,7 @@ export const disableLegacyContextForFunctionComponents: boolean = false;
 export const disableLegacyMode: boolean = false;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
-export const enableAsyncDebugInfo: boolean = false;
+export const enableAsyncDebugInfo: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableCPUSuspense: boolean = true;
 export const enableCreateEventHandleAPI: boolean = false;
@@ -82,6 +83,7 @@ export const enablePerformanceIssueReporting: boolean =
   enableComponentPerformanceTrack;
 export const enableInternalInstanceMap: boolean = false;
 export const enableOptimisticKey: boolean = false;
+export const enableParallelTransitions: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

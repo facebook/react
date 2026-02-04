@@ -10,7 +10,7 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
-export const enableAsyncDebugInfo: boolean = false;
+export const enableAsyncDebugInfo: boolean = true;
 export const enableSchedulingProfiler: boolean = false;
 export const enableProfilerTimer: boolean = __PROFILE__;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
@@ -60,7 +60,7 @@ export const enableEagerAlternateStateNodeCleanup: boolean = true;
 export const enableYieldingBeforePassive: boolean = true;
 
 export const enableThrottledScheduling: boolean = false;
-export const enableViewTransition: boolean = false;
+export const enableViewTransition: boolean = true;
 export const enableGestureTransition: boolean = false;
 export const enableScrollEndPolyfill: boolean = true;
 export const enableSuspenseyImages: boolean = false;
@@ -73,6 +73,7 @@ export const ownerStackLimit = 1e4;
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
 export const enableFragmentRefsInstanceHandles: boolean = false;
+export const enableFragmentRefsTextNodes: boolean = true;
 
 export const enableInternalInstanceMap: boolean = false;
 
@@ -91,6 +92,7 @@ export const enableReactTestRendererWarning: boolean = true;
 export const enableObjectFiber: boolean = false;
 
 export const enableOptimisticKey: boolean = false;
+export const enableParallelTransitions: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -24,7 +24,7 @@ export const disableLegacyContextForFunctionComponents: boolean = true;
 export const disableLegacyMode: boolean = false;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
-export const enableAsyncDebugInfo: boolean = false;
+export const enableAsyncDebugInfo: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableCPUSuspense: boolean = false;
 export const enableCreateEventHandleAPI: boolean = false;
@@ -72,6 +72,7 @@ export const ownerStackLimit = 1e4;
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = false;
 export const enableFragmentRefsInstanceHandles: boolean = false;
+export const enableFragmentRefsTextNodes: boolean = false;
 
 export const enableInternalInstanceMap: boolean = false;
 
@@ -82,6 +83,7 @@ export const enableProfilerTimer: boolean = __PROFILE__;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
 export const enableProfilerNestedUpdatePhase: boolean = __PROFILE__;
 export const enableUpdaterTracking: boolean = __PROFILE__;
+export const enableParallelTransitions: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

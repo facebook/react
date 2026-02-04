@@ -787,7 +787,7 @@ describe('ReactFlightDOM', () => {
     <ClientModule.Component key="this adds instrumentation" />;
   });
 
-  it('throws when accessing a Context.Provider below the client exports', () => {
+  it('does not throw when accessing a Context.Provider from client exports', () => {
     const Context = React.createContext();
     const ClientModule = clientExports({
       Context,
@@ -795,11 +795,60 @@ describe('ReactFlightDOM', () => {
     function dotting() {
       return ClientModule.Context.Provider;
     }
-    expect(dotting).toThrowError(
-      `Cannot render a Client Context Provider on the Server. ` +
-        `Instead, you can export a Client Component wrapper ` +
-        `that itself renders a Client Context Provider.`,
+    expect(dotting).not.toThrowError();
+  });
+
+  it('can render a client Context.Provider from a server component', async () => {
+    // Create a context in a client module
+    const TestContext = React.createContext('default');
+    const ClientModule = clientExports({
+      TestContext,
+    });
+
+    // Client component that reads context
+    function ClientConsumer() {
+      const value = React.useContext(TestContext);
+      return <span>{value}</span>;
+    }
+    const {ClientConsumer: ClientConsumerRef} = clientExports({ClientConsumer});
+
+    function Print({response}) {
+      return use(response);
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    // Server component that provides context
+    function ServerApp() {
+      return (
+        <ClientModule.TestContext.Provider value="from-server">
+          <div>
+            <ClientConsumerRef />
+          </div>
+        </ClientModule.TestContext.Provider>
+      );
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<ServerApp />, webpackMap),
     );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('<div><span>from-server</span></div>');
   });
 
   it('should progressively reveal server components', async () => {

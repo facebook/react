@@ -1160,9 +1160,9 @@ function codegenTerminal(
       const value = codegenPlaceToExpression(cx, terminal.value);
       if (value.type === 'Identifier' && value.name === 'undefined') {
         // Use implicit undefined
-        return t.returnStatement();
+        return createReturnStatement(terminal.loc);
       }
-      return t.returnStatement(value);
+      return createReturnStatement(terminal.loc, value);
     }
     case 'switch': {
       return createSwitchStatement(
@@ -1545,6 +1545,7 @@ const createThrowStatement = withLoc(t.throwStatement);
 const createTryStatement = withLoc(t.tryStatement);
 const createBreakStatement = withLoc(t.breakStatement);
 const createContinueStatement = withLoc(t.continueStatement);
+const createReturnStatement = withLoc(t.returnStatement);
 
 function createVariableDeclarator(
   id: t.LVal,

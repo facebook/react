@@ -523,4 +523,110 @@ describe('ReactPerformanceTracks', () => {
       ],
     ]);
   });
+
+  // @gate __DEV__ && enableComponentPerformanceTrack
+  it('diffs HTML-like objects', async () => {
+    const App = function App({container}) {
+      Scheduler.unstable_advanceTime(10);
+      React.useEffect(() => {}, [container]);
+    };
+
+    class Window {}
+    const createOpaqueOriginWindow = () => {
+      return new Proxy(new Window(), {
+        get(target, prop) {
+          if (prop === Symbol.toStringTag) {
+            return target[Symbol.toStringTag];
+          }
+          // Some properties are allowed if JS itself is accessign those e.g.
+          // Symbol.toStringTag.
+          // Just make sure React isn't accessing arbitrary properties.
+          throw new Error(
+            `Failed to read named property '${String(prop)}' from Window`,
+          );
+        },
+      });
+    };
+
+    class OpaqueOriginHTMLIFrameElement {
+      constructor(textContent) {
+        this.textContent = textContent;
+      }
+      contentWindow = createOpaqueOriginWindow();
+      nodeType = 1;
+      [Symbol.toStringTag] = 'HTMLIFrameElement';
+    }
+
+    Scheduler.unstable_advanceTime(1);
+    await act(() => {
+      ReactNoop.render(
+        <App
+          container={new OpaqueOriginHTMLIFrameElement('foo')}
+          contentWindow={createOpaqueOriginWindow()}
+        />,
+      );
+    });
+
+    expect(performanceMeasureCalls).toEqual([
+      [
+        'Mount',
+        {
+          detail: {
+            devtools: {
+              color: 'warning',
+              properties: null,
+              tooltipText: 'Mount',
+              track: 'Components ⚛',
+            },
+          },
+          end: 11,
+          start: 1,
+        },
+      ],
+    ]);
+    performanceMeasureCalls.length = 0;
+
+    Scheduler.unstable_advanceTime(10);
+
+    await act(() => {
+      ReactNoop.render(
+        <App
+          container={new OpaqueOriginHTMLIFrameElement('bar')}
+          contentWindow={createOpaqueOriginWindow()}
+        />,
+      );
+    });
+
+    expect(performanceMeasureCalls).toEqual([
+      [
+        '​App',
+        {
+          detail: {
+            devtools: {
+              color: 'primary-dark',
+              properties: [
+                ['Changed Props', ''],
+                ['- container', 'HTMLIFrameElement'],
+                ['-   contentWindow', 'Window'],
+                ['-   nodeType', '1'],
+                ['-   textContent', '"foo"'],
+                ['+ container', 'HTMLIFrameElement'],
+                ['+   contentWindow', 'Window'],
+                ['+   nodeType', '1'],
+                ['+   textContent', '"bar"'],
+                [
+                  '  contentWindow',
+                  'Referentially unequal but deeply equal objects. Consider memoization.',
+                ],
+              ],
+              tooltipText: 'App',
+              track: 'Components ⚛',
+            },
+          },
+          end: 31,
+          start: 21,
+        },
+      ],
+    ]);
+  });
 });

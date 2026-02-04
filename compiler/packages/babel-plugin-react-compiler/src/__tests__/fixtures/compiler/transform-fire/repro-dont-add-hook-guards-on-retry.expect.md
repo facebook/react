@@ -36,6 +36,7 @@ function Component(props, useDynamicHook) {
   useEffect(() => {
     t0(props);
   });
+
   return <div>hello world</div>;
 }
 function _temp(props_0) {

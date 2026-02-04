@@ -19,7 +19,7 @@ export const disableLegacyContextForFunctionComponents = false;
 export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const disableTextareaChildren = false;
-export const enableAsyncDebugInfo = false;
+export const enableAsyncDebugInfo = true;
 export const enableAsyncIterableChildren = false;
 export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
@@ -65,8 +65,11 @@ export const enableHydrationChangeEvent = false;
 export const enableDefaultTransitionIndicator = true;
 export const enableFragmentRefs = false;
 export const enableFragmentRefsScrollIntoView = false;
+export const enableFragmentRefsInstanceHandles = false;
+export const enableFragmentRefsTextNodes = false;
 export const ownerStackLimit = 1e4;
 export const enableOptimisticKey = false;
+export const enableParallelTransitions = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
