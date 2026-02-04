@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<e3d84f8ada221a38dea80e1133881ae0>>
+ * @generated SignedSource<<e935f2a8b43ecf55e243b6e83fe0d103>>
  */
 
 'use strict';
@@ -49314,7 +49314,7 @@ function validateNoSetStateInEffects(fn, env) {
                 case 'MethodCall':
                 case 'CallExpression': {
                     const callee = instr.value.kind === 'MethodCall'
-                        ? instr.value.receiver
+                        ? instr.value.property
                         : instr.value.callee;
                     if (isUseEffectEventType(callee.identifier)) {
                         const arg = instr.value.args[0];
