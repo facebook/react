@@ -18,6 +18,7 @@ import type {
   ReactFunctionLocation,
   ReactErrorInfoDev,
 } from 'shared/ReactTypes';
+import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import type {
@@ -552,6 +553,10 @@ function moveDebugInfoFromChunkToInnerValue<T>(
         resolvedValue._debugInfo,
         debugInfo,
       );
+    } else if (resolvedValue._debugInfo === null) {
+      const elementOrLazy: LazyComponent<mixed, mixed> | ReactElement =
+        (resolvedValue: $FlowFixMe);
+      elementOrLazy._debugInfo = debugInfo;
     } else {
       Object.defineProperty((resolvedValue: any), '_debugInfo', {
         configurable: false,
@@ -2900,6 +2905,10 @@ function addAsyncInfo(chunk: SomeChunk<any>, asyncInfo: ReactAsyncInfo): void {
     if (isArray(value._debugInfo)) {
       // $FlowFixMe[method-unbinding]
       value._debugInfo.push(asyncInfo);
+    } else if (value._debugInfo === null) {
+      const elementOrLazy: LazyComponent<mixed, mixed> | ReactElement =
+        (value: $FlowFixMe);
+      elementOrLazy._debugInfo = [asyncInfo];
     } else {
       Object.defineProperty((value: any), '_debugInfo', {
         configurable: false,
