@@ -49534,7 +49534,7 @@ function validateNoSetStateInEffects(fn, env) {
                 case 'MethodCall':
                 case 'CallExpression': {
                     const callee = instr.value.kind === 'MethodCall'
-                        ? instr.value.receiver
+                        ? instr.value.property
                         : instr.value.callee;
                     if (isUseEffectEventType(callee.identifier)) {
                         const arg = instr.value.args[0];
