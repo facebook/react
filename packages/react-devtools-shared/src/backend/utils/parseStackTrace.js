@@ -59,7 +59,7 @@ function parseStackTraceFromChromeStack(
   return parsedFrames;
 }
 
-const firefoxFrameRegExp = /^((?:.*".+")?[^@]*)@(.+):(\d+):(\d+)$/;
+const firefoxFrameRegExp = /^([^@"]*(?:"[^"]*"[^@"]*)*)@(.+):(\d+):(\d+)$/;
 function parseStackTraceFromFirefoxStack(
   stack: string,
   skipFrames: number,
@@ -94,7 +94,7 @@ function parseStackTraceFromFirefoxStack(
   return parsedFrames;
 }
 
-const CHROME_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
+const CHROME_STACK_REGEXP = /^\s*at /m;
 export function parseStackTraceFromString(
   stack: string,
   skipFrames: number,
