@@ -20,7 +20,11 @@ import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
-import {StoreContext, BridgeContext} from './context';
+import {
+  StoreContext,
+  BridgeContext,
+  PaneResizeObserverContext,
+} from './context';
 import {sanitizeForParse, smartParse, smartStringify} from '../utils';
 
 type ACTION_RESET = {
@@ -112,31 +116,41 @@ export function useEditableValue(
 }
 
 export function useIsOverflowing(
-  containerRef: {current: HTMLDivElement | null, ...},
+  containerRef: {current: HTMLDivElement | null},
   totalChildWidth: number,
 ): boolean {
   const [isOverflowing, setIsOverflowing] = useState<boolean>(false);
+  const handleResize = useCallback(() => {
+    const container = containerRef.current;
+    if (container === null) {
+      return;
+    }
+    setIsOverflowing(container.clientWidth <= totalChildWidth);
+  }, [totalChildWidth]);
+
+  const paneResizeObserver = useContext(PaneResizeObserverContext);
 
   // It's important to use a layout effect, so that we avoid showing a flash of overflowed content.
   useLayoutEffect(() => {
-    if (containerRef.current === null) {
-      return () => {};
+    const container = containerRef.current;
+    if (container === null) {
+      return;
     }
-
-    const container = ((containerRef.current: any): HTMLDivElement);
-
-    const handleResize = () =>
-      setIsOverflowing(container.clientWidth <= totalChildWidth);
 
     handleResize();
 
     // It's important to listen to the ownerDocument.defaultView to support the browser extension.
     // Here we use portals to render individual tabs (e.g. Profiler),
     // and the root document might belong to a different window.
+    // Note that ResizeObserver doesn't work in Chrome DevTools panels.
     const ownerWindow = container.ownerDocument.defaultView;
     ownerWindow.addEventListener('resize', handleResize);
-    return () => ownerWindow.removeEventListener('resize', handleResize);
-  }, [containerRef, totalChildWidth]);
+    paneResizeObserver.addListener(handleResize);
+    return () => {
+      ownerWindow.removeEventListener('resize', handleResize);
+      paneResizeObserver.removeListener(handleResize);
+    };
+  }, [containerRef, handleResize]);
 
   return isOverflowing;
 }

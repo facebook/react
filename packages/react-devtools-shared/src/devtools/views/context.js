@@ -53,3 +53,14 @@ export const OptionsContext: ReactContext<OptionsContextType> =
     hideLogAction: false,
     hideViewSourceAction: false,
   });
+
+export type PaneResizeObserverContextType = {
+  addListener: (listener: () => void) => void,
+  removeListener: (listener: () => void) => void,
+};
+
+export const PaneResizeObserverContext: ReactContext<PaneResizeObserverContextType> =
+  createContext<PaneResizeObserverContextType>({
+    addListener: () => {},
+    removeListener: () => {},
+  });

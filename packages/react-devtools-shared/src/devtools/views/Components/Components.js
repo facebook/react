@@ -7,11 +7,14 @@
  * @flow
  */
 
+import type {PaneResizeObserverContextType} from 'react-devtools-shared/src/devtools/views/context';
+
 import * as React from 'react';
 import {Fragment, useEffect, useLayoutEffect, useReducer, useRef} from 'react';
 import Tree from './Tree';
 import {OwnersListContextController} from './OwnersListContext';
 import portaledContent from '../portaledContent';
+import {PaneResizeObserverContext} from 'react-devtools-shared/src/devtools/views/context';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
 import {
   localStorageGetItem,
@@ -47,6 +50,23 @@ function Components(_: {}) {
   const wrapperElementRef = useRef<null | HTMLElement>(null);
   const resizeElementRef = useRef<null | HTMLElement>(null);
 
+  // Only exists as a workaround for targets not supporting ResizeObserver (e.g. Chrome DevTools extension)
+  const [paneResizeListeners] = React.useState<Array<() => void>>(() => []);
+  const [paneResizeObserver] = React.useState<PaneResizeObserverContextType>(
+    () => {
+      return {
+        addListener(listener: () => void) {
+          paneResizeListeners.push(listener);
+        },
+        removeListener(listener: () => void) {
+          const index = paneResizeListeners.indexOf(listener);
+          if (index !== -1) {
+            paneResizeListeners.splice(index, 1);
+          }
+        },
+      };
+    },
+  );
   const [state, dispatch] = useReducer<ResizeState, any, ResizeAction>(
     resizeReducer,
     null,
@@ -137,6 +157,10 @@ function Components(_: {}) {
         type: actionType,
         payload: currentMousePosition / resizedElementDimension,
       });
+      for (let i = 0; i < paneResizeListeners.length; i++) {
+        const listener = paneResizeListeners[i];
+        listener();
+      }
     }
   };
 
@@ -145,30 +169,32 @@ function Components(_: {}) {
       <OwnersListContextController>
         <div ref={wrapperElementRef} className={styles.Components}>
           <Fragment>
-            <div ref={resizeElementRef} className={styles.TreeWrapper}>
-              <Tree />
-            </div>
-            <div className={styles.ResizeBarWrapper}>
-              <div
-                onPointerDown={onResizeStart}
-                onPointerMove={onResize}
-                onPointerUp={onResizeEnd}
-                className={styles.ResizeBar}
-              />
-            </div>
-            <div className={styles.InspectedElementWrapper}>
-              <NativeStyleContextController>
-                <InspectedElementErrorBoundary>
-                  <InspectedElement
-                    fallbackEmpty={
-                      'No React element selected. Select an element in the tree to inspect.'
-                    }
-                  />
-                </InspectedElementErrorBoundary>
-              </NativeStyleContextController>
-            </div>
-            <ModalDialog />
-            <SettingsModal />
+            <PaneResizeObserverContext.Provider value={paneResizeObserver}>
+              <div ref={resizeElementRef} className={styles.TreeWrapper}>
+                <Tree />
+              </div>
+              <div className={styles.ResizeBarWrapper}>
+                <div
+                  onPointerDown={onResizeStart}
+                  onPointerMove={onResize}
+                  onPointerUp={onResizeEnd}
+                  className={styles.ResizeBar}
+                />
+              </div>
+              <div className={styles.InspectedElementWrapper}>
+                <NativeStyleContextController>
+                  <InspectedElementErrorBoundary>
+                    <InspectedElement
+                      fallbackEmpty={
+                        'No React element selected. Select an element in the tree to inspect.'
+                      }
+                    />
+                  </InspectedElementErrorBoundary>
+                </NativeStyleContextController>
+              </div>
+              <ModalDialog />
+              <SettingsModal />
+            </PaneResizeObserverContext.Provider>
           </Fragment>
         </div>
       </OwnersListContextController>
