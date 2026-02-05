@@ -24,24 +24,25 @@ import {
   SuspenseTreeDispatcherContext,
 } from './SuspenseTreeContext';
 
-export default function SuspenseBreadcrumbs(): React$Node {
+type SuspenseBreadcrumbsFlatListProps = {
+  onItemClick: (id: SuspenseNode['id'], event: SyntheticMouseEvent) => void,
+  onItemPointerEnter: (
+    id: SuspenseNode['id'],
+    event: SyntheticMouseEvent,
+  ) => void,
+  onItemPointerLeave: (event: SyntheticMouseEvent) => void,
+};
+
+function SuspenseBreadcrumbsFlatList({
+  onItemClick,
+  onItemPointerEnter,
+  onItemPointerLeave,
+}: SuspenseBreadcrumbsFlatListProps): React$Node {
   const store = useContext(StoreContext);
   const {activityID} = useContext(TreeStateContext);
-  const treeDispatch = useContext(TreeDispatcherContext);
-  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   const {selectedSuspenseID, lineage, roots} = useContext(
     SuspenseTreeStateContext,
   );
-
-  const {highlightHostInstance, clearHighlightHostInstance} =
-    useHighlightHostInstance();
-
-  function handleClick(id: SuspenseNode['id'], event: SyntheticMouseEvent) {
-    event.preventDefault();
-    treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: id});
-    suspenseTreeDispatch({type: 'SELECT_SUSPENSE_BY_ID', payload: id});
-  }
-
   return (
     <ol className={styles.SuspenseBreadcrumbsList}>
       {lineage === null ? null : lineage.length === 0 ? (
@@ -55,7 +56,7 @@ export default function SuspenseBreadcrumbs(): React$Node {
             aria-current="true">
             <button
               className={styles.SuspenseBreadcrumbsButton}
-              onClick={handleClick.bind(
+              onClick={onItemClick.bind(
                 null,
                 activityID === null ? roots[0] : activityID,
               )}
@@ -73,11 +74,11 @@ export default function SuspenseBreadcrumbs(): React$Node {
               key={id}
               className={styles.SuspenseBreadcrumbsListItem}
               aria-current={selectedSuspenseID === id}
-              onPointerEnter={highlightHostInstance.bind(null, id, false)}
-              onPointerLeave={clearHighlightHostInstance}>
+              onPointerEnter={onItemPointerEnter.bind(null, id)}
+              onPointerLeave={onItemPointerLeave}>
               <button
                 className={styles.SuspenseBreadcrumbsButton}
-                onClick={handleClick.bind(null, id)}
+                onClick={onItemClick.bind(null, id)}
                 type="button">
                 {node === null ? 'Unknown' : node.name || 'Unknown'}
               </button>
@@ -86,5 +87,27 @@ export default function SuspenseBreadcrumbs(): React$Node {
         })
       )}
     </ol>
+  );
+}
+
+export default function SuspenseBreadcrumbs(): React$Node {
+  const treeDispatch = useContext(TreeDispatcherContext);
+  const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
+
+  const {highlightHostInstance, clearHighlightHostInstance} =
+    useHighlightHostInstance();
+
+  function handleClick(id: SuspenseNode['id'], event: SyntheticMouseEvent) {
+    event.preventDefault();
+    treeDispatch({type: 'SELECT_ELEMENT_BY_ID', payload: id});
+    suspenseTreeDispatch({type: 'SELECT_SUSPENSE_BY_ID', payload: id});
+  }
+
+  return (
+    <SuspenseBreadcrumbsFlatList
+      onItemClick={handleClick}
+      onItemPointerEnter={highlightHostInstance}
+      onItemPointerLeave={clearHighlightHostInstance}
+    />
   );
 }
