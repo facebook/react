@@ -11,13 +11,13 @@ import type {SuspenseNode} from 'react-devtools-shared/src/frontend/types';
 import typeof {SyntheticMouseEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
-import {useContext} from 'react';
+import {useContext, useLayoutEffect, useState} from 'react';
 import {
   TreeDispatcherContext,
   TreeStateContext,
 } from '../Components/TreeContext';
 import {StoreContext} from '../context';
-import {useHighlightHostInstance} from '../hooks';
+import {useHighlightHostInstance, useIsOverflowing} from '../hooks';
 import styles from './SuspenseBreadcrumbs.css';
 import {
   SuspenseTreeStateContext,
@@ -90,6 +90,19 @@ function SuspenseBreadcrumbsFlatList({
   );
 }
 
+type SuspenseBreadcrumbsMenuProps = {
+  onItemClick: (id: SuspenseNode['id'], event: SyntheticMouseEvent) => void,
+  onItemPointerEnter: (
+    id: SuspenseNode['id'],
+    scrollIntoView?: boolean,
+  ) => void,
+  onItemPointerLeave: (event: SyntheticMouseEvent) => void,
+};
+
+function SuspenseBreadcrumbsMenu({}: SuspenseBreadcrumbsMenuProps): React$Node {
+  return <div>TODO: Suspense Breadcrumbs Menu</div>;
+}
+
 export default function SuspenseBreadcrumbs(): React$Node {
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
@@ -103,13 +116,38 @@ export default function SuspenseBreadcrumbs(): React$Node {
     suspenseTreeDispatch({type: 'SELECT_SUSPENSE_BY_ID', payload: id});
   }
 
+  const [elementsTotalWidth, setElementsTotalWidth] = useState(0);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const isOverflowing = useIsOverflowing(containerRef, elementsTotalWidth);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (container === null) {
+      return;
+    }
+
+    const ResizeObserver = container.ownerDocument.defaultView.ResizeObserver;
+    const observer = new ResizeObserver(entries => {
+      const entry = entries[0];
+      setElementsTotalWidth(entry.contentRect.width);
+    });
+
+    observer.observe(container);
+
+    return observer.disconnect.bind(observer);
+  }, [containerRef, isOverflowing]);
+
   return (
-    <div className={styles.SuspenseBreadcrumbsContainer}>
-      <SuspenseBreadcrumbsFlatList
-        onItemClick={handleClick}
-        onItemPointerEnter={highlightHostInstance}
-        onItemPointerLeave={clearHighlightHostInstance}
-      />
+    <div className={styles.SuspenseBreadcrumbsContainer} ref={containerRef}>
+      {isOverflowing ? (
+        <SuspenseBreadcrumbsMenu />
+      ) : (
+        <SuspenseBreadcrumbsFlatList
+          onItemClick={handleClick}
+          onItemPointerEnter={highlightHostInstance}
+          onItemPointerLeave={clearHighlightHostInstance}
+        />
+      )}
     </div>
   );
 }
