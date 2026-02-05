@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(node scripts/enable-feature-flag.js:*)"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}

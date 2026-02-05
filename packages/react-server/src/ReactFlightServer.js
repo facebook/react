@@ -557,6 +557,8 @@ type DeferredDebugStore = {
   existing: Map<ReactClientReference | string, number>,
 };
 
+const __PROTO__ = '__proto__';
+
 const OPENING = 10;
 const OPEN = 11;
 const ABORTING = 12;
@@ -658,6 +660,7 @@ function RequestInstance(
   onFatalError: (error: mixed) => void,
   identifierPrefix?: string,
   temporaryReferences: void | TemporaryReferenceSet,
+  debugStartTime: void | number, // Profiling-only
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
@@ -749,7 +752,15 @@ function RequestInstance(
     // This avoids leaking unnecessary information like how long the server has
     // been running and allows for more compact representation of each timestamp.
     // The time origin is stored as an offset in the time space of this environment.
-    timeOrigin = this.timeOrigin = performance.now();
+    if (typeof debugStartTime === 'number') {
+      // We expect `startTime` to be an absolute timestamp, so relativize it to match the other case.
+      timeOrigin = this.timeOrigin =
+        debugStartTime -
+        // $FlowFixMe[prop-missing]
+        performance.timeOrigin;
+    } else {
+      timeOrigin = this.timeOrigin = performance.now();
+    }
     emitTimeOriginChunk(
       this,
       timeOrigin +
@@ -782,6 +793,7 @@ export function createRequest(
   onError: void | ((error: mixed) => ?string),
   identifierPrefix: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
+  debugStartTime: void | number, // Profiling-only
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
@@ -800,6 +812,7 @@ export function createRequest(
     noop,
     identifierPrefix,
     temporaryReferences,
+    debugStartTime,
     environmentName,
     filterStackFrame,
     keepDebugAlive,
@@ -814,6 +827,7 @@ export function createPrerenderRequest(
   onError: void | ((error: mixed) => ?string),
   identifierPrefix: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
+  debugStartTime: void | number, // Profiling-only
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
@@ -832,6 +846,7 @@ export function createPrerenderRequest(
     onFatalError,
     identifierPrefix,
     temporaryReferences,
+    debugStartTime,
     environmentName,
     filterStackFrame,
     keepDebugAlive,
@@ -2330,19 +2345,53 @@ function visitAsyncNode(
   >,
   cutOff: number,
 ): void | null | PromiseNode | IONode {
-  if (visited.has(node)) {
-    // It's possible to visit them same node twice when it's part of both an "awaited" path
-    // and a "previous" path. This also gracefully handles cycles which would be a bug.
-    return visited.get(node);
+  // Collect the previous chain iteratively instead of recursively to avoid
+  // stack overflow on deep chains. We process from deepest to shallowest so
+  // each node has its previousIONode available.
+  const chain: Array<AsyncSequence> = [];
+  let current: AsyncSequence | null = node;
+
+  while (current !== null) {
+    if (visited.has(current)) {
+      break;
+    }
+    chain.push(current);
+    current = current.previous;
   }
-  // Set it as visited early in case we see ourselves before returning.
-  visited.set(node, null);
-  const result = visitAsyncNodeImpl(request, task, node, visited, cutOff);
-  if (result !== null) {
-    // If we ended up with a value, let's use that value for future visits.
-    visited.set(node, result);
+
+  let previousIONode: void | null | PromiseNode | IONode =
+    current !== null ? visited.get(current) : null;
+
+  // Process from deepest to shallowest (reverse order).
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const n = chain[i];
+    // Set it as visited early in case we see the node again before returning.
+    visited.set(n, null);
+
+    const result = visitAsyncNodeImpl(
+      request,
+      task,
+      n,
+      visited,
+      cutOff,
+      previousIONode,
+    );
+
+    if (result !== null) {
+      // If we ended up with a value, let's use that value for future visits.
+      visited.set(n, result);
+    }
+
+    if (result === undefined) {
+      // Undefined is used as a signal that we found a suitable aborted node
+      // and we don't have to find further aborted nodes.
+      return undefined;
+    }
+
+    previousIONode = result;
   }
-  return result;
+
+  return previousIONode;
 }
 
 function visitAsyncNodeImpl(
@@ -2354,29 +2403,13 @@ function visitAsyncNodeImpl(
     void | null | PromiseNode | IONode,
   >,
   cutOff: number,
+  previousIONode: void | null | PromiseNode | IONode,
 ): void | null | PromiseNode | IONode {
   if (node.end >= 0 && node.end <= request.timeOrigin) {
     // This was already resolved when we started this render. It must have been either something
     // that's part of a start up sequence or externally cached data. We exclude that information.
     // The technique for debugging the effects of uncached data on the render is to simply uncache it.
     return null;
-  }
-
-  let previousIONode: void | null | PromiseNode | IONode = null;
-  // First visit anything that blocked this sequence to start in the first place.
-  if (node.previous !== null) {
-    previousIONode = visitAsyncNode(
-      request,
-      task,
-      node.previous,
-      visited,
-      cutOff,
-    );
-    if (previousIONode === undefined) {
-      // Undefined is used as a signal that we found a suitable aborted node and we don't have to find
-      // further aborted nodes.
-      return undefined;
-    }
   }
 
   // `found` represents the return value of the following switch statement.
@@ -3446,6 +3479,17 @@ function renderModelDestructive(
 ): ReactJSONValue {
   // Set the currently rendering model
   task.model = value;
+
+  if (__DEV__) {
+    if (parentPropertyName === __PROTO__) {
+      callWithDebugContextInDEV(request, task, () => {
+        console.error(
+          'Expected not to serialize an object with own property `__proto__`. When parsed this property will be omitted.%s',
+          describeObjectForErrorMessage(parent, parentPropertyName),
+        );
+      });
+    }
+  }
 
   // Special Symbol, that's very common.
   if (value === REACT_ELEMENT_TYPE) {

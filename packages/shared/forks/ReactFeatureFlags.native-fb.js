@@ -20,14 +20,15 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
+  enableEffectEventMutationPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
   enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
-  renameElementSymbol,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
   enableFragmentRefsInstanceHandles,
+  enableFragmentRefsTextNodes,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -39,7 +40,7 @@ export const disableLegacyContextForFunctionComponents: boolean = false;
 export const disableLegacyMode: boolean = false;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
-export const enableAsyncDebugInfo: boolean = false;
+export const enableAsyncDebugInfo: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableCPUSuspense: boolean = true;
 export const enableCreateEventHandleAPI: boolean = false;
@@ -67,7 +68,6 @@ export const enableUpdaterTracking: boolean = __PROFILE__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableHydrationLaneScheduling: boolean = true;
 export const enableYieldingBeforePassive: boolean = false;
 export const enableThrottledScheduling: boolean = false;
 export const enableViewTransition: boolean = false;
@@ -79,12 +79,12 @@ export const enableSrcObject: boolean = false;
 export const enableHydrationChangeEvent: boolean = true;
 export const enableDefaultTransitionIndicator: boolean = true;
 export const ownerStackLimit = 1e4;
-export const enableComponentPerformanceTrack: boolean =
-  __PROFILE__ && dynamicFlags.enableComponentPerformanceTrack;
+export const enableComponentPerformanceTrack: boolean = true;
 export const enablePerformanceIssueReporting: boolean =
   enableComponentPerformanceTrack;
 export const enableInternalInstanceMap: boolean = false;
 export const enableOptimisticKey: boolean = false;
+export const enableParallelTransitions: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

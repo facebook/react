@@ -38,6 +38,7 @@ function Component(props) {
     t0 = undefined;
   }
   const x = t0;
+
   return x;
 }
 

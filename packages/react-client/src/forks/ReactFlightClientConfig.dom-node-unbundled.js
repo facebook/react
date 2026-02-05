@@ -12,6 +12,7 @@ export const rendererPackageName = 'react-server-dom-unbundled';
 
 export * from 'react-client/src/ReactFlightClientStreamConfigNode';
 export * from 'react-client/src/ReactClientConsoleConfigServer';
+export * from 'react-client/src/ReactClientDebugConfigNode';
 export * from 'react-server-dom-unbundled/src/client/ReactFlightClientConfigBundlerNode';
 export * from 'react-server-dom-unbundled/src/client/ReactFlightClientConfigTargetNodeServer';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';

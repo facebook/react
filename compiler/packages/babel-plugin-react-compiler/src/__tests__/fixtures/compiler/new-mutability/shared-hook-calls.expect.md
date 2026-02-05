@@ -71,6 +71,7 @@ function Component(t0) {
     t5 = $[8];
   }
   useEffect(t5);
+
   return null;
 }
 

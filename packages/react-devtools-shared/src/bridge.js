@@ -208,7 +208,6 @@ export type BackendEvents = {
   isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
-  overrideComponentFilters: [Array<ComponentFilter>],
   environmentNames: [Array<string>],
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],

@@ -46,6 +46,7 @@ function Component(props) {
       t0(props);
     });
   }
+
   return <Stringify />;
 }
 function _temp(props_0) {

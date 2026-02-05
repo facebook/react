@@ -57,6 +57,7 @@ function Component(props) {
     t2 = $[4];
   }
   useEffect(t1, t2);
+
   return y;
 }
 
