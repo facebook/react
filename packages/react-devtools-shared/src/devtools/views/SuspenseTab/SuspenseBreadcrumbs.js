@@ -28,7 +28,7 @@ type SuspenseBreadcrumbsFlatListProps = {
   onItemClick: (id: SuspenseNode['id'], event: SyntheticMouseEvent) => void,
   onItemPointerEnter: (
     id: SuspenseNode['id'],
-    event: SyntheticMouseEvent,
+    scrollIntoView?: boolean,
   ) => void,
   onItemPointerLeave: (event: SyntheticMouseEvent) => void,
 };
@@ -74,7 +74,7 @@ function SuspenseBreadcrumbsFlatList({
               key={id}
               className={styles.SuspenseBreadcrumbsListItem}
               aria-current={selectedSuspenseID === id}
-              onPointerEnter={onItemPointerEnter.bind(null, id)}
+              onPointerEnter={onItemPointerEnter.bind(null, id, false)}
               onPointerLeave={onItemPointerLeave}>
               <button
                 className={styles.SuspenseBreadcrumbsButton}
@@ -104,10 +104,12 @@ export default function SuspenseBreadcrumbs(): React$Node {
   }
 
   return (
-    <SuspenseBreadcrumbsFlatList
-      onItemClick={handleClick}
-      onItemPointerEnter={highlightHostInstance}
-      onItemPointerLeave={clearHighlightHostInstance}
-    />
+    <div className={styles.SuspenseBreadcrumbsContainer}>
+      <SuspenseBreadcrumbsFlatList
+        onItemClick={handleClick}
+        onItemPointerEnter={highlightHostInstance}
+        onItemPointerLeave={clearHighlightHostInstance}
+      />
+    </div>
   );
 }
