@@ -309,39 +309,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['This operation was aborted']);
   });
 
-  // @gate !enableHalt
-  it('should reject if aborting before the shell is complete and enableHalt is disabled', async () => {
-    const errors = [];
-    const controller = new AbortController();
-    const promise = serverAct(() =>
-      ReactDOMFizzStatic.prerender(
-        <div>
-          <InfiniteSuspend />
-        </div>,
-        {
-          signal: controller.signal,
-          onError(x) {
-            errors.push(x.message);
-          },
-        },
-      ),
-    );
-
-    await jest.runAllTimers();
-
-    const theReason = new Error('aborted for reasons');
-    controller.abort(theReason);
-
-    let caughtError = null;
-    try {
-      await promise;
-    } catch (error) {
-      caughtError = error;
-    }
-    expect(caughtError).toBe(theReason);
-    expect(errors).toEqual(['aborted for reasons']);
-  });
-
   it('should resolve an empty prelude if aborting before the shell is complete', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -402,56 +369,10 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ),
     );
 
-    if (gate(flags => flags.enableHalt)) {
-      const {prelude} = await streamPromise;
-      const content = await readContent(prelude);
-      expect(errors).toEqual(['This operation was aborted']);
-      expect(content).toBe('');
-    } else {
-      let caughtError = null;
-      try {
-        await streamPromise;
-      } catch (error) {
-        caughtError = error;
-      }
-      expect(caughtError.message).toBe('This operation was aborted');
-      expect(errors).toEqual(['This operation was aborted']);
-    }
-  });
-
-  // @gate !enableHalt
-  it('should reject if passing an already aborted signal and enableHalt is disabled', async () => {
-    const errors = [];
-    const controller = new AbortController();
-    const theReason = new Error('aborted for reasons');
-    controller.abort(theReason);
-
-    const promise = serverAct(() =>
-      ReactDOMFizzStatic.prerender(
-        <div>
-          <Suspense fallback={<div>Loading</div>}>
-            <InfiniteSuspend />
-          </Suspense>
-        </div>,
-        {
-          signal: controller.signal,
-          onError(x) {
-            errors.push(x.message);
-          },
-        },
-      ),
-    );
-
-    // Technically we could still continue rendering the shell but currently the
-    // semantics mean that we also abort any pending CPU work.
-    let caughtError = null;
-    try {
-      await promise;
-    } catch (error) {
-      caughtError = error;
-    }
-    expect(caughtError).toBe(theReason);
-    expect(errors).toEqual(['aborted for reasons']);
+    const {prelude} = await streamPromise;
+    const content = await readContent(prelude);
+    expect(errors).toEqual(['This operation was aborted']);
+    expect(content).toBe('');
   });
 
   it('should resolve an empty prelude if passing an already aborted signal', async () => {
@@ -591,9 +512,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
         onError,
       }),
     );
-    expect(prerendered.postponed).toBe(
-      gate(flags => flags.enableHalt) ? null : undefined,
-    );
+    expect(prerendered.postponed).toBe(null);
     expect(errors).toEqual(['bad onHeaders']);
 
     await readIntoContainer(prerendered.prelude);
@@ -1021,7 +940,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
   });
 
-  // @gate enableHalt && enableSuspenseList
+  // @gate enableSuspenseList
   it('can resume a partially prerendered SuspenseList', async () => {
     const errors = [];
 
@@ -1106,7 +1025,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
   });
 
-  // @gate enableHalt && enableOptimisticKey
+  // @gate enableOptimisticKey
   it('can resume an optimistic keyed slot', async () => {
     const errors = [];
 

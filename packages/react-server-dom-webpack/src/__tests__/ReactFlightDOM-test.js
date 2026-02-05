@@ -3022,7 +3022,7 @@ describe('ReactFlightDOM', () => {
   });
 
   // This could be a bug. Discovered while making enableAsyncDebugInfo dynamic for www.
-  // @gate enableHalt || (enableAsyncDebugInfo && __DEV__)
+  // @gate (enableAsyncDebugInfo && __DEV__)
   it('will leave async iterables in an incomplete state when halting', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
