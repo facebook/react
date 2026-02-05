@@ -160,7 +160,7 @@ export default function OwnerStack(): React.Node {
   return (
     <div className={styles.OwnerStack}>
       <div className={styles.Bar} ref={elementsBarRef}>
-        {isOverflowing && (
+        {isOverflowing ? (
           <Fragment>
             <ElementsDropdown
               owners={owners}
@@ -180,8 +180,7 @@ export default function OwnerStack(): React.Node {
               />
             )}
           </Fragment>
-        )}
-        {!isOverflowing &&
+        ) : (
           owners.map((owner, index) => (
             <ElementView
               key={index}
@@ -189,7 +188,8 @@ export default function OwnerStack(): React.Node {
               isSelected={index === selectedIndex}
               selectOwner={selectOwner}
             />
-          ))}
+          ))
+        )}
       </div>
       <div className={styles.VRule} />
       <Button onClick={() => selectOwner(null)} title="Back to tree view">
