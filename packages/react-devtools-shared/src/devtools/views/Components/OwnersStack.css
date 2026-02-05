@@ -32,6 +32,10 @@
   overflow-x: auto;
 }
 
+.OwnerStackFlatListContainer {
+  display: inline-flex;
+} 
+
 .VRule {
   flex: 0 0 auto;
   height: 20px;

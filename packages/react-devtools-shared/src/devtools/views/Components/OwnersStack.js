@@ -81,21 +81,44 @@ type OwnerStackFlatListProps = {
   owners: Array<SerializedElement>,
   selectedIndex: number,
   selectOwner: SelectOwner,
+  setElementsTotalWidth: (width: number) => void,
 };
 
 function OwnerStackFlatList({
   owners,
   selectedIndex,
   selectOwner,
+  setElementsTotalWidth,
 }: OwnerStackFlatListProps): React.Node {
-  return owners.map((owner, index) => (
-    <ElementView
-      key={index}
-      owner={owner}
-      isSelected={index === selectedIndex}
-      selectOwner={selectOwner}
-    />
-  ));
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (container === null) {
+      return;
+    }
+
+    const ResizeObserver = container.ownerDocument.defaultView.ResizeObserver;
+    const observer = new ResizeObserver(entries => {
+      const entry = entries[0];
+      setElementsTotalWidth(entry.contentRect.width);
+    });
+
+    observer.observe(container);
+    return observer.disconnect.bind(observer);
+  }, []);
+
+  return (
+    <div className={styles.OwnerStackFlatListContainer} ref={containerRef}>
+      {owners.map((owner, index) => (
+        <ElementView
+          key={index}
+          owner={owner}
+          isSelected={index === selectedIndex}
+          selectOwner={selectOwner}
+        />
+      ))}
+    </div>
+  );
 }
 
 export default function OwnerStack(): React.Node {
@@ -156,28 +179,6 @@ export default function OwnerStack(): React.Node {
 
   const selectedOwner = owners[selectedIndex];
 
-  useLayoutEffect(() => {
-    // If we're already overflowing, then we don't need to re-measure items.
-    // That's because once the owners stack is open, it can only get larger (by drilling in).
-    // A totally new stack can only be reached by exiting this mode and re-entering it.
-    if (elementsBarRef.current === null || isOverflowing) {
-      return () => {};
-    }
-
-    let totalWidth = 0;
-    for (let i = 0; i < owners.length; i++) {
-      const element = elementsBarRef.current.children[i];
-      const computedStyle = getComputedStyle(element);
-
-      totalWidth +=
-        element.offsetWidth +
-        parseInt(computedStyle.marginLeft, 10) +
-        parseInt(computedStyle.marginRight, 10);
-    }
-
-    setElementsTotalWidth(totalWidth);
-  }, [elementsBarRef, isOverflowing, owners.length]);
-
   return (
     <div className={styles.OwnerStack}>
       <div className={styles.Bar} ref={elementsBarRef}>
@@ -206,6 +207,7 @@ export default function OwnerStack(): React.Node {
             owners={owners}
             selectedIndex={selectedIndex}
             selectOwner={selectOwner}
+            setElementsTotalWidth={setElementsTotalWidth}
           />
         )}
       </div>

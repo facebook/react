@@ -40,20 +40,40 @@ type SuspenseBreadcrumbsFlatListProps = {
     scrollIntoView?: boolean,
   ) => void,
   onItemPointerLeave: (event: SyntheticMouseEvent) => void,
+  setElementsTotalWidth: (width: number) => void,
 };
 
 function SuspenseBreadcrumbsFlatList({
   onItemClick,
   onItemPointerEnter,
   onItemPointerLeave,
+  setElementsTotalWidth,
 }: SuspenseBreadcrumbsFlatListProps): React$Node {
   const store = useContext(StoreContext);
   const {activityID} = useContext(TreeStateContext);
   const {selectedSuspenseID, lineage, roots} = useContext(
     SuspenseTreeStateContext,
   );
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (container === null) {
+      return;
+    }
+
+    const ResizeObserver = container.ownerDocument.defaultView.ResizeObserver;
+    const observer = new ResizeObserver(entries => {
+      const entry = entries[0];
+      setElementsTotalWidth(entry.contentRect.width);
+    });
+
+    observer.observe(container);
+    return observer.disconnect.bind(observer);
+  }, []);
+
   return (
-    <ol className={styles.SuspenseBreadcrumbsList}>
+    <ol className={styles.SuspenseBreadcrumbsList} ref={containerRef}>
       {lineage === null ? null : lineage.length === 0 ? (
         // We selected the root. This means that we're currently viewing the Transition
         // that rendered the whole screen. In laymans terms this is really "Initial Paint" .
@@ -271,37 +291,6 @@ export default function SuspenseBreadcrumbs(): React$Node {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isOverflowing = useIsOverflowing(containerRef, elementsTotalWidth);
 
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-
-    if (
-      container === null ||
-      // We want to measure the size of the flat list only when it's being used.
-      isOverflowing
-    ) {
-      return;
-    }
-
-    const ResizeObserver = container.ownerDocument.defaultView.ResizeObserver;
-    const observer = new ResizeObserver(() => {
-      let totalWidth = 0;
-      for (let i = 0; i < container.children.length; i++) {
-        const element = container.children[i];
-        const computedStyle = getComputedStyle(element);
-
-        totalWidth +=
-          element.offsetWidth +
-          parseInt(computedStyle.marginLeft, 10) +
-          parseInt(computedStyle.marginRight, 10);
-      }
-      setElementsTotalWidth(totalWidth);
-    });
-
-    observer.observe(container);
-
-    return observer.disconnect.bind(observer);
-  }, [containerRef, isOverflowing]);
-
   return (
     <div className={styles.SuspenseBreadcrumbsContainer} ref={containerRef}>
       {isOverflowing ? (
@@ -315,6 +304,7 @@ export default function SuspenseBreadcrumbs(): React$Node {
           onItemClick={handleClick}
           onItemPointerEnter={highlightHostInstance}
           onItemPointerLeave={clearHighlightHostInstance}
+          setElementsTotalWidth={setElementsTotalWidth}
         />
       )}
     </div>
