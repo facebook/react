@@ -16,6 +16,10 @@
   display: inline;
 }
 
+.SuspenseBreadcrumbsListItemSeparator {
+  user-select: none;
+}
+
 .SuspenseBreadcrumbsListItem[aria-current="true"] .SuspenseBreadcrumbsButton {
   color: var(--color-button-active);
 }

@@ -110,12 +110,16 @@ function OwnerStackFlatList({
   return (
     <div className={styles.OwnerStackFlatListContainer} ref={containerRef}>
       {owners.map((owner, index) => (
-        <ElementView
-          key={index}
-          owner={owner}
-          isSelected={index === selectedIndex}
-          selectOwner={selectOwner}
-        />
+        <Fragment key={index}>
+          <ElementView
+            owner={owner}
+            isSelected={index === selectedIndex}
+            selectOwner={selectOwner}
+          />
+          {index < owners.length - 1 && (
+            <span className={styles.OwnerStackFlatListSeparator}>»</span>
+          )}
+        </Fragment>
       ))}
     </div>
   );

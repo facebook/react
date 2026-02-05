@@ -34,7 +34,11 @@
 
 .OwnerStackFlatListContainer {
   display: inline-flex;
-} 
+}
+
+.OwnerStackFlatListSeparator {
+  user-select: none;
+}
 
 .VRule {
   flex: 0 0 auto;

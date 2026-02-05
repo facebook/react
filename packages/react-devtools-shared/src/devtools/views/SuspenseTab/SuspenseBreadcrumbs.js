@@ -11,7 +11,7 @@ import type {SuspenseNode} from 'react-devtools-shared/src/frontend/types';
 import typeof {SyntheticMouseEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 
 import * as React from 'react';
-import {useContext, useLayoutEffect, useRef, useState} from 'react';
+import {Fragment, useContext, useLayoutEffect, useRef, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Tooltip from '../Components/reach-ui/tooltip';
@@ -99,19 +99,25 @@ function SuspenseBreadcrumbsFlatList({
           const node = store.getSuspenseByID(id);
 
           return (
-            <li
-              key={id}
-              className={styles.SuspenseBreadcrumbsListItem}
-              aria-current={selectedSuspenseID === id}
-              onPointerEnter={onItemPointerEnter.bind(null, id, false)}
-              onPointerLeave={onItemPointerLeave}>
-              <button
-                className={styles.SuspenseBreadcrumbsButton}
-                onClick={onItemClick.bind(null, id)}
-                type="button">
-                {node === null ? 'Unknown' : node.name || 'Unknown'}
-              </button>
-            </li>
+            <Fragment key={id}>
+              <li
+                className={styles.SuspenseBreadcrumbsListItem}
+                aria-current={selectedSuspenseID === id}
+                onPointerEnter={onItemPointerEnter.bind(null, id, false)}
+                onPointerLeave={onItemPointerLeave}>
+                <button
+                  className={styles.SuspenseBreadcrumbsButton}
+                  onClick={onItemClick.bind(null, id)}
+                  type="button">
+                  {node === null ? 'Unknown' : node.name || 'Unknown'}
+                </button>
+              </li>
+              {index < lineage.length - 1 && (
+                <span className={styles.SuspenseBreadcrumbsListItemSeparator}>
+                  »
+                </span>
+              )}
+            </Fragment>
           );
         })
       )}
