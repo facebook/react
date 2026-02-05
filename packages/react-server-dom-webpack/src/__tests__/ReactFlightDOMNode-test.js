@@ -548,7 +548,6 @@ describe('ReactFlightDOMNode', () => {
     expect(errors).toEqual([reason]);
   });
 
-  // @gate enableHalt
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -602,7 +601,6 @@ describe('ReactFlightDOMNode', () => {
     expect(result).toBe('<div>hello world</div>');
   });
 
-  // @gate enableHalt
   it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -675,7 +673,6 @@ describe('ReactFlightDOMNode', () => {
     expect(result).toContain('loading...');
   });
 
-  // @gate enableHalt
   it('includes source locations in component and owner stacks for halted components', async () => {
     async function Component() {
       await new Promise(() => {});
@@ -810,7 +807,6 @@ describe('ReactFlightDOMNode', () => {
     }
   });
 
-  // @gate enableHalt
   it('includes source locations in component and owner stacks for halted Client components', async () => {
     function SharedComponent({p1, p2, p3}) {
       use(p1);
@@ -969,7 +965,6 @@ describe('ReactFlightDOMNode', () => {
     }
   });
 
-  // @gate enableHalt
   it('includes deeper location for aborted stacks', async () => {
     async function getData() {
       const signal = ReactServer.cacheSignal();
@@ -1127,8 +1122,6 @@ describe('ReactFlightDOMNode', () => {
     }
   });
 
-  // @gate enableHalt
-  // @gate enableHalt
   it('can handle an empty prelude when prerendering', async () => {
     function App() {
       return null;

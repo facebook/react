@@ -342,7 +342,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['aborted for reasons']);
   });
 
-  // @gate enableHalt
   it('should resolve an empty prelude if aborting before the shell is complete', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -455,7 +454,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['aborted for reasons']);
   });
 
-  // @gate enableHalt
   it('should resolve an empty prelude if passing an already aborted signal', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -602,7 +600,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(getVisibleChildren(container)).toEqual(<div>hello</div>);
   });
 
-  // @gate enableHalt
   it('can resume render of a prerender', async () => {
     const errors = [];
 
@@ -689,7 +686,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
-  // @gate enableHalt
   it('can prerender a preamble', async () => {
     const errors = [];
 
@@ -850,7 +846,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['boom']);
   });
 
-  // @gate enableHalt
   it('will render fallback Document when erroring a boundary above the body', async () => {
     let isPrerendering = true;
     const promise = new Promise(() => {});
@@ -927,7 +922,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
   });
 
-  // @gate enableHalt
   it('can omit a preamble with an empty shell if no preamble is ready when prerendering finishes', async () => {
     const errors = [];
 

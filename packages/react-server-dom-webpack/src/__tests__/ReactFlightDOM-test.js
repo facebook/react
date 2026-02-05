@@ -2878,7 +2878,6 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  // @gate enableHalt
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2940,7 +2939,6 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<div>hello world</div>);
   });
 
-  // @gate enableHalt
   it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -3083,7 +3081,6 @@ describe('ReactFlightDOM', () => {
     expect(await race).toBe('timeout');
   });
 
-  // @gate enableHalt
   it('will halt unfinished chunks inside Suspense when aborting a prerender', async () => {
     const controller = new AbortController();
     function ComponentThatAborts() {
