@@ -20,11 +20,7 @@ import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
-import {
-  StoreContext,
-  BridgeContext,
-  PaneResizeObserverContext,
-} from './context';
+import {StoreContext, BridgeContext} from './context';
 import {sanitizeForParse, smartParse, smartStringify} from '../utils';
 
 type ACTION_RESET = {
@@ -120,15 +116,6 @@ export function useIsOverflowing(
   totalChildWidth: number,
 ): boolean {
   const [isOverflowing, setIsOverflowing] = useState<boolean>(false);
-  const handleResize = useCallback(() => {
-    const container = containerRef.current;
-    if (container === null) {
-      return;
-    }
-    setIsOverflowing(container.clientWidth <= totalChildWidth);
-  }, [totalChildWidth]);
-
-  const paneResizeObserver = useContext(PaneResizeObserverContext);
 
   // It's important to use a layout effect, so that we avoid showing a flash of overflowed content.
   useLayoutEffect(() => {
@@ -137,20 +124,27 @@ export function useIsOverflowing(
       return;
     }
 
-    handleResize();
+    // ResizeObserver on the global did not fire for the extension.
+    // We need to grab the ResizeObserver from the container's window.
+    const ResizeObserver = container.ownerDocument.defaultView.ResizeObserver;
+    const observer = new ResizeObserver(entries => {
+      const entry = entries[0];
+      const contentWidth = entry.contentRect.width;
+      setIsOverflowing(
+        contentWidth <=
+          // We need to treat the box as overflowing when you're just
+          // about to overflow.
+          // Otherwise you won't be able to resize panes with custom resize handles.
+          // Previously we were relying on clientWidth which is already rounded.
+          // We don't want to read that again since that would trigger another layout.
+          totalChildWidth + 1,
+      );
+    });
 
-    // It's important to listen to the ownerDocument.defaultView to support the browser extension.
-    // Here we use portals to render individual tabs (e.g. Profiler),
-    // and the root document might belong to a different window.
-    // Note that ResizeObserver doesn't work in Chrome DevTools panels.
-    const ownerWindow = container.ownerDocument.defaultView;
-    ownerWindow.addEventListener('resize', handleResize);
-    paneResizeObserver.addListener(handleResize);
-    return () => {
-      ownerWindow.removeEventListener('resize', handleResize);
-      paneResizeObserver.removeListener(handleResize);
-    };
-  }, [containerRef, handleResize]);
+    observer.observe(container);
+
+    return observer.disconnect.bind(observer);
+  }, [containerRef, totalChildWidth]);
 
   return isOverflowing;
 }
