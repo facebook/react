@@ -2902,9 +2902,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2826,
+                2824,
                 19,
-                2810,
+                2808,
                 89,
               ],
             ],
