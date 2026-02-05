@@ -12,6 +12,7 @@ import type {
   TouchedViewDataAtPoint,
   ViewConfig,
 } from './ReactNativeTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
   NoEventPriority,
@@ -71,6 +72,12 @@ import {
 import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
+
+export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 
 export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
 export const rendererPackageName = 'react-native-renderer';
@@ -157,12 +164,219 @@ if (registerEventHandler) {
   registerEventHandler(dispatchEvent);
 }
 
-export * from 'react-reconciler/src/ReactFiberConfigWithNoMutation';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
+// -------------------
+//     Mutation
+// -------------------
+
+function shim(...args: any): empty {
+  throw new Error(
+    'The current renderer does not support mutation. ' +
+      'This error is likely caused by a bug in React. ' +
+      'Please file an issue.',
+  );
+}
+
+export const supportsMutation = false;
+
+export const cloneMutableInstance = shim;
+export const cloneMutableTextInstance = shim;
+export const appendChild = shim;
+export const appendChildToContainer = shim;
+export const commitTextUpdate = shim;
+
+export function commitMount(
+  instance: Instance,
+  type: string,
+  newProps: Props,
+  internalInstanceHandle: Object,
+): void {
+  console.log('[shim] commitMount');
+}
+
+export const commitUpdate = shim;
+export const insertBefore = shim;
+export const insertInContainerBefore = shim;
+export const removeChild = shim;
+export const removeChildFromContainer = shim;
+export const resetTextContent = shim;
+export const hideInstance = shim;
+export const hideTextInstance = shim;
+export const unhideInstance = shim;
+export const unhideTextInstance = shim;
+export const clearContainer = shim;
+
+export type InstanceMeasurement = {
+  rect: {x: number, y: number, width: number, height: number},
+  abs: boolean,
+  clip: boolean,
+  view: boolean,
+};
+
+export type RunningViewTransition = null;
+
+export type ViewTransitionInstance = null | {
+  name: string,
+  ...
+};
+
+export type GestureTimeline = any;
+
+export function restoreViewTransitionName(
+  instance: Instance,
+  props: Props,
+): void {
+  console.log('[shim] restoreViewTransitionName ', instance.canonical.nativeTag);
+}
+
+export function cancelViewTransitionName(
+  instance: Instance,
+  oldName: string,
+  props: Props,
+): void {
+  console.log('[shim] cancelViewTransitionName ', oldName, instance.canonical.nativeTag);
+}
+
+export function cancelRootViewTransitionName(rootContainer: Container): void {
+  console.log('[shim] cancelRootViewTransitionName');
+}
+
+export function restoreRootViewTransitionName(rootContainer: Container): void {
+  console.log('[shim] restoreRootViewTransitionName');
+}
+
+export function cloneRootViewTransitionContainer(
+  rootContainer: Container,
+): Instance {
+  console.log('[shim] cloneRootViewTransitionContainer');
+}
+
+export function removeRootViewTransitionClone(
+  rootContainer: Container,
+  clone: Instance,
+): void {
+  console.log('[shim] removeRootViewTransitionClone');
+}
+
+export function measureInstance(instance: Instance): InstanceMeasurement {
+  console.log('[shim] measureInstance ', instance.canonical.nativeTag);
+  return {rect: {x: 0, y: 0, width: 0, height: 0}, abs: false, clip: false, view: true};
+}
+
+export function measureClonedInstance(instance: Instance): InstanceMeasurement {
+  console.log('[shim] measureClonedInstance ', instance.canonical.nativeTag);
+  return {rect: {x: 0, y: 0, width: 0, height: 0}, abs: false, clip: false, view: true};
+}
+
+export function wasInstanceInViewport(
+  measurement: InstanceMeasurement,
+): boolean {
+  console.log('[shim] wasInstanceInViewport');
+  return measurement.view;
+}
+
+export function hasInstanceChanged(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  console.log('[shim] hasInstanceChanged');
+  return false;
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  console.log('[shim] hasInstanceAffectedParent');
+  return false;
+}
+
+export function startGestureTransition(
+  suspendedState: null | SuspendedState,
+  rootContainer: Container,
+  timeline: GestureTimeline,
+  rangeStart: number,
+  rangeEnd: number,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  animateCallback: () => void,
+  errorCallback: (error: mixed) => void,
+  finishedAnimation: () => void,
+): RunningViewTransition {
+  console.log('[shim] startGestureTransition');
+  return null;
+}
+
+export function stopViewTransition(transition: RunningViewTransition): void {
+  console.log('[shim] stopViewTransition');
+}
+
+export function addViewTransitionFinishedListener(
+  transition: RunningViewTransition,
+  callback: () => void,
+): void {
+  console.log('[shim] addViewTransitionFinishedListener');
+  callback();
+}
+
+export function createViewTransitionInstance(
+  name: string,
+): ViewTransitionInstance {
+  console.log('[shim] createViewTransitionInstance', name);
+  return {name};
+}
+
+export function getCurrentGestureOffset(timeline: GestureTimeline): number {
+  console.log('[shim] getCurrentGestureOffset');
+  return 0;
+}
+
+export function applyViewTransitionName(
+  instance: Instance,
+  name: string,
+  className: ?string,
+): void {
+  // add view-transition-name to things that might animate for browser
+  console.log('[shim] applyViewTransitionName', name, className, instance.canonical.nativeTag);
+}
+
+export function startViewTransition(
+  suspendedState: null | SuspendedState,
+  rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
+  mutationCallback: () => void,
+  layoutCallback: () => void,
+  afterMutationCallback: () => void,
+  spawnedWorkCallback: () => void,
+  passiveCallback: () => mixed,
+  errorCallback: (error: mixed) => void,
+  blockedCallback: (name: string) => void,
+  finishedAnimation: () => void,
+): RunningViewTransition {
+  console.log('[shim] startViewTransition transitionTypes', JSON.stringify(transitionTypes ?? []));
+
+  // mutation phase
+  console.log('[shim] startViewTransition mutations start');
+  mutationCallback();
+  layoutCallback(); // run layout effects
+  afterMutationCallback();
+  console.log('[shim] startViewTransition mutations finish');
+
+  // browser creates pseudo elements
+  console.log('[shim] startViewTransition pseudo element captured');
+
+  // transition ready
+  console.log('[shim] startViewTransition transition ready');
+  spawnedWorkCallback();
+
+  console.log('[shim] startViewTransition finishedAnimation');
+  // finishedAnimation();
+
+  // transition ends
+  console.log('[shim] startViewTransition transition ends');
+  passiveCallback();
+
+  return null;
+}
 
 export function appendInitialChild(
   parentInstance: Instance,
