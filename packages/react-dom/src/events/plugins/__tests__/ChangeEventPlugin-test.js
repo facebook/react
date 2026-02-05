@@ -82,17 +82,21 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
   }
 }
 
-function getTargetInstForInputEvent(domEventName, targetInst) {
-  if (domEventName === 'input') {
-    return targetInst;
+function getInstIfValueChanged(targetInst) {
+  const targetNode = getNodeFromInstance(targetInst);
+  if (targetNode == null) {
+    return null;
   }
+  return targetInst;
 }
+
 
 function getTargetInstForClickEvent(domEventName, targetInst) {
   if (domEventName === 'click') {
-    return targetInst;
+    return getInstIfValueChanged(targetInst);
   }
 }
+
 
 function shouldUseChangeEvent(elem) {
   const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
