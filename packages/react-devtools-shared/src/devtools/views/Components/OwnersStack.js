@@ -77,6 +77,27 @@ function dialogReducer(state: State, action: Action) {
   }
 }
 
+type OwnerStackFlatListProps = {
+  owners: Array<SerializedElement>,
+  selectedIndex: number,
+  selectOwner: SelectOwner,
+};
+
+function OwnerStackFlatList({
+  owners,
+  selectedIndex,
+  selectOwner,
+}: OwnerStackFlatListProps): React.Node {
+  return owners.map((owner, index) => (
+    <ElementView
+      key={index}
+      owner={owner}
+      isSelected={index === selectedIndex}
+      selectOwner={selectOwner}
+    />
+  ));
+}
+
 export default function OwnerStack(): React.Node {
   const read = useContext(OwnersListContext);
   const {ownerID} = useContext(TreeStateContext);
@@ -181,14 +202,11 @@ export default function OwnerStack(): React.Node {
             )}
           </Fragment>
         ) : (
-          owners.map((owner, index) => (
-            <ElementView
-              key={index}
-              owner={owner}
-              isSelected={index === selectedIndex}
-              selectOwner={selectOwner}
-            />
-          ))
+          <OwnerStackFlatList
+            owners={owners}
+            selectedIndex={selectedIndex}
+            selectOwner={selectOwner}
+          />
         )}
       </div>
       <div className={styles.VRule} />
