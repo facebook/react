@@ -1138,7 +1138,7 @@ export function attach(
   // if any passive effects called console.warn / console.error.
   let needsToFlushComponentLogs = false;
 
-  function bruteForceFlushErrorsAndWarnings() {
+  function bruteForceFlushErrorsAndWarnings(root: FiberInstance) {
     // Refresh error/warning count for all mounted unfiltered Fibers.
     let hasChanges = false;
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
@@ -1156,7 +1156,7 @@ export function attach(
       }
     }
     if (hasChanges) {
-      flushPendingEvents();
+      flushPendingEvents(root);
     }
   }
 
@@ -1183,7 +1183,7 @@ export function attach(
         updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
       }
     }
-    flushPendingEvents();
+    flushPendingEvents(null);
   }
 
   function clearConsoleLogsHelper(instanceID: number, type: 'error' | 'warn') {
@@ -1211,7 +1211,7 @@ export function attach(
         }
         const changed = recordConsoleLogs(devtoolsInstance, componentLogsEntry);
         if (changed) {
-          flushPendingEvents();
+          flushPendingEvents(null);
           updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
         }
       }
@@ -1533,6 +1533,8 @@ export function attach(
     if (isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
+      // Supporting change of filters while profiling would require a refactor
+      // to flush after each root instead of at the end.
       throw Error('Cannot modify filter preferences while profiling');
     }
 
@@ -1647,7 +1649,8 @@ export function attach(
       focusedActivityFilter.activityID = focusedActivityID;
     }
 
-    flushPendingEvents();
+    // We're not profiling so it's safe to flush without a specific root.
+    flushPendingEvents(null);
 
     needsToFlushComponentLogs = false;
   }
@@ -2203,7 +2206,12 @@ export function attach(
     }
   }
 
-  function flushPendingEvents(): void {
+  /**
+   * Allowed to flush pending events without a specific root when:
+   * - pending operations don't record tree mutations e.g. TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS
+   * - not profiling (the commit tree builder requires the root of the mutations)
+   */
+  function flushPendingEvents(root: FiberInstance | null): void {
     if (shouldBailoutWithPendingOperations()) {
       // If we aren't profiling, we can just bail out here.
       // No use sending an empty update over the bridge.
@@ -2245,11 +2253,10 @@ export function attach(
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
-    if (currentRoot === null) {
-      // TODO: This is not always safe so this field is probably not needed.
+    if (root === null) {
       operations[i++] = -1;
     } else {
-      operations[i++] = currentRoot.id;
+      operations[i++] = root.id;
     }
 
     // Now fill in the string table.
@@ -5746,10 +5753,10 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
+        flushPendingEvents(currentRoot);
+
         currentRoot = (null: any);
       });
-
-      flushPendingEvents();
 
       needsToFlushComponentLogs = false;
     }
@@ -5760,7 +5767,7 @@ export function attach(
     // safe to stop calling it from Fiber.
   }
 
-  function handlePostCommitFiberRoot(root: any) {
+  function handlePostCommitFiberRoot(root: FiberRoot) {
     if (isProfiling && rootSupportsProfiling(root)) {
       if (currentCommitProfilingMetadata !== null) {
         const {effectDuration, passiveEffectDuration} =
@@ -5774,12 +5781,18 @@ export function attach(
     }
 
     if (needsToFlushComponentLogs) {
+      const rootInstance = rootToFiberInstanceMap.get(root);
+      if (rootInstance === undefined) {
+        throw new Error(
+          'Should have a root instance for a committed root. This is a bug in React DevTools.',
+        );
+      }
       // We received new logs after commit. I.e. in a passive effect. We need to
       // traverse the tree to find the affected ones. If we just moved the whole
       // tree traversal from handleCommitFiberRoot to handlePostCommitFiberRoot
       // this wouldn't be needed. For now we just brute force check all instances.
       // This is not that common of a case.
-      bruteForceFlushErrorsAndWarnings();
+      bruteForceFlushErrorsAndWarnings(rootInstance);
     }
   }
 
@@ -5876,7 +5889,7 @@ export function attach(
     }
 
     // We're done here.
-    flushPendingEvents();
+    flushPendingEvents(currentRoot);
 
     needsToFlushComponentLogs = false;
 
