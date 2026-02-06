@@ -536,7 +536,7 @@ function codegenBlockNoReset(
       }
       case 'scope': {
         const temp = new Map(cx.temp);
-        if (item.scope.stableHandler) {
+        if (item.scope.stableHandler && item.scope.dependencies.size > 0) {
           codegenStableHandlerScope(
             cx,
             statements,

@@ -32,9 +32,10 @@ function Component(t0) {
   const $ = _c(5);
   const { onSubmit, value } = t0;
   let t1;
-  if ($[0] !== value) {
-    t1 = () => onSubmit(value);
-    $[0] = value;
+  t1 = () => onSubmit(value);
+  $[0] = t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = (...args) => $[0](...args);
     $[1] = t1;
   } else {
     t1 = $[1];

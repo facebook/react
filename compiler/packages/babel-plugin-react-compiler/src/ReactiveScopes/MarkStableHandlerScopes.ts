@@ -20,9 +20,14 @@ import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
  * one slot always holds the latest function (updated every render),
  * another slot holds a stable wrapper (created once on first render).
  *
- * This pass runs before scope merging. It finds StoreLocal instructions
- * targeting StableHandler-typed variables, then marks the scope that
- * declares the source function expression.
+ * This pass detects two patterns:
+ * 1. StoreLocal instructions targeting StableHandler-typed variables
+ *    (explicit annotation: `const handler: StableHandler<...> = () => ...`)
+ * 2. Function expressions used as JSX event handler attributes
+ *    (auto-detection: `onClick={() => ...}`, `onSubmit={handler}`, etc.)
+ *
+ * For each detected function, the pass marks the scope that declares it
+ * so codegen uses the stable two-slot pattern.
  */
 export function markStableHandlerScopes(fn: ReactiveFunction): void {
   if (!fn.env.config.enableStableHandlerAnnotation) {
@@ -53,6 +58,19 @@ class CollectVisitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
       // Track the source value's identifier id — this is the function
       // expression produced by a scope that we need to mark.
       state.add(value.value.identifier.id);
+    }
+    // Detect function expressions used as JSX event handler attributes.
+    // Inline functions passed to event handler props (onClick, onSubmit, etc.)
+    // are automatically compiled with the stable two-slot pattern.
+    if (value.kind === 'JsxExpression') {
+      for (const prop of value.props) {
+        if (
+          prop.kind === 'JsxAttribute' &&
+          /^on[A-Z]/.test(prop.name)
+        ) {
+          state.add(prop.place.identifier.id);
+        }
+      }
     }
   }
 }
