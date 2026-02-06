@@ -30,7 +30,6 @@ export const enableCPUSuspense: boolean = false;
 export const enableCreateEventHandleAPI: boolean = false;
 export const enableMoveBefore: boolean = true;
 export const enableFizzExternalRuntime: boolean = true;
-export const enableHalt: boolean = true;
 export const enableHiddenSubtreeInsertionEffectCleanup: boolean = false;
 export const enableInfiniteRenderLoopDetection: boolean = false;
 export const enableLegacyCache: boolean = false;

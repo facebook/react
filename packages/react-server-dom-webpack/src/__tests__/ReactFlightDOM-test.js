@@ -2878,7 +2878,6 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  // @gate enableHalt
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2940,7 +2939,6 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<div>hello world</div>);
   });
 
-  // @gate enableHalt
   it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -3023,8 +3021,6 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<div>loading...</div>);
   });
 
-  // This could be a bug. Discovered while making enableAsyncDebugInfo dynamic for www.
-  // @gate enableHalt || (enableAsyncDebugInfo && __DEV__)
   it('will leave async iterables in an incomplete state when halting', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
@@ -3083,7 +3079,6 @@ describe('ReactFlightDOM', () => {
     expect(await race).toBe('timeout');
   });
 
-  // @gate enableHalt
   it('will halt unfinished chunks inside Suspense when aborting a prerender', async () => {
     const controller = new AbortController();
     function ComponentThatAborts() {
