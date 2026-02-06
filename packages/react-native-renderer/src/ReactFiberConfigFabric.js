@@ -60,7 +60,6 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
   measureInstance: fabricMeasureInstance,
   applyViewTransitionName: fabricApplyViewTransitionName,
-  executeViewTransition: fabricExecuteViewTransition,
   startViewTransition: fabricStartViewTransition,
 } = nativeFabricUIManager;
 
@@ -368,30 +367,33 @@ export function startViewTransition(
   blockedCallback: (name: string) => void,
   finishedAnimation: () => void,
 ): RunningViewTransition {
-  console.log('[shim] startViewTransition transitionTypes', JSON.stringify(transitionTypes ?? []));
-  fabricStartViewTransition();
+  console.log(
+    "[shim] startViewTransition transitionTypes",
+    JSON.stringify(null != transitionTypes ? transitionTypes : [])
+  );
 
-  // mutation phase
-  console.log('[shim] startViewTransition mutations start');
-  mutationCallback();
-  layoutCallback(); // run layout effects
-  afterMutationCallback();
-  console.log('[shim] startViewTransition mutations finish');
-
-  // browser creates pseudo elements
-  console.log('[shim] startViewTransition pseudo element captured');
-
-  // transition ready
-  console.log('[shim] startViewTransition transition ready');
-  spawnedWorkCallback();
-  fabricExecuteViewTransition();
-
-  console.log('[shim] startViewTransition finishedAnimation');
-  // finishedAnimation();
-
-  // transition ends
-  console.log('[shim] startViewTransition transition ends');
-  passiveCallback();
+  fabricStartViewTransition(
+    // mutation
+    ()=>{
+      console.log("[shim] startViewTransition mutations start");
+      // completeRoot should run here
+    mutationCallback();
+    layoutCallback();
+    afterMutationCallback();
+    console.log("[shim] startViewTransition mutations finish");
+  },
+  // onReady
+    ()=>{
+      console.log("[shim] startViewTransition pseudo element captured");
+  console.log("[shim] startViewTransition transition ready");
+    spawnedWorkCallback();
+  },
+  // onComplete
+  ()=>{
+    console.log("[shim] startViewTransition finishedAnimation");
+    console.log("[shim] startViewTransition transition ends");
+    passiveCallback();
+  });
 
   return null;
 }
@@ -789,6 +791,7 @@ export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
+  console.log('completeRoot');
   completeRoot(container.containerTag, newChildren);
 }
 
