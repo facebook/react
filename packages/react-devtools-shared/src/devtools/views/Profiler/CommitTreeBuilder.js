@@ -171,7 +171,7 @@ function updateTree(
     return clonedNode;
   };
 
-  let i = 1;
+  let i = 2;
   let id: number = ((null: any): number);
 
   // Reassemble the string table.

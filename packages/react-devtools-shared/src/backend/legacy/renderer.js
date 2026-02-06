@@ -525,7 +525,7 @@ export function attach(
 
     const operations = new Array<number>(
       // Identify which renderer this update is coming from.
-      1 + // [rendererID]
+      2 + // [rendererID, rootFiberID]
         // How big is the string table?
         1 + // [stringTableLength]
         // Then goes the actual string table.
@@ -544,6 +544,7 @@ export function attach(
     // Which in turn enables fiber properations, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
+    operations[i++] = rootID;
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
