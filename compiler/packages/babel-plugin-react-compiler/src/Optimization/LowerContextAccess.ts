@@ -264,6 +264,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     async: false,
     directives: [],
     aliasingEffects: [],
+    propsTypeAnnotations: null,
   };
 
   reversePostorderBlocks(fn.body);

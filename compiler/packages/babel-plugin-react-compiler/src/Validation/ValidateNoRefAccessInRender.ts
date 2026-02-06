@@ -22,7 +22,10 @@ import {
   isRefValueType,
   isUseRefType,
 } from '../HIR';
-import {BuiltInEventHandlerId} from '../HIR/ObjectShape';
+import {
+  BuiltInEventHandlerId,
+  BuiltInStableHandlerId,
+} from '../HIR/ObjectShape';
 import {
   eachInstructionOperand,
   eachInstructionValueOperand,
@@ -180,7 +183,11 @@ function refTypeOfType(place: Place): RefAccessType {
 
 function isEventHandlerType(identifier: Identifier): boolean {
   const type = identifier.type;
-  return type.kind === 'Function' && type.shapeId === BuiltInEventHandlerId;
+  return (
+    type.kind === 'Function' &&
+    (type.shapeId === BuiltInEventHandlerId ||
+      type.shapeId === BuiltInStableHandlerId)
+  );
 }
 
 function tyEqual(a: RefAccessType, b: RefAccessType): boolean {

@@ -379,6 +379,7 @@ function emitOutlinedFn(
     async: false,
     directives: [],
     aliasingEffects: [],
+    propsTypeAnnotations: null,
   };
   return fn;
 }

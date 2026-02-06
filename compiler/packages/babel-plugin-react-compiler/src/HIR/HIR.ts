@@ -294,6 +294,7 @@ export type HIRFunction = {
   async: boolean;
   directives: Array<string>;
   aliasingEffects: Array<AliasingEffect> | null;
+  propsTypeAnnotations: Map<string, t.FlowType | t.TSType> | null;
 };
 
 /*
@@ -1620,6 +1621,13 @@ export type ReactiveScope = {
   merged: Set<ScopeId>;
 
   loc: SourceLocation;
+
+  /**
+   * When true, this scope contains a StableHandler function that should use
+   * the two-slot codegen pattern: one slot always holds the latest function,
+   * another slot holds a stable wrapper created once on first render.
+   */
+  stableHandler: boolean;
 };
 
 export type ReactiveScopeDependencies = Set<ReactiveScopeDependency>;
@@ -1899,6 +1907,12 @@ export function isEffectEventFunctionType(id: Identifier): boolean {
   );
 }
 
+export function isStableHandlerType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInStableHandler'
+  );
+}
+
 export function isStableType(id: Identifier): boolean {
   return (
     isSetStateType(id) ||
@@ -1906,7 +1920,8 @@ export function isStableType(id: Identifier): boolean {
     isDispatcherType(id) ||
     isUseRefType(id) ||
     isStartTransitionType(id) ||
-    isSetOptimisticType(id)
+    isSetOptimisticType(id) ||
+    isStableHandlerType(id)
   );
 }
 

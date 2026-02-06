@@ -536,7 +536,21 @@ function codegenBlockNoReset(
       }
       case 'scope': {
         const temp = new Map(cx.temp);
-        codegenReactiveScope(cx, statements, item.scope, item.instructions);
+        if (item.scope.stableHandler) {
+          codegenStableHandlerScope(
+            cx,
+            statements,
+            item.scope,
+            item.instructions,
+          );
+        } else {
+          codegenReactiveScope(
+            cx,
+            statements,
+            item.scope,
+            item.instructions,
+          );
+        }
         cx.temp = temp;
         break;
       }
@@ -929,6 +943,140 @@ function codegenReactiveScope(
           ),
         ),
         t.blockStatement([t.returnStatement(t.identifier(name))]),
+      ),
+    );
+  }
+}
+
+/**
+ * Generates the two-slot codegen pattern for StableHandler scopes.
+ *
+ * The scope contains a FunctionExpression that produces a value (e.g. t0).
+ * We always recompute the function (to capture latest closure values),
+ * store it in cache slot 0, and maintain a stable wrapper in cache slot 1
+ * that delegates to slot 0.
+ *
+ * Output pattern:
+ *   let t0;       // scope declaration
+ *   t0 = () => { ... };           // always recomputed
+ *   $[0] = t0;                    // store latest
+ *   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+ *     t0 = (...args) => $[0](...args);  // create stable wrapper once
+ *     $[1] = t0;
+ *   } else {
+ *     t0 = $[1];                  // load cached stable wrapper
+ *   }
+ */
+function codegenStableHandlerScope(
+  cx: Context,
+  statements: Array<t.Statement>,
+  scope: ReactiveScope,
+  block: ReactiveBlock,
+): void {
+  // Allocate two cache slots
+  const latestIndex = cx.nextCacheIndex;
+  const wrapperIndex = cx.nextCacheIndex;
+
+  // Declare scope outputs before emitting the computation block.
+  // This mirrors the normal scope codegen pattern.
+  const declNames: Array<t.Identifier> = [];
+  for (const [, {identifier}] of [...scope.declarations].sort(
+    ([, a], [, b]) => compareScopeDeclaration(a, b),
+  )) {
+    CompilerError.invariant(identifier.name != null, {
+      reason: `Expected scope declaration identifier to be named`,
+      description: `Declaration \`${printIdentifier(
+        identifier,
+      )}\` is unnamed in scope @${scope.id}`,
+      loc: GeneratedSource,
+    });
+    const name = convertIdentifier(identifier);
+    if (!cx.hasDeclared(identifier)) {
+      statements.push(
+        t.variableDeclaration('let', [
+          t.variableDeclarator(t.cloneNode(name), null),
+        ]),
+      );
+    }
+    cx.declare(identifier);
+    declNames.push(name);
+  }
+
+  // Generate and emit the scope body unconditionally.
+  // This produces the function expression and assigns it to the declared variable.
+  const computationBlock = codegenBlock(cx, block);
+  statements.push(...computationBlock.body);
+
+  // For each declaration (typically just one function expression):
+  for (const name of declNames) {
+    // $[latestIndex] = <name>;  (always update with latest closure)
+    statements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            t.identifier(cx.synthesizeName('$')),
+            t.numericLiteral(latestIndex),
+            true,
+          ),
+          t.cloneNode(name),
+        ),
+      ),
+    );
+
+    // Sentinel-guarded wrapper: created once, loaded from cache thereafter
+    const wrapperSlot = t.memberExpression(
+      t.identifier(cx.synthesizeName('$')),
+      t.numericLiteral(wrapperIndex),
+      true,
+    );
+
+    // The stable wrapper: (...args) => $[latestIndex](...args)
+    const stableWrapper = t.arrowFunctionExpression(
+      [t.restElement(t.identifier('args'))],
+      t.callExpression(
+        t.memberExpression(
+          t.identifier(cx.synthesizeName('$')),
+          t.numericLiteral(latestIndex),
+          true,
+        ),
+        [t.spreadElement(t.identifier('args'))],
+      ),
+    );
+
+    const sentinelCheck = t.binaryExpression(
+      '===',
+      t.cloneNode(wrapperSlot),
+      t.callExpression(
+        t.memberExpression(t.identifier('Symbol'), t.identifier('for')),
+        [t.stringLiteral(MEMO_CACHE_SENTINEL)],
+      ),
+    );
+
+    statements.push(
+      t.ifStatement(
+        sentinelCheck,
+        t.blockStatement([
+          t.expressionStatement(
+            t.assignmentExpression('=', t.cloneNode(name), stableWrapper),
+          ),
+          t.expressionStatement(
+            t.assignmentExpression(
+              '=',
+              t.cloneNode(wrapperSlot),
+              t.cloneNode(name),
+            ),
+          ),
+        ]),
+        t.blockStatement([
+          t.expressionStatement(
+            t.assignmentExpression(
+              '=',
+              t.cloneNode(name),
+              t.cloneNode(wrapperSlot),
+            ),
+          ),
+        ]),
       ),
     );
   }

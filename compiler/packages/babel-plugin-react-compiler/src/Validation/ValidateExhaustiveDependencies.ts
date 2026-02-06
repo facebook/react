@@ -26,6 +26,7 @@ import {
   InstructionKind,
   isEffectEventFunctionType,
   isPrimitiveType,
+  isStableHandlerType,
   isStableType,
   isSubPath,
   isSubPathIgnoringOptionals,
@@ -325,9 +326,12 @@ function validateDependencies(
       loc: inferredDependency.loc,
     });
     /**
-     * Skip effect event functions as they are not valid dependencies
+     * Skip effect event functions and stable handlers as they are not valid dependencies
      */
-    if (isEffectEventFunctionType(inferredDependency.identifier)) {
+    if (
+      isEffectEventFunctionType(inferredDependency.identifier) ||
+      isStableHandlerType(inferredDependency.identifier)
+    ) {
       continue;
     }
     let hasMatchingManualDependency = false;
@@ -400,7 +404,8 @@ function validateDependencies(
             dep =>
               dep.kind === 'Local' &&
               !isOptionalDependency(dep, reactive) &&
-              !isEffectEventFunctionType(dep.identifier),
+              !isEffectEventFunctionType(dep.identifier) &&
+              !isStableHandlerType(dep.identifier),
           )
           .map(printInferredDependency)
           .join(', ')}]`,

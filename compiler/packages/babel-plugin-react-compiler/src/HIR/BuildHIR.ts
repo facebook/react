@@ -50,7 +50,7 @@ import {
   validateIdentifierName,
 } from './HIR';
 import HIRBuilder, {Bindings, createTemporaryPlace} from './HIRBuilder';
-import {BuiltInArrayId} from './ObjectShape';
+import {BuiltInArrayId, BuiltInStableHandlerId} from './ObjectShape';
 
 /*
  * *******************************************************************************************
@@ -184,6 +184,67 @@ export function lower(
     }
   });
 
+  // Extract per-property type annotations for StableHandler props
+  let propsTypeAnnotations: Map<string, t.FlowType | t.TSType> | null = null;
+  if (env.config.enableStableHandlerAnnotation) {
+    const firstParam = func.get('params')[0];
+    if (firstParam != null && firstParam.isObjectPattern()) {
+      const typeAnnotation = (firstParam.node as t.ObjectPattern).typeAnnotation;
+      if (typeAnnotation != null) {
+        const annoNode =
+          typeAnnotation.type === 'TSTypeAnnotation'
+            ? typeAnnotation.typeAnnotation
+            : typeAnnotation.type === 'TypeAnnotation'
+              ? typeAnnotation.typeAnnotation
+              : null;
+        if (annoNode != null) {
+          const members =
+            annoNode.type === 'TSTypeLiteral'
+              ? annoNode.members
+              : annoNode.type === 'ObjectTypeAnnotation'
+                ? annoNode.properties
+                : null;
+          if (members != null) {
+            for (const member of members) {
+              let propName: string | null = null;
+              let propType: t.FlowType | t.TSType | null = null;
+              if (
+                member.type === 'TSPropertySignature' &&
+                member.key.type === 'Identifier' &&
+                member.typeAnnotation?.type === 'TSTypeAnnotation'
+              ) {
+                const tsType = member.typeAnnotation.typeAnnotation;
+                if (
+                  tsType.type === 'TSTypeReference' &&
+                  tsType.typeName.type === 'Identifier' &&
+                  tsType.typeName.name === 'StableHandler'
+                ) {
+                  propName = member.key.name;
+                  propType = tsType;
+                }
+              } else if (
+                member.type === 'ObjectTypeProperty' &&
+                member.key.type === 'Identifier' &&
+                member.value.type === 'GenericTypeAnnotation' &&
+                member.value.id.type === 'Identifier' &&
+                member.value.id.name === 'StableHandler'
+              ) {
+                propName = member.key.name;
+                propType = member.value;
+              }
+              if (propName != null && propType != null) {
+                if (propsTypeAnnotations == null) {
+                  propsTypeAnnotations = new Map();
+                }
+                propsTypeAnnotations.set(propName, propType);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   let directives: Array<string> = [];
   const body = func.get('body');
   if (body.isExpression()) {
@@ -260,6 +321,7 @@ export function lower(
     effects: null,
     aliasingEffects: null,
     directives,
+    propsTypeAnnotations,
   });
 }
 
@@ -4349,12 +4411,28 @@ export function lowerType(node: t.FlowType | t.TSType): Type {
       if (id.type === 'Identifier' && id.name === 'Array') {
         return {kind: 'Object', shapeId: BuiltInArrayId};
       }
+      if (id.type === 'Identifier' && id.name === 'StableHandler') {
+        return {
+          kind: 'Function',
+          shapeId: BuiltInStableHandlerId,
+          return: makeType(),
+          isConstructor: false,
+        };
+      }
       return makeType();
     }
     case 'TSTypeReference': {
       const typeName = node.typeName;
       if (typeName.type === 'Identifier' && typeName.name === 'Array') {
         return {kind: 'Object', shapeId: BuiltInArrayId};
+      }
+      if (typeName.type === 'Identifier' && typeName.name === 'StableHandler') {
+        return {
+          kind: 'Function',
+          shapeId: BuiltInStableHandlerId,
+          return: makeType(),
+          isConstructor: false,
+        };
       }
       return makeType();
     }

@@ -28,6 +28,7 @@ import {
   BuiltInArrayId,
   BuiltInEventHandlerId,
   BuiltInFunctionId,
+  BuiltInStableHandlerId,
   BuiltInJsxId,
   BuiltInMixedReadonlyId,
   BuiltInObjectId,
@@ -140,7 +141,12 @@ function* generate(
     }
 
     for (const instr of block.instructions) {
-      yield* generateInstructionTypes(func.env, names, instr);
+      yield* generateInstructionTypes(
+        func.env,
+        names,
+        instr,
+        func.propsTypeAnnotations,
+      );
     }
     const terminal = block.terminal;
     if (terminal.kind === 'return') {
@@ -175,6 +181,7 @@ function* generateInstructionTypes(
   env: Environment,
   names: Map<IdentifierId, string>,
   instr: Instruction,
+  propsTypeAnnotations: Map<string, t.FlowType | t.TSType> | null,
 ): Generator<TypeEquation, void, undefined> {
   const {lvalue, value} = instr;
   const left = lvalue.identifier.type;
@@ -224,14 +231,26 @@ function* generateInstructionTypes(
 
     case 'StoreLocal': {
       if (env.config.enableUseTypeAnnotations) {
-        yield equation(
-          value.lvalue.place.identifier.type,
-          value.value.identifier.type,
-        );
         const valueType =
           value.type === null ? makeType() : lowerType(value.type);
-        yield equation(valueType, value.lvalue.place.identifier.type);
-        yield equation(left, valueType);
+        // When the annotation is a StableHandler, bind the lvalue to the
+        // annotation type first so it takes priority over the inferred
+        // function expression type.
+        if (
+          env.config.enableStableHandlerAnnotation &&
+          valueType.kind === 'Function' &&
+          valueType.shapeId === BuiltInStableHandlerId
+        ) {
+          yield equation(value.lvalue.place.identifier.type, valueType);
+          yield equation(left, valueType);
+        } else {
+          yield equation(
+            value.lvalue.place.identifier.type,
+            value.value.identifier.type,
+          );
+          yield equation(valueType, value.lvalue.place.identifier.type);
+          yield equation(left, valueType);
+        }
       } else {
         yield equation(left, value.value.identifier.type);
         yield equation(
@@ -414,6 +433,23 @@ function* generateInstructionTypes(
                   value: makePropertyLiteral(property.key.name),
                 },
               });
+              // If this property is annotated as StableHandler, emit an
+              // additional type equation so the identifier gets the
+              // BuiltInStableHandler function type.
+              if (
+                env.config.enableStableHandlerAnnotation &&
+                propsTypeAnnotations != null
+              ) {
+                const annotation = propsTypeAnnotations.get(
+                  property.key.name,
+                );
+                if (annotation != null) {
+                  yield equation(
+                    property.place.identifier.type,
+                    lowerType(annotation),
+                  );
+                }
+              }
             }
           }
         }

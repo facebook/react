@@ -12,6 +12,7 @@ export {buildReactiveFunction} from './BuildReactiveFunction';
 export {codegenFunction, type CodegenFunction} from './CodegenReactiveFunction';
 export {extractScopeDeclarationsFromDestructuring} from './ExtractScopeDeclarationsFromDestructuring';
 export {inferReactiveScopeVariables} from './InferReactiveScopeVariables';
+export {markStableHandlerScopes} from './MarkStableHandlerScopes';
 export {memoizeFbtAndMacroOperandsInSameScope} from './MemoizeFbtAndMacroOperandsInSameScope';
 export {mergeReactiveScopesThatInvalidateTogether} from './MergeReactiveScopesThatInvalidateTogether';
 export {

@@ -52,6 +52,7 @@ import {
   codegenFunction,
   extractScopeDeclarationsFromDestructuring,
   inferReactiveScopeVariables,
+  markStableHandlerScopes,
   memoizeFbtAndMacroOperandsInSameScope,
   mergeReactiveScopesThatInvalidateTogether,
   promoteUsedTemporaries,
@@ -459,6 +460,13 @@ function runWithEnvironment(
   });
 
   assertWellFormedBreakTargets(reactiveFunction);
+
+  markStableHandlerScopes(reactiveFunction);
+  log({
+    kind: 'reactive',
+    name: 'MarkStableHandlerScopes',
+    value: reactiveFunction,
+  });
 
   pruneUnusedLabels(reactiveFunction);
   log({
