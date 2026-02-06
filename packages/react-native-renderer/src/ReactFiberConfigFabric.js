@@ -61,6 +61,10 @@ const {
   unstable_ContinuousEventPriority: FabricContinuousPriority,
   unstable_IdleEventPriority: FabricIdlePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
+  measureInstance: fabricMeasureInstance,
+  applyViewTransitionName: fabricApplyViewTransitionName,
+  executeViewTransition: fabricExecuteViewTransition,
+  startViewTransition: fabricStartViewTransition,
 } = nativeFabricUIManager;
 
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
@@ -262,7 +266,18 @@ export function removeRootViewTransitionClone(
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
   console.log('[shim] measureInstance ', instance.canonical.nativeTag);
-  return {rect: {x: 0, y: 0, width: 0, height: 0}, abs: false, clip: false, view: true};
+  var measurement = fabricMeasureInstance(instance.node);
+  return {
+    rect: {
+      x: measurement.x,
+      y: measurement.y,
+      width: measurement.width,
+      height: measurement.height
+    },
+    abs: false,
+    clip: false,
+    view: true
+  };
 }
 
 export function measureClonedInstance(instance: Instance): InstanceMeasurement {
@@ -340,6 +355,7 @@ export function applyViewTransitionName(
 ): void {
   // add view-transition-name to things that might animate for browser
   console.log('[shim] applyViewTransitionName', name, className, instance.canonical.nativeTag);
+  fabricApplyViewTransitionName(instance.node, name, className);
 }
 
 export function startViewTransition(
@@ -356,6 +372,7 @@ export function startViewTransition(
   finishedAnimation: () => void,
 ): RunningViewTransition {
   console.log('[shim] startViewTransition transitionTypes', JSON.stringify(transitionTypes ?? []));
+  fabricStartViewTransition();
 
   // mutation phase
   console.log('[shim] startViewTransition mutations start');
@@ -370,6 +387,7 @@ export function startViewTransition(
   // transition ready
   console.log('[shim] startViewTransition transition ready');
   spawnedWorkCallback();
+  fabricExecuteViewTransition();
 
   console.log('[shim] startViewTransition finishedAnimation');
   // finishedAnimation();
