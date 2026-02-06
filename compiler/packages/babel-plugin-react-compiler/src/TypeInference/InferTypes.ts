@@ -28,7 +28,7 @@ import {
   BuiltInArrayId,
   BuiltInEventHandlerId,
   BuiltInFunctionId,
-  BuiltInStableHandlerId,
+  BuiltInNonReactiveId,
   BuiltInJsxId,
   BuiltInMixedReadonlyId,
   BuiltInObjectId,
@@ -233,13 +233,13 @@ function* generateInstructionTypes(
       if (env.config.enableUseTypeAnnotations) {
         const valueType =
           value.type === null ? makeType() : lowerType(value.type);
-        // When the annotation is a StableHandler, bind the lvalue to the
+        // When the annotation is a NonReactive, bind the lvalue to the
         // annotation type first so it takes priority over the inferred
         // function expression type.
         if (
-          env.config.enableStableHandlerAnnotation &&
+          env.config.enableNonReactiveAnnotation &&
           valueType.kind === 'Function' &&
-          valueType.shapeId === BuiltInStableHandlerId
+          valueType.shapeId === BuiltInNonReactiveId
         ) {
           yield equation(value.lvalue.place.identifier.type, valueType);
           yield equation(left, valueType);
@@ -284,6 +284,9 @@ function* generateInstructionTypes(
     }
 
     case 'LoadGlobal': {
+      // Record the global binding name so it can be looked up by callee id
+      // in CallExpression handling (e.g. for nonReactive() detection).
+      names.set(lvalue.identifier.id, value.binding.name);
       const globalType = env.getGlobalDeclaration(value.binding, value.loc);
       if (globalType) {
         yield equation(left, globalType);
@@ -298,10 +301,10 @@ function* generateInstructionTypes(
        * We should change Hook to a subtype of Function or change unifier logic.
        * (see https://github.com/facebook/react-forget/pull/1427)
        */
+      const calleeName = getName(names, value.callee.identifier.id);
       let shapeId: string | null = null;
       if (env.config.enableTreatSetIdentifiersAsStateSetters) {
-        const name = getName(names, value.callee.identifier.id);
-        if (name.startsWith('set')) {
+        if (calleeName.startsWith('set')) {
           shapeId = BuiltInSetStateId;
         }
       }
@@ -311,7 +314,21 @@ function* generateInstructionTypes(
         return: returnType,
         isConstructor: false,
       });
-      yield equation(left, returnType);
+      // nonReactive() is a compiler intrinsic that marks its return value
+      // as NonReactive-typed, producing the two-slot stable wrapper pattern.
+      if (
+        env.config.enableNonReactiveAnnotation &&
+        calleeName === 'nonReactive'
+      ) {
+        yield equation(left, {
+          kind: 'Function',
+          shapeId: BuiltInNonReactiveId,
+          return: makeType(),
+          isConstructor: false,
+        });
+      } else {
+        yield equation(left, returnType);
+      }
       break;
     }
 
@@ -433,11 +450,11 @@ function* generateInstructionTypes(
                   value: makePropertyLiteral(property.key.name),
                 },
               });
-              // If this property is annotated as StableHandler, emit an
+              // If this property is annotated as NonReactive, emit an
               // additional type equation so the identifier gets the
-              // BuiltInStableHandler function type.
+              // BuiltInNonReactive function type.
               if (
-                env.config.enableStableHandlerAnnotation &&
+                env.config.enableNonReactiveAnnotation &&
                 propsTypeAnnotations != null
               ) {
                 const annotation = propsTypeAnnotations.get(

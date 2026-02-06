@@ -18,6 +18,43 @@ type MemoCache = Array<number | typeof $empty>;
 
 const $empty = Symbol.for('react.memo_cache_sentinel');
 
+/**
+ * Compile-time annotation that tells the React Compiler to treat a value as
+ * non-reactive. The value is excluded from dependency tracking and, for local
+ * functions, the compiler generates a stable wrapper whose identity never
+ * changes across renders while always delegating to the latest closure.
+ *
+ * Usage on props — signals the compiler that the value is non-reactive:
+ * ```ts
+ * function Child({onSubmit}: {onSubmit: NonReactive<(data: string) => void>}) { ... }
+ * ```
+ *
+ * Usage on local functions — compiler generates a stable wrapper pattern:
+ * ```ts
+ * const handler: NonReactive<() => void> = () => { console.log(value); };
+ * ```
+ *
+ * Requires the `enableNonReactiveAnnotation` compiler flag.
+ */
+export type NonReactive<T> = T;
+
+/**
+ * Compiler intrinsic that marks a value as non-reactive at the call site.
+ * This is an alternative to the `NonReactive<T>` type annotation.
+ *
+ * ```ts
+ * return <Child onClick={nonReactive(() => onSubmit(value))} />;
+ * ```
+ *
+ * At runtime this is an identity function. The compiler recognizes calls to
+ * `nonReactive()` and generates a stable wrapper pattern for the result.
+ *
+ * Requires the `enableNonReactiveAnnotation` compiler flag.
+ */
+export function nonReactive<T>(value: T): T {
+  return value;
+}
+
 // Re-export React.c if present, otherwise fallback to the userspace polyfill for versions of React
 // < 19.
 export const c =

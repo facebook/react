@@ -24,7 +24,7 @@ import {
 } from '../HIR';
 import {
   BuiltInEventHandlerId,
-  BuiltInStableHandlerId,
+  BuiltInNonReactiveId,
 } from '../HIR/ObjectShape';
 import {
   eachInstructionOperand,
@@ -186,7 +186,7 @@ function isEventHandlerType(identifier: Identifier): boolean {
   return (
     type.kind === 'Function' &&
     (type.shapeId === BuiltInEventHandlerId ||
-      type.shapeId === BuiltInStableHandlerId)
+      type.shapeId === BuiltInNonReactiveId)
   );
 }
 

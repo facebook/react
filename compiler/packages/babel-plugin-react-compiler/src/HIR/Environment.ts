@@ -255,13 +255,13 @@ export const EnvironmentConfigSchema = z.object({
   enableUseTypeAnnotations: z.boolean().default(false),
 
   /**
-   * Enable support for the StableHandler<T> type annotation. When enabled,
-   * props annotated as StableHandler are treated as stable (non-reactive) and
-   * safe for ref access. Local functions annotated as StableHandler are compiled
+   * Enable support for the NonReactive<T> type annotation. When enabled,
+   * props annotated as NonReactive are treated as stable (non-reactive) and
+   * safe for ref access. Local functions annotated as NonReactive are compiled
    * using a two-slot pattern that produces a stable function identity.
    * Requires enableUseTypeAnnotations to also be enabled.
    */
-  enableStableHandlerAnnotation: z.boolean().default(false),
+  enableNonReactiveAnnotation: z.boolean().default(false),
 
   /**
    * Allows specifying a function that can populate HIR with type information from

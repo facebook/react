@@ -2,14 +2,14 @@
 ## Input
 
 ```javascript
-// @enableStableHandlerAnnotation @enableUseTypeAnnotations
-type StableHandler<T> = T;
+// @enableNonReactiveAnnotation @enableUseTypeAnnotations
+type NonReactive<T> = T;
 
 function Component({
   onSubmit,
   label,
 }: {
-  onSubmit: StableHandler<(data: string) => void>;
+  onSubmit: NonReactive<(data: string) => void>;
   label: string;
 }) {
   return (
@@ -29,17 +29,16 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableStableHandlerAnnotation @enableUseTypeAnnotations
-type StableHandler<T> = T;
+import { c as _c } from "react/compiler-runtime"; // @enableNonReactiveAnnotation @enableUseTypeAnnotations
+type NonReactive<T> = T;
 
 function Component(t0) {
   const $ = _c(5);
   const { onSubmit, label } = t0;
   let t1;
-  t1 = () => onSubmit(label);
-  $[0] = t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = (...args) => $[0](...args);
+  if ($[0] !== label) {
+    t1 = () => onSubmit(label);
+    $[0] = label;
     $[1] = t1;
   } else {
     t1 = $[1];

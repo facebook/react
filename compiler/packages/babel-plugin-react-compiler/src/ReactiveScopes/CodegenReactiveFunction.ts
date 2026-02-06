@@ -536,8 +536,8 @@ function codegenBlockNoReset(
       }
       case 'scope': {
         const temp = new Map(cx.temp);
-        if (item.scope.stableHandler && item.scope.dependencies.size > 0) {
-          codegenStableHandlerScope(
+        if (item.scope.nonReactive) {
+          codegenNonReactiveScope(
             cx,
             statements,
             item.scope,
@@ -949,7 +949,7 @@ function codegenReactiveScope(
 }
 
 /**
- * Generates the two-slot codegen pattern for StableHandler scopes.
+ * Generates the two-slot codegen pattern for NonReactive scopes.
  *
  * The scope contains a FunctionExpression that produces a value (e.g. t0).
  * We always recompute the function (to capture latest closure values),
@@ -967,7 +967,7 @@ function codegenReactiveScope(
  *     t0 = $[1];                  // load cached stable wrapper
  *   }
  */
-function codegenStableHandlerScope(
+function codegenNonReactiveScope(
   cx: Context,
   statements: Array<t.Statement>,
   scope: ReactiveScope,

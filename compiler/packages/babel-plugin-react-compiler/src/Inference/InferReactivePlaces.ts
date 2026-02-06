@@ -16,7 +16,7 @@ import {
   Place,
   evaluatesToStableTypeOrContainer,
   getHookKind,
-  isStableHandlerType,
+  isNonReactiveType,
   isStableType,
   isStableTypeContainer,
   isUseOperator,
@@ -98,9 +98,9 @@ class StableSidemap {
             }
           }
         } else {
-          // StableHandler-typed identifiers are stable regardless of source
+          // NonReactive-typed identifiers are stable regardless of source
           for (const lvalue of eachInstructionLValue(instr)) {
-            if (isStableHandlerType(lvalue.identifier)) {
+            if (isNonReactiveType(lvalue.identifier)) {
               this.map.set(lvalue.identifier.id, {
                 isStable: true,
               });

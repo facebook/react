@@ -52,7 +52,7 @@ import {
   codegenFunction,
   extractScopeDeclarationsFromDestructuring,
   inferReactiveScopeVariables,
-  markStableHandlerScopes,
+  markNonReactiveScopes,
   memoizeFbtAndMacroOperandsInSameScope,
   mergeReactiveScopesThatInvalidateTogether,
   promoteUsedTemporaries,
@@ -461,10 +461,10 @@ function runWithEnvironment(
 
   assertWellFormedBreakTargets(reactiveFunction);
 
-  markStableHandlerScopes(reactiveFunction);
+  markNonReactiveScopes(reactiveFunction);
   log({
     kind: 'reactive',
-    name: 'MarkStableHandlerScopes',
+    name: 'MarkNonReactiveScopes',
     value: reactiveFunction,
   });
 

@@ -50,7 +50,7 @@ import {
   validateIdentifierName,
 } from './HIR';
 import HIRBuilder, {Bindings, createTemporaryPlace} from './HIRBuilder';
-import {BuiltInArrayId, BuiltInStableHandlerId} from './ObjectShape';
+import {BuiltInArrayId, BuiltInNonReactiveId} from './ObjectShape';
 
 /*
  * *******************************************************************************************
@@ -184,9 +184,9 @@ export function lower(
     }
   });
 
-  // Extract per-property type annotations for StableHandler props
+  // Extract per-property type annotations for NonReactive props
   let propsTypeAnnotations: Map<string, t.FlowType | t.TSType> | null = null;
-  if (env.config.enableStableHandlerAnnotation) {
+  if (env.config.enableNonReactiveAnnotation) {
     const firstParam = func.get('params')[0];
     if (firstParam != null && firstParam.isObjectPattern()) {
       const typeAnnotation = (firstParam.node as t.ObjectPattern).typeAnnotation;
@@ -217,7 +217,7 @@ export function lower(
                 if (
                   tsType.type === 'TSTypeReference' &&
                   tsType.typeName.type === 'Identifier' &&
-                  tsType.typeName.name === 'StableHandler'
+                  tsType.typeName.name === 'NonReactive'
                 ) {
                   propName = member.key.name;
                   propType = tsType;
@@ -227,7 +227,7 @@ export function lower(
                 member.key.type === 'Identifier' &&
                 member.value.type === 'GenericTypeAnnotation' &&
                 member.value.id.type === 'Identifier' &&
-                member.value.id.name === 'StableHandler'
+                member.value.id.name === 'NonReactive'
               ) {
                 propName = member.key.name;
                 propType = member.value;
@@ -4411,10 +4411,10 @@ export function lowerType(node: t.FlowType | t.TSType): Type {
       if (id.type === 'Identifier' && id.name === 'Array') {
         return {kind: 'Object', shapeId: BuiltInArrayId};
       }
-      if (id.type === 'Identifier' && id.name === 'StableHandler') {
+      if (id.type === 'Identifier' && id.name === 'NonReactive') {
         return {
           kind: 'Function',
-          shapeId: BuiltInStableHandlerId,
+          shapeId: BuiltInNonReactiveId,
           return: makeType(),
           isConstructor: false,
         };
@@ -4426,10 +4426,10 @@ export function lowerType(node: t.FlowType | t.TSType): Type {
       if (typeName.type === 'Identifier' && typeName.name === 'Array') {
         return {kind: 'Object', shapeId: BuiltInArrayId};
       }
-      if (typeName.type === 'Identifier' && typeName.name === 'StableHandler') {
+      if (typeName.type === 'Identifier' && typeName.name === 'NonReactive') {
         return {
           kind: 'Function',
-          shapeId: BuiltInStableHandlerId,
+          shapeId: BuiltInNonReactiveId,
           return: makeType(),
           isConstructor: false,
         };

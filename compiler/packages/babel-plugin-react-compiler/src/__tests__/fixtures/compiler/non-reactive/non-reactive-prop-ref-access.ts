@@ -1,12 +1,12 @@
-// @enableStableHandlerAnnotation @enableUseTypeAnnotations
+// @enableNonReactiveAnnotation @enableUseTypeAnnotations
 import {useRef} from 'react';
 
-type StableHandler<T> = T;
+type NonReactive<T> = T;
 
 function Component({
   onSubmit,
 }: {
-  onSubmit: StableHandler<(data: string) => void>;
+  onSubmit: NonReactive<(data: string) => void>;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const handler = () => {

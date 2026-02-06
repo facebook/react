@@ -2,16 +2,16 @@
 ## Input
 
 ```javascript
-// @enableStableHandlerAnnotation @enableUseTypeAnnotations
+// @enableNonReactiveAnnotation @enableUseTypeAnnotations
 import {useState} from 'react';
 
-type StableHandler<T> = T;
+type NonReactive<T> = T;
 
 function Component() {
   const [count, setCount] = useState(0);
   const [name, setName] = useState('world');
 
-  const handler: StableHandler<() => void> = () => {
+  const handler: NonReactive<() => void> = () => {
     console.log(count, name);
   };
 
@@ -34,10 +34,10 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableStableHandlerAnnotation @enableUseTypeAnnotations
+import { c as _c } from "react/compiler-runtime"; // @enableNonReactiveAnnotation @enableUseTypeAnnotations
 import { useState } from "react";
 
-type StableHandler<T> = T;
+type NonReactive<T> = T;
 
 function Component() {
   const $ = _c(8);

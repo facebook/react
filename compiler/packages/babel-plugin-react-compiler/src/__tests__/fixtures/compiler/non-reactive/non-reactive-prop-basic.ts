@@ -1,11 +1,11 @@
-// @enableStableHandlerAnnotation @enableUseTypeAnnotations
-type StableHandler<T> = T;
+// @enableNonReactiveAnnotation @enableUseTypeAnnotations
+type NonReactive<T> = T;
 
 function Component({
   onSubmit,
   value,
 }: {
-  onSubmit: StableHandler<(data: string) => void>;
+  onSubmit: NonReactive<(data: string) => void>;
   value: string;
 }) {
   return <button onClick={() => onSubmit(value)}>{value}</button>;

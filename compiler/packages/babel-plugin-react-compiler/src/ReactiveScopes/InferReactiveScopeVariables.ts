@@ -113,7 +113,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
         earlyReturnValue: null,
         merged: new Set(),
         loc: identifier.loc,
-        stableHandler: false,
+        nonReactive: false,
       };
       scopes.set(groupIdentifier, scope);
     } else {

@@ -2,11 +2,11 @@
 ## Input
 
 ```javascript
-// @enableStableHandlerAnnotation @enableUseTypeAnnotations
-type StableHandler<T> = T;
+// @enableNonReactiveAnnotation @enableUseTypeAnnotations
+type NonReactive<T> = T;
 
 function Component({value}: {value: string}) {
-  const handler: StableHandler<() => void> = () => {
+  const handler: NonReactive<() => void> = () => {
     console.log(value);
   };
   return <button onClick={handler}>Click</button>;
@@ -22,8 +22,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableStableHandlerAnnotation @enableUseTypeAnnotations
-type StableHandler<T> = T;
+import { c as _c } from "react/compiler-runtime"; // @enableNonReactiveAnnotation @enableUseTypeAnnotations
+type NonReactive<T> = T;
 
 function Component(t0) {
   const $ = _c(4);

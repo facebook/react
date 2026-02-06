@@ -2,15 +2,15 @@
 ## Input
 
 ```javascript
-// @enableStableHandlerAnnotation @enableUseTypeAnnotations
+// @enableNonReactiveAnnotation @enableUseTypeAnnotations
 import {useRef} from 'react';
 
-type StableHandler<T> = T;
+type NonReactive<T> = T;
 
 function Component() {
   const ref = useRef<HTMLInputElement>(null);
 
-  const handler: StableHandler<() => void> = () => {
+  const handler: NonReactive<() => void> = () => {
     if (ref.current !== null) {
       console.log(ref.current.value);
     }
@@ -34,37 +34,39 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableStableHandlerAnnotation @enableUseTypeAnnotations
+import { c as _c } from "react/compiler-runtime"; // @enableNonReactiveAnnotation @enableUseTypeAnnotations
 import { useRef } from "react";
 
-type StableHandler<T> = T;
+type NonReactive<T> = T;
 
 function Component() {
-  const $ = _c(2);
+  const $ = _c(3);
   const ref = useRef(null);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {
-      if (ref.current !== null) {
-        console.log(ref.current.value);
-      }
-    };
-    $[0] = t0;
+  t0 = () => {
+    if (ref.current !== null) {
+      console.log(ref.current.value);
+    }
+  };
+  $[0] = t0;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = (...args) => $[0](...args);
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   const handler = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = (
       <>
         <input ref={ref} />
         <button onClick={handler}>Read Input</button>
       </>
     );
-    $[1] = t1;
+    $[2] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[2];
   }
   return t1;
 }

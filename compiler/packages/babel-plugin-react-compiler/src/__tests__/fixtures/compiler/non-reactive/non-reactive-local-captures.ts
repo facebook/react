@@ -1,13 +1,13 @@
-// @enableStableHandlerAnnotation @enableUseTypeAnnotations
+// @enableNonReactiveAnnotation @enableUseTypeAnnotations
 import {useState} from 'react';
 
-type StableHandler<T> = T;
+type NonReactive<T> = T;
 
 function Component() {
   const [count, setCount] = useState(0);
   const [name, setName] = useState('world');
 
-  const handler: StableHandler<() => void> = () => {
+  const handler: NonReactive<() => void> = () => {
     console.log(count, name);
   };
 

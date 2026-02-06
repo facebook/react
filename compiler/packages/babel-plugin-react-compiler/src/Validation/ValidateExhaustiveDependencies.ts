@@ -26,7 +26,7 @@ import {
   InstructionKind,
   isEffectEventFunctionType,
   isPrimitiveType,
-  isStableHandlerType,
+  isNonReactiveType,
   isStableType,
   isSubPath,
   isSubPathIgnoringOptionals,
@@ -330,7 +330,7 @@ function validateDependencies(
      */
     if (
       isEffectEventFunctionType(inferredDependency.identifier) ||
-      isStableHandlerType(inferredDependency.identifier)
+      isNonReactiveType(inferredDependency.identifier)
     ) {
       continue;
     }
@@ -405,7 +405,7 @@ function validateDependencies(
               dep.kind === 'Local' &&
               !isOptionalDependency(dep, reactive) &&
               !isEffectEventFunctionType(dep.identifier) &&
-              !isStableHandlerType(dep.identifier),
+              !isNonReactiveType(dep.identifier),
           )
           .map(printInferredDependency)
           .join(', ')}]`,

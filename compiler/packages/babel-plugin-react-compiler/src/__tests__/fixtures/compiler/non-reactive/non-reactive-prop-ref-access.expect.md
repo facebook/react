@@ -2,15 +2,15 @@
 ## Input
 
 ```javascript
-// @enableStableHandlerAnnotation @enableUseTypeAnnotations
+// @enableNonReactiveAnnotation @enableUseTypeAnnotations
 import {useRef} from 'react';
 
-type StableHandler<T> = T;
+type NonReactive<T> = T;
 
 function Component({
   onSubmit,
 }: {
-  onSubmit: StableHandler<(data: string) => void>;
+  onSubmit: NonReactive<(data: string) => void>;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const handler = () => {
@@ -34,10 +34,10 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableStableHandlerAnnotation @enableUseTypeAnnotations
+import { c as _c } from "react/compiler-runtime"; // @enableNonReactiveAnnotation @enableUseTypeAnnotations
 import { useRef } from "react";
 
-type StableHandler<T> = T;
+type NonReactive<T> = T;
 
 function Component(t0) {
   const $ = _c(2);
