@@ -1351,8 +1351,9 @@ export default class Store extends EventEmitter<{
     let haveErrorsOrWarningsChanged = false;
     let hasSuspenseTreeChanged = false;
 
-    // The first two values are always rendererID and rootID
-    const rendererID = operations[0];
+    // The first value is always rendererID
+    let i = 0;
+    const rendererID = operations[i++];
 
     const addedElementIDs: Array<number> = [];
     // This is a mapping of removed ID -> parent ID:
@@ -1361,8 +1362,6 @@ export default class Store extends EventEmitter<{
     const removedSuspenseIDs: Map<SuspenseNode['id'], SuspenseNode['id']> =
       new Map();
     let nextActivitySliceID: Element['id'] | null = null;
-
-    let i = 2;
 
     // Reassemble the string table.
     const stringTable: Array<string | null> = [

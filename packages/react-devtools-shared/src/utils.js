@@ -222,13 +222,11 @@ export function utfEncodeString(string: string): Array<number> {
 }
 
 export function printOperationsArray(operations: Array<number>) {
-  // The first two values are always rendererID and rootID
-  const rendererID = operations[0];
-  const rootID = operations[1];
+  // The first value is always rendererID
+  let i = 0;
+  const rendererID = operations[i++];
 
-  const logs = [`operations for renderer:${rendererID} and root:${rootID}`];
-
-  let i = 2;
+  const logs = [`operations for renderer:${rendererID}`];
 
   // Reassemble the string table.
   const stringTable: Array<null | string> = [

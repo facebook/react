@@ -67,6 +67,12 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
     minNpmVersion: '4.22.0',
     maxNpmVersion: null,
   },
+  // Version 3 no longer sends a rootFiberID at the start
+  {
+    version: 3,
+    minNpmVersion: '7.1.0',
+    maxNpmVersion: null,
+  },
 ];
 
 export const currentBridgeProtocol: BridgeProtocol =
