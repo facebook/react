@@ -1573,13 +1573,14 @@ export default class Store extends EventEmitter<{
             const element = this._idToElement.get(id);
 
             if (element === undefined) {
-              this._throwAndEmitError(
-                Error(
-                  `Cannot remove node "${id}" because no matching node was found in the Store.`,
-                ),
-              );
-
-              break;
+              /*
+                - there may be further nodes in the batch to be processed hence throwing error right now is not a good soln
+                - Our store may be partially updated because of this logic 
+                - So I changed it to look for further nodes and skip removing this node 
+                - logically as it is absent so its better logically
+              */
+              i += 1;
+              continue;
             }
 
             i += 1;
