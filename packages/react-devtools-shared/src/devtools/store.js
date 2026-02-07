@@ -1572,6 +1572,7 @@ export default class Store extends EventEmitter<{
             const id = operations[i];
             const element = this._idToElement.get(id);
 
+            i += 1;
             if (element === undefined) {
               /*
                 - there may be further nodes in the batch to be processed hence throwing error right now is not a good soln
@@ -1579,11 +1580,10 @@ export default class Store extends EventEmitter<{
                 - So I changed it to look for further nodes and skip removing this node 
                 - logically as it is absent so its better logically
               */
-              i += 1;
               continue;
             }
 
-            i += 1;
+        
 
             const {children, ownerID, parentID, weight} = element;
             if (children.length > 0) {
