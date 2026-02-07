@@ -191,4 +191,73 @@ describe('commit tree', () => {
       expect(commitTrees[1].nodes.size).toBe(2); // <Root> + <App>
     });
   });
+
+  describe('Suspense', () => {
+    it('should handle transitioning from fallback back to content during profiling', async () => {
+      let resolvePromise;
+      let promise = null;
+      let childTreeBaseDuration = 10;
+
+      function Wrapper({children}) {
+        Scheduler.unstable_advanceTime(2);
+        return children;
+      }
+
+      function Child() {
+        Scheduler.unstable_advanceTime(childTreeBaseDuration);
+        if (promise !== null) {
+          React.use(promise);
+        }
+        return <GrandChild />;
+      }
+
+      function GrandChild() {
+        Scheduler.unstable_advanceTime(5);
+        return null;
+      }
+
+      function Fallback() {
+        Scheduler.unstable_advanceTime(2);
+        return null;
+      }
+
+      function App() {
+        Scheduler.unstable_advanceTime(1);
+        return (
+          <React.Suspense fallback={<Fallback />}>
+            <Wrapper>
+              <Child />
+            </Wrapper>
+          </React.Suspense>
+        );
+      }
+
+      utils.act(() => store.profilerStore.startProfiling());
+
+      // Commit 1: Mount with primary
+      utils.act(() => render(<App step={1} />));
+
+      // Commit 2: Suspend, show fallback
+      promise = new Promise(resolve => (resolvePromise = resolve));
+      await utils.actAsync(() => render(<App step={2} />));
+
+      // Commit 3: Resolve suspended promise, show primary content with a different duration.
+      childTreeBaseDuration = 20;
+      promise = null;
+      await utils.actAsync(resolvePromise);
+      utils.act(() => render(<App step={3} />));
+
+      utils.act(() => store.profilerStore.stopProfiling());
+
+      const rootID = store.roots[0];
+      const dataForRoot = store.profilerStore.getDataForRoot(rootID);
+      const numCommits = dataForRoot.commitData.length;
+      for (let commitIndex = 0; commitIndex < numCommits; commitIndex++) {
+        store.profilerStore.profilingCache.getCommitTree({
+          commitIndex,
+          rootID,
+        });
+      }
+    });
+  });
 });
