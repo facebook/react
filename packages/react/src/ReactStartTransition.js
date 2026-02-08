@@ -42,6 +42,7 @@ function releaseAsyncTransition() {
   }
 }
 
+
 const now =
   typeof performance === 'object' && typeof performance.now === 'function'
     ? () => performance.now()
