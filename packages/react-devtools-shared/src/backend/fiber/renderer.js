@@ -7874,17 +7874,20 @@ export function attach(
           }
           break;
         case 'props':
-          if (instance === null) {
-            if (typeof overridePropsRenamePath === 'function') {
-              overridePropsRenamePath(fiber, oldPath, newPath);
-            }
-          } else {
-            fiber.pendingProps = copyWithRename(
-              instance.props,
-              oldPath,
-              newPath,
-            );
-            instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+              fiber.pendingProps = copyWithRename(
+                instance.props,
+                oldPath,
+                newPath,
+              );
+              instance.forceUpdate();
+              break;
+            default:
+              if (typeof overridePropsRenamePath === 'function') {
+                overridePropsRenamePath(fiber, oldPath, newPath);
+              }
+              break;
           }
           break;
         case 'state':
