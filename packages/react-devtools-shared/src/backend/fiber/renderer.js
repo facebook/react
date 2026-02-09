@@ -5581,10 +5581,12 @@ export function attach(
           }
           recordConsoleLogs(fiberInstance, componentLogsEntry);
 
-          const isProfilingSupported =
-            nextFiber.hasOwnProperty('treeBaseDuration');
-          if (isProfilingSupported) {
-            recordProfilingDurations(fiberInstance, prevFiber);
+          if (!isInDisconnectedSubtree) {
+            const isProfilingSupported =
+              nextFiber.hasOwnProperty('treeBaseDuration');
+            if (isProfilingSupported) {
+              recordProfilingDurations(fiberInstance, prevFiber);
+            }
           }
         }
       }
