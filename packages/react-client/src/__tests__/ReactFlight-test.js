@@ -3941,4 +3941,61 @@ describe('ReactFlight', () => {
     const model = await ReactNoopFlightClient.read(transport);
     expect(model.element.key).toBe(React.optimisticKey);
   });
+
+  it('can use a JSX element exported as a client reference in multiple server components', async () => {
+    const ClientReference = clientReference(React.createElement('span'));
+
+    function Foo() {
+      return ClientReference;
+    }
+
+    function Bar() {
+      return ClientReference;
+    }
+
+    function App() {
+      return ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Foo),
+        ReactServer.createElement(Bar),
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      ReactServer.createElement(App),
+    );
+
+    await act(async () => {
+      const result = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(result);
+
+      if (__DEV__) {
+        // TODO: Debug info is dropped for frozen elements (client-created JSX
+        // exported as a client reference in this case). Ideally we'd clone the
+        // element so that each context gets its own mutable copy with correct
+        // debug info. When fixed, foo should have Foo's debug info and bar should
+        // have Bar's debug info.
+        const [foo, bar] = result.props.children;
+        expect(getDebugInfo(foo)).toBe(null);
+        expect(getDebugInfo(bar)).toBe(null);
+      }
+    });
+
+    // TODO: With cloning, each context would get its own element copy, so this
+    // key warning should go away.
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the top-level render call using <div>. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in span (at **)',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span />
+        <span />
+      </div>,
+    );
+  });
 });
