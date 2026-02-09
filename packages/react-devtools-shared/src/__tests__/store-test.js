@@ -2857,8 +2857,7 @@ describe('Store', () => {
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <App> [Server]
-          ▾ <App> [Server]
-              <ClientComponent key="app">
+            <ClientComponent key="app">
     `);
   });
 
