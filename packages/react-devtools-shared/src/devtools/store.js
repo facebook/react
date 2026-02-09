@@ -16,7 +16,6 @@ import {
   PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
@@ -147,8 +146,8 @@ export default class Store extends EventEmitter<{
   enableSuspenseTab: [],
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
-  hostInstanceSelected: [Element['id']],
-  settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
+  hostInstanceSelected: [Element['id'] | null],
+  settingsUpdated: [$ReadOnly<DevToolsHookSettings>, Array<ComponentFilter>],
   mutated: [
     [
       Array<Element['id']>,
@@ -321,10 +320,6 @@ export default class Store extends EventEmitter<{
 
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
-    bridge.addListener(
-      'overrideComponentFilters',
-      this.onBridgeOverrideComponentFilters,
-    );
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isReloadAndProfileSupportedByBackend',
@@ -437,8 +432,23 @@ export default class Store extends EventEmitter<{
 
     this._componentFilters = value;
 
-    // Update persisted filter preferences stored in localStorage.
+    // Update persisted filter preferences
     setSavedComponentFilters(value);
+    if (this._hookSettings === null) {
+      // We changed filters before we got the hook settings.
+      // Wait for hook settings before persisting component filters to not overwrite
+      // persisted hook settings with defaults.
+      // This exists purely as a type safety check; in practice the hook settings
+      // should have arrived before any filter changes could be made.
+      const onHookSettings = (settings: $ReadOnly<DevToolsHookSettings>) => {
+        this._bridge.removeListener('hookSettings', onHookSettings);
+        this.emit('settingsUpdated', settings, value);
+      };
+      this._bridge.addListener('hookSettings', onHookSettings);
+      this._bridge.send('getHookSettings');
+    } else {
+      this.emit('settingsUpdated', this._hookSettings, value);
+    }
 
     // Notify the renderer that filter preferences have changed.
     // This is an expensive operation; it unmounts and remounts the entire tree,
@@ -1633,45 +1643,6 @@ export default class Store extends EventEmitter<{
 
           break;
         }
-        case TREE_OPERATION_REMOVE_ROOT: {
-          i += 1;
-
-          const id = operations[1];
-
-          if (__DEBUG__) {
-            debug(`Remove root ${id}`);
-          }
-
-          const recursivelyDeleteElements = (elementID: number) => {
-            const element = this._idToElement.get(elementID);
-            this._idToElement.delete(elementID);
-            if (element) {
-              // Mostly for Flow's sake
-              for (let index = 0; index < element.children.length; index++) {
-                recursivelyDeleteElements(element.children[index]);
-              }
-            }
-          };
-
-          const root = this._idToElement.get(id);
-          if (root === undefined) {
-            this._throwAndEmitError(
-              Error(
-                `Cannot remove root "${id}": no matching node was found in the Store.`,
-              ),
-            );
-
-            break;
-          }
-
-          recursivelyDeleteElements(id);
-
-          this._rootIDToCapabilities.delete(id);
-          this._rootIDToRendererID.delete(id);
-          this._roots = this._roots.filter(rootID => rootID !== id);
-          this._weightAcrossRoots -= root.weight;
-          break;
-        }
         case TREE_OPERATION_REORDER_CHILDREN: {
           const id = operations[i + 1];
           const numChildren = operations[i + 2];
@@ -2264,19 +2235,6 @@ export default class Store extends EventEmitter<{
     return didMutate;
   }
 
-  // Certain backends save filters on a per-domain basis.
-  // In order to prevent filter preferences and applied filters from being out of sync,
-  // this message enables the backend to override the frontend's current ("saved") filters.
-  // This action should also override the saved filters too,
-  // else reloading the frontend without reloading the backend would leave things out of sync.
-  onBridgeOverrideComponentFilters: (
-    componentFilters: Array<ComponentFilter>,
-  ) => void = componentFilters => {
-    this._componentFilters = componentFilters;
-
-    setSavedComponentFilters(componentFilters);
-  };
-
   onBridgeShutdown: () => void = () => {
     if (__DEBUG__) {
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
@@ -2284,10 +2242,6 @@ export default class Store extends EventEmitter<{
 
     const bridge = this._bridge;
     bridge.removeListener('operations', this.onBridgeOperations);
-    bridge.removeListener(
-      'overrideComponentFilters',
-      this.onBridgeOverrideComponentFilters,
-    );
     bridge.removeListener('shutdown', this.onBridgeShutdown);
     bridge.removeListener(
       'isReloadAndProfileSupportedByBackend',
@@ -2381,8 +2335,15 @@ export default class Store extends EventEmitter<{
     this._bridge.send('getHookSettings'); // Warm up cached hook settings
   };
 
-  onHostInstanceSelected: (elementId: number) => void = elementId => {
-    if (this._lastSelectedHostInstanceElementId === elementId) {
+  onHostInstanceSelected: (elementId: number | null) => void = elementId => {
+    if (
+      this._lastSelectedHostInstanceElementId === elementId &&
+      // Force clear selection e.g. when we inspect an element in the Components panel
+      // and then switch to the browser's Elements panel.
+      // We wouldn't want to stay on the inspected element if we're inspecting
+      // an element not owned by React when switching to the browser's Elements panel.
+      elementId !== null
+    ) {
       return;
     }
 
@@ -2412,7 +2373,7 @@ export default class Store extends EventEmitter<{
       this._hookSettings = settings;
 
       this._bridge.send('updateHookSettings', settings);
-      this.emit('settingsUpdated', settings);
+      this.emit('settingsUpdated', settings, this._componentFilters);
     };
 
   onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =

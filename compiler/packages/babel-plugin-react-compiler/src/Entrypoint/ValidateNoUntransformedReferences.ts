@@ -215,14 +215,7 @@ function validateImportSpecifier(
   const binding = local.scope.getBinding(local.node.name);
   CompilerError.invariant(binding != null, {
     reason: 'Expected binding to be found for import specifier',
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: local.node.loc ?? null,
-        message: null,
-      },
-    ],
+    loc: local.node.loc ?? GeneratedSource,
   });
   checkFn(binding.referencePaths, state);
 }
@@ -242,14 +235,7 @@ function validateNamespacedImport(
 
   CompilerError.invariant(binding != null, {
     reason: 'Expected binding to be found for import specifier',
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: local.node.loc ?? null,
-        message: null,
-      },
-    ],
+    loc: local.node.loc ?? GeneratedSource,
   });
   const filteredReferences = new Map<
     CheckInvalidReferenceFn,

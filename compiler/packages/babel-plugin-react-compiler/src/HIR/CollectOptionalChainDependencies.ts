@@ -186,13 +186,7 @@ function matchOptionalTestBlock(
         reason:
           '[OptionalChainDeps] Inconsistent optional chaining property load',
         description: `Test=${printIdentifier(terminal.test.identifier)} PropertyLoad base=${printIdentifier(propertyLoad.value.object.identifier)}`,
-        details: [
-          {
-            kind: 'error',
-            loc: propertyLoad.loc,
-            message: null,
-          },
-        ],
+        loc: propertyLoad.loc,
       },
     );
 
@@ -200,14 +194,7 @@ function matchOptionalTestBlock(
       storeLocal.value.identifier.id === propertyLoad.lvalue.identifier.id,
       {
         reason: '[OptionalChainDeps] Unexpected storeLocal',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: propertyLoad.loc,
-            message: null,
-          },
-        ],
+        loc: propertyLoad.loc,
       },
     );
     if (
@@ -224,14 +211,7 @@ function matchOptionalTestBlock(
         alternate.instructions[1].value.kind === 'StoreLocal',
       {
         reason: 'Unexpected alternate structure',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: terminal.loc,
-            message: null,
-          },
-        ],
+        loc: terminal.loc,
       },
     );
 
@@ -267,14 +247,7 @@ function traverseOptionalBlock(
   if (maybeTest.terminal.kind === 'branch') {
     CompilerError.invariant(optional.terminal.optional, {
       reason: '[OptionalChainDeps] Expect base case to be always optional',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: optional.terminal.loc,
-          message: null,
-        },
-      ],
+      loc: optional.terminal.loc,
     });
     /**
      * Optional base expressions are currently within value blocks which cannot
@@ -312,14 +285,7 @@ function traverseOptionalBlock(
         maybeTest.instructions.at(-1)!.lvalue.identifier.id,
       {
         reason: '[OptionalChainDeps] Unexpected test expression',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: maybeTest.terminal.loc,
-            message: null,
-          },
-        ],
+        loc: maybeTest.terminal.loc,
       },
     );
     baseObject = {
@@ -408,14 +374,7 @@ function traverseOptionalBlock(
       reason:
         '[OptionalChainDeps] Unexpected instructions an inner optional block. ' +
         'This indicates that the compiler may be incorrectly concatenating two unrelated optional chains',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: optional.terminal.loc,
-          message: null,
-        },
-      ],
+      loc: optional.terminal.loc,
     });
   }
   const matchConsequentResult = matchOptionalTestBlock(test, context.blocks);
@@ -428,13 +387,7 @@ function traverseOptionalBlock(
     {
       reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
       description: `${matchConsequentResult.consequentGoto} != ${optional.terminal.fallthrough}`,
-      details: [
-        {
-          kind: 'error',
-          loc: optional.terminal.loc,
-          message: null,
-        },
-      ],
+      loc: optional.terminal.loc,
     },
   );
   const load = {

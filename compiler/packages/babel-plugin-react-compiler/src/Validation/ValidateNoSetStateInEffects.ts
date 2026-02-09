@@ -97,7 +97,7 @@ export function validateNoSetStateInEffects(
         case 'CallExpression': {
           const callee =
             instr.value.kind === 'MethodCall'
-              ? instr.value.receiver
+              ? instr.value.property
               : instr.value.callee;
 
           if (isUseEffectEventType(callee.identifier)) {
@@ -264,15 +264,7 @@ function getSetStateCall(
               case Effect.Unknown: {
                 CompilerError.invariant(false, {
                   reason: 'Unexpected unknown effect',
-                  description: null,
-                  details: [
-                    {
-                      kind: 'error',
-                      loc: operand.loc,
-                      message: null,
-                    },
-                  ],
-                  suggestions: null,
+                  loc: operand.loc,
                 });
               }
               default: {

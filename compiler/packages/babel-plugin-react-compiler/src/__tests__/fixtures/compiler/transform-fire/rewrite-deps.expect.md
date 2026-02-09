@@ -44,6 +44,7 @@ function Component(props) {
     t2 = $[3];
   }
   useEffect(t1, t2);
+
   return null;
 }
 function _temp(props_0) {

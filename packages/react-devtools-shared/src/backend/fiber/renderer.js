@@ -18,7 +18,7 @@ import type {
   Wakeable,
 } from 'shared/ReactTypes';
 
-import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
+import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
 import {
   ComponentFilterDisplayName,
@@ -48,13 +48,11 @@ import {
   deletePathInObject,
   getDisplayName,
   getWrappedDisplayName,
-  getDefaultComponentFilters,
   getInObject,
   getUID,
   renamePathInObject,
   setInObject,
   utfEncodeString,
-  persistableComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {
   formatConsoleArgumentsToSingleString,
@@ -127,7 +125,6 @@ import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import {componentInfoToComponentLogsMap} from '../shared/DevToolsServerComponentLogs';
 
 import is from 'shared/objectIs';
-import hasOwnProperty from 'shared/hasOwnProperty';
 
 import {getIODescription} from 'shared/ReactIODescription';
 
@@ -1011,6 +1008,9 @@ export function attach(
   global: Object,
   shouldStartProfilingNow: boolean,
   profilingSettings: ProfilingSettings,
+  componentFiltersOrComponentFiltersPromise:
+    | Array<ComponentFilter>
+    | Promise<Array<ComponentFilter>>,
 ): RendererInterface {
   // Newer versions of the reconciler package also specific reconciler version.
   // If that version number is present, use it.
@@ -1138,7 +1138,7 @@ export function attach(
   // if any passive effects called console.warn / console.error.
   let needsToFlushComponentLogs = false;
 
-  function bruteForceFlushErrorsAndWarnings() {
+  function bruteForceFlushErrorsAndWarnings(root: FiberInstance) {
     // Refresh error/warning count for all mounted unfiltered Fibers.
     let hasChanges = false;
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
@@ -1156,7 +1156,7 @@ export function attach(
       }
     }
     if (hasChanges) {
-      flushPendingEvents();
+      flushPendingEvents(root);
     }
   }
 
@@ -1183,7 +1183,7 @@ export function attach(
         updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
       }
     }
-    flushPendingEvents();
+    flushPendingEvents(null);
   }
 
   function clearConsoleLogsHelper(instanceID: number, type: 'error' | 'warn') {
@@ -1211,7 +1211,7 @@ export function attach(
         }
         const changed = recordConsoleLogs(devtoolsInstance, componentLogsEntry);
         if (changed) {
-          flushPendingEvents();
+          flushPendingEvents(null);
           updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
         }
       }
@@ -1517,21 +1517,12 @@ export function attach(
     });
   }
 
-  // The renderer interface can't read saved component filters directly,
-  // because they are stored in localStorage within the context of the extension.
-  // Instead it relies on the extension to pass filters through.
-  if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
-    const restoredComponentFilters: Array<ComponentFilter> =
-      persistableComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
-    applyComponentFilters(restoredComponentFilters, null);
+  if (Array.isArray(componentFiltersOrComponentFiltersPromise)) {
+    applyComponentFilters(componentFiltersOrComponentFiltersPromise, null);
   } else {
-    // Unfortunately this feature is not expected to work for React Native for now.
-    // It would be annoying for us to spam YellowBox warnings with unactionable stuff,
-    // so for now just skip this message...
-    //console.warn('⚛ DevTools: Could not locate saved component filters');
-
-    // Fallback to assuming the default filters in this case.
-    applyComponentFilters(getDefaultComponentFilters(), null);
+    componentFiltersOrComponentFiltersPromise.then(componentFilters => {
+      applyComponentFilters(componentFilters, null);
+    });
   }
 
   // If necessary, we can revisit optimizing this operation.
@@ -1542,6 +1533,8 @@ export function attach(
     if (isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
+      // Supporting change of filters while profiling would require a refactor
+      // to flush after each root instead of at the end.
       throw Error('Cannot modify filter preferences while profiling');
     }
 
@@ -1656,7 +1649,8 @@ export function attach(
       focusedActivityFilter.activityID = focusedActivityID;
     }
 
-    flushPendingEvents();
+    // We're not profiling so it's safe to flush without a specific root.
+    flushPendingEvents(null);
 
     needsToFlushComponentLogs = false;
   }
@@ -1976,10 +1970,9 @@ export function attach(
             state: null,
           };
         } else {
-          const indices = getChangedHooksIndices(
-            prevFiber.memoizedState,
-            nextFiber.memoizedState,
-          );
+          const prevHooks = inspectHooks(prevFiber);
+          const nextHooks = inspectHooks(nextFiber);
+          const indices = getChangedHooksIndices(prevHooks, nextHooks);
           const data: ChangeDescription = {
             context: getContextChanged(prevFiber, nextFiber),
             didHooksChange: indices !== null && indices.length > 0,
@@ -2028,74 +2021,53 @@ export function attach(
     return false;
   }
 
-  function isUseSyncExternalStoreHook(hookObject: any): boolean {
-    const queue = hookObject.queue;
-    if (!queue) {
-      return false;
-    }
+  function didStatefulHookChange(prev: HooksNode, next: HooksNode): boolean {
+    // Detect the shape of useState() / useReducer() / useTransition() / useSyncExternalStore() / useActionState()
+    const isStatefulHook =
+      prev.isStateEditable === true ||
+      prev.name === 'SyncExternalStore' ||
+      prev.name === 'Transition' ||
+      prev.name === 'ActionState' ||
+      prev.name === 'FormState';
 
-    const boundHasOwnProperty = hasOwnProperty.bind(queue);
-    return (
-      boundHasOwnProperty('value') &&
-      boundHasOwnProperty('getSnapshot') &&
-      typeof queue.getSnapshot === 'function'
-    );
-  }
-
-  function isHookThatCanScheduleUpdate(hookObject: any) {
-    const queue = hookObject.queue;
-    if (!queue) {
-      return false;
-    }
-
-    const boundHasOwnProperty = hasOwnProperty.bind(queue);
-
-    // Detect the shape of useState() / useReducer() / useTransition()
-    // using the attributes that are unique to these hooks
-    // but also stable (e.g. not tied to current Lanes implementation)
-    // We don't check for dispatch property, because useTransition doesn't have it
-    if (boundHasOwnProperty('pending')) {
-      return true;
-    }
-
-    return isUseSyncExternalStoreHook(hookObject);
-  }
-
-  function didStatefulHookChange(prev: any, next: any): boolean {
-    const prevMemoizedState = prev.memoizedState;
-    const nextMemoizedState = next.memoizedState;
-
-    if (isHookThatCanScheduleUpdate(prev)) {
-      return prevMemoizedState !== nextMemoizedState;
+    // Compare the values to see if they changed
+    if (isStatefulHook) {
+      return prev.value !== next.value;
     }
 
     return false;
   }
 
-  function getChangedHooksIndices(prev: any, next: any): null | Array<number> {
-    if (prev == null || next == null) {
+  function getChangedHooksIndices(
+    prevHooks: HooksTree | null,
+    nextHooks: HooksTree | null,
+  ): null | Array<number> {
+    if (prevHooks == null || nextHooks == null) {
       return null;
     }
 
-    const indices = [];
+    const indices: Array<number> = [];
     let index = 0;
 
-    while (next !== null) {
-      if (didStatefulHookChange(prev, next)) {
-        indices.push(index);
-      }
+    function traverse(prevTree: HooksTree, nextTree: HooksTree): void {
+      for (let i = 0; i < prevTree.length; i++) {
+        const prevHook = prevTree[i];
+        const nextHook = nextTree[i];
 
-      // useSyncExternalStore creates 2 internal hooks, but we only count it as 1 user-facing hook
-      if (isUseSyncExternalStoreHook(next)) {
-        next = next.next;
-        prev = prev.next;
-      }
+        if (prevHook.subHooks.length > 0 && nextHook.subHooks.length > 0) {
+          traverse(prevHook.subHooks, nextHook.subHooks);
+          continue;
+        }
 
-      next = next.next;
-      prev = prev.next;
-      index++;
+        if (didStatefulHookChange(prevHook, nextHook)) {
+          indices.push(index);
+        }
+
+        index++;
+      }
     }
 
+    traverse(prevHooks, nextHooks);
     return indices;
   }
 
@@ -2234,7 +2206,12 @@ export function attach(
     }
   }
 
-  function flushPendingEvents(): void {
+  /**
+   * Allowed to flush pending events without a specific root when:
+   * - pending operations don't record tree mutations e.g. TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS
+   * - not profiling (the commit tree builder requires the root of the mutations)
+   */
+  function flushPendingEvents(root: FiberInstance | null): void {
     if (shouldBailoutWithPendingOperations()) {
       // If we aren't profiling, we can just bail out here.
       // No use sending an empty update over the bridge.
@@ -2276,11 +2253,10 @@ export function attach(
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
-    if (currentRoot === null) {
-      // TODO: This is not always safe so this field is probably not needed.
+    if (root === null) {
       operations[i++] = -1;
     } else {
-      operations[i++] = currentRoot.id;
+      operations[i++] = root.id;
     }
 
     // Now fill in the string table.
@@ -2991,6 +2967,30 @@ export function attach(
       parentInstance !== parentSuspenseNode.instance
     ) {
       parentInstance = parentInstance.parent;
+    }
+    if (parentInstance.kind === FIBER_INSTANCE) {
+      const fiber = parentInstance.data;
+
+      if (
+        fiber.tag === SuspenseComponent &&
+        parentInstance !== parentSuspenseNode.instance
+      ) {
+        // We're about to attach async info to a Suspense boundary we're not
+        // actually considering the parent Suspense boundary for this async info.
+        // We must have not found a suitable Fiber inside the fallback (e.g. due to filtering).
+        // Use the parent of this instance instead since we treat async info
+        // attached to a Suspense boundary as that async info triggering the
+        // fallback of that boundary.
+        const parent = parentInstance.parent;
+        if (parent === null) {
+          // This shouldn't happen. Any <Suspense> would have at least have the
+          // host root as the parent which can't have a fallback.
+          throw new Error(
+            'Did not find a suitable instance for this async info. This is a bug in React.',
+          );
+        }
+        parentInstance = parent;
+      }
     }
 
     const suspenseNodeSuspendedBy = parentSuspenseNode.suspendedBy;
@@ -5255,9 +5255,9 @@ export function attach(
       // It might even result in a bad user experience for e.g. node selection in the Elements panel.
       // The easiest fix is to strip out the intermediate Fragment fibers,
       // so the Elements panel and Profiler don't need to special case them.
-      // Suspense components only have a non-null memoizedState if they're timed-out.
       const isLegacySuspense =
         nextFiber.tag === SuspenseComponent && OffscreenComponent === -1;
+      // Suspense components only have a non-null memoizedState if they're timed-out.
       const prevDidTimeout =
         isLegacySuspense && prevFiber.memoizedState !== null;
       const nextDidTimeOut =
@@ -5753,10 +5753,10 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
+        flushPendingEvents(currentRoot);
+
         currentRoot = (null: any);
       });
-
-      flushPendingEvents();
 
       needsToFlushComponentLogs = false;
     }
@@ -5767,7 +5767,7 @@ export function attach(
     // safe to stop calling it from Fiber.
   }
 
-  function handlePostCommitFiberRoot(root: any) {
+  function handlePostCommitFiberRoot(root: FiberRoot) {
     if (isProfiling && rootSupportsProfiling(root)) {
       if (currentCommitProfilingMetadata !== null) {
         const {effectDuration, passiveEffectDuration} =
@@ -5781,12 +5781,18 @@ export function attach(
     }
 
     if (needsToFlushComponentLogs) {
+      const rootInstance = rootToFiberInstanceMap.get(root);
+      if (rootInstance === undefined) {
+        throw new Error(
+          'Should have a root instance for a committed root. This is a bug in React DevTools.',
+        );
+      }
       // We received new logs after commit. I.e. in a passive effect. We need to
       // traverse the tree to find the affected ones. If we just moved the whole
       // tree traversal from handleCommitFiberRoot to handlePostCommitFiberRoot
       // this wouldn't be needed. For now we just brute force check all instances.
       // This is not that common of a case.
-      bruteForceFlushErrorsAndWarnings();
+      bruteForceFlushErrorsAndWarnings(rootInstance);
     }
   }
 
@@ -5883,7 +5889,7 @@ export function attach(
     }
 
     // We're done here.
-    flushPendingEvents();
+    flushPendingEvents(currentRoot);
 
     needsToFlushComponentLogs = false;
 

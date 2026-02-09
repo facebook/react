@@ -29,6 +29,7 @@ import {
   disableLegacyMode,
   enableDefaultTransitionIndicator,
   enableGestureTransition,
+  enableParallelTransitions,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {clz32} from './clz32';
@@ -208,6 +209,9 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
     case TransitionLane8:
     case TransitionLane9:
     case TransitionLane10:
+      if (enableParallelTransitions) {
+        return getHighestPriorityLane(lanes);
+      }
       return lanes & TransitionUpdateLanes;
     case TransitionLane11:
     case TransitionLane12:
@@ -621,7 +625,8 @@ export function includesOnlyRetries(lanes: Lanes): boolean {
 export function includesOnlyNonUrgentLanes(lanes: Lanes): boolean {
   // TODO: Should hydration lanes be included here? This function is only
   // used in `updateDeferredValueImpl`.
-  const UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
+  const UrgentLanes =
+    SyncLane | InputContinuousLane | DefaultLane | GestureLane;
   return (lanes & UrgentLanes) === NoLanes;
 }
 export function includesOnlyTransitions(lanes: Lanes): boolean {

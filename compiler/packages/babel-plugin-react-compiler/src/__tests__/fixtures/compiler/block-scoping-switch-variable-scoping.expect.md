@@ -53,6 +53,7 @@ function Component(props) {
     default:
   }
   const outerHandlers = handlers;
+
   return outerHandlers;
 }
 
