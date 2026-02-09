@@ -23,6 +23,8 @@ let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactServerScheduler;
+let ReactDOM;
+let clientAct;
 let serverAct;
 
 describe('ReactFlightDOMReply', () => {
@@ -46,6 +48,8 @@ describe('ReactFlightDOMReply', () => {
     jest.resetModules();
     __unmockReact();
     ReactServerDOMClient = require('react-server-dom-webpack/client');
+    ReactDOM = require('react-dom/client');
+    clientAct = require('internal-test-utils').act;
   });
 
   // This method should exist on File but is not implemented in JSDOM
@@ -392,6 +396,54 @@ describe('ReactFlightDOMReply', () => {
 
     // This should've been the same reference that we already saw.
     expect(response.children).toBe(children);
+  });
+
+  it('validates temporary references', async () => {
+    function Component() {
+      return <div />;
+    }
+
+    const children = <Component />;
+
+    const temporaryReferences =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+    const body = await ReactServerDOMClient.encodeReply(
+      {children},
+      {
+        temporaryReferences,
+      },
+    );
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+    const props = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        React.createElement(
+          'section',
+          null,
+          React.createElement('div'),
+          props.children,
+        ),
+        null,
+        {
+          temporaryReferences: temporaryReferencesServer,
+        },
+      ),
+    );
+
+    const app = await ReactServerDOMClient.createFromReadableStream(stream, {
+      temporaryReferences,
+    });
+
+    await clientAct(async () => {
+      ReactDOM.createRoot(document.createElement('div')).render(app);
+    });
   });
 
   it('can return the same object using temporary references', async () => {
