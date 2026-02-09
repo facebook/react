@@ -2827,6 +2827,40 @@ describe('Store', () => {
       `);
   });
 
+  // @reactVersion >= 19.0
+  it('does not duplicate Server Component parents in keyed Fragments', async () => {
+    // TODO: Use an actual Flight renderer.
+    // See ReactFlight-test for the produced JSX from Flight.
+    function ClientComponent() {
+      return null;
+    }
+    // This used to be a keyed Fragment on the Server.
+    const children = [<ClientComponent key="app" />];
+    children._debugInfo = [
+      {time: 12},
+      {
+        name: 'App',
+        env: 'Server',
+        key: null,
+        stack: '    in Object.<anonymous> (at **)',
+        props: {},
+      },
+      {time: 13},
+    ];
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await actAsync(() => {
+      root.render([children]);
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App> [Server]
+            <ClientComponent key="app">
+    `);
+  });
+
   // @reactVersion >= 17.0
   it('can reconcile Suspense in fallback positions', async () => {
     let resolveFallback;
