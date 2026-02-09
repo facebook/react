@@ -124,7 +124,9 @@ function createResponseFromOptions(options: void | Options) {
     options && options.temporaryReferences
       ? options.temporaryReferences
       : undefined,
-    options && options.allowPartialStream ? options.allowPartialStream : false,
+    options && options.unstable_allowPartialStream
+      ? options.unstable_allowPartialStream
+      : false,
     __DEV__ ? findSourceMapURL : undefined,
     __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
     __DEV__ && options && options.environmentName
@@ -208,7 +210,7 @@ function startReadingFromStream(
 export type Options = {
   debugChannel?: {writable?: WritableStream, readable?: ReadableStream, ...},
   temporaryReferences?: TemporaryReferenceSet,
-  allowPartialStream?: boolean,
+  unstable_allowPartialStream?: boolean,
   replayConsoleLogs?: boolean,
   environmentName?: string,
   startTime?: number,

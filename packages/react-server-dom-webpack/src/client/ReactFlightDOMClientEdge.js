@@ -76,7 +76,7 @@ export type Options = {
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
-  allowPartialStream?: boolean,
+  unstable_allowPartialStream?: boolean,
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
@@ -105,7 +105,9 @@ function createResponseFromOptions(options: Options) {
     options && options.temporaryReferences
       ? options.temporaryReferences
       : undefined,
-    options && options.allowPartialStream ? options.allowPartialStream : false,
+    options && options.unstable_allowPartialStream
+      ? options.unstable_allowPartialStream
+      : false,
     __DEV__ && options && options.findSourceMapURL
       ? options.findSourceMapURL
       : undefined,

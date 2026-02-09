@@ -2504,7 +2504,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('renders Suspense fallback for unresolved promises with allowPartialStream', async () => {
+  it('renders Suspense fallback for unresolved promises with unstable_allowPartialStream', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
       resolveGreeting = resolve;
@@ -2547,7 +2547,7 @@ describe('ReactFlightDOMBrowser', () => {
     const response = ReactServerDOMClient.createFromReadableStream(
       passThrough(prelude),
       {
-        allowPartialStream: true,
+        unstable_allowPartialStream: true,
       },
     );
     const container = document.createElement('div');
@@ -2562,13 +2562,13 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<ClientRoot response={response} />);
     });
 
-    // With `allowPartialStream`, we should see the fallback instead of a
+    // With `unstable_allowPartialStream`, we should see the fallback instead of a
     // 'Connection closed.' error
     expect(errors).toEqual([]);
     expect(container.innerHTML).toBe('loading...');
   });
 
-  it('renders client components that are blocked on chunks with allowPartialStream', async () => {
+  it('renders client components that are blocked on chunks with unstable_allowPartialStream', async () => {
     let resolveClientComponentChunk;
 
     const ClientComponent = clientExports(
@@ -2607,7 +2607,7 @@ describe('ReactFlightDOMBrowser', () => {
     const response = ReactServerDOMClient.createFromReadableStream(
       passThrough(prelude),
       {
-        allowPartialStream: true,
+        unstable_allowPartialStream: true,
       },
     );
     const container = document.createElement('div');
@@ -2626,7 +2626,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<div>Hello, World!</div>');
   });
 
-  it('closes inner ReadableStreams gracefully with allowPartialStream', async () => {
+  it('closes inner ReadableStreams gracefully with unstable_allowPartialStream', async () => {
     let streamController;
     const innerStream = new ReadableStream({
       start(c) {
@@ -2654,7 +2654,7 @@ describe('ReactFlightDOMBrowser', () => {
     const response = await ReactServerDOMClient.createFromReadableStream(
       passThrough(prelude),
       {
-        allowPartialStream: true,
+        unstable_allowPartialStream: true,
       },
     );
 

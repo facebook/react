@@ -49,7 +49,7 @@ export type Options = {
   callServer?: CallServerCallback,
   debugChannel?: {writable?: WritableStream, readable?: ReadableStream, ...},
   temporaryReferences?: TemporaryReferenceSet,
-  allowPartialStream?: boolean,
+  unstable_allowPartialStream?: boolean,
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
@@ -99,7 +99,9 @@ function createResponseFromOptions(options: void | Options) {
     options && options.temporaryReferences
       ? options.temporaryReferences
       : undefined,
-    options && options.allowPartialStream ? options.allowPartialStream : false,
+    options && options.unstable_allowPartialStream
+      ? options.unstable_allowPartialStream
+      : false,
     __DEV__ && options && options.findSourceMapURL
       ? options.findSourceMapURL
       : undefined,
