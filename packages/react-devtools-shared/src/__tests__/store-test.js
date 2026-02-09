@@ -3686,7 +3686,7 @@ describe('Store', () => {
               <Component key="three">
       [suspense-root]  rects={null}
         <Suspense name="outer" uniqueSuspenders={true} rects={null}>
-          <Suspense name="inner" uniqueSuspenders={true} rects={null}>
+          <Suspense name="inner" uniqueSuspenders={false} rects={null}>
     `);
 
     // Now we remove all unique suspenders of the outer Suspense boundary.
