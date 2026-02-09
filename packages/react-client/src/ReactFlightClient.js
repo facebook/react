@@ -552,7 +552,7 @@ function moveDebugInfoFromChunkToInnerValue<T>(
         resolvedValue._debugInfo,
         debugInfo,
       );
-    } else {
+    } else if (!Object.isFrozen(resolvedValue)) {
       Object.defineProperty((resolvedValue: any), '_debugInfo', {
         configurable: false,
         enumerable: false,
@@ -560,6 +560,11 @@ function moveDebugInfoFromChunkToInnerValue<T>(
         value: debugInfo,
       });
     }
+    // TODO: If the resolved value is a frozen element (e.g. a client-created
+    // element from a temporary reference, or a JSX element exported as a client
+    // reference), server debug info is currently dropped because the element
+    // can't be mutated. We should probably clone the element so each rendering
+    // context gets its own mutable copy with the correct debug info.
   }
 }
 
@@ -2900,7 +2905,9 @@ function addAsyncInfo(chunk: SomeChunk<any>, asyncInfo: ReactAsyncInfo): void {
     if (isArray(value._debugInfo)) {
       // $FlowFixMe[method-unbinding]
       value._debugInfo.push(asyncInfo);
-    } else {
+    } else if (!Object.isFrozen(value)) {
+      // TODO: Debug info is dropped for frozen elements. See the TODO in
+      // moveDebugInfoFromChunkToInnerValue.
       Object.defineProperty((value: any), '_debugInfo', {
         configurable: false,
         enumerable: false,
