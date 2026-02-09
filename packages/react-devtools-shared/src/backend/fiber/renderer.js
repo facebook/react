@@ -5416,6 +5416,17 @@ export function attach(
           // We're hiding the children. Remove them from the Frontend
           unmountRemainingChildren();
         }
+      } else if (prevWasHidden && !nextIsHidden) {
+        // Since we don't mount hidden children and unmount children when hiding,
+        // we need to enter the mount path when revealing.
+        const nextChildSet = nextFiber.child;
+        if (nextChildSet !== null) {
+          mountChildrenRecursively(
+            nextChildSet,
+            traceNearestHostComponentUpdate,
+          );
+          updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
+        }
       } else if (
         nextFiber.tag === SuspenseComponent &&
         OffscreenComponent !== -1 &&
