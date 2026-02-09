@@ -2088,6 +2088,10 @@ export function attach(
     return changedKeys;
   }
 
+  /**
+   * Returns true iff nextFiber actually performed any work and produced an update.
+   * For generic components, like Function or Class components, prevFiber is not considered.
+   */
   function didFiberRender(prevFiber: Fiber, nextFiber: Fiber): boolean {
     switch (nextFiber.tag) {
       case ClassComponent:
@@ -4520,7 +4524,10 @@ export function attach(
         pushOperation(convertedTreeBaseDuration);
       }
 
-      if (prevFiber == null || didFiberRender(prevFiber, fiber)) {
+      if (
+        prevFiber == null ||
+        (prevFiber !== fiber && didFiberRender(prevFiber, fiber))
+      ) {
         if (actualDuration != null) {
           // The actual duration reported by React includes time spent working on children.
           // This is useful information, but it's also useful to be able to exclude child durations.
@@ -5150,11 +5157,13 @@ export function attach(
           elementType === ElementTypeMemo ||
           elementType === ElementTypeForwardRef
         ) {
-          // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
-          traceNearestHostComponentUpdate = didFiberRender(
-            prevFiber,
-            nextFiber,
-          );
+          if (prevFiber !== nextFiber) {
+            // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
+            traceNearestHostComponentUpdate = didFiberRender(
+              prevFiber,
+              nextFiber,
+            );
+          }
         }
       }
     }
@@ -5174,18 +5183,20 @@ export function attach(
       previousSuspendedBy = fiberInstance.suspendedBy;
       // Update the Fiber so we that we always keep the current Fiber on the data.
       fiberInstance.data = nextFiber;
-      if (
-        mostRecentlyInspectedElement !== null &&
-        (mostRecentlyInspectedElement.id === fiberInstance.id ||
-          // If we're inspecting a Root, we inspect the Screen.
-          // Invalidating any Root invalidates the Screen too.
-          (mostRecentlyInspectedElement.type === ElementTypeRoot &&
-            nextFiber.tag === HostRoot)) &&
-        didFiberRender(prevFiber, nextFiber)
-      ) {
-        // If this Fiber has updated, clear cached inspected data.
-        // If it is inspected again, it may need to be re-run to obtain updated hooks values.
-        hasElementUpdatedSinceLastInspected = true;
+      if (prevFiber !== nextFiber) {
+        if (
+          mostRecentlyInspectedElement !== null &&
+          (mostRecentlyInspectedElement.id === fiberInstance.id ||
+            // If we're inspecting a Root, we inspect the Screen.
+            // Invalidating any Root invalidates the Screen too.
+            (mostRecentlyInspectedElement.type === ElementTypeRoot &&
+              nextFiber.tag === HostRoot)) &&
+          didFiberRender(prevFiber, nextFiber)
+        ) {
+          // If this Fiber has updated, clear cached inspected data.
+          // If it is inspected again, it may need to be re-run to obtain updated hooks values.
+          hasElementUpdatedSinceLastInspected = true;
+        }
       }
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = fiberInstance;
