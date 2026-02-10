@@ -7,13 +7,14 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type { Fiber } from './ReactInternalTypes';
 
-import type {SuspendedReason} from './ReactFiberWorkLoop';
+import type { SuspendedReason } from './ReactFiberWorkLoop';
+import type { Transition } from 'react/src/ReactStartTransition';
 
-import type {Lane, Lanes} from './ReactFiberLane';
+import type { Lane, Lanes } from './ReactFiberLane';
 
-import type {CapturedValue} from './ReactCapturedValue';
+import type { CapturedValue } from './ReactCapturedValue';
 
 import {
   isTransitionLane,
@@ -21,10 +22,11 @@ import {
   isGestureRender,
   includesTransitionLane,
   includesBlockingLane,
+  getHighestPriorityLane,
   NoLanes,
 } from './ReactFiberLane';
 
-import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
+import { resolveEventType, resolveEventTimeStamp } from './ReactFiberConfig';
 
 import {
   enableProfilerCommitHooks,
@@ -34,20 +36,19 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import getComponentNameFromFiber from './getComponentNameFromFiber';
-import {requestCurrentTransition} from './ReactFiberTransition';
-import {isAlreadyRendering} from './ReactFiberWorkLoop';
+import { requestCurrentTransition } from './ReactFiberTransition';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
 
-const {unstable_now: now} = Scheduler;
+const { unstable_now: now } = Scheduler;
 
 const createTask =
   // eslint-disable-next-line react-internal/no-production-logging
   __DEV__ && console.createTask
     ? // eslint-disable-next-line react-internal/no-production-logging
-      console.createTask
+    console.createTask
     : (name: string) => null;
 
 export const REGULAR_UPDATE: UpdateType = 0;
@@ -106,7 +107,7 @@ export function getTransitionTimers(lane: Lane): TransitionTimers | null {
   return timers !== undefined ? timers : null;
 }
 
-type TransitionTimers = {
+export type TransitionTimers = {
   clampTime: number,
   startTime: number,
   updateTime: number,
@@ -141,6 +142,7 @@ export function startUpdateTimerByLane(
   lane: Lane,
   method: string,
   fiber: Fiber | null,
+  isAlreadyRendering: boolean,
 ): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
@@ -172,7 +174,7 @@ export function startUpdateTimerByLane(
       if (__DEV__ && fiber != null) {
         blockingUpdateComponentName = getComponentNameFromFiber(fiber);
       }
-      if (isAlreadyRendering()) {
+      if (isAlreadyRendering) {
         componentEffectSpawnedUpdate = true;
         blockingUpdateType = SPAWNED_UPDATE;
       }
@@ -257,7 +259,10 @@ export function startUpdateTimerByLane(
   }
 }
 
-export function startHostActionTimer(fiber: Fiber): void {
+export function startHostActionTimer(
+  fiber: Fiber,
+  isAlreadyRendering: boolean,
+): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
@@ -267,7 +272,7 @@ export function startHostActionTimer(fiber: Fiber): void {
     blockingUpdateTime = now();
     blockingUpdateTask =
       __DEV__ && fiber._debugTask != null ? fiber._debugTask : null;
-    if (isAlreadyRendering()) {
+    if (isAlreadyRendering) {
       blockingUpdateType = SPAWNED_UPDATE;
     }
     const newEventTime = resolveEventTimeStamp();
@@ -367,7 +372,7 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
     while (remainingLanes !== NoLanes) {
       const lane = getHighestPriorityLane(remainingLanes);
       if (isTransitionLane(lane)) {
-        let timers = transitionTimers.get(lane);
+        const timers = transitionTimers.get(lane);
         if (timers !== undefined) {
           timers.suspendedTime = renderEndTime;
         }
@@ -408,12 +413,10 @@ export function startAsyncTransitionTimer(): void {
 
 export function hasScheduledTransitionWork(): boolean {
   // If we have setState on a transition or scheduled useActionState update.
-  for (const timers of transitionTimers.values()) {
-    if (timers.updateTime > -1) {
-      return true;
-    }
-  }
-  return false;
+  // If we have setState on a transition or scheduled useActionState update.
+  return Array.from(transitionTimers.values()).some((timers) => {
+    return timers.updateTime > -1;
+  });
 }
 
 export function clearAsyncTransitionTimer(): void {
@@ -477,9 +480,9 @@ export function clampTransitionTimers(finalTime: number): void {
   // If we had new updates come in while we were still rendering or committing, we don't want
   // those update times to create overlapping tracks in the performance timeline so we clamp
   // them to the end of the commit phase.
-  for (const timers of transitionTimers.values()) {
+  transitionTimers.forEach((timers) => {
     timers.clampTime = finalTime;
-  }
+  });
 }
 
 export function clampRetryTimers(finalTime: number): void {

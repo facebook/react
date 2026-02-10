@@ -1,0 +1,1234 @@
+yarn run v1.22.22
+$ node ./scripts/jest/jest-cli.js packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js --no-color
+$ NODE_ENV=development RELEASE_CHANNEL=experimental compactConsole=false node ./scripts/jest/jest.js --config ./scripts/jest/config.source.js packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js --no-color
+
+Running tests for default (experimental)...
+FAIL packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js
+  ReactInteractionTracing
+    × [GATED, SHOULD FAIL] should not call callbacks when transition is not defined (318 ms)
+    × [GATED, SHOULD FAIL] should correctly trace basic interaction (47 ms)
+    × [GATED, SHOULD FAIL] multiple updates in transition callback should only result in one transitionStart/transitionComplete call (62 ms)
+    × [GATED, SHOULD FAIL] should correctly trace interactions for async roots (47 ms)
+    × [GATED, SHOULD FAIL] should correctly trace multiple separate root interactions (181 ms)
+    × [GATED, SHOULD FAIL] should correctly trace multiple intertwined root interactions (92 ms)
+    × [GATED, SHOULD FAIL] trace interaction with nested and sibling suspense boundaries (60 ms)
+    × [GATED, SHOULD FAIL] trace interactions with the same child suspense boundaries (63 ms)
+    × [GATED, SHOULD FAIL] should correctly trace basic interaction with tracing markers (53 ms)
+    × [GATED, SHOULD FAIL] should correctly trace interactions for tracing markers (52 ms)
+    × [GATED, SHOULD FAIL] trace interaction with multiple tracing markers (74 ms)
+    × [GATED, SHOULD FAIL] marker incomplete for tree with parent and sibling tracing markers (56 ms)
+    × [GATED, SHOULD FAIL] marker gets deleted (56 ms)
+    × [GATED, SHOULD FAIL] Suspense boundary added by the transition is deleted (62 ms)
+    × [GATED, SHOULD FAIL] Suspense boundary not added by the transition is deleted (53 ms)
+    × [GATED, SHOULD FAIL] marker incomplete gets called properly if child suspense marker is not part of it (58 ms)
+    × [GATED, SHOULD FAIL] warns when marker name changes (51 ms)
+    × [GATED, SHOULD FAIL] offscreen trees should not stop transition from completing (51 ms)
+    × [GATED, SHOULD FAIL] discrete events (60 ms)
+    × [GATED, SHOULD FAIL] multiple commits happen before a paint (51 ms)
+    × [GATED, SHOULD FAIL] transition callbacks work for multiple roots (46 ms)
+    ○ skipped warn and calls marker incomplete if name changes before transition completes
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] should not call callbacks when transition is not defined
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] should correctly trace basic interaction
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] multiple updates in transition callback should only result in one transitionStart/transitionComplete call
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] should correctly trace interactions for async roots
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] should correctly trace multiple separate root interactions
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] should correctly trace multiple intertwined root interactions
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] trace interaction with nested and sibling suspense boundaries
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] trace interactions with the same child suspense boundaries
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] should correctly trace basic interaction with tracing markers
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] should correctly trace interactions for tracing markers
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] trace interaction with multiple tracing markers
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] marker incomplete for tree with parent and sibling tracing markers
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] marker gets deleted
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] Suspense boundary added by the transition is deleted
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] Suspense boundary not added by the transition is deleted
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] marker incomplete gets called properly if child suspense marker is not part of it
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] warns when marker name changes
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] offscreen trees should not stop transition from completing
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] discrete events
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] multiple commits happen before a paint
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+  ● ReactInteractionTracing › [GATED, SHOULD FAIL] transition callbacks work for multiple roots
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: invalid expression (26:0)
+    } from './ReactFiberLane';
+    ^
+
+      106 |       plugins.push(pathToTransformLazyJSXImport);
+      107 |
+    > 108 |       let sourceAst = hermesParser.parse(src, {babel: true});
+          |                                    ^
+      109 |       return {
+      110 |         code: babel.transformFromAstSync(
+      111 |           sourceAst,
+
+      at Object.parse (node_modules/hermes-parser/dist/HermesParser.js:91:29)
+      at Object.parse (node_modules/hermes-parser/dist/index.js:135:28)
+      at Object.process (scripts/jest/preprocessor.js:108:36)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRootScheduler.js:80:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberAsyncAction.js:18:32)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberTransition.js:45:30)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberWorkLoop.js:229:29)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberHotReloading.js:16:27)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiber.js:82:31)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberRoot.js:21:19)
+      at Object.<anonymous> (packages/react-reconciler/src/ReactFiberReconciler.js:60:23)
+      at Object.<anonymous> (packages/react-reconciler/index.js:10:29)
+      at scripts/jest/setupHostConfigs.js:141:17
+      at createReactNoop (packages/react-noop-renderer/src/createReactNoop.js:988:22)
+      at Object.<anonymous> (packages/react-noop-renderer/src/ReactNoop.js:56:33)
+      at Object.<anonymous> (packages/react-noop-renderer/index.js:10:18)
+      at Object.<anonymous> (packages/react-reconciler/src/__tests__/ReactTransitionTracing-test.js:44:17)
+
+Test Suites: 1 failed, 1 total
+Tests:       21 failed, 1 skipped, 22 total
+Snapshots:   0 total
+Time:        2.725 s, estimated 3 s
+Ran all test suites matching /packages\\react-reconciler\\src\\__tests__\\ReactTransitionTracing-test.js/i.
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

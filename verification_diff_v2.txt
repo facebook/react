@@ -1,0 +1,924 @@
+diff --git a/packages/react-reconciler/src/ReactFiberWorkLoop.js b/packages/react-reconciler/src/ReactFiberWorkLoop.js
+index 555a75dacf..2c9a48aae6 100644
+--- a/packages/react-reconciler/src/ReactFiberWorkLoop.js
++++ b/packages/react-reconciler/src/ReactFiberWorkLoop.js
+@@ -7,25 +7,25 @@
+  * @flow
+  */
+ 
+-import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
++import { REACT_STRICT_MODE_TYPE } from 'shared/ReactSymbols';
+ 
+ import type {
+   Wakeable,
+   Thenable,
+   GestureOptionsRequired,
+ } from 'shared/ReactTypes';
+-import type {Fiber, FiberRoot} from './ReactInternalTypes';
+-import type {Lanes, Lane} from './ReactFiberLane';
+-import type {ActivityState} from './ReactFiberActivityComponent';
+-import type {SuspenseState} from './ReactFiberSuspenseComponent';
+-import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
+-import type {Transition} from 'react/src/ReactStartTransition';
++import type { Fiber, FiberRoot } from './ReactInternalTypes';
++import type { Lanes, Lane } from './ReactFiberLane';
++import type { ActivityState } from './ReactFiberActivityComponent';
++import type { SuspenseState } from './ReactFiberSuspenseComponent';
++import type { FunctionComponentUpdateQueue } from './ReactFiberHooks';
++import type { Transition } from 'react/src/ReactStartTransition';
+ import type {
+   PendingTransitionCallbacks,
+   PendingBoundaries,
+   TransitionAbort,
+ } from './ReactFiberTracingMarkerComponent';
+-import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
++import type { OffscreenInstance } from './ReactFiberOffscreenComponent';
+ import type {
+   Resource,
+   ViewTransitionInstance,
+@@ -33,12 +33,12 @@ import type {
+   GestureTimeline,
+   SuspendedState,
+ } from './ReactFiberConfig';
+-import type {RootState} from './ReactFiberRoot';
++import type { RootState } from './ReactFiberRoot';
+ import {
+   getViewTransitionName,
+   type ViewTransitionState,
+ } from './ReactFiberViewTransitionComponent';
+-import type {TransitionTypes} from 'react/src/ReactTransitionType';
++import type { TransitionTypes } from 'react/src/ReactTransitionType';
+ 
+ import {
+   enableCreateEventHandleAPI,
+@@ -60,7 +60,7 @@ import {
+   enableDefaultTransitionIndicator,
+   enableParallelTransitions,
+ } from 'shared/ReactFeatureFlags';
+-import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
++import { resetOwnerStackLimit } from 'shared/ReactOwnerStackReset';
+ import ReactSharedInternals from 'shared/ReactSharedInternals';
+ import is from 'shared/objectIs';
+ 
+@@ -126,8 +126,8 @@ import {
+   flushHydrationEvents,
+ } from './ReactFiberConfig';
+ 
+-import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
+-import {isRootDehydrated} from './ReactFiberShellHydration';
++import { createWorkInProgress, resetWorkInProgress } from './ReactFiber';
++import { isRootDehydrated } from './ReactFiberShellHydration';
+ import {
+   getIsHydrating,
+   popHydrationStateOnInterruptedWork,
+@@ -154,8 +154,8 @@ import {
+   HostHoistable,
+   HostSingleton,
+ } from './ReactWorkTags';
+-import {ConcurrentRoot, LegacyRoot} from './ReactRootTags';
+-import type {Flags} from './ReactFiberFlags';
++import { ConcurrentRoot, LegacyRoot } from './ReactRootTags';
++import type { Flags } from './ReactFiberFlags';
+ import {
+   NoFlags,
+   Incomplete,
+@@ -226,14 +226,14 @@ import {
+   lanesToEventPriority,
+   eventPriorityToLane,
+ } from './ReactEventPriorities';
+-import {requestCurrentTransition} from './ReactFiberTransition';
++import { requestCurrentTransition } from './ReactFiberTransition';
+ import {
+   SelectiveHydrationException,
+   beginWork,
+   replayFunctionComponent,
+ } from './ReactFiberBeginWork';
+-import {completeWork} from './ReactFiberCompleteWork';
+-import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork';
++import { completeWork } from './ReactFiberCompleteWork';
++import { unwindWork, unwindInterruptedWork } from './ReactFiberUnwindWork';
+ import {
+   throwException,
+   createRootErrorUpdate,
+@@ -258,21 +258,21 @@ import {
+   invokePassiveEffectUnmountInDEV,
+   accumulateSuspenseyCommit,
+ } from './ReactFiberCommitWork';
+-import {resetShouldStartViewTransition} from './ReactFiberCommitViewTransitions';
+-import {shouldStartViewTransition} from './ReactFiberCommitViewTransitions';
++import { resetShouldStartViewTransition } from './ReactFiberCommitViewTransitions';
++import { shouldStartViewTransition } from './ReactFiberCommitViewTransitions';
+ import {
+   insertDestinationClones,
+   applyDepartureTransitions,
+   startGestureAnimations,
+ } from './ReactFiberApplyGesture';
+-import {enqueueUpdate} from './ReactFiberClassUpdateQueue';
+-import {resetContextDependencies} from './ReactFiberNewContext';
++import { enqueueUpdate } from './ReactFiberClassUpdateQueue';
++import { resetContextDependencies } from './ReactFiberNewContext';
+ import {
+   resetHooksAfterThrow,
+   resetHooksOnUnwind,
+   ContextOnlyDispatcher,
+ } from './ReactFiberHooks';
+-import {DefaultAsyncDispatcher} from './ReactFiberAsyncDispatcher';
++import { DefaultAsyncDispatcher } from './ReactFiberAsyncDispatcher';
+ import {
+   createCapturedValueAtFiber,
+   type CapturedValue,
+@@ -378,13 +378,13 @@ import {
+   onPostCommitRoot as onPostCommitRootDevTools,
+   setIsStrictModeForDevtools,
+ } from './ReactFiberDevToolsHook';
+-import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
+-import {releaseCache} from './ReactFiberCacheComponent';
++import { onCommitRoot as onCommitRootTestSelector } from './ReactTestSelectors';
++import { releaseCache } from './ReactFiberCacheComponent';
+ import {
+   isLegacyActEnvironment,
+   isConcurrentActEnvironment,
+ } from './ReactFiberAct';
+-import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent';
++import { processTransitionCallbacks } from './ReactFiberTracingMarkerComponent';
+ import {
+   SuspenseException,
+   SuspenseActionException,
+@@ -392,25 +392,25 @@ import {
+   getSuspendedThenable,
+   isThenableResolved,
+ } from './ReactFiberThenable';
+-import {schedulePostPaintCallback} from './ReactPostPaintCallback';
++import { schedulePostPaintCallback } from './ReactPostPaintCallback';
+ import {
+   getSuspenseHandler,
+   getShellBoundary,
+ } from './ReactFiberSuspenseContext';
+-import {resetChildReconcilerOnUnwind} from './ReactChildFiber';
++import { resetChildReconcilerOnUnwind } from './ReactChildFiber';
+ import {
+   ensureRootIsScheduled,
+   flushSyncWorkOnAllRoots,
+   flushSyncWorkOnLegacyRootsOnly,
+   requestTransitionLane,
+ } from './ReactFiberRootScheduler';
+-import {getMaskedContext, getUnmaskedContext} from './ReactFiberLegacyContext';
+-import {logUncaughtError} from './ReactFiberErrorLogger';
++import { getMaskedContext, getUnmaskedContext } from './ReactFiberLegacyContext';
++import { logUncaughtError } from './ReactFiberErrorLogger';
+ import {
+   scheduleGestureCommit,
+   stopCommittedGesture,
+ } from './ReactFiberGestureScheduler';
+-import {claimQueuedTransitionTypes} from './ReactFiberTransitionTypes';
++import { claimQueuedTransitionTypes } from './ReactFiberTransitionTypes';
+ 
+ const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+ 
+@@ -559,7 +559,7 @@ export function addTransitionStartCallbackToPendingTransition(
+ 
+     if (currentPendingTransitionCallbacks.transitionStart === null) {
+       currentPendingTransitionCallbacks.transitionStart =
+-        ([]: Array<Transition>);
++        ([]: Array < Transition >);
+     }
+ 
+     currentPendingTransitionCallbacks.transitionStart.push(transition);
+@@ -693,7 +693,7 @@ export function addTransitionCompleteCallbackToPendingTransition(
+ 
+     if (currentPendingTransitionCallbacks.transitionComplete === null) {
+       currentPendingTransitionCallbacks.transitionComplete =
+-        ([]: Array<Transition>);
++        ([]: Array < Transition >);
+     }
+ 
+     currentPendingTransitionCallbacks.transitionComplete.push(transition);
+@@ -828,9 +828,9 @@ export function requestUpdateLane(fiber: Fiber): Lane {
+       if (transition.gesture) {
+         throw new Error(
+           'Cannot setState on regular state inside a startGestureTransition. ' +
+-            'Gestures can only update the useOptimistic() hook. There should be no ' +
+-            'side-effects associated with starting a Gesture until its Action is ' +
+-            'invoked. Move side-effects to the Action instead.',
++          'Gestures can only update the useOptimistic() hook. There should be no ' +
++          'side-effects associated with starting a Gesture until its Action is ' +
++          'invoked. Move side-effects to the Action instead.',
+         );
+       }
+     }
+@@ -1572,7 +1572,7 @@ function completeRootWhenReady(
+   const maySuspendCommit =
+     subtreeFlags & ShouldSuspendCommit ||
+     (subtreeFlags & BothVisibilityAndMaySuspendCommit) ===
+-      BothVisibilityAndMaySuspendCommit;
++    BothVisibilityAndMaySuspendCommit;
+   let suspendedState: null | SuspendedState = null;
+   if (isViewTransitionEligible || maySuspendCommit || isGestureTransition) {
+     // Before committing, ask the renderer whether the host tree is ready.
+@@ -2137,56 +2137,66 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
+       clearBlockingTimers();
+     }
+     if (includesTransitionLane(lanes)) {
+-      workInProgressUpdateTask = transitionUpdateTask;
+-      const clampedStartTime =
+-        transitionStartTime >= 0 && transitionStartTime < transitionClampTime
+-          ? transitionClampTime
+-          : transitionStartTime;
+-      const clampedUpdateTime =
+-        transitionUpdateTime >= 0 && transitionUpdateTime < transitionClampTime
+-          ? transitionClampTime
+-          : transitionUpdateTime;
+-      const clampedEventTime =
+-        transitionEventTime >= 0 && transitionEventTime < transitionClampTime
+-          ? transitionClampTime
+-          : transitionEventTime;
+-      const clampedRenderStartTime =
+-        // Clamp the suspended time to the first event/update.
+-        clampedEventTime >= 0
+-          ? clampedEventTime
+-          : clampedUpdateTime >= 0
+-            ? clampedUpdateTime
+-            : renderStartTime;
+-      if (transitionSuspendedTime >= 0) {
+-        setCurrentTrackFromLanes(SomeTransitionLane);
+-        logSuspendedWithDelayPhase(
+-          transitionSuspendedTime,
+-          clampedRenderStartTime,
+-          lanes,
+-          workInProgressUpdateTask,
+-        );
+-      } else if (includesTransitionLane(animatingLanes)) {
+-        // If this lane is still animating, log the time from previous render finishing to now as animating.
+-        setCurrentTrackFromLanes(SomeTransitionLane);
+-        logAnimatingPhase(
+-          transitionClampTime,
+-          clampedRenderStartTime,
+-          animatingTask,
+-        );
++      let remainingLanes = lanes;
++      while (remainingLanes !== NoLanes) {
++        const lane = getHighestPriorityLane(remainingLanes);
++        if (isTransitionLane(lane)) {
++          const timers = getTransitionTimers(lane);
++          if (timers !== null) {
++            workInProgressUpdateTask = timers.updateTask;
++            const clampedStartTime =
++              timers.startTime >= 0 && timers.startTime < timers.clampTime
++                ? timers.clampTime
++                : timers.startTime;
++            const clampedUpdateTime =
++              timers.updateTime >= 0 && timers.updateTime < timers.clampTime
++                ? timers.clampTime
++                : timers.updateTime;
++            const clampedEventTime =
++              timers.eventTime >= 0 && timers.eventTime < timers.clampTime
++                ? timers.clampTime
++                : timers.eventTime;
++            const clampedRenderStartTime =
++              // Clamp the suspended time to the first event/update.
++              clampedEventTime >= 0
++                ? clampedEventTime
++                : clampedUpdateTime >= 0
++                  ? clampedUpdateTime
++                  : renderStartTime;
++            if (timers.suspendedTime >= 0) {
++              setCurrentTrackFromLanes(lane);
++              logSuspendedWithDelayPhase(
++                timers.suspendedTime,
++                clampedRenderStartTime,
++                lanes,
++                workInProgressUpdateTask,
++              );
++            } else if (includesTransitionLane(animatingLanes)) {
++              // If this lane is still animating, log the time from previous render finishing to now as animating.
++              setCurrentTrackFromLanes(SomeTransitionLane);
++              logAnimatingPhase(
++                timers.clampTime,
++                clampedRenderStartTime,
++                animatingTask,
++              );
++            }
++            logTransitionStart(
++              clampedStartTime,
++              clampedUpdateTime,
++              clampedEventTime,
++              timers.eventType,
++              timers.eventRepeatTime > 0,
++              timers.updateType === PINGED_UPDATE,
++              renderStartTime,
++              timers.updateTask,
++              timers.updateMethodName,
++              timers.updateComponentName,
++            );
++            clearTransitionTimer(lane);
++          }
++        }
++        remainingLanes &= ~lane;
+       }
+-      logTransitionStart(
+-        clampedStartTime,
+-        clampedUpdateTime,
+-        clampedEventTime,
+-        transitionEventType,
+-        transitionEventRepeatTime > 0,
+-        transitionUpdateType === PINGED_UPDATE,
+-        renderStartTime,
+-        transitionUpdateTask,
+-        transitionUpdateMethodName,
+-        transitionUpdateComponentName,
+-      );
+-      clearTransitionTimers();
+     }
+     if (includesRetryLane(lanes)) {
+       if (includesRetryLane(animatingLanes)) {
+@@ -2329,11 +2339,11 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
+ 
+     workInProgressSuspendedReason = isWakeable
+       ? // A wakeable object was thrown by a legacy Suspense implementation.
+-        // This has slightly different behavior than suspending with `use`.
+-        SuspendedOnDeprecatedThrowPromise
++      // This has slightly different behavior than suspending with `use`.
++      SuspendedOnDeprecatedThrowPromise
+       : // This is a regular error. If something earlier in the component already
+-        // suspended, we must clear the thenable state to unblock the work loop.
+-        SuspendedOnError;
++      // suspended, we must clear the thenable state to unblock the work loop.
++      SuspendedOnError;
+   }
+ 
+   workInProgressThrownValue = thrownValue;
+@@ -2925,7 +2935,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes): RootExitStatus {
+                 if (__DEV__) {
+                   console.error(
+                     'Unexpected type of fiber triggered a suspensey commit. ' +
+-                      'This is a bug in React.',
++                    'This is a bug in React.',
+                   );
+                 }
+                 break;
+@@ -3536,7 +3546,7 @@ function completeRoot(
+         finishedWork !== null &&
+         finishedWork.alternate !== null &&
+         (finishedWork.alternate.memoizedState: RootState).isDehydrated &&
+-        (finishedWork.flags & ForceClientRender) !== NoFlags;
++          (finishedWork.flags & ForceClientRender) !== NoFlags;
+       logRecoveredRenderPhase(
+         completedRenderStartTime,
+         completedRenderEndTime,
+@@ -3575,7 +3585,7 @@ function completeRoot(
+       if (lanes === NoLanes) {
+         console.error(
+           'finishedLanes should not be empty during a commit. This is a ' +
+-            'bug in React.',
++          'bug in React.',
+         );
+       }
+     }
+@@ -3584,7 +3594,7 @@ function completeRoot(
+   if (finishedWork === root.current) {
+     throw new Error(
+       'Cannot commit the same tree as before. This error is likely caused by ' +
+-        'a bug in React. Please file an issue.',
++      'a bug in React. Please file an issue.',
+     );
+   }
+ 
+@@ -3878,7 +3888,7 @@ function commitRoot(
+       enableProfilerTimer ? suspendedViewTransition : (null: any),
+       enableProfilerTimer
+         ? // This callback fires after "pendingEffects" so we need to snapshot the arguments.
+-          finishedViewTransition.bind(null, lanes)
++        finishedViewTransition.bind(null, lanes)
+         : (null: any),
+     );
+   } else {
+@@ -4437,7 +4447,7 @@ function applyGestureOnRoot(
+     reportViewTransitionError,
+     enableProfilerTimer
+       ? // This callback fires after "pendingEffects" so we need to snapshot the arguments.
+-        finishedViewTransition.bind(null, pendingEffectsLanes)
++      finishedViewTransition.bind(null, pendingEffectsLanes)
+       : (null: any),
+   );
+ }
+@@ -4578,8 +4588,8 @@ function makeErrorInfo(componentStack: ?string) {
+       get() {
+         console.error(
+           'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+-            ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+-            ' of the Error instance itself.',
++          ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
++          ' of the Error instance itself.',
+         );
+       },
+     });
+@@ -4620,9 +4630,9 @@ export function flushPendingEffects(): boolean {
+         didWarnAboutInterruptedViewTransitions = true;
+         console.warn(
+           'A flushSync update cancelled a View Transition because it was called ' +
+-            'while the View Transition was still preparing. To preserve the synchronous ' +
+-            'semantics, React had to skip the View Transition. If you can, try to avoid ' +
+-            "flushSync() in a scenario that's likely to interfere.",
++          'while the View Transition was still preparing. To preserve the synchronous ' +
++          'semantics, React had to skip the View Transition. If you can, try to avoid ' +
++          "flushSync() in a scenario that's likely to interfere.",
+         );
+       }
+     }
+@@ -4908,10 +4918,10 @@ export function captureCommitPhaseError(
+   if (__DEV__) {
+     console.error(
+       'Internal React error: Attempted to capture a commit phase error ' +
+-        'inside a detached tree. This indicates a bug in React. Potential ' +
+-        'causes include deleting the same fiber more than once, committing an ' +
+-        'already-finished tree, or an inconsistent return pointer.\n\n' +
+-        'Error message:\n\n%s',
++      'inside a detached tree. This indicates a bug in React. Potential ' +
++      'causes include deleting the same fiber more than once, committing an ' +
++      'already-finished tree, or an inconsistent return pointer.\n\n' +
++      'Error message:\n\n%s',
+       error,
+     );
+   }
+@@ -4938,7 +4948,7 @@ export function attachPingListener(
+   let threadIDs;
+   if (pingCache === null) {
+     pingCache = root.pingCache = new PossiblyWeakMap();
+-    threadIDs = new Set<mixed>();
++    threadIDs = new Set < mixed > ();
+     pingCache.set(wakeable, threadIDs);
+   } else {
+     threadIDs = pingCache.get(wakeable);
+@@ -5128,7 +5138,7 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
+     default:
+       throw new Error(
+         'Pinged unknown suspense boundary type. ' +
+-          'This is probably a bug in React.',
++        'This is probably a bug in React.',
+       );
+   }
+ 
+@@ -5163,9 +5173,9 @@ export function throwIfInfiniteUpdateLoopDetected() {
+ 
+     throw new Error(
+       'Maximum update depth exceeded. This can happen when a component ' +
+-        'repeatedly calls setState inside componentWillUpdate or ' +
+-        'componentDidUpdate. React limits the number of nested updates to ' +
+-        'prevent infinite loops.',
++      'repeatedly calls setState inside componentWillUpdate or ' +
++      'componentDidUpdate. React limits the number of nested updates to ' +
++      'prevent infinite loops.',
+     );
+   }
+ 
+@@ -5176,9 +5186,9 @@ export function throwIfInfiniteUpdateLoopDetected() {
+ 
+       console.error(
+         'Maximum update depth exceeded. This can happen when a component ' +
+-          "calls setState inside useEffect, but useEffect either doesn't " +
+-          'have a dependency array, or one of the dependencies changes on ' +
+-          'every render.',
++        "calls setState inside useEffect, but useEffect either doesn't " +
++        'have a dependency array, or one of the dependencies changes on ' +
++        'every render.',
+       );
+     }
+   }
+@@ -5389,9 +5399,9 @@ export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
+     runWithFiberInDEV(fiber, () => {
+       console.error(
+         "Can't perform a React state update on a component that hasn't mounted yet. " +
+-          'This indicates that you have a side-effect in your render function that ' +
+-          'asynchronously tries to update the component. Move this work to ' +
+-          'useEffect instead.',
++        'This indicates that you have a side-effect in your render function that ' +
++        'asynchronously tries to update the component. Move this work to ' +
++        'useEffect instead.',
+       );
+     });
+   }
+@@ -5400,7 +5410,7 @@ export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
+ let didWarnAboutUpdateInRender = false;
+ let didWarnAboutUpdateInRenderForAnotherComponent;
+ if (__DEV__) {
+-  didWarnAboutUpdateInRenderForAnotherComponent = new Set<string>();
++  didWarnAboutUpdateInRenderForAnotherComponent = new Set < string > ();
+ }
+ 
+ function warnAboutRenderPhaseUpdatesInDEV(fiber: Fiber) {
+@@ -5421,8 +5431,8 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber: Fiber) {
+               getComponentNameFromFiber(fiber) || 'Unknown';
+             console.error(
+               'Cannot update a component (`%s`) while rendering a ' +
+-                'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
+-                'follow the stack trace as described in https://react.dev/link/setstate-in-render',
++              'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
++              'follow the stack trace as described in https://react.dev/link/setstate-in-render',
+               setStateComponentName,
+               renderingComponentName,
+               renderingComponentName,
+@@ -5434,8 +5444,8 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber: Fiber) {
+           if (!didWarnAboutUpdateInRender) {
+             console.error(
+               'Cannot update during an existing state transition (such as ' +
+-                'within `render`). Render methods should be a pure ' +
+-                'function of props and state.',
++              'within `render`). Render methods should be a pure ' +
++              'function of props and state.',
+             );
+             didWarnAboutUpdateInRender = true;
+           }
+@@ -5518,15 +5528,15 @@ function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
+       runWithFiberInDEV(fiber, () => {
+         console.error(
+           'An update to %s inside a test was not wrapped in act(...).\n\n' +
+-            'When testing, code that causes React state updates should be ' +
+-            'wrapped into act(...):\n\n' +
+-            'act(() => {\n' +
+-            '  /* fire events that update state */\n' +
+-            '});\n' +
+-            '/* assert on the output */\n\n' +
+-            "This ensures that you're testing the behavior the user would see " +
+-            'in the browser.' +
+-            ' Learn more at https://react.dev/link/wrap-tests-with-act',
++          'When testing, code that causes React state updates should be ' +
++          'wrapped into act(...):\n\n' +
++          'act(() => {\n' +
++          '  /* fire events that update state */\n' +
++          '});\n' +
++          '/* assert on the output */\n\n' +
++          "This ensures that you're testing the behavior the user would see " +
++          'in the browser.' +
++          ' Learn more at https://react.dev/link/wrap-tests-with-act',
+           getComponentNameFromFiber(fiber),
+         );
+       });
+@@ -5543,16 +5553,16 @@ function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
+     ) {
+       console.error(
+         'A suspended resource finished loading inside a test, but the event ' +
+-          'was not wrapped in act(...).\n\n' +
+-          'When testing, code that resolves suspended data should be wrapped ' +
+-          'into act(...):\n\n' +
+-          'act(() => {\n' +
+-          '  /* finish loading suspended data */\n' +
+-          '});\n' +
+-          '/* assert on the output */\n\n' +
+-          "This ensures that you're testing the behavior the user would see " +
+-          'in the browser.' +
+-          ' Learn more at https://react.dev/link/wrap-tests-with-act',
++        'was not wrapped in act(...).\n\n' +
++        'When testing, code that resolves suspended data should be wrapped ' +
++        'into act(...):\n\n' +
++        'act(() => {\n' +
++        '  /* finish loading suspended data */\n' +
++        '});\n' +
++        '/* assert on the output */\n\n' +
++        "This ensures that you're testing the behavior the user would see " +
++        'in the browser.' +
++        ' Learn more at https://react.dev/link/wrap-tests-with-act',
+       );
+     }
+   }
+diff --git a/packages/react-reconciler/src/ReactProfilerTimer.js b/packages/react-reconciler/src/ReactProfilerTimer.js
+index 42289ea30a..77121babd3 100644
+--- a/packages/react-reconciler/src/ReactProfilerTimer.js
++++ b/packages/react-reconciler/src/ReactProfilerTimer.js
+@@ -7,13 +7,13 @@
+  * @flow
+  */
+ 
+-import type {Fiber} from './ReactInternalTypes';
++import type { Fiber } from './ReactInternalTypes';
+ 
+-import type {SuspendedReason} from './ReactFiberWorkLoop';
++import type { SuspendedReason } from './ReactFiberWorkLoop';
+ 
+-import type {Lane, Lanes} from './ReactFiberLane';
++import type { Lane, Lanes } from './ReactFiberLane';
+ 
+-import type {CapturedValue} from './ReactCapturedValue';
++import type { CapturedValue } from './ReactCapturedValue';
+ 
+ import {
+   isTransitionLane,
+@@ -24,7 +24,7 @@ import {
+   NoLanes,
+ } from './ReactFiberLane';
+ 
+-import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
++import { resolveEventType, resolveEventTimeStamp } from './ReactFiberConfig';
+ 
+ import {
+   enableProfilerCommitHooks,
+@@ -34,19 +34,20 @@ import {
+ } from 'shared/ReactFeatureFlags';
+ 
+ import getComponentNameFromFiber from './getComponentNameFromFiber';
+-import {isAlreadyRendering} from './ReactFiberWorkLoop';
++import { requestCurrentTransition } from './ReactFiberTransition';
++import { isAlreadyRendering } from './ReactFiberWorkLoop';
+ 
+ // Intentionally not named imports because Rollup would use dynamic dispatch for
+ // CommonJS interop named imports.
+ import * as Scheduler from 'scheduler';
+ 
+-const {unstable_now: now} = Scheduler;
++const { unstable_now: now } = Scheduler;
+ 
+ const createTask =
+   // eslint-disable-next-line react-internal/no-production-logging
+   __DEV__ && console.createTask
+     ? // eslint-disable-next-line react-internal/no-production-logging
+-      console.createTask
++    console.createTask
+     : (name: string) => null;
+ 
+ export const REGULAR_UPDATE: UpdateType = 0;
+@@ -89,17 +90,35 @@ export let gestureEventRepeatTime: number = -1.1;
+ export let gestureSuspendedTime: number = -1.1;
+ 
+ // TODO: This should really be one per Transition lane.
+-export let transitionClampTime: number = -0;
+-export let transitionStartTime: number = -1.1; // First startTransition call before setState.
+-export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
+-export let transitionUpdateType: UpdateType = 0;
+-export let transitionUpdateTask: null | ConsoleTask = null; // First transition setState's stack trace.
+-export let transitionUpdateMethodName: null | string = null; // The name of the method that caused first transition update.
+-export let transitionUpdateComponentName: null | string = null; // The name of the component where first transition update happened.
+-export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
+-export let transitionEventType: null | string = null; // Event type of the first transition.
+-export let transitionEventRepeatTime: number = -1.1;
+-export let transitionSuspendedTime: number = -1.1;
++export const transitionTimers: Map<Lane, TransitionTimers> = new Map();
++const pendingTransitionStartTimes: WeakMap<Transition, number> = new WeakMap();
++const pendingTransitionEventInfo: WeakMap<
++  Transition,
++  {
++    time: number,
++    type: null | string,
++  },
++> = new WeakMap();
++const pendingActionUpdateTimes: WeakMap<Fiber, number> = new WeakMap();
++
++export function getTransitionTimers(lane: Lane): TransitionTimers | null {
++  const timers = transitionTimers.get(lane);
++  return timers !== undefined ? timers : null;
++}
++
++type TransitionTimers = {
++  clampTime: number,
++  startTime: number,
++  updateTime: number,
++  updateType: UpdateType,
++  updateTask: null | ConsoleTask,
++  updateMethodName: null | string,
++  updateComponentName: null | string,
++  eventTime: number,
++  eventType: null | string,
++  eventRepeatTime: number,
++  suspendedTime: number,
++};
+ 
+ export let retryClampTime: number = -0;
+ export let idleClampTime: number = -0;
+@@ -174,24 +193,65 @@ export function startUpdateTimerByLane(
+       blockingEventType = newEventType;
+     }
+   } else if (isTransitionLane(lane)) {
+-    if (transitionUpdateTime < 0) {
+-      transitionUpdateTime = now();
+-      transitionUpdateTask = createTask(method);
+-      transitionUpdateMethodName = method;
++    let timers = transitionTimers.get(lane);
++    if (timers === undefined) {
++      timers = {
++        clampTime: -0,
++        startTime: -1.1,
++        updateTime: -1.1,
++        updateType: 0,
++        updateTask: null,
++        updateMethodName: null,
++        updateComponentName: null,
++        eventTime: -1.1,
++        eventType: null,
++        eventRepeatTime: -1.1,
++        suspendedTime: -1.1,
++      };
++      transitionTimers.set(lane, timers);
++    }
++    if (timers.updateTime < 0) {
++      const pendingUpdateTime =
++        fiber !== null ? pendingActionUpdateTimes.get(fiber) : undefined;
++      timers.updateTime =
++        pendingUpdateTime !== undefined ? pendingUpdateTime : now();
++      timers.updateTask = createTask(method);
++      timers.updateMethodName = method;
+       if (__DEV__ && fiber != null) {
+-        transitionUpdateComponentName = getComponentNameFromFiber(fiber);
++        timers.updateComponentName = getComponentNameFromFiber(fiber);
+       }
+-      if (transitionStartTime < 0) {
+-        const newEventTime = resolveEventTimeStamp();
+-        const newEventType = resolveEventType();
++      if (timers.startTime < 0) {
++        const transition = requestCurrentTransition();
++        const pendingStartTime =
++          transition !== null
++            ? pendingTransitionStartTimes.get(transition)
++            : undefined;
++        if (pendingStartTime !== undefined) {
++          timers.startTime = pendingStartTime;
++        }
++
++        let newEventTime = -1.1;
++        let newEventType = null;
++        const pendingEventInfo =
++          transition !== null
++            ? pendingTransitionEventInfo.get(transition)
++            : undefined;
++        if (pendingEventInfo !== undefined) {
++          newEventTime = pendingEventInfo.time;
++          newEventType = pendingEventInfo.type;
++        } else {
++          newEventTime = resolveEventTimeStamp();
++          newEventType = resolveEventType();
++        }
++
+         if (
+-          newEventTime !== transitionEventRepeatTime ||
+-          newEventType !== transitionEventType
++          newEventTime !== timers.eventRepeatTime ||
++          newEventType !== timers.eventType
+         ) {
+-          transitionEventRepeatTime = -1.1;
++          timers.eventRepeatTime = -1.1;
+         }
+-        transitionEventTime = newEventTime;
+-        transitionEventType = newEventType;
++        timers.eventTime = newEventTime;
++        timers.eventType = newEventType;
+       }
+     }
+   }
+@@ -226,21 +286,18 @@ export function startHostActionTimer(fiber: Fiber): void {
+     blockingEventTime = newEventTime;
+     blockingEventType = newEventType;
+   }
+-  if (transitionUpdateTime < 0) {
+-    transitionUpdateTime = now();
+-    transitionUpdateTask =
+-      __DEV__ && fiber._debugTask != null ? fiber._debugTask : null;
+-    if (transitionStartTime < 0) {
++  pendingActionUpdateTimes.set(fiber, now());
++
++  const transition = requestCurrentTransition();
++  if (transition !== null) {
++    if (!pendingTransitionStartTimes.has(transition)) {
++      pendingTransitionStartTimes.set(transition, now());
+       const newEventTime = resolveEventTimeStamp();
+       const newEventType = resolveEventType();
+-      if (
+-        newEventTime !== transitionEventRepeatTime ||
+-        newEventType !== transitionEventType
+-      ) {
+-        transitionEventRepeatTime = -1.1;
+-      }
+-      transitionEventTime = newEventTime;
+-      transitionEventType = newEventType;
++      pendingTransitionEventInfo.set(transition, {
++        time: newEventTime,
++        type: newEventType,
++      });
+     }
+   }
+ }
+@@ -265,10 +322,34 @@ export function startPingTimerByLanes(lanes: Lanes): void {
+       blockingUpdateType = PINGED_UPDATE;
+     }
+   } else if (includesTransitionLane(lanes)) {
+-    if (transitionUpdateTime < 0) {
+-      transitionClampTime = transitionUpdateTime = now();
+-      transitionUpdateTask = createTask('Promise Resolved');
+-      transitionUpdateType = PINGED_UPDATE;
++    let remainingLanes = lanes;
++    while (remainingLanes !== NoLanes) {
++      const lane = getHighestPriorityLane(remainingLanes);
++      if (isTransitionLane(lane)) {
++        let timers = transitionTimers.get(lane);
++        if (timers === undefined) {
++          timers = {
++            clampTime: -0,
++            startTime: -1.1,
++            updateTime: -1.1,
++            updateType: 0,
++            updateTask: null,
++            updateMethodName: null,
++            updateComponentName: null,
++            eventTime: -1.1,
++            eventType: null,
++            eventRepeatTime: -1.1,
++            suspendedTime: -1.1,
++          };
++          transitionTimers.set(lane, timers);
++        }
++        if (timers.updateTime < 0) {
++          timers.clampTime = timers.updateTime = now();
++          timers.updateTask = createTask('Promise Resolved');
++          timers.updateType = PINGED_UPDATE;
++        }
++      }
++      remainingLanes &= ~lane;
+     }
+   }
+ }
+@@ -282,7 +363,17 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
+   } else if (includesBlockingLane(lanes)) {
+     blockingSuspendedTime = renderEndTime;
+   } else if (includesTransitionLane(lanes)) {
+-    transitionSuspendedTime = renderEndTime;
++    let remainingLanes = lanes;
++    while (remainingLanes !== NoLanes) {
++      const lane = getHighestPriorityLane(remainingLanes);
++      if (isTransitionLane(lane)) {
++        let timers = transitionTimers.get(lane);
++        if (timers !== undefined) {
++          timers.suspendedTime = renderEndTime;
++        }
++      }
++      remainingLanes &= ~lane;
++    }
+   }
+ }
+ 
+@@ -301,38 +392,38 @@ export function startAsyncTransitionTimer(): void {
+   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+     return;
+   }
+-  if (transitionStartTime < 0 && transitionUpdateTime < 0) {
+-    transitionStartTime = now();
+-    const newEventTime = resolveEventTimeStamp();
+-    const newEventType = resolveEventType();
+-    if (
+-      newEventTime !== transitionEventRepeatTime ||
+-      newEventType !== transitionEventType
+-    ) {
+-      transitionEventRepeatTime = -1.1;
++  const transition = requestCurrentTransition();
++  if (transition !== null) {
++    if (!pendingTransitionStartTimes.has(transition)) {
++      pendingTransitionStartTimes.set(transition, now());
++      const newEventTime = resolveEventTimeStamp();
++      const newEventType = resolveEventType();
++      pendingTransitionEventInfo.set(transition, {
++        time: newEventTime,
++        type: newEventType,
++      });
+     }
+-    transitionEventTime = newEventTime;
+-    transitionEventType = newEventType;
+   }
+ }
+ 
+ export function hasScheduledTransitionWork(): boolean {
+   // If we have setState on a transition or scheduled useActionState update.
+-  return transitionUpdateTime > -1;
++  for (const timers of transitionTimers.values()) {
++    if (timers.updateTime > -1) {
++      return true;
++    }
++  }
++  return false;
+ }
+ 
+ export function clearAsyncTransitionTimer(): void {
+-  transitionStartTime = -1.1;
++  // This is a global clear. We probably shouldn't use it or it should be
++  // updated to clear pending weak maps?
++  // For now, removing the global write.
+ }
+ 
+-export function clearTransitionTimers(): void {
+-  transitionStartTime = -1.1;
+-  transitionUpdateTime = -1.1;
+-  transitionUpdateType = 0;
+-  transitionSuspendedTime = -1.1;
+-  transitionEventRepeatTime = transitionEventTime;
+-  transitionEventTime = -1.1;
+-  transitionClampTime = now();
++export function clearTransitionTimer(lane: Lane): void {
++  transitionTimers.delete(lane);
+ }
+ 
+ export function hasScheduledGestureTransitionWork(): boolean {
+@@ -386,7 +477,9 @@ export function clampTransitionTimers(finalTime: number): void {
+   // If we had new updates come in while we were still rendering or committing, we don't want
+   // those update times to create overlapping tracks in the performance timeline so we clamp
+   // them to the end of the commit phase.
+-  transitionClampTime = finalTime;
++  for (const timers of transitionTimers.values()) {
++    timers.clampTime = finalTime;
++  }
+ }
+ 
+ export function clampRetryTimers(finalTime: number): void {
