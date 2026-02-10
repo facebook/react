@@ -3669,6 +3669,6 @@ describe('Store', () => {
     `);
     style = document.head.querySelector('style');
     styleID = agent.getIDForHostInstance(style).id;
-    expect(store.containsElement(styleID)).toBe(false);
+    expect(store.containsElement(styleID)).toBe(true);
   });
 });
