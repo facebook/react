@@ -3616,4 +3616,59 @@ describe('Store', () => {
               <div>
     `);
   });
+
+  // @reactVersion >= 19
+  it('cleans up host hoistables', async () => {
+    function Left() {
+      return (
+        <style href="test.css" precedence="medium">
+          {'* {color:black}'}
+        </style>
+      );
+    }
+
+    function Right() {
+      return (
+        <style href="test.css" precedence="medium">
+          {'* {color:black}'}
+        </style>
+      );
+    }
+
+    await actAsync(() => {
+      render(
+        <>
+          <Left />
+          <Right />
+        </>,
+      );
+    });
+
+    // Ensure we're still testing deduplicated hoistables.
+    expect(document.head.querySelectorAll('style')).toHaveLength(1);
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Left>
+          <Right>
+    `);
+    let style = document.head.querySelector('style');
+    let styleID = agent.getIDForHostInstance(style).id;
+    expect(store.containsElement(styleID)).toBe(true);
+
+    await actAsync(() => {
+      render(
+        <>
+          <Right />
+        </>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Right>
+    `);
+    style = document.head.querySelector('style');
+    styleID = agent.getIDForHostInstance(style).id;
+    expect(store.containsElement(styleID)).toBe(true);
+  });
 });
