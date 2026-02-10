@@ -3617,6 +3617,103 @@ describe('Store', () => {
     `);
   });
 
+  // @reactVersion >= 17.0
+  it('continues to consider Suspense boundary as blocking if some child still is suspended on removed io', async () => {
+    function Component({promise}) {
+      readValue(promise);
+      return null;
+    }
+
+    let resolve;
+    const promise = new Promise(_resolve => {
+      resolve = _resolve;
+    });
+
+    await actAsync(() => {
+      render(
+        <React.Suspense fallback={null} name="outer">
+          <Component key="one" promise={promise} />
+          <Component key="two" promise={promise} />
+          <React.Suspense fallback={null} name="inner">
+            <Component key="three" promise={promise} />
+          </React.Suspense>
+        </React.Suspense>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Suspense name="outer">
+      [suspense-root]  rects={null}
+        <Suspense name="outer" uniqueSuspenders={true} rects={null}>
+    `);
+
+    await actAsync(() => {
+      resolve('Hello, World!');
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="outer">
+            <Component key="one">
+            <Component key="two">
+          ▾ <Suspense name="inner">
+              <Component key="three">
+      [suspense-root]  rects={null}
+        <Suspense name="outer" uniqueSuspenders={true} rects={null}>
+          <Suspense name="inner" uniqueSuspenders={false} rects={null}>
+    `);
+
+    // We remove one suspender.
+    // The inner one shouldn't have unique suspenders because it's still blocked
+    // by the outer one.
+    await actAsync(() => {
+      render(
+        <React.Suspense fallback={null} name="outer">
+          <Component key="one" promise={promise} />
+          <React.Suspense fallback={null} name="inner">
+            <Component key="three" promise={promise} />
+          </React.Suspense>
+        </React.Suspense>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="outer">
+            <Component key="one">
+          ▾ <Suspense name="inner">
+              <Component key="three">
+      [suspense-root]  rects={null}
+        <Suspense name="outer" uniqueSuspenders={true} rects={null}>
+          <Suspense name="inner" uniqueSuspenders={false} rects={null}>
+    `);
+
+    // Now we remove all unique suspenders of the outer Suspense boundary.
+    // The inner one is now independently revealed from the parent and should
+    // be marked as having unique suspenders.
+    // TODO: The outer boundary no longer has unique suspenders.
+    await actAsync(() => {
+      render(
+        <React.Suspense fallback={null} name="outer">
+          <React.Suspense fallback={null} name="inner">
+            <Component key="three" promise={promise} />
+          </React.Suspense>
+        </React.Suspense>,
+      );
+    });
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Suspense name="outer">
+          ▾ <Suspense name="inner">
+              <Component key="three">
+      [suspense-root]  rects={null}
+        <Suspense name="outer" uniqueSuspenders={true} rects={null}>
+          <Suspense name="inner" uniqueSuspenders={true} rects={null}>
+    `);
+  });
+
   // @reactVersion >= 19
   it('cleans up host hoistables', async () => {
     function Left() {
