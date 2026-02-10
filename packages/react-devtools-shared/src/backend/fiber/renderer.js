@@ -7819,6 +7819,7 @@ export function attach(
         case 'state':
           switch (fiber.tag) {
             case ClassComponent:
+            case IncompleteClassComponent:
               deletePathInObject(instance.state, path);
               instance.forceUpdate();
               break;
