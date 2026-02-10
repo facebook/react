@@ -1036,10 +1036,6 @@ export function scheduleUpdateOnFiber(
     if (enableTransitionTracing) {
       const transition = ReactSharedInternals.T;
       if (transition !== null && transition.name != null) {
-        if (transition.startTime === -1) {
-          transition.startTime = now();
-        }
-
         addTransitionToLanesMap(root, transition, lane);
       }
     }
@@ -2141,56 +2137,66 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       clearBlockingTimers();
     }
     if (includesTransitionLane(lanes)) {
-      workInProgressUpdateTask = transitionUpdateTask;
-      const clampedStartTime =
-        transitionStartTime >= 0 && transitionStartTime < transitionClampTime
-          ? transitionClampTime
-          : transitionStartTime;
-      const clampedUpdateTime =
-        transitionUpdateTime >= 0 && transitionUpdateTime < transitionClampTime
-          ? transitionClampTime
-          : transitionUpdateTime;
-      const clampedEventTime =
-        transitionEventTime >= 0 && transitionEventTime < transitionClampTime
-          ? transitionClampTime
-          : transitionEventTime;
-      const clampedRenderStartTime =
-        // Clamp the suspended time to the first event/update.
-        clampedEventTime >= 0
-          ? clampedEventTime
-          : clampedUpdateTime >= 0
-            ? clampedUpdateTime
-            : renderStartTime;
-      if (transitionSuspendedTime >= 0) {
-        setCurrentTrackFromLanes(SomeTransitionLane);
-        logSuspendedWithDelayPhase(
-          transitionSuspendedTime,
-          clampedRenderStartTime,
-          lanes,
-          workInProgressUpdateTask,
-        );
-      } else if (includesTransitionLane(animatingLanes)) {
-        // If this lane is still animating, log the time from previous render finishing to now as animating.
-        setCurrentTrackFromLanes(SomeTransitionLane);
-        logAnimatingPhase(
-          transitionClampTime,
-          clampedRenderStartTime,
-          animatingTask,
-        );
+      let remainingLanes = lanes;
+      while (remainingLanes !== NoLanes) {
+        const lane = getHighestPriorityLane(remainingLanes);
+        if (isTransitionLane(lane)) {
+          const timers = getTransitionTimers(lane);
+          if (timers !== null) {
+            workInProgressUpdateTask = timers.updateTask;
+            const clampedStartTime =
+              timers.startTime >= 0 && timers.startTime < timers.clampTime
+                ? timers.clampTime
+                : timers.startTime;
+            const clampedUpdateTime =
+              timers.updateTime >= 0 && timers.updateTime < timers.clampTime
+                ? timers.clampTime
+                : timers.updateTime;
+            const clampedEventTime =
+              timers.eventTime >= 0 && timers.eventTime < timers.clampTime
+                ? timers.clampTime
+                : timers.eventTime;
+            const clampedRenderStartTime =
+              // Clamp the suspended time to the first event/update.
+              clampedEventTime >= 0
+                ? clampedEventTime
+                : clampedUpdateTime >= 0
+                  ? clampedUpdateTime
+                  : renderStartTime;
+            if (timers.suspendedTime >= 0) {
+              setCurrentTrackFromLanes(lane);
+              logSuspendedWithDelayPhase(
+                timers.suspendedTime,
+                clampedRenderStartTime,
+                lanes,
+                workInProgressUpdateTask,
+              );
+            } else if (includesTransitionLane(animatingLanes)) {
+              // If this lane is still animating, log the time from previous render finishing to now as animating.
+              setCurrentTrackFromLanes(SomeTransitionLane);
+              logAnimatingPhase(
+                timers.clampTime,
+                clampedRenderStartTime,
+                animatingTask,
+              );
+            }
+            logTransitionStart(
+              clampedStartTime,
+              clampedUpdateTime,
+              clampedEventTime,
+              timers.eventType,
+              timers.eventRepeatTime > 0,
+              timers.updateType === PINGED_UPDATE,
+              renderStartTime,
+              timers.updateTask,
+              timers.updateMethodName,
+              timers.updateComponentName,
+            );
+            clearTransitionTimer(lane);
+          }
+        }
+        remainingLanes &= ~lane;
       }
-      logTransitionStart(
-        clampedStartTime,
-        clampedUpdateTime,
-        clampedEventTime,
-        transitionEventType,
-        transitionEventRepeatTime > 0,
-        transitionUpdateType === PINGED_UPDATE,
-        renderStartTime,
-        transitionUpdateTask,
-        transitionUpdateMethodName,
-        transitionUpdateComponentName,
-      );
-      clearTransitionTimers();
     }
     if (includesRetryLane(lanes)) {
       if (includesRetryLane(animatingLanes)) {
