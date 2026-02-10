@@ -89,7 +89,7 @@ describe('Store React.optimisticKey', () => {
 
     expect(store).toMatchInlineSnapshot(`
       [root]
-          <Component key="Symbol(react.optimistic_key)">
+          <Component key="React.optimisticKey">
     `);
     expect(store.getElementAtIndex(0)).toEqual(
       expect.objectContaining({key: 'React.optimisticKey'}),
@@ -109,7 +109,7 @@ describe('Store React.optimisticKey', () => {
 
     expect(state).toMatchInlineSnapshot(`
       [root]
-           <Fragment key="Symbol(react.optimistic_key)">
+           <Fragment key="React.optimisticKey">
     `);
 
     act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'optimistic'}));
@@ -117,15 +117,15 @@ describe('Store React.optimisticKey', () => {
 
     expect(state).toMatchInlineSnapshot(`
       [root]
-           <Fragment key="Symbol(react.optimistic_key)">
+           <Fragment key="React.optimisticKey">
     `);
 
-    act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'symbol'}));
+    act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'react'}));
     act(() => renderer.update(<Contexts />));
 
     expect(state).toMatchInlineSnapshot(`
       [root]
-      →    <Fragment key="Symbol(react.optimistic_key)">
+      →    <Fragment key="React.optimisticKey">
     `);
   });
 });
