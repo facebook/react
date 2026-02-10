@@ -73,6 +73,40 @@ import {ErrorCategory} from '../CompilerError';
 
 const DEBUG = false;
 
+type OperandUsageInfo = {
+  declarationRoots: Map<DeclarationId, DeclarationId>;
+  callArgOnlyDeclarations: Set<DeclarationId>;
+  maxUseInstructionByDeclarationRoot: Map<DeclarationId, number>;
+  usedDeclarations: Set<DeclarationId>;
+  rootDefinitionInstructionByDeclarationRoot: Map<DeclarationId, number>;
+  callResultDeclarationRoots: Set<DeclarationId>;
+  hookCallInstructionIds: Array<number>;
+};
+
+const EMPTY_OPERAND_USAGE_INFO: OperandUsageInfo = {
+  declarationRoots: new Map(),
+  callArgOnlyDeclarations: new Set(),
+  maxUseInstructionByDeclarationRoot: new Map(),
+  usedDeclarations: new Set(),
+  rootDefinitionInstructionByDeclarationRoot: new Map(),
+  callResultDeclarationRoots: new Set(),
+  hookCallInstructionIds: [],
+};
+
+function hasHookCall(fn: HIRFunction): boolean {
+  for (const block of fn.body.blocks.values()) {
+    for (const instruction of block.instructions) {
+      if (
+        instruction.value.kind === 'CallExpression' &&
+        getHookKind(fn.env, instruction.value.callee.identifier) != null
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /**
  * Infers the mutation/aliasing effects for instructions and terminals and annotates
  * them on the HIR, making the effects of builtin instructions/functions as well as
@@ -186,12 +220,16 @@ export function inferMutationAliasingEffects(
   queue(fn.body.entry, initialState);
 
   const hoistedContextDeclarations = findHoistedContextDeclarations(fn);
+  const operandUsageInfo = hasHookCall(fn)
+    ? collectOperandUsageInfo(fn)
+    : EMPTY_OPERAND_USAGE_INFO;
 
   const context = new Context(
     isFunctionExpression,
     fn,
     hoistedContextDeclarations,
     findNonMutatedDestructureSpreads(fn),
+    operandUsageInfo,
   );
 
   let iterationCount = 0;
@@ -260,6 +298,258 @@ function findHoistedContextDeclarations(
   return hoisted;
 }
 
+function collectOperandUsageInfo(fn: HIRFunction): OperandUsageInfo {
+  const declarationRoots = new Map<DeclarationId, DeclarationId>();
+  const maxUseInstructionByDeclarationRoot = new Map<DeclarationId, number>();
+  const callArgOnlyByDeclaration = new Map<DeclarationId, boolean>();
+  const usedDeclarations = new Set<DeclarationId>();
+  const rootDefinitionInstructionByDeclaration = new Map<
+    DeclarationId,
+    number
+  >();
+  const rootProducedByCallByDeclaration = new Map<DeclarationId, boolean>();
+  const hookCallInstructionIds = new Array<number>();
+
+  const ensureDeclaration = (declarationId: DeclarationId): void => {
+    if (!declarationRoots.has(declarationId)) {
+      declarationRoots.set(declarationId, declarationId);
+    }
+  };
+
+  const resolveDeclarationRoot = (
+    declarationId: DeclarationId,
+  ): DeclarationId => {
+    ensureDeclaration(declarationId);
+    let root = declarationId;
+    while (true) {
+      const next = declarationRoots.get(root);
+      CompilerError.invariant(next != null, {
+        reason: 'Expected declaration root to be initialized',
+        loc: GeneratedSource,
+      });
+      if (next === root) {
+        break;
+      }
+      root = next;
+    }
+    let cursor = declarationId;
+    while (cursor !== root) {
+      const next = declarationRoots.get(cursor);
+      CompilerError.invariant(next != null, {
+        reason: 'Expected declaration root to be initialized',
+        loc: GeneratedSource,
+      });
+      declarationRoots.set(cursor, root);
+      cursor = next;
+    }
+    return root;
+  };
+
+  const setDeclarationRoot = (
+    declarationId: DeclarationId,
+    sourceDeclarationId: DeclarationId,
+  ): void => {
+    const sourceRoot = resolveDeclarationRoot(sourceDeclarationId);
+    const previousRoot = resolveDeclarationRoot(declarationId);
+    declarationRoots.set(declarationId, sourceRoot);
+    if (previousRoot !== sourceRoot) {
+      const previousMax = maxUseInstructionByDeclarationRoot.get(previousRoot);
+      if (previousMax != null) {
+        const existingMax = maxUseInstructionByDeclarationRoot.get(sourceRoot);
+        if (existingMax == null || existingMax < previousMax) {
+          maxUseInstructionByDeclarationRoot.set(sourceRoot, previousMax);
+        }
+      }
+    }
+  };
+
+  const recordUse = (
+    place: Place,
+    instructionId: number,
+    isCallArgUse: boolean,
+  ): void => {
+    const declarationId = place.identifier.declarationId;
+    usedDeclarations.add(declarationId);
+    ensureDeclaration(declarationId);
+
+    const previousIsCallArgOnly = callArgOnlyByDeclaration.get(declarationId);
+    if (previousIsCallArgOnly == null) {
+      callArgOnlyByDeclaration.set(declarationId, isCallArgUse);
+    } else if (previousIsCallArgOnly && !isCallArgUse) {
+      callArgOnlyByDeclaration.set(declarationId, false);
+    }
+
+    const root = resolveDeclarationRoot(declarationId);
+    const maxInstructionId = maxUseInstructionByDeclarationRoot.get(root);
+    if (maxInstructionId == null || maxInstructionId < instructionId) {
+      maxUseInstructionByDeclarationRoot.set(root, instructionId);
+    }
+  };
+
+  const recordCallArgUse = (
+    arg: Place | SpreadPattern,
+    instructionId: number,
+  ) => {
+    if (arg.kind === 'Spread') {
+      recordUse(arg.place, instructionId, true);
+    } else {
+      recordUse(arg, instructionId, true);
+    }
+  };
+
+  for (const block of fn.body.blocks.values()) {
+    for (const phi of block.phis) {
+      ensureDeclaration(phi.place.identifier.declarationId);
+      for (const operand of phi.operands.values()) {
+        recordUse(operand, block.terminal.id, false);
+      }
+    }
+    for (const instruction of block.instructions) {
+      const instructionDeclarationId =
+        instruction.lvalue.identifier.declarationId;
+      ensureDeclaration(instructionDeclarationId);
+      if (
+        !rootDefinitionInstructionByDeclaration.has(instructionDeclarationId)
+      ) {
+        rootDefinitionInstructionByDeclaration.set(
+          instructionDeclarationId,
+          instruction.id,
+        );
+        rootProducedByCallByDeclaration.set(
+          instructionDeclarationId,
+          instruction.value.kind === 'CallExpression' ||
+            instruction.value.kind === 'MethodCall' ||
+            instruction.value.kind === 'NewExpression',
+        );
+      }
+      switch (instruction.value.kind) {
+        case 'LoadLocal': {
+          setDeclarationRoot(
+            instruction.lvalue.identifier.declarationId,
+            instruction.value.place.identifier.declarationId,
+          );
+          break;
+        }
+        case 'StoreLocal': {
+          setDeclarationRoot(
+            instruction.lvalue.identifier.declarationId,
+            instruction.value.value.identifier.declarationId,
+          );
+          setDeclarationRoot(
+            instruction.value.lvalue.place.identifier.declarationId,
+            instruction.value.value.identifier.declarationId,
+          );
+          break;
+        }
+      }
+      switch (instruction.value.kind) {
+        case 'CallExpression':
+        case 'NewExpression': {
+          if (
+            instruction.value.kind === 'CallExpression' &&
+            getHookKind(fn.env, instruction.value.callee.identifier) != null
+          ) {
+            hookCallInstructionIds.push(instruction.id);
+          }
+          recordUse(instruction.value.callee, instruction.id, false);
+          for (const arg of instruction.value.args) {
+            recordCallArgUse(arg, instruction.id);
+          }
+          break;
+        }
+        case 'MethodCall': {
+          recordUse(instruction.value.receiver, instruction.id, false);
+          recordUse(instruction.value.property, instruction.id, false);
+          for (const arg of instruction.value.args) {
+            recordCallArgUse(arg, instruction.id);
+          }
+          break;
+        }
+        default: {
+          for (const operand of eachInstructionValueOperand(
+            instruction.value,
+          )) {
+            recordUse(operand, instruction.id, false);
+          }
+          break;
+        }
+      }
+    }
+    for (const operand of eachTerminalOperand(block.terminal)) {
+      recordUse(operand, block.terminal.id, false);
+    }
+  }
+
+  const normalizedMaxUseInstructionByDeclarationRoot = new Map<
+    DeclarationId,
+    number
+  >();
+  for (const [
+    declarationId,
+    instructionId,
+  ] of maxUseInstructionByDeclarationRoot) {
+    const root = resolveDeclarationRoot(declarationId);
+    const previousInstructionId =
+      normalizedMaxUseInstructionByDeclarationRoot.get(root);
+    if (
+      previousInstructionId == null ||
+      previousInstructionId < instructionId
+    ) {
+      normalizedMaxUseInstructionByDeclarationRoot.set(root, instructionId);
+    }
+  }
+
+  const callArgOnlyDeclarations = new Set<DeclarationId>();
+  for (const [declarationId, isCallArgOnly] of callArgOnlyByDeclaration) {
+    if (isCallArgOnly) {
+      callArgOnlyDeclarations.add(declarationId);
+    }
+  }
+
+  const rootDefinitionInstructionByDeclarationRoot = new Map<
+    DeclarationId,
+    number
+  >();
+  const callResultDeclarationRoots = new Set<DeclarationId>();
+  for (const declarationId of declarationRoots.keys()) {
+    declarationRoots.set(declarationId, resolveDeclarationRoot(declarationId));
+  }
+  for (const [
+    declarationId,
+    definitionInstructionId,
+  ] of rootDefinitionInstructionByDeclaration) {
+    const root = resolveDeclarationRoot(declarationId);
+    const previousInstructionId =
+      rootDefinitionInstructionByDeclarationRoot.get(root);
+    if (
+      previousInstructionId == null ||
+      previousInstructionId > definitionInstructionId
+    ) {
+      rootDefinitionInstructionByDeclarationRoot.set(
+        root,
+        definitionInstructionId,
+      );
+    }
+    // Intentional over-approximation: if any declaration in a root comes from a
+    // call result, treat the root as call-produced for the #35237 guard.
+    if (rootProducedByCallByDeclaration.get(declarationId) === true) {
+      callResultDeclarationRoots.add(root);
+    }
+  }
+  hookCallInstructionIds.sort((a, b) => a - b);
+
+  return {
+    declarationRoots,
+    callArgOnlyDeclarations,
+    maxUseInstructionByDeclarationRoot:
+      normalizedMaxUseInstructionByDeclarationRoot,
+    usedDeclarations,
+    rootDefinitionInstructionByDeclarationRoot,
+    callResultDeclarationRoots,
+    hookCallInstructionIds,
+  };
+}
+
 class Context {
   internedEffects: Map<string, AliasingEffect> = new Map();
   instructionSignatureCache: Map<Instruction, InstructionSignature> = new Map();
@@ -276,17 +566,21 @@ class Context {
   fn: HIRFunction;
   hoistedContextDeclarations: Map<DeclarationId, Place | null>;
   nonMutatingSpreads: Set<IdentifierId>;
+  operandUsageInfo: OperandUsageInfo;
+  currentInstructionId: number | null = null;
 
   constructor(
     isFunctionExpression: boolean,
     fn: HIRFunction,
     hoistedContextDeclarations: Map<DeclarationId, Place | null>,
     nonMutatingSpreads: Set<IdentifierId>,
+    operandUsageInfo: OperandUsageInfo,
   ) {
     this.isFuctionExpression = isFunctionExpression;
     this.fn = fn;
     this.hoistedContextDeclarations = hoistedContextDeclarations;
     this.nonMutatingSpreads = nonMutatingSpreads;
+    this.operandUsageInfo = operandUsageInfo;
   }
 
   cacheApplySignature(
@@ -310,6 +604,63 @@ class Context {
       interned = effect;
     }
     return interned;
+  }
+
+  resolveDeclarationRoot(declarationId: DeclarationId): DeclarationId {
+    return (
+      this.operandUsageInfo.declarationRoots.get(declarationId) ?? declarationId
+    );
+  }
+
+  isCallArgOnlyDeclaration(declarationId: DeclarationId): boolean {
+    return this.operandUsageInfo.callArgOnlyDeclarations.has(declarationId);
+  }
+
+  hasUsesAfterInstruction(
+    declarationId: DeclarationId,
+    instructionId: number,
+  ): boolean {
+    const root = this.resolveDeclarationRoot(declarationId);
+    const maxUse =
+      this.operandUsageInfo.maxUseInstructionByDeclarationRoot.get(root);
+    return maxUse != null && maxUse > instructionId;
+  }
+
+  isConsumedDeclaration(declarationId: DeclarationId): boolean {
+    return this.operandUsageInfo.usedDeclarations.has(declarationId);
+  }
+
+  isRootProducedByCall(declarationId: DeclarationId): boolean {
+    const root = this.resolveDeclarationRoot(declarationId);
+    return this.operandUsageInfo.callResultDeclarationRoots.has(root);
+  }
+
+  hasHookCallBetweenRootAndInstruction(
+    declarationId: DeclarationId,
+    instructionId: number,
+  ): boolean {
+    const root = this.resolveDeclarationRoot(declarationId);
+    const rootInstructionId =
+      this.operandUsageInfo.rootDefinitionInstructionByDeclarationRoot.get(
+        root,
+      );
+    if (rootInstructionId == null || rootInstructionId >= instructionId) {
+      return false;
+    }
+    const hookInstructionIds = this.operandUsageInfo.hookCallInstructionIds;
+    let low = 0;
+    let high = hookInstructionIds.length;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if (hookInstructionIds[mid] <= rootInstructionId) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    return (
+      low < hookInstructionIds.length && hookInstructionIds[low] < instructionId
+    );
   }
 }
 
@@ -648,8 +999,14 @@ function applySignature(
     console.log(printInstruction(instruction));
   }
 
-  for (const effect of signature.effects) {
-    applyEffect(context, state, effect, initialized, effects);
+  const previousInstructionId = context.currentInstructionId;
+  context.currentInstructionId = instruction.id;
+  try {
+    for (const effect of signature.effects) {
+      applyEffect(context, state, effect, initialized, effects);
+    }
+  } finally {
+    context.currentInstructionId = previousInstructionId;
   }
   if (DEBUG) {
     console.log(
@@ -1113,6 +1470,11 @@ function applyEffect(
           initialized,
           effects,
         );
+        CompilerError.invariant(context.currentInstructionId != null, {
+          reason: 'Expected current instruction id to be initialized',
+          loc: GeneratedSource,
+        });
+        const instructionId = context.currentInstructionId;
         /*
          * If no signature then by default:
          * - All operands are conditionally mutated, except some instruction
@@ -1125,7 +1487,29 @@ function applyEffect(
             continue;
           }
           const operand = arg.kind === 'Identifier' ? arg : arg.place;
-          if (operand !== effect.function || effect.mutatesFunction) {
+          // React Compiler issue #35237: avoid marking ephemeral call-result
+          // operands as transitively mutated across an interleaved hook boundary.
+          const shouldSkipDefaultMutationForArg =
+            operand !== effect.function &&
+            context.isConsumedDeclaration(
+              effect.into.identifier.declarationId,
+            ) &&
+            context.isCallArgOnlyDeclaration(
+              operand.identifier.declarationId,
+            ) &&
+            context.isRootProducedByCall(operand.identifier.declarationId) &&
+            context.hasHookCallBetweenRootAndInstruction(
+              operand.identifier.declarationId,
+              instructionId,
+            ) &&
+            !context.hasUsesAfterInstruction(
+              operand.identifier.declarationId,
+              instructionId,
+            );
+          if (
+            (operand !== effect.function || effect.mutatesFunction) &&
+            !shouldSkipDefaultMutationForArg
+          ) {
             applyEffect(
               context,
               state,
