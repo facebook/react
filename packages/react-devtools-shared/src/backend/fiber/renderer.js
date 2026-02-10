@@ -2606,7 +2606,12 @@ export function attach(
 
       // This check is a guard to handle a React element that has been modified
       // in such a way as to bypass the default stringification of the "key" property.
-      const keyString = key === null ? null : String(key);
+      const keyString =
+        key === null
+          ? null
+          : key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : String(key);
       const keyStringID = getStringID(keyString);
 
       const nameProp =
@@ -6180,7 +6185,10 @@ export function attach(
       return {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
-        key: fiber.key === REACT_OPTIMISTIC_KEY ? null : fiber.key,
+        key:
+          fiber.key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : fiber.key,
         env: null,
         stack:
           fiber._debugOwner == null || fiber._debugStack == null
@@ -6196,7 +6204,7 @@ export function attach(
         key:
           componentInfo.key == null ||
           componentInfo.key === REACT_OPTIMISTIC_KEY
-            ? null
+            ? 'React.optimisticKey'
             : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
         stack:
@@ -7123,7 +7131,12 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
-      key: key != null && key !== REACT_OPTIMISTIC_KEY ? key : null,
+      key:
+        key != null
+          ? key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : key
+          : null,
 
       type: elementType,
 
