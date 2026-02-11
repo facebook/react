@@ -213,6 +213,44 @@ describe('ReactIncrementalErrorLogging', () => {
     }).toThrow('logCapturedError error');
   });
 
+  it('reports Offscreen as the source component for errors thrown during reconciliation inside Suspense', async () => {
+    // When a child of Suspense throws during reconciliation (not render),
+    // a Throw fiber is created whose .return is the internal Offscreen fiber.
+    // getComponentNameFromFiber falls through to fiber.return for Throw fibers,
+    // which returns 'Offscreen' — an internal implementation detail that
+    // shouldn't be shown to users.
+    // React.lazy used as a direct child value (not a JSX element) so the
+    // REACT_LAZY_TYPE case in reconcileChildFibersImpl is hit and
+    // resolveLazy throws during reconciliation, creating a Throw fiber.
+    const lazyChild = React.lazy(() => {
+      throw new Error('lazy init error');
+    });
+    await fakeAct(() => {
+      ReactNoop.render(
+        <React.Suspense fallback={<div />}>{lazyChild}</React.Suspense>,
+      );
+    });
+    expect(uncaughtExceptionMock).toHaveBeenCalledTimes(1);
+    expect(uncaughtExceptionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'lazy init error',
+      }),
+    );
+    if (__DEV__) {
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('%s'),
+        expect.stringContaining(
+          'An error occurred in the <Offscreen> component.',
+        ),
+        expect.stringContaining(
+          'Consider adding an error boundary to your tree ' +
+            'to customize error handling behavior.',
+        ),
+      );
+    }
+  });
+
   it('resets instance variables before unmounting failed node', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
