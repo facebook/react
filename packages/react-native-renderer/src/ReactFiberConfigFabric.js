@@ -241,23 +241,34 @@ export function cancelViewTransitionName(
 }
 
 export function cancelRootViewTransitionName(rootContainer: Container): void {
-
+  if (__DEV__) {
+    console.warn('cancelRootViewTransitionName is not implemented');
+  }
 }
 
 export function restoreRootViewTransitionName(rootContainer: Container): void {
-
+  if (__DEV__) {
+    console.warn('restoreRootViewTransitionName is not implemented');
+  }
 }
 
 export function cloneRootViewTransitionContainer(
   rootContainer: Container,
 ): Instance {
+  if (__DEV__) {
+    console.warn('cloneRootViewTransitionContainer is not implemented');
+  }
+  // $FlowFixMe[incompatible-return] Return empty stub
+  return null;
 }
 
 export function removeRootViewTransitionClone(
   rootContainer: Container,
   clone: Instance,
 ): void {
-
+  if (__DEV__) {
+    console.warn('removeRootViewTransitionClone is not implemented');
+  }
 }
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
@@ -277,6 +288,9 @@ export function measureInstance(instance: Instance): InstanceMeasurement {
 }
 
 export function measureClonedInstance(instance: Instance): InstanceMeasurement {
+  if (__DEV__) {
+    console.warn('measureClonedInstance is not implemented');
+  }
   return {rect: {x: 0, y: 0, width: 0, height: 0}, abs: false, clip: false, view: true};
 }
 
@@ -290,6 +304,9 @@ export function hasInstanceChanged(
   oldMeasurement: InstanceMeasurement,
   newMeasurement: InstanceMeasurement,
 ): boolean {
+  if (__DEV__) {
+    console.warn('hasInstanceChanged is not implemented');
+  }
   return false;
 }
 
@@ -297,6 +314,9 @@ export function hasInstanceAffectedParent(
   oldMeasurement: InstanceMeasurement,
   newMeasurement: InstanceMeasurement,
 ): boolean {
+  if (__DEV__) {
+    console.warn('hasInstanceAffectedParent is not implemented');
+  }
   return false;
 }
 
@@ -312,10 +332,16 @@ export function startGestureTransition(
   errorCallback: (error: mixed) => void,
   finishedAnimation: () => void,
 ): RunningViewTransition {
+  if (__DEV__) {
+    console.warn('startGestureTransition is not implemented');
+  }
   return null;
 }
 
 export function stopViewTransition(transition: RunningViewTransition): void {
+  if (__DEV__) {
+    console.warn('stopViewTransition is not implemented');
+  }
 }
 
 export function addViewTransitionFinishedListener(
@@ -332,6 +358,9 @@ export function createViewTransitionInstance(
 }
 
 export function getCurrentGestureOffset(timeline: GestureTimeline): number {
+  if (__DEV__) {
+    console.warn('getCurrentGestureOffset is not implemented');
+  }
   return 0;
 }
 
