@@ -3056,6 +3056,9 @@ function indexOfEventListener(
   listener: EventListener,
   optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
 ): number {
+  if (eventListeners.length === 0) {
+    return -1;
+  }
   const normalizedOptions = normalizeListenerOptions(optionsOrUseCapture);
   for (let i = 0; i < eventListeners.length; i++) {
     const item = eventListeners[i];
