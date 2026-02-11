@@ -991,8 +991,8 @@ function releaseHostResource(
         // eslint-disable-next-line no-for-of-loops/no-for-of-loops
         for (const firstInstance of resourceInstances) {
           publicInstanceToDevToolsInstanceMap.set(
+            publicInstance,
             firstInstance,
-            nearestInstance,
           );
           break;
         }
@@ -1138,7 +1138,7 @@ export function attach(
   // if any passive effects called console.warn / console.error.
   let needsToFlushComponentLogs = false;
 
-  function bruteForceFlushErrorsAndWarnings() {
+  function bruteForceFlushErrorsAndWarnings(root: FiberInstance) {
     // Refresh error/warning count for all mounted unfiltered Fibers.
     let hasChanges = false;
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
@@ -1156,7 +1156,7 @@ export function attach(
       }
     }
     if (hasChanges) {
-      flushPendingEvents();
+      flushPendingEvents(root);
     }
   }
 
@@ -1183,7 +1183,7 @@ export function attach(
         updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
       }
     }
-    flushPendingEvents();
+    flushPendingEvents(null);
   }
 
   function clearConsoleLogsHelper(instanceID: number, type: 'error' | 'warn') {
@@ -1211,7 +1211,7 @@ export function attach(
         }
         const changed = recordConsoleLogs(devtoolsInstance, componentLogsEntry);
         if (changed) {
-          flushPendingEvents();
+          flushPendingEvents(null);
           updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
         }
       }
@@ -1533,6 +1533,8 @@ export function attach(
     if (isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
+      // Supporting change of filters while profiling would require a refactor
+      // to flush after each root instead of at the end.
       throw Error('Cannot modify filter preferences while profiling');
     }
 
@@ -1647,7 +1649,8 @@ export function attach(
       focusedActivityFilter.activityID = focusedActivityID;
     }
 
-    flushPendingEvents();
+    // We're not profiling so it's safe to flush without a specific root.
+    flushPendingEvents(null);
 
     needsToFlushComponentLogs = false;
   }
@@ -2085,6 +2088,10 @@ export function attach(
     return changedKeys;
   }
 
+  /**
+   * Returns true iff nextFiber actually performed any work and produced an update.
+   * For generic components, like Function or Class components, prevFiber is not considered.
+   */
   function didFiberRender(prevFiber: Fiber, nextFiber: Fiber): boolean {
     switch (nextFiber.tag) {
       case ClassComponent:
@@ -2203,7 +2210,12 @@ export function attach(
     }
   }
 
-  function flushPendingEvents(): void {
+  /**
+   * Allowed to flush pending events without a specific root when:
+   * - pending operations don't record tree mutations e.g. TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS
+   * - not profiling (the commit tree builder requires the root of the mutations)
+   */
+  function flushPendingEvents(root: FiberInstance | null): void {
     if (shouldBailoutWithPendingOperations()) {
       // If we aren't profiling, we can just bail out here.
       // No use sending an empty update over the bridge.
@@ -2245,11 +2257,10 @@ export function attach(
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
-    if (currentRoot === null) {
-      // TODO: This is not always safe so this field is probably not needed.
+    if (root === null) {
       operations[i++] = -1;
     } else {
-      operations[i++] = currentRoot.id;
+      operations[i++] = root.id;
     }
 
     // Now fill in the string table.
@@ -2595,7 +2606,12 @@ export function attach(
 
       // This check is a guard to handle a React element that has been modified
       // in such a way as to bypass the default stringification of the "key" property.
-      const keyString = key === null ? null : String(key);
+      const keyString =
+        key === null
+          ? null
+          : key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : String(key);
       const keyStringID = getStringID(keyString);
 
       const nameProp =
@@ -3186,15 +3202,16 @@ export function attach(
                 environmentCounts.set(env, count - 1);
               }
             }
-          }
-          if (
-            suspenseNode.hasUniqueSuspenders &&
-            !ioExistsInSuspenseAncestor(suspenseNode, ioInfo)
-          ) {
-            // This entry wasn't in any ancestor and is no longer in this suspense boundary.
-            // This means that a child might now be the unique suspender for this IO.
-            // Search the child boundaries to see if we can reveal any of them.
-            unblockSuspendedBy(suspenseNode, ioInfo);
+
+            if (
+              suspenseNode.hasUniqueSuspenders &&
+              !ioExistsInSuspenseAncestor(suspenseNode, ioInfo)
+            ) {
+              // This entry wasn't in any ancestor and is no longer in this suspense boundary.
+              // This means that a child might now be the unique suspender for this IO.
+              // Search the child boundaries to see if we can reveal any of them.
+              unblockSuspendedBy(suspenseNode, ioInfo);
+            }
           }
         }
       }
@@ -4513,7 +4530,10 @@ export function attach(
         pushOperation(convertedTreeBaseDuration);
       }
 
-      if (prevFiber == null || didFiberRender(prevFiber, fiber)) {
+      if (
+        prevFiber == null ||
+        (prevFiber !== fiber && didFiberRender(prevFiber, fiber))
+      ) {
         if (actualDuration != null) {
           // The actual duration reported by React includes time spent working on children.
           // This is useful information, but it's also useful to be able to exclude child durations.
@@ -5143,11 +5163,13 @@ export function attach(
           elementType === ElementTypeMemo ||
           elementType === ElementTypeForwardRef
         ) {
-          // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
-          traceNearestHostComponentUpdate = didFiberRender(
-            prevFiber,
-            nextFiber,
-          );
+          if (prevFiber !== nextFiber) {
+            // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
+            traceNearestHostComponentUpdate = didFiberRender(
+              prevFiber,
+              nextFiber,
+            );
+          }
         }
       }
     }
@@ -5167,18 +5189,20 @@ export function attach(
       previousSuspendedBy = fiberInstance.suspendedBy;
       // Update the Fiber so we that we always keep the current Fiber on the data.
       fiberInstance.data = nextFiber;
-      if (
-        mostRecentlyInspectedElement !== null &&
-        (mostRecentlyInspectedElement.id === fiberInstance.id ||
-          // If we're inspecting a Root, we inspect the Screen.
-          // Invalidating any Root invalidates the Screen too.
-          (mostRecentlyInspectedElement.type === ElementTypeRoot &&
-            nextFiber.tag === HostRoot)) &&
-        didFiberRender(prevFiber, nextFiber)
-      ) {
-        // If this Fiber has updated, clear cached inspected data.
-        // If it is inspected again, it may need to be re-run to obtain updated hooks values.
-        hasElementUpdatedSinceLastInspected = true;
+      if (prevFiber !== nextFiber) {
+        if (
+          mostRecentlyInspectedElement !== null &&
+          (mostRecentlyInspectedElement.id === fiberInstance.id ||
+            // If we're inspecting a Root, we inspect the Screen.
+            // Invalidating any Root invalidates the Screen too.
+            (mostRecentlyInspectedElement.type === ElementTypeRoot &&
+              nextFiber.tag === HostRoot)) &&
+          didFiberRender(prevFiber, nextFiber)
+        ) {
+          // If this Fiber has updated, clear cached inspected data.
+          // If it is inspected again, it may need to be re-run to obtain updated hooks values.
+          hasElementUpdatedSinceLastInspected = true;
+        }
       }
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = fiberInstance;
@@ -5398,6 +5422,17 @@ export function attach(
           // We're hiding the children. Remove them from the Frontend
           unmountRemainingChildren();
         }
+      } else if (prevWasHidden && !nextIsHidden) {
+        // Since we don't mount hidden children and unmount children when hiding,
+        // we need to enter the mount path when revealing.
+        const nextChildSet = nextFiber.child;
+        if (nextChildSet !== null) {
+          mountChildrenRecursively(
+            nextChildSet,
+            traceNearestHostComponentUpdate,
+          );
+          updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
+        }
       } else if (
         nextFiber.tag === SuspenseComponent &&
         OffscreenComponent !== -1 &&
@@ -5552,10 +5587,12 @@ export function attach(
           }
           recordConsoleLogs(fiberInstance, componentLogsEntry);
 
-          const isProfilingSupported =
-            nextFiber.hasOwnProperty('treeBaseDuration');
-          if (isProfilingSupported) {
-            recordProfilingDurations(fiberInstance, prevFiber);
+          if (!isInDisconnectedSubtree) {
+            const isProfilingSupported =
+              nextFiber.hasOwnProperty('treeBaseDuration');
+            if (isProfilingSupported) {
+              recordProfilingDurations(fiberInstance, prevFiber);
+            }
           }
         }
       }
@@ -5746,10 +5783,10 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
+        flushPendingEvents(currentRoot);
+
         currentRoot = (null: any);
       });
-
-      flushPendingEvents();
 
       needsToFlushComponentLogs = false;
     }
@@ -5760,7 +5797,7 @@ export function attach(
     // safe to stop calling it from Fiber.
   }
 
-  function handlePostCommitFiberRoot(root: any) {
+  function handlePostCommitFiberRoot(root: FiberRoot) {
     if (isProfiling && rootSupportsProfiling(root)) {
       if (currentCommitProfilingMetadata !== null) {
         const {effectDuration, passiveEffectDuration} =
@@ -5774,12 +5811,18 @@ export function attach(
     }
 
     if (needsToFlushComponentLogs) {
+      const rootInstance = rootToFiberInstanceMap.get(root);
+      if (rootInstance === undefined) {
+        throw new Error(
+          'Should have a root instance for a committed root. This is a bug in React DevTools.',
+        );
+      }
       // We received new logs after commit. I.e. in a passive effect. We need to
       // traverse the tree to find the affected ones. If we just moved the whole
       // tree traversal from handleCommitFiberRoot to handlePostCommitFiberRoot
       // this wouldn't be needed. For now we just brute force check all instances.
       // This is not that common of a case.
-      bruteForceFlushErrorsAndWarnings();
+      bruteForceFlushErrorsAndWarnings(rootInstance);
     }
   }
 
@@ -5876,7 +5919,7 @@ export function attach(
     }
 
     // We're done here.
-    flushPendingEvents();
+    flushPendingEvents(currentRoot);
 
     needsToFlushComponentLogs = false;
 
@@ -6142,7 +6185,10 @@ export function attach(
       return {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
-        key: fiber.key === REACT_OPTIMISTIC_KEY ? null : fiber.key,
+        key:
+          fiber.key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : fiber.key,
         env: null,
         stack:
           fiber._debugOwner == null || fiber._debugStack == null
@@ -6158,7 +6204,7 @@ export function attach(
         key:
           componentInfo.key == null ||
           componentInfo.key === REACT_OPTIMISTIC_KEY
-            ? null
+            ? 'React.optimisticKey'
             : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
         stack:
@@ -6822,6 +6868,8 @@ export function attach(
 
     // TODO Show custom UI for Cache like we do for Suspense
     // For now, just hide state data entirely since it's not meant to be inspected.
+    // Make sure delete, rename, and override of state handles all tags for which
+    // we show state.
     const showState =
       tag === ClassComponent || tag === IncompleteClassComponent;
 
@@ -7083,7 +7131,12 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
-      key: key != null && key !== REACT_OPTIMISTIC_KEY ? key : null,
+      key:
+        key != null
+          ? key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : key
+          : null,
 
       type: elementType,
 
@@ -7778,8 +7831,13 @@ export function attach(
           }
           break;
         case 'state':
-          deletePathInObject(instance.state, path);
-          instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+            case IncompleteClassComponent:
+              deletePathInObject(instance.state, path);
+              instance.forceUpdate();
+              break;
+          }
           break;
       }
     }
@@ -7839,22 +7897,30 @@ export function attach(
           }
           break;
         case 'props':
-          if (instance === null) {
-            if (typeof overridePropsRenamePath === 'function') {
-              overridePropsRenamePath(fiber, oldPath, newPath);
-            }
-          } else {
-            fiber.pendingProps = copyWithRename(
-              instance.props,
-              oldPath,
-              newPath,
-            );
-            instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+              fiber.pendingProps = copyWithRename(
+                instance.props,
+                oldPath,
+                newPath,
+              );
+              instance.forceUpdate();
+              break;
+            default:
+              if (typeof overridePropsRenamePath === 'function') {
+                overridePropsRenamePath(fiber, oldPath, newPath);
+              }
+              break;
           }
           break;
         case 'state':
-          renamePathInObject(instance.state, oldPath, newPath);
-          instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+            case IncompleteClassComponent:
+              renamePathInObject(instance.state, oldPath, newPath);
+              instance.forceUpdate();
+              break;
+          }
           break;
       }
     }
@@ -7924,6 +7990,7 @@ export function attach(
         case 'state':
           switch (fiber.tag) {
             case ClassComponent:
+            case IncompleteClassComponent:
               setInObject(instance.state, path, value);
               instance.forceUpdate();
               break;

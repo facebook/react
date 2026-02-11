@@ -71,6 +71,7 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
     undefined,
     undefined,
     undefined,
+    false,
     options !== undefined ? options.findSourceMapURL : undefined,
     true,
     undefined,

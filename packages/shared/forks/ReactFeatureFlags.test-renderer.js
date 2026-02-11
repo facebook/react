@@ -21,7 +21,6 @@ export const enableUpdaterTracking: boolean = false;
 export const enableLegacyCache: boolean = __EXPERIMENTAL__;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableTaint: boolean = true;
-export const enableHalt: boolean = true;
 export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const enableScopeAPI: boolean = false;
@@ -56,11 +55,12 @@ export const disableClientCache: boolean = true;
 export const enableInfiniteRenderLoopDetection: boolean = false;
 
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
+export const enableEffectEventMutationPhase: boolean = false;
 
 export const enableYieldingBeforePassive: boolean = true;
 
 export const enableThrottledScheduling: boolean = false;
-export const enableViewTransition: boolean = false;
+export const enableViewTransition: boolean = true;
 export const enableGestureTransition: boolean = false;
 export const enableScrollEndPolyfill: boolean = true;
 export const enableSuspenseyImages: boolean = false;
@@ -92,6 +92,7 @@ export const enableReactTestRendererWarning: boolean = true;
 export const enableObjectFiber: boolean = false;
 
 export const enableOptimisticKey: boolean = false;
+export const enableParallelTransitions: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

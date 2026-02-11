@@ -16,7 +16,6 @@ import {
   PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
@@ -1642,45 +1641,6 @@ export default class Store extends EventEmitter<{
             }
           }
 
-          break;
-        }
-        case TREE_OPERATION_REMOVE_ROOT: {
-          i += 1;
-
-          const id = operations[1];
-
-          if (__DEBUG__) {
-            debug(`Remove root ${id}`);
-          }
-
-          const recursivelyDeleteElements = (elementID: number) => {
-            const element = this._idToElement.get(elementID);
-            this._idToElement.delete(elementID);
-            if (element) {
-              // Mostly for Flow's sake
-              for (let index = 0; index < element.children.length; index++) {
-                recursivelyDeleteElements(element.children[index]);
-              }
-            }
-          };
-
-          const root = this._idToElement.get(id);
-          if (root === undefined) {
-            this._throwAndEmitError(
-              Error(
-                `Cannot remove root "${id}": no matching node was found in the Store.`,
-              ),
-            );
-
-            break;
-          }
-
-          recursivelyDeleteElements(id);
-
-          this._rootIDToCapabilities.delete(id);
-          this._rootIDToRendererID.delete(id);
-          this._roots = this._roots.filter(rootID => rootID !== id);
-          this._weightAcrossRoots -= root.weight;
           break;
         }
         case TREE_OPERATION_REORDER_CHILDREN: {

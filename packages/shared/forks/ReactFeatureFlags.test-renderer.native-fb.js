@@ -25,7 +25,6 @@ export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
 export const enableMoveBefore = false;
 export const enableFizzExternalRuntime = true;
-export const enableHalt = true;
 export const enableInfiniteRenderLoopDetection = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = true;
 export const enableLegacyCache = false;
@@ -43,6 +42,7 @@ export const enableComponentPerformanceTrack = false;
 export const enablePerformanceIssueReporting = false;
 export const enableScopeAPI = false;
 export const enableEagerAlternateStateNodeCleanup = true;
+export const enableEffectEventMutationPhase = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseCallback = false;
 export const enableTaint = true;
@@ -69,6 +69,7 @@ export const enableFragmentRefsInstanceHandles = false;
 export const enableFragmentRefsTextNodes = false;
 export const ownerStackLimit = 1e4;
 export const enableOptimisticKey = false;
+export const enableParallelTransitions = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -420,9 +420,13 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-        // pre-warming
-        'Suspend! [Loading...]',
-        'Suspend! [Final]',
+        ...(gate('enableParallelTransitions')
+          ? []
+          : [
+              // Existing bug: Unnecessary pre-warm.
+              'Suspend! [Loading...]',
+              'Suspend! [Final]',
+            ]),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -436,6 +440,171 @@ describe('ReactDeferredValue', () => {
       await act(() => resolveText('Loading...'));
       assertLog([]);
       expect(root).toMatchRenderedOutput('Final');
+    },
+  );
+
+  it(
+    'if a suspended render spawns a deferred task that suspends on a sibling, ' +
+      'we can finish the original task if the original sibling loads first',
+    async () => {
+      function App() {
+        const deferredText = useDeferredValue(`Final`, `Loading...`);
+        return (
+          <>
+            <AsyncText text={deferredText} />{' '}
+            <AsyncText text={`Sibling: ${deferredText}`} />
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => root.render(<App text="a" />));
+      assertLog([
+        'Suspend! [Loading...]',
+        // The initial value suspended, so we attempt the final value, which
+        // also suspends.
+        'Suspend! [Final]',
+        'Suspend! [Sibling: Final]',
+        ...(gate('enableParallelTransitions')
+          ? [
+              // With parallel transitions,
+              // we do not continue pre-warming.
+            ]
+          : [
+              'Suspend! [Loading...]',
+              'Suspend! [Sibling: Loading...]',
+              'Suspend! [Final]',
+              'Suspend! [Sibling: Final]',
+            ]),
+      ]);
+      expect(root).toMatchRenderedOutput(null);
+
+      // The final value loads, so we can skip the initial value entirely.
+      await act(() => {
+        resolveText('Final');
+      });
+      assertLog(['Final', 'Suspend! [Sibling: Final]']);
+      expect(root).toMatchRenderedOutput(null);
+
+      // The initial value resolves first, so we render that.
+      await act(() => resolveText('Loading...'));
+      assertLog([
+        'Loading...',
+        'Suspend! [Sibling: Loading...]',
+        'Final',
+        'Suspend! [Sibling: Final]',
+        ...(gate('enableParallelTransitions')
+          ? [
+              // With parallel transitions,
+              // we do not continue pre-warming.
+            ]
+          : [
+              'Loading...',
+              'Suspend! [Sibling: Loading...]',
+              'Final',
+              'Suspend! [Sibling: Final]',
+            ]),
+      ]);
+      expect(root).toMatchRenderedOutput(null);
+
+      // The Final sibling loads, we're unblocked and commit.
+      await act(() => {
+        resolveText('Sibling: Final');
+      });
+      assertLog(['Final', 'Sibling: Final']);
+      expect(root).toMatchRenderedOutput('Final Sibling: Final');
+
+      // We already rendered the Final value, so nothing happens
+      await act(() => {
+        resolveText('Sibling: Loading...');
+      });
+      assertLog([]);
+      expect(root).toMatchRenderedOutput('Final Sibling: Final');
+    },
+  );
+
+  it(
+    'if a suspended render spawns a deferred task that suspends on a sibling,' +
+      ' we can switch to the deferred task without finishing the original one',
+    async () => {
+      function App() {
+        const deferredText = useDeferredValue(`Final`, `Loading...`);
+        return (
+          <>
+            <AsyncText text={deferredText} />{' '}
+            <AsyncText text={`Sibling: ${deferredText}`} />
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => root.render(<App text="a" />));
+      assertLog([
+        'Suspend! [Loading...]',
+        // The initial value suspended, so we attempt the final value, which
+        // also suspends.
+        'Suspend! [Final]',
+        'Suspend! [Sibling: Final]',
+        ...(gate('enableParallelTransitions')
+          ? [
+              // With parallel transitions,
+              // we do not continue pre-warming.
+            ]
+          : [
+              'Suspend! [Loading...]',
+              'Suspend! [Sibling: Loading...]',
+              'Suspend! [Final]',
+              'Suspend! [Sibling: Final]',
+            ]),
+      ]);
+      expect(root).toMatchRenderedOutput(null);
+
+      // The final value loads, so we can skip the initial value entirely.
+      await act(() => {
+        resolveText('Final');
+      });
+      assertLog(['Final', 'Suspend! [Sibling: Final]']);
+      expect(root).toMatchRenderedOutput(null);
+
+      // The initial value resolves first, so we render that.
+      await act(() => resolveText('Loading...'));
+      assertLog([
+        'Loading...',
+        'Suspend! [Sibling: Loading...]',
+        'Final',
+        'Suspend! [Sibling: Final]',
+        ...(gate('enableParallelTransitions')
+          ? [
+              // With parallel transitions,
+              // we do not continue pre-warming.
+            ]
+          : [
+              'Loading...',
+              'Suspend! [Sibling: Loading...]',
+              'Final',
+              'Suspend! [Sibling: Final]',
+            ]),
+      ]);
+      expect(root).toMatchRenderedOutput(null);
+
+      // The initial sibling loads, we're unblocked and commit.
+      await act(() => {
+        resolveText('Sibling: Loading...');
+      });
+      assertLog([
+        'Loading...',
+        'Sibling: Loading...',
+        'Final',
+        'Suspend! [Sibling: Final]',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading... Sibling: Loading...');
+
+      // Now unblock the final sibling.
+      await act(() => {
+        resolveText('Sibling: Final');
+      });
+      assertLog(['Final', 'Sibling: Final']);
+      expect(root).toMatchRenderedOutput('Final Sibling: Final');
     },
   );
 
@@ -462,9 +631,12 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-        // pre-warming
-        'Suspend! [Loading...]',
-        'Suspend! [Final]',
+        ...(gate('enableParallelTransitions')
+          ? [
+              // With parallel transitions,
+              // we do not continue pre-warming.
+            ]
+          : ['Suspend! [Loading...]', 'Suspend! [Final]']),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -539,9 +711,12 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-        // pre-warming
-        'Suspend! [Loading...]',
-        'Suspend! [Final]',
+        ...(gate('enableParallelTransitions')
+          ? [
+              // With parallel transitions,
+              // we do not continue pre-warming.
+            ]
+          : ['Suspend! [Loading...]', 'Suspend! [Final]']),
       ]);
       expect(root).toMatchRenderedOutput(null);
 

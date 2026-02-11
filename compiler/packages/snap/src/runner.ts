@@ -12,7 +12,7 @@ import * as readline from 'readline';
 import ts from 'typescript';
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
-import {PROJECT_ROOT} from './constants';
+import {BABEL_PLUGIN_ROOT, PROJECT_ROOT} from './constants';
 import {TestFilter, getFixtures} from './fixture-utils';
 import {TestResult, TestResults, report, update} from './reporter';
 import {
@@ -23,28 +23,311 @@ import {
 } from './runner-watch';
 import * as runnerWorker from './runner-worker';
 import {execSync} from 'child_process';
-import {runMinimize} from './minimize';
+import fs from 'fs';
+import path from 'path';
+import {minimize} from './minimize';
+import {parseInput, parseLanguage, parseSourceType} from './compiler';
+import {
+  PARSE_CONFIG_PRAGMA_IMPORT,
+  PRINT_HIR_IMPORT,
+  PRINT_REACTIVE_IR_IMPORT,
+  BABEL_PLUGIN_SRC,
+} from './constants';
+import chalk from 'chalk';
 
 const WORKER_PATH = require.resolve('./runner-worker.js');
 const NUM_WORKERS = cpus().length - 1;
 
 readline.emitKeypressEvents(process.stdin);
 
-type RunnerOptions = {
+type TestOptions = {
   sync: boolean;
   workerThreads: boolean;
   watch: boolean;
   update: boolean;
   pattern?: string;
   debug: boolean;
+  verbose: boolean;
 };
 
-async function runTestCommand(opts: RunnerOptions): Promise<void> {
-  await main(opts);
+type MinimizeOptions = {
+  path: string;
+  update: boolean;
+};
+
+type CompileOptions = {
+  path: string;
+  debug: boolean;
+};
+
+async function runTestCommand(opts: TestOptions): Promise<void> {
+  const worker: Worker & typeof runnerWorker = new Worker(WORKER_PATH, {
+    enableWorkerThreads: opts.workerThreads,
+    numWorkers: NUM_WORKERS,
+  }) as any;
+  worker.getStderr().pipe(process.stderr);
+  worker.getStdout().pipe(process.stdout);
+
+  // Check if watch mode should be enabled
+  const shouldWatch = opts.watch;
+
+  if (shouldWatch) {
+    makeWatchRunner(
+      state => onChange(worker, state, opts.sync, opts.verbose),
+      opts.debug,
+      opts.pattern,
+    );
+    if (opts.pattern) {
+      /**
+       * Warm up wormers when in watch mode. Loading the Forget babel plugin
+       * and all of its transitive dependencies takes 1-3s (per worker) on a M1.
+       * As jest-worker dispatches tasks using a round-robin strategy, we can
+       * avoid an additional 1-3s wait on the first num_workers runs by warming
+       * up workers eagerly.
+       */
+      for (let i = 0; i < NUM_WORKERS - 1; i++) {
+        worker.transformFixture(
+          {
+            fixturePath: 'tmp',
+            snapshotPath: './tmp.expect.md',
+            inputPath: './tmp.js',
+            input: `
+            function Foo(props) {
+              return identity(props);
+            }
+            `,
+            snapshot: null,
+          },
+          0,
+          false,
+          false,
+        );
+      }
+    }
+  } else {
+    // Non-watch mode. For simplicity we re-use the same watchSrc() function.
+    // After the first build completes run tests and exit
+    const tsWatch: ts.WatchOfConfigFile<ts.SemanticDiagnosticsBuilderProgram> =
+      watchSrc(
+        () => {},
+        async (isTypecheckSuccess: boolean) => {
+          let isSuccess = false;
+          if (!isTypecheckSuccess) {
+            console.error(
+              'Found typescript errors in Forget source code, skipping test fixtures.',
+            );
+          } else {
+            try {
+              execSync('yarn build', {cwd: BABEL_PLUGIN_ROOT});
+              console.log('Built compiler successfully with tsup');
+
+              // Determine which filter to use
+              let testFilter: TestFilter | null = null;
+              if (opts.pattern) {
+                testFilter = {
+                  paths: [opts.pattern],
+                };
+              }
+
+              const results = await runFixtures(
+                worker,
+                testFilter,
+                0,
+                opts.debug,
+                false, // no requireSingleFixture in non-watch mode
+                opts.sync,
+              );
+              if (opts.update) {
+                update(results);
+                isSuccess = true;
+              } else {
+                isSuccess = report(results, opts.verbose);
+              }
+            } catch (e) {
+              console.warn('Failed to build compiler with tsup:', e);
+            }
+          }
+          tsWatch?.close();
+          await worker.end();
+          process.exit(isSuccess ? 0 : 1);
+        },
+      );
+  }
 }
 
-async function runMinimizeCommand(path: string): Promise<void> {
-  await runMinimize({path});
+async function runMinimizeCommand(opts: MinimizeOptions): Promise<void> {
+  // Resolve the input path
+  const inputPath = path.isAbsolute(opts.path)
+    ? opts.path
+    : path.resolve(PROJECT_ROOT, opts.path);
+
+  // Check if file exists
+  if (!fs.existsSync(inputPath)) {
+    console.error(`Error: File not found: ${inputPath}`);
+    process.exit(1);
+  }
+
+  // Read the input file
+  const input = fs.readFileSync(inputPath, 'utf-8');
+  const filename = path.basename(inputPath);
+  const firstLine = input.substring(0, input.indexOf('\n'));
+  const language = parseLanguage(firstLine);
+  const sourceType = parseSourceType(firstLine);
+
+  console.log(`Minimizing: ${inputPath}`);
+
+  const originalLines = input.split('\n').length;
+
+  // Run the minimization
+  const result = minimize(input, filename, language, sourceType);
+
+  if (result.kind === 'success') {
+    console.log('Could not minimize: the input compiles successfully.');
+    process.exit(0);
+  }
+
+  if (result.kind === 'minimal') {
+    console.log(
+      'Could not minimize: the input fails but is already minimal and cannot be reduced further.',
+    );
+    process.exit(0);
+  }
+
+  // Output the minimized code
+  console.log('--- Minimized Code ---');
+  console.log(result.source);
+
+  const minimizedLines = result.source.split('\n').length;
+  console.log(
+    `\nReduced from ${originalLines} lines to ${minimizedLines} lines`,
+  );
+
+  if (opts.update) {
+    fs.writeFileSync(inputPath, result.source, 'utf-8');
+    console.log(`\nUpdated ${inputPath} with minimized code.`);
+  }
+}
+
+async function runCompileCommand(opts: CompileOptions): Promise<void> {
+  // Resolve the input path
+  const inputPath = path.isAbsolute(opts.path)
+    ? opts.path
+    : path.resolve(PROJECT_ROOT, opts.path);
+
+  // Check if file exists
+  if (!fs.existsSync(inputPath)) {
+    console.error(`Error: File not found: ${inputPath}`);
+    process.exit(1);
+  }
+
+  // Read the input file
+  const input = fs.readFileSync(inputPath, 'utf-8');
+  const filename = path.basename(inputPath);
+  const firstLine = input.substring(0, input.indexOf('\n'));
+  const language = parseLanguage(firstLine);
+  const sourceType = parseSourceType(firstLine);
+
+  // Import the compiler
+  const importedCompilerPlugin = require(BABEL_PLUGIN_SRC) as Record<
+    string,
+    any
+  >;
+  const BabelPluginReactCompiler = importedCompilerPlugin['default'];
+  const parseConfigPragmaForTests =
+    importedCompilerPlugin[PARSE_CONFIG_PRAGMA_IMPORT];
+  const printFunctionWithOutlined = importedCompilerPlugin[PRINT_HIR_IMPORT];
+  const printReactiveFunctionWithOutlined =
+    importedCompilerPlugin[PRINT_REACTIVE_IR_IMPORT];
+  const EffectEnum = importedCompilerPlugin['Effect'];
+  const ValueKindEnum = importedCompilerPlugin['ValueKind'];
+  const ValueReasonEnum = importedCompilerPlugin['ValueReason'];
+
+  // Setup debug logger
+  let lastLogged: string | null = null;
+  const debugIRLogger = opts.debug
+    ? (value: any) => {
+        let printed: string;
+        switch (value.kind) {
+          case 'hir':
+            printed = printFunctionWithOutlined(value.value);
+            break;
+          case 'reactive':
+            printed = printReactiveFunctionWithOutlined(value.value);
+            break;
+          case 'debug':
+            printed = value.value;
+            break;
+          case 'ast':
+            printed = '(ast)';
+            break;
+          default:
+            printed = String(value);
+        }
+
+        if (printed !== lastLogged) {
+          lastLogged = printed;
+          console.log(`${chalk.green(value.name)}:\n${printed}\n`);
+        } else {
+          console.log(`${chalk.blue(value.name)}: (no change)\n`);
+        }
+      }
+    : () => {};
+
+  // Parse the input
+  let ast;
+  try {
+    ast = parseInput(input, filename, language, sourceType);
+  } catch (e: any) {
+    console.error(`Parse error: ${e.message}`);
+    process.exit(1);
+  }
+
+  // Build plugin options
+  const config = parseConfigPragmaForTests(firstLine, {compilationMode: 'all'});
+  const options = {
+    ...config,
+    environment: {
+      ...config.environment,
+    },
+    logger: {
+      logEvent: () => {},
+      debugLogIRs: debugIRLogger,
+    },
+    enableReanimatedCheck: false,
+  };
+
+  // Compile
+  const {transformFromAstSync} = require('@babel/core');
+  try {
+    const result = transformFromAstSync(ast, input, {
+      filename: '/' + filename,
+      highlightCode: false,
+      retainLines: true,
+      compact: true,
+      plugins: [[BabelPluginReactCompiler, options]],
+      sourceType: 'module',
+      ast: false,
+      cloneInputAst: true,
+      configFile: false,
+      babelrc: false,
+    });
+
+    if (result?.code != null) {
+      // Format the output
+      const prettier = require('prettier');
+      const formatted = await prettier.format(result.code, {
+        semi: true,
+        parser: language === 'typescript' ? 'babel-ts' : 'flow',
+      });
+      console.log(formatted);
+    } else {
+      console.error('Error: No code emitted from compiler');
+      process.exit(1);
+    }
+  } catch (e: any) {
+    console.error(e.message);
+    process.exit(1);
+  }
 }
 
 yargs(hideBin(process.argv))
@@ -85,24 +368,55 @@ yargs(hideBin(process.argv))
         .boolean('debug')
         .alias('d', 'debug')
         .describe('debug', 'Enable debug logging to print HIR for each pass')
-        .default('debug', false);
+        .default('debug', false)
+        .boolean('verbose')
+        .alias('v', 'verbose')
+        .describe('verbose', 'Print individual test results')
+        .default('verbose', false);
     },
     async argv => {
-      await runTestCommand(argv as RunnerOptions);
+      await runTestCommand(argv as TestOptions);
     },
   )
   .command(
-    'minimize',
+    'minimize <path>',
     'Minimize a test case to reproduce a compiler error',
     yargs => {
       return yargs
-        .string('path')
-        .alias('p', 'path')
-        .describe('path', 'Path to the file to minimize')
-        .demandOption('path');
+        .positional('path', {
+          describe: 'Path to the file to minimize',
+          type: 'string',
+          demandOption: true,
+        })
+        .boolean('update')
+        .alias('u', 'update')
+        .describe(
+          'update',
+          'Update the input file in-place with the minimized version',
+        )
+        .default('update', false);
     },
     async argv => {
-      await runMinimizeCommand(argv.path as string);
+      await runMinimizeCommand(argv as unknown as MinimizeOptions);
+    },
+  )
+  .command(
+    'compile <path>',
+    'Compile a file with the React Compiler',
+    yargs => {
+      return yargs
+        .positional('path', {
+          describe: 'Path to the file to compile',
+          type: 'string',
+          demandOption: true,
+        })
+        .boolean('debug')
+        .alias('d', 'debug')
+        .describe('debug', 'Enable debug logging to print HIR for each pass')
+        .default('debug', false);
+    },
+    async argv => {
+      await runCompileCommand(argv as unknown as CompileOptions);
     },
   )
   .help('help')
@@ -162,6 +476,7 @@ async function onChange(
   worker: Worker & typeof runnerWorker,
   state: RunnerState,
   sync: boolean,
+  verbose: boolean,
 ) {
   const {compilerVersion, isCompilerBuildValid, mode, filter, debug} = state;
   if (isCompilerBuildValid) {
@@ -194,7 +509,7 @@ async function onChange(
       update(results);
       state.lastUpdate = end;
     } else {
-      report(results);
+      report(results, verbose);
     }
     console.log(`Completed in ${Math.floor(end - start)} ms`);
   } else {
@@ -215,102 +530,4 @@ async function onChange(
       'q     - quit\n' +
       '[any] - rerun tests\n',
   );
-}
-
-/**
- * Runs the compiler in watch or single-execution mode
- */
-export async function main(opts: RunnerOptions): Promise<void> {
-  const worker: Worker & typeof runnerWorker = new Worker(WORKER_PATH, {
-    enableWorkerThreads: opts.workerThreads,
-    numWorkers: NUM_WORKERS,
-  }) as any;
-  worker.getStderr().pipe(process.stderr);
-  worker.getStdout().pipe(process.stdout);
-
-  // Check if watch mode should be enabled
-  const shouldWatch = opts.watch;
-
-  if (shouldWatch) {
-    makeWatchRunner(
-      state => onChange(worker, state, opts.sync),
-      opts.debug,
-      opts.pattern,
-    );
-    if (opts.pattern) {
-      /**
-       * Warm up wormers when in watch mode. Loading the Forget babel plugin
-       * and all of its transitive dependencies takes 1-3s (per worker) on a M1.
-       * As jest-worker dispatches tasks using a round-robin strategy, we can
-       * avoid an additional 1-3s wait on the first num_workers runs by warming
-       * up workers eagerly.
-       */
-      for (let i = 0; i < NUM_WORKERS - 1; i++) {
-        worker.transformFixture(
-          {
-            fixturePath: 'tmp',
-            snapshotPath: './tmp.expect.md',
-            inputPath: './tmp.js',
-            input: `
-            function Foo(props) {
-              return identity(props);
-            }
-            `,
-            snapshot: null,
-          },
-          0,
-          false,
-          false,
-        );
-      }
-    }
-  } else {
-    // Non-watch mode. For simplicity we re-use the same watchSrc() function.
-    // After the first build completes run tests and exit
-    const tsWatch: ts.WatchOfConfigFile<ts.SemanticDiagnosticsBuilderProgram> =
-      watchSrc(
-        () => {},
-        async (isTypecheckSuccess: boolean) => {
-          let isSuccess = false;
-          if (!isTypecheckSuccess) {
-            console.error(
-              'Found typescript errors in Forget source code, skipping test fixtures.',
-            );
-          } else {
-            try {
-              execSync('yarn build', {cwd: PROJECT_ROOT});
-              console.log('Built compiler successfully with tsup');
-
-              // Determine which filter to use
-              let testFilter: TestFilter | null = null;
-              if (opts.pattern) {
-                testFilter = {
-                  paths: [opts.pattern],
-                };
-              }
-
-              const results = await runFixtures(
-                worker,
-                testFilter,
-                0,
-                opts.debug,
-                false, // no requireSingleFixture in non-watch mode
-                opts.sync,
-              );
-              if (opts.update) {
-                update(results);
-                isSuccess = true;
-              } else {
-                isSuccess = report(results);
-              }
-            } catch (e) {
-              console.warn('Failed to build compiler with tsup:', e);
-            }
-          }
-          tsWatch?.close();
-          await worker.end();
-          process.exit(isSuccess ? 0 : 1);
-        },
-      );
-  }
 }

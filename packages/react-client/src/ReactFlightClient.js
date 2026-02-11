@@ -359,6 +359,7 @@ type Response = {
   _stringDecoder: StringDecoder,
   _closed: boolean,
   _closedReason: mixed,
+  _allowPartialStream: boolean,
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _timeOrigin: number, // Profiling-only
   _pendingInitialRender: null | TimeoutID, // Profiling-only,
@@ -552,7 +553,7 @@ function moveDebugInfoFromChunkToInnerValue<T>(
         resolvedValue._debugInfo,
         debugInfo,
       );
-    } else {
+    } else if (!Object.isFrozen(resolvedValue)) {
       Object.defineProperty((resolvedValue: any), '_debugInfo', {
         configurable: false,
         enumerable: false,
@@ -560,6 +561,11 @@ function moveDebugInfoFromChunkToInnerValue<T>(
         value: debugInfo,
       });
     }
+    // TODO: If the resolved value is a frozen element (e.g. a client-created
+    // element from a temporary reference, or a JSX element exported as a client
+    // reference), server debug info is currently dropped because the element
+    // can't be mutated. We should probably clone the element so each rendering
+    // context gets its own mutable copy with the correct debug info.
   }
 }
 
@@ -1451,9 +1457,19 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   let chunk = chunks.get(id);
   if (!chunk) {
     if (response._closed) {
-      // We have already errored the response and we're not going to get
-      // anything more streaming in so this will immediately error.
-      chunk = createErrorChunk(response, response._closedReason);
+      if (response._allowPartialStream) {
+        // For partial streams, chunks accessed after close should be HALTED
+        // (never resolve).
+        chunk = createPendingChunk(response);
+        const haltedChunk: HaltedChunk<any> = (chunk: any);
+        haltedChunk.status = HALTED;
+        haltedChunk.value = null;
+        haltedChunk.reason = null;
+      } else {
+        // We have already errored the response and we're not going to get
+        // anything more streaming in so this will immediately error.
+        chunk = createErrorChunk(response, response._closedReason);
+      }
     } else {
       chunk = createPendingChunk(response);
     }
@@ -2650,6 +2666,7 @@ function ResponseInstance(
   encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
+  allowPartialStream: boolean,
   findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
@@ -2669,6 +2686,7 @@ function ResponseInstance(
   this._fromJSON = (null: any);
   this._closed = false;
   this._closedReason = null;
+  this._allowPartialStream = allowPartialStream;
   this._tempRefs = temporaryReferences;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     this._timeOrigin = 0;
@@ -2762,6 +2780,7 @@ export function createResponse(
   encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
+  allowPartialStream: boolean,
   findSourceMapURL: void | FindSourceMapURLCallback, // DEV-only
   replayConsole: boolean, // DEV-only
   environmentName: void | string, // DEV-only
@@ -2787,6 +2806,7 @@ export function createResponse(
       encodeFormAction,
       nonce,
       temporaryReferences,
+      allowPartialStream,
       findSourceMapURL,
       replayConsole,
       environmentName,
@@ -2900,7 +2920,9 @@ function addAsyncInfo(chunk: SomeChunk<any>, asyncInfo: ReactAsyncInfo): void {
     if (isArray(value._debugInfo)) {
       // $FlowFixMe[method-unbinding]
       value._debugInfo.push(asyncInfo);
-    } else {
+    } else if (!Object.isFrozen(value)) {
+      // TODO: Debug info is dropped for frozen elements. See the TODO in
+      // moveDebugInfoFromChunkToInnerValue.
       Object.defineProperty((value: any), '_debugInfo', {
         configurable: false,
         enumerable: false,
@@ -5236,11 +5258,45 @@ function createFromJSONCallback(response: Response) {
 }
 
 export function close(weakResponse: WeakResponse): void {
-  // In case there are any remaining unresolved chunks, they won't
-  // be resolved now. So we need to issue an error to those.
-  // Ideally we should be able to early bail out if we kept a
-  // ref count of pending chunks.
-  reportGlobalError(weakResponse, new Error('Connection closed.'));
+  // In case there are any remaining unresolved chunks, they won't be resolved
+  // now. So we either error or halt them depending on whether partial streams
+  // are allowed.
+  // TODO: Ideally we should be able to bail out early if we kept a ref count of
+  // pending chunks.
+  if (hasGCedResponse(weakResponse)) {
+    return;
+  }
+  const response = unwrapWeakResponse(weakResponse);
+  if (response._allowPartialStream) {
+    // For partial streams, we halt pending chunks instead of erroring them.
+    response._closed = true;
+    response._chunks.forEach(chunk => {
+      if (chunk.status === PENDING) {
+        // Clear listeners to release closures and transition to HALTED.
+        // Future .then() calls on HALTED chunks are no-ops.
+        releasePendingChunk(response, chunk);
+        const haltedChunk: HaltedChunk<any> = (chunk: any);
+        haltedChunk.status = HALTED;
+        haltedChunk.value = null;
+        haltedChunk.reason = null;
+      } else if (chunk.status === INITIALIZED && chunk.reason !== null) {
+        // Stream chunk - close gracefully instead of erroring.
+        chunk.reason.close('"$undefined"');
+      }
+    });
+    if (__DEV__) {
+      const debugChannel = response._debugChannel;
+      if (debugChannel !== undefined) {
+        closeDebugChannel(debugChannel);
+        response._debugChannel = undefined;
+        if (debugChannelRegistry !== null) {
+          debugChannelRegistry.unregister(response);
+        }
+      }
+    }
+  } else {
+    reportGlobalError(weakResponse, new Error('Connection closed.'));
+  }
 }
 
 function getCurrentOwnerInDEV(): null | ReactComponentInfo {
