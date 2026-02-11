@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b47e93ce064d55648dca81d863edb99f>>
+ * @generated SignedSource<<9065f8e965e2a450ccec55b70d028024>>
  */
 
 "use strict";
@@ -8163,11 +8163,13 @@ function commitHostMount(finishedWork) {
 function commitFragmentInstanceDeletionEffects(fiber) {
   for (var parent = fiber.return; null !== parent; ) {
     if (isFragmentInstanceParent(parent)) {
-      var fragmentInstance = parent.stateNode,
-        publicInstance = getPublicInstance(fiber.stateNode);
-      enableFragmentRefsInstanceHandles &&
-        null != publicInstance.unstable_reactFragments &&
-        publicInstance.unstable_reactFragments.delete(fragmentInstance);
+      var fragmentInstance = parent.stateNode;
+      var childInstance = fiber.stateNode;
+      (enableFragmentRefsTextNodes && null == childInstance.canonical) ||
+        ((childInstance = getPublicInstance(childInstance)),
+        enableFragmentRefsInstanceHandles &&
+          null != childInstance.unstable_reactFragments &&
+          childInstance.unstable_reactFragments.delete(fragmentInstance));
     }
     if (isHostParent(parent)) break;
     parent = parent.return;
@@ -8186,7 +8188,8 @@ function commitImmutablePlacementNodeToFragmentInstances(
   if (enableFragmentRefs)
     if (5 === finishedWork.tag) {
       if (
-        5 === finishedWork.tag &&
+        (5 === finishedWork.tag ||
+          (enableFragmentRefsTextNodes && 6 === finishedWork.tag)) &&
         null === finishedWork.alternate &&
         null !== parentFragmentInstances
       )
@@ -8475,7 +8478,8 @@ function commitDeletionEffectsOnFiber(
       offscreenSubtreeWasHidden ||
         safelyDetachRef(deletedFiber, nearestMountedAncestor),
         enableFragmentRefs &&
-          5 === deletedFiber.tag &&
+          (5 === deletedFiber.tag ||
+            (enableFragmentRefsTextNodes && 6 === deletedFiber.tag)) &&
           commitFragmentInstanceDeletionEffects(deletedFiber);
     case 6:
       recursivelyTraverseDeletionEffects(
@@ -8875,7 +8879,8 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
       case 5:
         safelyDetachRef(finishedWork, finishedWork.return);
         enableFragmentRefs &&
-          5 === finishedWork.tag &&
+          (5 === finishedWork.tag ||
+            (enableFragmentRefsTextNodes && 6 === finishedWork.tag)) &&
           commitFragmentInstanceDeletionEffects(finishedWork);
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
         break;
@@ -11319,16 +11324,18 @@ function addFragmentHandleToInstance(instance, fragmentInstance) {
     instance.unstable_reactFragments.add(fragmentInstance));
 }
 function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
-  var publicInstance = getPublicInstance(childInstance);
-  if (null !== fragmentInstance._observers) {
-    if (null == publicInstance)
-      throw Error("Expected to find a host node. This is a bug in React.");
-    fragmentInstance._observers.forEach(function (observer) {
-      observer.observe(publicInstance);
-    });
+  if (!enableFragmentRefsTextNodes || null != childInstance.canonical) {
+    var publicInstance = getPublicInstance(childInstance);
+    if (null !== fragmentInstance._observers) {
+      if (null == publicInstance)
+        throw Error("Expected to find a host node. This is a bug in React.");
+      fragmentInstance._observers.forEach(function (observer) {
+        observer.observe(publicInstance);
+      });
+    }
+    enableFragmentRefsInstanceHandles &&
+      addFragmentHandleToInstance(publicInstance, fragmentInstance);
   }
-  enableFragmentRefsInstanceHandles &&
-    addFragmentHandleToInstance(publicInstance, fragmentInstance);
 }
 var HostTransitionContext = {
     $$typeof: REACT_CONTEXT_TYPE,
@@ -11413,26 +11420,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1311 = {
+  internals$jscomp$inline_1312 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-24f215ce-20260209",
+    version: "19.3.0-native-fb-cd515d7e-20260211",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-24f215ce-20260209"
+    reconcilerVersion: "19.3.0-native-fb-cd515d7e-20260211"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1311.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1312.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1636 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1637 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1636.isDisabled &&
-    hook$jscomp$inline_1636.supportsFiber
+    !hook$jscomp$inline_1637.isDisabled &&
+    hook$jscomp$inline_1637.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1636.inject(
-        internals$jscomp$inline_1311
+      (rendererID = hook$jscomp$inline_1637.inject(
+        internals$jscomp$inline_1312
       )),
-        (injectedHook = hook$jscomp$inline_1636);
+        (injectedHook = hook$jscomp$inline_1637);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
