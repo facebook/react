@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9ea300da0f2710feeae1f9768f6aafe3>>
+ * @generated SignedSource<<b86a4ee9182439a4465a116cb6974ec5>>
  */
 
 /*
@@ -381,7 +381,8 @@ function getComponentNameFromFiber(fiber) {
     case 8:
       return type === REACT_STRICT_MODE_TYPE ? "StrictMode" : "Mode";
     case 22:
-      return "Offscreen";
+      if (null !== fiber.return) return getComponentNameFromFiber(fiber.return);
+      break;
     case 12:
       return "Profiler";
     case 21:
@@ -17772,14 +17773,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2047 = React.version;
 if (
-  "19.3.0-native-fb-cd515d7e-20260211" !==
+  "19.3.0-native-fb-892c6860-20260211" !==
   isomorphicReactPackageVersion$jscomp$inline_2047
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2047,
-      "19.3.0-native-fb-cd515d7e-20260211"
+      "19.3.0-native-fb-892c6860-20260211"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -17801,10 +17802,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2627 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-cd515d7e-20260211",
+  version: "19.3.0-native-fb-892c6860-20260211",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-cd515d7e-20260211"
+  reconcilerVersion: "19.3.0-native-fb-892c6860-20260211"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2628 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17911,4 +17912,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.3.0-native-fb-cd515d7e-20260211";
+exports.version = "19.3.0-native-fb-892c6860-20260211";

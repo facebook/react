@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9065f8e965e2a450ccec55b70d028024>>
+ * @generated SignedSource<<336329fa276281fa941f413d6226eb6e>>
  */
 
 "use strict";
@@ -345,7 +345,8 @@ function getComponentNameFromFiber(fiber) {
     case 8:
       return type === REACT_STRICT_MODE_TYPE ? "StrictMode" : "Mode";
     case 22:
-      return "Offscreen";
+      if (null !== fiber.return) return getComponentNameFromFiber(fiber.return);
+      break;
     case 12:
       return "Profiler";
     case 21:
@@ -11422,10 +11423,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1312 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-cd515d7e-20260211",
+    version: "19.3.0-native-fb-892c6860-20260211",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-cd515d7e-20260211"
+    reconcilerVersion: "19.3.0-native-fb-892c6860-20260211"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1312.rendererConfig = extraDevToolsConfig);

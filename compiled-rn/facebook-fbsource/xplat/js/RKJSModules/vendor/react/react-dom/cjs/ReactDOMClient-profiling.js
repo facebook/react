@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bf02dd0ef8befaecfc359d4b1bf267b1>>
+ * @generated SignedSource<<8cfb1c41df3f99248cd025da4e76ca69>>
  */
 
 /*
@@ -381,7 +381,8 @@ function getComponentNameFromFiber(fiber) {
     case 8:
       return type === REACT_STRICT_MODE_TYPE ? "StrictMode" : "Mode";
     case 22:
-      return "Offscreen";
+      if (null !== fiber.return) return getComponentNameFromFiber(fiber.return);
+      break;
     case 12:
       return "Profiler";
     case 21:
@@ -19761,14 +19762,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2395 = React.version;
 if (
-  "19.3.0-native-fb-cd515d7e-20260211" !==
+  "19.3.0-native-fb-892c6860-20260211" !==
   isomorphicReactPackageVersion$jscomp$inline_2395
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2395,
-      "19.3.0-native-fb-cd515d7e-20260211"
+      "19.3.0-native-fb-892c6860-20260211"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19790,10 +19791,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2402 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-cd515d7e-20260211",
+  version: "19.3.0-native-fb-892c6860-20260211",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-cd515d7e-20260211",
+  reconcilerVersion: "19.3.0-native-fb-892c6860-20260211",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$337 = 0;
@@ -19916,4 +19917,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.3.0-native-fb-cd515d7e-20260211";
+exports.version = "19.3.0-native-fb-892c6860-20260211";

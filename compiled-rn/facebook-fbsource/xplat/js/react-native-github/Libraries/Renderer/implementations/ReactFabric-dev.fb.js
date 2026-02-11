@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ad6974dd7851c450eceaabede3a137ee>>
+ * @generated SignedSource<<3f4997991aeb5349800d53ad150cf5a1>>
  */
 
 "use strict";
@@ -592,7 +592,9 @@ __DEV__ &&
         case 8:
           return type === REACT_STRICT_MODE_TYPE ? "StrictMode" : "Mode";
         case 22:
-          return "Offscreen";
+          if (null !== fiber.return)
+            return getComponentNameFromFiber(fiber.return);
+          break;
         case 12:
           return "Profiler";
         case 21:
@@ -20145,10 +20147,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-cd515d7e-20260211",
+        version: "19.3.0-native-fb-892c6860-20260211",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-cd515d7e-20260211"
+        reconcilerVersion: "19.3.0-native-fb-892c6860-20260211"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
