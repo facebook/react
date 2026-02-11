@@ -3709,7 +3709,10 @@ function commitPassiveMountOnFiber(
       }
 
       if (isViewTransitionEligible) {
-        if ((supportsMutation || supportsPersistence) && rootViewTransitionNameCanceled) {
+        if (
+          (supportsMutation || supportsPersistence) &&
+          rootViewTransitionNameCanceled
+        ) {
           restoreRootViewTransitionName(finishedRoot.containerInfo);
         }
       }
