@@ -61,6 +61,8 @@ const {
   measureInstance: fabricMeasureInstance,
   applyViewTransitionName: fabricApplyViewTransitionName,
   startViewTransition: fabricStartViewTransition,
+  restoreViewTransitionName: fabricRestoreViewTransitionName,
+  cancelViewTransitionName: fabricCancelViewTransitionName,
 } = nativeFabricUIManager;
 
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
@@ -75,12 +77,6 @@ import {
 import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
-
-export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 
 export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
 export const rendererPackageName = 'react-native-renderer';
@@ -167,8 +163,14 @@ if (registerEventHandler) {
   registerEventHandler(dispatchEvent);
 }
 
+export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
+
 // -------------------
-//     Mutation
+//    ViewTransition
 // -------------------
 
 function shim(...args: any): empty {
@@ -192,9 +194,7 @@ export function commitMount(
   type: string,
   newProps: Props,
   internalInstanceHandle: Object,
-): void {
-  console.log('[shim] commitMount');
-}
+): void {}
 
 export const commitUpdate = shim;
 export const insertBefore = shim;
@@ -228,41 +228,41 @@ export function restoreViewTransitionName(
   instance: Instance,
   props: Props,
 ): void {
-  console.log('[shim] restoreViewTransitionName ', instance.canonical.nativeTag);
+  fabricRestoreViewTransitionName(instance.node);
 }
 
+// Cancel the old and new snapshots of viewTransitionName
 export function cancelViewTransitionName(
   instance: Instance,
   oldName: string,
   props: Props,
 ): void {
-  console.log('[shim] cancelViewTransitionName ', oldName, instance.canonical.nativeTag);
+  fabricCancelViewTransitionName(instance.node, oldName);
 }
 
 export function cancelRootViewTransitionName(rootContainer: Container): void {
-  console.log('[shim] cancelRootViewTransitionName');
+
 }
 
 export function restoreRootViewTransitionName(rootContainer: Container): void {
-  console.log('[shim] restoreRootViewTransitionName');
+
 }
 
 export function cloneRootViewTransitionContainer(
   rootContainer: Container,
 ): Instance {
-  console.log('[shim] cloneRootViewTransitionContainer');
 }
 
 export function removeRootViewTransitionClone(
   rootContainer: Container,
   clone: Instance,
 ): void {
-  console.log('[shim] removeRootViewTransitionClone');
+
 }
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
-  console.log('[shim] measureInstance ', instance.canonical.nativeTag);
-  var measurement = fabricMeasureInstance(instance.node);
+
+  const measurement = fabricMeasureInstance(instance.node);
   return {
     rect: {
       x: measurement.x,
@@ -277,14 +277,12 @@ export function measureInstance(instance: Instance): InstanceMeasurement {
 }
 
 export function measureClonedInstance(instance: Instance): InstanceMeasurement {
-  console.log('[shim] measureClonedInstance ', instance.canonical.nativeTag);
   return {rect: {x: 0, y: 0, width: 0, height: 0}, abs: false, clip: false, view: true};
 }
 
 export function wasInstanceInViewport(
   measurement: InstanceMeasurement,
 ): boolean {
-  console.log('[shim] wasInstanceInViewport');
   return measurement.view;
 }
 
@@ -292,7 +290,6 @@ export function hasInstanceChanged(
   oldMeasurement: InstanceMeasurement,
   newMeasurement: InstanceMeasurement,
 ): boolean {
-  console.log('[shim] hasInstanceChanged');
   return false;
 }
 
@@ -300,7 +297,6 @@ export function hasInstanceAffectedParent(
   oldMeasurement: InstanceMeasurement,
   newMeasurement: InstanceMeasurement,
 ): boolean {
-  console.log('[shim] hasInstanceAffectedParent');
   return false;
 }
 
@@ -316,31 +312,26 @@ export function startGestureTransition(
   errorCallback: (error: mixed) => void,
   finishedAnimation: () => void,
 ): RunningViewTransition {
-  console.log('[shim] startGestureTransition');
   return null;
 }
 
 export function stopViewTransition(transition: RunningViewTransition): void {
-  console.log('[shim] stopViewTransition');
 }
 
 export function addViewTransitionFinishedListener(
   transition: RunningViewTransition,
   callback: () => void,
 ): void {
-  console.log('[shim] addViewTransitionFinishedListener');
   callback();
 }
 
 export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
-  console.log('[shim] createViewTransitionInstance', name);
   return {name};
 }
 
 export function getCurrentGestureOffset(timeline: GestureTimeline): number {
-  console.log('[shim] getCurrentGestureOffset');
   return 0;
 }
 
@@ -350,7 +341,6 @@ export function applyViewTransitionName(
   className: ?string,
 ): void {
   // add view-transition-name to things that might animate for browser
-  console.log('[shim] applyViewTransitionName', name, className, instance.canonical.nativeTag);
   fabricApplyViewTransitionName(instance.node, name, className);
 }
 
@@ -367,33 +357,37 @@ export function startViewTransition(
   blockedCallback: (name: string) => void,
   finishedAnimation: () => void,
 ): RunningViewTransition {
-  console.log(
-    "[shim] startViewTransition transitionTypes",
-    JSON.stringify(null != transitionTypes ? transitionTypes : [])
-  );
 
-  fabricStartViewTransition(
+  const startedTransition = fabricStartViewTransition(
     // mutation
     ()=>{
-      console.log("[shim] startViewTransition mutations start");
-      // completeRoot should run here
-    mutationCallback();
+    mutationCallback(); // completeRoot should run here
     layoutCallback();
     afterMutationCallback();
-    console.log("[shim] startViewTransition mutations finish");
   },
   // onReady
     ()=>{
-      console.log("[shim] startViewTransition pseudo element captured");
-  console.log("[shim] startViewTransition transition ready");
     spawnedWorkCallback();
   },
   // onComplete
   ()=>{
-    console.log("[shim] startViewTransition finishedAnimation");
-    console.log("[shim] startViewTransition transition ends");
     passiveCallback();
   });
+
+  if (!startedTransition) {
+    if (__DEV__) {
+      console.warn(
+        "startViewTransition didn't kick off transition in Fabric, the ViewTransition ReactNativeFeatureFlag might not be enabled.",
+      );
+    }
+     // Flush remaining work synchronously.
+    mutationCallback();
+    layoutCallback();
+    // Skip afterMutationCallback(). We don't need it since we're not animating.
+    spawnedWorkCallback();
+    // Skip passiveCallback(). Spawned work will schedule a task.
+    return null;
+  }
 
   return null;
 }
@@ -791,7 +785,6 @@ export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  console.log('completeRoot');
   completeRoot(container.containerTag, newChildren);
 }
 
