@@ -2504,6 +2504,171 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('');
   });
 
+  it('renders Suspense fallback for unresolved promises with unstable_allowPartialStream', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <Suspense fallback="loading...">
+          <Greeting />
+        </Suspense>
+      );
+    }
+
+    async function Greeting() {
+      const greeting = await greetingPromise;
+      return greeting;
+    }
+
+    const controller = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+    resolveGreeting('Hello, World!');
+    const {prelude} = await serverAct(() => pendingResult);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+      {
+        unstable_allowPartialStream: true,
+      },
+    );
+    const container = document.createElement('div');
+    const errors = [];
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError(err) {
+        errors.push(err);
+      },
+    });
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    // With `unstable_allowPartialStream`, we should see the fallback instead of a
+    // 'Connection closed.' error
+    expect(errors).toEqual([]);
+    expect(container.innerHTML).toBe('loading...');
+  });
+
+  it('renders client components that are blocked on chunks with unstable_allowPartialStream', async () => {
+    let resolveClientComponentChunk;
+
+    const ClientComponent = clientExports(
+      function ClientComponent({children}) {
+        return <div>{children}</div>;
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function App() {
+      return <ClientComponent>Hello, World!</ClientComponent>;
+    }
+
+    const controller = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+    const {prelude} = await serverAct(() => pendingResult);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+      {
+        unstable_allowPartialStream: true,
+      },
+    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<div>Hello, World!</div>');
+  });
+
+  it('closes inner ReadableStreams gracefully with unstable_allowPartialStream', async () => {
+    let streamController;
+    const innerStream = new ReadableStream({
+      start(c) {
+        streamController = c;
+      },
+    });
+
+    const abortController = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      streamController.enqueue({hello: 'world'});
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          {stream: innerStream},
+          webpackMap,
+          {
+            signal: abortController.signal,
+          },
+        ),
+      };
+    });
+
+    abortController.abort();
+    const {prelude} = await serverAct(() => pendingResult);
+
+    const response = await ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+      {
+        unstable_allowPartialStream: true,
+      },
+    );
+
+    // The inner stream should be readable up to what was enqueued.
+    const reader = response.stream.getReader();
+    const {value, done} = await reader.read();
+    expect(value).toEqual({hello: 'world'});
+    expect(done).toBe(false);
+
+    // The next read should signal the stream is done (closed, not errored).
+    const final = await reader.read();
+    expect(final.done).toBe(true);
+  });
+
   it('can dedupe references inside promises', async () => {
     const foo = {};
     const bar = {
@@ -2902,9 +3067,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2824,
+                2989,
                 19,
-                2808,
+                2973,
                 89,
               ],
             ],
