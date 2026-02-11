@@ -301,5 +301,23 @@ declare const nativeFabricUIManager: {
   unstable_ContinuousEventPriority: number,
   unstable_IdleEventPriority: number,
   unstable_getCurrentEventPriority: () => number,
+  measureInstance: (node: Object) => {
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  },
+  applyViewTransitionName: (
+    node: Object,
+    name: string,
+    className: ?string,
+  ) => void,
+  startViewTransition: (
+    mutationCallback: () => void,
+    onReady: () => void,
+    onComplete: () => void,
+  ) => boolean,
+  restoreViewTransitionName: (node: Object) => void,
+  cancelViewTransitionName: (node: Object, oldName: string) => void,
   ...
 };
