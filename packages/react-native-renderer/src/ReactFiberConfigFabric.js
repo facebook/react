@@ -275,18 +275,17 @@ export function removeRootViewTransitionClone(
 }
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
-
   const measurement = fabricMeasureInstance(instance.node);
   return {
     rect: {
       x: measurement.x,
       y: measurement.y,
       width: measurement.width,
-      height: measurement.height
+      height: measurement.height,
     },
     abs: false,
     clip: false,
-    view: true
+    view: true,
   };
 }
 
@@ -294,7 +293,12 @@ export function measureClonedInstance(instance: Instance): InstanceMeasurement {
   if (__DEV__) {
     console.warn('measureClonedInstance is not implemented');
   }
-  return {rect: {x: 0, y: 0, width: 0, height: 0}, abs: false, clip: false, view: true};
+  return {
+    rect: {x: 0, y: 0, width: 0, height: 0},
+    abs: false,
+    clip: false,
+    view: true,
+  };
 }
 
 export function wasInstanceInViewport(
@@ -389,22 +393,22 @@ export function startViewTransition(
   blockedCallback: (name: string) => void,
   finishedAnimation: () => void,
 ): RunningViewTransition {
-
   const startedTransition = fabricStartViewTransition(
     // mutation
-    ()=>{
-    mutationCallback(); // completeRoot should run here
-    layoutCallback();
-    afterMutationCallback();
-  },
-  // onReady
-    ()=>{
-    spawnedWorkCallback();
-  },
-  // onComplete
-  ()=>{
-    passiveCallback();
-  });
+    () => {
+      mutationCallback(); // completeRoot should run here
+      layoutCallback();
+      afterMutationCallback();
+    },
+    // onReady
+    () => {
+      spawnedWorkCallback();
+    },
+    // onComplete
+    () => {
+      passiveCallback();
+    },
+  );
 
   if (!startedTransition) {
     if (__DEV__) {
@@ -412,7 +416,7 @@ export function startViewTransition(
         "startViewTransition didn't kick off transition in Fabric, the ViewTransition ReactNativeFeatureFlag might not be enabled.",
       );
     }
-     // Flush remaining work synchronously.
+    // Flush remaining work synchronously.
     mutationCallback();
     layoutCallback();
     // Skip afterMutationCallback(). We don't need it since we're not animating.
