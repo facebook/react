@@ -12452,7 +12452,7 @@ __DEV__ &&
     }
     function commitNewChildToFragmentInstances(fiber, parentFragmentInstances) {
       if (
-        5 === fiber.tag &&
+        (5 === fiber.tag || (enableFragmentRefsTextNodes && 6 === fiber.tag)) &&
         null === fiber.alternate &&
         null !== parentFragmentInstances
       )
@@ -13977,7 +13977,8 @@ __DEV__ &&
           offscreenSubtreeWasHidden ||
             safelyDetachRef(deletedFiber, nearestMountedAncestor),
             enableFragmentRefs &&
-              5 === deletedFiber.tag &&
+              (5 === deletedFiber.tag ||
+                (enableFragmentRefsTextNodes && 6 === deletedFiber.tag)) &&
               commitFragmentInstanceDeletionEffects(deletedFiber);
         case 6:
           if (supportsMutation) {
@@ -14989,7 +14990,8 @@ __DEV__ &&
         case 5:
           safelyDetachRef(finishedWork, finishedWork.return);
           enableFragmentRefs &&
-            5 === finishedWork.tag &&
+            (5 === finishedWork.tag ||
+              (enableFragmentRefsTextNodes && 6 === finishedWork.tag)) &&
             commitFragmentInstanceDeletionEffects(finishedWork);
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
@@ -20056,6 +20058,8 @@ __DEV__ &&
         dynamicFeatureFlags.transitionLaneExpirationMs,
       enableViewTransition = dynamicFeatureFlags.enableViewTransition,
       enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
+      enableFragmentRefsTextNodes =
+        dynamicFeatureFlags.enableFragmentRefsTextNodes,
       enableParallelTransitions = dynamicFeatureFlags.enableParallelTransitions,
       enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -22825,7 +22829,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-24f215ce-20260209"
+        reconcilerVersion: "19.3.0-www-modern-cd515d7e-20260211"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
