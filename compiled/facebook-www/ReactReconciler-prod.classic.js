@@ -252,7 +252,9 @@ module.exports = function ($$$config) {
       case 8:
         return type === REACT_STRICT_MODE_TYPE ? "StrictMode" : "Mode";
       case 22:
-        return "Offscreen";
+        if (null !== fiber.return)
+          return getComponentNameFromFiber(fiber.return);
+        break;
       case 12:
         return "Profiler";
       case 21:
@@ -14429,7 +14431,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-cd515d7e-20260211"
+      reconcilerVersion: "19.3.0-www-classic-892c6860-20260211"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

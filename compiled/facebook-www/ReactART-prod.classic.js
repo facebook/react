@@ -224,7 +224,8 @@ function getComponentNameFromFiber(fiber) {
     case 8:
       return type === REACT_STRICT_MODE_TYPE ? "StrictMode" : "Mode";
     case 22:
-      return "Offscreen";
+      if (null !== fiber.return) return getComponentNameFromFiber(fiber.return);
+      break;
     case 12:
       return "Profiler";
     case 21:
@@ -11580,10 +11581,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1628 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-cd515d7e-20260211",
+  version: "19.3.0-www-classic-892c6860-20260211",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-cd515d7e-20260211"
+  reconcilerVersion: "19.3.0-www-classic-892c6860-20260211"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1629 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11609,4 +11610,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-classic-cd515d7e-20260211";
+exports.version = "19.3.0-www-classic-892c6860-20260211";

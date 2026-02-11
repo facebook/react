@@ -266,7 +266,9 @@ __DEV__ &&
         case 8:
           return type === REACT_STRICT_MODE_TYPE ? "StrictMode" : "Mode";
         case 22:
-          return "Offscreen";
+          if (null !== fiber.return)
+            return getComponentNameFromFiber(fiber.return);
+          break;
         case 12:
           return "Profiler";
         case 21:
@@ -20381,10 +20383,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-classic-cd515d7e-20260211",
+        version: "19.3.0-www-classic-892c6860-20260211",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-cd515d7e-20260211"
+        reconcilerVersion: "19.3.0-www-classic-892c6860-20260211"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20419,7 +20421,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.3.0-www-classic-cd515d7e-20260211";
+    exports.version = "19.3.0-www-classic-892c6860-20260211";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
