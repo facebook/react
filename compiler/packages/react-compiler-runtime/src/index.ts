@@ -189,8 +189,168 @@ export function $reset($: MemoCache) {
   }
 }
 
-export function $makeReadOnly() {
-  throw new Error('TODO: implement $makeReadOnly in react-compiler-runtime');
+/**
+ * Dev-mode mutation debugging for React Compiler ("enableEmitFreeze").
+ *
+ * When the compiler memoizes a value, it wraps the cached store with:
+ *   $[i] = __DEV__ ? makeReadOnly(val, fnName) : val;
+ *
+ * This implementation uses property-descriptor proxying to detect and log
+ * mutations to values that the compiler treats as immutable.
+ */
+
+type SavedEntry = {
+  savedVal: unknown;
+  getter: () => unknown;
+};
+type SavedROObject = Map<string, SavedEntry>;
+type SavedROObjects = WeakMap<Object, SavedROObject>;
+
+function isWriteable(desc: PropertyDescriptor) {
+  return (desc.writable || desc.set) && desc.configurable;
+}
+
+function getOrInsertDefault(
+  m: SavedROObjects,
+  k: object,
+): {existed: boolean; entry: SavedROObject} {
+  const entry = m.get(k);
+  if (entry) {
+    return {existed: true, entry};
+  } else {
+    const newEntry: SavedROObject = new Map();
+    m.set(k, newEntry);
+    return {existed: false, entry: newEntry};
+  }
+}
+
+const savedROObjects: SavedROObjects = new WeakMap();
+
+function makeReadOnlyImpl<T>(o: T, source: string): T {
+  if (typeof o !== 'object' || o == null) {
+    return o;
+  }
+
+  const {existed, entry: cache} = getOrInsertDefault(savedROObjects, o);
+
+  for (const [k, entry] of cache.entries()) {
+    const currentProp = Object.getOwnPropertyDescriptor(o, k);
+    if (currentProp && !isWriteable(currentProp)) {
+      continue;
+    }
+    const currentPropGetter = currentProp?.get;
+    const cachedGetter = entry.getter;
+
+    if (currentPropGetter !== cachedGetter) {
+      cache.delete(k);
+      if (!currentProp) {
+        // eslint-disable-next-line no-console
+        console.error(
+          `[React Compiler] Property "${k}" was deleted from frozen object (source: ${source})`,
+        );
+      } else {
+        // eslint-disable-next-line no-console
+        console.error(
+          `[React Compiler] Property "${k}" was changed on frozen object (source: ${source})`,
+        );
+        addROProperty(o, source, k, currentProp, cache);
+      }
+    }
+  }
+  const keys = Object.getOwnPropertyNames(o);
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    const prop = Object.getOwnPropertyDescriptor(o, k);
+    if (prop == null || cache.has(k) || !isWriteable(prop)) {
+      continue;
+    }
+    if (
+      prop.hasOwnProperty('set') ||
+      prop.hasOwnProperty('get') ||
+      k === 'current'
+    ) {
+      continue;
+    }
+
+    if (existed) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `[React Compiler] Property "${k}" was added to frozen object (source: ${source})`,
+      );
+    }
+    addROProperty(o, source, k, prop, cache);
+  }
+  return o;
+}
+
+function addROProperty(
+  obj: Object,
+  source: string,
+  key: string,
+  prop: PropertyDescriptor,
+  savedEntries: Map<string, SavedEntry>,
+) {
+  const proxy: PropertyDescriptor & {get(): unknown} = {
+    get() {
+      return makeReadOnlyImpl(savedEntries.get(key)!.savedVal, source);
+    },
+    set(newVal: unknown) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `[React Compiler] Mutating frozen object property "${key}" (source: ${source})`,
+        newVal,
+      );
+      savedEntries.get(key)!.savedVal = newVal;
+    },
+  };
+  if (prop.configurable != null) {
+    proxy.configurable = prop.configurable;
+  }
+  if (prop.enumerable != null) {
+    proxy.enumerable = prop.enumerable;
+  }
+
+  savedEntries.set(key, {savedVal: (obj as any)[key], getter: proxy.get});
+  Object.defineProperty(obj, key, proxy);
+}
+
+export function makeReadOnly<T>(val: T, source: string = ''): T {
+  return makeReadOnlyImpl(val, source);
+}
+
+/**
+ * Legacy alias for makeReadOnly. Kept for backwards compatibility.
+ */
+export const $makeReadOnly = makeReadOnly;
+
+/**
+ * Gating value for React Compiler instrumentation ("enableEmitInstrumentForget").
+ *
+ * The compiler emits: `if (DEV && shouldInstrument) useRenderCounter(...)`
+ * This is referenced as a simple identifier (not called as a function).
+ * Exported as `true` so that instrumentation is active whenever this module
+ * is imported (the compiler also gates on DEV separately).
+ */
+export const shouldInstrument: boolean = true;
+
+/**
+ * Lowered context access hook ("lowerContextAccess").
+ *
+ * The compiler transforms:
+ *   const {foo, bar} = useContext(MyContext);
+ * into:
+ *   const {foo, bar} = useContext_withSelector(MyContext, (c) => [c.foo, c.bar]);
+ *
+ * The selector argument enables future optimized implementations to skip
+ * re-renders when unselected context fields change. This fallback implementation
+ * delegates to React.useContext and ignores the selector, which is correct
+ * (though not optimized) for all React versions.
+ */
+export function useContext_withSelector<T>(
+  context: React.Context<T>,
+  _selector: (value: T) => Array<unknown>,
+): T {
+  return React.useContext(context);
 }
 
 /**
