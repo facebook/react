@@ -143,7 +143,6 @@ export default class Store extends EventEmitter<{
   backendVersion: [],
   collapseNodesByDefault: [],
   componentFilters: [],
-  enableSuspenseTab: [],
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
   hostInstanceSelected: [Element['id'] | null],
@@ -239,8 +238,6 @@ export default class Store extends EventEmitter<{
   _supportsClickToInspect: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
-  // Dynamically set if the renderer supports the Suspense tab.
-  _supportsSuspenseTab: boolean = false;
 
   _isReloadAndProfileFrontendSupported: boolean = false;
   _isReloadAndProfileBackendSupported: boolean = false;
@@ -341,7 +338,6 @@ export default class Store extends EventEmitter<{
     bridge.addListener('hookSettings', this.onHookSettings);
     bridge.addListener('backendInitialized', this.onBackendInitialized);
     bridge.addListener('selectElement', this.onHostInstanceSelected);
-    bridge.addListener('enableSuspenseTab', this.onEnableSuspenseTab);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -2393,15 +2389,6 @@ export default class Store extends EventEmitter<{
       this.emit('mutated', [[], new Map(), null]);
     }
   }
-
-  get supportsSuspenseTab(): boolean {
-    return this._supportsSuspenseTab;
-  }
-
-  onEnableSuspenseTab = (): void => {
-    this._supportsSuspenseTab = true;
-    this.emit('enableSuspenseTab');
-  };
 
   // The Store should never throw an Error without also emitting an event.
   // Otherwise Store errors will be invisible to users,
