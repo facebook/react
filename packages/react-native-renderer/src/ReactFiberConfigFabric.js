@@ -280,6 +280,7 @@ export function getChildHostContext(
       type === 'RCTMultilineTextInputView' || // iOS
       type === 'RCTSinglelineTextInputView' || // iOS
       type === 'RCTText' ||
+      type === 'RCTSelectableText' ||
       type === 'RCTVirtualText';
 
     // TODO: If this is an offscreen host container, we should reuse the
