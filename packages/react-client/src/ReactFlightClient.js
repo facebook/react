@@ -2286,6 +2286,11 @@ function defineLazyGetter<T>(
         // TODO: We should ideally throw here to indicate a difference.
         return OMITTED_PROP_ERROR;
       },
+      // no-op: the walk function may try to reassign this property after
+      // parseModelString returns. With the JSON.parse reviver, the engine's
+      // internal CreateDataProperty silently failed. We use a no-op setter
+      // to match that behavior in strict mode.
+      set: function () {},
       enumerable: true,
       configurable: false,
     });
@@ -2606,6 +2611,11 @@ function parseModelString(
                 // TODO: We should ideally throw here to indicate a difference.
                 return OMITTED_PROP_ERROR;
               },
+              // no-op: the walk function may try to reassign this property
+              // after parseModelString returns. With the JSON.parse reviver,
+              // the engine's internal CreateDataProperty silently failed.
+              // We use a no-op setter to match that behavior in strict mode.
+              set: function () {},
               enumerable: true,
               configurable: false,
             });
