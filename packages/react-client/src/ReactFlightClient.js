@@ -355,7 +355,7 @@ type Response = {
   _encodeFormAction: void | EncodeFormActionCallback,
   _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
-  _fromJSON: (key: string, value: JSONValue) => any,
+  _walkJSON: (value: JSONValue, parentObject: Object, key: string) => any,
   _stringDecoder: StringDecoder,
   _closed: boolean,
   _closedReason: mixed,
@@ -2683,7 +2683,7 @@ function ResponseInstance(
   this._nonce = nonce;
   this._chunks = chunks;
   this._stringDecoder = createStringDecoder();
-  this._fromJSON = (null: any);
+  this._walkJSON = (null: any);
   this._closed = false;
   this._closedReason = null;
   this._allowPartialStream = allowPartialStream;
@@ -2769,7 +2769,7 @@ function ResponseInstance(
   }
 
   // Don't inline this call because it causes closure to outline the call above.
-  this._fromJSON = createFromJSONCallback(this);
+  this._walkJSON = createWalkParsedJSON(this);
 }
 
 export function createResponse(
@@ -5237,24 +5237,50 @@ export function processStringChunk(
 }
 
 function parseModel<T>(response: Response, json: UninitializedModel): T {
-  return JSON.parse(json, response._fromJSON);
+  return response._walkJSON(JSON.parse(json), null, '');
 }
 
-function createFromJSONCallback(response: Response) {
-  // $FlowFixMe[missing-this-annot]
-  return function (key: string, value: JSONValue) {
-    if (key === __PROTO__) {
-      return undefined;
-    }
+function createWalkParsedJSON(response: Response) {
+  function walk(
+    value: JSONValue,
+    parentObject: Object | null,
+    key: string,
+  ): any {
     if (typeof value === 'string') {
-      // We can't use .bind here because we need the "this" value.
-      return parseModelString(response, this, key, value);
+      if (value[0] === '$') {
+        return parseModelString(response, parentObject, key, value);
+      }
+      return value;
     }
-    if (typeof value === 'object' && value !== null) {
-      return parseModelTuple(response, value);
+    if (typeof value !== 'object' || value === null) {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      if (value[0] === REACT_ELEMENT_TYPE) {
+        // React element tuple
+        return parseModelTuple(response, value);
+      }
+      for (let i = 0; i < value.length; i++) {
+        (value: any)[i] = walk(value[i], value, '' + i);
+      }
+      return value;
+    }
+    // Plain object
+    for (const k in value) {
+      if (k === __PROTO__) {
+        delete (value: any)[k];
+      } else {
+        const walked = walk((value: any)[k], value, k);
+        if (walked !== undefined) {
+          (value: any)[k] = walked;
+        } else {
+          delete (value: any)[k];
+        }
+      }
     }
     return value;
-  };
+  }
+  return walk;
 }
 
 export function close(weakResponse: WeakResponse): void {
