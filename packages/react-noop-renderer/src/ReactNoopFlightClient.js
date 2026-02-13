@@ -44,7 +44,8 @@ const {createResponse, createStreamState, processBinaryChunk, getRoot, close} =
       return readModule(idx);
     },
     parseModel(response: Response, json) {
-      return JSON.parse(json, response._fromJSON);
+      const parsed = JSON.parse(json);
+      return response._walkJSON(parsed, {'': parsed}, '');
     },
     bindToConsole(methodName, args, badgeName) {
       return Function.prototype.bind.apply(
