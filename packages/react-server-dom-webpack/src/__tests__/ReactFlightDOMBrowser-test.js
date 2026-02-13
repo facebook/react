@@ -3066,7 +3066,7 @@ describe('ReactFlightDOMBrowser', () => {
             "stack": [
               [
                 "Object.<anonymous>",
-                "\\packages\\react-server-dom-webpack\\src\\__tests__\\ReactFlightDOMBrowser-test.js",
+                "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
                 2989,
                 19,
                 2973,
