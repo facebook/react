@@ -5237,7 +5237,11 @@ export function processStringChunk(
 }
 
 function parseModel<T>(response: Response, json: UninitializedModel): T {
-  return response._walkJSON(JSON.parse(json), null, '');
+  const parsed = JSON.parse(json);
+  // Pass a wrapper object as parentObject to match the original JSON.parse
+  // reviver behavior, where the root value's reviver receives {"": rootValue}
+  // as `this`. This ensures parentObject is never null when accessed downstream.
+  return response._walkJSON(parsed, {'': parsed}, '');
 }
 
 function createWalkParsedJSON(response: Response) {
@@ -5256,12 +5260,12 @@ function createWalkParsedJSON(response: Response) {
       return value;
     }
     if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        (value: any)[i] = walk(value[i], value, '' + i);
+      }
       if (value[0] === REACT_ELEMENT_TYPE) {
         // React element tuple
         return parseModelTuple(response, value);
-      }
-      for (let i = 0; i < value.length; i++) {
-        (value: any)[i] = walk(value[i], value, '' + i);
       }
       return value;
     }
