@@ -215,7 +215,12 @@ export type InstanceMeasurement = {
   view: boolean,
 };
 
-export type RunningViewTransition = null;
+export type RunningViewTransition = {
+  skipTransition(): void,
+  finished: Promise<void>,
+  ready: Promise<void>,
+  ...
+};
 
 export type ViewTransitionInstance = null | {
   name: string,
@@ -389,8 +394,8 @@ export function startViewTransition(
   errorCallback: (error: mixed) => void,
   blockedCallback: (name: string) => void,
   finishedAnimation: () => void,
-): RunningViewTransition {
-  const startedTransition = fabricStartViewTransition(
+): null | RunningViewTransition {
+  const transition = fabricStartViewTransition(
     // mutation
     () => {
       mutationCallback(); // completeRoot should run here
@@ -407,7 +412,7 @@ export function startViewTransition(
     },
   );
 
-  if (!startedTransition) {
+  if (transition == null) {
     if (__DEV__) {
       console.warn(
         "startViewTransition didn't kick off transition in Fabric, the ViewTransition ReactNativeFeatureFlag might not be enabled.",
@@ -422,7 +427,7 @@ export function startViewTransition(
     return null;
   }
 
-  return null;
+  return transition;
 }
 
 export function appendInitialChild(
