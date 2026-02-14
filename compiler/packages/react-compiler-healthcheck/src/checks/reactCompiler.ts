@@ -10,17 +10,33 @@ import {transformFromAstSync} from '@babel/core';
 import * as BabelParser from '@babel/parser';
 import BabelPluginReactCompiler, {
   ErrorSeverity,
-  type CompilerErrorDetailOptions,
   type PluginOptions,
 } from 'babel-plugin-react-compiler/src';
-import {LoggerEvent as RawLoggerEvent} from 'babel-plugin-react-compiler/src/Entrypoint';
+import type {LoggerEvent as RawLoggerEvent} from 'babel-plugin-react-compiler/src/Entrypoint';
 import chalk from 'chalk';
 
-type LoggerEvent = RawLoggerEvent & {filename: string | null};
+type LoggerEvent =
+  | (Extract<RawLoggerEvent, {kind: 'CompileSuccess'}> & {
+      filename: string | null;
+    })
+  | (Extract<RawLoggerEvent, {kind: 'CompileError'}> & {
+      filename: string | null;
+    })
+  | (Extract<RawLoggerEvent, {kind: 'CompileDiagnostic'}> & {
+      filename: string | null;
+    })
+  | (Extract<RawLoggerEvent, {kind: 'PipelineError'}> & {
+      filename: string | null;
+    });
+type SuccessEvent = Extract<LoggerEvent, {kind: 'CompileSuccess'}>;
+type FailureEvent = Extract<
+  LoggerEvent,
+  {kind: 'CompileError' | 'CompileDiagnostic' | 'PipelineError'}
+>;
 
-const SucessfulCompilation: Array<LoggerEvent> = [];
-const ActionableFailures: Array<LoggerEvent> = [];
-const OtherFailures: Array<LoggerEvent> = [];
+const SucessfulCompilation: Array<SuccessEvent> = [];
+const ActionableFailures: Array<FailureEvent> = [];
+const OtherFailures: Array<FailureEvent> = [];
 
 const logger = {
   logEvent(filename: string | null, rawEvent: RawLoggerEvent) {
@@ -42,6 +58,8 @@ const logger = {
       case 'PipelineError':
         OtherFailures.push(event);
         return;
+      default:
+        return;
     }
   },
 };
@@ -53,19 +71,8 @@ const COMPILER_OPTIONS: PluginOptions = {
   logger,
 };
 
-function isActionableDiagnostic(detail: CompilerErrorDetailOptions) {
-  switch (detail.severity) {
-    case ErrorSeverity.InvalidReact:
-    case ErrorSeverity.InvalidJS:
-      return true;
-    case ErrorSeverity.InvalidConfig:
-    case ErrorSeverity.Invariant:
-    case ErrorSeverity.CannotPreserveMemoization:
-    case ErrorSeverity.Todo:
-      return false;
-    default:
-      throw new Error(`Unhandled error severity \`${detail.severity}\``);
-  }
+function isActionableDiagnostic(detail: {severity: ErrorSeverity}) {
+  return detail.severity === ErrorSeverity.Error;
 }
 
 function runBabelPluginReactCompiler(
@@ -118,7 +125,7 @@ const JsFileExtensionRE = /(js|ts|jsx|tsx)$/;
  * TODO: enable non-destructive `CompilerDiagnostic` logging in dev mode,
  * and log a "CompilationStart" event for every function we begin processing.
  */
-function countUniqueLocInEvents(events: Array<LoggerEvent>): number {
+function countUniqueLocInEvents(events: Array<FailureEvent>): number {
   const seenLocs = new Set<string>();
   let count = 0;
   for (const e of events) {
@@ -132,6 +139,74 @@ function countUniqueLocInEvents(events: Array<LoggerEvent>): number {
   return count + seenLocs.size;
 }
 
+function formatLoc(loc: FailureEvent['fnLoc']): string | null {
+  if (loc == null) {
+    return null;
+  }
+  return `${loc.start.line}:${loc.start.column}-${loc.end.line}:${loc.end.column}`;
+}
+
+function getFailureReason(event: FailureEvent): string {
+  switch (event.kind) {
+    case 'CompileError': {
+      const description = event.detail.description;
+      if (description == null || description.length === 0) {
+        return event.detail.reason;
+      }
+      return `${event.detail.reason}: ${description}`;
+    }
+    case 'CompileDiagnostic': {
+      if (
+        event.detail.description == null ||
+        event.detail.description.length === 0
+      ) {
+        return event.detail.reason;
+      }
+      return `${event.detail.reason}: ${event.detail.description}`;
+    }
+    case 'PipelineError':
+      return event.data;
+    default:
+      return 'Unknown failure';
+  }
+}
+
+type VerboseFailure = {
+  group: 'ActionableFailure' | 'OtherFailure';
+  filename: string;
+  location: string | null;
+  reason: string;
+};
+
+function getVerboseFailures(): Array<VerboseFailure> {
+  const failures: Array<VerboseFailure> = [];
+  for (const failure of ActionableFailures) {
+    failures.push({
+      group: 'ActionableFailure',
+      filename: failure.filename ?? '<unknown file>',
+      location: formatLoc(failure.fnLoc),
+      reason: getFailureReason(failure),
+    });
+  }
+  for (const failure of OtherFailures) {
+    failures.push({
+      group: 'OtherFailure',
+      filename: failure.filename ?? '<unknown file>',
+      location: formatLoc(failure.fnLoc),
+      reason: getFailureReason(failure),
+    });
+  }
+  failures.sort((a, b) => {
+    return (
+      a.group.localeCompare(b.group) ||
+      a.filename.localeCompare(b.filename) ||
+      (a.location ?? '').localeCompare(b.location ?? '') ||
+      a.reason.localeCompare(b.reason)
+    );
+  });
+  return failures;
+}
+
 export default {
   run(source: string, path: string): void {
     if (JsFileExtensionRE.exec(path) !== null) {
@@ -139,7 +214,7 @@ export default {
     }
   },
 
-  report(): void {
+  report(verbose: boolean = false): void {
     const totalComponents =
       SucessfulCompilation.length +
       countUniqueLocInEvents(OtherFailures) +
@@ -149,5 +224,23 @@ export default {
         `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`,
       ),
     );
+
+    if (!verbose) {
+      return;
+    }
+
+    const verboseFailures = getVerboseFailures();
+    if (verboseFailures.length === 0) {
+      console.log(chalk.green('No compiler failures found.'));
+      return;
+    }
+
+    console.log(chalk.red('Compiler failures (verbose):'));
+    for (const failure of verboseFailures) {
+      const location = failure.location == null ? '' : `:${failure.location}`;
+      console.log(
+        `[${failure.group}] ${failure.filename}${location} ${failure.reason}`,
+      );
+    }
   },
 };
