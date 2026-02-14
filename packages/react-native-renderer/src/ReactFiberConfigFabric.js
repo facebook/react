@@ -278,9 +278,9 @@ export function getChildHostContext(
     const isInAParentText =
       type === 'AndroidTextInput' || // Android
       type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSelectableText' || 
       type === 'RCTSinglelineTextInputView' || // iOS
       type === 'RCTText' ||
-      type === 'RCTSelectableText' ||
       type === 'RCTVirtualText';
 
     // TODO: If this is an offscreen host container, we should reuse the
