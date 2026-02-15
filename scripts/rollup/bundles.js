@@ -1151,6 +1151,17 @@ const bundles = [
     externals: ['react', 'use-sync-external-store/shim'],
   },
 
+  /******* react-webmcp *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-webmcp',
+    global: 'ReactWebMCP',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: true,
+    externals: ['react'],
+  },
+
   /******* React Scheduler (experimental) *******/
   {
     bundleTypes: [
