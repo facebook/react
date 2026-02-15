@@ -58,6 +58,7 @@ import {
   enableViewTransition,
   enableGestureTransition,
   enableDefaultTransitionIndicator,
+  enableParallelTransitions,
 } from 'shared/ReactFeatureFlags';
 import {resetOwnerStackLimit} from 'shared/ReactOwnerStackReset';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -1777,6 +1778,11 @@ function markRootSuspended(
   spawnedLane: Lane,
   didAttemptEntireTree: boolean,
 ) {
+  if (enableParallelTransitions) {
+    // When suspending, we should always mark the entangled lanes as suspended.
+    suspendedLanes = getEntangledLanes(root, suspendedLanes);
+  }
+
   // When suspending, we should always exclude lanes that were pinged or (more
   // rarely, since we try to avoid it) updated during the render phase.
   suspendedLanes = removeLanes(suspendedLanes, workInProgressRootPingedLanes);

@@ -1369,8 +1369,8 @@ describe('TreeListContext', () => {
                  ▾ <Suspense>
                      <Grandchild>
         [suspense-root]  rects={null}
-          <Suspense name="Parent" rects={null}>
-            <Suspense name="Child" rects={null}>
+          <Suspense name="Parent" uniqueSuspenders={false} rects={null}>
+            <Suspense name="Child" uniqueSuspenders={false} rects={null}>
       `);
 
       const outerSuspenseID = ((store.getElementIDAtIndex(1): any): number);
@@ -1411,8 +1411,8 @@ describe('TreeListContext', () => {
                  ▾ <Suspense>
                      <Grandchild>
         [suspense-root]  rects={null}
-          <Suspense name="Parent" rects={null}>
-            <Suspense name="Child" rects={null}>
+          <Suspense name="Parent" uniqueSuspenders={false} rects={null}>
+            <Suspense name="Child" uniqueSuspenders={false} rects={null}>
       `);
     });
   });
@@ -2370,7 +2370,7 @@ describe('TreeListContext', () => {
           [root]
                <Suspense>
           [suspense-root]  rects={null}
-            <Suspense name="Unknown" rects={null}>
+            <Suspense name="Unknown" uniqueSuspenders={true} rects={null}>
         `);
 
         selectNextErrorOrWarning();
@@ -2379,7 +2379,7 @@ describe('TreeListContext', () => {
           [root]
                <Suspense>
           [suspense-root]  rects={null}
-            <Suspense name="Unknown" rects={null}>
+            <Suspense name="Unknown" uniqueSuspenders={true} rects={null}>
         `);
       });
 
@@ -2405,7 +2405,7 @@ describe('TreeListContext', () => {
           [root]
                <Suspense>
           [suspense-root]  rects={null}
-            <Suspense name="Unknown" rects={null}>
+            <Suspense name="Unknown" uniqueSuspenders={true} rects={null}>
         `);
 
         await Promise.resolve();
@@ -2427,7 +2427,7 @@ describe('TreeListContext', () => {
                  <Child> ⚠
                  <Child>
           [suspense-root]  rects={null}
-            <Suspense name="Unknown" rects={null}>
+            <Suspense name="Unknown" uniqueSuspenders={true} rects={null}>
         `);
       });
 
@@ -2457,7 +2457,7 @@ describe('TreeListContext', () => {
                ▾ <Fallback>
                    <Child> ✕
           [suspense-root]  rects={null}
-            <Suspense name="Unknown" rects={null}>
+            <Suspense name="Unknown" uniqueSuspenders={true} rects={null}>
         `);
 
         await Promise.resolve();
@@ -2476,7 +2476,7 @@ describe('TreeListContext', () => {
              ▾ <Suspense>
                  <Child>
           [suspense-root]  rects={null}
-            <Suspense name="Unknown" rects={null}>
+            <Suspense name="Unknown" uniqueSuspenders={true} rects={null}>
         `);
       });
     });

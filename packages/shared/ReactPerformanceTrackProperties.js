@@ -82,6 +82,13 @@ export function addObjectToProperties(
   }
 }
 
+function readReactElementTypeof(value: Object): mixed {
+  // Prevents dotting into $$typeof in opaque origin windows.
+  return '$$typeof' in value && hasOwnProperty.call(value, '$$typeof')
+    ? value.$$typeof
+    : undefined;
+}
+
 export function addValueToProperties(
   propertyName: string,
   value: mixed,
@@ -96,7 +103,7 @@ export function addValueToProperties(
         desc = 'null';
         break;
       } else {
-        if (value.$$typeof === REACT_ELEMENT_TYPE) {
+        if (readReactElementTypeof(value) === REACT_ELEMENT_TYPE) {
           // JSX
           const typeName = getComponentNameFromType(value.type) || '\u2026';
           const key = value.key;
@@ -352,9 +359,10 @@ export function addObjectDiffToProperties(
           typeof nextValue === 'object' &&
           prevValue !== null &&
           nextValue !== null &&
-          prevValue.$$typeof === nextValue.$$typeof
+          readReactElementTypeof(prevValue) ===
+            readReactElementTypeof(nextValue)
         ) {
-          if (nextValue.$$typeof === REACT_ELEMENT_TYPE) {
+          if (readReactElementTypeof(nextValue) === REACT_ELEMENT_TYPE) {
             if (
               prevValue.type === nextValue.type &&
               prevValue.key === nextValue.key

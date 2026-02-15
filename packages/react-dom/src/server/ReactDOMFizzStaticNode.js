@@ -36,8 +36,6 @@ import {
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-import {enableHalt} from 'shared/ReactFeatureFlags';
-
 import {textEncoder} from 'react-server/src/ReactServerStreamConfigNode';
 
 import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
@@ -130,14 +128,10 @@ function prerenderToNodeStream(
       });
       const writable = createFakeWritableFromReadable(readable);
 
-      const result: StaticResult = enableHalt
-        ? {
-            postponed: getPostponedState(request),
-            prelude: readable,
-          }
-        : ({
-            prelude: readable,
-          }: any);
+      const result: StaticResult = {
+        postponed: getPostponedState(request),
+        prelude: readable,
+      };
       resolve(result);
     }
     const resumableState = createResumableState(
@@ -215,14 +209,10 @@ function prerender(
         {highWaterMark: 0},
       );
 
-      const result = enableHalt
-        ? {
-            postponed: getPostponedState(request),
-            prelude: stream,
-          }
-        : ({
-            prelude: stream,
-          }: any);
+      const result = {
+        postponed: getPostponedState(request),
+        prelude: stream,
+      };
       resolve(result);
     }
 

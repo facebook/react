@@ -20,6 +20,7 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
+  enableEffectEventMutationPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
   enableEagerAlternateStateNodeCleanup,
@@ -39,13 +40,12 @@ export const disableLegacyContextForFunctionComponents: boolean = false;
 export const disableLegacyMode: boolean = false;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
-export const enableAsyncDebugInfo: boolean = false;
+export const enableAsyncDebugInfo: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableCPUSuspense: boolean = true;
 export const enableCreateEventHandleAPI: boolean = false;
 export const enableMoveBefore: boolean = true;
 export const enableFizzExternalRuntime: boolean = true;
-export const enableHalt: boolean = true;
 export const enableInfiniteRenderLoopDetection: boolean = false;
 export const enableLegacyCache: boolean = false;
 export const enableLegacyFBSupport: boolean = false;
@@ -83,6 +83,7 @@ export const enablePerformanceIssueReporting: boolean =
   enableComponentPerformanceTrack;
 export const enableInternalInstanceMap: boolean = false;
 export const enableOptimisticKey: boolean = false;
+export const enableParallelTransitions: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

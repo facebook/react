@@ -672,9 +672,10 @@ describe('ReactDOMEventListener', () => {
         reactEventType: 'submit',
         nativeEvent: 'submit',
         dispatch(node) {
-          const e = new Event('submit', {
+          const e = new SubmitEvent('submit', {
             bubbles: true,
             cancelable: true,
+            submitter: null,
           });
           node.dispatchEvent(e);
         },

@@ -763,7 +763,7 @@ describe('FragmentRefs', () => {
       });
 
       describe('with activity', () => {
-        // @gate enableFragmentRefs && enableActivity
+        // @gate enableFragmentRefs
         it('does not apply event listeners to hidden trees', async () => {
           const parentRef = React.createRef();
           const fragmentRef = React.createRef();
@@ -799,7 +799,7 @@ describe('FragmentRefs', () => {
           expect(logs).toEqual(['Child 1', 'Child 3']);
         });
 
-        // @gate enableFragmentRefs && enableActivity
+        // @gate enableFragmentRefs
         it('applies event listeners to visible trees', async () => {
           const parentRef = React.createRef();
           const fragmentRef = React.createRef();
@@ -835,7 +835,7 @@ describe('FragmentRefs', () => {
           expect(logs).toEqual(['Child 1', 'Child 2', 'Child 3']);
         });
 
-        // @gate enableFragmentRefs && enableActivity
+        // @gate enableFragmentRefs
         it('handles Activity modes switching', async () => {
           const fragmentRef = React.createRef();
           const fragmentRef2 = React.createRef();

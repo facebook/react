@@ -18,6 +18,7 @@ export const {
   alwaysThrottleRetries,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
+  enableEffectEventMutationPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache,
@@ -33,8 +34,8 @@ export const {
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
   enableFragmentRefsTextNodes,
-  enableAsyncDebugInfo,
   enableInternalInstanceMap,
+  enableParallelTransitions,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -47,6 +48,7 @@ export const enableUpdaterTracking = __PROFILE__;
 
 export const enableSuspenseAvoidThisFallback: boolean = true;
 
+export const enableAsyncDebugInfo: boolean = true;
 export const enableCPUSuspense: boolean = true;
 export const enableMoveBefore: boolean = false;
 export const disableInputAttributeSyncing: boolean = false;
@@ -71,8 +73,6 @@ export const enableLegacyCache: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 
 export const enableTaint: boolean = false;
-
-export const enableHalt: boolean = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.

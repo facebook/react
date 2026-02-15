@@ -38,7 +38,7 @@ import type {
   ElementType,
 } from 'react-devtools-shared/src/frontend/types';
 import type {GroupItem} from './views/TraceUpdates/canvas';
-import {gte, isReactNativeEnvironment} from './utils';
+import {isReactNativeEnvironment} from './utils';
 import {
   sessionStorageGetItem,
   sessionStorageRemoveItem,
@@ -960,16 +960,6 @@ export default class Agent extends EventEmitter<{
     this._rendererInterfaces[rendererID] = rendererInterface;
 
     rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
-
-    const renderer = rendererInterface.renderer;
-    if (renderer !== null) {
-      const devRenderer = renderer.bundleType === 1;
-      const enableSuspenseTab =
-        devRenderer && gte(renderer.version, '19.3.0-canary');
-      if (enableSuspenseTab) {
-        this._bridge.send('enableSuspenseTab');
-      }
-    }
 
     // When the renderer is attached, we need to tell it whether
     // we remember the previous selection that we'd like to restore.

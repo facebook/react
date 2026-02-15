@@ -40,7 +40,10 @@ import {
   type PublicTextInstance,
   type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-import {enableFragmentRefsInstanceHandles} from 'shared/ReactFeatureFlags';
+import {
+  enableFragmentRefsInstanceHandles,
+  enableFragmentRefsTextNodes,
+} from 'shared/ReactFeatureFlags';
 
 const {
   createNode,
@@ -847,10 +850,15 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childInstance: Instance,
+  childInstance: Instance | TextInstance,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  const publicInstance = getPublicInstance(childInstance);
+  // Text nodes are not observable
+  if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
+    return;
+  }
+  const instance: Instance = (childInstance: any);
+  const publicInstance = getPublicInstance(instance);
   if (fragmentInstance._observers !== null) {
     if (publicInstance == null) {
       throw new Error('Expected to find a host node. This is a bug in React.');
@@ -869,11 +877,16 @@ export function commitNewChildToFragmentInstance(
 }
 
 export function deleteChildFromFragmentInstance(
-  childInstance: Instance,
+  childInstance: Instance | TextInstance,
   fragmentInstance: FragmentInstanceType,
 ): void {
+  // Text nodes are not observable
+  if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
+    return;
+  }
+  const instance: Instance = (childInstance: any);
   const publicInstance = ((getPublicInstance(
-    childInstance,
+    instance,
   ): any): PublicInstanceWithFragmentHandles);
   if (enableFragmentRefsInstanceHandles) {
     if (publicInstance.unstable_reactFragments != null) {

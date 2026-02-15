@@ -612,7 +612,7 @@ export type TryTerminal = {
 export type MaybeThrowTerminal = {
   kind: 'maybe-throw';
   continuation: BlockId;
-  handler: BlockId;
+  handler: BlockId | null;
   id: InstructionId;
   loc: SourceLocation;
   fallthrough?: never;

@@ -11,7 +11,6 @@ import {
   __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
@@ -160,11 +159,14 @@ function updateTree(
 
   // Clone nodes before mutating them so edits don't affect them.
   const getClonedNode = (id: number): CommitTreeNode => {
-    // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
-    const clonedNode = ((Object.assign(
-      {},
-      nodes.get(id),
-    ): any): CommitTreeNode);
+    const existingNode = nodes.get(id);
+    if (existingNode == null) {
+      throw new Error(
+        `Could not clone the node: commit tree does not contain fiber "${id}". This is a bug in React DevTools.`,
+      );
+    }
+
+    const clonedNode = {...existingNode};
     nodes.set(id, clonedNode);
     return clonedNode;
   };
@@ -309,9 +311,6 @@ function updateTree(
           }
         }
         break;
-      }
-      case TREE_OPERATION_REMOVE_ROOT: {
-        throw Error('Operation REMOVE_ROOT is not supported while profiling.');
       }
       case TREE_OPERATION_REORDER_CHILDREN: {
         id = ((operations[i + 1]: any): number);

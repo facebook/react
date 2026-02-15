@@ -167,10 +167,6 @@ function createBridgeAndStore() {
     supportsClickToInspect: true,
   });
 
-  store.addListener('enableSuspenseTab', () => {
-    createSuspensePanel();
-  });
-
   store.addListener('settingsUpdated', (hookSettings, componentFilters) => {
     chrome.storage.local.set({...hookSettings, componentFilters});
   });
@@ -565,8 +561,7 @@ function mountReactDevTools() {
   createProfilerPanel();
   createSourcesEditorPanel();
   createElementsInspectPanel();
-  // Suspense Tab is created via the hook
-  // TODO(enableSuspenseTab): Create eagerly once Suspense tab is stable
+  createSuspensePanel();
 }
 
 let reactPollingInstance = null;

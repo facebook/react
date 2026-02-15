@@ -1596,6 +1596,57 @@ describe('ReactDOMForm', () => {
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
   });
 
+  it('should fire onReset on automatic form reset', async () => {
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+
+    let setValue;
+    const defaultValue = 0;
+    function App({promiseForUsername}) {
+      const [value, _setValue] = useState(defaultValue);
+      setValue = _setValue;
+
+      return (
+        <form
+          ref={formRef}
+          action={async formData => {
+            Scheduler.log(`Async action started`);
+            await getText('Wait');
+          }}
+          onReset={() => {
+            setValue(defaultValue);
+          }}>
+          <input
+            ref={inputRef}
+            text="text"
+            name="amount"
+            value={value}
+            onChange={event => setValue(event.currentTarget.value)}
+          />
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    // Dirty the controlled input
+    await act(() => setValue('3'));
+    expect(inputRef.current.value).toEqual('3');
+
+    // Submit the form. This will trigger an async action.
+    await submit(formRef.current);
+    assertLog(['Async action started']);
+
+    // We haven't reset yet.
+    expect(inputRef.current.value).toEqual('3');
+
+    // Action completes. onReset has been fired and values reset manually.
+    await act(() => resolveText('Wait'));
+    assertLog([]);
+    expect(inputRef.current.value).toEqual('0');
+  });
+
   it('requestFormReset schedules a form reset after transition completes', async () => {
     // This is the same as the previous test, except the form is updated with
     // a userspace action instead of a built-in form action.

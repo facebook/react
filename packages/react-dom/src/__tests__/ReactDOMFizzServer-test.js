@@ -6710,7 +6710,6 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
-  // @gate enableHalt
   it('can resume a prerender that was aborted', async () => {
     const promise = new Promise(r => {});
 

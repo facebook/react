@@ -3044,7 +3044,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate enableActivity
     it('warns when setState is called from offscreen deleted insertion effect cleanup', async () => {
       function App(props) {
         const [, setX] = useState(0);

@@ -10,7 +10,7 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer.www';
 
-export const enableAsyncDebugInfo: boolean = false;
+export const enableAsyncDebugInfo: boolean = true;
 export const enableSchedulingProfiler: boolean = false;
 export const enableProfilerTimer: boolean = __PROFILE__;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
@@ -21,7 +21,6 @@ export const enableUpdaterTracking: boolean = false;
 export const enableLegacyCache: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 export const enableTaint: boolean = true;
-export const enableHalt: boolean = true;
 export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const enableScopeAPI: boolean = true;
@@ -62,6 +61,7 @@ export const disableLegacyMode: boolean = true;
 
 export const enableObjectFiber: boolean = false;
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
+export const enableEffectEventMutationPhase: boolean = false;
 
 export const enableYieldingBeforePassive: boolean = false;
 
@@ -84,6 +84,7 @@ export const ownerStackLimit = 1e4;
 export const enableInternalInstanceMap: boolean = false;
 
 export const enableOptimisticKey: boolean = false;
+export const enableParallelTransitions: boolean = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

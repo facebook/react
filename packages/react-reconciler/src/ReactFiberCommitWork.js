@@ -47,6 +47,7 @@ import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 import {
   alwaysThrottleRetries,
   enableCreateEventHandleAPI,
+  enableEffectEventMutationPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableProfilerTimer,
   enableProfilerCommitHooks,
@@ -61,6 +62,7 @@ import {
   enableFragmentRefs,
   enableEagerAlternateStateNodeCleanup,
   enableDefaultTransitionIndicator,
+  enableFragmentRefsTextNodes,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -499,7 +501,7 @@ function commitBeforeMutationEffectsOnFiber(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
-      if ((flags & Update) !== NoFlags) {
+      if (!enableEffectEventMutationPhase && (flags & Update) !== NoFlags) {
         const updateQueue: FunctionComponentUpdateQueue | null =
           (finishedWork.updateQueue: any);
         const eventPayloads = updateQueue !== null ? updateQueue.events : null;
@@ -1532,7 +1534,11 @@ function commitDeletionEffectsOnFiber(
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
       }
-      if (enableFragmentRefs && deletedFiber.tag === HostComponent) {
+      if (
+        enableFragmentRefs &&
+        (deletedFiber.tag === HostComponent ||
+          (enableFragmentRefsTextNodes && deletedFiber.tag === HostText))
+      ) {
         commitFragmentInstanceDeletionEffects(deletedFiber);
       }
       // Intentional fallthrough to next branch
@@ -2042,6 +2048,24 @@ function commitMutationEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
+      // Mutate event effect callbacks on the way down, before mutation effects.
+      // This ensures that parent event effects are mutated before child effects.
+      // This isn't a supported use case, so we can re-consider it,
+      // but this was the behavior we originally shipped.
+      if (enableEffectEventMutationPhase) {
+        if (flags & Update) {
+          const updateQueue: FunctionComponentUpdateQueue | null =
+            (finishedWork.updateQueue: any);
+          const eventPayloads =
+            updateQueue !== null ? updateQueue.events : null;
+          if (eventPayloads !== null) {
+            for (let ii = 0; ii < eventPayloads.length; ii++) {
+              const {ref, nextImpl} = eventPayloads[ii];
+              ref.impl = nextImpl;
+            }
+          }
+        }
+      }
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork, lanes);
 
@@ -3009,7 +3033,11 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
 
-      if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+      if (
+        enableFragmentRefs &&
+        (finishedWork.tag === HostComponent ||
+          (enableFragmentRefsTextNodes && finishedWork.tag === HostText))
+      ) {
         commitFragmentInstanceDeletionEffects(finishedWork);
       }
 

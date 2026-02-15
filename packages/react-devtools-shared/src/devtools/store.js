@@ -16,7 +16,6 @@ import {
   PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
@@ -144,7 +143,6 @@ export default class Store extends EventEmitter<{
   backendVersion: [],
   collapseNodesByDefault: [],
   componentFilters: [],
-  enableSuspenseTab: [],
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
   hostInstanceSelected: [Element['id'] | null],
@@ -240,8 +238,6 @@ export default class Store extends EventEmitter<{
   _supportsClickToInspect: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
-  // Dynamically set if the renderer supports the Suspense tab.
-  _supportsSuspenseTab: boolean = false;
 
   _isReloadAndProfileFrontendSupported: boolean = false;
   _isReloadAndProfileBackendSupported: boolean = false;
@@ -342,7 +338,6 @@ export default class Store extends EventEmitter<{
     bridge.addListener('hookSettings', this.onHookSettings);
     bridge.addListener('backendInitialized', this.onBackendInitialized);
     bridge.addListener('selectElement', this.onHostInstanceSelected);
-    bridge.addListener('enableSuspenseTab', this.onEnableSuspenseTab);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -1644,45 +1639,6 @@ export default class Store extends EventEmitter<{
 
           break;
         }
-        case TREE_OPERATION_REMOVE_ROOT: {
-          i += 1;
-
-          const id = operations[1];
-
-          if (__DEBUG__) {
-            debug(`Remove root ${id}`);
-          }
-
-          const recursivelyDeleteElements = (elementID: number) => {
-            const element = this._idToElement.get(elementID);
-            this._idToElement.delete(elementID);
-            if (element) {
-              // Mostly for Flow's sake
-              for (let index = 0; index < element.children.length; index++) {
-                recursivelyDeleteElements(element.children[index]);
-              }
-            }
-          };
-
-          const root = this._idToElement.get(id);
-          if (root === undefined) {
-            this._throwAndEmitError(
-              Error(
-                `Cannot remove root "${id}": no matching node was found in the Store.`,
-              ),
-            );
-
-            break;
-          }
-
-          recursivelyDeleteElements(id);
-
-          this._rootIDToCapabilities.delete(id);
-          this._rootIDToRendererID.delete(id);
-          this._roots = this._roots.filter(rootID => rootID !== id);
-          this._weightAcrossRoots -= root.weight;
-          break;
-        }
         case TREE_OPERATION_REORDER_CHILDREN: {
           const id = operations[i + 1];
           const numChildren = operations[i + 2];
@@ -1917,6 +1873,13 @@ export default class Store extends EventEmitter<{
               }
 
               const index = parentSuspense.children.indexOf(id);
+              if (index === -1) {
+                this._throwAndEmitError(
+                  Error(
+                    `Cannot remove suspense node "${id}" from parent "${parentID}" because it is not a child of the parent.`,
+                  ),
+                );
+              }
               parentSuspense.children.splice(index, 1);
             }
           }
@@ -2433,15 +2396,6 @@ export default class Store extends EventEmitter<{
       this.emit('mutated', [[], new Map(), null]);
     }
   }
-
-  get supportsSuspenseTab(): boolean {
-    return this._supportsSuspenseTab;
-  }
-
-  onEnableSuspenseTab = (): void => {
-    this._supportsSuspenseTab = true;
-    this.emit('enableSuspenseTab');
-  };
 
   // The Store should never throw an Error without also emitting an event.
   // Otherwise Store errors will be invisible to users,
