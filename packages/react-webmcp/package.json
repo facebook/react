@@ -1,0 +1,25 @@
+{
+  "name": "react-webmcp",
+  "description": "React hooks and components for the WebMCP standard — expose structured tools for AI agents on your website",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./src/*": "./src/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tech-sumit/react.git",
+    "directory": "packages/react-webmcp"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "cjs/"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  }
+}
