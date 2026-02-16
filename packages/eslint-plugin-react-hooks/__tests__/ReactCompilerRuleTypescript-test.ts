@@ -195,7 +195,62 @@ const tests: CompilerTestCases = {
   ],
 };
 
+const setStateInEffectTests: CompilerTestCases = {
+  valid: [
+    {
+      name: 'Allows setState in ref-guarded first render branch',
+      filename: 'test.tsx',
+      code: normalizeIndent`
+        import {useEffect, useRef, useState} from 'react';
+
+        function App() {
+          const isFirstRender = useRef(true);
+          const [stateValue, setStateValue] = useState(false);
+
+          useEffect(() => {
+            if (isFirstRender.current == true) {
+              isFirstRender.current = false;
+              setStateValue(true);
+            }
+          }, []);
+
+          return stateValue ? null : null;
+        }
+      `,
+    },
+  ],
+  invalid: [
+    {
+      name: 'Still reports synchronous setState in effect body',
+      filename: 'test.tsx',
+      code: normalizeIndent`
+        import {useEffect, useState} from 'react';
+
+        function App() {
+          const [stateValue, setStateValue] = useState(false);
+
+          useEffect(() => {
+            setStateValue(true);
+          }, []);
+
+          return stateValue ? null : null;
+        }
+      `,
+      errors: [
+        {
+          message: /Calling setState synchronously within an effect/,
+        },
+      ],
+    },
+  ],
+};
+
 const eslintTester = new ESLintTesterV8({
   parser: require.resolve('@typescript-eslint/parser-v5'),
 });
 eslintTester.run('react-compiler', allRules['immutability'].rule, tests);
+eslintTester.run(
+  'react-compiler set-state-in-effect',
+  allRules['set-state-in-effect'].rule,
+  setStateInEffectTests,
+);
