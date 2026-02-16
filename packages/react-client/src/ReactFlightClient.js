@@ -355,7 +355,6 @@ type Response = {
   _encodeFormAction: void | EncodeFormActionCallback,
   _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
-  _walkJSON: (value: JSONValue, parentObject: Object, key: string) => any,
   _stringDecoder: StringDecoder,
   _closed: boolean,
   _closedReason: mixed,
@@ -2693,7 +2692,6 @@ function ResponseInstance(
   this._nonce = nonce;
   this._chunks = chunks;
   this._stringDecoder = createStringDecoder();
-  this._walkJSON = (null: any);
   this._closed = false;
   this._closedReason = null;
   this._allowPartialStream = allowPartialStream;
@@ -2777,9 +2775,6 @@ function ResponseInstance(
       markAllTracksInOrder();
     }
   }
-
-  // Don't inline this call because it causes closure to outline the call above.
-  this._walkJSON = createWalkParsedJSON(this);
 }
 
 export function createResponse(
@@ -5251,50 +5246,48 @@ function parseModel<T>(response: Response, json: UninitializedModel): T {
   // Pass a wrapper object as parentObject to match the original JSON.parse
   // reviver behavior, where the root value's reviver receives {"": rootValue}
   // as `this`. This ensures parentObject is never null when accessed downstream.
-  return response._walkJSON(parsed, {'': parsed}, '');
+  return walkParsedJSON(response, parsed, {'': parsed}, '');
 }
 
-function createWalkParsedJSON(response: Response) {
-  function walk(
-    value: JSONValue,
-    parentObject: Object | null,
-    key: string,
-  ): any {
-    if (typeof value === 'string') {
-      if (value[0] === '$') {
-        return parseModelString(response, parentObject, key, value);
-      }
-      return value;
-    }
-    if (typeof value !== 'object' || value === null) {
-      return value;
-    }
-    if (Array.isArray(value)) {
-      for (let i = 0; i < value.length; i++) {
-        (value: any)[i] = walk(value[i], value, '' + i);
-      }
-      if (value[0] === REACT_ELEMENT_TYPE) {
-        // React element tuple
-        return parseModelTuple(response, value);
-      }
-      return value;
-    }
-    // Plain object
-    for (const k in value) {
-      if (k === __PROTO__) {
-        delete (value: any)[k];
-      } else {
-        const walked = walk((value: any)[k], value, k);
-        if (walked !== undefined) {
-          (value: any)[k] = walked;
-        } else {
-          delete (value: any)[k];
-        }
-      }
+function walkParsedJSON(
+  response: Response,
+  value: JSONValue,
+  parentObject: Object | null,
+  key: string,
+): any {
+  if (typeof value === 'string') {
+    if (value[0] === '$') {
+      return parseModelString(response, parentObject, key, value);
     }
     return value;
   }
-  return walk;
+  if (typeof value !== 'object' || value === null) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      (value: any)[i] = walkParsedJSON(response, value[i], value, '' + i);
+    }
+    if (value[0] === REACT_ELEMENT_TYPE) {
+      // React element tuple
+      return parseModelTuple(response, value);
+    }
+    return value;
+  }
+  // Plain object
+  for (const k in value) {
+    if (k === __PROTO__) {
+      delete (value: any)[k];
+    } else {
+      const walked = walkParsedJSON(response, (value: any)[k], value, k);
+      if (walked !== undefined) {
+        (value: any)[k] = walked;
+      } else {
+        delete (value: any)[k];
+      }
+    }
+  }
+  return value;
 }
 
 export function close(weakResponse: WeakResponse): void {
