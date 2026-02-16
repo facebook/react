@@ -4,6 +4,19 @@ React hooks and components for the [WebMCP](https://github.com/webmachinelearnin
 
 WebMCP is a W3C-proposed web standard (Chrome 146+) that allows websites to register tools that AI agents can discover and invoke directly, replacing unreliable screen-scraping with robust, schema-driven interaction.
 
+> **Source repository:** This package is maintained at [tech-sumit/react-webmcp](https://github.com/tech-sumit/react-webmcp). For standalone usage, demo applications, and detailed documentation, see the source repo.
+
+<table>
+  <tr>
+    <td>
+      <img src="https://github.com/user-attachments/assets/6effbf70-c183-48da-b9f5-f344dbc23022" width="500" alt="Flight Search demo — Imperative API"/>
+    </td>
+    <td>
+      <img src="https://github.com/user-attachments/assets/5673ec8e-4f35-46d7-a775-c8013c73838f" width="500" alt="French Bistro demo — Declarative API"/>
+    </td>
+  </tr>
+</table>
+
 ## Installation
 
 ```sh
@@ -97,3 +110,19 @@ function ReservationForm() {
 - `getModelContext()` — Returns `navigator.modelContext` or `null`.
 - `isWebMCPAvailable()` — Returns `true` if the API is available.
 - `isWebMCPTestingAvailable()` — Returns `true` if the testing/inspector API is available.
+
+## Demos
+
+Working demo applications are available in the [source repository](https://github.com/tech-sumit/react-webmcp):
+
+- **[Flight Search](https://github.com/tech-sumit/react-webmcp/tree/master/demos/flight-search)** (Imperative API) — Replicates Google's [react-flightsearch](https://googlechromelabs.github.io/webmcp-tools/demos/react-flightsearch/) demo using `useWebMCPTool` hooks. Exposes 4 tools: `searchFlights`, `listFlights`, `setFilters`, `resetFilters`.
+- **[French Bistro](https://github.com/tech-sumit/react-webmcp/tree/master/demos/french-bistro)** (Declarative API) — Replicates Google's [french-bistro](https://googlechromelabs.github.io/webmcp-tools/demos/french-bistro/) demo using `<WebMCPForm>` and `<WebMCPInput>` components. Exposes the `book_table_le_petit_bistro` tool.
+
+To try them:
+
+```sh
+git clone https://github.com/tech-sumit/react-webmcp.git
+cd react-webmcp/demos/flight-search  # or demos/french-bistro
+npm install
+npm run dev
+```
