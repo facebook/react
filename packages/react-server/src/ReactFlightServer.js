@@ -92,6 +92,7 @@ import {
   markAsyncSequenceRootTask,
   getCurrentAsyncSequence,
   getAsyncSequenceFromPromise,
+  cleanupAsyncDebugInfo,
   parseStackTrace,
   parseStackTracePrivate,
   supportsComponentStorage,
@@ -861,6 +862,10 @@ export function resolveRequest(): null | Request {
     if (store) return store;
   }
   return null;
+}
+
+export function isRequestClosingOrClosed(request: Request): boolean {
+  return request.status >= CLOSING;
 }
 
 function isTypedArray(value: any): boolean {
@@ -4140,6 +4145,9 @@ function fatalError(request: Request, error: mixed): void {
     request.status = CLOSING;
     request.fatalError = error;
   }
+  if (__DEV__) {
+    cleanupAsyncDebugInfo(request);
+  }
   const abortReason = new Error(
     'The render was aborted due to a fatal error.',
     {
@@ -6086,6 +6094,9 @@ function flushCompletedChunks(request: Request): void {
             close(request.destination);
             request.destination = null;
           }
+          if (__DEV__) {
+            cleanupAsyncDebugInfo(request);
+          }
           return;
         }
       }
@@ -6108,6 +6119,11 @@ function flushCompletedChunks(request: Request): void {
     if (__DEV__ && request.debugDestination !== null) {
       close(request.debugDestination);
       request.debugDestination = null;
+    }
+    if (__DEV__) {
+      // Clean up async debug tracking after all close/abort side effects,
+      // so any async work spawned during abort doesn't re-populate tracking.
+      cleanupAsyncDebugInfo(request);
     }
   }
 }
@@ -6158,6 +6174,9 @@ function callOnAllReadyIfReady(request: Request): void {
 export function startFlowing(request: Request, destination: Destination): void {
   if (request.status === CLOSING) {
     request.status = CLOSED;
+    if (__DEV__) {
+      cleanupAsyncDebugInfo(request);
+    }
     closeWithError(destination, request.fatalError);
     return;
   }
@@ -6183,6 +6202,9 @@ export function startFlowingDebug(
 ): void {
   if (request.status === CLOSING) {
     request.status = CLOSED;
+    if (__DEV__) {
+      cleanupAsyncDebugInfo(request);
+    }
     closeWithError(debugDestination, request.fatalError);
     return;
   }

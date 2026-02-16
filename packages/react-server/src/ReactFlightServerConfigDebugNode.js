@@ -26,7 +26,11 @@ import {
   UNRESOLVED_AWAIT_NODE,
 } from './ReactFlightAsyncSequence';
 import {resolveOwner} from './flight/ReactFlightCurrentOwner';
-import {resolveRequest, isAwaitInUserspace} from './ReactFlightServer';
+import {
+  resolveRequest,
+  isAwaitInUserspace,
+  isRequestClosingOrClosed,
+} from './ReactFlightServer';
 import {createHook, executionAsyncId, AsyncResource} from 'async_hooks';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
 import {parseStackTracePrivate} from './ReactFlightServerConfig';
@@ -36,6 +40,12 @@ const getAsyncId = AsyncResource.prototype.asyncId;
 
 const pendingOperations: Map<number, AsyncSequence> =
   __DEV__ && enableAsyncDebugInfo ? new Map() : (null: any);
+
+// Tracks which asyncIds belong to each request, for cleanup when the request closes.
+const requestAsyncIds: WeakMap<any, Set<number>> = __DEV__ &&
+enableAsyncDebugInfo
+  ? new WeakMap()
+  : (null: any);
 
 // Keep the last resolved await as a workaround for async functions missing data.
 let lastRanAwait: null | AwaitNode = null;
@@ -201,6 +211,21 @@ export function initAsyncDebugInfo(): void {
           }
         }
         pendingOperations.set(asyncId, node);
+        const request = resolveRequest();
+        if (request !== null) {
+          if (isRequestClosingOrClosed(request)) {
+            // The request is already closing/closed. Don't track this asyncId
+            // since no sweep will run for it. Remove it immediately.
+            pendingOperations.delete(asyncId);
+          } else {
+            let ids = requestAsyncIds.get(request);
+            if (ids === undefined) {
+              ids = new Set();
+              requestAsyncIds.set(request, ids);
+            }
+            ids.add(asyncId);
+          }
+        }
       },
       before(asyncId: number): void {
         const node = pendingOperations.get(asyncId);
@@ -385,4 +410,29 @@ export function getAsyncSequenceFromPromise(
     return null;
   }
   return node;
+}
+
+export function cleanupAsyncDebugInfo(request: any): void {
+  if (__DEV__ && enableAsyncDebugInfo) {
+    // Sweep all asyncIds tracked for this request from the global pendingOperations map.
+    // This prevents monotonic growth of pendingOperations across requests.
+    //
+    // Trade-off: if another request later chains .then() on a promise that originated
+    // in this (now-closed) request, the trigger lookup in init() will return undefined
+    // and lineage for that chain won't be tracked. This is the same behavior as for any
+    // async operation originating outside tracked scope, and is acceptable because RSC
+    // requests are independent renders.
+    //
+    // Note: the per-request Set may contain asyncIds already removed by the destroy hook.
+    // The extra deletes are harmless no-ops. We don't trim the Set from destroy because
+    // resolveRequest() is unreliable in the destroy context (it runs during GC, not
+    // necessarily within any request's AsyncLocalStorage scope).
+    const ids = requestAsyncIds.get(request);
+    if (ids !== undefined) {
+      ids.forEach(function (id) {
+        pendingOperations.delete(id);
+      });
+      requestAsyncIds.delete(request);
+    }
+  }
 }
