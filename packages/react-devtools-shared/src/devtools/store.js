@@ -1873,6 +1873,13 @@ export default class Store extends EventEmitter<{
               }
 
               const index = parentSuspense.children.indexOf(id);
+              if (index === -1) {
+                this._throwAndEmitError(
+                  Error(
+                    `Cannot remove suspense node "${id}" from parent "${parentID}" because it is not a child of the parent.`,
+                  ),
+                );
+              }
               parentSuspense.children.splice(index, 1);
             }
           }
