@@ -61,15 +61,35 @@ export const TestRecommendedRules: Rule.RuleModule = {
     schema: [{type: 'object', additionalProperties: true}],
   },
   create(context) {
+    // Aggregate all listeners from recommended rules
+    type ListenerFunction = (node: Rule.Node) => void;
+    const aggregatedListeners: Record<string, ListenerFunction[]> = {};
+    
     for (const ruleConfig of Object.values(
       configs.recommended.plugins['react-compiler'].rules,
     )) {
       const listener = ruleConfig.rule.create(context);
-      if (Object.entries(listener).length !== 0) {
-        throw new Error('TODO: handle rules that return listeners to eslint');
+      
+      // Aggregate listeners by their event type (e.g., 'Program', 'CallExpression')
+      for (const [eventType, handler] of Object.entries(listener)) {
+        if (!aggregatedListeners[eventType]) {
+          aggregatedListeners[eventType] = [];
+        }
+        aggregatedListeners[eventType].push(handler as ListenerFunction);
       }
     }
-    return {};
+    
+    // Create combined listeners that call all handlers for each event type
+    const combinedListeners: Rule.RuleListener = {};
+    for (const [eventType, handlers] of Object.entries(aggregatedListeners)) {
+      combinedListeners[eventType] = (node: Rule.Node) => {
+        for (const handler of handlers) {
+          handler(node);
+        }
+      };
+    }
+    
+    return combinedListeners;
   },
 };
 
