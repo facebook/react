@@ -42,9 +42,22 @@ const pendingOperations: Map<number, AsyncSequence> =
   __DEV__ && enableAsyncDebugInfo ? new Map() : (null: any);
 
 // Tracks which asyncIds belong to each request, for cleanup when the request closes.
+// Explicit cleanup is required because asyncIdToRequests holds strong references
+// to request owners until ownership is removed.
 const requestAsyncIds: WeakMap<any, Set<number>> = __DEV__ &&
 enableAsyncDebugInfo
   ? new WeakMap()
+  : (null: any);
+
+// Tracks request ownership for each asyncId.
+const asyncIdToRequests: Map<number, Set<any>> = __DEV__ && enableAsyncDebugInfo
+  ? new Map()
+  : (null: any);
+
+// Tracks requests that have already been cleaned so we can avoid re-adding
+// ownership in windows where status has not yet transitioned to CLOSING/CLOSED.
+const cleanedRequests: WeakSet<any> = __DEV__ && enableAsyncDebugInfo
+  ? new WeakSet()
   : (null: any);
 
 // Keep the last resolved await as a workaround for async functions missing data.
@@ -64,6 +77,55 @@ function resolvePromiseOrAwaitNode(
 
 const emptyStack: ReactStackTrace = [];
 
+function addRequestOwnership(request: any, asyncId: number): void {
+  let ids = requestAsyncIds.get(request);
+  if (ids === undefined) {
+    ids = new Set();
+    requestAsyncIds.set(request, ids);
+  }
+  ids.add(asyncId);
+
+  let owners = asyncIdToRequests.get(asyncId);
+  if (owners === undefined) {
+    owners = new Set();
+    asyncIdToRequests.set(asyncId, owners);
+  }
+  owners.add(request);
+}
+
+function removeAsyncIdFromRequest(request: any, asyncId: number): void {
+  const ids = requestAsyncIds.get(request);
+  if (ids !== undefined) {
+    ids.delete(asyncId);
+    if (ids.size === 0) {
+      requestAsyncIds.delete(request);
+    }
+  }
+}
+
+function removeAllRequestOwnership(asyncId: number): void {
+  const owners = asyncIdToRequests.get(asyncId);
+  if (owners !== undefined) {
+    owners.forEach(request => {
+      removeAsyncIdFromRequest(request, asyncId);
+    });
+    asyncIdToRequests.delete(asyncId);
+  }
+}
+
+function removeRequestOwnership(request: any, asyncId: number): boolean {
+  const owners = asyncIdToRequests.get(asyncId);
+  if (owners === undefined) {
+    return false;
+  }
+  owners.delete(request);
+  if (owners.size === 0) {
+    asyncIdToRequests.delete(asyncId);
+    return true;
+  }
+  return false;
+}
+
 // Initialize the tracing of async operations.
 // We do this globally since the async work can potentially eagerly
 // start before the first request and once requests start they can interleave.
@@ -78,6 +140,15 @@ export function initAsyncDebugInfo(): void {
         triggerAsyncId: number,
         resource: any,
       ): void {
+        const request = resolveRequest();
+        if (
+          request !== null &&
+          (isRequestClosingOrClosed(request) || cleanedRequests.has(request))
+        ) {
+          // Avoid creating any new tracking nodes once cleanup has run for this request.
+          return;
+        }
+
         const trigger = pendingOperations.get(triggerAsyncId);
         let node: AsyncSequence;
         if (type === 'PROMISE') {
@@ -110,7 +181,6 @@ export function initAsyncDebugInfo(): void {
               }
             } else {
               promiseRef = new WeakRef((resource: Promise<any>));
-              const request = resolveRequest();
               if (request === null) {
                 // We don't collect stacks for awaits that weren't in the scope of a specific render.
               } else {
@@ -210,22 +280,28 @@ export function initAsyncDebugInfo(): void {
             node = trigger;
           }
         }
-        // Only track this asyncId if there is an active, non-closing request.
-        // If there is no request context then no cleanupAsyncDebugInfo sweep
-        // will ever remove the entry, and if the request is already
-        // closing/closed the sweep already ran or won't run. In both cases we
-        // skip the insert entirely to avoid unbounded growth of
-        // pendingOperations and a wasteful set-then-delete cycle. The destroy
-        // hook is unreliable for cleanup since it depends on GC timing.
-        const request = resolveRequest();
-        if (request !== null && !isRequestClosingOrClosed(request)) {
-          pendingOperations.set(asyncId, node);
-          let ids = requestAsyncIds.get(request);
-          if (ids === undefined) {
-            ids = new Set();
-            requestAsyncIds.set(request, ids);
+        // Keep operation tracking for both request-scoped and external async work.
+        pendingOperations.set(asyncId, node);
+
+        if (request !== null) {
+          // Keep ownership request-local here. We intentionally don't claim
+          // unowned trigger nodes so async debug info from external promises can
+          // still be reused by later requests.
+          addRequestOwnership(request, asyncId);
+        } else {
+          // If this async resource was spawned from request-owned work, preserve all
+          // owners so cleanup only deletes entries when the last owner closes.
+          const triggerOwners = asyncIdToRequests.get(triggerAsyncId);
+          if (triggerOwners !== undefined) {
+            triggerOwners.forEach(triggerRequest => {
+              if (
+                !isRequestClosingOrClosed(triggerRequest) &&
+                !cleanedRequests.has(triggerRequest)
+              ) {
+                addRequestOwnership(triggerRequest, asyncId);
+              }
+            });
           }
-          ids.add(asyncId);
         }
       },
       before(asyncId: number): void {
@@ -361,6 +437,7 @@ export function initAsyncDebugInfo(): void {
         // If we needed the meta data from this operation we should have already
         // extracted it or it should be part of a chain of triggers.
         pendingOperations.delete(asyncId);
+        removeAllRequestOwnership(asyncId);
       },
     }).enable();
   }
@@ -371,7 +448,9 @@ export function markAsyncSequenceRootTask(): void {
     // Whatever Task we're running now is spawned by React itself to perform render work.
     // Don't track any cause beyond this task. We may still track I/O that was started outside
     // React but just not the cause of entering the render.
-    pendingOperations.delete(executionAsyncId());
+    const asyncId = executionAsyncId();
+    pendingOperations.delete(asyncId);
+    removeAllRequestOwnership(asyncId);
   }
 }
 
@@ -415,22 +494,20 @@ export function getAsyncSequenceFromPromise(
 
 export function cleanupAsyncDebugInfo(request: any): void {
   if (__DEV__ && enableAsyncDebugInfo) {
+    cleanedRequests.add(request);
+    // Ensure we don't retain chains through the process-global fallback pointer.
+    lastRanAwait = null;
+
     // Sweep all asyncIds tracked for this request from the global pendingOperations map.
-    // This prevents monotonic growth of pendingOperations across requests.
-    //
-    // Trade-off: if another request later chains .then() on a promise that originated
-    // in this (now-closed) request, the trigger lookup in init() will return undefined
-    // and lineage for that chain won't be tracked. This is the same behavior as for any
-    // async operation originating outside tracked scope, and is acceptable because RSC
-    // requests are independent renders.
-    //
-    // Note: the per-request Set may contain asyncIds already removed by the destroy hook.
-    // The extra deletes are harmless no-ops. We don't trim the Set from destroy because
-    // resolveRequest() is unreliable in the destroy context (it runs during GC, not
-    // necessarily within any request's AsyncLocalStorage scope).
+    // Delete an asyncId only when this was its final request owner so sharing across
+    // active requests does not lose lineage.
     const ids = requestAsyncIds.get(request);
     if (ids !== undefined) {
-      ids.forEach(id => pendingOperations.delete(id));
+      ids.forEach(id => {
+        if (removeRequestOwnership(request, id)) {
+          pendingOperations.delete(id);
+        }
+      });
       requestAsyncIds.delete(request);
     }
   }

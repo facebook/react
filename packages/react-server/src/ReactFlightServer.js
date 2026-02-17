@@ -6086,11 +6086,12 @@ function flushCompletedChunks(request: Request): void {
           // We'll continue writing on this stream so nothing closes.
           return;
         } else {
-          // We'll close the main stream but keep the debug stream open.
-          // TODO: If this destination is not currently flowing we'll not close it when it resumes flowing.
+          // We'll mark the main stream as closed while keeping the debug stream open.
+          // If the main stream is currently flowing, close it immediately.
+          // TODO: If this destination is not currently flowing we won't close it when flow resumes.
           // We should keep a separate status for this.
+          request.status = CLOSED;
           if (request.destination !== null) {
-            request.status = CLOSED;
             close(request.destination);
             request.destination = null;
           }
@@ -6234,6 +6235,9 @@ function finishHalt(request: Request, abortedTasks: Set<Task>): void {
     const onAllReady = request.onAllReady;
     onAllReady();
     flushCompletedChunks(request);
+    if (__DEV__) {
+      cleanupAsyncDebugInfo(request);
+    }
   } catch (error) {
     logRecoverableError(request, error, null);
     fatalError(request, error);
@@ -6250,6 +6254,9 @@ function finishAbort(
     const onAllReady = request.onAllReady;
     onAllReady();
     flushCompletedChunks(request);
+    if (__DEV__) {
+      cleanupAsyncDebugInfo(request);
+    }
   } catch (error) {
     logRecoverableError(request, error, null);
     fatalError(request, error);
@@ -6304,6 +6311,9 @@ export function abort(request: Request, reason: mixed): void {
       const onAllReady = request.onAllReady;
       onAllReady();
       flushCompletedChunks(request);
+      if (__DEV__) {
+        cleanupAsyncDebugInfo(request);
+      }
     }
   } catch (error) {
     logRecoverableError(request, error, null);
