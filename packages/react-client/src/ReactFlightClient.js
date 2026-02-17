@@ -5242,14 +5242,14 @@ export function processStringChunk(
 }
 
 function parseModel<T>(response: Response, json: UninitializedModel): T {
-  const parsed = JSON.parse(json);
+  const rawModel = JSON.parse(json);
   // Pass a wrapper object as parentObject to match the original JSON.parse
   // reviver behavior, where the root value's reviver receives {"": rootValue}
   // as `this`. This ensures parentObject is never null when accessed downstream.
-  return walkParsedJSON(response, parsed, {'': parsed}, '');
+  return reviveModel(response, rawModel, {'': rawModel}, '');
 }
 
-function walkParsedJSON(
+function reviveModel(
   response: Response,
   value: JSONValue,
   parentObject: Object | null,
@@ -5266,7 +5266,7 @@ function walkParsedJSON(
   }
   if (Array.isArray(value)) {
     for (let i = 0; i < value.length; i++) {
-      (value: any)[i] = walkParsedJSON(response, value[i], value, '' + i);
+      (value: any)[i] = reviveModel(response, value[i], value, '' + i);
     }
     if (value[0] === REACT_ELEMENT_TYPE) {
       // React element tuple
@@ -5279,7 +5279,7 @@ function walkParsedJSON(
     if (k === __PROTO__) {
       delete (value: any)[k];
     } else {
-      const walked = walkParsedJSON(response, (value: any)[k], value, k);
+      const walked = reviveModel(response, (value: any)[k], value, k);
       if (walked !== undefined) {
         (value: any)[k] = walked;
       } else {
