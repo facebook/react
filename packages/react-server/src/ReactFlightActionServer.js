@@ -54,6 +54,14 @@ function loadServerReference<T>(
   if (typeof id !== 'string') {
     return (null: any);
   }
+
+  // Security: Validate server reference ID to prevent path traversal
+  if (id.includes('..') || id.includes('\0') || id.startsWith('/')) {
+    throw new Error(
+      'Invalid server reference ID. ID must not contain "..", null bytes, or start with "/".',
+    );
+  }
+
   const serverReference: ServerReference<T> =
     resolveServerReference<$FlowFixMe>(bundlerConfig, id);
   // We expect most servers to not really need this because you'd just have all
