@@ -5252,7 +5252,7 @@ function parseModel<T>(response: Response, json: UninitializedModel): T {
 function reviveModel(
   response: Response,
   value: JSONValue,
-  parentObject: Object | null,
+  parentObject: Object,
   key: string,
 ): any {
   if (typeof value === 'string') {
