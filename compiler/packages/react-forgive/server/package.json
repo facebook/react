@@ -1,5 +1,5 @@
 {
-  "private": "true",
+  "private": true,
   "name": "react-forgive-server",
   "version": "0.0.0",
   "description": "Experimental LSP server",
