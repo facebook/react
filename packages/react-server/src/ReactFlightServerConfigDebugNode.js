@@ -210,21 +210,22 @@ export function initAsyncDebugInfo(): void {
             node = trigger;
           }
         }
-        pendingOperations.set(asyncId, node);
+        // Only track this asyncId if there is an active, non-closing request.
+        // If there is no request context then no cleanupAsyncDebugInfo sweep
+        // will ever remove the entry, and if the request is already
+        // closing/closed the sweep already ran or won't run. In both cases we
+        // skip the insert entirely to avoid unbounded growth of
+        // pendingOperations and a wasteful set-then-delete cycle. The destroy
+        // hook is unreliable for cleanup since it depends on GC timing.
         const request = resolveRequest();
-        if (request !== null) {
-          if (isRequestClosingOrClosed(request)) {
-            // The request is already closing/closed. Don't track this asyncId
-            // since no sweep will run for it. Remove it immediately.
-            pendingOperations.delete(asyncId);
-          } else {
-            let ids = requestAsyncIds.get(request);
-            if (ids === undefined) {
-              ids = new Set();
-              requestAsyncIds.set(request, ids);
-            }
-            ids.add(asyncId);
+        if (request !== null && !isRequestClosingOrClosed(request)) {
+          pendingOperations.set(asyncId, node);
+          let ids = requestAsyncIds.get(request);
+          if (ids === undefined) {
+            ids = new Set();
+            requestAsyncIds.set(request, ids);
           }
+          ids.add(asyncId);
         }
       },
       before(asyncId: number): void {
@@ -429,9 +430,7 @@ export function cleanupAsyncDebugInfo(request: any): void {
     // necessarily within any request's AsyncLocalStorage scope).
     const ids = requestAsyncIds.get(request);
     if (ids !== undefined) {
-      ids.forEach(function (id) {
-        pendingOperations.delete(id);
-      });
+      ids.forEach(id => pendingOperations.delete(id));
       requestAsyncIds.delete(request);
     }
   }
