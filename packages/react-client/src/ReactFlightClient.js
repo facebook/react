@@ -5264,7 +5264,7 @@ function reviveModel(
   if (typeof value !== 'object' || value === null) {
     return value;
   }
-  if (Array.isArray(value)) {
+  if (isArray(value)) {
     for (let i = 0; i < value.length; i++) {
       (value: any)[i] = reviveModel(response, value[i], value, '' + i);
     }
