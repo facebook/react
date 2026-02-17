@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<0a1c7b83185390f237a6237c40208b58>>
+ * @generated SignedSource<<36fc820520e851e419aab04adcf8b406>>
  */
 
 'use strict';
@@ -18939,7 +18939,7 @@ function printReactiveScopeSummary(scope) {
 function printDependency(dependency) {
     const identifier = printIdentifier(dependency.identifier) +
         printType(dependency.identifier.type);
-    return `${identifier}${dependency.path.map(token => `${token.optional ? '?.' : '.'}${token.property}`).join('')}`;
+    return `${identifier}${dependency.path.map(token => `${token.optional ? '?.' : '.'}${token.property}`).join('')}_${printSourceLocation(dependency.loc)}`;
 }
 
 function printFunction(fn) {
@@ -38595,6 +38595,7 @@ function canMergeScopes(current, next, temporaries) {
         identifier: declaration.identifier,
         reactive: true,
         path: [],
+        loc: GeneratedSource,
     }))), next.scope.dependencies) ||
         (next.scope.dependencies.size !== 0 &&
             [...next.scope.dependencies].every(dep => dep.path.length === 0 &&
@@ -43193,7 +43194,10 @@ function collectMaybeMemoDependencies(value, maybeDeps, optional) {
             if (object != null) {
                 return {
                     root: object.root,
-                    path: [...object.path, { property: value.property, optional }],
+                    path: [
+                        ...object.path,
+                        { property: value.property, optional, loc: value.loc },
+                    ],
                     loc: value.loc,
                 };
             }
@@ -44065,7 +44069,7 @@ class PropertyPathRegistry {
     constructor() {
         this.roots = new Map();
     }
-    getOrCreateIdentifier(identifier, reactive) {
+    getOrCreateIdentifier(identifier, reactive, loc) {
         let rootNode = this.roots.get(identifier.id);
         if (rootNode === undefined) {
             rootNode = {
@@ -44076,6 +44080,7 @@ class PropertyPathRegistry {
                     identifier,
                     reactive,
                     path: [],
+                    loc,
                 },
                 hasOptional: false,
                 parent: null,
@@ -44102,6 +44107,7 @@ class PropertyPathRegistry {
                     identifier: parent.fullPath.identifier,
                     reactive: parent.fullPath.reactive,
                     path: parent.fullPath.path.concat(entry),
+                    loc: entry.loc,
                 },
                 hasOptional: parent.hasOptional || entry.optional,
             };
@@ -44110,7 +44116,7 @@ class PropertyPathRegistry {
         return child;
     }
     getOrCreateProperty(n) {
-        let currNode = this.getOrCreateIdentifier(n.identifier, n.reactive);
+        let currNode = this.getOrCreateIdentifier(n.identifier, n.reactive, n.loc);
         if (n.path.length === 0) {
             return currNode;
         }
@@ -44120,21 +44126,22 @@ class PropertyPathRegistry {
         return PropertyPathRegistry.getOrCreatePropertyEntry(currNode, n.path.at(-1));
     }
 }
-function getMaybeNonNullInInstruction(instr, context) {
+function getMaybeNonNullInInstruction(value, context) {
     var _a, _b, _c;
     let path = null;
-    if (instr.kind === 'PropertyLoad') {
-        path = (_a = context.temporaries.get(instr.object.identifier.id)) !== null && _a !== void 0 ? _a : {
-            identifier: instr.object.identifier,
-            reactive: instr.object.reactive,
+    if (value.kind === 'PropertyLoad') {
+        path = (_a = context.temporaries.get(value.object.identifier.id)) !== null && _a !== void 0 ? _a : {
+            identifier: value.object.identifier,
+            reactive: value.object.reactive,
             path: [],
+            loc: value.loc,
         };
     }
-    else if (instr.kind === 'Destructure') {
-        path = (_b = context.temporaries.get(instr.value.identifier.id)) !== null && _b !== void 0 ? _b : null;
+    else if (value.kind === 'Destructure') {
+        path = (_b = context.temporaries.get(value.value.identifier.id)) !== null && _b !== void 0 ? _b : null;
     }
-    else if (instr.kind === 'ComputedLoad') {
-        path = (_c = context.temporaries.get(instr.object.identifier.id)) !== null && _c !== void 0 ? _c : null;
+    else if (value.kind === 'ComputedLoad') {
+        path = (_c = context.temporaries.get(value.object.identifier.id)) !== null && _c !== void 0 ? _c : null;
     }
     return path != null ? context.registry.getOrCreateProperty(path) : null;
 }
@@ -44158,7 +44165,7 @@ function collectNonNullsInBlocks(fn, context) {
         fn.params.length > 0 &&
         fn.params[0].kind === 'Identifier') {
         const identifier = fn.params[0].identifier;
-        knownNonNullIdentifiers.add(context.registry.getOrCreateIdentifier(identifier, true));
+        knownNonNullIdentifiers.add(context.registry.getOrCreateIdentifier(identifier, true, fn.params[0].loc));
     }
     const nodes = new Map();
     for (const [_, block] of fn.body.blocks) {
@@ -44202,6 +44209,7 @@ function collectNonNullsInBlocks(fn, context) {
                                 identifier: dep.root.value.identifier,
                                 path: dep.path.slice(0, i),
                                 reactive: dep.root.value.reactive,
+                                loc: dep.loc,
                             });
                             assumedNonNullObjects.add(depNode);
                         }
@@ -44301,12 +44309,12 @@ function reduceMaybeOptionalChains(nodes, registry) {
     do {
         changed = false;
         for (const original of optionalChainNodes) {
-            let { identifier, path: origPath, reactive } = original.fullPath;
-            let currNode = registry.getOrCreateIdentifier(identifier, reactive);
+            let { identifier, path: origPath, reactive, loc: origLoc, } = original.fullPath;
+            let currNode = registry.getOrCreateIdentifier(identifier, reactive, origLoc);
             for (let i = 0; i < origPath.length; i++) {
                 const entry = origPath[i];
                 const nextEntry = entry.optional && nodes.has(currNode)
-                    ? { property: entry.property, optional: false }
+                    ? { property: entry.property, optional: false, loc: entry.loc }
                     : entry;
                 currNode = PropertyPathRegistry.getOrCreatePropertyEntry(currNode, nextEntry);
             }
@@ -44476,6 +44484,7 @@ function matchOptionalTestBlock(terminal, blocks) {
             propertyId: propertyLoad.lvalue.identifier.id,
             storeLocalInstr,
             consequentGoto: consequentBlock.terminal.block,
+            propertyLoadLoc: propertyLoad.loc,
         };
     }
     return null;
@@ -44500,7 +44509,11 @@ function traverseOptionalBlock(optional, context, outerAlternate) {
             const prevInstr = maybeTest.instructions[i - 1];
             if (instrVal.kind === 'PropertyLoad' &&
                 instrVal.object.identifier.id === prevInstr.lvalue.identifier.id) {
-                path.push({ property: instrVal.property, optional: false });
+                path.push({
+                    property: instrVal.property,
+                    optional: false,
+                    loc: instrVal.loc,
+                });
             }
             else {
                 return null;
@@ -44515,6 +44528,7 @@ function traverseOptionalBlock(optional, context, outerAlternate) {
             identifier: maybeTest.instructions[0].value.place.identifier,
             reactive: maybeTest.instructions[0].value.place.reactive,
             path,
+            loc: maybeTest.instructions[0].value.place.loc,
         };
         test = maybeTest.terminal;
     }
@@ -44566,8 +44580,10 @@ function traverseOptionalBlock(optional, context, outerAlternate) {
             {
                 property: matchConsequentResult.property,
                 optional: optional.terminal.optional,
+                loc: matchConsequentResult.propertyLoadLoc,
             },
         ],
+        loc: matchConsequentResult.propertyLoadLoc,
     };
     context.processedInstrsInOptional.add(matchConsequentResult.storeLocalInstr);
     context.processedInstrsInOptional.add(test);
@@ -44582,8 +44598,8 @@ class ReactiveScopeDependencyTreeHIR {
         var _b;
         _ReactiveScopeDependencyTreeHIR_hoistableObjects.set(this, new Map());
         _ReactiveScopeDependencyTreeHIR_deps.set(this, new Map());
-        for (const { path, identifier, reactive } of hoistableObjects) {
-            let currNode = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, reactive, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f"), path.length > 0 && path[0].optional ? 'Optional' : 'NonNull');
+        for (const { path, identifier, reactive, loc } of hoistableObjects) {
+            let currNode = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, reactive, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f"), path.length > 0 && path[0].optional ? 'Optional' : 'NonNull', loc);
             for (let i = 0; i < path.length; i++) {
                 const prevAccessType = (_b = currNode.properties.get(path[i].property)) === null || _b === void 0 ? void 0 : _b.accessType;
                 const accessType = i + 1 < path.length && path[i + 1].optional ? 'Optional' : 'NonNull';
@@ -44596,6 +44612,7 @@ class ReactiveScopeDependencyTreeHIR {
                     nextNode = {
                         properties: new Map(),
                         accessType,
+                        loc: path[i].loc,
                     };
                     currNode.properties.set(path[i].property, nextNode);
                 }
@@ -44604,8 +44621,8 @@ class ReactiveScopeDependencyTreeHIR {
         }
     }
     addDependency(dep) {
-        const { identifier, reactive, path } = dep;
-        let depCursor = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, reactive, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f"), PropertyAccessType.UnconditionalAccess);
+        const { identifier, reactive, path, loc } = dep;
+        let depCursor = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, reactive, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f"), PropertyAccessType.UnconditionalAccess, loc);
         let hoistableCursor = __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f").get(identifier);
         for (const entry of path) {
             let nextHoistableCursor;
@@ -44622,12 +44639,12 @@ class ReactiveScopeDependencyTreeHIR {
                 else {
                     accessType = PropertyAccessType.OptionalAccess;
                 }
-                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, accessType);
+                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, accessType, entry.loc);
             }
             else if (hoistableCursor != null &&
                 hoistableCursor.accessType === 'NonNull') {
                 nextHoistableCursor = hoistableCursor.properties.get(entry.property);
-                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, PropertyAccessType.UnconditionalAccess);
+                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, PropertyAccessType.UnconditionalAccess, entry.loc);
             }
             else {
                 break;
@@ -44662,13 +44679,14 @@ class ReactiveScopeDependencyTreeHIR {
         return buf.length > 2 ? buf.join('\n') : buf.join('');
     }
 }
-_a = ReactiveScopeDependencyTreeHIR, _ReactiveScopeDependencyTreeHIR_hoistableObjects = new WeakMap(), _ReactiveScopeDependencyTreeHIR_deps = new WeakMap(), _ReactiveScopeDependencyTreeHIR_getOrCreateRoot = function _ReactiveScopeDependencyTreeHIR_getOrCreateRoot(identifier, reactive, roots, defaultAccessType) {
+_a = ReactiveScopeDependencyTreeHIR, _ReactiveScopeDependencyTreeHIR_hoistableObjects = new WeakMap(), _ReactiveScopeDependencyTreeHIR_deps = new WeakMap(), _ReactiveScopeDependencyTreeHIR_getOrCreateRoot = function _ReactiveScopeDependencyTreeHIR_getOrCreateRoot(identifier, reactive, roots, defaultAccessType, loc) {
     let rootNode = roots.get(identifier);
     if (rootNode === undefined) {
         rootNode = {
             properties: new Map(),
             reactive,
             accessType: defaultAccessType,
+            loc,
         };
         roots.set(identifier, rootNode);
     }
@@ -44723,7 +44741,7 @@ function merge$1(access1, access2) {
 }
 function collectMinimalDependenciesInSubtree(node, reactive, rootIdentifier, path, results) {
     if (isDependency(node.accessType)) {
-        results.add({ identifier: rootIdentifier, reactive, path });
+        results.add({ identifier: rootIdentifier, reactive, path, loc: node.loc });
     }
     else {
         for (const [childName, childNode] of node.properties) {
@@ -44732,6 +44750,7 @@ function collectMinimalDependenciesInSubtree(node, reactive, rootIdentifier, pat
                 {
                     property: childName,
                     optional: isOptional(childNode.accessType),
+                    loc: childNode.loc,
                 },
             ], results);
         }
@@ -44748,12 +44767,13 @@ function printSubtree(node, includeAccesses) {
     }
     return results;
 }
-function makeOrMergeProperty(node, property, accessType) {
+function makeOrMergeProperty(node, property, accessType, loc) {
     let child = node.properties.get(property);
     if (child == null) {
         child = {
             properties: new Map(),
             accessType,
+            loc,
         };
         node.properties.set(property, child);
     }
@@ -44857,7 +44877,7 @@ function collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporarie
             if (value.kind === 'PropertyLoad' && !usedOutside) {
                 if (innerFnContext == null ||
                     temporaries.has(value.object.identifier.id)) {
-                    const property = getProperty(value.object, value.property, false, temporaries);
+                    const property = getProperty(value.object, value.property, false, value.loc, temporaries);
                     temporaries.set(lvalue.identifier.id, property);
                 }
             }
@@ -44871,6 +44891,7 @@ function collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporarie
                         identifier: value.place.identifier,
                         reactive: value.place.reactive,
                         path: [],
+                        loc: value.loc,
                     });
                 }
             }
@@ -44881,21 +44902,26 @@ function collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporarie
         }
     }
 }
-function getProperty(object, propertyName, optional, temporaries) {
+function getProperty(object, propertyName, optional, loc, temporaries) {
     const resolvedDependency = temporaries.get(object.identifier.id);
     let property;
     if (resolvedDependency == null) {
         property = {
             identifier: object.identifier,
             reactive: object.reactive,
-            path: [{ property: propertyName, optional }],
+            path: [{ property: propertyName, optional, loc }],
+            loc,
         };
     }
     else {
         property = {
             identifier: resolvedDependency.identifier,
             reactive: resolvedDependency.reactive,
-            path: [...resolvedDependency.path, { property: propertyName, optional }],
+            path: [
+                ...resolvedDependency.path,
+                { property: propertyName, optional, loc },
+            ],
+            loc,
         };
     }
     return property;
@@ -44961,10 +44987,11 @@ class DependencyCollectionContext {
             identifier: place.identifier,
             reactive: place.reactive,
             path: [],
+            loc: place.loc,
         });
     }
-    visitProperty(object, property, optional) {
-        const nextDependency = getProperty(object, property, optional, __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f"));
+    visitProperty(object, property, optional, loc) {
+        const nextDependency = getProperty(object, property, optional, loc, __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f"));
         this.visitDependency(nextDependency);
     }
     visitDependency(maybeDependency) {
@@ -44989,6 +45016,7 @@ class DependencyCollectionContext {
                 identifier: maybeDependency.identifier,
                 reactive: maybeDependency.reactive,
                 path: [],
+                loc: maybeDependency.loc,
             };
         }
         if (__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, maybeDependency)) {
@@ -45003,6 +45031,7 @@ class DependencyCollectionContext {
                 identifier: place.identifier,
                 reactive: place.reactive,
                 path: [],
+                loc: place.loc,
             })) {
             currentScope.reassignments.add(place.identifier);
         }
@@ -45056,7 +45085,7 @@ function handleInstruction(instr, context) {
         return;
     }
     if (value.kind === 'PropertyLoad') {
-        context.visitProperty(value.object, value.property, false);
+        context.visitProperty(value.object, value.property, false, value.loc);
     }
     else if (value.kind === 'StoreLocal') {
         context.visitOperand(value.value);
@@ -52253,6 +52282,7 @@ function collectDependencies(fn, temporaries, callbacks, isFunctionExpression) {
                                 {
                                     optional,
                                     property: value.property,
+                                    loc: value.loc,
                                 },
                             ],
                             loc: value.loc,
