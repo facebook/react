@@ -201,6 +201,13 @@ export function $reset($: MemoCache) {
  * make-read-only-util package, but this simpler version suffices for
  * runtime usage where we just need to catch obvious mutations.
  * 
+ * Limitations:
+ * - Only performs shallow freeze (Object.freeze). Nested object properties
+ *   can still be mutated. A deep freeze would be more correct but adds
+ *   runtime overhead and complexity.
+ * - Does not freeze React elements to avoid breaking React internals.
+ * - Silently ignores objects that cannot be frozen (e.g., some host objects).
+ * 
  * @param value The value to make read-only
  * @returns The same value (frozen in development mode)
  */

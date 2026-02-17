@@ -62,7 +62,8 @@ export const TestRecommendedRules: Rule.RuleModule = {
   },
   create(context) {
     // Aggregate all listeners from recommended rules
-    const aggregatedListeners: Record<string, Function[]> = {};
+    type ListenerFunction = (node: Rule.Node) => void;
+    const aggregatedListeners: Record<string, ListenerFunction[]> = {};
     
     for (const ruleConfig of Object.values(
       configs.recommended.plugins['react-compiler'].rules,
@@ -74,14 +75,14 @@ export const TestRecommendedRules: Rule.RuleModule = {
         if (!aggregatedListeners[eventType]) {
           aggregatedListeners[eventType] = [];
         }
-        aggregatedListeners[eventType].push(handler);
+        aggregatedListeners[eventType].push(handler as ListenerFunction);
       }
     }
     
     // Create combined listeners that call all handlers for each event type
     const combinedListeners: Rule.RuleListener = {};
     for (const [eventType, handlers] of Object.entries(aggregatedListeners)) {
-      combinedListeners[eventType] = (node: any) => {
+      combinedListeners[eventType] = (node: Rule.Node) => {
         for (const handler of handlers) {
           handler(node);
         }
