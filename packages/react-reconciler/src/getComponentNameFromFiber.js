@@ -122,7 +122,10 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       }
       return 'Mode';
     case OffscreenComponent:
-      return 'Offscreen';
+      if (fiber.return !== null) {
+        return getComponentNameFromFiber(fiber.return);
+      }
+      return null;
     case Profiler:
       return 'Profiler';
     case ScopeComponent:
