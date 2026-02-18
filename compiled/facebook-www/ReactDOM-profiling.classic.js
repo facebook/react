@@ -17368,7 +17368,7 @@ var ANIMATION_END = getVendorPrefixedEventName("animationend"),
   TRANSITION_END = getVendorPrefixedEventName("transitionend"),
   topLevelEventsToReactNames = new Map(),
   simpleEventPluginEvents =
-    "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll toggle touchMove waiting wheel".split(
+    "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error fullscreenChange fullscreenError gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll toggle touchMove waiting wheel".split(
       " "
     );
 enableScrollEndPolyfill || simpleEventPluginEvents.push("scrollEnd");
@@ -22267,6 +22267,7 @@ function getEventPriority(domEventName) {
     case "beforeinput":
     case "blur":
     case "fullscreenchange":
+    case "fullscreenerror":
     case "focus":
     case "hashchange":
     case "popstate":
@@ -22349,14 +22350,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2401 = React.version;
 if (
-  "19.3.0-www-classic-4ac47537-20260217" !==
+  "19.3.0-www-classic-4842fbea-20260217" !==
   isomorphicReactPackageVersion$jscomp$inline_2401
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2401,
-      "19.3.0-www-classic-4ac47537-20260217"
+      "19.3.0-www-classic-4842fbea-20260217"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22374,10 +22375,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2403 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-4ac47537-20260217",
+  version: "19.3.0-www-classic-4842fbea-20260217",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-4ac47537-20260217"
+  reconcilerVersion: "19.3.0-www-classic-4842fbea-20260217"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2403.getLaneLabelMap = getLaneLabelMap),
@@ -22810,7 +22811,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-4ac47537-20260217";
+exports.version = "19.3.0-www-classic-4842fbea-20260217";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
