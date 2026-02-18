@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4162b252d1adf53ccdad84f00e8b51ee>>
+ * @generated SignedSource<<ad5c8edb89177f5eb106f75d848ada91>>
  */
 
 "use strict";
@@ -2811,6 +2811,7 @@ __DEV__ &&
       nextContext =
         "AndroidTextInput" === nextContext ||
         "RCTMultilineTextInputView" === nextContext ||
+        "RCTSelectableText" === nextContext ||
         "RCTSinglelineTextInputView" === nextContext ||
         "RCTText" === nextContext ||
         "RCTVirtualText" === nextContext;
@@ -20147,10 +20148,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-4ac47537-20260217",
+        version: "19.3.0-native-fb-61db53c1-20260217",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-4ac47537-20260217"
+        reconcilerVersion: "19.3.0-native-fb-61db53c1-20260217"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
