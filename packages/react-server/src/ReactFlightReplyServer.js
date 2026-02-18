@@ -199,6 +199,8 @@ export type Response = {
   _temporaryReferences: void | TemporaryReferenceSet,
   _rootArrayContexts: WeakMap<$ReadOnlyArray<mixed>, NestedArrayContext>,
   _arraySizeLimit: number,
+  _totalStringSize: number,
+  _formDataKeyCount: number,
 };
 
 export function getRoot<T>(response: Response): Thenable<T> {
@@ -715,6 +717,17 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   cyclicChunk.reason = null;
 
   try {
+    // Security: Validate JSON payload size before parsing to prevent DoS
+    if (resolvedModel.length > MAX_JSON_PAYLOAD_SIZE) {
+      throw new Error(
+        'JSON payload too large. Maximum size is ' +
+          MAX_JSON_PAYLOAD_SIZE +
+          ' bytes but received ' +
+          resolvedModel.length +
+          ' bytes.',
+      );
+    }
+
     const rawModel = JSON.parse(resolvedModel);
 
     // The root might not be an array but if it is we want to track the count of entries.
@@ -1604,6 +1617,18 @@ function parseModelString(
         // Clone the keys to workaround bugs in the delete-while-iterating
         // algorithm of FormData.
         const keys = Array.from(backingFormData.keys());
+
+        // Security: Validate FormData key count to prevent DoS
+        if (keys.length > MAX_FORMDATA_KEYS) {
+          throw new Error(
+            'FormData has too many keys. Maximum is ' +
+              MAX_FORMDATA_KEYS +
+              ' but received ' +
+              keys.length +
+              ' keys.',
+          );
+        }
+
         for (let i = 0; i < keys.length; i++) {
           const entryKey = keys[i];
           if (entryKey.startsWith(formPrefix)) {
@@ -1825,6 +1850,27 @@ function parseModelString(
     const ref = value.slice(1);
     return getOutlinedModel(response, ref, obj, key, arrayRoot, createModel);
   }
+
+  // Security: Track total string size to prevent memory exhaustion
+  if (value.length > MAX_STRING_LENGTH) {
+    throw new Error(
+      'String too long. Maximum length is ' +
+        MAX_STRING_LENGTH +
+        ' characters but received ' +
+        value.length +
+        ' characters.',
+    );
+  }
+
+  response._totalStringSize += value.length;
+  if (response._totalStringSize > MAX_TOTAL_STRING_SIZE) {
+    throw new Error(
+      'Total string size limit exceeded. Maximum total is ' +
+        MAX_TOTAL_STRING_SIZE +
+        ' bytes.',
+    );
+  }
+
   if (arrayRoot !== null) {
     bumpArrayCount(arrayRoot, value.length, response);
   }
@@ -1840,6 +1886,14 @@ const DEFAULT_MAX_ARRAY_NESTING = 1000000;
 const MAX_BIGINT_DIGITS = 300;
 
 export const MAX_BOUND_ARGS = 1000;
+
+// Security limits to prevent DoS attacks
+// These limits are designed to prevent malicious attacks while allowing
+// legitimate large payloads from real applications
+const MAX_JSON_PAYLOAD_SIZE = 50 * 1024 * 1024; // 50MB max JSON payload
+const MAX_FORMDATA_KEYS = 100000; // Maximum number of FormData keys
+const MAX_STRING_LENGTH = 10 * 1024 * 1024; // 10MB max per string (for large documents/files)
+const MAX_TOTAL_STRING_SIZE = 500 * 1024 * 1024; // 500MB total string memory
 
 export function createResponse(
   bundlerConfig: ServerManifest,
@@ -1859,6 +1913,8 @@ export function createResponse(
     _temporaryReferences: temporaryReferences,
     _rootArrayContexts: new WeakMap(),
     _arraySizeLimit: arraySizeLimit,
+    _totalStringSize: 0,
+    _formDataKeyCount: 0,
   };
   return response;
 }
@@ -1868,6 +1924,16 @@ export function resolveField(
   key: string,
   value: string,
 ): void {
+  // Security: Track and limit FormData keys to prevent DoS
+  response._formDataKeyCount++;
+  if (response._formDataKeyCount > MAX_FORMDATA_KEYS) {
+    throw new Error(
+      'FormData key limit exceeded. Maximum is ' +
+        MAX_FORMDATA_KEYS +
+        ' keys.',
+    );
+  }
+
   // Add this field to the backing store.
   response._formData.append(key, value);
   const prefix = response._prefix;
@@ -1883,6 +1949,16 @@ export function resolveField(
 }
 
 export function resolveFile(response: Response, key: string, file: File): void {
+  // Security: Track and limit FormData keys to prevent DoS
+  response._formDataKeyCount++;
+  if (response._formDataKeyCount > MAX_FORMDATA_KEYS) {
+    throw new Error(
+      'FormData key limit exceeded. Maximum is ' +
+        MAX_FORMDATA_KEYS +
+        ' keys.',
+    );
+  }
+
   // Add this field to the backing store.
   response._formData.append(key, file);
 }
