@@ -22,6 +22,12 @@ async function main() {
       type: 'string',
       default: '**/+(*.{js,mjs,jsx,ts,tsx}|package.json)',
     })
+    .option('verbose', {
+      alias: 'v',
+      description: 'display per-component failure details',
+      type: 'boolean',
+      default: false,
+    })
     .parseSync();
 
   const spinner = ora('Checking').start();
@@ -48,7 +54,7 @@ async function main() {
   }
   spinner.stop();
 
-  reactCompilerCheck.report();
+  reactCompilerCheck.report(argv.verbose);
   strictModeCheck.report();
   libraryCompatCheck.report();
 }

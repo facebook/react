@@ -132,6 +132,58 @@ function countUniqueLocInEvents(events: Array<LoggerEvent>): number {
   return count + seenLocs.size;
 }
 
+function getFailureReason(event: LoggerEvent): string {
+  switch (event.kind) {
+    case 'CompileError': {
+      const detail = event.detail;
+      if ('reason' in detail) {
+        return detail.reason;
+      }
+      return 'Unknown error';
+    }
+    case 'CompileDiagnostic':
+      return event.detail.reason;
+    case 'PipelineError':
+      return event.data;
+    default:
+      return 'Unknown error';
+  }
+}
+
+function printFailureDetails(
+  events: Array<LoggerEvent>,
+  label: string,
+  color: (s: string) => string,
+): void {
+  const seen = new Map<string, LoggerEvent>();
+  for (const e of events) {
+    if (e.filename != null && e.fnLoc != null) {
+      const key = `${e.filename}:${e.fnLoc.start.line}:${e.fnLoc.start.column}`;
+      if (!seen.has(key)) {
+        seen.set(key, e);
+      }
+    } else {
+      // no location info, use a unique key so it's always printed
+      seen.set(`unknown-${seen.size}`, e);
+    }
+  }
+
+  if (seen.size === 0) {
+    return;
+  }
+
+  console.log(color(`\n${label} (${seen.size}):`));
+  for (const [, event] of seen) {
+    const file = event.filename ?? '<unknown>';
+    const loc =
+      event.fnLoc != null
+        ? `:${event.fnLoc.start.line}:${event.fnLoc.start.column}`
+        : '';
+    const reason = getFailureReason(event);
+    console.log(color(`  ${file}${loc} - ${reason}`));
+  }
+}
+
 export default {
   run(source: string, path: string): void {
     if (JsFileExtensionRE.exec(path) !== null) {
@@ -139,7 +191,7 @@ export default {
     }
   },
 
-  report(): void {
+  report(verbose?: boolean): void {
     const totalComponents =
       SucessfulCompilation.length +
       countUniqueLocInEvents(OtherFailures) +
@@ -149,5 +201,10 @@ export default {
         `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`,
       ),
     );
+
+    if (verbose) {
+      printFailureDetails(ActionableFailures, 'Actionable failures', chalk.red);
+      printFailureDetails(OtherFailures, 'Other failures', chalk.yellow);
+    }
   },
 };
