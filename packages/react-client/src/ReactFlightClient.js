@@ -3564,18 +3564,8 @@ function resolveErrorDev(
 
   (error: any).name = name;
   (error: any).environmentName = env;
-  const causeInfo = errorInfo.cause;
-  if (typeof causeInfo === 'string') {
-    // TODO: What bad things can I do by controling the cause reference?
-    const causeReference = causeInfo.slice(1);
-    const cause = getOutlinedModel(
-      response,
-      causeReference,
-      {},
-      '',
-      createModel,
-    );
-    (error: any).cause = cause;
+  if ('cause' in errorInfo) {
+    (error: any).cause = errorInfo.cause;
   }
   return error;
 }

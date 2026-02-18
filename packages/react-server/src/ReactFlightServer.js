@@ -4173,9 +4173,7 @@ function serializeErrorValue(request: Request, error: Error): string {
     }
     const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
     if ('cause' in error) {
-      const cause: ReactClientValue = (error.cause: any);
-      const causeId = outlineModel(request, cause);
-      errorInfo.cause = serializeByValueID(causeId);
+      errorInfo.cause = error.cause;
     }
     const id = outlineModel(request, errorInfo);
     return '$Z' + id.toString(16);
@@ -4187,11 +4185,7 @@ function serializeErrorValue(request: Request, error: Error): string {
   }
 }
 
-function serializeDebugErrorValue(
-  request: Request,
-  counter: {objectLimit: number},
-  error: Error,
-): string {
+function serializeDebugErrorValue(request: Request, error: Error): string {
   if (__DEV__) {
     let name: string = 'Error';
     let message: string;
@@ -4214,10 +4208,7 @@ function serializeDebugErrorValue(
     }
     const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
     if ('cause' in error) {
-      counter.objectLimit--;
-      const cause: ReactClientValue = (error.cause: any);
-      const causeId = outlineDebugModel(request, counter, cause);
-      errorInfo.cause = serializeByValueID(causeId);
+      errorInfo.cause = error.cause;
     }
     const id = outlineDebugModel(
       request,
@@ -4261,7 +4252,10 @@ function emitErrorChunk(
           env = errorEnv;
         }
         if ('cause' in error) {
-          const cause: ReactClientValue = (error.cause: any);
+          // We're stringifying the error info without a replacer so we need to
+          // make sure the Flight Client can revive the cause.
+          // TODO: outline model accepts a serializeable value instead of a ready Client value
+          const cause: ReactClientValue = (error.cause: $FlowFixMe);
           const causeId = debug
             ? outlineDebugModel(request, {objectLimit: 5}, cause)
             : outlineModel(request, cause);
@@ -4996,7 +4990,7 @@ function renderDebugModel(
       return serializeDebugFormData(request, value);
     }
     if (value instanceof Error) {
-      return serializeDebugErrorValue(request, counter, value);
+      return serializeDebugErrorValue(request, value);
     }
     if (value instanceof ArrayBuffer) {
       return serializeDebugTypedArray(request, 'A', new Uint8Array(value));
