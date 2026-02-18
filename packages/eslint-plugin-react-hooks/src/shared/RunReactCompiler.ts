@@ -138,6 +138,8 @@ const COMPILER_OPTIONS: PluginOptions = {
     validateNoDerivedComputationsInEffects: true,
     // Temporarily enabled for internal testing
     enableUseKeyedState: true,
+    // Keep this explicit so eslint behavior does not depend on compiler defaults.
+    enableAllowSetStateFromRefsInEffects: true,
     enableVerboseNoSetStateInEffect: true,
     validateExhaustiveEffectDependencies: 'extra-only',
   },

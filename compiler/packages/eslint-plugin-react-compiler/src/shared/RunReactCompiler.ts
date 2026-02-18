@@ -38,6 +38,8 @@ const COMPILER_OPTIONS: PluginOptions = {
     validateNoCapitalizedCalls: [],
     validateHooksUsage: true,
     validateNoDerivedComputationsInEffects: true,
+    // Keep this explicit so eslint behavior does not depend on compiler defaults.
+    enableAllowSetStateFromRefsInEffects: true,
   }),
 };
 
