@@ -278,6 +278,7 @@ export function getChildHostContext(
     const isInAParentText =
       type === 'AndroidTextInput' || // Android
       type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSelectableText' ||
       type === 'RCTSinglelineTextInputView' || // iOS
       type === 'RCTText' ||
       type === 'RCTVirtualText';
