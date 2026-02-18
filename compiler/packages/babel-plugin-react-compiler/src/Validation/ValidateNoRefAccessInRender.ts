@@ -151,16 +151,6 @@ function collectTemporariesSidemap(fn: HIRFunction, env: Env): void {
           break;
         }
         case 'PropertyLoad': {
-          if (
-            isUseRefType(value.object.identifier) &&
-            value.property === 'current'
-          ) {
-            continue;
-          }
-          const temp = env.lookup(value.object);
-          if (temp != null) {
-            env.define(lvalue, temp);
-          }
           break;
         }
       }
@@ -375,7 +365,7 @@ function validateNoRefAccessInRenderImpl(
             const objType = env.get(instr.value.object.identifier.id);
             let lookupType: null | RefAccessType = null;
             if (objType?.kind === 'Structure') {
-              lookupType = objType.value;
+              lookupType = objType.value ?? objType;
             } else if (objType?.kind === 'Ref') {
               lookupType = {
                 kind: 'RefValue',
