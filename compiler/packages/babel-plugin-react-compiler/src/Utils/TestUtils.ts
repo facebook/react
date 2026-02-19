@@ -39,10 +39,6 @@ function tryParseTestPragmaValue(val: string): Result<unknown, unknown> {
 
 const testComplexConfigDefaults: PartialEnvironmentConfig = {
   validateNoCapitalizedCalls: [],
-  enableChangeDetectionForDebugging: {
-    source: 'react-compiler-runtime',
-    importSpecifierName: '$structuralCheck',
-  },
   enableEmitInstrumentForget: {
     fn: {
       source: 'react-compiler-runtime',

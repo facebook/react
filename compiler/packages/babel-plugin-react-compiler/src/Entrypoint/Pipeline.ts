@@ -67,7 +67,6 @@ import {alignReactiveScopesToBlockScopesHIR} from '../ReactiveScopes/AlignReacti
 import {flattenReactiveLoopsHIR} from '../ReactiveScopes/FlattenReactiveLoopsHIR';
 import {flattenScopesWithHooksOrUseHIR} from '../ReactiveScopes/FlattenScopesWithHooksOrUseHIR';
 import {pruneAlwaysInvalidatingScopes} from '../ReactiveScopes/PruneAlwaysInvalidatingScopes';
-import pruneInitializationDependencies from '../ReactiveScopes/PruneInitializationDependencies';
 import {stabilizeBlockIds} from '../ReactiveScopes/StabilizeBlockIds';
 import {
   eliminateRedundantPhi,
@@ -169,8 +168,7 @@ function runWithEnvironment(
   if (
     env.enableDropManualMemoization &&
     !env.config.enablePreserveExistingManualUseMemo &&
-    !env.config.disableMemoizationForDebugging &&
-    !env.config.enableChangeDetectionForDebugging
+    !env.config.disableMemoizationForDebugging
   ) {
     dropManualMemoization(hir).unwrap();
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
@@ -479,14 +477,6 @@ function runWithEnvironment(
     value: reactiveFunction,
   });
 
-  if (env.config.enableChangeDetectionForDebugging != null) {
-    pruneInitializationDependencies(reactiveFunction);
-    log({
-      kind: 'reactive',
-      name: 'PruneInitializationDependencies',
-      value: reactiveFunction,
-    });
-  }
 
   propagateEarlyReturns(reactiveFunction);
   log({

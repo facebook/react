@@ -693,14 +693,6 @@ function codegenReactiveScope(
   }
 
   if (cx.env.config.disableMemoizationForDebugging) {
-    CompilerError.invariant(
-      cx.env.config.enableChangeDetectionForDebugging == null,
-      {
-        reason: `Expected to not have both change detection enabled and memoization disabled`,
-        description: `Incompatible config options`,
-        loc: GeneratedSource,
-      },
-    );
     testCondition = t.logicalExpression(
       '||',
       testCondition,
@@ -709,121 +701,42 @@ function codegenReactiveScope(
   }
   let computationBlock = codegenBlock(cx, block);
 
-  let memoStatement;
-  const detectionFunction = cx.env.config.enableChangeDetectionForDebugging;
-  if (detectionFunction != null && changeExpressions.length > 0) {
-    const loc =
-      typeof scope.loc === 'symbol'
-        ? 'unknown location'
-        : `(${scope.loc.start.line}:${scope.loc.end.line})`;
-    const importedDetectionFunctionIdentifier =
-      cx.env.programContext.addImportSpecifier(detectionFunction).name;
-    const cacheLoadOldValueStatements: Array<t.Statement> = [];
-    const changeDetectionStatements: Array<t.Statement> = [];
-    const idempotenceDetectionStatements: Array<t.Statement> = [];
 
-    for (const {name, index, value} of cacheLoads) {
-      const loadName = cx.synthesizeName(`old$${name.name}`);
-      const slot = t.memberExpression(
-        t.identifier(cx.synthesizeName('$')),
-        t.numericLiteral(index),
-        true,
-      );
-      cacheStoreStatements.push(
-        t.expressionStatement(t.assignmentExpression('=', slot, value)),
-      );
-      cacheLoadOldValueStatements.push(
-        t.variableDeclaration('let', [
-          t.variableDeclarator(t.identifier(loadName), slot),
-        ]),
-      );
-      changeDetectionStatements.push(
-        t.expressionStatement(
-          t.callExpression(t.identifier(importedDetectionFunctionIdentifier), [
-            t.identifier(loadName),
-            t.cloneNode(name, true),
-            t.stringLiteral(name.name),
-            t.stringLiteral(cx.fnName),
-            t.stringLiteral('cached'),
-            t.stringLiteral(loc),
-          ]),
+  let memoStatement;
+  for (const {name, index, value} of cacheLoads) {
+    cacheStoreStatements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            t.identifier(cx.synthesizeName('$')),
+            t.numericLiteral(index),
+            true,
+          ),
+          value,
         ),
-      );
-      idempotenceDetectionStatements.push(
-        t.expressionStatement(
-          t.callExpression(t.identifier(importedDetectionFunctionIdentifier), [
-            t.cloneNode(slot, true),
-            t.cloneNode(name, true),
-            t.stringLiteral(name.name),
-            t.stringLiteral(cx.fnName),
-            t.stringLiteral('recomputed'),
-            t.stringLiteral(loc),
-          ]),
-        ),
-      );
-      idempotenceDetectionStatements.push(
-        t.expressionStatement(t.assignmentExpression('=', name, slot)),
-      );
-    }
-    const condition = cx.synthesizeName('condition');
-    const recomputationBlock = t.cloneNode(computationBlock, true);
-    memoStatement = t.blockStatement([
-      ...computationBlock.body,
-      t.variableDeclaration('let', [
-        t.variableDeclarator(t.identifier(condition), testCondition),
-      ]),
-      t.ifStatement(
-        t.unaryExpression('!', t.identifier(condition)),
-        t.blockStatement([
-          ...cacheLoadOldValueStatements,
-          ...changeDetectionStatements,
-        ]),
       ),
-      ...cacheStoreStatements,
-      t.ifStatement(
-        t.identifier(condition),
-        t.blockStatement([
-          ...recomputationBlock.body,
-          ...idempotenceDetectionStatements,
-        ]),
-      ),
-    ]);
-  } else {
-    for (const {name, index, value} of cacheLoads) {
-      cacheStoreStatements.push(
-        t.expressionStatement(
-          t.assignmentExpression(
-            '=',
-            t.memberExpression(
-              t.identifier(cx.synthesizeName('$')),
-              t.numericLiteral(index),
-              true,
-            ),
-            value,
+    );
+    cacheLoadStatements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          name,
+          t.memberExpression(
+            t.identifier(cx.synthesizeName('$')),
+            t.numericLiteral(index),
+            true,
           ),
         ),
-      );
-      cacheLoadStatements.push(
-        t.expressionStatement(
-          t.assignmentExpression(
-            '=',
-            name,
-            t.memberExpression(
-              t.identifier(cx.synthesizeName('$')),
-              t.numericLiteral(index),
-              true,
-            ),
-          ),
-        ),
-      );
-    }
-    computationBlock.body.push(...cacheStoreStatements);
-    memoStatement = t.ifStatement(
-      testCondition,
-      computationBlock,
-      t.blockStatement(cacheLoadStatements),
+      ),
     );
   }
+  computationBlock.body.push(...cacheStoreStatements);
+  memoStatement = t.ifStatement(
+    testCondition,
+    computationBlock,
+    t.blockStatement(cacheLoadStatements),
+  );
 
   if (cx.env.config.enableMemoizationComments) {
     if (changeExpressionComments.length) {

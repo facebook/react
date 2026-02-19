@@ -205,8 +205,6 @@ if ($[0] !== "source_hash_abc123") {
 }
 ```
 
-### Change Detection for Debugging
-When `enableChangeDetectionForDebugging` is configured, additional code is generated to detect when cached values unexpectedly change.
 
 ### Labeled Breaks
 Control flow with labeled breaks (for early returns or loop exits) uses `codegenLabel` to generate consistent label names:
