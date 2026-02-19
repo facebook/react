@@ -385,7 +385,6 @@ export const BuiltInSetOptimisticId = 'BuiltInSetOptimistic';
 export const BuiltInStartTransitionId = 'BuiltInStartTransition';
 export const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
 export const BuiltInEffectEventId = 'BuiltInEffectEventFunction';
-export const BuiltInEventHandlerId = 'BuiltInEventHandlerId';
 
 // See getReanimatedModuleType() in Globals.ts — this is part of supporting Reanimated's ref-like types
 export const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
@@ -1244,19 +1243,6 @@ addFunction(
     returnValueKind: ValueKind.Mutable,
   },
   BuiltInEffectEventId,
-);
-
-addFunction(
-  BUILTIN_SHAPES,
-  [],
-  {
-    positionalParams: [],
-    restParam: Effect.ConditionallyMutate,
-    returnType: {kind: 'Poly'},
-    calleeEffect: Effect.ConditionallyMutate,
-    returnValueKind: ValueKind.Mutable,
-  },
-  BuiltInEventHandlerId,
 );
 
 /**

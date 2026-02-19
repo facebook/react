@@ -499,15 +499,6 @@ export const EnvironmentConfigSchema = z.object({
    * 3. Force update / external sync - should use useSyncExternalStore
    */
   enableVerboseNoSetStateInEffect: z.boolean().default(false),
-
-  /**
-   * Enables inference of event handler types for JSX props on built-in DOM elements.
-   * When enabled, functions passed to event handler props (props starting with "on")
-   * on primitive JSX tags are inferred to have the BuiltinEventHandlerId type, which
-   * allows ref access within those functions since DOM event handlers are guaranteed
-   * by React to only execute in response to events, not during render.
-   */
-  enableInferEventHandlers: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
