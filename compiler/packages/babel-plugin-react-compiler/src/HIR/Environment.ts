@@ -347,12 +347,6 @@ export const EnvironmentConfigSchema = z.object({
   enableEmitHookGuards: ExternalFunctionSchema.nullable().default(null),
 
   /**
-   * Enable instruction reordering. See InstructionReordering.ts for the details
-   * of the approach.
-   */
-  enableInstructionReordering: z.boolean().default(false),
-
-  /**
    * Enables function outlinining, where anonymous functions that do not close over
    * local variables can be extracted into top-level helper functions.
    */

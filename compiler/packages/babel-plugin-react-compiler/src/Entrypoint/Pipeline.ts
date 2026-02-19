@@ -40,7 +40,6 @@ import {
   deadCodeElimination,
   pruneMaybeThrows,
 } from '../Optimization';
-import {instructionReordering} from '../Optimization/InstructionReordering';
 import {
   CodegenFunction,
   alignObjectMethodScopes,
@@ -229,12 +228,6 @@ function runWithEnvironment(
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
   log({kind: 'hir', name: 'DeadCodeElimination', value: hir});
-
-  if (env.config.enableInstructionReordering) {
-    instructionReordering(hir);
-    log({kind: 'hir', name: 'InstructionReordering', value: hir});
-  }
-
   pruneMaybeThrows(hir);
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 

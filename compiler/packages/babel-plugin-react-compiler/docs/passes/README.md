@@ -25,7 +25,7 @@ This directory contains detailed documentation for each pass in the React Compil
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
 │  PHASE 2: OPTIMIZATION                                                              │
 │                                                                                     │
-│  constantPropagation ──▶ deadCodeElimination ──▶ instructionReordering              │
+│  constantPropagation ──▶ deadCodeElimination                                         │
 │                                                                                     │
 └─────────────────────────────────────────────────────────────────────────────────────┘
                                               │
