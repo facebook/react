@@ -227,13 +227,6 @@ export const EnvironmentConfigSchema = z.object({
     .enum(['off', 'all', 'missing-only', 'extra-only'])
     .default('off'),
 
-  /**
-   * When this is true, rather than pruning existing manual memoization but ensuring or validating
-   * that the memoized values remain memoized, the compiler will simply not prune existing calls to
-   * useMemo/useCallback.
-   */
-  enablePreserveExistingManualUseMemo: z.boolean().default(false),
-
   // 🌲
   enableForest: z.boolean().default(false),
 
@@ -519,9 +512,8 @@ export const EnvironmentConfigSchema = z.object({
   /**
    * When true, always act as though the dependencies of a memoized value
    * have changed. This makes the compiler not actually perform any optimizations,
-   * but is useful for debugging. Implicitly also sets
-   * @enablePreserveExistingManualUseMemo, because otherwise memoization in the
-   * original source will be disabled as well.
+   * but is useful for debugging. When enabled, existing manual memoization from
+   * the original source is also preserved.
    */
   disableMemoizationForDebugging: z.boolean().default(false),
 

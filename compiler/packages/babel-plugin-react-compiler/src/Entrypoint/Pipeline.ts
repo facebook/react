@@ -167,7 +167,6 @@ function runWithEnvironment(
 
   if (
     env.enableDropManualMemoization &&
-    !env.config.enablePreserveExistingManualUseMemo &&
     !env.config.disableMemoizationForDebugging
   ) {
     dropManualMemoization(hir).unwrap();
