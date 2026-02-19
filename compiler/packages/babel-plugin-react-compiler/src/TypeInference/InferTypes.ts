@@ -8,7 +8,6 @@
 import * as t from '@babel/types';
 import {CompilerError} from '../CompilerError';
 import {Environment} from '../HIR';
-import {lowerType} from '../HIR/BuildHIR';
 import {
   GeneratedSource,
   HIRFunction,
@@ -223,22 +222,11 @@ function* generateInstructionTypes(
     }
 
     case 'StoreLocal': {
-      if (env.config.enableUseTypeAnnotations) {
-        yield equation(
-          value.lvalue.place.identifier.type,
-          value.value.identifier.type,
-        );
-        const valueType =
-          value.type === null ? makeType() : lowerType(value.type);
-        yield equation(valueType, value.lvalue.place.identifier.type);
-        yield equation(left, valueType);
-      } else {
-        yield equation(left, value.value.identifier.type);
-        yield equation(
-          value.lvalue.place.identifier.type,
-          value.value.identifier.type,
-        );
-      }
+      yield equation(left, value.value.identifier.type);
+      yield equation(
+        value.lvalue.place.identifier.type,
+        value.value.identifier.type,
+      );
       break;
     }
 
@@ -422,12 +410,7 @@ function* generateInstructionTypes(
     }
 
     case 'TypeCastExpression': {
-      if (env.config.enableUseTypeAnnotations) {
-        yield equation(value.type, value.value.identifier.type);
-        yield equation(left, value.type);
-      } else {
-        yield equation(left, value.value.identifier.type);
-      }
+      yield equation(left, value.value.identifier.type);
       break;
     }
 
