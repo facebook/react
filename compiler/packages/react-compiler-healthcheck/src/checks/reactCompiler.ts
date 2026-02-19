@@ -132,6 +132,53 @@ function countUniqueLocInEvents(events: Array<LoggerEvent>): number {
   return count + seenLocs.size;
 }
 
+function getFailureReason(event: LoggerEvent): string {
+  switch (event.kind) {
+    case 'CompileError':
+    case 'CompileDiagnostic':
+      return event.detail.reason;
+    case 'PipelineError':
+      return String(event.data);
+    default:
+      return 'Unknown';
+  }
+}
+
+function getFailureLocation(event: LoggerEvent): string {
+  const filename = event.filename ?? '<unknown>';
+  if (event.fnLoc != null) {
+    return `${filename}:${event.fnLoc.start.line}:${event.fnLoc.start.column}`;
+  }
+  return filename;
+}
+
+function printFailureDetails(
+  label: string,
+  events: Array<LoggerEvent>,
+): void {
+  const uniqueCount = countUniqueLocInEvents(events);
+  if (uniqueCount === 0) {
+    return;
+  }
+  console.log(`\n${label} (${uniqueCount}):`);
+  const seen = new Set<string>();
+  for (const event of events) {
+    const key =
+      event.filename != null && event.fnLoc != null
+        ? `${event.filename}:${event.fnLoc.start}:${event.fnLoc.end}`
+        : null;
+    if (key != null) {
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+    }
+    const location = getFailureLocation(event);
+    const reason = getFailureReason(event);
+    console.log(chalk.yellow(`  ${location} — ${reason}`));
+  }
+}
+
 export default {
   run(source: string, path: string): void {
     if (JsFileExtensionRE.exec(path) !== null) {
@@ -139,7 +186,7 @@ export default {
     }
   },
 
-  report(): void {
+  report(verbose?: boolean): void {
     const totalComponents =
       SucessfulCompilation.length +
       countUniqueLocInEvents(OtherFailures) +
@@ -149,5 +196,10 @@ export default {
         `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`,
       ),
     );
+
+    if (verbose) {
+      printFailureDetails('Actionable failures', ActionableFailures);
+      printFailureDetails('Other failures', OtherFailures);
+    }
   },
 };
