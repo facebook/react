@@ -565,7 +565,6 @@ function printCodeFrame(
 function printErrorSummary(category: ErrorCategory, message: string): string {
   let heading: string;
   switch (category) {
-    case ErrorCategory.AutomaticEffectDependencies:
     case ErrorCategory.CapitalizedCalls:
     case ErrorCategory.Config:
     case ErrorCategory.EffectDerivationsOfState:
@@ -719,10 +718,6 @@ export enum ErrorCategory {
    */
   Suppression = 'Suppression',
   /**
-   * Issues with auto deps
-   */
-  AutomaticEffectDependencies = 'AutomaticEffectDependencies',
-  /**
    * Issues with `fire`
    */
   Fire = 'Fire',
@@ -790,16 +785,6 @@ export function getRuleForCategory(category: ErrorCategory): LintRule {
 
 function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
   switch (category) {
-    case ErrorCategory.AutomaticEffectDependencies: {
-      return {
-        category,
-        severity: ErrorSeverity.Error,
-        name: 'automatic-effect-dependencies',
-        description:
-          'Verifies that automatic effect dependencies are compiled if opted-in',
-        preset: LintRulePreset.Off,
-      };
-    }
     case ErrorCategory.CapitalizedCalls: {
       return {
         category,

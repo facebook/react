@@ -272,39 +272,6 @@ export const EnvironmentConfigSchema = z.object({
 
   enableNameAnonymousFunctions: z.boolean().default(false),
 
-  /**
-   * Enables inference and auto-insertion of effect dependencies. Takes in an array of
-   * configurable module and import pairs to allow for user-land experimentation. For example,
-   * [
-   *   {
-   *     module: 'react',
-   *     imported: 'useEffect',
-   *     autodepsIndex: 1,
-   *   },{
-   *     module: 'MyExperimentalEffectHooks',
-   *     imported: 'useExperimentalEffect',
-   *     autodepsIndex: 2,
-   *   },
-   * ]
-   * would insert dependencies for calls of `useEffect` imported from `react` and calls of
-   * useExperimentalEffect` from `MyExperimentalEffectHooks`.
-   *
-   * `autodepsIndex` tells the compiler which index we expect the AUTODEPS to appear in.
-   *  With the configuration above, we'd insert dependencies for `useEffect` if it has two
-   *  arguments, and the second is AUTODEPS.
-   *
-   * Still experimental.
-   */
-  inferEffectDependencies: z
-    .nullable(
-      z.array(
-        z.object({
-          function: ExternalFunctionSchema,
-          autodepsIndex: z.number().min(1, 'autodepsIndex must be > 0'),
-        }),
-      ),
-    )
-    .default(null),
 
   /**
    * Enables inlining ReactElement object literals in place of JSX
@@ -755,8 +722,6 @@ export class Environment {
   outputMode: CompilerOutputMode;
   programContext: ProgramContext;
   hasFireRewrite: boolean;
-  hasInferredEffect: boolean;
-  inferredEffectLocations: Set<SourceLocation> = new Set();
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -787,7 +752,6 @@ export class Environment {
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
     this.hasFireRewrite = false;
-    this.hasInferredEffect = false;
 
     if (
       config.disableMemoizationForDebugging &&

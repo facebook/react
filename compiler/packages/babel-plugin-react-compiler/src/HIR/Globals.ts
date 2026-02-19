@@ -9,7 +9,6 @@ import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
-  BuiltInAutodepsId,
   BuiltInFireFunctionId,
   BuiltInFireId,
   BuiltInMapId,
@@ -887,7 +886,6 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       BuiltInUseEffectEventId,
     ),
   ],
-  ['AUTODEPS', addObject(DEFAULT_SHAPES, BuiltInAutodepsId, [])],
 ];
 
 TYPED_GLOBALS.push(

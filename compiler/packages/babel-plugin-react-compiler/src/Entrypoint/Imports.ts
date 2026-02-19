@@ -88,7 +88,6 @@ export class ProgramContext {
    * Metadata from compilation
    */
   retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
-  inferredEffectLocations: Set<t.SourceLocation> = new Set();
 
   constructor({
     program,

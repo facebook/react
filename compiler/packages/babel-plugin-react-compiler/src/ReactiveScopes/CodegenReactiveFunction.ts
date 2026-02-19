@@ -102,12 +102,6 @@ export type CodegenFunction = {
   }>;
 
   /**
-   * This is true if the compiler has compiled inferred effect dependencies
-   */
-  hasInferredEffect: boolean;
-  inferredEffectLocations: Set<SourceLocation>;
-
-  /**
    * This is true if the compiler has compiled a fire to a useFire call
    */
   hasFireRewrite: boolean;
@@ -388,8 +382,6 @@ function codegenReactiveFunction(
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
     outlined: [],
     hasFireRewrite: fn.env.hasFireRewrite,
-    hasInferredEffect: fn.env.hasInferredEffect,
-    inferredEffectLocations: fn.env.inferredEffectLocations,
   });
 }
 

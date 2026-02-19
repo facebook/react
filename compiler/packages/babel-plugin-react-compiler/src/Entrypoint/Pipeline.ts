@@ -34,7 +34,6 @@ import {
   dropManualMemoization,
   inferReactivePlaces,
   inlineImmediatelyInvokedFunctionExpressions,
-  inferEffectDependencies,
 } from '../Inference';
 import {
   constantPropagation,
@@ -432,15 +431,6 @@ function runWithEnvironment(
     name: 'PropagateScopeDependenciesHIR',
     value: hir,
   });
-
-  if (env.config.inferEffectDependencies) {
-    inferEffectDependencies(hir);
-    log({
-      kind: 'hir',
-      name: 'InferEffectDependencies',
-      value: hir,
-    });
-  }
 
   if (env.config.inlineJsxTransform) {
     inlineJsxTransform(hir, env.config.inlineJsxTransform);

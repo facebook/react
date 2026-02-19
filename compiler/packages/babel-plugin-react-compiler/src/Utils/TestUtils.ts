@@ -70,29 +70,7 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
     source: 'react-compiler-runtime',
     importSpecifierName: 'useContext_withSelector',
   },
-  inferEffectDependencies: [
-    {
-      function: {
-        source: 'react',
-        importSpecifierName: 'useEffect',
-      },
-      autodepsIndex: 1,
-    },
-    {
-      function: {
-        source: 'shared-runtime',
-        importSpecifierName: 'useSpecialEffect',
-      },
-      autodepsIndex: 2,
-    },
-    {
-      function: {
-        source: 'useEffectWrapper',
-        importSpecifierName: 'default',
-      },
-      autodepsIndex: 1,
-    },
-  ],
+
 };
 
 function* splitPragma(

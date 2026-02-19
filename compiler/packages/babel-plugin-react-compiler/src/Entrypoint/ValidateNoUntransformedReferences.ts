@@ -31,88 +31,6 @@ function throwInvalidReact(
   CompilerError.throwDiagnostic(options);
 }
 
-function isAutodepsSigil(
-  arg: NodePath<t.ArgumentPlaceholder | t.SpreadElement | t.Expression>,
-): boolean {
-  // Check for AUTODEPS identifier imported from React
-  if (arg.isIdentifier() && arg.node.name === 'AUTODEPS') {
-    const binding = arg.scope.getBinding(arg.node.name);
-    if (binding && binding.path.isImportSpecifier()) {
-      const importSpecifier = binding.path.node as t.ImportSpecifier;
-      if (importSpecifier.imported.type === 'Identifier') {
-        return (importSpecifier.imported as t.Identifier).name === 'AUTODEPS';
-      }
-    }
-    return false;
-  }
-
-  // Check for React.AUTODEPS member expression
-  if (arg.isMemberExpression() && !arg.node.computed) {
-    const object = arg.get('object');
-    const property = arg.get('property');
-
-    if (
-      object.isIdentifier() &&
-      object.node.name === 'React' &&
-      property.isIdentifier() &&
-      property.node.name === 'AUTODEPS'
-    ) {
-      return true;
-    }
-  }
-
-  return false;
-}
-function assertValidEffectImportReference(
-  autodepsIndex: number,
-  paths: Array<NodePath<t.Node>>,
-  context: TraversalState,
-): void {
-  for (const path of paths) {
-    const parent = path.parentPath;
-    if (parent != null && parent.isCallExpression()) {
-      const args = parent.get('arguments');
-      const maybeCalleeLoc = path.node.loc;
-      const hasInferredEffect =
-        maybeCalleeLoc != null &&
-        context.inferredEffectLocations.has(maybeCalleeLoc);
-      /**
-       * Error on effect calls that still have AUTODEPS in their args
-       */
-      const hasAutodepsArg = args.some(isAutodepsSigil);
-      if (hasAutodepsArg && !hasInferredEffect) {
-        const maybeErrorDiagnostic = matchCompilerDiagnostic(
-          path,
-          context.transformErrors,
-        );
-        /**
-         * Note that we cannot easily check the type of the first argument here,
-         * as it may have already been transformed by the compiler (and not
-         * memoized).
-         */
-        throwInvalidReact(
-          {
-            category: ErrorCategory.AutomaticEffectDependencies,
-            reason:
-              'Cannot infer dependencies of this effect. This will break your build!',
-            description:
-              'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics' +
-              (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
-            details: [
-              {
-                kind: 'error',
-                message: 'Cannot infer dependencies',
-                loc: parent.node.loc ?? GeneratedSource,
-              },
-            ],
-          },
-          context,
-        );
-      }
-    }
-  }
-}
-
 function assertValidFireImportReference(
   paths: Array<NodePath<t.Node>>,
   context: TraversalState,
@@ -162,18 +80,6 @@ export default function validateNoUntransformedReferences(
       react.set('fire', assertValidFireImportReference);
     }
   }
-  if (env.inferEffectDependencies) {
-    for (const {
-      function: {source, importSpecifierName},
-      autodepsIndex,
-    } of env.inferEffectDependencies) {
-      const module = getOrInsertWith(moduleLoadChecks, source, () => new Map());
-      module.set(
-        importSpecifierName,
-        assertValidEffectImportReference.bind(null, autodepsIndex),
-      );
-    }
-  }
   if (moduleLoadChecks.size > 0) {
     transformProgram(path, moduleLoadChecks, filename, logger, compileResult);
   }
@@ -185,7 +91,6 @@ type TraversalState = {
   logger: Logger | null;
   filename: string | null;
   transformErrors: Array<{fn: NodePath<t.Node>; error: CompilerError}>;
-  inferredEffectLocations: Set<t.SourceLocation>;
 };
 type CheckInvalidReferenceFn = (
   paths: Array<NodePath<t.Node>>,
@@ -281,8 +186,6 @@ function transformProgram(
     filename,
     logger,
     transformErrors: compileResult?.retryErrors ?? [],
-    inferredEffectLocations:
-      compileResult?.inferredEffectLocations ?? new Set(),
   };
   path.traverse({
     ImportDeclaration(path: NodePath<t.ImportDeclaration>) {

@@ -352,7 +352,6 @@ function isFilePartOfSources(
 
 export type CompileProgramMetadata = {
   retryErrors: Array<{fn: BabelFn; error: CompilerError}>;
-  inferredEffectLocations: Set<t.SourceLocation>;
 };
 /**
  * Main entrypoint for React Compiler.
@@ -487,7 +486,6 @@ export function compileProgram(
 
   return {
     retryErrors: programContext.retryErrors,
-    inferredEffectLocations: programContext.inferredEffectLocations,
   };
 }
 
@@ -678,16 +676,6 @@ function processFn(
   if (programContext.hasModuleScopeOptOut) {
     return null;
   } else if (programContext.opts.outputMode === 'lint') {
-    /**
-     * inferEffectDependencies + noEmit is currently only used for linting. In
-     * this mode, add source locations for where the compiler *can* infer effect
-     * dependencies.
-     */
-    for (const loc of compiledFn.inferredEffectLocations) {
-      if (loc !== GeneratedSource) {
-        programContext.inferredEffectLocations.add(loc);
-      }
-    }
     return null;
   } else if (
     programContext.opts.compilationMode === 'annotation' &&
@@ -758,9 +746,7 @@ function retryCompileFunction(
   programContext: ProgramContext,
 ): CodegenFunction | null {
   const environment = programContext.opts.environment;
-  if (
-    !(environment.enableFire || environment.inferEffectDependencies != null)
-  ) {
+  if (!environment.enableFire) {
     return null;
   }
   /**
@@ -779,7 +765,7 @@ function retryCompileFunction(
       programContext.code,
     );
 
-    if (!retryResult.hasFireRewrite && !retryResult.hasInferredEffect) {
+    if (!retryResult.hasFireRewrite) {
       return null;
     }
     return retryResult;
