@@ -3555,10 +3555,10 @@ __DEV__ &&
       childState.stylesheets.forEach(hoistStylesheetDependency, parentState);
       childState.suspenseyImages && (parentState.suspenseyImages = !0);
     }
-    function hasSuspenseyContent(hoistableState) {
-      return (
-        0 < hoistableState.stylesheets.size || hoistableState.suspenseyImages
-      );
+    function hasSuspenseyContent(hoistableState, flushingInShell) {
+      return flushingInShell
+        ? hoistableState.suspenseyImages
+        : 0 < hoistableState.stylesheets.size || hoistableState.suspenseyImages;
     }
     function getComponentNameFromType(type) {
       if (null == type) return null;
@@ -4416,7 +4416,7 @@ __DEV__ &&
     function isEligibleForOutlining(request, boundary) {
       return (
         (500 < boundary.byteSize ||
-          hasSuspenseyContent(boundary.contentState) ||
+          hasSuspenseyContent(boundary.contentState, !1) ||
           boundary.defer) &&
         null === boundary.preamble
       );
@@ -7664,7 +7664,7 @@ __DEV__ &&
         !flushingPartialBoundaries &&
         isEligibleForOutlining(request, boundary) &&
         (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
-          hasSuspenseyContent(boundary.contentState) ||
+          hasSuspenseyContent(boundary.contentState, flushingShell) ||
           boundary.defer)
       )
         (boundary.rootSegmentID = request.nextSegmentId++),
@@ -7998,7 +7998,9 @@ __DEV__ &&
                 completedPreambleSegments++
               )
                 destination.buffer += bodyChunks[completedPreambleSegments];
+            flushingShell = !0;
             flushSegment(request, destination, completedRootSegment, null);
+            flushingShell = !1;
             request.completedRootSegment = null;
             var resumableState$jscomp$0 = request.resumableState,
               renderState$jscomp$0 = request.renderState;
@@ -9685,7 +9687,8 @@ __DEV__ &&
       didWarnAboutGenerators = !1,
       didWarnAboutMaps = !1,
       flushedByteSize = 0,
-      flushingPartialBoundaries = !1;
+      flushingPartialBoundaries = !1,
+      flushingShell = !1;
     exports.abortStream = function (stream, reason) {
       abort(stream.request, reason);
     };

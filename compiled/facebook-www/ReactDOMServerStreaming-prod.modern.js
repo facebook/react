@@ -2921,8 +2921,10 @@ function hoistHoistables(parentState, childState) {
   childState.stylesheets.forEach(hoistStylesheetDependency, parentState);
   childState.suspenseyImages && (parentState.suspenseyImages = !0);
 }
-function hasSuspenseyContent(hoistableState) {
-  return 0 < hoistableState.stylesheets.size || hoistableState.suspenseyImages;
+function hasSuspenseyContent(hoistableState, flushingInShell) {
+  return flushingInShell
+    ? hoistableState.suspenseyImages
+    : 0 < hoistableState.stylesheets.size || hoistableState.suspenseyImages;
 }
 var bind = Function.prototype.bind,
   REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
@@ -3714,7 +3716,7 @@ function getViewTransitionClassName(defaultClass, eventClass) {
 function isEligibleForOutlining(request, boundary) {
   return (
     (500 < boundary.byteSize ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, !1) ||
       boundary.defer) &&
     null === boundary.preamble
   );
@@ -6067,7 +6069,7 @@ function flushSegment(request, destination, segment, hoistableState) {
     !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
     (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, flushingShell) ||
       boundary.defer)
   )
     (boundary.rootSegmentID = request.nextSegmentId++),
@@ -6251,7 +6253,8 @@ function flushPartiallyCompletedSegment(
     : writeChunkAndReturn(destination, '"></template>');
   return destination;
 }
-var flushingPartialBoundaries = !1;
+var flushingPartialBoundaries = !1,
+  flushingShell = !1;
 function flushCompletedQueues(request, destination) {
   try {
     if (!(0 < request.pendingRootTasks)) {
@@ -6365,7 +6368,9 @@ function flushCompletedQueues(request, destination) {
             completedPreambleSegments++
           )
             destination.buffer += bodyChunks[completedPreambleSegments];
+        flushingShell = !0;
         flushSegment(request, destination, completedRootSegment, null);
+        flushingShell = !1;
         request.completedRootSegment = null;
         var resumableState$jscomp$0 = request.resumableState,
           renderState$jscomp$0 = request.renderState;
