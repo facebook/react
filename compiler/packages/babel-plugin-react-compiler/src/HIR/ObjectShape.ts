@@ -372,6 +372,7 @@ export const BuiltInSetActionStateId = 'BuiltInSetActionState';
 export const BuiltInUseRefId = 'BuiltInUseRefId';
 export const BuiltInRefValueId = 'BuiltInRefValue';
 export const BuiltInMixedReadonlyId = 'BuiltInMixedReadonly';
+export const BuiltInUseFragmentId = 'BuiltInUseFragment';
 export const BuiltInUseEffectHookId = 'BuiltInUseEffectHook';
 export const BuiltInUseLayoutEffectHookId = 'BuiltInUseLayoutEffectHook';
 export const BuiltInUseInsertionEffectHookId = 'BuiltInUseInsertionEffectHook';
@@ -1453,6 +1454,16 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     }),
   ],
   ['*', {kind: 'Object', shapeId: BuiltInMixedReadonlyId}],
+]);
+
+/**
+ * BuiltInUseFragment represents values returned from Relay's useFragment hook.
+ * The catch-all property ensures that property accesses on useFragment data
+ * are also typed as BuiltInUseFragmentId, enabling tracking of fragment-derived
+ * values through the program.
+ */
+addObject(BUILTIN_SHAPES, BuiltInUseFragmentId, [
+  ['*', {kind: 'Object', shapeId: BuiltInUseFragmentId}],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInJsxId, []);

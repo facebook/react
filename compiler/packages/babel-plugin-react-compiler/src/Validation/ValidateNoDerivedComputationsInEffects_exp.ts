@@ -15,6 +15,7 @@ import {
   IdentifierId,
   isSetStateType,
   isUseEffectHookType,
+  isUseFragmentType,
   Place,
   CallExpression,
   Instruction,
@@ -27,8 +28,14 @@ import {
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {assertExhaustive} from '../Utils/utils';
+import {printInstruction} from '../HIR/PrintHIR';
 
-type TypeOfValue = 'ignored' | 'fromProps' | 'fromState' | 'fromPropsAndState';
+type TypeOfValue =
+  | 'ignored'
+  | 'fromProps'
+  | 'fromState'
+  | 'fromPropsAndState'
+  | 'fromRelay';
 
 type DerivationMetadata = {
   typeOfValue: TypeOfValue;
@@ -293,6 +300,9 @@ function joinValue(
   if (lvalueType === 'ignored') return valueType;
   if (valueType === 'ignored') return lvalueType;
   if (lvalueType === valueType) return lvalueType;
+  if (lvalueType === 'fromRelay' || valueType === 'fromRelay') {
+    return 'fromRelay';
+  }
   return 'fromPropsAndState';
 }
 
@@ -384,6 +394,15 @@ function recordInstructionDerivations(
       }
     } else if (isUseStateType(lvalue.identifier)) {
       typeOfValue = 'fromState';
+      context.derivationCache.addDerivationEntry(
+        lvalue,
+        new Set(),
+        typeOfValue,
+        true,
+      );
+      return;
+    } else if (isUseFragmentType(lvalue.identifier)) {
+      typeOfValue = 'fromRelay';
       context.derivationCache.addDerivationEntry(
         lvalue,
         new Set(),
@@ -498,6 +517,13 @@ type TreeNode = {
   children: Array<TreeNode>;
 };
 
+type DataFlowInfo = {
+  rootSources: string;
+  trees: Array<string>;
+  propsArr: Array<string>;
+  stateArr: Array<string>;
+};
+
 function buildTreeNode(
   sourceId: IdentifierId,
   context: ValidationContext,
@@ -606,6 +632,51 @@ function renderTree(
   }
 
   return result;
+}
+
+/**
+ * Builds the data flow information including trees and source categorization
+ */
+function buildDataFlowInfo(
+  sourceIds: Set<IdentifierId>,
+  context: ValidationContext,
+): DataFlowInfo {
+  const propsSet = new Set<string>();
+  const stateSet = new Set<string>();
+
+  const rootNodesMap = new Map<string, TreeNode>();
+  for (const id of sourceIds) {
+    const nodes = buildTreeNode(id, context);
+    for (const node of nodes) {
+      if (!rootNodesMap.has(node.name)) {
+        rootNodesMap.set(node.name, node);
+      }
+    }
+  }
+  const rootNodes = Array.from(rootNodesMap.values());
+
+  const trees = rootNodes.map((node, index) =>
+    renderTree(node, '', index === rootNodes.length - 1, propsSet, stateSet),
+  );
+
+  const propsArr = Array.from(propsSet);
+  const stateArr = Array.from(stateSet);
+
+  let rootSources = '';
+  if (propsArr.length > 0) {
+    rootSources += `Props: [${propsArr.join(', ')}]`;
+  }
+  if (stateArr.length > 0) {
+    if (rootSources) rootSources += '\n';
+    rootSources += `State: [${stateArr.join(', ')}]`;
+  }
+
+  return {
+    rootSources,
+    trees,
+    propsArr,
+    stateArr,
+  };
 }
 
 function getFnLocalDeps(
@@ -724,6 +795,26 @@ function validateEffect(
         );
 
         if (argMetadata !== undefined) {
+          // Check if the value being set is derived from useFragment (Relay)
+          if (argMetadata.typeOfValue === 'fromRelay') {
+            console.log('relay');
+            context.errors.pushDiagnostic(
+              CompilerDiagnostic.create({
+                description:
+                  'Deriving value from Relay store. Instead of holding it in a local state, use a client schema extension to store the value directly in the Relay store.',
+                category: ErrorCategory.EffectDerivationsOfState,
+                reason:
+                  'Avoid storing Relay data in React state. Use client schema extensions instead.',
+              }).withDetails({
+                kind: 'error',
+                loc: instr.value.callee.loc,
+                message:
+                  'setState with Relay-derived value. Use client schema instead.',
+              }),
+            );
+            continue;
+          }
+
           effectDerivedSetStateCalls.push({
             value: instr.value,
             id: instr.value.callee.identifier.id,
@@ -772,47 +863,16 @@ function validateEffect(
       effectSetStateUsages.get(rootSetStateCall)!.size ===
         context.setStateUsages.get(rootSetStateCall)!.size - 1
     ) {
-      const propsSet = new Set<string>();
-      const stateSet = new Set<string>();
-
-      const rootNodesMap = new Map<string, TreeNode>();
-      for (const id of derivedSetStateCall.sourceIds) {
-        const nodes = buildTreeNode(id, context);
-        for (const node of nodes) {
-          if (!rootNodesMap.has(node.name)) {
-            rootNodesMap.set(node.name, node);
-          }
-        }
-      }
-      const rootNodes = Array.from(rootNodesMap.values());
-
-      const trees = rootNodes.map((node, index) =>
-        renderTree(
-          node,
-          '',
-          index === rootNodes.length - 1,
-          propsSet,
-          stateSet,
-        ),
-      );
-
       for (const dep of derivedSetStateCall.sourceIds) {
         if (cleanUpFunctionDeps !== undefined && cleanUpFunctionDeps.has(dep)) {
           return;
         }
       }
 
-      const propsArr = Array.from(propsSet);
-      const stateArr = Array.from(stateSet);
-
-      let rootSources = '';
-      if (propsArr.length > 0) {
-        rootSources += `Props: [${propsArr.join(', ')}]`;
-      }
-      if (stateArr.length > 0) {
-        if (rootSources) rootSources += '\n';
-        rootSources += `State: [${stateArr.join(', ')}]`;
-      }
+      const {rootSources, trees} = buildDataFlowInfo(
+        derivedSetStateCall.sourceIds,
+        context,
+      );
 
       const description = `Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user
 
@@ -837,6 +897,80 @@ See: https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-o
           message: 'This should be computed during render, not in an effect',
         }),
       );
+    } else if (
+      rootSetStateCall !== null &&
+      effectSetStateUsages.has(rootSetStateCall) &&
+      context.setStateUsages.has(rootSetStateCall) &&
+      effectSetStateUsages.get(rootSetStateCall)!.size <
+        context.setStateUsages.get(rootSetStateCall)!.size
+    ) {
+      for (const dep of derivedSetStateCall.sourceIds) {
+        if (cleanUpFunctionDeps !== undefined && cleanUpFunctionDeps.has(dep)) {
+          return;
+        }
+      }
+
+      const {rootSources, trees} = buildDataFlowInfo(
+        derivedSetStateCall.sourceIds,
+        context,
+      );
+
+      // Find setState calls outside the effect
+      const allSetStateUsages = context.setStateUsages.get(rootSetStateCall)!;
+      const effectUsages = effectSetStateUsages.get(rootSetStateCall)!;
+      const outsideEffectUsages: Array<SourceLocation> = [];
+
+      for (const usage of allSetStateUsages) {
+        if (!effectUsages.has(usage)) {
+          outsideEffectUsages.push(usage);
+        }
+      }
+
+      const description = `Using an effect triggers an additional render which can hurt performance and user experience, potentially briefly showing stale values to the user
+
+This setState call is setting a derived value that depends on the following reactive sources:
+
+${rootSources}
+
+Data Flow Tree:
+${trees.join('\n')}
+
+This state is also being set outside of the effect. Consider hoisting the state up to a parent component and making this a controlled component.
+
+See: https://react.dev/learn/sharing-state-between-components`;
+
+      const diagnosticDetails: Array<{
+        kind: 'error';
+        loc: SourceLocation;
+        message: string;
+      }> = [
+        {
+          kind: 'error',
+          loc: derivedSetStateCall.value.callee.loc,
+          message: 'setState in effect',
+        },
+      ];
+
+      for (const usage of outsideEffectUsages) {
+        diagnosticDetails.push({
+          kind: 'error',
+          loc: usage,
+          message: 'setState outside effect',
+        });
+      }
+
+      let diagnostic = CompilerDiagnostic.create({
+        description: description,
+        category: ErrorCategory.EffectDerivationsOfState,
+        reason:
+          'Consider hoisting state to parent and making this a controlled component',
+      });
+
+      for (const detail of diagnosticDetails) {
+        diagnostic = diagnostic.withDetails(detail);
+      }
+
+      context.errors.pushDiagnostic(diagnostic);
     }
   }
 }

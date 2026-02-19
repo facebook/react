@@ -34,6 +34,7 @@ import {
   BuiltInPropsId,
   BuiltInRefValueId,
   BuiltInSetStateId,
+  BuiltInUseFragmentId,
   BuiltInUseRefId,
 } from '../HIR/ObjectShape';
 import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
@@ -266,7 +267,18 @@ function* generateInstructionTypes(
 
     case 'LoadGlobal': {
       const globalType = env.getGlobalDeclaration(value.binding, value.loc);
-      if (globalType) {
+      // If the binding is useFragment and the flag is enabled, override the type
+      if (
+        env.config.enableTreatUseFragmentAsRelay &&
+        value.binding.name === 'useFragment'
+      ) {
+        yield equation(left, {
+          kind: 'Function',
+          shapeId: BuiltInUseFragmentId,
+          return: {kind: 'Object', shapeId: BuiltInUseFragmentId},
+          isConstructor: false,
+        });
+      } else if (globalType) {
         yield equation(left, globalType);
       }
       break;
@@ -280,9 +292,9 @@ function* generateInstructionTypes(
        * (see https://github.com/facebook/react-forget/pull/1427)
        */
       let shapeId: string | null = null;
+      const calleeName = getName(names, value.callee.identifier.id);
       if (env.config.enableTreatSetIdentifiersAsStateSetters) {
-        const name = getName(names, value.callee.identifier.id);
-        if (name.startsWith('set')) {
+        if (calleeName.startsWith('set')) {
           shapeId = BuiltInSetStateId;
         }
       }
@@ -723,26 +735,32 @@ class Unifier {
          *   T2
          *   Phi [
          *     T3
-         *     Phi [
-         *       T4
-         *     ]
+         *     Phi [T4]
          *   ]
          * ]
          *
-         * Which avoids the cycle
+         * Which then resolves to T1, T2, T3, T4 as candidates (because
+         * they're all resolved Phi types).
          */
-        const operands = [];
+        const operands: Array<Type> = [];
         for (const operand of type.operands) {
-          if (operand.kind === 'Type' && operand.id === v.id) {
+          if (typeEquals(operand, v)) {
             continue;
           }
-          const resolved = this.tryResolveType(v, operand);
+          const resolved = this.tryResolveType(v, this.get(operand));
           if (resolved === null) {
             return null;
           }
           operands.push(resolved);
         }
-        return {kind: 'Phi', operands};
+        if (operands.length === 0) {
+          // All operands were `v`
+          return null;
+        }
+        return {
+          kind: 'Phi',
+          operands,
+        };
       }
       case 'Type': {
         const substitution = this.get(type);
@@ -852,12 +870,19 @@ function tryUnionTypes(ty1: Type, ty2: Type): Type | null {
   } else if (ty2.kind === 'Object' && ty2.shapeId === BuiltInMixedReadonlyId) {
     readonlyType = ty2;
     otherType = ty1;
+  } else if (ty1.kind === 'Object' && ty1.shapeId === BuiltInUseFragmentId) {
+    readonlyType = ty1;
+    otherType = ty2;
+  } else if (ty2.kind === 'Object' && ty2.shapeId === BuiltInUseFragmentId) {
+    readonlyType = ty2;
+    otherType = ty1;
   } else {
     return null;
   }
   if (otherType.kind === 'Primitive') {
     /**
      * Union(Primitive | MixedReadonly) = MixedReadonly
+     * Union(Primitive | UseFragment) = UseFragment
      *
      * For example, `data ?? null` could return `data`, the fact that RHS
      * is a primitive doesn't guarantee the result is a primitive.
@@ -869,6 +894,7 @@ function tryUnionTypes(ty1: Type, ty2: Type): Type | null {
   ) {
     /**
      * Union(Array | MixedReadonly) = Array
+     * Union(Array | UseFragment) = Array
      *
      * In practice this pattern means the result is always an array. Given
      * that this behavior requires opting-in to the mixedreadonly type
