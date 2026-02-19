@@ -215,12 +215,12 @@ const UseEffectEventHook = addHook(
 Feature flags are configured in `src/HIR/Environment.ts`, for example `enableJsxOutlining`. Test fixtures can override the active feature flags used for that fixture via a comment pragma on the first line of the fixture input, for example:
 
 ```javascript
-// enableJsxOutlining @enableChangeVariableCodegen:false
+// enableJsxOutlining @enableNameAnonymousFunctions:false
 
 ...code...
 ```
 
-Would enable the `enableJsxOutlining` feature and disable the `enableChangeVariableCodegen` feature.
+Would enable the `enableJsxOutlining` feature and disable the `enableNameAnonymousFunctions` feature.
 
 ## Debugging Tips
 

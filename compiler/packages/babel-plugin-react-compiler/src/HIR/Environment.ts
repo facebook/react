@@ -427,26 +427,6 @@ export const EnvironmentConfigSchema = z.object({
   // Enable validation of mutable ranges
   assertValidMutableRanges: z.boolean().default(false),
 
-  /*
-   * Enable emitting "change variables" which store the result of whether a particular
-   * reactive scope dependency has changed since the scope was last executed.
-   *
-   * Ex:
-   * ```
-   * const c_0 = $[0] !== input; // change variable
-   * let output;
-   * if (c_0) ...
-   * ```
-   *
-   * Defaults to false, where the comparison is inlined:
-   *
-   * ```
-   * let output;
-   * if ($[0] !== input) ...
-   * ```
-   */
-  enableChangeVariableCodegen: z.boolean().default(false),
-
   /**
    * Enable emitting comments that explain Forget's output, and which
    * values are being checked and which values produced by each memo block.

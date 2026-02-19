@@ -590,18 +590,7 @@ function codegenReactiveScope(
       ),
       codegenDependency(cx, dep),
     );
-
-    if (cx.env.config.enableChangeVariableCodegen) {
-      const changeIdentifier = t.identifier(cx.synthesizeName(`c_${index}`));
-      statements.push(
-        t.variableDeclaration('const', [
-          t.variableDeclarator(changeIdentifier, comparison),
-        ]),
-      );
-      changeExpressions.push(changeIdentifier);
-    } else {
-      changeExpressions.push(comparison);
-    }
+    changeExpressions.push(comparison);
     /*
      * Adding directly to cacheStoreStatements rather than cacheLoads, because there
      * is no corresponding cacheLoadStatement for dependencies
