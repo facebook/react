@@ -4173,7 +4173,9 @@ function serializeErrorValue(request: Request, error: Error): string {
     }
     const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
     if ('cause' in error) {
-      errorInfo.cause = error.cause;
+      const cause: ReactClientValue = (error.cause: any);
+      const causeId = outlineModel(request, cause);
+      errorInfo.cause = serializeByValueID(causeId);
     }
     const id = outlineModel(request, errorInfo);
     return '$Z' + id.toString(16);
@@ -4212,14 +4214,13 @@ function serializeDebugErrorValue(
     }
     const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
     if ('cause' in error) {
-      errorInfo.cause = error.cause;
+      counter.objectLimit--;
+      const cause: ReactClientValue = (error.cause: any);
+      const causeId = outlineDebugModel(request, counter, cause);
+      errorInfo.cause = serializeByValueID(causeId);
     }
     const id = outlineDebugModel(
       request,
-      // For stacks with small (<1024) file and function names this will mean
-      // we'll stop serialization at the third cause in the chain.
-      // With large strings it'll stop at the second one already since
-      // the stack takes up all of the object limit.
       {objectLimit: stack.length * 2 + 1},
       errorInfo,
     );
@@ -4246,6 +4247,7 @@ function emitErrorChunk(
     let message: string;
     let stack: ReactStackTrace;
     let env = (0, request.environmentName)();
+    let causeReference: null | string = null;
     try {
       if (error instanceof Error) {
         name = error.name;
@@ -4257,6 +4259,13 @@ function emitErrorChunk(
           // This probably came from another FlightClient as a pass through.
           // Keep the environment name.
           env = errorEnv;
+        }
+        if ('cause' in error) {
+          const cause: ReactClientValue = (error.cause: any);
+          const causeId = debug
+            ? outlineDebugModel(request, {objectLimit: 5}, cause)
+            : outlineModel(request, cause);
+          causeReference = serializeByValueID(causeId);
         }
       } else if (typeof error === 'object' && error !== null) {
         message = describeObjectForErrorMessage(error);
@@ -4273,16 +4282,13 @@ function emitErrorChunk(
     const ownerRef =
       owner == null ? null : outlineComponentInfo(request, owner);
     errorInfo = {digest, name, message, stack, env, owner: ownerRef};
-    if (error instanceof Error && 'cause' in error) {
-      (errorInfo: ReactErrorInfoDev).cause = error.cause;
+    if (causeReference !== null) {
+      (errorInfo: ReactErrorInfoDev).cause = causeReference;
     }
   } else {
     errorInfo = {digest};
   }
-  const json: string = debug
-    ? serializeDebugModel(request, 500, errorInfo)
-    : serializeDebugModel(request, 500, errorInfo);
-  const row = serializeRowHeader('E', id) + json + '\n';
+  const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
   const processedChunk = stringToChunk(row);
   if (__DEV__ && debug) {
     request.completedDebugChunks.push(processedChunk);
