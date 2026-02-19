@@ -235,7 +235,7 @@ export type ReactErrorInfoDev = {
   +stack: ReactStackTrace,
   +env: string,
   +owner?: null | string,
-  cause?: mixed,
+  cause?: string,
 };
 
 export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;

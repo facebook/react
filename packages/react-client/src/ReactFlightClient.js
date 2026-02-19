@@ -3527,6 +3527,18 @@ function resolveErrorDev(
   }
 
   let error;
+  const errorOptions =
+    'cause' in errorInfo
+      ? {
+          cause: reviveModel(
+            response,
+            // $FlowFixMe[incompatible-call] -- refined to be non void
+            errorInfo.cause,
+            errorInfo,
+            'cause',
+          ),
+        }
+      : undefined;
   const callStack = buildFakeCallStack(
     response,
     stack,
@@ -3537,6 +3549,7 @@ function resolveErrorDev(
       null,
       message ||
         'An error occurred in the Server Components render but no message was provided',
+      errorOptions,
     ),
   );
 
@@ -3564,19 +3577,6 @@ function resolveErrorDev(
 
   (error: any).name = name;
   (error: any).environmentName = env;
-  const causeInfo = errorInfo.cause;
-  if (typeof causeInfo === 'string') {
-    // TODO: What bad things can I do by controling the cause reference?
-    const causeReference = causeInfo.slice(1);
-    const cause = getOutlinedModel(
-      response,
-      causeReference,
-      {},
-      '',
-      createModel,
-    );
-    (error: any).cause = cause;
-  }
   return error;
 }
 
