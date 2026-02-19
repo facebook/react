@@ -39,7 +39,6 @@ import {
   constantPropagation,
   deadCodeElimination,
   pruneMaybeThrows,
-  inlineJsxTransform,
 } from '../Optimization';
 import {instructionReordering} from '../Optimization/InstructionReordering';
 import {
@@ -432,14 +431,6 @@ function runWithEnvironment(
     value: hir,
   });
 
-  if (env.config.inlineJsxTransform) {
-    inlineJsxTransform(hir, env.config.inlineJsxTransform);
-    log({
-      kind: 'hir',
-      name: 'inlineJsxTransform',
-      value: hir,
-    });
-  }
 
   const reactiveFunction = buildReactiveFunction(hir);
   log({

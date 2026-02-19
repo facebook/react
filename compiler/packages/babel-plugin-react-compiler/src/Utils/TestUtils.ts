@@ -62,10 +62,6 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
     source: 'react-compiler-runtime',
     importSpecifierName: '$dispatcherGuard',
   },
-  inlineJsxTransform: {
-    elementSymbol: 'react.transitional.element',
-    globalDevVar: 'DEV',
-  },
   lowerContextAccess: {
     source: 'react-compiler-runtime',
     importSpecifierName: 'useContext_withSelector',
