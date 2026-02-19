@@ -631,15 +631,7 @@ function processFn(
     } else {
       handleError(compileResult.error, programContext, fn.node.loc ?? null);
     }
-    if (outputMode === 'client') {
-      const retryResult = retryCompileFunction(fn, fnType, programContext);
-      if (retryResult == null) {
-        return null;
-      }
-      compiledFn = retryResult;
-    } else {
-      return null;
-    }
+    return null;
   } else {
     compiledFn = compileResult.compiledFn;
   }
@@ -731,50 +723,6 @@ function tryCompileFunction(
     };
   } catch (err) {
     return {kind: 'error', error: err};
-  }
-}
-
-/**
- * If non-memo feature flags are enabled, retry compilation with a more minimal
- * feature set.
- *
- * @returns a CodegenFunction if retry was successful
- */
-function retryCompileFunction(
-  fn: BabelFn,
-  fnType: ReactFunctionType,
-  programContext: ProgramContext,
-): CodegenFunction | null {
-  const environment = programContext.opts.environment;
-  if (!environment.enableFire) {
-    return null;
-  }
-  /**
-   * Note that function suppressions are not checked in the retry pipeline, as
-   * they only affect auto-memoization features.
-   */
-  try {
-    const retryResult = compileFn(
-      fn,
-      environment,
-      fnType,
-      'client-no-memo',
-      programContext,
-      programContext.opts.logger,
-      programContext.filename,
-      programContext.code,
-    );
-
-    if (!retryResult.hasFireRewrite) {
-      return null;
-    }
-    return retryResult;
-  } catch (err) {
-    // TODO: we might want to log error here, but this will also result in duplicate logging
-    if (err instanceof CompilerError) {
-      programContext.retryErrors.push({fn, error: err});
-    }
-    return null;
   }
 }
 

@@ -229,7 +229,6 @@ type CodegenFunction = {
   prunedMemoBlocks: number;  // Scopes that were pruned
   prunedMemoValues: number;  // Values in pruned scopes
   hasInferredEffect: boolean;
-  hasFireRewrite: boolean;
 };
 ```
 

@@ -195,7 +195,6 @@ This directory contains detailed documentation for each pass in the React Compil
 
 | # | Pass | File | Description |
 |---|------|------|-------------|
-| 32 | [transformFire](32-transformFire.md) | `Transform/TransformFire.ts` | Transform `fire()` calls in effects |
 | 34 | [optimizePropsMethodCalls](34-optimizePropsMethodCalls.md) | `Optimization/OptimizePropsMethodCalls.ts` | Normalize props method calls |
 | 35 | [optimizeForSSR](35-optimizeForSSR.md) | `Optimization/OptimizeForSSR.ts` | SSR-specific optimizations |
 | 36 | [outlineJSX](36-outlineJSX.md) | `Optimization/OutlineJsx.ts` | Outline JSX to components |
@@ -274,7 +273,6 @@ Many passes are controlled by feature flags in `Environment.ts`:
 
 | Flag | Enables Pass |
 |------|--------------|
-| `enableFire` | transformFire |
 | `enableJsxOutlining` | outlineJSX |
 | `enableFunctionOutlining` | outlineFunctions |
 | `validateNoSetStateInRender` | validateNoSetStateInRender |

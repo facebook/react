@@ -10,13 +10,12 @@ import * as t from '@babel/types';
 
 import {CompilerError, EnvironmentConfig, Logger} from '..';
 import {getOrInsertWith} from '../Utils/utils';
-import {Environment, GeneratedSource} from '../HIR';
+import {GeneratedSource} from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {CompileProgramMetadata} from './Program';
 import {
   CompilerDiagnostic,
   CompilerDiagnosticOptions,
-  ErrorCategory,
 } from '../CompilerError';
 
 function throwInvalidReact(
@@ -31,34 +30,6 @@ function throwInvalidReact(
   CompilerError.throwDiagnostic(options);
 }
 
-function assertValidFireImportReference(
-  paths: Array<NodePath<t.Node>>,
-  context: TraversalState,
-): void {
-  if (paths.length > 0) {
-    const maybeErrorDiagnostic = matchCompilerDiagnostic(
-      paths[0],
-      context.transformErrors,
-    );
-    throwInvalidReact(
-      {
-        category: ErrorCategory.Fire,
-        reason: '[Fire] Untransformed reference to compiler-required feature.',
-        description:
-          'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
-          (maybeErrorDiagnostic != null ? ` ${maybeErrorDiagnostic}` : ''),
-        details: [
-          {
-            kind: 'error',
-            message: 'Untransformed `fire` call',
-            loc: paths[0].node.loc ?? GeneratedSource,
-          },
-        ],
-      },
-      context,
-    );
-  }
-}
 export default function validateNoUntransformedReferences(
   path: NodePath<t.Program>,
   filename: string | null,
@@ -70,16 +41,6 @@ export default function validateNoUntransformedReferences(
     string,
     Map<string, CheckInvalidReferenceFn>
   >();
-  if (env.enableFire) {
-    /**
-     * Error on any untransformed references to `fire` (e.g. including non-call
-     * expressions)
-     */
-    for (const module of Environment.knownReactModules) {
-      const react = getOrInsertWith(moduleLoadChecks, module, () => new Map());
-      react.set('fire', assertValidFireImportReference);
-    }
-  }
   if (moduleLoadChecks.size > 0) {
     transformProgram(path, moduleLoadChecks, filename, logger, compileResult);
   }

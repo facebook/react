@@ -74,7 +74,6 @@ export const InstrumentationSchema = z
   );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
-export const USE_FIRE_FUNCTION_NAME = 'useFire';
 
 export const MacroSchema = z.string();
 
@@ -244,7 +243,6 @@ export const EnvironmentConfigSchema = z.object({
    */
   enableOptionalDependencies: z.boolean().default(true),
 
-  enableFire: z.boolean().default(false),
 
   enableNameAnonymousFunctions: z.boolean().default(false),
 
@@ -632,7 +630,6 @@ export class Environment {
   fnType: ReactFunctionType;
   outputMode: CompilerOutputMode;
   programContext: ProgramContext;
-  hasFireRewrite: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -662,7 +659,6 @@ export class Environment {
     this.programContext = programContext;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
-    this.hasFireRewrite = false;
 
 
     for (const [hookName, hook] of this.config.customHooks) {

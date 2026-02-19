@@ -91,7 +91,6 @@ import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryState
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
-import {transformFire} from '../Transform';
 import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureFunctionsInRender';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
@@ -207,11 +206,6 @@ function runWithEnvironment(
     if (env.config.validateNoCapitalizedCalls) {
       validateNoCapitalizedCalls(hir).unwrap();
     }
-  }
-
-  if (env.config.enableFire) {
-    transformFire(hir);
-    log({kind: 'hir', name: 'TransformFire', value: hir});
   }
 
   optimizePropsMethodCalls(hir);

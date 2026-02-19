@@ -572,7 +572,6 @@ function printErrorSummary(category: ErrorCategory, message: string): string {
     case ErrorCategory.ErrorBoundaries:
     case ErrorCategory.Factories:
     case ErrorCategory.FBT:
-    case ErrorCategory.Fire:
     case ErrorCategory.Gating:
     case ErrorCategory.Globals:
     case ErrorCategory.Hooks:
@@ -717,10 +716,6 @@ export enum ErrorCategory {
    * Suppressions
    */
   Suppression = 'Suppression',
-  /**
-   * Issues with `fire`
-   */
-  Fire = 'Fire',
   /**
    * fbt-specific issues
    */
@@ -872,15 +867,6 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         severity: ErrorSeverity.Error,
         name: 'fbt',
         description: 'Validates usage of fbt',
-        preset: LintRulePreset.Off,
-      };
-    }
-    case ErrorCategory.Fire: {
-      return {
-        category,
-        severity: ErrorSeverity.Error,
-        name: 'fire',
-        description: 'Validates usage of `fire`',
         preset: LintRulePreset.Off,
       };
     }

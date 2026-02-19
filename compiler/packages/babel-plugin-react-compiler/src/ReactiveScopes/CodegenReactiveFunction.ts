@@ -101,10 +101,6 @@ export type CodegenFunction = {
     type: ReactFunctionType | null;
   }>;
 
-  /**
-   * This is true if the compiler has compiled a fire to a useFire call
-   */
-  hasFireRewrite: boolean;
 };
 
 export function codegenFunction(
@@ -381,7 +377,6 @@ function codegenReactiveFunction(
     prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
     outlined: [],
-    hasFireRewrite: fn.env.hasFireRewrite,
   });
 }
 
