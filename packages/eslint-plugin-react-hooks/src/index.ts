@@ -14,7 +14,7 @@ import {
   recommendedLatestRules,
 } from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
-
+import {version} from '../package.json';
 const rules = {
   'exhaustive-deps': ExhaustiveDeps,
   'rules-of-hooks': RulesOfHooks,
@@ -80,7 +80,7 @@ const configs = {
 const plugin = {
   meta: {
     name: 'eslint-plugin-react-hooks',
-    version: '7.0.0',
+    version,
   },
   rules,
   configs,
