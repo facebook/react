@@ -946,14 +946,13 @@ function getReactFunctionType(
   fn: BabelFn,
   pass: CompilerPass,
 ): ReactFunctionType | null {
-  const hookPattern = pass.opts.environment.hookPattern;
   if (fn.node.body.type === 'BlockStatement') {
     const optInDirectives = tryFindDirectiveEnablingMemoization(
       fn.node.body.directives,
       pass.opts,
     );
     if (optInDirectives.unwrapOr(null) != null) {
-      return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
+      return getComponentOrHookLike(fn) ?? 'Other';
     }
   }
 
@@ -974,13 +973,13 @@ function getReactFunctionType(
     }
     case 'infer': {
       // Check if this is a component or hook-like function
-      return componentSyntaxType ?? getComponentOrHookLike(fn, hookPattern);
+      return componentSyntaxType ?? getComponentOrHookLike(fn);
     }
     case 'syntax': {
       return componentSyntaxType;
     }
     case 'all': {
-      return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
+      return getComponentOrHookLike(fn) ?? 'Other';
     }
     default: {
       assertExhaustive(
@@ -1022,10 +1021,7 @@ function hasMemoCacheFunctionImport(
   return hasUseMemoCache;
 }
 
-function isHookName(s: string, hookPattern: string | null): boolean {
-  if (hookPattern !== null) {
-    return new RegExp(hookPattern).test(s);
-  }
+function isHookName(s: string): boolean {
   return /^use[A-Z0-9]/.test(s);
 }
 
@@ -1036,14 +1032,13 @@ function isHookName(s: string, hookPattern: string | null): boolean {
 
 function isHook(
   path: NodePath<t.Expression | t.PrivateName>,
-  hookPattern: string | null,
 ): boolean {
   if (path.isIdentifier()) {
-    return isHookName(path.node.name, hookPattern);
+    return isHookName(path.node.name);
   } else if (
     path.isMemberExpression() &&
     !path.node.computed &&
-    isHook(path.get('property'), hookPattern)
+    isHook(path.get('property'))
   ) {
     const obj = path.get('object').node;
     const isPascalCaseNameSpace = /^[A-Z].*/;
@@ -1184,19 +1179,18 @@ function getComponentOrHookLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  hookPattern: string | null,
 ): ReactFunctionType | null {
   const functionName = getFunctionName(node);
   // Check if the name is component or hook like:
   if (functionName !== null && isComponentName(functionName)) {
     let isComponent =
-      callsHooksOrCreatesJsx(node, hookPattern) &&
+      callsHooksOrCreatesJsx(node) &&
       isValidComponentParams(node.get('params')) &&
       !returnsNonNode(node);
     return isComponent ? 'Component' : null;
-  } else if (functionName !== null && isHook(functionName, hookPattern)) {
+  } else if (functionName !== null && isHook(functionName)) {
     // Hooks have hook invocations or JSX, but can take any # of arguments
-    return callsHooksOrCreatesJsx(node, hookPattern) ? 'Hook' : null;
+    return callsHooksOrCreatesJsx(node) ? 'Hook' : null;
   }
 
   /*
@@ -1206,7 +1200,7 @@ function getComponentOrHookLike(
   if (node.isFunctionExpression() || node.isArrowFunctionExpression()) {
     if (isForwardRefCallback(node) || isMemoCallback(node)) {
       // As an added check we also look for hook invocations or JSX
-      return callsHooksOrCreatesJsx(node, hookPattern) ? 'Component' : null;
+      return callsHooksOrCreatesJsx(node) ? 'Component' : null;
     }
   }
   return null;
@@ -1232,7 +1226,6 @@ function callsHooksOrCreatesJsx(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  hookPattern: string | null,
 ): boolean {
   let invokesHooks = false;
   let createsJsx = false;
@@ -1243,7 +1236,7 @@ function callsHooksOrCreatesJsx(
     },
     CallExpression(call) {
       const callee = call.get('callee');
-      if (callee.isExpression() && isHook(callee, hookPattern)) {
+      if (callee.isExpression() && isHook(callee)) {
         invokesHooks = true;
       }
     },

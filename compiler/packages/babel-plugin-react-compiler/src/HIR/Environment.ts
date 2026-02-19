@@ -620,19 +620,6 @@ export const EnvironmentConfigSchema = z.object({
   enableCustomTypeDefinitionForReanimated: z.boolean().default(false),
 
   /**
-   * If specified, this value is used as a pattern for determing which global values should be
-   * treated as hooks. The pattern should have a single capture group, which will be used as
-   * the hook name for the purposes of resolving hook definitions (for builtin hooks)_.
-   *
-   * For example, by default `React$useState` would not be treated as a hook. By specifying
-   * `hookPattern: 'React$(\w+)'`, the compiler will treat this value equivalently to `useState()`.
-   *
-   * This setting is intended for cases where Forget is compiling code that has been prebundled
-   * and identifiers have been changed.
-   */
-  hookPattern: z.string().nullable().default(null),
-
-  /**
    * If enabled, this will treat objects named as `ref` or if their names end with the substring `Ref`,
    * and contain a property named `current`, as React refs.
    *
@@ -1029,18 +1016,6 @@ export class Environment {
     binding: NonLocalBinding,
     loc: SourceLocation,
   ): Global | null {
-    if (this.config.hookPattern != null) {
-      const match = new RegExp(this.config.hookPattern).exec(binding.name);
-      if (
-        match != null &&
-        typeof match[1] === 'string' &&
-        isHookName(match[1])
-      ) {
-        const resolvedName = match[1];
-        return this.#globals.get(resolvedName) ?? this.#getCustomHookType();
-      }
-    }
-
     switch (binding.kind) {
       case 'ModuleLocal': {
         // don't resolve module locals
