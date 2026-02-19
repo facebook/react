@@ -467,14 +467,6 @@ function getCurrentStackInDEV(): string {
 
 const ObjectPrototype = Object.prototype;
 
-type JSONValue =
-  | string
-  | boolean
-  | number
-  | null
-  | {+[key: string]: JSONValue}
-  | $ReadOnlyArray<JSONValue>;
-
 const stringify = JSON.stringify;
 
 type ReactJSONValue =
