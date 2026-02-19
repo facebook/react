@@ -218,7 +218,6 @@ This directory contains detailed documentation for each pass in the React Compil
 | 49 | [validateNoRefAccessInRender](49-validateNoRefAccessInRender.md) | `Validation/ValidateNoRefAccessInRender.ts` | Ref access constraints |
 | 50 | [validateNoFreezingKnownMutableFunctions](50-validateNoFreezingKnownMutableFunctions.md) | `Validation/ValidateNoFreezingKnownMutableFunctions.ts` | Mutable function isolation |
 | 51 | [validateExhaustiveDependencies](51-validateExhaustiveDependencies.md) | `Validation/ValidateExhaustiveDependencies.ts` | Dependency array completeness |
-| 52 | [validateMemoizedEffectDependencies](52-validateMemoizedEffectDependencies.md) | `Validation/ValidateMemoizedEffectDependencies.ts` | Effect scope memoization |
 | 53 | [validatePreservedManualMemoization](53-validatePreservedManualMemoization.md) | `Validation/ValidatePreservedManualMemoization.ts` | Manual memo preservation |
 | 54 | [validateStaticComponents](54-validateStaticComponents.md) | `Validation/ValidateStaticComponents.ts` | Component identity stability |
 | 55 | [validateSourceLocations](55-validateSourceLocations.md) | `Validation/ValidateSourceLocations.ts` | Source location preservation |

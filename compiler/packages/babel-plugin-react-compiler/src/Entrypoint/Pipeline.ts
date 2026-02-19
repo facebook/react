@@ -77,7 +77,6 @@ import {inferTypes} from '../TypeInference';
 import {
   validateContextVariableLValues,
   validateHooksUsage,
-  validateMemoizedEffectDependencies,
   validateNoCapitalizedCalls,
   validateNoRefAccessInRender,
   validateNoSetStateInRender,
@@ -519,10 +518,6 @@ function runWithEnvironment(
     name: 'PruneHoistedContexts',
     value: reactiveFunction,
   });
-
-  if (env.config.validateMemoizedEffectDependencies) {
-    validateMemoizedEffectDependencies(reactiveFunction).unwrap();
-  }
 
   if (
     env.config.enablePreserveExistingMemoizationGuarantees ||

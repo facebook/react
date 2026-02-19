@@ -299,16 +299,6 @@ export const EnvironmentConfigSchema = z.object({
   validateStaticComponents: z.boolean().default(false),
 
   /**
-   * Validates that the dependencies of all effect hooks are memoized. This helps ensure
-   * that Forget does not introduce infinite renders caused by a dependency changing,
-   * triggering an effect, which triggers re-rendering, which causes a dependency to change,
-   * triggering the effect, etc.
-   *
-   * Covers useEffect, useLayoutEffect, useInsertionEffect.
-   */
-  validateMemoizedEffectDependencies: z.boolean().default(false),
-
-  /**
    * Validates that there are no capitalized calls other than those allowed by the allowlist.
    * Calls to capitalized functions are often functions that used to be components and may
    * have lingering hook calls, which makes those calls risky to memoize.
