@@ -479,13 +479,6 @@ export const EnvironmentConfigSchema = z.object({
   validateNoVoidUseMemo: z.boolean().default(true),
 
   /**
-   * Validates that Components/Hooks are always defined at module level. This prevents scope
-   * reference errors that occur when the compiler attempts to optimize the nested component/hook
-   * while its parent function remains uncompiled.
-   */
-  validateNoDynamicallyCreatedComponentsOrHooks: z.boolean().default(false),
-
-  /**
    * When enabled, allows setState calls in effects based on valid patterns involving refs:
    * - Allow setState where the value being set is derived from a ref. This is useful where
    *   state needs to take into account layer information, and a layout effect reads layout

@@ -570,7 +570,6 @@ function printErrorSummary(category: ErrorCategory, message: string): string {
     case ErrorCategory.EffectDerivationsOfState:
     case ErrorCategory.EffectSetState:
     case ErrorCategory.ErrorBoundaries:
-    case ErrorCategory.Factories:
     case ErrorCategory.FBT:
     case ErrorCategory.Gating:
     case ErrorCategory.Globals:
@@ -635,10 +634,6 @@ export enum ErrorCategory {
    * Checking that useMemos always return a value
    */
   VoidUseMemo = 'VoidUseMemo',
-  /**
-   * Checking for higher order functions acting as factories for components/hooks
-   */
-  Factories = 'Factories',
   /**
    * Checks that manual memoization is preserved
    */
@@ -847,17 +842,6 @@ function getRuleForCategoryImpl(category: ErrorCategory): LintRule {
         name: 'error-boundaries',
         description:
           'Validates usage of error boundaries instead of try/catch for errors in child components',
-        preset: LintRulePreset.Recommended,
-      };
-    }
-    case ErrorCategory.Factories: {
-      return {
-        category,
-        severity: ErrorSeverity.Error,
-        name: 'component-hook-factories',
-        description:
-          'Validates against higher order functions defining nested components or hooks. ' +
-          'Components and hooks should be defined at the module level',
         preset: LintRulePreset.Recommended,
       };
     }
