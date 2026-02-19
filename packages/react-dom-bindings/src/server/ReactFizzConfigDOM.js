@@ -7041,7 +7041,17 @@ export function hoistHoistables(
   }
 }
 
-export function hasSuspenseyContent(hoistableState: HoistableState): boolean {
+export function hasSuspenseyContent(
+  hoistableState: HoistableState,
+  flushingInShell: boolean,
+): boolean {
+  if (flushingInShell) {
+    // When flushing the shell, stylesheets with precedence are already emitted
+    // in the <head> which blocks paint. There's no benefit to outlining for CSS
+    // alone during the shell flush. However, suspensey images (for ViewTransition
+    // animation reveals) should still trigger outlining even during the shell.
+    return hoistableState.suspenseyImages;
+  }
   return hoistableState.stylesheets.size > 0 || hoistableState.suspenseyImages;
 }
 
