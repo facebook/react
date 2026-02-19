@@ -75,7 +75,6 @@ export const InstrumentationSchema = z
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
 export const USE_FIRE_FUNCTION_NAME = 'useFire';
-export const EMIT_FREEZE_GLOBAL_GATING = '__DEV__';
 
 export const MacroSchema = z.string();
 
@@ -372,30 +371,6 @@ export const EnvironmentConfigSchema = z.object({
    * then this flag will assume that `x` is not subusequently modified.
    */
   enableTransitivelyFreezeFunctionExpressions: z.boolean().default(true),
-
-  /*
-   * Enables codegen mutability debugging. This emits a dev-mode only to log mutations
-   * to values that Forget assumes are immutable (for Forget compiled code).
-   * For example:
-   *   emitFreeze: {
-   *     source: 'ReactForgetRuntime',
-   *     importSpecifierName: 'makeReadOnly',
-   *   }
-   *
-   * produces:
-   *   import {makeReadOnly} from 'ReactForgetRuntime';
-   *
-   *   function Component(props) {
-   *     if (c_0) {
-   *       // ...
-   *       $[0] = __DEV__ ? makeReadOnly(x) : x;
-   *     } else {
-   *       x = $[0];
-   *     }
-   *   }
-   */
-  enableEmitFreeze: ExternalFunctionSchema.nullable().default(null),
-
   enableEmitHookGuards: ExternalFunctionSchema.nullable().default(null),
 
   /**

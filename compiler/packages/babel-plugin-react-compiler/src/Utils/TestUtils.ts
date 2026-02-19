@@ -43,10 +43,6 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
     source: 'react-compiler-runtime',
     importSpecifierName: '$structuralCheck',
   },
-  enableEmitFreeze: {
-    source: 'react-compiler-runtime',
-    importSpecifierName: 'makeReadOnly',
-  },
   enableEmitInstrumentForget: {
     fn: {
       source: 'react-compiler-runtime',

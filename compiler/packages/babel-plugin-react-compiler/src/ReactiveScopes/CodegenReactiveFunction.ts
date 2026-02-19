@@ -52,7 +52,7 @@ import {assertExhaustive} from '../Utils/utils';
 import {buildReactiveFunction} from './BuildReactiveFunction';
 import {SINGLE_CHILD_FBT_TAGS} from './MemoizeFbtAndMacroOperandsInSameScope';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
-import {EMIT_FREEZE_GLOBAL_GATING, ReactFunctionType} from '../HIR/Environment';
+import {ReactFunctionType} from '../HIR/Environment';
 import {ProgramContext} from '../Entrypoint';
 
 export const MEMO_CACHE_SENTINEL = 'react.memo_cache_sentinel';
@@ -566,30 +566,6 @@ function codegenBlockNoReset(
   return t.blockStatement(statements);
 }
 
-function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
-  if (
-    cx.env.config.enableEmitFreeze != null &&
-    cx.env.outputMode === 'client'
-  ) {
-    const emitFreezeIdentifier = cx.env.programContext.addImportSpecifier(
-      cx.env.config.enableEmitFreeze,
-    ).name;
-    cx.env.programContext
-      .assertGlobalBinding(EMIT_FREEZE_GLOBAL_GATING, cx.env.scope)
-      .unwrap();
-    return t.conditionalExpression(
-      t.identifier(EMIT_FREEZE_GLOBAL_GATING),
-      t.callExpression(t.identifier(emitFreezeIdentifier), [
-        value,
-        t.stringLiteral(cx.fnName),
-      ]),
-      value,
-    );
-  } else {
-    return value;
-  }
-}
-
 function codegenReactiveScope(
   cx: Context,
   statements: Array<t.Statement>,
@@ -674,7 +650,7 @@ function codegenReactiveScope(
         t.variableDeclaration('let', [createVariableDeclarator(name, null)]),
       );
     }
-    cacheLoads.push({name, index, value: wrapCacheDep(cx, name)});
+    cacheLoads.push({name, index, value: name});
     cx.declare(identifier);
   }
   for (const reassignment of scope.reassignments) {
@@ -684,7 +660,7 @@ function codegenReactiveScope(
     }
     const name = convertIdentifier(reassignment);
     outputComments.push(name.name);
-    cacheLoads.push({name, index, value: wrapCacheDep(cx, name)});
+    cacheLoads.push({name, index, value: name});
   }
 
   let testCondition = (changeExpressions as Array<t.Expression>).reduce(
