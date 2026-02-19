@@ -593,28 +593,6 @@ export const EnvironmentConfigSchema = z.object({
    */
   enableTreatSetIdentifiersAsStateSetters: z.boolean().default(false),
 
-  /*
-   * If specified a value, the compiler lowers any calls to `useContext` to use
-   * this value as the callee.
-   *
-   * A selector function is compiled and passed as an argument along with the
-   * context to this function call.
-   *
-   * The compiler automatically figures out the keys by looking for the immediate
-   * destructuring of the return value from the useContext call. In the future,
-   * this can be extended to different kinds of context access like property
-   * loads and accesses over multiple statements as well.
-   *
-   * ```
-   * // input
-   * const {foo, bar} = useContext(MyContext);
-   *
-   * // output
-   * const {foo, bar} = useCompiledContext(MyContext, (c) => [c.foo, c.bar]);
-   * ```
-   */
-  lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
-
   /**
    * If enabled, will validate useMemos that don't return any values:
    *

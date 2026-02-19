@@ -87,7 +87,6 @@ import {
 } from '../Validation';
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
-import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInEffects} from '../Validation/ValidateNoSetStateInEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
@@ -216,10 +215,6 @@ function runWithEnvironment(
   if (env.config.enableFire) {
     transformFire(hir);
     log({kind: 'hir', name: 'TransformFire', value: hir});
-  }
-
-  if (env.config.lowerContextAccess) {
-    lowerContextAccess(hir, env.config.lowerContextAccess);
   }
 
   optimizePropsMethodCalls(hir);

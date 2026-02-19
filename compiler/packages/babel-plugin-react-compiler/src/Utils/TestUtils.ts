@@ -62,10 +62,6 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
     source: 'react-compiler-runtime',
     importSpecifierName: '$dispatcherGuard',
   },
-  lowerContextAccess: {
-    source: 'react-compiler-runtime',
-    importSpecifierName: 'useContext_withSelector',
-  },
 
 };
 
