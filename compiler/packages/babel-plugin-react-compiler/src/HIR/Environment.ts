@@ -434,14 +434,6 @@ export const EnvironmentConfigSchema = z.object({
   throwUnknownException__testonly: z.boolean().default(false),
 
   /**
-   * When true, always act as though the dependencies of a memoized value
-   * have changed. This makes the compiler not actually perform any optimizations,
-   * but is useful for debugging. When enabled, existing manual memoization from
-   * the original source is also preserved.
-   */
-  disableMemoizationForDebugging: z.boolean().default(false),
-
-  /**
    * The react native re-animated library uses custom Babel transforms that
    * requires the calls to library API remain unmodified.
    *

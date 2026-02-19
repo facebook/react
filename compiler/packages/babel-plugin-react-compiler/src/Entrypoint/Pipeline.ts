@@ -162,10 +162,7 @@ function runWithEnvironment(
   validateContextVariableLValues(hir);
   validateUseMemo(hir).unwrap();
 
-  if (
-    env.enableDropManualMemoization &&
-    !env.config.disableMemoizationForDebugging
-  ) {
+  if (env.enableDropManualMemoization) {
     dropManualMemoization(hir).unwrap();
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
   }
