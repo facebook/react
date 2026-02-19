@@ -3537,6 +3537,7 @@ function resolveErrorDev(
       null,
       message ||
         'An error occurred in the Server Components render but no message was provided',
+      'cause' in errorInfo ? {cause: errorInfo.cause} : undefined,
     ),
   );
 
@@ -3564,19 +3565,7 @@ function resolveErrorDev(
 
   (error: any).name = name;
   (error: any).environmentName = env;
-  const causeInfo = errorInfo.cause;
-  if (typeof causeInfo === 'string') {
-    // TODO: What bad things can I do by controling the cause reference?
-    const causeReference = causeInfo.slice(1);
-    const cause = getOutlinedModel(
-      response,
-      causeReference,
-      {},
-      '',
-      createModel,
-    );
-    (error: any).cause = cause;
-  }
+
   return error;
 }
 
@@ -3588,7 +3577,7 @@ function resolveErrorModel(
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
-  const errorInfo = JSON.parse(row);
+  const errorInfo = parseModel(response, row);
   let error;
   if (__DEV__) {
     error = resolveErrorDev(response, errorInfo);

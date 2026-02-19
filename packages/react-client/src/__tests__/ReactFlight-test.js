@@ -789,6 +789,7 @@ describe('ReactFlight', () => {
 
     function ServerComponent() {
       const cause = new TypeError('root cause', {
+        // too deep for React to serialize when thrown.
         cause: {type: 'object cause'},
       });
       const error = new Error('hello', {cause});
@@ -828,7 +829,7 @@ describe('ReactFlight', () => {
         stack: TypeError: root cause
     in ServerComponent (at **)
         environmentName: Server
-        cause: {"type":"object cause"}`);
+        cause: "This object has been omitted by React in the console log to avoid sending too much data from the server. Try logging smaller or more specific objects."`);
     } else {
       expect(renderError(error)).toEqual(`
         is error: true
