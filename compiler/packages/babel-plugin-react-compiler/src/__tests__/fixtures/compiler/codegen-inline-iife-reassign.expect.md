@@ -32,7 +32,7 @@ import { makeArray, print } from "shared-runtime";
 function useTest() {
   const $ = _c(1);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     let w = {};
     const t1 = (w = 42);
     const t2 = w;

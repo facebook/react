@@ -45,7 +45,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = [];
     $[2] = t1;
   } else {

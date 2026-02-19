@@ -45,7 +45,7 @@ function Bar(props) {
     useRenderCounter("Bar", "/conflict-codegen-instrument-forget.ts");
   const $ = _c(4);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = identity(null);
     $[0] = t0;
   } else {
@@ -53,7 +53,7 @@ function Bar(props) {
   }
   const shouldInstrument = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = identity(null);
     $[1] = t1;
   } else {

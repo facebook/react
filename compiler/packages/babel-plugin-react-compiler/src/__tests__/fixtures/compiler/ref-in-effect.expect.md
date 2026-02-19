@@ -24,7 +24,7 @@ function Component(props) {
   const $ = _c(3);
   const ref = useRef(null);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = (e) => {
       const newValue = e.target.value ?? ref.current;
       ref.current = newValue;
@@ -35,7 +35,7 @@ function Component(props) {
   }
   const onChange = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       console.log(ref.current);
     };
@@ -45,7 +45,7 @@ function Component(props) {
   }
   useEffect(t1);
   let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t2 = <Foo onChange={onChange} />;
     $[2] = t2;
   } else {

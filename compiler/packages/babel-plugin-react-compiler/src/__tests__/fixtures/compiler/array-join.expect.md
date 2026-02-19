@@ -19,7 +19,7 @@ function Component(props) {
   const $ = _c(7);
   let t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};
     t1 = [];
     $[0] = t0;

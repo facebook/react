@@ -41,8 +41,8 @@ function Component(props) {
   const $ = _c(2);
   let t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = Symbol.for("react.early_return_sentinel");
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
+    t1 = globalThis.Symbol.for("react.early_return_sentinel");
     bb0: {
       const object = makeObject_Primitives();
       const cond = makeObject_Primitives();
@@ -66,7 +66,7 @@ function Component(props) {
     t0 = $[0];
     t1 = $[1];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+  if (t1 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t1;
   }
   return t0;

@@ -24,7 +24,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = [];
     $[0] = t0;
   } else {
@@ -32,7 +32,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const y = x.map(_temp);
     t1 = [x, y];
     $[1] = t1;

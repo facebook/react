@@ -45,7 +45,7 @@ function useFoo(t0) {
   let t1;
   let x;
   if ($[0] !== cond || $[1] !== hasAB || $[2] !== input) {
-    t1 = Symbol.for("react.early_return_sentinel");
+    t1 = globalThis.Symbol.for("react.early_return_sentinel");
     bb0: {
       x = [];
       if (cond) {
@@ -83,7 +83,7 @@ function useFoo(t0) {
     t1 = $[3];
     x = $[4];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+  if (t1 !== globalThis.Symbol.for("react.early_return_sentinel")) {
     return t1;
   }
 

@@ -24,7 +24,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo() {
   const $ = _c(1);
   let a;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     a = [[1]];
     const first = a.at(0);
     first.set(0, 2);

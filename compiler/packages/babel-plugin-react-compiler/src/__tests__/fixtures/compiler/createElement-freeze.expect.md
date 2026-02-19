@@ -40,7 +40,7 @@ function Component(props) {
   let t1;
   if ($[2] !== childProps) {
     let t2;
-    if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[4] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t2 = ["hello world"];
       $[4] = t2;
     } else {

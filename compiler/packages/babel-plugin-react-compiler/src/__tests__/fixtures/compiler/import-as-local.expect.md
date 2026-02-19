@@ -67,7 +67,7 @@ function uniqueId() {
 export function useCustomHook(src) {
   const $ = _c(6);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = uniqueId();
     $[0] = t0;
   } else {
@@ -103,7 +103,7 @@ export function useCustomHook(src) {
     t2 = $[4];
   }
   let t3;
-  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[5] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = [];
     $[5] = t3;
   } else {
@@ -119,7 +119,7 @@ function Component() {
   const $ = _c(1);
   useCustomHook("hello");
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = <div>Hello</div>;
     $[0] = t0;
   } else {

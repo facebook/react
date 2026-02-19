@@ -29,7 +29,7 @@ import { useRef } from "react";
 function Component() {
   const $ = _c(2);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = { text: { value: null } };
     $[0] = t0;
   } else {
@@ -37,7 +37,7 @@ function Component() {
   }
   const ref = useRef(t0);
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const inputChanged = (e) => {
       ref.current.text.value = e.target.value;
     };

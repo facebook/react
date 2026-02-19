@@ -78,7 +78,7 @@ function cond(x) {
 function testFunction(props) {
   const $ = _c(1);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     let a = {};
     let b = {};
     let c = {};

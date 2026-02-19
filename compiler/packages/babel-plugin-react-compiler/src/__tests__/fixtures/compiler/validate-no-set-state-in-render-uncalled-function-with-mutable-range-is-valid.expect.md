@@ -54,7 +54,7 @@ function Component(props) {
   switch (currentStep) {
     case 0: {
       let t1;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t1 = <OtherComponent data={{ foo: "bar" }} />;
         $[2] = t1;
       } else {
@@ -64,7 +64,7 @@ function Component(props) {
     }
     case 1: {
       let t1;
-      if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[3] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t1 = { foo: "joe" };
         $[3] = t1;
       } else {
@@ -83,7 +83,7 @@ function Component(props) {
     default: {
       logEvent("Invalid step");
       let t1;
-      if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+      if ($[6] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
         t1 = <OtherComponent data={null} />;
         $[6] = t1;
       } else {

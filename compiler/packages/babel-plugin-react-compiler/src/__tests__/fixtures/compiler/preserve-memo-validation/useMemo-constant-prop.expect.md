@@ -37,7 +37,7 @@ function useFoo(cond) {
   const $ = _c(5);
   const sourceDep = 0;
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = identity(0);
     $[0] = t0;
   } else {
@@ -47,7 +47,7 @@ function useFoo(cond) {
 
   const derived2 = (cond ?? Math.min(0, 1)) ? 1 : 2;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = identity(0);
     $[1] = t1;
   } else {

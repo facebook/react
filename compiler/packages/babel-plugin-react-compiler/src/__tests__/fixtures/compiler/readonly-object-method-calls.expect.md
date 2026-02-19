@@ -44,7 +44,7 @@ function Component(props) {
   if ($[0] !== user.timeline.posts.edges.nodes) {
     posts = user.timeline.posts.edges.nodes.map(_temp);
     let t0;
-    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[2] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t0 = {};
       $[2] = t0;
     } else {

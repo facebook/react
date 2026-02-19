@@ -23,7 +23,7 @@ function Component(props) {
   const $ = _c(2);
   const start = performance.now();
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t0 = Date.now();
     $[0] = t0;
   } else {
@@ -32,7 +32,7 @@ function Component(props) {
   const now = t0;
   const time = performance.now() - start;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = (
       <div>
         rendering took

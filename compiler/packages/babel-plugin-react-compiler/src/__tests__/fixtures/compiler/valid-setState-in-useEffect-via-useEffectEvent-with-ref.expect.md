@@ -119,7 +119,7 @@ function Component(t0) {
   }
   useEffect(t2, t3);
   let t4;
-  if ($[10] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[10] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t4 = (xx, yy) => {
       const previousX_0 = previousXRef.current;
       previousXRef.current = xx;

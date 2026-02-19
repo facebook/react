@@ -30,7 +30,7 @@ function useFoo(t0) {
 
   if (cond) {
     let t1;
-    if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t1 = <SharedRuntime.Text value={4} />;
       $[0] = t1;
     } else {

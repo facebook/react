@@ -53,7 +53,7 @@ function VideoPlayer(t0) {
   }
   useEffect(t1, t2);
   let t3;
-  if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[4] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t3 = <video />;
     $[4] = t3;
   } else {

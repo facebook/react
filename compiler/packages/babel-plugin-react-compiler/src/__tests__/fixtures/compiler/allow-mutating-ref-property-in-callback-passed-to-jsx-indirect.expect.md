@@ -43,7 +43,7 @@ function Component() {
   const $ = _c(2);
   const ref = useRef(null);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     const setRef = () => {
       if (ref.current !== null) {
         ref.current.value = "";
@@ -58,7 +58,7 @@ function Component() {
   }
   const onClick = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = (
       <>
         <input ref={ref} />

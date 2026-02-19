@@ -28,7 +28,7 @@ export function useFormatRelativeTime(t0) {
   const opts = t0 === undefined ? {} : t0;
   const { timeZone, minimal } = opts;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = function formatWithUnit() {};
     $[0] = t1;
   } else {

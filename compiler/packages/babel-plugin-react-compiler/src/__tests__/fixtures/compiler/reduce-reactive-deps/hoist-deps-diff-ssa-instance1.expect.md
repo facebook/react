@@ -44,7 +44,7 @@ function Foo(t0) {
   const $ = _c(7);
   const { cond } = t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
     t1 = shallowCopy({ kind: "hasA", a: { value: 2 } });
     $[0] = t1;
   } else {
@@ -55,7 +55,7 @@ function Foo(t0) {
   Math.max(x.a.value, 2);
   if (cond) {
     let t2;
-    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[1] === globalThis.Symbol.for("react.memo_cache_sentinel")) {
       t2 = shallowCopy({ kind: "hasC", c: { value: 3 } });
       $[1] = t2;
     } else {
