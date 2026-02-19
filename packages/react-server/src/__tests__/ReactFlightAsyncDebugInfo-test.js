@@ -3633,4 +3633,40 @@ describe('ReactFlightAsyncDebugInfo', () => {
       `);
     }
   });
+
+  it('should not exponentially accumulate debug info on outlined debug chunks', async () => {
+    // Regression test: Each Level wraps its received `context` prop in a new
+    // object before passing it down. This creates props deduplication
+    // references to the parent's outlined chunk alongside the owner reference,
+    // giving 2 references per level to the direct parent's chunk. Without
+    // skipping transferReferencedDebugInfo during debug info resolution, this
+    // test would fail with an infinite loop detection error.
+    async function Level({depth, context}) {
+      await delay(0);
+      if (depth === 0) {
+        return <div>Hello, World!</div>;
+      }
+      const newContext = {prev: context, id: depth};
+      return ReactServer.createElement(Level, {
+        depth: depth - 1,
+        context: newContext,
+      });
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(
+      ReactServer.createElement(Level, {depth: 20, context: {root: true}}),
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    const resolved = await result;
+    expect(resolved.type).toBe('div');
+
+    await finishLoadingStream(readable);
+  });
 });

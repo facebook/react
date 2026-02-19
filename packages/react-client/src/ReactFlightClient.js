@@ -943,6 +943,7 @@ type InitializationHandler = {
 };
 let initializingHandler: null | InitializationHandler = null;
 let initializingChunk: null | BlockedChunk<any> = null;
+let isInitializingDebugInfo: boolean = false;
 
 function initializeDebugChunk(
   response: Response,
@@ -951,6 +952,8 @@ function initializeDebugChunk(
   const debugChunk = chunk._debugChunk;
   if (debugChunk !== null) {
     const debugInfo = chunk._debugInfo;
+    const prevIsInitializingDebugInfo = isInitializingDebugInfo;
+    isInitializingDebugInfo = true;
     try {
       if (debugChunk.status === RESOLVED_MODEL) {
         // Find the index of this debug info by walking the linked list.
@@ -1015,6 +1018,8 @@ function initializeDebugChunk(
       }
     } catch (error) {
       triggerErrorOnChunk(response, chunk, error);
+    } finally {
+      isInitializingDebugInfo = prevIsInitializingDebugInfo;
     }
   }
 }
@@ -1632,7 +1637,9 @@ function fulfillReference(
       const element: any = handler.value;
       switch (key) {
         case '3':
-          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          if (__DEV__) {
+            transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          }
           element.props = mappedValue;
           break;
         case '4':
@@ -1648,7 +1655,9 @@ function fulfillReference(
           }
           break;
         default:
-          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          if (__DEV__) {
+            transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          }
           break;
       }
     } else if (__DEV__ && !reference.isDebug) {
@@ -2086,7 +2095,7 @@ function getOutlinedModel<T>(
                 response,
                 map,
                 path.slice(i - 1),
-                false,
+                isInitializingDebugInfo,
               );
             }
             case HALTED: {
@@ -2158,14 +2167,21 @@ function getOutlinedModel<T>(
       }
 
       const chunkValue = map(response, value, parentObject, key);
-      if (
-        parentObject[0] === REACT_ELEMENT_TYPE &&
-        (key === '4' || key === '5')
-      ) {
-        // If we're resolving the "owner" or "stack" slot of an Element array, we don't call
-        // transferReferencedDebugInfo because this reference is to a debug chunk.
-      } else {
-        transferReferencedDebugInfo(initializingChunk, chunk);
+      if (__DEV__) {
+        if (
+          parentObject[0] === REACT_ELEMENT_TYPE &&
+          (key === '4' || key === '5')
+        ) {
+          // If we're resolving the "owner" or "stack" slot of an Element array,
+          // we don't call transferReferencedDebugInfo because this reference is
+          // to a debug chunk.
+        } else if (isInitializingDebugInfo) {
+          // If we're resolving references as part of debug info resolution, we
+          // don't call transferReferencedDebugInfo because these references are
+          // to debug chunks.
+        } else {
+          transferReferencedDebugInfo(initializingChunk, chunk);
+        }
       }
       return chunkValue;
     case PENDING:
@@ -2177,7 +2193,7 @@ function getOutlinedModel<T>(
         response,
         map,
         path,
-        false,
+        isInitializingDebugInfo,
       );
     case HALTED: {
       // Add a dependency that will never resolve.
@@ -4264,15 +4280,21 @@ function resolveIOInfo(
 ): void {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
-  if (!chunk) {
-    chunk = createResolvedModelChunk(response, model);
-    chunks.set(id, chunk);
-    initializeModelChunk(chunk);
-  } else {
-    resolveModelChunk(response, chunk, model);
-    if (chunk.status === RESOLVED_MODEL) {
+  const prevIsInitializingDebugInfo = isInitializingDebugInfo;
+  isInitializingDebugInfo = true;
+  try {
+    if (!chunk) {
+      chunk = createResolvedModelChunk(response, model);
+      chunks.set(id, chunk);
       initializeModelChunk(chunk);
+    } else {
+      resolveModelChunk(response, chunk, model);
+      if (chunk.status === RESOLVED_MODEL) {
+        initializeModelChunk(chunk);
+      }
     }
+  } finally {
+    isInitializingDebugInfo = prevIsInitializingDebugInfo;
   }
   if (chunk.status === INITIALIZED) {
     initializeIOInfo(response, chunk.value);
