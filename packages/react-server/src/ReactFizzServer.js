@@ -5592,9 +5592,7 @@ function flushSegment(
     // blocked on something later in the stream anyway.
     !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
-    (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
-      hasSuspenseyContent(boundary.contentState) ||
-      boundary.defer)
+    (hasSuspenseyContent(boundary.contentState) || boundary.defer)
   ) {
     // Inlining this boundary would make the current sequence being written too large
     // and block the parent for too long. Instead, it will be emitted separately so that we
