@@ -833,7 +833,7 @@ class Unifier {
   }
 }
 
-const RefLikeNameRE = /^(?:[a-zA-Z$_][a-zA-Z$_0-9]*)Ref$|^ref$/;
+const RefLikeNameRE = /^(?:[a-zA-Z$_][a-zA-Z$_0-9]*)(?:R|_r)ef$|^ref$/;
 
 function isRefLikeName(t: PropType): boolean {
   return (

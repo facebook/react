@@ -620,7 +620,7 @@ export const EnvironmentConfigSchema = z.object({
   enableCustomTypeDefinitionForReanimated: z.boolean().default(false),
 
   /**
-   * If specified, this value is used as a pattern for determing which global values should be
+   * If specified, this value is used as a pattern for determining which global values should be
    * treated as hooks. The pattern should have a single capture group, which will be used as
    * the hook name for the purposes of resolving hook definitions (for builtin hooks)_.
    *
@@ -633,8 +633,8 @@ export const EnvironmentConfigSchema = z.object({
   hookPattern: z.string().nullable().default(null),
 
   /**
-   * If enabled, this will treat objects named as `ref` or if their names end with the substring `Ref`,
-   * and contain a property named `current`, as React refs.
+   * If enabled, this will treat objects named as `ref` or if their names end with substring `Ref`
+   * or `_ref`, and contain a property named `current`, as React refs.
    *
    * ```
    * const ref = useMyRef();
@@ -645,7 +645,7 @@ export const EnvironmentConfigSchema = z.object({
    * })
    * ```
    *
-   * Here the variables `ref` and `myRef` will be typed as Refs.
+   * Here the variables `ref`, `myRef`, and `my_ref` will be typed as Refs.
    */
   enableTreatRefLikeIdentifiersAsRefs: z.boolean().default(true),
 
