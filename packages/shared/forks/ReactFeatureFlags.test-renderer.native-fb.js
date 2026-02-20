@@ -67,6 +67,7 @@ export const enableFragmentRefs = false;
 export const enableFragmentRefsScrollIntoView = false;
 export const enableFragmentRefsInstanceHandles = false;
 export const enableFragmentRefsTextNodes = false;
+export const disableSetStateInRenderOnMount = false;
 export const ownerStackLimit = 1e4;
 export const enableOptimisticKey = false;
 export const enableParallelTransitions = false;
