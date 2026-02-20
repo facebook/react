@@ -174,17 +174,17 @@ These passes already accumulate errors internally and return `Result<void, Compi
   - Record errors on env
   - Update Pipeline.ts call site (line 315): remove `.unwrap()`
 
-- [ ] **4.10 `validateMemoizedEffectDependencies`** (`src/Validation/ValidateMemoizedEffectDependencies.ts`)
+- [x] **4.10 `validateMemoizedEffectDependencies`** (`src/Validation/ValidateMemoizedEffectDependencies.ts`)
   - Change signature to return void (note: operates on `ReactiveFunction`)
   - Record errors on the function's env
   - Update Pipeline.ts call site (line 565): remove `.unwrap()`
 
-- [ ] **4.11 `validatePreservedManualMemoization`** (`src/Validation/ValidatePreservedManualMemoization.ts`)
+- [x] **4.11 `validatePreservedManualMemoization`** (`src/Validation/ValidatePreservedManualMemoization.ts`)
   - Change signature to return void (note: operates on `ReactiveFunction`)
   - Record errors on the function's env
   - Update Pipeline.ts call site (line 572): remove `.unwrap()`
 
-- [ ] **4.12 `validateSourceLocations`** (`src/Validation/ValidateSourceLocations.ts`)
+- [x] **4.12 `validateSourceLocations`** (`src/Validation/ValidateSourceLocations.ts`)
   - Change signature to return void
   - Record errors on env
   - Update Pipeline.ts call site (line 585): remove `.unwrap()`
@@ -202,16 +202,16 @@ These already use a soft-logging pattern and don't block compilation. They can b
 
 These throw `CompilerError` directly (not via Result). They need the most work.
 
-- [ ] **4.17 `validateContextVariableLValues`** (`src/Validation/ValidateContextVariableLValues.ts`)
+- [x] **4.17 `validateContextVariableLValues`** (`src/Validation/ValidateContextVariableLValues.ts`)
   - Currently throws via `CompilerError.throwTodo()` and `CompilerError.invariant()`
   - Change to record Todo errors on env and continue
   - Keep invariant throws (those indicate internal bugs)
 
-- [ ] **4.18 `validateLocalsNotReassignedAfterRender`** (`src/Validation/ValidateLocalsNotReassignedAfterRender.ts`)
+- [x] **4.18 `validateLocalsNotReassignedAfterRender`** (`src/Validation/ValidateLocalsNotReassignedAfterRender.ts`)
   - Currently constructs a `CompilerError` and `throw`s it directly
   - Change to record errors on env
 
-- [ ] **4.19 `validateNoDerivedComputationsInEffects`** (`src/Validation/ValidateNoDerivedComputationsInEffects.ts`)
+- [x] **4.19 `validateNoDerivedComputationsInEffects`** (`src/Validation/ValidateNoDerivedComputationsInEffects.ts`)
   - Currently throws directly
   - Change to record errors on env
 
@@ -219,14 +219,14 @@ These throw `CompilerError` directly (not via Result). They need the most work.
 
 The inference passes are the most critical to handle correctly because they produce side effects (populating effects on instructions, computing mutable ranges) that downstream passes depend on. They must continue producing valid (even if imprecise) output when errors are encountered.
 
-- [ ] **5.1 `inferMutationAliasingEffects`** (`src/Inference/InferMutationAliasingEffects.ts`)
+- [x] **5.1 `inferMutationAliasingEffects`** (`src/Inference/InferMutationAliasingEffects.ts`)
   - Currently returns `Result<void, CompilerError>` — errors are about mutation of frozen/global values
   - Change to record errors on `fn.env` instead of accumulating internally
   - **Key recovery strategy**: When a mutation of a frozen value is detected, record the error but treat the operation as a non-mutating read. This way downstream passes see a consistent (if conservative) view
   - When a mutation of a global is detected, record the error but continue with the global unchanged
   - Update Pipeline.ts (lines 233-239): remove the conditional `.isErr()` / throw pattern
 
-- [ ] **5.2 `inferMutationAliasingRanges`** (`src/Inference/InferMutationAliasingRanges.ts`)
+- [x] **5.2 `inferMutationAliasingRanges`** (`src/Inference/InferMutationAliasingRanges.ts`)
   - Currently returns `Result<Array<AliasingEffect>, CompilerError>`
   - This pass has a meaningful success value (the function's external aliasing effects)
   - Change to: always produce a best-effort effects array, record errors on env
@@ -235,7 +235,7 @@ The inference passes are the most critical to handle correctly because they prod
 
 ### Phase 6: Update Codegen
 
-- [ ] **6.1 `codegenFunction`** (`src/ReactiveScopes/CodegenReactiveFunction.ts`)
+- [x] **6.1 `codegenFunction`** (`src/ReactiveScopes/CodegenReactiveFunction.ts`)
   - Currently returns `Result<CodegenFunction, CompilerError>`
   - Change to: always produce a `CodegenFunction`, record errors on env
   - If codegen encounters an error (e.g., an instruction it can't generate code for), it should:
