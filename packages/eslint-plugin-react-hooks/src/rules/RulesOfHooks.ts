@@ -69,32 +69,6 @@ function isReactFunction(node: Node, functionName: string): boolean {
   );
 }
 
-/**
- * Checks if the node is a callback argument of forwardRef. This render function
- * should follow the rules of hooks.
- */
-function isForwardRefCallback(node: Node): boolean {
-  return !!(
-    node.parent &&
-    'callee' in node.parent &&
-    node.parent.callee &&
-    isReactFunction(node.parent.callee, 'forwardRef')
-  );
-}
-
-/**
- * Checks if the node is a callback argument of React.memo. This anonymous
- * functional component should follow the rules of hooks.
- */
-function isMemoCallback(node: Node): boolean {
-  return !!(
-    node.parent &&
-    'callee' in node.parent &&
-    node.parent.callee &&
-    isReactFunction(node.parent.callee, 'memo')
-  );
-}
-
 function isInsideComponentOrHook(node: Node | undefined): boolean {
   while (node) {
     const functionName = getFunctionName(node);
@@ -103,8 +77,12 @@ function isInsideComponentOrHook(node: Node | undefined): boolean {
         return true;
       }
     }
-    if (isForwardRefCallback(node) || isMemoCallback(node)) {
-      return true;
+    const functionNameSkippingCallExpressions =
+      getFunctionNameSkippingCallExpressions(node);
+    if (functionNameSkippingCallExpressions) {
+      if (isComponentName(functionNameSkippingCallExpressions)) {
+        return true;
+      }
     }
     node = node.parent;
   }
@@ -531,10 +509,27 @@ const rule = {
         // function component or we are in a hook function.
         const isSomewhereInsideComponentOrHook =
           isInsideComponentOrHook(codePathNode);
-        const isDirectlyInsideComponentOrHook = codePathFunctionName
-          ? isComponentName(codePathFunctionName) ||
-            isHook(codePathFunctionName)
-          : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
+
+        const isDirectlyInsideComponentOrHook = (() => {
+          if (
+            codePathFunctionName &&
+            (isComponentName(codePathFunctionName) ||
+              isHook(codePathFunctionName))
+          ) {
+            return true;
+          }
+
+          const codePathFunctionNameSkippingCallExpressions =
+            getFunctionNameSkippingCallExpressions(codePathNode);
+          if (
+            codePathFunctionNameSkippingCallExpressions &&
+            isComponentName(codePathFunctionNameSkippingCallExpressions)
+          ) {
+            return true;
+          }
+
+          return false;
+        })();
 
         // Compute the earliest finalizer level using information from the
         // cache. We expect all reachable final segments to have a cache entry
@@ -916,6 +911,61 @@ function getFunctionName(node: Node) {
       // Kinda clowny, but we'd said we'd follow spec convention for
       // `IsAnonymousFunctionDefinition()` usage.
       return node.parent.left;
+    } else {
+      return undefined;
+    }
+  } else {
+    return undefined;
+  }
+}
+
+/**
+ * Gets the static name of a function that is passed as an argument to one or more
+ * wrapper function calls. This function traverses up the AST through multiple levels
+ * of CallExpression nodes to find the ultimate variable assignment.
+ *
+ * This is used to identify React components that are wrapped in higher-order components
+ * or other wrapper functions like React.memo, React.forwardRef, or custom wrappers.
+ *
+ * The function works by:
+ * 1. Starting with the given function node
+ * 2. Traversing up through parent CallExpression nodes while the current node
+ *    is an argument to those calls
+ * 3. Stopping when it reaches a VariableDeclarator that assigns the final
+ *    CallExpression result to a variable
+ * 4. Returning the variable identifier if found
+ *
+ * This enables the rules-of-hooks linter to properly identify components even
+ * when they are deeply nested in wrapper function calls, allowing it to apply
+ * React Hook rules correctly.
+ */
+
+function getFunctionNameSkippingCallExpressions(node: Node) {
+  if (
+    node.type === 'FunctionExpression' ||
+    node.type === 'ArrowFunctionExpression'
+  ) {
+    let current: Node = node;
+    let parent = node.parent;
+
+    // Skip through multiple chained CallExpressions
+    while (
+      parent?.type === 'CallExpression' &&
+      parent.arguments.includes(current)
+    ) {
+      current = parent;
+      parent = parent.parent;
+    }
+
+    if (parent?.type === 'VariableDeclarator' && parent.init === current) {
+      // const ComponentName = memo(() => {});
+      // const ComponentName = forwardRef(() => {});
+      // const ComponentName = anyWrapper(() => {});
+      // const ComponentName = anyWrapper1(anyWrapper2(() => {}));
+      //
+      // This handles the case where a function is passed as an argument to
+      // one or more wrapper functions that are assigned to a component-named variable.
+      return parent.id;
     } else {
       return undefined;
     }
