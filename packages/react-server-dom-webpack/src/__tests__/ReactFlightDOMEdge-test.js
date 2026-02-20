@@ -43,6 +43,38 @@ function normalizeSerializedContent(str) {
   return str.replaceAll(__REACT_ROOT_PATH_TEST__, '**');
 }
 
+function getSerializedModelRows(serializedContent) {
+  return Object.fromEntries(
+    serializedContent
+      .trim()
+      .split('\n')
+      .map(line => {
+        const colonIndex = line.indexOf(':');
+        if (colonIndex < 0 || colonIndex === line.length - 1) {
+          return null;
+        }
+        const tag = line[colonIndex + 1];
+        if (tag === 'D' || tag === 'T' || tag === 'N') {
+          return null;
+        }
+        return [
+          line.slice(0, colonIndex),
+          JSON.parse(line.slice(colonIndex + 1)),
+        ];
+      })
+      .filter(Boolean),
+  );
+}
+
+function createFromStream(stream) {
+  return ReactServerDOMClient.createFromReadableStream(stream, {
+    serverConsumerManifest: {
+      moduleMap: null,
+      moduleLoading: null,
+    },
+  });
+}
+
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
     // Mock performance.now for timing tests
@@ -782,9 +814,9 @@ describe('ReactFlightDOMEdge', () => {
       },
     );
 
-    // We should have resolved enough to be able to get the array even though some
-    // of the items inside are still lazy.
-    expect(result.length).toBe(20);
+    // We should have some of the elements, but not all of them yet
+    expect(result.length).toBeGreaterThan(4);
+    expect(result.length).toBeLessThan(20);
 
     // Unblock the rest
     drip(Infinity);
@@ -803,6 +835,583 @@ describe('ReactFlightDOMEdge', () => {
     expect(html).toBe(html2);
   });
 
+  it('packs trailing children into continuation rows', async () => {
+    const largeText = 'x'.repeat(1000);
+    const elements = [
+      <p
+        key={0}
+        data-a={largeText + '0a'}
+        data-b={largeText + '0b'}
+        data-c={largeText + '0c'}
+        data-d={largeText + '0d'}>
+        w
+      </p>,
+      <p
+        key={1}
+        data-a={largeText + '1a'}
+        data-b={largeText + '1b'}
+        data-c={largeText + '1c'}
+        data-d={largeText + '1d'}>
+        x
+      </p>,
+      <p key={2} data-a={largeText + '2a'}>
+        y
+      </p>,
+      <p key={3} data-a={largeText + '3a'}>
+        z
+      </p>,
+    ];
+
+    // Elements 0 and 1 each exceed MAX_ROW_SIZE alone (4×1000 chars), so
+    // each triggers its own continuation split. Element 3 is small enough to
+    // share a row with element 2 (~1000 chars each), verifying that a continuation can
+    // pack multiple elements when they fit.
+
+    // Without array continuations:
+    // Row 0: [elem0, $L1, $L2, $L3] — all three remaining elements deferred individually
+    // Row 1: [elem1] (the resolved lazy for $L1)
+    // Row 2: [elem2] (the resolved lazy for $L2)
+    // Row 3: [elem3] (the resolved lazy for $L3)
+
+    // With array continuations:
+    // Row 0: [elem0, $L1] — split after elem0 (assertion 1: continuation on first row)
+    // Row 1: [elem1, $L2] — split again after elem1 (assertion 2: continuation itself splits)
+    // Row 2: [elem2, elem3] — both small elements fit together (assertion 3: multiple elements per continuation row)
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(elements),
+    );
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const modelRows = Object.values(getSerializedModelRows(serializedContent));
+
+    // There should be two rows that have lazy refs
+    expect(
+      modelRows.filter(
+        row =>
+          Array.isArray(row) &&
+          row.some(item => typeof item === 'string' && /^\$L/.test(item)),
+      ).length,
+    ).toBe(2);
+
+    // The last continuation row (for elements 2 and 3) should contain both
+    // elements without a further lazy ref, confirming they share a single row.
+    const lastContinuationRow = modelRows.find(
+      row =>
+        Array.isArray(row) &&
+        !row.some(item => typeof item === 'string' && /^\$L/.test(item)) &&
+        row.length === 2 &&
+        Array.isArray(row[0]) &&
+        row[0].some(prop => prop?.children === 'y') &&
+        Array.isArray(row[1]) &&
+        row[1].some(prop => prop?.children === 'z'),
+    );
+    expect(lastContinuationRow).toBeDefined();
+
+    const result = await createFromStream(
+      passThrough(
+        await serverAct(() =>
+          ReactServerDOMServer.renderToReadableStream(elements),
+        ),
+      ),
+    );
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(result),
+    );
+    const html = await readResult(ssrStream);
+    const ssrStream2 = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(elements),
+    );
+    const html2 = await readResult(ssrStream2);
+    expect(html).toBe(html2);
+  });
+
+  it('does not truncate a packed children array reused by another prop', async () => {
+    const items = Array.from({length: 100}, (_, i) => (
+      <p key={i}>{'text '.repeat(50) + i}</p>
+    ));
+
+    const stream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(
+          React.createElement('div', {children: items, list: items}),
+        ),
+      ),
+    );
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const rootRow = getSerializedModelRows(serializedContent)['0'];
+
+    // This one intentionally stays at the row level because the regression is
+    // about reusing the packed children encoding rather than the final output.
+    expect(rootRow[3].children.length).toBeLessThan(100);
+    expect(rootRow[3].children[0][3].children).toBe('text '.repeat(50) + 0);
+    expect(rootRow[3].children[rootRow[3].children.length - 1]).toMatch(/^\$L/);
+    expect(rootRow[3].list).toBe('$0:props:children');
+  });
+
+  it('preserves deduped shared props across packed child rows', async () => {
+    const shared = {value: 'deduped'};
+    const items = Array.from({length: 100}, (_, i) => (
+      <div key={i} extra={i > 40 ? shared : null}>
+        {'x'.repeat(80)}
+      </div>
+    ));
+
+    const stream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(<section>{items}</section>),
+      ),
+    );
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const modelRows = Object.values(getSerializedModelRows(serializedContent));
+    let sharedObjectCount = 0;
+    let sharedReferenceCount = 0;
+
+    function visit(value) {
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          visit(value[i]);
+        }
+      } else if (value !== null && typeof value === 'object') {
+        if (value.value === 'deduped') {
+          sharedObjectCount++;
+        }
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) {
+            visit(value[key]);
+          }
+        }
+      } else if (typeof value === 'string' && value.endsWith(':props:extra')) {
+        sharedReferenceCount++;
+      }
+    }
+
+    for (let i = 0; i < modelRows.length; i++) {
+      visit(modelRows[i]);
+    }
+
+    expect(sharedObjectCount).toBe(1);
+    expect(sharedReferenceCount).toBeGreaterThan(0);
+  });
+
+  it('preserves deduped nested props across packed child rows', async () => {
+    const shared = {value: 'nested-deduped'};
+    const items = Array.from({length: 100}, (_, i) => (
+      <div key={i} extra={{nested: i > 40 ? shared : null}}>
+        {'x'.repeat(80)}
+      </div>
+    ));
+
+    const stream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(<section>{items}</section>),
+      ),
+    );
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const modelRows = Object.values(getSerializedModelRows(serializedContent));
+    let sharedObjectCount = 0;
+    let sharedReferenceCount = 0;
+
+    function visit(value) {
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          visit(value[i]);
+        }
+      } else if (value !== null && typeof value === 'object') {
+        if (value.value === 'nested-deduped') {
+          sharedObjectCount++;
+        }
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) {
+            visit(value[key]);
+          }
+        }
+      } else if (
+        typeof value === 'string' &&
+        value.endsWith(':props:extra:nested')
+      ) {
+        sharedReferenceCount++;
+      }
+    }
+
+    for (let i = 0; i < modelRows.length; i++) {
+      visit(modelRows[i]);
+    }
+
+    expect(sharedObjectCount).toBe(1);
+    expect(sharedReferenceCount).toBeGreaterThan(0);
+  });
+
+  it('preserves promise identity across packed child rows', async () => {
+    const foo = {};
+    const bar = {
+      foo,
+    };
+    foo.bar = bar;
+    const promisedFoo = Promise.resolve(foo);
+    const promisedBar = Promise.resolve(bar);
+
+    const items = Array.from({length: 100}, (_, i) =>
+      i === 70
+        ? promisedFoo
+        : i === 71
+          ? promisedBar
+          : Promise.resolve('x'.repeat(80) + i),
+    );
+
+    const stream = await serverAct(() =>
+      passThrough(ReactServerDOMServer.renderToReadableStream(items)),
+    );
+    const result = await createFromStream(stream);
+
+    const resolvedFoo = await result[70];
+    const resolvedBar = await result[71];
+
+    expect(resolvedFoo.bar).toBe(resolvedBar);
+    expect(resolvedBar.foo).toBe(resolvedFoo);
+  });
+
+  it('preserves outlined promise identity across packed child rows', async () => {
+    const foo = {};
+    const bar = new Set([foo]);
+    foo.bar = bar;
+    const promisedFoo = Promise.resolve(foo);
+    const promisedBar = Promise.resolve(bar);
+
+    const items = Array.from({length: 100}, (_, i) =>
+      i === 70
+        ? promisedFoo
+        : i === 71
+          ? promisedBar
+          : Promise.resolve('y'.repeat(80) + i),
+    );
+
+    const stream = await serverAct(() =>
+      passThrough(ReactServerDOMServer.renderToReadableStream(items)),
+    );
+    const result = await createFromStream(stream);
+
+    const resolvedFoo = await result[70];
+    const resolvedBar = await result[71];
+
+    expect(resolvedFoo.bar).toBe(resolvedBar);
+    expect(Array.from(resolvedBar)[0]).toBe(resolvedFoo);
+  });
+
+  it('preserves map value identity across packed child rows', async () => {
+    const shared = {id: 42};
+    const map = new Map([[42, shared]]);
+    const items = Array.from({length: 100}, (_, i) =>
+      i === 70 ? {shared, map} : Promise.resolve('z'.repeat(80) + i),
+    );
+
+    const stream = await serverAct(() =>
+      passThrough(ReactServerDOMServer.renderToReadableStream(items)),
+    );
+    const result = await createFromStream(stream);
+
+    const target = result[70];
+    expect(target.map.get(42)).toBe(target.shared);
+  });
+
+  it('preserves deduped client props across packed child rows', async () => {
+    const Client = clientExports(function Client({value}) {
+      return JSON.stringify(value);
+    });
+
+    const shared = [1, 2, 3];
+    const items = Array.from({length: 100}, (_, i) =>
+      i === 70 ? (
+        <Client key={i} value={[shared, shared]} />
+      ) : (
+        <span key={i}>{'b'.repeat(80) + i}</span>
+      ),
+    );
+
+    const stream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(items, webpackMap),
+      ),
+    );
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const modelRows = serializedContent
+      .trim()
+      .split('\n')
+      .map(line => {
+        const colonIndex = line.indexOf(':');
+        if (colonIndex < 0 || colonIndex === line.length - 1) {
+          return null;
+        }
+        const payload = line.slice(colonIndex + 1);
+        if (payload[0] !== '[' && payload[0] !== '{') {
+          return null;
+        }
+        return JSON.parse(payload);
+      })
+      .filter(Boolean);
+    let sharedArrayCount = 0;
+    let sharedReferenceCount = 0;
+
+    function visit(value) {
+      if (Array.isArray(value)) {
+        if (
+          value.length === 3 &&
+          value[0] === 1 &&
+          value[1] === 2 &&
+          value[2] === 3
+        ) {
+          sharedArrayCount++;
+        }
+        for (let i = 0; i < value.length; i++) {
+          visit(value[i]);
+        }
+      } else if (value !== null && typeof value === 'object') {
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) {
+            visit(value[key]);
+          }
+        }
+      } else if (
+        typeof value === 'string' &&
+        value.endsWith(':props:value:0')
+      ) {
+        sharedReferenceCount++;
+      }
+    }
+
+    for (let i = 0; i < modelRows.length; i++) {
+      visit(modelRows[i]);
+    }
+
+    expect(sharedArrayCount).toBe(1);
+    expect(sharedReferenceCount).toBeGreaterThan(0);
+  });
+
+  it('preserves cross-boundary deduped element props across packed child rows', async () => {
+    function PassthroughServerComponent({children}) {
+      return children;
+    }
+
+    const Client = clientExports(function Client({children, track}) {
+      return children;
+    });
+
+    const shared = <div data-shared="yes" />;
+    const items = Array.from({length: 100}, (_, i) =>
+      i === 70 ? (
+        <Client key={i} track={shared}>
+          <PassthroughServerComponent>{shared}</PassthroughServerComponent>
+        </Client>
+      ) : (
+        <span key={i}>{'c'.repeat(80) + i}</span>
+      ),
+    );
+
+    const stream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(items, webpackMap),
+      ),
+    );
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const modelRows = serializedContent
+      .trim()
+      .split('\n')
+      .map(line => {
+        const colonIndex = line.indexOf(':');
+        if (colonIndex < 0 || colonIndex === line.length - 1) {
+          return null;
+        }
+        const payload = line.slice(colonIndex + 1);
+        if (payload[0] !== '[' && payload[0] !== '{') {
+          return null;
+        }
+        return JSON.parse(payload);
+      })
+      .filter(Boolean);
+    let sharedElementCount = 0;
+    let sharedReferenceCount = 0;
+
+    function visit(value) {
+      if (Array.isArray(value)) {
+        if (
+          value[0] === '$' &&
+          value[1] === 'div' &&
+          value[3] !== null &&
+          typeof value[3] === 'object' &&
+          value[3]['data-shared'] === 'yes'
+        ) {
+          sharedElementCount++;
+        }
+        for (let i = 0; i < value.length; i++) {
+          visit(value[i]);
+        }
+      } else if (value !== null && typeof value === 'object') {
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) {
+            visit(value[key]);
+          }
+        }
+      } else if (typeof value === 'string' && value.endsWith(':props:track')) {
+        sharedReferenceCount++;
+      }
+    }
+
+    for (let i = 0; i < modelRows.length; i++) {
+      visit(modelRows[i]);
+    }
+
+    expect(sharedElementCount).toBe(1);
+    expect(sharedReferenceCount).toBeGreaterThan(0);
+  });
+
+  it('resolves shared children arrays referenced from continuation rows', async () => {
+    // The same children array is reused by two parents while the outer children
+    // array is also split into continuation rows. Before the fix, the server could
+    // emit a property-path reference based on the original unsplit index, which
+    // the client could not resolve after packing.
+    const sharedItems0 = Array.from({length: 8}, (_, i) => (
+      <span key={i} data-item={'x'.repeat(500) + i}>
+        {String(i)}
+      </span>
+    ));
+    const sharedItems1 = Array.from({length: 8}, (_, i) => (
+      <em key={i} data-item={'y'.repeat(500) + i}>
+        {String(i)}
+      </em>
+    ));
+
+    const element = (
+      <div>
+        <section data-parent="first-0">{sharedItems0}</section>
+        <span data-sep={'s'.repeat(400)} />
+        <section data-parent="second-0">{sharedItems0}</section>
+        <section data-parent="first-1">{sharedItems1}</section>
+        <span data-sep={'t'.repeat(400)} />
+        <section data-parent="second-1">{sharedItems1}</section>
+      </div>
+    );
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(element),
+    );
+    const result = await createFromStream(passThrough(rscStream));
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(result),
+    );
+    const rscHtml = await readResult(ssrStream);
+
+    const directStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(element),
+    );
+    const directHtml = await readResult(directStream);
+
+    expect(rscHtml).toBe(directHtml);
+  });
+
+  it('does not pack nested child arrays reused by sibling props', async () => {
+    const items = Array.from({length: 100}, (_, i) => (
+      <p key={i}>{'text '.repeat(50) + i}</p>
+    ));
+
+    const stream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(
+          <div>
+            {items}
+            <span list={items} />
+          </div>,
+        ),
+      ),
+    );
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const rows = getSerializedModelRows(serializedContent);
+    const rootRow = rows['0'];
+
+    expect(rootRow[3].children[0].length).toBe(100);
+    expect(rootRow[3].children[1]).toMatch(/^\$L/);
+    expect(rows[rootRow[3].children[1].slice(2)][3].list).toBe(
+      '$0:props:children:0',
+    );
+  });
+
+  it('should not treat plain prop arrays as renderable children', async () => {
+    const groups = [];
+    for (let groupIndex = 0; groupIndex < 20; groupIndex++) {
+      const tuples = [];
+      for (let tupleIndex = 0; tupleIndex < 20; tupleIndex++) {
+        tuples.push([
+          'key-' + groupIndex + '-' + tupleIndex,
+          'value-' + groupIndex + '-' + tupleIndex + '-' + 'x'.repeat(40),
+        ]);
+      }
+      groups.push(
+        <div key={groupIndex} data-items={tuples}>
+          <h2>{'Group ' + groupIndex}</h2>
+          <span>{tuples.length + ' items'}</span>
+        </div>,
+      );
+    }
+
+    const stream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(
+          <section>{groups}</section>,
+        ),
+      ),
+    );
+
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const modelRows = Object.values(getSerializedModelRows(serializedContent));
+    const dataItemArrays = [];
+
+    function visit(value) {
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          visit(value[i]);
+        }
+      } else if (value !== null && typeof value === 'object') {
+        if (Array.isArray(value['data-items'])) {
+          dataItemArrays.push(value['data-items']);
+        }
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) {
+            visit(value[key]);
+          }
+        }
+      }
+    }
+
+    for (let i = 0; i < modelRows.length; i++) {
+      visit(modelRows[i]);
+    }
+
+    expect(dataItemArrays.length).toBeGreaterThan(0);
+    for (let i = 0; i < dataItemArrays.length; i++) {
+      const tuples = dataItemArrays[i];
+      expect(
+        tuples.some(item => typeof item === 'string' && /^\$L/.test(item)),
+      ).toBe(false);
+      for (let j = 0; j < tuples.length; j++) {
+        expect(Array.isArray(tuples[j])).toBe(true);
+      }
+    }
+  });
+
   it('regression: should not leak serialized size', async () => {
     const MAX_ROW_SIZE = 3200;
     // This test case is a bit convoluted and may no longer trigger the original bug.
@@ -817,26 +1426,13 @@ describe('ReactFlightDOMEdge', () => {
       ReactServerDOMServer.renderToReadableStream(model),
     );
 
-    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
-      serverConsumerManifest: {
-        moduleMap: null,
-        moduleLoading: null,
-      },
-    });
+    const result = await createFromStream(stream);
 
     const stream2 = await serverAct(() =>
       ReactServerDOMServer.renderToReadableStream(model),
     );
 
-    const result2 = await ReactServerDOMClient.createFromReadableStream(
-      stream2,
-      {
-        serverConsumerManifest: {
-          moduleMap: null,
-          moduleLoading: null,
-        },
-      },
-    );
+    const result2 = await createFromStream(stream2);
 
     expect(result2.syncText).toEqual(result.syncText);
   });
