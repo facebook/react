@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import type {Linter, Rule} from 'eslint';
+import packageJson from '../package.json';
 
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
 import {
@@ -80,7 +81,7 @@ const configs = {
 const plugin = {
   meta: {
     name: 'eslint-plugin-react-hooks',
-    version: '7.0.0',
+    version: packageJson.version,
   },
   rules,
   configs,
