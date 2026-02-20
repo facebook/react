@@ -406,7 +406,6 @@ function runWithEnvironment(
     value: hir,
   });
 
-
   const reactiveFunction = buildReactiveFunction(hir);
   log({
     kind: 'reactive',
@@ -458,7 +457,6 @@ function runWithEnvironment(
     name: 'PruneAlwaysInvalidatingScopes',
     value: reactiveFunction,
   });
-
 
   propagateEarlyReturns(reactiveFunction);
   log({

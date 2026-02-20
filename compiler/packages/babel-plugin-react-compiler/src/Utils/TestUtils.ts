@@ -54,7 +54,6 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
     source: 'react-compiler-runtime',
     importSpecifierName: '$dispatcherGuard',
   },
-
 };
 
 function* splitPragma(

@@ -243,9 +243,7 @@ export const EnvironmentConfigSchema = z.object({
    */
   enableOptionalDependencies: z.boolean().default(true),
 
-
   enableNameAnonymousFunctions: z.boolean().default(false),
-
 
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
@@ -569,7 +567,6 @@ export class Environment {
     this.programContext = programContext;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
-
 
     for (const [hookName, hook] of this.config.customHooks) {
       CompilerError.invariant(!this.#globals.has(hookName), {

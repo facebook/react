@@ -24,7 +24,6 @@ import {
 } from 'babel-plugin-react-compiler';
 import {babelLocationToRange, getRangeFirstCharacter} from './compiler/compat';
 
-
 const SUPPORTED_LANGUAGE_IDS = new Set([
   'javascript',
   'javascriptreact',

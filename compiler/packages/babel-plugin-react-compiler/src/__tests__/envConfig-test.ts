@@ -24,7 +24,6 @@ describe('parseConfigPragma()', () => {
     );
   });
 
-
   it('can parse stringy enums', () => {
     const stringyHook = {
       effectKind: 'freeze',

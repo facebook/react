@@ -100,7 +100,6 @@ export type CodegenFunction = {
     fn: CodegenFunction;
     type: ReactFunctionType | null;
   }>;
-
 };
 
 export function codegenFunction(
@@ -672,7 +671,6 @@ function codegenReactiveScope(
   }
 
   let computationBlock = codegenBlock(cx, block);
-
 
   let memoStatement;
   for (const {name, index, value} of cacheLoads) {

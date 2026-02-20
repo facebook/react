@@ -894,9 +894,7 @@ function isHookName(s: string): boolean {
  * containing a hook name.
  */
 
-function isHook(
-  path: NodePath<t.Expression | t.PrivateName>,
-): boolean {
+function isHook(path: NodePath<t.Expression | t.PrivateName>): boolean {
   if (path.isIdentifier()) {
     return isHookName(path.node.name);
   } else if (
