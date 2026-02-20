@@ -51,9 +51,7 @@ import {
 export function validateMemoizedEffectDependencies(fn: ReactiveFunction): void {
   const errors = new CompilerError();
   visitReactiveFunction(fn, new Visitor(), errors);
-  for (const detail of errors.details) {
-    fn.env.recordError(detail);
-  }
+  fn.env.recordErrors(errors);
 }
 
 class Visitor extends ReactiveFunctionVisitor<CompilerError> {

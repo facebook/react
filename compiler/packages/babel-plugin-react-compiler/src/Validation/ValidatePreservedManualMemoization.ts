@@ -52,9 +52,7 @@ export function validatePreservedManualMemoization(fn: ReactiveFunction): void {
     manualMemoState: null,
   };
   visitReactiveFunction(fn, new Visitor(), state);
-  for (const detail of state.errors.details) {
-    fn.env.recordError(detail);
-  }
+  fn.env.recordErrors(state.errors);
 }
 
 const DEBUG = false;

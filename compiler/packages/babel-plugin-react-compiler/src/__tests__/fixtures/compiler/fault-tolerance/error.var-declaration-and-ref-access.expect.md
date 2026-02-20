@@ -18,7 +18,12 @@ function Component() {
   // Error: reading ref during render
   const value = ref.current;
 
-  return <div>{value}{items.length}</div>;
+  return (
+    <div>
+      {value}
+      {items.length}
+    </div>
+  );
 }
 
 ```
@@ -50,8 +55,8 @@ error.var-declaration-and-ref-access.ts:15:16
 > 15 |   const value = ref.current;
      |                 ^^^^^^^^^^^ Cannot access ref value during render
   16 |
-  17 |   return <div>{value}{items.length}</div>;
-  18 | }
+  17 |   return (
+  18 |     <div>
 ```
           
       

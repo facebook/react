@@ -171,8 +171,12 @@ function runWithEnvironment(
   });
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
-  validateContextVariableLValues(hir);
-  validateUseMemo(hir);
+  env.tryRecord(() => {
+    validateContextVariableLValues(hir);
+  });
+  env.tryRecord(() => {
+    validateUseMemo(hir);
+  });
 
   if (
     env.enableDropManualMemoization &&
@@ -225,10 +229,14 @@ function runWithEnvironment(
 
   if (env.enableValidations) {
     if (env.config.validateHooksUsage) {
-      validateHooksUsage(hir);
+      env.tryRecord(() => {
+        validateHooksUsage(hir);
+      });
     }
     if (env.config.validateNoCapitalizedCalls) {
-      validateNoCapitalizedCalls(hir);
+      env.tryRecord(() => {
+        validateNoCapitalizedCalls(hir);
+      });
     }
   }
 
@@ -255,7 +263,9 @@ function runWithEnvironment(
   });
   log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
 
-  inferMutationAliasingEffects(hir);
+  env.tryRecord(() => {
+    inferMutationAliasingEffects(hir);
+  });
   log({kind: 'hir', name: 'InferMutationAliasingEffects', value: hir});
 
   if (env.outputMode === 'ssr') {
@@ -283,25 +293,31 @@ function runWithEnvironment(
   });
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
-  inferMutationAliasingRanges(hir, {
-    isFunctionExpression: false,
+  env.tryRecord(() => {
+    inferMutationAliasingRanges(hir, {
+      isFunctionExpression: false,
+    });
   });
   log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
   if (env.enableValidations) {
-    validateLocalsNotReassignedAfterRender(hir);
-  }
+    env.tryRecord(() => {
+      validateLocalsNotReassignedAfterRender(hir);
+    });
 
-  if (env.enableValidations) {
     if (env.config.assertValidMutableRanges) {
       assertValidMutableRanges(hir);
     }
 
     if (env.config.validateRefAccessDuringRender) {
-      validateNoRefAccessInRender(hir);
+      env.tryRecord(() => {
+        validateNoRefAccessInRender(hir);
+      });
     }
 
     if (env.config.validateNoSetStateInRender) {
-      validateNoSetStateInRender(hir);
+      env.tryRecord(() => {
+        validateNoSetStateInRender(hir);
+      });
     }
 
     if (
@@ -310,7 +326,9 @@ function runWithEnvironment(
     ) {
       env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
     } else if (env.config.validateNoDerivedComputationsInEffects) {
-      validateNoDerivedComputationsInEffects(hir);
+      env.tryRecord(() => {
+        validateNoDerivedComputationsInEffects(hir);
+      });
     }
 
     if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
@@ -322,10 +340,14 @@ function runWithEnvironment(
     }
 
     if (env.config.validateNoImpureFunctionsInRender) {
-      validateNoImpureFunctionsInRender(hir);
+      env.tryRecord(() => {
+        validateNoImpureFunctionsInRender(hir);
+      });
     }
 
-    validateNoFreezingKnownMutableFunctions(hir);
+    env.tryRecord(() => {
+      validateNoFreezingKnownMutableFunctions(hir);
+    });
   }
 
   env.tryRecord(() => {
@@ -339,7 +361,9 @@ function runWithEnvironment(
       env.config.validateExhaustiveEffectDependencies
     ) {
       // NOTE: this relies on reactivity inference running first
-      validateExhaustiveDependencies(hir);
+      env.tryRecord(() => {
+        validateExhaustiveDependencies(hir);
+      });
     }
   }
 
@@ -656,14 +680,18 @@ function runWithEnvironment(
   });
 
   if (env.config.validateMemoizedEffectDependencies) {
-    validateMemoizedEffectDependencies(reactiveFunction);
+    env.tryRecord(() => {
+      validateMemoizedEffectDependencies(reactiveFunction);
+    });
   }
 
   if (
     env.config.enablePreserveExistingMemoizationGuarantees ||
     env.config.validatePreserveExistingMemoizationGuarantees
   ) {
-    validatePreservedManualMemoization(reactiveFunction);
+    env.tryRecord(() => {
+      validatePreservedManualMemoization(reactiveFunction);
+    });
   }
 
   const ast = codegenFunction(reactiveFunction, {
@@ -676,7 +704,9 @@ function runWithEnvironment(
   }
 
   if (env.config.validateSourceLocations) {
-    validateSourceLocations(func, ast, env);
+    env.tryRecord(() => {
+      validateSourceLocations(func, ast, env);
+    });
   }
 
   /**
