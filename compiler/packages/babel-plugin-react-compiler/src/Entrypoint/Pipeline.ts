@@ -167,14 +167,10 @@ function runWithEnvironment(
   env.tryRecord(() => {
     validateContextVariableLValues(hir);
   });
-  env.tryRecord(() => {
-    validateUseMemo(hir).unwrap();
-  });
+  validateUseMemo(hir);
 
   if (env.enableDropManualMemoization) {
-    env.tryRecord(() => {
-      dropManualMemoization(hir).unwrap();
-    });
+    dropManualMemoization(hir);
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
   }
 
@@ -219,14 +215,10 @@ function runWithEnvironment(
 
   if (env.enableValidations) {
     if (env.config.validateHooksUsage) {
-      env.tryRecord(() => {
-        validateHooksUsage(hir).unwrap();
-      });
+      validateHooksUsage(hir);
     }
     if (env.config.validateNoCapitalizedCalls) {
-      env.tryRecord(() => {
-        validateNoCapitalizedCalls(hir).unwrap();
-      });
+      validateNoCapitalizedCalls(hir);
     }
   }
 
@@ -284,15 +276,11 @@ function runWithEnvironment(
     }
 
     if (env.config.validateRefAccessDuringRender) {
-      env.tryRecord(() => {
-        validateNoRefAccessInRender(hir).unwrap();
-      });
+      validateNoRefAccessInRender(hir);
     }
 
     if (env.config.validateNoSetStateInRender) {
-      env.tryRecord(() => {
-        validateNoSetStateInRender(hir).unwrap();
-      });
+      validateNoSetStateInRender(hir);
     }
 
     if (
@@ -315,14 +303,10 @@ function runWithEnvironment(
     }
 
     if (env.config.validateNoImpureFunctionsInRender) {
-      env.tryRecord(() => {
-        validateNoImpureFunctionsInRender(hir).unwrap();
-      });
+      validateNoImpureFunctionsInRender(hir);
     }
 
-    env.tryRecord(() => {
-      validateNoFreezingKnownMutableFunctions(hir).unwrap();
-    });
+    validateNoFreezingKnownMutableFunctions(hir);
   }
 
   env.tryRecord(() => {
@@ -336,9 +320,7 @@ function runWithEnvironment(
       env.config.validateExhaustiveEffectDependencies
     ) {
       // NOTE: this relies on reactivity inference running first
-      env.tryRecord(() => {
-        validateExhaustiveDependencies(hir).unwrap();
-      });
+      validateExhaustiveDependencies(hir);
     }
   }
 
