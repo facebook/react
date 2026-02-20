@@ -25,7 +25,7 @@ component Component(prop1, ref) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime";
+import { c as _c, useFire } from "react/compiler-runtime";
 import { fire } from "react";
 import { print } from "shared-runtime";
 

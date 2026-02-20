@@ -26,7 +26,7 @@ function Component({props, bar}) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime"; // @enableFire @panicThreshold:"none"
+import { c as _c, useFire } from "react/compiler-runtime"; // @enableFire @panicThreshold:"none"
 import { useRef } from "react";
 
 function Component(t0) {

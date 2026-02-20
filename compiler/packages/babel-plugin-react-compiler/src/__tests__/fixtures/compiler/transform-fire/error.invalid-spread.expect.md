@@ -24,15 +24,15 @@ function Component(props) {
 ```
 Found 1 error:
 
-Error: Cannot compile `fire`
+Invariant: [InferMutationAliasingEffects] Expected value kind to be initialized
 
-fire() can only take in a single call expression as an argument but received a spread argument.
+<unknown> $32:TFunction<BuiltInFire>():  :TFunction<BuiltInFireFunction>():  :TPoly.
 
 error.invalid-spread.ts:9:4
    7 |   };
    8 |   useEffect(() => {
 >  9 |     fire(...foo);
-     |     ^^^^^^^^^^^^ Cannot compile `fire`
+     |     ^^^^ this is uninitialized
   10 |   });
   11 |
   12 |   return null;
