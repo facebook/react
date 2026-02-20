@@ -7,13 +7,14 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type { Fiber } from './ReactInternalTypes';
 
-import type {SuspendedReason} from './ReactFiberWorkLoop';
+import type { SuspendedReason } from './ReactFiberWorkLoop';
+import type { Transition } from 'react/src/ReactStartTransition';
 
-import type {Lane, Lanes} from './ReactFiberLane';
+import type { Lane, Lanes } from './ReactFiberLane';
 
-import type {CapturedValue} from './ReactCapturedValue';
+import type { CapturedValue } from './ReactCapturedValue';
 
 import {
   isTransitionLane,
@@ -21,10 +22,11 @@ import {
   isGestureRender,
   includesTransitionLane,
   includesBlockingLane,
+  getHighestPriorityLane,
   NoLanes,
 } from './ReactFiberLane';
 
-import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
+import { resolveEventType, resolveEventTimeStamp } from './ReactFiberConfig';
 
 import {
   enableProfilerCommitHooks,
@@ -34,19 +36,19 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import getComponentNameFromFiber from './getComponentNameFromFiber';
-import {isAlreadyRendering} from './ReactFiberWorkLoop';
+import { requestCurrentTransition } from './ReactFiberTransition';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
 
-const {unstable_now: now} = Scheduler;
+const { unstable_now: now } = Scheduler;
 
 const createTask =
   // eslint-disable-next-line react-internal/no-production-logging
   __DEV__ && console.createTask
     ? // eslint-disable-next-line react-internal/no-production-logging
-      console.createTask
+    console.createTask
     : (name: string) => null;
 
 export const REGULAR_UPDATE: UpdateType = 0;
@@ -89,17 +91,35 @@ export let gestureEventRepeatTime: number = -1.1;
 export let gestureSuspendedTime: number = -1.1;
 
 // TODO: This should really be one per Transition lane.
-export let transitionClampTime: number = -0;
-export let transitionStartTime: number = -1.1; // First startTransition call before setState.
-export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
-export let transitionUpdateType: UpdateType = 0;
-export let transitionUpdateTask: null | ConsoleTask = null; // First transition setState's stack trace.
-export let transitionUpdateMethodName: null | string = null; // The name of the method that caused first transition update.
-export let transitionUpdateComponentName: null | string = null; // The name of the component where first transition update happened.
-export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
-export let transitionEventType: null | string = null; // Event type of the first transition.
-export let transitionEventRepeatTime: number = -1.1;
-export let transitionSuspendedTime: number = -1.1;
+export const transitionTimers: Map<Lane, TransitionTimers> = new Map();
+const pendingTransitionStartTimes: WeakMap<Transition, number> = new WeakMap();
+const pendingTransitionEventInfo: WeakMap<
+  Transition,
+  {
+    time: number,
+    type: null | string,
+  },
+> = new WeakMap();
+const pendingActionUpdateTimes: WeakMap<Fiber, number> = new WeakMap();
+
+export function getTransitionTimers(lane: Lane): TransitionTimers | null {
+  const timers = transitionTimers.get(lane);
+  return timers !== undefined ? timers : null;
+}
+
+export type TransitionTimers = {
+  clampTime: number,
+  startTime: number,
+  updateTime: number,
+  updateType: UpdateType,
+  updateTask: null | ConsoleTask,
+  updateMethodName: null | string,
+  updateComponentName: null | string,
+  eventTime: number,
+  eventType: null | string,
+  eventRepeatTime: number,
+  suspendedTime: number,
+};
 
 export let retryClampTime: number = -0;
 export let idleClampTime: number = -0;
@@ -122,6 +142,7 @@ export function startUpdateTimerByLane(
   lane: Lane,
   method: string,
   fiber: Fiber | null,
+  isAlreadyRendering: boolean,
 ): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
@@ -153,7 +174,7 @@ export function startUpdateTimerByLane(
       if (__DEV__ && fiber != null) {
         blockingUpdateComponentName = getComponentNameFromFiber(fiber);
       }
-      if (isAlreadyRendering()) {
+      if (isAlreadyRendering) {
         componentEffectSpawnedUpdate = true;
         blockingUpdateType = SPAWNED_UPDATE;
       }
@@ -174,30 +195,74 @@ export function startUpdateTimerByLane(
       blockingEventType = newEventType;
     }
   } else if (isTransitionLane(lane)) {
-    if (transitionUpdateTime < 0) {
-      transitionUpdateTime = now();
-      transitionUpdateTask = createTask(method);
-      transitionUpdateMethodName = method;
+    let timers = transitionTimers.get(lane);
+    if (timers === undefined) {
+      timers = {
+        clampTime: -0,
+        startTime: -1.1,
+        updateTime: -1.1,
+        updateType: 0,
+        updateTask: null,
+        updateMethodName: null,
+        updateComponentName: null,
+        eventTime: -1.1,
+        eventType: null,
+        eventRepeatTime: -1.1,
+        suspendedTime: -1.1,
+      };
+      transitionTimers.set(lane, timers);
+    }
+    if (timers.updateTime < 0) {
+      const pendingUpdateTime =
+        fiber !== null ? pendingActionUpdateTimes.get(fiber) : undefined;
+      timers.updateTime =
+        pendingUpdateTime !== undefined ? pendingUpdateTime : now();
+      timers.updateTask = createTask(method);
+      timers.updateMethodName = method;
       if (__DEV__ && fiber != null) {
-        transitionUpdateComponentName = getComponentNameFromFiber(fiber);
+        timers.updateComponentName = getComponentNameFromFiber(fiber);
       }
-      if (transitionStartTime < 0) {
-        const newEventTime = resolveEventTimeStamp();
-        const newEventType = resolveEventType();
-        if (
-          newEventTime !== transitionEventRepeatTime ||
-          newEventType !== transitionEventType
-        ) {
-          transitionEventRepeatTime = -1.1;
+      if (timers.startTime < 0) {
+        const transition = requestCurrentTransition();
+        const pendingStartTime =
+          transition !== null
+            ? pendingTransitionStartTimes.get(transition)
+            : undefined;
+        if (pendingStartTime !== undefined) {
+          timers.startTime = pendingStartTime;
         }
-        transitionEventTime = newEventTime;
-        transitionEventType = newEventType;
+
+        let newEventTime = -1.1;
+        let newEventType = null;
+        const pendingEventInfo =
+          transition !== null
+            ? pendingTransitionEventInfo.get(transition)
+            : undefined;
+        if (pendingEventInfo !== undefined) {
+          newEventTime = pendingEventInfo.time;
+          newEventType = pendingEventInfo.type;
+        } else {
+          newEventTime = resolveEventTimeStamp();
+          newEventType = resolveEventType();
+        }
+
+        if (
+          newEventTime !== timers.eventRepeatTime ||
+          newEventType !== timers.eventType
+        ) {
+          timers.eventRepeatTime = -1.1;
+        }
+        timers.eventTime = newEventTime;
+        timers.eventType = newEventType;
       }
     }
   }
 }
 
-export function startHostActionTimer(fiber: Fiber): void {
+export function startHostActionTimer(
+  fiber: Fiber,
+  isAlreadyRendering: boolean,
+): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
@@ -207,7 +272,7 @@ export function startHostActionTimer(fiber: Fiber): void {
     blockingUpdateTime = now();
     blockingUpdateTask =
       __DEV__ && fiber._debugTask != null ? fiber._debugTask : null;
-    if (isAlreadyRendering()) {
+    if (isAlreadyRendering) {
       blockingUpdateType = SPAWNED_UPDATE;
     }
     const newEventTime = resolveEventTimeStamp();
@@ -226,21 +291,18 @@ export function startHostActionTimer(fiber: Fiber): void {
     blockingEventTime = newEventTime;
     blockingEventType = newEventType;
   }
-  if (transitionUpdateTime < 0) {
-    transitionUpdateTime = now();
-    transitionUpdateTask =
-      __DEV__ && fiber._debugTask != null ? fiber._debugTask : null;
-    if (transitionStartTime < 0) {
+  pendingActionUpdateTimes.set(fiber, now());
+
+  const transition = requestCurrentTransition();
+  if (transition !== null) {
+    if (!pendingTransitionStartTimes.has(transition)) {
+      pendingTransitionStartTimes.set(transition, now());
       const newEventTime = resolveEventTimeStamp();
       const newEventType = resolveEventType();
-      if (
-        newEventTime !== transitionEventRepeatTime ||
-        newEventType !== transitionEventType
-      ) {
-        transitionEventRepeatTime = -1.1;
-      }
-      transitionEventTime = newEventTime;
-      transitionEventType = newEventType;
+      pendingTransitionEventInfo.set(transition, {
+        time: newEventTime,
+        type: newEventType,
+      });
     }
   }
 }
@@ -265,10 +327,34 @@ export function startPingTimerByLanes(lanes: Lanes): void {
       blockingUpdateType = PINGED_UPDATE;
     }
   } else if (includesTransitionLane(lanes)) {
-    if (transitionUpdateTime < 0) {
-      transitionClampTime = transitionUpdateTime = now();
-      transitionUpdateTask = createTask('Promise Resolved');
-      transitionUpdateType = PINGED_UPDATE;
+    let remainingLanes = lanes;
+    while (remainingLanes !== NoLanes) {
+      const lane = getHighestPriorityLane(remainingLanes);
+      if (isTransitionLane(lane)) {
+        let timers = transitionTimers.get(lane);
+        if (timers === undefined) {
+          timers = {
+            clampTime: -0,
+            startTime: -1.1,
+            updateTime: -1.1,
+            updateType: 0,
+            updateTask: null,
+            updateMethodName: null,
+            updateComponentName: null,
+            eventTime: -1.1,
+            eventType: null,
+            eventRepeatTime: -1.1,
+            suspendedTime: -1.1,
+          };
+          transitionTimers.set(lane, timers);
+        }
+        if (timers.updateTime < 0) {
+          timers.clampTime = timers.updateTime = now();
+          timers.updateTask = createTask('Promise Resolved');
+          timers.updateType = PINGED_UPDATE;
+        }
+      }
+      remainingLanes &= ~lane;
     }
   }
 }
@@ -282,7 +368,17 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
   } else if (includesBlockingLane(lanes)) {
     blockingSuspendedTime = renderEndTime;
   } else if (includesTransitionLane(lanes)) {
-    transitionSuspendedTime = renderEndTime;
+    let remainingLanes = lanes;
+    while (remainingLanes !== NoLanes) {
+      const lane = getHighestPriorityLane(remainingLanes);
+      if (isTransitionLane(lane)) {
+        const timers = transitionTimers.get(lane);
+        if (timers !== undefined) {
+          timers.suspendedTime = renderEndTime;
+        }
+      }
+      remainingLanes &= ~lane;
+    }
   }
 }
 
@@ -301,38 +397,36 @@ export function startAsyncTransitionTimer(): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  if (transitionStartTime < 0 && transitionUpdateTime < 0) {
-    transitionStartTime = now();
-    const newEventTime = resolveEventTimeStamp();
-    const newEventType = resolveEventType();
-    if (
-      newEventTime !== transitionEventRepeatTime ||
-      newEventType !== transitionEventType
-    ) {
-      transitionEventRepeatTime = -1.1;
+  const transition = requestCurrentTransition();
+  if (transition !== null) {
+    if (!pendingTransitionStartTimes.has(transition)) {
+      pendingTransitionStartTimes.set(transition, now());
+      const newEventTime = resolveEventTimeStamp();
+      const newEventType = resolveEventType();
+      pendingTransitionEventInfo.set(transition, {
+        time: newEventTime,
+        type: newEventType,
+      });
     }
-    transitionEventTime = newEventTime;
-    transitionEventType = newEventType;
   }
 }
 
 export function hasScheduledTransitionWork(): boolean {
   // If we have setState on a transition or scheduled useActionState update.
-  return transitionUpdateTime > -1;
+  // If we have setState on a transition or scheduled useActionState update.
+  return Array.from(transitionTimers.values()).some((timers) => {
+    return timers.updateTime > -1;
+  });
 }
 
 export function clearAsyncTransitionTimer(): void {
-  transitionStartTime = -1.1;
+  // This is a global clear. We probably shouldn't use it or it should be
+  // updated to clear pending weak maps?
+  // For now, removing the global write.
 }
 
-export function clearTransitionTimers(): void {
-  transitionStartTime = -1.1;
-  transitionUpdateTime = -1.1;
-  transitionUpdateType = 0;
-  transitionSuspendedTime = -1.1;
-  transitionEventRepeatTime = transitionEventTime;
-  transitionEventTime = -1.1;
-  transitionClampTime = now();
+export function clearTransitionTimer(lane: Lane): void {
+  transitionTimers.delete(lane);
 }
 
 export function hasScheduledGestureTransitionWork(): boolean {
@@ -386,7 +480,9 @@ export function clampTransitionTimers(finalTime: number): void {
   // If we had new updates come in while we were still rendering or committing, we don't want
   // those update times to create overlapping tracks in the performance timeline so we clamp
   // them to the end of the commit phase.
-  transitionClampTime = finalTime;
+  transitionTimers.forEach((timers) => {
+    timers.clampTime = finalTime;
+  });
 }
 
 export function clampRetryTimers(finalTime: number): void {
