@@ -19,7 +19,7 @@ import {getOrInsertWith} from '../Utils/utils';
 import {ExternalFunction, isHookName} from '../HIR/Environment';
 import {Err, Ok, Result} from '../Utils/Result';
 import {LoggerEvent, ParsedPluginOptions} from './Options';
-import {BabelFn, getReactCompilerRuntimeModule} from './Program';
+import {getReactCompilerRuntimeModule} from './Program';
 import {SuppressionRange} from './Suppression';
 
 export function validateRestrictedImports(
@@ -83,11 +83,6 @@ export class ProgramContext {
   knownReferencedNames: Set<string> = new Set();
   // generated imports
   imports: Map<string, Map<string, NonLocalImportSpecifier>> = new Map();
-
-  /**
-   * Metadata from compilation
-   */
-  retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
 
   constructor({
     program,

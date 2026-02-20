@@ -629,9 +629,6 @@ export class Environment {
       case 'ssr': {
         return true;
       }
-      case 'client-no-memo': {
-        return false;
-      }
       default: {
         assertExhaustive(
           this.outputMode,
@@ -648,8 +645,7 @@ export class Environment {
         // linting also enables memoization so that we can check if manual memoization is preserved
         return true;
       }
-      case 'ssr':
-      case 'client-no-memo': {
+      case 'ssr': {
         return false;
       }
       default: {
@@ -667,9 +663,6 @@ export class Environment {
       case 'lint':
       case 'ssr': {
         return true;
-      }
-      case 'client-no-memo': {
-        return false;
       }
       default: {
         assertExhaustive(
