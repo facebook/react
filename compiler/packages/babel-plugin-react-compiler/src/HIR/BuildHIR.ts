@@ -185,47 +185,32 @@ export function lower(
 
   let directives: Array<string> = [];
   const body = func.get('body');
-  try {
-    if (body.isExpression()) {
-      const fallthrough = builder.reserve('block');
-      const terminal: ReturnTerminal = {
-        kind: 'return',
-        returnVariant: 'Implicit',
-        loc: GeneratedSource,
-        value: lowerExpressionToTemporary(builder, body),
-        id: makeInstructionId(0),
-        effects: null,
-      };
-      builder.terminateWithContinuation(terminal, fallthrough);
-    } else if (body.isBlockStatement()) {
-      lowerStatement(builder, body);
-      directives = body.get('directives').map(d => d.node.value.value);
-    } else {
-      builder.errors.pushDiagnostic(
-        CompilerDiagnostic.create({
-          category: ErrorCategory.Syntax,
-          reason: `Unexpected function body kind`,
-          description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
-        }).withDetails({
-          kind: 'error',
-          loc: body.node.loc ?? null,
-          message: 'Expected a block statement or expression',
-        }),
-      );
-    }
-  } catch (err) {
-    if (err instanceof CompilerError) {
-      // Re-throw invariant errors immediately
-      for (const detail of err.details) {
-        if (detail.category === ErrorCategory.Invariant) {
-          throw err;
-        }
-      }
-      // Record non-invariant errors and continue to produce partial HIR
-      builder.errors.merge(err);
-    } else {
-      throw err;
-    }
+  if (body.isExpression()) {
+    const fallthrough = builder.reserve('block');
+    const terminal: ReturnTerminal = {
+      kind: 'return',
+      returnVariant: 'Implicit',
+      loc: GeneratedSource,
+      value: lowerExpressionToTemporary(builder, body),
+      id: makeInstructionId(0),
+      effects: null,
+    };
+    builder.terminateWithContinuation(terminal, fallthrough);
+  } else if (body.isBlockStatement()) {
+    lowerStatement(builder, body);
+    directives = body.get('directives').map(d => d.node.value.value);
+  } else {
+    builder.errors.pushDiagnostic(
+      CompilerDiagnostic.create({
+        category: ErrorCategory.Syntax,
+        reason: `Unexpected function body kind`,
+        description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
+      }).withDetails({
+        kind: 'error',
+        loc: body.node.loc ?? null,
+        message: 'Expected a block statement or expression',
+      }),
+    );
   }
 
   let validatedId: HIRFunction['id'] = null;

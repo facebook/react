@@ -24,9 +24,9 @@ function useThing(fn) {
 ```
 Found 1 error:
 
-Invariant: [HIRBuilder] Unexpected null block
+Error: Expected a non-reserved identifier name
 
-expected block 0 to exist.
+`this` is a reserved word in JavaScript and cannot be used as an identifier name.
 ```
           
       

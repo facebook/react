@@ -254,6 +254,7 @@ export type LoggerEvent =
   | CompileErrorEvent
   | CompileDiagnosticEvent
   | CompileSkipEvent
+  | CompileUnexpectedThrowEvent
   | PipelineErrorEvent
   | TimingEvent
   | AutoDepsDecorationsEvent
@@ -287,6 +288,11 @@ export type CompileSkipEvent = {
 };
 export type PipelineErrorEvent = {
   kind: 'PipelineError';
+  fnLoc: t.SourceLocation | null;
+  data: string;
+};
+export type CompileUnexpectedThrowEvent = {
+  kind: 'CompileUnexpectedThrow';
   fnLoc: t.SourceLocation | null;
   data: string;
 };

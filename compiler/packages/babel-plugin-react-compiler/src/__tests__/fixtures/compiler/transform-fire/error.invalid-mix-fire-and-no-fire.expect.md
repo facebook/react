@@ -29,15 +29,15 @@ function Component(props) {
 ```
 Found 1 error:
 
-Invariant: [InferMutationAliasingEffects] Expected value kind to be initialized
+Error: Cannot compile `fire`
 
-<unknown> foo$42:TFunction<BuiltInFunction>():  :TPrimitive.
+All uses of foo must be either used with a fire() call in this effect or not used with a fire() call at all. foo was used with fire() on line 10:10 in this effect.
 
 error.invalid-mix-fire-and-no-fire.ts:11:6
    9 |     function nested() {
   10 |       fire(foo(props));
 > 11 |       foo(props);
-     |       ^^^ this is uninitialized
+     |       ^^^ Cannot compile `fire`
   12 |     }
   13 |
   14 |     nested();
