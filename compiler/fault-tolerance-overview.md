@@ -31,7 +31,7 @@ Note that some errors may continue to cause an eager bailout:
 
 Add error accumulation to the `Environment` class so that any pass can record errors during compilation without halting.
 
-- [ ] **1.1 Add error accumulator to Environment** (`src/HIR/Environment.ts`)
+- [x] **1.1 Add error accumulator to Environment** (`src/HIR/Environment.ts`)
   - Add a `#errors: CompilerError` field, initialized in the constructor
   - Add a `recordError(error: CompilerDiagnostic | CompilerErrorDetail)` method that:
     - If an Invariant-category detail, immediately throw it
@@ -41,7 +41,7 @@ Add error accumulation to the `Environment` class so that any pass can record er
   - Add a `aggregateErrors(): CompilerError` method that returns the accumulated error object
   - Consider whether `recordError` should accept the same options as `CompilerError.push()` for convenience (reason, description, severity, loc, etc.)
 
-- [ ] **1.2 Add a `tryRecord` helper on Environment** (`src/HIR/Environment.ts`)
+- [x] **1.2 Add a `tryRecord` helper on Environment** (`src/HIR/Environment.ts`)
   - Add a `tryRecord(fn: () => void): void` method that wraps a callback in try/catch:
     - If `fn` throws a `CompilerError` that is NOT an invariant, record it via `recordError`
     - If `fn` throws a non-CompilerError or a CompilerError invariant, re-throw
