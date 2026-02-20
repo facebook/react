@@ -29,7 +29,6 @@ import {
   eachPatternOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
-import {Err, Ok, Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
 
 /**
@@ -122,12 +121,14 @@ class Env {
   }
 }
 
-export function validateNoRefAccessInRender(
-  fn: HIRFunction,
-): Result<void, CompilerError> {
+export function validateNoRefAccessInRender(fn: HIRFunction): void {
   const env = new Env();
   collectTemporariesSidemap(fn, env);
-  return validateNoRefAccessInRenderImpl(fn, env).map(_ => undefined);
+  const errors = new CompilerError();
+  validateNoRefAccessInRenderImpl(fn, env, errors);
+  if (errors.hasAnyErrors()) {
+    fn.env.recordErrors(errors);
+  }
 }
 
 function collectTemporariesSidemap(fn: HIRFunction, env: Env): void {
@@ -312,7 +313,8 @@ function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
 function validateNoRefAccessInRenderImpl(
   fn: HIRFunction,
   env: Env,
-): Result<RefAccessType, CompilerError> {
+  errors: CompilerError,
+): RefAccessType {
   let returnValues: Array<undefined | RefAccessType> = [];
   let place;
   for (const param of fn.params) {
@@ -343,7 +345,6 @@ function validateNoRefAccessInRenderImpl(
     env.resetChanged();
     returnValues = [];
     const safeBlocks: Array<{block: BlockId; ref: RefId}> = [];
-    const errors = new CompilerError();
     for (const [, block] of fn.body.blocks) {
       retainWhere(safeBlocks, entry => entry.block !== block.id);
       for (const phi of block.phis) {
@@ -439,13 +440,15 @@ function validateNoRefAccessInRenderImpl(
           case 'FunctionExpression': {
             let returnType: RefAccessType = {kind: 'None'};
             let readRefEffect = false;
+            const innerErrors = new CompilerError();
             const result = validateNoRefAccessInRenderImpl(
               instr.value.loweredFunc.func,
               env,
+              innerErrors,
             );
-            if (result.isOk()) {
-              returnType = result.unwrap();
-            } else if (result.isErr()) {
+            if (!innerErrors.hasAnyErrors()) {
+              returnType = result;
+            } else {
               readRefEffect = true;
             }
             env.set(instr.lvalue.identifier.id, {
@@ -741,7 +744,7 @@ function validateNoRefAccessInRenderImpl(
     }
 
     if (errors.hasAnyErrors()) {
-      return Err(errors);
+      return {kind: 'None'};
     }
   }
 
@@ -750,10 +753,8 @@ function validateNoRefAccessInRenderImpl(
     loc: GeneratedSource,
   });
 
-  return Ok(
-    joinRefAccessTypes(
-      ...returnValues.filter((env): env is RefAccessType => env !== undefined),
-    ),
+  return joinRefAccessTypes(
+    ...returnValues.filter((env): env is RefAccessType => env !== undefined),
   );
 }
 
