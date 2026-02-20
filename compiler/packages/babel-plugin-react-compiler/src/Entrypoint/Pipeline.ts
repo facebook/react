@@ -164,9 +164,7 @@ function runWithEnvironment(
   });
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
-  env.tryRecord(() => {
-    validateContextVariableLValues(hir);
-  });
+  validateContextVariableLValues(hir);
   validateUseMemo(hir);
 
   if (env.enableDropManualMemoization) {
@@ -232,13 +230,8 @@ function runWithEnvironment(
   });
   log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
 
-  const mutabilityAliasingErrors = inferMutationAliasingEffects(hir);
+  inferMutationAliasingEffects(hir);
   log({kind: 'hir', name: 'InferMutationAliasingEffects', value: hir});
-  if (env.enableValidations) {
-    if (mutabilityAliasingErrors.isErr()) {
-      env.recordErrors(mutabilityAliasingErrors.unwrapErr());
-    }
-  }
 
   if (env.outputMode === 'ssr') {
     env.tryRecord(() => {
@@ -257,17 +250,12 @@ function runWithEnvironment(
   });
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
-  const mutabilityAliasingRangeErrors = inferMutationAliasingRanges(hir, {
+  inferMutationAliasingRanges(hir, {
     isFunctionExpression: false,
   });
   log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
   if (env.enableValidations) {
-    if (mutabilityAliasingRangeErrors.isErr()) {
-      env.recordErrors(mutabilityAliasingRangeErrors.unwrapErr());
-    }
-    env.tryRecord(() => {
-      validateLocalsNotReassignedAfterRender(hir);
-    });
+    validateLocalsNotReassignedAfterRender(hir);
   }
 
   if (env.enableValidations) {
@@ -289,9 +277,7 @@ function runWithEnvironment(
     ) {
       env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
     } else if (env.config.validateNoDerivedComputationsInEffects) {
-      env.tryRecord(() => {
-        validateNoDerivedComputationsInEffects(hir);
-      });
+      validateNoDerivedComputationsInEffects(hir);
     }
 
     if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
@@ -608,29 +594,20 @@ function runWithEnvironment(
     env.config.enablePreserveExistingMemoizationGuarantees ||
     env.config.validatePreserveExistingMemoizationGuarantees
   ) {
-    env.tryRecord(() => {
-      validatePreservedManualMemoization(reactiveFunction).unwrap();
-    });
+    validatePreservedManualMemoization(reactiveFunction);
   }
 
-  const codegenResult = codegenFunction(reactiveFunction, {
+  const ast = codegenFunction(reactiveFunction, {
     uniqueIdentifiers,
     fbtOperands,
   });
-  if (codegenResult.isErr()) {
-    env.recordErrors(codegenResult.unwrapErr());
-    return Err(env.aggregateErrors());
-  }
-  const ast = codegenResult.unwrap();
   log({kind: 'ast', name: 'Codegen', value: ast});
   for (const outlined of ast.outlined) {
     log({kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn});
   }
 
   if (env.config.validateSourceLocations) {
-    env.tryRecord(() => {
-      validateSourceLocations(func, ast).unwrap();
-    });
+    validateSourceLocations(func, ast, env);
   }
 
   /**
