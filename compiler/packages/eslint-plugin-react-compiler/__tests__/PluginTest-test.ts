@@ -130,37 +130,5 @@ testRule('plugin-recommended', TestRecommendedRules, {
         ),
       ],
     },
-    {
-      name: 'Pipeline errors are reported',
-      code: normalizeIndent`
-            import useMyEffect from 'useMyEffect';
-            import {AUTODEPS} from 'react';
-            function Component({a}) {
-              'use no memo';
-              useMyEffect(() => console.log(a.b), AUTODEPS);
-              return <div>Hello world</div>;
-            }
-          `,
-      options: [
-        {
-          environment: {
-            inferEffectDependencies: [
-              {
-                function: {
-                  source: 'useMyEffect',
-                  importSpecifierName: 'default',
-                },
-                autodepsIndex: 1,
-              },
-            ],
-          },
-        },
-      ],
-      errors: [
-        {
-          message: /Cannot infer dependencies of this effect/,
-        },
-      ],
-    },
   ],
 });

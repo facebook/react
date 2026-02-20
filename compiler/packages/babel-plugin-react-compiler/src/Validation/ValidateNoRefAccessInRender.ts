@@ -15,14 +15,12 @@ import {
   GeneratedSource,
   HIRFunction,
   IdentifierId,
-  Identifier,
   Place,
   SourceLocation,
   getHookKindForType,
   isRefValueType,
   isUseRefType,
 } from '../HIR';
-import {BuiltInEventHandlerId} from '../HIR/ObjectShape';
 import {
   eachInstructionOperand,
   eachInstructionValueOperand,
@@ -176,11 +174,6 @@ function refTypeOfType(place: Place): RefAccessType {
   } else {
     return {kind: 'None'};
   }
-}
-
-function isEventHandlerType(identifier: Identifier): boolean {
-  const type = identifier.type;
-  return type.kind === 'Function' && type.shapeId === BuiltInEventHandlerId;
 }
 
 function tyEqual(a: RefAccessType, b: RefAccessType): boolean {
@@ -491,9 +484,6 @@ function validateNoRefAccessInRenderImpl(
              */
             if (!didError) {
               const isRefLValue = isUseRefType(instr.lvalue.identifier);
-              const isEventHandlerLValue = isEventHandlerType(
-                instr.lvalue.identifier,
-              );
               for (const operand of eachInstructionValueOperand(instr.value)) {
                 /**
                  * By default we check that function call operands are not refs,
@@ -501,7 +491,6 @@ function validateNoRefAccessInRenderImpl(
                  */
                 if (
                   isRefLValue ||
-                  isEventHandlerLValue ||
                   (hookKind != null &&
                     hookKind !== 'useState' &&
                     hookKind !== 'useReducer')
@@ -509,8 +498,7 @@ function validateNoRefAccessInRenderImpl(
                   /**
                    * Allow passing refs or ref-accessing functions when:
                    * 1. lvalue is a ref (mergeRefs pattern: `mergeRefs(ref1, ref2)`)
-                   * 2. lvalue is an event handler (DOM events execute outside render)
-                   * 3. calling hooks (independently validated for ref safety)
+                   * 2. calling hooks (independently validated for ref safety)
                    */
                   validateNoDirectRefValueAccess(errors, operand, env);
                 } else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {

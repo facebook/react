@@ -1888,12 +1888,6 @@ export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
 }
 
-export function isFireFunctionType(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction'
-  );
-}
-
 export function isEffectEventFunctionType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' &&

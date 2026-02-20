@@ -255,9 +255,7 @@ export type LoggerEvent =
   | CompileDiagnosticEvent
   | CompileSkipEvent
   | PipelineErrorEvent
-  | TimingEvent
-  | AutoDepsDecorationsEvent
-  | AutoDepsEligibleEvent;
+  | TimingEvent;
 
 export type CompileErrorEvent = {
   kind: 'CompileError';
@@ -294,17 +292,6 @@ export type TimingEvent = {
   kind: 'Timing';
   measurement: PerformanceMeasure;
 };
-export type AutoDepsDecorationsEvent = {
-  kind: 'AutoDepsDecorations';
-  fnLoc: t.SourceLocation;
-  decorations: Array<t.SourceLocation>;
-};
-export type AutoDepsEligibleEvent = {
-  kind: 'AutoDepsEligible';
-  fnLoc: t.SourceLocation;
-  depArrayLoc: t.SourceLocation;
-};
-
 export type Logger = {
   logEvent: (filename: string | null, event: LoggerEvent) => void;
   debugLogIRs?: (value: CompilerPipelineValue) => void;
