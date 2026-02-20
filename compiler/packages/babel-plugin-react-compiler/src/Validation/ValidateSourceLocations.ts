@@ -9,7 +9,7 @@ import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
 import {CompilerDiagnostic, CompilerError, ErrorCategory} from '..';
 import {CodegenFunction} from '../ReactiveScopes';
-import {Result} from '../Utils/Result';
+import {Environment} from '../HIR/Environment';
 
 /**
  * IMPORTANT: This validation is only intended for use in unit tests.
@@ -123,7 +123,8 @@ export function validateSourceLocations(
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
   generatedAst: CodegenFunction,
-): Result<void, CompilerError> {
+  env: Environment,
+): void {
   const errors = new CompilerError();
 
   /*
@@ -309,5 +310,5 @@ export function validateSourceLocations(
     }
   }
 
-  return errors.asResult();
+  env.recordErrors(errors);
 }

@@ -46,7 +46,7 @@ import {
 } from '../HIR/HIR';
 import {printIdentifier, printInstruction, printPlace} from '../HIR/PrintHIR';
 import {eachPatternOperand} from '../HIR/visitors';
-import {Err, Ok, Result} from '../Utils/Result';
+
 import {GuardKind} from '../Utils/RuntimeDiagnosticConstants';
 import {assertExhaustive} from '../Utils/utils';
 import {buildReactiveFunction} from './BuildReactiveFunction';
@@ -122,7 +122,7 @@ export function codegenFunction(
     uniqueIdentifiers: Set<string>;
     fbtOperands: Set<IdentifierId>;
   },
-): Result<CodegenFunction, CompilerError> {
+): CodegenFunction {
   const cx = new Context(
     fn.env,
     fn.id ?? '[[ anonymous ]]',
@@ -152,11 +152,7 @@ export function codegenFunction(
     };
   }
 
-  const compileResult = codegenReactiveFunction(cx, fn);
-  if (compileResult.isErr()) {
-    return compileResult;
-  }
-  const compiled = compileResult.unwrap();
+  const compiled = codegenReactiveFunction(cx, fn);
 
   const hookGuard = fn.env.config.enableEmitHookGuards;
   if (hookGuard != null && fn.env.outputMode === 'client') {
@@ -284,7 +280,7 @@ export function codegenFunction(
         emitInstrumentForget.globalGating,
       );
       if (assertResult.isErr()) {
-        return assertResult;
+        fn.env.recordErrors(assertResult.unwrapErr());
       }
     }
 
@@ -334,20 +330,17 @@ export function codegenFunction(
       ),
       reactiveFunction,
     );
-    if (codegen.isErr()) {
-      return codegen;
-    }
-    outlined.push({fn: codegen.unwrap(), type});
+    outlined.push({fn: codegen, type});
   }
   compiled.outlined = outlined;
 
-  return compileResult;
+  return compiled;
 }
 
 function codegenReactiveFunction(
   cx: Context,
   fn: ReactiveFunction,
-): Result<CodegenFunction, CompilerError> {
+): CodegenFunction {
   for (const param of fn.params) {
     const place = param.kind === 'Identifier' ? param : param.place;
     cx.temp.set(place.identifier.declarationId, null);
@@ -366,13 +359,13 @@ function codegenReactiveFunction(
   }
 
   if (cx.errors.hasAnyErrors()) {
-    return Err(cx.errors);
+    fn.env.recordErrors(cx.errors);
   }
 
   const countMemoBlockVisitor = new CountMemoBlockVisitor(fn.env);
   visitReactiveFunction(fn, countMemoBlockVisitor, undefined);
 
-  return Ok({
+  return {
     type: 'CodegenFunction',
     loc: fn.loc,
     id: fn.id !== null ? t.identifier(fn.id) : null,
@@ -390,7 +383,7 @@ function codegenReactiveFunction(
     hasFireRewrite: fn.env.hasFireRewrite,
     hasInferredEffect: fn.env.hasInferredEffect,
     inferredEffectLocations: fn.env.inferredEffectLocations,
-  });
+  };
 }
 
 class CountMemoBlockVisitor extends ReactiveFunctionVisitor<void> {
@@ -1897,7 +1890,7 @@ function codegenInstructionValue(
                   cx.temp,
                 ),
                 reactiveFunction,
-              ).unwrap();
+              );
 
               /*
                * ObjectMethod builder must be backwards compatible with older versions of babel.
@@ -2096,7 +2089,7 @@ function codegenInstructionValue(
           cx.temp,
         ),
         reactiveFunction,
-      ).unwrap();
+      );
 
       if (instrValue.type === 'ArrowFunctionExpression') {
         let body: t.BlockStatement | t.Expression = fn.body;

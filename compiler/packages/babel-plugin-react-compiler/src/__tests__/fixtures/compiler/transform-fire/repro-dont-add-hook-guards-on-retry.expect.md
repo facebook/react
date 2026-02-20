@@ -23,14 +23,15 @@ function Component(props, useDynamicHook) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime";
+import { $dispatcherGuard } from "react-compiler-runtime";
+import { c as _c, useFire } from "react/compiler-runtime";
 import { useEffect, fire } from "react";
 
 function Component(props, useDynamicHook) {
   "use memo";
 
   useDynamicHook();
-  const foo = _temp;
+  const foo = _temp2;
   const t0 = useFire(foo);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ function Component(props, useDynamicHook) {
 
   return <div>hello world</div>;
 }
-function _temp(props_0) {
+function _temp2(props_0) {
   console.log(props_0);
 }
 

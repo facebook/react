@@ -24,7 +24,7 @@ function Component({prop1, bar}) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime"; // @validateNoCapitalizedCalls @enableFire @panicThreshold:"none"
+import { c as _c, useFire } from "react/compiler-runtime"; // @validateNoCapitalizedCalls @enableFire @panicThreshold:"none"
 import { fire } from "react";
 const CapitalizedCall = require("shared-runtime").sum;
 

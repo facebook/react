@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @inferEffectDependencies @panicThreshold:"none"
+import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies @panicThreshold:"none"
 import { print } from "shared-runtime";
 import useEffectWrapper from "useEffectWrapper";
 import { AUTODEPS } from "react";

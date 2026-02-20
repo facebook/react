@@ -8,6 +8,7 @@
  */
 
 import type {
+  JSONValue,
   Thenable,
   ReactDebugInfo,
   ReactDebugInfoEntry,
@@ -131,14 +132,6 @@ interface FlightStreamController {
 }
 
 type UninitializedModel = string;
-
-export type JSONValue =
-  | number
-  | null
-  | boolean
-  | string
-  | {+[key: string]: JSONValue}
-  | $ReadOnlyArray<JSONValue>;
 
 type ProfilingResult = {
   track: number,
@@ -355,7 +348,6 @@ type Response = {
   _encodeFormAction: void | EncodeFormActionCallback,
   _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
-  _fromJSON: (key: string, value: JSONValue) => any,
   _stringDecoder: StringDecoder,
   _closed: boolean,
   _closedReason: mixed,
@@ -943,6 +935,7 @@ type InitializationHandler = {
 };
 let initializingHandler: null | InitializationHandler = null;
 let initializingChunk: null | BlockedChunk<any> = null;
+let isInitializingDebugInfo: boolean = false;
 
 function initializeDebugChunk(
   response: Response,
@@ -951,6 +944,8 @@ function initializeDebugChunk(
   const debugChunk = chunk._debugChunk;
   if (debugChunk !== null) {
     const debugInfo = chunk._debugInfo;
+    const prevIsInitializingDebugInfo = isInitializingDebugInfo;
+    isInitializingDebugInfo = true;
     try {
       if (debugChunk.status === RESOLVED_MODEL) {
         // Find the index of this debug info by walking the linked list.
@@ -1015,6 +1010,8 @@ function initializeDebugChunk(
       }
     } catch (error) {
       triggerErrorOnChunk(response, chunk, error);
+    } finally {
+      isInitializingDebugInfo = prevIsInitializingDebugInfo;
     }
   }
 }
@@ -1632,7 +1629,9 @@ function fulfillReference(
       const element: any = handler.value;
       switch (key) {
         case '3':
-          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          if (__DEV__) {
+            transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          }
           element.props = mappedValue;
           break;
         case '4':
@@ -1648,7 +1647,9 @@ function fulfillReference(
           }
           break;
         default:
-          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          if (__DEV__) {
+            transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          }
           break;
       }
     } else if (__DEV__ && !reference.isDebug) {
@@ -2086,7 +2087,7 @@ function getOutlinedModel<T>(
                 response,
                 map,
                 path.slice(i - 1),
-                false,
+                isInitializingDebugInfo,
               );
             }
             case HALTED: {
@@ -2158,14 +2159,21 @@ function getOutlinedModel<T>(
       }
 
       const chunkValue = map(response, value, parentObject, key);
-      if (
-        parentObject[0] === REACT_ELEMENT_TYPE &&
-        (key === '4' || key === '5')
-      ) {
-        // If we're resolving the "owner" or "stack" slot of an Element array, we don't call
-        // transferReferencedDebugInfo because this reference is to a debug chunk.
-      } else {
-        transferReferencedDebugInfo(initializingChunk, chunk);
+      if (__DEV__) {
+        if (
+          parentObject[0] === REACT_ELEMENT_TYPE &&
+          (key === '4' || key === '5')
+        ) {
+          // If we're resolving the "owner" or "stack" slot of an Element array,
+          // we don't call transferReferencedDebugInfo because this reference is
+          // to a debug chunk.
+        } else if (isInitializingDebugInfo) {
+          // If we're resolving references as part of debug info resolution, we
+          // don't call transferReferencedDebugInfo because these references are
+          // to debug chunks.
+        } else {
+          transferReferencedDebugInfo(initializingChunk, chunk);
+        }
       }
       return chunkValue;
     case PENDING:
@@ -2177,7 +2185,7 @@ function getOutlinedModel<T>(
         response,
         map,
         path,
-        false,
+        isInitializingDebugInfo,
       );
     case HALTED: {
       // Add a dependency that will never resolve.
@@ -2286,6 +2294,11 @@ function defineLazyGetter<T>(
         // TODO: We should ideally throw here to indicate a difference.
         return OMITTED_PROP_ERROR;
       },
+      // no-op: the walk function may try to reassign this property after
+      // parseModelString returns. With the JSON.parse reviver, the engine's
+      // internal CreateDataProperty silently failed. We use a no-op setter
+      // to match that behavior in strict mode.
+      set: function () {},
       enumerable: true,
       configurable: false,
     });
@@ -2606,6 +2619,11 @@ function parseModelString(
                 // TODO: We should ideally throw here to indicate a difference.
                 return OMITTED_PROP_ERROR;
               },
+              // no-op: the walk function may try to reassign this property
+              // after parseModelString returns. With the JSON.parse reviver,
+              // the engine's internal CreateDataProperty silently failed.
+              // We use a no-op setter to match that behavior in strict mode.
+              set: function () {},
               enumerable: true,
               configurable: false,
             });
@@ -2683,7 +2701,6 @@ function ResponseInstance(
   this._nonce = nonce;
   this._chunks = chunks;
   this._stringDecoder = createStringDecoder();
-  this._fromJSON = (null: any);
   this._closed = false;
   this._closedReason = null;
   this._allowPartialStream = allowPartialStream;
@@ -2767,9 +2784,6 @@ function ResponseInstance(
       markAllTracksInOrder();
     }
   }
-
-  // Don't inline this call because it causes closure to outline the call above.
-  this._fromJSON = createFromJSONCallback(this);
 }
 
 export function createResponse(
@@ -3506,6 +3520,18 @@ function resolveErrorDev(
   }
 
   let error;
+  const errorOptions =
+    'cause' in errorInfo
+      ? {
+          cause: reviveModel(
+            response,
+            // $FlowFixMe[incompatible-cast] -- Flow thinks `cause` in `cause?: JSONValue` can be undefined after `in` check.
+            (errorInfo.cause: JSONValue),
+            errorInfo,
+            'cause',
+          ),
+        }
+      : undefined;
   const callStack = buildFakeCallStack(
     response,
     stack,
@@ -3516,6 +3542,7 @@ function resolveErrorDev(
       null,
       message ||
         'An error occurred in the Server Components render but no message was provided',
+      errorOptions,
     ),
   );
 
@@ -4264,15 +4291,21 @@ function resolveIOInfo(
 ): void {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
-  if (!chunk) {
-    chunk = createResolvedModelChunk(response, model);
-    chunks.set(id, chunk);
-    initializeModelChunk(chunk);
-  } else {
-    resolveModelChunk(response, chunk, model);
-    if (chunk.status === RESOLVED_MODEL) {
+  const prevIsInitializingDebugInfo = isInitializingDebugInfo;
+  isInitializingDebugInfo = true;
+  try {
+    if (!chunk) {
+      chunk = createResolvedModelChunk(response, model);
+      chunks.set(id, chunk);
       initializeModelChunk(chunk);
+    } else {
+      resolveModelChunk(response, chunk, model);
+      if (chunk.status === RESOLVED_MODEL) {
+        initializeModelChunk(chunk);
+      }
     }
+  } finally {
+    isInitializingDebugInfo = prevIsInitializingDebugInfo;
   }
   if (chunk.status === INITIALIZED) {
     initializeIOInfo(response, chunk.value);
@@ -5237,24 +5270,52 @@ export function processStringChunk(
 }
 
 function parseModel<T>(response: Response, json: UninitializedModel): T {
-  return JSON.parse(json, response._fromJSON);
+  const rawModel = JSON.parse(json);
+  // Pass a wrapper object as parentObject to match the original JSON.parse
+  // reviver behavior, where the root value's reviver receives {"": rootValue}
+  // as `this`. This ensures parentObject is never null when accessed downstream.
+  return reviveModel(response, rawModel, {'': rawModel}, '');
 }
 
-function createFromJSONCallback(response: Response) {
-  // $FlowFixMe[missing-this-annot]
-  return function (key: string, value: JSONValue) {
-    if (key === __PROTO__) {
-      return undefined;
+function reviveModel(
+  response: Response,
+  value: JSONValue,
+  parentObject: Object,
+  key: string,
+): any {
+  if (typeof value === 'string') {
+    if (value[0] === '$') {
+      return parseModelString(response, parentObject, key, value);
     }
-    if (typeof value === 'string') {
-      // We can't use .bind here because we need the "this" value.
-      return parseModelString(response, this, key, value);
+    return value;
+  }
+  if (typeof value !== 'object' || value === null) {
+    return value;
+  }
+  if (isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      (value: any)[i] = reviveModel(response, value[i], value, '' + i);
     }
-    if (typeof value === 'object' && value !== null) {
+    if (value[0] === REACT_ELEMENT_TYPE) {
+      // React element tuple
       return parseModelTuple(response, value);
     }
     return value;
-  };
+  }
+  // Plain object
+  for (const k in value) {
+    if (k === __PROTO__) {
+      delete (value: any)[k];
+    } else {
+      const walked = reviveModel(response, (value: any)[k], value, k);
+      if (walked !== undefined) {
+        (value: any)[k] = walked;
+      } else {
+        delete (value: any)[k];
+      }
+    }
+  }
+  return value;
 }
 
 export function close(weakResponse: WeakResponse): void {

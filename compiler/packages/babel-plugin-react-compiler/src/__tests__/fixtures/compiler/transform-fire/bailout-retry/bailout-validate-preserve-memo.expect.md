@@ -24,7 +24,7 @@ function Component({prop1, bar}) {
 ## Code
 
 ```javascript
-import { useFire } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold:"none"
+import { c as _c, useFire } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableFire @panicThreshold:"none"
 import { fire } from "react";
 import { sum } from "shared-runtime";
 

@@ -728,19 +728,21 @@ function tryCompileFunction(
   }
 
   try {
-    return {
-      kind: 'compile',
-      compiledFn: compileFn(
-        fn,
-        programContext.opts.environment,
-        fnType,
-        outputMode,
-        programContext,
-        programContext.opts.logger,
-        programContext.filename,
-        programContext.code,
-      ),
-    };
+    const result = compileFn(
+      fn,
+      programContext.opts.environment,
+      fnType,
+      outputMode,
+      programContext,
+      programContext.opts.logger,
+      programContext.filename,
+      programContext.code,
+    );
+    if (result.isOk()) {
+      return {kind: 'compile', compiledFn: result.unwrap()};
+    } else {
+      return {kind: 'error', error: result.unwrapErr()};
+    }
   } catch (err) {
     return {kind: 'error', error: err};
   }
@@ -779,10 +781,16 @@ function retryCompileFunction(
       programContext.code,
     );
 
-    if (!retryResult.hasFireRewrite && !retryResult.hasInferredEffect) {
+    if (retryResult.isErr()) {
+      const err = retryResult.unwrapErr();
+      programContext.retryErrors.push({fn, error: err});
       return null;
     }
-    return retryResult;
+    const compiledFn = retryResult.unwrap();
+    if (!compiledFn.hasFireRewrite && !compiledFn.hasInferredEffect) {
+      return null;
+    }
+    return compiledFn;
   } catch (err) {
     // TODO: we might want to log error here, but this will also result in duplicate logging
     if (err instanceof CompilerError) {

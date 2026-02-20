@@ -20,9 +20,8 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
-import {Result} from '../Utils/Result';
 
-export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
+export function validateUseMemo(fn: HIRFunction): void {
   const errors = new CompilerError();
   const voidMemoErrors = new CompilerError();
   const useMemos = new Set<IdentifierId>();
@@ -177,7 +176,9 @@ export function validateUseMemo(fn: HIRFunction): Result<void, CompilerError> {
     }
   }
   fn.env.logErrors(voidMemoErrors.asResult());
-  return errors.asResult();
+  if (errors.hasAnyErrors()) {
+    fn.env.recordErrors(errors);
+  }
 }
 
 function validateNoContextVariableAssignment(

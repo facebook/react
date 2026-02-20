@@ -29,7 +29,7 @@ function useFoo({cond}) {
 ## Code
 
 ```javascript
-// @inferEffectDependencies @panicThreshold:"none"
+import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies @panicThreshold:"none"
 import { useRef, AUTODEPS } from "react";
 import { useSpecialEffect } from "shared-runtime";
 

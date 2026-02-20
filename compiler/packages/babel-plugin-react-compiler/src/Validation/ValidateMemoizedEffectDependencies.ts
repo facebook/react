@@ -23,7 +23,6 @@ import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
 } from '../ReactiveScopes/visitors';
-import {Result} from '../Utils/Result';
 
 /**
  * Validates that all known effect dependencies are memoized. The algorithm checks two things:
@@ -49,12 +48,10 @@ import {Result} from '../Utils/Result';
  * mutate(object); // ... mutable range ends here after this mutation
  * ```
  */
-export function validateMemoizedEffectDependencies(
-  fn: ReactiveFunction,
-): Result<void, CompilerError> {
+export function validateMemoizedEffectDependencies(fn: ReactiveFunction): void {
   const errors = new CompilerError();
   visitReactiveFunction(fn, new Visitor(), errors);
-  return errors.asResult();
+  fn.env.recordErrors(errors);
 }
 
 class Visitor extends ReactiveFunctionVisitor<CompilerError> {
