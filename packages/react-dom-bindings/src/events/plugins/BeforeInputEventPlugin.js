@@ -61,6 +61,11 @@ function registerEvents() {
     'keypress',
     'textInput',
     'paste',
+    // Firefox and some input methods dispatch native `beforeinput` events
+    // (for example: macOS accent menu, spellcheck replacement flows). Ensure
+    // we listen for the native `beforeinput` so we can extract its data and
+    // dispatch React's synthetic `beforeinput` events.
+    'beforeinput',
   ]);
   registerTwoPhaseEvent('onCompositionEnd', [
     'compositionend',
@@ -256,6 +261,15 @@ function getNativeBeforeInputChars(
   domEventName: DOMEventName,
   nativeEvent: any,
 ): ?string {
+  // Some browsers (notably Firefox) dispatch native `beforeinput` events
+  // with the `data` property set (and sometimes with `inputType` describing
+  // the replacement). Prefer handling that case early so that we correctly
+  // surface beforeinput for those flows.
+  if (domEventName === 'beforeinput') {
+    // `data` may be null for some inputTypes, but when present it's the
+    // closest analogue to `textInput.data`.
+    return nativeEvent.data || getDataFromCustomEvent(nativeEvent);
+  }
   switch (domEventName) {
     case 'compositionend':
       return getDataFromCustomEvent(nativeEvent);
