@@ -279,27 +279,27 @@ Walk through `runWithEnvironment` and wrap each pass call site. This is the inte
 
 ### Phase 8: Testing
 
-- [ ] **8.1 Update existing `error.todo-*` fixture expectations**
+- [x] **8.1 Update existing `error.todo-*` fixture expectations**
   - Currently, fixtures with `error.todo-` prefix expect a single error and bailout
   - After fault tolerance, some of these may now produce multiple errors
   - Update the `.expect.md` files to reflect the new aggregated error output
 
-- [ ] **8.2 Add multi-error test fixtures**
+- [x] **8.2 Add multi-error test fixtures**
   - Create test fixtures that contain multiple independent errors (e.g., both a `var` declaration and a mutation of a frozen value)
   - Verify that all errors are reported, not just the first one
 
-- [ ] **8.3 Add test for invariant-still-throws behavior**
+- [x] **8.3 Add test for invariant-still-throws behavior**
   - Verify that `CompilerError.invariant()` failures still cause immediate abort
   - Verify that non-CompilerError exceptions still cause immediate abort
 
-- [ ] **8.4 Add test for partial HIR codegen**
+- [x] **8.4 Add test for partial HIR codegen**
   - Verify that when BuildHIR produces partial HIR (with `UnsupportedNode` values), later passes handle it gracefully and codegen produces the original AST for unsupported portions
 
-- [ ] **8.5 Verify error severity in aggregated output**
+- [x] **8.5 Verify error severity in aggregated output**
   - Test that the aggregated `CompilerError` correctly reports `hasErrors()` vs `hasWarning()` vs `hasHints()` based on the mix of accumulated diagnostics
   - Verify that `panicThreshold` behavior in Program.ts is correct for aggregated errors
 
-- [ ] **8.6 Run full test suite**
+- [x] **8.6 Run full test suite**
   - Run `yarn snap` and `yarn snap -u` to update all fixture expectations
   - Ensure no regressions in passing tests
 
