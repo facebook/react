@@ -124,7 +124,7 @@ export type TextInstance = {
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
 type PublicInstanceWithFragmentHandles = PublicInstance & {
-  unstable_reactFragments?: Set<FragmentInstanceType>,
+  reactFragments?: Set<FragmentInstanceType>,
 };
 export type Container = {
   containerTag: number,
@@ -822,10 +822,10 @@ function addFragmentHandleToInstance(
   fragmentInstance: FragmentInstanceType,
 ): void {
   if (enableFragmentRefsInstanceHandles) {
-    if (instance.unstable_reactFragments == null) {
-      instance.unstable_reactFragments = new Set();
+    if (instance.reactFragments == null) {
+      instance.reactFragments = new Set();
     }
-    instance.unstable_reactFragments.add(fragmentInstance);
+    instance.reactFragments.add(fragmentInstance);
   }
 }
 
@@ -890,8 +890,8 @@ export function deleteChildFromFragmentInstance(
     instance,
   ): any): PublicInstanceWithFragmentHandles);
   if (enableFragmentRefsInstanceHandles) {
-    if (publicInstance.unstable_reactFragments != null) {
-      publicInstance.unstable_reactFragments.delete(fragmentInstance);
+    if (publicInstance.reactFragments != null) {
+      publicInstance.reactFragments.delete(fragmentInstance);
     }
   }
 }
