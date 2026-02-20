@@ -721,10 +721,18 @@ function tryCompileFunction(
     fn,
   );
   if (suppressionsInFunction.length > 0) {
-    return {
-      kind: 'error',
-      error: suppressionsToCompilerError(suppressionsInFunction),
-    };
+    if (!programContext.opts.noEmit) {
+      return {
+        kind: 'error',
+        error: suppressionsToCompilerError(suppressionsInFunction),
+      };
+    }
+    /* ESLint mode: log suppression but continue analysis */
+    logError(
+      suppressionsToCompilerError(suppressionsInFunction),
+      programContext,
+      fn.node.loc ?? null,
+    );
   }
 
   try {
