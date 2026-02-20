@@ -13,23 +13,6 @@ import {getOrInsertWith} from '../Utils/utils';
 import {GeneratedSource} from '../HIR';
 import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {CompileProgramMetadata} from './Program';
-import {
-  CompilerDiagnostic,
-  CompilerDiagnosticOptions,
-} from '../CompilerError';
-
-function throwInvalidReact(
-  options: CompilerDiagnosticOptions,
-  {logger, filename}: TraversalState,
-): never {
-  logger?.logEvent(filename, {
-    kind: 'CompileError',
-    fnLoc: null,
-    detail: new CompilerDiagnostic(options),
-  });
-  CompilerError.throwDiagnostic(options);
-}
-
 export default function validateNoUntransformedReferences(
   path: NodePath<t.Program>,
   filename: string | null,
@@ -176,16 +159,4 @@ function transformProgram(
       }
     },
   });
-}
-
-function matchCompilerDiagnostic(
-  badReference: NodePath<t.Node>,
-  transformErrors: Array<{fn: NodePath<t.Node>; error: CompilerError}>,
-): string | null {
-  for (const {fn, error} of transformErrors) {
-    if (fn.isAncestor(badReference)) {
-      return error.toString();
-    }
-  }
-  return null;
 }

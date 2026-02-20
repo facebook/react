@@ -15,7 +15,6 @@ import {
   GeneratedSource,
   HIRFunction,
   IdentifierId,
-  Identifier,
   Place,
   SourceLocation,
   getHookKindForType,
