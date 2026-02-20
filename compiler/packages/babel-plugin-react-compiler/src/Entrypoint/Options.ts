@@ -228,8 +228,6 @@ const CompilerOutputModeSchema = z.enum([
   'ssr',
   // Build optimized for the client, with auto memoization
   'client',
-  // Build optimized for the client without auto memo
-  'client-no-memo',
   // Lint mode, the output is unused but validations should run
   'lint',
 ]);
