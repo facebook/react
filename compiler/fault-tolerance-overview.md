@@ -75,49 +75,49 @@ Change `runWithEnvironment` to run all passes and check for errors at the end in
 
 Currently `lower()` returns `Result<HIRFunction, CompilerError>`. It already accumulates errors internally via `builder.errors`, but returns `Err` when errors exist. Change it to always return `Ok(hir)` while recording errors on the environment.
 
-- [ ] **3.1 Change `lower` to always return HIRFunction** (`src/HIR/BuildHIR.ts`)
+- [x] **3.1 Change `lower` to always return HIRFunction** (`src/HIR/BuildHIR.ts`)
   - Change return type from `Result<HIRFunction, CompilerError>` to `HIRFunction`
-  - Instead of returning `Err(builder.errors)` at line 227-229, record errors on `env` via `env.recordError(builder.errors)` and return the (partial) HIR
+  - Instead of returning `Err(builder.errors)` at line 227-229, record errors on `env` via `env.recordErrors(builder.errors)` and return the (partial) HIR
   - Update the pipeline to call `lower(func, env)` directly instead of `lower(func, env).unwrap()`
+  - Added try/catch around body lowering to catch thrown CompilerErrors (e.g., from `resolveBinding`) and record them
 
-- [ ] **3.2 Handle `var` declarations as `let`** (`src/HIR/BuildHIR.ts`, line ~855)
-  - Currently throws `Todo("Handle var kinds in VariableDeclaration")`
-  - Instead: record the Todo error on env, then treat the `var` as `let` and continue lowering
+- [x] **3.2 Handle `var` declarations as `let`** (`src/HIR/BuildHIR.ts`, line ~855)
+  - Record the Todo error, then treat `var` as `let` and continue lowering (instead of skipping the declaration)
 
-- [ ] **3.3 Handle `try/finally` by pruning `finally`** (`src/HIR/BuildHIR.ts`, lines ~1281-1296)
-  - Currently throws Todo for `try` without `catch` and `try` with `finally`
-  - Instead: record the Todo error, then lower the `try/catch` portion only (put the `finally` block content in the fallthrough of the try/catch)
+- [x] **3.3 Handle `try/finally` by pruning `finally`** (`src/HIR/BuildHIR.ts`, lines ~1281-1296)
+  - Already handled: `try` without `catch` pushes error and returns; `try` with `finally` pushes error and continues with `try/catch` portion only
 
-- [ ] **3.4 Handle `eval()` via UnsupportedNode** (`src/HIR/BuildHIR.ts`, line ~3568)
-  - Currently throws `UnsupportedSyntax("The 'eval' function is not supported")`
-  - Instead: record the error, emit an `UnsupportedNode` instruction value with the original AST node
+- [x] **3.4 Handle `eval()` via UnsupportedNode** (`src/HIR/BuildHIR.ts`, line ~3568)
+  - Already handled: records error via `builder.errors.push()` and continues
 
-- [ ] **3.5 Handle `with` statement via UnsupportedNode** (`src/HIR/BuildHIR.ts`, line ~1382)
-  - Currently throws `UnsupportedSyntax`
-  - Instead: record the error, emit the body statements as-is (or skip them), continue
+- [x] **3.5 Handle `with` statement via UnsupportedNode** (`src/HIR/BuildHIR.ts`, line ~1382)
+  - Already handled: records error and emits `UnsupportedNode`
 
-- [ ] **3.6 Handle inline `class` declarations** (`src/HIR/BuildHIR.ts`, line ~1402)
-  - Currently throws `UnsupportedSyntax`
-  - Already creates an `UnsupportedNode`; just record the error instead of throwing
+- [x] **3.6 Handle inline `class` declarations** (`src/HIR/BuildHIR.ts`, line ~1402)
+  - Already handled: records error and emits `UnsupportedNode`
 
-- [ ] **3.7 Handle remaining Todo errors in expression lowering** (`src/HIR/BuildHIR.ts`)
-  - For each of the ~35 Todo error sites in `lowerExpression`, `lowerAssignment`, `lowerMemberExpression`, etc.:
-    - Record the Todo error on the environment
-    - Emit an `UnsupportedNode` instruction value with the original Babel AST node as fallback
-  - Key sites include: pipe operator, tagged templates with interpolations, compound logical assignment (`&&=`, `||=`, `??=`), `for await...of`, object getters/setters, UpdateExpression on context variables, complex destructuring patterns
-  - The `UnsupportedNode` variant already exists in HIR and passes through codegen unchanged, so no new HIR types are needed for most cases
+- [x] **3.7 Handle remaining Todo errors in expression lowering** (`src/HIR/BuildHIR.ts`)
+  - Already handled: all ~60 error sites use `builder.errors.push()` to accumulate errors. The try/catch around body lowering provides a safety net for any that still throw.
 
-- [ ] **3.8 Handle `throw` inside `try/catch`** (`src/HIR/BuildHIR.ts`, line ~284)
-  - Currently throws Todo
-  - Instead: record the error, and represent the `throw` as a terminal that ends the block (the existing `throw` terminal type may already handle this, or we can use `UnsupportedNode`)
+- [x] **3.8 Handle `throw` inside `try/catch`** (`src/HIR/BuildHIR.ts`, line ~284)
+  - Already handled: records error via `builder.errors.push()` and continues
 
-- [ ] **3.9 Handle `for` loops with missing test or expression init** (`src/HIR/BuildHIR.ts`, lines ~559, ~632)
-  - Record the error and construct a best-effort loop HIR (e.g., for `for(;;)`, use `true` as the test expression)
+- [x] **3.9 Handle `for` loops with missing test or expression init** (`src/HIR/BuildHIR.ts`, lines ~559, ~632)
+  - For `for(;;)` (missing test): emit `true` as the test expression and add a branch terminal
+  - For empty init (`for (; ...)`): add a placeholder instruction to avoid invariant about empty blocks
+  - For expression init (`for (expr; ...)`): record error and lower the expression as best-effort
+  - Changed `'unsupported'` terminal to `'goto'` terminal for non-variable init to maintain valid CFG structure
 
-- [ ] **3.10 Handle nested function lowering failures** (`src/HIR/BuildHIR.ts`, `lowerFunction` at line ~3504)
-  - Currently calls `lower()` recursively and merges errors if it fails (`builder.errors.merge(functionErrors)`)
-  - With the new approach, the nested `lower()` always returns an HIR, but errors are recorded on the shared environment
-  - Ensure the parent function continues lowering even if a nested function had errors
+- [x] **3.10 Handle nested function lowering failures** (`src/HIR/BuildHIR.ts`, `lowerFunction` at line ~3504)
+  - `lowerFunction()` now always returns `LoweredFunction` since `lower()` always returns `HIRFunction`
+  - Errors from nested functions are recorded on the shared environment
+  - Removed the `null` return case and the corresponding `UnsupportedNode` fallback in callers
+
+- [x] **3.11 Handle unreachable functions in `build()`** (`src/HIR/HIRBuilder.ts`, `build()`)
+  - Changed `CompilerError.throwTodo()` for unreachable code with hoisted declarations to `this.errors.push()` to allow HIR construction to complete
+
+- [x] **3.12 Handle duplicate fbt tags** (`src/HIR/BuildHIR.ts`, line ~2279)
+  - Changed `CompilerError.throwDiagnostic()` to `builder.errors.pushDiagnostic()` to record instead of throw
 
 ### Phase 4: Update Validation Passes
 
@@ -324,4 +324,7 @@ Walk through `runWithEnvironment` and wrap each pass call site. This is the inte
 * **Lint-only passes (Pattern B: `env.logErrors()`) should not use `tryRecord()`/`recordError()`** because those errors are intentionally non-blocking. They are reported via the logger only and should not cause the pipeline to return `Err`. The `logErrors` pattern was kept for `validateNoDerivedComputationsInEffects_exp`, `validateNoSetStateInEffects`, `validateNoJSXInTryStatement`, and `validateStaticComponents`.
 * **Inference passes that return `Result` with validation errors** (`inferMutationAliasingEffects`, `inferMutationAliasingRanges`) were changed to record errors via `env.recordErrors()` instead of throwing, allowing subsequent passes to proceed.
 * **Value-producing passes** (`memoizeFbtAndMacroOperandsInSameScope`, `renameVariables`, `buildReactiveFunction`) need safe default values when wrapped in `tryRecord()` since the callback can't return values. We initialize with empty defaults (e.g., `new Set()`) before the `tryRecord()` call.
+* **Phase 3 (BuildHIR) revealed that most error sites already used `builder.errors.push()` for accumulation.** The existing lowering code was designed to accumulate errors rather than throw. The main changes were: (1) changing `lower()` return type from `Result` to `HIRFunction`, (2) recording builder errors on env, (3) adding a try/catch around body lowering to catch thrown CompilerErrors from sub-calls like `resolveBinding()`, (4) treating `var` as `let` instead of skipping declarations, and (5) fixing ForStatement init/test handling to produce valid CFG structure.
+* **Partial HIR can trigger downstream invariants.** When lowering skips or partially handles constructs (e.g., unreachable hoisted functions, `var` declarations before the fix), downstream passes like `InferMutationAliasingEffects` may encounter uninitialized identifiers and throw invariants. This is acceptable since the function still correctly bails out of compilation, but error messages may be less specific. The fix for `var` (treating as `let`) demonstrates how to avoid this: continue lowering with a best-effort representation rather than skipping entirely.
+* **Errors accumulated on `env` are lost when an invariant propagates out of the pipeline.** Since invariant CompilerErrors always re-throw through `tryRecord()`, they exit the pipeline as exceptions. The caller only sees the invariant error, not any errors previously recorded on `env`. This is a design limitation that could be addressed by aggregating env errors with caught exceptions in `tryCompileFunction()`.
 

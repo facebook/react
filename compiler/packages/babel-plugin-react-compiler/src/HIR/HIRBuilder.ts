@@ -381,11 +381,12 @@ export default class HIRBuilder {
           instr => instr.value.kind === 'FunctionExpression',
         )
       ) {
-        CompilerError.throwTodo({
+        this.errors.push({
           reason: `Support functions with unreachable code that may contain hoisted declarations`,
           loc: block.instructions[0]?.loc ?? block.terminal.loc,
           description: null,
           suggestions: null,
+          category: ErrorCategory.Todo,
         });
       }
     }
