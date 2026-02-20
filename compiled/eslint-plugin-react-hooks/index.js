@@ -18008,15 +18008,12 @@ function printCodeFrame(source, loc, message) {
 function printErrorSummary(category, message) {
     let heading;
     switch (category) {
-        case ErrorCategory.AutomaticEffectDependencies:
         case ErrorCategory.CapitalizedCalls:
         case ErrorCategory.Config:
         case ErrorCategory.EffectDerivationsOfState:
         case ErrorCategory.EffectSetState:
         case ErrorCategory.ErrorBoundaries:
-        case ErrorCategory.Factories:
         case ErrorCategory.FBT:
-        case ErrorCategory.Fire:
         case ErrorCategory.Gating:
         case ErrorCategory.Globals:
         case ErrorCategory.Hooks:
@@ -18062,7 +18059,6 @@ var ErrorCategory;
     ErrorCategory["StaticComponents"] = "StaticComponents";
     ErrorCategory["UseMemo"] = "UseMemo";
     ErrorCategory["VoidUseMemo"] = "VoidUseMemo";
-    ErrorCategory["Factories"] = "Factories";
     ErrorCategory["PreserveManualMemo"] = "PreserveManualMemo";
     ErrorCategory["MemoDependencies"] = "MemoDependencies";
     ErrorCategory["IncompatibleLibrary"] = "IncompatibleLibrary";
@@ -18083,8 +18079,6 @@ var ErrorCategory;
     ErrorCategory["Config"] = "Config";
     ErrorCategory["Gating"] = "Gating";
     ErrorCategory["Suppression"] = "Suppression";
-    ErrorCategory["AutomaticEffectDependencies"] = "AutomaticEffectDependencies";
-    ErrorCategory["Fire"] = "Fire";
     ErrorCategory["FBT"] = "FBT";
 })(ErrorCategory || (ErrorCategory = {}));
 var LintRulePreset;
@@ -18101,15 +18095,6 @@ function getRuleForCategory(category) {
 }
 function getRuleForCategoryImpl(category) {
     switch (category) {
-        case ErrorCategory.AutomaticEffectDependencies: {
-            return {
-                category,
-                severity: ErrorSeverity.Error,
-                name: 'automatic-effect-dependencies',
-                description: 'Verifies that automatic effect dependencies are compiled if opted-in',
-                preset: LintRulePreset.Off,
-            };
-        }
         case ErrorCategory.CapitalizedCalls: {
             return {
                 category,
@@ -18175,31 +18160,12 @@ function getRuleForCategoryImpl(category) {
                 preset: LintRulePreset.Recommended,
             };
         }
-        case ErrorCategory.Factories: {
-            return {
-                category,
-                severity: ErrorSeverity.Error,
-                name: 'component-hook-factories',
-                description: 'Validates against higher order functions defining nested components or hooks. ' +
-                    'Components and hooks should be defined at the module level',
-                preset: LintRulePreset.Recommended,
-            };
-        }
         case ErrorCategory.FBT: {
             return {
                 category,
                 severity: ErrorSeverity.Error,
                 name: 'fbt',
                 description: 'Validates usage of fbt',
-                preset: LintRulePreset.Off,
-            };
-        }
-        case ErrorCategory.Fire: {
-            return {
-                category,
-                severity: ErrorSeverity.Error,
-                name: 'fire',
-                description: 'Validates usage of `fire`',
                 preset: LintRulePreset.Off,
             };
         }
@@ -18514,9 +18480,6 @@ const GeneratedSource = Symbol();
 function isStatementBlockKind(kind) {
     return kind === 'block' || kind === 'catch';
 }
-function isExpressionBlockKind(kind) {
-    return !isStatementBlockKind(kind);
-}
 var GotoVariant;
 (function (GotoVariant) {
     GotoVariant["Break"] = "Break";
@@ -18562,9 +18525,6 @@ function makeTemporaryIdentifier(id, loc) {
         type: makeType(),
         loc,
     };
-}
-function forkTemporaryIdentifier(id, source) {
-    return Object.assign(Object.assign({}, source), { mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) }, id });
 }
 function validateIdentifierName(name) {
     if (isReservedWord(name)) {
@@ -18844,9 +18804,6 @@ function isUseReducerType(id) {
 function isDispatcherType(id) {
     return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
 }
-function isFireFunctionType(id) {
-    return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction');
-}
 function isEffectEventFunctionType(id) {
     return (id.type.kind === 'Function' &&
         id.type.shapeId === 'BuiltInEffectEventFunction');
@@ -18899,9 +18856,6 @@ function isUseInsertionEffectHookType(id) {
 }
 function isUseEffectEventType(id) {
     return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectEvent');
-}
-function isUseContextHookType(id) {
-    return (id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseContextHook');
 }
 function getHookKind(env, id) {
     return getHookKindForType(env, id.type);
@@ -19586,14 +19540,6 @@ function printSourceLocation(loc) {
     }
     else {
         return `${loc.start.line}:${loc.start.column}:${loc.end.line}:${loc.end.column}`;
-    }
-}
-function printSourceLocationLine(loc) {
-    if (typeof loc === 'symbol') {
-        return 'generated';
-    }
-    else {
-        return `${loc.start.line}:${loc.end.line}`;
     }
 }
 function getFunctionName$2(instrValue, defaultValue) {
@@ -21821,12 +21767,8 @@ const BuiltInUseTransitionId = 'BuiltInUseTransition';
 const BuiltInUseOptimisticId = 'BuiltInUseOptimistic';
 const BuiltInSetOptimisticId = 'BuiltInSetOptimistic';
 const BuiltInStartTransitionId = 'BuiltInStartTransition';
-const BuiltInFireId = 'BuiltInFire';
-const BuiltInFireFunctionId = 'BuiltInFireFunction';
 const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
 const BuiltInEffectEventId = 'BuiltInEffectEventFunction';
-const BuiltInAutodepsId = 'BuiltInAutoDepsId';
-const BuiltInEventHandlerId = 'BuiltInEventHandlerId';
 const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
 const BUILTIN_SHAPES = new Map();
 addObject(BUILTIN_SHAPES, BuiltInPropsId, [
@@ -22487,13 +22429,6 @@ addFunction(BUILTIN_SHAPES, [], {
     calleeEffect: Effect.ConditionallyMutate,
     returnValueKind: ValueKind.Mutable,
 }, BuiltInEffectEventId);
-addFunction(BUILTIN_SHAPES, [], {
-    positionalParams: [],
-    restParam: Effect.ConditionallyMutate,
-    returnType: { kind: 'Poly' },
-    calleeEffect: Effect.ConditionallyMutate,
-    returnValueKind: ValueKind.Mutable,
-}, BuiltInEventHandlerId);
 addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     [
         'toString',
@@ -30784,21 +30719,6 @@ const REACT_APIS = [
         }, BuiltInUseOperatorId),
     ],
     [
-        'fire',
-        addFunction(DEFAULT_SHAPES, [], {
-            positionalParams: [],
-            restParam: null,
-            returnType: {
-                kind: 'Function',
-                return: { kind: 'Poly' },
-                shapeId: BuiltInFireFunctionId,
-                isConstructor: false,
-            },
-            calleeEffect: Effect.Read,
-            returnValueKind: ValueKind.Frozen,
-        }, BuiltInFireId),
-    ],
-    [
         'useEffectEvent',
         addHook(DEFAULT_SHAPES, {
             positionalParams: [],
@@ -30814,7 +30734,6 @@ const REACT_APIS = [
             returnValueKind: ValueKind.Frozen,
         }, BuiltInUseEffectEventId),
     ],
-    ['AUTODEPS', addObject(DEFAULT_SHAPES, BuiltInAutodepsId, [])],
 ];
 TYPED_GLOBALS.push([
     'React',
@@ -31694,13 +31613,6 @@ function defaultModuleTypeProvider(moduleName) {
 }
 
 var _Environment_instances, _Environment_globals, _Environment_shapes, _Environment_moduleTypes, _Environment_nextIdentifer, _Environment_nextBlock, _Environment_nextScope, _Environment_scope, _Environment_outlinedFunctions, _Environment_contextIdentifiers, _Environment_hoistedIdentifiers, _Environment_flowTypeEnvironment, _Environment_resolveModuleType, _Environment_isKnownReactModule, _Environment_getCustomHookType;
-const ReactElementSymbolSchema = v4.z.object({
-    elementSymbol: v4.z.union([
-        v4.z.literal('react.element'),
-        v4.z.literal('react.transitional.element'),
-    ]),
-    globalDevVar: v4.z.string(),
-});
 const ExternalFunctionSchema = v4.z.object({
     source: v4.z.string(),
     importSpecifierName: v4.z.string(),
@@ -31712,8 +31624,6 @@ const InstrumentationSchema = v4.z
     globalGating: v4.z.string().nullable(),
 })
     .refine(opts => opts.gating != null || opts.globalGating != null, 'Expected at least one of gating or globalGating');
-const USE_FIRE_FUNCTION_NAME = 'useFire';
-const EMIT_FREEZE_GLOBAL_GATING = 'true';
 const MacroSchema = v4.z.string();
 const HookSchema = v4.z.object({
     effectKind: v4.z.nativeEnum(Effect),
@@ -31732,20 +31642,10 @@ const EnvironmentConfigSchema = v4.z.object({
     validateExhaustiveEffectDependencies: v4.z
         .enum(['off', 'all', 'missing-only', 'extra-only'])
         .default('off'),
-    enablePreserveExistingManualUseMemo: v4.z.boolean().default(false),
     enableForest: v4.z.boolean().default(false),
-    enableUseTypeAnnotations: v4.z.boolean().default(false),
     flowTypeProvider: v4.z.nullable(v4.z.any()).default(null),
     enableOptionalDependencies: v4.z.boolean().default(true),
-    enableFire: v4.z.boolean().default(false),
     enableNameAnonymousFunctions: v4.z.boolean().default(false),
-    inferEffectDependencies: v4.z
-        .nullable(v4.z.array(v4.z.object({
-        function: ExternalFunctionSchema,
-        autodepsIndex: v4.z.number().min(1, 'autodepsIndex must be > 0'),
-    })))
-        .default(null),
-    inlineJsxTransform: ReactElementSymbolSchema.nullable().default(null),
     validateHooksUsage: v4.z.boolean().default(true),
     validateRefAccessDuringRender: v4.z.boolean().default(true),
     validateNoSetStateInRender: v4.z.boolean().default(true),
@@ -31755,7 +31655,6 @@ const EnvironmentConfigSchema = v4.z.object({
     validateNoDerivedComputationsInEffects_exp: v4.z.boolean().default(false),
     validateNoJSXInTryStatements: v4.z.boolean().default(false),
     validateStaticComponents: v4.z.boolean().default(false),
-    validateMemoizedEffectDependencies: v4.z.boolean().default(false),
     validateNoCapitalizedCalls: v4.z.nullable(v4.z.array(v4.z.string())).default(null),
     validateBlocklistedImports: v4.z.nullable(v4.z.array(v4.z.string())).default(null),
     validateSourceLocations: v4.z.boolean().default(false),
@@ -31763,29 +31662,18 @@ const EnvironmentConfigSchema = v4.z.object({
     validateNoFreezingKnownMutableFunctions: v4.z.boolean().default(false),
     enableAssumeHooksFollowRulesOfReact: v4.z.boolean().default(true),
     enableTransitivelyFreezeFunctionExpressions: v4.z.boolean().default(true),
-    enableEmitFreeze: ExternalFunctionSchema.nullable().default(null),
     enableEmitHookGuards: ExternalFunctionSchema.nullable().default(null),
-    enableInstructionReordering: v4.z.boolean().default(false),
     enableFunctionOutlining: v4.z.boolean().default(true),
     enableJsxOutlining: v4.z.boolean().default(false),
     enableEmitInstrumentForget: InstrumentationSchema.nullable().default(null),
     assertValidMutableRanges: v4.z.boolean().default(false),
-    enableChangeVariableCodegen: v4.z.boolean().default(false),
-    enableMemoizationComments: v4.z.boolean().default(false),
     throwUnknownException__testonly: v4.z.boolean().default(false),
-    enableTreatFunctionDepsAsConditional: v4.z.boolean().default(false),
-    disableMemoizationForDebugging: v4.z.boolean().default(false),
-    enableChangeDetectionForDebugging: ExternalFunctionSchema.nullable().default(null),
     enableCustomTypeDefinitionForReanimated: v4.z.boolean().default(false),
-    hookPattern: v4.z.string().nullable().default(null),
     enableTreatRefLikeIdentifiersAsRefs: v4.z.boolean().default(true),
     enableTreatSetIdentifiersAsStateSetters: v4.z.boolean().default(false),
-    lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
     validateNoVoidUseMemo: v4.z.boolean().default(true),
-    validateNoDynamicallyCreatedComponentsOrHooks: v4.z.boolean().default(false),
     enableAllowSetStateFromRefsInEffects: v4.z.boolean().default(true),
     enableVerboseNoSetStateInEffect: v4.z.boolean().default(false),
-    enableInferEventHandlers: v4.z.boolean().default(false),
 });
 class Environment {
     constructor(scope, fnType, outputMode, config, contextIdentifiers, parentFunction, logger, filename, code, programContext) {
@@ -31798,7 +31686,6 @@ class Environment {
         _Environment_nextScope.set(this, 0);
         _Environment_scope.set(this, void 0);
         _Environment_outlinedFunctions.set(this, []);
-        this.inferredEffectLocations = new Set();
         _Environment_contextIdentifiers.set(this, void 0);
         _Environment_hoistedIdentifiers.set(this, void 0);
         _Environment_flowTypeEnvironment.set(this, void 0);
@@ -31812,17 +31699,6 @@ class Environment {
         this.programContext = programContext;
         __classPrivateFieldSet(this, _Environment_shapes, new Map(DEFAULT_SHAPES), "f");
         __classPrivateFieldSet(this, _Environment_globals, new Map(DEFAULT_GLOBALS), "f");
-        this.hasFireRewrite = false;
-        this.hasInferredEffect = false;
-        if (config.disableMemoizationForDebugging &&
-            config.enableChangeDetectionForDebugging != null) {
-            CompilerError.throwInvalidConfig({
-                reason: `Invalid environment config: the 'disableMemoizationForDebugging' and 'enableChangeDetectionForDebugging' options cannot be used together`,
-                description: null,
-                loc: null,
-                suggestions: null,
-            });
-        }
         for (const [hookName, hook] of this.config.customHooks) {
             CompilerError.invariant(!__classPrivateFieldGet(this, _Environment_globals, "f").has(hookName), {
                 reason: `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
@@ -31957,26 +31833,17 @@ class Environment {
         return __classPrivateFieldGet(this, _Environment_outlinedFunctions, "f");
     }
     getGlobalDeclaration(binding, loc) {
-        var _a, _b, _c, _d;
-        if (this.config.hookPattern != null) {
-            const match = new RegExp(this.config.hookPattern).exec(binding.name);
-            if (match != null &&
-                typeof match[1] === 'string' &&
-                isHookName$2(match[1])) {
-                const resolvedName = match[1];
-                return (_a = __classPrivateFieldGet(this, _Environment_globals, "f").get(resolvedName)) !== null && _a !== void 0 ? _a : __classPrivateFieldGet(this, _Environment_instances, "m", _Environment_getCustomHookType).call(this);
-            }
-        }
+        var _a, _b, _c;
         switch (binding.kind) {
             case 'ModuleLocal': {
                 return isHookName$2(binding.name) ? __classPrivateFieldGet(this, _Environment_instances, "m", _Environment_getCustomHookType).call(this) : null;
             }
             case 'Global': {
-                return ((_b = __classPrivateFieldGet(this, _Environment_globals, "f").get(binding.name)) !== null && _b !== void 0 ? _b : (isHookName$2(binding.name) ? __classPrivateFieldGet(this, _Environment_instances, "m", _Environment_getCustomHookType).call(this) : null));
+                return ((_a = __classPrivateFieldGet(this, _Environment_globals, "f").get(binding.name)) !== null && _a !== void 0 ? _a : (isHookName$2(binding.name) ? __classPrivateFieldGet(this, _Environment_instances, "m", _Environment_getCustomHookType).call(this) : null));
             }
             case 'ImportSpecifier': {
                 if (__classPrivateFieldGet(this, _Environment_instances, "m", _Environment_isKnownReactModule).call(this, binding.module)) {
-                    return ((_c = __classPrivateFieldGet(this, _Environment_globals, "f").get(binding.imported)) !== null && _c !== void 0 ? _c : (isHookName$2(binding.imported) || isHookName$2(binding.name)
+                    return ((_b = __classPrivateFieldGet(this, _Environment_globals, "f").get(binding.imported)) !== null && _b !== void 0 ? _b : (isHookName$2(binding.imported) || isHookName$2(binding.name)
                         ? __classPrivateFieldGet(this, _Environment_instances, "m", _Environment_getCustomHookType).call(this)
                         : null));
                 }
@@ -32005,7 +31872,7 @@ class Environment {
             case 'ImportDefault':
             case 'ImportNamespace': {
                 if (__classPrivateFieldGet(this, _Environment_instances, "m", _Environment_isKnownReactModule).call(this, binding.module)) {
-                    return ((_d = __classPrivateFieldGet(this, _Environment_globals, "f").get(binding.name)) !== null && _d !== void 0 ? _d : (isHookName$2(binding.name) ? __classPrivateFieldGet(this, _Environment_instances, "m", _Environment_getCustomHookType).call(this) : null));
+                    return ((_c = __classPrivateFieldGet(this, _Environment_globals, "f").get(binding.name)) !== null && _c !== void 0 ? _c : (isHookName$2(binding.name) ? __classPrivateFieldGet(this, _Environment_instances, "m", _Environment_getCustomHookType).call(this) : null));
                 }
                 else {
                     const moduleType = __classPrivateFieldGet(this, _Environment_instances, "m", _Environment_resolveModuleType).call(this, binding.module, loc);
@@ -32927,7 +32794,7 @@ function findContextIdentifiers(func) {
             var _a;
             const currentFn = (_a = state.currentFn.at(-1)) !== null && _a !== void 0 ? _a : null;
             if (path.isReferencedIdentifier()) {
-                handleIdentifier$1(currentFn, state.identifiers, path);
+                handleIdentifier(currentFn, state.identifiers, path);
             }
         },
     }, state);
@@ -32942,7 +32809,7 @@ function findContextIdentifiers(func) {
     }
     return result;
 }
-function handleIdentifier$1(currentFn, identifiers, path) {
+function handleIdentifier(currentFn, identifiers, path) {
     const name = path.node.name;
     const binding = path.scope.getBinding(name);
     if (binding == null) {
@@ -34243,527 +34110,6 @@ function instructionMayThrow(instr) {
     }
 }
 
-function inlineJsxTransform(fn, inlineJsxTransformConfig) {
-    var _a;
-    const inlinedJsxDeclarations = new Map();
-    for (const [_, currentBlock] of [...fn.body.blocks]) {
-        let fallthroughBlockInstructions = null;
-        const instructionCount = currentBlock.instructions.length;
-        for (let i = 0; i < instructionCount; i++) {
-            const instr = currentBlock.instructions[i];
-            if (currentBlock.kind === 'value') {
-                (_a = fn.env.logger) === null || _a === void 0 ? void 0 : _a.logEvent(fn.env.filename, {
-                    kind: 'CompileDiagnostic',
-                    fnLoc: null,
-                    detail: {
-                        category: ErrorCategory.Todo,
-                        reason: 'JSX Inlining is not supported on value blocks',
-                        loc: instr.loc,
-                    },
-                });
-                continue;
-            }
-            switch (instr.value.kind) {
-                case 'JsxExpression':
-                case 'JsxFragment': {
-                    const currentBlockInstructions = currentBlock.instructions.slice(0, i);
-                    const thenBlockInstructions = currentBlock.instructions.slice(i, i + 1);
-                    const elseBlockInstructions = [];
-                    fallthroughBlockInstructions !== null && fallthroughBlockInstructions !== void 0 ? fallthroughBlockInstructions : (fallthroughBlockInstructions = currentBlock.instructions.slice(i + 1));
-                    const fallthroughBlockId = fn.env.nextBlockId;
-                    const fallthroughBlock = {
-                        kind: currentBlock.kind,
-                        id: fallthroughBlockId,
-                        instructions: fallthroughBlockInstructions,
-                        terminal: currentBlock.terminal,
-                        preds: new Set(),
-                        phis: new Set(),
-                    };
-                    const varPlace = createTemporaryPlace(fn.env, instr.value.loc);
-                    promoteTemporary(varPlace.identifier);
-                    const varLValuePlace = createTemporaryPlace(fn.env, instr.value.loc);
-                    const thenVarPlace = Object.assign(Object.assign({}, varPlace), { identifier: forkTemporaryIdentifier(fn.env.nextIdentifierId, varPlace.identifier) });
-                    const elseVarPlace = Object.assign(Object.assign({}, varPlace), { identifier: forkTemporaryIdentifier(fn.env.nextIdentifierId, varPlace.identifier) });
-                    const varInstruction = {
-                        id: makeInstructionId(0),
-                        lvalue: Object.assign({}, varLValuePlace),
-                        value: {
-                            kind: 'DeclareLocal',
-                            lvalue: { place: Object.assign({}, varPlace), kind: InstructionKind.Let },
-                            type: null,
-                            loc: instr.value.loc,
-                        },
-                        effects: null,
-                        loc: instr.loc,
-                    };
-                    currentBlockInstructions.push(varInstruction);
-                    const devGlobalPlace = createTemporaryPlace(fn.env, instr.value.loc);
-                    const devGlobalInstruction = {
-                        id: makeInstructionId(0),
-                        lvalue: Object.assign(Object.assign({}, devGlobalPlace), { effect: Effect.Mutate }),
-                        value: {
-                            kind: 'LoadGlobal',
-                            binding: {
-                                kind: 'Global',
-                                name: inlineJsxTransformConfig.globalDevVar,
-                            },
-                            loc: instr.value.loc,
-                        },
-                        effects: null,
-                        loc: instr.loc,
-                    };
-                    currentBlockInstructions.push(devGlobalInstruction);
-                    const thenBlockId = fn.env.nextBlockId;
-                    const elseBlockId = fn.env.nextBlockId;
-                    const ifTerminal = {
-                        kind: 'if',
-                        test: Object.assign(Object.assign({}, devGlobalPlace), { effect: Effect.Read }),
-                        consequent: thenBlockId,
-                        alternate: elseBlockId,
-                        fallthrough: fallthroughBlockId,
-                        loc: instr.loc,
-                        id: makeInstructionId(0),
-                    };
-                    currentBlock.instructions = currentBlockInstructions;
-                    currentBlock.terminal = ifTerminal;
-                    const thenBlock = {
-                        id: thenBlockId,
-                        instructions: thenBlockInstructions,
-                        kind: 'block',
-                        phis: new Set(),
-                        preds: new Set(),
-                        terminal: {
-                            kind: 'goto',
-                            block: fallthroughBlockId,
-                            variant: GotoVariant.Break,
-                            id: makeInstructionId(0),
-                            loc: instr.loc,
-                        },
-                    };
-                    fn.body.blocks.set(thenBlockId, thenBlock);
-                    const resassignElsePlace = createTemporaryPlace(fn.env, instr.value.loc);
-                    const reassignElseInstruction = {
-                        id: makeInstructionId(0),
-                        lvalue: Object.assign({}, resassignElsePlace),
-                        value: {
-                            kind: 'StoreLocal',
-                            lvalue: {
-                                place: elseVarPlace,
-                                kind: InstructionKind.Reassign,
-                            },
-                            value: Object.assign({}, instr.lvalue),
-                            type: null,
-                            loc: instr.value.loc,
-                        },
-                        effects: null,
-                        loc: instr.loc,
-                    };
-                    thenBlockInstructions.push(reassignElseInstruction);
-                    const elseBlockTerminal = {
-                        kind: 'goto',
-                        block: fallthroughBlockId,
-                        variant: GotoVariant.Break,
-                        id: makeInstructionId(0),
-                        loc: instr.loc,
-                    };
-                    const elseBlock = {
-                        id: elseBlockId,
-                        instructions: elseBlockInstructions,
-                        kind: 'block',
-                        phis: new Set(),
-                        preds: new Set(),
-                        terminal: elseBlockTerminal,
-                    };
-                    fn.body.blocks.set(elseBlockId, elseBlock);
-                    const { refProperty, keyProperty, propsProperty } = createPropsProperties(fn, instr, elseBlockInstructions, instr.value.kind === 'JsxExpression' ? instr.value.props : [], instr.value.children);
-                    const reactElementInstructionPlace = createTemporaryPlace(fn.env, instr.value.loc);
-                    const reactElementInstruction = {
-                        id: makeInstructionId(0),
-                        lvalue: Object.assign(Object.assign({}, reactElementInstructionPlace), { effect: Effect.Store }),
-                        value: {
-                            kind: 'ObjectExpression',
-                            properties: [
-                                createSymbolProperty(fn, instr, elseBlockInstructions, '$$typeof', inlineJsxTransformConfig.elementSymbol),
-                                instr.value.kind === 'JsxExpression'
-                                    ? createTagProperty(fn, instr, elseBlockInstructions, instr.value.tag)
-                                    : createSymbolProperty(fn, instr, elseBlockInstructions, 'type', 'react.fragment'),
-                                refProperty,
-                                keyProperty,
-                                propsProperty,
-                            ],
-                            loc: instr.value.loc,
-                        },
-                        effects: null,
-                        loc: instr.loc,
-                    };
-                    elseBlockInstructions.push(reactElementInstruction);
-                    const reassignConditionalInstruction = {
-                        id: makeInstructionId(0),
-                        lvalue: Object.assign({}, createTemporaryPlace(fn.env, instr.value.loc)),
-                        value: {
-                            kind: 'StoreLocal',
-                            lvalue: {
-                                place: Object.assign({}, elseVarPlace),
-                                kind: InstructionKind.Reassign,
-                            },
-                            value: Object.assign({}, reactElementInstruction.lvalue),
-                            type: null,
-                            loc: instr.value.loc,
-                        },
-                        effects: null,
-                        loc: instr.loc,
-                    };
-                    elseBlockInstructions.push(reassignConditionalInstruction);
-                    const operands = new Map();
-                    operands.set(thenBlockId, Object.assign({}, elseVarPlace));
-                    operands.set(elseBlockId, Object.assign({}, thenVarPlace));
-                    const phiIdentifier = forkTemporaryIdentifier(fn.env.nextIdentifierId, varPlace.identifier);
-                    const phiPlace = Object.assign(Object.assign({}, createTemporaryPlace(fn.env, instr.value.loc)), { identifier: phiIdentifier });
-                    const phis = new Set([
-                        {
-                            kind: 'Phi',
-                            operands,
-                            place: phiPlace,
-                        },
-                    ]);
-                    fallthroughBlock.phis = phis;
-                    fn.body.blocks.set(fallthroughBlockId, fallthroughBlock);
-                    inlinedJsxDeclarations.set(instr.lvalue.identifier.declarationId, {
-                        identifier: phiIdentifier,
-                        blockIdsToIgnore: new Set([thenBlockId, elseBlockId]),
-                    });
-                    break;
-                }
-                case 'FunctionExpression':
-                case 'ObjectMethod': {
-                    inlineJsxTransform(instr.value.loweredFunc.func, inlineJsxTransformConfig);
-                    break;
-                }
-            }
-        }
-    }
-    for (const [blockId, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            mapInstructionOperands(instr, place => handlePlace(place, blockId, inlinedJsxDeclarations));
-            mapInstructionLValues(instr, lvalue => handlelValue(lvalue, blockId, inlinedJsxDeclarations));
-            mapInstructionValueOperands(instr.value, place => handlePlace(place, blockId, inlinedJsxDeclarations));
-        }
-        mapTerminalOperands(block.terminal, place => handlePlace(place, blockId, inlinedJsxDeclarations));
-        if (block.terminal.kind === 'scope') {
-            const scope = block.terminal.scope;
-            for (const dep of scope.dependencies) {
-                dep.identifier = handleIdentifier(dep.identifier, inlinedJsxDeclarations);
-            }
-            for (const [origId, decl] of [...scope.declarations]) {
-                const newDecl = handleIdentifier(decl.identifier, inlinedJsxDeclarations);
-                if (newDecl.id !== origId) {
-                    scope.declarations.delete(origId);
-                    scope.declarations.set(decl.identifier.id, {
-                        identifier: newDecl,
-                        scope: decl.scope,
-                    });
-                }
-            }
-        }
-    }
-    reversePostorderBlocks(fn.body);
-    markPredecessors(fn.body);
-    markInstructionIds(fn.body);
-    fixScopeAndIdentifierRanges(fn.body);
-}
-function createSymbolProperty(fn, instr, nextInstructions, propertyName, symbolName) {
-    const symbolPlace = createTemporaryPlace(fn.env, instr.value.loc);
-    const symbolInstruction = {
-        id: makeInstructionId(0),
-        lvalue: Object.assign(Object.assign({}, symbolPlace), { effect: Effect.Mutate }),
-        value: {
-            kind: 'LoadGlobal',
-            binding: { kind: 'Global', name: 'Symbol' },
-            loc: instr.value.loc,
-        },
-        effects: null,
-        loc: instr.loc,
-    };
-    nextInstructions.push(symbolInstruction);
-    const symbolForPlace = createTemporaryPlace(fn.env, instr.value.loc);
-    const symbolForInstruction = {
-        id: makeInstructionId(0),
-        lvalue: Object.assign(Object.assign({}, symbolForPlace), { effect: Effect.Read }),
-        value: {
-            kind: 'PropertyLoad',
-            object: Object.assign({}, symbolInstruction.lvalue),
-            property: makePropertyLiteral('for'),
-            loc: instr.value.loc,
-        },
-        effects: null,
-        loc: instr.loc,
-    };
-    nextInstructions.push(symbolForInstruction);
-    const symbolValuePlace = createTemporaryPlace(fn.env, instr.value.loc);
-    const symbolValueInstruction = {
-        id: makeInstructionId(0),
-        lvalue: Object.assign(Object.assign({}, symbolValuePlace), { effect: Effect.Mutate }),
-        value: {
-            kind: 'Primitive',
-            value: symbolName,
-            loc: instr.value.loc,
-        },
-        effects: null,
-        loc: instr.loc,
-    };
-    nextInstructions.push(symbolValueInstruction);
-    const $$typeofPlace = createTemporaryPlace(fn.env, instr.value.loc);
-    const $$typeofInstruction = {
-        id: makeInstructionId(0),
-        lvalue: Object.assign(Object.assign({}, $$typeofPlace), { effect: Effect.Mutate }),
-        value: {
-            kind: 'MethodCall',
-            receiver: symbolInstruction.lvalue,
-            property: symbolForInstruction.lvalue,
-            args: [symbolValueInstruction.lvalue],
-            loc: instr.value.loc,
-        },
-        effects: null,
-        loc: instr.loc,
-    };
-    const $$typeofProperty = {
-        kind: 'ObjectProperty',
-        key: { name: propertyName, kind: 'string' },
-        type: 'property',
-        place: Object.assign(Object.assign({}, $$typeofPlace), { effect: Effect.Capture }),
-    };
-    nextInstructions.push($$typeofInstruction);
-    return $$typeofProperty;
-}
-function createTagProperty(fn, instr, nextInstructions, componentTag) {
-    let tagProperty;
-    switch (componentTag.kind) {
-        case 'BuiltinTag': {
-            const tagPropertyPlace = createTemporaryPlace(fn.env, instr.value.loc);
-            const tagInstruction = {
-                id: makeInstructionId(0),
-                lvalue: Object.assign(Object.assign({}, tagPropertyPlace), { effect: Effect.Mutate }),
-                value: {
-                    kind: 'Primitive',
-                    value: componentTag.name,
-                    loc: instr.value.loc,
-                },
-                effects: null,
-                loc: instr.loc,
-            };
-            tagProperty = {
-                kind: 'ObjectProperty',
-                key: { name: 'type', kind: 'string' },
-                type: 'property',
-                place: Object.assign(Object.assign({}, tagPropertyPlace), { effect: Effect.Capture }),
-            };
-            nextInstructions.push(tagInstruction);
-            break;
-        }
-        case 'Identifier': {
-            tagProperty = {
-                kind: 'ObjectProperty',
-                key: { name: 'type', kind: 'string' },
-                type: 'property',
-                place: Object.assign(Object.assign({}, componentTag), { effect: Effect.Capture }),
-            };
-            break;
-        }
-    }
-    return tagProperty;
-}
-function createPropsProperties(fn, instr, nextInstructions, propAttributes, children) {
-    let refProperty;
-    let keyProperty;
-    const props = [];
-    const jsxAttributesWithoutKey = propAttributes.filter(p => p.kind === 'JsxAttribute' && p.name !== 'key');
-    const jsxSpreadAttributes = propAttributes.filter(p => p.kind === 'JsxSpreadAttribute');
-    const spreadPropsOnly = jsxAttributesWithoutKey.length === 0 && jsxSpreadAttributes.length === 1;
-    propAttributes.forEach(prop => {
-        switch (prop.kind) {
-            case 'JsxAttribute': {
-                switch (prop.name) {
-                    case 'key': {
-                        keyProperty = {
-                            kind: 'ObjectProperty',
-                            key: { name: 'key', kind: 'string' },
-                            type: 'property',
-                            place: Object.assign({}, prop.place),
-                        };
-                        break;
-                    }
-                    case 'ref': {
-                        refProperty = {
-                            kind: 'ObjectProperty',
-                            key: { name: 'ref', kind: 'string' },
-                            type: 'property',
-                            place: Object.assign({}, prop.place),
-                        };
-                        const refPropProperty = {
-                            kind: 'ObjectProperty',
-                            key: { name: 'ref', kind: 'string' },
-                            type: 'property',
-                            place: Object.assign({}, prop.place),
-                        };
-                        props.push(refPropProperty);
-                        break;
-                    }
-                    default: {
-                        const attributeProperty = {
-                            kind: 'ObjectProperty',
-                            key: { name: prop.name, kind: 'string' },
-                            type: 'property',
-                            place: Object.assign({}, prop.place),
-                        };
-                        props.push(attributeProperty);
-                    }
-                }
-                break;
-            }
-            case 'JsxSpreadAttribute': {
-                props.push({
-                    kind: 'Spread',
-                    place: Object.assign({}, prop.argument),
-                });
-                break;
-            }
-        }
-    });
-    const propsPropertyPlace = createTemporaryPlace(fn.env, instr.value.loc);
-    if (children) {
-        let childrenPropProperty;
-        if (children.length === 1) {
-            childrenPropProperty = {
-                kind: 'ObjectProperty',
-                key: { name: 'children', kind: 'string' },
-                type: 'property',
-                place: Object.assign(Object.assign({}, children[0]), { effect: Effect.Capture }),
-            };
-        }
-        else {
-            const childrenPropPropertyPlace = createTemporaryPlace(fn.env, instr.value.loc);
-            const childrenPropInstruction = {
-                id: makeInstructionId(0),
-                lvalue: Object.assign(Object.assign({}, childrenPropPropertyPlace), { effect: Effect.Mutate }),
-                value: {
-                    kind: 'ArrayExpression',
-                    elements: [...children],
-                    loc: instr.value.loc,
-                },
-                effects: null,
-                loc: instr.loc,
-            };
-            nextInstructions.push(childrenPropInstruction);
-            childrenPropProperty = {
-                kind: 'ObjectProperty',
-                key: { name: 'children', kind: 'string' },
-                type: 'property',
-                place: Object.assign(Object.assign({}, childrenPropPropertyPlace), { effect: Effect.Capture }),
-            };
-        }
-        props.push(childrenPropProperty);
-    }
-    if (refProperty == null) {
-        const refPropertyPlace = createTemporaryPlace(fn.env, instr.value.loc);
-        const refInstruction = {
-            id: makeInstructionId(0),
-            lvalue: Object.assign(Object.assign({}, refPropertyPlace), { effect: Effect.Mutate }),
-            value: {
-                kind: 'Primitive',
-                value: null,
-                loc: instr.value.loc,
-            },
-            effects: null,
-            loc: instr.loc,
-        };
-        refProperty = {
-            kind: 'ObjectProperty',
-            key: { name: 'ref', kind: 'string' },
-            type: 'property',
-            place: Object.assign(Object.assign({}, refPropertyPlace), { effect: Effect.Capture }),
-        };
-        nextInstructions.push(refInstruction);
-    }
-    if (keyProperty == null) {
-        const keyPropertyPlace = createTemporaryPlace(fn.env, instr.value.loc);
-        const keyInstruction = {
-            id: makeInstructionId(0),
-            lvalue: Object.assign(Object.assign({}, keyPropertyPlace), { effect: Effect.Mutate }),
-            value: {
-                kind: 'Primitive',
-                value: null,
-                loc: instr.value.loc,
-            },
-            effects: null,
-            loc: instr.loc,
-        };
-        keyProperty = {
-            kind: 'ObjectProperty',
-            key: { name: 'key', kind: 'string' },
-            type: 'property',
-            place: Object.assign(Object.assign({}, keyPropertyPlace), { effect: Effect.Capture }),
-        };
-        nextInstructions.push(keyInstruction);
-    }
-    let propsProperty;
-    if (spreadPropsOnly) {
-        const spreadProp = jsxSpreadAttributes[0];
-        CompilerError.invariant(spreadProp.kind === 'JsxSpreadAttribute', {
-            reason: 'Spread prop attribute must be of kind JSXSpreadAttribute',
-            loc: instr.loc,
-        });
-        propsProperty = {
-            kind: 'ObjectProperty',
-            key: { name: 'props', kind: 'string' },
-            type: 'property',
-            place: Object.assign(Object.assign({}, spreadProp.argument), { effect: Effect.Mutate }),
-        };
-    }
-    else {
-        const propsInstruction = {
-            id: makeInstructionId(0),
-            lvalue: Object.assign(Object.assign({}, propsPropertyPlace), { effect: Effect.Mutate }),
-            value: {
-                kind: 'ObjectExpression',
-                properties: props,
-                loc: instr.value.loc,
-            },
-            effects: null,
-            loc: instr.loc,
-        };
-        propsProperty = {
-            kind: 'ObjectProperty',
-            key: { name: 'props', kind: 'string' },
-            type: 'property',
-            place: Object.assign(Object.assign({}, propsPropertyPlace), { effect: Effect.Capture }),
-        };
-        nextInstructions.push(propsInstruction);
-    }
-    return { refProperty, keyProperty, propsProperty };
-}
-function handlePlace(place, blockId, inlinedJsxDeclarations) {
-    const inlinedJsxDeclaration = inlinedJsxDeclarations.get(place.identifier.declarationId);
-    if (inlinedJsxDeclaration == null ||
-        inlinedJsxDeclaration.blockIdsToIgnore.has(blockId)) {
-        return place;
-    }
-    return Object.assign(Object.assign({}, place), { identifier: inlinedJsxDeclaration.identifier });
-}
-function handlelValue(lvalue, blockId, inlinedJsxDeclarations) {
-    const inlinedJsxDeclaration = inlinedJsxDeclarations.get(lvalue.identifier.declarationId);
-    if (inlinedJsxDeclaration == null ||
-        inlinedJsxDeclaration.blockIdsToIgnore.has(blockId)) {
-        return lvalue;
-    }
-    return Object.assign(Object.assign({}, lvalue), { identifier: inlinedJsxDeclaration.identifier });
-}
-function handleIdentifier(identifier, inlinedJsxDeclarations) {
-    const inlinedJsxDeclaration = inlinedJsxDeclarations.get(identifier.declarationId);
-    return inlinedJsxDeclaration == null
-        ? identifier
-        : inlinedJsxDeclaration.identifier;
-}
-
 function findScopesToMerge(fn) {
     const objectMethodDecls = new Set();
     const mergeScopesBuilder = new DisjointSet();
@@ -35333,9 +34679,9 @@ class CheckInstructionsAgainstScopesVisitor extends ReactiveFunctionVisitor {
 }
 
 function assertWellFormedBreakTargets(fn) {
-    visitReactiveFunction(fn, new Visitor$a(), new Set());
+    visitReactiveFunction(fn, new Visitor$8(), new Set());
 }
-let Visitor$a = class Visitor extends ReactiveFunctionVisitor {
+let Visitor$8 = class Visitor extends ReactiveFunctionVisitor {
     visitTerminal(stmt, seenLabels) {
         if (stmt.label != null) {
             seenLabels.add(stmt.label.id);
@@ -35352,7 +34698,7 @@ let Visitor$a = class Visitor extends ReactiveFunctionVisitor {
 
 var _Context_nextScheduleId, _Context_scheduled, _Context_catchHandlers, _Context_controlFlowStack;
 function buildReactiveFunction(fn) {
-    const cx = new Context$3(fn.body);
+    const cx = new Context$2(fn.body);
     const driver = new Driver(cx);
     const body = driver.traverseBlock(cx.block(fn.body.entry));
     return {
@@ -36253,7 +35599,7 @@ class Driver {
         };
     }
 }
-let Context$3 = class Context {
+let Context$2 = class Context {
     constructor(ir) {
         _Context_nextScheduleId.set(this, 0);
         this.emitted = new Set();
@@ -36588,7 +35934,7 @@ const MEMO_CACHE_SENTINEL = 'react.memo_cache_sentinel';
 const EARLY_RETURN_SENTINEL = 'react.early_return_sentinel';
 function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
     var _a, _b, _c;
-    const cx = new Context$2(fn.env, (_a = fn.id) !== null && _a !== void 0 ? _a : '[[ anonymous ]]', uniqueIdentifiers, fbtOperands, null);
+    const cx = new Context$1(fn.env, (_a = fn.id) !== null && _a !== void 0 ? _a : '[[ anonymous ]]', uniqueIdentifiers, fbtOperands, null);
     let fastRefreshState = null;
     if (fn.env.config.enableResetCacheOnSourceFileChanges &&
         fn.env.code !== null) {
@@ -36675,7 +36021,7 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
         pruneUnusedLValues(reactiveFunction);
         pruneHoistedContexts(reactiveFunction);
         const identifiers = renameVariables(reactiveFunction);
-        const codegen = codegenReactiveFunction(new Context$2(cx.env, (_c = reactiveFunction.id) !== null && _c !== void 0 ? _c : '[[ anonymous ]]', identifiers, cx.fbtOperands), reactiveFunction);
+        const codegen = codegenReactiveFunction(new Context$1(cx.env, (_c = reactiveFunction.id) !== null && _c !== void 0 ? _c : '[[ anonymous ]]', identifiers, cx.fbtOperands), reactiveFunction);
         if (codegen.isErr()) {
             return codegen;
         }
@@ -36720,9 +36066,6 @@ function codegenReactiveFunction(cx, fn) {
         prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
         prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
         outlined: [],
-        hasFireRewrite: fn.env.hasFireRewrite,
-        hasInferredEffect: fn.env.hasInferredEffect,
-        inferredEffectLocations: fn.env.inferredEffectLocations,
     });
 }
 class CountMemoBlockVisitor extends ReactiveFunctionVisitor {
@@ -36753,7 +36096,7 @@ function convertParameter(param) {
         return libExports$1.restElement(convertIdentifier(param.place.identifier));
     }
 }
-let Context$2 = class Context {
+let Context$1 = class Context {
     constructor(env, fnName, uniqueIdentifiers, fbtOperands, temporaries = null) {
         _Context_nextCacheIndex.set(this, 0);
         _Context_declarations.set(this, new Set());
@@ -36855,43 +36198,15 @@ function codegenBlockNoReset(cx, block) {
     }
     return libExports$1.blockStatement(statements);
 }
-function wrapCacheDep(cx, value) {
-    if (cx.env.config.enableEmitFreeze != null &&
-        cx.env.outputMode === 'client') {
-        const emitFreezeIdentifier = cx.env.programContext.addImportSpecifier(cx.env.config.enableEmitFreeze).name;
-        cx.env.programContext
-            .assertGlobalBinding(EMIT_FREEZE_GLOBAL_GATING, cx.env.scope)
-            .unwrap();
-        return libExports$1.conditionalExpression(libExports$1.identifier(EMIT_FREEZE_GLOBAL_GATING), libExports$1.callExpression(libExports$1.identifier(emitFreezeIdentifier), [
-            value,
-            libExports$1.stringLiteral(cx.fnName),
-        ]), value);
-    }
-    else {
-        return value;
-    }
-}
 function codegenReactiveScope(cx, statements, scope, block) {
     const cacheStoreStatements = [];
     const cacheLoadStatements = [];
     const cacheLoads = [];
     const changeExpressions = [];
-    const changeExpressionComments = [];
-    const outputComments = [];
     for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
         const index = cx.nextCacheIndex;
-        changeExpressionComments.push(printDependencyComment(dep));
         const comparison = libExports$1.binaryExpression('!==', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true), codegenDependency(cx, dep));
-        if (cx.env.config.enableChangeVariableCodegen) {
-            const changeIdentifier = libExports$1.identifier(cx.synthesizeName(`c_${index}`));
-            statements.push(libExports$1.variableDeclaration('const', [
-                libExports$1.variableDeclarator(changeIdentifier, comparison),
-            ]));
-            changeExpressions.push(changeIdentifier);
-        }
-        else {
-            changeExpressions.push(comparison);
-        }
+        changeExpressions.push(comparison);
         cacheStoreStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true), codegenDependency(cx, dep))));
     }
     let firstOutputIndex = null;
@@ -36906,11 +36221,10 @@ function codegenReactiveScope(cx, statements, scope, block) {
             loc: GeneratedSource,
         });
         const name = convertIdentifier(identifier);
-        outputComments.push(name.name);
         if (!cx.hasDeclared(identifier)) {
             statements.push(libExports$1.variableDeclaration('let', [createVariableDeclarator(name, null)]));
         }
-        cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
+        cacheLoads.push({ name, index, value: name });
         cx.declare(identifier);
     }
     for (const reassignment of scope.reassignments) {
@@ -36919,8 +36233,7 @@ function codegenReactiveScope(cx, statements, scope, block) {
             firstOutputIndex = index;
         }
         const name = convertIdentifier(reassignment);
-        outputComments.push(name.name);
-        cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
+        cacheLoads.push({ name, index, value: name });
     }
     let testCondition = changeExpressions.reduce((acc, ident) => {
         if (acc == null) {
@@ -36936,92 +36249,14 @@ function codegenReactiveScope(cx, statements, scope, block) {
         });
         testCondition = libExports$1.binaryExpression('===', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(firstOutputIndex), true), libExports$1.callExpression(libExports$1.memberExpression(libExports$1.identifier('Symbol'), libExports$1.identifier('for')), [libExports$1.stringLiteral(MEMO_CACHE_SENTINEL)]));
     }
-    if (cx.env.config.disableMemoizationForDebugging) {
-        CompilerError.invariant(cx.env.config.enableChangeDetectionForDebugging == null, {
-            reason: `Expected to not have both change detection enabled and memoization disabled`,
-            description: `Incompatible config options`,
-            loc: GeneratedSource,
-        });
-        testCondition = libExports$1.logicalExpression('||', testCondition, libExports$1.booleanLiteral(true));
-    }
     let computationBlock = codegenBlock(cx, block);
     let memoStatement;
-    const detectionFunction = cx.env.config.enableChangeDetectionForDebugging;
-    if (detectionFunction != null && changeExpressions.length > 0) {
-        const loc = typeof scope.loc === 'symbol'
-            ? 'unknown location'
-            : `(${scope.loc.start.line}:${scope.loc.end.line})`;
-        const importedDetectionFunctionIdentifier = cx.env.programContext.addImportSpecifier(detectionFunction).name;
-        const cacheLoadOldValueStatements = [];
-        const changeDetectionStatements = [];
-        const idempotenceDetectionStatements = [];
-        for (const { name, index, value } of cacheLoads) {
-            const loadName = cx.synthesizeName(`old$${name.name}`);
-            const slot = libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true);
-            cacheStoreStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', slot, value)));
-            cacheLoadOldValueStatements.push(libExports$1.variableDeclaration('let', [
-                libExports$1.variableDeclarator(libExports$1.identifier(loadName), slot),
-            ]));
-            changeDetectionStatements.push(libExports$1.expressionStatement(libExports$1.callExpression(libExports$1.identifier(importedDetectionFunctionIdentifier), [
-                libExports$1.identifier(loadName),
-                libExports$1.cloneNode(name, true),
-                libExports$1.stringLiteral(name.name),
-                libExports$1.stringLiteral(cx.fnName),
-                libExports$1.stringLiteral('cached'),
-                libExports$1.stringLiteral(loc),
-            ])));
-            idempotenceDetectionStatements.push(libExports$1.expressionStatement(libExports$1.callExpression(libExports$1.identifier(importedDetectionFunctionIdentifier), [
-                libExports$1.cloneNode(slot, true),
-                libExports$1.cloneNode(name, true),
-                libExports$1.stringLiteral(name.name),
-                libExports$1.stringLiteral(cx.fnName),
-                libExports$1.stringLiteral('recomputed'),
-                libExports$1.stringLiteral(loc),
-            ])));
-            idempotenceDetectionStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', name, slot)));
-        }
-        const condition = cx.synthesizeName('condition');
-        const recomputationBlock = libExports$1.cloneNode(computationBlock, true);
-        memoStatement = libExports$1.blockStatement([
-            ...computationBlock.body,
-            libExports$1.variableDeclaration('let', [
-                libExports$1.variableDeclarator(libExports$1.identifier(condition), testCondition),
-            ]),
-            libExports$1.ifStatement(libExports$1.unaryExpression('!', libExports$1.identifier(condition)), libExports$1.blockStatement([
-                ...cacheLoadOldValueStatements,
-                ...changeDetectionStatements,
-            ])),
-            ...cacheStoreStatements,
-            libExports$1.ifStatement(libExports$1.identifier(condition), libExports$1.blockStatement([
-                ...recomputationBlock.body,
-                ...idempotenceDetectionStatements,
-            ])),
-        ]);
+    for (const { name, index, value } of cacheLoads) {
+        cacheStoreStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true), value)));
+        cacheLoadStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', name, libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true))));
     }
-    else {
-        for (const { name, index, value } of cacheLoads) {
-            cacheStoreStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true), value)));
-            cacheLoadStatements.push(libExports$1.expressionStatement(libExports$1.assignmentExpression('=', name, libExports$1.memberExpression(libExports$1.identifier(cx.synthesizeName('$')), libExports$1.numericLiteral(index), true))));
-        }
-        computationBlock.body.push(...cacheStoreStatements);
-        memoStatement = libExports$1.ifStatement(testCondition, computationBlock, libExports$1.blockStatement(cacheLoadStatements));
-    }
-    if (cx.env.config.enableMemoizationComments) {
-        if (changeExpressionComments.length) {
-            libExports$1.addComment(memoStatement, 'leading', ` check if ${printDelimitedCommentList(changeExpressionComments, 'or')} changed`, true);
-            libExports$1.addComment(memoStatement, 'leading', ` "useMemo" for ${printDelimitedCommentList(outputComments, 'and')}:`, true);
-        }
-        else {
-            libExports$1.addComment(memoStatement, 'leading', ' cache value with no dependencies', true);
-            libExports$1.addComment(memoStatement, 'leading', ` "useMemo" for ${printDelimitedCommentList(outputComments, 'and')}:`, true);
-        }
-        if (computationBlock.body.length > 0) {
-            libExports$1.addComment(computationBlock.body[0], 'leading', ` Inputs changed, recompute`, true);
-        }
-        if (cacheLoadStatements.length > 0) {
-            libExports$1.addComment(cacheLoadStatements[0], 'leading', ` Inputs did not change, use cached value`, true);
-        }
-    }
+    computationBlock.body.push(...cacheStoreStatements);
+    memoStatement = libExports$1.ifStatement(testCondition, computationBlock, libExports$1.blockStatement(cacheLoadStatements));
     statements.push(memoStatement);
     const earlyReturnValue = scope.earlyReturnValue;
     if (earlyReturnValue !== null) {
@@ -37438,38 +36673,6 @@ function codegenForInit(cx, init) {
         return codegenInstructionValueToExpression(cx, init);
     }
 }
-function printDependencyComment(dependency) {
-    const identifier = convertIdentifier(dependency.identifier);
-    let name = identifier.name;
-    if (dependency.path !== null) {
-        for (const path of dependency.path) {
-            name += `.${path.property}`;
-        }
-    }
-    return name;
-}
-function printDelimitedCommentList(items, finalCompletion) {
-    if (items.length === 2) {
-        return items.join(` ${finalCompletion} `);
-    }
-    else if (items.length <= 1) {
-        return items.join('');
-    }
-    let output = [];
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (i < items.length - 2) {
-            output.push(`${item}, `);
-        }
-        else if (i === items.length - 2) {
-            output.push(`${item}, ${finalCompletion} `);
-        }
-        else {
-            output.push(item);
-        }
-    }
-    return output.join('');
-}
 function codegenDependency(cx, dependency) {
     let object = convertIdentifier(dependency.identifier);
     if (dependency.path.length !== 0) {
@@ -37731,7 +36934,7 @@ function codegenInstructionValue(cx, instrValue) {
                             const reactiveFunction = buildReactiveFunction(loweredFunc.func);
                             pruneUnusedLabels(reactiveFunction);
                             pruneUnusedLValues(reactiveFunction);
-                            const fn = codegenReactiveFunction(new Context$2(cx.env, (_e = reactiveFunction.id) !== null && _e !== void 0 ? _e : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
+                            const fn = codegenReactiveFunction(new Context$1(cx.env, (_e = reactiveFunction.id) !== null && _e !== void 0 ? _e : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
                             const babelNode = libExports$1.objectMethod('method', key, fn.params, fn.body, false);
                             babelNode.async = fn.async;
                             babelNode.generator = fn.generator;
@@ -37859,7 +37062,7 @@ function codegenInstructionValue(cx, instrValue) {
             pruneUnusedLabels(reactiveFunction);
             pruneUnusedLValues(reactiveFunction);
             pruneHoistedContexts(reactiveFunction);
-            const fn = codegenReactiveFunction(new Context$2(cx.env, (_g = reactiveFunction.id) !== null && _g !== void 0 ? _g : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
+            const fn = codegenReactiveFunction(new Context$1(cx.env, (_g = reactiveFunction.id) !== null && _g !== void 0 ? _g : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
             if (instrValue.type === 'ArrowFunctionExpression') {
                 let body = fn.body;
                 if (body.body.length === 1 && loweredFunc.directives.length == 0) {
@@ -38288,7 +37491,7 @@ function extractScopeDeclarationsFromDestructuring(fn) {
         const place = param.kind === 'Identifier' ? param : param.place;
         state.declared.add(place.identifier.declarationId);
     }
-    visitReactiveFunction(fn, new Visitor$9(), state);
+    visitReactiveFunction(fn, new Visitor$7(), state);
 }
 let State$1 = class State {
     constructor(env) {
@@ -38296,7 +37499,7 @@ let State$1 = class State {
         this.env = env;
     }
 };
-let Visitor$9 = class Visitor extends ReactiveFunctionTransform {
+let Visitor$7 = class Visitor extends ReactiveFunctionTransform {
     visitScope(scope, state) {
         for (const [, declaration] of scope.scope.declarations) {
             state.declared.add(declaration.identifier.declarationId);
@@ -39206,12 +38409,12 @@ class Empty {
 const EMPTY = new Empty();
 
 function pruneHoistedContexts(fn) {
-    visitReactiveFunction(fn, new Visitor$8(), {
+    visitReactiveFunction(fn, new Visitor$6(), {
         activeScopes: empty(),
         uninitialized: new Map(),
     });
 }
-let Visitor$8 = class Visitor extends ReactiveFunctionTransform {
+let Visitor$6 = class Visitor extends ReactiveFunctionTransform {
     visitScope(scope, state) {
         state.activeScopes = state.activeScopes.push(new Set(scope.scope.declarations.keys()));
         for (const decl of scope.scope.declarations.values()) {
@@ -39434,7 +38637,7 @@ function inferMutationAliasingEffects(fn, { isFunctionExpression } = {
     }
     queue(fn.body.entry, initialState);
     const hoistedContextDeclarations = findHoistedContextDeclarations(fn);
-    const context = new Context$1(isFunctionExpression, fn, hoistedContextDeclarations, findNonMutatedDestructureSpreads(fn));
+    const context = new Context(isFunctionExpression, fn, hoistedContextDeclarations, findNonMutatedDestructureSpreads(fn));
     let iterationCount = 0;
     while (queuedStates.size !== 0) {
         iterationCount++;
@@ -39491,7 +38694,7 @@ function findHoistedContextDeclarations(fn) {
     }
     return hoisted;
 }
-let Context$1 = class Context {
+class Context {
     constructor(isFunctionExpression, fn, hoistedContextDeclarations, nonMutatingSpreads) {
         this.internedEffects = new Map();
         this.instructionSignatureCache = new Map();
@@ -39517,7 +38720,7 @@ let Context$1 = class Context {
         }
         return interned;
     }
-};
+}
 function findNonMutatedDestructureSpreads(fn) {
     const knownFrozen = new Set();
     if (fn.fnType === 'Component') {
@@ -42139,7 +41342,7 @@ class PruneScopesTransform extends ReactiveFunctionTransform {
     }
 }
 
-let Visitor$7 = class Visitor extends ReactiveFunctionVisitor {
+let Visitor$5 = class Visitor extends ReactiveFunctionVisitor {
     visitLValue(id, lvalue, state) {
         this.visitPlace(id, lvalue, state);
     }
@@ -42162,7 +41365,7 @@ function isStableRefType(identifier, reactiveIdentifiers) {
     return isUseRefType(identifier) && !reactiveIdentifiers.has(identifier.id);
 }
 function collectReactiveIdentifiers(fn) {
-    const visitor = new Visitor$7();
+    const visitor = new Visitor$5();
     const state = new Set();
     visitReactiveFunction(fn, visitor, state);
     return state;
@@ -42170,9 +41373,9 @@ function collectReactiveIdentifiers(fn) {
 
 function pruneNonReactiveDependencies(fn) {
     const reactiveIdentifiers = collectReactiveIdentifiers(fn);
-    visitReactiveFunction(fn, new Visitor$6(), reactiveIdentifiers);
+    visitReactiveFunction(fn, new Visitor$4(), reactiveIdentifiers);
 }
-let Visitor$6 = class Visitor extends ReactiveFunctionVisitor {
+let Visitor$4 = class Visitor extends ReactiveFunctionVisitor {
     visitInstruction(instruction, state) {
         this.traverseInstruction(instruction, state);
         const { lvalue, value } = instruction;
@@ -42245,12 +41448,12 @@ let Visitor$6 = class Visitor extends ReactiveFunctionVisitor {
 
 function pruneUnusedLValues(fn) {
     const lvalues = new Map();
-    visitReactiveFunction(fn, new Visitor$5(), lvalues);
+    visitReactiveFunction(fn, new Visitor$3(), lvalues);
     for (const [, instr] of lvalues) {
         instr.lvalue = null;
     }
 }
-let Visitor$5 = class Visitor extends ReactiveFunctionVisitor {
+let Visitor$3 = class Visitor extends ReactiveFunctionVisitor {
     visitPlace(id, place, state) {
         state.delete(place.identifier.declarationId);
     }
@@ -42340,10 +41543,10 @@ function hasOwnDeclaration(block) {
 
 function collectReferencedGlobals(fn) {
     const identifiers = new Set();
-    visitReactiveFunction(fn, new Visitor$4(), identifiers);
+    visitReactiveFunction(fn, new Visitor$2(), identifiers);
     return identifiers;
 }
-let Visitor$4 = class Visitor extends ReactiveFunctionVisitor {
+let Visitor$2 = class Visitor extends ReactiveFunctionVisitor {
     visitValue(id, value, state) {
         this.traverseValue(id, value, state);
         if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
@@ -42362,7 +41565,7 @@ var _Scopes_instances, _Scopes_seen, _Scopes_stack, _Scopes_globals, _Scopes_pro
 function renameVariables(fn) {
     const globals = collectReferencedGlobals(fn);
     const scopes = new Scopes(globals, fn.env.programContext);
-    renameVariablesImpl(fn, new Visitor$3(), scopes);
+    renameVariablesImpl(fn, new Visitor$1(), scopes);
     return new Set([...scopes.names, ...globals]);
 }
 function renameVariablesImpl(fn, visitor, scopes) {
@@ -42378,7 +41581,7 @@ function renameVariablesImpl(fn, visitor, scopes) {
         visitReactiveFunction(fn, visitor, scopes);
     });
 }
-let Visitor$3 = class Visitor extends ReactiveFunctionVisitor {
+let Visitor$1 = class Visitor extends ReactiveFunctionVisitor {
     visitParam(place, state) {
         state.visit(place.identifier);
     }
@@ -44011,1994 +43214,6 @@ function declareTemporary(env, block, result) {
     });
 }
 
-function collectHoistablePropertyLoads(fn, temporaries, hoistableFromOptionals) {
-    const registry = new PropertyPathRegistry();
-    const knownImmutableIdentifiers = new Set();
-    if (fn.fnType === 'Component' || fn.fnType === 'Hook') {
-        for (const p of fn.params) {
-            if (p.kind === 'Identifier') {
-                knownImmutableIdentifiers.add(p.identifier.id);
-            }
-        }
-    }
-    return collectHoistablePropertyLoadsImpl(fn, {
-        temporaries,
-        knownImmutableIdentifiers,
-        hoistableFromOptionals,
-        registry,
-        nestedFnImmutableContext: null,
-        assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
-            ? new Set()
-            : getAssumedInvokedFunctions(fn),
-    });
-}
-function collectHoistablePropertyLoadsInInnerFn(fnInstr, temporaries, hoistableFromOptionals) {
-    const fn = fnInstr.value.loweredFunc.func;
-    const initialContext = {
-        temporaries,
-        knownImmutableIdentifiers: new Set(),
-        hoistableFromOptionals,
-        registry: new PropertyPathRegistry(),
-        nestedFnImmutableContext: null,
-        assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
-            ? new Set()
-            : getAssumedInvokedFunctions(fn),
-    };
-    const nestedFnImmutableContext = new Set(fn.context
-        .filter(place => isImmutableAtInstr(place.identifier, fnInstr.id, initialContext))
-        .map(place => place.identifier.id));
-    initialContext.nestedFnImmutableContext = nestedFnImmutableContext;
-    return collectHoistablePropertyLoadsImpl(fn, initialContext);
-}
-function collectHoistablePropertyLoadsImpl(fn, context) {
-    const nodes = collectNonNullsInBlocks(fn, context);
-    propagateNonNull(fn, nodes, context.registry);
-    return nodes;
-}
-function keyByScopeId(fn, source) {
-    const keyedByScopeId = new Map();
-    for (const [_, block] of fn.body.blocks) {
-        if (block.terminal.kind === 'scope') {
-            keyedByScopeId.set(block.terminal.scope.id, source.get(block.terminal.block));
-        }
-    }
-    return keyedByScopeId;
-}
-class PropertyPathRegistry {
-    constructor() {
-        this.roots = new Map();
-    }
-    getOrCreateIdentifier(identifier, reactive, loc) {
-        let rootNode = this.roots.get(identifier.id);
-        if (rootNode === undefined) {
-            rootNode = {
-                root: identifier.id,
-                properties: new Map(),
-                optionalProperties: new Map(),
-                fullPath: {
-                    identifier,
-                    reactive,
-                    path: [],
-                    loc,
-                },
-                hasOptional: false,
-                parent: null,
-            };
-            this.roots.set(identifier.id, rootNode);
-        }
-        else {
-            CompilerError.invariant(reactive === rootNode.fullPath.reactive, {
-                reason: '[HoistablePropertyLoads] Found inconsistencies in `reactive` flag when deduping identifier reads within the same scope',
-                loc: identifier.loc,
-            });
-        }
-        return rootNode;
-    }
-    static getOrCreatePropertyEntry(parent, entry) {
-        const map = entry.optional ? parent.optionalProperties : parent.properties;
-        let child = map.get(entry.property);
-        if (child == null) {
-            child = {
-                properties: new Map(),
-                optionalProperties: new Map(),
-                parent: parent,
-                fullPath: {
-                    identifier: parent.fullPath.identifier,
-                    reactive: parent.fullPath.reactive,
-                    path: parent.fullPath.path.concat(entry),
-                    loc: entry.loc,
-                },
-                hasOptional: parent.hasOptional || entry.optional,
-            };
-            map.set(entry.property, child);
-        }
-        return child;
-    }
-    getOrCreateProperty(n) {
-        let currNode = this.getOrCreateIdentifier(n.identifier, n.reactive, n.loc);
-        if (n.path.length === 0) {
-            return currNode;
-        }
-        for (let i = 0; i < n.path.length - 1; i++) {
-            currNode = PropertyPathRegistry.getOrCreatePropertyEntry(currNode, n.path[i]);
-        }
-        return PropertyPathRegistry.getOrCreatePropertyEntry(currNode, n.path.at(-1));
-    }
-}
-function getMaybeNonNullInInstruction(value, context) {
-    var _a, _b, _c;
-    let path = null;
-    if (value.kind === 'PropertyLoad') {
-        path = (_a = context.temporaries.get(value.object.identifier.id)) !== null && _a !== void 0 ? _a : {
-            identifier: value.object.identifier,
-            reactive: value.object.reactive,
-            path: [],
-            loc: value.loc,
-        };
-    }
-    else if (value.kind === 'Destructure') {
-        path = (_b = context.temporaries.get(value.value.identifier.id)) !== null && _b !== void 0 ? _b : null;
-    }
-    else if (value.kind === 'ComputedLoad') {
-        path = (_c = context.temporaries.get(value.object.identifier.id)) !== null && _c !== void 0 ? _c : null;
-    }
-    return path != null ? context.registry.getOrCreateProperty(path) : null;
-}
-function isImmutableAtInstr(identifier, instr, context) {
-    if (context.nestedFnImmutableContext != null) {
-        return context.nestedFnImmutableContext.has(identifier.id);
-    }
-    else {
-        const mutableAtInstr = identifier.mutableRange.end > identifier.mutableRange.start + 1 &&
-            identifier.scope != null &&
-            inRange({
-                id: instr,
-            }, identifier.scope.range);
-        return (!mutableAtInstr || context.knownImmutableIdentifiers.has(identifier.id));
-    }
-}
-function collectNonNullsInBlocks(fn, context) {
-    var _a;
-    const knownNonNullIdentifiers = new Set();
-    if (fn.fnType === 'Component' &&
-        fn.params.length > 0 &&
-        fn.params[0].kind === 'Identifier') {
-        const identifier = fn.params[0].identifier;
-        knownNonNullIdentifiers.add(context.registry.getOrCreateIdentifier(identifier, true, fn.params[0].loc));
-    }
-    const nodes = new Map();
-    for (const [_, block] of fn.body.blocks) {
-        const assumedNonNullObjects = new Set(knownNonNullIdentifiers);
-        const maybeOptionalChain = context.hoistableFromOptionals.get(block.id);
-        if (maybeOptionalChain != null) {
-            assumedNonNullObjects.add(context.registry.getOrCreateProperty(maybeOptionalChain));
-        }
-        for (const instr of block.instructions) {
-            const maybeNonNull = getMaybeNonNullInInstruction(instr.value, context);
-            if (maybeNonNull != null &&
-                isImmutableAtInstr(maybeNonNull.fullPath.identifier, instr.id, context)) {
-                assumedNonNullObjects.add(maybeNonNull);
-            }
-            if (instr.value.kind === 'FunctionExpression') {
-                const innerFn = instr.value.loweredFunc;
-                if (context.assumedInvokedFns.has(innerFn)) {
-                    const innerHoistableMap = collectHoistablePropertyLoadsImpl(innerFn.func, Object.assign(Object.assign({}, context), { nestedFnImmutableContext: (_a = context.nestedFnImmutableContext) !== null && _a !== void 0 ? _a : new Set(innerFn.func.context
-                            .filter(place => isImmutableAtInstr(place.identifier, instr.id, context))
-                            .map(place => place.identifier.id)) }));
-                    const innerHoistables = assertNonNull(innerHoistableMap.get(innerFn.func.body.entry));
-                    for (const entry of innerHoistables.assumedNonNullObjects) {
-                        assumedNonNullObjects.add(entry);
-                    }
-                }
-            }
-            else if (fn.env.config.enablePreserveExistingMemoizationGuarantees &&
-                instr.value.kind === 'StartMemoize' &&
-                instr.value.deps != null) {
-                for (const dep of instr.value.deps) {
-                    if (dep.root.kind === 'NamedLocal') {
-                        if (!isImmutableAtInstr(dep.root.value.identifier, instr.id, context)) {
-                            continue;
-                        }
-                        for (let i = 0; i < dep.path.length; i++) {
-                            const pathEntry = dep.path[i];
-                            if (pathEntry.optional) {
-                                break;
-                            }
-                            const depNode = context.registry.getOrCreateProperty({
-                                identifier: dep.root.value.identifier,
-                                path: dep.path.slice(0, i),
-                                reactive: dep.root.value.reactive,
-                                loc: dep.loc,
-                            });
-                            assumedNonNullObjects.add(depNode);
-                        }
-                    }
-                }
-            }
-        }
-        nodes.set(block.id, {
-            block,
-            assumedNonNullObjects,
-        });
-    }
-    return nodes;
-}
-function propagateNonNull(fn, nodes, registry) {
-    const blockSuccessors = new Map();
-    const terminalPreds = new Set();
-    for (const [blockId, block] of fn.body.blocks) {
-        for (const pred of block.preds) {
-            getOrInsertDefault(blockSuccessors, pred, new Set()).add(blockId);
-        }
-        if (block.terminal.kind === 'throw' || block.terminal.kind === 'return') {
-            terminalPreds.add(blockId);
-        }
-    }
-    function recursivelyPropagateNonNull(nodeId, direction, traversalState) {
-        var _a;
-        if (traversalState.has(nodeId)) {
-            return false;
-        }
-        traversalState.set(nodeId, 'active');
-        const node = nodes.get(nodeId);
-        if (node == null) {
-            CompilerError.invariant(false, {
-                reason: `Bad node ${nodeId}, kind: ${direction}`,
-                loc: GeneratedSource,
-            });
-        }
-        const neighbors = Array.from(direction === 'backward'
-            ? ((_a = blockSuccessors.get(nodeId)) !== null && _a !== void 0 ? _a : [])
-            : node.block.preds);
-        let changed = false;
-        for (const pred of neighbors) {
-            if (!traversalState.has(pred)) {
-                const neighborChanged = recursivelyPropagateNonNull(pred, direction, traversalState);
-                changed || (changed = neighborChanged);
-            }
-        }
-        const neighborAccesses = Set_intersect(Array.from(neighbors)
-            .filter(n => traversalState.get(n) === 'done')
-            .map(n => assertNonNull(nodes.get(n)).assumedNonNullObjects));
-        const prevObjects = assertNonNull(nodes.get(nodeId)).assumedNonNullObjects;
-        const mergedObjects = Set_union(prevObjects, neighborAccesses);
-        reduceMaybeOptionalChains(mergedObjects, registry);
-        assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
-        traversalState.set(nodeId, 'done');
-        changed || (changed = !Set_equal(prevObjects, mergedObjects));
-        return changed;
-    }
-    const traversalState = new Map();
-    const reversedBlocks = [...fn.body.blocks];
-    reversedBlocks.reverse();
-    let changed;
-    let i = 0;
-    do {
-        CompilerError.invariant(i++ < 100, {
-            reason: '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 100 loops',
-            loc: GeneratedSource,
-        });
-        changed = false;
-        for (const [blockId] of fn.body.blocks) {
-            const forwardChanged = recursivelyPropagateNonNull(blockId, 'forward', traversalState);
-            changed || (changed = forwardChanged);
-        }
-        traversalState.clear();
-        for (const [blockId] of reversedBlocks) {
-            const backwardChanged = recursivelyPropagateNonNull(blockId, 'backward', traversalState);
-            changed || (changed = backwardChanged);
-        }
-        traversalState.clear();
-    } while (changed);
-}
-function assertNonNull(value, source) {
-    CompilerError.invariant(value != null, {
-        reason: 'Unexpected null',
-        description: source != null ? `(from ${source})` : null,
-        loc: GeneratedSource,
-    });
-    return value;
-}
-function reduceMaybeOptionalChains(nodes, registry) {
-    let optionalChainNodes = Set_filter(nodes, n => n.hasOptional);
-    if (optionalChainNodes.size === 0) {
-        return;
-    }
-    let changed;
-    do {
-        changed = false;
-        for (const original of optionalChainNodes) {
-            let { identifier, path: origPath, reactive, loc: origLoc, } = original.fullPath;
-            let currNode = registry.getOrCreateIdentifier(identifier, reactive, origLoc);
-            for (let i = 0; i < origPath.length; i++) {
-                const entry = origPath[i];
-                const nextEntry = entry.optional && nodes.has(currNode)
-                    ? { property: entry.property, optional: false, loc: entry.loc }
-                    : entry;
-                currNode = PropertyPathRegistry.getOrCreatePropertyEntry(currNode, nextEntry);
-            }
-            if (currNode !== original) {
-                changed = true;
-                optionalChainNodes.delete(original);
-                optionalChainNodes.add(currNode);
-                nodes.delete(original);
-                nodes.add(currNode);
-            }
-        }
-    } while (changed);
-}
-function getAssumedInvokedFunctions(fn, temporaries = new Map()) {
-    var _a;
-    const hoistableFunctions = new Set();
-    for (const block of fn.body.blocks.values()) {
-        for (const { lvalue, value } of block.instructions) {
-            if (value.kind === 'FunctionExpression') {
-                temporaries.set(lvalue.identifier.id, {
-                    fn: value.loweredFunc,
-                    mayInvoke: new Set(),
-                });
-            }
-            else if (value.kind === 'StoreLocal') {
-                const lvalue = value.lvalue.place.identifier;
-                const maybeLoweredFunc = temporaries.get(value.value.identifier.id);
-                if (maybeLoweredFunc != null) {
-                    temporaries.set(lvalue.id, maybeLoweredFunc);
-                }
-            }
-            else if (value.kind === 'LoadLocal') {
-                const maybeLoweredFunc = temporaries.get(value.place.identifier.id);
-                if (maybeLoweredFunc != null) {
-                    temporaries.set(lvalue.identifier.id, maybeLoweredFunc);
-                }
-            }
-        }
-    }
-    for (const block of fn.body.blocks.values()) {
-        for (const { lvalue, value } of block.instructions) {
-            if (value.kind === 'CallExpression') {
-                const callee = value.callee;
-                const maybeHook = getHookKind(fn.env, callee.identifier);
-                const maybeLoweredFunc = temporaries.get(callee.identifier.id);
-                if (maybeLoweredFunc != null) {
-                    hoistableFunctions.add(maybeLoweredFunc.fn);
-                }
-                else if (maybeHook != null) {
-                    for (const arg of value.args) {
-                        if (arg.kind === 'Identifier') {
-                            const maybeLoweredFunc = temporaries.get(arg.identifier.id);
-                            if (maybeLoweredFunc != null) {
-                                hoistableFunctions.add(maybeLoweredFunc.fn);
-                            }
-                        }
-                    }
-                }
-            }
-            else if (value.kind === 'JsxExpression') {
-                for (const attr of value.props) {
-                    if (attr.kind === 'JsxSpreadAttribute') {
-                        continue;
-                    }
-                    const maybeLoweredFunc = temporaries.get(attr.place.identifier.id);
-                    if (maybeLoweredFunc != null) {
-                        hoistableFunctions.add(maybeLoweredFunc.fn);
-                    }
-                }
-                for (const child of (_a = value.children) !== null && _a !== void 0 ? _a : []) {
-                    const maybeLoweredFunc = temporaries.get(child.identifier.id);
-                    if (maybeLoweredFunc != null) {
-                        hoistableFunctions.add(maybeLoweredFunc.fn);
-                    }
-                }
-            }
-            else if (value.kind === 'FunctionExpression') {
-                const loweredFunc = value.loweredFunc.func;
-                const lambdasCalled = getAssumedInvokedFunctions(loweredFunc, temporaries);
-                const maybeLoweredFunc = temporaries.get(lvalue.identifier.id);
-                if (maybeLoweredFunc != null) {
-                    for (const called of lambdasCalled) {
-                        maybeLoweredFunc.mayInvoke.add(called);
-                    }
-                }
-            }
-        }
-        if (block.terminal.kind === 'return') {
-            const maybeLoweredFunc = temporaries.get(block.terminal.value.identifier.id);
-            if (maybeLoweredFunc != null) {
-                hoistableFunctions.add(maybeLoweredFunc.fn);
-            }
-        }
-    }
-    for (const [_, { fn, mayInvoke }] of temporaries) {
-        if (hoistableFunctions.has(fn)) {
-            for (const called of mayInvoke) {
-                hoistableFunctions.add(called);
-            }
-        }
-    }
-    return hoistableFunctions;
-}
-
-function collectOptionalChainSidemap(fn) {
-    const context = {
-        currFn: fn,
-        blocks: fn.body.blocks,
-        seenOptionals: new Set(),
-        processedInstrsInOptional: new Set(),
-        temporariesReadInOptional: new Map(),
-        hoistableObjects: new Map(),
-    };
-    traverseFunction(fn, context);
-    return {
-        temporariesReadInOptional: context.temporariesReadInOptional,
-        processedInstrsInOptional: context.processedInstrsInOptional,
-        hoistableObjects: context.hoistableObjects,
-    };
-}
-function traverseFunction(fn, context) {
-    for (const [_, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            if (instr.value.kind === 'FunctionExpression' ||
-                instr.value.kind === 'ObjectMethod') {
-                traverseFunction(instr.value.loweredFunc.func, Object.assign(Object.assign({}, context), { currFn: instr.value.loweredFunc.func, blocks: instr.value.loweredFunc.func.body.blocks }));
-            }
-        }
-        if (block.terminal.kind === 'optional' &&
-            !context.seenOptionals.has(block.id)) {
-            traverseOptionalBlock(block, context, null);
-        }
-    }
-}
-function matchOptionalTestBlock(terminal, blocks) {
-    const consequentBlock = assertNonNull(blocks.get(terminal.consequent));
-    if (consequentBlock.instructions.length === 2 &&
-        consequentBlock.instructions[0].value.kind === 'PropertyLoad' &&
-        consequentBlock.instructions[1].value.kind === 'StoreLocal') {
-        const propertyLoad = consequentBlock
-            .instructions[0];
-        const storeLocal = consequentBlock.instructions[1].value;
-        const storeLocalInstr = consequentBlock.instructions[1];
-        CompilerError.invariant(propertyLoad.value.object.identifier.id === terminal.test.identifier.id, {
-            reason: '[OptionalChainDeps] Inconsistent optional chaining property load',
-            description: `Test=${printIdentifier(terminal.test.identifier)} PropertyLoad base=${printIdentifier(propertyLoad.value.object.identifier)}`,
-            loc: propertyLoad.loc,
-        });
-        CompilerError.invariant(storeLocal.value.identifier.id === propertyLoad.lvalue.identifier.id, {
-            reason: '[OptionalChainDeps] Unexpected storeLocal',
-            loc: propertyLoad.loc,
-        });
-        if (consequentBlock.terminal.kind !== 'goto' ||
-            consequentBlock.terminal.variant !== GotoVariant.Break) {
-            return null;
-        }
-        const alternate = assertNonNull(blocks.get(terminal.alternate));
-        CompilerError.invariant(alternate.instructions.length === 2 &&
-            alternate.instructions[0].value.kind === 'Primitive' &&
-            alternate.instructions[1].value.kind === 'StoreLocal', {
-            reason: 'Unexpected alternate structure',
-            loc: terminal.loc,
-        });
-        return {
-            consequentId: storeLocal.lvalue.place.identifier.id,
-            property: propertyLoad.value.property,
-            propertyId: propertyLoad.lvalue.identifier.id,
-            storeLocalInstr,
-            consequentGoto: consequentBlock.terminal.block,
-            propertyLoadLoc: propertyLoad.loc,
-        };
-    }
-    return null;
-}
-function traverseOptionalBlock(optional, context, outerAlternate) {
-    context.seenOptionals.add(optional.id);
-    const maybeTest = context.blocks.get(optional.terminal.test);
-    let test;
-    let baseObject;
-    if (maybeTest.terminal.kind === 'branch') {
-        CompilerError.invariant(optional.terminal.optional, {
-            reason: '[OptionalChainDeps] Expect base case to be always optional',
-            loc: optional.terminal.loc,
-        });
-        if (maybeTest.instructions.length === 0 ||
-            maybeTest.instructions[0].value.kind !== 'LoadLocal') {
-            return null;
-        }
-        const path = [];
-        for (let i = 1; i < maybeTest.instructions.length; i++) {
-            const instrVal = maybeTest.instructions[i].value;
-            const prevInstr = maybeTest.instructions[i - 1];
-            if (instrVal.kind === 'PropertyLoad' &&
-                instrVal.object.identifier.id === prevInstr.lvalue.identifier.id) {
-                path.push({
-                    property: instrVal.property,
-                    optional: false,
-                    loc: instrVal.loc,
-                });
-            }
-            else {
-                return null;
-            }
-        }
-        CompilerError.invariant(maybeTest.terminal.test.identifier.id ===
-            maybeTest.instructions.at(-1).lvalue.identifier.id, {
-            reason: '[OptionalChainDeps] Unexpected test expression',
-            loc: maybeTest.terminal.loc,
-        });
-        baseObject = {
-            identifier: maybeTest.instructions[0].value.place.identifier,
-            reactive: maybeTest.instructions[0].value.place.reactive,
-            path,
-            loc: maybeTest.instructions[0].value.place.loc,
-        };
-        test = maybeTest.terminal;
-    }
-    else if (maybeTest.terminal.kind === 'optional') {
-        const testBlock = context.blocks.get(maybeTest.terminal.fallthrough);
-        if (testBlock.terminal.kind !== 'branch') {
-            CompilerError.throwTodo({
-                reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
-                loc: maybeTest.terminal.loc,
-            });
-        }
-        const innerOptional = traverseOptionalBlock(maybeTest, context, testBlock.terminal.alternate);
-        if (innerOptional == null) {
-            return null;
-        }
-        if (testBlock.terminal.test.identifier.id !== innerOptional) {
-            return null;
-        }
-        if (!optional.terminal.optional) {
-            context.hoistableObjects.set(optional.id, assertNonNull(context.temporariesReadInOptional.get(innerOptional)));
-        }
-        baseObject = assertNonNull(context.temporariesReadInOptional.get(innerOptional));
-        test = testBlock.terminal;
-    }
-    else {
-        return null;
-    }
-    if (test.alternate === outerAlternate) {
-        CompilerError.invariant(optional.instructions.length === 0, {
-            reason: '[OptionalChainDeps] Unexpected instructions an inner optional block. ' +
-                'This indicates that the compiler may be incorrectly concatenating two unrelated optional chains',
-            loc: optional.terminal.loc,
-        });
-    }
-    const matchConsequentResult = matchOptionalTestBlock(test, context.blocks);
-    if (!matchConsequentResult) {
-        return null;
-    }
-    CompilerError.invariant(matchConsequentResult.consequentGoto === optional.terminal.fallthrough, {
-        reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
-        description: `${matchConsequentResult.consequentGoto} != ${optional.terminal.fallthrough}`,
-        loc: optional.terminal.loc,
-    });
-    const load = {
-        identifier: baseObject.identifier,
-        reactive: baseObject.reactive,
-        path: [
-            ...baseObject.path,
-            {
-                property: matchConsequentResult.property,
-                optional: optional.terminal.optional,
-                loc: matchConsequentResult.propertyLoadLoc,
-            },
-        ],
-        loc: matchConsequentResult.propertyLoadLoc,
-    };
-    context.processedInstrsInOptional.add(matchConsequentResult.storeLocalInstr);
-    context.processedInstrsInOptional.add(test);
-    context.temporariesReadInOptional.set(matchConsequentResult.consequentId, load);
-    context.temporariesReadInOptional.set(matchConsequentResult.propertyId, load);
-    return matchConsequentResult.consequentId;
-}
-
-var _a, _ReactiveScopeDependencyTreeHIR_hoistableObjects, _ReactiveScopeDependencyTreeHIR_deps, _ReactiveScopeDependencyTreeHIR_getOrCreateRoot, _ReactiveScopeDependencyTreeHIR_debugImpl;
-class ReactiveScopeDependencyTreeHIR {
-    constructor(hoistableObjects) {
-        var _b;
-        _ReactiveScopeDependencyTreeHIR_hoistableObjects.set(this, new Map());
-        _ReactiveScopeDependencyTreeHIR_deps.set(this, new Map());
-        for (const { path, identifier, reactive, loc } of hoistableObjects) {
-            let currNode = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, reactive, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f"), path.length > 0 && path[0].optional ? 'Optional' : 'NonNull', loc);
-            for (let i = 0; i < path.length; i++) {
-                const prevAccessType = (_b = currNode.properties.get(path[i].property)) === null || _b === void 0 ? void 0 : _b.accessType;
-                const accessType = i + 1 < path.length && path[i + 1].optional ? 'Optional' : 'NonNull';
-                CompilerError.invariant(prevAccessType == null || prevAccessType === accessType, {
-                    reason: 'Conflicting access types',
-                    loc: GeneratedSource,
-                });
-                let nextNode = currNode.properties.get(path[i].property);
-                if (nextNode == null) {
-                    nextNode = {
-                        properties: new Map(),
-                        accessType,
-                        loc: path[i].loc,
-                    };
-                    currNode.properties.set(path[i].property, nextNode);
-                }
-                currNode = nextNode;
-            }
-        }
-    }
-    addDependency(dep) {
-        const { identifier, reactive, path, loc } = dep;
-        let depCursor = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, reactive, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f"), PropertyAccessType.UnconditionalAccess, loc);
-        let hoistableCursor = __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f").get(identifier);
-        for (const entry of path) {
-            let nextHoistableCursor;
-            let nextDepCursor;
-            if (entry.optional) {
-                if (hoistableCursor != null) {
-                    nextHoistableCursor = hoistableCursor === null || hoistableCursor === void 0 ? void 0 : hoistableCursor.properties.get(entry.property);
-                }
-                let accessType;
-                if (hoistableCursor != null &&
-                    hoistableCursor.accessType === 'NonNull') {
-                    accessType = PropertyAccessType.UnconditionalAccess;
-                }
-                else {
-                    accessType = PropertyAccessType.OptionalAccess;
-                }
-                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, accessType, entry.loc);
-            }
-            else if (hoistableCursor != null &&
-                hoistableCursor.accessType === 'NonNull') {
-                nextHoistableCursor = hoistableCursor.properties.get(entry.property);
-                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, PropertyAccessType.UnconditionalAccess, entry.loc);
-            }
-            else {
-                break;
-            }
-            depCursor = nextDepCursor;
-            hoistableCursor = nextHoistableCursor;
-        }
-        depCursor.accessType = merge$1(depCursor.accessType, PropertyAccessType.OptionalDependency);
-    }
-    deriveMinimalDependencies() {
-        const results = new Set();
-        for (const [rootId, rootNode] of __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f").entries()) {
-            collectMinimalDependenciesInSubtree(rootNode, rootNode.reactive, rootId, [], results);
-        }
-        return results;
-    }
-    printDeps(includeAccesses) {
-        let res = [];
-        for (const [rootId, rootNode] of __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f").entries()) {
-            const rootResults = printSubtree(rootNode, includeAccesses).map(result => `${printIdentifier(rootId)}.${result}`);
-            res.push(rootResults);
-        }
-        return res.flat().join('\n');
-    }
-    static debug(roots) {
-        const buf = [`tree() [`];
-        for (const [rootId, rootNode] of roots) {
-            buf.push(`${printIdentifier(rootId)} (${rootNode.accessType}):`);
-            __classPrivateFieldGet(this, _a, "m", _ReactiveScopeDependencyTreeHIR_debugImpl).call(this, buf, rootNode, 1);
-        }
-        buf.push(']');
-        return buf.length > 2 ? buf.join('\n') : buf.join('');
-    }
-}
-_a = ReactiveScopeDependencyTreeHIR, _ReactiveScopeDependencyTreeHIR_hoistableObjects = new WeakMap(), _ReactiveScopeDependencyTreeHIR_deps = new WeakMap(), _ReactiveScopeDependencyTreeHIR_getOrCreateRoot = function _ReactiveScopeDependencyTreeHIR_getOrCreateRoot(identifier, reactive, roots, defaultAccessType, loc) {
-    let rootNode = roots.get(identifier);
-    if (rootNode === undefined) {
-        rootNode = {
-            properties: new Map(),
-            reactive,
-            accessType: defaultAccessType,
-            loc,
-        };
-        roots.set(identifier, rootNode);
-    }
-    else {
-        CompilerError.invariant(reactive === rootNode.reactive, {
-            reason: '[DeriveMinimalDependenciesHIR] Conflicting reactive root flag',
-            description: `Identifier ${printIdentifier(identifier)}`,
-            loc: GeneratedSource,
-        });
-    }
-    return rootNode;
-}, _ReactiveScopeDependencyTreeHIR_debugImpl = function _ReactiveScopeDependencyTreeHIR_debugImpl(buf, node, depth = 0) {
-    for (const [property, childNode] of node.properties) {
-        buf.push(`${'  '.repeat(depth)}.${property} (${childNode.accessType}):`);
-        __classPrivateFieldGet(this, _a, "m", _ReactiveScopeDependencyTreeHIR_debugImpl).call(this, buf, childNode, depth + 1);
-    }
-};
-var PropertyAccessType;
-(function (PropertyAccessType) {
-    PropertyAccessType["OptionalAccess"] = "OptionalAccess";
-    PropertyAccessType["UnconditionalAccess"] = "UnconditionalAccess";
-    PropertyAccessType["OptionalDependency"] = "OptionalDependency";
-    PropertyAccessType["UnconditionalDependency"] = "UnconditionalDependency";
-})(PropertyAccessType || (PropertyAccessType = {}));
-function isOptional(access) {
-    return (access === PropertyAccessType.OptionalAccess ||
-        access === PropertyAccessType.OptionalDependency);
-}
-function isDependency(access) {
-    return (access === PropertyAccessType.OptionalDependency ||
-        access === PropertyAccessType.UnconditionalDependency);
-}
-function merge$1(access1, access2) {
-    const resultIsUnconditional = !(isOptional(access1) && isOptional(access2));
-    const resultIsDependency = isDependency(access1) || isDependency(access2);
-    if (resultIsUnconditional) {
-        if (resultIsDependency) {
-            return PropertyAccessType.UnconditionalDependency;
-        }
-        else {
-            return PropertyAccessType.UnconditionalAccess;
-        }
-    }
-    else {
-        if (resultIsDependency) {
-            return PropertyAccessType.OptionalDependency;
-        }
-        else {
-            return PropertyAccessType.OptionalAccess;
-        }
-    }
-}
-function collectMinimalDependenciesInSubtree(node, reactive, rootIdentifier, path, results) {
-    if (isDependency(node.accessType)) {
-        results.add({ identifier: rootIdentifier, reactive, path, loc: node.loc });
-    }
-    else {
-        for (const [childName, childNode] of node.properties) {
-            collectMinimalDependenciesInSubtree(childNode, reactive, rootIdentifier, [
-                ...path,
-                {
-                    property: childName,
-                    optional: isOptional(childNode.accessType),
-                    loc: childNode.loc,
-                },
-            ], results);
-        }
-    }
-}
-function printSubtree(node, includeAccesses) {
-    const results = [];
-    for (const [propertyName, propertyNode] of node.properties) {
-        if (includeAccesses || isDependency(propertyNode.accessType)) {
-            results.push(`${propertyName} (${propertyNode.accessType})`);
-        }
-        const propertyResults = printSubtree(propertyNode, includeAccesses);
-        results.push(...propertyResults.map(result => `${propertyName}.${result}`));
-    }
-    return results;
-}
-function makeOrMergeProperty(node, property, accessType, loc) {
-    let child = node.properties.get(property);
-    if (child == null) {
-        child = {
-            properties: new Map(),
-            accessType,
-            loc,
-        };
-        node.properties.set(property, child);
-    }
-    else {
-        child.accessType = merge$1(child.accessType, accessType);
-    }
-    return child;
-}
-
-var _DependencyCollectionContext_instances, _DependencyCollectionContext_declarations, _DependencyCollectionContext_reassignments, _DependencyCollectionContext_scopes, _DependencyCollectionContext_dependencies, _DependencyCollectionContext_temporaries, _DependencyCollectionContext_temporariesUsedOutsideScope, _DependencyCollectionContext_processedInstrsInOptional, _DependencyCollectionContext_innerFnContext, _DependencyCollectionContext_checkValidDependency, _DependencyCollectionContext_isScopeActive;
-function propagateScopeDependenciesHIR(fn) {
-    const usedOutsideDeclaringScope = findTemporariesUsedOutsideDeclaringScope(fn);
-    const temporaries = collectTemporariesSidemap$1(fn, usedOutsideDeclaringScope);
-    const { temporariesReadInOptional, processedInstrsInOptional, hoistableObjects, } = collectOptionalChainSidemap(fn);
-    const hoistablePropertyLoads = keyByScopeId(fn, collectHoistablePropertyLoads(fn, temporaries, hoistableObjects));
-    const scopeDeps = collectDependencies$1(fn, usedOutsideDeclaringScope, new Map([...temporaries, ...temporariesReadInOptional]), processedInstrsInOptional);
-    for (const [scope, deps] of scopeDeps) {
-        if (deps.length === 0) {
-            continue;
-        }
-        const hoistables = hoistablePropertyLoads.get(scope.id);
-        CompilerError.invariant(hoistables != null, {
-            reason: '[PropagateScopeDependencies] Scope not found in tracked blocks',
-            loc: GeneratedSource,
-        });
-        const tree = new ReactiveScopeDependencyTreeHIR([...hoistables.assumedNonNullObjects].map(o => o.fullPath));
-        for (const dep of deps) {
-            tree.addDependency(Object.assign({}, dep));
-        }
-        const candidates = tree.deriveMinimalDependencies();
-        for (const candidateDep of candidates) {
-            if (!Iterable_some(scope.dependencies, existingDep => existingDep.identifier.declarationId ===
-                candidateDep.identifier.declarationId &&
-                areEqualPaths(existingDep.path, candidateDep.path)))
-                scope.dependencies.add(candidateDep);
-        }
-    }
-}
-function findTemporariesUsedOutsideDeclaringScope(fn) {
-    const declarations = new Map();
-    const prunedScopes = new Set();
-    const scopeTraversal = new ScopeBlockTraversal();
-    const usedOutsideDeclaringScope = new Set();
-    function handlePlace(place) {
-        const declaringScope = declarations.get(place.identifier.declarationId);
-        if (declaringScope != null &&
-            !scopeTraversal.isScopeActive(declaringScope) &&
-            !prunedScopes.has(declaringScope)) {
-            usedOutsideDeclaringScope.add(place.identifier.declarationId);
-        }
-    }
-    function handleInstruction(instr) {
-        const scope = scopeTraversal.currentScope;
-        if (scope == null || prunedScopes.has(scope)) {
-            return;
-        }
-        switch (instr.value.kind) {
-            case 'LoadLocal':
-            case 'LoadContext':
-            case 'PropertyLoad': {
-                declarations.set(instr.lvalue.identifier.declarationId, scope);
-                break;
-            }
-        }
-    }
-    for (const [blockId, block] of fn.body.blocks) {
-        scopeTraversal.recordScopes(block);
-        const scopeStartInfo = scopeTraversal.blockInfos.get(blockId);
-        if ((scopeStartInfo === null || scopeStartInfo === void 0 ? void 0 : scopeStartInfo.kind) === 'begin' && scopeStartInfo.pruned) {
-            prunedScopes.add(scopeStartInfo.scope.id);
-        }
-        for (const instr of block.instructions) {
-            for (const place of eachInstructionOperand(instr)) {
-                handlePlace(place);
-            }
-            handleInstruction(instr);
-        }
-        for (const place of eachTerminalOperand(block.terminal)) {
-            handlePlace(place);
-        }
-    }
-    return usedOutsideDeclaringScope;
-}
-function collectTemporariesSidemap$1(fn, usedOutsideDeclaringScope) {
-    const temporaries = new Map();
-    collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporaries, null);
-    return temporaries;
-}
-function isLoadContextMutable(instrValue, id) {
-    if (instrValue.kind === 'LoadContext') {
-        return (instrValue.place.identifier.scope != null &&
-            id >= instrValue.place.identifier.scope.range.end);
-    }
-    return false;
-}
-function collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporaries, innerFnContext) {
-    for (const [_, block] of fn.body.blocks) {
-        for (const { value, lvalue, id: origInstrId } of block.instructions) {
-            const instrId = innerFnContext != null ? innerFnContext.instrId : origInstrId;
-            const usedOutside = usedOutsideDeclaringScope.has(lvalue.identifier.declarationId);
-            if (value.kind === 'PropertyLoad' && !usedOutside) {
-                if (innerFnContext == null ||
-                    temporaries.has(value.object.identifier.id)) {
-                    const property = getProperty(value.object, value.property, false, value.loc, temporaries);
-                    temporaries.set(lvalue.identifier.id, property);
-                }
-            }
-            else if ((value.kind === 'LoadLocal' || isLoadContextMutable(value, instrId)) &&
-                lvalue.identifier.name == null &&
-                value.place.identifier.name !== null &&
-                !usedOutside) {
-                if (innerFnContext == null ||
-                    fn.context.some(context => context.identifier.id === value.place.identifier.id)) {
-                    temporaries.set(lvalue.identifier.id, {
-                        identifier: value.place.identifier,
-                        reactive: value.place.reactive,
-                        path: [],
-                        loc: value.loc,
-                    });
-                }
-            }
-            else if (value.kind === 'FunctionExpression' ||
-                value.kind === 'ObjectMethod') {
-                collectTemporariesSidemapImpl(value.loweredFunc.func, usedOutsideDeclaringScope, temporaries, innerFnContext !== null && innerFnContext !== void 0 ? innerFnContext : { instrId });
-            }
-        }
-    }
-}
-function getProperty(object, propertyName, optional, loc, temporaries) {
-    const resolvedDependency = temporaries.get(object.identifier.id);
-    let property;
-    if (resolvedDependency == null) {
-        property = {
-            identifier: object.identifier,
-            reactive: object.reactive,
-            path: [{ property: propertyName, optional, loc }],
-            loc,
-        };
-    }
-    else {
-        property = {
-            identifier: resolvedDependency.identifier,
-            reactive: resolvedDependency.reactive,
-            path: [
-                ...resolvedDependency.path,
-                { property: propertyName, optional, loc },
-            ],
-            loc,
-        };
-    }
-    return property;
-}
-class DependencyCollectionContext {
-    constructor(temporariesUsedOutsideScope, temporaries, processedInstrsInOptional) {
-        _DependencyCollectionContext_instances.add(this);
-        _DependencyCollectionContext_declarations.set(this, new Map());
-        _DependencyCollectionContext_reassignments.set(this, new Map());
-        _DependencyCollectionContext_scopes.set(this, empty());
-        _DependencyCollectionContext_dependencies.set(this, empty());
-        this.deps = new Map();
-        _DependencyCollectionContext_temporaries.set(this, void 0);
-        _DependencyCollectionContext_temporariesUsedOutsideScope.set(this, void 0);
-        _DependencyCollectionContext_processedInstrsInOptional.set(this, void 0);
-        _DependencyCollectionContext_innerFnContext.set(this, null);
-        __classPrivateFieldSet(this, _DependencyCollectionContext_temporariesUsedOutsideScope, temporariesUsedOutsideScope, "f");
-        __classPrivateFieldSet(this, _DependencyCollectionContext_temporaries, temporaries, "f");
-        __classPrivateFieldSet(this, _DependencyCollectionContext_processedInstrsInOptional, processedInstrsInOptional, "f");
-    }
-    enterScope(scope) {
-        __classPrivateFieldSet(this, _DependencyCollectionContext_dependencies, __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").push([]), "f");
-        __classPrivateFieldSet(this, _DependencyCollectionContext_scopes, __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f").push(scope), "f");
-    }
-    exitScope(scope, pruned) {
-        var _a;
-        const scopedDependencies = __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").value;
-        CompilerError.invariant(scopedDependencies != null, {
-            reason: '[PropagateScopeDeps]: Unexpected scope mismatch',
-            loc: scope.loc,
-        });
-        __classPrivateFieldSet(this, _DependencyCollectionContext_scopes, __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f").pop(), "f");
-        __classPrivateFieldSet(this, _DependencyCollectionContext_dependencies, __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").pop(), "f");
-        for (const dep of scopedDependencies) {
-            if (__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, dep)) {
-                (_a = __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").value) === null || _a === void 0 ? void 0 : _a.push(dep);
-            }
-        }
-        if (!pruned) {
-            this.deps.set(scope, scopedDependencies);
-        }
-    }
-    isUsedOutsideDeclaringScope(place) {
-        return __classPrivateFieldGet(this, _DependencyCollectionContext_temporariesUsedOutsideScope, "f").has(place.identifier.declarationId);
-    }
-    declare(identifier, decl) {
-        if (__classPrivateFieldGet(this, _DependencyCollectionContext_innerFnContext, "f") != null)
-            return;
-        if (!__classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").has(identifier.declarationId)) {
-            __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").set(identifier.declarationId, decl);
-        }
-        __classPrivateFieldGet(this, _DependencyCollectionContext_reassignments, "f").set(identifier, decl);
-    }
-    hasDeclared(identifier) {
-        return __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").has(identifier.declarationId);
-    }
-    get currentScope() {
-        return __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f");
-    }
-    visitOperand(place) {
-        var _a;
-        this.visitDependency((_a = __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f").get(place.identifier.id)) !== null && _a !== void 0 ? _a : {
-            identifier: place.identifier,
-            reactive: place.reactive,
-            path: [],
-            loc: place.loc,
-        });
-    }
-    visitProperty(object, property, optional, loc) {
-        const nextDependency = getProperty(object, property, optional, loc, __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f"));
-        this.visitDependency(nextDependency);
-    }
-    visitDependency(maybeDependency) {
-        var _a;
-        const originalDeclaration = __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").get(maybeDependency.identifier.declarationId);
-        if (originalDeclaration !== undefined &&
-            originalDeclaration.scope.value !== null) {
-            originalDeclaration.scope.each(scope => {
-                if (!__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_isScopeActive).call(this, scope) &&
-                    !Iterable_some(scope.declarations.values(), decl => decl.identifier.declarationId ===
-                        maybeDependency.identifier.declarationId)) {
-                    scope.declarations.set(maybeDependency.identifier.id, {
-                        identifier: maybeDependency.identifier,
-                        scope: originalDeclaration.scope.value,
-                    });
-                }
-            });
-        }
-        if (isUseRefType(maybeDependency.identifier) &&
-            ((_a = maybeDependency.path.at(0)) === null || _a === void 0 ? void 0 : _a.property) === 'current') {
-            maybeDependency = {
-                identifier: maybeDependency.identifier,
-                reactive: maybeDependency.reactive,
-                path: [],
-                loc: maybeDependency.loc,
-            };
-        }
-        if (__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, maybeDependency)) {
-            __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").value.push(maybeDependency);
-        }
-    }
-    visitReassignment(place) {
-        const currentScope = this.currentScope.value;
-        if (currentScope != null &&
-            !Iterable_some(currentScope.reassignments, identifier => identifier.declarationId === place.identifier.declarationId) &&
-            __classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, {
-                identifier: place.identifier,
-                reactive: place.reactive,
-                path: [],
-                loc: place.loc,
-            })) {
-            currentScope.reassignments.add(place.identifier);
-        }
-    }
-    enterInnerFn(innerFn, cb) {
-        var _a;
-        const prevContext = __classPrivateFieldGet(this, _DependencyCollectionContext_innerFnContext, "f");
-        __classPrivateFieldSet(this, _DependencyCollectionContext_innerFnContext, (_a = __classPrivateFieldGet(this, _DependencyCollectionContext_innerFnContext, "f")) !== null && _a !== void 0 ? _a : { outerInstrId: innerFn.id }, "f");
-        const result = cb();
-        __classPrivateFieldSet(this, _DependencyCollectionContext_innerFnContext, prevContext, "f");
-        return result;
-    }
-    isDeferredDependency(instr) {
-        return (__classPrivateFieldGet(this, _DependencyCollectionContext_processedInstrsInOptional, "f").has(instr.value) ||
-            (instr.kind === HIRValue.Instruction &&
-                __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f").has(instr.value.lvalue.identifier.id)));
-    }
-}
-_DependencyCollectionContext_declarations = new WeakMap(), _DependencyCollectionContext_reassignments = new WeakMap(), _DependencyCollectionContext_scopes = new WeakMap(), _DependencyCollectionContext_dependencies = new WeakMap(), _DependencyCollectionContext_temporaries = new WeakMap(), _DependencyCollectionContext_temporariesUsedOutsideScope = new WeakMap(), _DependencyCollectionContext_processedInstrsInOptional = new WeakMap(), _DependencyCollectionContext_innerFnContext = new WeakMap(), _DependencyCollectionContext_instances = new WeakSet(), _DependencyCollectionContext_checkValidDependency = function _DependencyCollectionContext_checkValidDependency(maybeDependency) {
-    var _a;
-    if (isRefValueType(maybeDependency.identifier)) {
-        return false;
-    }
-    if (isObjectMethodType(maybeDependency.identifier)) {
-        return false;
-    }
-    const identifier = maybeDependency.identifier;
-    const currentDeclaration = (_a = __classPrivateFieldGet(this, _DependencyCollectionContext_reassignments, "f").get(identifier)) !== null && _a !== void 0 ? _a : __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").get(identifier.declarationId);
-    const currentScope = this.currentScope.value;
-    return (currentScope != null &&
-        currentDeclaration !== undefined &&
-        currentDeclaration.id < currentScope.range.start);
-}, _DependencyCollectionContext_isScopeActive = function _DependencyCollectionContext_isScopeActive(scope) {
-    if (__classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f") === null) {
-        return false;
-    }
-    return __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f").find(state => state === scope);
-};
-var HIRValue;
-(function (HIRValue) {
-    HIRValue[HIRValue["Instruction"] = 1] = "Instruction";
-    HIRValue[HIRValue["Terminal"] = 2] = "Terminal";
-})(HIRValue || (HIRValue = {}));
-function handleInstruction(instr, context) {
-    const { id, value, lvalue } = instr;
-    context.declare(lvalue.identifier, {
-        id,
-        scope: context.currentScope,
-    });
-    if (context.isDeferredDependency({ kind: HIRValue.Instruction, value: instr })) {
-        return;
-    }
-    if (value.kind === 'PropertyLoad') {
-        context.visitProperty(value.object, value.property, false, value.loc);
-    }
-    else if (value.kind === 'StoreLocal') {
-        context.visitOperand(value.value);
-        if (value.lvalue.kind === InstructionKind.Reassign) {
-            context.visitReassignment(value.lvalue.place);
-        }
-        context.declare(value.lvalue.place.identifier, {
-            id,
-            scope: context.currentScope,
-        });
-    }
-    else if (value.kind === 'DeclareLocal' || value.kind === 'DeclareContext') {
-        if (convertHoistedLValueKind(value.lvalue.kind) === null) {
-            context.declare(value.lvalue.place.identifier, {
-                id,
-                scope: context.currentScope,
-            });
-        }
-    }
-    else if (value.kind === 'Destructure') {
-        context.visitOperand(value.value);
-        for (const place of eachPatternOperand(value.lvalue.pattern)) {
-            if (value.lvalue.kind === InstructionKind.Reassign) {
-                context.visitReassignment(place);
-            }
-            context.declare(place.identifier, {
-                id,
-                scope: context.currentScope,
-            });
-        }
-    }
-    else if (value.kind === 'StoreContext') {
-        if (!context.hasDeclared(value.lvalue.place.identifier) ||
-            value.lvalue.kind !== InstructionKind.Reassign) {
-            context.declare(value.lvalue.place.identifier, {
-                id,
-                scope: context.currentScope,
-            });
-        }
-        for (const operand of eachInstructionValueOperand(value)) {
-            context.visitOperand(operand);
-        }
-    }
-    else {
-        for (const operand of eachInstructionValueOperand(value)) {
-            context.visitOperand(operand);
-        }
-    }
-}
-function collectDependencies$1(fn, usedOutsideDeclaringScope, temporaries, processedInstrsInOptional) {
-    const context = new DependencyCollectionContext(usedOutsideDeclaringScope, temporaries, processedInstrsInOptional);
-    for (const param of fn.params) {
-        if (param.kind === 'Identifier') {
-            context.declare(param.identifier, {
-                id: makeInstructionId(0),
-                scope: empty(),
-            });
-        }
-        else {
-            context.declare(param.place.identifier, {
-                id: makeInstructionId(0),
-                scope: empty(),
-            });
-        }
-    }
-    const scopeTraversal = new ScopeBlockTraversal();
-    const handleFunction = (fn) => {
-        for (const [blockId, block] of fn.body.blocks) {
-            scopeTraversal.recordScopes(block);
-            const scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
-            if ((scopeBlockInfo === null || scopeBlockInfo === void 0 ? void 0 : scopeBlockInfo.kind) === 'begin') {
-                context.enterScope(scopeBlockInfo.scope);
-            }
-            else if ((scopeBlockInfo === null || scopeBlockInfo === void 0 ? void 0 : scopeBlockInfo.kind) === 'end') {
-                context.exitScope(scopeBlockInfo.scope, scopeBlockInfo.pruned);
-            }
-            for (const phi of block.phis) {
-                for (const operand of phi.operands) {
-                    const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
-                    if (maybeOptionalChain) {
-                        context.visitDependency(maybeOptionalChain);
-                    }
-                }
-            }
-            for (const instr of block.instructions) {
-                if (instr.value.kind === 'FunctionExpression' ||
-                    instr.value.kind === 'ObjectMethod') {
-                    context.declare(instr.lvalue.identifier, {
-                        id: instr.id,
-                        scope: context.currentScope,
-                    });
-                    const innerFn = instr.value.loweredFunc.func;
-                    context.enterInnerFn(instr, () => {
-                        handleFunction(innerFn);
-                    });
-                }
-                else {
-                    handleInstruction(instr, context);
-                }
-            }
-            if (!context.isDeferredDependency({
-                kind: HIRValue.Terminal,
-                value: block.terminal,
-            })) {
-                for (const place of eachTerminalOperand(block.terminal)) {
-                    context.visitOperand(place);
-                }
-            }
-        }
-    };
-    handleFunction(fn);
-    return context.deps;
-}
-
-function buildDependencyInstructions(dep, env) {
-    const builder = new HIRBuilder(env, {
-        entryBlockKind: 'value',
-    });
-    let dependencyValue;
-    if (dep.path.every(path => !path.optional)) {
-        dependencyValue = writeNonOptionalDependency(dep, env, builder);
-    }
-    else {
-        dependencyValue = writeOptionalDependency(dep, builder, null);
-    }
-    const exitBlockId = builder.terminate({
-        kind: 'unsupported',
-        loc: GeneratedSource,
-        id: makeInstructionId(0),
-    }, null);
-    return {
-        place: {
-            kind: 'Identifier',
-            identifier: dependencyValue,
-            effect: Effect.Freeze,
-            reactive: dep.reactive,
-            loc: GeneratedSource,
-        },
-        value: builder.build(),
-        exitBlockId,
-    };
-}
-function writeNonOptionalDependency(dep, env, builder) {
-    const loc = dep.identifier.loc;
-    let curr = makeTemporaryIdentifier(env.nextIdentifierId, loc);
-    builder.push({
-        lvalue: {
-            identifier: curr,
-            kind: 'Identifier',
-            effect: Effect.Mutate,
-            reactive: dep.reactive,
-            loc,
-        },
-        value: {
-            kind: 'LoadLocal',
-            place: {
-                identifier: dep.identifier,
-                kind: 'Identifier',
-                effect: Effect.Freeze,
-                reactive: dep.reactive,
-                loc,
-            },
-            loc,
-        },
-        id: makeInstructionId(1),
-        loc: loc,
-        effects: null,
-    });
-    for (const path of dep.path) {
-        const next = makeTemporaryIdentifier(env.nextIdentifierId, loc);
-        builder.push({
-            lvalue: {
-                identifier: next,
-                kind: 'Identifier',
-                effect: Effect.Mutate,
-                reactive: dep.reactive,
-                loc,
-            },
-            value: {
-                kind: 'PropertyLoad',
-                object: {
-                    identifier: curr,
-                    kind: 'Identifier',
-                    effect: Effect.Freeze,
-                    reactive: dep.reactive,
-                    loc,
-                },
-                property: path.property,
-                loc,
-            },
-            id: makeInstructionId(1),
-            loc: loc,
-            effects: null,
-        });
-        curr = next;
-    }
-    return curr;
-}
-function writeOptionalDependency(dep, builder, parentAlternate) {
-    const env = builder.environment;
-    const dependencyValue = {
-        kind: 'Identifier',
-        identifier: makeTemporaryIdentifier(env.nextIdentifierId, GeneratedSource),
-        effect: Effect.Mutate,
-        reactive: dep.reactive,
-        loc: GeneratedSource,
-    };
-    const continuationBlock = builder.reserve(builder.currentBlockKind());
-    let alternate;
-    if (parentAlternate != null) {
-        alternate = parentAlternate;
-    }
-    else {
-        alternate = builder.enter('value', () => {
-            const temp = lowerValueToTemporary(builder, {
-                kind: 'Primitive',
-                value: undefined,
-                loc: GeneratedSource,
-            });
-            lowerValueToTemporary(builder, {
-                kind: 'StoreLocal',
-                lvalue: { kind: InstructionKind.Const, place: Object.assign({}, dependencyValue) },
-                value: Object.assign({}, temp),
-                type: null,
-                loc: GeneratedSource,
-            });
-            return {
-                kind: 'goto',
-                variant: GotoVariant.Break,
-                block: continuationBlock.id,
-                id: makeInstructionId(0),
-                loc: GeneratedSource,
-            };
-        });
-    }
-    const consequent = builder.reserve('value');
-    let testIdentifier = null;
-    const testBlock = builder.enter('value', () => {
-        const testDependency = Object.assign(Object.assign({}, dep), { path: dep.path.slice(0, dep.path.length - 1) });
-        const firstOptional = dep.path.findIndex(path => path.optional);
-        CompilerError.invariant(firstOptional !== -1, {
-            reason: '[ScopeDependencyUtils] Internal invariant broken: expected optional path',
-            loc: dep.identifier.loc,
-        });
-        if (firstOptional === dep.path.length - 1) {
-            testIdentifier = writeNonOptionalDependency(testDependency, env, builder);
-        }
-        else {
-            testIdentifier = writeOptionalDependency(testDependency, builder, alternate);
-        }
-        return {
-            kind: 'branch',
-            test: {
-                identifier: testIdentifier,
-                effect: Effect.Freeze,
-                kind: 'Identifier',
-                loc: GeneratedSource,
-                reactive: dep.reactive,
-            },
-            consequent: consequent.id,
-            alternate,
-            id: makeInstructionId(0),
-            loc: GeneratedSource,
-            fallthrough: continuationBlock.id,
-        };
-    });
-    builder.enterReserved(consequent, () => {
-        CompilerError.invariant(testIdentifier !== null, {
-            reason: 'Satisfy type checker',
-            loc: GeneratedSource,
-        });
-        lowerValueToTemporary(builder, {
-            kind: 'StoreLocal',
-            lvalue: { kind: InstructionKind.Const, place: Object.assign({}, dependencyValue) },
-            value: lowerValueToTemporary(builder, {
-                kind: 'PropertyLoad',
-                object: {
-                    identifier: testIdentifier,
-                    kind: 'Identifier',
-                    effect: Effect.Freeze,
-                    reactive: dep.reactive,
-                    loc: GeneratedSource,
-                },
-                property: dep.path.at(-1).property,
-                loc: GeneratedSource,
-            }),
-            type: null,
-            loc: GeneratedSource,
-        });
-        return {
-            kind: 'goto',
-            variant: GotoVariant.Break,
-            block: continuationBlock.id,
-            id: makeInstructionId(0),
-            loc: GeneratedSource,
-        };
-    });
-    builder.terminateWithContinuation({
-        kind: 'optional',
-        optional: dep.path.at(-1).optional,
-        test: testBlock,
-        fallthrough: continuationBlock.id,
-        id: makeInstructionId(0),
-        loc: GeneratedSource,
-    }, continuationBlock);
-    return dependencyValue.identifier;
-}
-
-function inferEffectDependencies(fn) {
-    var _a, _b;
-    const fnExpressions = new Map();
-    const autodepFnConfigs = new Map();
-    for (const effectTarget of fn.env.config.inferEffectDependencies) {
-        const moduleTargets = getOrInsertWith(autodepFnConfigs, effectTarget.function.source, () => new Map());
-        moduleTargets.set(effectTarget.function.importSpecifierName, effectTarget.autodepsIndex);
-    }
-    const autodepFnLoads = new Map();
-    const autodepModuleLoads = new Map();
-    const scopeInfos = new Map();
-    const loadGlobals = new Set();
-    const reactiveIds = inferReactiveIdentifiers(fn);
-    const rewriteBlocks = [];
-    for (const [, block] of fn.body.blocks) {
-        if (block.terminal.kind === 'scope') {
-            const scopeBlock = fn.body.blocks.get(block.terminal.block);
-            if (scopeBlock.instructions.length === 1 &&
-                scopeBlock.terminal.kind === 'goto' &&
-                scopeBlock.terminal.block === block.terminal.fallthrough) {
-                scopeInfos.set(block.terminal.scope.id, block.terminal.scope.dependencies);
-            }
-        }
-        const rewriteInstrs = [];
-        for (const instr of block.instructions) {
-            const { value, lvalue } = instr;
-            if (value.kind === 'FunctionExpression') {
-                fnExpressions.set(lvalue.identifier.id, instr);
-            }
-            else if (value.kind === 'PropertyLoad') {
-                if (typeof value.property === 'string' &&
-                    autodepModuleLoads.has(value.object.identifier.id)) {
-                    const moduleTargets = autodepModuleLoads.get(value.object.identifier.id);
-                    const propertyName = value.property;
-                    const numRequiredArgs = moduleTargets.get(propertyName);
-                    if (numRequiredArgs != null) {
-                        autodepFnLoads.set(lvalue.identifier.id, numRequiredArgs);
-                    }
-                }
-            }
-            else if (value.kind === 'LoadGlobal') {
-                loadGlobals.add(lvalue.identifier.id);
-                if (value.binding.kind === 'ImportNamespace') {
-                    const moduleTargets = autodepFnConfigs.get(value.binding.module);
-                    if (moduleTargets != null) {
-                        autodepModuleLoads.set(lvalue.identifier.id, moduleTargets);
-                    }
-                }
-                if (value.binding.kind === 'ImportSpecifier' ||
-                    value.binding.kind === 'ImportDefault') {
-                    const moduleTargets = autodepFnConfigs.get(value.binding.module);
-                    if (moduleTargets != null) {
-                        const importSpecifierName = value.binding.kind === 'ImportSpecifier'
-                            ? value.binding.imported
-                            : DEFAULT_EXPORT;
-                        const numRequiredArgs = moduleTargets.get(importSpecifierName);
-                        if (numRequiredArgs != null) {
-                            autodepFnLoads.set(lvalue.identifier.id, numRequiredArgs);
-                        }
-                    }
-                }
-            }
-            else if (value.kind === 'CallExpression' ||
-                value.kind === 'MethodCall') {
-                const callee = value.kind === 'CallExpression' ? value.callee : value.property;
-                const autodepsArgIndex = value.args.findIndex(arg => arg.kind === 'Identifier' &&
-                    arg.identifier.type.kind === 'Object' &&
-                    arg.identifier.type.shapeId === BuiltInAutodepsId);
-                const autodepsArgExpectedIndex = autodepFnLoads.get(callee.identifier.id);
-                if (value.args.length > 0 &&
-                    autodepsArgExpectedIndex != null &&
-                    autodepsArgIndex === autodepsArgExpectedIndex &&
-                    autodepFnLoads.has(callee.identifier.id) &&
-                    value.args[0].kind === 'Identifier') {
-                    const effectDeps = [];
-                    const deps = {
-                        kind: 'ArrayExpression',
-                        elements: effectDeps,
-                        loc: GeneratedSource,
-                    };
-                    const depsPlace = createTemporaryPlace(fn.env, GeneratedSource);
-                    depsPlace.effect = Effect.Read;
-                    const fnExpr = fnExpressions.get(value.args[0].identifier.id);
-                    if (fnExpr != null) {
-                        const scopeInfo = fnExpr.lvalue.identifier.scope != null
-                            ? scopeInfos.get(fnExpr.lvalue.identifier.scope.id)
-                            : null;
-                        let minimalDeps;
-                        if (scopeInfo != null) {
-                            minimalDeps = new Set(scopeInfo);
-                        }
-                        else {
-                            minimalDeps = inferMinimalDependencies(fnExpr);
-                        }
-                        const usedDeps = [];
-                        for (const maybeDep of minimalDeps) {
-                            if (((isUseRefType(maybeDep.identifier) ||
-                                isSetStateType(maybeDep.identifier)) &&
-                                !reactiveIds.has(maybeDep.identifier.id)) ||
-                                isFireFunctionType(maybeDep.identifier) ||
-                                isEffectEventFunctionType(maybeDep.identifier)) {
-                                continue;
-                            }
-                            const dep = truncateDepAtCurrent(maybeDep);
-                            const { place, value, exitBlockId } = buildDependencyInstructions(dep, fn.env);
-                            rewriteInstrs.push({
-                                kind: 'block',
-                                location: instr.id,
-                                value,
-                                exitBlockId: exitBlockId,
-                            });
-                            effectDeps.push(place);
-                            usedDeps.push(dep);
-                        }
-                        const decorations = [];
-                        for (const loc of collectDepUsages(usedDeps, fnExpr.value)) {
-                            if (typeof loc === 'symbol') {
-                                continue;
-                            }
-                            decorations.push(loc);
-                        }
-                        if (typeof value.loc !== 'symbol') {
-                            (_a = fn.env.logger) === null || _a === void 0 ? void 0 : _a.logEvent(fn.env.filename, {
-                                kind: 'AutoDepsDecorations',
-                                fnLoc: value.loc,
-                                decorations,
-                            });
-                        }
-                        rewriteInstrs.push({
-                            kind: 'instr',
-                            location: instr.id,
-                            value: {
-                                id: makeInstructionId(0),
-                                loc: GeneratedSource,
-                                lvalue: Object.assign(Object.assign({}, depsPlace), { effect: Effect.Mutate }),
-                                value: deps,
-                                effects: null,
-                            },
-                        });
-                        value.args[autodepsArgIndex] = Object.assign(Object.assign({}, depsPlace), { effect: Effect.Freeze });
-                        fn.env.inferredEffectLocations.add(callee.loc);
-                    }
-                    else if (loadGlobals.has(value.args[0].identifier.id)) {
-                        rewriteInstrs.push({
-                            kind: 'instr',
-                            location: instr.id,
-                            value: {
-                                id: makeInstructionId(0),
-                                loc: GeneratedSource,
-                                lvalue: Object.assign(Object.assign({}, depsPlace), { effect: Effect.Mutate }),
-                                value: deps,
-                                effects: null,
-                            },
-                        });
-                        value.args[autodepsArgIndex] = Object.assign(Object.assign({}, depsPlace), { effect: Effect.Freeze });
-                        fn.env.inferredEffectLocations.add(callee.loc);
-                    }
-                }
-                else if (value.args.length >= 2 &&
-                    value.args.length - 1 === autodepFnLoads.get(callee.identifier.id) &&
-                    value.args[0] != null &&
-                    value.args[0].kind === 'Identifier') {
-                    const penultimateArg = value.args[value.args.length - 2];
-                    const depArrayArg = value.args[value.args.length - 1];
-                    if (depArrayArg.kind !== 'Spread' &&
-                        penultimateArg.kind !== 'Spread' &&
-                        typeof depArrayArg.loc !== 'symbol' &&
-                        typeof penultimateArg.loc !== 'symbol' &&
-                        typeof value.loc !== 'symbol') {
-                        (_b = fn.env.logger) === null || _b === void 0 ? void 0 : _b.logEvent(fn.env.filename, {
-                            kind: 'AutoDepsEligible',
-                            fnLoc: value.loc,
-                            depArrayLoc: Object.assign(Object.assign({}, depArrayArg.loc), { start: penultimateArg.loc.end, end: depArrayArg.loc.end }),
-                        });
-                    }
-                }
-            }
-        }
-        rewriteSplices(block, rewriteInstrs, rewriteBlocks);
-    }
-    if (rewriteBlocks.length > 0) {
-        for (const block of rewriteBlocks) {
-            fn.body.blocks.set(block.id, block);
-        }
-        reversePostorderBlocks(fn.body);
-        markPredecessors(fn.body);
-        markInstructionIds(fn.body);
-        fixScopeAndIdentifierRanges(fn.body);
-        deadCodeElimination(fn);
-        fn.env.hasInferredEffect = true;
-    }
-}
-function truncateDepAtCurrent(dep) {
-    const idx = dep.path.findIndex(path => path.property === 'current');
-    if (idx === -1) {
-        return dep;
-    }
-    else {
-        return Object.assign(Object.assign({}, dep), { path: dep.path.slice(0, idx) });
-    }
-}
-function rewriteSplices(originalBlock, splices, rewriteBlocks) {
-    if (splices.length === 0) {
-        return;
-    }
-    const originalInstrs = originalBlock.instructions;
-    let currBlock = Object.assign(Object.assign({}, originalBlock), { instructions: [] });
-    rewriteBlocks.push(currBlock);
-    let cursor = 0;
-    for (const rewrite of splices) {
-        while (originalInstrs[cursor].id < rewrite.location) {
-            CompilerError.invariant(originalInstrs[cursor].id < originalInstrs[cursor + 1].id, {
-                reason: '[InferEffectDependencies] Internal invariant broken: expected block instructions to be sorted',
-                loc: originalInstrs[cursor].loc,
-            });
-            currBlock.instructions.push(originalInstrs[cursor]);
-            cursor++;
-        }
-        CompilerError.invariant(originalInstrs[cursor].id === rewrite.location, {
-            reason: '[InferEffectDependencies] Internal invariant broken: splice location not found',
-            loc: originalInstrs[cursor].loc,
-        });
-        if (rewrite.kind === 'instr') {
-            currBlock.instructions.push(rewrite.value);
-        }
-        else if (rewrite.kind === 'block') {
-            const { entry, blocks } = rewrite.value;
-            const entryBlock = blocks.get(entry);
-            currBlock.instructions.push(...entryBlock.instructions);
-            if (blocks.size > 1) {
-                CompilerError.invariant(terminalFallthrough(entryBlock.terminal) === rewrite.exitBlockId, {
-                    reason: '[InferEffectDependencies] Internal invariant broken: expected entry block to have a fallthrough',
-                    loc: entryBlock.terminal.loc,
-                });
-                const originalTerminal = currBlock.terminal;
-                currBlock.terminal = entryBlock.terminal;
-                for (const [id, block] of blocks) {
-                    if (id === entry) {
-                        continue;
-                    }
-                    if (id === rewrite.exitBlockId) {
-                        block.terminal = originalTerminal;
-                        currBlock = block;
-                    }
-                    rewriteBlocks.push(block);
-                }
-            }
-        }
-    }
-    currBlock.instructions.push(...originalInstrs.slice(cursor));
-}
-function inferReactiveIdentifiers(fn) {
-    const reactiveIds = new Set();
-    for (const [, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            for (const place of eachInstructionOperand(instr)) {
-                if (place.reactive) {
-                    reactiveIds.add(place.identifier.id);
-                }
-            }
-        }
-        for (const place of eachTerminalOperand(block.terminal)) {
-            if (place.reactive) {
-                reactiveIds.add(place.identifier.id);
-            }
-        }
-    }
-    return reactiveIds;
-}
-function collectDepUsages(deps, fnExpr) {
-    const identifiers = new Map();
-    const loadedDeps = new Set();
-    const sourceLocations = [];
-    for (const dep of deps) {
-        identifiers.set(dep.identifier.id, dep);
-    }
-    for (const [, block] of fnExpr.loweredFunc.func.body.blocks) {
-        for (const instr of block.instructions) {
-            if (instr.value.kind === 'LoadLocal' &&
-                identifiers.has(instr.value.place.identifier.id)) {
-                loadedDeps.add(instr.lvalue.identifier.id);
-            }
-            for (const place of eachInstructionOperand(instr)) {
-                if (loadedDeps.has(place.identifier.id)) {
-                    sourceLocations.push(place.identifier.loc);
-                }
-            }
-        }
-    }
-    return sourceLocations;
-}
-function inferMinimalDependencies(fnInstr) {
-    const fn = fnInstr.value.loweredFunc.func;
-    const temporaries = collectTemporariesSidemap$1(fn, new Set());
-    const { hoistableObjects, processedInstrsInOptional, temporariesReadInOptional, } = collectOptionalChainSidemap(fn);
-    const hoistablePropertyLoads = collectHoistablePropertyLoadsInInnerFn(fnInstr, temporaries, hoistableObjects);
-    const hoistableToFnEntry = hoistablePropertyLoads.get(fn.body.entry);
-    CompilerError.invariant(hoistableToFnEntry != null, {
-        reason: '[InferEffectDependencies] Internal invariant broken: missing entry block',
-        loc: fnInstr.loc,
-    });
-    const dependencies = inferDependencies(fnInstr, new Map([...temporaries, ...temporariesReadInOptional]), processedInstrsInOptional);
-    const tree = new ReactiveScopeDependencyTreeHIR([...hoistableToFnEntry.assumedNonNullObjects].map(o => o.fullPath));
-    for (const dep of dependencies) {
-        tree.addDependency(Object.assign({}, dep));
-    }
-    return tree.deriveMinimalDependencies();
-}
-function inferDependencies(fnInstr, temporaries, processedInstrsInOptional) {
-    const fn = fnInstr.value.loweredFunc.func;
-    const context = new DependencyCollectionContext(new Set(), temporaries, processedInstrsInOptional);
-    for (const dep of fn.context) {
-        context.declare(dep.identifier, {
-            id: makeInstructionId(0),
-            scope: empty(),
-        });
-    }
-    const placeholderScope = {
-        id: makeScopeId(0),
-        range: {
-            start: fnInstr.id,
-            end: makeInstructionId(fnInstr.id + 1),
-        },
-        dependencies: new Set(),
-        reassignments: new Set(),
-        declarations: new Map(),
-        earlyReturnValue: null,
-        merged: new Set(),
-        loc: GeneratedSource,
-    };
-    context.enterScope(placeholderScope);
-    inferDependenciesInFn(fn, context, temporaries);
-    context.exitScope(placeholderScope, false);
-    const resultUnfiltered = context.deps.get(placeholderScope);
-    CompilerError.invariant(resultUnfiltered != null, {
-        reason: '[InferEffectDependencies] Internal invariant broken: missing scope dependencies',
-        loc: fn.loc,
-    });
-    const fnContext = new Set(fn.context.map(dep => dep.identifier.id));
-    const result = new Set();
-    for (const dep of resultUnfiltered) {
-        if (fnContext.has(dep.identifier.id)) {
-            result.add(dep);
-        }
-    }
-    return result;
-}
-function inferDependenciesInFn(fn, context, temporaries) {
-    for (const [, block] of fn.body.blocks) {
-        for (const phi of block.phis) {
-            for (const operand of phi.operands) {
-                const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
-                if (maybeOptionalChain) {
-                    context.visitDependency(maybeOptionalChain);
-                }
-            }
-        }
-        for (const instr of block.instructions) {
-            if (instr.value.kind === 'FunctionExpression' ||
-                instr.value.kind === 'ObjectMethod') {
-                context.declare(instr.lvalue.identifier, {
-                    id: instr.id,
-                    scope: context.currentScope,
-                });
-                const innerFn = instr.value.loweredFunc.func;
-                context.enterInnerFn(instr, () => {
-                    inferDependenciesInFn(innerFn, context, temporaries);
-                });
-            }
-            else {
-                handleInstruction(instr, context);
-            }
-        }
-    }
-}
-
-function instructionReordering(fn) {
-    var _a;
-    const shared = new Map();
-    const references = findReferencedRangeOfTemporaries(fn);
-    for (const [, block] of fn.body.blocks) {
-        reorderBlock(fn.env, block, shared, references);
-    }
-    CompilerError.invariant(shared.size === 0, {
-        reason: `InstructionReordering: expected all reorderable nodes to have been emitted`,
-        loc: (_a = [...shared.values()]
-            .map(node => { var _a; return (_a = node.instruction) === null || _a === void 0 ? void 0 : _a.loc; })
-            .filter(loc => loc != null)[0]) !== null && _a !== void 0 ? _a : GeneratedSource,
-    });
-    markInstructionIds(fn.body);
-}
-var ReferenceKind;
-(function (ReferenceKind) {
-    ReferenceKind[ReferenceKind["Read"] = 0] = "Read";
-    ReferenceKind[ReferenceKind["Write"] = 1] = "Write";
-})(ReferenceKind || (ReferenceKind = {}));
-function findReferencedRangeOfTemporaries(fn) {
-    const singleUseIdentifiers = new Map();
-    const lastAssignments = new Map();
-    function reference(instr, place, kind) {
-        var _a;
-        if (place.identifier.name !== null &&
-            place.identifier.name.kind === 'named') {
-            if (kind === ReferenceKind.Write) {
-                const name = place.identifier.name.value;
-                const previous = lastAssignments.get(name);
-                if (previous === undefined) {
-                    lastAssignments.set(name, instr);
-                }
-                else {
-                    lastAssignments.set(name, makeInstructionId(Math.max(previous, instr)));
-                }
-            }
-            return;
-        }
-        else if (kind === ReferenceKind.Read) {
-            const previousCount = (_a = singleUseIdentifiers.get(place.identifier.id)) !== null && _a !== void 0 ? _a : 0;
-            singleUseIdentifiers.set(place.identifier.id, previousCount + 1);
-        }
-    }
-    for (const [, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            for (const operand of eachInstructionValueLValue(instr.value)) {
-                reference(instr.id, operand, ReferenceKind.Read);
-            }
-            for (const lvalue of eachInstructionLValue(instr)) {
-                reference(instr.id, lvalue, ReferenceKind.Write);
-            }
-        }
-        for (const operand of eachTerminalOperand(block.terminal)) {
-            reference(block.terminal.id, operand, ReferenceKind.Read);
-        }
-    }
-    return {
-        singleUseIdentifiers: new Set([...singleUseIdentifiers]
-            .filter(([, count]) => count === 1)
-            .map(([id]) => id)),
-        lastAssignments,
-    };
-}
-function reorderBlock(env, block, shared, references) {
-    var _a, _b;
-    const locals = new Map();
-    const named = new Map();
-    let previous = null;
-    for (const instr of block.instructions) {
-        const { lvalue, value } = instr;
-        const reorderability = getReorderability(instr, references);
-        const node = getOrInsertWith(locals, lvalue.identifier.id, () => ({
-            instruction: instr,
-            dependencies: new Set(),
-            reorderability,
-            depth: null,
-        }));
-        if (reorderability === Reorderability.Nonreorderable) {
-            if (previous !== null) {
-                node.dependencies.add(previous);
-            }
-            previous = lvalue.identifier.id;
-        }
-        for (const operand of eachInstructionValueOperand(value)) {
-            const { name, id } = operand.identifier;
-            if (name !== null && name.kind === 'named') {
-                const previous = named.get(name.value);
-                if (previous !== undefined) {
-                    node.dependencies.add(previous);
-                }
-                named.set(name.value, lvalue.identifier.id);
-            }
-            else if (locals.has(id) || shared.has(id)) {
-                node.dependencies.add(id);
-            }
-        }
-        for (const lvalueOperand of eachInstructionValueLValue(value)) {
-            const lvalueNode = getOrInsertWith(locals, lvalueOperand.identifier.id, () => ({
-                instruction: null,
-                dependencies: new Set(),
-                depth: null,
-            }));
-            lvalueNode.dependencies.add(lvalue.identifier.id);
-            const name = lvalueOperand.identifier.name;
-            if (name !== null && name.kind === 'named') {
-                const previous = named.get(name.value);
-                if (previous !== undefined) {
-                    node.dependencies.add(previous);
-                }
-                named.set(name.value, lvalue.identifier.id);
-            }
-        }
-    }
-    const nextInstructions = [];
-    if (isExpressionBlockKind(block.kind)) {
-        if (previous !== null) {
-            emit(env, locals, shared, nextInstructions, previous);
-        }
-        if (block.instructions.length !== 0) {
-            emit(env, locals, shared, nextInstructions, block.instructions.at(-1).lvalue.identifier.id);
-        }
-        for (const operand of eachTerminalOperand(block.terminal)) {
-            emit(env, locals, shared, nextInstructions, operand.identifier.id);
-        }
-        for (const [id, node] of locals) {
-            if (node.instruction == null) {
-                continue;
-            }
-            CompilerError.invariant(node.reorderability === Reorderability.Reorderable, {
-                reason: `Expected all remaining instructions to be reorderable`,
-                description: node.instruction != null
-                    ? `Instruction [${node.instruction.id}] was not emitted yet but is not reorderable`
-                    : `Lvalue $${id} was not emitted yet but is not reorderable`,
-                loc: (_b = (_a = node.instruction) === null || _a === void 0 ? void 0 : _a.loc) !== null && _b !== void 0 ? _b : block.terminal.loc,
-            });
-            shared.set(id, node);
-        }
-    }
-    else {
-        for (const operand of eachTerminalOperand(block.terminal)) {
-            emit(env, locals, shared, nextInstructions, operand.identifier.id);
-        }
-        for (const id of Array.from(locals.keys()).reverse()) {
-            const node = locals.get(id);
-            if (node === undefined) {
-                continue;
-            }
-            if (node.reorderability === Reorderability.Reorderable) {
-                shared.set(id, node);
-            }
-            else {
-                emit(env, locals, shared, nextInstructions, id);
-            }
-        }
-    }
-    block.instructions = nextInstructions;
-}
-function getDepth(env, nodes, id) {
-    const node = nodes.get(id);
-    if (node == null) {
-        return 0;
-    }
-    if (node.depth != null) {
-        return node.depth;
-    }
-    node.depth = 0;
-    let depth = node.reorderability === Reorderability.Reorderable ? 1 : 10;
-    for (const dep of node.dependencies) {
-        depth += getDepth(env, nodes, dep);
-    }
-    node.depth = depth;
-    return depth;
-}
-function emit(env, locals, shared, instructions, id) {
-    var _a;
-    const node = (_a = locals.get(id)) !== null && _a !== void 0 ? _a : shared.get(id);
-    if (node == null) {
-        return;
-    }
-    locals.delete(id);
-    shared.delete(id);
-    const deps = [...node.dependencies];
-    deps.sort((a, b) => {
-        const aDepth = getDepth(env, locals, a);
-        const bDepth = getDepth(env, locals, b);
-        return bDepth - aDepth;
-    });
-    for (const dep of deps) {
-        emit(env, locals, shared, instructions, dep);
-    }
-    if (node.instruction !== null) {
-        instructions.push(node.instruction);
-    }
-}
-var Reorderability;
-(function (Reorderability) {
-    Reorderability[Reorderability["Reorderable"] = 0] = "Reorderable";
-    Reorderability[Reorderability["Nonreorderable"] = 1] = "Nonreorderable";
-})(Reorderability || (Reorderability = {}));
-function getReorderability(instr, references) {
-    switch (instr.value.kind) {
-        case 'JsxExpression':
-        case 'JsxFragment':
-        case 'JSXText':
-        case 'LoadGlobal':
-        case 'Primitive':
-        case 'TemplateLiteral':
-        case 'BinaryExpression':
-        case 'UnaryExpression': {
-            return Reorderability.Reorderable;
-        }
-        case 'LoadLocal': {
-            const name = instr.value.place.identifier.name;
-            if (name !== null && name.kind === 'named') {
-                const lastAssignment = references.lastAssignments.get(name.value);
-                if (lastAssignment !== undefined &&
-                    lastAssignment < instr.id &&
-                    references.singleUseIdentifiers.has(instr.lvalue.identifier.id)) {
-                    return Reorderability.Reorderable;
-                }
-            }
-            return Reorderability.Nonreorderable;
-        }
-        default: {
-            return Reorderability.Nonreorderable;
-        }
-    }
-}
-
 function alignMethodCallScopes(fn) {
     const scopeMapping = new Map();
     const mergedScopes = new DisjointSet();
@@ -46367,170 +43582,6 @@ class Transform extends ReactiveFunctionTransform {
     }
 }
 
-let Visitor$2 = class Visitor extends ReactiveFunctionVisitor {
-    constructor(env, aliases, paths) {
-        super();
-        this.map = new Map();
-        this.aliases = aliases;
-        this.paths = paths;
-        this.env = env;
-    }
-    join(values) {
-        function join2(l, r) {
-            if (l === 'Update' || r === 'Update') {
-                return 'Update';
-            }
-            else if (l === 'Create' || r === 'Create') {
-                return 'Create';
-            }
-            else if (l === 'Unknown' || r === 'Unknown') {
-                return 'Unknown';
-            }
-            assertExhaustive$1(r, `Unhandled variable kind ${r}`);
-        }
-        return values.reduce(join2, 'Unknown');
-    }
-    isCreateOnlyHook(id) {
-        return isUseStateType(id) || isUseRefType(id);
-    }
-    visitPlace(_, place, state) {
-        var _a;
-        this.map.set(place.identifier.id, this.join([state, (_a = this.map.get(place.identifier.id)) !== null && _a !== void 0 ? _a : 'Unknown']));
-    }
-    visitBlock(block, state) {
-        super.visitBlock([...block].reverse(), state);
-    }
-    visitInstruction(instruction) {
-        const state = this.join([...eachInstructionLValue(instruction)].map(operand => { var _a; return (_a = this.map.get(operand.identifier.id)) !== null && _a !== void 0 ? _a : 'Unknown'; }));
-        const visitCallOrMethodNonArgs = () => {
-            switch (instruction.value.kind) {
-                case 'CallExpression': {
-                    this.visitPlace(instruction.id, instruction.value.callee, state);
-                    break;
-                }
-                case 'MethodCall': {
-                    this.visitPlace(instruction.id, instruction.value.property, state);
-                    this.visitPlace(instruction.id, instruction.value.receiver, state);
-                    break;
-                }
-            }
-        };
-        const isHook = () => {
-            let callee = null;
-            switch (instruction.value.kind) {
-                case 'CallExpression': {
-                    callee = instruction.value.callee.identifier;
-                    break;
-                }
-                case 'MethodCall': {
-                    callee = instruction.value.property.identifier;
-                    break;
-                }
-            }
-            return callee != null && getHookKind(this.env, callee) != null;
-        };
-        switch (instruction.value.kind) {
-            case 'CallExpression':
-            case 'MethodCall': {
-                if (instruction.lvalue &&
-                    this.isCreateOnlyHook(instruction.lvalue.identifier)) {
-                    [...eachCallArgument(instruction.value.args)].forEach(operand => this.visitPlace(instruction.id, operand, 'Create'));
-                    visitCallOrMethodNonArgs();
-                }
-                else {
-                    this.traverseInstruction(instruction, isHook() ? 'Update' : state);
-                }
-                break;
-            }
-            default: {
-                this.traverseInstruction(instruction, state);
-            }
-        }
-    }
-    visitScope(scope) {
-        const state = this.join([
-            ...scope.scope.declarations.keys(),
-            ...[...scope.scope.reassignments.values()].map(ident => ident.id),
-        ].map(id => { var _a; return (_a = this.map.get(id)) !== null && _a !== void 0 ? _a : 'Unknown'; }));
-        super.visitScope(scope, state);
-        [...scope.scope.dependencies].forEach(ident => {
-            var _a;
-            let target = (_a = this.aliases.find(ident.identifier.id)) !== null && _a !== void 0 ? _a : ident.identifier.id;
-            ident.path.forEach(token => {
-                var _a;
-                target && (target = (_a = this.paths.get(target)) === null || _a === void 0 ? void 0 : _a.get(token.property));
-            });
-            if (target && this.map.get(target) === 'Create') {
-                scope.scope.dependencies.delete(ident);
-            }
-        });
-    }
-    visitTerminal(stmt, state) {
-        CompilerError.invariant(state !== 'Create', {
-            reason: "Visiting a terminal statement with state 'Create'",
-            loc: stmt.terminal.loc,
-        });
-        super.visitTerminal(stmt, state);
-    }
-    visitReactiveFunctionValue(_id, _dependencies, fn, state) {
-        visitReactiveFunction(fn, this, state);
-    }
-};
-function pruneInitializationDependencies(fn) {
-    const [aliases, paths] = getAliases(fn);
-    visitReactiveFunction(fn, new Visitor$2(fn.env, aliases, paths), 'Update');
-}
-function update(map, key, path, value) {
-    var _a;
-    const inner = (_a = map.get(key)) !== null && _a !== void 0 ? _a : new Map();
-    inner.set(path, value);
-    map.set(key, inner);
-}
-class AliasVisitor extends ReactiveFunctionVisitor {
-    constructor() {
-        super(...arguments);
-        this.scopeIdentifiers = new DisjointSet();
-        this.scopePaths = new Map();
-    }
-    visitInstruction(instr) {
-        if (instr.value.kind === 'StoreLocal' ||
-            instr.value.kind === 'StoreContext') {
-            this.scopeIdentifiers.union([
-                instr.value.lvalue.place.identifier.id,
-                instr.value.value.identifier.id,
-            ]);
-        }
-        else if (instr.value.kind === 'LoadLocal' ||
-            instr.value.kind === 'LoadContext') {
-            instr.lvalue &&
-                this.scopeIdentifiers.union([
-                    instr.lvalue.identifier.id,
-                    instr.value.place.identifier.id,
-                ]);
-        }
-        else if (instr.value.kind === 'PropertyLoad') {
-            instr.lvalue &&
-                update(this.scopePaths, instr.value.object.identifier.id, instr.value.property, instr.lvalue.identifier.id);
-        }
-        else if (instr.value.kind === 'PropertyStore') {
-            update(this.scopePaths, instr.value.object.identifier.id, instr.value.property, instr.value.value.identifier.id);
-        }
-    }
-}
-function getAliases(fn) {
-    var _a, _b;
-    const visitor = new AliasVisitor();
-    visitReactiveFunction(fn, visitor, null);
-    let disjoint = visitor.scopeIdentifiers;
-    let scopePaths = new Map();
-    for (const [key, value] of visitor.scopePaths) {
-        for (const [path, id] of value) {
-            update(scopePaths, (_a = disjoint.find(key)) !== null && _a !== void 0 ? _a : key, path, (_b = disjoint.find(id)) !== null && _b !== void 0 ? _b : id);
-        }
-    }
-    return [disjoint, scopePaths];
-}
-
 function isPrimitiveBinaryOp(op) {
     switch (op) {
         case '+':
@@ -46673,16 +43724,8 @@ function* generateInstructionTypes(env, names, instr) {
             break;
         }
         case 'StoreLocal': {
-            if (env.config.enableUseTypeAnnotations) {
-                yield equation(value.lvalue.place.identifier.type, value.value.identifier.type);
-                const valueType = value.type === null ? makeType() : lowerType(value.type);
-                yield equation(valueType, value.lvalue.place.identifier.type);
-                yield equation(left, valueType);
-            }
-            else {
-                yield equation(left, value.value.identifier.type);
-                yield equation(value.lvalue.place.identifier.type, value.value.identifier.type);
-            }
+            yield equation(left, value.value.identifier.type);
+            yield equation(value.lvalue.place.identifier.type, value.value.identifier.type);
             break;
         }
         case 'StoreGlobal': {
@@ -46840,13 +43883,7 @@ function* generateInstructionTypes(env, names, instr) {
             break;
         }
         case 'TypeCastExpression': {
-            if (env.config.enableUseTypeAnnotations) {
-                yield equation(value.type, value.value.identifier.type);
-                yield equation(left, value.type);
-            }
-            else {
-                yield equation(left, value.value.identifier.type);
-            }
+            yield equation(left, value.value.identifier.type);
             break;
         }
         case 'PropertyDelete':
@@ -46882,25 +43919,6 @@ function* generateInstructionTypes(env, names, instr) {
                             yield equation(prop.place.identifier.type, {
                                 kind: 'Object',
                                 shapeId: BuiltInUseRefId,
-                            });
-                        }
-                    }
-                }
-            }
-            if (env.config.enableInferEventHandlers) {
-                if (value.kind === 'JsxExpression' &&
-                    value.tag.kind === 'BuiltinTag' &&
-                    !value.tag.name.includes('-')) {
-                    for (const prop of value.props) {
-                        if (prop.kind === 'JsxAttribute' &&
-                            prop.name.startsWith('on') &&
-                            prop.name.length > 2 &&
-                            prop.name[2] === prop.name[2].toUpperCase()) {
-                            yield equation(prop.place.identifier.type, {
-                                kind: 'Function',
-                                shapeId: BuiltInEventHandlerId,
-                                return: makeType(),
-                                isConstructor: false,
                             });
                         }
                     }
@@ -47575,61 +44593,6 @@ function visitFunctionExpression(errors, fn) {
     }
 }
 
-function validateMemoizedEffectDependencies(fn) {
-    const errors = new CompilerError();
-    visitReactiveFunction(fn, new Visitor$1(), errors);
-    return errors.asResult();
-}
-let Visitor$1 = class Visitor extends ReactiveFunctionVisitor {
-    constructor() {
-        super(...arguments);
-        this.scopes = new Set();
-    }
-    visitScope(scopeBlock, state) {
-        this.traverseScope(scopeBlock, state);
-        let areDependenciesMemoized = true;
-        for (const dep of scopeBlock.scope.dependencies) {
-            if (isUnmemoized$1(dep.identifier, this.scopes)) {
-                areDependenciesMemoized = false;
-                break;
-            }
-        }
-        if (areDependenciesMemoized) {
-            this.scopes.add(scopeBlock.scope.id);
-            for (const id of scopeBlock.scope.merged) {
-                this.scopes.add(id);
-            }
-        }
-    }
-    visitInstruction(instruction, state) {
-        this.traverseInstruction(instruction, state);
-        if (instruction.value.kind === 'CallExpression' &&
-            isEffectHook(instruction.value.callee.identifier) &&
-            instruction.value.args.length >= 2) {
-            const deps = instruction.value.args[1];
-            if (deps.kind === 'Identifier' &&
-                (isMutable(instruction, deps) ||
-                    isUnmemoized$1(deps.identifier, this.scopes))) {
-                state.push({
-                    category: ErrorCategory.EffectDependencies,
-                    reason: 'React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior',
-                    description: null,
-                    loc: typeof instruction.loc !== 'symbol' ? instruction.loc : null,
-                    suggestions: null,
-                });
-            }
-        }
-    }
-};
-function isUnmemoized$1(operand, scopes) {
-    return operand.scope != null && !scopes.has(operand.scope.id);
-}
-function isEffectHook(identifier) {
-    return (isUseEffectHookType(identifier) ||
-        isUseLayoutEffectHookType(identifier) ||
-        isUseInsertionEffectHookType(identifier));
-}
-
 function validateNoCapitalizedCalls(fn) {
     var _a;
     const envConfig = fn.env.config;
@@ -47637,9 +44600,8 @@ function validateNoCapitalizedCalls(fn) {
         ...DEFAULT_GLOBALS.keys(),
         ...((_a = envConfig.validateNoCapitalizedCalls) !== null && _a !== void 0 ? _a : []),
     ]);
-    const hookPattern = envConfig.hookPattern != null ? new RegExp(envConfig.hookPattern) : null;
     const isAllowed = (name) => {
-        return (ALLOW_LIST.has(name) || (hookPattern != null && hookPattern.test(name)));
+        return ALLOW_LIST.has(name);
     };
     const errors = new CompilerError();
     const capitalLoadGlobals = new Map();
@@ -47750,10 +44712,10 @@ class Env {
 _Env_changed = new WeakMap(), _Env_data = new WeakMap(), _Env_temporaries = new WeakMap();
 function validateNoRefAccessInRender(fn) {
     const env = new Env();
-    collectTemporariesSidemap(fn, env);
+    collectTemporariesSidemap$1(fn, env);
     return validateNoRefAccessInRenderImpl(fn, env).map(_ => undefined);
 }
-function collectTemporariesSidemap(fn, env) {
+function collectTemporariesSidemap$1(fn, env) {
     for (const block of fn.body.blocks.values()) {
         for (const instr of block.instructions) {
             const { lvalue, value } = instr;
@@ -47798,10 +44760,6 @@ function refTypeOfType(place) {
     else {
         return { kind: 'None' };
     }
-}
-function isEventHandlerType(identifier) {
-    const type = identifier.type;
-    return type.kind === 'Function' && type.shapeId === BuiltInEventHandlerId;
 }
 function tyEqual(a, b) {
     if (a.kind !== b.kind) {
@@ -48061,10 +45019,8 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                         }
                         if (!didError) {
                             const isRefLValue = isUseRefType(instr.lvalue.identifier);
-                            const isEventHandlerLValue = isEventHandlerType(instr.lvalue.identifier);
                             for (const operand of eachInstructionValueOperand(instr.value)) {
                                 if (isRefLValue ||
-                                    isEventHandlerLValue ||
                                     (hookKind != null &&
                                         hookKind !== 'useState' &&
                                         hookKind !== 'useReducer')) {
@@ -48477,7 +45433,7 @@ var CompareDependencyResult;
     CompareDependencyResult[CompareDependencyResult["Subpath"] = 3] = "Subpath";
     CompareDependencyResult[CompareDependencyResult["RefAccessDifference"] = 4] = "RefAccessDifference";
 })(CompareDependencyResult || (CompareDependencyResult = {}));
-function merge(a, b) {
+function merge$1(a, b) {
     return Math.max(a, b);
 }
 function getCompareDependencyResultDescription(result) {
@@ -48579,7 +45535,7 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
             return;
         }
         else {
-            errorDiagnostic = merge(errorDiagnostic !== null && errorDiagnostic !== void 0 ? errorDiagnostic : compareResult, compareResult);
+            errorDiagnostic = merge$1(errorDiagnostic !== null && errorDiagnostic !== void 0 ? errorDiagnostic : compareResult, compareResult);
         }
     }
     errorState.pushDiagnostic(CompilerDiagnostic.create({
@@ -49312,226 +46268,6 @@ function outlineFunctions(fn, fbtOperands) {
     }
 }
 
-function lowerContextAccess(fn, loweredContextCalleeConfig) {
-    const contextAccess = new Map();
-    const contextKeys = new Map();
-    for (const [, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            const { value, lvalue } = instr;
-            if (value.kind === 'CallExpression' &&
-                isUseContextHookType(value.callee.identifier)) {
-                contextAccess.set(lvalue.identifier.id, value);
-                continue;
-            }
-            if (value.kind !== 'Destructure') {
-                continue;
-            }
-            const destructureId = value.value.identifier.id;
-            if (!contextAccess.has(destructureId)) {
-                continue;
-            }
-            const keys = getContextKeys(value);
-            if (keys === null) {
-                return;
-            }
-            if (contextKeys.has(destructureId)) {
-                return;
-            }
-            else {
-                contextKeys.set(destructureId, keys);
-            }
-        }
-    }
-    let importLoweredContextCallee = null;
-    if (contextAccess.size > 0 && contextKeys.size > 0) {
-        for (const [, block] of fn.body.blocks) {
-            let nextInstructions = null;
-            for (let i = 0; i < block.instructions.length; i++) {
-                const instr = block.instructions[i];
-                const { lvalue, value } = instr;
-                if (value.kind === 'CallExpression' &&
-                    isUseContextHookType(value.callee.identifier) &&
-                    contextKeys.has(lvalue.identifier.id)) {
-                    importLoweredContextCallee !== null && importLoweredContextCallee !== void 0 ? importLoweredContextCallee : (importLoweredContextCallee = fn.env.programContext.addImportSpecifier(loweredContextCalleeConfig));
-                    const loweredContextCalleeInstr = emitLoadLoweredContextCallee(fn.env, importLoweredContextCallee);
-                    if (nextInstructions === null) {
-                        nextInstructions = block.instructions.slice(0, i);
-                    }
-                    nextInstructions.push(loweredContextCalleeInstr);
-                    const keys = contextKeys.get(lvalue.identifier.id);
-                    const selectorFnInstr = emitSelectorFn(fn.env, keys);
-                    nextInstructions.push(selectorFnInstr);
-                    const lowerContextCallId = loweredContextCalleeInstr.lvalue;
-                    value.callee = lowerContextCallId;
-                    const selectorFn = selectorFnInstr.lvalue;
-                    value.args.push(selectorFn);
-                }
-                if (nextInstructions) {
-                    nextInstructions.push(instr);
-                }
-            }
-            if (nextInstructions) {
-                block.instructions = nextInstructions;
-            }
-        }
-        markInstructionIds(fn.body);
-        inferTypes(fn);
-    }
-}
-function emitLoadLoweredContextCallee(env, importedLowerContextCallee) {
-    const loadGlobal = {
-        kind: 'LoadGlobal',
-        binding: Object.assign({}, importedLowerContextCallee),
-        loc: GeneratedSource,
-    };
-    return {
-        id: makeInstructionId(0),
-        loc: GeneratedSource,
-        lvalue: createTemporaryPlace(env, GeneratedSource),
-        effects: null,
-        value: loadGlobal,
-    };
-}
-function getContextKeys(value) {
-    const keys = [];
-    const pattern = value.lvalue.pattern;
-    switch (pattern.kind) {
-        case 'ArrayPattern': {
-            return null;
-        }
-        case 'ObjectPattern': {
-            for (const place of pattern.properties) {
-                if (place.kind !== 'ObjectProperty' ||
-                    place.type !== 'property' ||
-                    place.key.kind !== 'identifier' ||
-                    place.place.identifier.name === null ||
-                    place.place.identifier.name.kind !== 'named') {
-                    return null;
-                }
-                keys.push(place.key.name);
-            }
-            return keys;
-        }
-    }
-}
-function emitPropertyLoad(env, obj, property) {
-    const loadObj = {
-        kind: 'LoadLocal',
-        place: obj,
-        loc: GeneratedSource,
-    };
-    const object = createTemporaryPlace(env, GeneratedSource);
-    const loadLocalInstr = {
-        lvalue: object,
-        value: loadObj,
-        id: makeInstructionId(0),
-        effects: null,
-        loc: GeneratedSource,
-    };
-    const loadProp = {
-        kind: 'PropertyLoad',
-        object,
-        property: makePropertyLiteral(property),
-        loc: GeneratedSource,
-    };
-    const element = createTemporaryPlace(env, GeneratedSource);
-    const loadPropInstr = {
-        lvalue: element,
-        value: loadProp,
-        id: makeInstructionId(0),
-        effects: null,
-        loc: GeneratedSource,
-    };
-    return {
-        instructions: [loadLocalInstr, loadPropInstr],
-        element: element,
-    };
-}
-function emitSelectorFn(env, keys) {
-    const obj = createTemporaryPlace(env, GeneratedSource);
-    promoteTemporary(obj.identifier);
-    const instr = [];
-    const elements = [];
-    for (const key of keys) {
-        const { instructions, element: prop } = emitPropertyLoad(env, obj, key);
-        instr.push(...instructions);
-        elements.push(prop);
-    }
-    const arrayInstr = emitArrayInstr(elements, env);
-    instr.push(arrayInstr);
-    const block = {
-        kind: 'block',
-        id: makeBlockId(0),
-        instructions: instr,
-        terminal: {
-            id: makeInstructionId(0),
-            kind: 'return',
-            returnVariant: 'Explicit',
-            loc: GeneratedSource,
-            value: arrayInstr.lvalue,
-            effects: null,
-        },
-        preds: new Set(),
-        phis: new Set(),
-    };
-    const fn = {
-        loc: GeneratedSource,
-        id: null,
-        nameHint: null,
-        fnType: 'Other',
-        env,
-        params: [obj],
-        returnTypeAnnotation: null,
-        returns: createTemporaryPlace(env, GeneratedSource),
-        context: [],
-        body: {
-            entry: block.id,
-            blocks: new Map([[block.id, block]]),
-        },
-        generator: false,
-        async: false,
-        directives: [],
-        aliasingEffects: [],
-    };
-    reversePostorderBlocks(fn.body);
-    markInstructionIds(fn.body);
-    enterSSA(fn);
-    inferTypes(fn);
-    const fnInstr = {
-        id: makeInstructionId(0),
-        value: {
-            kind: 'FunctionExpression',
-            name: null,
-            nameHint: null,
-            loweredFunc: {
-                func: fn,
-            },
-            type: 'ArrowFunctionExpression',
-            loc: GeneratedSource,
-        },
-        lvalue: createTemporaryPlace(env, GeneratedSource),
-        effects: null,
-        loc: GeneratedSource,
-    };
-    return fnInstr;
-}
-function emitArrayInstr(elements, env) {
-    const array = {
-        kind: 'ArrayExpression',
-        elements,
-        loc: GeneratedSource,
-    };
-    const arrayLvalue = createTemporaryPlace(env, GeneratedSource);
-    const arrayInstr = {
-        id: makeInstructionId(0),
-        value: array,
-        lvalue: arrayLvalue,
-        effects: null,
-        loc: GeneratedSource,
-    };
-    return arrayInstr;
-}
-
 function validateNoSetStateInEffects(fn, env) {
     const setStateFunctions = new Map();
     const errors = new CompilerError();
@@ -49781,6 +46517,1174 @@ function validateNoJSXInTryStatement(fn) {
         }
     }
     return errors.asResult();
+}
+
+function collectHoistablePropertyLoads(fn, temporaries, hoistableFromOptionals) {
+    const registry = new PropertyPathRegistry();
+    const knownImmutableIdentifiers = new Set();
+    if (fn.fnType === 'Component' || fn.fnType === 'Hook') {
+        for (const p of fn.params) {
+            if (p.kind === 'Identifier') {
+                knownImmutableIdentifiers.add(p.identifier.id);
+            }
+        }
+    }
+    return collectHoistablePropertyLoadsImpl(fn, {
+        temporaries,
+        knownImmutableIdentifiers,
+        hoistableFromOptionals,
+        registry,
+        nestedFnImmutableContext: null,
+        assumedInvokedFns: getAssumedInvokedFunctions(fn),
+    });
+}
+function collectHoistablePropertyLoadsImpl(fn, context) {
+    const nodes = collectNonNullsInBlocks(fn, context);
+    propagateNonNull(fn, nodes, context.registry);
+    return nodes;
+}
+function keyByScopeId(fn, source) {
+    const keyedByScopeId = new Map();
+    for (const [_, block] of fn.body.blocks) {
+        if (block.terminal.kind === 'scope') {
+            keyedByScopeId.set(block.terminal.scope.id, source.get(block.terminal.block));
+        }
+    }
+    return keyedByScopeId;
+}
+class PropertyPathRegistry {
+    constructor() {
+        this.roots = new Map();
+    }
+    getOrCreateIdentifier(identifier, reactive, loc) {
+        let rootNode = this.roots.get(identifier.id);
+        if (rootNode === undefined) {
+            rootNode = {
+                root: identifier.id,
+                properties: new Map(),
+                optionalProperties: new Map(),
+                fullPath: {
+                    identifier,
+                    reactive,
+                    path: [],
+                    loc,
+                },
+                hasOptional: false,
+                parent: null,
+            };
+            this.roots.set(identifier.id, rootNode);
+        }
+        else {
+            CompilerError.invariant(reactive === rootNode.fullPath.reactive, {
+                reason: '[HoistablePropertyLoads] Found inconsistencies in `reactive` flag when deduping identifier reads within the same scope',
+                loc: identifier.loc,
+            });
+        }
+        return rootNode;
+    }
+    static getOrCreatePropertyEntry(parent, entry) {
+        const map = entry.optional ? parent.optionalProperties : parent.properties;
+        let child = map.get(entry.property);
+        if (child == null) {
+            child = {
+                properties: new Map(),
+                optionalProperties: new Map(),
+                parent: parent,
+                fullPath: {
+                    identifier: parent.fullPath.identifier,
+                    reactive: parent.fullPath.reactive,
+                    path: parent.fullPath.path.concat(entry),
+                    loc: entry.loc,
+                },
+                hasOptional: parent.hasOptional || entry.optional,
+            };
+            map.set(entry.property, child);
+        }
+        return child;
+    }
+    getOrCreateProperty(n) {
+        let currNode = this.getOrCreateIdentifier(n.identifier, n.reactive, n.loc);
+        if (n.path.length === 0) {
+            return currNode;
+        }
+        for (let i = 0; i < n.path.length - 1; i++) {
+            currNode = PropertyPathRegistry.getOrCreatePropertyEntry(currNode, n.path[i]);
+        }
+        return PropertyPathRegistry.getOrCreatePropertyEntry(currNode, n.path.at(-1));
+    }
+}
+function getMaybeNonNullInInstruction(value, context) {
+    var _a, _b, _c;
+    let path = null;
+    if (value.kind === 'PropertyLoad') {
+        path = (_a = context.temporaries.get(value.object.identifier.id)) !== null && _a !== void 0 ? _a : {
+            identifier: value.object.identifier,
+            reactive: value.object.reactive,
+            path: [],
+            loc: value.loc,
+        };
+    }
+    else if (value.kind === 'Destructure') {
+        path = (_b = context.temporaries.get(value.value.identifier.id)) !== null && _b !== void 0 ? _b : null;
+    }
+    else if (value.kind === 'ComputedLoad') {
+        path = (_c = context.temporaries.get(value.object.identifier.id)) !== null && _c !== void 0 ? _c : null;
+    }
+    return path != null ? context.registry.getOrCreateProperty(path) : null;
+}
+function isImmutableAtInstr(identifier, instr, context) {
+    if (context.nestedFnImmutableContext != null) {
+        return context.nestedFnImmutableContext.has(identifier.id);
+    }
+    else {
+        const mutableAtInstr = identifier.mutableRange.end > identifier.mutableRange.start + 1 &&
+            identifier.scope != null &&
+            inRange({
+                id: instr,
+            }, identifier.scope.range);
+        return (!mutableAtInstr || context.knownImmutableIdentifiers.has(identifier.id));
+    }
+}
+function collectNonNullsInBlocks(fn, context) {
+    var _a;
+    const knownNonNullIdentifiers = new Set();
+    if (fn.fnType === 'Component' &&
+        fn.params.length > 0 &&
+        fn.params[0].kind === 'Identifier') {
+        const identifier = fn.params[0].identifier;
+        knownNonNullIdentifiers.add(context.registry.getOrCreateIdentifier(identifier, true, fn.params[0].loc));
+    }
+    const nodes = new Map();
+    for (const [_, block] of fn.body.blocks) {
+        const assumedNonNullObjects = new Set(knownNonNullIdentifiers);
+        const maybeOptionalChain = context.hoistableFromOptionals.get(block.id);
+        if (maybeOptionalChain != null) {
+            assumedNonNullObjects.add(context.registry.getOrCreateProperty(maybeOptionalChain));
+        }
+        for (const instr of block.instructions) {
+            const maybeNonNull = getMaybeNonNullInInstruction(instr.value, context);
+            if (maybeNonNull != null &&
+                isImmutableAtInstr(maybeNonNull.fullPath.identifier, instr.id, context)) {
+                assumedNonNullObjects.add(maybeNonNull);
+            }
+            if (instr.value.kind === 'FunctionExpression') {
+                const innerFn = instr.value.loweredFunc;
+                if (context.assumedInvokedFns.has(innerFn)) {
+                    const innerHoistableMap = collectHoistablePropertyLoadsImpl(innerFn.func, Object.assign(Object.assign({}, context), { nestedFnImmutableContext: (_a = context.nestedFnImmutableContext) !== null && _a !== void 0 ? _a : new Set(innerFn.func.context
+                            .filter(place => isImmutableAtInstr(place.identifier, instr.id, context))
+                            .map(place => place.identifier.id)) }));
+                    const innerHoistables = assertNonNull(innerHoistableMap.get(innerFn.func.body.entry));
+                    for (const entry of innerHoistables.assumedNonNullObjects) {
+                        assumedNonNullObjects.add(entry);
+                    }
+                }
+            }
+            else if (fn.env.config.enablePreserveExistingMemoizationGuarantees &&
+                instr.value.kind === 'StartMemoize' &&
+                instr.value.deps != null) {
+                for (const dep of instr.value.deps) {
+                    if (dep.root.kind === 'NamedLocal') {
+                        if (!isImmutableAtInstr(dep.root.value.identifier, instr.id, context)) {
+                            continue;
+                        }
+                        for (let i = 0; i < dep.path.length; i++) {
+                            const pathEntry = dep.path[i];
+                            if (pathEntry.optional) {
+                                break;
+                            }
+                            const depNode = context.registry.getOrCreateProperty({
+                                identifier: dep.root.value.identifier,
+                                path: dep.path.slice(0, i),
+                                reactive: dep.root.value.reactive,
+                                loc: dep.loc,
+                            });
+                            assumedNonNullObjects.add(depNode);
+                        }
+                    }
+                }
+            }
+        }
+        nodes.set(block.id, {
+            block,
+            assumedNonNullObjects,
+        });
+    }
+    return nodes;
+}
+function propagateNonNull(fn, nodes, registry) {
+    const blockSuccessors = new Map();
+    const terminalPreds = new Set();
+    for (const [blockId, block] of fn.body.blocks) {
+        for (const pred of block.preds) {
+            getOrInsertDefault(blockSuccessors, pred, new Set()).add(blockId);
+        }
+        if (block.terminal.kind === 'throw' || block.terminal.kind === 'return') {
+            terminalPreds.add(blockId);
+        }
+    }
+    function recursivelyPropagateNonNull(nodeId, direction, traversalState) {
+        var _a;
+        if (traversalState.has(nodeId)) {
+            return false;
+        }
+        traversalState.set(nodeId, 'active');
+        const node = nodes.get(nodeId);
+        if (node == null) {
+            CompilerError.invariant(false, {
+                reason: `Bad node ${nodeId}, kind: ${direction}`,
+                loc: GeneratedSource,
+            });
+        }
+        const neighbors = Array.from(direction === 'backward'
+            ? ((_a = blockSuccessors.get(nodeId)) !== null && _a !== void 0 ? _a : [])
+            : node.block.preds);
+        let changed = false;
+        for (const pred of neighbors) {
+            if (!traversalState.has(pred)) {
+                const neighborChanged = recursivelyPropagateNonNull(pred, direction, traversalState);
+                changed || (changed = neighborChanged);
+            }
+        }
+        const neighborAccesses = Set_intersect(Array.from(neighbors)
+            .filter(n => traversalState.get(n) === 'done')
+            .map(n => assertNonNull(nodes.get(n)).assumedNonNullObjects));
+        const prevObjects = assertNonNull(nodes.get(nodeId)).assumedNonNullObjects;
+        const mergedObjects = Set_union(prevObjects, neighborAccesses);
+        reduceMaybeOptionalChains(mergedObjects, registry);
+        assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
+        traversalState.set(nodeId, 'done');
+        changed || (changed = !Set_equal(prevObjects, mergedObjects));
+        return changed;
+    }
+    const traversalState = new Map();
+    const reversedBlocks = [...fn.body.blocks];
+    reversedBlocks.reverse();
+    let changed;
+    let i = 0;
+    do {
+        CompilerError.invariant(i++ < 100, {
+            reason: '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 100 loops',
+            loc: GeneratedSource,
+        });
+        changed = false;
+        for (const [blockId] of fn.body.blocks) {
+            const forwardChanged = recursivelyPropagateNonNull(blockId, 'forward', traversalState);
+            changed || (changed = forwardChanged);
+        }
+        traversalState.clear();
+        for (const [blockId] of reversedBlocks) {
+            const backwardChanged = recursivelyPropagateNonNull(blockId, 'backward', traversalState);
+            changed || (changed = backwardChanged);
+        }
+        traversalState.clear();
+    } while (changed);
+}
+function assertNonNull(value, source) {
+    CompilerError.invariant(value != null, {
+        reason: 'Unexpected null',
+        description: source != null ? `(from ${source})` : null,
+        loc: GeneratedSource,
+    });
+    return value;
+}
+function reduceMaybeOptionalChains(nodes, registry) {
+    let optionalChainNodes = Set_filter(nodes, n => n.hasOptional);
+    if (optionalChainNodes.size === 0) {
+        return;
+    }
+    let changed;
+    do {
+        changed = false;
+        for (const original of optionalChainNodes) {
+            let { identifier, path: origPath, reactive, loc: origLoc, } = original.fullPath;
+            let currNode = registry.getOrCreateIdentifier(identifier, reactive, origLoc);
+            for (let i = 0; i < origPath.length; i++) {
+                const entry = origPath[i];
+                const nextEntry = entry.optional && nodes.has(currNode)
+                    ? { property: entry.property, optional: false, loc: entry.loc }
+                    : entry;
+                currNode = PropertyPathRegistry.getOrCreatePropertyEntry(currNode, nextEntry);
+            }
+            if (currNode !== original) {
+                changed = true;
+                optionalChainNodes.delete(original);
+                optionalChainNodes.add(currNode);
+                nodes.delete(original);
+                nodes.add(currNode);
+            }
+        }
+    } while (changed);
+}
+function getAssumedInvokedFunctions(fn, temporaries = new Map()) {
+    var _a;
+    const hoistableFunctions = new Set();
+    for (const block of fn.body.blocks.values()) {
+        for (const { lvalue, value } of block.instructions) {
+            if (value.kind === 'FunctionExpression') {
+                temporaries.set(lvalue.identifier.id, {
+                    fn: value.loweredFunc,
+                    mayInvoke: new Set(),
+                });
+            }
+            else if (value.kind === 'StoreLocal') {
+                const lvalue = value.lvalue.place.identifier;
+                const maybeLoweredFunc = temporaries.get(value.value.identifier.id);
+                if (maybeLoweredFunc != null) {
+                    temporaries.set(lvalue.id, maybeLoweredFunc);
+                }
+            }
+            else if (value.kind === 'LoadLocal') {
+                const maybeLoweredFunc = temporaries.get(value.place.identifier.id);
+                if (maybeLoweredFunc != null) {
+                    temporaries.set(lvalue.identifier.id, maybeLoweredFunc);
+                }
+            }
+        }
+    }
+    for (const block of fn.body.blocks.values()) {
+        for (const { lvalue, value } of block.instructions) {
+            if (value.kind === 'CallExpression') {
+                const callee = value.callee;
+                const maybeHook = getHookKind(fn.env, callee.identifier);
+                const maybeLoweredFunc = temporaries.get(callee.identifier.id);
+                if (maybeLoweredFunc != null) {
+                    hoistableFunctions.add(maybeLoweredFunc.fn);
+                }
+                else if (maybeHook != null) {
+                    for (const arg of value.args) {
+                        if (arg.kind === 'Identifier') {
+                            const maybeLoweredFunc = temporaries.get(arg.identifier.id);
+                            if (maybeLoweredFunc != null) {
+                                hoistableFunctions.add(maybeLoweredFunc.fn);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (value.kind === 'JsxExpression') {
+                for (const attr of value.props) {
+                    if (attr.kind === 'JsxSpreadAttribute') {
+                        continue;
+                    }
+                    const maybeLoweredFunc = temporaries.get(attr.place.identifier.id);
+                    if (maybeLoweredFunc != null) {
+                        hoistableFunctions.add(maybeLoweredFunc.fn);
+                    }
+                }
+                for (const child of (_a = value.children) !== null && _a !== void 0 ? _a : []) {
+                    const maybeLoweredFunc = temporaries.get(child.identifier.id);
+                    if (maybeLoweredFunc != null) {
+                        hoistableFunctions.add(maybeLoweredFunc.fn);
+                    }
+                }
+            }
+            else if (value.kind === 'FunctionExpression') {
+                const loweredFunc = value.loweredFunc.func;
+                const lambdasCalled = getAssumedInvokedFunctions(loweredFunc, temporaries);
+                const maybeLoweredFunc = temporaries.get(lvalue.identifier.id);
+                if (maybeLoweredFunc != null) {
+                    for (const called of lambdasCalled) {
+                        maybeLoweredFunc.mayInvoke.add(called);
+                    }
+                }
+            }
+        }
+        if (block.terminal.kind === 'return') {
+            const maybeLoweredFunc = temporaries.get(block.terminal.value.identifier.id);
+            if (maybeLoweredFunc != null) {
+                hoistableFunctions.add(maybeLoweredFunc.fn);
+            }
+        }
+    }
+    for (const [_, { fn, mayInvoke }] of temporaries) {
+        if (hoistableFunctions.has(fn)) {
+            for (const called of mayInvoke) {
+                hoistableFunctions.add(called);
+            }
+        }
+    }
+    return hoistableFunctions;
+}
+
+var _a, _ReactiveScopeDependencyTreeHIR_hoistableObjects, _ReactiveScopeDependencyTreeHIR_deps, _ReactiveScopeDependencyTreeHIR_getOrCreateRoot, _ReactiveScopeDependencyTreeHIR_debugImpl;
+class ReactiveScopeDependencyTreeHIR {
+    constructor(hoistableObjects) {
+        var _b;
+        _ReactiveScopeDependencyTreeHIR_hoistableObjects.set(this, new Map());
+        _ReactiveScopeDependencyTreeHIR_deps.set(this, new Map());
+        for (const { path, identifier, reactive, loc } of hoistableObjects) {
+            let currNode = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, reactive, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f"), path.length > 0 && path[0].optional ? 'Optional' : 'NonNull', loc);
+            for (let i = 0; i < path.length; i++) {
+                const prevAccessType = (_b = currNode.properties.get(path[i].property)) === null || _b === void 0 ? void 0 : _b.accessType;
+                const accessType = i + 1 < path.length && path[i + 1].optional ? 'Optional' : 'NonNull';
+                CompilerError.invariant(prevAccessType == null || prevAccessType === accessType, {
+                    reason: 'Conflicting access types',
+                    loc: GeneratedSource,
+                });
+                let nextNode = currNode.properties.get(path[i].property);
+                if (nextNode == null) {
+                    nextNode = {
+                        properties: new Map(),
+                        accessType,
+                        loc: path[i].loc,
+                    };
+                    currNode.properties.set(path[i].property, nextNode);
+                }
+                currNode = nextNode;
+            }
+        }
+    }
+    addDependency(dep) {
+        const { identifier, reactive, path, loc } = dep;
+        let depCursor = __classPrivateFieldGet(_a, _a, "m", _ReactiveScopeDependencyTreeHIR_getOrCreateRoot).call(_a, identifier, reactive, __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f"), PropertyAccessType.UnconditionalAccess, loc);
+        let hoistableCursor = __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_hoistableObjects, "f").get(identifier);
+        for (const entry of path) {
+            let nextHoistableCursor;
+            let nextDepCursor;
+            if (entry.optional) {
+                if (hoistableCursor != null) {
+                    nextHoistableCursor = hoistableCursor === null || hoistableCursor === void 0 ? void 0 : hoistableCursor.properties.get(entry.property);
+                }
+                let accessType;
+                if (hoistableCursor != null &&
+                    hoistableCursor.accessType === 'NonNull') {
+                    accessType = PropertyAccessType.UnconditionalAccess;
+                }
+                else {
+                    accessType = PropertyAccessType.OptionalAccess;
+                }
+                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, accessType, entry.loc);
+            }
+            else if (hoistableCursor != null &&
+                hoistableCursor.accessType === 'NonNull') {
+                nextHoistableCursor = hoistableCursor.properties.get(entry.property);
+                nextDepCursor = makeOrMergeProperty(depCursor, entry.property, PropertyAccessType.UnconditionalAccess, entry.loc);
+            }
+            else {
+                break;
+            }
+            depCursor = nextDepCursor;
+            hoistableCursor = nextHoistableCursor;
+        }
+        depCursor.accessType = merge(depCursor.accessType, PropertyAccessType.OptionalDependency);
+    }
+    deriveMinimalDependencies() {
+        const results = new Set();
+        for (const [rootId, rootNode] of __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f").entries()) {
+            collectMinimalDependenciesInSubtree(rootNode, rootNode.reactive, rootId, [], results);
+        }
+        return results;
+    }
+    printDeps(includeAccesses) {
+        let res = [];
+        for (const [rootId, rootNode] of __classPrivateFieldGet(this, _ReactiveScopeDependencyTreeHIR_deps, "f").entries()) {
+            const rootResults = printSubtree(rootNode, includeAccesses).map(result => `${printIdentifier(rootId)}.${result}`);
+            res.push(rootResults);
+        }
+        return res.flat().join('\n');
+    }
+    static debug(roots) {
+        const buf = [`tree() [`];
+        for (const [rootId, rootNode] of roots) {
+            buf.push(`${printIdentifier(rootId)} (${rootNode.accessType}):`);
+            __classPrivateFieldGet(this, _a, "m", _ReactiveScopeDependencyTreeHIR_debugImpl).call(this, buf, rootNode, 1);
+        }
+        buf.push(']');
+        return buf.length > 2 ? buf.join('\n') : buf.join('');
+    }
+}
+_a = ReactiveScopeDependencyTreeHIR, _ReactiveScopeDependencyTreeHIR_hoistableObjects = new WeakMap(), _ReactiveScopeDependencyTreeHIR_deps = new WeakMap(), _ReactiveScopeDependencyTreeHIR_getOrCreateRoot = function _ReactiveScopeDependencyTreeHIR_getOrCreateRoot(identifier, reactive, roots, defaultAccessType, loc) {
+    let rootNode = roots.get(identifier);
+    if (rootNode === undefined) {
+        rootNode = {
+            properties: new Map(),
+            reactive,
+            accessType: defaultAccessType,
+            loc,
+        };
+        roots.set(identifier, rootNode);
+    }
+    else {
+        CompilerError.invariant(reactive === rootNode.reactive, {
+            reason: '[DeriveMinimalDependenciesHIR] Conflicting reactive root flag',
+            description: `Identifier ${printIdentifier(identifier)}`,
+            loc: GeneratedSource,
+        });
+    }
+    return rootNode;
+}, _ReactiveScopeDependencyTreeHIR_debugImpl = function _ReactiveScopeDependencyTreeHIR_debugImpl(buf, node, depth = 0) {
+    for (const [property, childNode] of node.properties) {
+        buf.push(`${'  '.repeat(depth)}.${property} (${childNode.accessType}):`);
+        __classPrivateFieldGet(this, _a, "m", _ReactiveScopeDependencyTreeHIR_debugImpl).call(this, buf, childNode, depth + 1);
+    }
+};
+var PropertyAccessType;
+(function (PropertyAccessType) {
+    PropertyAccessType["OptionalAccess"] = "OptionalAccess";
+    PropertyAccessType["UnconditionalAccess"] = "UnconditionalAccess";
+    PropertyAccessType["OptionalDependency"] = "OptionalDependency";
+    PropertyAccessType["UnconditionalDependency"] = "UnconditionalDependency";
+})(PropertyAccessType || (PropertyAccessType = {}));
+function isOptional(access) {
+    return (access === PropertyAccessType.OptionalAccess ||
+        access === PropertyAccessType.OptionalDependency);
+}
+function isDependency(access) {
+    return (access === PropertyAccessType.OptionalDependency ||
+        access === PropertyAccessType.UnconditionalDependency);
+}
+function merge(access1, access2) {
+    const resultIsUnconditional = !(isOptional(access1) && isOptional(access2));
+    const resultIsDependency = isDependency(access1) || isDependency(access2);
+    if (resultIsUnconditional) {
+        if (resultIsDependency) {
+            return PropertyAccessType.UnconditionalDependency;
+        }
+        else {
+            return PropertyAccessType.UnconditionalAccess;
+        }
+    }
+    else {
+        if (resultIsDependency) {
+            return PropertyAccessType.OptionalDependency;
+        }
+        else {
+            return PropertyAccessType.OptionalAccess;
+        }
+    }
+}
+function collectMinimalDependenciesInSubtree(node, reactive, rootIdentifier, path, results) {
+    if (isDependency(node.accessType)) {
+        results.add({ identifier: rootIdentifier, reactive, path, loc: node.loc });
+    }
+    else {
+        for (const [childName, childNode] of node.properties) {
+            collectMinimalDependenciesInSubtree(childNode, reactive, rootIdentifier, [
+                ...path,
+                {
+                    property: childName,
+                    optional: isOptional(childNode.accessType),
+                    loc: childNode.loc,
+                },
+            ], results);
+        }
+    }
+}
+function printSubtree(node, includeAccesses) {
+    const results = [];
+    for (const [propertyName, propertyNode] of node.properties) {
+        if (includeAccesses || isDependency(propertyNode.accessType)) {
+            results.push(`${propertyName} (${propertyNode.accessType})`);
+        }
+        const propertyResults = printSubtree(propertyNode, includeAccesses);
+        results.push(...propertyResults.map(result => `${propertyName}.${result}`));
+    }
+    return results;
+}
+function makeOrMergeProperty(node, property, accessType, loc) {
+    let child = node.properties.get(property);
+    if (child == null) {
+        child = {
+            properties: new Map(),
+            accessType,
+            loc,
+        };
+        node.properties.set(property, child);
+    }
+    else {
+        child.accessType = merge(child.accessType, accessType);
+    }
+    return child;
+}
+
+function collectOptionalChainSidemap(fn) {
+    const context = {
+        currFn: fn,
+        blocks: fn.body.blocks,
+        seenOptionals: new Set(),
+        processedInstrsInOptional: new Set(),
+        temporariesReadInOptional: new Map(),
+        hoistableObjects: new Map(),
+    };
+    traverseFunction(fn, context);
+    return {
+        temporariesReadInOptional: context.temporariesReadInOptional,
+        processedInstrsInOptional: context.processedInstrsInOptional,
+        hoistableObjects: context.hoistableObjects,
+    };
+}
+function traverseFunction(fn, context) {
+    for (const [_, block] of fn.body.blocks) {
+        for (const instr of block.instructions) {
+            if (instr.value.kind === 'FunctionExpression' ||
+                instr.value.kind === 'ObjectMethod') {
+                traverseFunction(instr.value.loweredFunc.func, Object.assign(Object.assign({}, context), { currFn: instr.value.loweredFunc.func, blocks: instr.value.loweredFunc.func.body.blocks }));
+            }
+        }
+        if (block.terminal.kind === 'optional' &&
+            !context.seenOptionals.has(block.id)) {
+            traverseOptionalBlock(block, context, null);
+        }
+    }
+}
+function matchOptionalTestBlock(terminal, blocks) {
+    const consequentBlock = assertNonNull(blocks.get(terminal.consequent));
+    if (consequentBlock.instructions.length === 2 &&
+        consequentBlock.instructions[0].value.kind === 'PropertyLoad' &&
+        consequentBlock.instructions[1].value.kind === 'StoreLocal') {
+        const propertyLoad = consequentBlock
+            .instructions[0];
+        const storeLocal = consequentBlock.instructions[1].value;
+        const storeLocalInstr = consequentBlock.instructions[1];
+        CompilerError.invariant(propertyLoad.value.object.identifier.id === terminal.test.identifier.id, {
+            reason: '[OptionalChainDeps] Inconsistent optional chaining property load',
+            description: `Test=${printIdentifier(terminal.test.identifier)} PropertyLoad base=${printIdentifier(propertyLoad.value.object.identifier)}`,
+            loc: propertyLoad.loc,
+        });
+        CompilerError.invariant(storeLocal.value.identifier.id === propertyLoad.lvalue.identifier.id, {
+            reason: '[OptionalChainDeps] Unexpected storeLocal',
+            loc: propertyLoad.loc,
+        });
+        if (consequentBlock.terminal.kind !== 'goto' ||
+            consequentBlock.terminal.variant !== GotoVariant.Break) {
+            return null;
+        }
+        const alternate = assertNonNull(blocks.get(terminal.alternate));
+        CompilerError.invariant(alternate.instructions.length === 2 &&
+            alternate.instructions[0].value.kind === 'Primitive' &&
+            alternate.instructions[1].value.kind === 'StoreLocal', {
+            reason: 'Unexpected alternate structure',
+            loc: terminal.loc,
+        });
+        return {
+            consequentId: storeLocal.lvalue.place.identifier.id,
+            property: propertyLoad.value.property,
+            propertyId: propertyLoad.lvalue.identifier.id,
+            storeLocalInstr,
+            consequentGoto: consequentBlock.terminal.block,
+            propertyLoadLoc: propertyLoad.loc,
+        };
+    }
+    return null;
+}
+function traverseOptionalBlock(optional, context, outerAlternate) {
+    context.seenOptionals.add(optional.id);
+    const maybeTest = context.blocks.get(optional.terminal.test);
+    let test;
+    let baseObject;
+    if (maybeTest.terminal.kind === 'branch') {
+        CompilerError.invariant(optional.terminal.optional, {
+            reason: '[OptionalChainDeps] Expect base case to be always optional',
+            loc: optional.terminal.loc,
+        });
+        if (maybeTest.instructions.length === 0 ||
+            maybeTest.instructions[0].value.kind !== 'LoadLocal') {
+            return null;
+        }
+        const path = [];
+        for (let i = 1; i < maybeTest.instructions.length; i++) {
+            const instrVal = maybeTest.instructions[i].value;
+            const prevInstr = maybeTest.instructions[i - 1];
+            if (instrVal.kind === 'PropertyLoad' &&
+                instrVal.object.identifier.id === prevInstr.lvalue.identifier.id) {
+                path.push({
+                    property: instrVal.property,
+                    optional: false,
+                    loc: instrVal.loc,
+                });
+            }
+            else {
+                return null;
+            }
+        }
+        CompilerError.invariant(maybeTest.terminal.test.identifier.id ===
+            maybeTest.instructions.at(-1).lvalue.identifier.id, {
+            reason: '[OptionalChainDeps] Unexpected test expression',
+            loc: maybeTest.terminal.loc,
+        });
+        baseObject = {
+            identifier: maybeTest.instructions[0].value.place.identifier,
+            reactive: maybeTest.instructions[0].value.place.reactive,
+            path,
+            loc: maybeTest.instructions[0].value.place.loc,
+        };
+        test = maybeTest.terminal;
+    }
+    else if (maybeTest.terminal.kind === 'optional') {
+        const testBlock = context.blocks.get(maybeTest.terminal.fallthrough);
+        if (testBlock.terminal.kind !== 'branch') {
+            CompilerError.throwTodo({
+                reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
+                loc: maybeTest.terminal.loc,
+            });
+        }
+        const innerOptional = traverseOptionalBlock(maybeTest, context, testBlock.terminal.alternate);
+        if (innerOptional == null) {
+            return null;
+        }
+        if (testBlock.terminal.test.identifier.id !== innerOptional) {
+            return null;
+        }
+        if (!optional.terminal.optional) {
+            context.hoistableObjects.set(optional.id, assertNonNull(context.temporariesReadInOptional.get(innerOptional)));
+        }
+        baseObject = assertNonNull(context.temporariesReadInOptional.get(innerOptional));
+        test = testBlock.terminal;
+    }
+    else {
+        return null;
+    }
+    if (test.alternate === outerAlternate) {
+        CompilerError.invariant(optional.instructions.length === 0, {
+            reason: '[OptionalChainDeps] Unexpected instructions an inner optional block. ' +
+                'This indicates that the compiler may be incorrectly concatenating two unrelated optional chains',
+            loc: optional.terminal.loc,
+        });
+    }
+    const matchConsequentResult = matchOptionalTestBlock(test, context.blocks);
+    if (!matchConsequentResult) {
+        return null;
+    }
+    CompilerError.invariant(matchConsequentResult.consequentGoto === optional.terminal.fallthrough, {
+        reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
+        description: `${matchConsequentResult.consequentGoto} != ${optional.terminal.fallthrough}`,
+        loc: optional.terminal.loc,
+    });
+    const load = {
+        identifier: baseObject.identifier,
+        reactive: baseObject.reactive,
+        path: [
+            ...baseObject.path,
+            {
+                property: matchConsequentResult.property,
+                optional: optional.terminal.optional,
+                loc: matchConsequentResult.propertyLoadLoc,
+            },
+        ],
+        loc: matchConsequentResult.propertyLoadLoc,
+    };
+    context.processedInstrsInOptional.add(matchConsequentResult.storeLocalInstr);
+    context.processedInstrsInOptional.add(test);
+    context.temporariesReadInOptional.set(matchConsequentResult.consequentId, load);
+    context.temporariesReadInOptional.set(matchConsequentResult.propertyId, load);
+    return matchConsequentResult.consequentId;
+}
+
+var _DependencyCollectionContext_instances, _DependencyCollectionContext_declarations, _DependencyCollectionContext_reassignments, _DependencyCollectionContext_scopes, _DependencyCollectionContext_dependencies, _DependencyCollectionContext_temporaries, _DependencyCollectionContext_temporariesUsedOutsideScope, _DependencyCollectionContext_processedInstrsInOptional, _DependencyCollectionContext_innerFnContext, _DependencyCollectionContext_checkValidDependency, _DependencyCollectionContext_isScopeActive;
+function propagateScopeDependenciesHIR(fn) {
+    const usedOutsideDeclaringScope = findTemporariesUsedOutsideDeclaringScope(fn);
+    const temporaries = collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
+    const { temporariesReadInOptional, processedInstrsInOptional, hoistableObjects, } = collectOptionalChainSidemap(fn);
+    const hoistablePropertyLoads = keyByScopeId(fn, collectHoistablePropertyLoads(fn, temporaries, hoistableObjects));
+    const scopeDeps = collectDependencies$1(fn, usedOutsideDeclaringScope, new Map([...temporaries, ...temporariesReadInOptional]), processedInstrsInOptional);
+    for (const [scope, deps] of scopeDeps) {
+        if (deps.length === 0) {
+            continue;
+        }
+        const hoistables = hoistablePropertyLoads.get(scope.id);
+        CompilerError.invariant(hoistables != null, {
+            reason: '[PropagateScopeDependencies] Scope not found in tracked blocks',
+            loc: GeneratedSource,
+        });
+        const tree = new ReactiveScopeDependencyTreeHIR([...hoistables.assumedNonNullObjects].map(o => o.fullPath));
+        for (const dep of deps) {
+            tree.addDependency(Object.assign({}, dep));
+        }
+        const candidates = tree.deriveMinimalDependencies();
+        for (const candidateDep of candidates) {
+            if (!Iterable_some(scope.dependencies, existingDep => existingDep.identifier.declarationId ===
+                candidateDep.identifier.declarationId &&
+                areEqualPaths(existingDep.path, candidateDep.path)))
+                scope.dependencies.add(candidateDep);
+        }
+    }
+}
+function findTemporariesUsedOutsideDeclaringScope(fn) {
+    const declarations = new Map();
+    const prunedScopes = new Set();
+    const scopeTraversal = new ScopeBlockTraversal();
+    const usedOutsideDeclaringScope = new Set();
+    function handlePlace(place) {
+        const declaringScope = declarations.get(place.identifier.declarationId);
+        if (declaringScope != null &&
+            !scopeTraversal.isScopeActive(declaringScope) &&
+            !prunedScopes.has(declaringScope)) {
+            usedOutsideDeclaringScope.add(place.identifier.declarationId);
+        }
+    }
+    function handleInstruction(instr) {
+        const scope = scopeTraversal.currentScope;
+        if (scope == null || prunedScopes.has(scope)) {
+            return;
+        }
+        switch (instr.value.kind) {
+            case 'LoadLocal':
+            case 'LoadContext':
+            case 'PropertyLoad': {
+                declarations.set(instr.lvalue.identifier.declarationId, scope);
+                break;
+            }
+        }
+    }
+    for (const [blockId, block] of fn.body.blocks) {
+        scopeTraversal.recordScopes(block);
+        const scopeStartInfo = scopeTraversal.blockInfos.get(blockId);
+        if ((scopeStartInfo === null || scopeStartInfo === void 0 ? void 0 : scopeStartInfo.kind) === 'begin' && scopeStartInfo.pruned) {
+            prunedScopes.add(scopeStartInfo.scope.id);
+        }
+        for (const instr of block.instructions) {
+            for (const place of eachInstructionOperand(instr)) {
+                handlePlace(place);
+            }
+            handleInstruction(instr);
+        }
+        for (const place of eachTerminalOperand(block.terminal)) {
+            handlePlace(place);
+        }
+    }
+    return usedOutsideDeclaringScope;
+}
+function collectTemporariesSidemap(fn, usedOutsideDeclaringScope) {
+    const temporaries = new Map();
+    collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporaries, null);
+    return temporaries;
+}
+function isLoadContextMutable(instrValue, id) {
+    if (instrValue.kind === 'LoadContext') {
+        return (instrValue.place.identifier.scope != null &&
+            id >= instrValue.place.identifier.scope.range.end);
+    }
+    return false;
+}
+function collectTemporariesSidemapImpl(fn, usedOutsideDeclaringScope, temporaries, innerFnContext) {
+    for (const [_, block] of fn.body.blocks) {
+        for (const { value, lvalue, id: origInstrId } of block.instructions) {
+            const instrId = innerFnContext != null ? innerFnContext.instrId : origInstrId;
+            const usedOutside = usedOutsideDeclaringScope.has(lvalue.identifier.declarationId);
+            if (value.kind === 'PropertyLoad' && !usedOutside) {
+                if (innerFnContext == null ||
+                    temporaries.has(value.object.identifier.id)) {
+                    const property = getProperty(value.object, value.property, false, value.loc, temporaries);
+                    temporaries.set(lvalue.identifier.id, property);
+                }
+            }
+            else if ((value.kind === 'LoadLocal' || isLoadContextMutable(value, instrId)) &&
+                lvalue.identifier.name == null &&
+                value.place.identifier.name !== null &&
+                !usedOutside) {
+                if (innerFnContext == null ||
+                    fn.context.some(context => context.identifier.id === value.place.identifier.id)) {
+                    temporaries.set(lvalue.identifier.id, {
+                        identifier: value.place.identifier,
+                        reactive: value.place.reactive,
+                        path: [],
+                        loc: value.loc,
+                    });
+                }
+            }
+            else if (value.kind === 'FunctionExpression' ||
+                value.kind === 'ObjectMethod') {
+                collectTemporariesSidemapImpl(value.loweredFunc.func, usedOutsideDeclaringScope, temporaries, innerFnContext !== null && innerFnContext !== void 0 ? innerFnContext : { instrId });
+            }
+        }
+    }
+}
+function getProperty(object, propertyName, optional, loc, temporaries) {
+    const resolvedDependency = temporaries.get(object.identifier.id);
+    let property;
+    if (resolvedDependency == null) {
+        property = {
+            identifier: object.identifier,
+            reactive: object.reactive,
+            path: [{ property: propertyName, optional, loc }],
+            loc,
+        };
+    }
+    else {
+        property = {
+            identifier: resolvedDependency.identifier,
+            reactive: resolvedDependency.reactive,
+            path: [
+                ...resolvedDependency.path,
+                { property: propertyName, optional, loc },
+            ],
+            loc,
+        };
+    }
+    return property;
+}
+class DependencyCollectionContext {
+    constructor(temporariesUsedOutsideScope, temporaries, processedInstrsInOptional) {
+        _DependencyCollectionContext_instances.add(this);
+        _DependencyCollectionContext_declarations.set(this, new Map());
+        _DependencyCollectionContext_reassignments.set(this, new Map());
+        _DependencyCollectionContext_scopes.set(this, empty());
+        _DependencyCollectionContext_dependencies.set(this, empty());
+        this.deps = new Map();
+        _DependencyCollectionContext_temporaries.set(this, void 0);
+        _DependencyCollectionContext_temporariesUsedOutsideScope.set(this, void 0);
+        _DependencyCollectionContext_processedInstrsInOptional.set(this, void 0);
+        _DependencyCollectionContext_innerFnContext.set(this, null);
+        __classPrivateFieldSet(this, _DependencyCollectionContext_temporariesUsedOutsideScope, temporariesUsedOutsideScope, "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_temporaries, temporaries, "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_processedInstrsInOptional, processedInstrsInOptional, "f");
+    }
+    enterScope(scope) {
+        __classPrivateFieldSet(this, _DependencyCollectionContext_dependencies, __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").push([]), "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_scopes, __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f").push(scope), "f");
+    }
+    exitScope(scope, pruned) {
+        var _a;
+        const scopedDependencies = __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").value;
+        CompilerError.invariant(scopedDependencies != null, {
+            reason: '[PropagateScopeDeps]: Unexpected scope mismatch',
+            loc: scope.loc,
+        });
+        __classPrivateFieldSet(this, _DependencyCollectionContext_scopes, __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f").pop(), "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_dependencies, __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").pop(), "f");
+        for (const dep of scopedDependencies) {
+            if (__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, dep)) {
+                (_a = __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").value) === null || _a === void 0 ? void 0 : _a.push(dep);
+            }
+        }
+        if (!pruned) {
+            this.deps.set(scope, scopedDependencies);
+        }
+    }
+    isUsedOutsideDeclaringScope(place) {
+        return __classPrivateFieldGet(this, _DependencyCollectionContext_temporariesUsedOutsideScope, "f").has(place.identifier.declarationId);
+    }
+    declare(identifier, decl) {
+        if (__classPrivateFieldGet(this, _DependencyCollectionContext_innerFnContext, "f") != null)
+            return;
+        if (!__classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").has(identifier.declarationId)) {
+            __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").set(identifier.declarationId, decl);
+        }
+        __classPrivateFieldGet(this, _DependencyCollectionContext_reassignments, "f").set(identifier, decl);
+    }
+    hasDeclared(identifier) {
+        return __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").has(identifier.declarationId);
+    }
+    get currentScope() {
+        return __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f");
+    }
+    visitOperand(place) {
+        var _a;
+        this.visitDependency((_a = __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f").get(place.identifier.id)) !== null && _a !== void 0 ? _a : {
+            identifier: place.identifier,
+            reactive: place.reactive,
+            path: [],
+            loc: place.loc,
+        });
+    }
+    visitProperty(object, property, optional, loc) {
+        const nextDependency = getProperty(object, property, optional, loc, __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f"));
+        this.visitDependency(nextDependency);
+    }
+    visitDependency(maybeDependency) {
+        var _a;
+        const originalDeclaration = __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").get(maybeDependency.identifier.declarationId);
+        if (originalDeclaration !== undefined &&
+            originalDeclaration.scope.value !== null) {
+            originalDeclaration.scope.each(scope => {
+                if (!__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_isScopeActive).call(this, scope) &&
+                    !Iterable_some(scope.declarations.values(), decl => decl.identifier.declarationId ===
+                        maybeDependency.identifier.declarationId)) {
+                    scope.declarations.set(maybeDependency.identifier.id, {
+                        identifier: maybeDependency.identifier,
+                        scope: originalDeclaration.scope.value,
+                    });
+                }
+            });
+        }
+        if (isUseRefType(maybeDependency.identifier) &&
+            ((_a = maybeDependency.path.at(0)) === null || _a === void 0 ? void 0 : _a.property) === 'current') {
+            maybeDependency = {
+                identifier: maybeDependency.identifier,
+                reactive: maybeDependency.reactive,
+                path: [],
+                loc: maybeDependency.loc,
+            };
+        }
+        if (__classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, maybeDependency)) {
+            __classPrivateFieldGet(this, _DependencyCollectionContext_dependencies, "f").value.push(maybeDependency);
+        }
+    }
+    visitReassignment(place) {
+        const currentScope = this.currentScope.value;
+        if (currentScope != null &&
+            !Iterable_some(currentScope.reassignments, identifier => identifier.declarationId === place.identifier.declarationId) &&
+            __classPrivateFieldGet(this, _DependencyCollectionContext_instances, "m", _DependencyCollectionContext_checkValidDependency).call(this, {
+                identifier: place.identifier,
+                reactive: place.reactive,
+                path: [],
+                loc: place.loc,
+            })) {
+            currentScope.reassignments.add(place.identifier);
+        }
+    }
+    enterInnerFn(innerFn, cb) {
+        var _a;
+        const prevContext = __classPrivateFieldGet(this, _DependencyCollectionContext_innerFnContext, "f");
+        __classPrivateFieldSet(this, _DependencyCollectionContext_innerFnContext, (_a = __classPrivateFieldGet(this, _DependencyCollectionContext_innerFnContext, "f")) !== null && _a !== void 0 ? _a : { outerInstrId: innerFn.id }, "f");
+        const result = cb();
+        __classPrivateFieldSet(this, _DependencyCollectionContext_innerFnContext, prevContext, "f");
+        return result;
+    }
+    isDeferredDependency(instr) {
+        return (__classPrivateFieldGet(this, _DependencyCollectionContext_processedInstrsInOptional, "f").has(instr.value) ||
+            (instr.kind === HIRValue.Instruction &&
+                __classPrivateFieldGet(this, _DependencyCollectionContext_temporaries, "f").has(instr.value.lvalue.identifier.id)));
+    }
+}
+_DependencyCollectionContext_declarations = new WeakMap(), _DependencyCollectionContext_reassignments = new WeakMap(), _DependencyCollectionContext_scopes = new WeakMap(), _DependencyCollectionContext_dependencies = new WeakMap(), _DependencyCollectionContext_temporaries = new WeakMap(), _DependencyCollectionContext_temporariesUsedOutsideScope = new WeakMap(), _DependencyCollectionContext_processedInstrsInOptional = new WeakMap(), _DependencyCollectionContext_innerFnContext = new WeakMap(), _DependencyCollectionContext_instances = new WeakSet(), _DependencyCollectionContext_checkValidDependency = function _DependencyCollectionContext_checkValidDependency(maybeDependency) {
+    var _a;
+    if (isRefValueType(maybeDependency.identifier)) {
+        return false;
+    }
+    if (isObjectMethodType(maybeDependency.identifier)) {
+        return false;
+    }
+    const identifier = maybeDependency.identifier;
+    const currentDeclaration = (_a = __classPrivateFieldGet(this, _DependencyCollectionContext_reassignments, "f").get(identifier)) !== null && _a !== void 0 ? _a : __classPrivateFieldGet(this, _DependencyCollectionContext_declarations, "f").get(identifier.declarationId);
+    const currentScope = this.currentScope.value;
+    return (currentScope != null &&
+        currentDeclaration !== undefined &&
+        currentDeclaration.id < currentScope.range.start);
+}, _DependencyCollectionContext_isScopeActive = function _DependencyCollectionContext_isScopeActive(scope) {
+    if (__classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f") === null) {
+        return false;
+    }
+    return __classPrivateFieldGet(this, _DependencyCollectionContext_scopes, "f").find(state => state === scope);
+};
+var HIRValue;
+(function (HIRValue) {
+    HIRValue[HIRValue["Instruction"] = 1] = "Instruction";
+    HIRValue[HIRValue["Terminal"] = 2] = "Terminal";
+})(HIRValue || (HIRValue = {}));
+function handleInstruction(instr, context) {
+    const { id, value, lvalue } = instr;
+    context.declare(lvalue.identifier, {
+        id,
+        scope: context.currentScope,
+    });
+    if (context.isDeferredDependency({ kind: HIRValue.Instruction, value: instr })) {
+        return;
+    }
+    if (value.kind === 'PropertyLoad') {
+        context.visitProperty(value.object, value.property, false, value.loc);
+    }
+    else if (value.kind === 'StoreLocal') {
+        context.visitOperand(value.value);
+        if (value.lvalue.kind === InstructionKind.Reassign) {
+            context.visitReassignment(value.lvalue.place);
+        }
+        context.declare(value.lvalue.place.identifier, {
+            id,
+            scope: context.currentScope,
+        });
+    }
+    else if (value.kind === 'DeclareLocal' || value.kind === 'DeclareContext') {
+        if (convertHoistedLValueKind(value.lvalue.kind) === null) {
+            context.declare(value.lvalue.place.identifier, {
+                id,
+                scope: context.currentScope,
+            });
+        }
+    }
+    else if (value.kind === 'Destructure') {
+        context.visitOperand(value.value);
+        for (const place of eachPatternOperand(value.lvalue.pattern)) {
+            if (value.lvalue.kind === InstructionKind.Reassign) {
+                context.visitReassignment(place);
+            }
+            context.declare(place.identifier, {
+                id,
+                scope: context.currentScope,
+            });
+        }
+    }
+    else if (value.kind === 'StoreContext') {
+        if (!context.hasDeclared(value.lvalue.place.identifier) ||
+            value.lvalue.kind !== InstructionKind.Reassign) {
+            context.declare(value.lvalue.place.identifier, {
+                id,
+                scope: context.currentScope,
+            });
+        }
+        for (const operand of eachInstructionValueOperand(value)) {
+            context.visitOperand(operand);
+        }
+    }
+    else {
+        for (const operand of eachInstructionValueOperand(value)) {
+            context.visitOperand(operand);
+        }
+    }
+}
+function collectDependencies$1(fn, usedOutsideDeclaringScope, temporaries, processedInstrsInOptional) {
+    const context = new DependencyCollectionContext(usedOutsideDeclaringScope, temporaries, processedInstrsInOptional);
+    for (const param of fn.params) {
+        if (param.kind === 'Identifier') {
+            context.declare(param.identifier, {
+                id: makeInstructionId(0),
+                scope: empty(),
+            });
+        }
+        else {
+            context.declare(param.place.identifier, {
+                id: makeInstructionId(0),
+                scope: empty(),
+            });
+        }
+    }
+    const scopeTraversal = new ScopeBlockTraversal();
+    const handleFunction = (fn) => {
+        for (const [blockId, block] of fn.body.blocks) {
+            scopeTraversal.recordScopes(block);
+            const scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
+            if ((scopeBlockInfo === null || scopeBlockInfo === void 0 ? void 0 : scopeBlockInfo.kind) === 'begin') {
+                context.enterScope(scopeBlockInfo.scope);
+            }
+            else if ((scopeBlockInfo === null || scopeBlockInfo === void 0 ? void 0 : scopeBlockInfo.kind) === 'end') {
+                context.exitScope(scopeBlockInfo.scope, scopeBlockInfo.pruned);
+            }
+            for (const phi of block.phis) {
+                for (const operand of phi.operands) {
+                    const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
+                    if (maybeOptionalChain) {
+                        context.visitDependency(maybeOptionalChain);
+                    }
+                }
+            }
+            for (const instr of block.instructions) {
+                if (instr.value.kind === 'FunctionExpression' ||
+                    instr.value.kind === 'ObjectMethod') {
+                    context.declare(instr.lvalue.identifier, {
+                        id: instr.id,
+                        scope: context.currentScope,
+                    });
+                    const innerFn = instr.value.loweredFunc.func;
+                    context.enterInnerFn(instr, () => {
+                        handleFunction(innerFn);
+                    });
+                }
+                else {
+                    handleInstruction(instr, context);
+                }
+            }
+            if (!context.isDeferredDependency({
+                kind: HIRValue.Terminal,
+                value: block.terminal,
+            })) {
+                for (const place of eachTerminalOperand(block.terminal)) {
+                    context.visitOperand(place);
+                }
+            }
+        }
+    };
+    handleFunction(fn);
+    return context.deps;
 }
 
 function outlineJSX(fn) {
@@ -50163,451 +48067,6 @@ function optimizePropsMethodCalls(fn) {
             }
         }
     }
-}
-
-var _Context_env, _Context_errors, _Context_callExpressions, _Context_functionExpressions, _Context_loadLocals, _Context_fireCalleesToFireFunctions, _Context_calleesWithInsertedFire, _Context_capturedCalleeIdentifierIds, _Context_inUseEffectLambda, _Context_loadGlobalInstructionIds, _Context_arrayExpressions;
-const CANNOT_COMPILE_FIRE = 'Cannot compile `fire`';
-function transformFire(fn) {
-    const context = new Context(fn.env);
-    replaceFireFunctions(fn, context);
-    if (!context.hasErrors()) {
-        ensureNoMoreFireUses(fn, context);
-    }
-    context.throwIfErrorsFound();
-}
-function replaceFireFunctions(fn, context) {
-    let importedUseFire = null;
-    let hasRewrite = false;
-    for (const [, block] of fn.body.blocks) {
-        const rewriteInstrs = new Map();
-        const deleteInstrs = new Set();
-        for (const instr of block.instructions) {
-            const { value, lvalue } = instr;
-            if (value.kind === 'CallExpression' &&
-                isUseEffectHookType(value.callee.identifier) &&
-                value.args.length > 0 &&
-                value.args[0].kind === 'Identifier') {
-                const lambda = context.getFunctionExpression(value.args[0].identifier.id);
-                if (lambda != null) {
-                    const capturedCallees = visitFunctionExpressionAndPropagateFireDependencies(lambda, context, true);
-                    const newInstrs = [];
-                    for (const [fireCalleePlace, fireCalleeInfo,] of capturedCallees.entries()) {
-                        if (!context.hasCalleeWithInsertedFire(fireCalleePlace)) {
-                            context.addCalleeWithInsertedFire(fireCalleePlace);
-                            importedUseFire !== null && importedUseFire !== void 0 ? importedUseFire : (importedUseFire = fn.env.programContext.addImportSpecifier({
-                                source: fn.env.programContext.reactRuntimeModule,
-                                importSpecifierName: USE_FIRE_FUNCTION_NAME,
-                            }));
-                            const loadUseFireInstr = makeLoadUseFireInstruction(fn.env, importedUseFire);
-                            const loadFireCalleeInstr = makeLoadFireCalleeInstruction(fn.env, fireCalleeInfo.capturedCalleeIdentifier);
-                            const callUseFireInstr = makeCallUseFireInstruction(fn.env, loadUseFireInstr.lvalue, loadFireCalleeInstr.lvalue);
-                            const storeUseFireInstr = makeStoreUseFireInstruction(fn.env, callUseFireInstr.lvalue, fireCalleeInfo.fireFunctionBinding);
-                            newInstrs.push(loadUseFireInstr, loadFireCalleeInstr, callUseFireInstr, storeUseFireInstr);
-                            const loadUseEffectInstrId = context.getLoadGlobalInstrId(value.callee.identifier.id);
-                            if (loadUseEffectInstrId == null) {
-                                context.pushError({
-                                    loc: value.loc,
-                                    description: null,
-                                    category: ErrorCategory.Invariant,
-                                    reason: '[InsertFire] No LoadGlobal found for useEffect call',
-                                    suggestions: null,
-                                });
-                                continue;
-                            }
-                            rewriteInstrs.set(loadUseEffectInstrId, newInstrs);
-                        }
-                    }
-                    ensureNoRemainingCalleeCaptures(lambda.loweredFunc.func, context, capturedCallees);
-                    if (value.args.length > 1 &&
-                        value.args[1] != null &&
-                        value.args[1].kind === 'Identifier') {
-                        const depArray = value.args[1];
-                        const depArrayExpression = context.getArrayExpression(depArray.identifier.id);
-                        if (depArrayExpression != null) {
-                            for (const dependency of depArrayExpression.elements) {
-                                if (dependency.kind === 'Identifier') {
-                                    const loadOfDependency = context.getLoadLocalInstr(dependency.identifier.id);
-                                    if (loadOfDependency != null) {
-                                        const replacedDepArrayItem = capturedCallees.get(loadOfDependency.place.identifier.id);
-                                        if (replacedDepArrayItem != null) {
-                                            loadOfDependency.place =
-                                                replacedDepArrayItem.fireFunctionBinding;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        else {
-                            context.pushError({
-                                loc: value.args[1].loc,
-                                description: 'You must use an array literal for an effect dependency array when that effect uses `fire()`',
-                                category: ErrorCategory.Fire,
-                                reason: CANNOT_COMPILE_FIRE,
-                                suggestions: null,
-                            });
-                        }
-                    }
-                    else if (value.args.length > 1 && value.args[1].kind === 'Spread') {
-                        context.pushError({
-                            loc: value.args[1].place.loc,
-                            description: 'You must use an array literal for an effect dependency array when that effect uses `fire()`',
-                            category: ErrorCategory.Fire,
-                            reason: CANNOT_COMPILE_FIRE,
-                            suggestions: null,
-                        });
-                    }
-                }
-            }
-            else if (value.kind === 'CallExpression' &&
-                value.callee.identifier.type.kind === 'Function' &&
-                value.callee.identifier.type.shapeId === BuiltInFireId &&
-                context.inUseEffectLambda()) {
-                if (value.args.length === 1 && value.args[0].kind === 'Identifier') {
-                    const callExpr = context.getCallExpression(value.args[0].identifier.id);
-                    if (callExpr != null) {
-                        const calleeId = callExpr.callee.identifier.id;
-                        const loadLocal = context.getLoadLocalInstr(calleeId);
-                        if (loadLocal == null) {
-                            context.pushError({
-                                loc: value.loc,
-                                description: null,
-                                category: ErrorCategory.Invariant,
-                                reason: '[InsertFire] No loadLocal found for fire call argument',
-                                suggestions: null,
-                            });
-                            continue;
-                        }
-                        const fireFunctionBinding = context.getOrGenerateFireFunctionBinding(loadLocal.place, value.loc);
-                        loadLocal.place = Object.assign({}, fireFunctionBinding);
-                        deleteInstrs.add(instr.id);
-                    }
-                    else {
-                        context.pushError({
-                            loc: value.loc,
-                            description: '`fire()` can only receive a function call such as `fire(fn(a,b)). Method calls and other expressions are not allowed',
-                            category: ErrorCategory.Fire,
-                            reason: CANNOT_COMPILE_FIRE,
-                            suggestions: null,
-                        });
-                    }
-                }
-                else {
-                    let description = 'fire() can only take in a single call expression as an argument';
-                    if (value.args.length === 0) {
-                        description += ' but received none';
-                    }
-                    else if (value.args.length > 1) {
-                        description += ' but received multiple arguments';
-                    }
-                    else if (value.args[0].kind === 'Spread') {
-                        description += ' but received a spread argument';
-                    }
-                    context.pushError({
-                        loc: value.loc,
-                        description,
-                        category: ErrorCategory.Fire,
-                        reason: CANNOT_COMPILE_FIRE,
-                        suggestions: null,
-                    });
-                }
-            }
-            else if (value.kind === 'CallExpression') {
-                context.addCallExpression(lvalue.identifier.id, value);
-            }
-            else if (value.kind === 'FunctionExpression' &&
-                context.inUseEffectLambda()) {
-                visitFunctionExpressionAndPropagateFireDependencies(value, context, false);
-            }
-            else if (value.kind === 'FunctionExpression') {
-                context.addFunctionExpression(lvalue.identifier.id, value);
-            }
-            else if (value.kind === 'LoadLocal') {
-                context.addLoadLocalInstr(lvalue.identifier.id, value);
-            }
-            else if (value.kind === 'LoadGlobal' &&
-                value.binding.kind === 'ImportSpecifier' &&
-                value.binding.module === 'react' &&
-                value.binding.imported === 'fire' &&
-                context.inUseEffectLambda()) {
-                deleteInstrs.add(instr.id);
-            }
-            else if (value.kind === 'LoadGlobal') {
-                context.addLoadGlobalInstrId(lvalue.identifier.id, instr.id);
-            }
-            else if (value.kind === 'ArrayExpression') {
-                context.addArrayExpression(lvalue.identifier.id, value);
-            }
-        }
-        block.instructions = rewriteInstructions(rewriteInstrs, block.instructions);
-        block.instructions = deleteInstructions(deleteInstrs, block.instructions);
-        if (rewriteInstrs.size > 0 || deleteInstrs.size > 0) {
-            hasRewrite = true;
-            fn.env.hasFireRewrite = true;
-        }
-    }
-    if (hasRewrite) {
-        markInstructionIds(fn.body);
-    }
-}
-function visitFunctionExpressionAndPropagateFireDependencies(fnExpr, context, enteringUseEffect) {
-    let withScope = enteringUseEffect
-        ? context.withUseEffectLambdaScope.bind(context)
-        : context.withFunctionScope.bind(context);
-    const calleesCapturedByFnExpression = withScope(() => replaceFireFunctions(fnExpr.loweredFunc.func, context));
-    for (let contextIdx = 0; contextIdx < fnExpr.loweredFunc.func.context.length; contextIdx++) {
-        const contextItem = fnExpr.loweredFunc.func.context[contextIdx];
-        const replacedCallee = calleesCapturedByFnExpression.get(contextItem.identifier.id);
-        if (replacedCallee != null) {
-            fnExpr.loweredFunc.func.context[contextIdx] = Object.assign({}, replacedCallee.fireFunctionBinding);
-        }
-    }
-    context.mergeCalleesFromInnerScope(calleesCapturedByFnExpression);
-    return calleesCapturedByFnExpression;
-}
-function* eachReachablePlace(fn) {
-    for (const [, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            if (instr.value.kind === 'FunctionExpression' ||
-                instr.value.kind === 'ObjectMethod') {
-                yield* eachReachablePlace(instr.value.loweredFunc.func);
-            }
-            else {
-                yield* eachInstructionOperand(instr);
-            }
-        }
-    }
-}
-function ensureNoRemainingCalleeCaptures(fn, context, capturedCallees) {
-    var _a;
-    for (const place of eachReachablePlace(fn)) {
-        const calleeInfo = capturedCallees.get(place.identifier.id);
-        if (calleeInfo != null) {
-            const calleeName = ((_a = calleeInfo.capturedCalleeIdentifier.name) === null || _a === void 0 ? void 0 : _a.kind) === 'named'
-                ? calleeInfo.capturedCalleeIdentifier.name.value
-                : '<unknown>';
-            context.pushError({
-                loc: place.loc,
-                description: `All uses of ${calleeName} must be either used with a fire() call in \
-this effect or not used with a fire() call at all. ${calleeName} was used with fire() on line \
-${printSourceLocationLine(calleeInfo.fireLoc)} in this effect`,
-                category: ErrorCategory.Fire,
-                reason: CANNOT_COMPILE_FIRE,
-                suggestions: null,
-            });
-        }
-    }
-}
-function ensureNoMoreFireUses(fn, context) {
-    for (const place of eachReachablePlace(fn)) {
-        if (place.identifier.type.kind === 'Function' &&
-            place.identifier.type.shapeId === BuiltInFireId) {
-            context.pushError({
-                loc: place.identifier.loc,
-                description: 'Cannot use `fire` outside of a useEffect function',
-                category: ErrorCategory.Fire,
-                reason: CANNOT_COMPILE_FIRE,
-                suggestions: null,
-            });
-        }
-    }
-}
-function makeLoadUseFireInstruction(env, importedLoadUseFire) {
-    const useFirePlace = createTemporaryPlace(env, GeneratedSource);
-    useFirePlace.effect = Effect.Read;
-    useFirePlace.identifier.type = DefaultNonmutatingHook;
-    const instrValue = {
-        kind: 'LoadGlobal',
-        binding: Object.assign({}, importedLoadUseFire),
-        loc: GeneratedSource,
-    };
-    return {
-        id: makeInstructionId(0),
-        value: instrValue,
-        lvalue: Object.assign({}, useFirePlace),
-        loc: GeneratedSource,
-        effects: null,
-    };
-}
-function makeLoadFireCalleeInstruction(env, fireCalleeIdentifier) {
-    const loadedFireCallee = createTemporaryPlace(env, GeneratedSource);
-    const fireCallee = {
-        kind: 'Identifier',
-        identifier: fireCalleeIdentifier,
-        reactive: false,
-        effect: Effect.Unknown,
-        loc: fireCalleeIdentifier.loc,
-    };
-    return {
-        id: makeInstructionId(0),
-        value: {
-            kind: 'LoadLocal',
-            loc: GeneratedSource,
-            place: Object.assign({}, fireCallee),
-        },
-        lvalue: Object.assign({}, loadedFireCallee),
-        loc: GeneratedSource,
-        effects: null,
-    };
-}
-function makeCallUseFireInstruction(env, useFirePlace, argPlace) {
-    const useFireCallResultPlace = createTemporaryPlace(env, GeneratedSource);
-    useFireCallResultPlace.effect = Effect.Read;
-    const useFireCall = {
-        kind: 'CallExpression',
-        callee: Object.assign({}, useFirePlace),
-        args: [argPlace],
-        loc: GeneratedSource,
-    };
-    return {
-        id: makeInstructionId(0),
-        value: useFireCall,
-        lvalue: Object.assign({}, useFireCallResultPlace),
-        loc: GeneratedSource,
-        effects: null,
-    };
-}
-function makeStoreUseFireInstruction(env, useFireCallResultPlace, fireFunctionBindingPlace) {
-    promoteTemporary(fireFunctionBindingPlace.identifier);
-    const fireFunctionBindingLValuePlace = createTemporaryPlace(env, GeneratedSource);
-    return {
-        id: makeInstructionId(0),
-        value: {
-            kind: 'StoreLocal',
-            lvalue: {
-                kind: InstructionKind.Const,
-                place: Object.assign({}, fireFunctionBindingPlace),
-            },
-            value: Object.assign({}, useFireCallResultPlace),
-            type: null,
-            loc: GeneratedSource,
-        },
-        lvalue: fireFunctionBindingLValuePlace,
-        loc: GeneratedSource,
-        effects: null,
-    };
-}
-class Context {
-    constructor(env) {
-        _Context_env.set(this, void 0);
-        _Context_errors.set(this, new CompilerError());
-        _Context_callExpressions.set(this, new Map());
-        _Context_functionExpressions.set(this, new Map());
-        _Context_loadLocals.set(this, new Map());
-        _Context_fireCalleesToFireFunctions.set(this, new Map());
-        _Context_calleesWithInsertedFire.set(this, new Set());
-        _Context_capturedCalleeIdentifierIds.set(this, new Map());
-        _Context_inUseEffectLambda.set(this, false);
-        _Context_loadGlobalInstructionIds.set(this, new Map());
-        _Context_arrayExpressions.set(this, new Map());
-        __classPrivateFieldSet(this, _Context_env, env, "f");
-    }
-    pushError(error) {
-        __classPrivateFieldGet(this, _Context_errors, "f").push(error);
-    }
-    withFunctionScope(fn) {
-        fn();
-        return __classPrivateFieldGet(this, _Context_capturedCalleeIdentifierIds, "f");
-    }
-    withUseEffectLambdaScope(fn) {
-        const capturedCalleeIdentifierIds = __classPrivateFieldGet(this, _Context_capturedCalleeIdentifierIds, "f");
-        const inUseEffectLambda = __classPrivateFieldGet(this, _Context_inUseEffectLambda, "f");
-        __classPrivateFieldSet(this, _Context_capturedCalleeIdentifierIds, new Map(), "f");
-        __classPrivateFieldSet(this, _Context_inUseEffectLambda, true, "f");
-        const resultCapturedCalleeIdentifierIds = this.withFunctionScope(fn);
-        __classPrivateFieldSet(this, _Context_capturedCalleeIdentifierIds, capturedCalleeIdentifierIds, "f");
-        __classPrivateFieldSet(this, _Context_inUseEffectLambda, inUseEffectLambda, "f");
-        return resultCapturedCalleeIdentifierIds;
-    }
-    addCallExpression(id, callExpr) {
-        __classPrivateFieldGet(this, _Context_callExpressions, "f").set(id, callExpr);
-    }
-    getCallExpression(id) {
-        return __classPrivateFieldGet(this, _Context_callExpressions, "f").get(id);
-    }
-    addLoadLocalInstr(id, loadLocal) {
-        __classPrivateFieldGet(this, _Context_loadLocals, "f").set(id, loadLocal);
-    }
-    getLoadLocalInstr(id) {
-        return __classPrivateFieldGet(this, _Context_loadLocals, "f").get(id);
-    }
-    getOrGenerateFireFunctionBinding(callee, fireLoc) {
-        const fireFunctionBinding = getOrInsertWith(__classPrivateFieldGet(this, _Context_fireCalleesToFireFunctions, "f"), callee.identifier.id, () => createTemporaryPlace(__classPrivateFieldGet(this, _Context_env, "f"), GeneratedSource));
-        fireFunctionBinding.identifier.type = {
-            kind: 'Function',
-            shapeId: BuiltInFireFunctionId,
-            return: { kind: 'Poly' },
-            isConstructor: false,
-        };
-        __classPrivateFieldGet(this, _Context_capturedCalleeIdentifierIds, "f").set(callee.identifier.id, {
-            fireFunctionBinding,
-            capturedCalleeIdentifier: callee.identifier,
-            fireLoc,
-        });
-        return fireFunctionBinding;
-    }
-    mergeCalleesFromInnerScope(innerCallees) {
-        for (const [id, calleeInfo] of innerCallees.entries()) {
-            __classPrivateFieldGet(this, _Context_capturedCalleeIdentifierIds, "f").set(id, calleeInfo);
-        }
-    }
-    addCalleeWithInsertedFire(id) {
-        __classPrivateFieldGet(this, _Context_calleesWithInsertedFire, "f").add(id);
-    }
-    hasCalleeWithInsertedFire(id) {
-        return __classPrivateFieldGet(this, _Context_calleesWithInsertedFire, "f").has(id);
-    }
-    inUseEffectLambda() {
-        return __classPrivateFieldGet(this, _Context_inUseEffectLambda, "f");
-    }
-    addFunctionExpression(id, fn) {
-        __classPrivateFieldGet(this, _Context_functionExpressions, "f").set(id, fn);
-    }
-    getFunctionExpression(id) {
-        return __classPrivateFieldGet(this, _Context_functionExpressions, "f").get(id);
-    }
-    addLoadGlobalInstrId(id, instrId) {
-        __classPrivateFieldGet(this, _Context_loadGlobalInstructionIds, "f").set(id, instrId);
-    }
-    getLoadGlobalInstrId(id) {
-        return __classPrivateFieldGet(this, _Context_loadGlobalInstructionIds, "f").get(id);
-    }
-    addArrayExpression(id, array) {
-        __classPrivateFieldGet(this, _Context_arrayExpressions, "f").set(id, array);
-    }
-    getArrayExpression(id) {
-        return __classPrivateFieldGet(this, _Context_arrayExpressions, "f").get(id);
-    }
-    hasErrors() {
-        return __classPrivateFieldGet(this, _Context_errors, "f").hasAnyErrors();
-    }
-    throwIfErrorsFound() {
-        if (this.hasErrors())
-            throw __classPrivateFieldGet(this, _Context_errors, "f");
-    }
-}
-_Context_env = new WeakMap(), _Context_errors = new WeakMap(), _Context_callExpressions = new WeakMap(), _Context_functionExpressions = new WeakMap(), _Context_loadLocals = new WeakMap(), _Context_fireCalleesToFireFunctions = new WeakMap(), _Context_calleesWithInsertedFire = new WeakMap(), _Context_capturedCalleeIdentifierIds = new WeakMap(), _Context_inUseEffectLambda = new WeakMap(), _Context_loadGlobalInstructionIds = new WeakMap(), _Context_arrayExpressions = new WeakMap();
-function deleteInstructions(deleteInstrs, instructions) {
-    if (deleteInstrs.size > 0) {
-        const newInstrs = instructions.filter(instr => !deleteInstrs.has(instr.id));
-        return newInstrs;
-    }
-    return instructions;
-}
-function rewriteInstructions(rewriteInstrs, instructions) {
-    if (rewriteInstrs.size > 0) {
-        const newInstrs = [];
-        for (const instr of instructions) {
-            const newInstrsAtId = rewriteInstrs.get(instr.id);
-            if (newInstrsAtId != null) {
-                newInstrs.push(...newInstrsAtId, instr);
-            }
-            else {
-                newInstrs.push(instr);
-            }
-        }
-        return newInstrs;
-    }
-    return instructions;
 }
 
 function validateNoImpureFunctionsInRender(fn) {
@@ -52557,6 +50016,11 @@ function createDiagnostic(category, missing, extra, suggestion) {
         suggestions: suggestion != null ? [suggestion] : null,
     });
 }
+function isEffectHook(identifier) {
+    return (isUseEffectHookType(identifier) ||
+        isUseLayoutEffectHookType(identifier) ||
+        isUseInsertionEffectHookType(identifier));
+}
 
 function run(func, config, fnType, mode, programContext, logger, filename, code) {
     var _a, _b;
@@ -52580,10 +50044,7 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
     validateContextVariableLValues(hir);
     validateUseMemo(hir).unwrap();
-    if (env.enableDropManualMemoization &&
-        !env.config.enablePreserveExistingManualUseMemo &&
-        !env.config.disableMemoizationForDebugging &&
-        !env.config.enableChangeDetectionForDebugging) {
+    if (env.enableDropManualMemoization) {
         dropManualMemoization(hir).unwrap();
         log({ kind: 'hir', name: 'DropManualMemoization', value: hir });
     }
@@ -52614,13 +50075,6 @@ function runWithEnvironment(func, env) {
             validateNoCapitalizedCalls(hir).unwrap();
         }
     }
-    if (env.config.enableFire) {
-        transformFire(hir);
-        log({ kind: 'hir', name: 'TransformFire', value: hir });
-    }
-    if (env.config.lowerContextAccess) {
-        lowerContextAccess(hir, env.config.lowerContextAccess);
-    }
     optimizePropsMethodCalls(hir);
     log({ kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir });
     analyseFunctions(hir);
@@ -52638,10 +50092,6 @@ function runWithEnvironment(func, env) {
     }
     deadCodeElimination(hir);
     log({ kind: 'hir', name: 'DeadCodeElimination', value: hir });
-    if (env.config.enableInstructionReordering) {
-        instructionReordering(hir);
-        log({ kind: 'hir', name: 'InstructionReordering', value: hir });
-    }
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
     const mutabilityAliasingRangeErrors = inferMutationAliasingRanges(hir, {
@@ -52784,22 +50234,6 @@ function runWithEnvironment(func, env) {
         name: 'PropagateScopeDependenciesHIR',
         value: hir,
     });
-    if (env.config.inferEffectDependencies) {
-        inferEffectDependencies(hir);
-        log({
-            kind: 'hir',
-            name: 'InferEffectDependencies',
-            value: hir,
-        });
-    }
-    if (env.config.inlineJsxTransform) {
-        inlineJsxTransform(hir, env.config.inlineJsxTransform);
-        log({
-            kind: 'hir',
-            name: 'inlineJsxTransform',
-            value: hir,
-        });
-    }
     const reactiveFunction = buildReactiveFunction(hir);
     log({
         kind: 'reactive',
@@ -52844,14 +50278,6 @@ function runWithEnvironment(func, env) {
         name: 'PruneAlwaysInvalidatingScopes',
         value: reactiveFunction,
     });
-    if (env.config.enableChangeDetectionForDebugging != null) {
-        pruneInitializationDependencies(reactiveFunction);
-        log({
-            kind: 'reactive',
-            name: 'PruneInitializationDependencies',
-            value: reactiveFunction,
-        });
-    }
     propagateEarlyReturns(reactiveFunction);
     log({
         kind: 'reactive',
@@ -52894,9 +50320,6 @@ function runWithEnvironment(func, env) {
         name: 'PruneHoistedContexts',
         value: reactiveFunction,
     });
-    if (env.config.validateMemoizedEffectDependencies) {
-        validateMemoizedEffectDependencies(reactiveFunction).unwrap();
-    }
     if (env.config.enablePreserveExistingMemoizationGuarantees ||
         env.config.validatePreserveExistingMemoizationGuarantees) {
         validatePreservedManualMemoization(reactiveFunction).unwrap();
@@ -53335,7 +50758,6 @@ function compileProgram(program, pass) {
     applyCompiledFunctions(program, compiledFns, pass, programContext);
     return {
         retryErrors: programContext.retryErrors,
-        inferredEffectLocations: programContext.inferredEffectLocations,
     };
 }
 function findFunctionsToCompile(program, pass, programContext) {
@@ -53347,9 +50769,6 @@ function findFunctionsToCompile(program, pass, programContext) {
             return;
         }
         const fnType = getReactFunctionType(fn, pass);
-        if (pass.opts.environment.validateNoDynamicallyCreatedComponentsOrHooks) {
-            validateNoDynamicallyCreatedComponentsOrHooks(fn, pass, programContext);
-        }
         if (fnType === null || programContext.alreadyCompiled.has(fn.node)) {
             return;
         }
@@ -53399,16 +50818,7 @@ function processFn(fn, fnType, programContext, outputMode) {
         else {
             handleError(compileResult.error, programContext, (_c = fn.node.loc) !== null && _c !== void 0 ? _c : null);
         }
-        if (outputMode === 'client') {
-            const retryResult = retryCompileFunction(fn, fnType, programContext);
-            if (retryResult == null) {
-                return null;
-            }
-            compiledFn = retryResult;
-        }
-        else {
-            return null;
-        }
+        return null;
     }
     else {
         compiledFn = compileResult.compiledFn;
@@ -53437,11 +50847,6 @@ function processFn(fn, fnType, programContext, outputMode) {
         return null;
     }
     else if (programContext.opts.outputMode === 'lint') {
-        for (const loc of compiledFn.inferredEffectLocations) {
-            if (loc !== GeneratedSource) {
-                programContext.inferredEffectLocations.add(loc);
-            }
-        }
         return null;
     }
     else if (programContext.opts.compilationMode === 'annotation' &&
@@ -53468,25 +50873,6 @@ function tryCompileFunction(fn, fnType, programContext, outputMode) {
     }
     catch (err) {
         return { kind: 'error', error: err };
-    }
-}
-function retryCompileFunction(fn, fnType, programContext) {
-    const environment = programContext.opts.environment;
-    if (!(environment.enableFire || environment.inferEffectDependencies != null)) {
-        return null;
-    }
-    try {
-        const retryResult = compileFn(fn, environment, fnType, 'client-no-memo', programContext, programContext.opts.logger, programContext.filename, programContext.code);
-        if (!retryResult.hasFireRewrite && !retryResult.hasInferredEffect) {
-            return null;
-        }
-        return retryResult;
-    }
-    catch (err) {
-        if (err instanceof CompilerError) {
-            programContext.retryErrors.push({ fn, error: err });
-        }
-        return null;
     }
 }
 function applyCompiledFunctions(program, compiledFns, pass, programContext) {
@@ -53538,58 +50924,12 @@ function shouldSkipCompilation(program, pass) {
     }
     return false;
 }
-function validateNoDynamicallyCreatedComponentsOrHooks(fn, pass, programContext) {
-    const parentNameExpr = getFunctionName$1(fn);
-    const parentName = parentNameExpr !== null && parentNameExpr.isIdentifier()
-        ? parentNameExpr.node.name
-        : '<anonymous>';
-    const validateNestedFunction = (nestedFn) => {
-        var _a, _b, _c, _d;
-        if (nestedFn.node === fn.node ||
-            programContext.alreadyCompiled.has(nestedFn.node)) {
-            return;
-        }
-        if (nestedFn.scope.getProgramParent() !== nestedFn.scope.parent) {
-            const nestedFnType = getReactFunctionType(nestedFn, pass);
-            const nestedFnNameExpr = getFunctionName$1(nestedFn);
-            const nestedName = nestedFnNameExpr !== null && nestedFnNameExpr.isIdentifier()
-                ? nestedFnNameExpr.node.name
-                : '<anonymous>';
-            if (nestedFnType === 'Component' || nestedFnType === 'Hook') {
-                CompilerError.throwDiagnostic({
-                    category: ErrorCategory.Factories,
-                    reason: `Components and hooks cannot be created dynamically`,
-                    description: `The function \`${nestedName}\` appears to be a React ${nestedFnType.toLowerCase()}, but it's defined inside \`${parentName}\`. Components and Hooks should always be declared at module scope`,
-                    details: [
-                        {
-                            kind: 'error',
-                            message: 'this function dynamically created a component/hook',
-                            loc: (_b = (_a = parentNameExpr === null || parentNameExpr === void 0 ? void 0 : parentNameExpr.node.loc) !== null && _a !== void 0 ? _a : fn.node.loc) !== null && _b !== void 0 ? _b : null,
-                        },
-                        {
-                            kind: 'error',
-                            message: 'the component is created here',
-                            loc: (_d = (_c = nestedFnNameExpr === null || nestedFnNameExpr === void 0 ? void 0 : nestedFnNameExpr.node.loc) !== null && _c !== void 0 ? _c : nestedFn.node.loc) !== null && _d !== void 0 ? _d : null,
-                        },
-                    ],
-                });
-            }
-        }
-        nestedFn.skip();
-    };
-    fn.traverse({
-        FunctionDeclaration: validateNestedFunction,
-        FunctionExpression: validateNestedFunction,
-        ArrowFunctionExpression: validateNestedFunction,
-    });
-}
 function getReactFunctionType(fn, pass) {
     var _a, _b;
-    const hookPattern = pass.opts.environment.hookPattern;
     if (fn.node.body.type === 'BlockStatement') {
         const optInDirectives = tryFindDirectiveEnablingMemoization(fn.node.body.directives, pass.opts);
         if (optInDirectives.unwrapOr(null) != null) {
-            return (_a = getComponentOrHookLike(fn, hookPattern)) !== null && _a !== void 0 ? _a : 'Other';
+            return (_a = getComponentOrHookLike(fn)) !== null && _a !== void 0 ? _a : 'Other';
         }
     }
     let componentSyntaxType = null;
@@ -53606,13 +50946,13 @@ function getReactFunctionType(fn, pass) {
             return null;
         }
         case 'infer': {
-            return componentSyntaxType !== null && componentSyntaxType !== void 0 ? componentSyntaxType : getComponentOrHookLike(fn, hookPattern);
+            return componentSyntaxType !== null && componentSyntaxType !== void 0 ? componentSyntaxType : getComponentOrHookLike(fn);
         }
         case 'syntax': {
             return componentSyntaxType;
         }
         case 'all': {
-            return (_b = getComponentOrHookLike(fn, hookPattern)) !== null && _b !== void 0 ? _b : 'Other';
+            return (_b = getComponentOrHookLike(fn)) !== null && _b !== void 0 ? _b : 'Other';
         }
         default: {
             assertExhaustive$1(pass.opts.compilationMode, `Unexpected compilationMode \`${pass.opts.compilationMode}\``);
@@ -53640,19 +50980,16 @@ function hasMemoCacheFunctionImport(program, moduleName) {
     });
     return hasUseMemoCache;
 }
-function isHookName$1(s, hookPattern) {
-    if (hookPattern !== null) {
-        return new RegExp(hookPattern).test(s);
-    }
+function isHookName$1(s) {
     return /^use[A-Z0-9]/.test(s);
 }
-function isHook$1(path, hookPattern) {
+function isHook$1(path) {
     if (path.isIdentifier()) {
-        return isHookName$1(path.node.name, hookPattern);
+        return isHookName$1(path.node.name);
     }
     else if (path.isMemberExpression() &&
         !path.node.computed &&
-        isHook$1(path.get('property'), hookPattern)) {
+        isHook$1(path.get('property'))) {
         const obj = path.get('object').node;
         const isPascalCaseNameSpace = /^[A-Z].*/;
         return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
@@ -53750,20 +51087,20 @@ function isValidComponentParams(params) {
     }
     return false;
 }
-function getComponentOrHookLike(node, hookPattern) {
+function getComponentOrHookLike(node) {
     const functionName = getFunctionName$1(node);
     if (functionName !== null && isComponentName$1(functionName)) {
-        let isComponent = callsHooksOrCreatesJsx(node, hookPattern) &&
+        let isComponent = callsHooksOrCreatesJsx(node) &&
             isValidComponentParams(node.get('params')) &&
             !returnsNonNode(node);
         return isComponent ? 'Component' : null;
     }
-    else if (functionName !== null && isHook$1(functionName, hookPattern)) {
-        return callsHooksOrCreatesJsx(node, hookPattern) ? 'Hook' : null;
+    else if (functionName !== null && isHook$1(functionName)) {
+        return callsHooksOrCreatesJsx(node) ? 'Hook' : null;
     }
     if (node.isFunctionExpression() || node.isArrowFunctionExpression()) {
         if (isForwardRefCallback$1(node) || isMemoCallback$1(node)) {
-            return callsHooksOrCreatesJsx(node, hookPattern) ? 'Component' : null;
+            return callsHooksOrCreatesJsx(node) ? 'Component' : null;
         }
     }
     return null;
@@ -53775,7 +51112,7 @@ function skipNestedFunctions(node) {
         }
     };
 }
-function callsHooksOrCreatesJsx(node, hookPattern) {
+function callsHooksOrCreatesJsx(node) {
     let invokesHooks = false;
     let createsJsx = false;
     node.traverse({
@@ -53784,7 +51121,7 @@ function callsHooksOrCreatesJsx(node, hookPattern) {
         },
         CallExpression(call) {
             const callee = call.get('callee');
-            if (callee.isExpression() && isHook$1(callee, hookPattern)) {
+            if (callee.isExpression() && isHook$1(callee)) {
                 invokesHooks = true;
             }
         },
@@ -53952,7 +51289,6 @@ class ProgramContext {
         this.knownReferencedNames = new Set();
         this.imports = new Map();
         this.retryErrors = [];
-        this.inferredEffectLocations = new Set();
         this.scope = program.scope;
         this.opts = opts;
         this.filename = filename;
@@ -53962,13 +51298,7 @@ class ProgramContext {
         this.hasModuleScopeOptOut = hasModuleScopeOptOut;
     }
     isHookName(name) {
-        if (this.opts.environment.hookPattern == null) {
-            return isHookName$2(name);
-        }
-        else {
-            const match = new RegExp(this.opts.environment.hookPattern).exec(name);
-            return (match != null && typeof match[1] === 'string' && isHookName$2(match[1]));
-        }
+        return isHookName$2(name);
     }
     hasReference(name) {
         return (this.knownReferencedNames.has(name) ||
@@ -54287,99 +51617,8 @@ function injectReanimatedFlag(options) {
     return Object.assign(Object.assign({}, options), { environment: Object.assign(Object.assign({}, options.environment), { enableCustomTypeDefinitionForReanimated: true }) });
 }
 
-function throwInvalidReact(options, { logger, filename }) {
-    logger === null || logger === void 0 ? void 0 : logger.logEvent(filename, {
-        kind: 'CompileError',
-        fnLoc: null,
-        detail: new CompilerDiagnostic(options),
-    });
-    CompilerError.throwDiagnostic(options);
-}
-function isAutodepsSigil(arg) {
-    if (arg.isIdentifier() && arg.node.name === 'AUTODEPS') {
-        const binding = arg.scope.getBinding(arg.node.name);
-        if (binding && binding.path.isImportSpecifier()) {
-            const importSpecifier = binding.path.node;
-            if (importSpecifier.imported.type === 'Identifier') {
-                return importSpecifier.imported.name === 'AUTODEPS';
-            }
-        }
-        return false;
-    }
-    if (arg.isMemberExpression() && !arg.node.computed) {
-        const object = arg.get('object');
-        const property = arg.get('property');
-        if (object.isIdentifier() &&
-            object.node.name === 'React' &&
-            property.isIdentifier() &&
-            property.node.name === 'AUTODEPS') {
-            return true;
-        }
-    }
-    return false;
-}
-function assertValidEffectImportReference(autodepsIndex, paths, context) {
-    var _a;
-    for (const path of paths) {
-        const parent = path.parentPath;
-        if (parent != null && parent.isCallExpression()) {
-            const args = parent.get('arguments');
-            const maybeCalleeLoc = path.node.loc;
-            const hasInferredEffect = maybeCalleeLoc != null &&
-                context.inferredEffectLocations.has(maybeCalleeLoc);
-            const hasAutodepsArg = args.some(isAutodepsSigil);
-            if (hasAutodepsArg && !hasInferredEffect) {
-                const maybeErrorDiagnostic = matchCompilerDiagnostic(path, context.transformErrors);
-                throwInvalidReact({
-                    category: ErrorCategory.AutomaticEffectDependencies,
-                    reason: 'Cannot infer dependencies of this effect. This will break your build!',
-                    description: 'To resolve, either pass a dependency array or fix reported compiler bailout diagnostics' +
-                        (maybeErrorDiagnostic ? ` ${maybeErrorDiagnostic}` : ''),
-                    details: [
-                        {
-                            kind: 'error',
-                            message: 'Cannot infer dependencies',
-                            loc: (_a = parent.node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
-                        },
-                    ],
-                }, context);
-            }
-        }
-    }
-}
-function assertValidFireImportReference(paths, context) {
-    var _a;
-    if (paths.length > 0) {
-        const maybeErrorDiagnostic = matchCompilerDiagnostic(paths[0], context.transformErrors);
-        throwInvalidReact({
-            category: ErrorCategory.Fire,
-            reason: '[Fire] Untransformed reference to compiler-required feature.',
-            description: 'Either remove this `fire` call or ensure it is successfully transformed by the compiler' +
-                (maybeErrorDiagnostic != null ? ` ${maybeErrorDiagnostic}` : ''),
-            details: [
-                {
-                    kind: 'error',
-                    message: 'Untransformed `fire` call',
-                    loc: (_a = paths[0].node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
-                },
-            ],
-        }, context);
-    }
-}
 function validateNoUntransformedReferences(path, filename, logger, env, compileResult) {
     const moduleLoadChecks = new Map();
-    if (env.enableFire) {
-        for (const module of Environment.knownReactModules) {
-            const react = getOrInsertWith(moduleLoadChecks, module, () => new Map());
-            react.set('fire', assertValidFireImportReference);
-        }
-    }
-    if (env.inferEffectDependencies) {
-        for (const { function: { source, importSpecifierName }, autodepsIndex, } of env.inferEffectDependencies) {
-            const module = getOrInsertWith(moduleLoadChecks, source, () => new Map());
-            module.set(importSpecifierName, assertValidEffectImportReference.bind(null, autodepsIndex));
-        }
-    }
     if (moduleLoadChecks.size > 0) {
         transformProgram(path, moduleLoadChecks, filename, logger, compileResult);
     }
@@ -54442,14 +51681,13 @@ function validateNamespacedImport(specifier, importSpecifierChecks, state) {
     }
 }
 function transformProgram(path, moduleLoadChecks, filename, logger, compileResult) {
-    var _a, _b;
+    var _a;
     const traversalState = {
         shouldInvalidateScopes: true,
         program: path,
         filename,
         logger,
         transformErrors: (_a = compileResult === null || compileResult === void 0 ? void 0 : compileResult.retryErrors) !== null && _a !== void 0 ? _a : [],
-        inferredEffectLocations: (_b = compileResult === null || compileResult === void 0 ? void 0 : compileResult.inferredEffectLocations) !== null && _b !== void 0 ? _b : new Set(),
     };
     path.traverse({
         ImportDeclaration(path) {
@@ -54468,14 +51706,6 @@ function transformProgram(path, moduleLoadChecks, filename, logger, compileResul
             }
         },
     });
-}
-function matchCompilerDiagnostic(badReference, transformErrors) {
-    for (const { fn, error } of transformErrors) {
-        if (fn.isAncestor(badReference)) {
-            return error.toString();
-        }
-    }
-    return null;
 }
 
 const ENABLE_REACT_COMPILER_TIMINGS = process.env['ENABLE_REACT_COMPILER_TIMINGS'] === '1';
