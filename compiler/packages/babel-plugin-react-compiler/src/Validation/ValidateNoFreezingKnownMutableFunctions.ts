@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic, CompilerError, Effect} from '..';
+import {CompilerDiagnostic, Effect} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {
   HIRFunction,
@@ -43,7 +43,6 @@ import {AliasingEffect} from '../Inference/AliasingEffects';
  * that are passed where a frozen value is expected and rejects them.
  */
 export function validateNoFreezingKnownMutableFunctions(fn: HIRFunction): void {
-  const errors = new CompilerError();
   const contextMutationEffects: Map<
     IdentifierId,
     Extract<AliasingEffect, {kind: 'Mutate'} | {kind: 'MutateTransitive'}>
@@ -60,7 +59,7 @@ export function validateNoFreezingKnownMutableFunctions(fn: HIRFunction): void {
           place.identifier.name.kind === 'named'
             ? `\`${place.identifier.name.value}\``
             : 'a local variable';
-        errors.pushDiagnostic(
+        fn.env.recordError(
           CompilerDiagnostic.create({
             category: ErrorCategory.Immutability,
             reason: 'Cannot modify local variables after render completes',
@@ -158,8 +157,5 @@ export function validateNoFreezingKnownMutableFunctions(fn: HIRFunction): void {
     for (const operand of eachTerminalOperand(block.terminal)) {
       visitOperand(operand);
     }
-  }
-  if (errors.hasAnyErrors()) {
-    fn.env.recordErrors(errors);
   }
 }
