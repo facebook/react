@@ -3559,7 +3559,6 @@ export function attach(
         previouslyReconciledSiblingSuspenseNode = suspenseNode;
         // While React didn't rerender this node, it's possible that it was affected by
         // layout due to mutation of a parent or sibling. Check if it changed size.
-        measureUnchangedSuspenseNodesRecursively(suspenseNode);
         // Continue
         suspenseNode = nextRemainingSibling;
       } else if (foundOne) {
@@ -4112,38 +4111,6 @@ export function attach(
       }
       if (fiber.tag === SuspenseComponent || fiber.tag === HostRoot) {
         newSuspenseNode = createSuspenseNode(newInstance);
-        // Measure this Suspense node. In general we shouldn't do this until we have
-        // inserted the new children but since we know this is a FiberInstance we'll
-        // just use the Fiber anyway.
-        // Fallbacks get attributed to the parent so we only measure if we're
-        // showing primary content.
-        if (fiber.tag === SuspenseComponent) {
-          if (OffscreenComponent === -1) {
-            const isTimedOut = fiber.memoizedState !== null;
-            if (!isTimedOut) {
-              newSuspenseNode.rects = measureInstance(newInstance);
-            }
-          } else {
-            const hydrated = isFiberHydrated(fiber);
-            if (hydrated) {
-              const contentFiber = fiber.child;
-              if (contentFiber === null) {
-                throw new Error(
-                  'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
-                );
-              }
-            } else {
-              // This Suspense Fiber is still dehydrated. It won't have any children
-              // until hydration.
-            }
-            const isTimedOut = fiber.memoizedState !== null;
-            if (!isTimedOut) {
-              newSuspenseNode.rects = measureInstance(newInstance);
-            }
-          }
-        } else {
-          newSuspenseNode.rects = measureInstance(newInstance);
-        }
         recordSuspenseMount(newSuspenseNode, reconcilingParentSuspenseNode);
       }
       insertChild(newInstance);
@@ -4181,30 +4148,6 @@ export function attach(
         // just use the Fiber anyway.
         // Fallbacks get attributed to the parent so we only measure if we're
         // showing primary content.
-        if (OffscreenComponent === -1) {
-          const isTimedOut = fiber.memoizedState !== null;
-          if (!isTimedOut) {
-            newSuspenseNode.rects = measureInstance(newInstance);
-          }
-        } else {
-          const hydrated = isFiberHydrated(fiber);
-          if (hydrated) {
-            const contentFiber = fiber.child;
-            if (contentFiber === null) {
-              throw new Error(
-                'There should always be an Offscreen Fiber child in a hydrated Suspense boundary.',
-              );
-            }
-          } else {
-            // This Suspense Fiber is still dehydrated. It won't have any children
-            // until hydration.
-          }
-          const suspenseState = fiber.memoizedState;
-          const isTimedOut = suspenseState !== null;
-          if (!isTimedOut) {
-            newSuspenseNode.rects = measureInstance(newInstance);
-          }
-        }
       }
       insertChild(newInstance);
       if (__DEBUG__) {
@@ -5644,25 +5587,6 @@ export function attach(
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
-        if (shouldMeasureSuspenseNode) {
-          if (!isInDisconnectedSubtree) {
-            // Measure this Suspense node in case it changed. We don't update the rect
-            // while we're inside a disconnected subtree so that we keep the outline
-            // as it was before we hid the parent.
-            const suspenseNode = fiberInstance.suspenseNode;
-            if (suspenseNode === null) {
-              throw new Error(
-                'Attempted to measure a Suspense node that does not exist.',
-              );
-            }
-            const prevRects = suspenseNode.rects;
-            const nextRects = measureInstance(fiberInstance);
-            if (!areEqualRects(prevRects, nextRects)) {
-              suspenseNode.rects = nextRects;
-              recordSuspenseResize(suspenseNode);
-            }
-          }
-        }
         if (shouldPopSuspenseNode) {
           reconcilingParentSuspenseNode = stashedSuspenseParent;
           previouslyReconciledSiblingSuspenseNode = stashedSuspensePrevious;
