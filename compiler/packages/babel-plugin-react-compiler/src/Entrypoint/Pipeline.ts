@@ -500,7 +500,6 @@ function runWithEnvironment(
     value: reactiveFunction,
   });
 
-
   if (
     env.config.enablePreserveExistingMemoizationGuarantees ||
     env.config.validatePreserveExistingMemoizationGuarantees

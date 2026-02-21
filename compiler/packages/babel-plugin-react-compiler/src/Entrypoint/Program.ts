@@ -738,7 +738,6 @@ function tryCompileFunction(
   }
 }
 
-
 /**
  * Applies React Compiler generated functions to the babel AST by replacing
  * existing functions in place or inserting new declarations.
