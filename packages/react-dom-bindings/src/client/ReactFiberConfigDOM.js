@@ -661,7 +661,8 @@ export function finalizeInitialChildren(
     case 'img':
       return true;
     default:
-      return false;
+      // autoFocus is a global HTML attribute that applies to all elements.
+      return !!props.autoFocus;
   }
 }
 
@@ -888,6 +889,13 @@ export function commitMount(
         ((domElement: any): HTMLImageElement).src = src;
       } else if (newProps.srcSet) {
         ((domElement: any): HTMLImageElement).srcset = (newProps: any).srcSet;
+      }
+      return;
+    }
+    default: {
+      // autoFocus is a global HTML attribute that applies to all elements.
+      if (newProps.autoFocus) {
+        ((domElement: any): HTMLElement).focus();
       }
       return;
     }
