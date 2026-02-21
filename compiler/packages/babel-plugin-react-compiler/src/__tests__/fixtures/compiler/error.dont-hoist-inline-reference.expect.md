@@ -21,15 +21,15 @@ export const FIXTURE_ENTRYPOINT = {
 ```
 Found 1 error:
 
-Todo: [hoisting] EnterSSA: Expected identifier to be defined before being used
+Invariant: [InferMutationAliasingEffects] Expected value kind to be initialized
 
-Identifier x$1 is undefined.
+<unknown> x$1.
 
-error.dont-hoist-inline-reference.ts:3:2
+error.dont-hoist-inline-reference.ts:3:21
   1 | import {identity} from 'shared-runtime';
   2 | function useInvalid() {
 > 3 |   const x = identity(x);
-    |   ^^^^^^^^^^^^^^^^^^^^^^ [hoisting] EnterSSA: Expected identifier to be defined before being used
+    |                      ^ this is uninitialized
   4 |   return x;
   5 | }
   6 |
