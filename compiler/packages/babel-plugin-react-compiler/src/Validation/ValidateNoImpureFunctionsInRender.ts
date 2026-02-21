@@ -9,7 +9,6 @@ import {CompilerDiagnostic, CompilerError} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {HIRFunction} from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
-import {Result} from '../Utils/Result';
 
 /**
  * Checks that known-impure functions are not called during render. Examples of invalid functions to
@@ -20,9 +19,7 @@ import {Result} from '../Utils/Result';
  * this in several of our validation passes and should unify those analyses into a reusable helper
  * and use it here.
  */
-export function validateNoImpureFunctionsInRender(
-  fn: HIRFunction,
-): Result<void, CompilerError> {
+export function validateNoImpureFunctionsInRender(fn: HIRFunction): void {
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
@@ -55,5 +52,7 @@ export function validateNoImpureFunctionsInRender(
       }
     }
   }
-  return errors.asResult();
+  if (errors.hasAnyErrors()) {
+    fn.env.recordErrors(errors);
+  }
 }
