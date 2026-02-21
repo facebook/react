@@ -28,6 +28,7 @@ import RecordingInProgress from './RecordingInProgress';
 import ProcessingData from './ProcessingData';
 import ProfilingNotSupported from './ProfilingNotSupported';
 import SidebarSelectedFiberInfo from './SidebarSelectedFiberInfo';
+import ProfilerSearchInput from './ProfilerSearchInput';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
@@ -187,6 +188,9 @@ function Profiler(_: {}) {
                 ref={searchInputContainerRef}
                 className={styles.TimelineSearchInputContainer}
               />
+            )}
+            {isLegacyProfilerSelected && didRecordCommits && selectedCommitIndex !== null && (
+              <ProfilerSearchInput />
             )}
             <SettingsModalContextToggle />
             {isLegacyProfilerSelected && didRecordCommits && (
