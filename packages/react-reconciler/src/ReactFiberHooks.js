@@ -2014,7 +2014,7 @@ function rerenderOptimistic<S, A>(
   // the passthrough value changed.
   //
   // So instead of a forked re-render implementation that knows how to handle
-  // render phase udpates, we can use the same implementation as during a
+  // render phase updates, we can use the same implementation as during a
   // regular mount or update.
   const hook = updateWorkInProgressHook();
 
