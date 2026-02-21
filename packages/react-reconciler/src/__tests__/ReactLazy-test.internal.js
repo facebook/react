@@ -161,18 +161,25 @@ describe('ReactLazy', () => {
       },
     }));
 
+    const LazyTextWithStatus = lazy(() => ({
+      status: 'fulfilled',
+      value: {default: Text},
+      then() {},
+    }));
+
     let root;
     await act(() => {
       root = ReactTestRenderer.create(
         <Suspense fallback={<Text text="Loading..." />}>
           <LazyText text="Hi" />
+          <LazyTextWithStatus text="Bye" />
         </Suspense>,
         {unstable_isConcurrent: true},
       );
     });
 
-    assertLog(['Hi']);
-    expect(root).toMatchRenderedOutput('Hi');
+    assertLog(['Hi', 'Bye']);
+    expect(root).toMatchRenderedOutput('HiBye');
   });
 
   it('can reject synchronously without suspending', async () => {
@@ -207,6 +214,76 @@ describe('ReactLazy', () => {
     });
     assertLog([]);
     expect(root).toMatchRenderedOutput('Error: oh no');
+  });
+
+  it('can reject synchronously without suspending with status thenable', async () => {
+    const error = new Error('oh no');
+    const LazyText = lazy(() => ({
+      status: 'rejected',
+      reason: error,
+      then() {},
+    }));
+
+    class ErrorBoundary extends React.Component {
+      state = {};
+      static getDerivedStateFromError(error) {
+        return {message: error.message};
+      }
+      render() {
+        return this.state.message
+          ? `Error: ${this.state.message}`
+          : this.props.children;
+      }
+    }
+
+    let root;
+    await act(() => {
+      root = ReactTestRenderer.create(
+        <ErrorBoundary>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <LazyText text="Hi" />
+          </Suspense>
+        </ErrorBoundary>,
+        {unstable_isConcurrent: true},
+      );
+    });
+    assertLog([]);
+    expect(root).toMatchRenderedOutput('Error: oh no');
+  });
+
+  it('can resolve after pending status thenable flips', async () => {
+    let statusThenable;
+    const LazyText = lazy(() => {
+      statusThenable = {
+        status: 'pending',
+        value: {default: Text},
+        then() {},
+      };
+      return statusThenable;
+    });
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText text="Hi" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('Hi');
+
+    statusThenable.status = 'fulfilled';
+    statusThenable.value = {default: Text};
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText text="Hi again" />
+      </Suspense>,
+    );
+    await waitForAll(['Hi again']);
+    expect(root).toMatchRenderedOutput('Hi again');
   });
 
   it('multiple lazy components', async () => {
