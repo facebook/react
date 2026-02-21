@@ -196,10 +196,18 @@ function runWithEnvironment(
 
   if (env.enableValidations) {
     if (env.config.validateHooksUsage) {
-      validateHooksUsage(hir).unwrap();
+      if (env.outputMode === 'lint') {
+        env.logErrors(validateHooksUsage(hir));
+      } else {
+        validateHooksUsage(hir).unwrap();
+      }
     }
     if (env.config.validateNoCapitalizedCalls) {
-      validateNoCapitalizedCalls(hir).unwrap();
+      if (env.outputMode === 'lint') {
+        env.logErrors(validateNoCapitalizedCalls(hir));
+      } else {
+        validateNoCapitalizedCalls(hir).unwrap();
+      }
     }
   }
 

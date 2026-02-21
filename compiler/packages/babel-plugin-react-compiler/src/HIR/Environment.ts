@@ -696,7 +696,7 @@ export class Environment {
     return this.#scope;
   }
 
-  logErrors(errors: Result<void, CompilerError>): void {
+  logErrors(errors: Result<unknown, CompilerError>): void {
     if (errors.isOk() || this.logger == null) {
       return;
     }
