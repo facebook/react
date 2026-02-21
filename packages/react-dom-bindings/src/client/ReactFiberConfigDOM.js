@@ -4017,7 +4017,7 @@ export function registerSuspenseInstanceRetry(
     instance.data !== SUSPENSE_PENDING_START_DATA ||
     // The boundary is still in pending status but the document has finished loading
     // before we could register the event handler that would have scheduled the retry
-    // on load so we call teh callback now.
+    // on load so we call the callback now.
     ownerDocument.readyState !== DOCUMENT_READY_STATE_LOADING
   ) {
     callback();
