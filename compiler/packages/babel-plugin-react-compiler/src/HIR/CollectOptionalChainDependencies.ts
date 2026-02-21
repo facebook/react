@@ -229,6 +229,121 @@ function matchOptionalTestBlock(
 }
 
 /**
+ * Finds the test block for an optional chain by traversing through intermediate
+ * value blocks and nested value block terminals. This handles cases like
+ * `foo(a?.value, b?.value)?.result` where multiple optional chains or other
+ * value blocks (logicals, ternaries) appear as arguments, causing the fallthrough
+ * of one value block to contain another value block terminal rather than directly
+ * containing a branch.
+ *
+ * This function also ensures any nested optional chains encountered are properly
+ * traversed and added to the context.
+ */
+function findOptionalTestBlock(
+  blockId: BlockId,
+  context: OptionalTraversalContext,
+): BasicBlock | null {
+  const block = context.blocks.get(blockId);
+  if (block == null) {
+    return null;
+  }
+
+  const terminal = block.terminal;
+  switch (terminal.kind) {
+    case 'branch': {
+      // Found the branch terminal we're looking for
+      return block;
+    }
+    case 'optional': {
+      // Traverse the nested optional to collect its dependencies
+      if (!context.seenOptionals.has(block.id)) {
+        traverseOptionalBlock(
+          block as TBasicBlock<OptionalTerminal>,
+          context,
+          null,
+        );
+      }
+      // Continue searching in the fallthrough of this optional
+      return findOptionalTestBlock(terminal.fallthrough, context);
+    }
+    case 'logical':
+    case 'ternary': {
+      // Traverse nested value blocks in the test branch
+      const testBlock = context.blocks.get(terminal.test);
+      if (testBlock?.terminal.kind === 'branch') {
+        traverseValueBlock(testBlock.terminal.consequent, context);
+        traverseValueBlock(testBlock.terminal.alternate, context);
+      }
+      // Continue searching in the fallthrough
+      return findOptionalTestBlock(terminal.fallthrough, context);
+    }
+    case 'sequence': {
+      // Traverse the sequence block for any nested optionals
+      traverseValueBlock(terminal.block, context);
+      // Continue searching in the fallthrough
+      return findOptionalTestBlock(terminal.fallthrough, context);
+    }
+    default: {
+      // Unexpected terminal kind - return the block so caller can handle/error
+      return block;
+    }
+  }
+}
+
+/**
+ * Traverses a value block looking for nested optional chains to collect.
+ * This handles cases where optional chains appear inside logical, ternary,
+ * or sequence expressions.
+ */
+function traverseValueBlock(
+  blockId: BlockId,
+  context: OptionalTraversalContext,
+): void {
+  const block = context.blocks.get(blockId);
+  if (block == null) {
+    return;
+  }
+
+  const terminal = block.terminal;
+  switch (terminal.kind) {
+    case 'optional': {
+      if (!context.seenOptionals.has(block.id)) {
+        traverseOptionalBlock(
+          block as TBasicBlock<OptionalTerminal>,
+          context,
+          null,
+        );
+      }
+      break;
+    }
+    case 'logical':
+    case 'ternary': {
+      const testBlock = context.blocks.get(terminal.test);
+      if (testBlock?.terminal.kind === 'branch') {
+        traverseValueBlock(testBlock.terminal.consequent, context);
+        traverseValueBlock(testBlock.terminal.alternate, context);
+      }
+      traverseValueBlock(terminal.fallthrough, context);
+      break;
+    }
+    case 'sequence': {
+      traverseValueBlock(terminal.block, context);
+      traverseValueBlock(terminal.fallthrough, context);
+      break;
+    }
+    case 'branch':
+    case 'goto': {
+      // Terminal blocks, nothing more to traverse
+      break;
+    }
+    default: {
+      // Other terminal kinds - don't recurse
+      break;
+    }
+  }
+}
+
+/**
  * Traverse into the optional block and all transitively referenced blocks to
  * collect sidemaps of optional chain dependencies.
  *
@@ -309,15 +424,18 @@ function traverseOptionalBlock(
      * - <inner_optional> <other operation>
      * - a optional base block with a separate nested optional-chain (e.g. a(c?.d)?.d)
      */
-    const testBlock = context.blocks.get(maybeTest.terminal.fallthrough)!;
-    if (testBlock!.terminal.kind !== 'branch') {
+    const testBlock = findOptionalTestBlock(
+      maybeTest.terminal.fallthrough,
+      context,
+    );
+    if (testBlock == null || testBlock.terminal.kind !== 'branch') {
       /**
        * Fallthrough of the inner optional should be a block with no
        * instructions, terminating with Test($<temporary written to from
        * StoreLocal>)
        */
       CompilerError.throwTodo({
-        reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
+        reason: `Unexpected terminal kind \`${testBlock?.terminal.kind ?? '(null)'}\` for optional fallthrough block`,
         loc: maybeTest.terminal.loc,
       });
     }
