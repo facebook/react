@@ -36,20 +36,25 @@ class App extends PureComponent {
   }
 
   componentDidMount() {
-    window.addEventListener('keydown', e => {
+    this.handleKeydown = e => {
       if (e.key.toLowerCase() === '?') {
         e.preventDefault();
         this.setState(state => ({
           showClock: !state.showClock,
         }));
       }
-    });
+    };
+    window.addEventListener('keydown', this.handleKeydown);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.handleKeydown);
   }
 
   handleChartClick = e => {
     if (this.state.showDemo) {
       if (e.shiftKey) {
-        this.setState({showDemo: false});
+        this.setState({ showDemo: false });
       }
       return;
     }
@@ -63,9 +68,8 @@ class App extends PureComponent {
       return;
     }
     this._ignoreClick = true;
-
     startTransition(() => {
-      this.setState({showDemo: true}, () => {
+      this.setState({ showDemo: true }, () => {
         this._ignoreClick = false;
       });
     });
@@ -73,18 +77,18 @@ class App extends PureComponent {
 
   debouncedHandleChange = _.debounce(value => {
     if (this.state.strategy === 'debounced') {
-      this.setState({value: value});
+      this.setState({ value: value });
     }
   }, 1000);
 
   renderOption(strategy, label) {
-    const {strategy: currentStrategy} = this.state;
+    const { strategy: currentStrategy } = this.state;
     return (
       <label className={strategy === currentStrategy ? 'selected' : null}>
         <input
           type="radio"
           checked={strategy === currentStrategy}
-          onChange={() => this.setState({strategy})}
+          onChange={() => this.setState({ strategy })}
         />
         {label}
       </label>
@@ -93,10 +97,10 @@ class App extends PureComponent {
 
   handleChange = e => {
     const value = e.target.value;
-    const {strategy} = this.state;
+    const { strategy } = this.state;
     switch (strategy) {
       case 'sync':
-        this.setState({value});
+        this.setState({ value });
         break;
       case 'debounced':
         this.debouncedHandleChange(value);
@@ -104,7 +108,7 @@ class App extends PureComponent {
       case 'async':
         // TODO: useTransition hook instead.
         startTransition(() => {
-          this.setState({value});
+          this.setState({ value });
         });
         break;
       default:
@@ -113,7 +117,7 @@ class App extends PureComponent {
   };
 
   render() {
-    const {showClock} = this.state;
+    const { showClock } = this.state;
     const data = this.getStreamData(this.state.value);
     return (
       <div className="container">
@@ -123,7 +127,7 @@ class App extends PureComponent {
           {this.renderOption('async', 'Concurrent')}
         </div>
         <input
-          className={'input ' + this.state.strategy}
+          className={"input " + this.state.strategy}
           placeholder="longer input → more components and DOM nodes"
           defaultValue={this.state.input}
           onChange={this.handleChange}
@@ -132,7 +136,7 @@ class App extends PureComponent {
           {this.state.showDemo && (
             <Charts data={data} onClick={this.handleChartClick} />
           )}
-          <div style={{display: showClock ? 'block' : 'none'}}>
+          <div style={{ display: showClock ? "block" : "none" }}>
             <Clock />
           </div>
         </div>
