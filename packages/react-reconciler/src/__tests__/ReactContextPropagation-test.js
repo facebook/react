@@ -2,6 +2,7 @@ let React;
 let ReactNoop;
 let Scheduler;
 let act;
+let use;
 let useState;
 let useContext;
 let Suspense;
@@ -19,6 +20,7 @@ describe('ReactLazyContextPropagation', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
+    use = React.use;
     useState = React.useState;
     useContext = React.useContext;
     Suspense = React.Suspense;
@@ -936,5 +938,103 @@ describe('ReactLazyContextPropagation', () => {
     });
     assertLog(['B', 'B']);
     expect(root).toMatchRenderedOutput('BB');
+  });
+
+  it('regression: context change triggers retry of suspended Suspense boundary on initial mount', async () => {
+    // Regression test for a bug where a context change above a suspended
+    // Suspense boundary would fail to trigger a retry. When a Suspense
+    // boundary suspends during initial mount, the primary children's fibers
+    // are discarded because there is no current tree to preserve them. If
+    // the suspended promise never resolves, the only way to retry is
+    // something external — like a context change. Context propagation must
+    // mark suspended Suspense boundaries for retry even though the consumer
+    // fibers no longer exist in the tree.
+    //
+    // The Provider component owns the state update. The children are
+    // passed in from above, so they are not re-created when the Provider
+    // re-renders — this means the Suspense boundary bails out, exercising
+    // the lazy context propagation path where the bug manifests.
+    const Context = React.createContext(null);
+    const neverResolvingPromise = new Promise(() => {});
+    const resolvedThenable = {status: 'fulfilled', value: 'Result', then() {}};
+
+    function Consumer() {
+      return <Text text={use(use(Context))} />;
+    }
+
+    let setPromise;
+    function Provider({children}) {
+      const [promise, _setPromise] = useState(neverResolvingPromise);
+      setPromise = _setPromise;
+      return <Context.Provider value={promise}>{children}</Context.Provider>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <Provider>
+          <Suspense fallback={<Text text="Loading" />}>
+            <Consumer />
+          </Suspense>
+        </Provider>,
+      );
+    });
+    assertLog(['Loading']);
+    expect(root).toMatchRenderedOutput('Loading');
+
+    await act(() => {
+      setPromise(resolvedThenable);
+    });
+    assertLog(['Result']);
+    expect(root).toMatchRenderedOutput('Result');
+  });
+
+  it('regression: context change triggers retry of suspended Suspense boundary on initial mount (nested)', async () => {
+    // Same as above, but with an additional indirection component between
+    // the provider and the Suspense boundary. This exercises the
+    // propagateContextChanges walker path rather than the
+    // propagateParentContextChanges path.
+    const Context = React.createContext(null);
+    const neverResolvingPromise = new Promise(() => {});
+    const resolvedThenable = {status: 'fulfilled', value: 'Result', then() {}};
+
+    function Consumer() {
+      return <Text text={use(use(Context))} />;
+    }
+
+    function Indirection({children}) {
+      Scheduler.log('Indirection');
+      return children;
+    }
+
+    let setPromise;
+    function Provider({children}) {
+      const [promise, _setPromise] = useState(neverResolvingPromise);
+      setPromise = _setPromise;
+      return <Context.Provider value={promise}>{children}</Context.Provider>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <Provider>
+          <Indirection>
+            <Suspense fallback={<Text text="Loading" />}>
+              <Consumer />
+            </Suspense>
+          </Indirection>
+        </Provider>,
+      );
+    });
+    assertLog(['Indirection', 'Loading']);
+    expect(root).toMatchRenderedOutput('Loading');
+
+    // Indirection should not re-render — only the Suspense boundary
+    // should be retried.
+    await act(() => {
+      setPromise(resolvedThenable);
+    });
+    assertLog(['Result']);
+    expect(root).toMatchRenderedOutput('Result');
   });
 });
