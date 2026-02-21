@@ -704,23 +704,26 @@ function tryCompileFunction(
   }
 
   try {
-    return {
-      kind: 'compile',
-      compiledFn: compileFn(
-        fn,
-        programContext.opts.environment,
-        fnType,
-        outputMode,
-        programContext,
-        programContext.opts.logger,
-        programContext.filename,
-        programContext.code,
-      ),
-    };
+    const result = compileFn(
+      fn,
+      programContext.opts.environment,
+      fnType,
+      outputMode,
+      programContext,
+      programContext.opts.logger,
+      programContext.filename,
+      programContext.code,
+    );
+    if (result.isOk()) {
+      return {kind: 'compile', compiledFn: result.unwrap()};
+    } else {
+      return {kind: 'error', error: result.unwrapErr()};
+    }
   } catch (err) {
     return {kind: 'error', error: err};
   }
 }
+
 
 /**
  * Applies React Compiler generated functions to the babel AST by replacing
