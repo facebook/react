@@ -26,7 +26,7 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
-import {Err, Ok, Result} from '../Utils/Result';
+
 import {AliasingEffect, MutationReason} from './AliasingEffects';
 
 /**
@@ -74,7 +74,7 @@ import {AliasingEffect, MutationReason} from './AliasingEffects';
 export function inferMutationAliasingRanges(
   fn: HIRFunction,
   {isFunctionExpression}: {isFunctionExpression: boolean},
-): Result<Array<AliasingEffect>, CompilerError> {
+): Array<AliasingEffect> {
   // The set of externally-visible effects
   const functionEffects: Array<AliasingEffect> = [];
 
@@ -547,10 +547,14 @@ export function inferMutationAliasingRanges(
     }
   }
 
-  if (errors.hasAnyErrors() && !isFunctionExpression) {
-    return Err(errors);
+  if (
+    errors.hasAnyErrors() &&
+    !isFunctionExpression &&
+    fn.env.enableValidations
+  ) {
+    fn.env.recordErrors(errors);
   }
-  return Ok(functionEffects);
+  return functionEffects;
 }
 
 function appendFunctionErrors(errors: CompilerError, fn: HIRFunction): void {
