@@ -18,7 +18,6 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {AliasingEffect} from '../Inference/AliasingEffects';
-import {Result} from '../Utils/Result';
 
 /**
  * Validates that functions with known mutations (ie due to types) cannot be passed
@@ -43,9 +42,7 @@ import {Result} from '../Utils/Result';
  * This pass detects functions with *known* mutations (Store or Mutate, not ConditionallyMutate)
  * that are passed where a frozen value is expected and rejects them.
  */
-export function validateNoFreezingKnownMutableFunctions(
-  fn: HIRFunction,
-): Result<void, CompilerError> {
+export function validateNoFreezingKnownMutableFunctions(fn: HIRFunction): void {
   const errors = new CompilerError();
   const contextMutationEffects: Map<
     IdentifierId,
@@ -162,5 +159,7 @@ export function validateNoFreezingKnownMutableFunctions(
       visitOperand(operand);
     }
   }
-  return errors.asResult();
+  if (errors.hasAnyErrors()) {
+    fn.env.recordErrors(errors);
+  }
 }
