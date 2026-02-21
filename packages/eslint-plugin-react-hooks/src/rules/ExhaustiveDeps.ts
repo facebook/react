@@ -1335,11 +1335,10 @@ const rule = {
       const reactiveHookName =
         'name' in nodeWithoutNamespace ? nodeWithoutNamespace.name : '';
       const maybeNode = node.arguments[callbackIndex + 1];
+      const isExplicitUndefined =
+        maybeNode?.type === 'Identifier' && maybeNode.name === 'undefined';
       const declaredDependenciesNode =
-        maybeNode &&
-        !(maybeNode.type === 'Identifier' && maybeNode.name === 'undefined')
-          ? maybeNode
-          : undefined;
+        maybeNode && !isExplicitUndefined ? maybeNode : undefined;
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
       // Check whether a callback is supplied. If there is no callback supplied
@@ -1377,6 +1376,9 @@ const rule = {
             declaredDependenciesNode.value === null)) &&
         !isEffect
       ) {
+        if (isExplicitUndefined) {
+          return;
+        }
         // These are only used for optimization.
         if (
           reactiveHookName === 'useMemo' ||
