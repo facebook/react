@@ -127,49 +127,49 @@ All validation passes need to record errors on the environment instead of return
 
 These passes already accumulate errors internally and return `Result<void, CompilerError>`. The change is: instead of returning the Result, record errors on `env` and return void. Remove the `.unwrap()` call in Pipeline.ts.
 
-- [ ] **4.1 `validateHooksUsage`** (`src/Validation/ValidateHooksUsage.ts`)
+- [x] **4.1 `validateHooksUsage`** (`src/Validation/ValidateHooksUsage.ts`)
   - Change signature from `(fn: HIRFunction): Result<void, CompilerError>` to `(fn: HIRFunction): void`
   - Record errors on `fn.env` instead of returning `errors.asResult()`
   - Update Pipeline.ts call site (line 211): remove `.unwrap()`
 
-- [ ] **4.2 `validateNoCapitalizedCalls`** (`src/Validation/ValidateNoCapitalizedCalls.ts`)
+- [x] **4.2 `validateNoCapitalizedCalls`** (`src/Validation/ValidateNoCapitalizedCalls.ts`)
   - Change signature to return void
   - Fix the hybrid pattern: the direct `CallExpression` path currently throws via `CompilerError.throwInvalidReact()` — change to record on env
   - The `MethodCall` path already accumulates — change to record on env
   - Update Pipeline.ts call site (line 214): remove `.unwrap()`
 
-- [ ] **4.3 `validateUseMemo`** (`src/Validation/ValidateUseMemo.ts`)
+- [x] **4.3 `validateUseMemo`** (`src/Validation/ValidateUseMemo.ts`)
   - Change signature to return void
   - Record hard errors on env instead of returning `errors.asResult()`
   - The soft `voidMemoErrors` path already uses `env.logErrors()` — keep as-is or also record
   - Update Pipeline.ts call site (line 170): remove `.unwrap()`
 
-- [ ] **4.4 `dropManualMemoization`** (`src/Inference/DropManualMemoization.ts`)
+- [x] **4.4 `dropManualMemoization`** (`src/Inference/DropManualMemoization.ts`)
   - Change signature to return void
   - Record errors on env instead of returning `errors.asResult()`
   - Update Pipeline.ts call site (line 178): remove `.unwrap()`
 
-- [ ] **4.5 `validateNoRefAccessInRender`** (`src/Validation/ValidateNoRefAccessInRender.ts`)
+- [x] **4.5 `validateNoRefAccessInRender`** (`src/Validation/ValidateNoRefAccessInRender.ts`)
   - Change signature to return void
   - Record errors on env instead of returning Result
   - Update Pipeline.ts call site (line 275): remove `.unwrap()`
 
-- [ ] **4.6 `validateNoSetStateInRender`** (`src/Validation/ValidateNoSetStateInRender.ts`)
+- [x] **4.6 `validateNoSetStateInRender`** (`src/Validation/ValidateNoSetStateInRender.ts`)
   - Change signature to return void
   - Record errors on env
   - Update Pipeline.ts call site (line 279): remove `.unwrap()`
 
-- [ ] **4.7 `validateNoImpureFunctionsInRender`** (`src/Validation/ValidateNoImpureFunctionsInRender.ts`)
+- [x] **4.7 `validateNoImpureFunctionsInRender`** (`src/Validation/ValidateNoImpureFunctionsInRender.ts`)
   - Change signature to return void
   - Record errors on env
   - Update Pipeline.ts call site (line 300): remove `.unwrap()`
 
-- [ ] **4.8 `validateNoFreezingKnownMutableFunctions`** (`src/Validation/ValidateNoFreezingKnownMutableFunctions.ts`)
+- [x] **4.8 `validateNoFreezingKnownMutableFunctions`** (`src/Validation/ValidateNoFreezingKnownMutableFunctions.ts`)
   - Change signature to return void
   - Record errors on env
   - Update Pipeline.ts call site (line 303): remove `.unwrap()`
 
-- [ ] **4.9 `validateExhaustiveDependencies`** (`src/Validation/ValidateExhaustiveDependencies.ts`)
+- [x] **4.9 `validateExhaustiveDependencies`** (`src/Validation/ValidateExhaustiveDependencies.ts`)
   - Change signature to return void
   - Record errors on env
   - Update Pipeline.ts call site (line 315): remove `.unwrap()`
