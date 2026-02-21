@@ -44,7 +44,6 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
-import {Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
 
 const DEBUG = false;
@@ -88,9 +87,7 @@ const DEBUG = false;
  * When we go to compute the dependencies, we then think that the user's manual dep
  * logic is part of what the memo computation logic.
  */
-export function validateExhaustiveDependencies(
-  fn: HIRFunction,
-): Result<void, CompilerError> {
+export function validateExhaustiveDependencies(fn: HIRFunction): void {
   const env = fn.env;
   const reactive = collectReactiveIdentifiersHIR(fn);
 
@@ -217,7 +214,9 @@ export function validateExhaustiveDependencies(
     },
     false, // isFunctionExpression
   );
-  return error.asResult();
+  if (error.hasAnyErrors()) {
+    fn.env.recordErrors(error);
+  }
 }
 
 function validateDependencies(

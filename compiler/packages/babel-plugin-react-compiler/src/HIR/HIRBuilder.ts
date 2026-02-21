@@ -308,33 +308,23 @@ export default class HIRBuilder {
 
   resolveBinding(node: t.Identifier): Identifier {
     if (node.name === 'fbt') {
-      CompilerError.throwDiagnostic({
+      this.errors.push({
         category: ErrorCategory.Todo,
         reason: 'Support local variables named `fbt`',
         description:
           'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
-        details: [
-          {
-            kind: 'error',
-            message: 'Rename to avoid conflict with fbt plugin',
-            loc: node.loc ?? GeneratedSource,
-          },
-        ],
+        loc: node.loc ?? GeneratedSource,
+        suggestions: null,
       });
     }
     if (node.name === 'this') {
-      CompilerError.throwDiagnostic({
+      this.errors.push({
         category: ErrorCategory.UnsupportedSyntax,
         reason: '`this` is not supported syntax',
         description:
           'React Compiler does not support compiling functions that use `this`',
-        details: [
-          {
-            kind: 'error',
-            message: '`this` was used here',
-            loc: node.loc ?? GeneratedSource,
-          },
-        ],
+        loc: node.loc ?? GeneratedSource,
+        suggestions: null,
       });
     }
     const originalName = node.name;
@@ -381,11 +371,12 @@ export default class HIRBuilder {
           instr => instr.value.kind === 'FunctionExpression',
         )
       ) {
-        CompilerError.throwTodo({
+        this.errors.push({
           reason: `Support functions with unreachable code that may contain hoisted declarations`,
           loc: block.instructions[0]?.loc ?? block.terminal.loc,
           description: null,
           suggestions: null,
+          category: ErrorCategory.Todo,
         });
       }
     }

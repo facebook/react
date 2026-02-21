@@ -14,7 +14,6 @@ import {
   CompilerSuggestionOperation,
   ErrorCategory,
 } from '../CompilerError';
-import {Err, Ok, Result} from '../Utils/Result';
 import {assertExhaustive, hasNode} from '../Utils/utils';
 import {Environment} from './Environment';
 import {
@@ -75,7 +74,7 @@ export function lower(
   // Bindings captured from the outer function, in case lower() is called recursively (for lambdas)
   bindings: Bindings | null = null,
   capturedRefs: Map<t.Identifier, SourceLocation> = new Map(),
-): Result<HIRFunction, CompilerError> {
+): HIRFunction {
   const builder = new HIRBuilder(env, {
     bindings,
     context: capturedRefs,
@@ -224,10 +223,6 @@ export function lower(
     }
   }
 
-  if (builder.errors.hasAnyErrors()) {
-    return Err(builder.errors);
-  }
-
   builder.terminate(
     {
       kind: 'return',
@@ -244,23 +239,29 @@ export function lower(
     null,
   );
 
-  return Ok({
+  const hirBody = builder.build();
+
+  // Record all accumulated errors (including any from build()) on env
+  if (builder.errors.hasAnyErrors()) {
+    env.recordErrors(builder.errors);
+  }
+
+  return {
     id: validatedId,
     nameHint: null,
     params,
     fnType: bindings == null ? env.fnType : 'Other',
     returnTypeAnnotation: null, // TODO: extract the actual return type node if present
     returns: createTemporaryPlace(env, func.node.loc ?? GeneratedSource),
-    body: builder.build(),
+    body: hirBody,
     context,
     generator: func.node.generator === true,
     async: func.node.async === true,
     loc: func.node.loc ?? GeneratedSource,
     env,
-    effects: null,
     aliasingEffects: null,
     directives,
-  });
+  };
 }
 
 // Helper to lower a statement
@@ -555,6 +556,22 @@ function lowerStatement(
 
       const initBlock = builder.enter('loop', _blockId => {
         const init = stmt.get('init');
+        if (init.node == null) {
+          // No init expression (e.g., `for (; ...)`), add a placeholder to avoid
+          // invariant about empty blocks
+          lowerValueToTemporary(builder, {
+            kind: 'Primitive',
+            value: undefined,
+            loc: stmt.node.loc ?? GeneratedSource,
+          });
+          return {
+            kind: 'goto',
+            block: testBlock.id,
+            variant: GotoVariant.Break,
+            id: makeInstructionId(0),
+            loc: stmt.node.loc ?? GeneratedSource,
+          };
+        }
         if (!init.isVariableDeclaration()) {
           builder.errors.push({
             reason:
@@ -563,8 +580,14 @@ function lowerStatement(
             loc: stmt.node.loc ?? null,
             suggestions: null,
           });
+          // Lower the init expression as best-effort and continue
+          if (init.isExpression()) {
+            lowerExpressionToTemporary(builder, init as NodePath<t.Expression>);
+          }
           return {
-            kind: 'unsupported',
+            kind: 'goto',
+            block: testBlock.id,
+            variant: GotoVariant.Break,
             id: makeInstructionId(0),
             loc: init.node?.loc ?? GeneratedSource,
           };
@@ -635,6 +658,23 @@ function lowerStatement(
           loc: stmt.node.loc ?? null,
           suggestions: null,
         });
+        // Treat `for(;;)` as `while(true)` to keep the builder state consistent
+        builder.terminateWithContinuation(
+          {
+            kind: 'branch',
+            test: lowerValueToTemporary(builder, {
+              kind: 'Primitive',
+              value: true,
+              loc: stmt.node.loc ?? GeneratedSource,
+            }),
+            consequent: bodyBlock,
+            alternate: continuationBlock.id,
+            fallthrough: continuationBlock.id,
+            id: makeInstructionId(0),
+            loc: stmt.node.loc ?? GeneratedSource,
+          },
+          continuationBlock,
+        );
       } else {
         builder.terminateWithContinuation(
           {
@@ -858,10 +898,12 @@ function lowerStatement(
           loc: stmt.node.loc ?? null,
           suggestions: null,
         });
-        return;
+        // Treat `var` as `let` so references to the variable don't break
       }
       const kind =
-        nodeKind === 'let' ? InstructionKind.Let : InstructionKind.Const;
+        nodeKind === 'let' || nodeKind === 'var'
+          ? InstructionKind.Let
+          : InstructionKind.Const;
       for (const declaration of stmt.get('declarations')) {
         const id = declaration.get('id');
         const init = declaration.get('init');
@@ -1494,9 +1536,6 @@ function lowerObjectMethod(
 ): InstructionValue {
   const loc = property.node.loc ?? GeneratedSource;
   const loweredFunc = lowerFunction(builder, property);
-  if (!loweredFunc) {
-    return {kind: 'UnsupportedNode', node: property.node, loc: loc};
-  }
 
   return {
     kind: 'ObjectMethod',
@@ -2276,18 +2315,20 @@ function lowerExpression(
         });
         for (const [name, locations] of Object.entries(fbtLocations)) {
           if (locations.length > 1) {
-            CompilerError.throwDiagnostic({
-              category: ErrorCategory.Todo,
-              reason: 'Support duplicate fbt tags',
-              description: `Support \`<${tagName}>\` tags with multiple \`<${tagName}:${name}>\` values`,
-              details: locations.map(loc => {
-                return {
-                  kind: 'error',
-                  message: `Multiple \`<${tagName}:${name}>\` tags found`,
-                  loc,
-                };
+            builder.errors.pushDiagnostic(
+              new CompilerDiagnostic({
+                category: ErrorCategory.Todo,
+                reason: 'Support duplicate fbt tags',
+                description: `Support \`<${tagName}>\` tags with multiple \`<${tagName}:${name}>\` values`,
+                details: locations.map(loc => {
+                  return {
+                    kind: 'error' as const,
+                    message: `Multiple \`<${tagName}:${name}>\` tags found`,
+                    loc,
+                  };
+                }),
               }),
-            });
+            );
           }
         }
       }
@@ -3468,9 +3509,6 @@ function lowerFunctionToValue(
   const exprNode = expr.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
   const loweredFunc = lowerFunction(builder, expr);
-  if (!loweredFunc) {
-    return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
-  }
   return {
     kind: 'FunctionExpression',
     name: loweredFunc.func.id,
@@ -3489,7 +3527,7 @@ function lowerFunction(
     | t.FunctionDeclaration
     | t.ObjectMethod
   >,
-): LoweredFunction | null {
+): LoweredFunction {
   const componentScope: Scope = builder.environment.parentFunction.scope;
   const capturedContext = gatherCapturedContext(expr, componentScope);
 
@@ -3501,19 +3539,12 @@ function lowerFunction(
    * This isn't a problem in practice because use Babel's scope analysis to
    * identify the correct references.
    */
-  const lowering = lower(
+  const loweredFunc = lower(
     expr,
     builder.environment,
     builder.bindings,
     new Map([...builder.context, ...capturedContext]),
   );
-  let loweredFunc: HIRFunction;
-  if (lowering.isErr()) {
-    const functionErrors = lowering.unwrapErr();
-    builder.errors.merge(functionErrors);
-    return null;
-  }
-  loweredFunc = lowering.unwrap();
   return {
     func: loweredFunc,
   };
