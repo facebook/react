@@ -156,7 +156,7 @@ function runWithEnvironment(
   const log = (value: CompilerPipelineValue): void => {
     env.logger?.debugLogIRs?.(value);
   };
-  const hir = lower(func, env).unwrap();
+  const hir = lower(func, env);
   log({kind: 'hir', name: 'HIR', value: hir});
 
   env.tryRecord(() => {
