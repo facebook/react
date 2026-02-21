@@ -2262,7 +2262,7 @@ function commitMutationEffectsOnFiber(
               // node at this point, retaining it and its subtree. To reclaim
               // memory, point `alternate.stateNode` to new shadow node. This
               // prevents shadow node from staying in memory longer than it
-              // needs to. The correct behaviour of this is checked by test in
+              // needs to. The correct behavior of this is checked by test in
               // React Native: ShadowNodeReferenceCounter-itest.js#L150
               finishedWork.alternate.stateNode = finishedWork.stateNode;
             }
