@@ -701,9 +701,14 @@ const rule = {
               context.report({node: hook, message});
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
+              // Handle both real AST nodes and synthetic identifiers (e.g., for default exports)
+              const functionNameText =
+                'name' in codePathFunctionName && typeof codePathFunctionName.name === 'string'
+                  ? codePathFunctionName.name
+                  : getSourceCode().getText(codePathFunctionName);
               const message =
                 `React Hook "${getSourceCode().getText(hook)}" is called in ` +
-                `function "${getSourceCode().getText(codePathFunctionName)}" ` +
+                `function "${functionNameText}" ` +
                 'that is neither a React function component nor a custom ' +
                 'React Hook function.' +
                 ' React component names must start with an uppercase letter.' +
@@ -916,6 +921,13 @@ function getFunctionName(node: Node) {
       // Kinda clowny, but we'd said we'd follow spec convention for
       // `IsAnonymousFunctionDefinition()` usage.
       return node.parent.left;
+    } else if (node.parent?.type === 'ExportDefaultDeclaration') {
+      // export default () => {};
+      // export default function() {};
+      //
+      // For default exports, we use a synthetic identifier to represent
+      // the "default" export name, which is not a valid component name.
+      return {type: 'Identifier', name: 'default'} as Node;
     } else {
       return undefined;
     }
