@@ -230,7 +230,7 @@ function validateInferredDep(
   temporaries: Map<IdentifierId, ManualMemoDependency>,
   declsWithinMemoBlock: Set<DeclarationId>,
   validDepsInMemoBlock: Array<ManualMemoDependency>,
-  errorState: Environment,
+  env: Environment,
   memoLocation: SourceLocation,
 ): void {
   let normalizedDep: ManualMemoDependency;
@@ -280,7 +280,7 @@ function validateInferredDep(
       errorDiagnostic = merge(errorDiagnostic ?? compareResult, compareResult);
     }
   }
-  errorState.recordError(
+  env.recordError(
     CompilerDiagnostic.create({
       category: ErrorCategory.PreserveManualMemo,
       reason: 'Existing memoization could not be preserved',
