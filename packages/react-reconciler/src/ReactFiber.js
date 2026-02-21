@@ -443,6 +443,49 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   return workInProgress;
 }
 
+// Resets the stateNode to a fresh object.
+// This is used for components which don't set their stateNode in completeWork.
+function resetWorkInProgressStateNode(workInProgress: Fiber): void {
+  switch (workInProgress.tag) {
+    case ViewTransitionComponent:
+      const viewTransitionState: ViewTransitionState = {
+        autoName: null,
+        paired: null,
+        clones: null,
+        ref: null,
+      };
+      workInProgress.stateNode = viewTransitionState;
+      break;
+    case Profiler:
+      if (enableProfilerTimer) {
+        workInProgress.stateNode = {
+          effectDuration: 0,
+          passiveEffectDuration: 0,
+        };
+      }
+      break;
+    case TracingMarkerComponent:
+      if (enableTransitionTracing) {
+        const tracingMarkerInstance: TracingMarkerInstance = {
+          tag: TransitionTracingMarker,
+          transitions: null,
+          pendingBoundaries: null,
+          aborts: null,
+          name: workInProgress.pendingProps.name,
+        };
+        workInProgress.stateNode = tracingMarkerInstance;
+      }
+      break;
+    case HostPortal:
+    case DehydratedFragment:
+      // These preserve their stateNode
+      break;
+    default: {
+      workInProgress.stateNode = null;
+    }
+  }
+}
+
 // Used to reuse a Fiber for a second pass.
 export function resetWorkInProgress(
   workInProgress: Fiber,
@@ -476,7 +519,7 @@ export function resetWorkInProgress(
 
     workInProgress.dependencies = null;
 
-    workInProgress.stateNode = null;
+    resetWorkInProgressStateNode(workInProgress);
 
     if (enableProfilerTimer) {
       // Note: We don't reset the actualTime counts. It's useful to accumulate

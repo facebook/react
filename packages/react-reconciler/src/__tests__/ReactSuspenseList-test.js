@@ -3736,4 +3736,176 @@ describe('ReactSuspenseList', () => {
         '    in Foo (at **)',
     ]);
   });
+
+  // @gate enableSuspenseList
+  it('displays all "together" with various wrapper types as direct children', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+    const D = createAsyncText('D');
+    const E = createAsyncText('E');
+    const F = createAsyncText('F');
+    const G = createAsyncText('G');
+
+    const MemoSuspense = React.memo(function MemoSuspense({
+      fallback,
+      children,
+    }) {
+      return <Suspense fallback={fallback}>{children}</Suspense>;
+    });
+
+    const ForwardRefSuspense = React.forwardRef(function ForwardRefSuspense(
+      {fallback, children},
+      ref,
+    ) {
+      return (
+        <Suspense fallback={fallback}>
+          <span ref={ref}>{children}</span>
+        </Suspense>
+      );
+    });
+
+    // Custom function component wrapper
+    function CustomWrapper({fallback, children}) {
+      return <Suspense fallback={fallback}>{children}</Suspense>;
+    }
+
+    // Inlined portal helper
+    function Portal({children, container}) {
+      return {
+        $$typeof: Symbol.for('react.portal'),
+        key: null,
+        children,
+        containerInfo: container,
+        implementation: null,
+      };
+    }
+
+    const portalContainer = {rootID: 'portal-container', children: []};
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="together">
+          <Profiler id="profiler" onRender={() => {}}>
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+          </Profiler>
+          <>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+          </>
+          <MemoSuspense fallback={<Text text="Loading C" />}>
+            <C />
+          </MemoSuspense>
+          <ForwardRefSuspense fallback={<Text text="Loading D" />}>
+            <D />
+          </ForwardRefSuspense>
+          <CustomWrapper fallback={<Text text="Loading E" />}>
+            <E />
+          </CustomWrapper>
+          <div>
+            <Suspense fallback={<Text text="Loading F" />}>
+              <F />
+            </Suspense>
+          </div>
+          <Portal container={portalContainer}>
+            <Suspense fallback={<Text text="Loading G" />}>
+              <G />
+            </Suspense>
+          </Portal>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading A',
+      'Suspend! [B]',
+      'Loading B',
+      'Suspend! [C]',
+      'Loading C',
+      'Suspend! [D]',
+      'Loading D',
+      'Suspend! [E]',
+      'Loading E',
+      'Suspend! [F]',
+      'Loading F',
+      'Suspend! [G]',
+      'Loading G',
+      // SuspenseList does a second pass to force fallbacks
+      'Loading A',
+      'Loading B',
+      'Loading C',
+      'Loading D',
+      'Loading E',
+      'Loading F',
+      'Loading G',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+        <span>Loading D</span>
+        <span>Loading E</span>
+        <div>
+          <span>Loading F</span>
+        </div>
+      </>,
+    );
+
+    await act(() => A.resolve());
+    assertLog([
+      'A',
+      'Suspend! [B]',
+      'Suspend! [C]',
+      'Suspend! [D]',
+      'Suspend! [E]',
+      'Suspend! [F]',
+      'Suspend! [G]',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+        <span>Loading D</span>
+        <span>Loading E</span>
+        <div>
+          <span>Loading F</span>
+        </div>
+      </>,
+    );
+
+    await act(() => {
+      B.resolve();
+      C.resolve();
+      D.resolve();
+      E.resolve();
+      F.resolve();
+      G.resolve();
+    });
+    assertLog(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>
+          <span>D</span>
+        </span>
+        <span>E</span>
+        <div>
+          <span>F</span>
+        </div>
+      </>,
+    );
+  });
 });
