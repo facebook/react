@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, CompilerErrorDetailOptions, SourceLocation} from '..';
+import {
+  CompilerErrorDetail,
+  CompilerErrorDetailOptions,
+  SourceLocation,
+} from '..';
 import {
   ArrayExpression,
   CallExpression,
@@ -54,7 +58,6 @@ export function transformFire(fn: HIRFunction): void {
   if (!context.hasErrors()) {
     ensureNoMoreFireUses(fn, context);
   }
-  context.throwIfErrorsFound();
 }
 
 function replaceFireFunctions(fn: HIRFunction, context: Context): void {
@@ -526,7 +529,7 @@ type FireCalleesToFireFunctionBinding = Map<
 class Context {
   #env: Environment;
 
-  #errors: CompilerError = new CompilerError();
+  #hasErrors: boolean = false;
 
   /*
    * Used to look up the call expression passed to a `fire(callExpr())`. Gives back
@@ -589,7 +592,8 @@ class Context {
   #arrayExpressions = new Map<IdentifierId, ArrayExpression>();
 
   pushError(error: CompilerErrorDetailOptions): void {
-    this.#errors.push(error);
+    this.#hasErrors = true;
+    this.#env.recordError(new CompilerErrorDetail(error));
   }
 
   withFunctionScope(fn: () => void): FireCalleesToFireFunctionBinding {
@@ -698,11 +702,7 @@ class Context {
   }
 
   hasErrors(): boolean {
-    return this.#errors.hasAnyErrors();
-  }
-
-  throwIfErrorsFound(): void {
-    if (this.hasErrors()) throw this.#errors;
+    return this.#hasErrors;
   }
 }
 

@@ -68,7 +68,7 @@ function NonFireComponent({ prop1 }) {
 function FireComponent(props) {
   const $ = _c(3);
 
-  const foo = _temp3;
+  const foo = _temp;
   const t0 = useFire(foo);
   let t1;
   if ($[0] !== props || $[1] !== t0) {
@@ -85,7 +85,7 @@ function FireComponent(props) {
 
   return null;
 }
-function _temp3(props_0) {
+function _temp(props_0) {
   console.log(props_0);
 }
 

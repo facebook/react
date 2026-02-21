@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, CompilerErrorDetail, EnvironmentConfig} from '..';
+import {CompilerErrorDetail, EnvironmentConfig} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {HIRFunction, IdentifierId} from '../HIR';
 import {DEFAULT_GLOBALS} from '../HIR/Globals';
@@ -28,7 +28,6 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
     );
   };
 
-  const errors = new CompilerError();
   const capitalLoadGlobals = new Map<IdentifierId, string>();
   const capitalizedProperties = new Map<IdentifierId, string>();
   const reason =
@@ -80,20 +79,19 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
           const propertyIdentifier = value.property.identifier.id;
           const propertyName = capitalizedProperties.get(propertyIdentifier);
           if (propertyName != null) {
-            errors.push({
-              category: ErrorCategory.CapitalizedCalls,
-              reason,
-              description: `${propertyName} may be a component`,
-              loc: value.loc,
-              suggestions: null,
-            });
+            fn.env.recordError(
+              new CompilerErrorDetail({
+                category: ErrorCategory.CapitalizedCalls,
+                reason,
+                description: `${propertyName} may be a component`,
+                loc: value.loc,
+                suggestions: null,
+              }),
+            );
           }
           break;
         }
       }
     }
-  }
-  if (errors.hasAnyErrors()) {
-    fn.env.recordErrors(errors);
   }
 }

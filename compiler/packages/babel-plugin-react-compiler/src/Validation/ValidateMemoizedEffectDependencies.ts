@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '..';
-import {ErrorCategory} from '../CompilerError';
+import {CompilerErrorDetail, ErrorCategory} from '../CompilerError';
 import {
   Identifier,
   Instruction,
@@ -18,6 +17,7 @@ import {
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
 } from '../HIR';
+import {Environment} from '../HIR/Environment';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {
   ReactiveFunctionVisitor,
@@ -49,17 +49,15 @@ import {
  * ```
  */
 export function validateMemoizedEffectDependencies(fn: ReactiveFunction): void {
-  const errors = new CompilerError();
-  visitReactiveFunction(fn, new Visitor(), errors);
-  fn.env.recordErrors(errors);
+  visitReactiveFunction(fn, new Visitor(), fn.env);
 }
 
-class Visitor extends ReactiveFunctionVisitor<CompilerError> {
+class Visitor extends ReactiveFunctionVisitor<Environment> {
   scopes: Set<ScopeId> = new Set();
 
   override visitScope(
     scopeBlock: ReactiveScopeBlock,
-    state: CompilerError,
+    state: Environment,
   ): void {
     this.traverseScope(scopeBlock, state);
 
@@ -87,7 +85,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: CompilerError,
+    state: Environment,
   ): void {
     this.traverseInstruction(instruction, state);
     if (
@@ -105,14 +103,16 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
         (isMutable(instruction as Instruction, deps) ||
           isUnmemoized(deps.identifier, this.scopes))
       ) {
-        state.push({
-          category: ErrorCategory.EffectDependencies,
-          reason:
-            'React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior',
-          description: null,
-          loc: typeof instruction.loc !== 'symbol' ? instruction.loc : null,
-          suggestions: null,
-        });
+        state.recordError(
+          new CompilerErrorDetail({
+            category: ErrorCategory.EffectDependencies,
+            reason:
+              'React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior',
+            description: null,
+            loc: typeof instruction.loc !== 'symbol' ? instruction.loc : null,
+            suggestions: null,
+          }),
+        );
       }
     }
   }
