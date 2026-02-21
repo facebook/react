@@ -442,6 +442,7 @@ class Context {
   recordError(error: CompilerErrorDetail): void {
     this.env.recordError(error);
   }
+
   get nextCacheIndex(): number {
     return this.#nextCacheIndex++;
   }
