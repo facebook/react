@@ -293,7 +293,7 @@ function extractManualMemoizationArgs(
   instr: TInstruction<CallExpression> | TInstruction<MethodCall>,
   kind: 'useCallback' | 'useMemo',
   sidemap: IdentifierSidemap,
-  errors: CompilerError,
+  env: Environment,
 ): {
   fnPlace: Place;
   depsList: Array<ManualMemoDependency> | null;
@@ -303,7 +303,7 @@ function extractManualMemoizationArgs(
     Place | SpreadPattern | undefined
   >;
   if (fnPlace == null || fnPlace.kind !== 'Identifier') {
-    errors.pushDiagnostic(
+    env.recordError(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
         reason: `Expected a callback function to be passed to ${kind}`,
@@ -335,7 +335,7 @@ function extractManualMemoizationArgs(
       ? sidemap.maybeDepsLists.get(depsListPlace.identifier.id)
       : null;
   if (maybeDepsList == null) {
-    errors.pushDiagnostic(
+    env.recordError(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
         reason: `Expected the dependency list for ${kind} to be an array literal`,
@@ -354,7 +354,7 @@ function extractManualMemoizationArgs(
   for (const dep of maybeDepsList.deps) {
     const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
     if (maybeDep == null) {
-      errors.pushDiagnostic(
+      env.recordError(
         CompilerDiagnostic.create({
           category: ErrorCategory.UseMemo,
           reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
@@ -389,7 +389,6 @@ function extractManualMemoizationArgs(
  * is only used for memoizing values and not for running arbitrary side effects.
  */
 export function dropManualMemoization(func: HIRFunction): void {
-  const errors = new CompilerError();
   const isValidationEnabled =
     func.env.config.validatePreserveExistingMemoizationGuarantees ||
     func.env.config.validateNoSetStateInRender ||
@@ -436,7 +435,7 @@ export function dropManualMemoization(func: HIRFunction): void {
             instr as TInstruction<CallExpression> | TInstruction<MethodCall>,
             manualMemo.kind,
             sidemap,
-            errors,
+            func.env,
           );
 
           if (memoDetails == null) {
@@ -464,7 +463,7 @@ export function dropManualMemoization(func: HIRFunction): void {
              * is rare and likely sketchy.
              */
             if (!sidemap.functions.has(fnPlace.identifier.id)) {
-              errors.pushDiagnostic(
+              func.env.recordError(
                 CompilerDiagnostic.create({
                   category: ErrorCategory.UseMemo,
                   reason: `Expected the first argument to be an inline function expression`,
@@ -548,10 +547,6 @@ export function dropManualMemoization(func: HIRFunction): void {
     if (hasChanges) {
       markInstructionIds(func.body);
     }
-  }
-
-  if (errors.hasAnyErrors()) {
-    func.env.recordErrors(errors);
   }
 }
 

@@ -13,7 +13,11 @@ import {
   pruneUnusedLabels,
   renameVariables,
 } from '.';
-import {CompilerError, ErrorCategory} from '../CompilerError';
+import {
+  CompilerError,
+  CompilerErrorDetail,
+  ErrorCategory,
+} from '../CompilerError';
 import {Environment, ExternalFunction} from '../HIR';
 import {
   ArrayPattern,
@@ -358,10 +362,6 @@ function codegenReactiveFunction(
     }
   }
 
-  if (cx.errors.hasAnyErrors()) {
-    fn.env.recordErrors(cx.errors);
-  }
-
   const countMemoBlockVisitor = new CountMemoBlockVisitor(fn.env);
   visitReactiveFunction(fn, countMemoBlockVisitor, undefined);
 
@@ -434,7 +434,6 @@ class Context {
    */
   #declarations: Set<DeclarationId> = new Set();
   temp: Temporaries;
-  errors: CompilerError = new CompilerError();
   objectMethods: Map<IdentifierId, ObjectMethod> = new Map();
   uniqueIdentifiers: Set<string>;
   fbtOperands: Set<IdentifierId>;
@@ -452,6 +451,10 @@ class Context {
     this.uniqueIdentifiers = uniqueIdentifiers;
     this.fbtOperands = fbtOperands;
     this.temp = temporaries !== null ? new Map(temporaries) : new Map();
+  }
+
+  recordError(error: CompilerErrorDetail): void {
+    this.env.recordError(error);
   }
   get nextCacheIndex(): number {
     return this.#nextCacheIndex++;
@@ -972,12 +975,14 @@ function codegenTerminal(
         loc: terminal.init.loc,
       });
       if (terminal.init.instructions.length !== 2) {
-        cx.errors.push({
-          reason: 'Support non-trivial for..in inits',
-          category: ErrorCategory.Todo,
-          loc: terminal.init.loc,
-          suggestions: null,
-        });
+        cx.recordError(
+          new CompilerErrorDetail({
+            reason: 'Support non-trivial for..in inits',
+            category: ErrorCategory.Todo,
+            loc: terminal.init.loc,
+            suggestions: null,
+          }),
+        );
         return t.emptyStatement();
       }
       const iterableCollection = terminal.init.instructions[0];
@@ -993,12 +998,14 @@ function codegenTerminal(
           break;
         }
         case 'StoreContext': {
-          cx.errors.push({
-            reason: 'Support non-trivial for..in inits',
-            category: ErrorCategory.Todo,
-            loc: terminal.init.loc,
-            suggestions: null,
-          });
+          cx.recordError(
+            new CompilerErrorDetail({
+              reason: 'Support non-trivial for..in inits',
+              category: ErrorCategory.Todo,
+              loc: terminal.init.loc,
+              suggestions: null,
+            }),
+          );
           return t.emptyStatement();
         }
         default:
@@ -1069,12 +1076,14 @@ function codegenTerminal(
         loc: terminal.test.loc,
       });
       if (terminal.test.instructions.length !== 2) {
-        cx.errors.push({
-          reason: 'Support non-trivial for..of inits',
-          category: ErrorCategory.Todo,
-          loc: terminal.init.loc,
-          suggestions: null,
-        });
+        cx.recordError(
+          new CompilerErrorDetail({
+            reason: 'Support non-trivial for..of inits',
+            category: ErrorCategory.Todo,
+            loc: terminal.init.loc,
+            suggestions: null,
+          }),
+        );
         return t.emptyStatement();
       }
       const iterableItem = terminal.test.instructions[1];
@@ -1089,12 +1098,14 @@ function codegenTerminal(
           break;
         }
         case 'StoreContext': {
-          cx.errors.push({
-            reason: 'Support non-trivial for..of inits',
-            category: ErrorCategory.Todo,
-            loc: terminal.init.loc,
-            suggestions: null,
-          });
+          cx.recordError(
+            new CompilerErrorDetail({
+              reason: 'Support non-trivial for..of inits',
+              category: ErrorCategory.Todo,
+              loc: terminal.init.loc,
+              suggestions: null,
+            }),
+          );
           return t.emptyStatement();
         }
         default:
@@ -2189,22 +2200,26 @@ function codegenInstructionValue(
         } else {
           if (t.isVariableDeclaration(stmt)) {
             const declarator = stmt.declarations[0];
-            cx.errors.push({
-              reason: `(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare '${
-                (declarator.id as t.Identifier).name
-              }'`,
-              category: ErrorCategory.Todo,
-              loc: declarator.loc ?? null,
-              suggestions: null,
-            });
+            cx.recordError(
+              new CompilerErrorDetail({
+                reason: `(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare '${
+                  (declarator.id as t.Identifier).name
+                }'`,
+                category: ErrorCategory.Todo,
+                loc: declarator.loc ?? null,
+                suggestions: null,
+              }),
+            );
             return t.stringLiteral(`TODO handle ${declarator.id}`);
           } else {
-            cx.errors.push({
-              reason: `(CodegenReactiveFunction::codegenInstructionValue) Handle conversion of ${stmt.type} to expression`,
-              category: ErrorCategory.Todo,
-              loc: stmt.loc ?? null,
-              suggestions: null,
-            });
+            cx.recordError(
+              new CompilerErrorDetail({
+                reason: `(CodegenReactiveFunction::codegenInstructionValue) Handle conversion of ${stmt.type} to expression`,
+                category: ErrorCategory.Todo,
+                loc: stmt.loc ?? null,
+                suggestions: null,
+              }),
+            );
             return t.stringLiteral(`TODO handle ${stmt.type}`);
           }
         }

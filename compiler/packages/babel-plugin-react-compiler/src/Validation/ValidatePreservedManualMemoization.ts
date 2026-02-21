@@ -27,6 +27,7 @@ import {
   ScopeId,
   SourceLocation,
 } from '../HIR';
+import {Environment} from '../HIR/Environment';
 import {printIdentifier, printManualMemoDependency} from '../HIR/PrintHIR';
 import {
   eachInstructionValueLValue,
@@ -48,11 +49,10 @@ import {getOrInsertDefault} from '../Utils/utils';
  */
 export function validatePreservedManualMemoization(fn: ReactiveFunction): void {
   const state = {
-    errors: new CompilerError(),
+    env: fn.env,
     manualMemoState: null,
   };
   visitReactiveFunction(fn, new Visitor(), state);
-  fn.env.recordErrors(state.errors);
 }
 
 const DEBUG = false;
@@ -110,7 +110,7 @@ type ManualMemoBlockState = {
 };
 
 type VisitorState = {
-  errors: CompilerError;
+  env: Environment;
   manualMemoState: ManualMemoBlockState | null;
 };
 
@@ -230,7 +230,7 @@ function validateInferredDep(
   temporaries: Map<IdentifierId, ManualMemoDependency>,
   declsWithinMemoBlock: Set<DeclarationId>,
   validDepsInMemoBlock: Array<ManualMemoDependency>,
-  errorState: CompilerError,
+  errorState: Environment,
   memoLocation: SourceLocation,
 ): void {
   let normalizedDep: ManualMemoDependency;
@@ -280,7 +280,7 @@ function validateInferredDep(
       errorDiagnostic = merge(errorDiagnostic ?? compareResult, compareResult);
     }
   }
-  errorState.pushDiagnostic(
+  errorState.recordError(
     CompilerDiagnostic.create({
       category: ErrorCategory.PreserveManualMemo,
       reason: 'Existing memoization could not be preserved',
@@ -426,7 +426,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           this.temporaries,
           state.manualMemoState.decls,
           state.manualMemoState.depsFromSource,
-          state.errors,
+          state.env,
           state.manualMemoState.loc,
         );
       }
@@ -529,7 +529,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           !this.scopes.has(identifier.scope.id) &&
           !this.prunedScopes.has(identifier.scope.id)
         ) {
-          state.errors.pushDiagnostic(
+          state.env.recordError(
             CompilerDiagnostic.create({
               category: ErrorCategory.PreserveManualMemo,
               reason: 'Existing memoization could not be preserved',
@@ -575,7 +575,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
           for (const identifier of decls) {
             if (isUnmemoized(identifier, this.scopes)) {
-              state.errors.pushDiagnostic(
+              state.env.recordError(
                 CompilerDiagnostic.create({
                   category: ErrorCategory.PreserveManualMemo,
                   reason: 'Existing memoization could not be preserved',

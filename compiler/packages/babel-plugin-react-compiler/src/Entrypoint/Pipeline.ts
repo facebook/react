@@ -220,6 +220,9 @@ function runWithEnvironment(
   if (env.config.enableFire) {
     transformFire(hir);
     log({kind: 'hir', name: 'TransformFire', value: hir});
+    if (env.hasErrors()) {
+      return Err(env.aggregateErrors());
+    }
   }
 
   if (env.config.lowerContextAccess) {
