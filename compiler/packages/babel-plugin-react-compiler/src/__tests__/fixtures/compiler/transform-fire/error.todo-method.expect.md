@@ -24,15 +24,15 @@ function Component(props) {
 ```
 Found 1 error:
 
-Invariant: [InferMutationAliasingEffects] Expected value kind to be initialized
+Error: Cannot compile `fire`
 
-<unknown> $34:TFunction<BuiltInFire>():  :TFunction<BuiltInFireFunction>():  :TPoly.
+`fire()` can only receive a function call such as `fire(fn(a,b)). Method calls and other expressions are not allowed.
 
 error.todo-method.ts:9:4
    7 |   };
    8 |   useEffect(() => {
 >  9 |     fire(props.foo());
-     |     ^^^^ this is uninitialized
+     |     ^^^^^^^^^^^^^^^^^ Cannot compile `fire`
   10 |   });
   11 |
   12 |   return null;

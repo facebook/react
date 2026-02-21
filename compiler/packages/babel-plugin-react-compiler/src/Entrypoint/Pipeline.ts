@@ -13,7 +13,6 @@ import {CompilerError} from '../CompilerError';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
   HIRFunction,
-  IdentifierId,
   ReactiveFunction,
   assertConsistentIdentifiers,
   assertTerminalPredsExist,
@@ -166,17 +165,11 @@ function runWithEnvironment(
   const hir = lower(func, env);
   log({kind: 'hir', name: 'HIR', value: hir});
 
-  env.tryRecord(() => {
-    pruneMaybeThrows(hir);
-  });
+  pruneMaybeThrows(hir);
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
-  env.tryRecord(() => {
-    validateContextVariableLValues(hir);
-  });
-  env.tryRecord(() => {
-    validateUseMemo(hir);
-  });
+  validateContextVariableLValues(hir);
+  validateUseMemo(hir);
 
   if (
     env.enableDropManualMemoization &&
@@ -188,136 +181,94 @@ function runWithEnvironment(
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
   }
 
-  env.tryRecord(() => {
-    inlineImmediatelyInvokedFunctionExpressions(hir);
-  });
+  inlineImmediatelyInvokedFunctionExpressions(hir);
   log({
     kind: 'hir',
     name: 'InlineImmediatelyInvokedFunctionExpressions',
     value: hir,
   });
 
-  env.tryRecord(() => {
-    mergeConsecutiveBlocks(hir);
-  });
+  mergeConsecutiveBlocks(hir);
   log({kind: 'hir', name: 'MergeConsecutiveBlocks', value: hir});
 
   assertConsistentIdentifiers(hir);
   assertTerminalSuccessorsExist(hir);
 
-  env.tryRecord(() => {
-    enterSSA(hir);
-  });
+  enterSSA(hir);
   log({kind: 'hir', name: 'SSA', value: hir});
 
-  env.tryRecord(() => {
-    eliminateRedundantPhi(hir);
-  });
+  eliminateRedundantPhi(hir);
   log({kind: 'hir', name: 'EliminateRedundantPhi', value: hir});
 
   assertConsistentIdentifiers(hir);
 
-  env.tryRecord(() => {
-    constantPropagation(hir);
-  });
+  constantPropagation(hir);
   log({kind: 'hir', name: 'ConstantPropagation', value: hir});
 
-  env.tryRecord(() => {
-    inferTypes(hir);
-  });
+  inferTypes(hir);
   log({kind: 'hir', name: 'InferTypes', value: hir});
 
   if (env.enableValidations) {
     if (env.config.validateHooksUsage) {
-      env.tryRecord(() => {
-        validateHooksUsage(hir);
-      });
+      validateHooksUsage(hir);
     }
     if (env.config.validateNoCapitalizedCalls) {
-      env.tryRecord(() => {
-        validateNoCapitalizedCalls(hir);
-      });
+      validateNoCapitalizedCalls(hir);
     }
   }
 
   if (env.config.enableFire) {
-    env.tryRecord(() => {
-      transformFire(hir);
-    });
+    transformFire(hir);
     log({kind: 'hir', name: 'TransformFire', value: hir});
   }
 
   if (env.config.lowerContextAccess) {
-    env.tryRecord(() => {
-      lowerContextAccess(hir, env.config.lowerContextAccess!);
-    });
+    lowerContextAccess(hir, env.config.lowerContextAccess!);
   }
 
-  env.tryRecord(() => {
-    optimizePropsMethodCalls(hir);
-  });
+  optimizePropsMethodCalls(hir);
   log({kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir});
 
-  env.tryRecord(() => {
-    analyseFunctions(hir);
-  });
+  analyseFunctions(hir);
   log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
 
-  env.tryRecord(() => {
-    inferMutationAliasingEffects(hir);
-  });
+  inferMutationAliasingEffects(hir);
   log({kind: 'hir', name: 'InferMutationAliasingEffects', value: hir});
 
   if (env.outputMode === 'ssr') {
-    env.tryRecord(() => {
-      optimizeForSSR(hir);
-    });
+    optimizeForSSR(hir);
     log({kind: 'hir', name: 'OptimizeForSSR', value: hir});
   }
 
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
-  env.tryRecord(() => {
-    deadCodeElimination(hir);
-  });
+  deadCodeElimination(hir);
   log({kind: 'hir', name: 'DeadCodeElimination', value: hir});
 
   if (env.config.enableInstructionReordering) {
-    env.tryRecord(() => {
-      instructionReordering(hir);
-    });
+    instructionReordering(hir);
     log({kind: 'hir', name: 'InstructionReordering', value: hir});
   }
 
-  env.tryRecord(() => {
-    pruneMaybeThrows(hir);
-  });
+  pruneMaybeThrows(hir);
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
-  env.tryRecord(() => {
-    inferMutationAliasingRanges(hir, {
-      isFunctionExpression: false,
-    });
+  inferMutationAliasingRanges(hir, {
+    isFunctionExpression: false,
   });
   log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
   if (env.enableValidations) {
-    env.tryRecord(() => {
-      validateLocalsNotReassignedAfterRender(hir);
-    });
+    validateLocalsNotReassignedAfterRender(hir);
 
     if (env.config.assertValidMutableRanges) {
       assertValidMutableRanges(hir);
     }
 
     if (env.config.validateRefAccessDuringRender) {
-      env.tryRecord(() => {
-        validateNoRefAccessInRender(hir);
-      });
+      validateNoRefAccessInRender(hir);
     }
 
     if (env.config.validateNoSetStateInRender) {
-      env.tryRecord(() => {
-        validateNoSetStateInRender(hir);
-      });
+      validateNoSetStateInRender(hir);
     }
 
     if (
@@ -326,9 +277,7 @@ function runWithEnvironment(
     ) {
       env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
     } else if (env.config.validateNoDerivedComputationsInEffects) {
-      env.tryRecord(() => {
-        validateNoDerivedComputationsInEffects(hir);
-      });
+      validateNoDerivedComputationsInEffects(hir);
     }
 
     if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
@@ -340,19 +289,13 @@ function runWithEnvironment(
     }
 
     if (env.config.validateNoImpureFunctionsInRender) {
-      env.tryRecord(() => {
-        validateNoImpureFunctionsInRender(hir);
-      });
+      validateNoImpureFunctionsInRender(hir);
     }
 
-    env.tryRecord(() => {
-      validateNoFreezingKnownMutableFunctions(hir);
-    });
+    validateNoFreezingKnownMutableFunctions(hir);
   }
 
-  env.tryRecord(() => {
-    inferReactivePlaces(hir);
-  });
+  inferReactivePlaces(hir);
   log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
 
   if (env.enableValidations) {
@@ -361,15 +304,11 @@ function runWithEnvironment(
       env.config.validateExhaustiveEffectDependencies
     ) {
       // NOTE: this relies on reactivity inference running first
-      env.tryRecord(() => {
-        validateExhaustiveDependencies(hir);
-      });
+      validateExhaustiveDependencies(hir);
     }
   }
 
-  env.tryRecord(() => {
-    rewriteInstructionKindsBasedOnReassignment(hir);
-  });
+  rewriteInstructionKindsBasedOnReassignment(hir);
   log({
     kind: 'hir',
     name: 'RewriteInstructionKindsBasedOnReassignment',
@@ -390,16 +329,11 @@ function runWithEnvironment(
      * if inferred memoization is enabled. This makes all later passes which
      * transform reactive-scope labeled instructions no-ops.
      */
-    env.tryRecord(() => {
-      inferReactiveScopeVariables(hir);
-    });
+    inferReactiveScopeVariables(hir);
     log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
   }
 
-  let fbtOperands: Set<IdentifierId> = new Set();
-  env.tryRecord(() => {
-    fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
-  });
+  const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
   log({
     kind: 'hir',
     name: 'MemoizeFbtAndMacroOperandsInSameScope',
@@ -407,15 +341,11 @@ function runWithEnvironment(
   });
 
   if (env.config.enableJsxOutlining) {
-    env.tryRecord(() => {
-      outlineJSX(hir);
-    });
+    outlineJSX(hir);
   }
 
   if (env.config.enableNameAnonymousFunctions) {
-    env.tryRecord(() => {
-      nameAnonymousFunctions(hir);
-    });
+    nameAnonymousFunctions(hir);
     log({
       kind: 'hir',
       name: 'NameAnonymousFunctions',
@@ -424,51 +354,39 @@ function runWithEnvironment(
   }
 
   if (env.config.enableFunctionOutlining) {
-    env.tryRecord(() => {
-      outlineFunctions(hir, fbtOperands);
-    });
+    outlineFunctions(hir, fbtOperands);
     log({kind: 'hir', name: 'OutlineFunctions', value: hir});
   }
 
-  env.tryRecord(() => {
-    alignMethodCallScopes(hir);
-  });
+  alignMethodCallScopes(hir);
   log({
     kind: 'hir',
     name: 'AlignMethodCallScopes',
     value: hir,
   });
 
-  env.tryRecord(() => {
-    alignObjectMethodScopes(hir);
-  });
+  alignObjectMethodScopes(hir);
   log({
     kind: 'hir',
     name: 'AlignObjectMethodScopes',
     value: hir,
   });
 
-  env.tryRecord(() => {
-    pruneUnusedLabelsHIR(hir);
-  });
+  pruneUnusedLabelsHIR(hir);
   log({
     kind: 'hir',
     name: 'PruneUnusedLabelsHIR',
     value: hir,
   });
 
-  env.tryRecord(() => {
-    alignReactiveScopesToBlockScopesHIR(hir);
-  });
+  alignReactiveScopesToBlockScopesHIR(hir);
   log({
     kind: 'hir',
     name: 'AlignReactiveScopesToBlockScopesHIR',
     value: hir,
   });
 
-  env.tryRecord(() => {
-    mergeOverlappingReactiveScopesHIR(hir);
-  });
+  mergeOverlappingReactiveScopesHIR(hir);
   log({
     kind: 'hir',
     name: 'MergeOverlappingReactiveScopesHIR',
@@ -476,9 +394,7 @@ function runWithEnvironment(
   });
   assertValidBlockNesting(hir);
 
-  env.tryRecord(() => {
-    buildReactiveScopeTerminalsHIR(hir);
-  });
+  buildReactiveScopeTerminalsHIR(hir);
   log({
     kind: 'hir',
     name: 'BuildReactiveScopeTerminalsHIR',
@@ -487,18 +403,14 @@ function runWithEnvironment(
 
   assertValidBlockNesting(hir);
 
-  env.tryRecord(() => {
-    flattenReactiveLoopsHIR(hir);
-  });
+  flattenReactiveLoopsHIR(hir);
   log({
     kind: 'hir',
     name: 'FlattenReactiveLoopsHIR',
     value: hir,
   });
 
-  env.tryRecord(() => {
-    flattenScopesWithHooksOrUseHIR(hir);
-  });
+  flattenScopesWithHooksOrUseHIR(hir);
   log({
     kind: 'hir',
     name: 'FlattenScopesWithHooksOrUseHIR',
@@ -506,9 +418,8 @@ function runWithEnvironment(
   });
   assertTerminalSuccessorsExist(hir);
   assertTerminalPredsExist(hir);
-  env.tryRecord(() => {
-    propagateScopeDependenciesHIR(hir);
-  });
+
+  propagateScopeDependenciesHIR(hir);
   log({
     kind: 'hir',
     name: 'PropagateScopeDependenciesHIR',
@@ -516,9 +427,7 @@ function runWithEnvironment(
   });
 
   if (env.config.inferEffectDependencies) {
-    env.tryRecord(() => {
-      inferEffectDependencies(hir);
-    });
+    inferEffectDependencies(hir);
     log({
       kind: 'hir',
       name: 'InferEffectDependencies',
@@ -527,9 +436,7 @@ function runWithEnvironment(
   }
 
   if (env.config.inlineJsxTransform) {
-    env.tryRecord(() => {
-      inlineJsxTransform(hir, env.config.inlineJsxTransform!);
-    });
+    inlineJsxTransform(hir, env.config.inlineJsxTransform!);
     log({
       kind: 'hir',
       name: 'inlineJsxTransform',
@@ -537,10 +444,7 @@ function runWithEnvironment(
     });
   }
 
-  let reactiveFunction!: ReactiveFunction;
-  env.tryRecord(() => {
-    reactiveFunction = buildReactiveFunction(hir);
-  });
+  const reactiveFunction = buildReactiveFunction(hir);
   log({
     kind: 'reactive',
     name: 'BuildReactiveFunction',
@@ -549,9 +453,7 @@ function runWithEnvironment(
 
   assertWellFormedBreakTargets(reactiveFunction);
 
-  env.tryRecord(() => {
-    pruneUnusedLabels(reactiveFunction);
-  });
+  pruneUnusedLabels(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'PruneUnusedLabels',
@@ -559,45 +461,35 @@ function runWithEnvironment(
   });
   assertScopeInstructionsWithinScopes(reactiveFunction);
 
-  env.tryRecord(() => {
-    pruneNonEscapingScopes(reactiveFunction);
-  });
+  pruneNonEscapingScopes(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'PruneNonEscapingScopes',
     value: reactiveFunction,
   });
 
-  env.tryRecord(() => {
-    pruneNonReactiveDependencies(reactiveFunction);
-  });
+  pruneNonReactiveDependencies(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'PruneNonReactiveDependencies',
     value: reactiveFunction,
   });
 
-  env.tryRecord(() => {
-    pruneUnusedScopes(reactiveFunction);
-  });
+  pruneUnusedScopes(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'PruneUnusedScopes',
     value: reactiveFunction,
   });
 
-  env.tryRecord(() => {
-    mergeReactiveScopesThatInvalidateTogether(reactiveFunction);
-  });
+  mergeReactiveScopesThatInvalidateTogether(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'MergeReactiveScopesThatInvalidateTogether',
     value: reactiveFunction,
   });
 
-  env.tryRecord(() => {
-    pruneAlwaysInvalidatingScopes(reactiveFunction);
-  });
+  pruneAlwaysInvalidatingScopes(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'PruneAlwaysInvalidatingScopes',
@@ -605,9 +497,7 @@ function runWithEnvironment(
   });
 
   if (env.config.enableChangeDetectionForDebugging != null) {
-    env.tryRecord(() => {
-      pruneInitializationDependencies(reactiveFunction);
-    });
+    pruneInitializationDependencies(reactiveFunction);
     log({
       kind: 'reactive',
       name: 'PruneInitializationDependencies',
@@ -615,64 +505,49 @@ function runWithEnvironment(
     });
   }
 
-  env.tryRecord(() => {
-    propagateEarlyReturns(reactiveFunction);
-  });
+  propagateEarlyReturns(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'PropagateEarlyReturns',
     value: reactiveFunction,
   });
 
-  env.tryRecord(() => {
-    pruneUnusedLValues(reactiveFunction);
-  });
+  pruneUnusedLValues(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'PruneUnusedLValues',
     value: reactiveFunction,
   });
 
-  env.tryRecord(() => {
-    promoteUsedTemporaries(reactiveFunction);
-  });
+  promoteUsedTemporaries(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'PromoteUsedTemporaries',
     value: reactiveFunction,
   });
 
-  env.tryRecord(() => {
-    extractScopeDeclarationsFromDestructuring(reactiveFunction);
-  });
+  extractScopeDeclarationsFromDestructuring(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'ExtractScopeDeclarationsFromDestructuring',
     value: reactiveFunction,
   });
 
-  env.tryRecord(() => {
-    stabilizeBlockIds(reactiveFunction);
-  });
+  stabilizeBlockIds(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'StabilizeBlockIds',
     value: reactiveFunction,
   });
 
-  let uniqueIdentifiers: Set<string> = new Set();
-  env.tryRecord(() => {
-    uniqueIdentifiers = renameVariables(reactiveFunction);
-  });
+  const uniqueIdentifiers = renameVariables(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'RenameVariables',
     value: reactiveFunction,
   });
 
-  env.tryRecord(() => {
-    pruneHoistedContexts(reactiveFunction);
-  });
+  pruneHoistedContexts(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'PruneHoistedContexts',
@@ -680,18 +555,14 @@ function runWithEnvironment(
   });
 
   if (env.config.validateMemoizedEffectDependencies) {
-    env.tryRecord(() => {
-      validateMemoizedEffectDependencies(reactiveFunction);
-    });
+    validateMemoizedEffectDependencies(reactiveFunction);
   }
 
   if (
     env.config.enablePreserveExistingMemoizationGuarantees ||
     env.config.validatePreserveExistingMemoizationGuarantees
   ) {
-    env.tryRecord(() => {
-      validatePreservedManualMemoization(reactiveFunction);
-    });
+    validatePreservedManualMemoization(reactiveFunction);
   }
 
   const ast = codegenFunction(reactiveFunction, {
@@ -704,9 +575,7 @@ function runWithEnvironment(
   }
 
   if (env.config.validateSourceLocations) {
-    env.tryRecord(() => {
-      validateSourceLocations(func, ast, env);
-    });
+    validateSourceLocations(func, ast, env);
   }
 
   /**

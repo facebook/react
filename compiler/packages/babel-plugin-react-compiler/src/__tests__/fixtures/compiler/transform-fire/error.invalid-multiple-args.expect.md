@@ -24,15 +24,15 @@ function Component({bar, baz}) {
 ```
 Found 1 error:
 
-Invariant: [InferMutationAliasingEffects] Expected value kind to be initialized
+Error: Cannot compile `fire`
 
-<unknown> $43:TFunction<BuiltInFire>():  :TFunction<BuiltInFireFunction>():  :TPoly.
+fire() can only take in a single call expression as an argument but received multiple arguments.
 
 error.invalid-multiple-args.ts:9:4
    7 |   };
    8 |   useEffect(() => {
 >  9 |     fire(foo(bar), baz);
-     |     ^^^^ this is uninitialized
+     |     ^^^^^^^^^^^^^^^^^^^ Cannot compile `fire`
   10 |   });
   11 |
   12 |   return null;
