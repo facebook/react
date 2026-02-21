@@ -22,7 +22,7 @@ function useHook() {
 ## Error
 
 ```
-Found 1 error:
+Found 2 errors:
 
 Error: Found missing memoization dependencies
 
@@ -38,6 +38,19 @@ error.invalid-missing-nonreactive-dep-unmemoized.ts:11:31
   14 |
 
 Inferred dependencies: `[object]`
+
+Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `object`, but the source dependencies were []. Inferred dependency not present in source.
+
+error.invalid-missing-nonreactive-dep-unmemoized.ts:11:24
+   9 |   useIdentity();
+  10 |   object.x = 0;
+> 11 |   const array = useMemo(() => [object], []);
+     |                         ^^^^^^^^^^^^^^ Could not preserve existing manual memoization
+  12 |   return array;
+  13 | }
+  14 |
 ```
           
       
