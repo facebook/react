@@ -97,9 +97,7 @@ export function validateNoDerivedComputationsInEffects(fn: HIRFunction): void {
       }
     }
   }
-  if (errors.hasAnyErrors()) {
-    throw errors;
-  }
+  fn.env.recordErrors(errors);
 }
 
 function validateEffect(
