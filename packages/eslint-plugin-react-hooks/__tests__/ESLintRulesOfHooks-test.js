@@ -951,6 +951,14 @@ const allTests = {
     },
     {
       code: normalizeIndent`
+        function Component({Obj}) {
+          Obj?.useCustomHook();
+        }
+      `,
+      errors: [conditionalError('Obj?.useCustomHook')],
+    },
+    {
+      code: normalizeIndent`
         Hook.useState();
         Hook._useState();
         Hook.use42();
