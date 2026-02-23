@@ -5,15 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, EnvironmentConfig} from '..';
+import {CompilerError, CompilerErrorDetail, EnvironmentConfig} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {HIRFunction, IdentifierId} from '../HIR';
 import {DEFAULT_GLOBALS} from '../HIR/Globals';
-import {Result} from '../Utils/Result';
 
-export function validateNoCapitalizedCalls(
-  fn: HIRFunction,
-): Result<void, CompilerError> {
+export function validateNoCapitalizedCalls(fn: HIRFunction): void {
   const envConfig: EnvironmentConfig = fn.env.config;
   const ALLOW_LIST = new Set([
     ...DEFAULT_GLOBALS.keys(),
@@ -48,13 +45,16 @@ export function validateNoCapitalizedCalls(
           const calleeIdentifier = value.callee.identifier.id;
           const calleeName = capitalLoadGlobals.get(calleeIdentifier);
           if (calleeName != null) {
-            CompilerError.throwInvalidReact({
-              category: ErrorCategory.CapitalizedCalls,
-              reason,
-              description: `${calleeName} may be a component`,
-              loc: value.loc,
-              suggestions: null,
-            });
+            fn.env.recordError(
+              new CompilerErrorDetail({
+                category: ErrorCategory.CapitalizedCalls,
+                reason,
+                description: `${calleeName} may be a component`,
+                loc: value.loc,
+                suggestions: null,
+              }),
+            );
+            continue;
           }
           break;
         }
@@ -85,5 +85,7 @@ export function validateNoCapitalizedCalls(
       }
     }
   }
-  return errors.asResult();
+  if (errors.hasAnyErrors()) {
+    fn.env.recordErrors(errors);
+  }
 }
