@@ -44,13 +44,13 @@ function useMakeCallback(t0) {
   const { obj } = t0;
   const [state, setState] = useState(0);
   let t1;
-  if ($[0] !== obj.value) {
+  if ($[0] !== obj) {
     t1 = () => {
       if (obj.value !== 0) {
         setState(obj.value);
       }
     };
-    $[0] = obj.value;
+    $[0] = obj;
     $[1] = t1;
   } else {
     t1 = $[1];

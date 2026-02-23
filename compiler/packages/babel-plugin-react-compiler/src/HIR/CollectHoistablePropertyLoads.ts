@@ -449,7 +449,19 @@ function collectNonNullsInBlocks(
             innerHoistableMap.get(innerFn.func.body.entry),
           );
           for (const entry of innerHoistables.assumedNonNullObjects) {
-            assumedNonNullObjects.add(entry);
+            /**
+             * Inner functions (e.g. JSX attribute callbacks) prove
+             * non-nullness at invocation time, but NOT at the outer
+             * render scope where cache keys are evaluated. Only
+             * promote an inner hoistable when its root identifier
+             * is already proven non-null in the outer scope.
+             */
+            const rootNode = context.registry.roots.get(
+              entry.fullPath.identifier.id,
+            );
+            if (rootNode != null && assumedNonNullObjects.has(rootNode)) {
+              assumedNonNullObjects.add(entry);
+            }
           }
         }
       } else if (

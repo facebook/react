@@ -31,9 +31,9 @@ function useFoo(t0) {
   const $ = _c(5);
   const { arr1, arr2 } = t0;
   let t1;
-  if ($[0] !== arr2[0].value) {
+  if ($[0] !== arr2) {
     t1 = (e) => arr2[0].value + e.value;
-    $[0] = arr2[0].value;
+    $[0] = arr2;
     $[1] = t1;
   } else {
     t1 = $[1];
