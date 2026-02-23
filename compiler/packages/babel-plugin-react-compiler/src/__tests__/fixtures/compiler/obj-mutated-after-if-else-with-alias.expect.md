@@ -26,7 +26,7 @@ function foo(a, b, c, d) {
   const $ = _c(2);
   someObj();
   let x;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     if (a) {
       const y = someObj();
       const z = y;

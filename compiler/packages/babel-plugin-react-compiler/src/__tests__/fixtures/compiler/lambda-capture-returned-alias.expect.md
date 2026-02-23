@@ -35,7 +35,7 @@ import { c as _c } from "react/compiler-runtime"; // Here, element should not be
 function CaptureNotMutate(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.x) {
+  if (!Object.is($[0], props.x)) {
     t0 = foo(props.x);
     $[0] = props.x;
     $[1] = t0;
@@ -44,7 +44,7 @@ function CaptureNotMutate(props) {
   }
   const idx = t0;
   let aliasedElement;
-  if ($[2] !== idx || $[3] !== props.el) {
+  if (!Object.is($[2], idx) || !Object.is($[3], props.el)) {
     const element = bar(props.el);
     const fn = function () {
       const arr = { element };

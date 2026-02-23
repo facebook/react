@@ -40,7 +40,7 @@ function Router(t0) {
   const $ = _c(3);
   const { title, mapping } = t0;
   let array;
-  if ($[0] !== mapping || $[1] !== title) {
+  if (!Object.is($[0], mapping) || !Object.is($[1], title)) {
     array = [];
     for (const entry of mapping.values()) {
       array.push([title, entry]);

@@ -42,7 +42,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     const a = [props.a];
     t0 = [a];
     $[0] = props.a;
@@ -52,7 +52,7 @@ function Component(props) {
   }
   const b = t0;
   let c;
-  if ($[2] !== b || $[3] !== props.b) {
+  if (!Object.is($[2], b) || !Object.is($[3], props.b)) {
     c = [];
     const d = {};
     d.b = b;

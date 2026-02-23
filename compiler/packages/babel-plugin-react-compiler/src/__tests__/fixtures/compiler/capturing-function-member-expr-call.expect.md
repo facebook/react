@@ -24,7 +24,7 @@ function component(t0) {
   const $ = _c(7);
   const { mutator } = t0;
   let t1;
-  if ($[0] !== mutator) {
+  if (!Object.is($[0], mutator)) {
     t1 = () => {
       mutator.poke();
     };
@@ -35,7 +35,7 @@ function component(t0) {
   }
   const poke = t1;
   let t2;
-  if ($[2] !== mutator.user) {
+  if (!Object.is($[2], mutator.user)) {
     t2 = () => {
       mutator.user.hide();
     };
@@ -46,7 +46,7 @@ function component(t0) {
   }
   const hide = t2;
   let t3;
-  if ($[4] !== hide || $[5] !== poke) {
+  if (!Object.is($[4], hide) || !Object.is($[5], poke)) {
     t3 = <Foo poke={poke} hide={hide} />;
     $[4] = hide;
     $[5] = poke;

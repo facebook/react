@@ -42,7 +42,7 @@ function Component(props) {
   const $ = _c(4);
   const foo = useContext(FooContext);
   let t0;
-  if ($[0] !== foo.current) {
+  if (!Object.is($[0], foo.current)) {
     const getValue = () => {
       if (foo.current) {
         return {};
@@ -58,7 +58,7 @@ function Component(props) {
   }
   const value = t0;
   let t1;
-  if ($[2] !== value) {
+  if (!Object.is($[2], value)) {
     t1 = <Stringify value={value} />;
     $[2] = value;
     $[3] = t1;

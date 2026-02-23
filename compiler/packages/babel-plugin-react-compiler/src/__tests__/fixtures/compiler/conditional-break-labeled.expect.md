@@ -36,10 +36,10 @@ function Component(props) {
   const $ = _c(5);
   let a;
   if (
-    $[0] !== props.a ||
-    $[1] !== props.b ||
-    $[2] !== props.c ||
-    $[3] !== props.d
+    !Object.is($[0], props.a) ||
+    !Object.is($[1], props.b) ||
+    !Object.is($[2], props.c) ||
+    !Object.is($[3], props.d)
   ) {
     a = [];
     a.push(props.a);

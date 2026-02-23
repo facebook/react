@@ -38,7 +38,7 @@ function useFoo(t0) {
   const { propArr } = t0;
   let s1;
   let s2;
-  if ($[0] !== propArr[0]) {
+  if (!Object.is($[0], propArr[0])) {
     s1 = new Set([1, 2, 3]);
     s1.add(makeArray(propArr[0]));
     s2 = new Set(s1);
@@ -52,7 +52,7 @@ function useFoo(t0) {
     s2 = $[2];
   }
   let t1;
-  if ($[3] !== s1 || $[4] !== s2) {
+  if (!Object.is($[3], s1) || !Object.is($[4], s2)) {
     t1 = [s1, s2];
     $[3] = s1;
     $[4] = s2;

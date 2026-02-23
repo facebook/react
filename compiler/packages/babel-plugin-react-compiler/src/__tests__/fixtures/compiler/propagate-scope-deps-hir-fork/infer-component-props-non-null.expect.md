@@ -34,11 +34,11 @@ import { identity, Stringify } from "shared-runtime";
 function Foo(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.cond || $[1] !== props.value) {
+  if (!Object.is($[0], props.cond) || !Object.is($[1], props.value)) {
     const arr = [];
     if (props.cond) {
       let t1;
-      if ($[3] !== props.value) {
+      if (!Object.is($[3], props.value)) {
         t1 = identity(props.value);
         $[3] = props.value;
         $[4] = t1;

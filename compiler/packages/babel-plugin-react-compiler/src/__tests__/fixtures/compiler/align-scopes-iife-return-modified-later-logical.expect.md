@@ -28,7 +28,7 @@ import { getNull } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let items;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     items = getNull() ?? [];
 
     items.push(props.a);

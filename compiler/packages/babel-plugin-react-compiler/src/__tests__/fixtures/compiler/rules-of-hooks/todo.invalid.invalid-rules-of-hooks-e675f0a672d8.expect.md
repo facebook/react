@@ -32,7 +32,7 @@ function renderItem() {
 function List(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.items) {
+  if (!Object.is($[0], props.items)) {
     t0 = props.items.map(renderItem);
     $[0] = props.items;
     $[1] = t0;

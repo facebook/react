@@ -57,7 +57,7 @@ function Component(props) {
 
   const t1 = x.map(_temp2);
   let t2;
-  if ($[1] !== y) {
+  if (!Object.is($[1], y)) {
     t2 = mutate(y);
     $[1] = y;
     $[2] = t2;
@@ -65,7 +65,11 @@ function Component(props) {
     t2 = $[2];
   }
   let t3;
-  if ($[3] !== onClick || $[4] !== t1 || $[5] !== t2) {
+  if (
+    !Object.is($[3], onClick) ||
+    !Object.is($[4], t1) ||
+    !Object.is($[5], t2)
+  ) {
     t3 = (
       <div onClick={onClick}>
         {t1}

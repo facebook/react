@@ -99,7 +99,7 @@ function useFoo(t0) {
   let obj;
   let myDiv = null;
   if (data.cond) {
-    if ($[0] !== data.cond1) {
+    if (!Object.is($[0], data.cond1)) {
       obj = makeObject_Primitives();
       if (data.cond1) {
         myDiv = <Stringify value={mutateAndReturn(obj)} />;

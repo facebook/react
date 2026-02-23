@@ -42,7 +42,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[1] !== props.a || $[2] !== props.cond) {
+  if (!Object.is($[1], props.a) || !Object.is($[2], props.cond)) {
     let y;
     if (props.cond) {
       y = {};

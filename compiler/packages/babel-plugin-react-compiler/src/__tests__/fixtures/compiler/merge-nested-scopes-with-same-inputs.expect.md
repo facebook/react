@@ -36,7 +36,7 @@ import { setProperty } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let y;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     y = {};
 
     const x = {};

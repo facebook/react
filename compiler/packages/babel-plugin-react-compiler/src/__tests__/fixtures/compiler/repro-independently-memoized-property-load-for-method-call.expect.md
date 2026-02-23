@@ -59,7 +59,11 @@ function Component(t0) {
   const serverTime = useServerTime();
   let t1;
   let timestampLabel;
-  if ($[0] !== highlightedItem || $[1] !== label || $[2] !== serverTime) {
+  if (
+    !Object.is($[0], highlightedItem) ||
+    !Object.is($[1], label) ||
+    !Object.is($[2], serverTime)
+  ) {
     const highlight = new Highlight(highlightedItem);
     const time = serverTime.get();
     timestampLabel = time / 1000 || label;
@@ -74,7 +78,7 @@ function Component(t0) {
     timestampLabel = $[4];
   }
   let t2;
-  if ($[5] !== t1 || $[6] !== timestampLabel) {
+  if (!Object.is($[5], t1) || !Object.is($[6], timestampLabel)) {
     t2 = (
       <>
         {t1}

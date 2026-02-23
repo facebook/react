@@ -28,7 +28,7 @@ function Component(t0) {
   const $ = _c(5);
   let kind;
   let props;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     ({ kind, ...props } = t0);
     $[0] = t0;
     $[1] = kind;
@@ -40,7 +40,7 @@ function Component(t0) {
   switch (kind) {
     default: {
       let t1;
-      if ($[3] !== props) {
+      if (!Object.is($[3], props)) {
         t1 = <Stringify {...props} />;
         $[3] = props;
         $[4] = t1;

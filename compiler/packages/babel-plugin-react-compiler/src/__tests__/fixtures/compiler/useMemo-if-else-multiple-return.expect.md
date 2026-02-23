@@ -25,7 +25,7 @@ function Component(props) {
   bb0: {
     if (props.cond) {
       let t1;
-      if ($[0] !== props.a) {
+      if (!Object.is($[0], props.a)) {
         t1 = makeObject(props.a);
         $[0] = props.a;
         $[1] = t1;
@@ -36,7 +36,7 @@ function Component(props) {
       break bb0;
     }
     let t1;
-    if ($[2] !== props.b) {
+    if (!Object.is($[2], props.b)) {
       t1 = makeObject(props.b);
       $[2] = props.b;
       $[3] = t1;

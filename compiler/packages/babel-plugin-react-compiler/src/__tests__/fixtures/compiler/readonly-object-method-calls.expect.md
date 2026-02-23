@@ -41,7 +41,7 @@ function Component(props) {
     props.user,
   );
   let posts;
-  if ($[0] !== user.timeline.posts.edges.nodes) {
+  if (!Object.is($[0], user.timeline.posts.edges.nodes)) {
     posts = user.timeline.posts.edges.nodes.map(_temp);
     let t0;
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
@@ -59,7 +59,7 @@ function Component(props) {
   const count = posts.length;
   foo(count);
   let t0;
-  if ($[3] !== posts) {
+  if (!Object.is($[3], posts)) {
     t0 = <>{posts}</>;
     $[3] = posts;
     $[4] = t0;

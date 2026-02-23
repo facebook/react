@@ -29,7 +29,7 @@ import fbt from "fbt";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.name) {
+  if (!Object.is($[0], props.name)) {
     const element = fbt._(
       "Hello {user name ☺}",
       [fbt._param("user name \u263A", props.name)],

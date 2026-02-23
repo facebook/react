@@ -91,7 +91,7 @@ function Component() {
 
   const t5 = String(state);
   let t6;
-  if ($[5] !== t5) {
+  if (!Object.is($[5], t5)) {
     t6 = <Child key={t5} ref={ref} />;
     $[5] = t5;
     $[6] = t6;

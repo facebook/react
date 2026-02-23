@@ -26,7 +26,7 @@ function Component(t0) {
   const h = c++;
   const i = --c;
   let t1;
-  if ($[0] !== c || $[1] !== h || $[2] !== i) {
+  if (!Object.is($[0], c) || !Object.is($[1], h) || !Object.is($[2], i)) {
     t1 = [c, h, i];
     $[0] = c;
     $[1] = h;

@@ -41,7 +41,7 @@ function useFoo() {
   const $ = _c(4);
   const makeCb = useIdentity(_temp);
   let t0;
-  if ($[0] !== makeCb) {
+  if (!Object.is($[0], makeCb)) {
     t0 = makeCb();
     $[0] = makeCb;
     $[1] = t0;
@@ -49,7 +49,7 @@ function useFoo() {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = <Stringify fn={t0} shouldInvokeFns={true} />;
     $[2] = t0;
     $[3] = t1;

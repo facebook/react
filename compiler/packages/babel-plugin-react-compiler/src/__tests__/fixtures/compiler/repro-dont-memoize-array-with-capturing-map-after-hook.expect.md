@@ -61,7 +61,11 @@ function Component(props) {
   });
   const t2 = mutate(y);
   let t3;
-  if ($[1] !== onClick || $[2] !== t1 || $[3] !== t2) {
+  if (
+    !Object.is($[1], onClick) ||
+    !Object.is($[2], t1) ||
+    !Object.is($[3], t2)
+  ) {
     t3 = (
       <div onClick={onClick}>
         {t1}

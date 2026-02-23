@@ -43,7 +43,7 @@ function Component(props) {
   const c1 = __c;
   const $c = c1;
   let t0;
-  if ($[0] !== $c) {
+  if (!Object.is($[0], $c)) {
     t0 = [$c];
     $[0] = $c;
     $[1] = t0;
@@ -52,7 +52,7 @@ function Component(props) {
   }
   const array = t0;
   let t1;
-  if ($[2] !== state) {
+  if (!Object.is($[2], state)) {
     t1 = [state];
     $[2] = state;
     $[3] = t1;
@@ -60,7 +60,7 @@ function Component(props) {
     t1 = $[3];
   }
   let t2;
-  if ($[4] !== array || $[5] !== t1) {
+  if (!Object.is($[4], array) || !Object.is($[5], t1)) {
     t2 = <ValidateMemoization inputs={t1} output={array} />;
     $[4] = array;
     $[5] = t1;

@@ -22,7 +22,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== props.bar || $[1] !== props.foo) {
+  if (!Object.is($[0], props.bar) || !Object.is($[1], props.foo)) {
     t0 = [0, ...props.foo, null, ...props.bar, "z"];
     $[0] = props.bar;
     $[1] = props.foo;

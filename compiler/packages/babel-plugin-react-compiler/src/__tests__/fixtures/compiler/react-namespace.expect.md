@@ -45,7 +45,7 @@ function Component(props) {
   }
   const onClick = t0;
   let t1;
-  if ($[1] !== props.children) {
+  if (!Object.is($[1], props.children)) {
     t1 = React.cloneElement(props.children);
     $[1] = props.children;
     $[2] = t1;
@@ -53,7 +53,7 @@ function Component(props) {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== t1) {
+  if (!Object.is($[3], t1)) {
     t2 = <div onClick={onClick}>{t1}</div>;
     $[3] = t1;
     $[4] = t2;

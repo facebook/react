@@ -30,7 +30,7 @@ function Component(props) {
   const dispatch = useDispatch();
   useFreeze(dispatch);
   let t0;
-  if ($[0] !== dispatch) {
+  if (!Object.is($[0], dispatch)) {
     t0 = () => {
       dispatch({ kind: "update" });
     };
@@ -42,7 +42,7 @@ function Component(props) {
   const onUpdate = t0;
   let t1;
   let t2;
-  if ($[2] !== onUpdate) {
+  if (!Object.is($[2], onUpdate)) {
     t1 = () => {
       onUpdate();
     };

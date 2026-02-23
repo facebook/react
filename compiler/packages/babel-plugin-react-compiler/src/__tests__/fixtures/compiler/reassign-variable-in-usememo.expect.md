@@ -24,7 +24,7 @@ import { c as _c } from "react/compiler-runtime";
 export function useItemLanguage(items) {
   const $ = _c(2);
   let language;
-  if ($[0] !== items) {
+  if (!Object.is($[0], items)) {
     language = null;
     items.forEach((item) => {
       if (item.language != null) {

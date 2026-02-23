@@ -34,7 +34,7 @@ import { shallowCopy } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     t0 = shallowCopy(props);
     $[0] = props;
     $[1] = t0;

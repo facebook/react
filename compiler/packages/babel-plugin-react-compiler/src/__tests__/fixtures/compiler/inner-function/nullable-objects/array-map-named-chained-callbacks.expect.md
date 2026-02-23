@@ -45,7 +45,7 @@ function useFoo(t0) {
   const $ = _c(13);
   const { arr1, arr2 } = t0;
   let t1;
-  if ($[0] !== arr1[0]) {
+  if (!Object.is($[0], arr1[0])) {
     const getVal1 = () => arr1[0].value;
     t1 = (e) => getVal1() + e.value;
     $[0] = arr1[0];
@@ -55,7 +55,7 @@ function useFoo(t0) {
   }
   const cb1 = t1;
   let t2;
-  if ($[2] !== arr1 || $[3] !== cb1) {
+  if (!Object.is($[2], arr1) || !Object.is($[3], cb1)) {
     t2 = arr1.map(cb1);
     $[2] = arr1;
     $[3] = cb1;
@@ -65,7 +65,7 @@ function useFoo(t0) {
   }
   const x = t2;
   let t3;
-  if ($[5] !== arr2) {
+  if (!Object.is($[5], arr2)) {
     const getVal2 = () => arr2[0].value;
     t3 = (e_0) => getVal2() + e_0.value;
     $[5] = arr2;
@@ -75,7 +75,7 @@ function useFoo(t0) {
   }
   const cb2 = t3;
   let t4;
-  if ($[7] !== arr1 || $[8] !== cb2) {
+  if (!Object.is($[7], arr1) || !Object.is($[8], cb2)) {
     t4 = arr1.map(cb2);
     $[7] = arr1;
     $[8] = cb2;
@@ -85,7 +85,7 @@ function useFoo(t0) {
   }
   const y = t4;
   let t5;
-  if ($[10] !== x || $[11] !== y) {
+  if (!Object.is($[10], x) || !Object.is($[11], y)) {
     t5 = [x, y];
     $[10] = x;
     $[11] = y;

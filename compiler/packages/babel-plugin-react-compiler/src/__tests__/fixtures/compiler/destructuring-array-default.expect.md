@@ -23,7 +23,7 @@ function Component(props) {
   const $ = _c(2);
   const [t0] = props.y;
   let t1;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     t1 = t0 === undefined ? ["default"] : t0;
     $[0] = t0;
     $[1] = t1;

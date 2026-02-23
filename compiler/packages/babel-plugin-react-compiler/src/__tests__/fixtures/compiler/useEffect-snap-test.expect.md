@@ -44,7 +44,7 @@ function Component() {
   }
   useEffect(t0, t1);
   let t2;
-  if ($[2] !== state) {
+  if (!Object.is($[2], state)) {
     t2 = <div>{state}</div>;
     $[2] = state;
     $[3] = t2;

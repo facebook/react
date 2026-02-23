@@ -38,7 +38,7 @@ function useHook(t0) {
   const $ = _c(2);
   const { a, b } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t1 = { a };
     $[0] = a;
     $[1] = t1;

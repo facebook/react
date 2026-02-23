@@ -25,7 +25,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a) {
   const $ = _c(2);
   let x;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     const b = {};
     x = b;
     if (a) {

@@ -25,7 +25,7 @@ function Component(t0) {
   const $ = _c(6);
   let rest;
   let x;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     ({ x, ...rest } = t0);
     $[0] = t0;
     $[1] = rest;
@@ -35,7 +35,7 @@ function Component(t0) {
     x = $[2];
   }
   let t1;
-  if ($[3] !== rest || $[4] !== x) {
+  if (!Object.is($[3], rest) || !Object.is($[4], x)) {
     t1 = <Stringify {...rest} x={x} />;
     $[3] = rest;
     $[4] = x;

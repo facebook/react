@@ -25,7 +25,7 @@ import { c as _c } from "react/compiler-runtime";
 function f(a) {
   const $ = _c(4);
   let x;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     x = { a };
     $[0] = a;
     $[1] = x;
@@ -33,7 +33,7 @@ function f(a) {
     x = $[1];
   }
   let t0;
-  if ($[2] !== x) {
+  if (!Object.is($[2], x)) {
     t0 = <div x={x} />;
     $[2] = x;
     $[3] = t0;

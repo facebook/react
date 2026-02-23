@@ -44,7 +44,7 @@ function useMakeCallback(t0) {
   const $ = _c(3);
   const { obj, setState } = t0;
   let t1;
-  if ($[0] !== obj.value || $[1] !== setState) {
+  if (!Object.is($[0], obj.value) || !Object.is($[1], setState)) {
     t1 = <Stringify cb={() => setState(obj.value)} shouldInvokeFns={true} />;
     $[0] = obj.value;
     $[1] = setState;

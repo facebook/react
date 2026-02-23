@@ -33,7 +33,7 @@ function useFoo(t0) {
   const { obj, objIsNull } = t0;
   let t1;
   let x;
-  if ($[0] !== obj || $[1] !== objIsNull) {
+  if (!Object.is($[0], obj) || !Object.is($[1], objIsNull)) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       x = [];

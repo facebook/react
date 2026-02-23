@@ -37,7 +37,7 @@ export const Bar = _isForgetEnabled_Fixtures()
       "use forget";
       const $ = _c(2);
       let t0;
-      if ($[0] !== props.bar) {
+      if (!Object.is($[0], props.bar)) {
         t0 = <div>{props.bar}</div>;
         $[0] = props.bar;
         $[1] = t0;

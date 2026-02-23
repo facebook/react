@@ -22,7 +22,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== a.b) {
+  if (!Object.is($[0], a.b)) {
     t0 = [a.b];
     $[0] = a.b;
     $[1] = t0;

@@ -31,7 +31,7 @@ function Example() {
   const $ = _c(2);
   const data = useFragment();
   let t0;
-  if ($[0] !== data) {
+  if (!Object.is($[0], data)) {
     const { a, b } = identity(data);
     const el = <Stringify tooltip={b} />;
     identity(a.at(0));

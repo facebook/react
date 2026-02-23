@@ -28,7 +28,7 @@ interface ComponentProps {
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.name) {
+  if (!Object.is($[0], props.name)) {
     t0 = props.name.toUpperCase();
     $[0] = props.name;
     $[1] = t0;

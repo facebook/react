@@ -47,7 +47,7 @@ function Component(t0) {
   const ref2 = useRef(2);
   const ref = cond ? ref1 : ref2;
   let t1;
-  if ($[0] !== ref) {
+  if (!Object.is($[0], ref)) {
     const cb = () => ref.current;
     t1 = <Stringify cb={cb} shouldInvokeFns={true} />;
     $[0] = ref;

@@ -32,7 +32,7 @@ function useFoo(t0) {
   const $ = _c(8);
   const { arr1 } = t0;
   let t1;
-  if ($[0] !== arr1[0]) {
+  if (!Object.is($[0], arr1[0])) {
     t1 = (e) => arr1[0].value + e.value;
     $[0] = arr1[0];
     $[1] = t1;
@@ -41,7 +41,7 @@ function useFoo(t0) {
   }
   const cb1 = t1;
   let t2;
-  if ($[2] !== arr1 || $[3] !== cb1) {
+  if (!Object.is($[2], arr1) || !Object.is($[3], cb1)) {
     t2 = arr1.map(cb1);
     $[2] = arr1;
     $[3] = cb1;
@@ -51,7 +51,7 @@ function useFoo(t0) {
   }
   const x = t2;
   let t3;
-  if ($[5] !== cb1 || $[6] !== x) {
+  if (!Object.is($[5], cb1) || !Object.is($[6], x)) {
     t3 = [x, cb1];
     $[5] = cb1;
     $[6] = x;

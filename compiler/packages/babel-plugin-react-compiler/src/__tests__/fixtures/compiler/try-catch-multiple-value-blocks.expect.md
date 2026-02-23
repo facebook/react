@@ -78,7 +78,7 @@ function Component(t0) {
     const t2 = String(y);
     const t3 = String(z);
     let t4;
-    if ($[0] !== t1 || $[1] !== t2 || $[2] !== t3) {
+    if (!Object.is($[0], t1) || !Object.is($[1], t2) || !Object.is($[2], t3)) {
       t4 = (
         <div>
           {t1}-{t2}-{t3}

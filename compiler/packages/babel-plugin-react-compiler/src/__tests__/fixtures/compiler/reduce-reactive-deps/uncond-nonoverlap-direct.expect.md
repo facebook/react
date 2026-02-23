@@ -26,7 +26,7 @@ import { c as _c } from "react/compiler-runtime"; // Test that we can track non-
 function TestNonOverlappingTracked(props) {
   const $ = _c(3);
   let x;
-  if ($[0] !== props.a.b || $[1] !== props.a.c) {
+  if (!Object.is($[0], props.a.b) || !Object.is($[1], props.a.c)) {
     x = {};
     x.b = props.a.b;
     x.c = props.a.c;

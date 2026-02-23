@@ -24,7 +24,7 @@ function HomeDiscoStoreItemTileRating(props) {
   const $ = _c(4);
   const item = useFragment();
   let count;
-  if ($[0] !== item?.aggregates) {
+  if (!Object.is($[0], item?.aggregates)) {
     count = 0;
     const aggregates = item?.aggregates || [];
     aggregates.forEach((aggregate) => {
@@ -37,7 +37,7 @@ function HomeDiscoStoreItemTileRating(props) {
     count = $[1];
   }
   let t0;
-  if ($[2] !== count) {
+  if (!Object.is($[2], count)) {
     t0 = <Text>{count}</Text>;
     $[2] = count;
     $[3] = t0;

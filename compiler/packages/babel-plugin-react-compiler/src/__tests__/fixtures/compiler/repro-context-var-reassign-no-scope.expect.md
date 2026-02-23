@@ -55,7 +55,7 @@ function Content() {
   }
   const [users, setUsers] = useState(t0);
   let t1;
-  if ($[1] !== users.length) {
+  if (!Object.is($[1], users.length)) {
     t1 = () => {
       if (users.length === 2) {
         let removedUserName = "";
@@ -75,7 +75,7 @@ function Content() {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== users) {
+  if (!Object.is($[3], users)) {
     t2 = [users];
     $[3] = users;
     $[4] = t2;
@@ -84,7 +84,7 @@ function Content() {
   }
   useEffect(t1, t2);
   let t3;
-  if ($[5] !== announcement || $[6] !== users) {
+  if (!Object.is($[5], announcement) || !Object.is($[6], users)) {
     t3 = <Stringify users={users} announcement={announcement} />;
     $[5] = announcement;
     $[6] = users;

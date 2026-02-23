@@ -31,7 +31,7 @@ export function Component(t0) {
   const { fn: t1 } = t0;
   const fn = t1 === undefined ? id : t1;
   let t2;
-  if ($[0] !== fn) {
+  if (!Object.is($[0], fn)) {
     t2 = fn("hi" as T);
     $[0] = fn;
     $[1] = t2;
@@ -41,7 +41,7 @@ export function Component(t0) {
   const value = t2;
   const t3 = String(value);
   let t4;
-  if ($[2] !== t3) {
+  if (!Object.is($[2], t3)) {
     t4 = <div>{t3}</div>;
     $[2] = t3;
     $[3] = t4;

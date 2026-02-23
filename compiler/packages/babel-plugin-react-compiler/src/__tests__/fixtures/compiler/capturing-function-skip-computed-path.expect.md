@@ -22,7 +22,7 @@ import { c as _c } from "react/compiler-runtime";
 function StoreLandingUnseenGiftModalContainer(a) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     const giftsSeen = { a };
     t0 = ((gift) => (gift.id ? giftsSeen[gift.id] : false))();
     $[0] = a;

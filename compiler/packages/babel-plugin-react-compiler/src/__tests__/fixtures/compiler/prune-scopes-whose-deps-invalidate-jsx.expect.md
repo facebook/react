@@ -32,7 +32,7 @@ function Component(props) {
   const $ = _c(4);
   const o = {};
   let t0;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     t0 = <div>{props.value}</div>;
     $[0] = props.value;
     $[1] = t0;
@@ -43,7 +43,7 @@ function Component(props) {
   useHook();
   o.value = props.value;
   let t1;
-  if ($[2] !== x) {
+  if (!Object.is($[2], x)) {
     const y = <div>{x}</div>;
     t1 = <div>{y}</div>;
     $[2] = x;

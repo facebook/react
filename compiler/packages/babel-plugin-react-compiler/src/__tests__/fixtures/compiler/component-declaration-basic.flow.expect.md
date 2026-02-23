@@ -28,7 +28,7 @@ export default function Foo(t0) {
   const $ = _c(2);
   const { bar } = t0;
   let t1;
-  if ($[0] !== bar) {
+  if (!Object.is($[0], bar)) {
     t1 = <Bar bar={bar} />;
     $[0] = bar;
     $[1] = t1;
@@ -42,7 +42,7 @@ function Bar(t0) {
   const $ = _c(2);
   const { bar } = t0;
   let t1;
-  if ($[0] !== bar) {
+  if (!Object.is($[0], bar)) {
     t1 = <div>{bar}</div>;
     $[0] = bar;
     $[1] = t1;

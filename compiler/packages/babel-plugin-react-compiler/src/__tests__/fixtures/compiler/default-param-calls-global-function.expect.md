@@ -24,7 +24,7 @@ import { identity } from "shared-runtime";
 function Component(t0) {
   const $ = _c(2);
   let t1;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     t1 = t0 === undefined ? identity([_temp, true, 42, "hello"]) : t0;
     $[0] = t0;
     $[1] = t1;

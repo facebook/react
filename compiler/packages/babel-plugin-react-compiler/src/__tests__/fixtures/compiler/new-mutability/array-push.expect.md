@@ -24,14 +24,14 @@ function Component(t0) {
   const $ = _c(6);
   const { a, b, c } = t0;
   let t1;
-  if ($[0] !== a || $[1] !== b || $[2] !== c) {
+  if (!Object.is($[0], a) || !Object.is($[1], b) || !Object.is($[2], c)) {
     const x = [];
     x.push(a);
     const merged = { b };
     x.push(merged);
     mutate(x);
     let t2;
-    if ($[4] !== c) {
+    if (!Object.is($[4], c)) {
       t2 = { c };
       $[4] = c;
       $[5] = t2;

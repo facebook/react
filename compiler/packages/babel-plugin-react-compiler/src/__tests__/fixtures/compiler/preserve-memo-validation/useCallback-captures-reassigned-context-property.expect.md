@@ -58,7 +58,7 @@ import { Stringify } from "shared-runtime";
 function Foo(props) {
   const $ = _c(6);
   let contextVar;
-  if ($[0] !== props.cond) {
+  if (!Object.is($[0], props.cond)) {
     if (props.cond) {
       contextVar = { val: 2 };
     } else {
@@ -70,7 +70,7 @@ function Foo(props) {
     contextVar = $[1];
   }
   let t0;
-  if ($[2] !== contextVar.val) {
+  if (!Object.is($[2], contextVar.val)) {
     t0 = () => [contextVar.val];
     $[2] = contextVar.val;
     $[3] = t0;
@@ -80,7 +80,7 @@ function Foo(props) {
   contextVar;
   const cb = t0;
   let t1;
-  if ($[4] !== cb) {
+  if (!Object.is($[4], cb)) {
     t1 = <Stringify cb={cb} shouldInvokeFns={true} />;
     $[4] = cb;
     $[5] = t1;

@@ -68,7 +68,7 @@ function Component(t0) {
   const $ = _c(10);
   const { cond, a } = t0;
   let contextVar;
-  if ($[0] !== a || $[1] !== cond) {
+  if (!Object.is($[0], a) || !Object.is($[1], cond)) {
     if (cond) {
       contextVar = { val: a };
     } else {
@@ -82,7 +82,7 @@ function Component(t0) {
     contextVar = $[2];
   }
   let t1;
-  if ($[3] !== contextVar) {
+  if (!Object.is($[3], contextVar)) {
     t1 = { cb: () => contextVar.val * 4 };
     $[3] = contextVar;
     $[4] = t1;
@@ -93,7 +93,7 @@ function Component(t0) {
 
   const t2 = cond ? a : undefined;
   let t3;
-  if ($[5] !== t2) {
+  if (!Object.is($[5], t2)) {
     t3 = [t2];
     $[5] = t2;
     $[6] = t3;
@@ -101,7 +101,7 @@ function Component(t0) {
     t3 = $[6];
   }
   let t4;
-  if ($[7] !== cb || $[8] !== t3) {
+  if (!Object.is($[7], cb) || !Object.is($[8], t3)) {
     t4 = (
       <ValidateMemoization inputs={t3} output={cb} onlyCheckCompiled={true} />
     );

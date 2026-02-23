@@ -31,7 +31,7 @@ import { createHookWrapper, mutate } from "shared-runtime";
 function useHook(a) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     const x = { a };
     const obj = {
       method() {

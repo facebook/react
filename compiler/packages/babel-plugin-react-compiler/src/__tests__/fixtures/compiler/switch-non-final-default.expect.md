@@ -36,7 +36,7 @@ function Component(props) {
   const $ = _c(8);
   let t0;
   let y;
-  if ($[0] !== props.p0 || $[1] !== props.p2) {
+  if (!Object.is($[0], props.p0) || !Object.is($[1], props.p2)) {
     const x = [];
     bb0: switch (props.p0) {
       case 1: {
@@ -72,7 +72,7 @@ function Component(props) {
   const child = t0;
   y.push(props.p4);
   let t1;
-  if ($[5] !== child || $[6] !== y) {
+  if (!Object.is($[5], child) || !Object.is($[6], y)) {
     t1 = <Component data={y}>{child}</Component>;
     $[5] = child;
     $[6] = y;

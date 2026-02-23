@@ -39,7 +39,7 @@ import { Stringify } from "shared-runtime";
 function useFoo(arr1, arr2) {
   const $ = _c(7);
   let t0;
-  if ($[0] !== arr1) {
+  if (!Object.is($[0], arr1)) {
     t0 = [arr1];
     $[0] = arr1;
     $[1] = t0;
@@ -48,7 +48,7 @@ function useFoo(arr1, arr2) {
   }
   const x = t0;
   let t1;
-  if ($[2] !== arr2 || $[3] !== x) {
+  if (!Object.is($[2], arr2) || !Object.is($[3], x)) {
     let y;
     t1 = () => ({ y });
     (y = x.concat(arr2)), y;
@@ -60,7 +60,7 @@ function useFoo(arr1, arr2) {
   }
   const getVal = t1;
   let t2;
-  if ($[5] !== getVal) {
+  if (!Object.is($[5], getVal)) {
     t2 = <Stringify getVal={getVal} shouldInvokeFns={true} />;
     $[5] = getVal;
     $[6] = t2;

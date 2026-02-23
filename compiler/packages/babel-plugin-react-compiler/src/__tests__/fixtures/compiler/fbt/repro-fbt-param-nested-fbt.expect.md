@@ -66,7 +66,7 @@ function Component(t0) {
   const $ = _c(5);
   const { firstname, lastname } = t0;
   let t1;
-  if ($[0] !== firstname || $[1] !== lastname) {
+  if (!Object.is($[0], firstname) || !Object.is($[1], lastname)) {
     t1 = fbt._(
       "Name: {firstname}, {lastname}",
       [
@@ -102,7 +102,7 @@ function Component(t0) {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== t1) {
+  if (!Object.is($[3], t1)) {
     t2 = <div>{t1}</div>;
     $[3] = t1;
     $[4] = t2;

@@ -30,7 +30,7 @@ import { identity } from "shared-runtime";
 function Component(props) {
   const $ = _c(4);
   let x;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     const [t0] = props.value;
     x = t0;
     const foo = () => {
@@ -44,7 +44,7 @@ function Component(props) {
     x = $[1];
   }
   let t0;
-  if ($[2] !== x) {
+  if (!Object.is($[2], x)) {
     t0 = { x };
     $[2] = x;
     $[3] = t0;

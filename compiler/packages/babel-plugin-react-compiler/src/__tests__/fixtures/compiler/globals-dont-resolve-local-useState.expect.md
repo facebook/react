@@ -34,7 +34,7 @@ function useState(value) {
   const $ = _c(2);
   const [state, setState] = _useState(value);
   let t0;
-  if ($[0] !== state) {
+  if (!Object.is($[0], state)) {
     t0 = [state, setState];
     $[0] = state;
     $[1] = t0;
@@ -48,7 +48,7 @@ function Component() {
   const $ = _c(5);
   const [state, setState] = useState("hello");
   let t0;
-  if ($[0] !== setState) {
+  if (!Object.is($[0], setState)) {
     t0 = () => setState("goodbye");
     $[0] = setState;
     $[1] = t0;
@@ -56,7 +56,7 @@ function Component() {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== state || $[3] !== t0) {
+  if (!Object.is($[2], state) || !Object.is($[3], t0)) {
     t1 = <div onClick={t0}>{state}</div>;
     $[2] = state;
     $[3] = t0;

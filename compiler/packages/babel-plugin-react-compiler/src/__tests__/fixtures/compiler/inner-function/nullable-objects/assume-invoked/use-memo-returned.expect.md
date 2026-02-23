@@ -50,7 +50,7 @@ function useMakeCallback(t0) {
   const { obj, shouldSynchronizeState } = t0;
   const [, setState] = useState(0);
   let t1;
-  if ($[0] !== obj.value) {
+  if (!Object.is($[0], obj.value)) {
     t1 = () => {
       if (obj.value !== 0) {
         setState(obj.value);

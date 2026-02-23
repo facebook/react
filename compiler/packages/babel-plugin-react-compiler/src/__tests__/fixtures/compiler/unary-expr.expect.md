@@ -39,13 +39,13 @@ function component(a) {
   const f = typeof t.t;
   let t0;
   if (
-    $[0] !== e ||
-    $[1] !== f ||
-    $[2] !== m ||
-    $[3] !== n ||
-    $[4] !== p ||
-    $[5] !== q ||
-    $[6] !== z
+    !Object.is($[0], e) ||
+    !Object.is($[1], f) ||
+    !Object.is($[2], m) ||
+    !Object.is($[3], n) ||
+    !Object.is($[4], p) ||
+    !Object.is($[5], q) ||
+    !Object.is($[6], z)
   ) {
     t0 = { z, p, q, n, m, e, f };
     $[0] = e;

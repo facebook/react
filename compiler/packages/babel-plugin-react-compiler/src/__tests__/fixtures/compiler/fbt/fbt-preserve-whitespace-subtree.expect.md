@@ -47,7 +47,7 @@ import fbt from "fbt";
 function Foo(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.name) {
+  if (!Object.is($[0], props.name)) {
     t0 = fbt._(
       "{=m0}",
       [

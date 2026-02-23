@@ -54,7 +54,7 @@ function Component(t0) {
   const $ = _c(9);
   const { a, b } = t0;
   let x;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     x = { a };
     const f = () => {
       const y = typedCapture(x);
@@ -72,7 +72,7 @@ function Component(t0) {
     x = $[2];
   }
   let t1;
-  if ($[3] !== a || $[4] !== b) {
+  if (!Object.is($[3], a) || !Object.is($[4], b)) {
     t1 = [a, b];
     $[3] = a;
     $[4] = b;
@@ -81,7 +81,7 @@ function Component(t0) {
     t1 = $[5];
   }
   let t2;
-  if ($[6] !== t1 || $[7] !== x) {
+  if (!Object.is($[6], t1) || !Object.is($[7], x)) {
     t2 = <ValidateMemoization inputs={t1} output={x} />;
     $[6] = t1;
     $[7] = x;

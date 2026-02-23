@@ -58,7 +58,7 @@ function useBar(t0) {
   const $ = _c(2);
   const { arg } = t0;
   let t1;
-  if ($[0] !== arg) {
+  if (!Object.is($[0], arg)) {
     const s = new Set([1, 5, 4]);
     const mutableIterator = s.values();
     t1 = [arg, ...mutableIterator];

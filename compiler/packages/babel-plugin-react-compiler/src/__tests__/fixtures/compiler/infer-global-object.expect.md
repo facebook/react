@@ -37,7 +37,7 @@ import { identity, sum } from "shared-runtime";
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.b) {
+  if (!Object.is($[0], props.b)) {
     t0 = identity(props.b);
     $[0] = props.b;
     $[1] = t0;
@@ -51,7 +51,7 @@ function Component(props) {
 
   sum(primitiveVal1, Infinity, primitiveVal3);
   let t1;
-  if ($[2] !== primitiveVal1) {
+  if (!Object.is($[2], primitiveVal1)) {
     t1 = { primitiveVal1, primitiveVal2: Infinity, primitiveVal3 };
     $[2] = primitiveVal1;
     $[3] = t1;

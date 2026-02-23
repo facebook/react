@@ -29,7 +29,7 @@ import { shallowCopy } from "shared-runtime";
 function Component(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.width) {
+  if (!Object.is($[0], props.width)) {
     t0 = { style: { width: props.width } };
     $[0] = props.width;
     $[1] = t0;
@@ -38,7 +38,7 @@ function Component(props) {
   }
   const childProps = t0;
   let t1;
-  if ($[2] !== childProps) {
+  if (!Object.is($[2], childProps)) {
     let t2;
     if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
       t2 = ["hello world"];

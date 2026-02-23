@@ -47,7 +47,7 @@ function useFoo(t0) {
     t1 = $[0];
   }
   let s1;
-  if ($[1] !== propArr[0]) {
+  if (!Object.is($[1], propArr[0])) {
     s1 = new Set(t1);
     s1.add(propArr[0]);
     $[1] = propArr[0];
@@ -57,7 +57,7 @@ function useFoo(t0) {
   }
   let s2;
   let s3;
-  if ($[3] !== propArr[1] || $[4] !== propArr[2]) {
+  if (!Object.is($[3], propArr[1]) || !Object.is($[4], propArr[2])) {
     s2 = new Set(MODULE_LOCAL.values());
     s2.add(propArr[1]);
     s3 = new Set(s2.values());
@@ -71,7 +71,7 @@ function useFoo(t0) {
     s3 = $[6];
   }
   let s4;
-  if ($[7] !== propArr[3] || $[8] !== s3) {
+  if (!Object.is($[7], propArr[3]) || !Object.is($[8], s3)) {
     s4 = new Set(s3);
     s4.add(propArr[3]);
     $[7] = propArr[3];
@@ -81,7 +81,12 @@ function useFoo(t0) {
     s4 = $[9];
   }
   let t2;
-  if ($[10] !== s1 || $[11] !== s2 || $[12] !== s3 || $[13] !== s4) {
+  if (
+    !Object.is($[10], s1) ||
+    !Object.is($[11], s2) ||
+    !Object.is($[12], s3) ||
+    !Object.is($[13], s4)
+  ) {
     t2 = [s1, s2, s3, s4];
     $[10] = s1;
     $[11] = s2;

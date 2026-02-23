@@ -43,7 +43,7 @@ function Foo(t0) {
   const $ = _c(2);
   const { inputNum } = t0;
   let arr2;
-  if ($[0] !== inputNum) {
+  if (!Object.is($[0], inputNum)) {
     const arr1 = [{ a: 1 }, {}];
     arr2 = arr1.concat([1, inputNum]);
     mutate(arr2[0]);

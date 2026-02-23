@@ -29,12 +29,12 @@ import { identity, mutate, mutateAndReturn } from "shared-runtime";
 function Component(props) {
   const $ = _c(4);
   let context;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     const key = { a: "key" };
     const t0 = key.a;
     const t1 = identity([props.value]);
     let t2;
-    if ($[2] !== t1) {
+    if (!Object.is($[2], t1)) {
       t2 = { [t0]: t1 };
       $[2] = t1;
       $[3] = t2;

@@ -40,7 +40,7 @@ function useFoo(cond) {
   const $ = _c(3);
   let s;
   let t0;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       if (cond) {

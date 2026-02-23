@@ -27,7 +27,7 @@ function Component(props) {
   const $ = _c(4);
   const data = useFreeze();
   let t0;
-  if ($[0] !== data.items) {
+  if (!Object.is($[0], data.items)) {
     t0 = data.items.map(_temp);
     $[0] = data.items;
     $[1] = t0;
@@ -36,7 +36,7 @@ function Component(props) {
   }
   const items = t0;
   let t1;
-  if ($[2] !== items) {
+  if (!Object.is($[2], items)) {
     t1 = <div>{items}</div>;
     $[2] = items;
     $[3] = t1;

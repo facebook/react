@@ -29,7 +29,7 @@ import { makeObject_Primitives, Stringify } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.object) {
+  if (!Object.is($[0], props.object)) {
     const object = { object: props.object };
     const entries = Object.entries(object);
     entries.map(_temp);

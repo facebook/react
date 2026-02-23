@@ -29,7 +29,7 @@ import { identity, mutate } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let context;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     const key = {};
     context = { [key]: identity([props.value]) };
     mutate(key);

@@ -30,7 +30,7 @@ const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
 function Component(props) {
   const $ = _c(5);
   let x;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     x = [];
     try {
       let t0;
@@ -43,7 +43,7 @@ function Component(props) {
       x.push(t0);
     } catch {
       let t0;
-      if ($[3] !== props.a) {
+      if (!Object.is($[3], props.a)) {
         t0 = shallowCopy({ a: props.a });
         $[3] = props.a;
         $[4] = t0;

@@ -54,7 +54,7 @@ function Post(t0) {
   const $ = _c(7);
   const { author, text } = t0;
   let t1;
-  if ($[0] !== author) {
+  if (!Object.is($[0], author)) {
     t1 = <h1>{author}</h1>;
     $[0] = author;
     $[1] = t1;
@@ -62,7 +62,7 @@ function Post(t0) {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== text) {
+  if (!Object.is($[2], text)) {
     t2 = <span>{text}</span>;
     $[2] = text;
     $[3] = t2;
@@ -70,7 +70,7 @@ function Post(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t1 || $[5] !== t2) {
+  if (!Object.is($[4], t1) || !Object.is($[5], t2)) {
     t3 = (
       <div>
         {t1}

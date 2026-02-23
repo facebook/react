@@ -29,7 +29,7 @@ import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(2);
   let z;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     z = { a };
     const f0 = function () {
       const f1 = function () {

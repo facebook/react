@@ -23,7 +23,7 @@ function component(t) {
   const $ = _c(2);
   const { a } = t;
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t0 = { a };
     $[0] = a;
     $[1] = t0;

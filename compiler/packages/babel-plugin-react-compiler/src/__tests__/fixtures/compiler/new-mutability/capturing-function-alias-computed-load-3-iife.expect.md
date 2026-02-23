@@ -32,7 +32,7 @@ import { c as _c } from "react/compiler-runtime"; // @enableNewMutationAliasingM
 function bar(a, b) {
   const $ = _c(6);
   let t0;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     t0 = [a, b];
     $[0] = a;
     $[1] = b;
@@ -42,7 +42,7 @@ function bar(a, b) {
   }
   const x = t0;
   let y;
-  if ($[3] !== x[0][1] || $[4] !== x[1][0]) {
+  if (!Object.is($[3], x[0][1]) || !Object.is($[4], x[1][0])) {
     y = {};
     let t = {};
 

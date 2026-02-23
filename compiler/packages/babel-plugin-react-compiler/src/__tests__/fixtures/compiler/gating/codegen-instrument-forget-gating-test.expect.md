@@ -46,7 +46,7 @@ const Bar = isForgetEnabled_Fixtures()
         useRenderCounter("Bar", "/codegen-instrument-forget-gating-test.ts");
       const $ = _c(2);
       let t0;
-      if ($[0] !== props.bar) {
+      if (!Object.is($[0], props.bar)) {
         t0 = <div>{props.bar}</div>;
         $[0] = props.bar;
         $[1] = t0;
@@ -83,7 +83,7 @@ const Foo = isForgetEnabled_Fixtures()
         t1 = $[0];
       }
       let t2;
-      if ($[1] !== t0) {
+      if (!Object.is($[1], t0)) {
         t2 = <Foo bar={t0}>{t1}</Foo>;
         $[1] = t0;
         $[2] = t2;

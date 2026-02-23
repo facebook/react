@@ -39,7 +39,7 @@ function Component(t0) {
     const result = cond && obj?.value && items.length;
     const t1 = String(result);
     let t2;
-    if ($[0] !== t1) {
+    if (!Object.is($[0], t1)) {
       t2 = <div>{t1}</div>;
       $[0] = t1;
       $[1] = t2;

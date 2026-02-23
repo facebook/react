@@ -28,7 +28,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     const items = [];
     for (const key in props) {
       items.push(<div key={key}>{key}</div>);

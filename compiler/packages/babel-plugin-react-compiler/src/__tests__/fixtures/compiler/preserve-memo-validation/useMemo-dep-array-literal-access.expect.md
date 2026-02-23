@@ -39,7 +39,7 @@ import { makeArray } from "shared-runtime";
 function Foo(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     t0 = makeArray(props);
     $[0] = props;
     $[1] = t0;
@@ -48,7 +48,7 @@ function Foo(props) {
   }
   const x = t0;
   let t1;
-  if ($[2] !== x[0]) {
+  if (!Object.is($[2], x[0])) {
     t1 = [x[0]];
     $[2] = x[0];
     $[3] = t1;

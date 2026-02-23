@@ -68,7 +68,7 @@ function Foo(t0) {
   const arr = makeArray(b);
   fn(arr);
   let t1;
-  if ($[0] !== arr || $[1] !== myVar) {
+  if (!Object.is($[0], arr) || !Object.is($[1], myVar)) {
     t1 = <Stringify cb={myVar} value={arr} shouldInvokeFns={true} />;
     $[0] = arr;
     $[1] = myVar;

@@ -24,14 +24,14 @@ function useHook(t0) {
   const $ = _c(5);
   const { el1, el2 } = t0;
   let s;
-  if ($[0] !== el1 || $[1] !== el2) {
+  if (!Object.is($[0], el1) || !Object.is($[1], el2)) {
     s = new Set();
     const arr = makeArray(el1);
     s.add(arr);
 
     arr.push(el2);
     let t1;
-    if ($[3] !== el2) {
+    if (!Object.is($[3], el2)) {
       t1 = makeArray(el2);
       $[3] = el2;
       $[4] = t1;

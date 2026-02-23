@@ -75,7 +75,7 @@ function useFoo(t0) {
   const { a, b } = t0;
   let y;
   let z;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     const x = { a };
     y = {};
     mutate(x);

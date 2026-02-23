@@ -56,7 +56,7 @@ function Component(t0) {
 
     try {
       let t3;
-      if ($[0] !== value) {
+      if (!Object.is($[0], value)) {
         t3 = { value };
         $[0] = value;
         $[1] = t3;
@@ -70,7 +70,7 @@ function Component(t0) {
   }
   const result = t1;
   let t2;
-  if ($[2] !== value) {
+  if (!Object.is($[2], value)) {
     t2 = [value];
     $[2] = value;
     $[3] = t2;
@@ -78,7 +78,7 @@ function Component(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== result || $[5] !== t2) {
+  if (!Object.is($[4], result) || !Object.is($[5], t2)) {
     t3 = <ValidateMemoization inputs={t2} output={result} />;
     $[4] = result;
     $[5] = t2;

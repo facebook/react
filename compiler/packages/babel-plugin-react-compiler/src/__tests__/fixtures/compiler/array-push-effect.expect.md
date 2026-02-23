@@ -25,7 +25,7 @@ import { c as _c } from "react/compiler-runtime"; // arrayInstance.push should h
 function Component(props) {
   const $ = _c(8);
   let t0;
-  if ($[0] !== props.x) {
+  if (!Object.is($[0], props.x)) {
     t0 = foo(props.x);
     $[0] = props.x;
     $[1] = t0;
@@ -34,7 +34,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[2] !== props.y) {
+  if (!Object.is($[2], props.y)) {
     t1 = { y: props.y };
     $[2] = props.y;
     $[3] = t1;
@@ -43,7 +43,7 @@ function Component(props) {
   }
   const y = t1;
   let arr;
-  if ($[4] !== x || $[5] !== y) {
+  if (!Object.is($[4], x) || !Object.is($[5], y)) {
     arr = [];
     let t2;
     if ($[7] === Symbol.for("react.memo_cache_sentinel")) {

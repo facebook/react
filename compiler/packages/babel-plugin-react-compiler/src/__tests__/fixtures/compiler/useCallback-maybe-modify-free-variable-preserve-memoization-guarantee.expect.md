@@ -60,7 +60,7 @@ function Component(props) {
   const part = free2.part;
   useHook();
   let t2;
-  if ($[2] !== props.value) {
+  if (!Object.is($[2], props.value)) {
     t2 = () => {
       const x = makeObject_Primitives();
       x.value = props.value;

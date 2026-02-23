@@ -24,7 +24,7 @@ function Component(t0) {
   const $ = _c(2);
   const { name } = t0;
   let t1;
-  if ($[0] !== name) {
+  if (!Object.is($[0], name)) {
     t1 = <SharedRuntime.Stringify>hello world {name}</SharedRuntime.Stringify>;
     $[0] = name;
     $[1] = t1;

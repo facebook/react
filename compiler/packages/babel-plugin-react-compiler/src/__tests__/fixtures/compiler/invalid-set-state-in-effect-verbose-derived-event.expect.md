@@ -35,7 +35,7 @@ function VideoPlayer(t0) {
   const [wasPlaying, setWasPlaying] = useState(isPlaying);
   let t1;
   let t2;
-  if ($[0] !== isPlaying || $[1] !== wasPlaying) {
+  if (!Object.is($[0], isPlaying) || !Object.is($[1], wasPlaying)) {
     t1 = () => {
       if (isPlaying !== wasPlaying) {
         setWasPlaying(isPlaying);

@@ -28,7 +28,7 @@ function Component(props) {
   const T0 = Foo;
   const t0 = props.render({ ref });
   let t1;
-  if ($[0] !== T0 || $[1] !== t0) {
+  if (!Object.is($[0], T0) || !Object.is($[1], t0)) {
     t1 = <T0>{t0}</T0>;
     $[0] = T0;
     $[1] = t0;

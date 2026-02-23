@@ -56,7 +56,7 @@ function Component() {
   }
   const effectEvent = useEffectEvent(t0);
   let t1;
-  if ($[1] !== effectEvent) {
+  if (!Object.is($[1], effectEvent)) {
     t1 = () => {
       setTimeout(effectEvent, 10);
     };
@@ -79,7 +79,7 @@ function Component() {
   }
   const effectEventWithTimeout = useEffectEvent(t2);
   let t3;
-  if ($[4] !== effectEventWithTimeout) {
+  if (!Object.is($[4], effectEventWithTimeout)) {
     t3 = () => {
       effectEventWithTimeout();
     };

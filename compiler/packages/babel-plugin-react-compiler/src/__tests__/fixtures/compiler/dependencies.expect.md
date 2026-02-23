@@ -35,7 +35,7 @@ function foo(x, y, z) {
   const items = [z];
   items.push(x);
   let items2;
-  if ($[0] !== x || $[1] !== y) {
+  if (!Object.is($[0], x) || !Object.is($[1], y)) {
     items2 = [];
     if (x) {
       items2.push(y);

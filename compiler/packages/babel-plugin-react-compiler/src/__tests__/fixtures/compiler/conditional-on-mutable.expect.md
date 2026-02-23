@@ -38,7 +38,11 @@ import { c as _c } from "react/compiler-runtime";
 function ComponentA(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.p0 || $[1] !== props.p1 || $[2] !== props.p2) {
+  if (
+    !Object.is($[0], props.p0) ||
+    !Object.is($[1], props.p1) ||
+    !Object.is($[2], props.p2)
+  ) {
     const a = [];
     const b = [];
     if (b) {
@@ -61,7 +65,11 @@ function ComponentA(props) {
 function ComponentB(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.p0 || $[1] !== props.p1 || $[2] !== props.p2) {
+  if (
+    !Object.is($[0], props.p0) ||
+    !Object.is($[1], props.p1) ||
+    !Object.is($[2], props.p2)
+  ) {
     const a = [];
     const b = [];
     if (mayMutate(b)) {

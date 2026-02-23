@@ -28,7 +28,7 @@ import { c as _c } from "react/compiler-runtime";
 function component(a, b) {
   const $ = _c(2);
   let z;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     z = { a };
     const x = function () {
       z.a = 2;

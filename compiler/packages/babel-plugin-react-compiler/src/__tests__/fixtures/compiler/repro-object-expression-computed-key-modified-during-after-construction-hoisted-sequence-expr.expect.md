@@ -63,7 +63,7 @@ import { identity, mutate } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     const key = {};
     const tmp = (mutate(key), key);
     const context = { [tmp]: identity([props.value]) };

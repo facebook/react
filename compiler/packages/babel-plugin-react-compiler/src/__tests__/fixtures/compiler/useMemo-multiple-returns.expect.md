@@ -35,7 +35,7 @@ function Component(t0) {
   }
   const value = t1;
   let t2;
-  if ($[0] !== value) {
+  if (!Object.is($[0], value)) {
     t2 = <div>{value}</div>;
     $[0] = value;
     $[1] = t2;

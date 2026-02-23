@@ -39,7 +39,7 @@ function Component(t0) {
   const $ = _c(10);
   const { x } = t0;
   let t1;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     t1 = () => {
       console.log(x);
     };
@@ -57,7 +57,7 @@ function Component(t0) {
   }
   useEffect(t1, t2);
   let t3;
-  if ($[3] !== x) {
+  if (!Object.is($[3], x)) {
     t3 = [x];
     $[3] = x;
     $[4] = t3;
@@ -66,7 +66,7 @@ function Component(t0) {
   }
   const memo = t3;
   let t4;
-  if ($[5] !== x) {
+  if (!Object.is($[5], x)) {
     t4 = [x];
     $[5] = x;
     $[6] = t4;
@@ -74,7 +74,7 @@ function Component(t0) {
     t4 = $[6];
   }
   let t5;
-  if ($[7] !== memo || $[8] !== t4) {
+  if (!Object.is($[7], memo) || !Object.is($[8], t4)) {
     t5 = <ValidateMemoization inputs={t4} output={memo} />;
     $[7] = memo;
     $[8] = t4;

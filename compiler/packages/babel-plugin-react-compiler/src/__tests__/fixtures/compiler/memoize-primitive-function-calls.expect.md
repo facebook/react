@@ -45,7 +45,7 @@ import { makeObject_Primitives, ValidateMemoization } from "shared-runtime";
 function Component(props) {
   const $ = _c(7);
   let t0;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     t0 = makeObject(props.value);
     $[0] = props.value;
     $[1] = t0;
@@ -54,7 +54,7 @@ function Component(props) {
   }
   const result = t0.value + 1;
   let t1;
-  if ($[2] !== props.value) {
+  if (!Object.is($[2], props.value)) {
     t1 = [props.value];
     $[2] = props.value;
     $[3] = t1;
@@ -62,7 +62,7 @@ function Component(props) {
     t1 = $[3];
   }
   let t2;
-  if ($[4] !== result || $[5] !== t1) {
+  if (!Object.is($[4], result) || !Object.is($[5], t1)) {
     t2 = <ValidateMemoization inputs={t1} output={result} />;
     $[4] = result;
     $[5] = t1;

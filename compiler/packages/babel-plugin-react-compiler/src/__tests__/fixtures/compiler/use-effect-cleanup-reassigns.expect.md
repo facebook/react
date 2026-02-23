@@ -88,7 +88,7 @@ function Component(t0) {
     t1 = $[0];
   }
   let t2;
-  if ($[1] !== prop) {
+  if (!Object.is($[1], prop)) {
     t2 = [prop];
     $[1] = prop;
     $[2] = t2;
@@ -97,7 +97,7 @@ function Component(t0) {
   }
   useEffect(t1, t2);
   let t3;
-  if ($[3] !== cleanupCount) {
+  if (!Object.is($[3], cleanupCount)) {
     t3 = <div>{cleanupCount}</div>;
     $[3] = cleanupCount;
     $[4] = t3;

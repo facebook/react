@@ -22,7 +22,7 @@ import { useMemo } from "react";
 function useHook(maybeRef, shouldRead) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== maybeRef) {
+  if (!Object.is($[0], maybeRef)) {
     t0 = () => [maybeRef.current];
     $[0] = maybeRef;
     $[1] = t0;

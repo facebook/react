@@ -48,7 +48,7 @@ function useConditionalSuperpath2(t0) {
   const $ = _c(3);
   const { props, cond } = t0;
   let x;
-  if ($[0] !== cond || $[1] !== props.a) {
+  if (!Object.is($[0], cond) || !Object.is($[1], props.a)) {
     x = {};
     if (identity(cond)) {
       x.b = props.a.b;

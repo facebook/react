@@ -46,7 +46,7 @@ function Component(props) {
     z = y;
   } while (x < props.limit);
   let t0;
-  if ($[0] !== z) {
+  if (!Object.is($[0], z)) {
     t0 = [z];
     $[0] = z;
     $[1] = t0;

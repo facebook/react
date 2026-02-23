@@ -21,7 +21,7 @@ function Component(listItem, thread) {
   let t0;
   let t1;
   let t2;
-  if ($[0] !== listItem || $[1] !== thread.threadType) {
+  if (!Object.is($[0], listItem) || !Object.is($[1], thread.threadType)) {
     const isFoo = isFooThread(thread.threadType);
     t1 = useBar;
     t2 = listItem;
@@ -37,7 +37,7 @@ function Component(listItem, thread) {
     t2 = $[4];
   }
   let t3;
-  if ($[5] !== t0) {
+  if (!Object.is($[5], t0)) {
     t3 = [t0];
     $[5] = t0;
     $[6] = t3;

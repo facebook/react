@@ -58,7 +58,7 @@ function Component(t0) {
   const $ = _c(3);
   const { obj, isObjNull } = t0;
   let t1;
-  if ($[0] !== isObjNull || $[1] !== obj) {
+  if (!Object.is($[0], isObjNull) || !Object.is($[1], obj)) {
     const callback = () => {
       if (!isObjNull) {
         return obj.prop;

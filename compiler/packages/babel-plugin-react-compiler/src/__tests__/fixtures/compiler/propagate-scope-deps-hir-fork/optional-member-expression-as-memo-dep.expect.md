@@ -42,7 +42,7 @@ function Component(t0) {
 
   arg?.items.edges?.nodes;
   let t1;
-  if ($[0] !== arg?.items.edges?.nodes) {
+  if (!Object.is($[0], arg?.items.edges?.nodes)) {
     t1 = arg?.items.edges?.nodes.map(identity);
     $[0] = arg?.items.edges?.nodes;
     $[1] = t1;
@@ -53,7 +53,7 @@ function Component(t0) {
 
   const t2 = arg?.items.edges?.nodes;
   let t3;
-  if ($[2] !== t2) {
+  if (!Object.is($[2], t2)) {
     t3 = [t2];
     $[2] = t2;
     $[3] = t3;
@@ -61,7 +61,7 @@ function Component(t0) {
     t3 = $[3];
   }
   let t4;
-  if ($[4] !== data || $[5] !== t3) {
+  if (!Object.is($[4], data) || !Object.is($[5], t3)) {
     t4 = <ValidateMemoization inputs={t3} output={data} />;
     $[4] = data;
     $[5] = t3;

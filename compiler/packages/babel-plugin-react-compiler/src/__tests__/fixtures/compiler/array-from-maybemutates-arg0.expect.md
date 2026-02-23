@@ -37,7 +37,7 @@ function Component(t0) {
   useIdentity();
   const derived = Array.from(arr).map(mutateAndReturn);
   let t1;
-  if ($[0] !== derived) {
+  if (!Object.is($[0], derived)) {
     t1 = derived.at(0);
     $[0] = derived;
     $[1] = t1;
@@ -45,7 +45,7 @@ function Component(t0) {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== derived) {
+  if (!Object.is($[2], derived)) {
     t2 = derived.at(-1);
     $[2] = derived;
     $[3] = t2;
@@ -53,7 +53,7 @@ function Component(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t1 || $[5] !== t2) {
+  if (!Object.is($[4], t1) || !Object.is($[5], t2)) {
     t3 = (
       <Stringify>
         {t1}

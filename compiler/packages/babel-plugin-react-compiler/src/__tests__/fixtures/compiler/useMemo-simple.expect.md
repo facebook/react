@@ -16,7 +16,7 @@ import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t0 = [a];
     $[0] = a;
     $[1] = t0;
@@ -25,7 +25,7 @@ function component(a) {
   }
   const x = t0;
   let t1;
-  if ($[2] !== x) {
+  if (!Object.is($[2], x)) {
     t1 = <Foo x={x} />;
     $[2] = x;
     $[3] = t1;

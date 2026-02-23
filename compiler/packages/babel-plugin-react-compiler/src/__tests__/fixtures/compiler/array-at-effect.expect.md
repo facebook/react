@@ -24,7 +24,7 @@ import { c as _c } from "react/compiler-runtime"; // arrayInstance.at should hav
 function ArrayAtTest(props) {
   const $ = _c(9);
   let t0;
-  if ($[0] !== props.x) {
+  if (!Object.is($[0], props.x)) {
     t0 = foo(props.x);
     $[0] = props.x;
     $[1] = t0;
@@ -32,7 +32,7 @@ function ArrayAtTest(props) {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = [t0];
     $[2] = t0;
     $[3] = t1;
@@ -41,9 +41,9 @@ function ArrayAtTest(props) {
   }
   const arr = t1;
   let t2;
-  if ($[4] !== arr || $[5] !== props.y) {
+  if (!Object.is($[4], arr) || !Object.is($[5], props.y)) {
     let t3;
-    if ($[7] !== props.y) {
+    if (!Object.is($[7], props.y)) {
       t3 = bar(props.y);
       $[7] = props.y;
       $[8] = t3;

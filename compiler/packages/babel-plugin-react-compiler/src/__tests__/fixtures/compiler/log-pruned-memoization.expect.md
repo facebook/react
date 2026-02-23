@@ -88,7 +88,12 @@ function Component() {
     z = $[0];
   }
   let t0;
-  if ($[1] !== w || $[2] !== x || $[3] !== x2 || $[4] !== y) {
+  if (
+    !Object.is($[1], w) ||
+    !Object.is($[2], x) ||
+    !Object.is($[3], x2) ||
+    !Object.is($[4], y)
+  ) {
     t0 = <Stringify items={[w, x, x2, y, z]} />;
     $[1] = w;
     $[2] = x;

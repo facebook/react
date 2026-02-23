@@ -27,7 +27,7 @@ function foo(props) {
   const y = x++;
   const z = x--;
   let t0;
-  if ($[0] !== x || $[1] !== y || $[2] !== z) {
+  if (!Object.is($[0], x) || !Object.is($[1], y) || !Object.is($[2], z)) {
     t0 = { x, y, z };
     $[0] = x;
     $[1] = y;

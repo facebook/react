@@ -57,7 +57,7 @@ function useFoo(cond) {
 
   const derived4 = (Math.min(0, -1) ?? cond) ? 1 : 2;
   let t2;
-  if ($[2] !== derived2 || $[3] !== derived4) {
+  if (!Object.is($[2], derived2) || !Object.is($[3], derived4)) {
     t2 = [derived1, derived2, derived3, derived4];
     $[2] = derived2;
     $[3] = derived4;

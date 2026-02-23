@@ -25,7 +25,7 @@ function Component(props) {
 
   const t0 = a[props.a] + 1;
   let t1;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     t1 = bar(t0);
     $[0] = t0;
     $[1] = t1;

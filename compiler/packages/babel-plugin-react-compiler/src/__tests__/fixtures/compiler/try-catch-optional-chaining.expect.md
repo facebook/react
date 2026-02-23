@@ -36,7 +36,7 @@ function Foo(t0) {
   const { json } = t0;
   try {
     let t1;
-    if ($[0] !== json) {
+    if (!Object.is($[0], json)) {
       t1 = JSON.parse(json)?.foo;
       $[0] = json;
       $[1] = t1;
@@ -45,7 +45,7 @@ function Foo(t0) {
     }
     const foo = t1;
     let t2;
-    if ($[2] !== foo) {
+    if (!Object.is($[2], foo)) {
       t2 = <span>{foo}</span>;
       $[2] = foo;
       $[3] = t2;

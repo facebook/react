@@ -45,7 +45,7 @@ function useFoo(t0) {
     throw new Error("throw with error!");
   }
   let x;
-  if ($[0] !== input.a.b) {
+  if (!Object.is($[0], input.a.b)) {
     x = [];
     arrayPush(x, input.a.b);
     $[0] = input.a.b;

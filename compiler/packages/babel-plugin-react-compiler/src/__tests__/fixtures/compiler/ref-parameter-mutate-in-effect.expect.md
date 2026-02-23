@@ -28,7 +28,7 @@ import { useEffect } from "react";
 function Foo(props, ref) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== ref) {
+  if (!Object.is($[0], ref)) {
     t0 = () => {
       ref.current = 2;
     };
@@ -46,7 +46,7 @@ function Foo(props, ref) {
   }
   useEffect(t0, t1);
   let t2;
-  if ($[3] !== props.bar) {
+  if (!Object.is($[3], props.bar)) {
     t2 = <div>{props.bar}</div>;
     $[3] = props.bar;
     $[4] = t2;

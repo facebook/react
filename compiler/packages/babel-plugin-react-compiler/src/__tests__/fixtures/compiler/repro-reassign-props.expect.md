@@ -25,7 +25,7 @@ import { Stringify, useIdentity } from "shared-runtime";
 function Component(t0, ref) {
   const $ = _c(7);
   let props;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     let { other, ...t1 } = t0;
     props = t1;
     $[0] = t0;
@@ -34,7 +34,7 @@ function Component(t0, ref) {
     props = $[1];
   }
   let t1;
-  if ($[2] !== props || $[3] !== ref) {
+  if (!Object.is($[2], props) || !Object.is($[3], ref)) {
     t1 = [props, ref];
     $[2] = props;
     $[3] = ref;
@@ -44,7 +44,7 @@ function Component(t0, ref) {
   }
   [props, ref] = useIdentity(t1);
   let t2;
-  if ($[5] !== props) {
+  if (!Object.is($[5], props)) {
     t2 = <Stringify props={props} />;
     $[5] = props;
     $[6] = t2;

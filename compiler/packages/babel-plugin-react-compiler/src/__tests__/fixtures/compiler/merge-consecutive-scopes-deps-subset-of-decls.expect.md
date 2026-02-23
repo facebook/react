@@ -36,7 +36,7 @@ function Component() {
   const $ = _c(2);
   const [count, setCount] = useState(0);
   let t0;
-  if ($[0] !== count) {
+  if (!Object.is($[0], count)) {
     t0 = (
       <div>
         <button onClick={() => setCount(count - 1)}>Decrement</button>

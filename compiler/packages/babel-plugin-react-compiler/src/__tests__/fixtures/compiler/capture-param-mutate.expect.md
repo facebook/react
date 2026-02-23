@@ -49,7 +49,7 @@ import { c as _c } from "react/compiler-runtime";
 function getNativeLogFunction(level) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== level) {
+  if (!Object.is($[0], level)) {
     t0 = function () {
       let str;
       if (arguments.length === 1 && typeof arguments[0] === "string") {

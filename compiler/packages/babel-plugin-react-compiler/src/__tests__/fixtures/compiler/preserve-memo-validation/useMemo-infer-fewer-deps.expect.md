@@ -29,7 +29,7 @@ import { useMemo } from "react";
 function useFoo(a, b) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t0 = [a];
     $[0] = a;
     $[1] = t0;

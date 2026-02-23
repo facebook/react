@@ -41,7 +41,7 @@ function useFoo(t0) {
   const { input, cond } = t0;
   let t1;
   let x;
-  if ($[0] !== cond || $[1] !== input) {
+  if (!Object.is($[0], cond) || !Object.is($[1], input)) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       x = [];
@@ -50,7 +50,7 @@ function useFoo(t0) {
         break bb0;
       }
       let t2;
-      if ($[4] !== input.a.b) {
+      if (!Object.is($[4], input.a.b)) {
         t2 = identity(input.a.b);
         $[4] = input.a.b;
         $[5] = t2;

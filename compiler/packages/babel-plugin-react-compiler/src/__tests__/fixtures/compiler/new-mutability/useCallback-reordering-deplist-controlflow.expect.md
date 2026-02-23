@@ -44,7 +44,7 @@ function Foo(t0) {
   const $ = _c(10);
   const { arr1, arr2, foo } = t0;
   let t1;
-  if ($[0] !== arr1) {
+  if (!Object.is($[0], arr1)) {
     t1 = [arr1];
     $[0] = arr1;
     $[1] = t1;
@@ -54,7 +54,7 @@ function Foo(t0) {
   const x = t1;
   let getVal1;
   let t2;
-  if ($[2] !== arr2 || $[3] !== foo || $[4] !== x) {
+  if (!Object.is($[2], arr2) || !Object.is($[3], foo) || !Object.is($[4], x)) {
     let y = [];
     getVal1 = _temp;
     t2 = () => [y];
@@ -70,7 +70,7 @@ function Foo(t0) {
   }
   const getVal2 = t2;
   let t3;
-  if ($[7] !== getVal1 || $[8] !== getVal2) {
+  if (!Object.is($[7], getVal1) || !Object.is($[8], getVal2)) {
     t3 = <Stringify val1={getVal1} val2={getVal2} shouldInvokeFns={true} />;
     $[7] = getVal1;
     $[8] = getVal2;

@@ -28,7 +28,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo(props) {
   const $ = _c(4);
   let x;
-  if ($[0] !== props.bar) {
+  if (!Object.is($[0], props.bar)) {
     x = [];
     x.push(props.bar);
     $[0] = props.bar;
@@ -37,7 +37,7 @@ function foo(props) {
     x = $[1];
   }
   if (props.cond) {
-    if ($[2] !== props.foo) {
+    if (!Object.is($[2], props.foo)) {
       x = [];
       x.push(props.foo);
       $[2] = props.foo;

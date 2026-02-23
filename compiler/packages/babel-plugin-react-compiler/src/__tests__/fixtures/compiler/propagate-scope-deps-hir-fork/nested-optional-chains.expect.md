@@ -114,7 +114,7 @@ function useFoo(t0) {
   const $ = _c(15);
   const { prop1, prop2, prop3, prop4, prop5, prop6 } = t0;
   let t1;
-  if ($[0] !== prop1?.value) {
+  if (!Object.is($[0], prop1?.value)) {
     t1 = identity(prop1?.value)?.toString();
     $[0] = prop1?.value;
     $[1] = t1;
@@ -123,7 +123,7 @@ function useFoo(t0) {
   }
   const x = t1;
   let t2;
-  if ($[2] !== prop2?.inner.value) {
+  if (!Object.is($[2], prop2?.inner.value)) {
     t2 = identity(prop2?.inner.value)?.toString();
     $[2] = prop2?.inner.value;
     $[3] = t2;
@@ -132,7 +132,7 @@ function useFoo(t0) {
   }
   const y = t2;
   let t3;
-  if ($[4] !== prop3 || $[5] !== prop4?.inner) {
+  if (!Object.is($[4], prop3) || !Object.is($[5], prop4?.inner)) {
     t3 = prop3?.fn(prop4?.inner.value).toString();
     $[4] = prop3;
     $[5] = prop4?.inner;
@@ -142,7 +142,7 @@ function useFoo(t0) {
   }
   const z = t3;
   let t4;
-  if ($[7] !== prop5 || $[8] !== prop6?.inner) {
+  if (!Object.is($[7], prop5) || !Object.is($[8], prop6?.inner)) {
     t4 = prop5?.fn(prop6?.inner.value)?.toString();
     $[7] = prop5;
     $[8] = prop6?.inner;
@@ -152,7 +152,12 @@ function useFoo(t0) {
   }
   const zz = t4;
   let t5;
-  if ($[10] !== x || $[11] !== y || $[12] !== z || $[13] !== zz) {
+  if (
+    !Object.is($[10], x) ||
+    !Object.is($[11], y) ||
+    !Object.is($[12], z) ||
+    !Object.is($[13], zz)
+  ) {
     t5 = [x, y, z, zz];
     $[10] = x;
     $[11] = y;

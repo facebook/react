@@ -47,7 +47,7 @@ function useFoo(t0) {
   const $ = _c(10);
   const { value, cond } = t0;
   let x;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     x = makeObject_Primitives();
     if (cond) {
       setPropertyByKey(x, "a", null);
@@ -60,7 +60,7 @@ function useFoo(t0) {
     x = $[1];
   }
   let y;
-  if ($[2] !== cond || $[3] !== x) {
+  if (!Object.is($[2], cond) || !Object.is($[3], x)) {
     y = [];
     if (!cond) {
       y.push(x.a.b);
@@ -71,7 +71,7 @@ function useFoo(t0) {
   } else {
     y = $[4];
   }
-  if ($[5] !== value) {
+  if (!Object.is($[5], value)) {
     x = makeObject_Primitives();
     setPropertyByKey(x, "a", { b: value });
     $[5] = value;
@@ -80,7 +80,7 @@ function useFoo(t0) {
     x = $[6];
   }
   let t1;
-  if ($[7] !== x.a.b || $[8] !== y) {
+  if (!Object.is($[7], x.a.b) || !Object.is($[8], y)) {
     t1 = [y, x.a.b];
     $[7] = x.a.b;
     $[8] = y;

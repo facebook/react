@@ -60,7 +60,7 @@ function Test1() {
   const $ = _c(5);
   const [expire] = useState(5);
   let onClick;
-  if ($[0] !== expire) {
+  if (!Object.is($[0], expire)) {
     onClick = () => {
       console.log("isExpired", isExpired);
     };
@@ -72,7 +72,7 @@ function Test1() {
     onClick = $[1];
   }
   let t0;
-  if ($[2] !== expire || $[3] !== onClick) {
+  if (!Object.is($[2], expire) || !Object.is($[3], onClick)) {
     t0 = <div onClick={onClick}>{expire}</div>;
     $[2] = expire;
     $[3] = onClick;

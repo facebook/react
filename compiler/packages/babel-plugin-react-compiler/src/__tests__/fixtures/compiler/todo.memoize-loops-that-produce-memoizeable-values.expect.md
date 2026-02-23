@@ -32,14 +32,18 @@ function useHook(nodeID, condition) {
 
   let value;
   let t0;
-  if ($[0] !== node?.fields) {
+  if (!Object.is($[0], node?.fields)) {
     t0 = Object.keys(node?.fields ?? {});
     $[0] = node?.fields;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  if ($[2] !== condition || $[3] !== node || $[4] !== t0) {
+  if (
+    !Object.is($[2], condition) ||
+    !Object.is($[3], node) ||
+    !Object.is($[4], t0)
+  ) {
     for (const key of t0) {
       if (condition) {
         value = new Class(node.fields?.[field]);

@@ -24,7 +24,7 @@ let someGlobal = {};
 function component(a) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t0 = { a, someGlobal };
     $[0] = a;
     $[1] = t0;

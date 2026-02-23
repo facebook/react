@@ -27,7 +27,7 @@ function Component(t0) {
   const { something } = t0;
   const Foo = something.StaticText1;
   let t1;
-  if ($[0] !== Foo) {
+  if (!Object.is($[0], Foo)) {
     t1 = () => <Foo />;
     $[0] = Foo;
     $[1] = t1;

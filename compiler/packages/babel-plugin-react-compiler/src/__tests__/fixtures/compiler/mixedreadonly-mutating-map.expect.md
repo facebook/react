@@ -117,7 +117,7 @@ function Component(t0) {
   const count = jsx.length;
   identity(count);
   let t1;
-  if ($[0] !== count || $[1] !== x) {
+  if (!Object.is($[0], count) || !Object.is($[1], x)) {
     t1 = <Stringify x={x} count={count} />;
     $[0] = count;
     $[1] = x;
@@ -126,7 +126,7 @@ function Component(t0) {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== jsx[0] || $[4] !== t1) {
+  if (!Object.is($[3], jsx[0]) || !Object.is($[4], t1)) {
     t2 = (
       <>
         {t1}

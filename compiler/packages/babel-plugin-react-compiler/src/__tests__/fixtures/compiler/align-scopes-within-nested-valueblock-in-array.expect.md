@@ -52,7 +52,7 @@ function Foo(t0) {
   const $ = _c(3);
   const { cond1, cond2 } = t0;
   let t1;
-  if ($[0] !== cond1 || $[1] !== cond2) {
+  if (!Object.is($[0], cond1) || !Object.is($[1], cond2)) {
     const arr = makeArray({ a: 2 }, 2, []);
     t1 = cond1 ? (
       <>

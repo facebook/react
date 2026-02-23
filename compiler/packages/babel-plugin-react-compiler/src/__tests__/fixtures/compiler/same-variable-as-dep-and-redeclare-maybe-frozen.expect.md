@@ -54,7 +54,7 @@ import { c as _c } from "react/compiler-runtime"; // note: comments are for the 
 function foo(props) {
   const $ = _c(16);
   let x;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     x = [];
     x.push(props.a);
     $[0] = props.a;
@@ -63,7 +63,7 @@ function foo(props) {
     x = $[1];
   }
   let t0;
-  if ($[2] !== props.showHeader || $[3] !== x) {
+  if (!Object.is($[2], props.showHeader) || !Object.is($[3], x)) {
     t0 = props.showHeader ? <div>{x}</div> : null;
     $[2] = props.showHeader;
     $[3] = x;
@@ -73,7 +73,11 @@ function foo(props) {
   }
   const header = t0;
   let y;
-  if ($[5] !== props.b || $[6] !== props.c || $[7] !== x) {
+  if (
+    !Object.is($[5], props.b) ||
+    !Object.is($[6], props.c) ||
+    !Object.is($[7], x)
+  ) {
     y = [x];
     x = [];
     y.push(props.b);
@@ -88,7 +92,7 @@ function foo(props) {
     x = $[9];
   }
   let t1;
-  if ($[10] !== x || $[11] !== y) {
+  if (!Object.is($[10], x) || !Object.is($[11], y)) {
     t1 = (
       <div>
         {x}
@@ -103,7 +107,7 @@ function foo(props) {
   }
   const content = t1;
   let t2;
-  if ($[13] !== content || $[14] !== header) {
+  if (!Object.is($[13], content) || !Object.is($[14], header)) {
     t2 = (
       <>
         {header}

@@ -52,7 +52,7 @@ function Component(t0) {
   const $ = _c(11);
   const { x } = t0;
   let t1;
-  if ($[0] !== x.y) {
+  if (!Object.is($[0], x.y)) {
     t1 = identity({ callback: () => identity(x.y.z) });
     $[0] = x.y;
     $[1] = t1;
@@ -61,7 +61,7 @@ function Component(t0) {
   }
   const object = t1;
   let t2;
-  if ($[2] !== object) {
+  if (!Object.is($[2], object)) {
     t2 = object.callback();
     $[2] = object;
     $[3] = t2;
@@ -69,7 +69,7 @@ function Component(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t2) {
+  if (!Object.is($[4], t2)) {
     t3 = [t2];
     $[4] = t2;
     $[5] = t3;
@@ -78,7 +78,7 @@ function Component(t0) {
   }
   const result = t3;
   let t4;
-  if ($[6] !== x.y) {
+  if (!Object.is($[6], x.y)) {
     t4 = [x.y];
     $[6] = x.y;
     $[7] = t4;
@@ -86,7 +86,7 @@ function Component(t0) {
     t4 = $[7];
   }
   let t5;
-  if ($[8] !== result || $[9] !== t4) {
+  if (!Object.is($[8], result) || !Object.is($[9], t4)) {
     t5 = <ValidateMemoization inputs={t4} output={result} />;
     $[8] = result;
     $[9] = t4;

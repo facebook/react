@@ -40,7 +40,7 @@ function useFoo(t0) {
   const $ = _c(3);
   const { cond, value } = t0;
   let items;
-  if ($[0] !== cond || $[1] !== value) {
+  if (!Object.is($[0], cond) || !Object.is($[1], value)) {
     bb0: {
       items = [];
 

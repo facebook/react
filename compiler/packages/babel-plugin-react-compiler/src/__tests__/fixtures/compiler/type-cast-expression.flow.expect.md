@@ -27,7 +27,7 @@ type Foo = { bar: string };
 function Component(props) {
   const $ = _c(2);
   let y;
-  if ($[0] !== props.bar) {
+  if (!Object.is($[0], props.bar)) {
     const x = { bar: props.bar };
     y = (x: Foo);
     y.bar = "hello";

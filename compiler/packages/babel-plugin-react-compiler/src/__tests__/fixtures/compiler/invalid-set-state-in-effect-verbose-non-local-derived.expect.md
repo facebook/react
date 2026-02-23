@@ -32,7 +32,7 @@ function Child(t0) {
   const [fullName, setFullName] = useState("");
   let t1;
   let t2;
-  if ($[0] !== firstName || $[1] !== lastName) {
+  if (!Object.is($[0], firstName) || !Object.is($[1], lastName)) {
     t1 = () => {
       setFullName(firstName + " " + lastName);
     };
@@ -47,7 +47,7 @@ function Child(t0) {
   }
   useEffect(t1, t2);
   let t3;
-  if ($[4] !== fullName) {
+  if (!Object.is($[4], fullName)) {
     t3 = <div>{fullName}</div>;
     $[4] = fullName;
     $[5] = t3;

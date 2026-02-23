@@ -77,7 +77,7 @@ export function useCustomHook(src) {
   const destroyed = useRef(false);
   const getItem = _temp;
   let t1;
-  if ($[1] !== src) {
+  if (!Object.is($[1], src)) {
     t1 = () => {
       if (destroyed.current) {
         return;
@@ -92,7 +92,7 @@ export function useCustomHook(src) {
   }
   const getItemEvent = useEffectEvent(t1);
   let t2;
-  if ($[3] !== getItemEvent) {
+  if (!Object.is($[3], getItemEvent)) {
     t2 = () => {
       destroyed.current = false;
       getItemEvent();

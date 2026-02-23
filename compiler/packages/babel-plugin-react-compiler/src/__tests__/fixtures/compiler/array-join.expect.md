@@ -29,7 +29,7 @@ function Component(props) {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== props.value) {
+  if (!Object.is($[2], props.value)) {
     t2 = [t0, t1, props.value];
     $[2] = props.value;
     $[3] = t2;
@@ -40,7 +40,7 @@ function Component(props) {
   const y = x.join(_temp);
   foo(y);
   let t3;
-  if ($[4] !== x || $[5] !== y) {
+  if (!Object.is($[4], x) || !Object.is($[5], y)) {
     t3 = [x, y];
     $[4] = x;
     $[5] = y;

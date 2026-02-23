@@ -26,7 +26,7 @@ function Component(props) {
   const $ = _c(11);
   let a;
   let t0;
-  if ($[0] !== props.a || $[1] !== props.b) {
+  if (!Object.is($[0], props.a) || !Object.is($[1], props.b)) {
     a = [props.a, props.b, "hello"];
     t0 = a.push(42);
     $[0] = props.a;
@@ -39,7 +39,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[4] !== a || $[5] !== props.c) {
+  if (!Object.is($[4], a) || !Object.is($[5], props.c)) {
     t1 = a.at(props.c);
     $[4] = a;
     $[5] = props.c;
@@ -49,7 +49,7 @@ function Component(props) {
   }
   const y = t1;
   let t2;
-  if ($[7] !== a || $[8] !== x || $[9] !== y) {
+  if (!Object.is($[7], a) || !Object.is($[8], x) || !Object.is($[9], y)) {
     t2 = { a, x, y };
     $[7] = a;
     $[8] = x;

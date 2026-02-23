@@ -36,7 +36,7 @@ import { CONST_STRING0 } from "shared-runtime";
 function useHook(cond) {
   const $ = _c(2);
   let log;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     log = [];
     switch (CONST_STRING0) {
       case CONST_STRING0: {

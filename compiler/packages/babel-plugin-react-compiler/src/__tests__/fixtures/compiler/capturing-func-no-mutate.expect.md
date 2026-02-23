@@ -34,10 +34,10 @@ function Component(t0) {
   const $ = _c(5);
   const { a, b } = t0;
   let z;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     z = { a };
     let t1;
-    if ($[3] !== b) {
+    if (!Object.is($[3], b)) {
       t1 = { b };
       $[3] = b;
       $[4] = t1;

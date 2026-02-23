@@ -25,7 +25,7 @@ import { c as _c } from "react/compiler-runtime";
 function useHook(a, b) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t0 = { a };
     $[0] = a;
     $[1] = t0;
@@ -35,7 +35,7 @@ function useHook(a, b) {
   const z = t0;
   const y = b;
   let t1;
-  if ($[2] !== y || $[3] !== z) {
+  if (!Object.is($[2], y) || !Object.is($[3], z)) {
     t1 = function () {
       if (y) {
         maybeMutate(z);

@@ -36,7 +36,7 @@ function Component(props) {
     t0 = $[0];
   }
   let t1;
-  if ($[1] !== props.value) {
+  if (!Object.is($[1], props.value)) {
     t1 = identity([props.value]);
     $[1] = props.value;
     $[2] = t1;
@@ -44,7 +44,7 @@ function Component(props) {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== t1) {
+  if (!Object.is($[3], t1)) {
     t2 = { [t0]: t1 };
     $[3] = t1;
     $[4] = t2;

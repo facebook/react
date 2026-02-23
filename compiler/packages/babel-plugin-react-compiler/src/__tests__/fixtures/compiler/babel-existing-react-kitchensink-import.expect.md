@@ -32,7 +32,7 @@ function Component(props) {
   const $ = _c(4);
   const [x] = useState(0);
   let t0;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     t0 = calculateExpensiveNumber(x);
     $[0] = x;
     $[1] = t0;
@@ -41,7 +41,7 @@ function Component(props) {
   }
   const expensiveNumber = t0;
   let t1;
-  if ($[2] !== expensiveNumber) {
+  if (!Object.is($[2], expensiveNumber)) {
     t1 = <div>{expensiveNumber}</div>;
     $[2] = expensiveNumber;
     $[3] = t1;
@@ -55,7 +55,7 @@ function Component2(props) {
   const $ = _c(4);
   const [x] = useState(0);
   let t0;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     t0 = calculateExpensiveNumber(x);
     $[0] = x;
     $[1] = t0;
@@ -64,7 +64,7 @@ function Component2(props) {
   }
   const expensiveNumber = t0;
   let t1;
-  if ($[2] !== expensiveNumber) {
+  if (!Object.is($[2], expensiveNumber)) {
     t1 = <div>{expensiveNumber}</div>;
     $[2] = expensiveNumber;
     $[3] = t1;

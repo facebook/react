@@ -53,7 +53,7 @@ function Component() {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== state) {
+  if (!Object.is($[2], state)) {
     t2 = (
       <>
         Count {state}

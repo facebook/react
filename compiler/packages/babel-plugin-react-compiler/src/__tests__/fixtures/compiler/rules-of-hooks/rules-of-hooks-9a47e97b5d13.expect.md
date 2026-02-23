@@ -20,7 +20,7 @@ const FancyButton = React.forwardRef(function (props, ref) {
   const $ = _c(3);
   useHook();
   let t0;
-  if ($[0] !== props || $[1] !== ref) {
+  if (!Object.is($[0], props) || !Object.is($[1], ref)) {
     t0 = <button {...props} ref={ref} />;
     $[0] = props;
     $[1] = ref;

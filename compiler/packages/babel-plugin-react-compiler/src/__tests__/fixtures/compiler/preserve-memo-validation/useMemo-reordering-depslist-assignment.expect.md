@@ -33,7 +33,7 @@ import { useMemo } from "react";
 function useFoo(arr1, arr2) {
   const $ = _c(7);
   let t0;
-  if ($[0] !== arr1) {
+  if (!Object.is($[0], arr1)) {
     t0 = [arr1];
     $[0] = arr1;
     $[1] = t0;
@@ -42,7 +42,7 @@ function useFoo(arr1, arr2) {
   }
   const x = t0;
   let y;
-  if ($[2] !== arr2 || $[3] !== x) {
+  if (!Object.is($[2], arr2) || !Object.is($[3], x)) {
     (y = x.concat(arr2)), y;
     $[2] = arr2;
     $[3] = x;
@@ -51,7 +51,7 @@ function useFoo(arr1, arr2) {
     y = $[4];
   }
   let t1;
-  if ($[5] !== y) {
+  if (!Object.is($[5], y)) {
     t1 = { y };
     $[5] = y;
     $[6] = t1;

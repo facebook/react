@@ -54,7 +54,7 @@ function Component(t0) {
   const $ = _c(11);
   const { a, b } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t1 = { a };
     $[0] = a;
     $[1] = t1;
@@ -62,7 +62,7 @@ function Component(t0) {
     t1 = $[1];
   }
   let x;
-  if ($[2] !== b || $[3] !== t1) {
+  if (!Object.is($[2], b) || !Object.is($[3], t1)) {
     x = [t1];
     let z;
     if (b) {
@@ -79,7 +79,7 @@ function Component(t0) {
     x = $[4];
   }
   let t2;
-  if ($[5] !== a || $[6] !== b) {
+  if (!Object.is($[5], a) || !Object.is($[6], b)) {
     t2 = [a, b];
     $[5] = a;
     $[6] = b;
@@ -88,7 +88,7 @@ function Component(t0) {
     t2 = $[7];
   }
   let t3;
-  if ($[8] !== t2 || $[9] !== x) {
+  if (!Object.is($[8], t2) || !Object.is($[9], x)) {
     t3 = <ValidateMemoization inputs={t2} output={x} />;
     $[8] = t2;
     $[9] = x;

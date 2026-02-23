@@ -39,7 +39,7 @@ function foo(a, b, c) {
   let d;
   let h;
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     [d, t0, ...h] = a;
     $[0] = a;
     $[1] = d;
@@ -53,7 +53,7 @@ function foo(a, b, c) {
   const [t1] = t0;
   let g;
   let t2;
-  if ($[4] !== t1) {
+  if (!Object.is($[4], t1)) {
     ({ e: t2, ...g } = t1);
     $[4] = t1;
     $[5] = g;
@@ -67,7 +67,7 @@ function foo(a, b, c) {
   const { m: t4 } = t3;
   let o;
   let t5;
-  if ($[7] !== t4) {
+  if (!Object.is($[7], t4)) {
     [t5, ...o] = t4;
     $[7] = t4;
     $[8] = o;
@@ -79,13 +79,13 @@ function foo(a, b, c) {
   const [n] = t5;
   let t6;
   if (
-    $[10] !== d ||
-    $[11] !== f ||
-    $[12] !== g ||
-    $[13] !== h ||
-    $[14] !== n ||
-    $[15] !== o ||
-    $[16] !== p
+    !Object.is($[10], d) ||
+    !Object.is($[11], f) ||
+    !Object.is($[12], g) ||
+    !Object.is($[13], h) ||
+    !Object.is($[14], n) ||
+    !Object.is($[15], o) ||
+    !Object.is($[16], p)
   ) {
     t6 = [d, f, g, h, n, o, p];
     $[10] = d;

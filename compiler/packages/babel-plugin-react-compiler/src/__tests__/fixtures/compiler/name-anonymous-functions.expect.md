@@ -75,7 +75,7 @@ import * as SharedRuntime from "shared-runtime";
 function Component(props) {
   const $ = _c(31);
   let t0;
-  if ($[0] !== props.named) {
+  if (!Object.is($[0], props.named)) {
     t0 = function named() {
       const inner = { "Component[named > inner]": () => props.named }[
         "Component[named > inner]"
@@ -96,7 +96,7 @@ function Component(props) {
 
   const callback = _ComponentCallback;
   let t1;
-  if ($[2] !== props.namedVariable) {
+  if (!Object.is($[2], props.namedVariable)) {
     t1 = {
       "Component[namedVariable]": function () {
         return props.namedVariable;
@@ -109,7 +109,7 @@ function Component(props) {
   }
   const namedVariable = t1;
   let t2;
-  if ($[4] !== props.methodCall) {
+  if (!Object.is($[4], props.methodCall)) {
     t2 = { "Component[SharedRuntime.identity()]": () => props.methodCall }[
       "Component[SharedRuntime.identity()]"
     ];
@@ -120,7 +120,7 @@ function Component(props) {
   }
   const methodCall = SharedRuntime.identity(t2);
   let t3;
-  if ($[6] !== props.call) {
+  if (!Object.is($[6], props.call)) {
     t3 = { "Component[identity()]": () => props.call }["Component[identity()]"];
     $[6] = props.call;
     $[7] = t3;
@@ -129,7 +129,7 @@ function Component(props) {
   }
   const call = identity(t3);
   let t4;
-  if ($[8] !== props.builtinElementAttr) {
+  if (!Object.is($[8], props.builtinElementAttr)) {
     t4 = (
       <div
         onClick={
@@ -146,7 +146,7 @@ function Component(props) {
   }
   const builtinElementAttr = t4;
   let t5;
-  if ($[10] !== props.namedElementAttr) {
+  if (!Object.is($[10], props.namedElementAttr)) {
     t5 = (
       <Stringify
         onClick={
@@ -163,7 +163,7 @@ function Component(props) {
   }
   const namedElementAttr = t5;
   let t6;
-  if ($[12] !== props.hookArgument) {
+  if (!Object.is($[12], props.hookArgument)) {
     t6 = { "Component[useIdentity()]": () => props.hookArgument }[
       "Component[useIdentity()]"
     ];
@@ -175,7 +175,7 @@ function Component(props) {
   const hookArgument = useIdentity(t6);
   let t7;
   let t8;
-  if ($[14] !== props.useEffect) {
+  if (!Object.is($[14], props.useEffect)) {
     t7 = {
       "Component[useEffect()]": () => {
         console.log(props.useEffect);
@@ -202,7 +202,7 @@ function Component(props) {
   }
   useEffect(t7, t8);
   let t9;
-  if ($[17] !== named) {
+  if (!Object.is($[17], named)) {
     t9 = named();
     $[17] = named;
     $[18] = t9;
@@ -211,7 +211,7 @@ function Component(props) {
   }
   const t10 = callback();
   let t11;
-  if ($[19] !== namedVariable) {
+  if (!Object.is($[19], namedVariable)) {
     t11 = namedVariable();
     $[19] = namedVariable;
     $[20] = t11;
@@ -221,7 +221,7 @@ function Component(props) {
   const t12 = methodCall();
   const t13 = call();
   let t14;
-  if ($[21] !== hookArgument) {
+  if (!Object.is($[21], hookArgument)) {
     t14 = hookArgument();
     $[21] = hookArgument;
     $[22] = t14;
@@ -230,13 +230,13 @@ function Component(props) {
   }
   let t15;
   if (
-    $[23] !== builtinElementAttr ||
-    $[24] !== namedElementAttr ||
-    $[25] !== t11 ||
-    $[26] !== t12 ||
-    $[27] !== t13 ||
-    $[28] !== t14 ||
-    $[29] !== t9
+    !Object.is($[23], builtinElementAttr) ||
+    !Object.is($[24], namedElementAttr) ||
+    !Object.is($[25], t11) ||
+    !Object.is($[26], t12) ||
+    !Object.is($[27], t13) ||
+    !Object.is($[28], t14) ||
+    !Object.is($[29], t9)
   ) {
     t15 = (
       <>

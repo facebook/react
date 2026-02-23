@@ -21,10 +21,10 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     const x = makeFunction(props);
     let t1;
-    if ($[2] !== props.text) {
+    if (!Object.is($[2], props.text)) {
       t1 = (
         <div>
           <span>{props.text}</span>

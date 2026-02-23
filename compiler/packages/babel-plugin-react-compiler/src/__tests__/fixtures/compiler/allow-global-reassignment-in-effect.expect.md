@@ -63,7 +63,7 @@ function Component() {
 
   const t3 = String(state);
   let t4;
-  if ($[3] !== t3) {
+  if (!Object.is($[3], t3)) {
     t4 = <div>{t3}</div>;
     $[3] = t3;
     $[4] = t4;

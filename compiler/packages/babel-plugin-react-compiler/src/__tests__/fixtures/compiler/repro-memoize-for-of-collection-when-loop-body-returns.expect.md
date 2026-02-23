@@ -25,7 +25,7 @@ function useHook(nodeID, condition) {
   const graph = useContext(GraphContext);
   const node = nodeID != null ? graph[nodeID] : null;
   let t0;
-  if ($[0] !== node?.fields) {
+  if (!Object.is($[0], node?.fields)) {
     t0 = Object.keys(node?.fields ?? {});
     $[0] = node?.fields;
     $[1] = t0;
@@ -33,7 +33,11 @@ function useHook(nodeID, condition) {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== condition || $[3] !== node || $[4] !== t0) {
+  if (
+    !Object.is($[2], condition) ||
+    !Object.is($[3], node) ||
+    !Object.is($[4], t0)
+  ) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: for (const key of t0) {
       if (condition) {

@@ -41,7 +41,7 @@ function Component(props) {
   const $ = _c(5);
   const Foo = useContext(FooContext);
   let t0;
-  if ($[0] !== Foo.current) {
+  if (!Object.is($[0], Foo.current)) {
     t0 = () => {
       mutate(Foo.current);
     };
@@ -52,7 +52,7 @@ function Component(props) {
   }
   const onClick = t0;
   let t1;
-  if ($[2] !== onClick || $[3] !== props.children) {
+  if (!Object.is($[2], onClick) || !Object.is($[3], props.children)) {
     t1 = <div onClick={onClick}>{props.children}</div>;
     $[2] = onClick;
     $[3] = props.children;

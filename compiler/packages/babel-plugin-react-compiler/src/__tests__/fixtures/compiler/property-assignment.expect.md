@@ -20,7 +20,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.p0) {
+  if (!Object.is($[0], props.p0)) {
     const x = {};
     const y = [];
     x.y = y;

@@ -51,11 +51,11 @@ function Component(props) {
     props.post,
   );
   let t0;
-  if ($[0] !== post) {
+  if (!Object.is($[0], post)) {
     const allUrls = [];
     const { media, comments, urls } = post;
     let t1;
-    if ($[2] !== comments.length) {
+    if (!Object.is($[2], comments.length)) {
       t1 = (e) => {
         if (!comments.length) {
           return;

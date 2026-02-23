@@ -49,7 +49,7 @@ function Component(statusName) {
   let font;
   let t0;
   let text;
-  if ($[0] !== statusName) {
+  if (!Object.is($[0], statusName)) {
     const { status, text: t1 } = foo(statusName);
     text = t1;
     const { color, font: t2 } = getStyles(status);
@@ -66,7 +66,7 @@ function Component(statusName) {
   }
   const bg = t0;
   let t1;
-  if ($[4] !== text) {
+  if (!Object.is($[4], text)) {
     t1 = [text];
     $[4] = text;
     $[5] = t1;
@@ -74,7 +74,7 @@ function Component(statusName) {
     t1 = $[5];
   }
   let t2;
-  if ($[6] !== font || $[7] !== t1) {
+  if (!Object.is($[6], font) || !Object.is($[7], t1)) {
     t2 = <span className={font}>{t1}</span>;
     $[6] = font;
     $[7] = t1;
@@ -83,7 +83,7 @@ function Component(statusName) {
     t2 = $[8];
   }
   let t3;
-  if ($[9] !== bg || $[10] !== t2) {
+  if (!Object.is($[9], bg) || !Object.is($[10], t2)) {
     t3 = <div className={bg}>{t2}</div>;
     $[9] = bg;
     $[10] = t2;
@@ -99,7 +99,7 @@ function foo(name) {
 
   const t0 = `${name}!`;
   let t1;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     t1 = { status: "<status>", text: t0 };
     $[0] = t0;
     $[1] = t1;

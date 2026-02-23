@@ -34,7 +34,7 @@ function Foo(props, ref) {
   const $ = _c(7);
   let t0;
   let value;
-  if ($[0] !== ref) {
+  if (!Object.is($[0], ref)) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       value = {};
@@ -58,7 +58,7 @@ function Foo(props, ref) {
   }
   if (CONST_TRUE) {
     let t1;
-    if ($[3] !== ref) {
+    if (!Object.is($[3], ref)) {
       t1 = identity(ref);
       $[3] = ref;
       $[4] = t1;
@@ -66,7 +66,7 @@ function Foo(props, ref) {
       t1 = $[4];
     }
     let t2;
-    if ($[5] !== t1) {
+    if (!Object.is($[5], t1)) {
       t2 = <Stringify ref={t1} />;
       $[5] = t1;
       $[6] = t2;

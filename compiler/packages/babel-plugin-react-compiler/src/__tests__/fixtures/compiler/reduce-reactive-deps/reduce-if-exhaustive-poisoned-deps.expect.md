@@ -36,13 +36,17 @@ function useFoo(t0) {
   const { input, inputHasAB, inputHasABC } = t0;
   let t1;
   let x;
-  if ($[0] !== input.a || $[1] !== inputHasAB || $[2] !== inputHasABC) {
+  if (
+    !Object.is($[0], input.a) ||
+    !Object.is($[1], inputHasAB) ||
+    !Object.is($[2], inputHasABC)
+  ) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       x = [];
       if (!inputHasABC) {
         let t2;
-        if ($[5] !== input.a) {
+        if (!Object.is($[5], input.a)) {
           t2 = identity(input.a);
           $[5] = input.a;
           $[6] = t2;
@@ -55,7 +59,7 @@ function useFoo(t0) {
           break bb0;
         }
         let t3;
-        if ($[7] !== input.a.b) {
+        if (!Object.is($[7], input.a.b)) {
           t3 = identity(input.a.b);
           $[7] = input.a.b;
           $[8] = t3;
@@ -65,7 +69,7 @@ function useFoo(t0) {
         x.push(t3);
       } else {
         let t2;
-        if ($[9] !== input.a.b.c) {
+        if (!Object.is($[9], input.a.b.c)) {
           t2 = identity(input.a.b.c);
           $[9] = input.a.b.c;
           $[10] = t2;

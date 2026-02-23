@@ -31,7 +31,7 @@ import { c as _c } from "react/compiler-runtime";
 function useHook(end) {
   const $ = _c(2);
   let log;
-  if ($[0] !== end) {
+  if (!Object.is($[0], end)) {
     log = [];
     for (let i = 0; i < end + 1; i++) {
       log.push(`${i} @A`);

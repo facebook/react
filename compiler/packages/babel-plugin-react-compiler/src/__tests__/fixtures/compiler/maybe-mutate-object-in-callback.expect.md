@@ -45,7 +45,7 @@ function Component(props) {
   }
   const onClick = t0;
   let t1;
-  if ($[1] !== props.children) {
+  if (!Object.is($[1], props.children)) {
     t1 = <Foo callback={onClick}>{props.children}</Foo>;
     $[1] = props.children;
     $[2] = t1;

@@ -28,7 +28,7 @@ function Component(_props) {
   const $ = _c(2);
   const [x] = useState(0);
   let t0;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     t0 = { x };
     $[0] = x;
     $[1] = t0;

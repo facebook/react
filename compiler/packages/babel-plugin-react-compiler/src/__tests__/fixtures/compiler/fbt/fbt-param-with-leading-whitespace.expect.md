@@ -46,9 +46,9 @@ import { identity } from "shared-runtime";
 function Component(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.count || $[1] !== props.option) {
+  if (!Object.is($[0], props.count) || !Object.is($[1], props.option)) {
     let t1;
-    if ($[3] !== props.count) {
+    if (!Object.is($[3], props.count)) {
       t1 = identity(props.count);
       $[3] = props.count;
       $[4] = t1;

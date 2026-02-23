@@ -25,7 +25,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let x;
-  if ($[0] !== props.x) {
+  if (!Object.is($[0], props.x)) {
     x = [props.x];
 
     x[0] = x[0] * 2;

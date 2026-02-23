@@ -32,7 +32,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a, b) {
   const $ = _c(5);
   let x;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     x = [];
     x.push(a);
     $[0] = a;
@@ -41,7 +41,7 @@ function foo(a, b) {
     x = $[1];
   }
   let y;
-  if ($[2] !== b || $[3] !== x) {
+  if (!Object.is($[2], b) || !Object.is($[3], x)) {
     y = [];
     if (x.length) {
       y.push(x);

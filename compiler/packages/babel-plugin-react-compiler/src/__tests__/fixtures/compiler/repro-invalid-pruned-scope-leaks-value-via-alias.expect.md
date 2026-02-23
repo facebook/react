@@ -66,7 +66,7 @@ function MyApp(t0) {
   const z = makeObject_Primitives();
   const x = useIdentity(2);
   let t1;
-  if ($[0] !== count || $[1] !== x) {
+  if (!Object.is($[0], count) || !Object.is($[1], x)) {
     t1 = sum(x, count);
     $[0] = count;
     $[1] = x;
@@ -78,7 +78,7 @@ function MyApp(t0) {
   mutate(z);
   const z2 = z;
   let t2;
-  if ($[3] !== y || $[4] !== z2) {
+  if (!Object.is($[3], y) || !Object.is($[4], z2)) {
     t2 = [y, z2];
     $[3] = y;
     $[4] = z2;

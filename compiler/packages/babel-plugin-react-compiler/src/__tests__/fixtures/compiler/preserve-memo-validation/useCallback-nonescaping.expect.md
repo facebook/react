@@ -46,7 +46,7 @@ function Component(t0) {
     return children;
   }
   let t1;
-  if ($[0] !== children) {
+  if (!Object.is($[0], children)) {
     t1 = <div>{children}</div>;
     $[0] = children;
     $[1] = t1;

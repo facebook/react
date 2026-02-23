@@ -51,7 +51,7 @@ function Component(t0) {
   const $ = _c(5);
   const { prop1, prop2 } = t0;
   let z;
-  if ($[0] !== prop1 || $[1] !== prop2) {
+  if (!Object.is($[0], prop1) || !Object.is($[1], prop2)) {
     let x = [{ value: prop1 }];
     while (x.length < 2) {
       arrayPush(x, { value: prop2 });
@@ -71,7 +71,7 @@ function Component(t0) {
     z = $[2];
   }
   let t1;
-  if ($[3] !== z) {
+  if (!Object.is($[3], z)) {
     t1 = <Stringify z={z} />;
     $[3] = z;
     $[4] = t1;

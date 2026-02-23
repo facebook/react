@@ -37,7 +37,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(4);
   let x;
-  if ($[0] !== props.input) {
+  if (!Object.is($[0], props.input)) {
     x = [];
     const f = (arg) => {
       const y = x;
@@ -51,7 +51,7 @@ function Component(props) {
     x = $[1];
   }
   let t0;
-  if ($[2] !== x[0]) {
+  if (!Object.is($[2], x[0])) {
     t0 = [x[0]];
     $[2] = x[0];
     $[3] = t0;

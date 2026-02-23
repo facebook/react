@@ -58,7 +58,7 @@ const FooContext = React.createContext(null);
 function Component(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.cond) {
+  if (!Object.is($[0], props.cond)) {
     t0 = <Inner cond={props.cond} />;
     $[0] = props.cond;
     $[1] = t0;
@@ -66,7 +66,7 @@ function Component(props) {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== props.value || $[3] !== t0) {
+  if (!Object.is($[2], props.value) || !Object.is($[3], t0)) {
     t1 = <FooContext.Provider value={props.value}>{t0}</FooContext.Provider>;
     $[2] = props.value;
     $[3] = t0;
@@ -86,7 +86,7 @@ function Inner(props) {
 
   input;
   let t0;
-  if ($[0] !== input) {
+  if (!Object.is($[0], input)) {
     t0 = [input];
     $[0] = input;
     $[1] = t0;
@@ -95,7 +95,7 @@ function Inner(props) {
   }
   const output = t0;
   let t1;
-  if ($[2] !== input) {
+  if (!Object.is($[2], input)) {
     t1 = [input];
     $[2] = input;
     $[3] = t1;
@@ -103,7 +103,7 @@ function Inner(props) {
     t1 = $[3];
   }
   let t2;
-  if ($[4] !== output || $[5] !== t1) {
+  if (!Object.is($[4], output) || !Object.is($[5], t1)) {
     t2 = <ValidateMemoization inputs={t1} output={output} />;
     $[4] = output;
     $[5] = t1;

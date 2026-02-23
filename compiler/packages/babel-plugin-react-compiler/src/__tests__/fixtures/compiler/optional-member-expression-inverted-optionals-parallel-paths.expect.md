@@ -28,7 +28,7 @@ function Component(props) {
   x$0.push(props?.a.b?.c.d?.e);
   x$0.push(props.a?.b.c?.d.e);
   let t0;
-  if ($[0] !== props.a.b.c.d.e) {
+  if (!Object.is($[0], props.a.b.c.d.e)) {
     t0 = <ValidateMemoization inputs={[props.a.b.c.d.e]} output={x} />;
     $[0] = props.a.b.c.d.e;
     $[1] = t0;

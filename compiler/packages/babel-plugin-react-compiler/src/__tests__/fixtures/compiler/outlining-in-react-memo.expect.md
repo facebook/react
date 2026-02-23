@@ -37,7 +37,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     t0 = <View {...props} />;
     $[0] = props;
     $[1] = t0;
@@ -51,7 +51,7 @@ const View = React.memo((t0) => {
   const $ = _c(4);
   const { items } = t0;
   let t1;
-  if ($[0] !== items) {
+  if (!Object.is($[0], items)) {
     t1 = items.map(_temp);
     $[0] = items;
     $[1] = t1;
@@ -59,7 +59,7 @@ const View = React.memo((t0) => {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== t1) {
+  if (!Object.is($[2], t1)) {
     t2 = <ul>{t1}</ul>;
     $[2] = t1;
     $[3] = t2;

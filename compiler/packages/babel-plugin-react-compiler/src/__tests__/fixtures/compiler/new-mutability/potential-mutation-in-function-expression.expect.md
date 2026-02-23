@@ -23,7 +23,7 @@ function Component(t0) {
   const $ = _c(9);
   const { a, b, c } = t0;
   let t1;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     t1 = [a, b];
     $[0] = a;
     $[1] = b;
@@ -33,7 +33,7 @@ function Component(t0) {
   }
   const x = t1;
   let t2;
-  if ($[3] !== c || $[4] !== x) {
+  if (!Object.is($[3], c) || !Object.is($[4], x)) {
     t2 = () => {
       maybeMutate(x);
 
@@ -47,7 +47,7 @@ function Component(t0) {
   }
   const f = t2;
   let t3;
-  if ($[6] !== f || $[7] !== x) {
+  if (!Object.is($[6], f) || !Object.is($[7], x)) {
     t3 = <Foo onClick={f} value={x} />;
     $[6] = f;
     $[7] = x;

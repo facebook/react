@@ -56,9 +56,9 @@ function Component(t0) {
   const { arr } = t0;
   const x = useX();
   let t1;
-  if ($[0] !== arr || $[1] !== x) {
+  if (!Object.is($[0], arr) || !Object.is($[1], x)) {
     let t2;
-    if ($[3] !== x) {
+    if (!Object.is($[3], x)) {
       t2 = (i, id) => {
         const T0 = _temp;
         return <T0 k={i + "i"} k1={i + "j"} k12={i + "j"} key={id} x={x} />;
@@ -76,7 +76,7 @@ function Component(t0) {
     t1 = $[2];
   }
   let t2;
-  if ($[5] !== t1) {
+  if (!Object.is($[5], t1)) {
     t2 = <>{t1}</>;
     $[5] = t1;
     $[6] = t2;
@@ -89,7 +89,7 @@ function _temp(t0) {
   const $ = _c(11);
   const { k: k, k1: k1, k12: k12, x: x } = t0;
   let t1;
-  if ($[0] !== k) {
+  if (!Object.is($[0], k)) {
     t1 = <Foo k={k} />;
     $[0] = k;
     $[1] = t1;
@@ -97,7 +97,7 @@ function _temp(t0) {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== k1) {
+  if (!Object.is($[2], k1)) {
     t2 = <Foo k={k1} />;
     $[2] = k1;
     $[3] = t2;
@@ -105,7 +105,7 @@ function _temp(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== k12) {
+  if (!Object.is($[4], k12)) {
     t3 = <Baz k1={k12} />;
     $[4] = k12;
     $[5] = t3;
@@ -113,7 +113,12 @@ function _temp(t0) {
     t3 = $[5];
   }
   let t4;
-  if ($[6] !== t1 || $[7] !== t2 || $[8] !== t3 || $[9] !== x) {
+  if (
+    !Object.is($[6], t1) ||
+    !Object.is($[7], t2) ||
+    !Object.is($[8], t3) ||
+    !Object.is($[9], x)
+  ) {
     t4 = (
       <Bar x={x}>
         {t1}
@@ -136,7 +141,7 @@ function Bar(t0) {
   const $ = _c(3);
   const { x, children } = t0;
   let t1;
-  if ($[0] !== children || $[1] !== x) {
+  if (!Object.is($[0], children) || !Object.is($[1], x)) {
     t1 = (
       <>
         {x}

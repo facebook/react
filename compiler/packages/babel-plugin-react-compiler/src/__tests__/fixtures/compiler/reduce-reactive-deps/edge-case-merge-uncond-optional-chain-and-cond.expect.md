@@ -65,7 +65,7 @@ function useFoo(t0) {
   const $ = _c(2);
   const { screen } = t0;
   let t1;
-  if ($[0] !== screen) {
+  if (!Object.is($[0], screen)) {
     t1 =
       screen?.title_text != null
         ? "(not null)"

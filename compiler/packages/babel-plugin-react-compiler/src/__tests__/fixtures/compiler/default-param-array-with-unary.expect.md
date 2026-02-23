@@ -20,7 +20,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(t0) {
   const $ = _c(2);
   let t1;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     t1 = t0 === undefined ? [-1, 1] : t0;
     $[0] = t0;
     $[1] = t1;

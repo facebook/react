@@ -31,7 +31,7 @@ const isForgetEnabled_Fixtures_result = isForgetEnabled_Fixtures();
 function Foo_withRef_optimized(props, ref) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== props || $[1] !== ref) {
+  if (!Object.is($[0], props) || !Object.is($[1], ref)) {
     t0 = <Stringify ref={ref} {...props} />;
     $[0] = props;
     $[1] = ref;

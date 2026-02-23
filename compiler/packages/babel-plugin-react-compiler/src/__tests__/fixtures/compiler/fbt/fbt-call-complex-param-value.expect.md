@@ -30,7 +30,7 @@ import { identity } from "shared-runtime";
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.name) {
+  if (!Object.is($[0], props.name)) {
     t0 = fbt._(
       "Hello, {(key) name}!",
       [fbt._param("(key) name", identity(props.name))],
@@ -43,7 +43,7 @@ function Component(props) {
   }
   const text = t0;
   let t1;
-  if ($[2] !== text) {
+  if (!Object.is($[2], text)) {
     t1 = <div>{text}</div>;
     $[2] = text;
     $[3] = t1;

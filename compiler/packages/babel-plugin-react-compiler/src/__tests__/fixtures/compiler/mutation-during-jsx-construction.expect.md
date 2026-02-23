@@ -30,7 +30,7 @@ import { identity, mutate, mutateAndReturnNewValue } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let element;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     const key = {};
     element = <div key={mutateAndReturnNewValue(key)}>{props.value}</div>;
 

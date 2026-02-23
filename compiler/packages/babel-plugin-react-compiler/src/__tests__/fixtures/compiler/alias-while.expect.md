@@ -30,7 +30,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo(cond) {
   const $ = _c(2);
   let a;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     a = {};
     let b = {};
     let c = {};

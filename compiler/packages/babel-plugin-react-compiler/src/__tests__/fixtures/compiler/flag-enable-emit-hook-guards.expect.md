@@ -72,7 +72,7 @@ function Component(t0) {
     print(value, state);
     let t2;
     let t3;
-    if ($[1] !== state) {
+    if (!Object.is($[1], state)) {
       t2 = () => {
         if (state === 4) {
           setState(5);

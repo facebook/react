@@ -38,7 +38,7 @@ function Component(t0) {
   const { obj, arg } = t0;
   try {
     let t1;
-    if ($[0] !== arg || $[1] !== obj) {
+    if (!Object.is($[0], arg) || !Object.is($[1], obj)) {
       t1 = obj?.method?.(arg.value);
       $[0] = arg;
       $[1] = obj;
@@ -49,7 +49,7 @@ function Component(t0) {
     const result = t1;
     const t2 = result ?? "no result";
     let t3;
-    if ($[3] !== t2) {
+    if (!Object.is($[3], t2)) {
       t3 = <span>{t2}</span>;
       $[3] = t2;
       $[4] = t3;

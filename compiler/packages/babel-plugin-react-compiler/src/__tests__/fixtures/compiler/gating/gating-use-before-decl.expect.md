@@ -34,7 +34,7 @@ function Foo_optimized(t0) {
   const $ = _c(3);
   const { prop1, prop2 } = t0;
   let t1;
-  if ($[0] !== prop1 || $[1] !== prop2) {
+  if (!Object.is($[0], prop1) || !Object.is($[1], prop2)) {
     t1 = <Stringify prop1={prop1} prop2={prop2} />;
     $[0] = prop1;
     $[1] = prop2;

@@ -34,7 +34,7 @@ export const Component = (t0) => {
   const theme = t1 === undefined ? THEME_MAP.get("default") : t1;
   const t2 = `theme-${theme}`;
   let t3;
-  if ($[0] !== t2) {
+  if (!Object.is($[0], t2)) {
     t3 = <div className={t2}>User preferences</div>;
     $[0] = t2;
     $[1] = t3;

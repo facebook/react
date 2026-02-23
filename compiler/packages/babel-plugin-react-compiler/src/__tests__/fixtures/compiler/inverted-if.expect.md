@@ -29,7 +29,12 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a, b, c, d) {
   const $ = _c(5);
   let y;
-  if ($[0] !== a || $[1] !== b || $[2] !== c || $[3] !== d) {
+  if (
+    !Object.is($[0], a) ||
+    !Object.is($[1], b) ||
+    !Object.is($[2], c) ||
+    !Object.is($[3], d)
+  ) {
     y = [];
     bb0: if (a) {
       if (b) {

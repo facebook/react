@@ -35,7 +35,7 @@ function useFoo(t0) {
   const $ = _c(3);
   const { o, branchCheck } = t0;
   let x;
-  if ($[0] !== branchCheck || $[1] !== o.value) {
+  if (!Object.is($[0], branchCheck) || !Object.is($[1], o.value)) {
     x = {};
     if (branchCheck) {
       setProperty(x, o.value);

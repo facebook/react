@@ -29,11 +29,11 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a, b, c) {
   const $ = _c(8);
   let x;
-  if ($[0] !== a || $[1] !== b || $[2] !== c) {
+  if (!Object.is($[0], a) || !Object.is($[1], b) || !Object.is($[2], c)) {
     x = [];
     if (a) {
       let y;
-      if ($[4] !== b) {
+      if (!Object.is($[4], b)) {
         y = [];
         y.push(b);
         $[4] = b;
@@ -42,7 +42,7 @@ function foo(a, b, c) {
         y = $[5];
       }
       let t0;
-      if ($[6] !== y) {
+      if (!Object.is($[6], y)) {
         t0 = <div>{y}</div>;
         $[6] = y;
         $[7] = t0;

@@ -44,7 +44,7 @@ import { c as _c } from "react/compiler-runtime"; // To preserve the nullthrows 
 function Component(props) {
   const $ = _c(2);
   let x;
-  if ($[0] !== props.a.b) {
+  if (!Object.is($[0], props.a.b)) {
     x = [];
     x.push(props.a?.b);
     x.push(props.a.b.c);

@@ -42,7 +42,7 @@ function Component() {
   }
   const update = t0;
   let t1;
-  if ($[1] !== count) {
+  if (!Object.is($[1], count)) {
     t1 = <button onClick={update}>{count}</button>;
     $[1] = count;
     $[2] = t1;

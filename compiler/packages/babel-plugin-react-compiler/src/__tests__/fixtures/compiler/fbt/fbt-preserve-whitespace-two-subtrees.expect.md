@@ -40,9 +40,9 @@ function Foo(t0) {
   const $ = _c(13);
   const { name1, name2 } = t0;
   let t1;
-  if ($[0] !== name1 || $[1] !== name2) {
+  if (!Object.is($[0], name1) || !Object.is($[1], name2)) {
     let t2;
-    if ($[3] !== name1) {
+    if (!Object.is($[3], name1)) {
       t2 = <b>{name1}</b>;
       $[3] = name1;
       $[4] = t2;
@@ -50,7 +50,7 @@ function Foo(t0) {
       t2 = $[4];
     }
     let t3;
-    if ($[5] !== name1 || $[6] !== t2) {
+    if (!Object.is($[5], name1) || !Object.is($[6], t2)) {
       t3 = <span key={name1}>{t2}</span>;
       $[5] = name1;
       $[6] = t2;
@@ -59,7 +59,7 @@ function Foo(t0) {
       t3 = $[7];
     }
     let t4;
-    if ($[8] !== name2) {
+    if (!Object.is($[8], name2)) {
       t4 = <b>{name2}</b>;
       $[8] = name2;
       $[9] = t4;
@@ -67,7 +67,7 @@ function Foo(t0) {
       t4 = $[9];
     }
     let t5;
-    if ($[10] !== name2 || $[11] !== t4) {
+    if (!Object.is($[10], name2) || !Object.is($[11], t4)) {
       t5 = <span key={name2}>{t4}</span>;
       $[10] = name2;
       $[11] = t4;

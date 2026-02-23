@@ -25,10 +25,10 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a, b, c) {
   const $ = _c(7);
   let x;
-  if ($[0] !== a || $[1] !== b || $[2] !== c) {
+  if (!Object.is($[0], a) || !Object.is($[1], b) || !Object.is($[2], c)) {
     x = { a };
     let t0;
-    if ($[4] !== b || $[5] !== c) {
+    if (!Object.is($[4], b) || !Object.is($[5], c)) {
       t0 = [b, c];
       $[4] = b;
       $[5] = c;

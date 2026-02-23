@@ -39,7 +39,7 @@ function Component(t0) {
   const $ = _c(3);
   const { doReassign1, doReassign2 } = t0;
   let x;
-  if ($[0] !== doReassign1 || $[1] !== doReassign2) {
+  if (!Object.is($[0], doReassign1) || !Object.is($[1], doReassign2)) {
     x = {};
     const reassign1 = () => {
       x = 2;

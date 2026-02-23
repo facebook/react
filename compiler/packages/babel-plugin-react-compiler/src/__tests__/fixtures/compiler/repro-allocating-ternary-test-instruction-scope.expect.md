@@ -49,7 +49,7 @@ function useTest(t0) {
 
   useHook();
   let t2;
-  if ($[1] !== cond) {
+  if (!Object.is($[1], cond)) {
     t2 = identity(cond) ? val : null;
     $[1] = cond;
     $[2] = t2;

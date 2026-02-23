@@ -55,7 +55,7 @@ function Parent(t0) {
   const ref2 = useRef(2);
   const ref = cond ? ref1 : ref2;
   let t1;
-  if ($[0] !== ref) {
+  if (!Object.is($[0], ref)) {
     t1 = <Child ref={ref} />;
     $[0] = ref;
     $[1] = t1;
@@ -68,7 +68,7 @@ function Parent(t0) {
 function ChildImpl(_props, ref) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== ref) {
+  if (!Object.is($[0], ref)) {
     const cb = () => ref.current;
     t0 = <Stringify cb={cb} shouldInvokeFns={true} />;
     $[0] = ref;

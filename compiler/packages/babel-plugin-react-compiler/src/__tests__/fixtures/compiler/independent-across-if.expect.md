@@ -60,7 +60,11 @@ function Component(props) {
   const $ = _c(8);
   let a;
   let b;
-  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.c) {
+  if (
+    !Object.is($[0], props.a) ||
+    !Object.is($[1], props.b) ||
+    !Object.is($[2], props.c)
+  ) {
     a = compute(props.a);
     b = compute(props.b);
     if (props.c) {
@@ -77,7 +81,7 @@ function Component(props) {
     b = $[4];
   }
   let t0;
-  if ($[5] !== a || $[6] !== b) {
+  if (!Object.is($[5], a) || !Object.is($[6], b)) {
     t0 = <Foo a={a} b={b} />;
     $[5] = a;
     $[6] = b;

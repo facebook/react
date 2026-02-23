@@ -29,7 +29,7 @@ function Foo(t0) {
   const $ = _c(5);
   const { data } = t0;
   let t1;
-  if ($[0] !== data.a.d) {
+  if (!Object.is($[0], data.a.d)) {
     t1 = () => data.a.d;
     $[0] = data.a.d;
     $[1] = t1;
@@ -38,7 +38,7 @@ function Foo(t0) {
   }
   const t2 = data.a?.b.c;
   let t3;
-  if ($[2] !== t1 || $[3] !== t2) {
+  if (!Object.is($[2], t1) || !Object.is($[3], t2)) {
     t3 = <Stringify foo={t1} bar={t2} shouldInvokeFns={true} />;
     $[2] = t1;
     $[3] = t2;

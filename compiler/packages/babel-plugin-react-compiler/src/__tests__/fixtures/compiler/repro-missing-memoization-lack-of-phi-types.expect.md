@@ -35,7 +35,7 @@ function Component() {
   const $ = _c(7);
   const data = useFragment();
   let t0;
-  if ($[0] !== data.nodes) {
+  if (!Object.is($[0], data.nodes)) {
     const nodes = data.nodes ?? [];
     const flatMap = nodes.flatMap(_temp);
     t0 = flatMap.filter(_temp2);
@@ -46,7 +46,7 @@ function Component() {
   }
   const filtered = t0;
   let t1;
-  if ($[2] !== filtered) {
+  if (!Object.is($[2], filtered)) {
     t1 = filtered.map();
     $[2] = filtered;
     $[3] = t1;
@@ -56,7 +56,7 @@ function Component() {
   const map = t1;
   const index = filtered.findIndex(_temp3);
   let t2;
-  if ($[4] !== index || $[5] !== map) {
+  if (!Object.is($[4], index) || !Object.is($[5], map)) {
     t2 = (
       <div>
         {map}

@@ -43,7 +43,7 @@ function Component() {
   const $ = _c(2);
   const dispatch = useDispatch();
   let t0;
-  if ($[0] !== dispatch) {
+  if (!Object.is($[0], dispatch)) {
     t0 = (
       <div>
         <input

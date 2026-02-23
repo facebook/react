@@ -29,7 +29,7 @@ function Foo(t0) {
   const $ = _c(2);
   const { cond } = t0;
   let x;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     x = identity(identity(cond)) ? { a: 2 } : { b: 2 };
 
     mutate(x);

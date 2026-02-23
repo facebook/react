@@ -32,7 +32,7 @@ function Component(t0) {
   useIdentity();
   const derived = new Set(arr).forEach(mutateAndReturn);
   let t1;
-  if ($[0] !== derived) {
+  if (!Object.is($[0], derived)) {
     t1 = <Stringify>{[...derived]}</Stringify>;
     $[0] = derived;
     $[1] = t1;

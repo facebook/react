@@ -34,7 +34,7 @@ function component() {
   }
   const handler = t0;
   let t1;
-  if ($[1] !== x) {
+  if (!Object.is($[1], x)) {
     t1 = <input onChange={handler} value={x} />;
     $[1] = x;
     $[2] = t1;

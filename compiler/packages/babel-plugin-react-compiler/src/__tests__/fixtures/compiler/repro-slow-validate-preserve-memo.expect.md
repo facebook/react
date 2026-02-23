@@ -36,7 +36,7 @@ function useTest(t0) {
   const $ = _c(3);
   const { isNull, data } = t0;
   let t1;
-  if ($[0] !== data || $[1] !== isNull) {
+  if (!Object.is($[0], data) || !Object.is($[1], isNull)) {
     t1 = Builder.makeBuilder(isNull, "hello world")
       ?.push("1", 2)
       ?.push(3, { a: 4, b: 5, c: data })

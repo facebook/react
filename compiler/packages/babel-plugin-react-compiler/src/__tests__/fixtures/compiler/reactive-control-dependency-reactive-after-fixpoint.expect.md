@@ -70,7 +70,7 @@ function Component(props) {
     value = props.cond;
   }
   let t0;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     t0 = [x];
     $[0] = x;
     $[1] = t0;

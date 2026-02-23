@@ -32,7 +32,7 @@ import { createHookWrapper, setProperty } from "shared-runtime";
 function useHook(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     const x = {
       getX() {
         return props;

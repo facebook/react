@@ -38,7 +38,7 @@ function useFoo(t0) {
   const $ = _c(10);
   const { arg, cond } = t0;
   let t1;
-  if ($[0] !== arg) {
+  if (!Object.is($[0], arg)) {
     t1 = { value: arg };
     $[0] = arg;
     $[1] = t1;
@@ -49,11 +49,11 @@ function useFoo(t0) {
   const { value } = maybeObj;
   useIdentity(null);
   let arr;
-  if ($[2] !== cond || $[3] !== maybeObj.value) {
+  if (!Object.is($[2], cond) || !Object.is($[3], maybeObj.value)) {
     arr = [];
     if (cond) {
       let t2;
-      if ($[5] !== maybeObj.value) {
+      if (!Object.is($[5], maybeObj.value)) {
         t2 = identity(maybeObj.value);
         $[5] = maybeObj.value;
         $[6] = t2;
@@ -69,7 +69,7 @@ function useFoo(t0) {
     arr = $[4];
   }
   let t2;
-  if ($[7] !== arr || $[8] !== value) {
+  if (!Object.is($[7], arr) || !Object.is($[8], value)) {
     t2 = { arr, value };
     $[7] = arr;
     $[8] = value;

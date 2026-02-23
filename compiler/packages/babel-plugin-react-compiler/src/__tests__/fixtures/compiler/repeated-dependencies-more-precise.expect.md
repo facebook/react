@@ -39,7 +39,7 @@ function Test(t0) {
   const $ = _c(11);
   const { item, index } = t0;
   let a;
-  if ($[0] !== index || $[1] !== item.value) {
+  if (!Object.is($[0], index) || !Object.is($[1], item.value)) {
     a = [];
     if (index) {
       a.push({ value: item.value, index });
@@ -51,7 +51,7 @@ function Test(t0) {
     a = $[2];
   }
   let t1;
-  if ($[3] !== item.value) {
+  if (!Object.is($[3], item.value)) {
     t1 = [item.value];
     $[3] = item.value;
     $[4] = t1;
@@ -60,7 +60,7 @@ function Test(t0) {
   }
   const b = t1;
   let t2;
-  if ($[5] !== item.value.inner) {
+  if (!Object.is($[5], item.value.inner)) {
     t2 = [item.value.inner];
     $[5] = item.value.inner;
     $[6] = t2;
@@ -69,7 +69,7 @@ function Test(t0) {
   }
   const c = t2;
   let t3;
-  if ($[7] !== a || $[8] !== b || $[9] !== c) {
+  if (!Object.is($[7], a) || !Object.is($[8], b) || !Object.is($[9], c)) {
     t3 = <Stringify value={[a, b, c]} />;
     $[7] = a;
     $[8] = b;

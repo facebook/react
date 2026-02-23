@@ -32,7 +32,7 @@ import { shallowCopy } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let element;
-  if ($[0] !== props.width) {
+  if (!Object.is($[0], props.width)) {
     const childprops = { style: { width: props.width } };
     element = _jsx("div", { childprops, children: '"hello world"' });
     shallowCopy(childprops);

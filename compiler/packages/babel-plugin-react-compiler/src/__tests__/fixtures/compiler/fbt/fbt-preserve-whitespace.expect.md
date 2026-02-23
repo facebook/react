@@ -32,7 +32,7 @@ function Component(t0) {
   const $ = _c(2);
   const { value } = t0;
   let t1;
-  if ($[0] !== value) {
+  if (!Object.is($[0], value)) {
     t1 = fbt._(
       "Before text {paramName}",
       [

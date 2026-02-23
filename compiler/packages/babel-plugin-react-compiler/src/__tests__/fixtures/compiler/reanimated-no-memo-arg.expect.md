@@ -54,7 +54,7 @@ function Component() {
     return { d: path };
   });
   let t0;
-  if ($[0] !== animatedProps) {
+  if (!Object.is($[0], animatedProps)) {
     t0 = (
       <Svg>
         <AnimatedPath animatedProps={animatedProps} fill="black" />

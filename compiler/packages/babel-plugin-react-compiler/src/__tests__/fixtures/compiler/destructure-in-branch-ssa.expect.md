@@ -42,7 +42,7 @@ function useFoo(props) {
   let y = null;
   let z;
   let myList;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     myList = [];
     if (props.doDestructure) {
       ({ x, y, z } = props);
@@ -61,7 +61,7 @@ function useFoo(props) {
     z = $[4];
   }
   let t0;
-  if ($[5] !== myList || $[6] !== x || $[7] !== y) {
+  if (!Object.is($[5], myList) || !Object.is($[6], x) || !Object.is($[7], y)) {
     t0 = { x, y, myList };
     $[5] = myList;
     $[6] = x;

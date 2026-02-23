@@ -36,7 +36,7 @@ import { useEffect, useState } from "react";
 function Component(props) {
   const $ = _c(10);
   let t0;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     t0 = [props.value];
     $[0] = props.value;
     $[1] = t0;
@@ -53,7 +53,7 @@ function Component(props) {
   }
   useEffect(_temp, t1);
   let t2;
-  if ($[3] !== x.length) {
+  if (!Object.is($[3], x.length)) {
     t2 = () => {
       console.log(x.length);
     };
@@ -64,7 +64,7 @@ function Component(props) {
   }
   const onClick = t2;
   let t3;
-  if ($[5] !== x) {
+  if (!Object.is($[5], x)) {
     t3 = x.map(_temp2);
     $[5] = x;
     $[6] = t3;
@@ -72,7 +72,7 @@ function Component(props) {
     t3 = $[6];
   }
   let t4;
-  if ($[7] !== onClick || $[8] !== t3) {
+  if (!Object.is($[7], onClick) || !Object.is($[8], t3)) {
     t4 = <div onClick={onClick}>{t3}</div>;
     $[7] = onClick;
     $[8] = t3;

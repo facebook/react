@@ -89,7 +89,7 @@ function useFoo(t0) {
   const x = Array.from(t1);
   useIdentity();
   let t2;
-  if ($[1] !== val1) {
+  if (!Object.is($[1], val1)) {
     t2 = [val1];
     $[1] = val1;
     $[2] = t2;
@@ -98,7 +98,7 @@ function useFoo(t0) {
   }
   x.push(t2);
   let t3;
-  if ($[3] !== val2) {
+  if (!Object.is($[3], val2)) {
     t3 = [val2];
     $[3] = val2;
     $[4] = t3;
@@ -107,7 +107,7 @@ function useFoo(t0) {
   }
   x.push(t3);
   let t4;
-  if ($[5] !== val1 || $[6] !== val2 || $[7] !== x) {
+  if (!Object.is($[5], val1) || !Object.is($[6], val2) || !Object.is($[7], x)) {
     t4 = <Validate x={x} val1={val1} val2={val2} />;
     $[5] = val1;
     $[6] = val2;

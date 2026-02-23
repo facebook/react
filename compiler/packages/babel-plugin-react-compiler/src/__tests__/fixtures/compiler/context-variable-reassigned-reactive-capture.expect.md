@@ -31,7 +31,7 @@ function Component(t0) {
   const $ = _c(2);
   const { value } = t0;
   let x;
-  if ($[0] !== value) {
+  if (!Object.is($[0], value)) {
     x = null;
     const reassign = () => {
       x = value;

@@ -33,7 +33,7 @@ import { arrayPush } from "shared-runtime";
 function Foo(cond) {
   const $ = _c(2);
   let x;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     x = null;
     if (cond) {
       x = [];

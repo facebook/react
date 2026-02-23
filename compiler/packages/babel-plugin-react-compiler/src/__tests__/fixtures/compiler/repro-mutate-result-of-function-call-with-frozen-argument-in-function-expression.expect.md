@@ -33,7 +33,7 @@ function Example(props) {
   const $ = _c(5);
   const object = props.object;
   let t0;
-  if ($[0] !== object || $[1] !== props.value) {
+  if (!Object.is($[0], object) || !Object.is($[1], props.value)) {
     const f = () => {
       const obj = identity(object);
       obj.property = props.value;
@@ -48,7 +48,7 @@ function Example(props) {
   }
   const obj_0 = t0;
   let t1;
-  if ($[3] !== obj_0) {
+  if (!Object.is($[3], obj_0)) {
     t1 = <Stringify obj={obj_0} />;
     $[3] = obj_0;
     $[4] = t1;

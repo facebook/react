@@ -72,7 +72,7 @@ function Component() {
   const $ = _c(2);
   const [state] = useState(null);
   let t0;
-  if ($[0] !== state) {
+  if (!Object.is($[0], state)) {
     t0 = [
       React,
       state,

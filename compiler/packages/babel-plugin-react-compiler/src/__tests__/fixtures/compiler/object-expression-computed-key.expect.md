@@ -33,7 +33,7 @@ function Component(props) {
   const $ = _c(5);
   const { key } = props;
   let t0;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     t0 = identity([props.value, SCALE]);
     $[0] = props.value;
     $[1] = t0;
@@ -41,7 +41,7 @@ function Component(props) {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== key || $[3] !== t0) {
+  if (!Object.is($[2], key) || !Object.is($[3], t0)) {
     t1 = { [key]: t0 };
     $[2] = key;
     $[3] = t0;

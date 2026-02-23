@@ -32,9 +32,13 @@ function Component(t0) {
   const $ = _c(6);
   const { name, data, icon } = t0;
   let t1;
-  if ($[0] !== data || $[1] !== icon || $[2] !== name) {
+  if (
+    !Object.is($[0], data) ||
+    !Object.is($[1], icon) ||
+    !Object.is($[2], name)
+  ) {
     let t2;
-    if ($[4] !== name) {
+    if (!Object.is($[4], name)) {
       t2 = <Text type="h4">{name}</Text>;
       $[4] = name;
       $[5] = t2;

@@ -40,7 +40,7 @@ function Component(props) {
   const dispatch = useDispatch();
   useFreeze(dispatch);
   let t0;
-  if ($[0] !== dispatch) {
+  if (!Object.is($[0], dispatch)) {
     t0 = () => {
       dispatch(createExitAction());
     };
@@ -52,7 +52,7 @@ function Component(props) {
   const exit = t0;
   let t1;
   let t2;
-  if ($[2] !== exit || $[3] !== item) {
+  if (!Object.is($[2], exit) || !Object.is($[3], item)) {
     t1 = () => {
       const cleanup = GlobalEventEmitter.addListener("onInput", () => {
         if (item.value) {

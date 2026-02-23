@@ -48,7 +48,7 @@ function Component(t0) {
   const { cond: t1, id } = t0;
   const cond = t1 === undefined ? false : t1;
   let t2;
-  if ($[0] !== id) {
+  if (!Object.is($[0], id)) {
     t2 = identity(styles.a, id !== null ? styles.b : {});
     $[0] = id;
     $[1] = t2;
@@ -56,7 +56,7 @@ function Component(t0) {
     t2 = $[1];
   }
   let t3;
-  if ($[2] !== t2) {
+  if (!Object.is($[2], t2)) {
     t3 = <div className={t2} />;
     $[2] = t2;
     $[3] = t3;
@@ -64,7 +64,7 @@ function Component(t0) {
     t3 = $[3];
   }
   let t4;
-  if ($[4] !== cond) {
+  if (!Object.is($[4], cond)) {
     t4 = cond === false && (
       <div className={identity(styles.c, DISPLAY ? styles.d : {})} />
     );
@@ -74,7 +74,7 @@ function Component(t0) {
     t4 = $[5];
   }
   let t5;
-  if ($[6] !== t3 || $[7] !== t4) {
+  if (!Object.is($[6], t3) || !Object.is($[7], t4)) {
     t5 = (
       <>
         {t3}

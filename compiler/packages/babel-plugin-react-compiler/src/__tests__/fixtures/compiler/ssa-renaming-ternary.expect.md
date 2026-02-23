@@ -28,7 +28,7 @@ import { c as _c } from "react/compiler-runtime";
 function useFoo(props) {
   const $ = _c(5);
   let x;
-  if ($[0] !== props.bar) {
+  if (!Object.is($[0], props.bar)) {
     x = [];
     x.push(props.bar);
     $[0] = props.bar;
@@ -36,7 +36,7 @@ function useFoo(props) {
   } else {
     x = $[1];
   }
-  if ($[2] !== props.cond || $[3] !== props.foo) {
+  if (!Object.is($[2], props.cond) || !Object.is($[3], props.foo)) {
     props.cond ? ((x = []), x.push(props.foo)) : null;
     $[2] = props.cond;
     $[3] = props.foo;

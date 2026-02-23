@@ -63,7 +63,7 @@ import { CONST_TRUE, setProperty } from "shared-runtime";
 function useJoinCondDepsInUncondScopes(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.a.b) {
+  if (!Object.is($[0], props.a.b)) {
     const y = {};
     const x = {};
     if (CONST_TRUE) {

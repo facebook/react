@@ -34,7 +34,7 @@ import fbt from "fbt";
 function Component(props) {
   const $ = _c(7);
   let t0;
-  if ($[0] !== props.name) {
+  if (!Object.is($[0], props.name)) {
     t0 = fbt._("Hello {user name}", [fbt._param("user name", props.name)], {
       hk: "2zEDKF",
     });
@@ -44,7 +44,7 @@ function Component(props) {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== props.actions) {
+  if (!Object.is($[2], props.actions)) {
     t1 = fbt._(
       "{actions|response}",
       [fbt._param("actions|response", props.actions)],
@@ -56,7 +56,7 @@ function Component(props) {
     t1 = $[3];
   }
   let t2;
-  if ($[4] !== t0 || $[5] !== t1) {
+  if (!Object.is($[4], t0) || !Object.is($[5], t1)) {
     t2 = (
       <div>
         {t0}

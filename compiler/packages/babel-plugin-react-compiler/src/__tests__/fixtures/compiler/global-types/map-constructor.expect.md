@@ -32,10 +32,10 @@ function useHook(t0) {
   const $ = _c(7);
   const { el1, el2 } = t0;
   let s;
-  if ($[0] !== el1 || $[1] !== el2) {
+  if (!Object.is($[0], el1) || !Object.is($[1], el2)) {
     s = new Map();
     let t1;
-    if ($[3] !== el1) {
+    if (!Object.is($[3], el1)) {
       t1 = makeArray(el1);
       $[3] = el1;
       $[4] = t1;
@@ -44,7 +44,7 @@ function useHook(t0) {
     }
     s.set(el1, t1);
     let t2;
-    if ($[5] !== el2) {
+    if (!Object.is($[5], el2)) {
       t2 = makeArray(el2);
       $[5] = el2;
       $[6] = t2;

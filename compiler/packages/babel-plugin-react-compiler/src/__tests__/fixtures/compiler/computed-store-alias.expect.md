@@ -32,7 +32,7 @@ function useHook(t0) {
   const $ = _c(3);
   const { a, b } = t0;
   let x;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     const y = { a };
     x = { b };
     x.y = y;

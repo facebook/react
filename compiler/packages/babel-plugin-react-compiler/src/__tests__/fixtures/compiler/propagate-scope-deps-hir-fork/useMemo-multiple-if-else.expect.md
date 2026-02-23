@@ -37,10 +37,10 @@ function Component(props) {
   const $ = _c(5);
   let t0;
   if (
-    $[0] !== props.a ||
-    $[1] !== props.b ||
-    $[2] !== props.cond ||
-    $[3] !== props.cond2
+    !Object.is($[0], props.a) ||
+    !Object.is($[1], props.b) ||
+    !Object.is($[2], props.cond) ||
+    !Object.is($[3], props.cond2)
   ) {
     bb0: {
       const y = [];

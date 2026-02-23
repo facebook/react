@@ -34,7 +34,7 @@ import fbt from "fbt";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.name) {
+  if (!Object.is($[0], props.name)) {
     const element = fbt._(
       "Hello {a really long description that got split into multiple lines}",
       [

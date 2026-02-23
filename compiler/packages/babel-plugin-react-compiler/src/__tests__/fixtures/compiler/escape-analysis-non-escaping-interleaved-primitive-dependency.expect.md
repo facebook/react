@@ -37,7 +37,7 @@ function Component(props) {
 
   const a = props.a + props.b;
   let b;
-  if ($[0] !== a || $[1] !== props.c) {
+  if (!Object.is($[0], a) || !Object.is($[1], props.c)) {
     b = [];
     const c = {};
     c.a = a;

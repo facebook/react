@@ -21,7 +21,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.version) {
+  if (!Object.is($[0], props.version)) {
     t0 = <xml:http protocol:version={props.version} />;
     $[0] = props.version;
     $[1] = t0;

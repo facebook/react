@@ -49,7 +49,7 @@ function Component(props) {
   const $ = _c(10);
   let t0;
   let t1;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       const propsString = toJSON(props);
@@ -70,7 +70,7 @@ function Component(props) {
     return t1;
   }
   let t2;
-  if ($[3] !== t0) {
+  if (!Object.is($[3], t0)) {
     const linkProps = { url: t0 };
     const x = {};
     let t3;

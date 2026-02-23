@@ -37,7 +37,7 @@ function Component(props) {
   const { data, loadNext, isLoadingNext } =
     usePaginationFragment(props.key).items ?? [];
   let t0;
-  if ($[0] !== data.length || $[1] !== loadNext) {
+  if (!Object.is($[0], data.length) || !Object.is($[1], loadNext)) {
     t0 = () => {
       if (data.length === 0) {
         return;
@@ -54,7 +54,7 @@ function Component(props) {
   const loadMoreWithTiming = t0;
   let t1;
   let t2;
-  if ($[3] !== isLoadingNext || $[4] !== loadMoreWithTiming) {
+  if (!Object.is($[3], isLoadingNext) || !Object.is($[4], loadMoreWithTiming)) {
     t1 = () => {
       if (isLoadingNext) {
         return;
@@ -72,7 +72,7 @@ function Component(props) {
   }
   useEffect(t1, t2);
   let t3;
-  if ($[7] !== data) {
+  if (!Object.is($[7], data)) {
     t3 = data.map(_temp);
     $[7] = data;
     $[8] = t3;

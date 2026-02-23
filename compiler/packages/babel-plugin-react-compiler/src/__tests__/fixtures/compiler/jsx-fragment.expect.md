@@ -39,7 +39,7 @@ function Foo(props) {
     t0 = $[0];
   }
   let t1;
-  if ($[1] !== props.greeting) {
+  if (!Object.is($[1], props.greeting)) {
     t1 = (
       <>
         Hello {props.greeting} {t0}

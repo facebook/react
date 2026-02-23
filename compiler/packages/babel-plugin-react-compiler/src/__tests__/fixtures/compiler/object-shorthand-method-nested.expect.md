@@ -40,7 +40,7 @@ function useHook(t0) {
   const { value } = t0;
   const [state] = useState(false);
   let t1;
-  if ($[0] !== state || $[1] !== value) {
+  if (!Object.is($[0], state) || !Object.is($[1], value)) {
     t1 = {
       getX() {
         return {

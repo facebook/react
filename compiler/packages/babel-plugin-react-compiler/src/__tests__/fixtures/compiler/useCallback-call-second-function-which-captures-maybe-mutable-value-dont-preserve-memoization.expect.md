@@ -64,7 +64,7 @@ function Component(props) {
 
   identity(object);
   let t0;
-  if ($[0] !== onClick) {
+  if (!Object.is($[0], onClick)) {
     t0 = <div onClick={onClick} />;
     $[0] = onClick;
     $[1] = t0;

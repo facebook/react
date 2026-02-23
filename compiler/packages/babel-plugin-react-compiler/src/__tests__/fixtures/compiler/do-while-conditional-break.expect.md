@@ -22,7 +22,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let x;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     x = [0, 1, 2, 3];
     do {
       if (x === 0) {

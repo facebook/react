@@ -42,7 +42,7 @@ export default function Component(props) {
   const $ = _c(2);
   const { b } = props;
   let t0;
-  if ($[0] !== b) {
+  if (!Object.is($[0], b)) {
     const items = [];
     let i = 0;
     while (i < 10) {

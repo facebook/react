@@ -44,7 +44,7 @@ function useFoo(t0) {
   const $ = _c(2);
   const { items } = t0;
   let t1;
-  if ($[0] !== items) {
+  if (!Object.is($[0], items)) {
     t1 = [...items];
     $[0] = items;
     $[1] = t1;

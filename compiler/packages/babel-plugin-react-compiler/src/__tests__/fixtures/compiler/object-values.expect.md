@@ -56,7 +56,7 @@ function Component(t0) {
   const $ = _c(4);
   const { items } = t0;
   let t1;
-  if ($[0] !== items) {
+  if (!Object.is($[0], items)) {
     t1 = Object.fromEntries(items.map(_temp));
     $[0] = items;
     $[1] = t1;
@@ -65,7 +65,7 @@ function Component(t0) {
   }
   const record = t1;
   let t2;
-  if ($[2] !== record) {
+  if (!Object.is($[2], record)) {
     t2 = <div>{Object.values(record).map(_temp2)}</div>;
     $[2] = record;
     $[3] = t2;

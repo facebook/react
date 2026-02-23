@@ -34,7 +34,11 @@ function Component(props) {
   const $ = _c(6);
   let t0;
   let y;
-  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.cond) {
+  if (
+    !Object.is($[0], props.a) ||
+    !Object.is($[1], props.b) ||
+    !Object.is($[2], props.cond)
+  ) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       const x = [];

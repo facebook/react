@@ -35,7 +35,7 @@ import { ValidateMemoization } from "shared-runtime";
 function Component(props) {
   const $ = _c(7);
   let a;
-  if ($[0] !== props.name) {
+  if (!Object.is($[0], props.name)) {
     a = [];
     const f = function () {
       a.push(props.name);
@@ -49,7 +49,7 @@ function Component(props) {
   }
   const a_0 = a;
   let t0;
-  if ($[2] !== props.name) {
+  if (!Object.is($[2], props.name)) {
     t0 = [props.name];
     $[2] = props.name;
     $[3] = t0;
@@ -57,7 +57,7 @@ function Component(props) {
     t0 = $[3];
   }
   let t1;
-  if ($[4] !== a_0 || $[5] !== t0) {
+  if (!Object.is($[4], a_0) || !Object.is($[5], t0)) {
     t1 = <ValidateMemoization inputs={t0} output={a_0} />;
     $[4] = a_0;
     $[5] = t0;

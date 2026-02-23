@@ -39,7 +39,7 @@ function Component(props) {
   const logEvent = useLogging(props.appId);
   const [currentStep, setCurrentStep] = useState(0);
   let t0;
-  if ($[0] !== logEvent) {
+  if (!Object.is($[0], logEvent)) {
     t0 = (errorEvent) => {
       logEvent(errorEvent);
       setCurrentStep(1);
@@ -71,7 +71,7 @@ function Component(props) {
         t1 = $[3];
       }
       let t2;
-      if ($[4] !== onSubmit) {
+      if (!Object.is($[4], onSubmit)) {
         t2 = <OtherComponent data={t1} onSubmit={onSubmit} />;
         $[4] = onSubmit;
         $[5] = t2;

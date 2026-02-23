@@ -25,7 +25,11 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.p0 || $[1] !== props.p1 || $[2] !== props.p2) {
+  if (
+    !Object.is($[0], props.p0) ||
+    !Object.is($[1], props.p1) ||
+    !Object.is($[2], props.p2)
+  ) {
     let x = [];
     x.push(props.p0);
     const y = x;

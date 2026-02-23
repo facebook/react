@@ -42,7 +42,7 @@ function Component(t0) {
   const $ = _c(2);
   const { items } = t0;
   let t1;
-  if ($[0] !== items) {
+  if (!Object.is($[0], items)) {
     t1 = items.length > 0 ? <Foo value={<>{items.map(_temp)}</>} /> : null;
     $[0] = items;
     $[1] = t1;
@@ -59,7 +59,7 @@ function Foo(t0) {
   const $ = _c(2);
   const { value } = t0;
   let t1;
-  if ($[0] !== value) {
+  if (!Object.is($[0], value)) {
     t1 = <div>{value}</div>;
     $[0] = value;
     $[1] = t1;

@@ -31,7 +31,7 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 function useFoo(props) {
   const $ = _c(6);
   let x;
-  if ($[0] !== props.bar) {
+  if (!Object.is($[0], props.bar)) {
     x = [];
     x.push(props.bar);
     $[0] = props.bar;
@@ -39,7 +39,11 @@ function useFoo(props) {
   } else {
     x = $[1];
   }
-  if ($[2] !== props.bar || $[3] !== props.cond || $[4] !== props.foo) {
+  if (
+    !Object.is($[2], props.bar) ||
+    !Object.is($[3], props.cond) ||
+    !Object.is($[4], props.foo)
+  ) {
     props.cond ? ((x = []), x.push(props.foo)) : ((x = []), x.push(props.bar));
     $[2] = props.bar;
     $[3] = props.cond;

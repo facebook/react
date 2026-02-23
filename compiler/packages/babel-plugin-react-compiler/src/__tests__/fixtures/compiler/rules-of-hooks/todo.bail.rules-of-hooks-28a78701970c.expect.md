@@ -26,7 +26,7 @@ const MemoizedFunction = React.memo((props) => {
   const $ = _c(2);
   useHook();
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     t0 = <button {...props} />;
     $[0] = props;
     $[1] = t0;

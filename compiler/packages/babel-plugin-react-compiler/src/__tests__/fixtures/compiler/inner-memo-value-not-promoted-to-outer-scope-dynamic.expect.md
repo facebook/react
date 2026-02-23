@@ -31,7 +31,7 @@ function Component(props) {
   let T1;
   let t0;
   let t1;
-  if ($[0] !== item) {
+  if (!Object.is($[0], item)) {
     const count = new MaybeMutable(item);
     T1 = View;
     T0 = View;
@@ -54,7 +54,7 @@ function Component(props) {
     t1 = $[4];
   }
   let t2;
-  if ($[6] !== t0) {
+  if (!Object.is($[6], t0)) {
     t2 = <span>{t0}</span>;
     $[6] = t0;
     $[7] = t2;
@@ -62,7 +62,7 @@ function Component(props) {
     t2 = $[7];
   }
   let t3;
-  if ($[8] !== T0 || $[9] !== t1 || $[10] !== t2) {
+  if (!Object.is($[8], T0) || !Object.is($[9], t1) || !Object.is($[10], t2)) {
     t3 = (
       <T0>
         {t1}
@@ -77,7 +77,7 @@ function Component(props) {
     t3 = $[11];
   }
   let t4;
-  if ($[12] !== T1 || $[13] !== t3) {
+  if (!Object.is($[12], T1) || !Object.is($[13], t3)) {
     t4 = <T1>{t3}</T1>;
     $[12] = T1;
     $[13] = t3;

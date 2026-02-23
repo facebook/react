@@ -29,7 +29,7 @@ function component(a, b) {
   bb0: {
     if (a) {
       let t1;
-      if ($[0] !== b) {
+      if (!Object.is($[0], b)) {
         t1 = { b };
         $[0] = b;
         $[1] = t1;

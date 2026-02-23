@@ -27,7 +27,7 @@ import { c as _c } from "react/compiler-runtime"; // Test that we correctly trac
 function TestOverlappingDescendantTracked(props) {
   const $ = _c(2);
   let x;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     x = {};
     x.b = props.a.b.c;
     x.c = props.a.b.c.x.y;

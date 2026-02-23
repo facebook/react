@@ -32,7 +32,7 @@ function Bar(props) {
     useRenderCounter("Bar", "/codegen-instrument-forget-test.ts");
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.bar) {
+  if (!Object.is($[0], props.bar)) {
     t0 = <div>{props.bar}</div>;
     $[0] = props.bar;
     $[1] = t0;
@@ -52,7 +52,7 @@ function Foo(props) {
     useRenderCounter("Foo", "/codegen-instrument-forget-test.ts");
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.bar) {
+  if (!Object.is($[0], props.bar)) {
     t0 = <Foo>{props.bar}</Foo>;
     $[0] = props.bar;
     $[1] = t0;

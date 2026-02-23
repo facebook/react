@@ -44,7 +44,7 @@ function foo(a, b, c) {
   const $ = _c(10);
   let t0;
   let x;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     x = [];
     if (a) {
       x.push(a);
@@ -60,7 +60,7 @@ function foo(a, b, c) {
   const y = t0;
   bb0: switch (b) {
     case 0: {
-      if ($[3] !== b) {
+      if (!Object.is($[3], b)) {
         x = [];
         x.push(b);
         $[3] = b;
@@ -71,7 +71,7 @@ function foo(a, b, c) {
       break bb0;
     }
     default: {
-      if ($[5] !== c) {
+      if (!Object.is($[5], c)) {
         x = [];
         x.push(c);
         $[5] = c;
@@ -82,7 +82,7 @@ function foo(a, b, c) {
     }
   }
   let t1;
-  if ($[7] !== x || $[8] !== y) {
+  if (!Object.is($[7], x) || !Object.is($[8], y)) {
     t1 = (
       <div>
         {y}

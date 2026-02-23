@@ -61,7 +61,7 @@ function Bar(props) {
   }
   const _shouldInstrument = t1;
   let t2;
-  if ($[2] !== props.bar) {
+  if (!Object.is($[2], props.bar)) {
     t2 = (
       <div style={shouldInstrument} other={_shouldInstrument}>
         {props.bar}
@@ -81,7 +81,7 @@ function Foo(props) {
     useRenderCounter("Foo", "/conflict-codegen-instrument-forget.ts");
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.bar) {
+  if (!Object.is($[0], props.bar)) {
     t0 = <Foo>{props.bar}</Foo>;
     $[0] = props.bar;
     $[1] = t0;

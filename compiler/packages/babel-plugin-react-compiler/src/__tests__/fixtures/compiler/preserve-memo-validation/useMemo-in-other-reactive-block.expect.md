@@ -40,11 +40,15 @@ function useFoo(minWidth, otherProp) {
   const $ = _c(6);
   const [width] = useState(1);
   let t0;
-  if ($[0] !== minWidth || $[1] !== otherProp || $[2] !== width) {
+  if (
+    !Object.is($[0], minWidth) ||
+    !Object.is($[1], otherProp) ||
+    !Object.is($[2], width)
+  ) {
     const x = [];
     const t1 = Math.max(minWidth, width);
     let t2;
-    if ($[4] !== t1) {
+    if (!Object.is($[4], t1)) {
       t2 = { width: t1 };
       $[4] = t1;
       $[5] = t2;

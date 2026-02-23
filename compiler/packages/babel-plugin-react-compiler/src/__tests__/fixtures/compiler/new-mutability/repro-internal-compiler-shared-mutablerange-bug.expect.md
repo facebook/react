@@ -38,7 +38,7 @@ function Component(t0) {
   const $ = _c(8);
   const { onAsyncSubmit, onClose } = t0;
   let t1;
-  if ($[0] !== onAsyncSubmit || $[1] !== onClose) {
+  if (!Object.is($[0], onAsyncSubmit) || !Object.is($[1], onClose)) {
     t1 = () => {
       if (onAsyncSubmit) {
         onAsyncSubmit(() => {
@@ -55,7 +55,7 @@ function Component(t0) {
   }
   const onSubmit = t1;
   let t2;
-  if ($[3] !== onClose) {
+  if (!Object.is($[3], onClose)) {
     t2 = () => onClose(false);
     $[3] = onClose;
     $[4] = t2;
@@ -63,7 +63,7 @@ function Component(t0) {
     t2 = $[4];
   }
   let t3;
-  if ($[5] !== onSubmit || $[6] !== t2) {
+  if (!Object.is($[5], onSubmit) || !Object.is($[6], t2)) {
     t3 = <Dialog onSubmit={onSubmit} onClose={t2} />;
     $[5] = onSubmit;
     $[6] = t2;

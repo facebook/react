@@ -58,7 +58,7 @@ function Component(props) {
   const count = posts.length;
   foo(count);
   let t1;
-  if ($[1] !== posts) {
+  if (!Object.is($[1], posts)) {
     t1 = <>{posts}</>;
     $[1] = posts;
     $[2] = t1;

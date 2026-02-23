@@ -89,7 +89,7 @@ function useMakeCallback(t0) {
   const $ = _c(6);
   const { obj, cond, setState } = t0;
   let t1;
-  if ($[0] !== obj.value || $[1] !== setState) {
+  if (!Object.is($[0], obj.value) || !Object.is($[1], setState)) {
     t1 = () => setState(obj.value);
     $[0] = obj.value;
     $[1] = setState;
@@ -99,7 +99,7 @@ function useMakeCallback(t0) {
   }
   const cb = t1;
   let t2;
-  if ($[3] !== cb || $[4] !== cond) {
+  if (!Object.is($[3], cb) || !Object.is($[4], cond)) {
     t2 = () => (cond ? cb() : undefined);
     $[3] = cb;
     $[4] = cond;

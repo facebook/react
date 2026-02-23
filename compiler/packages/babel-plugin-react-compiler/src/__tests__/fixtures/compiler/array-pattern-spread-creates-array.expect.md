@@ -51,7 +51,7 @@ function Component(props) {
   }
   const x = t0;
   let rest;
-  if ($[1] !== props.array) {
+  if (!Object.is($[1], props.array)) {
     [, ...rest] = props.array;
 
     rest.push(x);
@@ -69,7 +69,7 @@ function Component(props) {
     t1 = $[3];
   }
   let t2;
-  if ($[4] !== props.array) {
+  if (!Object.is($[4], props.array)) {
     t2 = [props.array];
     $[4] = props.array;
     $[5] = t2;
@@ -77,7 +77,7 @@ function Component(props) {
     t2 = $[5];
   }
   let t3;
-  if ($[6] !== rest_0 || $[7] !== t2) {
+  if (!Object.is($[6], rest_0) || !Object.is($[7], t2)) {
     t3 = (
       <>
         {t1}

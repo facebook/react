@@ -31,7 +31,7 @@ import { makeObject_Primitives } from "shared-runtime";
 function Component(props) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== props.cond || $[1] !== props.value) {
+  if (!Object.is($[0], props.cond) || !Object.is($[1], props.value)) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       const object = makeObject_Primitives();

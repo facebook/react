@@ -35,7 +35,7 @@ function useFoo(t0) {
   const $ = _c(2);
   const { callback } = t0;
   let t1;
-  if ($[0] !== callback) {
+  if (!Object.is($[0], callback)) {
     t1 = new Array(callback());
     $[0] = callback;
     $[1] = t1;

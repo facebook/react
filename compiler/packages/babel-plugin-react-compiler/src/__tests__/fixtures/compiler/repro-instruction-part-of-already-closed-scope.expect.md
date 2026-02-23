@@ -42,12 +42,12 @@ function Component(t0) {
   let t1;
   let t2;
   let t3;
-  if ($[0] !== data || $[1] !== index) {
+  if (!Object.is($[0], data) || !Object.is($[1], index)) {
     const a = identity(data, index);
     const b = identity(data, index);
     const c = identity(data, index);
     const t4 = identity(b);
-    if ($[6] !== t4) {
+    if (!Object.is($[6], t4)) {
       t2 = <Stringify value={t4} />;
       $[6] = t4;
       $[7] = t2;
@@ -55,7 +55,7 @@ function Component(t0) {
       t2 = $[7];
     }
     const t5 = identity(a);
-    if ($[8] !== t5) {
+    if (!Object.is($[8], t5)) {
       t3 = <Stringify value={t5} />;
       $[8] = t5;
       $[9] = t3;
@@ -77,7 +77,7 @@ function Component(t0) {
     t3 = $[5];
   }
   let t4;
-  if ($[10] !== T0 || $[11] !== t1) {
+  if (!Object.is($[10], T0) || !Object.is($[11], t1)) {
     t4 = <T0 value={t1} />;
     $[10] = T0;
     $[11] = t1;
@@ -86,7 +86,7 @@ function Component(t0) {
     t4 = $[12];
   }
   let t5;
-  if ($[13] !== t2 || $[14] !== t3 || $[15] !== t4) {
+  if (!Object.is($[13], t2) || !Object.is($[14], t3) || !Object.is($[15], t4)) {
     t5 = (
       <div>
         {t2}

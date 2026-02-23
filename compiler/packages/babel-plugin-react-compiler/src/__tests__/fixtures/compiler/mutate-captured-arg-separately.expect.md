@@ -28,7 +28,7 @@ import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(2);
   let y;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     y = function () {
       m(x);
     };

@@ -44,7 +44,7 @@ function Component(t0) {
     identity(other);
   }
   let t1;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     t1 = [x];
     $[0] = x;
     $[1] = t1;

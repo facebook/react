@@ -28,7 +28,7 @@ import fbt from "fbt";
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.count) {
+  if (!Object.is($[0], props.count)) {
     t0 = fbt._(
       "{(key) count} items",
       [fbt._param("(key) count", props.count)],
@@ -41,7 +41,7 @@ function Component(props) {
   }
   const text = t0;
   let t1;
-  if ($[2] !== text) {
+  if (!Object.is($[2], text)) {
     t1 = <div>{text}</div>;
     $[2] = text;
     $[3] = t1;

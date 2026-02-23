@@ -17,7 +17,7 @@ import { c as _c } from "react/compiler-runtime";
 function component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     t0 = isMenuShown ? <Bar> {props.a ? props.b : props.c}</Bar> : null;
     $[0] = props;
     $[1] = t0;

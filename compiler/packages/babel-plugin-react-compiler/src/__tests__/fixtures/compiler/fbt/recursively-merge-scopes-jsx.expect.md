@@ -50,7 +50,7 @@ function Example(t0) {
   const $ = _c(2);
   const { x } = t0;
   let t1;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     t1 = fbt._(
       "Outer Text {=m1}",
       [

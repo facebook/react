@@ -31,7 +31,7 @@ import { addOne, shallowCopy } from "shared-runtime";
 function foo(a, b, c) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t0 = shallowCopy(a);
     $[0] = a;
     $[1] = t0;
@@ -40,7 +40,7 @@ function foo(a, b, c) {
   }
   const x = t0;
   let t1;
-  if ($[2] !== b || $[3] !== x) {
+  if (!Object.is($[2], b) || !Object.is($[3], x)) {
     t1 = x.foo(b);
     $[2] = b;
     $[3] = x;

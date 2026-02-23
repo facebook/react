@@ -41,11 +41,11 @@ function Component(props) {
   let x = 0;
   let values;
   if (
-    $[0] !== props.a ||
-    $[1] !== props.b ||
-    $[2] !== props.c ||
-    $[3] !== props.d ||
-    $[4] !== x
+    !Object.is($[0], props.a) ||
+    !Object.is($[1], props.b) ||
+    !Object.is($[2], props.c) ||
+    !Object.is($[3], props.d) ||
+    !Object.is($[4], x)
   ) {
     values = [];
     const y = props.a || props.b;

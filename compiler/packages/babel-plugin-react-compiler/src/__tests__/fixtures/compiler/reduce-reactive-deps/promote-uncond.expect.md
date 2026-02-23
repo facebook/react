@@ -36,7 +36,11 @@ import { identity } from "shared-runtime";
 function usePromoteUnconditionalAccessToDependency(props, other) {
   const $ = _c(4);
   let x;
-  if ($[0] !== other || $[1] !== props.a.a.a || $[2] !== props.a.b) {
+  if (
+    !Object.is($[0], other) ||
+    !Object.is($[1], props.a.a.a) ||
+    !Object.is($[2], props.a.b)
+  ) {
     x = {};
     x.a = props.a.a.a;
     if (identity(other)) {

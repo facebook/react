@@ -63,7 +63,7 @@ function Component(t0) {
   const $ = _c(7);
   const { a, b } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t1 = makeObject_Primitives(a);
     $[0] = a;
     $[1] = t1;
@@ -78,7 +78,7 @@ function Component(t0) {
 
   identity(x2, b);
   let t2;
-  if ($[2] !== a) {
+  if (!Object.is($[2], a)) {
     t2 = [a];
     $[2] = a;
     $[3] = t2;
@@ -86,7 +86,7 @@ function Component(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t2 || $[5] !== x) {
+  if (!Object.is($[4], t2) || !Object.is($[5], x)) {
     t3 = <ValidateMemoization inputs={t2} output={x} />;
     $[4] = t2;
     $[5] = x;

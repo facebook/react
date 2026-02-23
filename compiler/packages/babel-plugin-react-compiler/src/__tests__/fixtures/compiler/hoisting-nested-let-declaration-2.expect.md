@@ -29,7 +29,7 @@ import { c as _c } from "react/compiler-runtime";
 function hoisting(cond) {
   const $ = _c(2);
   let items;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     items = [];
     if (cond) {
       const foo = () => {

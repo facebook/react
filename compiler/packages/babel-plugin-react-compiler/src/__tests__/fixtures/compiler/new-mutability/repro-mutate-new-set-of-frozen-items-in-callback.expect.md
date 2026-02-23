@@ -39,7 +39,7 @@ export const App = () => {
   }
   const [selected, setSelected] = useState(t0);
   let t1;
-  if ($[1] !== selected) {
+  if (!Object.is($[1], selected)) {
     t1 = (value) => {
       const newSelected = new Set(selected);
       if (newSelected.has(value)) {
@@ -57,7 +57,7 @@ export const App = () => {
   }
   const onSelectedChange = t1;
   let t2;
-  if ($[3] !== onSelectedChange || $[4] !== selected) {
+  if (!Object.is($[3], onSelectedChange) || !Object.is($[4], selected)) {
     t2 = <Stringify selected={selected} onSelectedChange={onSelectedChange} />;
     $[3] = onSelectedChange;
     $[4] = selected;

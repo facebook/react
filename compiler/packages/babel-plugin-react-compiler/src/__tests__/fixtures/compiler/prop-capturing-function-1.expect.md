@@ -25,7 +25,7 @@ import { c as _c } from "react/compiler-runtime";
 function component(a, b) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     const z = { a, b };
     t0 = function () {
       console.log(z);

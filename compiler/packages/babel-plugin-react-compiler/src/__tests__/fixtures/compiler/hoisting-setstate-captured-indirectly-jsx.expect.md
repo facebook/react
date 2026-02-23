@@ -35,7 +35,7 @@ function useFoo() {
   const [, t0] = useState();
   const setState = t0;
   let t1;
-  if ($[0] !== setState) {
+  if (!Object.is($[0], setState)) {
     t1 = () => {
       setState(DISABLED_FORM);
     };
@@ -47,7 +47,7 @@ function useFoo() {
   setState;
   const handleLogout = t1;
   let t2;
-  if ($[2] !== handleLogout) {
+  if (!Object.is($[2], handleLogout)) {
     const getComponent = () => <ColumnItem onPress={() => handleLogout()} />;
     t2 = getComponent();
     $[2] = handleLogout;
@@ -56,7 +56,7 @@ function useFoo() {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== onClick || $[5] !== t2) {
+  if (!Object.is($[4], onClick) || !Object.is($[5], t2)) {
     t3 = [t2, onClick];
     $[4] = onClick;
     $[5] = t2;

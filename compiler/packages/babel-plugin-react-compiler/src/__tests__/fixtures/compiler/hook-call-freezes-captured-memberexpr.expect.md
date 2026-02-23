@@ -36,7 +36,7 @@ function Foo(t0) {
   const $ = _c(9);
   const { val1 } = t0;
   let t1;
-  if ($[0] !== val1) {
+  if (!Object.is($[0], val1)) {
     t1 = { inner: val1 };
     $[0] = val1;
     $[1] = t1;
@@ -45,7 +45,7 @@ function Foo(t0) {
   }
   const x = t1;
   let t2;
-  if ($[2] !== x.inner) {
+  if (!Object.is($[2], x.inner)) {
     t2 = () => x.inner;
     $[2] = x.inner;
     $[3] = t2;
@@ -54,7 +54,7 @@ function Foo(t0) {
   }
   const cb = useIdentity(t2);
   let t3;
-  if ($[4] !== x) {
+  if (!Object.is($[4], x)) {
     t3 = identity(x);
     $[4] = x;
     $[5] = t3;
@@ -63,7 +63,7 @@ function Foo(t0) {
   }
   const copy = t3;
   let t4;
-  if ($[6] !== cb || $[7] !== copy) {
+  if (!Object.is($[6], cb) || !Object.is($[7], copy)) {
     t4 = <Stringify copy={copy} cb={cb} shouldInvokeFns={true} />;
     $[6] = cb;
     $[7] = copy;

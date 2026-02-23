@@ -43,7 +43,7 @@ function Component(t0) {
   const $ = _c(9);
   const { entity, children } = t0;
   let t1;
-  if ($[0] !== entity) {
+  if (!Object.is($[0], entity)) {
     t1 = () => entity != null;
     $[0] = entity;
     $[1] = t1;
@@ -54,7 +54,7 @@ function Component(t0) {
 
   const shouldShowMessage = showMessage();
   let t2;
-  if ($[2] !== shouldShowMessage) {
+  if (!Object.is($[2], shouldShowMessage)) {
     t2 = <div>{shouldShowMessage}</div>;
     $[2] = shouldShowMessage;
     $[3] = t2;
@@ -62,7 +62,7 @@ function Component(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== children) {
+  if (!Object.is($[4], children)) {
     t3 = <div>{children}</div>;
     $[4] = children;
     $[5] = t3;
@@ -70,7 +70,7 @@ function Component(t0) {
     t3 = $[5];
   }
   let t4;
-  if ($[6] !== t2 || $[7] !== t3) {
+  if (!Object.is($[6], t2) || !Object.is($[7], t3)) {
     t4 = (
       <div>
         {t2}

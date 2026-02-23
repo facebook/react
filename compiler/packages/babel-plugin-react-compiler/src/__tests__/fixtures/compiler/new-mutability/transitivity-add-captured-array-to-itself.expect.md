@@ -56,7 +56,7 @@ function Component(t0) {
   const $ = _c(19);
   const { a, b } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t1 = { a };
     $[0] = a;
     $[1] = t1;
@@ -65,7 +65,7 @@ function Component(t0) {
   }
   const o = t1;
   let x;
-  if ($[2] !== b || $[3] !== o) {
+  if (!Object.is($[2], b) || !Object.is($[3], o)) {
     x = [o];
     const y = typedCapture(x);
     const z = typedCapture(y);
@@ -78,7 +78,7 @@ function Component(t0) {
     x = $[4];
   }
   let t2;
-  if ($[5] !== a) {
+  if (!Object.is($[5], a)) {
     t2 = [a];
     $[5] = a;
     $[6] = t2;
@@ -86,7 +86,7 @@ function Component(t0) {
     t2 = $[6];
   }
   let t3;
-  if ($[7] !== o || $[8] !== t2) {
+  if (!Object.is($[7], o) || !Object.is($[8], t2)) {
     t3 = <ValidateMemoization inputs={t2} output={o} />;
     $[7] = o;
     $[8] = t2;
@@ -95,7 +95,7 @@ function Component(t0) {
     t3 = $[9];
   }
   let t4;
-  if ($[10] !== a || $[11] !== b) {
+  if (!Object.is($[10], a) || !Object.is($[11], b)) {
     t4 = [a, b];
     $[10] = a;
     $[11] = b;
@@ -104,7 +104,7 @@ function Component(t0) {
     t4 = $[12];
   }
   let t5;
-  if ($[13] !== t4 || $[14] !== x) {
+  if (!Object.is($[13], t4) || !Object.is($[14], x)) {
     t5 = <ValidateMemoization inputs={t4} output={x} />;
     $[13] = t4;
     $[14] = x;
@@ -113,7 +113,7 @@ function Component(t0) {
     t5 = $[15];
   }
   let t6;
-  if ($[16] !== t3 || $[17] !== t5) {
+  if (!Object.is($[16], t3) || !Object.is($[17], t5)) {
     t6 = (
       <>
         {t3};{t5};

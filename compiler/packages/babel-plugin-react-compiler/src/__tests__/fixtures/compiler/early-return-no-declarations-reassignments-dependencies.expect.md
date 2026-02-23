@@ -91,7 +91,7 @@ function Component(props) {
     return t0;
   }
   let t1;
-  if ($[1] !== props.a) {
+  if (!Object.is($[1], props.a)) {
     t1 = makeArray(props.a);
     $[1] = props.a;
     $[2] = t1;

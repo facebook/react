@@ -35,7 +35,7 @@ function Foo() {
   const $ = _c(4);
   const data = useFragment();
   let t0;
-  if ($[0] !== data) {
+  if (!Object.is($[0], data)) {
     t0 = data?.toString() || "";
     $[0] = data;
     $[1] = t0;
@@ -43,7 +43,7 @@ function Foo() {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = [t0];
     $[2] = t0;
     $[3] = t1;

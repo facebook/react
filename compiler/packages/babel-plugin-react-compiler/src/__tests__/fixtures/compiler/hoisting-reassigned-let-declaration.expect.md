@@ -34,7 +34,7 @@ function useHook(t0) {
   const $ = _c(2);
   const { cond } = t0;
   let t1;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     const getX = () => x;
     let x = CONST_NUMBER0;
     if (cond) {

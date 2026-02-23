@@ -34,7 +34,7 @@ function useMakeCallback(t0) {
   const { obj } = t0;
   const [state, setState] = useState(0);
   let t1;
-  if ($[0] !== obj.value || $[1] !== state) {
+  if (!Object.is($[0], obj.value) || !Object.is($[1], state)) {
     t1 = () => {
       if (obj.value !== state) {
         setState(obj.value);
@@ -51,7 +51,7 @@ function useMakeCallback(t0) {
   useIdentity();
   cb();
   let t2;
-  if ($[3] !== cb) {
+  if (!Object.is($[3], cb)) {
     t2 = [cb];
     $[3] = cb;
     $[4] = t2;

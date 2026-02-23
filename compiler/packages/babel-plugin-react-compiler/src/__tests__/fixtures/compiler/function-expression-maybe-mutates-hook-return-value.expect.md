@@ -25,7 +25,7 @@ function Component(props) {
   const $ = _c(2);
   const id = useSelectedEntitytId();
   let t0;
-  if ($[0] !== id) {
+  if (!Object.is($[0], id)) {
     const onLoad = () => {
       log(id);
     };

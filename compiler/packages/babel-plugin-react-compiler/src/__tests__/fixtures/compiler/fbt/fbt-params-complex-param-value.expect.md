@@ -23,7 +23,7 @@ import fbt from "fbt";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.name) {
+  if (!Object.is($[0], props.name)) {
     t0 = fbt._(
       "Hello {user name}",
       [fbt._param("user name", capitalize(props.name))],

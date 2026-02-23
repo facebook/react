@@ -28,7 +28,7 @@ import { c as _c } from "react/compiler-runtime";
 function f(a, b) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== a.length || $[1] !== b) {
+  if (!Object.is($[0], a.length) || !Object.is($[1], b)) {
     const x = [];
     if (a.length === 1) {
       if (b) {

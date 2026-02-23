@@ -38,7 +38,7 @@ function Foo(t0) {
   const T0 = Stringify;
   const t1 = identity(y);
   let t2;
-  if ($[0] !== T0 || $[1] !== t1) {
+  if (!Object.is($[0], T0) || !Object.is($[1], t1)) {
     t2 = <T0 value={t1} />;
     $[0] = T0;
     $[1] = t1;
@@ -49,7 +49,7 @@ function Foo(t0) {
   const T1 = Stringify;
   const t3 = identity(x);
   let t4;
-  if ($[3] !== T1 || $[4] !== t3) {
+  if (!Object.is($[3], T1) || !Object.is($[4], t3)) {
     t4 = <T1 value={t3} />;
     $[3] = T1;
     $[4] = t3;
@@ -58,7 +58,7 @@ function Foo(t0) {
     t4 = $[5];
   }
   let t5;
-  if ($[6] !== t2 || $[7] !== t4) {
+  if (!Object.is($[6], t2) || !Object.is($[7], t4)) {
     t5 = (
       <>
         {t2}

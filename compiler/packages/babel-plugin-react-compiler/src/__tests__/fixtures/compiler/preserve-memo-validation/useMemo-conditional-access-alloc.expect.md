@@ -35,7 +35,7 @@ function Component(t0) {
 
   const t1 = propB?.x.y;
   let t2;
-  if ($[0] !== t1) {
+  if (!Object.is($[0], t1)) {
     t2 = identity(t1);
     $[0] = t1;
     $[1] = t2;
@@ -43,7 +43,7 @@ function Component(t0) {
     t2 = $[1];
   }
   let t3;
-  if ($[2] !== propA || $[3] !== t2) {
+  if (!Object.is($[2], propA) || !Object.is($[3], t2)) {
     t3 = { value: t2, other: propA };
     $[2] = propA;
     $[3] = t2;

@@ -38,12 +38,12 @@ function Component(a, b) {
     t1 = $[1];
   }
   let y = t1;
-  if ($[2] !== a || $[3] !== b) {
+  if (!Object.is($[2], a) || !Object.is($[3], b)) {
     const z = foo(a);
     if (FLAG) {
       x = bar(z);
       let t2;
-      if ($[6] !== b) {
+      if (!Object.is($[6], b)) {
         t2 = baz(b);
         $[6] = b;
         $[7] = t2;
@@ -61,7 +61,7 @@ function Component(a, b) {
     y = $[5];
   }
   let t2;
-  if ($[8] !== x || $[9] !== y) {
+  if (!Object.is($[8], x) || !Object.is($[9], y)) {
     t2 = [x, y];
     $[8] = x;
     $[9] = y;

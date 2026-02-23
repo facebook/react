@@ -51,7 +51,7 @@ function Component(props) {
   const $ = _c(2);
   const { buttons } = props;
   let t0;
-  if ($[0] !== buttons) {
+  if (!Object.is($[0], buttons)) {
     const [, ...nonPrimaryButtons] = buttons;
     const renderedNonPrimaryButtons = nonPrimaryButtons.map(_temp);
     t0 = <StaticText1>{renderedNonPrimaryButtons}</StaticText1>;

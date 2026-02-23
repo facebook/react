@@ -36,7 +36,7 @@ function Component(t0) {
     value = value + i;
   }
   let t1;
-  if ($[0] !== value) {
+  if (!Object.is($[0], value)) {
     t1 = <div>{value}</div>;
     $[0] = value;
     $[1] = t1;

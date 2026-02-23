@@ -22,7 +22,7 @@ function Component(props) {
   const $ = _c(2);
   const mutate = _temp;
   let x;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     x = makeObject(props);
     mutate(x);
     $[0] = props;

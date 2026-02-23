@@ -42,14 +42,14 @@ function useFoo(t0) {
   const $ = _c(5);
   const { input, cond } = t0;
   let x;
-  if ($[0] !== cond || $[1] !== input) {
+  if (!Object.is($[0], cond) || !Object.is($[1], input)) {
     x = [];
     bb0: {
       if (cond) {
         break bb0;
       }
       let t1;
-      if ($[3] !== input.a.b) {
+      if (!Object.is($[3], input.a.b)) {
         t1 = identity(input.a.b);
         $[3] = input.a.b;
         $[4] = t1;

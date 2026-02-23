@@ -27,7 +27,7 @@ import { c as _c } from "react/compiler-runtime"; // Determine that we only need
 function TestDepsSubpathOrder1(props) {
   const $ = _c(2);
   let x;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     x = {};
     x.b = props.a.b;
     x.a = props.a;

@@ -35,7 +35,7 @@ function Component(t0) {
   bb0: {
     if (propA) {
       let t2;
-      if ($[0] !== propB.x.y) {
+      if (!Object.is($[0], propB.x.y)) {
         t2 = { value: propB.x.y };
         $[0] = propB.x.y;
         $[1] = t2;

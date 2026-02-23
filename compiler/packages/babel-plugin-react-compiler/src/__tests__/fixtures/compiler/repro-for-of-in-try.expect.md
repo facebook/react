@@ -37,7 +37,7 @@ function Foo(t0) {
   const { obj } = t0;
   let items;
   let t1;
-  if ($[0] !== obj) {
+  if (!Object.is($[0], obj)) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       items = [];
@@ -70,7 +70,7 @@ function Foo(t0) {
 
   const t2 = items.join(", ");
   let t3;
-  if ($[4] !== t2) {
+  if (!Object.is($[4], t2)) {
     t3 = <span>{t2}</span>;
     $[4] = t2;
     $[5] = t3;

@@ -26,7 +26,7 @@ function Component(t0) {
   const f = b--;
   const g = --b;
   let t1;
-  if ($[0] !== b || $[1] !== f || $[2] !== g) {
+  if (!Object.is($[0], b) || !Object.is($[1], f) || !Object.is($[2], g)) {
     t1 = [b, f, g];
     $[0] = b;
     $[1] = f;

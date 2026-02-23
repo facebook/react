@@ -54,7 +54,7 @@ function Component() {
   }
   useEffect(t1);
   let t2;
-  if ($[2] !== state) {
+  if (!Object.is($[2], state)) {
     t2 = <CustomInput value={state} onChange={onChange} ref={ref} />;
     $[2] = state;
     $[3] = t2;

@@ -50,7 +50,7 @@ function Foo() {
   const $ = _c(4);
   const ref = useCustomRef();
   let t0;
-  if ($[0] !== ref) {
+  if (!Object.is($[0], ref)) {
     t0 = () => {
       ref.current?.click();
     };

@@ -39,7 +39,7 @@ function Component(props) {
   }
   const onChange = t0;
   let t1;
-  if ($[1] !== x) {
+  if (!Object.is($[1], x)) {
     t1 = <input value={x} onChange={onChange} />;
     $[1] = x;
     $[2] = t1;

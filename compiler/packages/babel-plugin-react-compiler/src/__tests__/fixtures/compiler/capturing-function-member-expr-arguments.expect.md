@@ -22,7 +22,7 @@ import { c as _c } from "react/compiler-runtime";
 function Foo(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.router.location) {
+  if (!Object.is($[0], props.router.location)) {
     t0 = (reason) => {
       log(props.router.location);
     };

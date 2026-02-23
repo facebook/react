@@ -30,7 +30,7 @@ function useFoo() {
   const $ = _c(2);
   const [state] = useState(false);
   let t0;
-  if ($[0] !== state) {
+  if (!Object.is($[0], state)) {
     t0 = {
       func() {
         return state;

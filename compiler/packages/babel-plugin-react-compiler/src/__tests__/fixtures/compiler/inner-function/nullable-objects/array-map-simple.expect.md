@@ -47,9 +47,9 @@ function useFoo(t0) {
   const $ = _c(12);
   const { arr1, arr2 } = t0;
   let t1;
-  if ($[0] !== arr1) {
+  if (!Object.is($[0], arr1)) {
     let t2;
-    if ($[2] !== arr1[0]) {
+    if (!Object.is($[2], arr1[0])) {
       t2 = (e) => arr1[0].value + e.value;
       $[2] = arr1[0];
       $[3] = t2;
@@ -64,9 +64,9 @@ function useFoo(t0) {
   }
   const x = t1;
   let t2;
-  if ($[4] !== arr1 || $[5] !== arr2) {
+  if (!Object.is($[4], arr1) || !Object.is($[5], arr2)) {
     let t3;
-    if ($[7] !== arr2) {
+    if (!Object.is($[7], arr2)) {
       t3 = (e_0) => arr2[0].value + e_0.value;
       $[7] = arr2;
       $[8] = t3;
@@ -82,7 +82,7 @@ function useFoo(t0) {
   }
   const y = t2;
   let t3;
-  if ($[9] !== x || $[10] !== y) {
+  if (!Object.is($[9], x) || !Object.is($[10], y)) {
     t3 = [x, y];
     $[9] = x;
     $[10] = y;

@@ -56,7 +56,7 @@ function Component(t0) {
   const $ = _c(7);
   const { cond } = t0;
   let t1;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     const value = makeObject_Primitives();
     if (cond) {
       t1 = value;
@@ -71,7 +71,7 @@ function Component(t0) {
   }
   const memoized = t1;
   let t2;
-  if ($[2] !== cond) {
+  if (!Object.is($[2], cond)) {
     t2 = [cond];
     $[2] = cond;
     $[3] = t2;
@@ -79,7 +79,7 @@ function Component(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== memoized || $[5] !== t2) {
+  if (!Object.is($[4], memoized) || !Object.is($[5], t2)) {
     t3 = <ValidateMemoization inputs={t2} output={memoized} />;
     $[4] = memoized;
     $[5] = t2;

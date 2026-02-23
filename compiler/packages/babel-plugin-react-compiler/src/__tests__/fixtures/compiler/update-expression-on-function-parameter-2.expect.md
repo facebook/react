@@ -25,7 +25,7 @@ function Component(a) {
   const d = a++;
   const e = ++a;
   let t0;
-  if ($[0] !== a || $[1] !== d || $[2] !== e) {
+  if (!Object.is($[0], a) || !Object.is($[1], d) || !Object.is($[2], e)) {
     t0 = [a, d, e];
     $[0] = a;
     $[1] = d;

@@ -22,7 +22,7 @@ import { c as _c } from "react/compiler-runtime"; // @validateExhaustiveMemoizat
 function Component(props) {
   const $ = _c(10);
   let t0;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     t0 = makeObject(props.a);
     $[0] = props.a;
     $[1] = t0;
@@ -31,7 +31,7 @@ function Component(props) {
   }
   const a = t0;
   let t1;
-  if ($[2] !== props.b) {
+  if (!Object.is($[2], props.b)) {
     t1 = makeObject(props.b);
     $[2] = props.b;
     $[3] = t1;
@@ -40,7 +40,7 @@ function Component(props) {
   }
   const b = t1;
   let t2;
-  if ($[4] !== a || $[5] !== b) {
+  if (!Object.is($[4], a) || !Object.is($[5], b)) {
     t2 = [a, b];
     $[4] = a;
     $[5] = b;
@@ -50,7 +50,7 @@ function Component(props) {
   }
   const [a_0, b_0] = t2;
   let t3;
-  if ($[7] !== a_0 || $[8] !== b_0) {
+  if (!Object.is($[7], a_0) || !Object.is($[8], b_0)) {
     t3 = [a_0, b_0];
     $[7] = a_0;
     $[8] = b_0;

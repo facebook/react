@@ -33,7 +33,7 @@ import { throwInput } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     const object = {
       foo() {
         try {

@@ -78,10 +78,10 @@ function Calendar(t0) {
   let daysToDisplay;
   let firstDay;
   if (
-    $[0] !== currentDate ||
-    $[1] !== defaultFirstDay ||
-    $[2] !== user ||
-    $[3] !== view
+    !Object.is($[0], currentDate) ||
+    !Object.is($[1], defaultFirstDay) ||
+    !Object.is($[2], user) ||
+    !Object.is($[3], view)
   ) {
     const weekendDays = getWeekendDays(user);
     firstDay = defaultFirstDay;
@@ -94,7 +94,7 @@ function Calendar(t0) {
     } else {
       if (view === "day") {
         let t1;
-        if ($[6] !== currentDate) {
+        if (!Object.is($[6], currentDate)) {
           t1 = currentDate.getDayOfWeek();
           $[6] = currentDate;
           $[7] = t1;
@@ -116,7 +116,11 @@ function Calendar(t0) {
     firstDay = $[5];
   }
   let t1;
-  if ($[8] !== currentDate || $[9] !== daysToDisplay || $[10] !== firstDay) {
+  if (
+    !Object.is($[8], currentDate) ||
+    !Object.is($[9], daysToDisplay) ||
+    !Object.is($[10], firstDay)
+  ) {
     t1 = [currentDate, firstDay, daysToDisplay];
     $[8] = currentDate;
     $[9] = daysToDisplay;

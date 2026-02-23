@@ -33,10 +33,10 @@ function Component(t0) {
   const $ = _c(6);
   const { a, b, c } = t0;
   let t1;
-  if ($[0] !== a || $[1] !== b || $[2] !== c) {
+  if (!Object.is($[0], a) || !Object.is($[1], b) || !Object.is($[2], c)) {
     const x = [a];
     let t2;
-    if ($[4] !== b) {
+    if (!Object.is($[4], b)) {
       t2 = [null, b];
       $[4] = b;
       $[5] = t2;

@@ -72,7 +72,7 @@ function Component(props) {
 
   const setState2 = setState;
   let t0;
-  if ($[0] !== setState2) {
+  if (!Object.is($[0], setState2)) {
     t0 = { setState: setState2 };
     $[0] = setState2;
     $[1] = t0;
@@ -81,7 +81,7 @@ function Component(props) {
   }
   const stateObject = t0;
   let t1;
-  if ($[2] !== props.cond || $[3] !== stateObject.setState) {
+  if (!Object.is($[2], props.cond) || !Object.is($[3], stateObject.setState)) {
     t1 = (
       <Foo
         cond={props.cond}

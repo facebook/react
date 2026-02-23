@@ -42,7 +42,7 @@ export function Component(props) {
     count = props.items.length;
   }
   let t0;
-  if ($[0] !== count) {
+  if (!Object.is($[0], count)) {
     t0 = fbt._("for {count} experiences", [fbt._param("count", count)], {
       hk: "nmYpm",
     });
@@ -52,7 +52,7 @@ export function Component(props) {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = <Stringify>{t0}</Stringify>;
     $[2] = t0;
     $[3] = t1;

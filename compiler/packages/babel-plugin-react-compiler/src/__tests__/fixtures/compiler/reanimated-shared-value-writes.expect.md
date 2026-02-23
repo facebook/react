@@ -39,7 +39,7 @@ function SomeComponent() {
   const $ = _c(2);
   const sharedVal = useSharedValue(0);
   let t0;
-  if ($[0] !== sharedVal) {
+  if (!Object.is($[0], sharedVal)) {
     t0 = (
       <Button
         onPress={() => (sharedVal.value = Math.random())}

@@ -34,7 +34,7 @@ function useMakeCallback(t0) {
   const $ = _c(2);
   const { arr } = t0;
   let t1;
-  if ($[0] !== arr) {
+  if (!Object.is($[0], arr)) {
     t1 = { getElement0: () => arr[0].value, getElement1: () => arr[1].value };
     $[0] = arr;
     $[1] = t1;

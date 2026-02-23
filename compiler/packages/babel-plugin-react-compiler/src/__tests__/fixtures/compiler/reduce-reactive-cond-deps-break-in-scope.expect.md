@@ -34,7 +34,7 @@ function useFoo(t0) {
   const $ = _c(3);
   const { obj, objIsNull } = t0;
   let x;
-  if ($[0] !== obj || $[1] !== objIsNull) {
+  if (!Object.is($[0], obj) || !Object.is($[1], objIsNull)) {
     x = [];
     bb0: {
       if (objIsNull) {

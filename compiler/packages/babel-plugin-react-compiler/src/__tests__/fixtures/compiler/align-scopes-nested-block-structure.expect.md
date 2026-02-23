@@ -120,7 +120,7 @@ function useFoo(t0) {
   const { cond1, cond2 } = t0;
   let s;
   let t1;
-  if ($[0] !== cond1 || $[1] !== cond2) {
+  if (!Object.is($[0], cond1) || !Object.is($[1], cond2)) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       if (cond1) {

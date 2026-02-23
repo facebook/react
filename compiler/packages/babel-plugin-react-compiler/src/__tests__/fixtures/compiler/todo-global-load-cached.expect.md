@@ -39,7 +39,7 @@ function Component(t0) {
   const { num } = t0;
   let T0;
   let t1;
-  if ($[0] !== num) {
+  if (!Object.is($[0], num)) {
     const arr = makeArray(num);
     T0 = Stringify;
     t1 = arr.push(num);
@@ -51,7 +51,7 @@ function Component(t0) {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== T0 || $[4] !== t1) {
+  if (!Object.is($[3], T0) || !Object.is($[4], t1)) {
     t2 = <T0 value={t1} />;
     $[3] = T0;
     $[4] = t1;

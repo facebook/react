@@ -31,7 +31,7 @@ function useFoo(t0) {
   const $ = _c(5);
   const { arr1, arr2 } = t0;
   let t1;
-  if ($[0] !== arr2[0].value) {
+  if (!Object.is($[0], arr2[0].value)) {
     t1 = (e) => arr2[0].value + e.value;
     $[0] = arr2[0].value;
     $[1] = t1;
@@ -40,7 +40,7 @@ function useFoo(t0) {
   }
   const cb = t1;
   let y;
-  if ($[2] !== arr1 || $[3] !== cb) {
+  if (!Object.is($[2], arr1) || !Object.is($[3], cb)) {
     y = [];
     for (let i = 0; i < arr1.length; i++) {
       y.push(cb(arr1[i]));

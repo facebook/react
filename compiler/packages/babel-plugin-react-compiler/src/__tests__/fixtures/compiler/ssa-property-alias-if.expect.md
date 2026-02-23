@@ -29,7 +29,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a) {
   const $ = _c(4);
   let x;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     x = {};
     if (a) {
       let t0;

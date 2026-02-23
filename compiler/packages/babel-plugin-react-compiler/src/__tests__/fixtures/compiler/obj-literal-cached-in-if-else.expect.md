@@ -24,7 +24,7 @@ function foo(a, b, c, d) {
   let x;
   if (someVal) {
     let t0;
-    if ($[0] !== b) {
+    if (!Object.is($[0], b)) {
       t0 = { b };
       $[0] = b;
       $[1] = t0;
@@ -34,7 +34,7 @@ function foo(a, b, c, d) {
     x = t0;
   } else {
     let t0;
-    if ($[2] !== c) {
+    if (!Object.is($[2], c)) {
       t0 = { c };
       $[2] = c;
       $[3] = t0;

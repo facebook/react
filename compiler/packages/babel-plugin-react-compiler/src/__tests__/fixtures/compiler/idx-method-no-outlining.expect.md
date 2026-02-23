@@ -30,7 +30,7 @@ import { c as _c } from "react/compiler-runtime"; // @customMacros:"idx.a"
 function Component(props) {
   const $ = _c(10);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     t0 = idx(props, (_) => _.group.label);
     $[0] = props;
     $[1] = t0;
@@ -39,7 +39,7 @@ function Component(props) {
   }
   const groupName1 = t0;
   let t1;
-  if ($[2] !== props) {
+  if (!Object.is($[2], props)) {
     t1 = idx.a(props, (__0) => __0.group.label);
     $[2] = props;
     $[3] = t1;
@@ -48,7 +48,7 @@ function Component(props) {
   }
   const groupName2 = t1;
   let t2;
-  if ($[4] !== props) {
+  if (!Object.is($[4], props)) {
     t2 = idx.a.b(props, (__1) => __1.group.label);
     $[4] = props;
     $[5] = t2;
@@ -57,7 +57,11 @@ function Component(props) {
   }
   const groupName3 = t2;
   let t3;
-  if ($[6] !== groupName1 || $[7] !== groupName2 || $[8] !== groupName3) {
+  if (
+    !Object.is($[6], groupName1) ||
+    !Object.is($[7], groupName2) ||
+    !Object.is($[8], groupName3)
+  ) {
     t3 = (
       <div>
         {groupName1}

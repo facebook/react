@@ -24,7 +24,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(7);
   let t0;
-  if ($[0] !== props.a || $[1] !== props.b) {
+  if (!Object.is($[0], props.a) || !Object.is($[1], props.b)) {
     t0 = [props.a, props.b, "hello"];
     $[0] = props.a;
     $[1] = props.b;
@@ -36,7 +36,7 @@ function Component(props) {
   const x = a.length;
   const y = a.push;
   let t1;
-  if ($[3] !== a || $[4] !== x || $[5] !== y) {
+  if (!Object.is($[3], a) || !Object.is($[4], x) || !Object.is($[5], y)) {
     t1 = { a, x, y, z: a.concat };
     $[3] = a;
     $[4] = x;

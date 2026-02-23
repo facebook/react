@@ -78,7 +78,7 @@ function Component(t0) {
 
   const [data, setData] = useState(null);
   let t1;
-  if ($[0] !== x || $[1] !== y) {
+  if (!Object.is($[0], x) || !Object.is($[1], y)) {
     t1 = () => {
       const data_0 = load({ x, y });
       setData(data_0);
@@ -91,7 +91,11 @@ function Component(t0) {
   }
   const effectEvent = useEffectEvent(t1);
   let t2;
-  if ($[3] !== effectEvent || $[4] !== x || $[5] !== y) {
+  if (
+    !Object.is($[3], effectEvent) ||
+    !Object.is($[4], x) ||
+    !Object.is($[5], y)
+  ) {
     t2 = () => {
       const previousX = previousXRef.current;
       previousXRef.current = x;
@@ -109,7 +113,7 @@ function Component(t0) {
     t2 = $[6];
   }
   let t3;
-  if ($[7] !== x || $[8] !== y) {
+  if (!Object.is($[7], x) || !Object.is($[8], y)) {
     t3 = [x, y];
     $[7] = x;
     $[8] = y;
@@ -136,7 +140,11 @@ function Component(t0) {
   }
   const effectEvent2 = useEffectEvent(t4);
   let t5;
-  if ($[11] !== effectEvent2 || $[12] !== x || $[13] !== y) {
+  if (
+    !Object.is($[11], effectEvent2) ||
+    !Object.is($[12], x) ||
+    !Object.is($[13], y)
+  ) {
     t5 = () => {
       effectEvent2(x, y);
     };
@@ -148,7 +156,7 @@ function Component(t0) {
     t5 = $[14];
   }
   let t6;
-  if ($[15] !== x || $[16] !== y) {
+  if (!Object.is($[15], x) || !Object.is($[16], y)) {
     t6 = [x, y];
     $[15] = x;
     $[16] = y;

@@ -26,7 +26,7 @@ const ErrorView = isForgetEnabled_Fixtures()
       const $ = _c(2);
       const { error } = t0;
       let t1;
-      if ($[0] !== error) {
+      if (!Object.is($[0], error)) {
         t1 = <Stringify error={error} />;
         $[0] = error;
         $[1] = t1;

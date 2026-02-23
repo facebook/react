@@ -20,7 +20,7 @@ function Component(props) {
   const $ = _c(2);
   const t0 = props.a?.b.c.d;
   let t1;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     t1 = foo(t0);
     $[0] = t0;
     $[1] = t1;

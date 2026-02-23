@@ -39,7 +39,7 @@ function Component(t0) {
   }
   const MyClass = t1;
   let t2;
-  if ($[1] !== val) {
+  if (!Object.is($[1], val)) {
     t2 = [val];
     $[1] = val;
     $[2] = t2;
@@ -56,7 +56,7 @@ function Component(t0) {
   }
   const y = t3;
   let t4;
-  if ($[4] !== x) {
+  if (!Object.is($[4], x)) {
     t4 = [x, y];
     $[4] = x;
     $[5] = t4;

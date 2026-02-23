@@ -100,7 +100,7 @@ function useHook4(x, y, z) {
 function useHook5(x) {
   const $ = _c(2);
   let e;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     e = [];
     const local = makeObject_Primitives(x);
     const fn = () => {
@@ -119,7 +119,7 @@ function useHook5(x) {
 function useHook6(x) {
   const $ = _c(2);
   let f;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     f = [];
     f.push(x.y.z);
     f.push(x.y);
@@ -172,13 +172,13 @@ function Component(t0) {
   const g = useHook7(x);
   let t1;
   if (
-    $[0] !== a ||
-    $[1] !== b ||
-    $[2] !== c ||
-    $[3] !== d ||
-    $[4] !== e ||
-    $[5] !== f ||
-    $[6] !== g
+    !Object.is($[0], a) ||
+    !Object.is($[1], b) ||
+    !Object.is($[2], c) ||
+    !Object.is($[3], d) ||
+    !Object.is($[4], e) ||
+    !Object.is($[5], f) ||
+    !Object.is($[6], g)
   ) {
     t1 = <Stringify results={[a, b, c, d, e, f, g]} />;
     $[0] = a;

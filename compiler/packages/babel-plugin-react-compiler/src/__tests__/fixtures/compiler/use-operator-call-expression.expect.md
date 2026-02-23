@@ -56,7 +56,7 @@ function Component(props) {
     t0 = $[0];
   }
   let t1;
-  if ($[1] !== props.value) {
+  if (!Object.is($[1], props.value)) {
     t1 = <FooContext.Provider value={props.value}>{t0}</FooContext.Provider>;
     $[1] = props.value;
     $[2] = t1;
@@ -70,7 +70,7 @@ function Inner(props) {
   const $ = _c(7);
   const input = use(FooContext);
   let t0;
-  if ($[0] !== input) {
+  if (!Object.is($[0], input)) {
     t0 = [input];
     $[0] = input;
     $[1] = t0;
@@ -79,7 +79,7 @@ function Inner(props) {
   }
   const output = t0;
   let t1;
-  if ($[2] !== input) {
+  if (!Object.is($[2], input)) {
     t1 = [input];
     $[2] = input;
     $[3] = t1;
@@ -87,7 +87,7 @@ function Inner(props) {
     t1 = $[3];
   }
   let t2;
-  if ($[4] !== output || $[5] !== t1) {
+  if (!Object.is($[4], output) || !Object.is($[5], t1)) {
     t2 = <ValidateMemoization inputs={t1} output={output} />;
     $[4] = output;
     $[5] = t1;

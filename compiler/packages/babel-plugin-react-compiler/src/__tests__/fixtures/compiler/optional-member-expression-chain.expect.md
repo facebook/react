@@ -28,7 +28,7 @@ function Component(props) {
   const x = props?.b.c;
   const y = props?.b.c.d?.e.f.g?.h;
   let t0;
-  if ($[0] !== x || $[1] !== y) {
+  if (!Object.is($[0], x) || !Object.is($[1], y)) {
     t0 = { x, y };
     $[0] = x;
     $[1] = y;

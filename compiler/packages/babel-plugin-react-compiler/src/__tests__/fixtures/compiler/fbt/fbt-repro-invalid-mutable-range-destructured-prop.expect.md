@@ -40,7 +40,7 @@ function Component(t0) {
   const $ = _c(7);
   const { data } = t0;
   let t1;
-  if ($[0] !== data.name) {
+  if (!Object.is($[0], data.name)) {
     t1 = fbt._("{name}", [fbt._param("name", data.name ?? "")], {
       hk: "csQUH",
     });
@@ -51,7 +51,7 @@ function Component(t0) {
   }
   const el = t1;
   let t2;
-  if ($[2] !== data.name) {
+  if (!Object.is($[2], data.name)) {
     t2 = [data.name];
     $[2] = data.name;
     $[3] = t2;
@@ -59,7 +59,7 @@ function Component(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== el || $[5] !== t2) {
+  if (!Object.is($[4], el) || !Object.is($[5], t2)) {
     t3 = <ValidateMemoization inputs={t2} output={el} />;
     $[4] = el;
     $[5] = t2;

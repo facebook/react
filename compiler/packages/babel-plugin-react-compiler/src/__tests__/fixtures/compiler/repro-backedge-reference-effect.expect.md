@@ -38,7 +38,7 @@ function Foo(t0) {
   const $ = _c(2);
   const { userIds } = t0;
   let t1;
-  if ($[0] !== userIds) {
+  if (!Object.is($[0], userIds)) {
     t1 = (
       <Stringify
         fn={() => {

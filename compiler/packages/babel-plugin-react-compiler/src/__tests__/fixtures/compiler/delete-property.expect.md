@@ -23,7 +23,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(3);
   let x;
-  if ($[0] !== props.a || $[1] !== props.b) {
+  if (!Object.is($[0], props.a) || !Object.is($[1], props.b)) {
     x = { a: props.a, b: props.b };
     delete x.b;
     $[0] = props.a;

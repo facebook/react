@@ -15,7 +15,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props?.items) {
+  if (!Object.is($[0], props?.items)) {
     t0 = props?.items?.map?.(render)?.filter(Boolean) ?? [];
     $[0] = props?.items;
     $[1] = t0;

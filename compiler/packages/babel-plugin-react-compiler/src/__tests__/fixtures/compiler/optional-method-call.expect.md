@@ -18,7 +18,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     const x = makeObject(props);
     const y = makeObject(props);
     t0 = x.optionalMethod?.(y.a, props.a, foo(y.b), bar(props.b));

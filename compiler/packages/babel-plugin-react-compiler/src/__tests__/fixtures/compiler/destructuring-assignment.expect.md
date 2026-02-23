@@ -50,7 +50,12 @@ function foo(a, b, c) {
   [n] = t7;
   o = t5;
   let t8;
-  if ($[0] !== d || $[1] !== g || $[2] !== n || $[3] !== o) {
+  if (
+    !Object.is($[0], d) ||
+    !Object.is($[1], g) ||
+    !Object.is($[2], n) ||
+    !Object.is($[3], o)
+  ) {
     t8 = { d, g, n, o };
     $[0] = d;
     $[1] = g;

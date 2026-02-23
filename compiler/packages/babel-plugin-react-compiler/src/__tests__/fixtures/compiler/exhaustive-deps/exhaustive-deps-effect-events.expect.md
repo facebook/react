@@ -37,7 +37,7 @@ function Component(t0) {
   const $ = _c(12);
   const { x, y, z } = t0;
   let t1;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     t1 = () => {
       log(x);
     };
@@ -48,7 +48,7 @@ function Component(t0) {
   }
   const effectEvent = useEffectEvent(t1);
   let t2;
-  if ($[2] !== y) {
+  if (!Object.is($[2], y)) {
     t2 = (z_0) => {
       log(y, z_0);
     };
@@ -59,7 +59,7 @@ function Component(t0) {
   }
   const effectEvent2 = useEffectEvent(t2);
   let t3;
-  if ($[4] !== effectEvent) {
+  if (!Object.is($[4], effectEvent)) {
     t3 = () => {
       effectEvent();
     };
@@ -77,7 +77,7 @@ function Component(t0) {
   }
   useEffect(t3, t4);
   let t5;
-  if ($[7] !== effectEvent2 || $[8] !== z) {
+  if (!Object.is($[7], effectEvent2) || !Object.is($[8], z)) {
     t5 = () => {
       effectEvent2(z);
     };
@@ -88,7 +88,7 @@ function Component(t0) {
     t5 = $[9];
   }
   let t6;
-  if ($[10] !== z) {
+  if (!Object.is($[10], z)) {
     t6 = [z];
     $[10] = z;
     $[11] = t6;

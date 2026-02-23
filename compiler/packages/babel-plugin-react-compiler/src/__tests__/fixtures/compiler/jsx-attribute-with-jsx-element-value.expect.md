@@ -46,7 +46,7 @@ function Component(t0) {
   const $ = _c(2);
   const { items } = t0;
   let t1;
-  if ($[0] !== items) {
+  if (!Object.is($[0], items)) {
     t1 =
       items.length > 0 ? <Foo value={<Bar>{items.map(_temp)}</Bar>} /> : null;
     $[0] = items;
@@ -69,7 +69,7 @@ function Bar(t0) {
   const $ = _c(2);
   const { children } = t0;
   let t1;
-  if ($[0] !== children) {
+  if (!Object.is($[0], children)) {
     t1 = <div>{children}</div>;
     $[0] = children;
     $[1] = t1;
@@ -83,7 +83,7 @@ function Item(t0) {
   const $ = _c(2);
   const { item } = t0;
   let t1;
-  if ($[0] !== item.name) {
+  if (!Object.is($[0], item.name)) {
     t1 = <div>{item.name}</div>;
     $[0] = item.name;
     $[1] = t1;

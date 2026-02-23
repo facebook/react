@@ -42,7 +42,7 @@ import { Stringify } from "shared-runtime";
 function Component(props) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== props.p0 || $[1] !== props.p1) {
+  if (!Object.is($[0], props.p0) || !Object.is($[1], props.p1)) {
     const x = [];
     let y;
     if (props.p0) {

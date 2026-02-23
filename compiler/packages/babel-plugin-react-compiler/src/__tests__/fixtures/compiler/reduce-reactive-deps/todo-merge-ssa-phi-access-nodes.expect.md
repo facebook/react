@@ -89,7 +89,7 @@ function useFoo(cond) {
     Math.max(x.a.b, 0);
   }
   let y;
-  if ($[2] !== cond || $[3] !== x) {
+  if (!Object.is($[2], cond) || !Object.is($[3], x)) {
     y = [];
     if (identity(cond)) {
       y.push(x.a.b);

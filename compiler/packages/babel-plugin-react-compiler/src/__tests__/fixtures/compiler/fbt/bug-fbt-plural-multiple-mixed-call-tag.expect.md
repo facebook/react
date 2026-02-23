@@ -61,7 +61,7 @@ function useFoo(t0) {
   const $ = _c(3);
   const { apples, bananas } = t0;
   let t1;
-  if ($[0] !== apples || $[1] !== bananas) {
+  if (!Object.is($[0], apples) || !Object.is($[1], bananas)) {
     t1 = (
       <div>
         {fbt._(

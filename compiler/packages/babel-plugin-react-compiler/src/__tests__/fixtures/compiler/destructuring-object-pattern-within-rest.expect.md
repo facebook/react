@@ -22,7 +22,7 @@ function Component(props) {
   const $ = _c(6);
   let t0;
   let y;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     [y, ...t0] = props.value;
     $[0] = props.value;
     $[1] = t0;
@@ -33,7 +33,7 @@ function Component(props) {
   }
   const { z } = t0;
   let t1;
-  if ($[3] !== y || $[4] !== z) {
+  if (!Object.is($[3], y) || !Object.is($[4], z)) {
     t1 = [y, z];
     $[3] = y;
     $[4] = z;

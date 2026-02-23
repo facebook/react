@@ -41,7 +41,7 @@ function Foo(t0) {
   const $ = _c(8);
   const { a, cond } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t1 = () => [a, a.b.c];
     $[0] = a;
     $[1] = t1;
@@ -51,7 +51,7 @@ function Foo(t0) {
   const fn = t1;
   useIdentity(null);
   let x;
-  if ($[2] !== a.b.c || $[3] !== cond) {
+  if (!Object.is($[2], a.b.c) || !Object.is($[3], cond)) {
     x = makeArray();
     if (cond) {
       x.push(identity(a.b.c));
@@ -63,7 +63,7 @@ function Foo(t0) {
     x = $[4];
   }
   let t2;
-  if ($[5] !== fn || $[6] !== x) {
+  if (!Object.is($[5], fn) || !Object.is($[6], x)) {
     t2 = <Stringify fn={fn} x={x} shouldInvokeFns={true} />;
     $[5] = fn;
     $[6] = x;

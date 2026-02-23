@@ -34,7 +34,7 @@ function Component(props) {
   const $ = _c(7);
   let x;
   let t0;
-  if ($[0] !== props.count) {
+  if (!Object.is($[0], props.count)) {
     t0 = [props.count];
     $[0] = props.count;
     $[1] = t0;
@@ -44,7 +44,7 @@ function Component(props) {
   const array = t0;
   x = array;
   let t1;
-  if ($[2] !== array) {
+  if (!Object.is($[2], array)) {
     t1 = <div>{array}</div>;
     $[2] = array;
     $[3] = t1;
@@ -53,7 +53,7 @@ function Component(props) {
   }
   const element = t1;
   let t2;
-  if ($[4] !== element || $[5] !== x) {
+  if (!Object.is($[4], element) || !Object.is($[5], x)) {
     t2 = (
       <div>
         {element}

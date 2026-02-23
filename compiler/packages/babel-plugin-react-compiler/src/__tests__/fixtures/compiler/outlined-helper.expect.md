@@ -30,7 +30,7 @@ import { Stringify } from "shared-runtime";
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.items) {
+  if (!Object.is($[0], props.items)) {
     t0 = props.items.map(_temp);
     $[0] = props.items;
     $[1] = t0;
@@ -38,7 +38,7 @@ function Component(props) {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = <div>{t0}</div>;
     $[2] = t0;
     $[3] = t1;

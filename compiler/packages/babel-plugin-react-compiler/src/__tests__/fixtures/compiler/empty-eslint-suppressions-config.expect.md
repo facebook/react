@@ -32,7 +32,7 @@ function Component(props) {
   "use forget";
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.text) {
+  if (!Object.is($[0], props.text)) {
     t0 = <div>{props.text}</div>;
     $[0] = props.text;
     $[1] = t0;

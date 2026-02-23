@@ -70,7 +70,7 @@ function useBar(t0, cond) {
     x = b;
   }
   let t2;
-  if ($[1] !== a || $[2] !== x) {
+  if (!Object.is($[1], a) || !Object.is($[2], x)) {
     t2 = () => [a, x];
     $[1] = a;
     $[2] = x;
@@ -81,7 +81,7 @@ function useBar(t0, cond) {
   x;
   const cb = t2;
   let t3;
-  if ($[4] !== cb) {
+  if (!Object.is($[4], cb)) {
     t3 = <Stringify cb={cb} shouldInvoke={true} />;
     $[4] = cb;
     $[5] = t3;

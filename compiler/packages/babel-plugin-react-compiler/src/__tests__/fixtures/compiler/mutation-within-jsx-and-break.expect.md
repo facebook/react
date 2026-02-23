@@ -53,7 +53,7 @@ function useFoo(t0) {
   const { data } = t0;
   let obj;
   let myDiv = null;
-  if ($[0] !== data.cond || $[1] !== data.cond1) {
+  if (!Object.is($[0], data.cond) || !Object.is($[1], data.cond1)) {
     bb0: if (data.cond) {
       obj = makeObject_Primitives();
       if (data.cond1) {

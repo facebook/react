@@ -38,7 +38,7 @@ function Component(t0) {
   try {
     const result = a ?? b ?? fallback.value;
     let t1;
-    if ($[0] !== result) {
+    if (!Object.is($[0], result)) {
       t1 = <span>{result}</span>;
       $[0] = result;
       $[1] = t1;

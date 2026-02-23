@@ -59,7 +59,7 @@ function Component(t0) {
   const $ = _c(9);
   const { config } = t0;
   let t1;
-  if ($[0] !== config) {
+  if (!Object.is($[0], config)) {
     t1 = (event) => {
       config?.onA?.(event);
     };
@@ -70,7 +70,7 @@ function Component(t0) {
   }
   const a = t1;
   let t2;
-  if ($[2] !== config) {
+  if (!Object.is($[2], config)) {
     t2 = (event_0) => {
       config?.onB?.(event_0);
     };
@@ -81,7 +81,7 @@ function Component(t0) {
   }
   const b = t2;
   let t3;
-  if ($[4] !== a || $[5] !== b) {
+  if (!Object.is($[4], a) || !Object.is($[5], b)) {
     t3 = { b, a };
     $[4] = a;
     $[5] = b;
@@ -91,7 +91,7 @@ function Component(t0) {
   }
   const object = t3;
   let t4;
-  if ($[7] !== object) {
+  if (!Object.is($[7], object)) {
     t4 = <Stringify value={object} />;
     $[7] = object;
     $[8] = t4;

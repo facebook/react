@@ -34,7 +34,11 @@ import { mutate } from "shared-runtime";
 function useFoo(props) {
   const $ = _c(4);
   let x;
-  if ($[0] !== props.bar || $[1] !== props.cond || $[2] !== props.foo) {
+  if (
+    !Object.is($[0], props.bar) ||
+    !Object.is($[1], props.cond) ||
+    !Object.is($[2], props.foo)
+  ) {
     x = [];
     x.push(props.bar);
     props.cond ? (([x] = [[]]), x.push(props.foo)) : null;

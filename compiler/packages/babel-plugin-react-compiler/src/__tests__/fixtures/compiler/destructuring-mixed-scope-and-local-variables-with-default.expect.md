@@ -73,12 +73,12 @@ function Component(props) {
     props.post,
   );
   let t0;
-  if ($[0] !== post) {
+  if (!Object.is($[0], post)) {
     const allUrls = [];
     const { media: t1, comments: t2, urls: t3 } = post;
     const media = t1 === undefined ? null : t1;
     let t4;
-    if ($[2] !== t2) {
+    if (!Object.is($[2], t2)) {
       t4 = t2 === undefined ? [] : t2;
       $[2] = t2;
       $[3] = t4;
@@ -87,7 +87,7 @@ function Component(props) {
     }
     const comments = t4;
     let t5;
-    if ($[4] !== t3) {
+    if (!Object.is($[4], t3)) {
       t5 = t3 === undefined ? [] : t3;
       $[4] = t3;
       $[5] = t5;
@@ -96,7 +96,7 @@ function Component(props) {
     }
     const urls = t5;
     let t6;
-    if ($[6] !== comments.length) {
+    if (!Object.is($[6], comments.length)) {
       t6 = (e) => {
         if (!comments.length) {
           return;

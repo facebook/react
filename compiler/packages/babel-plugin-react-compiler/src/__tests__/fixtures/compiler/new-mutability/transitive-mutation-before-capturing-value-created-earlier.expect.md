@@ -21,7 +21,7 @@ function Component(t0) {
   const $ = _c(5);
   const { a, b } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t1 = [a];
     $[0] = a;
     $[1] = t1;
@@ -30,7 +30,7 @@ function Component(t0) {
   }
   const x = t1;
   let t2;
-  if ($[2] !== b || $[3] !== x) {
+  if (!Object.is($[2], b) || !Object.is($[3], x)) {
     const y = { b };
     mutate(y);
     y.x = x;

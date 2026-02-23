@@ -98,7 +98,7 @@ function Example() {
   }
   useLayoutEffect(t2, t3);
   let t4;
-  if ($[4] !== resizeRef) {
+  if (!Object.is($[4], resizeRef)) {
     t4 = <div ref={resizeRef} />;
     $[4] = resizeRef;
     $[5] = t4;

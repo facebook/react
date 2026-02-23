@@ -55,7 +55,7 @@ function foo(props) {
   const $ = _c(14);
   let t0;
   let x;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     x = [];
     x.push(props.a);
     t0 = <div>{x}</div>;
@@ -68,7 +68,11 @@ function foo(props) {
   }
   const header = t0;
   let y;
-  if ($[3] !== props.b || $[4] !== props.c || $[5] !== x) {
+  if (
+    !Object.is($[3], props.b) ||
+    !Object.is($[4], props.c) ||
+    !Object.is($[5], x)
+  ) {
     y = [x];
     x = [];
     y.push(props.b);
@@ -83,7 +87,7 @@ function foo(props) {
     x = $[7];
   }
   let t1;
-  if ($[8] !== x || $[9] !== y) {
+  if (!Object.is($[8], x) || !Object.is($[9], y)) {
     t1 = (
       <div>
         {x}
@@ -98,7 +102,7 @@ function foo(props) {
   }
   const content = t1;
   let t2;
-  if ($[11] !== content || $[12] !== header) {
+  if (!Object.is($[11], content) || !Object.is($[12], header)) {
     t2 = (
       <>
         {header}

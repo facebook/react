@@ -63,7 +63,7 @@ function Component() {
     "styles/dark": identity([theme.getTheme()]),
   });
   let t1;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     t1 = <div className={t0} />;
     $[0] = t0;
     $[1] = t1;

@@ -40,11 +40,11 @@ import { identity } from "shared-runtime";
 function useFoo(maybeNullObject) {
   const $ = _c(4);
   let y;
-  if ($[0] !== maybeNullObject) {
+  if (!Object.is($[0], maybeNullObject)) {
     y = [];
     try {
       let t0;
-      if ($[2] !== maybeNullObject.value.inner) {
+      if (!Object.is($[2], maybeNullObject.value.inner)) {
         t0 = identity(maybeNullObject.value.inner);
         $[2] = maybeNullObject.value.inner;
         $[3] = t0;

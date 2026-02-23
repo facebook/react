@@ -34,7 +34,7 @@ function Component(t0) {
   const $ = _c(2);
   const { cond } = t0;
   let x;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     x = 2;
     const obj = {
       method(cond_0) {

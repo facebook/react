@@ -26,7 +26,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let items;
-  if ($[0] !== props.items) {
+  if (!Object.is($[0], props.items)) {
     items = [];
 
     for (let i = 0, length = props.items.length; i < length; i++) {

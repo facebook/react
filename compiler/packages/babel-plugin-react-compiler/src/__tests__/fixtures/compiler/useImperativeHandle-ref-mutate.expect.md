@@ -38,7 +38,7 @@ function Component(t0) {
   const ref2 = useRef(1);
   let t1;
   let t2;
-  if ($[0] !== prop) {
+  if (!Object.is($[0], prop)) {
     t1 = () => {
       const precomputed = prop + ref2.current;
       return { foo: () => prop + ref2.current + precomputed };

@@ -33,7 +33,7 @@ const { throwInput } = require("shared-runtime");
 function Component(props) {
   const $ = _c(3);
   let x;
-  if ($[0] !== props.e || $[1] !== props.y) {
+  if (!Object.is($[0], props.e) || !Object.is($[1], props.y)) {
     try {
       const y = [];
       y.push(props.y);

@@ -32,7 +32,7 @@ function Component(props) {
   const { x: t0, sameName: renamed } = props;
   const { destructured } = t0;
   let t1;
-  if ($[0] !== destructured) {
+  if (!Object.is($[0], destructured)) {
     t1 = identity(destructured);
     $[0] = destructured;
     $[1] = t1;
@@ -41,7 +41,7 @@ function Component(props) {
   }
   const sameName = t1;
   let t2;
-  if ($[2] !== renamed || $[3] !== sameName) {
+  if (!Object.is($[2], renamed) || !Object.is($[3], sameName)) {
     t2 = [sameName, renamed];
     $[2] = renamed;
     $[3] = sameName;

@@ -28,7 +28,7 @@ import { Stringify, makeObject_Primitives } from "shared-runtime";
 function Component(props) {
   const $ = _c(6);
   let t0;
-  if ($[0] !== props.count) {
+  if (!Object.is($[0], props.count)) {
     t0 = [props.count];
     $[0] = props.count;
     $[1] = t0;
@@ -38,7 +38,7 @@ function Component(props) {
   const array = t0;
   const x = makeObject_Primitives();
   let t1;
-  if ($[2] !== array) {
+  if (!Object.is($[2], array)) {
     t1 = <div>{array}</div>;
     $[2] = array;
     $[3] = t1;
@@ -48,7 +48,7 @@ function Component(props) {
   const element = t1;
   console.log(x);
   let t2;
-  if ($[4] !== element) {
+  if (!Object.is($[4], element)) {
     t2 = <div>{element}</div>;
     $[4] = element;
     $[5] = t2;

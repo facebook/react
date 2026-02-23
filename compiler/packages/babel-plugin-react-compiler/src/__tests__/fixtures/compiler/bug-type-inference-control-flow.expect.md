@@ -73,7 +73,7 @@ function useFoo(t0) {
   const $ = _c(5);
   const { cond, value } = t0;
   let x;
-  if ($[0] !== cond) {
+  if (!Object.is($[0], cond)) {
     x = { value: cond ? CONST_NUMBER0 : [] };
     mutate(x);
     $[0] = cond;
@@ -88,7 +88,7 @@ function useFoo(t0) {
     result = xValue + 1;
   } else {
     let t1;
-    if ($[2] !== value || $[3] !== xValue) {
+    if (!Object.is($[2], value) || !Object.is($[3], xValue)) {
       t1 = arrayPush(xValue, value);
       $[2] = value;
       $[3] = xValue;

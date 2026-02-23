@@ -19,7 +19,7 @@ export default function foo(x, y) {
   const $ = _c(4);
   if (x) {
     let t0;
-    if ($[0] !== y) {
+    if (!Object.is($[0], y)) {
       t0 = foo(false, y);
       $[0] = y;
       $[1] = t0;
@@ -31,7 +31,7 @@ export default function foo(x, y) {
 
   const t0 = y * 10;
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = [t0];
     $[2] = t0;
     $[3] = t1;

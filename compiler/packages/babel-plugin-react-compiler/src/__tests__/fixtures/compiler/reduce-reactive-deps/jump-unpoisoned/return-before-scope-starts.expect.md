@@ -52,7 +52,7 @@ function useFoo(t0) {
     return t1;
   }
   let x;
-  if ($[1] !== input.a.b) {
+  if (!Object.is($[1], input.a.b)) {
     x = [];
     arrayPush(x, input.a.b);
     $[1] = input.a.b;

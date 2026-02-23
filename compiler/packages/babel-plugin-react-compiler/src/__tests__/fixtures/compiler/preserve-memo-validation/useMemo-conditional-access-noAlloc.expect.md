@@ -33,7 +33,7 @@ function Component(t0) {
 
   const t1 = propB?.x.y;
   let t2;
-  if ($[0] !== propA || $[1] !== t1) {
+  if (!Object.is($[0], propA) || !Object.is($[1], t1)) {
     t2 = { value: t1, other: propA };
     $[0] = propA;
     $[1] = t1;

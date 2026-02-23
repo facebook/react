@@ -40,7 +40,7 @@ function Component(props) {
   useHook();
   identity(x);
   let t0;
-  if ($[0] !== x) {
+  if (!Object.is($[0], x)) {
     const y = [x];
     t0 = [y];
     $[0] = x;

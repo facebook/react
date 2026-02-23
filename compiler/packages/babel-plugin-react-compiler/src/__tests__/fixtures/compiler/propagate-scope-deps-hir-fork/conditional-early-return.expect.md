@@ -75,7 +75,11 @@ function ComponentA(props) {
   const $ = _c(5);
   let a_DEBUG;
   let t0;
-  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.d) {
+  if (
+    !Object.is($[0], props.a) ||
+    !Object.is($[1], props.b) ||
+    !Object.is($[2], props.d)
+  ) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       a_DEBUG = [];
@@ -109,10 +113,10 @@ function ComponentB(props) {
   const $ = _c(5);
   let a;
   if (
-    $[0] !== props.a ||
-    $[1] !== props.b ||
-    $[2] !== props.c ||
-    $[3] !== props.d
+    !Object.is($[0], props.a) ||
+    !Object.is($[1], props.b) ||
+    !Object.is($[2], props.c) ||
+    !Object.is($[3], props.d)
   ) {
     a = [];
     a.push(props.a);
@@ -140,10 +144,10 @@ function ComponentC(props) {
   let a;
   let t0;
   if (
-    $[0] !== props.a ||
-    $[1] !== props.b ||
-    $[2] !== props.c ||
-    $[3] !== props.d
+    !Object.is($[0], props.a) ||
+    !Object.is($[1], props.b) ||
+    !Object.is($[2], props.c) ||
+    !Object.is($[3], props.d)
   ) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
@@ -181,10 +185,10 @@ function ComponentD(props) {
   let a;
   let t0;
   if (
-    $[0] !== props.a ||
-    $[1] !== props.b ||
-    $[2] !== props.c ||
-    $[3] !== props.d
+    !Object.is($[0], props.a) ||
+    !Object.is($[1], props.b) ||
+    !Object.is($[2], props.c) ||
+    !Object.is($[3], props.d)
   ) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {

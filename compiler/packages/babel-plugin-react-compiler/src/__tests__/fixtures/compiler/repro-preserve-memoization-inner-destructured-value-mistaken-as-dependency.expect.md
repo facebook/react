@@ -57,7 +57,7 @@ import { identity, Stringify } from "shared-runtime";
 function useInputValue(input) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== input) {
+  if (!Object.is($[0], input)) {
     t0 = identity(input);
     $[0] = input;
     $[1] = t0;
@@ -66,7 +66,7 @@ function useInputValue(input) {
   }
   const { value } = t0;
   let t1;
-  if ($[2] !== value) {
+  if (!Object.is($[2], value)) {
     t1 = { value };
     $[2] = value;
     $[3] = t1;
@@ -89,7 +89,7 @@ function Component() {
   }
   const t1 = useInputValue(t0);
   let t2;
-  if ($[1] !== t1.value) {
+  if (!Object.is($[1], t1.value)) {
     t2 = <Stringify value={t1.value} />;
     $[1] = t1.value;
     $[2] = t2;

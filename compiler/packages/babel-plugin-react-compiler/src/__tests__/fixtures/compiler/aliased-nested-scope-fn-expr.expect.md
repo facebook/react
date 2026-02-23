@@ -83,7 +83,7 @@ function Component(t0) {
   const $ = _c(2);
   const { prop } = t0;
   let t1;
-  if ($[0] !== prop) {
+  if (!Object.is($[0], prop)) {
     const obj = shallowCopy(prop);
     const aliasedObj = identity(obj);
     const getId = () => obj.id;

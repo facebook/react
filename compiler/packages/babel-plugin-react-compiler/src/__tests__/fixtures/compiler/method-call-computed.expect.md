@@ -25,7 +25,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a, b, c) {
   const $ = _c(8);
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t0 = makeObject(a);
     $[0] = a;
     $[1] = t0;
@@ -34,7 +34,7 @@ function foo(a, b, c) {
   }
   const x = t0;
   let t1;
-  if ($[2] !== a) {
+  if (!Object.is($[2], a)) {
     t1 = makeObject(a);
     $[2] = a;
     $[3] = t1;
@@ -43,7 +43,11 @@ function foo(a, b, c) {
   }
   const y = t1;
   let t2;
-  if ($[4] !== b || $[5] !== x || $[6] !== y.method) {
+  if (
+    !Object.is($[4], b) ||
+    !Object.is($[5], x) ||
+    !Object.is($[6], y.method)
+  ) {
     t2 = x[y.method](b);
     $[4] = b;
     $[5] = x;

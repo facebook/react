@@ -64,7 +64,7 @@ function Foo(t0) {
     x = t2;
   }
   let t2;
-  if ($[2] !== cond || $[3] !== x) {
+  if (!Object.is($[2], cond) || !Object.is($[3], x)) {
     t2 = !cond && [(x as HasA).a.value + 2];
     $[2] = cond;
     $[3] = x;
@@ -73,7 +73,7 @@ function Foo(t0) {
     t2 = $[4];
   }
   let t3;
-  if ($[5] !== t2) {
+  if (!Object.is($[5], t2)) {
     t3 = <Stringify val={t2} />;
     $[5] = t2;
     $[6] = t3;

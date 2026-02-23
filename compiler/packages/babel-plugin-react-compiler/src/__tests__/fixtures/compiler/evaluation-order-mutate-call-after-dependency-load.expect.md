@@ -49,7 +49,7 @@ function useFoo(source) {
   const $ = _c(6);
   let t0;
   let t1;
-  if ($[0] !== source) {
+  if (!Object.is($[0], source)) {
     const arr = [1, 2, 3, ...source];
     t0 = arr.length;
     t1 = arr.push(0);
@@ -61,7 +61,7 @@ function useFoo(source) {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== t0 || $[4] !== t1) {
+  if (!Object.is($[3], t0) || !Object.is($[4], t1)) {
     t2 = [t0, t1];
     $[3] = t0;
     $[4] = t1;

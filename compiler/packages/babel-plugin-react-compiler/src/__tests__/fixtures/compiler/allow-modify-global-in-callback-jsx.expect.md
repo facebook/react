@@ -42,7 +42,7 @@ function Component(t0) {
   const $ = _c(4);
   const { value } = t0;
   let t1;
-  if ($[0] !== value) {
+  if (!Object.is($[0], value)) {
     t1 = () => {
       someGlobal.value = value;
     };
@@ -53,7 +53,7 @@ function Component(t0) {
   }
   const onClick = t1;
   let t2;
-  if ($[2] !== onClick) {
+  if (!Object.is($[2], onClick)) {
     t2 = <div onClick={onClick}>{someGlobal.value}</div>;
     $[2] = onClick;
     $[3] = t2;

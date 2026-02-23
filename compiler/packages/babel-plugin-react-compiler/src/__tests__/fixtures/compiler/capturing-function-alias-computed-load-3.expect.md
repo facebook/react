@@ -32,7 +32,7 @@ import { c as _c } from "react/compiler-runtime";
 function bar(a, b) {
   const $ = _c(3);
   let y;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     const x = [a, b];
     y = {};
     let t = {};

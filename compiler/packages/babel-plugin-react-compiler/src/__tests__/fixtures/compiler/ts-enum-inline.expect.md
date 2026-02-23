@@ -38,7 +38,7 @@ function Component(props) {
     bool = Bool.True;
   }
   let t0;
-  if ($[0] !== bool) {
+  if (!Object.is($[0], bool)) {
     t0 = <div>{bool}</div>;
     $[0] = bool;
     $[1] = t0;

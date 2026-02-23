@@ -49,7 +49,7 @@ function Component(t0) {
   const $ = _c(8);
   const { cond, other } = t0;
   let x;
-  if ($[0] !== cond || $[1] !== other) {
+  if (!Object.is($[0], cond) || !Object.is($[1], other)) {
     x = makeObject_Primitives();
     setProperty(x, { b: 3, other }, "a");
     identity(x.a.b);
@@ -63,7 +63,7 @@ function Component(t0) {
     x = $[2];
   }
   let t1;
-  if ($[3] !== cond || $[4] !== x) {
+  if (!Object.is($[3], cond) || !Object.is($[4], x)) {
     t1 = identity(cond) && x.a.b;
     $[3] = cond;
     $[4] = x;
@@ -72,7 +72,7 @@ function Component(t0) {
     t1 = $[5];
   }
   let t2;
-  if ($[6] !== t1) {
+  if (!Object.is($[6], t1)) {
     t2 = [t1];
     $[6] = t1;
     $[7] = t2;

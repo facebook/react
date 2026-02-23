@@ -26,7 +26,7 @@ function PrimitiveAsDep(props) {
   const $ = _c(2);
   const t0 = props.b + 1;
   let t1;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     t1 = foo(t0);
     $[0] = t0;
     $[1] = t1;

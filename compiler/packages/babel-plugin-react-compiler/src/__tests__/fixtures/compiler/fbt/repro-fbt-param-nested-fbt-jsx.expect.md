@@ -67,9 +67,9 @@ function Component(t0) {
   const $ = _c(9);
   const { firstname, lastname } = t0;
   let t1;
-  if ($[0] !== firstname || $[1] !== lastname) {
+  if (!Object.is($[0], firstname) || !Object.is($[1], lastname)) {
     let t2;
-    if ($[3] !== firstname) {
+    if (!Object.is($[3], firstname)) {
       t2 = <Stringify key={0} name={firstname} />;
       $[3] = firstname;
       $[4] = t2;
@@ -77,7 +77,7 @@ function Component(t0) {
       t2 = $[4];
     }
     let t3;
-    if ($[5] !== lastname) {
+    if (!Object.is($[5], lastname)) {
       t3 = <Stringify key={1} name={lastname} />;
       $[5] = lastname;
       $[6] = t3;
@@ -106,7 +106,7 @@ function Component(t0) {
     t1 = $[2];
   }
   let t2;
-  if ($[7] !== t1) {
+  if (!Object.is($[7], t1)) {
     t2 = <div>{t1}</div>;
     $[7] = t1;
     $[8] = t2;

@@ -31,7 +31,7 @@ function useHook(t0) {
   const $ = _c(3);
   const { isCond, value } = t0;
   let t1;
-  if ($[0] !== isCond || $[1] !== value) {
+  if (!Object.is($[0], isCond) || !Object.is($[1], value)) {
     t1 = isCond
       ? {
           getValue() {

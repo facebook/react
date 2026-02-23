@@ -47,7 +47,7 @@ export function Component(t0) {
   const $ = _c(17);
   const { a, b } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t1 = { a };
     $[0] = a;
     $[1] = t1;
@@ -56,7 +56,7 @@ export function Component(t0) {
   }
   const item1 = t1;
   let t2;
-  if ($[2] !== b) {
+  if (!Object.is($[2], b)) {
     t2 = { b };
     $[2] = b;
     $[3] = t2;
@@ -66,7 +66,7 @@ export function Component(t0) {
   const item2 = t2;
   typedLog(item1, item2);
   let t3;
-  if ($[4] !== a) {
+  if (!Object.is($[4], a)) {
     t3 = [a];
     $[4] = a;
     $[5] = t3;
@@ -74,7 +74,7 @@ export function Component(t0) {
     t3 = $[5];
   }
   let t4;
-  if ($[6] !== item1 || $[7] !== t3) {
+  if (!Object.is($[6], item1) || !Object.is($[7], t3)) {
     t4 = <ValidateMemoization inputs={t3} output={item1} />;
     $[6] = item1;
     $[7] = t3;
@@ -83,7 +83,7 @@ export function Component(t0) {
     t4 = $[8];
   }
   let t5;
-  if ($[9] !== b) {
+  if (!Object.is($[9], b)) {
     t5 = [b];
     $[9] = b;
     $[10] = t5;
@@ -91,7 +91,7 @@ export function Component(t0) {
     t5 = $[10];
   }
   let t6;
-  if ($[11] !== item2 || $[12] !== t5) {
+  if (!Object.is($[11], item2) || !Object.is($[12], t5)) {
     t6 = <ValidateMemoization inputs={t5} output={item2} />;
     $[11] = item2;
     $[12] = t5;
@@ -100,7 +100,7 @@ export function Component(t0) {
     t6 = $[13];
   }
   let t7;
-  if ($[14] !== t4 || $[15] !== t6) {
+  if (!Object.is($[14], t4) || !Object.is($[15], t6)) {
     t7 = (
       <>
         {t4}

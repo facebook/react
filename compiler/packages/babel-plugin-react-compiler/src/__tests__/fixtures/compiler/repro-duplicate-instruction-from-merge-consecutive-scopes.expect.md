@@ -40,7 +40,7 @@ function Component(t0) {
   }
   const t2 = id ? true : false;
   let t3;
-  if ($[1] !== t2) {
+  if (!Object.is($[1], t2)) {
     t3 = (
       <>
         {t1}

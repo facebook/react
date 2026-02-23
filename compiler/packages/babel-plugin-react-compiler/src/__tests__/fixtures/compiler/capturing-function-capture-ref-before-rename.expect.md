@@ -42,7 +42,7 @@ function Component(t0) {
   const $ = _c(7);
   const { a, b } = t0;
   let z;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     z = { a };
 
     mutate(z);
@@ -54,7 +54,7 @@ function Component(t0) {
 
   let y = z;
   let t1;
-  if ($[2] !== b) {
+  if (!Object.is($[2], b)) {
     t1 = { b };
     $[2] = b;
     $[3] = t1;
@@ -63,7 +63,7 @@ function Component(t0) {
   }
   const z_0 = t1;
   let t2;
-  if ($[4] !== y || $[5] !== z_0) {
+  if (!Object.is($[4], y) || !Object.is($[5], z_0)) {
     t2 = { y, z: z_0 };
     $[4] = y;
     $[5] = z_0;

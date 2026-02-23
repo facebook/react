@@ -40,7 +40,7 @@ import { identity } from "shared-runtime";
 function useConditionalSubpath1(props, cond) {
   const $ = _c(3);
   let x;
-  if ($[0] !== cond || $[1] !== props.a) {
+  if (!Object.is($[0], cond) || !Object.is($[1], props.a)) {
     x = {};
     x.b = props.a.b;
     if (identity(cond)) {

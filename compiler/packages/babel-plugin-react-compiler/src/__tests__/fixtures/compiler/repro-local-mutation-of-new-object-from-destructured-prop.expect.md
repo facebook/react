@@ -29,7 +29,7 @@ function Component(props) {
   const $ = _c(5);
   const { a } = props;
   let rest;
-  if ($[0] !== a || $[1] !== props.value) {
+  if (!Object.is($[0], a) || !Object.is($[1], props.value)) {
     const { b, ...t0 } = a;
     rest = t0;
 
@@ -41,7 +41,7 @@ function Component(props) {
     rest = $[2];
   }
   let t0;
-  if ($[3] !== rest) {
+  if (!Object.is($[3], rest)) {
     t0 = <Stringify rest={rest} />;
     $[3] = rest;
     $[4] = t0;

@@ -30,7 +30,7 @@ const StatusIndicator = (t0) => {
   const { status } = t0;
   const t1 = `status-${status}`;
   let t2;
-  if ($[0] !== status || $[1] !== t1) {
+  if (!Object.is($[0], status) || !Object.is($[1], t1)) {
     t2 = <div className={t1}>Status: {status}</div>;
     $[0] = status;
     $[1] = t1;
@@ -46,7 +46,7 @@ const Component = (t0) => {
   const { status: t1 } = t0;
   const status = t1 === undefined ? ("pending" as Status) : t1;
   let t2;
-  if ($[0] !== status) {
+  if (!Object.is($[0], status)) {
     t2 = <StatusIndicator status={status} />;
     $[0] = status;
     $[1] = t2;

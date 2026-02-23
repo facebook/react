@@ -29,7 +29,7 @@ import * as React from "react";
 function Component(props) {
   const $ = _c(2);
   let x;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     x = [];
     x.push(props.value);
     $[0] = props.value;

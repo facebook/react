@@ -31,7 +31,7 @@ function useHook(t0) {
   const $ = _c(8);
   const { a, b, c } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t1 = [a];
     $[0] = a;
     $[1] = t1;
@@ -39,9 +39,9 @@ function useHook(t0) {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== b || $[3] !== c || $[4] !== t1) {
+  if (!Object.is($[2], b) || !Object.is($[3], c) || !Object.is($[4], t1)) {
     let t3;
-    if ($[6] !== c) {
+    if (!Object.is($[6], c)) {
       t3 = { c };
       $[6] = c;
       $[7] = t3;

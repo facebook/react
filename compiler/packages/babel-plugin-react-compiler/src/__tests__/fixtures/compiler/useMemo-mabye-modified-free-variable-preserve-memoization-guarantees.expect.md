@@ -72,7 +72,7 @@ function Component(props) {
 
   useHook();
   let x;
-  if ($[2] !== props.value) {
+  if (!Object.is($[2], props.value)) {
     x = makeObject_Primitives();
     x.value = props.value;
     mutate(x, free, part);

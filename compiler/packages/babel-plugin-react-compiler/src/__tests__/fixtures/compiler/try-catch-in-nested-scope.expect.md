@@ -44,12 +44,12 @@ function useFoo(t0) {
   const { value, cond } = t0;
   let t1;
   let y;
-  if ($[0] !== cond || $[1] !== value) {
+  if (!Object.is($[0], cond) || !Object.is($[1], value)) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       y = [value];
       let x;
-      if ($[4] !== cond) {
+      if (!Object.is($[4], cond)) {
         x = { cond };
         try {
           mutate(x);

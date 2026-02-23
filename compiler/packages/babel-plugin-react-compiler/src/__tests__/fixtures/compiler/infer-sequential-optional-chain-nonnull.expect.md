@@ -33,7 +33,7 @@ function useFoo(t0) {
   const $ = _c(2);
   const { a } = t0;
   let x;
-  if ($[0] !== a.b.c.d.e) {
+  if (!Object.is($[0], a.b.c.d.e)) {
     x = [];
     x.push(a?.b.c?.d.e);
     x.push(a.b?.c.d?.e);

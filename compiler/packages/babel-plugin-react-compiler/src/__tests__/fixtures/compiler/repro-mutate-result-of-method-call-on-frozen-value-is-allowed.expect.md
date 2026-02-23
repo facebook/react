@@ -26,7 +26,7 @@ import { makeObject_Primitives, Stringify } from "shared-runtime";
 function Example(props) {
   const $ = _c(5);
   let obj;
-  if ($[0] !== props.object || $[1] !== props.value) {
+  if (!Object.is($[0], props.object) || !Object.is($[1], props.value)) {
     obj = props.object.makeObject();
     obj.property = props.value;
     $[0] = props.object;
@@ -36,7 +36,7 @@ function Example(props) {
     obj = $[2];
   }
   let t0;
-  if ($[3] !== obj) {
+  if (!Object.is($[3], obj)) {
     t0 = <Stringify obj={obj} />;
     $[3] = obj;
     $[4] = t0;

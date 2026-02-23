@@ -57,7 +57,11 @@ function Component(t0) {
   y.a?.b;
   z.a.b?.c;
   let t1;
-  if ($[0] !== x?.y?.z || $[1] !== y.a?.b || $[2] !== z.a.b?.c) {
+  if (
+    !Object.is($[0], x?.y?.z) ||
+    !Object.is($[1], y.a?.b) ||
+    !Object.is($[2], z.a.b?.c)
+  ) {
     t1 = identity({ callback: () => identity(x?.y?.z, y.a?.b, z.a.b?.c) });
     $[0] = x?.y?.z;
     $[1] = y.a?.b;
@@ -68,7 +72,7 @@ function Component(t0) {
   }
   const object = t1;
   let t2;
-  if ($[4] !== object) {
+  if (!Object.is($[4], object)) {
     t2 = object.callback();
     $[4] = object;
     $[5] = t2;
@@ -76,7 +80,7 @@ function Component(t0) {
     t2 = $[5];
   }
   let t3;
-  if ($[6] !== t2) {
+  if (!Object.is($[6], t2)) {
     t3 = [t2];
     $[6] = t2;
     $[7] = t3;
@@ -85,7 +89,7 @@ function Component(t0) {
   }
   const result = t3;
   let t4;
-  if ($[8] !== result || $[9] !== x) {
+  if (!Object.is($[8], result) || !Object.is($[9], x)) {
     t4 = <Inner x={x} result={result} />;
     $[8] = result;
     $[9] = x;

@@ -56,7 +56,10 @@ function Component(props) {
   let T0;
   let Tag;
   let t0;
-  if ($[0] !== props.alternateComponent || $[1] !== props.component) {
+  if (
+    !Object.is($[0], props.alternateComponent) ||
+    !Object.is($[1], props.component)
+  ) {
     const maybeMutable = new MaybeMutable();
     Tag = props.component;
     T0 = Tag;
@@ -72,7 +75,7 @@ function Component(props) {
     t0 = $[4];
   }
   let t1;
-  if ($[5] !== Tag) {
+  if (!Object.is($[5], Tag)) {
     t1 = <Tag />;
     $[5] = Tag;
     $[6] = t1;
@@ -80,7 +83,7 @@ function Component(props) {
     t1 = $[6];
   }
   let t2;
-  if ($[7] !== T0 || $[8] !== t0 || $[9] !== t1) {
+  if (!Object.is($[7], T0) || !Object.is($[8], t0) || !Object.is($[9], t1)) {
     t2 = (
       <T0>
         {t0}

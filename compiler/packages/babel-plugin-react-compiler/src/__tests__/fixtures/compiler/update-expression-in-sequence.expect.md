@@ -35,7 +35,12 @@ function Component(props) {
     d = ((b = a), a++, (c = a), ++a);
   }
   let t0;
-  if ($[0] !== a || $[1] !== b || $[2] !== c || $[3] !== d) {
+  if (
+    !Object.is($[0], a) ||
+    !Object.is($[1], b) ||
+    !Object.is($[2], c) ||
+    !Object.is($[3], d)
+  ) {
     t0 = [a, b, c, d];
     $[0] = a;
     $[1] = b;

@@ -29,7 +29,7 @@ function useHook(t0) {
   const $ = _c(4);
   const { value } = t0;
   let t1;
-  if ($[0] !== value) {
+  if (!Object.is($[0], value)) {
     t1 = mutateAndReturn({ value });
     $[0] = value;
     $[1] = t1;
@@ -38,7 +38,7 @@ function useHook(t0) {
   }
   const x = t1;
   let t2;
-  if ($[2] !== x) {
+  if (!Object.is($[2], x)) {
     t2 = {
       getValue() {
         return x;

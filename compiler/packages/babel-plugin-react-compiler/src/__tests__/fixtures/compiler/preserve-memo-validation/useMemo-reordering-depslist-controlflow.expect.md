@@ -45,7 +45,11 @@ function Foo(t0) {
   const { arr1, arr2, foo } = t0;
   let t1;
   let val1;
-  if ($[0] !== arr1 || $[1] !== arr2 || $[2] !== foo) {
+  if (
+    !Object.is($[0], arr1) ||
+    !Object.is($[1], arr2) ||
+    !Object.is($[2], foo)
+  ) {
     const x = [arr1];
     let y = [];
     let t2;
@@ -70,7 +74,7 @@ function Foo(t0) {
   }
   const val2 = t1;
   let t2;
-  if ($[6] !== val1 || $[7] !== val2) {
+  if (!Object.is($[6], val1) || !Object.is($[7], val2)) {
     t2 = <Stringify val1={val1} val2={val2} />;
     $[6] = val1;
     $[7] = val2;

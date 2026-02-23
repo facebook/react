@@ -34,7 +34,7 @@ function InvalidComponent(props) {
 function ValidComponent(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.greeting) {
+  if (!Object.is($[0], props.greeting)) {
     t0 = <div>{props.greeting}</div>;
     $[0] = props.greeting;
     $[1] = t0;

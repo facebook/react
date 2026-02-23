@@ -25,7 +25,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(7);
   let b;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     const { a, ...t0 } = props.a;
     b = t0;
     $[0] = props.a;
@@ -34,7 +34,7 @@ function Component(props) {
     b = $[1];
   }
   let d;
-  if ($[2] !== props.c) {
+  if (!Object.is($[2], props.c)) {
     [, ...d] = props.c;
     $[2] = props.c;
     $[3] = d;
@@ -42,7 +42,7 @@ function Component(props) {
     d = $[3];
   }
   let t0;
-  if ($[4] !== b || $[5] !== d) {
+  if (!Object.is($[4], b) || !Object.is($[5], d)) {
     t0 = <div b={b} d={d} />;
     $[4] = b;
     $[5] = d;

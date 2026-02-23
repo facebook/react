@@ -25,7 +25,7 @@ function Component(props) {
   const $ = _c(2);
   const cb = _temp;
   let t0;
-  if ($[0] !== props.id) {
+  if (!Object.is($[0], props.id)) {
     t0 = <Stringify cb={cb} id={props.id} />;
     $[0] = props.id;
     $[1] = t0;

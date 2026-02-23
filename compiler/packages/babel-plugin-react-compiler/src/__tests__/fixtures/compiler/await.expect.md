@@ -16,7 +16,7 @@ import { c as _c } from "react/compiler-runtime";
 async function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.id) {
+  if (!Object.is($[0], props.id)) {
     t0 = await load(props.id);
     $[0] = props.id;
     $[1] = t0;
@@ -25,7 +25,7 @@ async function Component(props) {
   }
   const user = t0;
   let t1;
-  if ($[2] !== user.name) {
+  if (!Object.is($[2], user.name)) {
     t1 = <div>{user.name}</div>;
     $[2] = user.name;
     $[3] = t1;

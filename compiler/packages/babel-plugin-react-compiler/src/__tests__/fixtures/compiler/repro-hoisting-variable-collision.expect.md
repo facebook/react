@@ -22,7 +22,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.items) {
+  if (!Object.is($[0], props.items)) {
     t0 = props.items.map(_temp);
     $[0] = props.items;
     $[1] = t0;
@@ -31,7 +31,7 @@ function Component(props) {
   }
   const items = t0;
   let t1;
-  if ($[2] !== items) {
+  if (!Object.is($[2], items)) {
     t1 = [42, items];
     $[2] = items;
     $[3] = t1;

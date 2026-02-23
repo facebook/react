@@ -32,7 +32,7 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a, b, c) {
   const $ = _c(4);
   let x;
-  if ($[0] !== a || $[1] !== b || $[2] !== c) {
+  if (!Object.is($[0], a) || !Object.is($[1], b) || !Object.is($[2], c)) {
     x = [];
     if (a) {
       if (b) {

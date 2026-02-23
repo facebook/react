@@ -27,7 +27,7 @@ function Component(props) {
   var _ref2;
   const $ = _c(4);
   let t0;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     var _ref;
     t0 =
       (_ref = props) != null
@@ -42,7 +42,7 @@ function Component(props) {
   }
   const groupName = t0;
   let t1;
-  if ($[2] !== groupName) {
+  if (!Object.is($[2], groupName)) {
     t1 = <div>{groupName}</div>;
     $[2] = groupName;
     $[3] = t1;

@@ -56,7 +56,7 @@ function useFoo(text) {
     let formattedText;
     try {
       let t2;
-      if ($[0] !== text) {
+      if (!Object.is($[0], text)) {
         t2 = format(text);
         $[0] = text;
         $[1] = t2;
@@ -84,7 +84,7 @@ function Foo(t0) {
   const { text } = t0;
   const result = useFoo(text);
   let t1;
-  if ($[0] !== result) {
+  if (!Object.is($[0], result)) {
     t1 = <span>{result}</span>;
     $[0] = result;
     $[1] = t1;

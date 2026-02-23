@@ -40,7 +40,7 @@ function Component(t0) {
   if (useFeature) {
     const t1 = useFeature + useFeature;
     let t2;
-    if ($[0] !== t1 || $[1] !== useFeature) {
+    if (!Object.is($[0], t1) || !Object.is($[1], useFeature)) {
       t2 = [t1].push(-useFeature);
       $[0] = t1;
       $[1] = useFeature;
@@ -54,7 +54,12 @@ function Component(t0) {
   const y = useFeature;
   const z = useFeature.useProperty;
   let t1;
-  if ($[3] !== useFeature || $[4] !== x || $[5] !== y || $[6] !== z) {
+  if (
+    !Object.is($[3], useFeature) ||
+    !Object.is($[4], x) ||
+    !Object.is($[5], y) ||
+    !Object.is($[6], z)
+  ) {
     t1 = (
       <Stringify val={useFeature}>
         {x}

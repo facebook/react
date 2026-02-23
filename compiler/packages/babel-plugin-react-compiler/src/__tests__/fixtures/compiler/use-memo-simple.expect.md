@@ -24,7 +24,7 @@ function Component(props) {
   "use memo";
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.foo) {
+  if (!Object.is($[0], props.foo)) {
     const x = [props.foo];
     t0 = <div x={x}>"foo"</div>;
     $[0] = props.foo;

@@ -23,7 +23,7 @@ function Foo(t0) {
   const ref = useRef();
   const val = ref.current;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     const x = { a, val };
     t1 = <VideoList videos={x} />;
     $[0] = a;

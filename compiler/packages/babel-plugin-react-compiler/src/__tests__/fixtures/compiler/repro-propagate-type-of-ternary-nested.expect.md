@@ -37,7 +37,7 @@ function V0(t0) {
   const { v1 } = t0;
   v5(V6.v7({ v8: V9.va }));
   let t1;
-  if ($[0] !== v1) {
+  if (!Object.is($[0], v1)) {
     t1 = (
       <ComponentC cd="TxqUy" ce="oh`]uc" cf="Bdbo" c10={!V9.va && v11.v12}>
         gmhubcw

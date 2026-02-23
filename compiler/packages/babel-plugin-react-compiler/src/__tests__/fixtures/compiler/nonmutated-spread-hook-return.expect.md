@@ -29,7 +29,7 @@ function Component(props) {
   const t0 = useIdentity(props);
   let rest;
   let x;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     ({ x, ...rest } = t0);
     $[0] = t0;
     $[1] = rest;
@@ -41,7 +41,7 @@ function Component(props) {
   const z = rest.z;
   identity(z);
   let t1;
-  if ($[3] !== x || $[4] !== z) {
+  if (!Object.is($[3], x) || !Object.is($[4], z)) {
     t1 = <Stringify x={x} z={z} />;
     $[3] = x;
     $[4] = z;

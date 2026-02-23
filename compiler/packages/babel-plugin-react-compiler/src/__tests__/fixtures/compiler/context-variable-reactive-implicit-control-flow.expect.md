@@ -37,7 +37,7 @@ function Component(t0) {
   const $ = _c(2);
   const { shouldReassign } = t0;
   let x;
-  if ($[0] !== shouldReassign) {
+  if (!Object.is($[0], shouldReassign)) {
     x = null;
     const reassign = () => {
       x = 2;

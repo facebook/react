@@ -62,7 +62,7 @@ function Component(props) {
     b = 1;
   }
   let t0;
-  if ($[0] !== b) {
+  if (!Object.is($[0], b)) {
     t0 = [b];
     $[0] = b;
     $[1] = t0;

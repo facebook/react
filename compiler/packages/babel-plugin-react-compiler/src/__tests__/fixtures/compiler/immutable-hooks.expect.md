@@ -33,7 +33,7 @@ function Component(props) {
 
   bar(x, y);
   let t1;
-  if ($[1] !== y) {
+  if (!Object.is($[1], y)) {
     t1 = [x, y];
     $[1] = y;
     $[2] = t1;

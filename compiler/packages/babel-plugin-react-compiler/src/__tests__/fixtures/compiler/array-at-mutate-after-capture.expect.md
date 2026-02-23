@@ -23,7 +23,7 @@ import { c as _c } from "react/compiler-runtime"; // x's mutable range should ex
 function Component(props) {
   const $ = _c(2);
   let x;
-  if ($[0] !== props.b) {
+  if (!Object.is($[0], props.b)) {
     x = [42, {}];
     const idx = foo(props.b);
     const y = x.at(idx);

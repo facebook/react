@@ -37,7 +37,7 @@ import { useMemo } from "react";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     t0 = { value: props.value };
     $[0] = props.value;
     $[1] = t0;

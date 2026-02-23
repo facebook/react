@@ -46,7 +46,7 @@ function Component() {
   const $ = _c(5);
   const params = useHook();
   let t0;
-  if ($[0] !== params) {
+  if (!Object.is($[0], params)) {
     t0 = (partialParams) => {
       const nextParams = { ...params, ...partialParams };
       nextParams.param = "value";
@@ -62,7 +62,7 @@ function Component() {
   const ref = useRef(null);
   let t1;
   let t2;
-  if ($[2] !== update) {
+  if (!Object.is($[2], update)) {
     t1 = () => {
       if (ref.current === null) {
         update();

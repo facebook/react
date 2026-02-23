@@ -27,7 +27,7 @@ function useComponentFactory(t0) {
   const $ = _c(2);
   const { name } = t0;
   let t1;
-  if ($[0] !== name) {
+  if (!Object.is($[0], name)) {
     const cb = () => (
       <SharedRuntime.Stringify>hello world {name}</SharedRuntime.Stringify>
     );

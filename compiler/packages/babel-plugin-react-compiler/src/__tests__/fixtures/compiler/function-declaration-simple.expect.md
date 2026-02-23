@@ -26,7 +26,7 @@ import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(3);
   let t;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t = { a };
     let t0;
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {

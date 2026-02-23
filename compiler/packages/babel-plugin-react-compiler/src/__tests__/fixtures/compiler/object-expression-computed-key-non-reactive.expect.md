@@ -32,7 +32,7 @@ const SCALE = 2;
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     t0 = identity([props.value]);
     $[0] = props.value;
     $[1] = t0;
@@ -40,7 +40,7 @@ function Component(props) {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = { [SCALE]: t0 };
     $[2] = t0;
     $[3] = t1;

@@ -32,7 +32,7 @@ function foo(a, b, c, d) {
   const $ = _c(3);
   someObj();
   let x;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     if (a) {
       let z;
       if (b) {

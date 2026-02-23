@@ -22,7 +22,7 @@ function Component(t0, t1) {
   const $ = _c(5);
   const x = t0 === undefined ? "default" : t0;
   let t2;
-  if ($[0] !== t1) {
+  if (!Object.is($[0], t1)) {
     t2 = t1 === undefined ? [{}] : t1;
     $[0] = t1;
     $[1] = t2;
@@ -31,7 +31,7 @@ function Component(t0, t1) {
   }
   const y = t2;
   let t3;
-  if ($[2] !== x || $[3] !== y) {
+  if (!Object.is($[2], x) || !Object.is($[3], y)) {
     t3 = [x, y];
     $[2] = x;
     $[3] = y;

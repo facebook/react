@@ -27,7 +27,7 @@ import * as React from "react";
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.value) {
+  if (!Object.is($[0], props.value)) {
     t0 = () => {
       console.log(props.value);
     };
@@ -38,7 +38,7 @@ function Component(props) {
   }
   const onClick = t0;
   let t1;
-  if ($[2] !== onClick) {
+  if (!Object.is($[2], onClick)) {
     t1 = <div onClick={onClick} />;
     $[2] = onClick;
     $[3] = t1;

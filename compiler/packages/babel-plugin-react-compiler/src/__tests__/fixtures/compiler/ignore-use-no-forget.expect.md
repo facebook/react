@@ -24,7 +24,7 @@ function Component(prop) {
   "use no forget";
   const $ = _c(4);
   let t0;
-  if ($[0] !== prop.x) {
+  if (!Object.is($[0], prop.x)) {
     t0 = prop.x.toFixed();
     $[0] = prop.x;
     $[1] = t0;
@@ -33,7 +33,7 @@ function Component(prop) {
   }
   const result = t0;
   let t1;
-  if ($[2] !== result) {
+  if (!Object.is($[2], result)) {
     t1 = <div>{result}</div>;
     $[2] = result;
     $[3] = t1;

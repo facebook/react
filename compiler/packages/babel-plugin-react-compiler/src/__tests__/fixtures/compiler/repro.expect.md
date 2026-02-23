@@ -29,7 +29,7 @@ function Component(props) {
   const item = props.item;
   let baseVideos;
   let thumbnails;
-  if ($[0] !== item) {
+  if (!Object.is($[0], item)) {
     thumbnails = [];
     baseVideos = getBaseVideos(item);
 
@@ -47,7 +47,7 @@ function Component(props) {
     thumbnails = $[2];
   }
   let t0;
-  if ($[3] !== baseVideos || $[4] !== thumbnails) {
+  if (!Object.is($[3], baseVideos) || !Object.is($[4], thumbnails)) {
     t0 = <FlatList baseVideos={baseVideos} items={thumbnails} />;
     $[3] = baseVideos;
     $[4] = thumbnails;

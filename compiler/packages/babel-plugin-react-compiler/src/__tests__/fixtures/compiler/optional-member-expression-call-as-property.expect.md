@@ -24,7 +24,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[1] !== props) {
+  if (!Object.is($[1], props)) {
     t1 = x?.[foo(props.value)];
     $[1] = props;
     $[2] = t1;

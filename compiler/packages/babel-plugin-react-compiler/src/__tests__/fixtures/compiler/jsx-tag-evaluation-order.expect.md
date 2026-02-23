@@ -40,7 +40,7 @@ function Component(props) {
     t1 = $[0];
   }
   let t2;
-  if ($[1] !== t0) {
+  if (!Object.is($[1], t0)) {
     t2 = (
       <StaticText1>
         {t0}

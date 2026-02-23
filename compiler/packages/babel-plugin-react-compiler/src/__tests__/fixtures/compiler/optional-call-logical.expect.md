@@ -35,7 +35,7 @@ function Component(props) {
     props.item,
   );
   let t0;
-  if ($[0] !== item.items) {
+  if (!Object.is($[0], item.items)) {
     t0 = item.items?.map(_temp) ?? [];
     $[0] = item.items;
     $[1] = t0;

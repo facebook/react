@@ -41,7 +41,7 @@ function Foo(t0) {
   const $ = _c(3);
   const { a, shouldReadA } = t0;
   let t1;
-  if ($[0] !== a || $[1] !== shouldReadA) {
+  if (!Object.is($[0], a) || !Object.is($[1], shouldReadA)) {
     t1 = (
       <Stringify
         fn={() => {

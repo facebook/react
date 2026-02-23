@@ -34,7 +34,7 @@ const ErrorView = isForgetEnabled_Fixtures()
   ? (error, _retry) => {
       const $ = _c(2);
       let t0;
-      if ($[0] !== error) {
+      if (!Object.is($[0], error)) {
         t0 = <Stringify error={error} />;
         $[0] = error;
         $[1] = t0;

@@ -35,7 +35,7 @@ function Component(t0) {
   const $ = _c(3);
   const { a, b } = t0;
   let t1;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     const x = { a, b };
     const y = [x];
     const f = () => {

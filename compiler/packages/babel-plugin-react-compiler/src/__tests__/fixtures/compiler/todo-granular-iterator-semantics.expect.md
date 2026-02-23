@@ -79,7 +79,7 @@ function useFoo(input) {
   const x = Array.from(t0);
   useIdentity();
   let t1;
-  if ($[1] !== input) {
+  if (!Object.is($[1], input)) {
     t1 = [input];
     $[1] = input;
     $[2] = t1;
@@ -88,7 +88,7 @@ function useFoo(input) {
   }
   x.push(t1);
   let t2;
-  if ($[3] !== input || $[4] !== x) {
+  if (!Object.is($[3], input) || !Object.is($[4], x)) {
     t2 = <Validate x={x} input={input} />;
     $[3] = input;
     $[4] = x;

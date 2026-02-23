@@ -24,11 +24,14 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 function Component(props) {
   const $ = _c(5);
   let x;
-  if ($[0] !== props.items?.edges || $[1] !== props.items?.length) {
+  if (
+    !Object.is($[0], props.items?.edges) ||
+    !Object.is($[1], props.items?.length)
+  ) {
     x = [];
     x.push(props.items?.length);
     let t0;
-    if ($[3] !== props.items?.edges) {
+    if (!Object.is($[3], props.items?.edges)) {
       t0 = props.items?.edges?.map?.(render)?.filter?.(Boolean) ?? [];
       $[3] = props.items?.edges;
       $[4] = t0;

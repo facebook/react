@@ -40,7 +40,7 @@ function useFoo(t0) {
   const $ = _c(3);
   const { input, max } = t0;
   let x;
-  if ($[0] !== input.a.b || $[1] !== max) {
+  if (!Object.is($[0], input.a.b) || !Object.is($[1], max)) {
     x = [];
     let i = 0;
     while (true) {

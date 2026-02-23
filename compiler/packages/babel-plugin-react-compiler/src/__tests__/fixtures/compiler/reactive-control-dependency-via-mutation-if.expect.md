@@ -52,7 +52,7 @@ function Component(props) {
     y = true;
   }
   let t0;
-  if ($[0] !== y) {
+  if (!Object.is($[0], y)) {
     t0 = [y];
     $[0] = y;
     $[1] = t0;

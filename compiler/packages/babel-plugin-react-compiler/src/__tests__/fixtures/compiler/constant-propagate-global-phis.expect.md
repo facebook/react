@@ -40,7 +40,7 @@ function Test() {
   const { tab } = useFoo();
   const currentTab = tab === CONST_STRING0 ? CONST_STRING0 : CONST_STRING1;
   let t0;
-  if ($[0] !== currentTab) {
+  if (!Object.is($[0], currentTab)) {
     t0 = <Text value={currentTab} />;
     $[0] = currentTab;
     $[1] = t0;

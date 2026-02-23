@@ -29,7 +29,7 @@ import { useNoAlias } from "shared-runtime";
 function Component(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     t0 = { a: props.a };
     $[0] = props.a;
     $[1] = t0;
@@ -41,7 +41,7 @@ function Component(props) {
     console.log(props);
   }, [props.a]);
   let t1;
-  if ($[2] !== item || $[3] !== x) {
+  if (!Object.is($[2], item) || !Object.is($[3], x)) {
     t1 = [x, item];
     $[2] = item;
     $[3] = x;

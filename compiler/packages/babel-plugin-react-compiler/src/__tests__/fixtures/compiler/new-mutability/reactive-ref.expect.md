@@ -26,7 +26,7 @@ function ReactiveRefInEffect(props) {
   const ref1 = useRef("initial value");
   const ref2 = useRef("initial value");
   let ref;
-  if ($[0] !== props.foo) {
+  if (!Object.is($[0], props.foo)) {
     if (props.foo) {
       ref = ref1;
     } else {
@@ -38,7 +38,7 @@ function ReactiveRefInEffect(props) {
     ref = $[1];
   }
   let t0;
-  if ($[2] !== ref) {
+  if (!Object.is($[2], ref)) {
     t0 = () => print(ref);
     $[2] = ref;
     $[3] = t0;

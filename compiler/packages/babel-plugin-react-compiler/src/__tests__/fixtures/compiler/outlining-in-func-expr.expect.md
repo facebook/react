@@ -33,7 +33,7 @@ import { c as _c } from "react/compiler-runtime";
 const Component2 = (props) => {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.items) {
+  if (!Object.is($[0], props.items)) {
     t0 = props.items.map(_temp);
     $[0] = props.items;
     $[1] = t0;
@@ -41,7 +41,7 @@ const Component2 = (props) => {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = <ul>{t0}</ul>;
     $[2] = t0;
     $[3] = t1;

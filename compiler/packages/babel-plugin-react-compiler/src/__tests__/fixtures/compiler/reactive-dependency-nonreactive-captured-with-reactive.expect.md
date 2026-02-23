@@ -31,7 +31,7 @@ function Component(props) {
   const x = t0;
   const y = props.y;
   let t1;
-  if ($[1] !== y) {
+  if (!Object.is($[1], y)) {
     t1 = [x, y];
     $[1] = y;
     $[2] = t1;

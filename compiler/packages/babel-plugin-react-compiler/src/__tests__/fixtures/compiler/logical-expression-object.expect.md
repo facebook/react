@@ -31,7 +31,7 @@ function component(props) {
   const a = props.a || (props.b && props.c && props.d);
   const b = (props.a && props.b && props.c) || props.d;
   let t0;
-  if ($[0] !== a || $[1] !== b) {
+  if (!Object.is($[0], a) || !Object.is($[1], b)) {
     t0 = { a, b };
     $[0] = a;
     $[1] = b;

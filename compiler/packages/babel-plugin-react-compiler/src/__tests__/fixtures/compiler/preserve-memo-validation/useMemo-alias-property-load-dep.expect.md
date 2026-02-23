@@ -32,7 +32,7 @@ function Component(t0) {
   const { propA, propB } = t0;
   const x = propB.x.y;
   let t1;
-  if ($[0] !== propA.x || $[1] !== x) {
+  if (!Object.is($[0], propA.x) || !Object.is($[1], x)) {
     t1 = sum(propA.x, x);
     $[0] = propA.x;
     $[1] = x;

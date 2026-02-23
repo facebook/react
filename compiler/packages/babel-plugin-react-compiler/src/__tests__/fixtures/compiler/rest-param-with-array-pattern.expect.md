@@ -21,7 +21,7 @@ function Component(foo, ...t0) {
   const $ = _c(3);
   const [bar] = t0;
   let t1;
-  if ($[0] !== bar || $[1] !== foo) {
+  if (!Object.is($[0], bar) || !Object.is($[1], foo)) {
     t1 = [foo, bar];
     $[0] = bar;
     $[1] = foo;

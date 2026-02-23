@@ -45,7 +45,7 @@ function Component(t0) {
   const $ = _c(7);
   const { a, b } = t0;
   let t1;
-  if ($[0] !== a.value) {
+  if (!Object.is($[0], a.value)) {
     t1 = () => {
       console.log(a.value);
     };
@@ -56,7 +56,7 @@ function Component(t0) {
   }
   const logA = t1;
   let t2;
-  if ($[2] !== b.value) {
+  if (!Object.is($[2], b.value)) {
     t2 = () => {
       console.log(b.value);
     };
@@ -69,7 +69,7 @@ function Component(t0) {
 
   const hasLogged = useRef(false);
   let t3;
-  if ($[4] !== logA || $[5] !== logB) {
+  if (!Object.is($[4], logA) || !Object.is($[5], logB)) {
     const log = () => {
       if (!hasLogged.current) {
         logA();

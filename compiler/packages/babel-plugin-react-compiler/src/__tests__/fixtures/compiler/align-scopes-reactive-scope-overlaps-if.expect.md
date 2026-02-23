@@ -46,7 +46,7 @@ function useFoo(t0) {
     t1 = $[0];
   }
   let items = t1;
-  if ($[1] !== cond) {
+  if (!Object.is($[1], cond)) {
     bb0: {
       if (cond) {
         items = [];

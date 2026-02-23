@@ -53,7 +53,7 @@ function Component(t0) {
     t2 = $[1];
   }
   let t3;
-  if ($[2] !== value) {
+  if (!Object.is($[2], value)) {
     t3 = [t1, t2, { value }];
     $[2] = value;
     $[3] = t3;
@@ -63,7 +63,7 @@ function Component(t0) {
   const arr = t3;
   useIdentity(null);
   let t4;
-  if ($[4] !== arr) {
+  if (!Object.is($[4], arr)) {
     t4 = arr.filter(Boolean);
     $[4] = arr;
     $[5] = t4;
@@ -72,7 +72,7 @@ function Component(t0) {
   }
   const derived = t4;
   let t5;
-  if ($[6] !== derived) {
+  if (!Object.is($[6], derived)) {
     t5 = derived.at(0);
     $[6] = derived;
     $[7] = t5;
@@ -80,7 +80,7 @@ function Component(t0) {
     t5 = $[7];
   }
   let t6;
-  if ($[8] !== derived) {
+  if (!Object.is($[8], derived)) {
     t6 = derived.at(-1);
     $[8] = derived;
     $[9] = t6;
@@ -88,7 +88,7 @@ function Component(t0) {
     t6 = $[9];
   }
   let t7;
-  if ($[10] !== t5 || $[11] !== t6) {
+  if (!Object.is($[10], t5) || !Object.is($[11], t6)) {
     t7 = (
       <Stringify>
         {t5}

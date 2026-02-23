@@ -38,7 +38,7 @@ import { identity } from "shared-runtime";
 function useCondDepInSwitchMissingDefault(props, other) {
   const $ = _c(3);
   let x;
-  if ($[0] !== other || $[1] !== props) {
+  if (!Object.is($[0], other) || !Object.is($[1], props)) {
     x = {};
     bb0: switch (identity(other)) {
       case 1: {

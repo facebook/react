@@ -43,7 +43,7 @@ function Component() {
   const items = useItems();
   let t0;
   let t1;
-  if ($[0] !== items) {
+  if (!Object.is($[0], items)) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       const filteredItems = items.filter(_temp);
@@ -75,7 +75,7 @@ function Component() {
     return t1;
   }
   let t2;
-  if ($[4] !== t0) {
+  if (!Object.is($[4], t0)) {
     t2 = <>{t0}</>;
     $[4] = t0;
     $[5] = t2;

@@ -20,7 +20,7 @@ function component() {
   const $ = _c(4);
   const [count, setCount] = useState(0);
   let t0;
-  if ($[0] !== count) {
+  if (!Object.is($[0], count)) {
     t0 = () => setCount(count + 1);
     $[0] = count;
     $[1] = t0;
@@ -29,7 +29,7 @@ function component() {
   }
   const increment = t0;
   let t1;
-  if ($[2] !== increment) {
+  if (!Object.is($[2], increment)) {
     t1 = <Foo onClick={increment} />;
     $[2] = increment;
     $[3] = t1;

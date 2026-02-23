@@ -24,7 +24,7 @@ function Component(props) {
   const $ = _c(2);
   const f = _temp;
   let t0;
-  if ($[0] !== props.items) {
+  if (!Object.is($[0], props.items)) {
     const x = [...props.items].map(f);
     t0 = [x, f];
     $[0] = props.items;

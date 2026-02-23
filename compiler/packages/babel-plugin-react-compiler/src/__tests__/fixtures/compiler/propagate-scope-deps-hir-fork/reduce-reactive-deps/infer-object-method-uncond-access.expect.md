@@ -34,7 +34,7 @@ function useFoo(t0) {
   const $ = _c(2);
   const { a } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     const x = {
       fn() {
         return identity(a.b.c);

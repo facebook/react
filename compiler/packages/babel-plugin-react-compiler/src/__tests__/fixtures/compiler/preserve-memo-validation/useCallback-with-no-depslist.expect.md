@@ -33,7 +33,7 @@ function Component(t0) {
   const $ = _c(2);
   const { propA } = t0;
   let t1;
-  if ($[0] !== propA) {
+  if (!Object.is($[0], propA)) {
     t1 = () => [propA];
     $[0] = propA;
     $[1] = t1;

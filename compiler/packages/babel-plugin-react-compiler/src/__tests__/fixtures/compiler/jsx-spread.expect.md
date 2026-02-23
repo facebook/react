@@ -19,7 +19,7 @@ function Component(props) {
 
   const t0 = props.cond ? props.foo : props.bar;
   let t1;
-  if ($[0] !== t0) {
+  if (!Object.is($[0], t0)) {
     t1 = { bar: t0 };
     $[0] = t0;
     $[1] = t1;
@@ -27,7 +27,7 @@ function Component(props) {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== props || $[3] !== t1) {
+  if (!Object.is($[2], props) || !Object.is($[3], t1)) {
     t2 = <Component {...props} {...t1} />;
     $[2] = props;
     $[3] = t1;

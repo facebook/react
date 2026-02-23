@@ -64,11 +64,11 @@ import { CONST_FALSE, identity } from "shared-runtime";
 function useReactiveDepsInCondScope(props) {
   const $ = _c(4);
   let x;
-  if ($[0] !== props) {
+  if (!Object.is($[0], props)) {
     x = {};
     if (CONST_FALSE) {
       let t0;
-      if ($[2] !== props.a.b) {
+      if (!Object.is($[2], props.a.b)) {
         t0 = identity(props.a.b);
         $[2] = props.a.b;
         $[3] = t0;

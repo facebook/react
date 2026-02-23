@@ -61,10 +61,10 @@ function Component(props) {
   const x = t0;
   let t1;
   if (
-    $[1] !== props.cond ||
-    $[2] !== props.cond2 ||
-    $[3] !== props.value ||
-    $[4] !== props.value2
+    !Object.is($[1], props.cond) ||
+    !Object.is($[2], props.cond2) ||
+    !Object.is($[3], props.value) ||
+    !Object.is($[4], props.value2)
   ) {
     let y;
     if (props.cond) {

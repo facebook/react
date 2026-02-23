@@ -39,7 +39,7 @@ function Component(props) {
     t0 = $[0];
   }
   let t1;
-  if ($[1] !== deeplinkItemId) {
+  if (!Object.is($[1], deeplinkItemId)) {
     t1 = <button onClick={t0}>{deeplinkItemId}</button>;
     $[1] = deeplinkItemId;
     $[2] = t1;

@@ -21,7 +21,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.x) {
+  if (!Object.is($[0], props.x)) {
     t0 = foo(props.x);
     $[0] = props.x;
     $[1] = t0;
@@ -30,7 +30,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[2] !== props || $[3] !== x) {
+  if (!Object.is($[2], props) || !Object.is($[3], x)) {
     const fn = function () {
       const arr = [...bar(props)];
       return arr.at(x);

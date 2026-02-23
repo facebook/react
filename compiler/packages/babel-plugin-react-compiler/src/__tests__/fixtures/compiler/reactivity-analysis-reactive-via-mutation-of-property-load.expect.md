@@ -20,7 +20,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(7);
   let items;
-  if ($[0] !== props.a) {
+  if (!Object.is($[0], props.a)) {
     items = bar();
     mutate(items.a, props.a);
     $[0] = props.a;
@@ -31,7 +31,7 @@ function Component(props) {
 
   const t0 = items.length + 1;
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = foo(t0);
     $[2] = t0;
     $[3] = t1;
@@ -40,7 +40,7 @@ function Component(props) {
   }
   const count = t1;
   let t2;
-  if ($[4] !== count || $[5] !== items) {
+  if (!Object.is($[4], count) || !Object.is($[5], items)) {
     t2 = { items, count };
     $[4] = count;
     $[5] = items;

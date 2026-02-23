@@ -47,7 +47,7 @@ function Component(t0) {
   const $ = _c(19);
   const { a, b } = t0;
   let t1;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t1 = [a];
     $[0] = a;
     $[1] = t1;
@@ -56,7 +56,7 @@ function Component(t0) {
   }
   const x = t1;
   let items;
-  if ($[2] !== b || $[3] !== x) {
+  if (!Object.is($[2], b) || !Object.is($[3], x)) {
     items = [b];
     for (const i of x) {
       items.push(i);
@@ -69,7 +69,7 @@ function Component(t0) {
   }
   const y = items;
   let t2;
-  if ($[5] !== a) {
+  if (!Object.is($[5], a)) {
     t2 = [a];
     $[5] = a;
     $[6] = t2;
@@ -77,7 +77,7 @@ function Component(t0) {
     t2 = $[6];
   }
   let t3;
-  if ($[7] !== t2 || $[8] !== x) {
+  if (!Object.is($[7], t2) || !Object.is($[8], x)) {
     t3 = <ValidateMemoization inputs={t2} output={x} />;
     $[7] = t2;
     $[8] = x;
@@ -86,7 +86,7 @@ function Component(t0) {
     t3 = $[9];
   }
   let t4;
-  if ($[10] !== b || $[11] !== x) {
+  if (!Object.is($[10], b) || !Object.is($[11], x)) {
     t4 = [x, b];
     $[10] = b;
     $[11] = x;
@@ -95,7 +95,7 @@ function Component(t0) {
     t4 = $[12];
   }
   let t5;
-  if ($[13] !== t4 || $[14] !== y) {
+  if (!Object.is($[13], t4) || !Object.is($[14], y)) {
     t5 = <ValidateMemoization inputs={t4} output={y} />;
     $[13] = t4;
     $[14] = y;
@@ -104,7 +104,7 @@ function Component(t0) {
     t5 = $[15];
   }
   let t6;
-  if ($[16] !== t3 || $[17] !== t5) {
+  if (!Object.is($[16], t3) || !Object.is($[17], t5)) {
     t6 = (
       <>
         {t3}

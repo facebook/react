@@ -25,7 +25,7 @@ function Component(props) {
   const $ = _c(4);
   const ref = useRef(null);
   let t0;
-  if ($[0] !== props.render) {
+  if (!Object.is($[0], props.render)) {
     t0 = props.render(ref);
     $[0] = props.render;
     $[1] = t0;
@@ -33,7 +33,7 @@ function Component(props) {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== t0) {
+  if (!Object.is($[2], t0)) {
     t1 = <Foo>{t0}</Foo>;
     $[2] = t0;
     $[3] = t1;

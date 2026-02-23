@@ -40,7 +40,7 @@ function Component(props) {
   const [state] = useState(0);
   const t0 = state * 2;
   let t1;
-  if ($[1] !== t0) {
+  if (!Object.is($[1], t0)) {
     t1 = [t0];
     $[1] = t0;
     $[2] = t1;
@@ -49,7 +49,7 @@ function Component(props) {
   }
   const doubled = t1;
   let t2;
-  if ($[3] !== state) {
+  if (!Object.is($[3], state)) {
     t2 = [state];
     $[3] = state;
     $[4] = t2;
@@ -57,7 +57,7 @@ function Component(props) {
     t2 = $[4];
   }
   let t3;
-  if ($[5] !== doubled || $[6] !== t2) {
+  if (!Object.is($[5], doubled) || !Object.is($[6], t2)) {
     t3 = <ValidateMemoization inputs={t2} output={doubled} />;
     $[5] = doubled;
     $[6] = t2;

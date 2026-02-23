@@ -26,7 +26,7 @@ import { c as _c } from "react/compiler-runtime";
 function bar(a) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== a) {
+  if (!Object.is($[0], a)) {
     t0 = [a];
     $[0] = a;
     $[1] = t0;
@@ -35,7 +35,7 @@ function bar(a) {
   }
   const x = t0;
   let y;
-  if ($[2] !== x[0]) {
+  if (!Object.is($[2], x[0])) {
     y = {};
 
     y = x[0];

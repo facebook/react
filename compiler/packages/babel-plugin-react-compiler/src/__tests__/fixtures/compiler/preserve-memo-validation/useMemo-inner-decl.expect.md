@@ -30,7 +30,7 @@ import { identity } from "shared-runtime";
 function useFoo(data) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== data.a) {
+  if (!Object.is($[0], data.a)) {
     t0 = identity(data.a);
     $[0] = data.a;
     $[1] = t0;
@@ -39,7 +39,7 @@ function useFoo(data) {
   }
   const temp = t0;
   let t1;
-  if ($[2] !== temp) {
+  if (!Object.is($[2], temp)) {
     t1 = { temp };
     $[2] = temp;
     $[3] = t1;
