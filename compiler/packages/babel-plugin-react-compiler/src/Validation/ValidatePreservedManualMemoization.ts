@@ -37,7 +37,6 @@ import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
 } from '../ReactiveScopes/visitors';
-import {Result} from '../Utils/Result';
 import {getOrInsertDefault} from '../Utils/utils';
 
 /**
@@ -47,15 +46,15 @@ import {getOrInsertDefault} from '../Utils/utils';
  * This can occur if a value's mutable range somehow extended to include a hook and
  * was pruned.
  */
-export function validatePreservedManualMemoization(
-  fn: ReactiveFunction,
-): Result<void, CompilerError> {
+export function validatePreservedManualMemoization(fn: ReactiveFunction): void {
   const state = {
     errors: new CompilerError(),
     manualMemoState: null,
   };
   visitReactiveFunction(fn, new Visitor(), state);
-  return state.errors.asResult();
+  for (const detail of state.errors.details) {
+    fn.env.recordError(detail);
+  }
 }
 
 const DEBUG = false;
