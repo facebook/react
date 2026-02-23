@@ -577,14 +577,21 @@ function codegenReactiveScope(
 
   for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
     const index = cx.nextCacheIndex;
-    const comparison = t.binaryExpression(
-      '!==',
-      t.memberExpression(
-        t.identifier(cx.synthesizeName('$')),
-        t.numericLiteral(index),
-        true,
+    // Use Object.is() to correctly handle NaN and -0 comparisons,
+    // consistent with React's runtime hook dependency comparison.
+    const comparison = t.unaryExpression(
+      '!',
+      t.callExpression(
+        t.memberExpression(t.identifier('Object'), t.identifier('is')),
+        [
+          t.memberExpression(
+            t.identifier(cx.synthesizeName('$')),
+            t.numericLiteral(index),
+            true,
+          ),
+          codegenDependency(cx, dep),
+        ],
       ),
-      codegenDependency(cx, dep),
     );
     changeExpressions.push(comparison);
     /*
