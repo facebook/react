@@ -361,6 +361,7 @@ function startServer(
     response.end(
       backendFile.toString() +
         '\n;' +
+        `var ReactDevToolsBackend = typeof ReactDevToolsBackend !== "undefined" ? ReactDevToolsBackend : require("ReactDevToolsBackend");\n` +
         `ReactDevToolsBackend.initialize(undefined, undefined, undefined, ${componentFiltersString});` +
         '\n' +
         `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', useHttps: ${
