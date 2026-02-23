@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<713aa54bed04754682d4479043af081e>>
+ * @generated SignedSource<<f5590de337e800bad43d561ff28b8a12>>
  */
 
 'use strict';
@@ -31752,9 +31752,6 @@ class Environment {
             case 'ssr': {
                 return true;
             }
-            case 'client-no-memo': {
-                return false;
-            }
             default: {
                 assertExhaustive$1(this.outputMode, `Unexpected output mode '${this.outputMode}'`);
             }
@@ -31766,8 +31763,7 @@ class Environment {
             case 'lint': {
                 return true;
             }
-            case 'ssr':
-            case 'client-no-memo': {
+            case 'ssr': {
                 return false;
             }
             default: {
@@ -31781,9 +31777,6 @@ class Environment {
             case 'lint':
             case 'ssr': {
                 return true;
-            }
-            case 'client-no-memo': {
-                return false;
             }
             default: {
                 assertExhaustive$1(this.outputMode, `Unexpected output mode '${this.outputMode}'`);
@@ -32045,7 +32038,6 @@ function tryParseExternalFunction(maybeExternalFunction) {
         suggestions: null,
     });
 }
-const DEFAULT_EXPORT = 'default';
 
 var _MergedBlocks_map;
 function mergeConsecutiveBlocks(fn) {
@@ -50694,12 +50686,12 @@ function isFilePartOfSources(sources, filename) {
 function compileProgram(program, pass) {
     var _a, _b;
     if (shouldSkipCompilation(program, pass)) {
-        return null;
+        return;
     }
     const restrictedImportsErr = validateRestrictedImports(program, pass.opts.environment);
     if (restrictedImportsErr) {
         handleError(restrictedImportsErr, pass, null);
-        return null;
+        return;
     }
     const suppressions = findProgramSuppressions(pass.comments, pass.opts.environment.validateExhaustiveMemoizationDependencies &&
         pass.opts.environment.validateHooksUsage
@@ -50754,12 +50746,9 @@ function compileProgram(program, pass) {
             }));
             handleError(error, programContext, null);
         }
-        return null;
+        return;
     }
     applyCompiledFunctions(program, compiledFns, pass, programContext);
-    return {
-        retryErrors: programContext.retryErrors,
-    };
 }
 function findFunctionsToCompile(program, pass, programContext) {
     var _a;
@@ -51289,7 +51278,6 @@ class ProgramContext {
         this.alreadyCompiled = new (WeakSet !== null && WeakSet !== void 0 ? WeakSet : Set)();
         this.knownReferencedNames = new Set();
         this.imports = new Map();
-        this.retryErrors = [];
         this.scope = program.scope;
         this.opts = opts;
         this.filename = filename;
@@ -51465,7 +51453,6 @@ v4.z.enum([
 v4.z.enum([
     'ssr',
     'client',
-    'client-no-memo',
     'lint',
 ]);
 const defaultOptions = {
@@ -51618,97 +51605,6 @@ function injectReanimatedFlag(options) {
     return Object.assign(Object.assign({}, options), { environment: Object.assign(Object.assign({}, options.environment), { enableCustomTypeDefinitionForReanimated: true }) });
 }
 
-function validateNoUntransformedReferences(path, filename, logger, env, compileResult) {
-    const moduleLoadChecks = new Map();
-    if (moduleLoadChecks.size > 0) {
-        transformProgram(path, moduleLoadChecks, filename, logger, compileResult);
-    }
-}
-function validateImportSpecifier(specifier, importSpecifierChecks, state) {
-    var _a;
-    const imported = specifier.get('imported');
-    const specifierName = imported.node.type === 'Identifier'
-        ? imported.node.name
-        : imported.node.value;
-    const checkFn = importSpecifierChecks.get(specifierName);
-    if (checkFn == null) {
-        return;
-    }
-    if (state.shouldInvalidateScopes) {
-        state.shouldInvalidateScopes = false;
-        state.program.scope.crawl();
-    }
-    const local = specifier.get('local');
-    const binding = local.scope.getBinding(local.node.name);
-    CompilerError.invariant(binding != null, {
-        reason: 'Expected binding to be found for import specifier',
-        loc: (_a = local.node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
-    });
-    checkFn(binding.referencePaths, state);
-}
-function validateNamespacedImport(specifier, importSpecifierChecks, state) {
-    var _a;
-    if (state.shouldInvalidateScopes) {
-        state.shouldInvalidateScopes = false;
-        state.program.scope.crawl();
-    }
-    const local = specifier.get('local');
-    const binding = local.scope.getBinding(local.node.name);
-    const defaultCheckFn = importSpecifierChecks.get(DEFAULT_EXPORT);
-    CompilerError.invariant(binding != null, {
-        reason: 'Expected binding to be found for import specifier',
-        loc: (_a = local.node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
-    });
-    const filteredReferences = new Map();
-    for (const reference of binding.referencePaths) {
-        if (defaultCheckFn != null) {
-            getOrInsertWith(filteredReferences, defaultCheckFn, () => []).push(reference);
-        }
-        const parent = reference.parentPath;
-        if (parent != null &&
-            parent.isMemberExpression() &&
-            parent.get('object') === reference) {
-            if (parent.node.computed || parent.node.property.type !== 'Identifier') {
-                continue;
-            }
-            const checkFn = importSpecifierChecks.get(parent.node.property.name);
-            if (checkFn != null) {
-                getOrInsertWith(filteredReferences, checkFn, () => []).push(parent);
-            }
-        }
-    }
-    for (const [checkFn, references] of filteredReferences) {
-        checkFn(references, state);
-    }
-}
-function transformProgram(path, moduleLoadChecks, filename, logger, compileResult) {
-    var _a;
-    const traversalState = {
-        shouldInvalidateScopes: true,
-        program: path,
-        filename,
-        logger,
-        transformErrors: (_a = compileResult === null || compileResult === void 0 ? void 0 : compileResult.retryErrors) !== null && _a !== void 0 ? _a : [],
-    };
-    path.traverse({
-        ImportDeclaration(path) {
-            const importSpecifierChecks = moduleLoadChecks.get(path.node.source.value);
-            if (importSpecifierChecks == null) {
-                return;
-            }
-            const specifiers = path.get('specifiers');
-            for (const specifier of specifiers) {
-                if (specifier.isImportSpecifier()) {
-                    validateImportSpecifier(specifier, importSpecifierChecks, traversalState);
-                }
-                else {
-                    validateNamespacedImport(specifier, importSpecifierChecks, traversalState);
-                }
-            }
-        },
-    });
-}
-
 const ENABLE_REACT_COMPILER_TIMINGS = process.env['ENABLE_REACT_COMPILER_TIMINGS'] === '1';
 function BabelPluginReactCompiler(_babel) {
     return {
@@ -51716,7 +51612,7 @@ function BabelPluginReactCompiler(_babel) {
         visitor: {
             Program: {
                 enter(prog, pass) {
-                    var _a, _b, _c, _d;
+                    var _a, _b, _c;
                     try {
                         const filename = (_a = pass.filename) !== null && _a !== void 0 ? _a : 'unknown';
                         if (ENABLE_REACT_COMPILER_TIMINGS === true) {
@@ -51735,13 +51631,12 @@ function BabelPluginReactCompiler(_babel) {
                             isDev) {
                             opts = Object.assign(Object.assign({}, opts), { environment: Object.assign(Object.assign({}, opts.environment), { enableResetCacheOnSourceFileChanges: true }) });
                         }
-                        const result = compileProgram(prog, {
+                        compileProgram(prog, {
                             opts,
                             filename: (_b = pass.filename) !== null && _b !== void 0 ? _b : null,
                             comments: (_c = pass.file.ast.comments) !== null && _c !== void 0 ? _c : [],
                             code: pass.file.code,
                         });
-                        validateNoUntransformedReferences(prog, (_d = pass.filename) !== null && _d !== void 0 ? _d : null, opts.logger, opts.environment, result);
                         if (ENABLE_REACT_COMPILER_TIMINGS === true) {
                             performance.mark(`${filename}:end`, {
                                 detail: 'BabelPlugin:Program:end',
