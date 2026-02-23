@@ -31612,7 +31612,7 @@ function defaultModuleTypeProvider(moduleName) {
     return null;
 }
 
-var _Environment_instances, _Environment_globals, _Environment_shapes, _Environment_moduleTypes, _Environment_nextIdentifer, _Environment_nextBlock, _Environment_nextScope, _Environment_scope, _Environment_outlinedFunctions, _Environment_contextIdentifiers, _Environment_hoistedIdentifiers, _Environment_flowTypeEnvironment, _Environment_resolveModuleType, _Environment_isKnownReactModule, _Environment_getCustomHookType;
+var _Environment_instances, _Environment_globals, _Environment_shapes, _Environment_moduleTypes, _Environment_nextIdentifer, _Environment_nextBlock, _Environment_nextScope, _Environment_scope, _Environment_outlinedFunctions, _Environment_contextIdentifiers, _Environment_hoistedIdentifiers, _Environment_flowTypeEnvironment, _Environment_errors, _Environment_resolveModuleType, _Environment_isKnownReactModule, _Environment_getCustomHookType;
 const ExternalFunctionSchema = v4.z.object({
     source: v4.z.string(),
     importSpecifierName: v4.z.string(),
@@ -31689,6 +31689,7 @@ class Environment {
         _Environment_contextIdentifiers.set(this, void 0);
         _Environment_hoistedIdentifiers.set(this, void 0);
         _Environment_flowTypeEnvironment.set(this, void 0);
+        _Environment_errors.set(this, new CompilerError());
         __classPrivateFieldSet(this, _Environment_scope, scope, "f");
         this.fnType = fnType;
         this.outputMode = outputMode;
@@ -31807,6 +31808,53 @@ class Environment {
                 detail: error,
                 fnLoc: null,
             });
+        }
+    }
+    recordError(error) {
+        if (error.category === ErrorCategory.Invariant) {
+            const compilerError = new CompilerError();
+            if (error instanceof CompilerDiagnostic) {
+                compilerError.pushDiagnostic(error);
+            }
+            else {
+                compilerError.pushErrorDetail(error);
+            }
+            throw compilerError;
+        }
+        if (error instanceof CompilerDiagnostic) {
+            __classPrivateFieldGet(this, _Environment_errors, "f").pushDiagnostic(error);
+        }
+        else {
+            __classPrivateFieldGet(this, _Environment_errors, "f").pushErrorDetail(error);
+        }
+    }
+    recordErrors(error) {
+        for (const detail of error.details) {
+            this.recordError(detail);
+        }
+    }
+    hasErrors() {
+        return __classPrivateFieldGet(this, _Environment_errors, "f").hasAnyErrors();
+    }
+    aggregateErrors() {
+        return __classPrivateFieldGet(this, _Environment_errors, "f");
+    }
+    tryRecord(fn) {
+        try {
+            fn();
+        }
+        catch (err) {
+            if (err instanceof CompilerError) {
+                for (const detail of err.details) {
+                    if (detail.category === ErrorCategory.Invariant) {
+                        throw err;
+                    }
+                }
+                this.recordErrors(err);
+            }
+            else {
+                throw err;
+            }
         }
     }
     isContextIdentifier(node) {
@@ -31955,7 +32003,7 @@ class Environment {
         __classPrivateFieldGet(this, _Environment_hoistedIdentifiers, "f").add(node);
     }
 }
-_Environment_globals = new WeakMap(), _Environment_shapes = new WeakMap(), _Environment_moduleTypes = new WeakMap(), _Environment_nextIdentifer = new WeakMap(), _Environment_nextBlock = new WeakMap(), _Environment_nextScope = new WeakMap(), _Environment_scope = new WeakMap(), _Environment_outlinedFunctions = new WeakMap(), _Environment_contextIdentifiers = new WeakMap(), _Environment_hoistedIdentifiers = new WeakMap(), _Environment_flowTypeEnvironment = new WeakMap(), _Environment_instances = new WeakSet(), _Environment_resolveModuleType = function _Environment_resolveModuleType(moduleName, loc) {
+_Environment_globals = new WeakMap(), _Environment_shapes = new WeakMap(), _Environment_moduleTypes = new WeakMap(), _Environment_nextIdentifer = new WeakMap(), _Environment_nextBlock = new WeakMap(), _Environment_nextScope = new WeakMap(), _Environment_scope = new WeakMap(), _Environment_outlinedFunctions = new WeakMap(), _Environment_contextIdentifiers = new WeakMap(), _Environment_hoistedIdentifiers = new WeakMap(), _Environment_flowTypeEnvironment = new WeakMap(), _Environment_errors = new WeakMap(), _Environment_instances = new WeakSet(), _Environment_resolveModuleType = function _Environment_resolveModuleType(moduleName, loc) {
     var _a;
     let moduleType = __classPrivateFieldGet(this, _Environment_moduleTypes, "f").get(moduleName);
     if (moduleType === undefined) {
