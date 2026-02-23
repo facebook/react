@@ -350,9 +350,6 @@ function isFilePartOfSources(
   return false;
 }
 
-export type CompileProgramMetadata = {
-  retryErrors: Array<{fn: BabelFn; error: CompilerError}>;
-};
 /**
  * Main entrypoint for React Compiler.
  *
@@ -363,7 +360,7 @@ export type CompileProgramMetadata = {
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass,
-): CompileProgramMetadata | null {
+): void {
   /**
    * This is directly invoked by the react-compiler babel plugin, so exceptions
    * thrown by this function will fail the babel build.
@@ -376,7 +373,7 @@ export function compileProgram(
    *   the outlined functions.
    */
   if (shouldSkipCompilation(program, pass)) {
-    return null;
+    return;
   }
   const restrictedImportsErr = validateRestrictedImports(
     program,
@@ -384,7 +381,7 @@ export function compileProgram(
   );
   if (restrictedImportsErr) {
     handleError(restrictedImportsErr, pass, null);
-    return null;
+    return;
   }
   /*
    * Record lint errors and critical errors as depending on Forget's config,
@@ -478,15 +475,11 @@ export function compileProgram(
       );
       handleError(error, programContext, null);
     }
-    return null;
+    return;
   }
 
   // Insert React Compiler generated functions into the Babel AST
   applyCompiledFunctions(program, compiledFns, pass, programContext);
-
-  return {
-    retryErrors: programContext.retryErrors,
-  };
 }
 
 type CompileSource = {
