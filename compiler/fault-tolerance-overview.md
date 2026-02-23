@@ -51,20 +51,20 @@ Add error accumulation to the `Environment` class so that any pass can record er
 
 Change `runWithEnvironment` to run all passes and check for errors at the end instead of letting exceptions propagate.
 
-- [ ] **2.1 Change `runWithEnvironment` return type** (`src/Entrypoint/Pipeline.ts`)
+- [x] **2.1 Change `runWithEnvironment` return type** (`src/Entrypoint/Pipeline.ts`)
   - Change return type from `CodegenFunction` to `Result<CodegenFunction, CompilerError>`
   - At the end of the pipeline, check `env.hasErrors()`:
     - If no errors: return `Ok(ast)`
     - If errors: return `Err(env.aggregateErrors())`
 
-- [ ] **2.2 Update `compileFn` to propagate the Result** (`src/Entrypoint/Pipeline.ts`)
+- [x] **2.2 Update `compileFn` to propagate the Result** (`src/Entrypoint/Pipeline.ts`)
   - Change `compileFn` return type from `CodegenFunction` to `Result<CodegenFunction, CompilerError>`
   - Propagate the Result from `runWithEnvironment`
 
-- [ ] **2.3 Update `run` to propagate the Result** (`src/Entrypoint/Pipeline.ts`)
+- [x] **2.3 Update `run` to propagate the Result** (`src/Entrypoint/Pipeline.ts`)
   - Same change for the internal `run` function
 
-- [ ] **2.4 Update callers in Program.ts** (`src/Entrypoint/Program.ts`)
+- [x] **2.4 Update callers in Program.ts** (`src/Entrypoint/Program.ts`)
   - In `tryCompileFunction`, change from try/catch around `compileFn` to handling the `Result`:
     - If `Ok(codegenFn)`: return the compiled function
     - If `Err(compilerError)`: return `{kind: 'error', error: compilerError}`
@@ -248,31 +248,31 @@ The inference passes are the most critical to handle correctly because they prod
 
 Walk through `runWithEnvironment` and wrap each pass call site. This is the integration work tying Phases 3-6 together.
 
-- [ ] **7.1 Wrap `lower()` call** (line 163)
+- [x] **7.1 Wrap `lower()` call** (line 163)
   - Change from `lower(func, env).unwrap()` to `lower(func, env)` (direct return after Phase 3.1)
 
-- [ ] **7.2 Wrap validation calls that use `.unwrap()`** (lines 169-303)
+- [x] **7.2 Wrap validation calls that use `.unwrap()`** (lines 169-303)
   - Remove `.unwrap()` from all validation calls after they're updated in Phase 4
   - For validations guarded by `env.enableValidations`, keep the guard but remove the `.unwrap()`
 
-- [ ] **7.3 Wrap inference calls** (lines 233-267)
+- [x] **7.3 Wrap inference calls** (lines 233-267)
   - After Phase 5, `inferMutationAliasingEffects` and `inferMutationAliasingRanges` record errors directly
   - Remove the `mutabilityAliasingErrors` / `mutabilityAliasingRangeErrors` variables and their conditional throw logic
 
-- [ ] **7.4 Wrap `env.logErrors()` calls** (lines 286-331)
+- [x] **7.4 Wrap `env.logErrors()` calls** (lines 286-331)
   - After Phase 4.13-4.16, these passes record on env directly
   - Remove the `env.logErrors()` wrapper calls
 
-- [ ] **7.5 Wrap codegen** (lines 575-578)
+- [x] **7.5 Wrap codegen** (lines 575-578)
   - After Phase 6.1, `codegenFunction` returns directly
   - Remove the `.unwrap()`
 
-- [ ] **7.6 Add final error check** (end of `runWithEnvironment`)
+- [x] **7.6 Add final error check** (end of `runWithEnvironment`)
   - After all passes complete, check `env.hasErrors()`
   - If no errors: return `Ok(ast)`
   - If errors: return `Err(env.aggregateErrors())`
 
-- [ ] **7.7 Consider wrapping each pass in `env.tryRecord()`** as a safety net
+- [x] **7.7 Consider wrapping each pass in `env.tryRecord()`** as a safety net
   - Even after individual passes are updated, wrapping each pass call in `env.tryRecord()` provides defense-in-depth
   - If a pass unexpectedly throws a CompilerError (e.g., from a code path we missed), it gets caught and recorded rather than aborting the pipeline
   - Non-CompilerError exceptions and invariants still propagate immediately
@@ -317,4 +317,11 @@ Walk through `runWithEnvironment` and wrap each pass call site. This is the inte
 - Non-CompilerError exceptions must continue to throw — these are unexpected JS errors
 - The `assertConsistentIdentifiers`, `assertTerminalSuccessorsExist`, `assertTerminalPredsExist`, `assertValidBlockNesting`, `assertValidMutableRanges`, `assertWellFormedBreakTargets`, `assertScopeInstructionsWithinScopes` assertion functions should continue to throw — they are invariant checks on internal data structure consistency
 - The `panicThreshold` mechanism in Program.ts should continue to work — it now operates on the aggregated error from the Result rather than a caught exception, but the behavior is the same
+
+## Key Learnings
+
+* **Phase 2+7 (Pipeline tryRecord wrapping) was sufficient for basic fault tolerance.** Wrapping all passes in `env.tryRecord()` immediately enabled the compiler to continue past errors that previously threw. This caused 52 test fixtures to produce additional errors that were previously masked by the first error bailing out. For example, `error.todo-reassign-const` previously reported only "Support destructuring of context variables" but now also reports the immutability violation.
+* **Lint-only passes (Pattern B: `env.logErrors()`) should not use `tryRecord()`/`recordError()`** because those errors are intentionally non-blocking. They are reported via the logger only and should not cause the pipeline to return `Err`. The `logErrors` pattern was kept for `validateNoDerivedComputationsInEffects_exp`, `validateNoSetStateInEffects`, `validateNoJSXInTryStatement`, and `validateStaticComponents`.
+* **Inference passes that return `Result` with validation errors** (`inferMutationAliasingEffects`, `inferMutationAliasingRanges`) were changed to record errors via `env.recordErrors()` instead of throwing, allowing subsequent passes to proceed.
+* **Value-producing passes** (`memoizeFbtAndMacroOperandsInSameScope`, `renameVariables`, `buildReactiveFunction`) need safe default values when wrapped in `tryRecord()` since the callback can't return values. We initialize with empty defaults (e.g., `new Set()`) before the `tryRecord()` call.
 
