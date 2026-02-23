@@ -20,7 +20,11 @@ import type {Hook} from './ReactFiberHooks';
 
 import {isPrimaryRenderer, HostTransitionContext} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
-import {ContextProvider, DehydratedFragment} from './ReactWorkTags';
+import {
+  ContextProvider,
+  DehydratedFragment,
+  SuspenseComponent,
+} from './ReactWorkTags';
 import {NoLanes, isSubsetOfLanes, mergeLanes} from './ReactFiberLane';
 import {
   NoFlags,
@@ -295,6 +299,37 @@ function propagateContextChanges<T>(
         workInProgress,
       );
       nextFiber = null;
+    } else if (
+      fiber.tag === SuspenseComponent &&
+      fiber.memoizedState !== null &&
+      fiber.memoizedState.dehydrated === null
+    ) {
+      // This is a client-rendered Suspense boundary that is currently
+      // showing its fallback. The primary children may include context
+      // consumers, but their fibers may not exist in the tree — during
+      // initial mount, if the primary children suspended, their fibers
+      // were discarded since there was no current tree to preserve them.
+      // We can't walk into the primary tree to find consumers, so
+      // conservatively mark the Suspense boundary itself for retry.
+      // When it re-renders, it will re-mount the primary children,
+      // which will read the updated context value.
+      fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
+      const alternate = fiber.alternate;
+      if (alternate !== null) {
+        alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
+      }
+      scheduleContextWorkOnParentPath(
+        fiber.return,
+        renderLanes,
+        workInProgress,
+      );
+      if (!forcePropagateEntireTree) {
+        // During lazy propagation, we can defer propagating changes to
+        // the children, same as the consumer match above.
+        nextFiber = null;
+      } else {
+        nextFiber = fiber.child;
+      }
     } else {
       // Traverse down.
       nextFiber = fiber.child;
@@ -331,9 +366,9 @@ export function lazilyPropagateParentContextChanges(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
-) {
+): boolean {
   const forcePropagateEntireTree = false;
-  propagateParentContextChanges(
+  return propagateParentContextChanges(
     current,
     workInProgress,
     renderLanes,
@@ -364,7 +399,7 @@ function propagateParentContextChanges(
   workInProgress: Fiber,
   renderLanes: Lanes,
   forcePropagateEntireTree: boolean,
-) {
+): boolean {
   // Collect all the parent providers that changed. Since this is usually small
   // number, we use an Array instead of Set.
   let contexts = null;
@@ -460,6 +495,7 @@ function propagateParentContextChanges(
   // then we could remove both `DidPropagateContext` and `NeedsPropagation`.
   // Consider this as part of the next refactor to the fiber tree structure.
   workInProgress.flags |= DidPropagateContext;
+  return contexts !== null;
 }
 
 export function checkIfContextChanged(

@@ -29,6 +29,9 @@ import {
   isStableType,
   isSubPath,
   isSubPathIgnoringOptionals,
+  isUseEffectHookType,
+  isUseInsertionEffectHookType,
+  isUseLayoutEffectHookType,
   isUseRefType,
   LoadGlobal,
   ManualMemoDependency,
@@ -43,7 +46,6 @@ import {
 } from '../HIR/visitors';
 import {Result} from '../Utils/Result';
 import {retainWhere} from '../Utils/utils';
-import {isEffectHook} from './ValidateMemoizedEffectDependencies';
 
 const DEBUG = false;
 
@@ -1110,4 +1112,12 @@ function createDiagnostic(
     description,
     suggestions: suggestion != null ? [suggestion] : null,
   });
+}
+
+export function isEffectHook(identifier: Identifier): boolean {
+  return (
+    isUseEffectHookType(identifier) ||
+    isUseLayoutEffectHookType(identifier) ||
+    isUseInsertionEffectHookType(identifier)
+  );
 }

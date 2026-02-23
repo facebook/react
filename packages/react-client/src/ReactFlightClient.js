@@ -8,6 +8,7 @@
  */
 
 import type {
+  JSONValue,
   Thenable,
   ReactDebugInfo,
   ReactDebugInfoEntry,
@@ -131,14 +132,6 @@ interface FlightStreamController {
 }
 
 type UninitializedModel = string;
-
-export type JSONValue =
-  | number
-  | null
-  | boolean
-  | string
-  | {+[key: string]: JSONValue}
-  | $ReadOnlyArray<JSONValue>;
 
 type ProfilingResult = {
   track: number,
@@ -3527,6 +3520,18 @@ function resolveErrorDev(
   }
 
   let error;
+  const errorOptions =
+    'cause' in errorInfo
+      ? {
+          cause: reviveModel(
+            response,
+            // $FlowFixMe[incompatible-cast] -- Flow thinks `cause` in `cause?: JSONValue` can be undefined after `in` check.
+            (errorInfo.cause: JSONValue),
+            errorInfo,
+            'cause',
+          ),
+        }
+      : undefined;
   const callStack = buildFakeCallStack(
     response,
     stack,
@@ -3537,6 +3542,7 @@ function resolveErrorDev(
       null,
       message ||
         'An error occurred in the Server Components render but no message was provided',
+      errorOptions,
     ),
   );
 

@@ -19,16 +19,8 @@ export function validateNoCapitalizedCalls(
     ...DEFAULT_GLOBALS.keys(),
     ...(envConfig.validateNoCapitalizedCalls ?? []),
   ]);
-  /*
-   * The hook pattern may allow uppercase names, like React$useState, so we need to be sure that we
-   * do not error in those cases
-   */
-  const hookPattern =
-    envConfig.hookPattern != null ? new RegExp(envConfig.hookPattern) : null;
   const isAllowed = (name: string): boolean => {
-    return (
-      ALLOW_LIST.has(name) || (hookPattern != null && hookPattern.test(name))
-    );
+    return ALLOW_LIST.has(name);
   };
 
   const errors = new CompilerError();
