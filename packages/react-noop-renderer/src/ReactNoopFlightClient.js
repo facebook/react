@@ -43,9 +43,6 @@ const {createResponse, createStreamState, processBinaryChunk, getRoot, close} =
     requireModule(idx: string) {
       return readModule(idx);
     },
-    parseModel(response: Response, json) {
-      return JSON.parse(json, response._fromJSON);
-    },
     bindToConsole(methodName, args, badgeName) {
       return Function.prototype.bind.apply(
         // eslint-disable-next-line react-internal/no-production-logging

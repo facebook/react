@@ -991,8 +991,8 @@ function releaseHostResource(
         // eslint-disable-next-line no-for-of-loops/no-for-of-loops
         for (const firstInstance of resourceInstances) {
           publicInstanceToDevToolsInstanceMap.set(
+            publicInstance,
             firstInstance,
-            nearestInstance,
           );
           break;
         }
@@ -2606,7 +2606,12 @@ export function attach(
 
       // This check is a guard to handle a React element that has been modified
       // in such a way as to bypass the default stringification of the "key" property.
-      const keyString = key === null ? null : String(key);
+      const keyString =
+        key === null
+          ? null
+          : key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : String(key);
       const keyStringID = getStringID(keyString);
 
       const nameProp =
@@ -3197,15 +3202,16 @@ export function attach(
                 environmentCounts.set(env, count - 1);
               }
             }
-          }
-          if (
-            suspenseNode.hasUniqueSuspenders &&
-            !ioExistsInSuspenseAncestor(suspenseNode, ioInfo)
-          ) {
-            // This entry wasn't in any ancestor and is no longer in this suspense boundary.
-            // This means that a child might now be the unique suspender for this IO.
-            // Search the child boundaries to see if we can reveal any of them.
-            unblockSuspendedBy(suspenseNode, ioInfo);
+
+            if (
+              suspenseNode.hasUniqueSuspenders &&
+              !ioExistsInSuspenseAncestor(suspenseNode, ioInfo)
+            ) {
+              // This entry wasn't in any ancestor and is no longer in this suspense boundary.
+              // This means that a child might now be the unique suspender for this IO.
+              // Search the child boundaries to see if we can reveal any of them.
+              unblockSuspendedBy(suspenseNode, ioInfo);
+            }
           }
         }
       }
@@ -6179,7 +6185,10 @@ export function attach(
       return {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
-        key: fiber.key === REACT_OPTIMISTIC_KEY ? null : fiber.key,
+        key:
+          fiber.key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : fiber.key,
         env: null,
         stack:
           fiber._debugOwner == null || fiber._debugStack == null
@@ -6195,7 +6204,7 @@ export function attach(
         key:
           componentInfo.key == null ||
           componentInfo.key === REACT_OPTIMISTIC_KEY
-            ? null
+            ? 'React.optimisticKey'
             : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
         stack:
@@ -6859,6 +6868,8 @@ export function attach(
 
     // TODO Show custom UI for Cache like we do for Suspense
     // For now, just hide state data entirely since it's not meant to be inspected.
+    // Make sure delete, rename, and override of state handles all tags for which
+    // we show state.
     const showState =
       tag === ClassComponent || tag === IncompleteClassComponent;
 
@@ -7120,7 +7131,12 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
-      key: key != null && key !== REACT_OPTIMISTIC_KEY ? key : null,
+      key:
+        key != null
+          ? key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : key
+          : null,
 
       type: elementType,
 
@@ -7815,8 +7831,13 @@ export function attach(
           }
           break;
         case 'state':
-          deletePathInObject(instance.state, path);
-          instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+            case IncompleteClassComponent:
+              deletePathInObject(instance.state, path);
+              instance.forceUpdate();
+              break;
+          }
           break;
       }
     }
@@ -7893,8 +7914,13 @@ export function attach(
           }
           break;
         case 'state':
-          renamePathInObject(instance.state, oldPath, newPath);
-          instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+            case IncompleteClassComponent:
+              renamePathInObject(instance.state, oldPath, newPath);
+              instance.forceUpdate();
+              break;
+          }
           break;
       }
     }
@@ -7964,6 +7990,7 @@ export function attach(
         case 'state':
           switch (fiber.tag) {
             case ClassComponent:
+            case IncompleteClassComponent:
               setInObject(instance.state, path, value);
               instance.forceUpdate();
               break;
@@ -8844,86 +8871,6 @@ export function attach(
     return unresolvedSource;
   }
 
-  type InternalMcpFunctions = {
-    __internal_only_getComponentTree?: Function,
-  };
-
-  const internalMcpFunctions: InternalMcpFunctions = {};
-  if (__IS_INTERNAL_MCP_BUILD__) {
-    // eslint-disable-next-line no-inner-declarations
-    function __internal_only_getComponentTree(): string {
-      let treeString = '';
-
-      function buildTreeString(
-        instance: DevToolsInstance,
-        prefix: string = '',
-        isLastChild: boolean = true,
-      ): void {
-        if (!instance) return;
-
-        const name =
-          (instance.kind !== VIRTUAL_INSTANCE
-            ? getDisplayNameForFiber(instance.data)
-            : instance.data.name) || 'Unknown';
-
-        const id = instance.id !== undefined ? instance.id : 'unknown';
-
-        if (name !== 'createRoot()') {
-          treeString +=
-            prefix +
-            (isLastChild ? '└── ' : '├── ') +
-            name +
-            ' (id: ' +
-            id +
-            ')\n';
-        }
-
-        const childPrefix = prefix + (isLastChild ? '    ' : '│   ');
-
-        let childCount = 0;
-        let tempChild = instance.firstChild;
-        while (tempChild !== null) {
-          childCount++;
-          tempChild = tempChild.nextSibling;
-        }
-
-        let child = instance.firstChild;
-        let currentChildIndex = 0;
-
-        while (child !== null) {
-          currentChildIndex++;
-          const isLastSibling = currentChildIndex === childCount;
-          buildTreeString(child, childPrefix, isLastSibling);
-          child = child.nextSibling;
-        }
-      }
-
-      const rootInstances: Array<DevToolsInstance> = [];
-      idToDevToolsInstanceMap.forEach(instance => {
-        if (instance.parent === null || instance.parent.parent === null) {
-          rootInstances.push(instance);
-        }
-      });
-
-      if (rootInstances.length > 0) {
-        for (let i = 0; i < rootInstances.length; i++) {
-          const isLast = i === rootInstances.length - 1;
-          buildTreeString(rootInstances[i], '', isLast);
-          if (!isLast) {
-            treeString += '\n';
-          }
-        }
-      } else {
-        treeString = 'No component tree found.';
-      }
-
-      return treeString;
-    }
-
-    internalMcpFunctions.__internal_only_getComponentTree =
-      __internal_only_getComponentTree;
-  }
-
   return {
     cleanup,
     clearErrorsAndWarnings,
@@ -8967,6 +8914,5 @@ export function attach(
     supportsTogglingSuspense,
     updateComponentFilters,
     getEnvironmentNames,
-    ...internalMcpFunctions,
   };
 }

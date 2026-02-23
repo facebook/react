@@ -135,21 +135,7 @@ const suspenseTab = {
   title: 'React Suspense',
 };
 
-const defaultTabs = [componentsTab, profilerTab];
-const tabsWithSuspense = [componentsTab, profilerTab, suspenseTab];
-
-function useIsSuspenseTabEnabled(store: Store): boolean {
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => {
-      store.addListener('enableSuspenseTab', onStoreChange);
-      return () => {
-        store.removeListener('enableSuspenseTab', onStoreChange);
-      };
-    },
-    [store],
-  );
-  return React.useSyncExternalStore(subscribe, () => store.supportsSuspenseTab);
-}
+const tabs = [componentsTab, profilerTab, suspenseTab];
 
 export default function DevTools({
   bridge,
@@ -183,8 +169,6 @@ export default function DevTools({
     LOCAL_STORAGE_DEFAULT_TAB_KEY,
     defaultTab,
   );
-  const enableSuspenseTab = useIsSuspenseTabEnabled(store);
-  const tabs = enableSuspenseTab ? tabsWithSuspense : defaultTabs;
 
   let tab = currentTab;
 
@@ -364,17 +348,15 @@ export default function DevTools({
                                         }
                                       />
                                     </div>
-                                    {enableSuspenseTab && (
-                                      <div
-                                        className={styles.TabContent}
-                                        hidden={tab !== 'suspense'}>
-                                        <SuspenseTab
-                                          portalContainer={
-                                            suspensePortalContainer
-                                          }
-                                        />
-                                      </div>
-                                    )}
+                                    <div
+                                      className={styles.TabContent}
+                                      hidden={tab !== 'suspense'}>
+                                      <SuspenseTab
+                                        portalContainer={
+                                          suspensePortalContainer
+                                        }
+                                      />
+                                    </div>
                                   </div>
                                   {editorPortalContainer ? (
                                     <EditorPane

@@ -34,15 +34,12 @@ import {
   dropManualMemoization,
   inferReactivePlaces,
   inlineImmediatelyInvokedFunctionExpressions,
-  inferEffectDependencies,
 } from '../Inference';
 import {
   constantPropagation,
   deadCodeElimination,
   pruneMaybeThrows,
-  inlineJsxTransform,
 } from '../Optimization';
-import {instructionReordering} from '../Optimization/InstructionReordering';
 import {
   CodegenFunction,
   alignObjectMethodScopes,
@@ -69,7 +66,6 @@ import {alignReactiveScopesToBlockScopesHIR} from '../ReactiveScopes/AlignReacti
 import {flattenReactiveLoopsHIR} from '../ReactiveScopes/FlattenReactiveLoopsHIR';
 import {flattenScopesWithHooksOrUseHIR} from '../ReactiveScopes/FlattenScopesWithHooksOrUseHIR';
 import {pruneAlwaysInvalidatingScopes} from '../ReactiveScopes/PruneAlwaysInvalidatingScopes';
-import pruneInitializationDependencies from '../ReactiveScopes/PruneInitializationDependencies';
 import {stabilizeBlockIds} from '../ReactiveScopes/StabilizeBlockIds';
 import {
   eliminateRedundantPhi,
@@ -80,7 +76,6 @@ import {inferTypes} from '../TypeInference';
 import {
   validateContextVariableLValues,
   validateHooksUsage,
-  validateMemoizedEffectDependencies,
   validateNoCapitalizedCalls,
   validateNoRefAccessInRender,
   validateNoSetStateInRender,
@@ -89,13 +84,11 @@ import {
 } from '../Validation';
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
-import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInEffects} from '../Validation/ValidateNoSetStateInEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
-import {transformFire} from '../Transform';
 import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureFunctionsInRender';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
@@ -169,12 +162,7 @@ function runWithEnvironment(
   validateContextVariableLValues(hir);
   validateUseMemo(hir).unwrap();
 
-  if (
-    env.enableDropManualMemoization &&
-    !env.config.enablePreserveExistingManualUseMemo &&
-    !env.config.disableMemoizationForDebugging &&
-    !env.config.enableChangeDetectionForDebugging
-  ) {
+  if (env.enableDropManualMemoization) {
     dropManualMemoization(hir).unwrap();
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
   }
@@ -215,15 +203,6 @@ function runWithEnvironment(
     }
   }
 
-  if (env.config.enableFire) {
-    transformFire(hir);
-    log({kind: 'hir', name: 'TransformFire', value: hir});
-  }
-
-  if (env.config.lowerContextAccess) {
-    lowerContextAccess(hir, env.config.lowerContextAccess);
-  }
-
   optimizePropsMethodCalls(hir);
   log({kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir});
 
@@ -246,12 +225,6 @@ function runWithEnvironment(
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
   log({kind: 'hir', name: 'DeadCodeElimination', value: hir});
-
-  if (env.config.enableInstructionReordering) {
-    instructionReordering(hir);
-    log({kind: 'hir', name: 'InstructionReordering', value: hir});
-  }
-
   pruneMaybeThrows(hir);
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
@@ -433,24 +406,6 @@ function runWithEnvironment(
     value: hir,
   });
 
-  if (env.config.inferEffectDependencies) {
-    inferEffectDependencies(hir);
-    log({
-      kind: 'hir',
-      name: 'InferEffectDependencies',
-      value: hir,
-    });
-  }
-
-  if (env.config.inlineJsxTransform) {
-    inlineJsxTransform(hir, env.config.inlineJsxTransform);
-    log({
-      kind: 'hir',
-      name: 'inlineJsxTransform',
-      value: hir,
-    });
-  }
-
   const reactiveFunction = buildReactiveFunction(hir);
   log({
     kind: 'reactive',
@@ -503,15 +458,6 @@ function runWithEnvironment(
     value: reactiveFunction,
   });
 
-  if (env.config.enableChangeDetectionForDebugging != null) {
-    pruneInitializationDependencies(reactiveFunction);
-    log({
-      kind: 'reactive',
-      name: 'PruneInitializationDependencies',
-      value: reactiveFunction,
-    });
-  }
-
   propagateEarlyReturns(reactiveFunction);
   log({
     kind: 'reactive',
@@ -560,10 +506,6 @@ function runWithEnvironment(
     name: 'PruneHoistedContexts',
     value: reactiveFunction,
   });
-
-  if (env.config.validateMemoizedEffectDependencies) {
-    validateMemoizedEffectDependencies(reactiveFunction).unwrap();
-  }
 
   if (
     env.config.enablePreserveExistingMemoizationGuarantees ||

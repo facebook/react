@@ -88,7 +88,6 @@ export class ProgramContext {
    * Metadata from compilation
    */
   retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
-  inferredEffectLocations: Set<t.SourceLocation> = new Set();
 
   constructor({
     program,
@@ -108,14 +107,7 @@ export class ProgramContext {
   }
 
   isHookName(name: string): boolean {
-    if (this.opts.environment.hookPattern == null) {
-      return isHookName(name);
-    } else {
-      const match = new RegExp(this.opts.environment.hookPattern).exec(name);
-      return (
-        match != null && typeof match[1] === 'string' && isHookName(match[1])
-      );
-    }
+    return isHookName(name);
   }
 
   hasReference(name: string): boolean {
