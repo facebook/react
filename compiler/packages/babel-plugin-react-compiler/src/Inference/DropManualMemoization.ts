@@ -31,7 +31,6 @@ import {
   makeInstructionId,
 } from '../HIR';
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
-import {Result} from '../Utils/Result';
 
 type ManualMemoCallee = {
   kind: 'useMemo' | 'useCallback';
@@ -389,9 +388,7 @@ function extractManualMemoizationArgs(
  * This pass also validates that useMemo callbacks return a value (not void), ensuring that useMemo
  * is only used for memoizing values and not for running arbitrary side effects.
  */
-export function dropManualMemoization(
-  func: HIRFunction,
-): Result<void, CompilerError> {
+export function dropManualMemoization(func: HIRFunction): void {
   const errors = new CompilerError();
   const isValidationEnabled =
     func.env.config.validatePreserveExistingMemoizationGuarantees ||
@@ -553,7 +550,9 @@ export function dropManualMemoization(
     }
   }
 
-  return errors.asResult();
+  if (errors.hasAnyErrors()) {
+    func.env.recordErrors(errors);
+  }
 }
 
 function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
