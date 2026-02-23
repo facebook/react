@@ -414,6 +414,11 @@ export function compileProgram(
     hasModuleScopeOptOut:
       findDirectiveDisablingMemoization(program.node.directives, pass.opts) !=
       null,
+    hasModuleScopeOptIn:
+      tryFindDirectiveEnablingMemoization(
+        program.node.directives,
+        pass.opts,
+      ).unwrapOr(null) != null,
   });
 
   const queue: Array<CompileSource> = findFunctionsToCompile(
@@ -514,7 +519,11 @@ function findFunctionsToCompile(
       return;
     }
 
-    const fnType = getReactFunctionType(fn, pass);
+    const fnType = getReactFunctionType(
+      fn,
+      pass,
+      programContext.hasModuleScopeOptIn,
+    );
 
     if (fnType === null || programContext.alreadyCompiled.has(fn.node)) {
       return;
@@ -667,11 +676,13 @@ function processFn(
     return null;
   } else if (
     programContext.opts.compilationMode === 'annotation' &&
-    directives.optIn == null
+    directives.optIn == null &&
+    !programContext.hasModuleScopeOptIn
   ) {
     /**
-     * If no opt-in directive is found and the compiler is configured in
-     * annotation mode, don't insert the compiled function.
+     * If no opt-in directive is found (neither function-level nor module-level)
+     * and the compiler is configured in annotation mode, don't insert the
+     * compiled function.
      */
     return null;
   } else {
@@ -809,6 +820,7 @@ function shouldSkipCompilation(
 function getReactFunctionType(
   fn: BabelFn,
   pass: CompilerPass,
+  hasModuleScopeOptIn: boolean,
 ): ReactFunctionType | null {
   if (fn.node.body.type === 'BlockStatement') {
     const optInDirectives = tryFindDirectiveEnablingMemoization(
@@ -832,7 +844,11 @@ function getReactFunctionType(
 
   switch (pass.opts.compilationMode) {
     case 'annotation': {
-      // opt-ins are checked above
+      // opt-ins are checked above (function-level)
+      // A module-level opt-in directive applies to all functions in the file
+      if (hasModuleScopeOptIn) {
+        return getComponentOrHookLike(fn) ?? 'Other';
+      }
       return null;
     }
     case 'infer': {
