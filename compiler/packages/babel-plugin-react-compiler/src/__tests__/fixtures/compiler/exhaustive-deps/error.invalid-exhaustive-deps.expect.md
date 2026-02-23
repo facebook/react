@@ -51,7 +51,7 @@ function Component({x, y, z}) {
 ## Error
 
 ```
-Found 4 errors:
+Found 6 errors:
 
 Error: Found missing/extra memoization dependencies
 
@@ -157,6 +157,48 @@ error.invalid-exhaustive-deps.ts:37:13
   40 |   }, []);
 
 Inferred dependencies: `[ref]`
+
+Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `x.y.z.a.b`, but the source dependencies were [x?.y.z.a?.b.z]. Inferred different dependency than source.
+
+error.invalid-exhaustive-deps.ts:14:20
+  12 |     // ok, not our job to type check nullability
+  13 |   }, [x.y.z.a]);
+> 14 |   const c = useMemo(() => {
+     |                     ^^^^^^^
+> 15 |     return x?.y.z.a?.b;
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+> 16 |     // error: too precise
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+> 17 |   }, [x?.y.z.a?.b.z]);
+     | ^^^^ Could not preserve existing manual memoization
+  18 |   const d = useMemo(() => {
+  19 |     return x?.y?.[(console.log(y), z?.b)];
+  20 |     // ok
+
+Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `ref`, but the source dependencies were []. Inferred dependency not present in source.
+
+error.invalid-exhaustive-deps.ts:35:21
+  33 |   const ref2 = useRef(null);
+  34 |   const ref = z ? ref1 : ref2;
+> 35 |   const cb = useMemo(() => {
+     |                      ^^^^^^^
+> 36 |     return () => {
+     | ^^^^^^^^^^^^^^^^^^
+> 37 |       return ref.current;
+     | ^^^^^^^^^^^^^^^^^^
+> 38 |     };
+     | ^^^^^^^^^^^^^^^^^^
+> 39 |     // error: ref is a stable type but reactive
+     | ^^^^^^^^^^^^^^^^^^
+> 40 |   }, []);
+     | ^^^^ Could not preserve existing manual memoization
+  41 |   return <Stringify results={[a, b, c, d, e, f, cb]} />;
+  42 | }
+  43 |
 ```
           
       

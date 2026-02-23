@@ -9,8 +9,11 @@ import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
 import prettyFormat from 'pretty-format';
 import {CompilerOutputMode, Logger, ProgramContext} from '.';
+import {CompilerError} from '../CompilerError';
+import {Err, Ok, Result} from '../Utils/Result';
 import {
   HIRFunction,
+  IdentifierId,
   ReactiveFunction,
   assertConsistentIdentifiers,
   assertTerminalPredsExist,
@@ -89,7 +92,6 @@ import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryState
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
-import {validateNoImpureFunctionsInRender} from '../Validation/ValidateNoImpureFunctionsInRender';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
 import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
@@ -118,7 +120,7 @@ function run(
   logger: Logger | null,
   filename: string | null,
   code: string | null,
-): CodegenFunction {
+): Result<CodegenFunction, CompilerError> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(
     func.scope,
@@ -149,7 +151,7 @@ function runWithEnvironment(
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
   env: Environment,
-): CodegenFunction {
+): Result<CodegenFunction, CompilerError> {
   const log = (value: CompilerPipelineValue): void => {
     env.logger?.debugLogIRs?.(value);
   };
@@ -159,11 +161,17 @@ function runWithEnvironment(
   pruneMaybeThrows(hir);
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
-  validateContextVariableLValues(hir);
-  validateUseMemo(hir).unwrap();
+  env.tryRecord(() => {
+    validateContextVariableLValues(hir);
+  });
+  env.tryRecord(() => {
+    validateUseMemo(hir).unwrap();
+  });
 
   if (env.enableDropManualMemoization) {
-    dropManualMemoization(hir).unwrap();
+    env.tryRecord(() => {
+      dropManualMemoization(hir).unwrap();
+    });
     log({kind: 'hir', name: 'DropManualMemoization', value: hir});
   }
 
@@ -196,10 +204,14 @@ function runWithEnvironment(
 
   if (env.enableValidations) {
     if (env.config.validateHooksUsage) {
-      validateHooksUsage(hir).unwrap();
+      env.tryRecord(() => {
+        validateHooksUsage(hir).unwrap();
+      });
     }
     if (env.config.validateNoCapitalizedCalls) {
-      validateNoCapitalizedCalls(hir).unwrap();
+      env.tryRecord(() => {
+        validateNoCapitalizedCalls(hir).unwrap();
+      });
     }
   }
 
@@ -213,7 +225,7 @@ function runWithEnvironment(
   log({kind: 'hir', name: 'InferMutationAliasingEffects', value: hir});
   if (env.enableValidations) {
     if (mutabilityAliasingErrors.isErr()) {
-      throw mutabilityAliasingErrors.unwrapErr();
+      env.recordErrors(mutabilityAliasingErrors.unwrapErr());
     }
   }
 
@@ -234,9 +246,11 @@ function runWithEnvironment(
   log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
   if (env.enableValidations) {
     if (mutabilityAliasingRangeErrors.isErr()) {
-      throw mutabilityAliasingRangeErrors.unwrapErr();
+      env.recordErrors(mutabilityAliasingRangeErrors.unwrapErr());
     }
-    validateLocalsNotReassignedAfterRender(hir);
+    env.tryRecord(() => {
+      validateLocalsNotReassignedAfterRender(hir);
+    });
   }
 
   if (env.enableValidations) {
@@ -245,11 +259,15 @@ function runWithEnvironment(
     }
 
     if (env.config.validateRefAccessDuringRender) {
-      validateNoRefAccessInRender(hir).unwrap();
+      env.tryRecord(() => {
+        validateNoRefAccessInRender(hir).unwrap();
+      });
     }
 
     if (env.config.validateNoSetStateInRender) {
-      validateNoSetStateInRender(hir).unwrap();
+      env.tryRecord(() => {
+        validateNoSetStateInRender(hir).unwrap();
+      });
     }
 
     if (
@@ -258,7 +276,9 @@ function runWithEnvironment(
     ) {
       env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
     } else if (env.config.validateNoDerivedComputationsInEffects) {
-      validateNoDerivedComputationsInEffects(hir);
+      env.tryRecord(() => {
+        validateNoDerivedComputationsInEffects(hir);
+      });
     }
 
     if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
@@ -269,11 +289,9 @@ function runWithEnvironment(
       env.logErrors(validateNoJSXInTryStatement(hir));
     }
 
-    if (env.config.validateNoImpureFunctionsInRender) {
-      validateNoImpureFunctionsInRender(hir).unwrap();
-    }
-
-    validateNoFreezingKnownMutableFunctions(hir).unwrap();
+    env.tryRecord(() => {
+      validateNoFreezingKnownMutableFunctions(hir).unwrap();
+    });
   }
 
   inferReactivePlaces(hir);
@@ -285,7 +303,9 @@ function runWithEnvironment(
       env.config.validateExhaustiveEffectDependencies
     ) {
       // NOTE: this relies on reactivity inference running first
-      validateExhaustiveDependencies(hir).unwrap();
+      env.tryRecord(() => {
+        validateExhaustiveDependencies(hir).unwrap();
+      });
     }
   }
 
@@ -314,7 +334,8 @@ function runWithEnvironment(
     log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
   }
 
-  const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
+  let fbtOperands: Set<IdentifierId> = new Set();
+  fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
   log({
     kind: 'hir',
     name: 'MemoizeFbtAndMacroOperandsInSameScope',
@@ -406,7 +427,8 @@ function runWithEnvironment(
     value: hir,
   });
 
-  const reactiveFunction = buildReactiveFunction(hir);
+  let reactiveFunction!: ReactiveFunction;
+  reactiveFunction = buildReactiveFunction(hir);
   log({
     kind: 'reactive',
     name: 'BuildReactiveFunction',
@@ -493,7 +515,8 @@ function runWithEnvironment(
     value: reactiveFunction,
   });
 
-  const uniqueIdentifiers = renameVariables(reactiveFunction);
+  let uniqueIdentifiers: Set<string> = new Set();
+  uniqueIdentifiers = renameVariables(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'RenameVariables',
@@ -511,20 +534,29 @@ function runWithEnvironment(
     env.config.enablePreserveExistingMemoizationGuarantees ||
     env.config.validatePreserveExistingMemoizationGuarantees
   ) {
-    validatePreservedManualMemoization(reactiveFunction).unwrap();
+    env.tryRecord(() => {
+      validatePreservedManualMemoization(reactiveFunction).unwrap();
+    });
   }
 
-  const ast = codegenFunction(reactiveFunction, {
+  const codegenResult = codegenFunction(reactiveFunction, {
     uniqueIdentifiers,
     fbtOperands,
-  }).unwrap();
+  });
+  if (codegenResult.isErr()) {
+    env.recordErrors(codegenResult.unwrapErr());
+    return Err(env.aggregateErrors());
+  }
+  const ast = codegenResult.unwrap();
   log({kind: 'ast', name: 'Codegen', value: ast});
   for (const outlined of ast.outlined) {
     log({kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn});
   }
 
   if (env.config.validateSourceLocations) {
-    validateSourceLocations(func, ast).unwrap();
+    env.tryRecord(() => {
+      validateSourceLocations(func, ast).unwrap();
+    });
   }
 
   /**
@@ -536,7 +568,10 @@ function runWithEnvironment(
     throw new Error('unexpected error');
   }
 
-  return ast;
+  if (env.hasErrors()) {
+    return Err(env.aggregateErrors());
+  }
+  return Ok(ast);
 }
 
 export function compileFn(
@@ -550,7 +585,7 @@ export function compileFn(
   logger: Logger | null,
   filename: string | null,
   code: string | null,
-): CodegenFunction {
+): Result<CodegenFunction, CompilerError> {
   return run(
     func,
     config,
