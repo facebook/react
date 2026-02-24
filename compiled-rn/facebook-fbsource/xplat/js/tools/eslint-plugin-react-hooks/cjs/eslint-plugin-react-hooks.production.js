@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<546405b4a52718e05315f1b5cabd3c29>>
+ * @generated SignedSource<<022616cd97de9830683763cea98b8669>>
  */
 
 'use strict';
@@ -45307,7 +45307,7 @@ function compareDeps(inferred, source) {
         }
     }
 }
-function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsInMemoBlock, errorState, memoLocation) {
+function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsInMemoBlock, env, memoLocation) {
     var _a;
     let normalizedDep;
     const maybeNormalizedRoot = temporaries.get(dep.identifier.id);
@@ -45355,7 +45355,7 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
             errorDiagnostic = merge$1(errorDiagnostic !== null && errorDiagnostic !== void 0 ? errorDiagnostic : compareResult, compareResult);
         }
     }
-    errorState.recordError(CompilerDiagnostic.create({
+    env.recordError(CompilerDiagnostic.create({
         category: ErrorCategory.PreserveManualMemo,
         reason: 'Existing memoization could not be preserved',
         description: [
