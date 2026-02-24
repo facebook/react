@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<64d892a279bcd736a83b65c8f39de19a>>
+ * @generated SignedSource<<1169c747c944291679143ea323d60bf4>>
  */
 
 'use strict';
@@ -21039,13 +21039,15 @@ class HIRBuilder {
         _HIRBuilder_bindings.set(this, void 0);
         _HIRBuilder_env.set(this, void 0);
         _HIRBuilder_exceptionHandlerStack.set(this, []);
-        this.errors = new CompilerError();
         this.fbtDepth = 0;
         __classPrivateFieldSet(this, _HIRBuilder_env, env, "f");
         __classPrivateFieldSet(this, _HIRBuilder_bindings, (_a = options === null || options === void 0 ? void 0 : options.bindings) !== null && _a !== void 0 ? _a : new Map(), "f");
         __classPrivateFieldSet(this, _HIRBuilder_context, (_b = options === null || options === void 0 ? void 0 : options.context) !== null && _b !== void 0 ? _b : new Map(), "f");
         __classPrivateFieldSet(this, _HIRBuilder_entry, makeBlockId(env.nextBlockId), "f");
         __classPrivateFieldSet(this, _HIRBuilder_current, newBlock(__classPrivateFieldGet(this, _HIRBuilder_entry, "f"), (_c = options === null || options === void 0 ? void 0 : options.entryBlockKind) !== null && _c !== void 0 ? _c : 'block'), "f");
+    }
+    recordError(error) {
+        __classPrivateFieldGet(this, _HIRBuilder_env, "f").recordError(error);
     }
     currentBlockKind() {
         return __classPrivateFieldGet(this, _HIRBuilder_current, "f").kind;
@@ -21147,32 +21149,22 @@ class HIRBuilder {
     resolveBinding(node) {
         var _a, _b, _c;
         if (node.name === 'fbt') {
-            CompilerError.throwDiagnostic({
+            this.recordError(new CompilerErrorDetail({
                 category: ErrorCategory.Todo,
                 reason: 'Support local variables named `fbt`',
                 description: 'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
-                details: [
-                    {
-                        kind: 'error',
-                        message: 'Rename to avoid conflict with fbt plugin',
-                        loc: (_a = node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
-                    },
-                ],
-            });
+                loc: (_a = node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
+                suggestions: null,
+            }));
         }
         if (node.name === 'this') {
-            CompilerError.throwDiagnostic({
+            this.recordError(new CompilerErrorDetail({
                 category: ErrorCategory.UnsupportedSyntax,
                 reason: '`this` is not supported syntax',
                 description: 'React Compiler does not support compiling functions that use `this`',
-                details: [
-                    {
-                        kind: 'error',
-                        message: '`this` was used here',
-                        loc: (_b = node.loc) !== null && _b !== void 0 ? _b : GeneratedSource,
-                    },
-                ],
-            });
+                loc: (_b = node.loc) !== null && _b !== void 0 ? _b : GeneratedSource,
+                suggestions: null,
+            }));
         }
         const originalName = node.name;
         let name = originalName;
@@ -21215,13 +21207,13 @@ class HIRBuilder {
         for (const [id, block] of ir.blocks) {
             if (!rpoBlocks.has(id) &&
                 block.instructions.some(instr => instr.value.kind === 'FunctionExpression')) {
-                this.errors.push({
+                this.recordError(new CompilerErrorDetail({
                     reason: `Support functions with unreachable code that may contain hoisted declarations`,
                     loc: (_b = (_a = block.instructions[0]) === null || _a === void 0 ? void 0 : _a.loc) !== null && _b !== void 0 ? _b : block.terminal.loc,
                     description: null,
                     suggestions: null,
                     category: ErrorCategory.Todo,
-                });
+                }));
             }
         }
         ir.blocks = rpoBlocks;
@@ -22682,7 +22674,7 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
         if (param.isIdentifier()) {
             const binding = builder.resolveIdentifier(param);
             if (binding.kind !== 'Identifier') {
-                builder.errors.pushDiagnostic(CompilerDiagnostic.create({
+                builder.recordError(CompilerDiagnostic.create({
                     category: ErrorCategory.Invariant,
                     reason: 'Could not find binding',
                     description: `[BuildHIR] Could not find binding for param \`${param.node.name}\``,
@@ -22731,7 +22723,7 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
             lowerAssignment(builder, (_h = param.node.loc) !== null && _h !== void 0 ? _h : GeneratedSource, InstructionKind.Let, param.get('argument'), place, 'Assignment');
         }
         else {
-            builder.errors.pushDiagnostic(CompilerDiagnostic.create({
+            builder.recordError(CompilerDiagnostic.create({
                 category: ErrorCategory.Todo,
                 reason: `Handle ${param.node.type} parameters`,
                 description: `[BuildHIR] Add support for ${param.node.type} parameters`,
@@ -22744,53 +22736,40 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
     });
     let directives = [];
     const body = func.get('body');
-    try {
-        if (body.isExpression()) {
-            const fallthrough = builder.reserve('block');
-            const terminal = {
-                kind: 'return',
-                returnVariant: 'Implicit',
-                loc: GeneratedSource,
-                value: lowerExpressionToTemporary(builder, body),
-                id: makeInstructionId(0),
-                effects: null,
-            };
-            builder.terminateWithContinuation(terminal, fallthrough);
-        }
-        else if (body.isBlockStatement()) {
-            lowerStatement(builder, body);
-            directives = body.get('directives').map(d => d.node.value.value);
-        }
-        else {
-            builder.errors.pushDiagnostic(CompilerDiagnostic.create({
-                category: ErrorCategory.Syntax,
-                reason: `Unexpected function body kind`,
-                description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
-            }).withDetails({
-                kind: 'error',
-                loc: (_a = body.node.loc) !== null && _a !== void 0 ? _a : null,
-                message: 'Expected a block statement or expression',
-            }));
-        }
+    if (body.isExpression()) {
+        const fallthrough = builder.reserve('block');
+        const terminal = {
+            kind: 'return',
+            returnVariant: 'Implicit',
+            loc: GeneratedSource,
+            value: lowerExpressionToTemporary(builder, body),
+            id: makeInstructionId(0),
+            effects: null,
+        };
+        builder.terminateWithContinuation(terminal, fallthrough);
     }
-    catch (err) {
-        if (err instanceof CompilerError) {
-            for (const detail of err.details) {
-                if (detail.category === ErrorCategory.Invariant) {
-                    throw err;
-                }
-            }
-            builder.errors.merge(err);
-        }
-        else {
-            throw err;
-        }
+    else if (body.isBlockStatement()) {
+        lowerStatement(builder, body);
+        directives = body.get('directives').map(d => d.node.value.value);
+    }
+    else {
+        builder.recordError(CompilerDiagnostic.create({
+            category: ErrorCategory.Syntax,
+            reason: `Unexpected function body kind`,
+            description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
+        }).withDetails({
+            kind: 'error',
+            loc: (_a = body.node.loc) !== null && _a !== void 0 ? _a : null,
+            message: 'Expected a block statement or expression',
+        }));
     }
     let validatedId = null;
     if (id != null) {
         const idResult = validateIdentifierName(id);
         if (idResult.isErr()) {
-            builder.errors.merge(idResult.unwrapErr());
+            for (const detail of idResult.unwrapErr().details) {
+                builder.recordError(detail);
+            }
         }
         else {
             validatedId = idResult.unwrap().value;
@@ -22809,9 +22788,6 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
         effects: null,
     }, null);
     const hirBody = builder.build();
-    if (builder.errors.hasAnyErrors()) {
-        env.recordErrors(builder.errors);
-    }
     return {
         id: validatedId,
         nameHint: null,
@@ -22838,12 +22814,12 @@ function lowerStatement(builder, stmtPath, label = null) {
             const value = lowerExpressionToTemporary(builder, stmt.get('argument'));
             const handler = builder.resolveThrowHandler();
             if (handler != null) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: '(BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch',
                     category: ErrorCategory.Todo,
                     loc: (_a = stmt.node.loc) !== null && _a !== void 0 ? _a : null,
                     suggestions: null,
-                });
+                }));
             }
             const terminal = {
                 kind: 'throw',
@@ -22992,23 +22968,23 @@ function lowerStatement(builder, stmtPath, label = null) {
                         kind = InstructionKind.HoistedFunction;
                     }
                     else if (!binding.path.isVariableDeclarator()) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             category: ErrorCategory.Todo,
                             reason: 'Unsupported declaration type for hoisting',
                             description: `variable "${binding.identifier.name}" declared with ${binding.path.type}`,
                             suggestions: null,
                             loc: (_f = id.parentPath.node.loc) !== null && _f !== void 0 ? _f : GeneratedSource,
-                        });
+                        }));
                         continue;
                     }
                     else {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             category: ErrorCategory.Todo,
                             reason: 'Handle non-const declarations for hoisting',
                             description: `variable "${binding.identifier.name}" declared with ${binding.kind}`,
                             suggestions: null,
                             loc: (_g = id.parentPath.node.loc) !== null && _g !== void 0 ? _g : GeneratedSource,
-                        });
+                        }));
                         continue;
                     }
                     const identifier = builder.resolveIdentifier(id);
@@ -23083,12 +23059,12 @@ function lowerStatement(builder, stmtPath, label = null) {
                     };
                 }
                 if (!init.isVariableDeclaration()) {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: '(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement',
                         category: ErrorCategory.Todo,
                         loc: (_c = stmt.node.loc) !== null && _c !== void 0 ? _c : null,
                         suggestions: null,
-                    });
+                    }));
                     if (init.isExpression()) {
                         lowerExpressionToTemporary(builder, init);
                     }
@@ -23150,12 +23126,12 @@ function lowerStatement(builder, stmtPath, label = null) {
             }, testBlock);
             const test = stmt.get('test');
             if (test.node == null) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerStatement) Handle empty test in ForStatement`,
                     category: ErrorCategory.Todo,
                     loc: (_t = stmt.node.loc) !== null && _t !== void 0 ? _t : null,
                     suggestions: null,
-                });
+                }));
                 builder.terminateWithContinuation({
                     kind: 'branch',
                     test: lowerValueToTemporary(builder, {
@@ -23274,12 +23250,12 @@ function lowerStatement(builder, stmtPath, label = null) {
                 const testExpr = case_.get('test');
                 if (testExpr.node == null) {
                     if (hasDefault) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `Expected at most one \`default\` branch in a switch statement, this code should have failed to parse`,
                             category: ErrorCategory.Syntax,
                             loc: (_0 = case_.node.loc) !== null && _0 !== void 0 ? _0 : null,
                             suggestions: null,
-                        });
+                        }));
                         break;
                     }
                     hasDefault = true;
@@ -23328,12 +23304,12 @@ function lowerStatement(builder, stmtPath, label = null) {
             const stmt = stmtPath;
             const nodeKind = stmt.node.kind;
             if (nodeKind === 'var') {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
                     category: ErrorCategory.Todo,
                     loc: (_2 = stmt.node.loc) !== null && _2 !== void 0 ? _2 : null,
                     suggestions: null,
-                });
+                }));
             }
             const kind = nodeKind === 'let' || nodeKind === 'var'
                 ? InstructionKind.Let
@@ -23350,12 +23326,12 @@ function lowerStatement(builder, stmtPath, label = null) {
                 else if (id.isIdentifier()) {
                     const binding = builder.resolveIdentifier(id);
                     if (binding.kind !== 'Identifier') {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
                             category: ErrorCategory.Invariant,
                             loc: (_4 = id.node.loc) !== null && _4 !== void 0 ? _4 : null,
                             suggestions: null,
-                        });
+                        }));
                     }
                     else {
                         const place = {
@@ -23368,7 +23344,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                         if (builder.isContextIdentifier(id)) {
                             if (kind === InstructionKind.Const) {
                                 const declRangeStart = declaration.parentPath.node.start;
-                                builder.errors.push({
+                                builder.recordError(new CompilerErrorDetail({
                                     reason: `Expect \`const\` declaration not to be reassigned`,
                                     category: ErrorCategory.Syntax,
                                     loc: (_6 = id.node.loc) !== null && _6 !== void 0 ? _6 : null,
@@ -23380,7 +23356,7 @@ function lowerStatement(builder, stmtPath, label = null) {
                                             text: 'let',
                                         },
                                     ],
-                                });
+                                }));
                             }
                             lowerValueToTemporary(builder, {
                                 kind: 'DeclareContext',
@@ -23418,13 +23394,13 @@ function lowerStatement(builder, stmtPath, label = null) {
                     }
                 }
                 else {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `Expected variable declaration to be an identifier if no initializer was provided`,
                         description: `Got a \`${id.type}\``,
                         category: ErrorCategory.Syntax,
                         loc: (_9 = stmt.node.loc) !== null && _9 !== void 0 ? _9 : null,
                         suggestions: null,
-                    });
+                    }));
                 }
             }
             return;
@@ -23493,12 +23469,12 @@ function lowerStatement(builder, stmtPath, label = null) {
             const initBlock = builder.reserve('loop');
             const testBlock = builder.reserve('loop');
             if (stmt.node.await) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerStatement) Handle for-await loops`,
                     category: ErrorCategory.Todo,
                     loc: (_13 = stmt.node.loc) !== null && _13 !== void 0 ? _13 : null,
                     suggestions: null,
-                });
+                }));
                 return;
             }
             const loopBlock = builder.enter('block', _blockId => {
@@ -23664,21 +23640,21 @@ function lowerStatement(builder, stmtPath, label = null) {
             const continuationBlock = builder.reserve('block');
             const handlerPath = stmt.get('handler');
             if (!hasNode(handlerPath)) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerStatement) Handle TryStatement without a catch clause`,
                     category: ErrorCategory.Todo,
                     loc: (_24 = stmt.node.loc) !== null && _24 !== void 0 ? _24 : null,
                     suggestions: null,
-                });
+                }));
                 return;
             }
             if (hasNode(stmt.get('finalizer'))) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause`,
                     category: ErrorCategory.Todo,
                     loc: (_25 = stmt.node.loc) !== null && _25 !== void 0 ? _25 : null,
                     suggestions: null,
-                });
+                }));
             }
             const handlerBindingPath = handlerPath.get('param');
             let handlerBinding = null;
@@ -23745,13 +23721,13 @@ function lowerStatement(builder, stmtPath, label = null) {
             return;
         }
         case 'WithStatement': {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: `JavaScript 'with' syntax is not supported`,
                 description: `'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives`,
                 category: ErrorCategory.UnsupportedSyntax,
                 loc: (_30 = stmtPath.node.loc) !== null && _30 !== void 0 ? _30 : null,
                 suggestions: null,
-            });
+            }));
             lowerValueToTemporary(builder, {
                 kind: 'UnsupportedNode',
                 loc: (_31 = stmtPath.node.loc) !== null && _31 !== void 0 ? _31 : GeneratedSource,
@@ -23760,13 +23736,13 @@ function lowerStatement(builder, stmtPath, label = null) {
             return;
         }
         case 'ClassDeclaration': {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: 'Inline `class` declarations are not supported',
                 description: `Move class declarations outside of components/hooks`,
                 category: ErrorCategory.UnsupportedSyntax,
                 loc: (_32 = stmtPath.node.loc) !== null && _32 !== void 0 ? _32 : null,
                 suggestions: null,
-            });
+            }));
             lowerValueToTemporary(builder, {
                 kind: 'UnsupportedNode',
                 loc: (_33 = stmtPath.node.loc) !== null && _33 !== void 0 ? _33 : GeneratedSource,
@@ -23789,12 +23765,12 @@ function lowerStatement(builder, stmtPath, label = null) {
         case 'ImportDeclaration':
         case 'TSExportAssignment':
         case 'TSImportEqualsDeclaration': {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: 'JavaScript `import` and `export` statements may only appear at the top level of a module',
                 category: ErrorCategory.Syntax,
                 loc: (_35 = stmtPath.node.loc) !== null && _35 !== void 0 ? _35 : null,
                 suggestions: null,
-            });
+            }));
             lowerValueToTemporary(builder, {
                 kind: 'UnsupportedNode',
                 loc: (_36 = stmtPath.node.loc) !== null && _36 !== void 0 ? _36 : GeneratedSource,
@@ -23803,12 +23779,12 @@ function lowerStatement(builder, stmtPath, label = null) {
             return;
         }
         case 'TSNamespaceExportDeclaration': {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: 'TypeScript `namespace` statements may only appear at the top level of a module',
                 category: ErrorCategory.Syntax,
                 loc: (_37 = stmtPath.node.loc) !== null && _37 !== void 0 ? _37 : null,
                 suggestions: null,
-            });
+            }));
             lowerValueToTemporary(builder, {
                 kind: 'UnsupportedNode',
                 loc: (_38 = stmtPath.node.loc) !== null && _38 !== void 0 ? _38 : GeneratedSource,
@@ -23878,12 +23854,12 @@ function lowerObjectPropertyKey(builder, property) {
             name: String(key.node.value),
         };
     }
-    builder.errors.push({
+    builder.recordError(new CompilerErrorDetail({
         reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
         category: ErrorCategory.Todo,
         loc: (_a = key.node.loc) !== null && _a !== void 0 ? _a : null,
         suggestions: null,
-    });
+    }));
     return null;
 }
 function lowerExpression(builder, exprPath) {
@@ -23930,12 +23906,12 @@ function lowerExpression(builder, exprPath) {
                     }
                     const valuePath = propertyPath.get('value');
                     if (!valuePath.isExpression()) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerExpression) Handle ${valuePath.type} values in ObjectExpression`,
                             category: ErrorCategory.Todo,
                             loc: (_b = valuePath.node.loc) !== null && _b !== void 0 ? _b : null,
                             suggestions: null,
-                        });
+                        }));
                         continue;
                     }
                     const value = lowerExpressionToTemporary(builder, valuePath);
@@ -23955,12 +23931,12 @@ function lowerExpression(builder, exprPath) {
                 }
                 else if (propertyPath.isObjectMethod()) {
                     if (propertyPath.node.kind !== 'method') {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.node.kind} functions in ObjectExpression`,
                             category: ErrorCategory.Todo,
                             loc: (_c = propertyPath.node.loc) !== null && _c !== void 0 ? _c : null,
                             suggestions: null,
-                        });
+                        }));
                         continue;
                     }
                     const method = lowerObjectMethod(builder, propertyPath);
@@ -23977,12 +23953,12 @@ function lowerExpression(builder, exprPath) {
                     });
                 }
                 else {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.type} properties in ObjectExpression`,
                         category: ErrorCategory.Todo,
                         loc: (_d = propertyPath.node.loc) !== null && _d !== void 0 ? _d : null,
                         suggestions: null,
-                    });
+                    }));
                     continue;
                 }
             }
@@ -24010,12 +23986,12 @@ function lowerExpression(builder, exprPath) {
                     elements.push({ kind: 'Spread', place });
                 }
                 else {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
                         category: ErrorCategory.Todo,
                         loc: (_e = element.node.loc) !== null && _e !== void 0 ? _e : null,
                         suggestions: null,
-                    });
+                    }));
                     continue;
                 }
             }
@@ -24029,13 +24005,13 @@ function lowerExpression(builder, exprPath) {
             const expr = exprPath;
             const calleePath = expr.get('callee');
             if (!calleePath.isExpression()) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `Expected an expression as the \`new\` expression receiver (v8 intrinsics are not supported)`,
                     description: `Got a \`${calleePath.node.type}\``,
                     category: ErrorCategory.Syntax,
                     loc: (_f = calleePath.node.loc) !== null && _f !== void 0 ? _f : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             const callee = lowerExpressionToTemporary(builder, calleePath);
@@ -24055,12 +24031,12 @@ function lowerExpression(builder, exprPath) {
             const expr = exprPath;
             const calleePath = expr.get('callee');
             if (!calleePath.isExpression()) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported). This error is likely caused by a bug in React Compiler. Please file an issue`,
                     category: ErrorCategory.Todo,
                     loc: (_g = calleePath.node.loc) !== null && _g !== void 0 ? _g : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             if (calleePath.isMemberExpression()) {
@@ -24090,24 +24066,24 @@ function lowerExpression(builder, exprPath) {
             const expr = exprPath;
             const leftPath = expr.get('left');
             if (!leftPath.isExpression()) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerExpression) Expected Expression, got ${leftPath.type} lval in BinaryExpression`,
                     category: ErrorCategory.Todo,
                     loc: (_h = leftPath.node.loc) !== null && _h !== void 0 ? _h : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             const left = lowerExpressionToTemporary(builder, leftPath);
             const right = lowerExpressionToTemporary(builder, expr.get('right'));
             const operator = expr.node.operator;
             if (operator === '|>') {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerExpression) Pipe operator not supported`,
                     category: ErrorCategory.Todo,
                     loc: (_j = leftPath.node.loc) !== null && _j !== void 0 ? _j : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             return {
@@ -24130,12 +24106,12 @@ function lowerExpression(builder, exprPath) {
                     last = lowerExpressionToTemporary(builder, item);
                 }
                 if (last === null) {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `Expected sequence expression to have at least one expression`,
                         category: ErrorCategory.Syntax,
                         loc: (_a = expr.node.loc) !== null && _a !== void 0 ? _a : null,
                         suggestions: null,
-                    });
+                    }));
                 }
                 else {
                     lowerValueToTemporary(builder, {
@@ -24308,13 +24284,13 @@ function lowerExpression(builder, exprPath) {
                         : 'Assignment');
                 }
                 else {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `(BuildHIR::lowerExpression) Unsupported syntax on the left side of an AssignmentExpression`,
                         description: `Expected an LVal, got: ${left.type}`,
                         category: ErrorCategory.Todo,
                         loc: (_q = left.node.loc) !== null && _q !== void 0 ? _q : null,
                         suggestions: null,
-                    });
+                    }));
                     return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
                 }
             }
@@ -24334,12 +24310,12 @@ function lowerExpression(builder, exprPath) {
             };
             const binaryOperator = operators[operator];
             if (binaryOperator == null) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerExpression) Handle ${operator} operators in AssignmentExpression`,
                     category: ErrorCategory.Todo,
                     loc: (_r = expr.node.loc) !== null && _r !== void 0 ? _r : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             const left = expr.get('left');
@@ -24427,12 +24403,12 @@ function lowerExpression(builder, exprPath) {
                     }
                 }
                 default: {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `(BuildHIR::lowerExpression) Expected Identifier or MemberExpression, got ${expr.type} lval in AssignmentExpression`,
                         category: ErrorCategory.Todo,
                         loc: (_v = expr.node.loc) !== null && _v !== void 0 ? _v : null,
                         suggestions: null,
-                    });
+                    }));
                     return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
                 }
             }
@@ -24461,12 +24437,12 @@ function lowerExpression(builder, exprPath) {
                     continue;
                 }
                 if (!attribute.isJSXAttribute()) {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `(BuildHIR::lowerExpression) Handle ${attribute.type} attributes in JSXElement`,
                         category: ErrorCategory.Todo,
                         loc: (_x = attribute.node.loc) !== null && _x !== void 0 ? _x : null,
                         suggestions: null,
-                    });
+                    }));
                     continue;
                 }
                 const namePath = attribute.get('name');
@@ -24474,12 +24450,12 @@ function lowerExpression(builder, exprPath) {
                 if (namePath.isJSXIdentifier()) {
                     propName = namePath.node.name;
                     if (propName.indexOf(':') !== -1) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name \`${propName}\``,
                             category: ErrorCategory.Todo,
                             loc: (_y = namePath.node.loc) !== null && _y !== void 0 ? _y : null,
                             suggestions: null,
-                        });
+                        }));
                     }
                 }
                 else {
@@ -24505,22 +24481,22 @@ function lowerExpression(builder, exprPath) {
                 }
                 else {
                     if (!valueExpr.isJSXExpressionContainer()) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerExpression) Handle ${valueExpr.type} attribute values in JSXElement`,
                             category: ErrorCategory.Todo,
                             loc: (_2 = (_1 = valueExpr.node) === null || _1 === void 0 ? void 0 : _1.loc) !== null && _2 !== void 0 ? _2 : null,
                             suggestions: null,
-                        });
+                        }));
                         continue;
                     }
                     const expression = valueExpr.get('expression');
                     if (!expression.isExpression()) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerExpression) Handle ${expression.type} expressions in JSXExpressionContainer within JSXElement`,
                             category: ErrorCategory.Todo,
                             loc: (_3 = valueExpr.node.loc) !== null && _3 !== void 0 ? _3 : null,
                             suggestions: null,
-                        });
+                        }));
                         continue;
                     }
                     value = lowerExpressionToTemporary(builder, expression);
@@ -24568,7 +24544,7 @@ function lowerExpression(builder, exprPath) {
                 });
                 for (const [name, locations] of Object.entries(fbtLocations)) {
                     if (locations.length > 1) {
-                        builder.errors.pushDiagnostic(new CompilerDiagnostic({
+                        builder.recordError(new CompilerDiagnostic({
                             category: ErrorCategory.Todo,
                             reason: 'Support duplicate fbt tags',
                             description: `Support \`<${tagName}>\` tags with multiple \`<${tagName}:${name}>\` values`,
@@ -24619,12 +24595,12 @@ function lowerExpression(builder, exprPath) {
         case 'TaggedTemplateExpression': {
             const expr = exprPath;
             if (expr.get('quasi').get('expressions').length !== 0) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: '(BuildHIR::lowerExpression) Handle tagged template with interpolations',
                     category: ErrorCategory.Todo,
                     loc: (_7 = exprPath.node.loc) !== null && _7 !== void 0 ? _7 : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             CompilerError.invariant(expr.get('quasi').get('quasis').length == 1, {
@@ -24633,12 +24609,12 @@ function lowerExpression(builder, exprPath) {
             });
             const value = expr.get('quasi').get('quasis').at(0).node.value;
             if (value.raw !== value.cooked) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: '(BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value',
                     category: ErrorCategory.Todo,
                     loc: (_9 = exprPath.node.loc) !== null && _9 !== void 0 ? _9 : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             return {
@@ -24653,21 +24629,21 @@ function lowerExpression(builder, exprPath) {
             const subexprs = expr.get('expressions');
             const quasis = expr.get('quasis');
             if (subexprs.length !== quasis.length - 1) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `Unexpected quasi and subexpression lengths in template literal`,
                     category: ErrorCategory.Syntax,
                     loc: (_10 = exprPath.node.loc) !== null && _10 !== void 0 ? _10 : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             if (subexprs.some(e => !e.isExpression())) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerAssignment) Handle TSType in TemplateLiteral.`,
                     category: ErrorCategory.Todo,
                     loc: (_11 = exprPath.node.loc) !== null && _11 !== void 0 ? _11 : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             const subexprPlaces = subexprs.map(e => lowerExpressionToTemporary(builder, e));
@@ -24702,7 +24678,7 @@ function lowerExpression(builder, exprPath) {
                     }
                 }
                 else {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `Only object properties can be deleted`,
                         category: ErrorCategory.Syntax,
                         loc: (_12 = expr.node.loc) !== null && _12 !== void 0 ? _12 : null,
@@ -24713,12 +24689,12 @@ function lowerExpression(builder, exprPath) {
                                 op: CompilerSuggestionOperation.Remove,
                             },
                         ],
-                    });
+                    }));
                     return { kind: 'UnsupportedNode', node: expr.node, loc: exprLoc };
                 }
             }
             else if (expr.node.operator === 'throw') {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `Throw expressions are not supported`,
                     category: ErrorCategory.Syntax,
                     loc: (_13 = expr.node.loc) !== null && _13 !== void 0 ? _13 : null,
@@ -24729,7 +24705,7 @@ function lowerExpression(builder, exprPath) {
                             op: CompilerSuggestionOperation.Remove,
                         },
                     ],
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: expr.node, loc: exprLoc };
             }
             else {
@@ -24831,42 +24807,42 @@ function lowerExpression(builder, exprPath) {
                 };
             }
             if (!argument.isIdentifier()) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
                     category: ErrorCategory.Todo,
                     loc: (_17 = exprPath.node.loc) !== null && _17 !== void 0 ? _17 : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             else if (builder.isContextIdentifier(argument)) {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.`,
                     category: ErrorCategory.Todo,
                     loc: (_18 = exprPath.node.loc) !== null && _18 !== void 0 ? _18 : null,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             const lvalue = lowerIdentifierForAssignment(builder, (_19 = argument.node.loc) !== null && _19 !== void 0 ? _19 : GeneratedSource, InstructionKind.Reassign, argument);
             if (lvalue === null) {
-                if (!builder.errors.hasAnyErrors()) {
-                    builder.errors.push({
+                if (!builder.environment.hasErrors()) {
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `(BuildHIR::lowerExpression) Found an invalid UpdateExpression without a previously reported error`,
                         category: ErrorCategory.Invariant,
                         loc: exprLoc,
                         suggestions: null,
-                    });
+                    }));
                 }
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             else if (lvalue.kind === 'Global') {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `(BuildHIR::lowerExpression) Support UpdateExpression where argument is a global`,
                     category: ErrorCategory.Todo,
                     loc: exprLoc,
                     suggestions: null,
-                });
+                }));
                 return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
             }
             const value = lowerIdentifier(builder, argument);
@@ -24914,21 +24890,21 @@ function lowerExpression(builder, exprPath) {
                     loc: (_21 = expr.node.loc) !== null && _21 !== void 0 ? _21 : GeneratedSource,
                 };
             }
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: `(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta`,
                 category: ErrorCategory.Todo,
                 loc: (_22 = exprPath.node.loc) !== null && _22 !== void 0 ? _22 : null,
                 suggestions: null,
-            });
+            }));
             return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
         }
         default: {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
                 category: ErrorCategory.Todo,
                 loc: (_23 = exprPath.node.loc) !== null && _23 !== void 0 ? _23 : null,
                 suggestions: null,
-            });
+            }));
             return { kind: 'UnsupportedNode', node: exprNode, loc: exprLoc };
         }
     }
@@ -25154,12 +25130,12 @@ function lowerOptionalCallExpression(builder, expr, parentAlternate) {
 function lowerReorderableExpression(builder, expr) {
     var _a;
     if (!isReorderableExpression(builder, expr, true)) {
-        builder.errors.push({
+        builder.recordError(new CompilerErrorDetail({
             reason: `(BuildHIR::node.lowerReorderableExpression) Expression type \`${expr.type}\` cannot be safely reordered`,
             category: ErrorCategory.Todo,
             loc: (_a = expr.node.loc) !== null && _a !== void 0 ? _a : null,
             suggestions: null,
-        });
+        }));
     }
     return lowerExpressionToTemporary(builder, expr);
 }
@@ -25287,12 +25263,12 @@ function lowerArguments(builder, expr) {
             args.push(lowerExpressionToTemporary(builder, argPath));
         }
         else {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
                 category: ErrorCategory.Todo,
                 loc: (_a = argPath.node.loc) !== null && _a !== void 0 ? _a : null,
                 suggestions: null,
-            });
+            }));
         }
     }
     return args;
@@ -25313,12 +25289,12 @@ function lowerMemberExpression(builder, expr, loweredObject = null) {
             property = makePropertyLiteral(propertyNode.node.value);
         }
         else {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: `(BuildHIR::lowerMemberExpression) Handle ${propertyNode.type} property`,
                 category: ErrorCategory.Todo,
                 loc: (_b = propertyNode.node.loc) !== null && _b !== void 0 ? _b : null,
                 suggestions: null,
-            });
+            }));
             return {
                 object,
                 property: propertyNode.toString(),
@@ -25335,12 +25311,12 @@ function lowerMemberExpression(builder, expr, loweredObject = null) {
     }
     else {
         if (!propertyNode.isExpression()) {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${propertyNode.type} property`,
                 category: ErrorCategory.Todo,
                 loc: (_c = propertyNode.node.loc) !== null && _c !== void 0 ? _c : null,
                 suggestions: null,
-            });
+            }));
             return {
                 object,
                 property: propertyNode.toString(),
@@ -25391,13 +25367,13 @@ function lowerJsxElementName(builder, exprPath) {
         const name = exprPath.node.name.name;
         const tag = `${namespace}:${name}`;
         if (namespace.indexOf(':') !== -1 || name.indexOf(':') !== -1) {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: `Expected JSXNamespacedName to have no colons in the namespace or name`,
                 description: `Got \`${namespace}\` : \`${name}\``,
                 category: ErrorCategory.Syntax,
                 loc: (_b = exprPath.node.loc) !== null && _b !== void 0 ? _b : null,
                 suggestions: null,
-            });
+            }));
         }
         const place = lowerValueToTemporary(builder, {
             kind: 'Primitive',
@@ -25407,12 +25383,12 @@ function lowerJsxElementName(builder, exprPath) {
         return place;
     }
     else {
-        builder.errors.push({
+        builder.recordError(new CompilerErrorDetail({
             reason: `(BuildHIR::lowerJsxElementName) Handle ${exprPath.type} tags`,
             category: ErrorCategory.Todo,
             loc: (_c = exprPath.node.loc) !== null && _c !== void 0 ? _c : null,
             suggestions: null,
-        });
+        }));
         return lowerValueToTemporary(builder, {
             kind: 'UnsupportedNode',
             node: exprNode,
@@ -25487,12 +25463,12 @@ function lowerJsxElement(builder, exprPath) {
         return place;
     }
     else {
-        builder.errors.push({
+        builder.recordError(new CompilerErrorDetail({
             reason: `(BuildHIR::lowerJsxElement) Unhandled JsxElement, got: ${exprPath.type}`,
             category: ErrorCategory.Todo,
             loc: (_c = exprPath.node.loc) !== null && _c !== void 0 ? _c : null,
             suggestions: null,
-        });
+        }));
         const place = lowerValueToTemporary(builder, {
             kind: 'UnsupportedNode',
             node: exprNode,
@@ -25594,13 +25570,13 @@ function lowerIdentifier(builder, exprPath) {
         }
         default: {
             if (binding.kind === 'Global' && binding.name === 'eval') {
-                builder.errors.push({
+                builder.recordError(new CompilerErrorDetail({
                     reason: `The 'eval' function is not supported`,
                     description: 'Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler',
                     category: ErrorCategory.UnsupportedSyntax,
                     loc: (_b = exprPath.node.loc) !== null && _b !== void 0 ? _b : null,
                     suggestions: null,
-                });
+                }));
             }
             return lowerValueToTemporary(builder, {
                 kind: 'LoadGlobal',
@@ -25636,25 +25612,25 @@ function lowerIdentifierForAssignment(builder, loc, kind, path) {
             return { kind: 'Global', name: path.node.name };
         }
         else {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
                 category: ErrorCategory.Invariant,
                 loc: (_a = path.node.loc) !== null && _a !== void 0 ? _a : null,
                 suggestions: null,
-            });
+            }));
             return null;
         }
     }
     else if (binding.bindingKind === 'const' &&
         kind === InstructionKind.Reassign) {
-        builder.errors.push({
+        builder.recordError(new CompilerErrorDetail({
             reason: `Cannot reassign a \`const\` variable`,
             category: ErrorCategory.Syntax,
             loc: (_b = path.node.loc) !== null && _b !== void 0 ? _b : null,
             description: binding.identifier.name != null
                 ? `\`${binding.identifier.name.value}\` is declared as const`
                 : null,
-        });
+        }));
         return null;
     }
     const place = {
@@ -25693,23 +25669,23 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
             let temporary;
             if (builder.isContextIdentifier(lvalue)) {
                 if (kind === InstructionKind.Const && !isHoistedIdentifier) {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `Expected \`const\` declaration not to be reassigned`,
                         category: ErrorCategory.Syntax,
                         loc: (_b = lvalue.node.loc) !== null && _b !== void 0 ? _b : null,
                         suggestions: null,
-                    });
+                    }));
                 }
                 if (kind !== InstructionKind.Const &&
                     kind !== InstructionKind.Reassign &&
                     kind !== InstructionKind.Let &&
                     kind !== InstructionKind.Function) {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `Unexpected context variable kind`,
                         category: ErrorCategory.Syntax,
                         loc: (_c = lvalue.node.loc) !== null && _c !== void 0 ? _c : null,
                         suggestions: null,
-                    });
+                    }));
                     temporary = lowerValueToTemporary(builder, {
                         kind: 'UnsupportedNode',
                         node: lvalueNode,
@@ -25778,24 +25754,24 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     });
                 }
                 else {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
                         category: ErrorCategory.Todo,
                         loc: (_f = property.node.loc) !== null && _f !== void 0 ? _f : null,
                         suggestions: null,
-                    });
+                    }));
                     return { kind: 'UnsupportedNode', node: lvalueNode, loc };
                 }
                 return { kind: 'LoadLocal', place: temporary, loc: temporary.loc };
             }
             else {
                 if (!property.isExpression()) {
-                    builder.errors.push({
+                    builder.recordError(new CompilerErrorDetail({
                         reason: '(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property',
                         category: ErrorCategory.Todo,
                         loc: (_g = property.node.loc) !== null && _g !== void 0 ? _g : null,
                         suggestions: null,
-                    });
+                    }));
                     return { kind: 'UnsupportedNode', node: lvalueNode, loc };
                 }
                 const propertyPlace = lowerExpressionToTemporary(builder, property);
@@ -25838,11 +25814,11 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                             continue;
                         }
                         else if (identifier.kind === 'Global') {
-                            builder.errors.push({
+                            builder.recordError(new CompilerErrorDetail({
                                 category: ErrorCategory.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
                                 loc: (_j = element.node.loc) !== null && _j !== void 0 ? _j : GeneratedSource,
-                            });
+                            }));
                             continue;
                         }
                         items.push({
@@ -25869,11 +25845,11 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                         continue;
                     }
                     else if (identifier.kind === 'Global') {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             category: ErrorCategory.Todo,
                             reason: 'Expected reassignment of globals to enable forceTemporaries',
                             loc: (_m = element.node.loc) !== null && _m !== void 0 ? _m : GeneratedSource,
-                        });
+                        }));
                         continue;
                     }
                     items.push(identifier);
@@ -25918,12 +25894,12 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                 if (property.isRestElement()) {
                     const argument = property.get('argument');
                     if (!argument.isIdentifier()) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ObjectPattern`,
                             category: ErrorCategory.Todo,
                             loc: (_r = argument.node.loc) !== null && _r !== void 0 ? _r : null,
                             suggestions: null,
-                        });
+                        }));
                         continue;
                     }
                     if (forceTemporaries ||
@@ -25942,11 +25918,11 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                             continue;
                         }
                         else if (identifier.kind === 'Global') {
-                            builder.errors.push({
+                            builder.recordError(new CompilerErrorDetail({
                                 category: ErrorCategory.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
                                 loc: (_u = property.node.loc) !== null && _u !== void 0 ? _u : GeneratedSource,
-                            });
+                            }));
                             continue;
                         }
                         properties.push({
@@ -25957,21 +25933,21 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                 }
                 else {
                     if (!property.isObjectProperty()) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
                             category: ErrorCategory.Todo,
                             loc: (_v = property.node.loc) !== null && _v !== void 0 ? _v : null,
                             suggestions: null,
-                        });
+                        }));
                         continue;
                     }
                     if (property.node.computed) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern`,
                             category: ErrorCategory.Todo,
                             loc: (_w = property.node.loc) !== null && _w !== void 0 ? _w : null,
                             suggestions: null,
-                        });
+                        }));
                         continue;
                     }
                     const loweredKey = lowerObjectPropertyKey(builder, property);
@@ -25980,12 +25956,12 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                     }
                     const element = property.get('value');
                     if (!element.isLVal()) {
-                        builder.errors.push({
+                        builder.recordError(new CompilerErrorDetail({
                             reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
                             category: ErrorCategory.Todo,
                             loc: (_x = element.node.loc) !== null && _x !== void 0 ? _x : null,
                             suggestions: null,
-                        });
+                        }));
                         continue;
                     }
                     if (element.isIdentifier() &&
@@ -25997,11 +25973,11 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
                             continue;
                         }
                         else if (identifier.kind === 'Global') {
-                            builder.errors.push({
+                            builder.recordError(new CompilerErrorDetail({
                                 category: ErrorCategory.Todo,
                                 reason: 'Expected reassignment of globals to enable forceTemporaries',
                                 loc: (_z = element.node.loc) !== null && _z !== void 0 ? _z : GeneratedSource,
-                            });
+                            }));
                             continue;
                         }
                         properties.push({
@@ -26112,12 +26088,12 @@ function lowerAssignment(builder, loc, kind, lvaluePath, value, assignmentKind) 
             return lowerAssignment(builder, loc, kind, lvalue.get('left'), temp, assignmentKind);
         }
         default: {
-            builder.errors.push({
+            builder.recordError(new CompilerErrorDetail({
                 reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,
                 category: ErrorCategory.Todo,
                 loc: (_4 = lvaluePath.node.loc) !== null && _4 !== void 0 ? _4 : null,
                 suggestions: null,
-            });
+            }));
             return { kind: 'UnsupportedNode', node: lvalueNode, loc };
         }
     }
@@ -31876,24 +31852,6 @@ class Environment {
     aggregateErrors() {
         return __classPrivateFieldGet(this, _Environment_errors, "f");
     }
-    tryRecord(fn) {
-        try {
-            fn();
-        }
-        catch (err) {
-            if (err instanceof CompilerError) {
-                for (const detail of err.details) {
-                    if (detail.category === ErrorCategory.Invariant) {
-                        throw err;
-                    }
-                }
-                this.recordErrors(err);
-            }
-            else {
-                throw err;
-            }
-        }
-    }
     isContextIdentifier(node) {
         return __classPrivateFieldGet(this, _Environment_contextIdentifiers, "f").has(node);
     }
@@ -35495,11 +35453,10 @@ class Driver {
         const test = this.visitValueBlock(testBlockId, loc);
         const testBlock = this.cx.ir.blocks.get(test.block);
         if (testBlock.terminal.kind !== 'branch') {
-            CompilerError.throwTodo({
-                reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for ${terminalKind} test block`,
-                description: null,
+            CompilerError.invariant(false, {
+                reason: `Expected a branch terminal for ${terminalKind} test block`,
+                description: `Got \`${testBlock.terminal.kind}\``,
                 loc: testBlock.terminal.loc,
-                suggestions: null,
             });
         }
         return {
@@ -36116,9 +36073,6 @@ function codegenReactiveFunction(cx, fn) {
             statements.pop();
         }
     }
-    if (cx.errors.hasAnyErrors()) {
-        fn.env.recordErrors(cx.errors);
-    }
     const countMemoBlockVisitor = new CountMemoBlockVisitor(fn.env);
     visitReactiveFunction(fn, countMemoBlockVisitor, undefined);
     return {
@@ -36170,7 +36124,6 @@ let Context$1 = class Context {
     constructor(env, fnName, uniqueIdentifiers, fbtOperands, temporaries = null) {
         _Context_nextCacheIndex.set(this, 0);
         _Context_declarations.set(this, new Set());
-        this.errors = new CompilerError();
         this.objectMethods = new Map();
         this.synthesizedNames = new Map();
         this.env = env;
@@ -36178,6 +36131,9 @@ let Context$1 = class Context {
         this.uniqueIdentifiers = uniqueIdentifiers;
         this.fbtOperands = fbtOperands;
         this.temp = temporaries !== null ? new Map(temporaries) : new Map();
+    }
+    recordError(error) {
+        this.env.recordError(error);
     }
     get nextCacheIndex() {
         var _a, _b;
@@ -36369,12 +36325,13 @@ function codegenTerminal(cx, terminal) {
                 loc: terminal.init.loc,
             });
             if (terminal.init.instructions.length !== 2) {
-                CompilerError.throwTodo({
+                cx.recordError(new CompilerErrorDetail({
                     reason: 'Support non-trivial for..in inits',
-                    description: null,
+                    category: ErrorCategory.Todo,
                     loc: terminal.init.loc,
                     suggestions: null,
-                });
+                }));
+                return libExports$1.emptyStatement();
             }
             const iterableCollection = terminal.init.instructions[0];
             const iterableItem = terminal.init.instructions[1];
@@ -36389,12 +36346,13 @@ function codegenTerminal(cx, terminal) {
                     break;
                 }
                 case 'StoreContext': {
-                    CompilerError.throwTodo({
+                    cx.recordError(new CompilerErrorDetail({
                         reason: 'Support non-trivial for..in inits',
-                        description: null,
+                        category: ErrorCategory.Todo,
                         loc: terminal.init.loc,
                         suggestions: null,
-                    });
+                    }));
+                    return libExports$1.emptyStatement();
                 }
                 default:
                     CompilerError.invariant(false, {
@@ -36447,12 +36405,13 @@ function codegenTerminal(cx, terminal) {
                 loc: terminal.test.loc,
             });
             if (terminal.test.instructions.length !== 2) {
-                CompilerError.throwTodo({
+                cx.recordError(new CompilerErrorDetail({
                     reason: 'Support non-trivial for..of inits',
-                    description: null,
+                    category: ErrorCategory.Todo,
                     loc: terminal.init.loc,
                     suggestions: null,
-                });
+                }));
+                return libExports$1.emptyStatement();
             }
             const iterableItem = terminal.test.instructions[1];
             let lval;
@@ -36466,12 +36425,13 @@ function codegenTerminal(cx, terminal) {
                     break;
                 }
                 case 'StoreContext': {
-                    CompilerError.throwTodo({
+                    cx.recordError(new CompilerErrorDetail({
                         reason: 'Support non-trivial for..of inits',
-                        description: null,
+                        category: ErrorCategory.Todo,
                         loc: terminal.init.loc,
                         suggestions: null,
-                    });
+                    }));
+                    return libExports$1.emptyStatement();
                 }
                 default:
                     CompilerError.invariant(false, {
@@ -37193,21 +37153,21 @@ function codegenInstructionValue(cx, instrValue) {
                 else {
                     if (libExports$1.isVariableDeclaration(stmt)) {
                         const declarator = stmt.declarations[0];
-                        cx.errors.push({
+                        cx.recordError(new CompilerErrorDetail({
                             reason: `(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block, tried to declare '${declarator.id.name}'`,
                             category: ErrorCategory.Todo,
                             loc: (_a = declarator.loc) !== null && _a !== void 0 ? _a : null,
                             suggestions: null,
-                        });
+                        }));
                         return libExports$1.stringLiteral(`TODO handle ${declarator.id}`);
                     }
                     else {
-                        cx.errors.push({
+                        cx.recordError(new CompilerErrorDetail({
                             reason: `(CodegenReactiveFunction::codegenInstructionValue) Handle conversion of ${stmt.type} to expression`,
                             category: ErrorCategory.Todo,
                             loc: (_b = stmt.loc) !== null && _b !== void 0 ? _b : null,
                             suggestions: null,
-                        });
+                        }));
                         return libExports$1.stringLiteral(`TODO handle ${stmt.type}`);
                     }
                 }
@@ -41811,7 +41771,7 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
     const mutations = [];
     const renders = [];
     let index = 0;
-    const errors = new CompilerError();
+    const shouldRecordErrors = !isFunctionExpression && fn.env.enableValidations;
     for (const param of [...fn.params, ...fn.context, fn.returns]) {
         const place = param.kind === 'Identifier' ? param : param.place;
         state.create(place, { kind: 'Object' });
@@ -41891,7 +41851,9 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                 else if (effect.kind === 'MutateFrozen' ||
                     effect.kind === 'MutateGlobal' ||
                     effect.kind === 'Impure') {
-                    errors.pushDiagnostic(effect.error);
+                    if (shouldRecordErrors) {
+                        fn.env.recordError(effect.error);
+                    }
                     functionEffects.push(effect);
                 }
                 else if (effect.kind === 'Render') {
@@ -41926,10 +41888,10 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
         }
     }
     for (const mutation of mutations) {
-        state.mutate(mutation.index, mutation.place.identifier, makeInstructionId(mutation.id + 1), mutation.transitive, mutation.kind, mutation.place.loc, mutation.reason, errors);
+        state.mutate(mutation.index, mutation.place.identifier, makeInstructionId(mutation.id + 1), mutation.transitive, mutation.kind, mutation.place.loc, mutation.reason, shouldRecordErrors ? fn.env : null);
     }
     for (const render of renders) {
-        state.render(render.index, render.place.identifier, errors);
+        state.render(render.index, render.place.identifier, shouldRecordErrors ? fn.env : null);
     }
     for (const param of [...fn.context, ...fn.params]) {
         const place = param.kind === 'Identifier' ? param : param.place;
@@ -42104,14 +42066,13 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
         reason: ValueReason.KnownReturnSignature,
     });
     const tracked = [];
-    const ignoredErrors = new CompilerError();
     for (const param of [...fn.params, ...fn.context, fn.returns]) {
         const place = param.kind === 'Identifier' ? param : param.place;
         tracked.push(place);
     }
     for (const into of tracked) {
         const mutationIndex = index++;
-        state.mutate(mutationIndex, into.identifier, null, true, MutationKind.Conditional, into.loc, null, ignoredErrors);
+        state.mutate(mutationIndex, into.identifier, null, true, MutationKind.Conditional, into.loc, null, null);
         for (const from of tracked) {
             if (from.identifier.id === into.identifier.id ||
                 from.identifier.id === fn.returns.identifier.id) {
@@ -42140,21 +42101,18 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
             }
         }
     }
-    if (errors.hasAnyErrors() &&
-        !isFunctionExpression &&
-        fn.env.enableValidations) {
-        fn.env.recordErrors(errors);
-    }
     return functionEffects;
 }
-function appendFunctionErrors(errors, fn) {
+function appendFunctionErrors(env, fn) {
     var _a;
+    if (env == null)
+        return;
     for (const effect of (_a = fn.aliasingEffects) !== null && _a !== void 0 ? _a : []) {
         switch (effect.kind) {
             case 'Impure':
             case 'MutateFrozen':
             case 'MutateGlobal': {
-                errors.pushDiagnostic(effect.error);
+                env.recordError(effect.error);
                 break;
             }
         }
@@ -42230,7 +42188,7 @@ class AliasingState {
             toNode.maybeAliases.set(from.identifier, index);
         }
     }
-    render(index, start, errors) {
+    render(index, start, env) {
         const seen = new Set();
         const queue = [start];
         while (queue.length !== 0) {
@@ -42244,7 +42202,7 @@ class AliasingState {
                 continue;
             }
             if (node.value.kind === 'Function') {
-                appendFunctionErrors(errors, node.value.function);
+                appendFunctionErrors(env, node.value.function);
             }
             for (const [alias, when] of node.createdFrom) {
                 if (when >= index) {
@@ -42266,7 +42224,7 @@ class AliasingState {
             }
         }
     }
-    mutate(index, start, end, transitive, startKind, loc, reason, errors) {
+    mutate(index, start, end, transitive, startKind, loc, reason, env) {
         var _a;
         const seen = new Map();
         const queue = [{ place: start, transitive, direction: 'backwards', kind: startKind }];
@@ -42289,7 +42247,7 @@ class AliasingState {
             if (node.value.kind === 'Function' &&
                 node.transitive == null &&
                 node.local == null) {
-                appendFunctionErrors(errors, node.value.function);
+                appendFunctionErrors(env, node.value.function);
             }
             if (transitive) {
                 if (node.transitive == null || node.transitive.kind < kind) {
@@ -42611,10 +42569,10 @@ function getManualMemoizationReplacement(fn, loc, kind) {
         };
     }
 }
-function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
+function extractManualMemoizationArgs(instr, kind, sidemap, env) {
     const [fnPlace, depsListPlace] = instr.value.args;
     if (fnPlace == null || fnPlace.kind !== 'Identifier') {
-        errors.pushDiagnostic(CompilerDiagnostic.create({
+        env.recordError(CompilerDiagnostic.create({
             category: ErrorCategory.UseMemo,
             reason: `Expected a callback function to be passed to ${kind}`,
             description: kind === 'useCallback'
@@ -42641,7 +42599,7 @@ function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
         ? sidemap.maybeDepsLists.get(depsListPlace.identifier.id)
         : null;
     if (maybeDepsList == null) {
-        errors.pushDiagnostic(CompilerDiagnostic.create({
+        env.recordError(CompilerDiagnostic.create({
             category: ErrorCategory.UseMemo,
             reason: `Expected the dependency list for ${kind} to be an array literal`,
             description: `Expected the dependency list for ${kind} to be an array literal`,
@@ -42657,7 +42615,7 @@ function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
     for (const dep of maybeDepsList.deps) {
         const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
         if (maybeDep == null) {
-            errors.pushDiagnostic(CompilerDiagnostic.create({
+            env.recordError(CompilerDiagnostic.create({
                 category: ErrorCategory.UseMemo,
                 reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
                 description: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
@@ -42679,7 +42637,6 @@ function extractManualMemoizationArgs(instr, kind, sidemap, errors) {
     };
 }
 function dropManualMemoization(func) {
-    const errors = new CompilerError();
     const isValidationEnabled = func.env.config.validatePreserveExistingMemoizationGuarantees ||
         func.env.config.validateNoSetStateInRender ||
         func.env.config.enablePreserveExistingMemoizationGuarantees;
@@ -42704,7 +42661,7 @@ function dropManualMemoization(func) {
                     : instr.value.property.identifier.id;
                 const manualMemo = sidemap.manualMemos.get(id);
                 if (manualMemo != null) {
-                    const memoDetails = extractManualMemoizationArgs(instr, manualMemo.kind, sidemap, errors);
+                    const memoDetails = extractManualMemoizationArgs(instr, manualMemo.kind, sidemap, func.env);
                     if (memoDetails == null) {
                         continue;
                     }
@@ -42712,7 +42669,7 @@ function dropManualMemoization(func) {
                     instr.value = getManualMemoizationReplacement(fnPlace, instr.value.loc, manualMemo.kind);
                     if (isValidationEnabled) {
                         if (!sidemap.functions.has(fnPlace.identifier.id)) {
-                            errors.pushDiagnostic(CompilerDiagnostic.create({
+                            func.env.recordError(CompilerDiagnostic.create({
                                 category: ErrorCategory.UseMemo,
                                 reason: `Expected the first argument to be an inline function expression`,
                                 description: `Expected the first argument to be an inline function expression`,
@@ -42768,9 +42725,6 @@ function dropManualMemoization(func) {
         if (hasChanges) {
             markInstructionIds(func.body);
         }
-    }
-    if (errors.hasAnyErrors()) {
-        func.env.recordErrors(errors);
     }
 }
 function findOptionalPlaces$1(fn) {
@@ -44396,11 +44350,10 @@ function joinKinds(a, b) {
 }
 function validateHooksUsage(fn) {
     const unconditionalBlocks = computeUnconditionalBlocks(fn);
-    const errors = new CompilerError();
     const errorsByPlace = new Map();
-    function recordError(loc, errorDetail) {
+    function trackError(loc, errorDetail) {
         if (typeof loc === 'symbol') {
-            errors.pushErrorDetail(errorDetail);
+            fn.env.recordError(errorDetail);
         }
         else {
             errorsByPlace.set(loc, errorDetail);
@@ -44411,7 +44364,7 @@ function validateHooksUsage(fn) {
         const reason = 'Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)';
         const previousError = typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
         if (previousError === undefined || previousError.reason !== reason) {
-            recordError(place.loc, new CompilerErrorDetail({
+            trackError(place.loc, new CompilerErrorDetail({
                 category: ErrorCategory.Hooks,
                 description: null,
                 reason,
@@ -44423,7 +44376,7 @@ function validateHooksUsage(fn) {
     function recordInvalidHookUsageError(place) {
         const previousError = typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
         if (previousError === undefined) {
-            recordError(place.loc, new CompilerErrorDetail({
+            trackError(place.loc, new CompilerErrorDetail({
                 category: ErrorCategory.Hooks,
                 description: null,
                 reason: 'Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values',
@@ -44435,7 +44388,7 @@ function validateHooksUsage(fn) {
     function recordDynamicHookUsageError(place) {
         const previousError = typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
         if (previousError === undefined) {
-            recordError(place.loc, new CompilerErrorDetail({
+            trackError(place.loc, new CompilerErrorDetail({
                 category: ErrorCategory.Hooks,
                 description: null,
                 reason: 'Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks',
@@ -44620,7 +44573,7 @@ function validateHooksUsage(fn) {
                 }
                 case 'ObjectMethod':
                 case 'FunctionExpression': {
-                    visitFunctionExpression(errors, instr.value.loweredFunc.func);
+                    visitFunctionExpression(fn.env, instr.value.loweredFunc.func);
                     break;
                 }
                 default: {
@@ -44639,19 +44592,16 @@ function validateHooksUsage(fn) {
         }
     }
     for (const [, error] of errorsByPlace) {
-        errors.pushErrorDetail(error);
-    }
-    if (errors.hasAnyErrors()) {
-        fn.env.recordErrors(errors);
+        fn.env.recordError(error);
     }
 }
-function visitFunctionExpression(errors, fn) {
+function visitFunctionExpression(env, fn) {
     for (const [, block] of fn.body.blocks) {
         for (const instr of block.instructions) {
             switch (instr.value.kind) {
                 case 'ObjectMethod':
                 case 'FunctionExpression': {
-                    visitFunctionExpression(errors, instr.value.loweredFunc.func);
+                    visitFunctionExpression(env, instr.value.loweredFunc.func);
                     break;
                 }
                 case 'MethodCall':
@@ -44661,7 +44611,7 @@ function visitFunctionExpression(errors, fn) {
                         : instr.value.property;
                     const hookKind = getHookKind(fn.env, callee.identifier);
                     if (hookKind != null) {
-                        errors.pushErrorDetail(new CompilerErrorDetail({
+                        env.recordError(new CompilerErrorDetail({
                             category: ErrorCategory.Hooks,
                             reason: 'Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)',
                             loc: callee.loc,
@@ -44686,7 +44636,6 @@ function validateNoCapitalizedCalls(fn) {
     const isAllowed = (name) => {
         return ALLOW_LIST.has(name);
     };
-    const errors = new CompilerError();
     const capitalLoadGlobals = new Map();
     const capitalizedProperties = new Map();
     const reason = 'Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter. Alternatively, if you know for a fact that this function is not a component, you can allowlist it via the compiler config';
@@ -44728,21 +44677,18 @@ function validateNoCapitalizedCalls(fn) {
                     const propertyIdentifier = value.property.identifier.id;
                     const propertyName = capitalizedProperties.get(propertyIdentifier);
                     if (propertyName != null) {
-                        errors.push({
+                        fn.env.recordError(new CompilerErrorDetail({
                             category: ErrorCategory.CapitalizedCalls,
                             reason,
                             description: `${propertyName} may be a component`,
                             loc: value.loc,
                             suggestions: null,
-                        });
+                        }));
                     }
                     break;
                 }
             }
         }
-    }
-    if (errors.hasAnyErrors()) {
-        fn.env.recordErrors(errors);
     }
 }
 
@@ -44801,8 +44747,8 @@ function validateNoRefAccessInRender(fn) {
     collectTemporariesSidemap$1(fn, env);
     const errors = new CompilerError();
     validateNoRefAccessInRenderImpl(fn, env, errors);
-    if (errors.hasAnyErrors()) {
-        fn.env.recordErrors(errors);
+    for (const detail of errors.details) {
+        fn.env.recordError(detail);
     }
 }
 function collectTemporariesSidemap$1(fn, env) {
@@ -45394,8 +45340,8 @@ const ERROR_DESCRIPTION = 'React refs are values that are not needed for renderi
 function validateNoSetStateInRender(fn) {
     const unconditionalSetStateFunctions = new Set();
     const errors = validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions);
-    if (errors.hasAnyErrors()) {
-        fn.env.recordErrors(errors);
+    for (const detail of errors.details) {
+        fn.env.recordError(detail);
     }
 }
 function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
@@ -45501,11 +45447,10 @@ function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
 
 function validatePreservedManualMemoization(fn) {
     const state = {
-        errors: new CompilerError(),
+        env: fn.env,
         manualMemoState: null,
     };
     visitReactiveFunction(fn, new Visitor(), state);
-    fn.env.recordErrors(state.errors);
 }
 function prettyPrintScopeDependency(val) {
     var _a;
@@ -45631,7 +45576,7 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
             errorDiagnostic = merge$1(errorDiagnostic !== null && errorDiagnostic !== void 0 ? errorDiagnostic : compareResult, compareResult);
         }
     }
-    errorState.pushDiagnostic(CompilerDiagnostic.create({
+    errorState.recordError(CompilerDiagnostic.create({
         category: ErrorCategory.PreserveManualMemo,
         reason: 'Existing memoization could not be preserved',
         description: [
@@ -45740,7 +45685,7 @@ class Visitor extends ReactiveFunctionVisitor {
         if (state.manualMemoState != null &&
             state.manualMemoState.depsFromSource != null) {
             for (const dep of scopeBlock.scope.dependencies) {
-                validateInferredDep(dep, this.temporaries, state.manualMemoState.decls, state.manualMemoState.depsFromSource, state.errors, state.manualMemoState.loc);
+                validateInferredDep(dep, this.temporaries, state.manualMemoState.decls, state.manualMemoState.depsFromSource, state.env, state.manualMemoState.loc);
             }
         }
         this.scopes.add(scopeBlock.scope.id);
@@ -45791,7 +45736,7 @@ class Visitor extends ReactiveFunctionVisitor {
                 if (identifier.scope != null &&
                     !this.scopes.has(identifier.scope.id) &&
                     !this.prunedScopes.has(identifier.scope.id)) {
-                    state.errors.pushDiagnostic(CompilerDiagnostic.create({
+                    state.env.recordError(CompilerDiagnostic.create({
                         category: ErrorCategory.PreserveManualMemo,
                         reason: 'Existing memoization could not be preserved',
                         description: [
@@ -45826,7 +45771,7 @@ class Visitor extends ReactiveFunctionVisitor {
                     }
                     for (const identifier of decls) {
                         if (isUnmemoized(identifier, this.scopes)) {
-                            state.errors.pushDiagnostic(CompilerDiagnostic.create({
+                            state.env.recordError(CompilerDiagnostic.create({
                                 category: ErrorCategory.PreserveManualMemo,
                                 reason: 'Existing memoization could not be preserved',
                                 description: [
@@ -45899,7 +45844,6 @@ function locationKey(loc) {
     return `${loc.start.line}:${loc.start.column}-${loc.end.line}:${loc.end.column}`;
 }
 function validateSourceLocations(func, generatedAst, env) {
-    const errors = new CompilerError();
     const importantOriginalLocations = new Map();
     func.traverse({
         enter(path) {
@@ -45975,7 +45919,7 @@ function validateSourceLocations(func, generatedAst, env) {
         'Identifier',
     ]);
     const reportMissingLocation = (loc, nodeType) => {
-        errors.pushDiagnostic(CompilerDiagnostic.create({
+        env.recordError(CompilerDiagnostic.create({
             category: ErrorCategory.Todo,
             reason: 'Important source location missing in generated code',
             description: `Source location for ${nodeType} is missing in the generated output. This can cause coverage instrumentation ` +
@@ -45987,7 +45931,7 @@ function validateSourceLocations(func, generatedAst, env) {
         }));
     };
     const reportWrongNodeType = (loc, expectedType, actualTypes) => {
-        errors.pushDiagnostic(CompilerDiagnostic.create({
+        env.recordError(CompilerDiagnostic.create({
             category: ErrorCategory.Todo,
             reason: 'Important source location has wrong node type in generated code',
             description: `Source location for ${expectedType} exists in the generated output but with wrong node type(s): ${Array.from(actualTypes).join(', ')}. ` +
@@ -46018,11 +45962,9 @@ function validateSourceLocations(func, generatedAst, env) {
             }
         }
     }
-    env.recordErrors(errors);
 }
 
 function validateUseMemo(fn) {
-    const errors = new CompilerError();
     const voidMemoErrors = new CompilerError();
     const useMemos = new Set();
     const react = new Set();
@@ -46077,7 +46019,7 @@ function validateUseMemo(fn) {
                         const loc = firstParam.kind === 'Identifier'
                             ? firstParam.loc
                             : firstParam.place.loc;
-                        errors.pushDiagnostic(CompilerDiagnostic.create({
+                        fn.env.recordError(CompilerDiagnostic.create({
                             category: ErrorCategory.UseMemo,
                             reason: 'useMemo() callbacks may not accept parameters',
                             description: 'useMemo() callbacks are called by React to cache calculations across re-renders. They should not take parameters. Instead, directly reference the props, state, or local variables needed for the computation',
@@ -46089,7 +46031,7 @@ function validateUseMemo(fn) {
                         }));
                     }
                     if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
-                        errors.pushDiagnostic(CompilerDiagnostic.create({
+                        fn.env.recordError(CompilerDiagnostic.create({
                             category: ErrorCategory.UseMemo,
                             reason: 'useMemo() callbacks may not be async or generator functions',
                             description: 'useMemo() callbacks are called once and must synchronously return a value',
@@ -46100,7 +46042,7 @@ function validateUseMemo(fn) {
                             message: 'Async and generator functions are not supported',
                         }));
                     }
-                    validateNoContextVariableAssignment(body.loweredFunc.func, errors);
+                    validateNoContextVariableAssignment(body.loweredFunc.func, fn.env);
                     if (fn.env.config.validateNoVoidUseMemo) {
                         if (!hasNonVoidReturn(body.loweredFunc.func)) {
                             voidMemoErrors.pushDiagnostic(CompilerDiagnostic.create({
@@ -46143,11 +46085,8 @@ function validateUseMemo(fn) {
         }
     }
     fn.env.logErrors(voidMemoErrors.asResult());
-    if (errors.hasAnyErrors()) {
-        fn.env.recordErrors(errors);
-    }
 }
-function validateNoContextVariableAssignment(fn, errors) {
+function validateNoContextVariableAssignment(fn, env) {
     const context = new Set(fn.context.map(place => place.identifier.id));
     for (const block of fn.body.blocks.values()) {
         for (const instr of block.instructions) {
@@ -46155,7 +46094,7 @@ function validateNoContextVariableAssignment(fn, errors) {
             switch (value.kind) {
                 case 'StoreContext': {
                     if (context.has(value.lvalue.place.identifier.id)) {
-                        errors.pushDiagnostic(CompilerDiagnostic.create({
+                        env.recordError(CompilerDiagnostic.create({
                             category: ErrorCategory.UseMemo,
                             reason: 'useMemo() callbacks may not reassign variables declared outside of the callback',
                             description: 'useMemo() callbacks must be pure functions and cannot reassign variables defined outside of the callback function',
@@ -47305,10 +47244,7 @@ function traverseOptionalBlock(optional, context, outerAlternate) {
     else if (maybeTest.terminal.kind === 'optional') {
         const testBlock = context.blocks.get(maybeTest.terminal.fallthrough);
         if (testBlock.terminal.kind !== 'branch') {
-            CompilerError.throwTodo({
-                reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
-                loc: maybeTest.terminal.loc,
-            });
+            return null;
         }
         const innerOptional = traverseOptionalBlock(maybeTest, context, testBlock.terminal.alternate);
         if (innerOptional == null) {
@@ -48228,7 +48164,6 @@ function validateStaticComponents(fn) {
 }
 
 function validateNoFreezingKnownMutableFunctions(fn) {
-    const errors = new CompilerError();
     const contextMutationEffects = new Map();
     function visitOperand(operand) {
         if (operand.effect === Effect.Freeze) {
@@ -48240,7 +48175,7 @@ function validateNoFreezingKnownMutableFunctions(fn) {
                     place.identifier.name.kind === 'named'
                     ? `\`${place.identifier.name.value}\``
                     : 'a local variable';
-                errors.pushDiagnostic(CompilerDiagnostic.create({
+                fn.env.recordError(CompilerDiagnostic.create({
                     category: ErrorCategory.Immutability,
                     reason: 'Cannot modify local variables after render completes',
                     description: `This argument is a function which may reassign or mutate ${variable} after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead`,
@@ -48320,16 +48255,12 @@ function validateNoFreezingKnownMutableFunctions(fn) {
             visitOperand(operand);
         }
     }
-    if (errors.hasAnyErrors()) {
-        fn.env.recordErrors(errors);
-    }
 }
 
 function validateNoDerivedComputationsInEffects(fn) {
     const candidateDependencies = new Map();
     const functions = new Map();
     const locals = new Map();
-    const errors = new CompilerError();
     for (const block of fn.body.blocks.values()) {
         for (const instr of block.instructions) {
             const { lvalue, value } = instr;
@@ -48363,15 +48294,14 @@ function validateNoDerivedComputationsInEffects(fn) {
                             });
                             return (_a = locals.get(dep.identifier.id)) !== null && _a !== void 0 ? _a : dep.identifier.id;
                         });
-                        validateEffect$1(effectFunction.loweredFunc.func, dependencies, errors);
+                        validateEffect$1(effectFunction.loweredFunc.func, dependencies, fn.env);
                     }
                 }
             }
         }
     }
-    fn.env.recordErrors(errors);
 }
-function validateEffect$1(effectFunction, effectDeps, errors) {
+function validateEffect$1(effectFunction, effectDeps, env) {
     for (const operand of effectFunction.context) {
         if (isSetStateType(operand.identifier)) {
             continue;
@@ -48474,13 +48404,13 @@ function validateEffect$1(effectFunction, effectDeps, errors) {
         seenBlocks.add(block.id);
     }
     for (const loc of setStateLocations) {
-        errors.push({
+        env.recordError(new CompilerErrorDetail({
             category: ErrorCategory.EffectDerivationsOfState,
             reason: 'Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)',
             description: null,
             loc,
             suggestions: null,
-        });
+        }));
     }
 }
 
@@ -49348,7 +49278,6 @@ function validateExhaustiveDependencies(fn) {
             loc: place.loc,
         });
     }
-    const error = new CompilerError();
     let startMemo = null;
     function onStartMemoize(value, dependencies, locals) {
         CompilerError.invariant(startMemo == null, {
@@ -49370,7 +49299,7 @@ function validateExhaustiveDependencies(fn) {
             const inferred = Array.from(dependencies);
             const diagnostic = validateDependencies(inferred, (_a = startMemo.deps) !== null && _a !== void 0 ? _a : [], reactive, startMemo.depsLoc, ErrorCategory.MemoDependencies, 'all');
             if (diagnostic != null) {
-                error.pushDiagnostic(diagnostic);
+                fn.env.recordError(diagnostic);
             }
         }
         dependencies.clear();
@@ -49419,13 +49348,10 @@ function validateExhaustiveDependencies(fn) {
                 : 'all';
             const diagnostic = validateDependencies(Array.from(inferred), manualDeps, reactive, manualMemoLoc, ErrorCategory.EffectExhaustiveDependencies, effectReportMode);
             if (diagnostic != null) {
-                error.pushDiagnostic(diagnostic);
+                fn.env.recordError(diagnostic);
             }
         },
     }, false);
-    if (error.hasAnyErrors()) {
-        fn.env.recordErrors(error);
-    }
 }
 function validateDependencies(inferred, manualDependencies, reactive, manualMemoLoc, category, exhaustiveDepsReportMode) {
     var _a, _b, _c, _d;
@@ -50107,12 +50033,8 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'HIR', value: hir });
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
-    env.tryRecord(() => {
-        validateContextVariableLValues(hir);
-    });
-    env.tryRecord(() => {
-        validateUseMemo(hir);
-    });
+    validateContextVariableLValues(hir);
+    validateUseMemo(hir);
     if (env.enableDropManualMemoization) {
         dropManualMemoization(hir);
         log({ kind: 'hir', name: 'DropManualMemoization', value: hir });
@@ -50138,23 +50060,17 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'InferTypes', value: hir });
     if (env.enableValidations) {
         if (env.config.validateHooksUsage) {
-            env.tryRecord(() => {
-                validateHooksUsage(hir);
-            });
+            validateHooksUsage(hir);
         }
         if (env.config.validateNoCapitalizedCalls) {
-            env.tryRecord(() => {
-                validateNoCapitalizedCalls(hir);
-            });
+            validateNoCapitalizedCalls(hir);
         }
     }
     optimizePropsMethodCalls(hir);
     log({ kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir });
     analyseFunctions(hir);
     log({ kind: 'hir', name: 'AnalyseFunctions', value: hir });
-    env.tryRecord(() => {
-        inferMutationAliasingEffects(hir);
-    });
+    inferMutationAliasingEffects(hir);
     log({ kind: 'hir', name: 'InferMutationAliasingEffects', value: hir });
     if (env.outputMode === 'ssr') {
         optimizeForSSR(hir);
@@ -50164,37 +50080,27 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'DeadCodeElimination', value: hir });
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
-    env.tryRecord(() => {
-        inferMutationAliasingRanges(hir, {
-            isFunctionExpression: false,
-        });
+    inferMutationAliasingRanges(hir, {
+        isFunctionExpression: false,
     });
     log({ kind: 'hir', name: 'InferMutationAliasingRanges', value: hir });
     if (env.enableValidations) {
-        env.tryRecord(() => {
-            validateLocalsNotReassignedAfterRender(hir);
-        });
+        validateLocalsNotReassignedAfterRender(hir);
         if (env.config.assertValidMutableRanges) {
             assertValidMutableRanges(hir);
         }
         if (env.config.validateRefAccessDuringRender) {
-            env.tryRecord(() => {
-                validateNoRefAccessInRender(hir);
-            });
+            validateNoRefAccessInRender(hir);
         }
         if (env.config.validateNoSetStateInRender) {
-            env.tryRecord(() => {
-                validateNoSetStateInRender(hir);
-            });
+            validateNoSetStateInRender(hir);
         }
         if (env.config.validateNoDerivedComputationsInEffects_exp &&
             env.outputMode === 'lint') {
             env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
         }
         else if (env.config.validateNoDerivedComputationsInEffects) {
-            env.tryRecord(() => {
-                validateNoDerivedComputationsInEffects(hir);
-            });
+            validateNoDerivedComputationsInEffects(hir);
         }
         if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
             env.logErrors(validateNoSetStateInEffects(hir, env));
@@ -50202,18 +50108,14 @@ function runWithEnvironment(func, env) {
         if (env.config.validateNoJSXInTryStatements && env.outputMode === 'lint') {
             env.logErrors(validateNoJSXInTryStatement(hir));
         }
-        env.tryRecord(() => {
-            validateNoFreezingKnownMutableFunctions(hir);
-        });
+        validateNoFreezingKnownMutableFunctions(hir);
     }
     inferReactivePlaces(hir);
     log({ kind: 'hir', name: 'InferReactivePlaces', value: hir });
     if (env.enableValidations) {
         if (env.config.validateExhaustiveMemoizationDependencies ||
             env.config.validateExhaustiveEffectDependencies) {
-            env.tryRecord(() => {
-                validateExhaustiveDependencies(hir);
-            });
+            validateExhaustiveDependencies(hir);
         }
     }
     rewriteInstructionKindsBasedOnReassignment(hir);
@@ -50231,8 +50133,7 @@ function runWithEnvironment(func, env) {
         inferReactiveScopeVariables(hir);
         log({ kind: 'hir', name: 'InferReactiveScopeVariables', value: hir });
     }
-    let fbtOperands = new Set();
-    fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
+    const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
     log({
         kind: 'hir',
         name: 'MemoizeFbtAndMacroOperandsInSameScope',
@@ -50311,8 +50212,7 @@ function runWithEnvironment(func, env) {
         name: 'PropagateScopeDependenciesHIR',
         value: hir,
     });
-    let reactiveFunction;
-    reactiveFunction = buildReactiveFunction(hir);
+    const reactiveFunction = buildReactiveFunction(hir);
     log({
         kind: 'reactive',
         name: 'BuildReactiveFunction',
@@ -50386,8 +50286,7 @@ function runWithEnvironment(func, env) {
         name: 'StabilizeBlockIds',
         value: reactiveFunction,
     });
-    let uniqueIdentifiers = new Set();
-    uniqueIdentifiers = renameVariables(reactiveFunction);
+    const uniqueIdentifiers = renameVariables(reactiveFunction);
     log({
         kind: 'reactive',
         name: 'RenameVariables',
@@ -50401,9 +50300,7 @@ function runWithEnvironment(func, env) {
     });
     if (env.config.enablePreserveExistingMemoizationGuarantees ||
         env.config.validatePreserveExistingMemoizationGuarantees) {
-        env.tryRecord(() => {
-            validatePreservedManualMemoization(reactiveFunction);
-        });
+        validatePreservedManualMemoization(reactiveFunction);
     }
     const ast = codegenFunction(reactiveFunction, {
         uniqueIdentifiers,
@@ -50414,9 +50311,7 @@ function runWithEnvironment(func, env) {
         log({ kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn });
     }
     if (env.config.validateSourceLocations) {
-        env.tryRecord(() => {
-            validateSourceLocations(func, ast, env);
-        });
+        validateSourceLocations(func, ast, env);
     }
     if (env.config.throwUnknownException__testonly) {
         throw new Error('unexpected error');
@@ -50941,6 +50836,7 @@ function processFn(fn, fnType, programContext, outputMode) {
     }
 }
 function tryCompileFunction(fn, fnType, programContext, outputMode) {
+    var _a;
     const suppressionsInFunction = filterSuppressionsThatAffectFunction(programContext.suppressions, fn);
     if (suppressionsInFunction.length > 0) {
         return {
@@ -50958,6 +50854,14 @@ function tryCompileFunction(fn, fnType, programContext, outputMode) {
         }
     }
     catch (err) {
+        if (err instanceof CompilerError &&
+            err.details.every(detail => detail.category !== ErrorCategory.Invariant)) {
+            programContext.logEvent({
+                kind: 'CompileUnexpectedThrow',
+                fnLoc: (_a = fn.node.loc) !== null && _a !== void 0 ? _a : null,
+                data: err.toString(),
+            });
+        }
         return { kind: 'error', error: err };
     }
 }
