@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<3f66fdacde32dbd4e9379de7de9036c1>>
+ * @generated SignedSource<<eb3ef64c5fd48240d3ca88f2532006de>>
  */
 
 'use strict';
@@ -45055,17 +45055,76 @@ function validateNoRefAccessInRenderImpl(fn, env, errors) {
                         }
                         if (!didError) {
                             const isRefLValue = isUseRefType(instr.lvalue.identifier);
-                            for (const operand of eachInstructionValueOperand(instr.value)) {
-                                if (isRefLValue ||
-                                    (hookKind != null &&
-                                        hookKind !== 'useState' &&
-                                        hookKind !== 'useReducer')) {
+                            if (isRefLValue ||
+                                (hookKind != null &&
+                                    hookKind !== 'useState' &&
+                                    hookKind !== 'useReducer')) {
+                                for (const operand of eachInstructionValueOperand(instr.value)) {
                                     validateNoDirectRefValueAccess(errors, operand, env);
                                 }
-                                else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
+                            }
+                            else if (interpolatedAsJsx.has(instr.lvalue.identifier.id)) {
+                                for (const operand of eachInstructionValueOperand(instr.value)) {
                                     validateNoRefValueAccess(errors, env, operand);
                                 }
-                                else {
+                            }
+                            else if (hookKind == null && instr.effects != null) {
+                                const visitedEffects = new Set();
+                                for (const effect of instr.effects) {
+                                    let place = null;
+                                    let validation = 'none';
+                                    switch (effect.kind) {
+                                        case 'Freeze': {
+                                            place = effect.value;
+                                            validation = 'direct-ref';
+                                            break;
+                                        }
+                                        case 'Mutate':
+                                        case 'MutateTransitive':
+                                        case 'MutateConditionally':
+                                        case 'MutateTransitiveConditionally': {
+                                            place = effect.value;
+                                            validation = 'ref-passed';
+                                            break;
+                                        }
+                                        case 'Render': {
+                                            place = effect.place;
+                                            validation = 'ref-passed';
+                                            break;
+                                        }
+                                        case 'Capture':
+                                        case 'Alias':
+                                        case 'MaybeAlias':
+                                        case 'Assign':
+                                        case 'CreateFrom': {
+                                            place = effect.from;
+                                            validation = 'ref-passed';
+                                            break;
+                                        }
+                                        case 'ImmutableCapture': {
+                                            place = effect.from;
+                                            const isFrozen = instr.effects.some(e => e.kind === 'Freeze' &&
+                                                e.value.identifier.id === effect.from.identifier.id);
+                                            validation = isFrozen ? 'direct-ref' : 'ref-passed';
+                                            break;
+                                        }
+                                    }
+                                    if (place !== null && validation !== 'none') {
+                                        const key = `${place.identifier.id}:${validation}`;
+                                        if (!visitedEffects.has(key)) {
+                                            visitedEffects.add(key);
+                                            if (validation === 'direct-ref') {
+                                                validateNoDirectRefValueAccess(errors, place, env);
+                                            }
+                                            else {
+                                                validateNoRefPassedToFunction(errors, env, place, place.loc);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                for (const operand of eachInstructionValueOperand(instr.value)) {
                                     validateNoRefPassedToFunction(errors, env, operand, operand.loc);
                                 }
                             }
