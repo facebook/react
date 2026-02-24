@@ -35984,11 +35984,7 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
             hash,
         };
     }
-    const compileResult = codegenReactiveFunction(cx, fn);
-    if (compileResult.isErr()) {
-        return compileResult;
-    }
-    const compiled = compileResult.unwrap();
+    const compiled = codegenReactiveFunction(cx, fn);
     const hookGuard = fn.env.config.enableEmitHookGuards;
     if (hookGuard != null && fn.env.outputMode === 'client') {
         compiled.body = libExports$1.blockStatement([
@@ -36030,7 +36026,7 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
         if (emitInstrumentForget.globalGating != null) {
             const assertResult = fn.env.programContext.assertGlobalBinding(emitInstrumentForget.globalGating);
             if (assertResult.isErr()) {
-                return assertResult;
+                fn.env.recordErrors(assertResult.unwrapErr());
             }
         }
         let ifTest;
@@ -36062,13 +36058,10 @@ function codegenFunction(fn, { uniqueIdentifiers, fbtOperands, }) {
         pruneHoistedContexts(reactiveFunction);
         const identifiers = renameVariables(reactiveFunction);
         const codegen = codegenReactiveFunction(new Context$1(cx.env, (_c = reactiveFunction.id) !== null && _c !== void 0 ? _c : '[[ anonymous ]]', identifiers, cx.fbtOperands), reactiveFunction);
-        if (codegen.isErr()) {
-            return codegen;
-        }
-        outlined.push({ fn: codegen.unwrap(), type });
+        outlined.push({ fn: codegen, type });
     }
     compiled.outlined = outlined;
-    return compileResult;
+    return compiled;
 }
 function codegenReactiveFunction(cx, fn) {
     for (const param of fn.params) {
@@ -36087,11 +36080,11 @@ function codegenReactiveFunction(cx, fn) {
         }
     }
     if (cx.errors.hasAnyErrors()) {
-        return Err(cx.errors);
+        fn.env.recordErrors(cx.errors);
     }
     const countMemoBlockVisitor = new CountMemoBlockVisitor(fn.env);
     visitReactiveFunction(fn, countMemoBlockVisitor, undefined);
-    return Ok({
+    return {
         type: 'CodegenFunction',
         loc: fn.loc,
         id: fn.id !== null ? libExports$1.identifier(fn.id) : null,
@@ -36106,7 +36099,7 @@ function codegenReactiveFunction(cx, fn) {
         prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
         prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
         outlined: [],
-    });
+    };
 }
 class CountMemoBlockVisitor extends ReactiveFunctionVisitor {
     constructor(env) {
@@ -36974,7 +36967,7 @@ function codegenInstructionValue(cx, instrValue) {
                             const reactiveFunction = buildReactiveFunction(loweredFunc.func);
                             pruneUnusedLabels(reactiveFunction);
                             pruneUnusedLValues(reactiveFunction);
-                            const fn = codegenReactiveFunction(new Context$1(cx.env, (_e = reactiveFunction.id) !== null && _e !== void 0 ? _e : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
+                            const fn = codegenReactiveFunction(new Context$1(cx.env, (_e = reactiveFunction.id) !== null && _e !== void 0 ? _e : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction);
                             const babelNode = libExports$1.objectMethod('method', key, fn.params, fn.body, false);
                             babelNode.async = fn.async;
                             babelNode.generator = fn.generator;
@@ -37102,7 +37095,7 @@ function codegenInstructionValue(cx, instrValue) {
             pruneUnusedLabels(reactiveFunction);
             pruneUnusedLValues(reactiveFunction);
             pruneHoistedContexts(reactiveFunction);
-            const fn = codegenReactiveFunction(new Context$1(cx.env, (_g = reactiveFunction.id) !== null && _g !== void 0 ? _g : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction).unwrap();
+            const fn = codegenReactiveFunction(new Context$1(cx.env, (_g = reactiveFunction.id) !== null && _g !== void 0 ? _g : '[[ anonymous ]]', cx.uniqueIdentifiers, cx.fbtOperands, cx.temp), reactiveFunction);
             if (instrValue.type === 'ArrowFunctionExpression') {
                 let body = fn.body;
                 if (body.body.length === 1 && loweredFunc.directives.length == 0) {
@@ -38702,7 +38695,7 @@ function inferMutationAliasingEffects(fn, { isFunctionExpression } = {
             }
         }
     }
-    return Ok(undefined);
+    return;
 }
 function findHoistedContextDeclarations(fn) {
     const hoisted = new Map();
@@ -42110,10 +42103,12 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
             }
         }
     }
-    if (errors.hasAnyErrors() && !isFunctionExpression) {
-        return Err(errors);
+    if (errors.hasAnyErrors() &&
+        !isFunctionExpression &&
+        fn.env.enableValidations) {
+        fn.env.recordErrors(errors);
     }
-    return Ok(functionEffects);
+    return functionEffects;
 }
 function appendFunctionErrors(errors, fn) {
     var _a;
@@ -42359,7 +42354,7 @@ function lowerWithMutationAliasing(fn) {
     deadCodeElimination(fn);
     const functionEffects = inferMutationAliasingRanges(fn, {
         isFunctionExpression: true,
-    }).unwrap();
+    });
     rewriteInstructionKindsBasedOnReassignment(fn);
     inferReactiveScopeVariables(fn);
     fn.aliasingEffects = functionEffects;
@@ -42737,7 +42732,9 @@ function dropManualMemoization(func) {
             markInstructionIds(func.body);
         }
     }
-    return errors.asResult();
+    if (errors.hasAnyErrors()) {
+        func.env.recordErrors(errors);
+    }
 }
 function findOptionalPlaces$1(fn) {
     const optionals = new Set();
@@ -44230,74 +44227,81 @@ function tryUnionTypes(ty1, ty2) {
 
 function validateContextVariableLValues(fn) {
     const identifierKinds = new Map();
-    validateContextVariableLValuesImpl(fn, identifierKinds);
+    validateContextVariableLValuesImpl(fn, identifierKinds, fn.env);
 }
-function validateContextVariableLValuesImpl(fn, identifierKinds) {
+function validateContextVariableLValuesImpl(fn, identifierKinds, env) {
     for (const [, block] of fn.body.blocks) {
         for (const instr of block.instructions) {
             const { value } = instr;
             switch (value.kind) {
                 case 'DeclareContext':
                 case 'StoreContext': {
-                    visit(identifierKinds, value.lvalue.place, 'context');
+                    visit(identifierKinds, value.lvalue.place, 'context', env);
                     break;
                 }
                 case 'LoadContext': {
-                    visit(identifierKinds, value.place, 'context');
+                    visit(identifierKinds, value.place, 'context', env);
                     break;
                 }
                 case 'StoreLocal':
                 case 'DeclareLocal': {
-                    visit(identifierKinds, value.lvalue.place, 'local');
+                    visit(identifierKinds, value.lvalue.place, 'local', env);
                     break;
                 }
                 case 'LoadLocal': {
-                    visit(identifierKinds, value.place, 'local');
+                    visit(identifierKinds, value.place, 'local', env);
                     break;
                 }
                 case 'PostfixUpdate':
                 case 'PrefixUpdate': {
-                    visit(identifierKinds, value.lvalue, 'local');
+                    visit(identifierKinds, value.lvalue, 'local', env);
                     break;
                 }
                 case 'Destructure': {
                     for (const lvalue of eachPatternOperand(value.lvalue.pattern)) {
-                        visit(identifierKinds, lvalue, 'destructure');
+                        visit(identifierKinds, lvalue, 'destructure', env);
                     }
                     break;
                 }
                 case 'ObjectMethod':
                 case 'FunctionExpression': {
-                    validateContextVariableLValuesImpl(value.loweredFunc.func, identifierKinds);
+                    validateContextVariableLValuesImpl(value.loweredFunc.func, identifierKinds, env);
                     break;
                 }
                 default: {
                     for (const _ of eachInstructionValueLValue(value)) {
-                        CompilerError.throwTodo({
+                        fn.env.recordError(CompilerDiagnostic.create({
+                            category: ErrorCategory.Todo,
                             reason: 'ValidateContextVariableLValues: unhandled instruction variant',
-                            loc: value.loc,
                             description: `Handle '${value.kind} lvalues`,
-                            suggestions: null,
-                        });
+                        }).withDetails({
+                            kind: 'error',
+                            loc: value.loc,
+                            message: null,
+                        }));
                     }
                 }
             }
         }
     }
 }
-function visit(identifiers, place, kind) {
+function visit(identifiers, place, kind, env) {
     const prev = identifiers.get(place.identifier.id);
     if (prev !== undefined) {
         const wasContext = prev.kind === 'context';
         const isContext = kind === 'context';
         if (wasContext !== isContext) {
             if (prev.kind === 'destructure' || kind === 'destructure') {
-                CompilerError.throwTodo({
+                env.recordError(CompilerDiagnostic.create({
+                    category: ErrorCategory.Todo,
                     reason: `Support destructuring of context variables`,
-                    loc: kind === 'destructure' ? place.loc : prev.place.loc,
                     description: null,
-                    suggestions: null,
-                });
+                }).withDetails({
+                    kind: 'error',
+                    loc: kind === 'destructure' ? place.loc : prev.place.loc,
+                    message: null,
+                }));
+                return;
             }
             CompilerError.invariant(false, {
                 reason: 'Expected all references to a variable to be consistently local or context references',
@@ -44600,7 +44604,9 @@ function validateHooksUsage(fn) {
     for (const [, error] of errorsByPlace) {
         errors.pushErrorDetail(error);
     }
-    return errors.asResult();
+    if (errors.hasAnyErrors()) {
+        fn.env.recordErrors(errors);
+    }
 }
 function visitFunctionExpression(errors, fn) {
     for (const [, block] of fn.body.blocks) {
@@ -44663,13 +44669,14 @@ function validateNoCapitalizedCalls(fn) {
                     const calleeIdentifier = value.callee.identifier.id;
                     const calleeName = capitalLoadGlobals.get(calleeIdentifier);
                     if (calleeName != null) {
-                        CompilerError.throwInvalidReact({
+                        fn.env.recordError(new CompilerErrorDetail({
                             category: ErrorCategory.CapitalizedCalls,
                             reason,
                             description: `${calleeName} may be a component`,
                             loc: value.loc,
                             suggestions: null,
-                        });
+                        }));
+                        continue;
                     }
                     break;
                 }
@@ -44697,7 +44704,9 @@ function validateNoCapitalizedCalls(fn) {
             }
         }
     }
-    return errors.asResult();
+    if (errors.hasAnyErrors()) {
+        fn.env.recordErrors(errors);
+    }
 }
 
 var _Env_changed, _Env_data, _Env_temporaries;
@@ -44753,7 +44762,11 @@ _Env_changed = new WeakMap(), _Env_data = new WeakMap(), _Env_temporaries = new 
 function validateNoRefAccessInRender(fn) {
     const env = new Env();
     collectTemporariesSidemap$1(fn, env);
-    return validateNoRefAccessInRenderImpl(fn, env).map(_ => undefined);
+    const errors = new CompilerError();
+    validateNoRefAccessInRenderImpl(fn, env, errors);
+    if (errors.hasAnyErrors()) {
+        fn.env.recordErrors(errors);
+    }
 }
 function collectTemporariesSidemap$1(fn, env) {
     for (const block of fn.body.blocks.values()) {
@@ -44919,7 +44932,7 @@ function joinRefAccessTypes(...types) {
         }
     }, { kind: 'None' });
 }
-function validateNoRefAccessInRenderImpl(fn, env) {
+function validateNoRefAccessInRenderImpl(fn, env, errors) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     let returnValues = [];
     let place;
@@ -44950,7 +44963,6 @@ function validateNoRefAccessInRenderImpl(fn, env) {
         env.resetChanged();
         returnValues = [];
         const safeBlocks = [];
-        const errors = new CompilerError();
         for (const [, block] of fn.body.blocks) {
             retainWhere(safeBlocks, entry => entry.block !== block.id);
             for (const phi of block.phis) {
@@ -45016,11 +45028,12 @@ function validateNoRefAccessInRenderImpl(fn, env) {
                     case 'FunctionExpression': {
                         let returnType = { kind: 'None' };
                         let readRefEffect = false;
-                        const result = validateNoRefAccessInRenderImpl(instr.value.loweredFunc.func, env);
-                        if (result.isOk()) {
-                            returnType = result.unwrap();
+                        const innerErrors = new CompilerError();
+                        const result = validateNoRefAccessInRenderImpl(instr.value.loweredFunc.func, env, innerErrors);
+                        if (!innerErrors.hasAnyErrors()) {
+                            returnType = result;
                         }
-                        else if (result.isErr()) {
+                        else {
                             readRefEffect = true;
                         }
                         env.set(instr.lvalue.identifier.id, {
@@ -45245,14 +45258,14 @@ function validateNoRefAccessInRenderImpl(fn, env) {
             }
         }
         if (errors.hasAnyErrors()) {
-            return Err(errors);
+            return { kind: 'None' };
         }
     }
     CompilerError.invariant(!env.hasChanged(), {
         reason: 'Ref type environment did not converge',
         loc: GeneratedSource,
     });
-    return Ok(joinRefAccessTypes(...returnValues.filter((env) => env !== undefined)));
+    return joinRefAccessTypes(...returnValues.filter((env) => env !== undefined));
 }
 function destructure(type) {
     if ((type === null || type === void 0 ? void 0 : type.kind) === 'Structure' && type.value !== null) {
@@ -45343,7 +45356,10 @@ const ERROR_DESCRIPTION = 'React refs are values that are not needed for renderi
 
 function validateNoSetStateInRender(fn) {
     const unconditionalSetStateFunctions = new Set();
-    return validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions);
+    const errors = validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions);
+    if (errors.hasAnyErrors()) {
+        fn.env.recordErrors(errors);
+    }
 }
 function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
     const unconditionalBlocks = computeUnconditionalBlocks(fn);
@@ -45369,7 +45385,7 @@ function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
                 case 'FunctionExpression': {
                     if ([...eachInstructionValueOperand(instr.value)].some(operand => isSetStateType(operand.identifier) ||
                         unconditionalSetStateFunctions.has(operand.identifier.id)) &&
-                        validateNoSetStateInRenderImpl(instr.value.loweredFunc.func, unconditionalSetStateFunctions).isErr()) {
+                        validateNoSetStateInRenderImpl(instr.value.loweredFunc.func, unconditionalSetStateFunctions).hasAnyErrors()) {
                         unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
                     }
                     break;
@@ -45443,7 +45459,7 @@ function validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions) {
             }
         }
     }
-    return errors.asResult();
+    return errors;
 }
 
 function validatePreservedManualMemoization(fn) {
@@ -45452,7 +45468,9 @@ function validatePreservedManualMemoization(fn) {
         manualMemoState: null,
     };
     visitReactiveFunction(fn, new Visitor(), state);
-    return state.errors.asResult();
+    for (const detail of state.errors.details) {
+        fn.env.recordError(detail);
+    }
 }
 function prettyPrintScopeDependency(val) {
     var _a;
@@ -45845,7 +45863,7 @@ function isManualMemoization(node) {
 function locationKey(loc) {
     return `${loc.start.line}:${loc.start.column}-${loc.end.line}:${loc.end.column}`;
 }
-function validateSourceLocations(func, generatedAst) {
+function validateSourceLocations(func, generatedAst, env) {
     const errors = new CompilerError();
     const importantOriginalLocations = new Map();
     func.traverse({
@@ -45965,7 +45983,9 @@ function validateSourceLocations(func, generatedAst) {
             }
         }
     }
-    return errors.asResult();
+    for (const detail of errors.details) {
+        env.recordError(detail);
+    }
 }
 
 function validateUseMemo(fn) {
@@ -46090,7 +46110,9 @@ function validateUseMemo(fn) {
         }
     }
     fn.env.logErrors(voidMemoErrors.asResult());
-    return errors.asResult();
+    if (errors.hasAnyErrors()) {
+        fn.env.recordErrors(errors);
+    }
 }
 function validateNoContextVariableAssignment(fn, errors) {
     const context = new Set(fn.context.map(place => place.identifier.id));
@@ -46131,14 +46153,13 @@ function hasNonVoidReturn(func) {
 
 function validateLocalsNotReassignedAfterRender(fn) {
     const contextVariables = new Set();
-    const reassignment = getContextReassignment(fn, contextVariables, false, false);
+    const reassignment = getContextReassignment(fn, contextVariables, false, false, fn.env);
     if (reassignment !== null) {
-        const errors = new CompilerError();
         const variable = reassignment.identifier.name != null &&
             reassignment.identifier.name.kind === 'named'
             ? `\`${reassignment.identifier.name.value}\``
             : 'variable';
-        errors.pushDiagnostic(CompilerDiagnostic.create({
+        fn.env.recordError(CompilerDiagnostic.create({
             category: ErrorCategory.Immutability,
             reason: 'Cannot reassign variable after render completes',
             description: `Reassigning ${variable} after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead`,
@@ -46147,10 +46168,9 @@ function validateLocalsNotReassignedAfterRender(fn) {
             loc: reassignment.loc,
             message: `Cannot reassign ${variable} after render completes`,
         }));
-        throw errors;
     }
 }
-function getContextReassignment(fn, contextVariables, isFunctionExpression, isAsync) {
+function getContextReassignment(fn, contextVariables, isFunctionExpression, isAsync, env) {
     const reassigningFunctions = new Map();
     for (const [, block] of fn.body.blocks) {
         for (const instr of block.instructions) {
@@ -46158,7 +46178,7 @@ function getContextReassignment(fn, contextVariables, isFunctionExpression, isAs
             switch (value.kind) {
                 case 'FunctionExpression':
                 case 'ObjectMethod': {
-                    let reassignment = getContextReassignment(value.loweredFunc.func, contextVariables, true, isAsync || value.loweredFunc.func.async);
+                    let reassignment = getContextReassignment(value.loweredFunc.func, contextVariables, true, isAsync || value.loweredFunc.func.async, env);
                     if (reassignment === null) {
                         for (const operand of eachInstructionValueOperand(value)) {
                             const reassignmentFromOperand = reassigningFunctions.get(operand.identifier.id);
@@ -46170,12 +46190,11 @@ function getContextReassignment(fn, contextVariables, isFunctionExpression, isAs
                     }
                     if (reassignment !== null) {
                         if (isAsync || value.loweredFunc.func.async) {
-                            const errors = new CompilerError();
                             const variable = reassignment.identifier.name !== null &&
                                 reassignment.identifier.name.kind === 'named'
                                 ? `\`${reassignment.identifier.name.value}\``
                                 : 'variable';
-                            errors.pushDiagnostic(CompilerDiagnostic.create({
+                            env.recordError(CompilerDiagnostic.create({
                                 category: ErrorCategory.Immutability,
                                 reason: 'Cannot reassign variable in async function',
                                 description: 'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
@@ -46184,7 +46203,7 @@ function getContextReassignment(fn, contextVariables, isFunctionExpression, isAs
                                 loc: reassignment.loc,
                                 message: `Cannot reassign ${variable}`,
                             }));
-                            throw errors;
+                            return null;
                         }
                         reassigningFunctions.set(lvalue.identifier.id, reassignment);
                     }
@@ -48109,35 +48128,6 @@ function optimizePropsMethodCalls(fn) {
     }
 }
 
-function validateNoImpureFunctionsInRender(fn) {
-    const errors = new CompilerError();
-    for (const [, block] of fn.body.blocks) {
-        for (const instr of block.instructions) {
-            const value = instr.value;
-            if (value.kind === 'MethodCall' || value.kind == 'CallExpression') {
-                const callee = value.kind === 'MethodCall' ? value.property : value.callee;
-                const signature = getFunctionCallSignature(fn.env, callee.identifier.type);
-                if (signature != null && signature.impure === true) {
-                    errors.pushDiagnostic(CompilerDiagnostic.create({
-                        category: ErrorCategory.Purity,
-                        reason: 'Cannot call impure function during render',
-                        description: (signature.canonicalName != null
-                            ? `\`${signature.canonicalName}\` is an impure function. `
-                            : '') +
-                            'Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent)',
-                        suggestions: null,
-                    }).withDetails({
-                        kind: 'error',
-                        loc: callee.loc,
-                        message: 'Cannot call impure function',
-                    }));
-                }
-            }
-        }
-    }
-    return errors.asResult();
-}
-
 function validateStaticComponents(fn) {
     const error = new CompilerError();
     const knownDynamicComponents = new Map();
@@ -48297,7 +48287,9 @@ function validateNoFreezingKnownMutableFunctions(fn) {
             visitOperand(operand);
         }
     }
-    return errors.asResult();
+    if (errors.hasAnyErrors()) {
+        fn.env.recordErrors(errors);
+    }
 }
 
 function validateNoDerivedComputationsInEffects(fn) {
@@ -48344,8 +48336,8 @@ function validateNoDerivedComputationsInEffects(fn) {
             }
         }
     }
-    if (errors.hasAnyErrors()) {
-        throw errors;
+    for (const detail of errors.details) {
+        fn.env.recordError(detail);
     }
 }
 function validateEffect$1(effectFunction, effectDeps, errors) {
@@ -49400,7 +49392,9 @@ function validateExhaustiveDependencies(fn) {
             }
         },
     }, false);
-    return error.asResult();
+    if (error.hasAnyErrors()) {
+        fn.env.recordErrors(error);
+    }
 }
 function validateDependencies(inferred, manualDependencies, reactive, manualMemoLoc, category, exhaustiveDepsReportMode) {
     var _a, _b, _c, _d;
@@ -50083,9 +50077,9 @@ function runWithEnvironment(func, env) {
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
     validateContextVariableLValues(hir);
-    validateUseMemo(hir).unwrap();
+    validateUseMemo(hir);
     if (env.enableDropManualMemoization) {
-        dropManualMemoization(hir).unwrap();
+        dropManualMemoization(hir);
         log({ kind: 'hir', name: 'DropManualMemoization', value: hir });
     }
     inlineImmediatelyInvokedFunctionExpressions(hir);
@@ -50109,23 +50103,18 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'InferTypes', value: hir });
     if (env.enableValidations) {
         if (env.config.validateHooksUsage) {
-            validateHooksUsage(hir).unwrap();
+            validateHooksUsage(hir);
         }
         if (env.config.validateNoCapitalizedCalls) {
-            validateNoCapitalizedCalls(hir).unwrap();
+            validateNoCapitalizedCalls(hir);
         }
     }
     optimizePropsMethodCalls(hir);
     log({ kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir });
     analyseFunctions(hir);
     log({ kind: 'hir', name: 'AnalyseFunctions', value: hir });
-    const mutabilityAliasingErrors = inferMutationAliasingEffects(hir);
+    inferMutationAliasingEffects(hir);
     log({ kind: 'hir', name: 'InferMutationAliasingEffects', value: hir });
-    if (env.enableValidations) {
-        if (mutabilityAliasingErrors.isErr()) {
-            throw mutabilityAliasingErrors.unwrapErr();
-        }
-    }
     if (env.outputMode === 'ssr') {
         optimizeForSSR(hir);
         log({ kind: 'hir', name: 'OptimizeForSSR', value: hir });
@@ -50134,14 +50123,11 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'DeadCodeElimination', value: hir });
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
-    const mutabilityAliasingRangeErrors = inferMutationAliasingRanges(hir, {
+    inferMutationAliasingRanges(hir, {
         isFunctionExpression: false,
     });
     log({ kind: 'hir', name: 'InferMutationAliasingRanges', value: hir });
     if (env.enableValidations) {
-        if (mutabilityAliasingRangeErrors.isErr()) {
-            throw mutabilityAliasingRangeErrors.unwrapErr();
-        }
         validateLocalsNotReassignedAfterRender(hir);
     }
     if (env.enableValidations) {
@@ -50149,10 +50135,10 @@ function runWithEnvironment(func, env) {
             assertValidMutableRanges(hir);
         }
         if (env.config.validateRefAccessDuringRender) {
-            validateNoRefAccessInRender(hir).unwrap();
+            validateNoRefAccessInRender(hir);
         }
         if (env.config.validateNoSetStateInRender) {
-            validateNoSetStateInRender(hir).unwrap();
+            validateNoSetStateInRender(hir);
         }
         if (env.config.validateNoDerivedComputationsInEffects_exp &&
             env.outputMode === 'lint') {
@@ -50167,17 +50153,16 @@ function runWithEnvironment(func, env) {
         if (env.config.validateNoJSXInTryStatements && env.outputMode === 'lint') {
             env.logErrors(validateNoJSXInTryStatement(hir));
         }
-        if (env.config.validateNoImpureFunctionsInRender) {
-            validateNoImpureFunctionsInRender(hir).unwrap();
-        }
-        validateNoFreezingKnownMutableFunctions(hir).unwrap();
+        env.tryRecord(() => {
+            validateNoFreezingKnownMutableFunctions(hir);
+        });
     }
     inferReactivePlaces(hir);
     log({ kind: 'hir', name: 'InferReactivePlaces', value: hir });
     if (env.enableValidations) {
         if (env.config.validateExhaustiveMemoizationDependencies ||
             env.config.validateExhaustiveEffectDependencies) {
-            validateExhaustiveDependencies(hir).unwrap();
+            validateExhaustiveDependencies(hir);
         }
     }
     rewriteInstructionKindsBasedOnReassignment(hir);
@@ -50195,7 +50180,8 @@ function runWithEnvironment(func, env) {
         inferReactiveScopeVariables(hir);
         log({ kind: 'hir', name: 'InferReactiveScopeVariables', value: hir });
     }
-    const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
+    let fbtOperands = new Set();
+    fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
     log({
         kind: 'hir',
         name: 'MemoizeFbtAndMacroOperandsInSameScope',
@@ -50274,7 +50260,8 @@ function runWithEnvironment(func, env) {
         name: 'PropagateScopeDependenciesHIR',
         value: hir,
     });
-    const reactiveFunction = buildReactiveFunction(hir);
+    let reactiveFunction;
+    reactiveFunction = buildReactiveFunction(hir);
     log({
         kind: 'reactive',
         name: 'BuildReactiveFunction',
@@ -50348,7 +50335,8 @@ function runWithEnvironment(func, env) {
         name: 'StabilizeBlockIds',
         value: reactiveFunction,
     });
-    const uniqueIdentifiers = renameVariables(reactiveFunction);
+    let uniqueIdentifiers = new Set();
+    uniqueIdentifiers = renameVariables(reactiveFunction);
     log({
         kind: 'reactive',
         name: 'RenameVariables',
@@ -50362,23 +50350,26 @@ function runWithEnvironment(func, env) {
     });
     if (env.config.enablePreserveExistingMemoizationGuarantees ||
         env.config.validatePreserveExistingMemoizationGuarantees) {
-        validatePreservedManualMemoization(reactiveFunction).unwrap();
+        validatePreservedManualMemoization(reactiveFunction);
     }
     const ast = codegenFunction(reactiveFunction, {
         uniqueIdentifiers,
         fbtOperands,
-    }).unwrap();
+    });
     log({ kind: 'ast', name: 'Codegen', value: ast });
     for (const outlined of ast.outlined) {
         log({ kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn });
     }
     if (env.config.validateSourceLocations) {
-        validateSourceLocations(func, ast).unwrap();
+        validateSourceLocations(func, ast, env);
     }
     if (env.config.throwUnknownException__testonly) {
         throw new Error('unexpected error');
     }
-    return ast;
+    if (env.hasErrors()) {
+        return Err(env.aggregateErrors());
+    }
+    return Ok(ast);
 }
 function compileFn(func, config, fnType, mode, programContext, logger, filename, code) {
     return run(func, config, fnType, mode, programContext, logger, filename, code);
@@ -50903,10 +50894,13 @@ function tryCompileFunction(fn, fnType, programContext, outputMode) {
         };
     }
     try {
-        return {
-            kind: 'compile',
-            compiledFn: compileFn(fn, programContext.opts.environment, fnType, outputMode, programContext, programContext.opts.logger, programContext.filename, programContext.code),
-        };
+        const result = compileFn(fn, programContext.opts.environment, fnType, outputMode, programContext, programContext.opts.logger, programContext.filename, programContext.code);
+        if (result.isOk()) {
+            return { kind: 'compile', compiledFn: result.unwrap() };
+        }
+        else {
+            return { kind: 'error', error: result.unwrapErr() };
+        }
     }
     catch (err) {
         return { kind: 'error', error: err };
