@@ -775,12 +775,13 @@ function codegenTerminal(
         loc: terminal.init.loc,
       });
       if (terminal.init.instructions.length !== 2) {
-        CompilerError.throwTodo({
+        cx.errors.push({
           reason: 'Support non-trivial for..in inits',
-          description: null,
+          category: ErrorCategory.Todo,
           loc: terminal.init.loc,
           suggestions: null,
         });
+        return t.emptyStatement();
       }
       const iterableCollection = terminal.init.instructions[0];
       const iterableItem = terminal.init.instructions[1];
@@ -795,12 +796,13 @@ function codegenTerminal(
           break;
         }
         case 'StoreContext': {
-          CompilerError.throwTodo({
+          cx.errors.push({
             reason: 'Support non-trivial for..in inits',
-            description: null,
+            category: ErrorCategory.Todo,
             loc: terminal.init.loc,
             suggestions: null,
           });
+          return t.emptyStatement();
         }
         default:
           CompilerError.invariant(false, {
@@ -870,12 +872,13 @@ function codegenTerminal(
         loc: terminal.test.loc,
       });
       if (terminal.test.instructions.length !== 2) {
-        CompilerError.throwTodo({
+        cx.errors.push({
           reason: 'Support non-trivial for..of inits',
-          description: null,
+          category: ErrorCategory.Todo,
           loc: terminal.init.loc,
           suggestions: null,
         });
+        return t.emptyStatement();
       }
       const iterableItem = terminal.test.instructions[1];
       let lval: t.LVal;
@@ -889,12 +892,13 @@ function codegenTerminal(
           break;
         }
         case 'StoreContext': {
-          CompilerError.throwTodo({
+          cx.errors.push({
             reason: 'Support non-trivial for..of inits',
-            description: null,
+            category: ErrorCategory.Todo,
             loc: terminal.init.loc,
             suggestions: null,
           });
+          return t.emptyStatement();
         }
         default:
           CompilerError.invariant(false, {

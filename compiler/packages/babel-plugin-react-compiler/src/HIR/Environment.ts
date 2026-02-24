@@ -759,29 +759,6 @@ export class Environment {
     return this.#errors;
   }
 
-  /**
-   * Wraps a callback in try/catch: if the callback throws a CompilerError
-   * that is NOT an invariant, the error is recorded and execution continues.
-   * Non-CompilerError exceptions and invariants are re-thrown.
-   */
-  tryRecord(fn: () => void): void {
-    try {
-      fn();
-    } catch (err) {
-      if (err instanceof CompilerError) {
-        // Check if any detail is an invariant — if so, re-throw
-        for (const detail of err.details) {
-          if (detail.category === ErrorCategory.Invariant) {
-            throw err;
-          }
-        }
-        this.recordErrors(err);
-      } else {
-        throw err;
-      }
-    }
-  }
-
   isContextIdentifier(node: t.Identifier): boolean {
     return this.#contextIdentifiers.has(node);
   }
