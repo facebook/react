@@ -1639,6 +1639,7 @@ export function makePropertyLiteral(value: string | number): PropertyLiteral {
 export type DependencyPathEntry = {
   property: PropertyLiteral;
   optional: boolean;
+  loc: SourceLocation;
 };
 export type DependencyPath = Array<DependencyPathEntry>;
 export type ReactiveScopeDependency = {
@@ -1656,6 +1657,7 @@ export type ReactiveScopeDependency = {
    */
   reactive: boolean;
   path: DependencyPath;
+  loc: SourceLocation;
 };
 
 export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
@@ -1884,12 +1886,6 @@ export function isUseReducerType(id: Identifier): boolean {
 
 export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
-}
-
-export function isFireFunctionType(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction'
-  );
 }
 
 export function isEffectEventFunctionType(id: Identifier): boolean {
