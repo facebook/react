@@ -2617,7 +2617,7 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  it('wont serialize thenables that were not already settled by the time an abort happens', async () => {
+  it("won't serialize thenables that were not already settled by the time an abort happens", async () => {
     function App() {
       return (
         <div>

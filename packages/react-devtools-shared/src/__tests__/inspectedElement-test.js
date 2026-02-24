@@ -2131,7 +2131,7 @@ describe('InspectedElement', () => {
   });
 
   // See github.com/facebook/react/issues/21654
-  it('should support Proxies that dont return an iterator', async () => {
+  it("should support Proxies that don't return an iterator", async () => {
     const Example = () => null;
     const proxy = new Proxy(
       {},

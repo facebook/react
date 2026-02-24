@@ -264,7 +264,7 @@ export type ResumableState = {
   nextFormID: number,
   streamingFormat: StreamingFormat,
 
-  // We carry the bootstrap intializers in resumable state in case we postpone in the shell
+  // We carry the bootstrap initializers in resumable state in case we postpone in the shell
   // of a prerender. On resume we will reinitialize the bootstrap scripts if necessary.
   // If we end up flushing the bootstrap scripts we void these on the resumable state
   bootstrapScriptContent?: string | void,

@@ -1374,7 +1374,7 @@ describe('ReactUse', () => {
 
   it('async children are recursively unwrapped', async () => {
     // This is a Usable of a Usable. `use` would only unwrap a single level, but
-    // when passed as a child, the reconciler recurisvely unwraps until it
+    // when passed as a child, the reconciler recursively unwraps until it
     // resolves to a non-Usable value.
     const thenable = {
       then() {},
