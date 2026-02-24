@@ -124,8 +124,8 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
   collectTemporariesSidemap(fn, env);
   const errors = new CompilerError();
   validateNoRefAccessInRenderImpl(fn, env, errors);
-  if (errors.hasAnyErrors()) {
-    fn.env.recordErrors(errors);
+  for (const detail of errors.details) {
+    fn.env.recordError(detail);
   }
 }
 

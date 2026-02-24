@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerDiagnostic, CompilerError} from '..';
+import {CompilerDiagnostic} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {HIRFunction} from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
@@ -20,7 +20,6 @@ import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffect
  * and use it here.
  */
 export function validateNoImpureFunctionsInRender(fn: HIRFunction): void {
-  const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       const value = instr.value;
@@ -32,7 +31,7 @@ export function validateNoImpureFunctionsInRender(fn: HIRFunction): void {
           callee.identifier.type,
         );
         if (signature != null && signature.impure === true) {
-          errors.pushDiagnostic(
+          fn.env.recordError(
             CompilerDiagnostic.create({
               category: ErrorCategory.Purity,
               reason: 'Cannot call impure function during render',
@@ -51,8 +50,5 @@ export function validateNoImpureFunctionsInRender(fn: HIRFunction): void {
         }
       }
     }
-  }
-  if (errors.hasAnyErrors()) {
-    fn.env.recordErrors(errors);
   }
 }
