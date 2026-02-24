@@ -21146,31 +21146,21 @@ class HIRBuilder {
     resolveBinding(node) {
         var _a, _b, _c;
         if (node.name === 'fbt') {
-            CompilerError.throwDiagnostic({
+            this.errors.push({
                 category: ErrorCategory.Todo,
                 reason: 'Support local variables named `fbt`',
                 description: 'Local variables named `fbt` may conflict with the fbt plugin and are not yet supported',
-                details: [
-                    {
-                        kind: 'error',
-                        message: 'Rename to avoid conflict with fbt plugin',
-                        loc: (_a = node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
-                    },
-                ],
+                loc: (_a = node.loc) !== null && _a !== void 0 ? _a : GeneratedSource,
+                suggestions: null,
             });
         }
         if (node.name === 'this') {
-            CompilerError.throwDiagnostic({
+            this.errors.push({
                 category: ErrorCategory.UnsupportedSyntax,
                 reason: '`this` is not supported syntax',
                 description: 'React Compiler does not support compiling functions that use `this`',
-                details: [
-                    {
-                        kind: 'error',
-                        message: '`this` was used here',
-                        loc: (_b = node.loc) !== null && _b !== void 0 ? _b : GeneratedSource,
-                    },
-                ],
+                loc: (_b = node.loc) !== null && _b !== void 0 ? _b : GeneratedSource,
+                suggestions: null,
             });
         }
         const originalName = node.name;
@@ -22743,47 +22733,32 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
     });
     let directives = [];
     const body = func.get('body');
-    try {
-        if (body.isExpression()) {
-            const fallthrough = builder.reserve('block');
-            const terminal = {
-                kind: 'return',
-                returnVariant: 'Implicit',
-                loc: GeneratedSource,
-                value: lowerExpressionToTemporary(builder, body),
-                id: makeInstructionId(0),
-                effects: null,
-            };
-            builder.terminateWithContinuation(terminal, fallthrough);
-        }
-        else if (body.isBlockStatement()) {
-            lowerStatement(builder, body);
-            directives = body.get('directives').map(d => d.node.value.value);
-        }
-        else {
-            builder.errors.pushDiagnostic(CompilerDiagnostic.create({
-                category: ErrorCategory.Syntax,
-                reason: `Unexpected function body kind`,
-                description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
-            }).withDetails({
-                kind: 'error',
-                loc: (_a = body.node.loc) !== null && _a !== void 0 ? _a : null,
-                message: 'Expected a block statement or expression',
-            }));
-        }
+    if (body.isExpression()) {
+        const fallthrough = builder.reserve('block');
+        const terminal = {
+            kind: 'return',
+            returnVariant: 'Implicit',
+            loc: GeneratedSource,
+            value: lowerExpressionToTemporary(builder, body),
+            id: makeInstructionId(0),
+            effects: null,
+        };
+        builder.terminateWithContinuation(terminal, fallthrough);
     }
-    catch (err) {
-        if (err instanceof CompilerError) {
-            for (const detail of err.details) {
-                if (detail.category === ErrorCategory.Invariant) {
-                    throw err;
-                }
-            }
-            builder.errors.merge(err);
-        }
-        else {
-            throw err;
-        }
+    else if (body.isBlockStatement()) {
+        lowerStatement(builder, body);
+        directives = body.get('directives').map(d => d.node.value.value);
+    }
+    else {
+        builder.errors.pushDiagnostic(CompilerDiagnostic.create({
+            category: ErrorCategory.Syntax,
+            reason: `Unexpected function body kind`,
+            description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
+        }).withDetails({
+            kind: 'error',
+            loc: (_a = body.node.loc) !== null && _a !== void 0 ? _a : null,
+            message: 'Expected a block statement or expression',
+        }));
     }
     let validatedId = null;
     if (id != null) {
@@ -31875,24 +31850,6 @@ class Environment {
     aggregateErrors() {
         return __classPrivateFieldGet(this, _Environment_errors, "f");
     }
-    tryRecord(fn) {
-        try {
-            fn();
-        }
-        catch (err) {
-            if (err instanceof CompilerError) {
-                for (const detail of err.details) {
-                    if (detail.category === ErrorCategory.Invariant) {
-                        throw err;
-                    }
-                }
-                this.recordErrors(err);
-            }
-            else {
-                throw err;
-            }
-        }
-    }
     isContextIdentifier(node) {
         return __classPrivateFieldGet(this, _Environment_contextIdentifiers, "f").has(node);
     }
@@ -35494,11 +35451,10 @@ class Driver {
         const test = this.visitValueBlock(testBlockId, loc);
         const testBlock = this.cx.ir.blocks.get(test.block);
         if (testBlock.terminal.kind !== 'branch') {
-            CompilerError.throwTodo({
-                reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for ${terminalKind} test block`,
-                description: null,
+            CompilerError.invariant(false, {
+                reason: `Expected a branch terminal for ${terminalKind} test block`,
+                description: `Got \`${testBlock.terminal.kind}\``,
                 loc: testBlock.terminal.loc,
-                suggestions: null,
             });
         }
         return {
@@ -36368,12 +36324,13 @@ function codegenTerminal(cx, terminal) {
                 loc: terminal.init.loc,
             });
             if (terminal.init.instructions.length !== 2) {
-                CompilerError.throwTodo({
+                cx.errors.push({
                     reason: 'Support non-trivial for..in inits',
-                    description: null,
+                    category: ErrorCategory.Todo,
                     loc: terminal.init.loc,
                     suggestions: null,
                 });
+                return libExports$1.emptyStatement();
             }
             const iterableCollection = terminal.init.instructions[0];
             const iterableItem = terminal.init.instructions[1];
@@ -36388,12 +36345,13 @@ function codegenTerminal(cx, terminal) {
                     break;
                 }
                 case 'StoreContext': {
-                    CompilerError.throwTodo({
+                    cx.errors.push({
                         reason: 'Support non-trivial for..in inits',
-                        description: null,
+                        category: ErrorCategory.Todo,
                         loc: terminal.init.loc,
                         suggestions: null,
                     });
+                    return libExports$1.emptyStatement();
                 }
                 default:
                     CompilerError.invariant(false, {
@@ -36446,12 +36404,13 @@ function codegenTerminal(cx, terminal) {
                 loc: terminal.test.loc,
             });
             if (terminal.test.instructions.length !== 2) {
-                CompilerError.throwTodo({
+                cx.errors.push({
                     reason: 'Support non-trivial for..of inits',
-                    description: null,
+                    category: ErrorCategory.Todo,
                     loc: terminal.init.loc,
                     suggestions: null,
                 });
+                return libExports$1.emptyStatement();
             }
             const iterableItem = terminal.test.instructions[1];
             let lval;
@@ -36465,12 +36424,13 @@ function codegenTerminal(cx, terminal) {
                     break;
                 }
                 case 'StoreContext': {
-                    CompilerError.throwTodo({
+                    cx.errors.push({
                         reason: 'Support non-trivial for..of inits',
-                        description: null,
+                        category: ErrorCategory.Todo,
                         loc: terminal.init.loc,
                         suggestions: null,
                     });
+                    return libExports$1.emptyStatement();
                 }
                 default:
                     CompilerError.invariant(false, {
@@ -47304,10 +47264,7 @@ function traverseOptionalBlock(optional, context, outerAlternate) {
     else if (maybeTest.terminal.kind === 'optional') {
         const testBlock = context.blocks.get(maybeTest.terminal.fallthrough);
         if (testBlock.terminal.kind !== 'branch') {
-            CompilerError.throwTodo({
-                reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
-                loc: maybeTest.terminal.loc,
-            });
+            return null;
         }
         const innerOptional = traverseOptionalBlock(maybeTest, context, testBlock.terminal.alternate);
         if (innerOptional == null) {
@@ -50106,12 +50063,8 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'HIR', value: hir });
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
-    env.tryRecord(() => {
-        validateContextVariableLValues(hir);
-    });
-    env.tryRecord(() => {
-        validateUseMemo(hir);
-    });
+    validateContextVariableLValues(hir);
+    validateUseMemo(hir);
     if (env.enableDropManualMemoization) {
         dropManualMemoization(hir);
         log({ kind: 'hir', name: 'DropManualMemoization', value: hir });
@@ -50137,23 +50090,17 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'InferTypes', value: hir });
     if (env.enableValidations) {
         if (env.config.validateHooksUsage) {
-            env.tryRecord(() => {
-                validateHooksUsage(hir);
-            });
+            validateHooksUsage(hir);
         }
         if (env.config.validateNoCapitalizedCalls) {
-            env.tryRecord(() => {
-                validateNoCapitalizedCalls(hir);
-            });
+            validateNoCapitalizedCalls(hir);
         }
     }
     optimizePropsMethodCalls(hir);
     log({ kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir });
     analyseFunctions(hir);
     log({ kind: 'hir', name: 'AnalyseFunctions', value: hir });
-    env.tryRecord(() => {
-        inferMutationAliasingEffects(hir);
-    });
+    inferMutationAliasingEffects(hir);
     log({ kind: 'hir', name: 'InferMutationAliasingEffects', value: hir });
     if (env.outputMode === 'ssr') {
         optimizeForSSR(hir);
@@ -50163,37 +50110,27 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'DeadCodeElimination', value: hir });
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
-    env.tryRecord(() => {
-        inferMutationAliasingRanges(hir, {
-            isFunctionExpression: false,
-        });
+    inferMutationAliasingRanges(hir, {
+        isFunctionExpression: false,
     });
     log({ kind: 'hir', name: 'InferMutationAliasingRanges', value: hir });
     if (env.enableValidations) {
-        env.tryRecord(() => {
-            validateLocalsNotReassignedAfterRender(hir);
-        });
+        validateLocalsNotReassignedAfterRender(hir);
         if (env.config.assertValidMutableRanges) {
             assertValidMutableRanges(hir);
         }
         if (env.config.validateRefAccessDuringRender) {
-            env.tryRecord(() => {
-                validateNoRefAccessInRender(hir);
-            });
+            validateNoRefAccessInRender(hir);
         }
         if (env.config.validateNoSetStateInRender) {
-            env.tryRecord(() => {
-                validateNoSetStateInRender(hir);
-            });
+            validateNoSetStateInRender(hir);
         }
         if (env.config.validateNoDerivedComputationsInEffects_exp &&
             env.outputMode === 'lint') {
             env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
         }
         else if (env.config.validateNoDerivedComputationsInEffects) {
-            env.tryRecord(() => {
-                validateNoDerivedComputationsInEffects(hir);
-            });
+            validateNoDerivedComputationsInEffects(hir);
         }
         if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
             env.logErrors(validateNoSetStateInEffects(hir, env));
@@ -50201,18 +50138,14 @@ function runWithEnvironment(func, env) {
         if (env.config.validateNoJSXInTryStatements && env.outputMode === 'lint') {
             env.logErrors(validateNoJSXInTryStatement(hir));
         }
-        env.tryRecord(() => {
-            validateNoFreezingKnownMutableFunctions(hir);
-        });
+        validateNoFreezingKnownMutableFunctions(hir);
     }
     inferReactivePlaces(hir);
     log({ kind: 'hir', name: 'InferReactivePlaces', value: hir });
     if (env.enableValidations) {
         if (env.config.validateExhaustiveMemoizationDependencies ||
             env.config.validateExhaustiveEffectDependencies) {
-            env.tryRecord(() => {
-                validateExhaustiveDependencies(hir);
-            });
+            validateExhaustiveDependencies(hir);
         }
     }
     rewriteInstructionKindsBasedOnReassignment(hir);
@@ -50230,8 +50163,7 @@ function runWithEnvironment(func, env) {
         inferReactiveScopeVariables(hir);
         log({ kind: 'hir', name: 'InferReactiveScopeVariables', value: hir });
     }
-    let fbtOperands = new Set();
-    fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
+    const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
     log({
         kind: 'hir',
         name: 'MemoizeFbtAndMacroOperandsInSameScope',
@@ -50310,8 +50242,7 @@ function runWithEnvironment(func, env) {
         name: 'PropagateScopeDependenciesHIR',
         value: hir,
     });
-    let reactiveFunction;
-    reactiveFunction = buildReactiveFunction(hir);
+    const reactiveFunction = buildReactiveFunction(hir);
     log({
         kind: 'reactive',
         name: 'BuildReactiveFunction',
@@ -50385,8 +50316,7 @@ function runWithEnvironment(func, env) {
         name: 'StabilizeBlockIds',
         value: reactiveFunction,
     });
-    let uniqueIdentifiers = new Set();
-    uniqueIdentifiers = renameVariables(reactiveFunction);
+    const uniqueIdentifiers = renameVariables(reactiveFunction);
     log({
         kind: 'reactive',
         name: 'RenameVariables',
@@ -50400,9 +50330,7 @@ function runWithEnvironment(func, env) {
     });
     if (env.config.enablePreserveExistingMemoizationGuarantees ||
         env.config.validatePreserveExistingMemoizationGuarantees) {
-        env.tryRecord(() => {
-            validatePreservedManualMemoization(reactiveFunction);
-        });
+        validatePreservedManualMemoization(reactiveFunction);
     }
     const ast = codegenFunction(reactiveFunction, {
         uniqueIdentifiers,
@@ -50413,9 +50341,7 @@ function runWithEnvironment(func, env) {
         log({ kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn });
     }
     if (env.config.validateSourceLocations) {
-        env.tryRecord(() => {
-            validateSourceLocations(func, ast, env);
-        });
+        validateSourceLocations(func, ast, env);
     }
     if (env.config.throwUnknownException__testonly) {
         throw new Error('unexpected error');
@@ -50940,6 +50866,7 @@ function processFn(fn, fnType, programContext, outputMode) {
     }
 }
 function tryCompileFunction(fn, fnType, programContext, outputMode) {
+    var _a;
     const suppressionsInFunction = filterSuppressionsThatAffectFunction(programContext.suppressions, fn);
     if (suppressionsInFunction.length > 0) {
         return {
@@ -50957,6 +50884,14 @@ function tryCompileFunction(fn, fnType, programContext, outputMode) {
         }
     }
     catch (err) {
+        if (err instanceof CompilerError &&
+            err.details.every(detail => detail.category !== ErrorCategory.Invariant)) {
+            programContext.logEvent({
+                kind: 'CompileUnexpectedThrow',
+                fnLoc: (_a = fn.node.loc) !== null && _a !== void 0 ? _a : null,
+                data: err.toString(),
+            });
+        }
         return { kind: 'error', error: err };
     }
 }
