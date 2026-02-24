@@ -229,20 +229,19 @@ Would enable the `enableJsxOutlining` feature and disable the `enableNameAnonymo
 3. Look for `Impure`, `Render`, `Capture` effects on instructions
 4. Check the pass ordering in Pipeline.ts to understand when effects are populated vs validated
 
-## Error Handling for Unsupported Features
+## Error Handling and Fault Tolerance
 
-When the compiler encounters an unsupported but known pattern, use `CompilerError.throwTodo()` instead of `CompilerError.invariant()`. Todo errors cause graceful bailouts in production; Invariant errors are hard failures indicating unexpected/invalid states.
+The compiler is fault-tolerant: it runs all passes and accumulates errors on the `Environment` rather than throwing on the first error. This lets users see all compilation errors at once.
 
-```typescript
-// Unsupported but expected pattern - graceful bailout
-CompilerError.throwTodo({
-  reason: `Support [description of unsupported feature]`,
-  loc: terminal.loc,
-});
+**Recording errors** — Passes record errors via `env.recordError(diagnostic)`. Errors are accumulated on `Environment.#errors` and checked at the end of the pipeline via `env.hasErrors()` / `env.aggregateErrors()`.
 
-// Invariant is for truly unexpected/invalid states - hard failure
-CompilerError.invariant(false, {
-  reason: `Unexpected [thing]`,
-  loc: terminal.loc,
-});
-```
+**`tryRecord()` wrapper** — In Pipeline.ts, validation passes are wrapped in `env.tryRecord(() => pass(hir))` which catches thrown `CompilerError`s (non-invariant) and records them. Infrastructure/transformation passes are NOT wrapped in `tryRecord()` because later passes depend on their output being structurally valid.
+
+**Error categories:**
+- `CompilerError.throwTodo()` — Unsupported but known pattern. Graceful bailout. Can be caught by `tryRecord()`.
+- `CompilerError.invariant()` — Truly unexpected/invalid state. Always throws immediately, never caught by `tryRecord()`.
+- Non-`CompilerError` exceptions — Always re-thrown.
+
+**Key files:** `Environment.ts` (`recordError`, `tryRecord`, `hasErrors`, `aggregateErrors`), `Pipeline.ts` (pass orchestration), `Program.ts` (`tryCompileFunction` handles the `Result`).
+
+**Test fixtures:** `__tests__/fixtures/compiler/fault-tolerance/` contains multi-error fixtures verifying all errors are reported.

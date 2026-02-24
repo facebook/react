@@ -228,8 +228,6 @@ const CompilerOutputModeSchema = z.enum([
   'ssr',
   // Build optimized for the client, with auto memoization
   'client',
-  // Build optimized for the client without auto memo
-  'client-no-memo',
   // Lint mode, the output is unused but validations should run
   'lint',
 ]);
@@ -254,6 +252,7 @@ export type LoggerEvent =
   | CompileErrorEvent
   | CompileDiagnosticEvent
   | CompileSkipEvent
+  | CompileUnexpectedThrowEvent
   | PipelineErrorEvent
   | TimingEvent;
 
@@ -285,6 +284,11 @@ export type CompileSkipEvent = {
 };
 export type PipelineErrorEvent = {
   kind: 'PipelineError';
+  fnLoc: t.SourceLocation | null;
+  data: string;
+};
+export type CompileUnexpectedThrowEvent = {
+  kind: 'CompileUnexpectedThrow';
   fnLoc: t.SourceLocation | null;
   data: string;
 };
