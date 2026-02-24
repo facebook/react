@@ -13,7 +13,6 @@ import {CompilerError} from '../CompilerError';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
   HIRFunction,
-  IdentifierId,
   ReactiveFunction,
   assertConsistentIdentifiers,
   assertTerminalPredsExist,
@@ -161,12 +160,8 @@ function runWithEnvironment(
   pruneMaybeThrows(hir);
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
-  env.tryRecord(() => {
-    validateContextVariableLValues(hir);
-  });
-  env.tryRecord(() => {
-    validateUseMemo(hir);
-  });
+  validateContextVariableLValues(hir);
+  validateUseMemo(hir);
 
   if (env.enableDropManualMemoization) {
     dropManualMemoization(hir);
@@ -202,14 +197,10 @@ function runWithEnvironment(
 
   if (env.enableValidations) {
     if (env.config.validateHooksUsage) {
-      env.tryRecord(() => {
-        validateHooksUsage(hir);
-      });
+      validateHooksUsage(hir);
     }
     if (env.config.validateNoCapitalizedCalls) {
-      env.tryRecord(() => {
-        validateNoCapitalizedCalls(hir);
-      });
+      validateNoCapitalizedCalls(hir);
     }
   }
 
@@ -219,9 +210,7 @@ function runWithEnvironment(
   analyseFunctions(hir);
   log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
 
-  env.tryRecord(() => {
-    inferMutationAliasingEffects(hir);
-  });
+  inferMutationAliasingEffects(hir);
   log({kind: 'hir', name: 'InferMutationAliasingEffects', value: hir});
 
   if (env.outputMode === 'ssr') {
@@ -235,31 +224,23 @@ function runWithEnvironment(
   pruneMaybeThrows(hir);
   log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
-  env.tryRecord(() => {
-    inferMutationAliasingRanges(hir, {
-      isFunctionExpression: false,
-    });
+  inferMutationAliasingRanges(hir, {
+    isFunctionExpression: false,
   });
   log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
   if (env.enableValidations) {
-    env.tryRecord(() => {
-      validateLocalsNotReassignedAfterRender(hir);
-    });
+    validateLocalsNotReassignedAfterRender(hir);
 
     if (env.config.assertValidMutableRanges) {
       assertValidMutableRanges(hir);
     }
 
     if (env.config.validateRefAccessDuringRender) {
-      env.tryRecord(() => {
-        validateNoRefAccessInRender(hir);
-      });
+      validateNoRefAccessInRender(hir);
     }
 
     if (env.config.validateNoSetStateInRender) {
-      env.tryRecord(() => {
-        validateNoSetStateInRender(hir);
-      });
+      validateNoSetStateInRender(hir);
     }
 
     if (
@@ -268,9 +249,7 @@ function runWithEnvironment(
     ) {
       env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
     } else if (env.config.validateNoDerivedComputationsInEffects) {
-      env.tryRecord(() => {
-        validateNoDerivedComputationsInEffects(hir);
-      });
+      validateNoDerivedComputationsInEffects(hir);
     }
 
     if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
@@ -281,9 +260,7 @@ function runWithEnvironment(
       env.logErrors(validateNoJSXInTryStatement(hir));
     }
 
-    env.tryRecord(() => {
-      validateNoFreezingKnownMutableFunctions(hir);
-    });
+    validateNoFreezingKnownMutableFunctions(hir);
   }
 
   inferReactivePlaces(hir);
@@ -295,9 +272,7 @@ function runWithEnvironment(
       env.config.validateExhaustiveEffectDependencies
     ) {
       // NOTE: this relies on reactivity inference running first
-      env.tryRecord(() => {
-        validateExhaustiveDependencies(hir);
-      });
+      validateExhaustiveDependencies(hir);
     }
   }
 
@@ -326,8 +301,7 @@ function runWithEnvironment(
     log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
   }
 
-  let fbtOperands: Set<IdentifierId> = new Set();
-  fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
+  const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
   log({
     kind: 'hir',
     name: 'MemoizeFbtAndMacroOperandsInSameScope',
@@ -412,6 +386,7 @@ function runWithEnvironment(
   });
   assertTerminalSuccessorsExist(hir);
   assertTerminalPredsExist(hir);
+
   propagateScopeDependenciesHIR(hir);
   log({
     kind: 'hir',
@@ -419,8 +394,7 @@ function runWithEnvironment(
     value: hir,
   });
 
-  let reactiveFunction!: ReactiveFunction;
-  reactiveFunction = buildReactiveFunction(hir);
+  const reactiveFunction = buildReactiveFunction(hir);
   log({
     kind: 'reactive',
     name: 'BuildReactiveFunction',
@@ -507,8 +481,7 @@ function runWithEnvironment(
     value: reactiveFunction,
   });
 
-  let uniqueIdentifiers: Set<string> = new Set();
-  uniqueIdentifiers = renameVariables(reactiveFunction);
+  const uniqueIdentifiers = renameVariables(reactiveFunction);
   log({
     kind: 'reactive',
     name: 'RenameVariables',
@@ -526,9 +499,7 @@ function runWithEnvironment(
     env.config.enablePreserveExistingMemoizationGuarantees ||
     env.config.validatePreserveExistingMemoizationGuarantees
   ) {
-    env.tryRecord(() => {
-      validatePreservedManualMemoization(reactiveFunction);
-    });
+    validatePreservedManualMemoization(reactiveFunction);
   }
 
   const ast = codegenFunction(reactiveFunction, {
@@ -541,9 +512,7 @@ function runWithEnvironment(
   }
 
   if (env.config.validateSourceLocations) {
-    env.tryRecord(() => {
-      validateSourceLocations(func, ast, env);
-    });
+    validateSourceLocations(func, ast, env);
   }
 
   /**
