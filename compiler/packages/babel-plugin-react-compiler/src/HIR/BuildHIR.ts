@@ -11,6 +11,7 @@ import invariant from 'invariant';
 import {
   CompilerDiagnostic,
   CompilerError,
+  CompilerErrorDetail,
   CompilerSuggestionOperation,
   ErrorCategory,
 } from '../CompilerError';
@@ -105,7 +106,7 @@ export function lower(
     if (param.isIdentifier()) {
       const binding = builder.resolveIdentifier(param);
       if (binding.kind !== 'Identifier') {
-        builder.errors.pushDiagnostic(
+        builder.recordError(
           CompilerDiagnostic.create({
             category: ErrorCategory.Invariant,
             reason: 'Could not find binding',
@@ -169,7 +170,7 @@ export function lower(
         'Assignment',
       );
     } else {
-      builder.errors.pushDiagnostic(
+      builder.recordError(
         CompilerDiagnostic.create({
           category: ErrorCategory.Todo,
           reason: `Handle ${param.node.type} parameters`,
@@ -200,7 +201,7 @@ export function lower(
     lowerStatement(builder, body);
     directives = body.get('directives').map(d => d.node.value.value);
   } else {
-    builder.errors.pushDiagnostic(
+    builder.recordError(
       CompilerDiagnostic.create({
         category: ErrorCategory.Syntax,
         reason: `Unexpected function body kind`,
@@ -217,7 +218,9 @@ export function lower(
   if (id != null) {
     const idResult = validateIdentifierName(id);
     if (idResult.isErr()) {
-      builder.errors.merge(idResult.unwrapErr());
+      for (const detail of idResult.unwrapErr().details) {
+        builder.recordError(detail);
+      }
     } else {
       validatedId = idResult.unwrap().value;
     }
@@ -240,11 +243,6 @@ export function lower(
   );
 
   const hirBody = builder.build();
-
-  // Record all accumulated errors (including any from build()) on env
-  if (builder.errors.hasAnyErrors()) {
-    env.recordErrors(builder.errors);
-  }
 
   return {
     id: validatedId,
@@ -282,13 +280,15 @@ function lowerStatement(
          * for control-flow and is generally considered an anti-pattern. we can likely
          * just not support this pattern, unless it really becomes necessary for some reason.
          */
-        builder.errors.push({
-          reason:
-            '(BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch',
-          category: ErrorCategory.Todo,
-          loc: stmt.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason:
+              '(BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch',
+            category: ErrorCategory.Todo,
+            loc: stmt.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
       }
       const terminal: ThrowTerminal = {
         kind: 'throw',
@@ -470,22 +470,26 @@ function lowerStatement(
           } else if (binding.path.isFunctionDeclaration()) {
             kind = InstructionKind.HoistedFunction;
           } else if (!binding.path.isVariableDeclarator()) {
-            builder.errors.push({
-              category: ErrorCategory.Todo,
-              reason: 'Unsupported declaration type for hoisting',
-              description: `variable "${binding.identifier.name}" declared with ${binding.path.type}`,
-              suggestions: null,
-              loc: id.parentPath.node.loc ?? GeneratedSource,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                category: ErrorCategory.Todo,
+                reason: 'Unsupported declaration type for hoisting',
+                description: `variable "${binding.identifier.name}" declared with ${binding.path.type}`,
+                suggestions: null,
+                loc: id.parentPath.node.loc ?? GeneratedSource,
+              }),
+            );
             continue;
           } else {
-            builder.errors.push({
-              category: ErrorCategory.Todo,
-              reason: 'Handle non-const declarations for hoisting',
-              description: `variable "${binding.identifier.name}" declared with ${binding.kind}`,
-              suggestions: null,
-              loc: id.parentPath.node.loc ?? GeneratedSource,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                category: ErrorCategory.Todo,
+                reason: 'Handle non-const declarations for hoisting',
+                description: `variable "${binding.identifier.name}" declared with ${binding.kind}`,
+                suggestions: null,
+                loc: id.parentPath.node.loc ?? GeneratedSource,
+              }),
+            );
             continue;
           }
 
@@ -575,13 +579,15 @@ function lowerStatement(
           };
         }
         if (!init.isVariableDeclaration()) {
-          builder.errors.push({
-            reason:
-              '(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement',
-            category: ErrorCategory.Todo,
-            loc: stmt.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason:
+                '(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement',
+              category: ErrorCategory.Todo,
+              loc: stmt.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
           // Lower the init expression as best-effort and continue
           if (init.isExpression()) {
             lowerExpressionToTemporary(builder, init as NodePath<t.Expression>);
@@ -654,12 +660,14 @@ function lowerStatement(
 
       const test = stmt.get('test');
       if (test.node == null) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle empty test in ForStatement`,
-          category: ErrorCategory.Todo,
-          loc: stmt.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerStatement) Handle empty test in ForStatement`,
+            category: ErrorCategory.Todo,
+            loc: stmt.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         // Treat `for(;;)` as `while(true)` to keep the builder state consistent
         builder.terminateWithContinuation(
           {
@@ -822,12 +830,14 @@ function lowerStatement(
         const testExpr = case_.get('test');
         if (testExpr.node == null) {
           if (hasDefault) {
-            builder.errors.push({
-              reason: `Expected at most one \`default\` branch in a switch statement, this code should have failed to parse`,
-              category: ErrorCategory.Syntax,
-              loc: case_.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `Expected at most one \`default\` branch in a switch statement, this code should have failed to parse`,
+                category: ErrorCategory.Syntax,
+                loc: case_.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
             break;
           }
           hasDefault = true;
@@ -894,12 +904,14 @@ function lowerStatement(
       const stmt = stmtPath as NodePath<t.VariableDeclaration>;
       const nodeKind: t.VariableDeclaration['kind'] = stmt.node.kind;
       if (nodeKind === 'var') {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
-          category: ErrorCategory.Todo,
-          loc: stmt.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
+            category: ErrorCategory.Todo,
+            loc: stmt.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         // Treat `var` as `let` so references to the variable don't break
       }
       const kind =
@@ -924,12 +936,14 @@ function lowerStatement(
         } else if (id.isIdentifier()) {
           const binding = builder.resolveIdentifier(id);
           if (binding.kind !== 'Identifier') {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
-              category: ErrorCategory.Invariant,
-              loc: id.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
+                category: ErrorCategory.Invariant,
+                loc: id.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
           } else {
             const place: Place = {
               effect: Effect.Unknown,
@@ -941,19 +955,21 @@ function lowerStatement(
             if (builder.isContextIdentifier(id)) {
               if (kind === InstructionKind.Const) {
                 const declRangeStart = declaration.parentPath.node.start!;
-                builder.errors.push({
-                  reason: `Expect \`const\` declaration not to be reassigned`,
-                  category: ErrorCategory.Syntax,
-                  loc: id.node.loc ?? null,
-                  suggestions: [
-                    {
-                      description: 'Change to a `let` declaration',
-                      op: CompilerSuggestionOperation.Replace,
-                      range: [declRangeStart, declRangeStart + 5], // "const".length
-                      text: 'let',
-                    },
-                  ],
-                });
+                builder.recordError(
+                  new CompilerErrorDetail({
+                    reason: `Expect \`const\` declaration not to be reassigned`,
+                    category: ErrorCategory.Syntax,
+                    loc: id.node.loc ?? null,
+                    suggestions: [
+                      {
+                        description: 'Change to a `let` declaration',
+                        op: CompilerSuggestionOperation.Replace,
+                        range: [declRangeStart, declRangeStart + 5], // "const".length
+                        text: 'let',
+                      },
+                    ],
+                  }),
+                );
               }
               lowerValueToTemporary(builder, {
                 kind: 'DeclareContext',
@@ -987,13 +1003,15 @@ function lowerStatement(
             }
           }
         } else {
-          builder.errors.push({
-            reason: `Expected variable declaration to be an identifier if no initializer was provided`,
-            description: `Got a \`${id.type}\``,
-            category: ErrorCategory.Syntax,
-            loc: stmt.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `Expected variable declaration to be an identifier if no initializer was provided`,
+              description: `Got a \`${id.type}\``,
+              category: ErrorCategory.Syntax,
+              loc: stmt.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
         }
       }
       return;
@@ -1094,12 +1112,14 @@ function lowerStatement(
       const testBlock = builder.reserve('loop');
 
       if (stmt.node.await) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle for-await loops`,
-          category: ErrorCategory.Todo,
-          loc: stmt.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerStatement) Handle for-await loops`,
+            category: ErrorCategory.Todo,
+            loc: stmt.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return;
       }
 
@@ -1322,21 +1342,25 @@ function lowerStatement(
 
       const handlerPath = stmt.get('handler');
       if (!hasNode(handlerPath)) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle TryStatement without a catch clause`,
-          category: ErrorCategory.Todo,
-          loc: stmt.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerStatement) Handle TryStatement without a catch clause`,
+            category: ErrorCategory.Todo,
+            loc: stmt.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return;
       }
       if (hasNode(stmt.get('finalizer'))) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause`,
-          category: ErrorCategory.Todo,
-          loc: stmt.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause`,
+            category: ErrorCategory.Todo,
+            loc: stmt.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
       }
 
       const handlerBindingPath = handlerPath.get('param');
@@ -1423,13 +1447,15 @@ function lowerStatement(
       return;
     }
     case 'WithStatement': {
-      builder.errors.push({
-        reason: `JavaScript 'with' syntax is not supported`,
-        description: `'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives`,
-        category: ErrorCategory.UnsupportedSyntax,
-        loc: stmtPath.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: `JavaScript 'with' syntax is not supported`,
+          description: `'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives`,
+          category: ErrorCategory.UnsupportedSyntax,
+          loc: stmtPath.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       lowerValueToTemporary(builder, {
         kind: 'UnsupportedNode',
         loc: stmtPath.node.loc ?? GeneratedSource,
@@ -1443,13 +1469,15 @@ function lowerStatement(
        * and complex enough to support that we don't anticipate supporting anytime soon. Developers
        * are encouraged to lift classes out of component/hook declarations.
        */
-      builder.errors.push({
-        reason: 'Inline `class` declarations are not supported',
-        description: `Move class declarations outside of components/hooks`,
-        category: ErrorCategory.UnsupportedSyntax,
-        loc: stmtPath.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: 'Inline `class` declarations are not supported',
+          description: `Move class declarations outside of components/hooks`,
+          category: ErrorCategory.UnsupportedSyntax,
+          loc: stmtPath.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       lowerValueToTemporary(builder, {
         kind: 'UnsupportedNode',
         loc: stmtPath.node.loc ?? GeneratedSource,
@@ -1472,13 +1500,15 @@ function lowerStatement(
     case 'ImportDeclaration':
     case 'TSExportAssignment':
     case 'TSImportEqualsDeclaration': {
-      builder.errors.push({
-        reason:
-          'JavaScript `import` and `export` statements may only appear at the top level of a module',
-        category: ErrorCategory.Syntax,
-        loc: stmtPath.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason:
+            'JavaScript `import` and `export` statements may only appear at the top level of a module',
+          category: ErrorCategory.Syntax,
+          loc: stmtPath.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       lowerValueToTemporary(builder, {
         kind: 'UnsupportedNode',
         loc: stmtPath.node.loc ?? GeneratedSource,
@@ -1487,13 +1517,15 @@ function lowerStatement(
       return;
     }
     case 'TSNamespaceExportDeclaration': {
-      builder.errors.push({
-        reason:
-          'TypeScript `namespace` statements may only appear at the top level of a module',
-        category: ErrorCategory.Syntax,
-        loc: stmtPath.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason:
+            'TypeScript `namespace` statements may only appear at the top level of a module',
+          category: ErrorCategory.Syntax,
+          loc: stmtPath.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       lowerValueToTemporary(builder, {
         kind: 'UnsupportedNode',
         loc: stmtPath.node.loc ?? GeneratedSource,
@@ -1574,12 +1606,14 @@ function lowerObjectPropertyKey(
     };
   }
 
-  builder.errors.push({
-    reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
-    category: ErrorCategory.Todo,
-    loc: key.node.loc ?? null,
-    suggestions: null,
-  });
+  builder.recordError(
+    new CompilerErrorDetail({
+      reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
+      category: ErrorCategory.Todo,
+      loc: key.node.loc ?? null,
+      suggestions: null,
+    }),
+  );
   return null;
 }
 
@@ -1631,12 +1665,14 @@ function lowerExpression(
           }
           const valuePath = propertyPath.get('value');
           if (!valuePath.isExpression()) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Handle ${valuePath.type} values in ObjectExpression`,
-              category: ErrorCategory.Todo,
-              loc: valuePath.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerExpression) Handle ${valuePath.type} values in ObjectExpression`,
+                category: ErrorCategory.Todo,
+                loc: valuePath.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
             continue;
           }
           const value = lowerExpressionToTemporary(builder, valuePath);
@@ -1657,12 +1693,14 @@ function lowerExpression(
           });
         } else if (propertyPath.isObjectMethod()) {
           if (propertyPath.node.kind !== 'method') {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.node.kind} functions in ObjectExpression`,
-              category: ErrorCategory.Todo,
-              loc: propertyPath.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.node.kind} functions in ObjectExpression`,
+                category: ErrorCategory.Todo,
+                loc: propertyPath.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
             continue;
           }
           const method = lowerObjectMethod(builder, propertyPath);
@@ -1678,12 +1716,14 @@ function lowerExpression(
             key: loweredKey,
           });
         } else {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.type} properties in ObjectExpression`,
-            category: ErrorCategory.Todo,
-            loc: propertyPath.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.type} properties in ObjectExpression`,
+              category: ErrorCategory.Todo,
+              loc: propertyPath.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
           continue;
         }
       }
@@ -1711,12 +1751,14 @@ function lowerExpression(
           );
           elements.push({kind: 'Spread', place});
         } else {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
-            category: ErrorCategory.Todo,
-            loc: element.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
+              category: ErrorCategory.Todo,
+              loc: element.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
           continue;
         }
       }
@@ -1730,13 +1772,15 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.NewExpression>;
       const calleePath = expr.get('callee');
       if (!calleePath.isExpression()) {
-        builder.errors.push({
-          reason: `Expected an expression as the \`new\` expression receiver (v8 intrinsics are not supported)`,
-          description: `Got a \`${calleePath.node.type}\``,
-          category: ErrorCategory.Syntax,
-          loc: calleePath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `Expected an expression as the \`new\` expression receiver (v8 intrinsics are not supported)`,
+            description: `Got a \`${calleePath.node.type}\``,
+            category: ErrorCategory.Syntax,
+            loc: calleePath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
       const callee = lowerExpressionToTemporary(builder, calleePath);
@@ -1757,12 +1801,14 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.CallExpression>;
       const calleePath = expr.get('callee');
       if (!calleePath.isExpression()) {
-        builder.errors.push({
-          reason: `Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported). This error is likely caused by a bug in React Compiler. Please file an issue`,
-          category: ErrorCategory.Todo,
-          loc: calleePath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported). This error is likely caused by a bug in React Compiler. Please file an issue`,
+            category: ErrorCategory.Todo,
+            loc: calleePath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
       if (calleePath.isMemberExpression()) {
@@ -1791,24 +1837,28 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.BinaryExpression>;
       const leftPath = expr.get('left');
       if (!leftPath.isExpression()) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Expected Expression, got ${leftPath.type} lval in BinaryExpression`,
-          category: ErrorCategory.Todo,
-          loc: leftPath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerExpression) Expected Expression, got ${leftPath.type} lval in BinaryExpression`,
+            category: ErrorCategory.Todo,
+            loc: leftPath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
       const left = lowerExpressionToTemporary(builder, leftPath);
       const right = lowerExpressionToTemporary(builder, expr.get('right'));
       const operator = expr.node.operator;
       if (operator === '|>') {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Pipe operator not supported`,
-          category: ErrorCategory.Todo,
-          loc: leftPath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerExpression) Pipe operator not supported`,
+            category: ErrorCategory.Todo,
+            loc: leftPath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
       return {
@@ -1832,12 +1882,14 @@ function lowerExpression(
           last = lowerExpressionToTemporary(builder, item);
         }
         if (last === null) {
-          builder.errors.push({
-            reason: `Expected sequence expression to have at least one expression`,
-            category: ErrorCategory.Syntax,
-            loc: expr.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `Expected sequence expression to have at least one expression`,
+              category: ErrorCategory.Syntax,
+              loc: expr.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
         } else {
           lowerValueToTemporary(builder, {
             kind: 'StoreLocal',
@@ -2043,13 +2095,15 @@ function lowerExpression(
            * OptionalMemberExpressions as the left side of an AssignmentExpression are Stage 1 and
            * not supported by React Compiler yet.
            */
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Unsupported syntax on the left side of an AssignmentExpression`,
-            description: `Expected an LVal, got: ${left.type}`,
-            category: ErrorCategory.Todo,
-            loc: left.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `(BuildHIR::lowerExpression) Unsupported syntax on the left side of an AssignmentExpression`,
+              description: `Expected an LVal, got: ${left.type}`,
+              category: ErrorCategory.Todo,
+              loc: left.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
           return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
         }
       }
@@ -2072,12 +2126,14 @@ function lowerExpression(
       };
       const binaryOperator = operators[operator];
       if (binaryOperator == null) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Handle ${operator} operators in AssignmentExpression`,
-          category: ErrorCategory.Todo,
-          loc: expr.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerExpression) Handle ${operator} operators in AssignmentExpression`,
+            category: ErrorCategory.Todo,
+            loc: expr.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
       const left = expr.get('left');
@@ -2171,12 +2227,14 @@ function lowerExpression(
           }
         }
         default: {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Expected Identifier or MemberExpression, got ${expr.type} lval in AssignmentExpression`,
-            category: ErrorCategory.Todo,
-            loc: expr.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `(BuildHIR::lowerExpression) Expected Identifier or MemberExpression, got ${expr.type} lval in AssignmentExpression`,
+              category: ErrorCategory.Todo,
+              loc: expr.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
           return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
         }
       }
@@ -2210,12 +2268,14 @@ function lowerExpression(
           continue;
         }
         if (!attribute.isJSXAttribute()) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Handle ${attribute.type} attributes in JSXElement`,
-            category: ErrorCategory.Todo,
-            loc: attribute.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `(BuildHIR::lowerExpression) Handle ${attribute.type} attributes in JSXElement`,
+              category: ErrorCategory.Todo,
+              loc: attribute.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
           continue;
         }
         const namePath = attribute.get('name');
@@ -2223,12 +2283,14 @@ function lowerExpression(
         if (namePath.isJSXIdentifier()) {
           propName = namePath.node.name;
           if (propName.indexOf(':') !== -1) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name \`${propName}\``,
-              category: ErrorCategory.Todo,
-              loc: namePath.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name \`${propName}\``,
+                category: ErrorCategory.Todo,
+                loc: namePath.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
           }
         } else {
           CompilerError.invariant(namePath.isJSXNamespacedName(), {
@@ -2251,22 +2313,26 @@ function lowerExpression(
           });
         } else {
           if (!valueExpr.isJSXExpressionContainer()) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Handle ${valueExpr.type} attribute values in JSXElement`,
-              category: ErrorCategory.Todo,
-              loc: valueExpr.node?.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerExpression) Handle ${valueExpr.type} attribute values in JSXElement`,
+                category: ErrorCategory.Todo,
+                loc: valueExpr.node?.loc ?? null,
+                suggestions: null,
+              }),
+            );
             continue;
           }
           const expression = valueExpr.get('expression');
           if (!expression.isExpression()) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Handle ${expression.type} expressions in JSXExpressionContainer within JSXElement`,
-              category: ErrorCategory.Todo,
-              loc: valueExpr.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerExpression) Handle ${expression.type} expressions in JSXExpressionContainer within JSXElement`,
+                category: ErrorCategory.Todo,
+                loc: valueExpr.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
             continue;
           }
           value = lowerExpressionToTemporary(builder, expression);
@@ -2317,7 +2383,7 @@ function lowerExpression(
         });
         for (const [name, locations] of Object.entries(fbtLocations)) {
           if (locations.length > 1) {
-            builder.errors.pushDiagnostic(
+            builder.recordError(
               new CompilerDiagnostic({
                 category: ErrorCategory.Todo,
                 reason: 'Support duplicate fbt tags',
@@ -2378,13 +2444,15 @@ function lowerExpression(
     case 'TaggedTemplateExpression': {
       const expr = exprPath as NodePath<t.TaggedTemplateExpression>;
       if (expr.get('quasi').get('expressions').length !== 0) {
-        builder.errors.push({
-          reason:
-            '(BuildHIR::lowerExpression) Handle tagged template with interpolations',
-          category: ErrorCategory.Todo,
-          loc: exprPath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason:
+              '(BuildHIR::lowerExpression) Handle tagged template with interpolations',
+            category: ErrorCategory.Todo,
+            loc: exprPath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
       CompilerError.invariant(expr.get('quasi').get('quasis').length == 1, {
@@ -2394,13 +2462,15 @@ function lowerExpression(
       });
       const value = expr.get('quasi').get('quasis').at(0)!.node.value;
       if (value.raw !== value.cooked) {
-        builder.errors.push({
-          reason:
-            '(BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value',
-          category: ErrorCategory.Todo,
-          loc: exprPath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason:
+              '(BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value',
+            category: ErrorCategory.Todo,
+            loc: exprPath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
 
@@ -2417,22 +2487,26 @@ function lowerExpression(
       const quasis = expr.get('quasis');
 
       if (subexprs.length !== quasis.length - 1) {
-        builder.errors.push({
-          reason: `Unexpected quasi and subexpression lengths in template literal`,
-          category: ErrorCategory.Syntax,
-          loc: exprPath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `Unexpected quasi and subexpression lengths in template literal`,
+            category: ErrorCategory.Syntax,
+            loc: exprPath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
 
       if (subexprs.some(e => !e.isExpression())) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerAssignment) Handle TSType in TemplateLiteral.`,
-          category: ErrorCategory.Todo,
-          loc: exprPath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerAssignment) Handle TSType in TemplateLiteral.`,
+            category: ErrorCategory.Todo,
+            loc: exprPath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
 
@@ -2469,8 +2543,26 @@ function lowerExpression(
             };
           }
         } else {
-          builder.errors.push({
-            reason: `Only object properties can be deleted`,
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `Only object properties can be deleted`,
+              category: ErrorCategory.Syntax,
+              loc: expr.node.loc ?? null,
+              suggestions: [
+                {
+                  description: 'Remove this line',
+                  range: [expr.node.start!, expr.node.end!],
+                  op: CompilerSuggestionOperation.Remove,
+                },
+              ],
+            }),
+          );
+          return {kind: 'UnsupportedNode', node: expr.node, loc: exprLoc};
+        }
+      } else if (expr.node.operator === 'throw') {
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `Throw expressions are not supported`,
             category: ErrorCategory.Syntax,
             loc: expr.node.loc ?? null,
             suggestions: [
@@ -2480,22 +2572,8 @@ function lowerExpression(
                 op: CompilerSuggestionOperation.Remove,
               },
             ],
-          });
-          return {kind: 'UnsupportedNode', node: expr.node, loc: exprLoc};
-        }
-      } else if (expr.node.operator === 'throw') {
-        builder.errors.push({
-          reason: `Throw expressions are not supported`,
-          category: ErrorCategory.Syntax,
-          loc: expr.node.loc ?? null,
-          suggestions: [
-            {
-              description: 'Remove this line',
-              range: [expr.node.start!, expr.node.end!],
-              op: CompilerSuggestionOperation.Remove,
-            },
-          ],
-        });
+          }),
+        );
         return {kind: 'UnsupportedNode', node: expr.node, loc: exprLoc};
       } else {
         return {
@@ -2605,20 +2683,24 @@ function lowerExpression(
         };
       }
       if (!argument.isIdentifier()) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
-          category: ErrorCategory.Todo,
-          loc: exprPath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
+            category: ErrorCategory.Todo,
+            loc: exprPath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       } else if (builder.isContextIdentifier(argument)) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.`,
-          category: ErrorCategory.Todo,
-          loc: exprPath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.`,
+            category: ErrorCategory.Todo,
+            loc: exprPath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
       const lvalue = lowerIdentifierForAssignment(
@@ -2632,22 +2714,26 @@ function lowerExpression(
          * lowerIdentifierForAssignment should have already reported an error if it returned null,
          * we check here just in case
          */
-        if (!builder.errors.hasAnyErrors()) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Found an invalid UpdateExpression without a previously reported error`,
-            category: ErrorCategory.Invariant,
-            loc: exprLoc,
-            suggestions: null,
-          });
+        if (!builder.environment.hasErrors()) {
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `(BuildHIR::lowerExpression) Found an invalid UpdateExpression without a previously reported error`,
+              category: ErrorCategory.Invariant,
+              loc: exprLoc,
+              suggestions: null,
+            }),
+          );
         }
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       } else if (lvalue.kind === 'Global') {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Support UpdateExpression where argument is a global`,
-          category: ErrorCategory.Todo,
-          loc: exprLoc,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `(BuildHIR::lowerExpression) Support UpdateExpression where argument is a global`,
+            category: ErrorCategory.Todo,
+            loc: exprLoc,
+            suggestions: null,
+          }),
+        );
         return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
       }
       const value = lowerIdentifier(builder, argument);
@@ -2697,21 +2783,25 @@ function lowerExpression(
         };
       }
 
-      builder.errors.push({
-        reason: `(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta`,
-        category: ErrorCategory.Todo,
-        loc: exprPath.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: `(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta`,
+          category: ErrorCategory.Todo,
+          loc: exprPath.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
     }
     default: {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
-        category: ErrorCategory.Todo,
-        loc: exprPath.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
+          category: ErrorCategory.Todo,
+          loc: exprPath.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       return {kind: 'UnsupportedNode', node: exprNode, loc: exprLoc};
     }
   }
@@ -3001,12 +3091,14 @@ function lowerReorderableExpression(
   expr: NodePath<t.Expression>,
 ): Place {
   if (!isReorderableExpression(builder, expr, true)) {
-    builder.errors.push({
-      reason: `(BuildHIR::node.lowerReorderableExpression) Expression type \`${expr.type}\` cannot be safely reordered`,
-      category: ErrorCategory.Todo,
-      loc: expr.node.loc ?? null,
-      suggestions: null,
-    });
+    builder.recordError(
+      new CompilerErrorDetail({
+        reason: `(BuildHIR::node.lowerReorderableExpression) Expression type \`${expr.type}\` cannot be safely reordered`,
+        category: ErrorCategory.Todo,
+        loc: expr.node.loc ?? null,
+        suggestions: null,
+      }),
+    );
   }
   return lowerExpressionToTemporary(builder, expr);
 }
@@ -3203,12 +3295,14 @@ function lowerArguments(
     } else if (argPath.isExpression()) {
       args.push(lowerExpressionToTemporary(builder, argPath));
     } else {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
-        category: ErrorCategory.Todo,
-        loc: argPath.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
+          category: ErrorCategory.Todo,
+          loc: argPath.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
     }
   }
   return args;
@@ -3238,12 +3332,14 @@ function lowerMemberExpression(
     } else if (propertyNode.isNumericLiteral()) {
       property = makePropertyLiteral(propertyNode.node.value);
     } else {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerMemberExpression) Handle ${propertyNode.type} property`,
-        category: ErrorCategory.Todo,
-        loc: propertyNode.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: `(BuildHIR::lowerMemberExpression) Handle ${propertyNode.type} property`,
+          category: ErrorCategory.Todo,
+          loc: propertyNode.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       return {
         object,
         property: propertyNode.toString(),
@@ -3259,12 +3355,14 @@ function lowerMemberExpression(
     return {object, property, value};
   } else {
     if (!propertyNode.isExpression()) {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${propertyNode.type} property`,
-        category: ErrorCategory.Todo,
-        loc: propertyNode.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${propertyNode.type} property`,
+          category: ErrorCategory.Todo,
+          loc: propertyNode.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       return {
         object,
         property: propertyNode.toString(),
@@ -3317,13 +3415,15 @@ function lowerJsxElementName(
     const name = exprPath.node.name.name;
     const tag = `${namespace}:${name}`;
     if (namespace.indexOf(':') !== -1 || name.indexOf(':') !== -1) {
-      builder.errors.push({
-        reason: `Expected JSXNamespacedName to have no colons in the namespace or name`,
-        description: `Got \`${namespace}\` : \`${name}\``,
-        category: ErrorCategory.Syntax,
-        loc: exprPath.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: `Expected JSXNamespacedName to have no colons in the namespace or name`,
+          description: `Got \`${namespace}\` : \`${name}\``,
+          category: ErrorCategory.Syntax,
+          loc: exprPath.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
     }
     const place = lowerValueToTemporary(builder, {
       kind: 'Primitive',
@@ -3332,12 +3432,14 @@ function lowerJsxElementName(
     });
     return place;
   } else {
-    builder.errors.push({
-      reason: `(BuildHIR::lowerJsxElementName) Handle ${exprPath.type} tags`,
-      category: ErrorCategory.Todo,
-      loc: exprPath.node.loc ?? null,
-      suggestions: null,
-    });
+    builder.recordError(
+      new CompilerErrorDetail({
+        reason: `(BuildHIR::lowerJsxElementName) Handle ${exprPath.type} tags`,
+        category: ErrorCategory.Todo,
+        loc: exprPath.node.loc ?? null,
+        suggestions: null,
+      }),
+    );
     return lowerValueToTemporary(builder, {
       kind: 'UnsupportedNode',
       node: exprNode,
@@ -3426,12 +3528,14 @@ function lowerJsxElement(
     });
     return place;
   } else {
-    builder.errors.push({
-      reason: `(BuildHIR::lowerJsxElement) Unhandled JsxElement, got: ${exprPath.type}`,
-      category: ErrorCategory.Todo,
-      loc: exprPath.node.loc ?? null,
-      suggestions: null,
-    });
+    builder.recordError(
+      new CompilerErrorDetail({
+        reason: `(BuildHIR::lowerJsxElement) Unhandled JsxElement, got: ${exprPath.type}`,
+        category: ErrorCategory.Todo,
+        loc: exprPath.node.loc ?? null,
+        suggestions: null,
+      }),
+    );
     const place = lowerValueToTemporary(builder, {
       kind: 'UnsupportedNode',
       node: exprNode,
@@ -3598,14 +3702,16 @@ function lowerIdentifier(
     }
     default: {
       if (binding.kind === 'Global' && binding.name === 'eval') {
-        builder.errors.push({
-          reason: `The 'eval' function is not supported`,
-          description:
-            'Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler',
-          category: ErrorCategory.UnsupportedSyntax,
-          loc: exprPath.node.loc ?? null,
-          suggestions: null,
-        });
+        builder.recordError(
+          new CompilerErrorDetail({
+            reason: `The 'eval' function is not supported`,
+            description:
+              'Eval is an anti-pattern in JavaScript, and the code executed cannot be evaluated by React Compiler',
+            category: ErrorCategory.UnsupportedSyntax,
+            loc: exprPath.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
       }
       return lowerValueToTemporary(builder, {
         kind: 'LoadGlobal',
@@ -3656,27 +3762,31 @@ function lowerIdentifierForAssignment(
       return {kind: 'Global', name: path.node.name};
     } else {
       // Else its an internal error bc we couldn't find the binding
-      builder.errors.push({
-        reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
-        category: ErrorCategory.Invariant,
-        loc: path.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
+          category: ErrorCategory.Invariant,
+          loc: path.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       return null;
     }
   } else if (
     binding.bindingKind === 'const' &&
     kind === InstructionKind.Reassign
   ) {
-    builder.errors.push({
-      reason: `Cannot reassign a \`const\` variable`,
-      category: ErrorCategory.Syntax,
-      loc: path.node.loc ?? null,
-      description:
-        binding.identifier.name != null
-          ? `\`${binding.identifier.name.value}\` is declared as const`
-          : null,
-    });
+    builder.recordError(
+      new CompilerErrorDetail({
+        reason: `Cannot reassign a \`const\` variable`,
+        category: ErrorCategory.Syntax,
+        loc: path.node.loc ?? null,
+        description:
+          binding.identifier.name != null
+            ? `\`${binding.identifier.name.value}\` is declared as const`
+            : null,
+      }),
+    );
     return null;
   }
 
@@ -3725,12 +3835,14 @@ function lowerAssignment(
       let temporary;
       if (builder.isContextIdentifier(lvalue)) {
         if (kind === InstructionKind.Const && !isHoistedIdentifier) {
-          builder.errors.push({
-            reason: `Expected \`const\` declaration not to be reassigned`,
-            category: ErrorCategory.Syntax,
-            loc: lvalue.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `Expected \`const\` declaration not to be reassigned`,
+              category: ErrorCategory.Syntax,
+              loc: lvalue.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
         }
 
         if (
@@ -3739,12 +3851,14 @@ function lowerAssignment(
           kind !== InstructionKind.Let &&
           kind !== InstructionKind.Function
         ) {
-          builder.errors.push({
-            reason: `Unexpected context variable kind`,
-            category: ErrorCategory.Syntax,
-            loc: lvalue.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `Unexpected context variable kind`,
+              category: ErrorCategory.Syntax,
+              loc: lvalue.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
           temporary = lowerValueToTemporary(builder, {
             kind: 'UnsupportedNode',
             node: lvalueNode,
@@ -3808,24 +3922,28 @@ function lowerAssignment(
             loc,
           });
         } else {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
-            category: ErrorCategory.Todo,
-            loc: property.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
+              category: ErrorCategory.Todo,
+              loc: property.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
           return {kind: 'UnsupportedNode', node: lvalueNode, loc};
         }
         return {kind: 'LoadLocal', place: temporary, loc: temporary.loc};
       } else {
         if (!property.isExpression()) {
-          builder.errors.push({
-            reason:
-              '(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property',
-            category: ErrorCategory.Todo,
-            loc: property.node.loc ?? null,
-            suggestions: null,
-          });
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason:
+                '(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property',
+              category: ErrorCategory.Todo,
+              loc: property.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
           return {kind: 'UnsupportedNode', node: lvalueNode, loc};
         }
         const propertyPlace = lowerExpressionToTemporary(builder, property);
@@ -3886,12 +4004,14 @@ function lowerAssignment(
             if (identifier === null) {
               continue;
             } else if (identifier.kind === 'Global') {
-              builder.errors.push({
-                category: ErrorCategory.Todo,
-                reason:
-                  'Expected reassignment of globals to enable forceTemporaries',
-                loc: element.node.loc ?? GeneratedSource,
-              });
+              builder.recordError(
+                new CompilerErrorDetail({
+                  category: ErrorCategory.Todo,
+                  reason:
+                    'Expected reassignment of globals to enable forceTemporaries',
+                  loc: element.node.loc ?? GeneratedSource,
+                }),
+              );
               continue;
             }
             items.push({
@@ -3925,12 +4045,14 @@ function lowerAssignment(
           if (identifier === null) {
             continue;
           } else if (identifier.kind === 'Global') {
-            builder.errors.push({
-              category: ErrorCategory.Todo,
-              reason:
-                'Expected reassignment of globals to enable forceTemporaries',
-              loc: element.node.loc ?? GeneratedSource,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                category: ErrorCategory.Todo,
+                reason:
+                  'Expected reassignment of globals to enable forceTemporaries',
+                loc: element.node.loc ?? GeneratedSource,
+              }),
+            );
             continue;
           }
           items.push(identifier);
@@ -3998,12 +4120,14 @@ function lowerAssignment(
         if (property.isRestElement()) {
           const argument = property.get('argument');
           if (!argument.isIdentifier()) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ObjectPattern`,
-              category: ErrorCategory.Todo,
-              loc: argument.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ObjectPattern`,
+                category: ErrorCategory.Todo,
+                loc: argument.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
             continue;
           }
           if (
@@ -4030,12 +4154,14 @@ function lowerAssignment(
             if (identifier === null) {
               continue;
             } else if (identifier.kind === 'Global') {
-              builder.errors.push({
-                category: ErrorCategory.Todo,
-                reason:
-                  'Expected reassignment of globals to enable forceTemporaries',
-                loc: property.node.loc ?? GeneratedSource,
-              });
+              builder.recordError(
+                new CompilerErrorDetail({
+                  category: ErrorCategory.Todo,
+                  reason:
+                    'Expected reassignment of globals to enable forceTemporaries',
+                  loc: property.node.loc ?? GeneratedSource,
+                }),
+              );
               continue;
             }
             properties.push({
@@ -4046,21 +4172,25 @@ function lowerAssignment(
         } else {
           // TODO: this should always be true given the if/else
           if (!property.isObjectProperty()) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
-              category: ErrorCategory.Todo,
-              loc: property.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
+                category: ErrorCategory.Todo,
+                loc: property.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
             continue;
           }
           if (property.node.computed) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern`,
-              category: ErrorCategory.Todo,
-              loc: property.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern`,
+                category: ErrorCategory.Todo,
+                loc: property.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
             continue;
           }
           const loweredKey = lowerObjectPropertyKey(builder, property);
@@ -4069,12 +4199,14 @@ function lowerAssignment(
           }
           const element = property.get('value');
           if (!element.isLVal()) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
-              category: ErrorCategory.Todo,
-              loc: element.node.loc ?? null,
-              suggestions: null,
-            });
+            builder.recordError(
+              new CompilerErrorDetail({
+                reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
+                category: ErrorCategory.Todo,
+                loc: element.node.loc ?? null,
+                suggestions: null,
+              }),
+            );
             continue;
           }
           if (
@@ -4092,12 +4224,14 @@ function lowerAssignment(
             if (identifier === null) {
               continue;
             } else if (identifier.kind === 'Global') {
-              builder.errors.push({
-                category: ErrorCategory.Todo,
-                reason:
-                  'Expected reassignment of globals to enable forceTemporaries',
-                loc: element.node.loc ?? GeneratedSource,
-              });
+              builder.recordError(
+                new CompilerErrorDetail({
+                  category: ErrorCategory.Todo,
+                  reason:
+                    'Expected reassignment of globals to enable forceTemporaries',
+                  loc: element.node.loc ?? GeneratedSource,
+                }),
+              );
               continue;
             }
             properties.push({
@@ -4241,12 +4375,14 @@ function lowerAssignment(
       );
     }
     default: {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,
-        category: ErrorCategory.Todo,
-        loc: lvaluePath.node.loc ?? null,
-        suggestions: null,
-      });
+      builder.recordError(
+        new CompilerErrorDetail({
+          reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,
+          category: ErrorCategory.Todo,
+          loc: lvaluePath.node.loc ?? null,
+          suggestions: null,
+        }),
+      );
       return {kind: 'UnsupportedNode', node: lvalueNode, loc};
     }
   }

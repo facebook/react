@@ -48,8 +48,8 @@ export function validateNoSetStateInRender(fn: HIRFunction): void {
     fn,
     unconditionalSetStateFunctions,
   );
-  if (errors.hasAnyErrors()) {
-    fn.env.recordErrors(errors);
+  for (const detail of errors.details) {
+    fn.env.recordError(detail);
   }
 }
 

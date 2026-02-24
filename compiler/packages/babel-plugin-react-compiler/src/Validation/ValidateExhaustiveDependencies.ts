@@ -102,7 +102,6 @@ export function validateExhaustiveDependencies(fn: HIRFunction): void {
       loc: place.loc,
     });
   }
-  const error = new CompilerError();
   let startMemo: StartMemoize | null = null;
 
   function onStartMemoize(
@@ -143,7 +142,7 @@ export function validateExhaustiveDependencies(fn: HIRFunction): void {
         'all',
       );
       if (diagnostic != null) {
-        error.pushDiagnostic(diagnostic);
+        fn.env.recordError(diagnostic);
       }
     }
 
@@ -208,15 +207,12 @@ export function validateExhaustiveDependencies(fn: HIRFunction): void {
           effectReportMode,
         );
         if (diagnostic != null) {
-          error.pushDiagnostic(diagnostic);
+          fn.env.recordError(diagnostic);
         }
       },
     },
     false, // isFunctionExpression
   );
-  if (error.hasAnyErrors()) {
-    fn.env.recordErrors(error);
-  }
 }
 
 function validateDependencies(
