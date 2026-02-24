@@ -45527,7 +45527,7 @@ function compareDeps(inferred, source) {
         }
     }
 }
-function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsInMemoBlock, errorState, memoLocation) {
+function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsInMemoBlock, env, memoLocation) {
     var _a;
     let normalizedDep;
     const maybeNormalizedRoot = temporaries.get(dep.identifier.id);
@@ -45575,7 +45575,7 @@ function validateInferredDep(dep, temporaries, declsWithinMemoBlock, validDepsIn
             errorDiagnostic = merge$1(errorDiagnostic !== null && errorDiagnostic !== void 0 ? errorDiagnostic : compareResult, compareResult);
         }
     }
-    errorState.recordError(CompilerDiagnostic.create({
+    env.recordError(CompilerDiagnostic.create({
         category: ErrorCategory.PreserveManualMemo,
         reason: 'Existing memoization could not be preserved',
         description: [
