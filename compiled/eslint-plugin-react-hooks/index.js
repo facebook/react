@@ -22775,9 +22775,7 @@ function lower(func, env, bindings = null, capturedRefs = new Map()) {
     catch (err) {
         if (err instanceof CompilerError) {
             for (const detail of err.details) {
-                if ((detail instanceof CompilerDiagnostic
-                    ? detail.category
-                    : detail.category) === ErrorCategory.Invariant) {
+                if (detail.category === ErrorCategory.Invariant) {
                     throw err;
                 }
             }
@@ -45506,9 +45504,7 @@ function validatePreservedManualMemoization(fn) {
         manualMemoState: null,
     };
     visitReactiveFunction(fn, new Visitor(), state);
-    for (const detail of state.errors.details) {
-        fn.env.recordError(detail);
-    }
+    fn.env.recordErrors(state.errors);
 }
 function prettyPrintScopeDependency(val) {
     var _a;
@@ -46021,9 +46017,7 @@ function validateSourceLocations(func, generatedAst, env) {
             }
         }
     }
-    for (const detail of errors.details) {
-        env.recordError(detail);
-    }
+    env.recordErrors(errors);
 }
 
 function validateUseMemo(fn) {
@@ -48374,9 +48368,7 @@ function validateNoDerivedComputationsInEffects(fn) {
             }
         }
     }
-    for (const detail of errors.details) {
-        fn.env.recordError(detail);
-    }
+    fn.env.recordErrors(errors);
 }
 function validateEffect$1(effectFunction, effectDeps, errors) {
     for (const operand of effectFunction.context) {
@@ -50114,8 +50106,12 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'HIR', value: hir });
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
-    validateContextVariableLValues(hir);
-    validateUseMemo(hir);
+    env.tryRecord(() => {
+        validateContextVariableLValues(hir);
+    });
+    env.tryRecord(() => {
+        validateUseMemo(hir);
+    });
     if (env.enableDropManualMemoization) {
         dropManualMemoization(hir);
         log({ kind: 'hir', name: 'DropManualMemoization', value: hir });
@@ -50141,17 +50137,23 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'InferTypes', value: hir });
     if (env.enableValidations) {
         if (env.config.validateHooksUsage) {
-            validateHooksUsage(hir);
+            env.tryRecord(() => {
+                validateHooksUsage(hir);
+            });
         }
         if (env.config.validateNoCapitalizedCalls) {
-            validateNoCapitalizedCalls(hir);
+            env.tryRecord(() => {
+                validateNoCapitalizedCalls(hir);
+            });
         }
     }
     optimizePropsMethodCalls(hir);
     log({ kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir });
     analyseFunctions(hir);
     log({ kind: 'hir', name: 'AnalyseFunctions', value: hir });
-    inferMutationAliasingEffects(hir);
+    env.tryRecord(() => {
+        inferMutationAliasingEffects(hir);
+    });
     log({ kind: 'hir', name: 'InferMutationAliasingEffects', value: hir });
     if (env.outputMode === 'ssr') {
         optimizeForSSR(hir);
@@ -50161,29 +50163,37 @@ function runWithEnvironment(func, env) {
     log({ kind: 'hir', name: 'DeadCodeElimination', value: hir });
     pruneMaybeThrows(hir);
     log({ kind: 'hir', name: 'PruneMaybeThrows', value: hir });
-    inferMutationAliasingRanges(hir, {
-        isFunctionExpression: false,
+    env.tryRecord(() => {
+        inferMutationAliasingRanges(hir, {
+            isFunctionExpression: false,
+        });
     });
     log({ kind: 'hir', name: 'InferMutationAliasingRanges', value: hir });
     if (env.enableValidations) {
-        validateLocalsNotReassignedAfterRender(hir);
-    }
-    if (env.enableValidations) {
+        env.tryRecord(() => {
+            validateLocalsNotReassignedAfterRender(hir);
+        });
         if (env.config.assertValidMutableRanges) {
             assertValidMutableRanges(hir);
         }
         if (env.config.validateRefAccessDuringRender) {
-            validateNoRefAccessInRender(hir);
+            env.tryRecord(() => {
+                validateNoRefAccessInRender(hir);
+            });
         }
         if (env.config.validateNoSetStateInRender) {
-            validateNoSetStateInRender(hir);
+            env.tryRecord(() => {
+                validateNoSetStateInRender(hir);
+            });
         }
         if (env.config.validateNoDerivedComputationsInEffects_exp &&
             env.outputMode === 'lint') {
             env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
         }
         else if (env.config.validateNoDerivedComputationsInEffects) {
-            validateNoDerivedComputationsInEffects(hir);
+            env.tryRecord(() => {
+                validateNoDerivedComputationsInEffects(hir);
+            });
         }
         if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
             env.logErrors(validateNoSetStateInEffects(hir, env));
@@ -50200,7 +50210,9 @@ function runWithEnvironment(func, env) {
     if (env.enableValidations) {
         if (env.config.validateExhaustiveMemoizationDependencies ||
             env.config.validateExhaustiveEffectDependencies) {
-            validateExhaustiveDependencies(hir);
+            env.tryRecord(() => {
+                validateExhaustiveDependencies(hir);
+            });
         }
     }
     rewriteInstructionKindsBasedOnReassignment(hir);
@@ -50388,7 +50400,9 @@ function runWithEnvironment(func, env) {
     });
     if (env.config.enablePreserveExistingMemoizationGuarantees ||
         env.config.validatePreserveExistingMemoizationGuarantees) {
-        validatePreservedManualMemoization(reactiveFunction);
+        env.tryRecord(() => {
+            validatePreservedManualMemoization(reactiveFunction);
+        });
     }
     const ast = codegenFunction(reactiveFunction, {
         uniqueIdentifiers,
@@ -50399,7 +50413,9 @@ function runWithEnvironment(func, env) {
         log({ kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn });
     }
     if (env.config.validateSourceLocations) {
-        validateSourceLocations(func, ast, env);
+        env.tryRecord(() => {
+            validateSourceLocations(func, ast, env);
+        });
     }
     if (env.config.throwUnknownException__testonly) {
         throw new Error('unexpected error');
