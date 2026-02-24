@@ -8,7 +8,12 @@
 import * as t from '@babel/types';
 import {ZodError, z} from 'zod/v4';
 import {fromZodError} from 'zod-validation-error/v4';
-import {CompilerError} from '../CompilerError';
+import {
+  CompilerDiagnostic,
+  CompilerError,
+  CompilerErrorDetail,
+  ErrorCategory,
+} from '../CompilerError';
 import {CompilerOutputMode, Logger, ProgramContext} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
@@ -545,6 +550,12 @@ export class Environment {
 
   #flowTypeEnvironment: FlowTypeEnv | null;
 
+  /**
+   * Accumulated compilation errors. Passes record errors here instead of
+   * throwing, so the pipeline can continue and report all errors at once.
+   */
+  #errors: CompilerError = new CompilerError();
+
   constructor(
     scope: BabelScope,
     fnType: ReactFunctionType,
@@ -700,6 +711,52 @@ export class Environment {
         fnLoc: null,
       });
     }
+  }
+
+  /**
+   * Record a single diagnostic or error detail on this environment.
+   * If the error is an Invariant, it is immediately thrown since invariants
+   * represent internal bugs that cannot be recovered from.
+   * Otherwise, the error is accumulated and optionally logged.
+   */
+  recordError(error: CompilerDiagnostic | CompilerErrorDetail): void {
+    if (error.category === ErrorCategory.Invariant) {
+      const compilerError = new CompilerError();
+      if (error instanceof CompilerDiagnostic) {
+        compilerError.pushDiagnostic(error);
+      } else {
+        compilerError.pushErrorDetail(error);
+      }
+      throw compilerError;
+    }
+    if (error instanceof CompilerDiagnostic) {
+      this.#errors.pushDiagnostic(error);
+    } else {
+      this.#errors.pushErrorDetail(error);
+    }
+  }
+
+  /**
+   * Record all diagnostics from a CompilerError onto this environment.
+   */
+  recordErrors(error: CompilerError): void {
+    for (const detail of error.details) {
+      this.recordError(detail);
+    }
+  }
+
+  /**
+   * Returns true if any errors have been recorded during compilation.
+   */
+  hasErrors(): boolean {
+    return this.#errors.hasAnyErrors();
+  }
+
+  /**
+   * Returns the accumulated CompilerError containing all recorded diagnostics.
+   */
+  aggregateErrors(): CompilerError {
+    return this.#errors;
   }
 
   isContextIdentifier(node: t.Identifier): boolean {

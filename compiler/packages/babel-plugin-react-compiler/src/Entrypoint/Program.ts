@@ -697,20 +697,36 @@ function tryCompileFunction(
   }
 
   try {
-    return {
-      kind: 'compile',
-      compiledFn: compileFn(
-        fn,
-        programContext.opts.environment,
-        fnType,
-        outputMode,
-        programContext,
-        programContext.opts.logger,
-        programContext.filename,
-        programContext.code,
-      ),
-    };
+    const result = compileFn(
+      fn,
+      programContext.opts.environment,
+      fnType,
+      outputMode,
+      programContext,
+      programContext.opts.logger,
+      programContext.filename,
+      programContext.code,
+    );
+    if (result.isOk()) {
+      return {kind: 'compile', compiledFn: result.unwrap()};
+    } else {
+      return {kind: 'error', error: result.unwrapErr()};
+    }
   } catch (err) {
+    /**
+     * A pass incorrectly threw instead of recording the error.
+     * Log for detection in development.
+     */
+    if (
+      err instanceof CompilerError &&
+      err.details.every(detail => detail.category !== ErrorCategory.Invariant)
+    ) {
+      programContext.logEvent({
+        kind: 'CompileUnexpectedThrow',
+        fnLoc: fn.node.loc ?? null,
+        data: err.toString(),
+      });
+    }
     return {kind: 'error', error: err};
   }
 }
