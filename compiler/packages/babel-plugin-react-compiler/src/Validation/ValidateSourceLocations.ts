@@ -310,7 +310,5 @@ export function validateSourceLocations(
     }
   }
 
-  for (const detail of errors.details) {
-    env.recordError(detail);
-  }
+  env.recordErrors(errors);
 }

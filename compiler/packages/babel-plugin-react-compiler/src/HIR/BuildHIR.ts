@@ -217,11 +217,7 @@ export function lower(
     if (err instanceof CompilerError) {
       // Re-throw invariant errors immediately
       for (const detail of err.details) {
-        if (
-          (detail instanceof CompilerDiagnostic
-            ? detail.category
-            : detail.category) === ErrorCategory.Invariant
-        ) {
+        if (detail.category === ErrorCategory.Invariant) {
           throw err;
         }
       }
