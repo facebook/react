@@ -35,6 +35,20 @@ yarn snap -p <file-basename> -d
 yarn snap -u
 ```
 
+## Linting
+
+```bash
+# Run lint on the compiler source
+yarn workspace babel-plugin-react-compiler lint
+```
+
+## Formatting
+
+```bash
+# Run prettier on all files (from the react root directory, not compiler/)
+yarn prettier-all
+```
+
 ## Compiling Arbitrary Files
 
 Use `yarn snap compile` to compile any file (not just fixtures) with the React Compiler:
