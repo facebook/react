@@ -1715,10 +1715,7 @@ __DEV__ &&
               }
           }
           checkAttributeStringCoercion(value, name);
-          node.setAttribute(
-            name,
-            enableTrustedTypesIntegration ? value : "" + value
-          );
+          node.setAttribute(name, value);
         }
     }
     function setValueForKnownAttribute(node, name, value) {
@@ -1733,10 +1730,7 @@ __DEV__ &&
             return;
         }
         checkAttributeStringCoercion(value, name);
-        node.setAttribute(
-          name,
-          enableTrustedTypesIntegration ? value : "" + value
-        );
+        node.setAttribute(name, value);
       }
     }
     function setValueForNamespacedAttribute(node, namespace, name, value) {
@@ -1751,11 +1745,7 @@ __DEV__ &&
             return;
         }
         checkAttributeStringCoercion(value, name);
-        node.setAttributeNS(
-          namespace,
-          name,
-          enableTrustedTypesIntegration ? value : "" + value
-        );
+        node.setAttributeNS(namespace, name, value);
       }
     }
     function getToStringValue(value) {
@@ -13230,8 +13220,7 @@ __DEV__ &&
                       break;
                     case "script":
                       nextResource = nextResource.createElement("div");
-                      enableTrustedTypesIntegration &&
-                        !didWarnScriptTags &&
+                      didWarnScriptTags ||
                         (console.error(
                           "Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)."
                         ),
@@ -22715,9 +22704,7 @@ __DEV__ &&
         return null;
       if ("function" === typeof actionProp) return actionProp;
       checkAttributeStringCoercion(actionProp, "action");
-      return sanitizeURL(
-        enableTrustedTypesIntegration ? actionProp : "" + actionProp
-      );
+      return sanitizeURL(actionProp);
     }
     function extractEvents$2(
       dispatchQueue,
@@ -23890,9 +23877,7 @@ __DEV__ &&
             break;
           }
           checkAttributeStringCoercion(value, key);
-          value = sanitizeURL(
-            enableTrustedTypesIntegration ? value : "" + value
-          );
+          value = sanitizeURL(value);
           domElement.setAttribute(key, value);
           break;
         case "action":
@@ -24025,9 +24010,7 @@ __DEV__ &&
             break;
           }
           checkAttributeStringCoercion(value, key);
-          value = sanitizeURL(
-            enableTrustedTypesIntegration ? value : "" + value
-          );
+          value = sanitizeURL(value);
           domElement.setAttribute(key, value);
           break;
         case "onClick":
@@ -24094,7 +24077,7 @@ __DEV__ &&
             break;
           }
           checkAttributeStringCoercion(value, key);
-          key = sanitizeURL(enableTrustedTypesIntegration ? value : "" + value);
+          key = sanitizeURL(value);
           domElement.setAttributeNS(xlinkNamespace, "xlink:href", key);
           break;
         case "contentEditable":
@@ -24109,10 +24092,7 @@ __DEV__ &&
           "function" !== typeof value &&
           "symbol" !== typeof value
             ? (checkAttributeStringCoercion(value, key),
-              domElement.setAttribute(
-                key,
-                enableTrustedTypesIntegration ? value : "" + value
-              ))
+              domElement.setAttribute(key, value))
             : domElement.removeAttribute(key);
           break;
         case "inert":
@@ -28912,8 +28892,6 @@ __DEV__ &&
       enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableTrustedTypesIntegration =
-        dynamicFeatureFlags.enableTrustedTypesIntegration,
       retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
       syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
       transitionLaneExpirationMs =
@@ -33062,11 +33040,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-classic-e33071c6-20260224" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-classic-074d96b9-20260225" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-classic-e33071c6-20260224\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-classic-074d96b9-20260225\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33109,10 +33087,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-classic-e33071c6-20260224",
+          version: "19.3.0-www-classic-074d96b9-20260225",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-classic-e33071c6-20260224"
+          reconcilerVersion: "19.3.0-www-classic-074d96b9-20260225"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33725,7 +33703,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-classic-e33071c6-20260224";
+    exports.version = "19.3.0-www-classic-074d96b9-20260225";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

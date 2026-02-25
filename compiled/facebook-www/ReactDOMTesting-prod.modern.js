@@ -46,8 +46,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
   enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
@@ -1206,10 +1204,7 @@ function setValueForAttribute(node, name, value) {
             return;
           }
       }
-      node.setAttribute(
-        name,
-        enableTrustedTypesIntegration ? value : "" + value
-      );
+      node.setAttribute(name, value);
     }
 }
 function setValueForKnownAttribute(node, name, value) {
@@ -1223,7 +1218,7 @@ function setValueForKnownAttribute(node, name, value) {
         node.removeAttribute(name);
         return;
     }
-    node.setAttribute(name, enableTrustedTypesIntegration ? value : "" + value);
+    node.setAttribute(name, value);
   }
 }
 function setValueForNamespacedAttribute(node, namespace, name, value) {
@@ -1237,11 +1232,7 @@ function setValueForNamespacedAttribute(node, namespace, name, value) {
         node.removeAttribute(name);
         return;
     }
-    node.setAttributeNS(
-      namespace,
-      name,
-      enableTrustedTypesIntegration ? value : "" + value
-    );
+    node.setAttributeNS(namespace, name, value);
   }
 }
 function getToStringValue(value) {
@@ -15324,9 +15315,7 @@ function coerceFormActionProp(actionProp) {
     ? null
     : "function" === typeof actionProp
       ? actionProp
-      : sanitizeURL(
-          enableTrustedTypesIntegration ? actionProp : "" + actionProp
-        );
+      : sanitizeURL(actionProp);
 }
 function extractEvents$2(
   dispatchQueue,
@@ -16390,7 +16379,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
         domElement.removeAttribute(key);
         break;
       }
-      value = sanitizeURL(enableTrustedTypesIntegration ? value : "" + value);
+      value = sanitizeURL(value);
       domElement.setAttribute(key, value);
       break;
     case "action":
@@ -16441,7 +16430,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
         domElement.removeAttribute(key);
         break;
       }
-      value = sanitizeURL(enableTrustedTypesIntegration ? value : "" + value);
+      value = sanitizeURL(value);
       domElement.setAttribute(key, value);
       break;
     case "onClick":
@@ -16494,7 +16483,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
         domElement.removeAttribute("xlink:href");
         break;
       }
-      key = sanitizeURL(enableTrustedTypesIntegration ? value : "" + value);
+      key = sanitizeURL(value);
       domElement.setAttributeNS(
         "http://www.w3.org/1999/xlink",
         "xlink:href",
@@ -16510,10 +16499,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
     case "focusable":
     case "preserveAlpha":
       null != value && "function" !== typeof value && "symbol" !== typeof value
-        ? domElement.setAttribute(
-            key,
-            enableTrustedTypesIntegration ? value : "" + value
-          )
+        ? domElement.setAttribute(key, value)
         : domElement.removeAttribute(key);
       break;
     case "inert":
@@ -20300,14 +20286,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2075 = React.version;
 if (
-  "19.3.0-www-modern-e33071c6-20260224" !==
+  "19.3.0-www-modern-074d96b9-20260225" !==
   isomorphicReactPackageVersion$jscomp$inline_2075
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2075,
-      "19.3.0-www-modern-e33071c6-20260224"
+      "19.3.0-www-modern-074d96b9-20260225"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20325,10 +20311,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2638 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-e33071c6-20260224",
+  version: "19.3.0-www-modern-074d96b9-20260225",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-e33071c6-20260224"
+  reconcilerVersion: "19.3.0-www-modern-074d96b9-20260225"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2639 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20908,4 +20894,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-e33071c6-20260224";
+exports.version = "19.3.0-www-modern-074d96b9-20260225";
