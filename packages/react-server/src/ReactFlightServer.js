@@ -526,6 +526,8 @@ type Task = {
   id: number,
   status: 0 | 1 | 3 | 4 | 5,
   model: ReactClientValue,
+  continuationSource: null | Array<ReactClientValue>,
+  continuationIndex: number,
   ping: () => void,
   keyPath: ReactKey, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
@@ -2711,10 +2713,11 @@ function createTask(
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
   debugTask: null | ConsoleTask, // DEV-only
+  registerModelReference: boolean = true,
 ): Task {
   request.pendingChunks++;
   const id = request.nextChunkId++;
-  if (typeof model === 'object' && model !== null) {
+  if (registerModelReference && typeof model === 'object' && model !== null) {
     // If we're about to write this into a new task we can assign it an ID early so that
     // any other references can refer to the value we're about to write.
     if (keyPath !== null || implicitSlot) {
@@ -2728,6 +2731,8 @@ function createTask(
     id,
     status: PENDING,
     model,
+    continuationSource: null,
+    continuationIndex: 0,
     keyPath,
     implicitSlot,
     formatContext: formatContext,
@@ -3413,13 +3418,14 @@ function renderModel(
 function createArrayContinuationTask(
   request: Request,
   task: Task,
-  model: Array<ReactClientValue>,
+  continuationSource: Array<ReactClientValue>,
+  continuationIndex: number,
 ): Task {
-  // Continuation tasks own a sliced tail, which keeps their bookkeeping and
-  // written-object references independent from the original array.
+  // Continuation tasks resume the same source array from a later index.
+  // This task resumes an existing array instead of outlining a new one.
   const newTask = createTask(
     request,
-    model,
+    continuationSource,
     task.keyPath,
     task.implicitSlot,
     task.formatContext,
@@ -3431,7 +3437,10 @@ function createArrayContinuationTask(
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
     __DEV__ ? task.debugTask : null,
+    false,
   );
+  newTask.continuationSource = continuationSource;
+  newTask.continuationIndex = continuationIndex;
   return newTask;
 }
 
@@ -3468,19 +3477,25 @@ function resolveModelArray(
   request: Request,
   task: Task,
   sourceArray: Array<ReactJSONValue>,
+  startIndex: number,
   mayBeChildrenArray: boolean,
 ): Array<ReactJSONValue> {
-  const resolvedArray = new Array<ReactJSONValue>(sourceArray.length);
-  let isChildrenArray = false;
-  let didCheckChildrenArray = !mayBeChildrenArray;
-  for (let i = 0; i < sourceArray.length; i++) {
-    resolvedArray[i] = resolveModelNode(
+  const totalLength = sourceArray.length - startIndex;
+  const resolvedArray = new Array<ReactJSONValue>(totalLength);
+  // Continuation tasks are only created for rendered children arrays.
+  let isChildrenArray = startIndex > 0;
+  let didCheckChildrenArray = startIndex > 0 || !mayBeChildrenArray;
+  for (let i = startIndex; i < sourceArray.length; i++) {
+    const targetIndex = i - startIndex;
+    const item = sourceArray[i];
+    const resolvedItem = resolveModelNode(
       request,
       task,
       sourceArray,
       '' + i,
-      sourceArray[i],
+      item,
     );
+    resolvedArray[targetIndex] = resolvedItem;
 
     if (serializedSize > MAX_ROW_SIZE && i + 1 < sourceArray.length) {
       // Most arrays never cross the split threshold, so defer the children-array
@@ -3493,20 +3508,64 @@ function resolveModelArray(
       if (!isChildrenArray) {
         continue;
       }
-      const remaining = sourceArray.slice(i + 1);
       const continuationTask = createArrayContinuationTask(
         request,
         task,
-        ((remaining: any): Array<ReactClientValue>),
+        ((sourceArray: any): Array<ReactClientValue>),
+        i + 1,
       );
       pingTask(request, continuationTask);
 
-      resolvedArray[i + 1] = serializeLazyID(continuationTask.id);
-      resolvedArray.length = i + 2;
+      resolvedArray.length = targetIndex + 2;
+      resolvedArray[targetIndex + 1] = serializeLazyID(continuationTask.id);
       break;
     }
   }
   return resolvedArray;
+}
+
+function getReferenceInParent(
+  request: Request,
+  task: Task,
+  parent:
+    | {+[key: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
+  parentPropertyName: string,
+): void | string {
+  let parentReference;
+  let propertyName = parentPropertyName;
+  if (
+    task.continuationSource !== null &&
+    parent === task.continuationSource &&
+    isArray(parent)
+  ) {
+    parentReference = serializeByValueID(task.id);
+    propertyName = '' + (+parentPropertyName - task.continuationIndex);
+  } else {
+    parentReference = request.writtenObjects.get(parent);
+    if (parentReference === undefined) {
+      return undefined;
+    }
+  }
+
+  if (isArray(parent) && parent[0] === REACT_ELEMENT_TYPE) {
+    switch (propertyName) {
+      case '1':
+        propertyName = 'type';
+        break;
+      case '2':
+        propertyName = 'key';
+        break;
+      case '3':
+        propertyName = 'props';
+        break;
+      case '4':
+        propertyName = '_owner';
+        break;
+    }
+  }
+
+  return parentReference + ':' + propertyName;
 }
 
 function resolveModelNode(
@@ -3585,6 +3644,7 @@ function resolveModelNode(
       request,
       task,
       ((rendered: any): Array<ReactJSONValue>),
+      0,
       parentPropertyName === '' || parentPropertyName === 'children',
     );
   }
@@ -3665,11 +3725,16 @@ function renderModelDestructive(
             }
           } else if (parentPropertyName.indexOf(':') === -1) {
             // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
-            const parentReference = writtenObjects.get(parent);
-            if (parentReference !== undefined) {
+            const reference = getReferenceInParent(
+              request,
+              task,
+              parent,
+              parentPropertyName,
+            );
+            if (reference !== undefined) {
               // If the parent has a reference, we can refer to this object indirectly
               // through the property name inside that parent.
-              elementReference = parentReference + ':' + parentPropertyName;
+              elementReference = reference;
               writtenObjects.set(value, elementReference);
             }
           }
@@ -3890,31 +3955,16 @@ function renderModelDestructive(
       }
     } else if (parentPropertyName.indexOf(':') === -1) {
       // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
-      const parentReference = writtenObjects.get(parent);
-      if (parentReference !== undefined) {
+      const reference = getReferenceInParent(
+        request,
+        task,
+        parent,
+        parentPropertyName,
+      );
+      if (reference !== undefined) {
         // If the parent has a reference, we can refer to this object indirectly
         // through the property name inside that parent.
-        let propertyName = parentPropertyName;
-        if (isArray(parent) && parent[0] === REACT_ELEMENT_TYPE) {
-          // For elements, we've converted it to an array but we'll have converted
-          // it back to an element before we read the references so the property
-          // needs to be aliased.
-          switch (parentPropertyName) {
-            case '1':
-              propertyName = 'type';
-              break;
-            case '2':
-              propertyName = 'key';
-              break;
-            case '3':
-              propertyName = 'props';
-              break;
-            case '4':
-              propertyName = '_owner';
-              break;
-          }
-        }
-        writtenObjects.set(value, parentReference + ':' + propertyName);
+        writtenObjects.set(value, reference);
       }
     }
 
@@ -5913,15 +5963,21 @@ function retryTask(request: Request, task: Task): void {
       canEmitDebugInfo = true;
     }
 
+    const isContinuationRow =
+      task.continuationSource !== null &&
+      task.model === task.continuationSource;
+
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
-    const resolvedModel = renderModelDestructive(
-      request,
-      task,
-      emptyRoot,
-      '',
-      task.model,
-    );
+    const resolvedModel = isContinuationRow
+      ? resolveModelArray(
+          request,
+          task,
+          ((task.continuationSource: any): Array<ReactJSONValue>),
+          task.continuationIndex,
+          true,
+        )
+      : renderModelDestructive(request, task, emptyRoot, '', task.model);
 
     if (__DEV__) {
       // We're now past rendering this task and future renders will spawn new tasks for their
@@ -5962,7 +6018,14 @@ function retryTask(request: Request, task: Task): void {
 
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
-      emitChunk(request, task, resolvedModel);
+      if (isContinuationRow && isArray(resolvedModel)) {
+        // This continuation row is already resolved.
+        // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+        const json: string = stringify(resolvedModel);
+        emitModelChunk(request, task.id, json);
+      } else {
+        emitChunk(request, task, resolvedModel);
+      }
     } else {
       // If the value is a string, it means it's a terminal value and we already escaped it
       // We don't need to escape it again.
