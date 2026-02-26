@@ -826,6 +826,7 @@ export type StartMemoize = {
    * emitting diagnostics with a suggested replacement
    */
   depsLoc: SourceLocation | null;
+  hasInvalidDeps?: true;
   loc: SourceLocation;
 };
 export type FinishMemoize = {
