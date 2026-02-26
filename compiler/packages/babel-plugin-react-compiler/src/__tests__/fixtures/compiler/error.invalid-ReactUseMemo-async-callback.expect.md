@@ -15,7 +15,7 @@ function component(a, b) {
 ## Error
 
 ```
-Found 3 errors:
+Found 2 errors:
 
 Error: useMemo() callbacks may not be async or generator functions
 
@@ -47,22 +47,6 @@ error.invalid-ReactUseMemo-async-callback.ts:3:10
   6 | }
 
 Inferred dependencies: `[a]`
-
-Compilation Skipped: Existing memoization could not be preserved
-
-React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `a`, but the source dependencies were []. Inferred dependency not present in source.
-
-error.invalid-ReactUseMemo-async-callback.ts:2:24
-  1 | function component(a, b) {
-> 2 |   let x = React.useMemo(async () => {
-    |                         ^^^^^^^^^^^^^
-> 3 |     await a;
-    | ^^^^^^^^^^^^
-> 4 |   }, []);
-    | ^^^^ Could not preserve existing manual memoization
-  5 |   return x;
-  6 | }
-  7 |
 ```
           
       
