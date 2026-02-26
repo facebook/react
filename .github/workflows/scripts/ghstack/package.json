@@ -1,0 +1,12 @@
+{
+  "name": "ghstack-perm-check",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "check-permissions": "node ./check_permissions.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@octokit/rest": "^21.1.1"
+  }
+}
