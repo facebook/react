@@ -1153,6 +1153,138 @@ describe('ReactFabric', () => {
     expect.assertions(6);
   });
 
+  it('propagates timeStamps from native events and sets defaults', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {
+        id: true,
+      },
+      uiViewClassName: 'RCTView',
+      directEventTypes: {
+        topTouchStart: {
+          registrationName: 'onTouchStart',
+        },
+        topTouchEnd: {
+          registrationName: 'onTouchEnd',
+        },
+      },
+    }));
+
+    function getViewById(id) {
+      const [reactTag, , , , instanceHandle] =
+        nativeFabricUIManager.createNode.mock.calls.find(
+          args => args[3] && args[3].id === id,
+        );
+
+      return {reactTag, instanceHandle};
+    }
+
+    const ref1 = React.createRef();
+    const ref2 = React.createRef();
+    const ref3 = React.createRef();
+
+    const explicitTimeStampCamelCase = 'explicit-timestamp-camelcase';
+    const explicitTimeStampLowerCase = 'explicit-timestamp-lowercase';
+    const performanceNowValue = 'performance-now-timestamp';
+
+    jest.spyOn(performance, 'now').mockReturnValue(performanceNowValue);
+
+    await act(() => {
+      ReactFabric.render(
+        <>
+          <View
+            ref={ref1}
+            id="default"
+            onTouchEnd={event => {
+              expect(event.timeStamp).toBe(performanceNowValue);
+            }}
+          />
+          <View
+            ref={ref2}
+            id="explicitTimeStampCamelCase"
+            onTouchEnd={event => {
+              expect(event.timeStamp).toBe(explicitTimeStampCamelCase);
+            }}
+          />
+          <View
+            ref={ref2}
+            id="explicitTimeStampLowerCase"
+            onTouchEnd={event => {
+              expect(event.timeStamp).toBe(explicitTimeStampLowerCase);
+            }}
+          />
+        </>,
+        1,
+        null,
+        true,
+      );
+    });
+
+    const [dispatchEvent] =
+      nativeFabricUIManager.registerEventHandler.mock.calls[0];
+
+    dispatchEvent(getViewById('default').instanceHandle, 'topTouchStart', {
+      target: getViewById('default').reactTag,
+      identifier: 17,
+      touches: [],
+      changedTouches: [],
+    });
+    dispatchEvent(getViewById('default').instanceHandle, 'topTouchEnd', {
+      target: getViewById('default').reactTag,
+      identifier: 17,
+      touches: [],
+      changedTouches: [],
+      // No timeStamp property
+    });
+
+    dispatchEvent(
+      getViewById('explicitTimeStampCamelCase').instanceHandle,
+      'topTouchStart',
+      {
+        target: getViewById('explicitTimeStampCamelCase').reactTag,
+        identifier: 17,
+        touches: [],
+        changedTouches: [],
+      },
+    );
+
+    dispatchEvent(
+      getViewById('explicitTimeStampCamelCase').instanceHandle,
+      'topTouchEnd',
+      {
+        target: getViewById('explicitTimeStampCamelCase').reactTag,
+        identifier: 17,
+        touches: [],
+        changedTouches: [],
+        timeStamp: explicitTimeStampCamelCase,
+      },
+    );
+
+    dispatchEvent(
+      getViewById('explicitTimeStampLowerCase').instanceHandle,
+      'topTouchStart',
+      {
+        target: getViewById('explicitTimeStampLowerCase').reactTag,
+        identifier: 17,
+        touches: [],
+        changedTouches: [],
+      },
+    );
+
+    dispatchEvent(
+      getViewById('explicitTimeStampLowerCase').instanceHandle,
+      'topTouchEnd',
+      {
+        target: getViewById('explicitTimeStampLowerCase').reactTag,
+        identifier: 17,
+        touches: [],
+        changedTouches: [],
+        timestamp: explicitTimeStampLowerCase,
+      },
+    );
+
+    expect.assertions(3);
+  });
+
   it('findHostInstance_DEPRECATED should warn if used to find a host component inside StrictMode', async () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
