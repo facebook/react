@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dd19b3040441305b1fe18664a0e4e0c5>>
+ * @generated SignedSource<<7cb615691eb4c597c6e16f3f782b5284>>
  */
 
 "use strict";
@@ -381,11 +381,14 @@ var hasError = !1,
   getNodeFromInstance$1 = null;
 function executeDispatch(event, listener, inst) {
   event.currentTarget = getNodeFromInstance$1(inst);
+  inst = global.event;
+  global.event = event;
   try {
     listener(event);
   } catch (error) {
     hasError || ((hasError = !0), (caughtError = error));
   }
+  global.event = inst;
   event.currentTarget = null;
 }
 function executeDirectDispatch(event) {
@@ -13378,10 +13381,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1638 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-a48e9e3f-20260226",
+    version: "19.3.0-native-fb-6b113b7b-20260226",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-a48e9e3f-20260226"
+    reconcilerVersion: "19.3.0-native-fb-6b113b7b-20260226"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1638.rendererConfig = extraDevToolsConfig);

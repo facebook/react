@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<737a686fa894db623353fd2fd06a75eb>>
+ * @generated SignedSource<<83aee8629582815a830f6e11ff0abd21>>
  */
 
 "use strict";
@@ -740,11 +740,14 @@ __DEV__ &&
     }
     function executeDispatch(event, listener, inst) {
       event.currentTarget = getNodeFromInstance$1(inst);
+      inst = global.event;
+      global.event = event;
       try {
         listener(event);
       } catch (error) {
         hasError || ((hasError = !0), (caughtError = error));
       }
+      global.event = inst;
       event.currentTarget = null;
     }
     function executeDirectDispatch(event) {
@@ -20182,10 +20185,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-a48e9e3f-20260226",
+        version: "19.3.0-native-fb-6b113b7b-20260226",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-a48e9e3f-20260226"
+        reconcilerVersion: "19.3.0-native-fb-6b113b7b-20260226"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
