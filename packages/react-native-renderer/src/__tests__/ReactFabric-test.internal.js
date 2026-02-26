@@ -1189,7 +1189,6 @@ describe('ReactFabric', () => {
 
     const ref1 = React.createRef();
     const ref2 = React.createRef();
-    const ref3 = React.createRef();
 
     const explicitTimeStampCamelCase = 'explicit-timestamp-camelcase';
     const explicitTimeStampLowerCase = 'explicit-timestamp-lowercase';
