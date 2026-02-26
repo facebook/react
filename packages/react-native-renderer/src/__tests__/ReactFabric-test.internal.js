@@ -1099,6 +1099,8 @@ describe('ReactFabric', () => {
               // Check for referential equality
               expect(ref1.current).toBe(event.target);
               expect(ref1.current).toBe(event.currentTarget);
+
+              expect(global.event).toBe(event);
             }}
             onStartShouldSetResponder={() => true}
           />
@@ -1110,6 +1112,8 @@ describe('ReactFabric', () => {
               // Check for referential equality
               expect(ref2.current).toBe(event.target);
               expect(ref2.current).toBe(event.currentTarget);
+
+              expect(global.event).toBe(event);
             }}
             onStartShouldSetResponder={() => true}
           />
@@ -1122,6 +1126,9 @@ describe('ReactFabric', () => {
 
     const [dispatchEvent] =
       nativeFabricUIManager.registerEventHandler.mock.calls[0];
+
+    const preexistingEvent = {};
+    global.event = preexistingEvent;
 
     dispatchEvent(getViewById('one').instanceHandle, 'topTouchStart', {
       target: getViewById('one').reactTag,
@@ -1150,7 +1157,9 @@ describe('ReactFabric', () => {
       changedTouches: [],
     });
 
-    expect.assertions(6);
+    expect(global.event).toBe(preexistingEvent);
+
+    expect.assertions(9);
   });
 
   it('findHostInstance_DEPRECATED should warn if used to find a host component inside StrictMode', async () => {
