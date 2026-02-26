@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<292cc98a82a3c8acc8701e9924919637>>
+ * @generated SignedSource<<dd19b3040441305b1fe18664a0e4e0c5>>
  */
 
 "use strict";
@@ -401,6 +401,19 @@ function executeDirectDispatch(event) {
   event._dispatchInstances = null;
   return dispatchListener;
 }
+function currentTimeStamp() {
+  currentTimeStamp =
+    "object" === typeof performance &&
+    null !== performance &&
+    "function" === typeof performance.now
+      ? function () {
+          return performance.now();
+        }
+      : function () {
+          return Date.now();
+        };
+  return currentTimeStamp();
+}
 function functionThatReturnsTrue() {
   return !0;
 }
@@ -477,7 +490,7 @@ SyntheticEvent.Interface = {
   bubbles: null,
   cancelable: null,
   timeStamp: function (event) {
-    return event.timeStamp || Date.now();
+    return event.timeStamp || event.timestamp || currentTimeStamp();
   },
   defaultPrevented: null,
   isTrusted: null
@@ -13365,10 +13378,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1638 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-074d96b9-20260225",
+    version: "19.3.0-native-fb-a48e9e3f-20260226",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-074d96b9-20260225"
+    reconcilerVersion: "19.3.0-native-fb-a48e9e3f-20260226"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1638.rendererConfig = extraDevToolsConfig);
