@@ -19,7 +19,6 @@ export const {
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
   enableEffectEventMutationPhase,
-  enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache,
   enableObjectFiber,

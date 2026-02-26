@@ -163,11 +163,6 @@ export const enableInternalInstanceMap: boolean = false;
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
 /**
- * Enables a fix to run insertion effect cleanup on hidden subtrees.
- */
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = true;
-
-/**
  * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
  */
 export const disableLegacyContext: boolean = true;
