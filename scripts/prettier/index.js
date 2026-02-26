@@ -66,6 +66,7 @@ const files = glob
 
 if (!files.length) {
   process.exit(0);
+  console.log("Hello");
 }
 
 async function main() {
