@@ -964,4 +964,52 @@ describe('StrictEffectsMode', () => {
       'Child dep create',
     ]);
   });
+
+  it('should not double invoke effects when a keyed child is moved in an array', async () => {
+    const log = [];
+
+    function Item({id}) {
+      React.useEffect(() => {
+        log.push(`${id} effect mount`);
+        return () => log.push(`${id} effect unmount`);
+      }, []);
+
+      React.useLayoutEffect(() => {
+        log.push(`${id} layout mount`);
+        return () => log.push(`${id} layout unmount`);
+      }, []);
+
+      return id;
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Initial render: [A, B, C]
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          {['A', 'B', 'C'].map(id => (
+            <Item key={id} id={id} />
+          ))}
+        </React.StrictMode>,
+      );
+    });
+
+    log.length = 0; // clear mount logs, only care about what happens on reorder
+
+    // Reorder to [C, A, B] — all elements move but none are new
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          {['C', 'A', 'B'].map(id => (
+            <Item key={id} id={id} />
+          ))}
+        </React.StrictMode>,
+      );
+    });
+
+    // Moved elements should not have their effects re-run.
+    // Only DOM placement happens; no mount/unmount of effects.
+    expect(log).toEqual([]);
+  });
 });

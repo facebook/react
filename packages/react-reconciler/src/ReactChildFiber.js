@@ -524,8 +524,11 @@ function createChildReconciler(
     if (current !== null) {
       const oldIndex = current.index;
       if (oldIndex < lastPlacedIndex) {
-        // This is a move.
-        newFiber.flags |= Placement | PlacementDEV;
+        // This is a move. The fiber already exists and is being repositioned in
+        // the DOM. We set Placement so the host node is moved, but we do NOT
+        // set PlacementDEV because the component is not newly mounting —
+        // StrictMode should not double-invoke effects for moved components.
+        newFiber.flags |= Placement;
         return lastPlacedIndex;
       } else {
         // This item can stay in place.
