@@ -95,7 +95,7 @@ Read the [React 19.2 release post](https://react.dev/blog/2025/10/01/react-19-2)
 An Owner Stack is a string representing the components that are directly responsible for rendering a particular component. You can log Owner Stacks when debugging or use Owner Stacks to enhance error overlays or other development tools. Owner Stacks are only available in development builds. Component Stacks in production are unchanged.
 
 * An Owner Stack is a development-only stack trace that helps identify which components are responsible for rendering a particular component. An Owner Stack is distinct from a Component Stacks, which shows the hierarchy of components leading to an error.
-* The [captureOwnerStack API](https://react.dev/reference/react/captureOwnerStack) is only available in development mode and returns a Owner Stack, if available. The API can be used to enhance error overlays or log component relationships when debugging. [#29923](https://github.com/facebook/react/pull/29923), [#32353](https://github.com/facebook/react/pull/32353), [#30306](https://github.com/facebook/react/pull/30306),
+* The [captureOwnerStack API](https://react.dev/reference/react/captureOwnerStack) is only available in development mode and returns an Owner Stack, if available. The API can be used to enhance error overlays or log component relationships when debugging. [#29923](https://github.com/facebook/react/pull/29923), [#32353](https://github.com/facebook/react/pull/32353), [#30306](https://github.com/facebook/react/pull/30306),
 [#32538](https://github.com/facebook/react/pull/32538), [#32529](https://github.com/facebook/react/pull/32529), [#32538](https://github.com/facebook/react/pull/32538)
 
 ### React
