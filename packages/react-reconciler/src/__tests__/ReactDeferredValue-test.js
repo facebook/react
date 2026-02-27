@@ -20,6 +20,7 @@ let Activity;
 let assertLog;
 let waitForPaint;
 let textCache;
+let assertConsoleErrorDev;
 
 describe('ReactDeferredValue', () => {
   beforeEach(() => {
@@ -39,6 +40,7 @@ describe('ReactDeferredValue', () => {
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
     waitForPaint = InternalTestUtils.waitForPaint;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     textCache = new Map();
   });
@@ -262,6 +264,15 @@ describe('ReactDeferredValue', () => {
     await act(() => {
       root.render(<App value={1} />);
     });
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in App (at **)',
+      ]);
+    }
     assertLog(['Original: 1', 'Deferred: 1']);
 
     // If it's an urgent update, the value is deferred
@@ -328,6 +339,15 @@ describe('ReactDeferredValue', () => {
     await act(async () => {
       root.render(<App value={1} />);
       await waitForPaint(['Original: 1', 'Deferred: 1']);
+      if (gate('disableSetStateInRenderOnMount')) {
+        assertConsoleErrorDev([
+          'A component called setState during the initial render. ' +
+            'This is deprecated, pass the initial value to useState instead. ' +
+            'To locate the bad setState() call, follow the stack trace ' +
+            'as described in https://react.dev/link/setstate-in-render\n' +
+            '    in App (at **)',
+        ]);
+      }
       expect(root).toMatchRenderedOutput(
         <div>
           <div>Original: 1</div>

@@ -82,6 +82,7 @@ export const enableFragmentRefsTextNodes: boolean = false;
 export const ownerStackLimit = 1e4;
 
 export const enableInternalInstanceMap: boolean = false;
+export const disableSetStateInRenderOnMount: boolean = false;
 
 export const enableOptimisticKey: boolean = false;
 export const enableParallelTransitions: boolean = false;

@@ -34,6 +34,7 @@ export const {
   enableFragmentRefsScrollIntoView,
   enableFragmentRefsTextNodes,
   enableInternalInstanceMap,
+  disableSetStateInRenderOnMount,
   enableParallelTransitions,
 } = dynamicFeatureFlags;
 

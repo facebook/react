@@ -763,6 +763,15 @@ describe('ReactHooks', () => {
     await act(() => {
       root.update(<Counter />);
     });
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in Counter (at **)',
+      ]);
+    }
     expect(root).toMatchRenderedOutput('4');
   });
 
@@ -787,6 +796,15 @@ describe('ReactHooks', () => {
     await act(() => {
       root.update(<Counter />);
     });
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in Counter (at **)',
+      ]);
+    }
     expect(root).toMatchRenderedOutput('4');
   });
 
@@ -810,6 +828,15 @@ describe('ReactHooks', () => {
     await act(() => {
       root.update(<Counter />);
     });
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in Counter (at **)',
+      ]);
+    }
     expect(root).toMatchRenderedOutput('4');
   });
 
@@ -1071,6 +1098,15 @@ describe('ReactHooks', () => {
       ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
     });
     assertConsoleErrorDev([
+      ...(gate('disableSetStateInRenderOnMount')
+        ? [
+            'A component called setState during the initial render. ' +
+              'This is deprecated, pass the initial value to useState instead. ' +
+              'To locate the bad setState() call, follow the stack trace ' +
+              'as described in https://react.dev/link/setstate-in-render\n' +
+              '    in App (at **)',
+          ]
+        : []),
       'Context can only be read while React is rendering. ' +
         'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
         'In function components, you can read it directly in the function body, ' +
@@ -1147,6 +1183,15 @@ describe('ReactHooks', () => {
       'Update hook called on initial render. This is likely a bug in React. Please file an issue.',
     );
     assertConsoleErrorDev([
+      ...(gate('disableSetStateInRenderOnMount')
+        ? [
+            'A component called setState during the initial render. ' +
+              'This is deprecated, pass the initial value to useState instead. ' +
+              'To locate the bad setState() call, follow the stack trace ' +
+              'as described in https://react.dev/link/setstate-in-render\n' +
+              '    in App (at **)',
+          ]
+        : []),
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
         'You can only call Hooks at the top level of your React function. ' +
         'For more information, see https://react.dev/link/rules-of-hooks\n' +
