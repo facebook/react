@@ -1704,6 +1704,7 @@ var aliases = new Map([
     ["markerEnd", "marker-end"],
     ["markerMid", "marker-mid"],
     ["markerStart", "marker-start"],
+    ["maskType", "mask-type"],
     ["overlinePosition", "overline-position"],
     ["overlineThickness", "overline-thickness"],
     ["paintOrder", "paint-order"],
@@ -22357,14 +22358,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2402 = React.version;
 if (
-  "19.3.0-www-classic-6b113b7b-20260226" !==
+  "19.3.0-www-classic-843d69f0-20260227" !==
   isomorphicReactPackageVersion$jscomp$inline_2402
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2402,
-      "19.3.0-www-classic-6b113b7b-20260226"
+      "19.3.0-www-classic-843d69f0-20260227"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22382,10 +22383,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2404 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-6b113b7b-20260226",
+  version: "19.3.0-www-classic-843d69f0-20260227",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-6b113b7b-20260226"
+  reconcilerVersion: "19.3.0-www-classic-843d69f0-20260227"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2404.getLaneLabelMap = getLaneLabelMap),
@@ -22818,7 +22819,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-6b113b7b-20260226";
+exports.version = "19.3.0-www-classic-843d69f0-20260227";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

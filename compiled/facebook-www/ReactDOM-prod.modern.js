@@ -1514,6 +1514,7 @@ var aliases = new Map([
     ["markerEnd", "marker-end"],
     ["markerMid", "marker-mid"],
     ["markerStart", "marker-start"],
+    ["maskType", "mask-type"],
     ["overlinePosition", "overline-position"],
     ["overlineThickness", "overline-thickness"],
     ["paintOrder", "paint-order"],
@@ -19970,14 +19971,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2046 = React.version;
 if (
-  "19.3.0-www-modern-6b113b7b-20260226" !==
+  "19.3.0-www-modern-843d69f0-20260227" !==
   isomorphicReactPackageVersion$jscomp$inline_2046
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2046,
-      "19.3.0-www-modern-6b113b7b-20260226"
+      "19.3.0-www-modern-843d69f0-20260227"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -19995,10 +19996,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2604 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-6b113b7b-20260226",
+  version: "19.3.0-www-modern-843d69f0-20260227",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-6b113b7b-20260226"
+  reconcilerVersion: "19.3.0-www-modern-843d69f0-20260227"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2605 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20427,4 +20428,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-6b113b7b-20260226";
+exports.version = "19.3.0-www-modern-843d69f0-20260227";
