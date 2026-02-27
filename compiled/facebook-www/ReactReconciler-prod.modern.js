@@ -9085,9 +9085,7 @@ module.exports = function ($$$config) {
       case 11:
       case 14:
       case 15:
-        (!enableHiddenSubtreeInsertionEffectCleanup &&
-          offscreenSubtreeWasHidden) ||
-          commitHookEffectListUnmount(2, deletedFiber, nearestMountedAncestor);
+        commitHookEffectListUnmount(2, deletedFiber, nearestMountedAncestor);
         offscreenSubtreeWasHidden ||
           commitHookEffectListUnmount(4, deletedFiber, nearestMountedAncestor);
         recursivelyTraverseDeletionEffects(
@@ -12920,8 +12918,6 @@ module.exports = function ($$$config) {
       dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
     enableEffectEventMutationPhase =
       dynamicFeatureFlags.enableEffectEventMutationPhase,
-    enableHiddenSubtreeInsertionEffectCleanup =
-      dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
     enableInfiniteRenderLoopDetection =
       dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
     enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
@@ -14167,7 +14163,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-843d69f0-20260227"
+      reconcilerVersion: "19.3.0-www-modern-e0cc7202-20260227"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
