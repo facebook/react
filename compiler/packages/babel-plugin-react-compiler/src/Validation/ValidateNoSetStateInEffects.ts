@@ -232,7 +232,17 @@ function getSetStateCall(
         }
       }
     }
+    /**
+     * Track whether we've encountered an Await instruction in the current block.
+     * Code after an `await` executes asynchronously (in a microtask), so setState
+     * calls after an await are not synchronous and should not be flagged.
+     */
+    let seenAwait = false;
     for (const instr of block.instructions) {
+      if (instr.value.kind === 'Await') {
+        seenAwait = true;
+      }
+
       if (enableAllowSetStateFromRefsInEffects) {
         const hasRefOperand = Iterable_some(
           eachInstructionValueOperand(instr.value),
@@ -316,6 +326,15 @@ function getSetStateCall(
             isSetStateType(callee.identifier) ||
             setStateFunctions.has(callee.identifier.id)
           ) {
+            /**
+             * Skip setState calls that appear after an Await instruction in the
+             * same block. After an `await`, execution continues asynchronously
+             * (in a microtask), so the setState call is not synchronous within
+             * the effect body and should not trigger this validation.
+             */
+            if (seenAwait) {
+              continue;
+            }
             if (enableAllowSetStateFromRefsInEffects) {
               const arg = instr.value.args.at(0);
               if (
