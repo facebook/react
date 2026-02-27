@@ -486,15 +486,24 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       ids.add(value.place.identifier);
     }
     if (value.kind === 'StartMemoize') {
-      let depsFromSource: Array<ManualMemoDependency> | null = null;
-      if (value.deps != null) {
-        depsFromSource = value.deps;
-      }
       CompilerError.invariant(state.manualMemoState == null, {
         reason: 'Unexpected nested StartMemoize instructions',
         description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${value.manualMemoId}`,
         loc: value.loc,
       });
+
+      if (value.hasInvalidDeps === true) {
+        /*
+         * ValidateExhaustiveDependencies already reported an error for this
+         * memo block, skip validation to avoid duplicate errors
+         */
+        return;
+      }
+
+      let depsFromSource: Array<ManualMemoDependency> | null = null;
+      if (value.deps != null) {
+        depsFromSource = value.deps;
+      }
 
       state.manualMemoState = {
         loc: instruction.loc,
@@ -547,12 +556,15 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       }
     }
     if (value.kind === 'FinishMemoize') {
+      if (state.manualMemoState == null) {
+        // StartMemoize had invalid deps, skip validation
+        return;
+      }
       CompilerError.invariant(
-        state.manualMemoState != null &&
-          state.manualMemoState.manualMemoId === value.manualMemoId,
+        state.manualMemoState.manualMemoId === value.manualMemoId,
         {
           reason: 'Unexpected mismatch between StartMemoize and FinishMemoize',
-          description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${value.manualMemoId}`,
+          description: `Encountered StartMemoize id=${state.manualMemoState.manualMemoId} followed by FinishMemoize id=${value.manualMemoId}`,
           loc: value.loc,
         },
       );

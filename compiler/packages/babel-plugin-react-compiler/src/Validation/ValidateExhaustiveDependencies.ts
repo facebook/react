@@ -143,6 +143,7 @@ export function validateExhaustiveDependencies(fn: HIRFunction): void {
       );
       if (diagnostic != null) {
         fn.env.recordError(diagnostic);
+        startMemo.hasInvalidDeps = true;
       }
     }
 
