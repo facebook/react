@@ -16,7 +16,6 @@
 export const alwaysThrottleRetries: boolean = __VARIANT__;
 export const disableLegacyContextForFunctionComponents: boolean = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop: boolean = __VARIANT__;
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = __VARIANT__;
 export const enableNoCloningMemoCache: boolean = __VARIANT__;
 export const enableObjectFiber: boolean = __VARIANT__;
 export const enableRetryLaneExpiration: boolean = __VARIANT__;

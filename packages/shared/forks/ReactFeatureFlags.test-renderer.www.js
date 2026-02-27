@@ -35,7 +35,6 @@ export const enableCPUSuspense: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
 export const enableLegacyFBSupport: boolean = false;
 export const enableMoveBefore: boolean = false;
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = true;
 
 export const enableRetryLaneExpiration: boolean = false;
 export const retryLaneExpirationMs = 5000;
