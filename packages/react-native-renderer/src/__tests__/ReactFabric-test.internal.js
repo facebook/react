@@ -1214,7 +1214,7 @@ describe('ReactFabric', () => {
             }}
           />
           <View
-            ref={ref2}
+            ref={ref3}
             id="explicitTimeStampLowerCase"
             onTouchEnd={event => {
               expect(event.timeStamp).toBe(explicitTimeStampLowerCase);
