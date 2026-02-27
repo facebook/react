@@ -160,6 +160,15 @@ export function validateHooksUsage(fn: HIRFunction): void {
     }
   }
 
+  /**
+   * Track identifiers that were loaded from module imports (ImportDefault,
+   * ImportNamespace, ImportSpecifier) but whose type is unresolved. These
+   * represent third-party module imports where the type system doesn't know
+   * the actual types. Used to avoid false hook detection on method calls
+   * like `amCharts.useTheme()`. See #32109.
+   */
+  const untypedImportIdentifiers = new Set<IdentifierId>();
+
   const valueKinds = new Map<IdentifierId, Kind>();
   function getKindForPlace(place: Place): Kind {
     const knownKind = valueKinds.get(place.identifier.id);
@@ -223,6 +232,20 @@ export function validateHooksUsage(fn: HIRFunction): void {
             setKind(instr.lvalue, Kind.KnownHook);
           } else {
             setKind(instr.lvalue, Kind.Global);
+          }
+          /*
+           * Track identifiers from module imports with unresolved types,
+           * used to skip heuristic hook detection on method calls. See #32109.
+           */
+          const binding = instr.value.binding;
+          if (
+            (binding.kind === 'ImportDefault' ||
+              binding.kind === 'ImportNamespace' ||
+              binding.kind === 'ImportSpecifier') &&
+            instr.lvalue.identifier.type.kind !== 'Object' &&
+            instr.lvalue.identifier.type.kind !== 'Function'
+          ) {
+            untypedImportIdentifiers.add(instr.lvalue.identifier.id);
           }
           break;
         }
@@ -331,11 +354,33 @@ export function validateHooksUsage(fn: HIRFunction): void {
         }
         case 'MethodCall': {
           const calleeKind = getKindForPlace(instr.value.property);
+          /**
+           * For method calls where the receiver is a non-React module import
+           * with an unresolved type, hook-named properties were typed
+           * heuristically based on naming alone. We skip hook validation for
+           * these cases to avoid false positives with third-party APIs like
+           * `amCharts.useTheme()` that happen to use "use*" naming but are
+           * not React hooks. See https://github.com/facebook/react/issues/32109
+           */
+          const receiverType = instr.value.receiver.identifier.type;
+          const isReceiverUntyped =
+            receiverType.kind !== 'Object' &&
+            receiverType.kind !== 'Function';
+          const isReceiverImport =
+            untypedImportIdentifiers.has(
+              instr.value.receiver.identifier.id,
+            );
+          const skipHookCheck = isReceiverUntyped && isReceiverImport;
           const isHookCallee =
-            calleeKind === Kind.KnownHook || calleeKind === Kind.PotentialHook;
+            !skipHookCheck &&
+            (calleeKind === Kind.KnownHook ||
+              calleeKind === Kind.PotentialHook);
           if (isHookCallee && !unconditionalBlocks.has(block.id)) {
             recordConditionalHookError(instr.value.property);
-          } else if (calleeKind === Kind.PotentialHook) {
+          } else if (
+            !skipHookCheck &&
+            calleeKind === Kind.PotentialHook
+          ) {
             recordDynamicHookUsageError(instr.value.property);
           }
           /*
@@ -435,6 +480,19 @@ function visitFunctionExpression(env: Environment, fn: HIRFunction): void {
             instr.value.kind === 'CallExpression'
               ? instr.value.callee
               : instr.value.property;
+          /**
+           * For MethodCall on untyped Global receivers, skip hook validation
+           * as the property was typed heuristically. See #32109.
+           */
+          if (instr.value.kind === 'MethodCall') {
+            const receiverType = instr.value.receiver.identifier.type;
+            if (
+              receiverType.kind !== 'Object' &&
+              receiverType.kind !== 'Function'
+            ) {
+              break;
+            }
+          }
           const hookKind = getHookKind(fn.env, callee.identifier);
           if (hookKind != null) {
             env.recordError(
