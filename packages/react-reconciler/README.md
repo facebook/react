@@ -48,8 +48,7 @@ const HostConfig = {
 
 **For an introduction to writing a very simple custom renderer, check out this article series:**
 
-* **[Building a simple custom renderer to DOM](https://medium.com/@agent_hunt/hello-world-custom-react-renderer-9a95b7cd04bc)**
-* **[Building a simple custom renderer to native](https://medium.com/@agent_hunt/introduction-to-react-native-renderers-aka-react-native-is-the-java-and-react-native-renderers-are-828a0022f433)**
+* **[How to Build a Custom React Renderer?](https://blog.swmansion.com/how-to-build-a-custom-react-renderer-595dc4a9cb1c)**
 
 The full list of supported methods [can be found here](https://github.com/facebook/react/blob/main/packages/react-reconciler/src/forks/ReactFiberConfig.custom.js). For their signatures, we recommend looking at specific examples below.
 
