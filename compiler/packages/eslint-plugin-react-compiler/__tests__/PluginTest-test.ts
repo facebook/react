@@ -57,7 +57,6 @@ testRule('plugin-recommended', TestRecommendedRules, {
   ],
   invalid: [
     {
-      // TODO: actually return multiple diagnostics in this case
       name: 'Multiple diagnostic kinds from the same function are surfaced',
       code: normalizeIndent`
         import Child from './Child';
@@ -70,6 +69,7 @@ testRule('plugin-recommended', TestRecommendedRules, {
       `,
       errors: [
         makeTestCaseError('Hooks must always be called in a consistent order'),
+        makeTestCaseError('Capitalized functions are reserved for components'),
       ],
     },
     {
@@ -128,6 +128,7 @@ testRule('plugin-recommended', TestRecommendedRules, {
         makeTestCaseError(
           'Calling setState from useMemo may trigger an infinite loop',
         ),
+        makeTestCaseError('Found extra memoization dependencies'),
       ],
     },
   ],

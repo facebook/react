@@ -306,11 +306,19 @@ type LoggerOptions = {
   surface?: ?string,
 };
 
+type ClientOptions = {
+  host?: string,
+  port?: number,
+  useHttps?: boolean,
+};
+
 function startServer(
   port: number = 8097,
   host: string = 'localhost',
   httpsOptions?: ServerOptions,
   loggerOptions?: LoggerOptions,
+  path?: string,
+  clientOptions?: ClientOptions,
 ): {close(): void} {
   registerDevToolsEventLogger(loggerOptions?.surface ?? 'standalone');
 
@@ -345,7 +353,18 @@ function startServer(
   server.on('error', (event: $FlowFixMe) => {
     onError(event);
     log.error('Failed to start the DevTools server', event);
-    startServerTimeoutID = setTimeout(() => startServer(port), 1000);
+    startServerTimeoutID = setTimeout(
+      () =>
+        startServer(
+          port,
+          host,
+          httpsOptions,
+          loggerOptions,
+          path,
+          clientOptions,
+        ),
+      1000,
+    );
   });
 
   httpServer.on('request', (request: $FlowFixMe, response: $FlowFixMe) => {
@@ -358,14 +377,21 @@ function startServer(
     // This will ensure that saved filters are shared across different web pages.
     const componentFiltersString = JSON.stringify(getSavedComponentFilters());
 
+    // Client overrides: when connecting through a reverse proxy, the client
+    // may need to connect to a different host/port/protocol than the server.
+    const clientHost = clientOptions?.host ?? host;
+    const clientPort = clientOptions?.port ?? port;
+    const clientUseHttps = clientOptions?.useHttps ?? useHttps;
+
     response.end(
       backendFile.toString() +
         '\n;' +
+        `var ReactDevToolsBackend = typeof ReactDevToolsBackend !== "undefined" ? ReactDevToolsBackend : require("ReactDevToolsBackend");\n` +
         `ReactDevToolsBackend.initialize(undefined, undefined, undefined, ${componentFiltersString});` +
         '\n' +
-        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', useHttps: ${
-          useHttps ? 'true' : 'false'
-        }});
+        `ReactDevToolsBackend.connectToDevTools({port: ${clientPort}, host: '${clientHost}', useHttps: ${
+          clientUseHttps ? 'true' : 'false'
+        }${path != null ? `, path: '${path}'` : ''}});
         `,
     );
   });
@@ -373,7 +399,18 @@ function startServer(
   httpServer.on('error', (event: $FlowFixMe) => {
     onError(event);
     statusListener('Failed to start the server.', 'error');
-    startServerTimeoutID = setTimeout(() => startServer(port), 1000);
+    startServerTimeoutID = setTimeout(
+      () =>
+        startServer(
+          port,
+          host,
+          httpsOptions,
+          loggerOptions,
+          path,
+          clientOptions,
+        ),
+      1000,
+    );
   });
 
   httpServer.listen(port, () => {

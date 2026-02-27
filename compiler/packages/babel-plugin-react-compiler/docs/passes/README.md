@@ -302,6 +302,15 @@ yarn snap minimize <path>
 yarn snap -u
 ```
 
+## Fault Tolerance
+
+The pipeline is fault-tolerant: all passes run to completion, accumulating errors on `Environment` rather than aborting on the first error.
+
+- **Validation passes** are wrapped in `env.tryRecord()` in Pipeline.ts, which catches non-invariant `CompilerError`s and records them. If a validation pass throws, compilation continues.
+- **Infrastructure/transformation passes** (enterSSA, eliminateRedundantPhi, inferMutationAliasingEffects, codegen, etc.) are NOT wrapped in `tryRecord()` because subsequent passes depend on their output being structurally valid. If they fail, compilation aborts.
+- **`lower()` (BuildHIR)** always produces an `HIRFunction`, recording errors on `env` instead of returning `Err`. Unsupported constructs (e.g., `var`) are lowered best-effort.
+- At the end of the pipeline, `env.hasErrors()` determines whether to return `Ok(codegen)` or `Err(aggregatedErrors)`.
+
 ## Further Reading
 
 - [MUTABILITY_ALIASING_MODEL.md](../../src/Inference/MUTABILITY_ALIASING_MODEL.md): Detailed aliasing model docs
