@@ -2085,7 +2085,7 @@ function dispatchActionState<S, P>(
   payload: P,
 ): void {
   if (isRenderPhaseUpdate(fiber)) {
-    throw new Error('Cannot update form state while rendering.');
+    throw new Error('Cannot update action state while rendering.');
   }
 
   const currentAction = actionQueue.action;
