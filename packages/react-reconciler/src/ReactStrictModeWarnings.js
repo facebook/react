@@ -338,13 +338,13 @@ if (__DEV__) {
 
         runWithFiberInDEV(firstFiber, () => {
           console.error(
-            'Legacy context API has been detected within a strict-mode tree.' +
-              '\n\nThe old API will be supported in all 16.x releases, but applications ' +
-              'using it should migrate to the new version.' +
-              '\n\nPlease update the following components: %s' +
-              '\n\nLearn more about this warning here: https://react.dev/link/legacy-context',
+            'Legacy context API detected inside a StrictMode tree.\n\n' +
+              'Support for the legacy API will eventually be removed. ' +
+              'Please migrate the following components to the modern context API:\n\n%s\n\n' +
+              'More info: https://react.dev/link/legacy-context',
             sortedNames,
           );
+          
         });
       },
     );
