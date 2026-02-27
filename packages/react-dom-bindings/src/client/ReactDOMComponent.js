@@ -71,7 +71,6 @@ import {
   enableHydrationChangeEvent,
   enableScrollEndPolyfill,
   enableSrcObject,
-  enableTrustedTypesIntegration,
   enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -525,9 +524,7 @@ function setProp(
       if (__DEV__) {
         checkAttributeStringCoercion(value, key);
       }
-      const sanitizedValue = (sanitizeURL(
-        enableTrustedTypesIntegration ? value : '' + (value: any),
-      ): any);
+      const sanitizedValue = (sanitizeURL(value): any);
       domElement.setAttribute(key, sanitizedValue);
       break;
     }
@@ -596,9 +593,7 @@ function setProp(
       if (__DEV__) {
         checkAttributeStringCoercion(value, key);
       }
-      const sanitizedValue = (sanitizeURL(
-        enableTrustedTypesIntegration ? value : '' + (value: any),
-      ): any);
+      const sanitizedValue = (sanitizeURL(value): any);
       domElement.setAttribute(key, sanitizedValue);
       break;
     }
@@ -699,9 +694,7 @@ function setProp(
       if (__DEV__) {
         checkAttributeStringCoercion(value, key);
       }
-      const sanitizedValue = (sanitizeURL(
-        enableTrustedTypesIntegration ? value : '' + (value: any),
-      ): any);
+      const sanitizedValue = (sanitizeURL(value): any);
       domElement.setAttributeNS(xlinkNamespace, 'xlink:href', sanitizedValue);
       break;
     }
@@ -727,10 +720,7 @@ function setProp(
         if (__DEV__) {
           checkAttributeStringCoercion(value, key);
         }
-        domElement.setAttribute(
-          key,
-          enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
-        );
+        domElement.setAttribute(key, (value: any));
       } else {
         domElement.removeAttribute(key);
       }

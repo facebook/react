@@ -116,7 +116,6 @@ import {
 import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableTrustedTypesIntegration,
   disableLegacyMode,
   enableMoveBefore,
   disableCommentsAsDOMContainers,
@@ -526,7 +525,7 @@ export function createInstance(
           // set to true and it does not execute
           const div = ownerDocument.createElement('div');
           if (__DEV__) {
-            if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+            if (!didWarnScriptTags) {
               console.error(
                 'Encountered a script tag while rendering React component. ' +
                   'Scripts inside React components are never executed when rendering ' +
