@@ -95,6 +95,9 @@ export default function SuspenseScrubber({
                 ? // The first step in the timeline is always a Transition (Initial Paint).
                   ' ' + styles.SuspenseScrubberBeadTransition
                 : '') +
+              (!step.hasUniqueSuspenders
+                ? ' ' + styles.SuspenseScrubberBeadNotSuspended
+                : '') +
               ' ' +
               getClassNameForEnvironment(environment) +
               (index <= value ? ' ' + styles.SuspenseScrubberBeadSelected : '')

@@ -972,6 +972,7 @@ export default class Store extends EventEmitter<{
             id: suspense.id,
             environment: environmentName,
             endTime: suspense.endTime,
+            hasUniqueSuspenders: true,
           };
           target.push(rootStep);
         } else {
@@ -1051,6 +1052,7 @@ export default class Store extends EventEmitter<{
       // TODO: Get environment for Activity
       environment: null,
       endTime: 0,
+      hasUniqueSuspenders: true,
     });
 
     const transitionChildren = this.getSuspenseChildren(focusedTransitionID);
@@ -1106,6 +1108,7 @@ export default class Store extends EventEmitter<{
           id: child.id,
           environment: environmentName,
           endTime: maxEndTime,
+          hasUniqueSuspenders: child.hasUniqueSuspenders,
         });
       }
       this.pushTimelineStepsInDocumentOrder(

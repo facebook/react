@@ -54,6 +54,14 @@
   background: var(--color-transition);
 }
 
+.SuspenseScrubberBeadNotSuspended {
+  background: color-mix(in srgb, var(--color-dim) 25%, transparent);
+}
+
+.SuspenseScrubberBeadNotSuspended.SuspenseScrubberBeadSelected {
+  background: var(--color-dim);
+}
+
 .SuspenseScrubberStepHighlight > .SuspenseScrubberBead {
   height: 0.75rem;
   transition: all 0.3s ease-out;

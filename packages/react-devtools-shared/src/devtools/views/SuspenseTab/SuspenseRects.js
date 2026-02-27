@@ -192,7 +192,10 @@ function SuspenseRects({
       className={
         styles.SuspenseRectsBoundary +
         ' ' +
-        getClassNameForEnvironment(environment)
+        getClassNameForEnvironment(environment) +
+        (!suspense.hasUniqueSuspenders
+          ? ' ' + styles.SuspenseRectsBoundaryNotSuspended
+          : '')
       }
       visible={visible}
       selected={selected}
@@ -550,6 +553,7 @@ function SuspenseRectsContainer({
 
   let selectedBoundingBox = null;
   let selectedEnvironment = null;
+  let selectedHasUniqueSuspenders = true;
   if (isRootSelected) {
     selectedEnvironment = rootEnvironment;
   } else if (
@@ -563,6 +567,7 @@ function SuspenseRectsContainer({
       (selectedSuspenseNode.hasUniqueSuspenders || !uniqueSuspendersOnly)
     ) {
       selectedBoundingBox = getBoundingBox(selectedSuspenseNode.rects);
+      selectedHasUniqueSuspenders = selectedSuspenseNode.hasUniqueSuspenders;
       for (let i = 0; i < timeline.length; i++) {
         const timelineStep = timeline[i];
         if (timelineStep.id === inspectedElementID) {
@@ -605,7 +610,10 @@ function SuspenseRectsContainer({
               className={
                 styles.SuspenseRectOutline +
                 ' ' +
-                getClassNameForEnvironment(selectedEnvironment)
+                getClassNameForEnvironment(selectedEnvironment) +
+                (!selectedHasUniqueSuspenders
+                  ? ' ' + styles.SuspenseRectsBoundaryNotSuspended
+                  : '')
               }
               rect={selectedBoundingBox}
               adjust={true}

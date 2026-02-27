@@ -108,3 +108,7 @@
 .SuspenseRectsBoundary[data-selected='true'] > .SuspenseRectsRect {
    box-shadow: none;
 }
+
+.SuspenseRectsBoundaryNotSuspended {
+  --color-suspense: var(--color-dim);
+}
