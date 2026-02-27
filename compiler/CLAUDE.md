@@ -76,7 +76,7 @@ yarn snap minimize --update <path>
 
 ## Version Control
 
-This repository uses Sapling (`sl`) for version control. Sapling is similar to Mercurial: there is not staging area, but new/deleted files must be explicitlyu added/removed.
+This repository uses Sapling (`sl`) for version control. Sapling is similar to Mercurial: there is no staging area, but new/deleted files must be explicitly added/removed.
 
 ```bash
 # Check status
