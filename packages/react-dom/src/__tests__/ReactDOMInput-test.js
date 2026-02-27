@@ -3109,4 +3109,51 @@ describe('ReactDOMInput', () => {
     expect(log).toEqual(['']);
     expect(node.value).toBe('a');
   });
+
+  it('should update defaultValue for focused number inputs when value changes', async () => {
+    // This test reproduces the issue described in:
+    // https://github.com/facebook/react/issues/33667
+    // Bug: input type number ignores defaultValue after clicking Enter when used with useActionState
+    
+    const TestComponent = () => {
+      const [state, setState] = React.useState({ value: '123' });
+      
+      return (
+        <div>
+          <input 
+            type="number" 
+            defaultValue={state.value}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                // Simulate form action completion that updates state
+                setState({ value: '456' });
+              }
+            }}
+          />
+        </div>
+      );
+    };
+
+    await act(() => {
+      root.render(<TestComponent />);
+    });
+
+    const node = container.firstChild;
+    expect(node.defaultValue).toBe('123');
+    expect(node.value).toBe('123');
+
+    // Focus the input and type something
+    node.focus();
+    setUntrackedValue.call(node, '789');
+    dispatchEventOnNode(node, 'input');
+
+    // Simulate pressing Enter (which would trigger a form action)
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+    node.dispatchEvent(enterEvent);
+
+    // The defaultValue should be updated even though the input is focused
+    expect(node.defaultValue).toBe('456');
+    // The visual value should also be updated
+    expect(node.value).toBe('456');
+  });
 });
