@@ -5037,7 +5037,7 @@ export function disconnectPassiveEffect(finishedWork: Fiber): void {
         HookPassive,
       );
       // When disconnecting passive effects, we fire the effects in the same
-      // order as during a deletiong: parent before child
+      // order as during a deletion: parent before child
       recursivelyTraverseDisconnectPassiveEffects(finishedWork);
       break;
     }

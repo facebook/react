@@ -79,7 +79,7 @@ import {readContextDuringReconciliation} from './ReactFiberNewContext';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
 
-// This tracks the thenables that are unwrapped during reconcilation.
+// This tracks the thenables that are unwrapped during reconciliation.
 let thenableState: ThenableState | null = null;
 let thenableIndexCounter: number = 0;
 
