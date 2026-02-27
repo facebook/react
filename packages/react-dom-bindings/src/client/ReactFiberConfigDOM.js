@@ -653,6 +653,7 @@ export function finalizeInitialChildren(
 ): boolean {
   setInitialProperties(domElement, type, props);
   switch (type) {
+    case 'a':
     case 'button':
     case 'input':
     case 'select':
@@ -846,12 +847,14 @@ export function commitMount(
   // there are also other cases when this might happen (such as patching
   // up text content during hydration mismatch). So we'll check this again.
   switch (type) {
+    case 'a':
     case 'button':
     case 'input':
     case 'select':
     case 'textarea':
       if (newProps.autoFocus) {
         ((domElement: any):
+          | HTMLAnchorElement
           | HTMLButtonElement
           | HTMLInputElement
           | HTMLSelectElement
