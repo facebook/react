@@ -217,7 +217,7 @@ export function codegenFunction(
                     ),
                     t.callExpression(
                       t.memberExpression(
-                        t.identifier('Symbol'),
+                        codegenGlobalAccess(cx, 'Symbol'),
                         t.identifier('for'),
                       ),
                       [t.stringLiteral(MEMO_CACHE_SENTINEL)],
@@ -408,6 +408,16 @@ function convertParameter(
   } else {
     return t.restElement(convertIdentifier(param.place.identifier));
   }
+}
+
+function codegenGlobalAccess(
+  cx: Context,
+  global: string,
+): t.MemberExpression | t.Identifier {
+  if (cx.env.scope.hasBinding(global, true)) {
+    return t.memberExpression(t.identifier('globalThis'), t.identifier(global));
+  }
+  return t.identifier(global);
 }
 
 class Context {
@@ -661,7 +671,10 @@ function codegenReactiveScope(
         true,
       ),
       t.callExpression(
-        t.memberExpression(t.identifier('Symbol'), t.identifier('for')),
+        t.memberExpression(
+          codegenGlobalAccess(cx, 'Symbol'),
+          t.identifier('for'),
+        ),
         [t.stringLiteral(MEMO_CACHE_SENTINEL)],
       ),
     );
@@ -724,7 +737,10 @@ function codegenReactiveScope(
           '!==',
           t.identifier(name),
           t.callExpression(
-            t.memberExpression(t.identifier('Symbol'), t.identifier('for')),
+            t.memberExpression(
+              codegenGlobalAccess(cx, 'Symbol'),
+              t.identifier('for'),
+            ),
             [t.stringLiteral(EARLY_RETURN_SENTINEL)],
           ),
         ),
@@ -2012,6 +2028,13 @@ function codegenInstructionValue(
       break;
     }
     case 'LoadGlobal': {
+      if (
+        instrValue.binding.kind === 'Global' &&
+        instrValue.binding.name === 'Symbol'
+      ) {
+        value = codegenGlobalAccess(cx, 'Symbol');
+        break;
+      }
       value = t.identifier(instrValue.binding.name);
       break;
     }
