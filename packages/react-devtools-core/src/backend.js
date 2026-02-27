@@ -33,6 +33,7 @@ import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeS
 type ConnectOptions = {
   host?: string,
   nativeStyleEditorValidAttributes?: $ReadOnlyArray<string>,
+  path?: string,
   port?: number,
   useHttps?: boolean,
   resolveRNStyle?: ResolveNativeStyle,
@@ -93,6 +94,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
   const {
     host = 'localhost',
     nativeStyleEditorValidAttributes,
+    path = '',
     useHttps = false,
     port = 8097,
     websocket,
@@ -107,6 +109,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
   } = options || {};
 
   const protocol = useHttps ? 'wss' : 'ws';
+  const prefixedPath = path !== '' && !path.startsWith('/') ? '/' + path : path;
   let retryTimeoutID: TimeoutID | null = null;
 
   function scheduleRetry() {
@@ -129,7 +132,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
   let bridge: BackendBridge | null = null;
 
   const messageListeners = [];
-  const uri = protocol + '://' + host + ':' + port;
+  const uri = protocol + '://' + host + ':' + port + prefixedPath;
 
   // If existing websocket is passed, use it.
   // This is necessary to support our custom integrations.
