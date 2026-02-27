@@ -289,7 +289,7 @@ To mitigate the performance impact of re-rendering a component, DevTools does th
 * Only function components that use _at least one hook_ are rendered. (Props and state can be analyzed without rendering.)
 * Rendering is always shallow.
 * Rendering is throttled to occur, at most, once per second.
-* Rendering is skipped if the component has been not updated since the last time its properties were inspected.
+* Rendering is skipped if the component has not been updated since the last time its properties were inspected.
 
 ## Profiler
 
@@ -326,7 +326,7 @@ Because all of the data is merged in the frontend after a profiling session is c
 
 ## Package Specific Details
 
-### Devtools Extension Overview Diagram
+### DevTools Extension Overview Diagram
 
-![React Devtools Extension](https://user-images.githubusercontent.com/2735514/132768489-6ab85156-b816-442f-9c3f-7af738ee9e49.png)
+![React DevTools Extension](https://user-images.githubusercontent.com/2735514/132768489-6ab85156-b816-442f-9c3f-7af738ee9e49.png)
 
