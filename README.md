@@ -50,7 +50,7 @@ function HelloMessage({ name }) {
 }
 
 const root = createRoot(document.getElementById('container'));
-root.render(<HelloMessage name="Taylor" />);
+root.render(<HelloMessage name='Taylor' />);
 ```
 
 This example will render "Hello Taylor" into a container on the page.
