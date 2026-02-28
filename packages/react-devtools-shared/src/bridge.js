@@ -9,6 +9,9 @@
 
 import EventEmitter from './events';
 
+import type {
+  TouchedViewDataAtPoint,
+} from './ReactNativeTypes';
 import type {ComponentFilter, Wall} from './frontend/types';
 import type {
   InspectedElementPayload,
@@ -213,6 +216,7 @@ export type BackendEvents = {
   reloadAppForProfiling: [],
   saveToClipboard: [string],
   selectElement: [number | null],
+  selectElementWithViewData: [TouchedViewDataAtPoint | null],
   shutdown: [],
   stopInspectingHost: [boolean],
   scrollTo: [{left: number, top: number, right: number, bottom: number}],
