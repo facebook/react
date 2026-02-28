@@ -42,6 +42,12 @@ function releaseAsyncTransition() {
   }
 }
 
+
+const now =
+  typeof performance === 'object' && typeof performance.now === 'function'
+    ? () => performance.now()
+    : () => Date.now();
+
 export function startTransition(
   scope: () => void,
   options?: StartTransitionOptions,
@@ -65,7 +71,7 @@ export function startTransition(
   if (enableTransitionTracing) {
     currentTransition.name =
       options !== undefined && options.name !== undefined ? options.name : null;
-    currentTransition.startTime = -1; // TODO: This should read the timestamp.
+    currentTransition.startTime = now();
   }
   if (__DEV__) {
     currentTransition._updatedFibers = new Set();
@@ -146,7 +152,7 @@ export function startGestureTransition(
   if (enableTransitionTracing) {
     currentTransition.name =
       options !== undefined && options.name !== undefined ? options.name : null;
-    currentTransition.startTime = -1; // TODO: This should read the timestamp.
+    currentTransition.startTime = now();
   }
   if (__DEV__) {
     currentTransition._updatedFibers = new Set();
