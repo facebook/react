@@ -88,6 +88,8 @@ export const enableSuspenseyImages: boolean = false;
 
 export const enableFizzBlockingRender = __EXPERIMENTAL__; // rel="expect"
 
+export const enableFizzSuspenseListTail: boolean = false;
+
 export const enableSrcObject = __EXPERIMENTAL__;
 
 export const enableHydrationChangeEvent = __EXPERIMENTAL__;

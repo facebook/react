@@ -65,6 +65,11 @@ export {
   writeClientRenderBoundaryInstruction,
   writeStartPendingSuspenseBoundary,
   writeEndPendingSuspenseBoundary,
+  writePendingSuspenseListMarker,
+  writeClientRenderedSuspenseListMarker,
+  writeAppendListInstruction,
+  writeCompletedListInstruction,
+  writeClientRenderListInstruction,
   writeHoistablesForBoundary,
   writePlaceholder,
   createRootFormatContext,
@@ -182,6 +187,21 @@ export function pushEndActivityBoundary(
   return;
 }
 
+export function pushStartSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  // Markup doesn't have any instructions.
+  return;
+}
+
+export function pushEndSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  // Markup doesn't have any instructions.
+  return;
+}
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,

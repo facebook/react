@@ -601,7 +601,6 @@ describe('useId', () => {
         >
           A
         </span>
-        <!-- -->
       </div>
     `);
 
@@ -618,7 +617,6 @@ describe('useId', () => {
         >
           A
         </span>
-        <!-- -->
       </div>
     `);
   });

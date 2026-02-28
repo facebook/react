@@ -150,6 +150,7 @@ export type RenderState = {
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: PrecomputedChunk,
+  listPrefix: PrecomputedChunk,
 
   // inline script streaming format, unused if using external runtime / data
   startInlineScript: PrecomputedChunk,
@@ -491,6 +492,7 @@ export function createRenderState(
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: stringToPrecomputedChunk(idPrefix + 'B:'),
+    listPrefix: stringToPrecomputedChunk(idPrefix + 'L:'),
     startInlineScript: inlineScriptWithNonce,
     startInlineStyle: inlineStyleWithNonce,
     preamble: createPreambleState(),
@@ -4573,6 +4575,100 @@ export function pushEndActivityBoundary(
   target.push(endActivityBoundary);
 }
 
+// SuspenseList with hidden tails are encoded as comments.
+const startSuspenseListBoundary = stringToPrecomputedChunk('<!--~-->');
+const endSuspenseListBoundary = stringToPrecomputedChunk('<!--/~-->');
+
+export function pushStartSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  target.push(startSuspenseListBoundary);
+}
+
+export function pushEndSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  target.push(endSuspenseListBoundary);
+}
+
+const pendingSuspenseList1 = stringToPrecomputedChunk(
+  '<template data-lst id="',
+);
+const pendingSuspenseList2 = stringToPrecomputedChunk('"></template>');
+
+const clientRenderedSuspenseListError1 = stringToPrecomputedChunk('<template');
+const clientRenderedSuspenseListErrorAttrInterstitial =
+  stringToPrecomputedChunk('"');
+const clientRenderedSuspenseListError1A =
+  stringToPrecomputedChunk(' data-dgst="');
+const clientRenderedSuspenseListError1B =
+  stringToPrecomputedChunk(' data-msg="');
+const clientRenderedSuspenseListError1C =
+  stringToPrecomputedChunk(' data-stck="');
+const clientRenderedSuspenseListError1D =
+  stringToPrecomputedChunk(' data-cstck="');
+const clientRenderedSuspenseListError2 =
+  stringToPrecomputedChunk('></template>');
+
+export function writePendingSuspenseListMarker(
+  destination: Destination,
+  renderState: RenderState,
+  id: number,
+): boolean {
+  writeChunk(destination, pendingSuspenseList1);
+
+  if (id === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
+  }
+
+  writeChunk(destination, renderState.listPrefix);
+  writeChunk(destination, stringToChunk(id.toString(16)));
+  return writeChunkAndReturn(destination, pendingSuspenseList2);
+}
+export function writeClientRenderedSuspenseListMarker(
+  destination: Destination,
+  renderState: RenderState,
+  errorDigest: ?string,
+  errorMessage: ?string,
+  errorStack: ?string,
+  errorComponentStack: ?string,
+): boolean {
+  writeChunk(destination, clientRenderedSuspenseListError1);
+  if (errorDigest) {
+    writeChunk(destination, clientRenderedSuspenseListError1A);
+    writeChunk(destination, stringToChunk(escapeTextForBrowser(errorDigest)));
+    writeChunk(destination, clientRenderedSuspenseListErrorAttrInterstitial);
+  }
+  if (__DEV__) {
+    if (errorMessage) {
+      writeChunk(destination, clientRenderedSuspenseListError1B);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorMessage)),
+      );
+      writeChunk(destination, clientRenderedSuspenseListErrorAttrInterstitial);
+    }
+    if (errorStack) {
+      writeChunk(destination, clientRenderedSuspenseListError1C);
+      writeChunk(destination, stringToChunk(escapeTextForBrowser(errorStack)));
+      writeChunk(destination, clientRenderedSuspenseListErrorAttrInterstitial);
+    }
+    if (errorComponentStack) {
+      writeChunk(destination, clientRenderedSuspenseListError1D);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorComponentStack)),
+      );
+      writeChunk(destination, clientRenderedSuspenseListErrorAttrInterstitial);
+    }
+  }
+  return writeChunkAndReturn(destination, clientRenderedSuspenseListError2);
+}
+
 // Suspense boundaries are encoded as comments.
 const startCompletedSuspenseBoundary = stringToPrecomputedChunk('<!--$-->');
 const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
@@ -4920,11 +5016,13 @@ const completeBoundaryData2 = stringToPrecomputedChunk('" data-sid="');
 const completeBoundaryData3a = stringToPrecomputedChunk('" data-sty="');
 const completeBoundaryDataEnd = dataElementQuotedEnd;
 
-export function writeCompletedBoundaryInstruction(
+function writeCompletedInstruction(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  id: number,
+  prefix: PrecomputedChunk,
+  boundaryId: number,
+  segmentId: number,
   hoistableState: HoistableState,
 ): boolean {
   const requiresStyleInsertion = renderState.stylesToHoist;
@@ -5009,10 +5107,8 @@ export function writeCompletedBoundaryInstruction(
     }
   }
 
-  const idChunk = stringToChunk(id.toString(16));
-
-  writeChunk(destination, renderState.boundaryPrefix);
-  writeChunk(destination, idChunk);
+  writeChunk(destination, prefix);
+  writeChunk(destination, stringToChunk(boundaryId.toString(16)));
 
   // Write function arguments, which are string and array literals
   if (scriptFormat) {
@@ -5021,7 +5117,7 @@ export function writeCompletedBoundaryInstruction(
     writeChunk(destination, completeBoundaryData2);
   }
   writeChunk(destination, renderState.segmentPrefix);
-  writeChunk(destination, idChunk);
+  writeChunk(destination, stringToChunk(segmentId.toString(16)));
   if (requiresStyleInsertion) {
     // Script and data writers must format this differently:
     //  - script writer emits an array literal, whose string elements are
@@ -5050,6 +5146,64 @@ export function writeCompletedBoundaryInstruction(
   return writeBootstrap(destination, renderState) && writeMore;
 }
 
+export function writeCompletedBoundaryInstruction(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  id: number,
+  hoistableState: HoistableState,
+): boolean {
+  return writeCompletedInstruction(
+    destination,
+    resumableState,
+    renderState,
+    renderState.boundaryPrefix,
+    id,
+    id,
+    hoistableState,
+  );
+}
+
+export function writeAppendListInstruction(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  suspenseListId: number,
+  segmentId: number,
+  hoistableState: HoistableState,
+  forwards: boolean,
+): boolean {
+  return writeCompletedInstruction(
+    destination,
+    resumableState,
+    renderState,
+    renderState.listPrefix,
+    suspenseListId,
+    segmentId,
+    hoistableState,
+  );
+}
+
+export function writeCompletedListInstruction(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  suspenseListId: number,
+  segmentId: number,
+  hoistableState: HoistableState,
+  forwards: boolean,
+): boolean {
+  return writeCompletedInstruction(
+    destination,
+    resumableState,
+    renderState,
+    renderState.listPrefix,
+    suspenseListId,
+    segmentId,
+    hoistableState,
+  );
+}
+
 const clientRenderScriptFunctionOnly =
   stringToPrecomputedChunk(clientRenderFunction);
 
@@ -5070,10 +5224,11 @@ const clientRenderData4 = stringToPrecomputedChunk('" data-stck="');
 const clientRenderData5 = stringToPrecomputedChunk('" data-cstck="');
 const clientRenderDataEnd = dataElementQuotedEnd;
 
-export function writeClientRenderBoundaryInstruction(
+function writeClientRenderInstruction(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
+  prefix: PrecomputedChunk,
   id: number,
   errorDigest: ?string,
   errorMessage: ?string,
@@ -5102,7 +5257,7 @@ export function writeClientRenderBoundaryInstruction(
     writeChunk(destination, clientRenderData1);
   }
 
-  writeChunk(destination, renderState.boundaryPrefix);
+  writeChunk(destination, prefix);
   writeChunk(destination, stringToChunk(id.toString(16)));
   if (scriptFormat) {
     // " needs to be inserted for scripts, since ArgInterstitual does not contain
@@ -5188,6 +5343,52 @@ export function writeClientRenderBoundaryInstruction(
     // "></template>
     return writeChunkAndReturn(destination, clientRenderDataEnd);
   }
+}
+
+export function writeClientRenderBoundaryInstruction(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  id: number,
+  errorDigest: ?string,
+  errorMessage: ?string,
+  errorStack: ?string,
+  errorComponentStack: ?string,
+): boolean {
+  return writeClientRenderInstruction(
+    destination,
+    resumableState,
+    renderState,
+    renderState.boundaryPrefix,
+    id,
+    errorDigest,
+    errorMessage,
+    errorStack,
+    errorComponentStack,
+  );
+}
+
+export function writeClientRenderListInstruction(
+  destination: Destination,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  id: number,
+  errorDigest: ?string,
+  errorMessage: ?string,
+  errorStack: ?string,
+  errorComponentStack: ?string,
+): boolean {
+  return writeClientRenderInstruction(
+    destination,
+    resumableState,
+    renderState,
+    renderState.listPrefix,
+    id,
+    errorDigest,
+    errorMessage,
+    errorStack,
+    errorComponentStack,
+  );
 }
 
 const regexForJSStringsInInstructionScripts = /[<\u2028\u2029]/g;
