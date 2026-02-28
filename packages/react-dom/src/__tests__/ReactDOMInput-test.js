@@ -3110,3 +3110,39 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('a');
   });
 });
+
+
+it('fires onChange for checkbox even when parent has click handler', async () => {
+  const log = [];
+
+  function Parent() {
+    return (
+      <div
+        onClick={() => {
+          log.push('parent click');
+        }}>
+        <input
+          type="checkbox"
+          onChange={() => {
+            log.push('checkbox change');
+          }}
+        />
+      </div>
+    );
+  }
+
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+
+  const root = ReactDOMClient.createRoot(container);
+  root.render(<Parent />);
+
+  const checkbox = container.querySelector('input');
+
+  checkbox.click();
+
+  expect(log).toEqual([
+    'parent click',
+    'checkbox change',
+  ]);
+});
