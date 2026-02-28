@@ -1100,8 +1100,13 @@ describe('ReactDeferredValue', () => {
       return value;
     }
 
+    // Create initial promise outside the component, matching the original
+    // issue pattern where promises come from external sources (e.g. server
+    // actions). Creating promises in state initializers is not supported.
+    const initialPromise = createPromise('initial');
+
     function App() {
-      const [promise, _setPromise] = useState(() => createPromise('initial'));
+      const [promise, _setPromise] = useState(initialPromise);
       setPromise = _setPromise;
       const deferred = useDeferredValue(promise);
       Scheduler.log('Render');
