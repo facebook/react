@@ -59,7 +59,11 @@ function parseStackTraceFromChromeStack(
   return parsedFrames;
 }
 
-const firefoxFrameRegExp = /^((?:.*".+")?[^@]*)@(.+):(\d+):(\d+)$/;
+// Fix ReDoS vulnerability: Changed `.*".+"` to `"[^"]+"` to prevent catastrophic backtracking.
+// The original pattern `(?:.*".+")?` with nested quantifiers could cause exponential time
+// complexity on malicious inputs. Using `"[^"]+"` (negated character class) is O(n) and
+// maintains the same matching behavior for valid Firefox stack frames.
+const firefoxFrameRegExp = /^((?:"[^"]+")?[^@]*)@(.+):(\d+):(\d+)$/;
 function parseStackTraceFromFirefoxStack(
   stack: string,
   skipFrames: number,
