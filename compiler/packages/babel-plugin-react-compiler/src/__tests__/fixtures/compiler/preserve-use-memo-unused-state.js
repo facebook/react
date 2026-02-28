@@ -1,5 +1,5 @@
 // @validatePreserveExistingMemoizationGuarantees
-import {useCallback, useTransition} from 'react';
+import {useCallback, useState, useTransition} from 'react';
 
 function useFoo() {
   const [, /* state value intentionally not captured */ setState] = useState();
