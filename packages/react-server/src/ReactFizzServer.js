@@ -5591,6 +5591,9 @@ function flushSegment(
     // because it doesn't make sense to outline something if its parent is going to be
     // blocked on something later in the stream anyway.
     !flushingPartialBoundaries &&
+    // We don't outline when all pending tasks are complete (e.g., when using onAllReady)
+    // because there's no need for streaming instructions if everything is already done.
+    request.allPendingTasks > 0 &&
     isEligibleForOutlining(request, boundary) &&
     (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
       hasSuspenseyContent(boundary.contentState, flushingShell) ||
@@ -5878,6 +5881,11 @@ function flushCompletedQueues(
           const errorInfo: ThrownInfo = {};
           logRecoverableError(request, error, errorInfo, null);
         }
+      }
+      // If all pending tasks are complete, we don't need blocking render instructions
+      // because everything is already done (e.g., when using onAllReady for SEO crawlers).
+      if (request.allPendingTasks === 0) {
+        skipBlockingShell = true;
       }
       flushPreamble(
         request,
