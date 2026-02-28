@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 import {useContext, useEffect} from 'react';
-import {BridgeContext} from '../context';
+import {BridgeContext, StoreContext} from '../context';
 import {TreeDispatcherContext} from '../Components/TreeContext';
 import {useScrollToHostInstance} from '../hooks';
 import {
@@ -24,6 +24,7 @@ import type {SuspenseNode} from '../../../frontend/types';
 
 function SuspenseTimelineInput() {
   const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
   const treeDispatch = useContext(TreeDispatcherContext);
   const suspenseTreeDispatch = useContext(SuspenseTreeDispatcherContext);
   const scrollToHostInstance = useScrollToHostInstance();
@@ -106,6 +107,14 @@ function SuspenseTimelineInput() {
       number,
       Array<SuspenseNode['id']>,
     >();
+    // Unsuspend everything by default.
+    // We might not encounter every renderer after the milestone e.g.
+    // if we clicked at the end of the timeline.
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const rendererID of store.rootIDToRendererID.values()) {
+      suspendedSetByRendererID.set(rendererID, []);
+    }
+
     // Synchronize timeline index with what is resuspended.
     // We suspend everything after the current selection. The root isn't showing
     // anything suspended in the root. The step after that should have one less
@@ -114,10 +123,12 @@ function SuspenseTimelineInput() {
     for (let i = timelineIndex + 1; i < timeline.length; i++) {
       const step = timeline[i];
       const {rendererID} = step;
-      let suspendedSetForRendererID = suspendedSetByRendererID.get(rendererID);
+      const suspendedSetForRendererID =
+        suspendedSetByRendererID.get(rendererID);
       if (suspendedSetForRendererID === undefined) {
-        suspendedSetForRendererID = [];
-        suspendedSetByRendererID.set(rendererID, suspendedSetForRendererID);
+        throw new Error(
+          `Should have initialized suspended set for renderer ID "${rendererID}" earlier. This is a bug in React DevTools.`,
+        );
       }
       suspendedSetForRendererID.push(step.id);
     }
