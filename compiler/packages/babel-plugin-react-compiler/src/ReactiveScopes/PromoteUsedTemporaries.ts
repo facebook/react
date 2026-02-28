@@ -31,6 +31,39 @@ import {eachInstructionValueLValue, eachPatternOperand} from '../HIR/visitors';
  * Phase 2: Promote identifiers which are used in a place that requires a named variable.
  */
 class PromoteTemporaries extends ReactiveFunctionVisitor<State> {
+  /*
+   * Only promote LoadGlobal temps when the JSX tag identifier's name differs
+   * from the referenced module-local binding. This preserves direct uses like
+   * <StaticText1 /> while still emitting stable temps for aliases such as
+   * const Tag = StaticText1; return <Tag />;.
+   */
+  override visitInstruction(
+    instruction: ReactiveInstruction,
+    state: State,
+  ): void {
+    const binding =
+      instruction.value.kind === 'LoadGlobal'
+        ? instruction.value.binding
+        : null;
+    const lvalue = instruction.lvalue;
+    const tagName =
+      lvalue != null
+        ? (state.tagNames.get(lvalue.identifier.declarationId) ?? null)
+        : null;
+    if (
+      binding != null &&
+      binding.kind === 'ModuleLocal' &&
+      lvalue != null &&
+      lvalue.identifier.name == null &&
+      tagName !== null &&
+      tagName !== binding.name &&
+      state.tags.has(lvalue.identifier.declarationId)
+    ) {
+      promoteIdentifier(lvalue.identifier, state);
+    }
+    this.traverseInstruction(instruction, state);
+  }
+
   override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
     for (const dep of scopeBlock.scope.dependencies) {
       const {identifier} = dep;
@@ -172,6 +205,7 @@ class PromoteAllInstancedOfPromotedTemporaries extends ReactiveFunctionVisitor<S
 type JsxExpressionTags = Set<DeclarationId>;
 type State = {
   tags: JsxExpressionTags;
+  tagNames: Map<DeclarationId, string | null>;
   promoted: Set<DeclarationId>;
   pruned: Map<
     DeclarationId,
@@ -205,7 +239,10 @@ class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
   ): void {
     this.traverseValue(id, value, state);
     if (value.kind === 'JsxExpression' && value.tag.kind === 'Identifier') {
-      state.tags.add(value.tag.identifier.declarationId);
+      const identifier = value.tag.identifier;
+      state.tags.add(identifier.declarationId);
+      const name = identifier.name != null ? identifier.name.value : null;
+      state.tagNames.set(identifier.declarationId, name);
     }
   }
 
@@ -425,6 +462,7 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
 export function promoteUsedTemporaries(fn: ReactiveFunction): void {
   const state: State = {
     tags: new Set(),
+    tagNames: new Map(),
     promoted: new Set(),
     pruned: new Map(),
   };
