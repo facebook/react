@@ -38,16 +38,19 @@ const SUBSEPARATOR = ':';
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
+const escapeRegex = /[=:]/g;
+const escaperLookup = {
+  '=': '=0',
+  ':': '=2',
+};
+
+function escapeKey(match: string): string {
+  // $FlowFixMe[invalid-computed-prop]
+  return escaperLookup[match];
+}
+
 function escape(key: string): string {
-  const escapeRegex = /[=:]/g;
-  const escaperLookup = {
-    '=': '=0',
-    ':': '=2',
-  };
-  const escapedString = key.replace(escapeRegex, function (match) {
-    // $FlowFixMe[invalid-computed-prop]
-    return escaperLookup[match];
-  });
+  const escapedString = key.replace(escapeRegex, escapeKey);
 
   return '$' + escapedString;
 }
