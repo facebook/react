@@ -74,7 +74,13 @@ export default function ContextMenu({
   );
 
   useLayoutEffect(() => {
-    const menu = ((ref.current: any): HTMLElement);
+    const menu = ref.current;
+
+    // Match the early-return condition below. If neither of these
+    // is true, menu being null would be a bug.
+    if (portalContainer == null || items.length === 0) {
+      return;
+    }
 
     function hideUnlessContains(event: Event) {
       if (!menu.contains(((event.target: any): Node))) {
