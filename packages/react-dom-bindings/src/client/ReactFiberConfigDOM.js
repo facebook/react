@@ -5071,7 +5071,7 @@ function preinitStyle(
       (link: any)._p = new Promise((resolve, reject) => {
         link.onload = resolve;
         link.onerror = reject;
-      });
+      }).catch(() => {});
       link.addEventListener('load', () => {
         state.loading |= Loaded;
       });
@@ -5594,7 +5594,7 @@ export function acquireResource(
         (linkInstance: any)._p = new Promise((resolve, reject) => {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
-        });
+        }).catch(() => {});
         setInitialProperties(instance, 'link', stylesheetProps);
         resource.state.loading |= Inserted;
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
@@ -6297,7 +6297,7 @@ export function suspendResource(
         (linkInstance: any)._p = new Promise((resolve, reject) => {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
-        });
+        }).catch(() => {});
         setInitialProperties(instance, 'link', stylesheetProps);
         resource.instance = instance;
       }
