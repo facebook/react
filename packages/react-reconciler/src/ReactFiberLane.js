@@ -619,6 +619,10 @@ export function includesSyncLane(lanes: Lanes): boolean {
 export function includesNonIdleWork(lanes: Lanes): boolean {
   return (lanes & NonIdleLanes) !== NoLanes;
 }
+export function includesTransitionDeferredLanes(lanes: Lanes): boolean {
+  return (lanes & TransitionDeferredLanes) !== NoLanes;
+}
+
 export function includesOnlyRetries(lanes: Lanes): boolean {
   return (lanes & RetryLanes) === lanes;
 }
