@@ -6,6 +6,7 @@
  */
 
 import * as t from '@babel/types';
+import {hasOwnProperty} from './utils';
 
 export type ComponentDeclaration = t.FunctionDeclaration & {
   __componentDeclaration: boolean;
@@ -14,7 +15,7 @@ export type ComponentDeclaration = t.FunctionDeclaration & {
 export function isComponentDeclaration(
   node: t.FunctionDeclaration,
 ): node is ComponentDeclaration {
-  return Object.prototype.hasOwnProperty.call(node, '__componentDeclaration');
+  return hasOwnProperty(node, '__componentDeclaration');
 }
 
 export function parseComponentDeclaration(
