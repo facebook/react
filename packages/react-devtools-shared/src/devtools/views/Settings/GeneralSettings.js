@@ -6,6 +6,7 @@
  *
  * @flow
  */
+import type {DisplayDensity, Theme} from './SettingsContext';
 
 import * as React from 'react';
 import {useContext, useMemo} from 'react';
@@ -67,7 +68,21 @@ export default function GeneralSettings(_: {}): React.Node {
         <div className={styles.RadioLabel}>Theme</div>
         <select
           value={theme}
-          onChange={({currentTarget}) => setTheme(currentTarget.value)}>
+          onChange={({currentTarget}) => {
+            // Casting here allows an exhaustive check so that devs changing
+            // themes will get a Flow error if they forget to update options.
+            // $FlowFixMe[incompatible-cast] We're checking the value below
+            const value = (currentTarget.value: Theme);
+            switch (value) {
+              case 'auto':
+              case 'light':
+              case 'dark':
+                break;
+              default:
+                (value: empty);
+            }
+            setTheme(value);
+          }}>
           <option value="auto">Auto</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
@@ -78,9 +93,20 @@ export default function GeneralSettings(_: {}): React.Node {
         <div className={styles.RadioLabel}>Display density</div>
         <select
           value={displayDensity}
-          onChange={({currentTarget}) =>
-            setDisplayDensity(currentTarget.value)
-          }>
+          onChange={({currentTarget}) => {
+            // Casting here allows an exhaustive check so that devs changing
+            // display densities will get a Flow error if they forget to update options.
+            // $FlowFixMe[incompatible-cast] We're checking the value below
+            const value = (currentTarget.value: DisplayDensity);
+            switch (value) {
+              case 'compact':
+              case 'comfortable':
+                break;
+              default:
+                (value: empty);
+            }
+            setDisplayDensity(value);
+          }}>
           <option value="compact">Compact</option>
           <option value="comfortable">Comfortable</option>
         </select>

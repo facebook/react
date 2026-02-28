@@ -195,7 +195,7 @@ function PrimaryFallbackTest({initialSuspend}) {
       <label>
         <input
           checked={suspend}
-          onChange={e => setSuspend(e.target.checked)}
+          onChange={e => setSuspend(e.currentTarget.checked)}
           type="checkbox"
         />
         Suspend
