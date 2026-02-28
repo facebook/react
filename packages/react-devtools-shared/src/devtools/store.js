@@ -972,6 +972,7 @@ export default class Store extends EventEmitter<{
             id: suspense.id,
             environment: environmentName,
             endTime: suspense.endTime,
+            hasUniqueSuspenders: suspense.hasUniqueSuspenders,
           };
           target.push(rootStep);
         } else {
@@ -982,6 +983,10 @@ export default class Store extends EventEmitter<{
           if (suspense.endTime > rootStep.endTime) {
             // If any root has a higher end time, let's use that.
             rootStep.endTime = suspense.endTime;
+          }
+          if (!rootStep.hasUniqueSuspenders) {
+            // If any root has unique suspenders, the merged root should too.
+            rootStep.hasUniqueSuspenders = suspense.hasUniqueSuspenders;
           }
         }
         this.pushTimelineStepsInDocumentOrder(
@@ -1051,6 +1056,7 @@ export default class Store extends EventEmitter<{
       // TODO: Get environment for Activity
       environment: null,
       endTime: 0,
+      hasUniqueSuspenders: true,
     });
 
     const transitionChildren = this.getSuspenseChildren(focusedTransitionID);
@@ -1106,6 +1112,7 @@ export default class Store extends EventEmitter<{
           id: child.id,
           environment: environmentName,
           endTime: maxEndTime,
+          hasUniqueSuspenders: child.hasUniqueSuspenders,
         });
       }
       this.pushTimelineStepsInDocumentOrder(

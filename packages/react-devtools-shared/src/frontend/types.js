@@ -211,6 +211,7 @@ export type SuspenseTimelineStep = {
   id: SuspenseNode['id'] | Element['id'], // TODO: Will become a group.
   environment: null | string,
   endTime: number,
+  hasUniqueSuspenders: boolean,
 };
 
 export type SuspenseNode = {
