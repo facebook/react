@@ -92,6 +92,7 @@ import {
   markAsyncSequenceRootTask,
   getCurrentAsyncSequence,
   getAsyncSequenceFromPromise,
+  cleanupAsyncDebugInfo,
   parseStackTrace,
   parseStackTracePrivate,
   supportsComponentStorage,
@@ -854,6 +855,10 @@ export function resolveRequest(): null | Request {
     if (store) return store;
   }
   return null;
+}
+
+export function isRequestClosingOrClosed(request: Request): boolean {
+  return request.status >= CLOSING;
 }
 
 function isTypedArray(value: any): boolean {
@@ -4133,6 +4138,9 @@ function fatalError(request: Request, error: mixed): void {
     request.status = CLOSING;
     request.fatalError = error;
   }
+  if (__DEV__) {
+    cleanupAsyncDebugInfo(request);
+  }
   const abortReason = new Error(
     'The render was aborted due to a fatal error.',
     {
@@ -6097,13 +6105,17 @@ function flushCompletedChunks(request: Request): void {
           // We'll continue writing on this stream so nothing closes.
           return;
         } else {
-          // We'll close the main stream but keep the debug stream open.
-          // TODO: If this destination is not currently flowing we'll not close it when it resumes flowing.
+          // We'll mark the main stream as closed while keeping the debug stream open.
+          // If the main stream is currently flowing, close it immediately.
+          // TODO: If this destination is not currently flowing we won't close it when flow resumes.
           // We should keep a separate status for this.
+          request.status = CLOSED;
           if (request.destination !== null) {
-            request.status = CLOSED;
             close(request.destination);
             request.destination = null;
+          }
+          if (__DEV__) {
+            cleanupAsyncDebugInfo(request);
           }
           return;
         }
@@ -6127,6 +6139,11 @@ function flushCompletedChunks(request: Request): void {
     if (__DEV__ && request.debugDestination !== null) {
       close(request.debugDestination);
       request.debugDestination = null;
+    }
+    if (__DEV__) {
+      // Clean up async debug tracking after all close/abort side effects,
+      // so any async work spawned during abort doesn't re-populate tracking.
+      cleanupAsyncDebugInfo(request);
     }
   }
 }
@@ -6177,6 +6194,9 @@ function callOnAllReadyIfReady(request: Request): void {
 export function startFlowing(request: Request, destination: Destination): void {
   if (request.status === CLOSING) {
     request.status = CLOSED;
+    if (__DEV__) {
+      cleanupAsyncDebugInfo(request);
+    }
     closeWithError(destination, request.fatalError);
     return;
   }
@@ -6202,6 +6222,9 @@ export function startFlowingDebug(
 ): void {
   if (request.status === CLOSING) {
     request.status = CLOSED;
+    if (__DEV__) {
+      cleanupAsyncDebugInfo(request);
+    }
     closeWithError(debugDestination, request.fatalError);
     return;
   }
@@ -6231,6 +6254,9 @@ function finishHalt(request: Request, abortedTasks: Set<Task>): void {
     const onAllReady = request.onAllReady;
     onAllReady();
     flushCompletedChunks(request);
+    if (__DEV__) {
+      cleanupAsyncDebugInfo(request);
+    }
   } catch (error) {
     logRecoverableError(request, error, null);
     fatalError(request, error);
@@ -6247,6 +6273,9 @@ function finishAbort(
     const onAllReady = request.onAllReady;
     onAllReady();
     flushCompletedChunks(request);
+    if (__DEV__) {
+      cleanupAsyncDebugInfo(request);
+    }
   } catch (error) {
     logRecoverableError(request, error, null);
     fatalError(request, error);
@@ -6301,6 +6330,9 @@ export function abort(request: Request, reason: mixed): void {
       const onAllReady = request.onAllReady;
       onAllReady();
       flushCompletedChunks(request);
+      if (__DEV__) {
+        cleanupAsyncDebugInfo(request);
+      }
     }
   } catch (error) {
     logRecoverableError(request, error, null);
