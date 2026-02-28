@@ -2404,4 +2404,92 @@ describe('ReactDOMForm', () => {
 
     assertLog(['[unrelated form] pending: false, state: 1']);
   });
+
+  it('controlled select elements maintain their value after form reset', async () => {
+    const formRef = React.createRef();
+    const selectRef = React.createRef();
+    const inputRef = React.createRef();
+
+    function App() {
+      const [selectedType, setSelectedType] = useState('2');
+      const [inputValue, setInputValue] = useState('test');
+
+      return (
+        <form
+          ref={formRef}
+          action={async () => {
+            Scheduler.log('Action started');
+            // Simulate async action
+            await getText('Action complete');
+            Scheduler.log('Action completed');
+          }}>
+          <select
+            ref={selectRef}
+            value={selectedType}
+            onChange={e => {
+              Scheduler.log(`Select changed to: ${e.target.value}`);
+              setSelectedType(e.target.value);
+            }}>
+            <option value="1">Type 1</option>
+            <option value="2">Type 2</option>
+            <option value="3">Type 3</option>
+          </select>
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={e => {
+              Scheduler.log(`Input changed to: ${e.target.value}`);
+              setInputValue(e.target.value);
+            }}
+          />
+        </form>
+      );
+    }
+
+    // Initial render
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    // Verify initial values
+    expect(selectRef.current.value).toBe('2');
+    expect(inputRef.current.value).toBe('test');
+
+    // User changes the controlled select value
+    await act(() => {
+      selectRef.current.value = '3';
+      const event = new Event('change', {bubbles: true, cancelable: true});
+      selectRef.current.dispatchEvent(event);
+    });
+    assertLog(['Select changed to: 3']);
+
+    // User changes the controlled input value
+    await act(() => {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+      ).set;
+      nativeInputValueSetter.call(inputRef.current, 'modified');
+      const event = new Event('input', {bubbles: true, cancelable: true});
+      inputRef.current.dispatchEvent(event);
+    });
+    assertLog(['Input changed to: modified']);
+
+    // Verify values changed
+    expect(selectRef.current.value).toBe('3');
+    expect(inputRef.current.value).toBe('modified');
+
+    // Submit the form, which will trigger automatic reset
+    await submit(formRef.current);
+    assertLog(['Action started']);
+
+    // Complete the action
+    await act(() => resolveText('Action complete'));
+    assertLog(['Action completed']);
+
+    // After form reset, controlled components should maintain their values
+    // This is the fix for issue #30580
+    expect(selectRef.current.value).toBe('3');
+    expect(inputRef.current.value).toBe('modified');
+  });
 });
