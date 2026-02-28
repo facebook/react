@@ -1202,50 +1202,99 @@ function applyEffect(
           console.log(prettyFormat(state.debugAbstractValue(value)));
         }
 
-        if (
-          mutationKind === 'mutate-frozen' &&
-          context.hoistedContextDeclarations.has(
-            effect.value.identifier.declarationId,
-          )
-        ) {
-          const variable =
-            effect.value.identifier.name !== null &&
-            effect.value.identifier.name.kind === 'named'
-              ? `\`${effect.value.identifier.name.value}\``
-              : null;
-          const hoistedAccess = context.hoistedContextDeclarations.get(
-            effect.value.identifier.declarationId,
-          );
-          const diagnostic = CompilerDiagnostic.create({
-            category: ErrorCategory.Immutability,
-            reason: 'Cannot access variable before it is declared',
-            description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
-          });
-          if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
-            diagnostic.withDetails({
-              kind: 'error',
-              loc: hoistedAccess.loc,
-              message: `${variable ?? 'variable'} accessed before it is declared`,
-            });
-          }
-          diagnostic.withDetails({
-            kind: 'error',
-            loc: effect.value.loc,
-            message: `${variable ?? 'variable'} is declared here`,
-          });
-
-          applyEffect(
-            context,
-            state,
-            {
-              kind: 'MutateFrozen',
-              place: effect.value,
-              error: diagnostic,
-            },
-            initialized,
-            effects,
-          );
-        } else {
+        +        if (
++          mutationKind === 'mutate-frozen' &&
++          context.hoistedContextDeclarations.has(
++            effect.value.identifier.declarationId,
++          )
++        ) {
++          const variable =
++            effect.value.identifier.name !== null &&
++            effect.value.identifier.name.kind === 'named'
++              ? `\`${effect.value.identifier.name.value}\``
++              : null;
++          const hoistedAccess = context.hoistedContextDeclarations.get(
++            effect.value.identifier.declarationId,
++          );
++
++          // Only produce the specialized "accessed before it is declared" diagnostic
++          // when we actually observed a prior distinct hoisted access location.
++          // If we don't have a recorded prior access location (hoistedAccess === null)
++          // or the prior access location is the same as the declaration, fall back to
++          // the generic "This value cannot be modified" diagnostic below.
++          if (hoistedAccess != null && hoistedAccess.loc != effect.value.loc) {
++            const diagnostic = CompilerDiagnostic.create({
++              category: ErrorCategory.Immutability,
++              reason: 'Cannot access variable before it is declared',
++              description: `${variable ?? 'This variable'} is accessed before it is declared, which prevents the earlier access from updating when this value changes over time`,
++            });
++            diagnostic.withDetails({
++              kind: 'error',
++              loc: hoistedAccess.loc,
++              message: `${variable ?? 'variable'} accessed before it is declared`,
++            });
++            diagnostic.withDetails({
++              kind: 'error',
++              loc: effect.value.loc,
++              message: `${variable ?? 'variable'} is declared here`,
++            });
++
++            applyEffect(
++              context,
++              state,
++              {
++                kind: 'MutateFrozen',
++                place: effect.value,
++                error: diagnostic,
++              },
++              initialized,
++              effects,
++            );
++          } else {
++            // No prior distinct hoisted access recorded: fall back to the generic diagnostic
++            // that explains why the value cannot be modified.
++            const reason = getWriteErrorReason({
++              kind: value.kind,
++              reason: value.reason,
++            });
++            const variableName =
++              effect.value.identifier.name !== null &&
++              effect.value.identifier.name.kind === 'named'
++                ? `\`${effect.value.identifier.name.value}\``
++                : 'value';
++            const diagnostic = CompilerDiagnostic.create({
++              category: ErrorCategory.Immutability,
++              reason: 'This value cannot be modified',
++              description: reason,
++            }).withDetails({
++              kind: 'error',
++              loc: effect.value.loc,
++              message: `${variableName} cannot be modified`,
++            });
++            if (
++              effect.kind === 'Mutate' &&
++              effect.reason?.kind === 'AssignCurrentProperty'
++            ) {
++              diagnostic.withDetails({
++                kind: 'hint',
++                message: `Hint: If this value is a Ref (value returned by \`useRef()\`), rename the variable to end in "Ref".`,
++              });
++            }
++
++            applyEffect(
++              context,
++              state,
++              {
++                kind:
++                  value.kind === ValueKind.Frozen ? 'MutateFrozen' : 'MutateGlobal',
++                place: effect.value,
++                error: diagnostic,
++              },
++              initialized,
++              effects,
++            );
++          }
++        } else {
           const reason = getWriteErrorReason({
             kind: value.kind,
             reason: value.reason,
