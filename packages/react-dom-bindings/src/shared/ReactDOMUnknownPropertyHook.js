@@ -293,7 +293,6 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'disablePictureInPicture':
             case 'disableRemotePlayback':
             case 'formNoValidate':
-            case 'hidden':
             case 'loop':
             case 'noModule':
             case 'noValidate':
