@@ -417,19 +417,23 @@ function updatePackageVersions(
     if (stats.isFile()) {
       const packageInfo = JSON.parse(fs.readFileSync(packageJSONPath));
 
+      const designatedStableVersion = packageInfo.version;
       // Update version
       packageInfo.version = version;
 
+      const designatedStableDependencies = {};
       if (packageInfo.dependencies) {
         for (const dep of Object.keys(packageInfo.dependencies)) {
           const depVersion = versionsMap.get(dep);
           if (depVersion !== undefined) {
+            designatedStableDependencies[dep] = packageInfo.dependencies[dep];
             packageInfo.dependencies[dep] = pinToExactVersion
               ? depVersion
               : '^' + depVersion;
           }
         }
       }
+      const designatedStablePeerDependencies = {};
       if (packageInfo.peerDependencies) {
         if (
           !pinToExactVersion &&
@@ -444,6 +448,8 @@ function updatePackageVersions(
           for (const dep of Object.keys(packageInfo.peerDependencies)) {
             const depVersion = versionsMap.get(dep);
             if (depVersion !== undefined) {
+              designatedStablePeerDependencies[dep] =
+                packageInfo.peerDependencies[dep];
               packageInfo.peerDependencies[dep] = pinToExactVersion
                 ? depVersion
                 : '^' + depVersion;
@@ -451,6 +457,12 @@ function updatePackageVersions(
           }
         }
       }
+
+      packageInfo.reactPublishStableConfig = {
+        version: designatedStableVersion,
+        dependencies: designatedStableDependencies,
+        peerDependencies: designatedStablePeerDependencies,
+      };
 
       // Write out updated package.json
       fs.writeFileSync(packageJSONPath, JSON.stringify(packageInfo, null, 2));
