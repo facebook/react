@@ -234,7 +234,7 @@ for (let i = 0; i < this._roots.length; i++) {
 }
 ```
 
-We skip the root itself because don't display them in the tree:
+We skip the root itself because we don't display them in the tree:
 ```js
 const firstChildID = root.children[0];
 ```
