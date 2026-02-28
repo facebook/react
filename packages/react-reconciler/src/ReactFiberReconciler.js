@@ -467,6 +467,21 @@ export {
   flushPendingEffects as flushPassiveEffects,
 };
 
+// Deprecated: Add deprecation warning for removed flushSync API
+let didWarnAboutFlushSync = false;
+export const flushSync = __DEV__
+  ? function flushSync() {
+      if (!didWarnAboutFlushSync) {
+        didWarnAboutFlushSync = true;
+        console.error(
+          'The `flushSync` export from react-reconciler has been removed. ' +
+            'Use `updateContainerSync()` followed by `flushSyncWork()` instead. ' +
+            'See https://github.com/facebook/react/pull/28500 for more details.',
+        );
+      }
+    }
+  : undefined;
+
 export function getPublicRootInstance(
   container: OpaqueRoot,
 ): component(...props: any) | PublicInstance | null {
