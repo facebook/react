@@ -202,9 +202,11 @@ function updateTree(
         i += 3;
 
         if (nodes.has(id)) {
-          throw new Error(
-            `Commit tree already contains fiber "${id}". This is a bug in React DevTools.`,
+          // Duplicate add detected; log and skip instead of throwing to avoid crashing the UI.
+          console.error(
+            `Commit tree already contains fiber "${id}". Skipping duplicate add.`,
           );
+          break;
         }
 
         if (type === ElementTypeRoot) {
@@ -286,9 +288,11 @@ function updateTree(
           i++;
 
           if (!nodes.has(id)) {
-            throw new Error(
-              `Commit tree does not contain fiber "${id}". This is a bug in React DevTools.`,
+            // Missing node; log and skip this remove operation.
+            console.error(
+              `Commit tree does not contain fiber "${id}". Skipping remove.`,
             );
+            continue;
           }
 
           const node = getClonedNode(id);
@@ -312,6 +316,13 @@ function updateTree(
         }
         break;
       }
+
+    case TREE_OPERATION_REMOVE_ROOT: {
+    console.warn('Operation REMOVE_ROOT is not supported while profiling. Ignoring.');
+    break;
+}
+
+
       case TREE_OPERATION_REORDER_CHILDREN: {
         id = ((operations[i + 1]: any): number);
         const numChildren = ((operations[i + 2]: any): number);
@@ -490,7 +501,10 @@ function updateTree(
       }
 
       default:
-        throw Error(`Unsupported Bridge operation "${operation}"`);
+        // Unsupported operation; log and stop processing further operations to avoid unpredictable state.
+        console.error(`Unsupported Bridge operation "${operation}". Ignoring remaining operations.`);
+        i = operations.length;
+        break;
     }
   }
 
