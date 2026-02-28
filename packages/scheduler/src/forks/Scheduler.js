@@ -500,6 +500,14 @@ const performWorkUntilDeadline = () => {
     // remain true, and we'll continue the work loop.
     let hasMoreWork = true;
     try {
+      if (isPerformingWork) {
+        // A scheduled task triggered a host event (e.g. valid re-entry).
+        // If we process it now, we'll lose key context. Schedulers that
+        // support re-entry should verify that the queue is empty before
+        // processing.
+        // For now, we'll just yield.
+        return;
+      }
       hasMoreWork = flushWork(currentTime);
     } finally {
       if (hasMoreWork) {
