@@ -20,6 +20,7 @@ import styles from './SuspenseTimeline.css';
 import SuspenseScrubber from './SuspenseScrubber';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import type {SuspenseNode} from '../../../frontend/types';
 
 function SuspenseTimelineInput() {
   const bridge = useContext(BridgeContext);
@@ -101,15 +102,33 @@ function SuspenseTimelineInput() {
   // TODO: useEffectEvent here once it's supported in all versions DevTools supports.
   // For now we just exclude it from deps since we don't lint those anyway.
   function changeTimelineIndex(newIndex: number) {
+    const suspendedSetByRendererID = new Map<
+      number,
+      Array<SuspenseNode['id']>,
+    >();
     // Synchronize timeline index with what is resuspended.
     // We suspend everything after the current selection. The root isn't showing
     // anything suspended in the root. The step after that should have one less
     // thing suspended. I.e. the first suspense boundary should be unsuspended
     // when it's selected. This also lets you show everything in the last step.
-    const suspendedSet = timeline.slice(timelineIndex + 1).map(step => step.id);
-    bridge.send('overrideSuspenseMilestone', {
-      suspendedSet,
-    });
+    for (let i = timelineIndex + 1; i < timeline.length; i++) {
+      const step = timeline[i];
+      const {rendererID} = step;
+      let suspendedSetForRendererID = suspendedSetByRendererID.get(rendererID);
+      if (suspendedSetForRendererID === undefined) {
+        suspendedSetForRendererID = [];
+        suspendedSetByRendererID.set(rendererID, suspendedSetForRendererID);
+      }
+      suspendedSetForRendererID.push(step.id);
+    }
+
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const [rendererID, suspendedSet] of suspendedSetByRendererID) {
+      bridge.send('overrideSuspenseMilestone', {
+        rendererID,
+        suspendedSet,
+      });
+    }
   }
 
   useEffect(() => {

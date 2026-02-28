@@ -957,6 +957,12 @@ export default class Store extends EventEmitter<{
       if (root === null) {
         continue;
       }
+      const rendererID = this._rootIDToRendererID.get(rootID);
+      if (rendererID === undefined) {
+        throw new Error(
+          'Failed to find renderer ID for root. This is a bug in React DevTools.',
+        );
+      }
       // TODO: This includes boundaries that can't be suspended due to no support from the renderer.
 
       const suspense = this.getSuspenseByID(rootID);
@@ -972,6 +978,7 @@ export default class Store extends EventEmitter<{
             id: suspense.id,
             environment: environmentName,
             endTime: suspense.endTime,
+            rendererID,
           };
           target.push(rootStep);
         } else {
@@ -990,6 +997,7 @@ export default class Store extends EventEmitter<{
           uniqueSuspendersOnly,
           environments,
           0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+          rendererID,
         );
       }
     }
@@ -1039,6 +1047,7 @@ export default class Store extends EventEmitter<{
    */
   getSuspendableDocumentOrderSuspenseTransition(
     uniqueSuspendersOnly: boolean,
+    rendererID: number,
   ): Array<SuspenseTimelineStep> {
     const target: Array<SuspenseTimelineStep> = [];
     const focusedTransitionID = this._focusedTransition;
@@ -1051,6 +1060,7 @@ export default class Store extends EventEmitter<{
       // TODO: Get environment for Activity
       environment: null,
       endTime: 0,
+      rendererID,
     });
 
     const transitionChildren = this.getSuspenseChildren(focusedTransitionID);
@@ -1062,6 +1072,7 @@ export default class Store extends EventEmitter<{
       // TODO: Get environment for Activity
       [],
       0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+      rendererID,
     );
 
     return target;
@@ -1073,6 +1084,7 @@ export default class Store extends EventEmitter<{
     uniqueSuspendersOnly: boolean,
     parentEnvironments: Array<string>,
     parentEndTime: number,
+    rendererID: number,
   ): void {
     for (let i = 0; i < children.length; i++) {
       const child = this.getSuspenseByID(children[i]);
@@ -1106,6 +1118,7 @@ export default class Store extends EventEmitter<{
           id: child.id,
           environment: environmentName,
           endTime: maxEndTime,
+          rendererID,
         });
       }
       this.pushTimelineStepsInDocumentOrder(
@@ -1114,6 +1127,7 @@ export default class Store extends EventEmitter<{
         uniqueSuspendersOnly,
         unionEnvironments,
         maxEndTime,
+        rendererID,
       );
     }
   }
@@ -1121,14 +1135,32 @@ export default class Store extends EventEmitter<{
   getEndTimeOrDocumentOrderSuspense(
     uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseTimelineStep> {
-    const timeline =
-      this._focusedTransition === 0
-        ? this.getSuspendableDocumentOrderSuspenseInitialPaint(
-            uniqueSuspendersOnly,
-          )
-        : this.getSuspendableDocumentOrderSuspenseTransition(
-            uniqueSuspendersOnly,
-          );
+    let timeline: SuspenseTimelineStep[];
+    if (this._focusedTransition === 0) {
+      timeline =
+        this.getSuspendableDocumentOrderSuspenseInitialPaint(
+          uniqueSuspendersOnly,
+        );
+    } else {
+      const focusedTransitionRootID = this.getRootIDForElement(
+        this._focusedTransition,
+      );
+      if (focusedTransitionRootID === null) {
+        throw new Error(
+          'Failed to find root ID for focused transition. This is a bug in React DevTools.',
+        );
+      }
+      const rendererID = this._rootIDToRendererID.get(focusedTransitionRootID);
+      if (rendererID === undefined) {
+        throw new Error(
+          'Failed to find renderer ID for focused transition root. This is a bug in React DevTools.',
+        );
+      }
+      timeline = this.getSuspendableDocumentOrderSuspenseTransition(
+        uniqueSuspendersOnly,
+        rendererID,
+      );
+    }
 
     if (timeline.length === 0) {
       return timeline;
