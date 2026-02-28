@@ -4518,7 +4518,9 @@ export function writeCompletedRoot(
   }
   if (enableFizzBlockingRender) {
     const preamble = renderState.preamble;
-    if (preamble.htmlChunks || preamble.headChunks) {
+    // Only emit the template tag if we're not complete yet. When everything is done
+    // (e.g., when using onAllReady), we don't need this target for rel="expect".
+    if (!isComplete && (preamble.htmlChunks || preamble.headChunks)) {
       // If we rendered the whole document, then we emitted a rel="expect" that needs a
       // matching target. Normally we use one of the bootstrap scripts for this but if
       // there are none, then we need to emit a tag to complete the shell.
