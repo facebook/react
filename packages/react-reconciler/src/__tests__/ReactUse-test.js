@@ -256,7 +256,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
-        'supported, except via a Suspense-compatible library or framework.\n' +
+        'supported, except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     assertLog(['ABC']);
@@ -426,11 +427,13 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
-        'supported, except via a Suspense-compatible library or framework.\n' +
+        'supported, except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
-        'supported, except via a Suspense-compatible library or framework.\n' +
+        'supported, except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     assertLog([
@@ -603,7 +606,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '     in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async');
@@ -652,7 +656,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '     in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async');
@@ -914,7 +919,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in ExcitingText (at **)',
     ]);
 
@@ -958,7 +964,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in Kitchen (at **)',
     ]);
 
@@ -979,7 +986,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in Kitchen (at **)',
     ]);
 
@@ -1000,7 +1008,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in Kitchen (at **)',
     ]);
     expect(root).toMatchRenderedOutput('banana dill');
@@ -1034,7 +1043,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in Lexicon (at **)',
     ]);
     expect(root).toMatchRenderedOutput('aguacate abogado');
@@ -1054,7 +1064,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in Lexicon (at **)',
     ]);
     expect(root).toMatchRenderedOutput('aguacate avocat');
@@ -1199,7 +1210,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in AsyncText (at **)',
     ]);
     expect(root).toMatchRenderedOutput('A(Loading B...)');
@@ -1225,7 +1237,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in AsyncText (at **)',
     ]);
     expect(root).toMatchRenderedOutput('AB(Loading C...)');
@@ -1243,7 +1256,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in AsyncText (at **)',
     ]);
     expect(root).toMatchRenderedOutput('ABC');
@@ -1278,11 +1292,13 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('A1');
@@ -1331,7 +1347,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Hi');
@@ -1366,7 +1383,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Hi');
@@ -1423,7 +1441,8 @@ describe('ReactUse', () => {
         '    in App (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('A');
@@ -1438,7 +1457,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('B');
@@ -1656,7 +1676,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async');
@@ -1690,7 +1711,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async');
@@ -1715,7 +1737,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Async!');
@@ -1776,11 +1799,13 @@ describe('ReactUse', () => {
         '    in App (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
     expect(root).toMatchRenderedOutput(
@@ -1968,7 +1993,8 @@ describe('ReactUse', () => {
           '    in AsyncClientComponent (at **)',
         'A component was suspended by an uncached promise. ' +
           'Creating promises inside a Client Component or hook is not yet supported, ' +
-          'except via a Suspense-compatible library or framework.\n' +
+          'except via a Suspense-compatible library or framework. ' +
+          'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
           '    in AsyncClientComponent (at **)',
       ]);
     },
@@ -2001,11 +2027,13 @@ describe('ReactUse', () => {
         '    in AsyncClientComponent (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in AsyncClientComponent (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in AsyncClientComponent (at **)',
     ]);
   });
@@ -2043,7 +2071,8 @@ describe('ReactUse', () => {
       // We get this warning because the generator's promise themselves are not cached.
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
 
@@ -2053,7 +2082,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in App (at **)',
     ]);
 
@@ -2094,7 +2124,8 @@ describe('ReactUse', () => {
       // We get this warning because the generator's promise themselves are not cached.
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in div (at **)\n' +
         '    in App (at **)',
     ]);
@@ -2105,7 +2136,8 @@ describe('ReactUse', () => {
     assertConsoleErrorDev([
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
-        'except via a Suspense-compatible library or framework.\n' +
+        'except via a Suspense-compatible library or framework. ' +
+        'If you are calling a function that returns a promise, make sure it is not marked as async.\n' +
         '    in div (at **)\n' +
         '    in App (at **)',
     ]);
