@@ -972,7 +972,7 @@ export default class Store extends EventEmitter<{
             id: suspense.id,
             environment: environmentName,
             endTime: suspense.endTime,
-            hasUniqueSuspenders: true,
+            hasUniqueSuspenders: suspense.hasUniqueSuspenders,
           };
           target.push(rootStep);
         } else {
@@ -983,6 +983,10 @@ export default class Store extends EventEmitter<{
           if (suspense.endTime > rootStep.endTime) {
             // If any root has a higher end time, let's use that.
             rootStep.endTime = suspense.endTime;
+          }
+          if (!rootStep.hasUniqueSuspenders) {
+            // If any root has unique suspenders, the merged root should too.
+            rootStep.hasUniqueSuspenders = suspense.hasUniqueSuspenders;
           }
         }
         this.pushTimelineStepsInDocumentOrder(
