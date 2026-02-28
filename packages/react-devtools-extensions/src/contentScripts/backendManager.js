@@ -207,4 +207,12 @@ if (!window.__REACT_DEVTOOLS_BACKEND_MANAGER_INJECTED__) {
   window.__REACT_DEVTOOLS_BACKEND_MANAGER_INJECTED__ = true;
 
   window.addEventListener('message', welcome);
+
+  // Signal to the content script that the backend manager has been injected.
+  // This allows the content script to connect immediately without polling.
+  window.document.documentElement.setAttribute(
+    'data-react-devtools-ready',
+    'true',
+  );
+  window.dispatchEvent(new CustomEvent('react-devtools-ready'));
 }

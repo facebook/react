@@ -17,18 +17,23 @@ function injectProxy({target}: {target: any}) {
     window.__REACT_DEVTOOLS_PROXY_INJECTED__ = true;
 
     connectPort();
-    sayHelloToBackendManager();
 
     // The backend waits to install the global hook until notified by the content script.
     // In the event of a page reload, the content script might be loaded before the backend manager is injected.
-    // Because of this we need to poll the backend manager until it has been initialized.
-    const intervalID: IntervalID = setInterval(() => {
-      if (backendInitialized) {
-        clearInterval(intervalID);
-      } else {
-        sayHelloToBackendManager();
-      }
-    }, 500);
+    // Because of this we need to synchronize with the backend manager.
+    // We use a data attribute and a custom event to detect when the backend manager is ready,
+    // avoiding the need for CPU-intensive polling (see issue #35515).
+
+    const onBackendReady = () => {
+      window.removeEventListener('react-devtools-ready', onBackendReady);
+      sayHelloToBackendManager();
+    };
+
+    if (document.documentElement.getAttribute('data-react-devtools-ready')) {
+      onBackendReady();
+    } else {
+      window.addEventListener('react-devtools-ready', onBackendReady);
+    }
   }
 }
 
