@@ -103,6 +103,7 @@ export function inferMutationAliasingRanges(
     kind: MutationKind;
     place: Place;
     reason: MutationReason | null;
+    noBackwardRangeExtension: boolean;
   }> = [];
   const renders: Array<{index: number; place: Place}> = [];
 
@@ -180,6 +181,9 @@ export function inferMutationAliasingRanges(
                 : MutationKind.Conditional,
             reason: null,
             place: effect.value,
+            noBackwardRangeExtension:
+              effect.kind === 'MutateTransitiveConditionally' &&
+              (effect.noBackwardRangeExtension ?? false),
           });
         } else if (
           effect.kind === 'Mutate' ||
@@ -195,6 +199,7 @@ export function inferMutationAliasingRanges(
                 : MutationKind.Conditional,
             reason: effect.kind === 'Mutate' ? (effect.reason ?? null) : null,
             place: effect.value,
+            noBackwardRangeExtension: false,
           });
         } else if (
           effect.kind === 'MutateFrozen' ||
@@ -249,6 +254,7 @@ export function inferMutationAliasingRanges(
       mutation.place.loc,
       mutation.reason,
       shouldRecordErrors ? fn.env : null,
+      mutation.noBackwardRangeExtension,
     );
   }
   for (const render of renders) {
@@ -711,16 +717,85 @@ class AliasingState {
     loc: SourceLocation,
     reason: MutationReason | null,
     env: Environment | null,
+    noBackwardRangeExtension: boolean = false,
   ): void {
+    /*
+     * Only skip backward-alias range extension when ALL of these hold:
+     * 1. The effect requested noBackwardRangeExtension (MethodCall receiver)
+     * 2. The start node is not a PropertyLoad result (no createdFrom edges),
+     *    since PropertyLoad receivers need backward range extension for
+     *    correctness (e.g. `x.y.push(val)` must extend x and y).
+     * 3. At least one of the start's backward alias targets was produced by
+     *    a function call (indicated by having maybeAliases from the default
+     *    Apply handler). This distinguishes `expensiveProcessing(data).map(fn)`
+     *    from `localArray.push(val)` — only the former should skip, since the
+     *    call result represents a separately-memoizable value.
+     */
+    const startNode = this.nodes.get(start);
+    let effectiveSkipAliases = false;
+    if (
+      noBackwardRangeExtension &&
+      startNode != null &&
+      startNode.createdFrom.size === 0
+    ) {
+      /*
+       * Walk backward through aliases from the start node to check if
+       * any value in the chain was produced by a function call (Apply).
+       * Apply results are identifiable by having maybeAliases, since the
+       * default Apply handler records MaybeAlias from each argument to
+       * the result. Only walk through alias edges (not maybeAliases or
+       * captures) to avoid matching catch parameters and similar patterns
+       * where range extension is required for correctness.
+       */
+      const visited = new Set<Identifier>();
+      const aliasQueue: Array<Identifier> = [start];
+      while (aliasQueue.length > 0) {
+        const id = aliasQueue.pop()!;
+        if (visited.has(id)) {
+          continue;
+        }
+        visited.add(id);
+        const node = this.nodes.get(id);
+        if (node == null) {
+          continue;
+        }
+        if (node.maybeAliases.size > 0) {
+          effectiveSkipAliases = true;
+          break;
+        }
+        for (const [nextAliasId] of node.aliases) {
+          aliasQueue.push(nextAliasId);
+        }
+      }
+    }
     const seen = new Map<Identifier, MutationKind>();
     const queue: Array<{
       place: Identifier;
       transitive: boolean;
       direction: 'backwards' | 'forwards';
       kind: MutationKind;
-    }> = [{place: start, transitive, direction: 'backwards', kind: startKind}];
+      /*
+       * When true, skip extending the mutable range for this node. This
+       * is set for nodes reached via backward alias/maybeAlias edges when
+       * effectiveSkipAliases is enabled, so that the receiver's backward
+       * aliases are not pulled into the same reactive scope as the method
+       * call. Nodes reached via capture edges reset this flag, since
+       * captures represent structural containment (e.g. function closures)
+       * where range extension is required for correctness.
+       */
+      skipRangeExtension: boolean;
+    }> = [
+      {
+        place: start,
+        transitive,
+        direction: 'backwards',
+        kind: startKind,
+        skipRangeExtension: false,
+      },
+    ];
     while (queue.length !== 0) {
-      const {place: current, transitive, direction, kind} = queue.pop()!;
+      const {place: current, transitive, direction, kind, skipRangeExtension} =
+        queue.pop()!;
       const previousKind = seen.get(current);
       if (previousKind != null && previousKind >= kind) {
         continue;
@@ -732,7 +807,7 @@ class AliasingState {
       }
       node.mutationReason ??= reason;
       node.lastMutated = Math.max(node.lastMutated, index);
-      if (end != null) {
+      if (end != null && !skipRangeExtension) {
         node.id.mutableRange.end = makeInstructionId(
           Math.max(node.id.mutableRange.end, end),
         );
@@ -768,6 +843,7 @@ class AliasingState {
           direction: 'forwards',
           // Traversing a maybeAlias edge always downgrades to conditional mutation
           kind: edge.kind === 'maybeAlias' ? MutationKind.Conditional : kind,
+          skipRangeExtension: false,
         });
       }
       for (const [alias, when] of node.createdFrom) {
@@ -779,6 +855,8 @@ class AliasingState {
           transitive: true,
           direction: 'backwards',
           kind,
+          // Propagate parent's skipRangeExtension but don't initiate it
+          skipRangeExtension,
         });
       }
       if (direction === 'backwards' || node.value.kind !== 'Phi') {
@@ -801,6 +879,16 @@ class AliasingState {
             transitive,
             direction: 'backwards',
             kind,
+            /*
+             * Skip range extension when traversing backward through alias
+             * edges from a conditional method-call mutation. This prevents
+             * the receiver's creation-site values from having their ranges
+             * extended to cover the method call instruction, which would
+             * otherwise cause them to be merged into the same scope.
+             */
+            skipRangeExtension:
+              skipRangeExtension ||
+              (effectiveSkipAliases && current === start),
           });
         }
         /**
@@ -819,6 +907,9 @@ class AliasingState {
             transitive,
             direction: 'backwards',
             kind: MutationKind.Conditional,
+            skipRangeExtension:
+              skipRangeExtension ||
+              (effectiveSkipAliases && current === start),
           });
         }
       }
@@ -835,6 +926,13 @@ class AliasingState {
             transitive,
             direction: 'backwards',
             kind,
+            /*
+             * Reset skipRangeExtension for capture edges. Captures
+             * represent structural containment (e.g. a function closing
+             * over a value), and the captured value's range must be
+             * extended to cover the mutation point for correctness.
+             */
+            skipRangeExtension: false,
           });
         }
       }

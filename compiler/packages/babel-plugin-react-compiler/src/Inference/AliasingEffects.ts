@@ -66,7 +66,11 @@ export type AliasingEffect =
   /**
    * Mutates any of the value, its direct aliases, and its transitive captures that are mutable.
    */
-  | {kind: 'MutateTransitiveConditionally'; value: Place}
+  | {
+      kind: 'MutateTransitiveConditionally';
+      value: Place;
+      noBackwardRangeExtension?: boolean;
+    }
   /**
    * Records information flow from `from` to `into` in cases where local mutation of the destination
    * will *not* mutate the source:

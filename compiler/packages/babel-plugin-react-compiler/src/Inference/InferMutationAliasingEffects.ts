@@ -1126,12 +1126,29 @@ function applyEffect(
           }
           const operand = arg.kind === 'Identifier' ? arg : arg.place;
           if (operand !== effect.function || effect.mutatesFunction) {
+            /*
+             * For the receiver of a MethodCall (where receiver !== function),
+             * use noBackwardRangeExtension so that the receiver's mutable
+             * range is not extended backward through aliases. Without this,
+             * values like `expensiveProcessing(data)` get pulled into the
+             * same reactive scope as the method call result, preventing
+             * independent memoization. The receiver itself and any values
+             * it was captured into are still marked as mutated (forward
+             * propagation is preserved), maintaining correctness for
+             * patterns like `s.add(arr); arr.push(x)`. Known mutating
+             * methods (e.g. Array.push) have explicit aliasing signatures
+             * that bypass this default path entirely.
+             */
+            const isMethodReceiver =
+              operand === effect.receiver &&
+              effect.receiver !== effect.function;
             applyEffect(
               context,
               state,
               {
                 kind: 'MutateTransitiveConditionally',
                 value: operand,
+                noBackwardRangeExtension: isMethodReceiver,
               },
               initialized,
               effects,
