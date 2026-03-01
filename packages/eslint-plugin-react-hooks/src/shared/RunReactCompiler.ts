@@ -97,6 +97,7 @@ function checkTopLevelNode(node: ESTree.Node): boolean {
   }
 
   // Handle: const MyComponent = () => {} or const useHook = function() {}
+  // Also handles: const MyComponent = wrap(() => {})
   if (node.type === 'VariableDeclaration') {
     for (const decl of (node as ESTree.VariableDeclaration).declarations) {
       if (decl.id.type === 'Identifier') {
@@ -104,7 +105,8 @@ function checkTopLevelNode(node: ESTree.Node): boolean {
         if (
           init != null &&
           (init.type === 'ArrowFunctionExpression' ||
-            init.type === 'FunctionExpression')
+            init.type === 'FunctionExpression' ||
+            init.type === 'CallExpression')
         ) {
           const name = decl.id.name;
           if (COMPONENT_NAME_PATTERN.test(name) || HOOK_NAME_PATTERN.test(name)) {
