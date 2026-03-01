@@ -51,9 +51,9 @@ import { Stringify, identity, makeArray, mutate } from "shared-runtime";
 function Foo(t0) {
   const $ = _c(3);
   const { cond1, cond2 } = t0;
+  const arr = makeArray({ a: 2 }, 2, []);
   let t1;
   if ($[0] !== cond1 || $[1] !== cond2) {
-    const arr = makeArray({ a: 2 }, 2, []);
     t1 = cond1 ? (
       <>
         <div>{identity("foo")}</div>

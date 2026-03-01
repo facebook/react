@@ -36,27 +36,35 @@ import fbt from "fbt";
 import { Stringify } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(5);
   let t0;
-  if ($[0] !== props.cond || $[1] !== props.value.length) {
-    const label = fbt._(
+  if ($[0] !== props.value.length) {
+    t0 = fbt._(
       { "*": "{number} bars", _1: "1 bar" },
       [fbt._plural(props.value.length, "number")],
       { hk: "4mUen7" },
     );
-    t0 = props.cond ? (
+    $[0] = props.value.length;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const label = t0;
+  let t1;
+  if ($[2] !== label || $[3] !== props.cond) {
+    t1 = props.cond ? (
       <Stringify
         description={fbt._("Text here", null, { hk: "21YpZs" })}
         label={label.toString()}
       />
     ) : null;
-    $[0] = props.cond;
-    $[1] = props.value.length;
-    $[2] = t0;
+    $[2] = label;
+    $[3] = props.cond;
+    $[4] = t1;
   } else {
-    t0 = $[2];
+    t1 = $[4];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

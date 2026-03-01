@@ -54,40 +54,54 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(t0) {
-  const $ = _c(8);
+  const $ = _c(12);
   const { label, highlightedItem } = t0;
   const serverTime = useServerTime();
   let t1;
-  let timestampLabel;
-  if ($[0] !== highlightedItem || $[1] !== label || $[2] !== serverTime) {
-    const highlight = new Highlight(highlightedItem);
-    const time = serverTime.get();
-    timestampLabel = time / 1000 || label;
-    t1 = highlight.render();
+  if ($[0] !== highlightedItem) {
+    t1 = new Highlight(highlightedItem);
     $[0] = highlightedItem;
-    $[1] = label;
-    $[2] = serverTime;
-    $[3] = t1;
-    $[4] = timestampLabel;
+    $[1] = t1;
   } else {
-    t1 = $[3];
-    timestampLabel = $[4];
+    t1 = $[1];
   }
   let t2;
-  if ($[5] !== t1 || $[6] !== timestampLabel) {
-    t2 = (
+  let timestampLabel;
+  if ($[2] !== label || $[3] !== serverTime || $[4] !== t1) {
+    const highlight = t1;
+    const time = serverTime.get();
+    timestampLabel = time / 1000 || label;
+    if ($[7] !== highlight) {
+      t2 = highlight.render();
+      $[7] = highlight;
+      $[8] = t2;
+    } else {
+      t2 = $[8];
+    }
+    $[2] = label;
+    $[3] = serverTime;
+    $[4] = t1;
+    $[5] = t2;
+    $[6] = timestampLabel;
+  } else {
+    t2 = $[5];
+    timestampLabel = $[6];
+  }
+  let t3;
+  if ($[9] !== t2 || $[10] !== timestampLabel) {
+    t3 = (
       <>
-        {t1}
+        {t2}
         {timestampLabel}
       </>
     );
-    $[5] = t1;
-    $[6] = timestampLabel;
-    $[7] = t2;
+    $[9] = t2;
+    $[10] = timestampLabel;
+    $[11] = t3;
   } else {
-    t2 = $[7];
+    t3 = $[11];
   }
-  return t2;
+  return t3;
 }
 
 function useServerTime() {

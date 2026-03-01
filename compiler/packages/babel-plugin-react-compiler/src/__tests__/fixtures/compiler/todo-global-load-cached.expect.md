@@ -35,31 +35,47 @@ import { makeArray } from "shared-runtime";
  * and avoid adding them to `temporariesUsedOutsideDefiningScope`.
  */
 function Component(t0) {
-  const $ = _c(6);
+  const $ = _c(12);
   const { num } = t0;
-  let T0;
   let t1;
   if ($[0] !== num) {
-    const arr = makeArray(num);
-    T0 = Stringify;
-    t1 = arr.push(num);
+    t1 = makeArray(num);
     $[0] = num;
-    $[1] = T0;
-    $[2] = t1;
+    $[1] = t1;
   } else {
-    T0 = $[1];
-    t1 = $[2];
+    t1 = $[1];
   }
+  let T0;
   let t2;
-  if ($[3] !== T0 || $[4] !== t1) {
-    t2 = <T0 value={t1} />;
-    $[3] = T0;
-    $[4] = t1;
+  if ($[2] !== num || $[3] !== t1) {
+    const arr = t1;
+    T0 = Stringify;
+    if ($[6] !== arr || $[7] !== num) {
+      t2 = arr.push(num);
+      $[6] = arr;
+      $[7] = num;
+      $[8] = t2;
+    } else {
+      t2 = $[8];
+    }
+    $[2] = num;
+    $[3] = t1;
+    $[4] = T0;
     $[5] = t2;
   } else {
+    T0 = $[4];
     t2 = $[5];
   }
-  return t2;
+  let t3;
+  if ($[9] !== T0 || $[10] !== t2) {
+    t3 = <T0 value={t2} />;
+    $[9] = T0;
+    $[10] = t2;
+    $[11] = t3;
+  } else {
+    t3 = $[11];
+  }
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

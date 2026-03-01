@@ -234,6 +234,9 @@ export function inferMutationAliasingRanges(
       for (const effect of block.terminal.effects) {
         if (effect.kind === 'Alias') {
           state.assign(index++, effect.from, effect.into);
+          if (block.terminal.kind === 'maybe-throw') {
+            state.catchParams.add(effect.into.identifier);
+          }
         } else {
           CompilerError.invariant(effect.kind === 'Freeze', {
             reason: `Unexpected '${effect.kind}' effect for MaybeThrow terminal`,
@@ -604,6 +607,13 @@ type Node = {
 };
 class AliasingState {
   nodes: Map<Identifier, Node> = new Map();
+  /*
+   * Identifiers that are catch handler bindings. These are tracked
+   * so the backward-alias heuristic in mutate() can stop walking
+   * through catch parameter aliases, which would otherwise incorrectly
+   * match the "function call result" pattern and skip range extension.
+   */
+  catchParams: Set<Identifier> = new Set();
 
   create(place: Place, value: Node['value']): void {
     this.nodes.set(place.identifier, {
@@ -744,8 +754,10 @@ class AliasingState {
        * Apply results are identifiable by having maybeAliases, since the
        * default Apply handler records MaybeAlias from each argument to
        * the result. Only walk through alias edges (not maybeAliases or
-       * captures) to avoid matching catch parameters and similar patterns
-       * where range extension is required for correctness.
+       * captures). Additionally, stop walking when a catch parameter is
+       * reached, since catch parameters are aliased to call results via
+       * terminal Alias effects and would otherwise incorrectly trigger
+       * this heuristic.
        */
       const visited = new Set<Identifier>();
       const aliasQueue: Array<Identifier> = [start];
@@ -757,6 +769,18 @@ class AliasingState {
         visited.add(id);
         const node = this.nodes.get(id);
         if (node == null) {
+          continue;
+        }
+        /*
+         * Stop walking through catch parameter aliases. Catch bindings
+         * are aliased to call results in the try block, and those call
+         * results have maybeAliases from the Apply handler. Without
+         * this check, the heuristic would incorrectly treat catch
+         * parameters as independently-memoizable function call results,
+         * preventing backward range extension and causing scope boundary
+         * issues (e.g. "Expected a break target" in try-catch blocks).
+         */
+        if (this.catchParams.has(id)) {
           continue;
         }
         if (node.maybeAliases.size > 0) {
