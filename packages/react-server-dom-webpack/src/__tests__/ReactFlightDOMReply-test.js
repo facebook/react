@@ -744,4 +744,42 @@ describe('ReactFlightDOMReply', () => {
     // has closed but that's a bug in both ReactFlightReplyServer and ReactFlightClient.
     // It just halts in this case.
   });
+
+  it('cannot deserialize a Blob reference backed by a string', async () => {
+    const formData = new FormData();
+    formData.set('1', '-'.repeat(50000));
+    formData.set('0', JSON.stringify(['$B1']));
+    let error;
+    try {
+      await ReactServerDOMServer.decodeReply(formData, webpackServerMap);
+    } catch (x) {
+      error = x;
+    }
+    expect(error.message).toContain('Referenced Blob is not a Blob.');
+  });
+
+  it('cannot deserialize nested arrays with Blob references exceeding the size limit', async () => {
+    const formData = new FormData();
+    formData.set('1', new Blob([new Uint8Array(400_000)]));
+    const n = 15;
+    formData.set('2', JSON.stringify(['$B1', '$B1', '$B1']));
+    for (let i = 3; i < n; i++) {
+      formData.set(
+        String(i),
+        JSON.stringify([
+          '$' + (i - 1).toString(16),
+          '$' + (i - 1).toString(16),
+          '$' + (i - 1).toString(16),
+        ]),
+      );
+    }
+    formData.set('0', JSON.stringify('$' + (n - 1).toString(16)));
+    let error;
+    try {
+      await ReactServerDOMServer.decodeReply(formData, webpackServerMap);
+    } catch (x) {
+      error = x;
+    }
+    expect(error.message).toContain('Maximum array nesting exceeded');
+  });
 });
