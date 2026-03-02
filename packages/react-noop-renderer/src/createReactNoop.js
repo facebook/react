@@ -24,6 +24,9 @@ import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import typeof * as HostConfig from 'react-reconciler/src/ReactFiberConfig';
+import typeof * as ReactFiberConfigWithNoMutation from 'react-reconciler/src/ReactFiberConfigWithNoMutation';
+import typeof * as ReactFiberConfigWithNoPersistence from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
+
 import typeof * as ReconcilerAPI from 'react-reconciler/src/ReactFiberReconciler';
 import type {
   Container,
@@ -45,24 +48,12 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
-import * as ReactFiberConfigWithNoMutation from 'react-reconciler/src/ReactFiberConfigWithNoMutation';
-import * as ReactFiberConfigWithNoPersistence from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
-import * as ReactFiberConfigWithNoHydration from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
-import * as ReactFiberConfigWithNoScopes from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
-import * as ReactFiberConfigWithNoTestSelectors from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
-import * as ReactFiberConfigWithNoResources from 'react-reconciler/src/ReactFiberConfigWithNoResources';
-import * as ReactFiberConfigWithNoSingletons from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
+import * as DefaultConfig from './ReactFiberConfigNoop';
 
 import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactVersion from 'shared/ReactVersion';
-
-type SharedHostConfig = Omit<
-  HostConfig,
-  | $Keys<typeof ReactFiberConfigWithNoMutation>
-  | $Keys<typeof ReactFiberConfigWithNoPersistence>,
->;
 
 type Props = {
   prop: any,
@@ -394,15 +385,11 @@ function createReactNoop(
     return null;
   }
 
-  const sharedHostConfig: SharedHostConfig = {
+  const sharedHostConfig: HostConfig = {
     rendererVersion: ReactVersion,
     rendererPackageName: 'react-noop',
 
-    ...ReactFiberConfigWithNoTestSelectors,
-    ...ReactFiberConfigWithNoResources,
-    ...ReactFiberConfigWithNoSingletons,
-    ...ReactFiberConfigWithNoHydration,
-    ...ReactFiberConfigWithNoScopes,
+    ...DefaultConfig,
 
     extraDevToolsConfig: null,
 
@@ -720,11 +707,11 @@ function createReactNoop(
     },
   };
 
-  const mutationHostConfig: HostConfig = {
-    ...sharedHostConfig,
-
+  const mutationHostConfig: Pick<
+    HostConfig,
+    $Keys<ReactFiberConfigWithNoMutation>,
+  > = {
     supportsMutation: true,
-    ...ReactFiberConfigWithNoPersistence,
 
     cloneMutableInstance() {
       // required for enableGestureTransition
@@ -916,13 +903,13 @@ function createReactNoop(
     },
   };
 
-  const persistenceHostConfig: HostConfig = {
-    ...sharedHostConfig,
-    ...ReactFiberConfigWithNoMutation,
+  const persistenceHostConfig: Pick<
+    HostConfig,
+    $Keys<ReactFiberConfigWithNoPersistence>,
+  > = {
     supportsPersistence: true,
 
     cloneInstance,
-    clearContainer,
 
     createContainerChildSet(): Array<Instance | TextInstance> {
       return [];
@@ -995,8 +982,8 @@ function createReactNoop(
   };
 
   const hostConfig: HostConfig = useMutation
-    ? mutationHostConfig
-    : persistenceHostConfig;
+    ? {...sharedHostConfig, ...mutationHostConfig}
+    : {...sharedHostConfig, ...persistenceHostConfig};
 
   const NoopRenderer = reconciler(hostConfig);
 

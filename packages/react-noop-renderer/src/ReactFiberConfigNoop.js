@@ -7,6 +7,15 @@
  * @flow
  */
 
+export * from './ReactFiberConfigNoopHydration';
+export * from './ReactFiberConfigNoopScopes';
+export * from './ReactFiberConfigNoopTestSelectors';
+export * from './ReactFiberConfigNoopResources';
+export * from './ReactFiberConfigNoopSingletons';
+// createReactNoop will overwrite these with the mutation or persistence versions.
+export * from './ReactFiberConfigNoopNoMutation';
+export * from './ReactFiberConfigNoopNoPersistence';
+
 export type HostContext = Object;
 
 export type TextInstance = {
