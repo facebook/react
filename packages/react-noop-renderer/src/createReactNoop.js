@@ -25,6 +25,12 @@ import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import typeof * as HostConfig from 'react-reconciler/src/ReactFiberConfig';
 import typeof * as ReconcilerAPI from 'react-reconciler/src/ReactFiberReconciler';
+import type {
+  HostContext,
+  Instance,
+  PublicInstance,
+  TextInstance,
+} from './ReactFiberConfigNoop';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -42,7 +48,6 @@ import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactVersion from 'shared/ReactVersion';
-import type {PublicInstance} from 'react-reconciler/src/forks/ReactFiberConfig.noop';
 
 type Container = {
   rootID: string,
@@ -61,24 +66,6 @@ type Props = {
   src?: string,
   ...
 };
-type Instance = {
-  type: string,
-  id: number,
-  parent: number,
-  children: Array<Instance | TextInstance>,
-  text: string | null,
-  prop: any,
-  hidden: boolean,
-  context: HostContext,
-};
-type TextInstance = {
-  text: string,
-  id: number,
-  parent: number,
-  hidden: boolean,
-  context: HostContext,
-};
-type HostContext = Object;
 type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   onUncaughtError?: (

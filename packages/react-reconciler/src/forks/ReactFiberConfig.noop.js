@@ -22,23 +22,20 @@
 // So `$$$config` looks like a global variable, but it's
 // really an argument to a top-level wrapping function.
 
+export * from 'react-noop-renderer/src/ReactFiberConfigNoop';
+
 declare const $$$config: $FlowFixMe;
 export opaque type Type = mixed;
 export opaque type Props = mixed;
 export opaque type Container = mixed;
-export opaque type Instance = mixed;
-export opaque type TextInstance = mixed;
 export opaque type ActivityInstance = mixed;
 export opaque type SuspenseInstance = mixed;
 export opaque type HydratableInstance = mixed;
-export opaque type PublicInstance = mixed;
-export opaque type HostContext = mixed;
 export opaque type UpdatePayload = mixed;
 export opaque type ChildSet = mixed;
 export opaque type TimeoutHandle = mixed;
 export opaque type NoTimeout = mixed;
 export opaque type RendererInspectionConfig = mixed;
-export opaque type TransitionStatus = mixed;
 export opaque type FormInstance = mixed;
 export opaque type SuspendedState = mixed;
 export type RunningViewTransition = mixed;
