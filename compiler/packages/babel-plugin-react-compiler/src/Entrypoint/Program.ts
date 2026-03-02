@@ -1325,6 +1325,13 @@ function getFunctionName(
     // const useHook = () => {};
     id = parent.get('id');
   } else if (
+    parent.isCallExpression() &&
+    parent.parentPath.isVariableDeclarator() &&
+    parent.parentPath.get('init').node === parent.node
+  ) {
+    // const MyComponent = wrap(() => {});
+    id = parent.parentPath.get('id');
+  } else if (
     parent.isAssignmentExpression() &&
     parent.get('right').node === path.node &&
     parent.get('operator') === '='
