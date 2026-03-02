@@ -44,10 +44,24 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
+import * as ReactFiberConfigWithNoMutation from 'react-reconciler/src/ReactFiberConfigWithNoMutation';
+import * as ReactFiberConfigWithNoPersistence from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
+import * as ReactFiberConfigWithNoHydration from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
+import * as ReactFiberConfigWithNoScopes from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
+import * as ReactFiberConfigWithNoTestSelectors from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
+import * as ReactFiberConfigWithNoResources from 'react-reconciler/src/ReactFiberConfigWithNoResources';
+import * as ReactFiberConfigWithNoSingletons from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
+
 import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactVersion from 'shared/ReactVersion';
+
+type SharedHostConfig = Omit<
+  HostConfig,
+  | $Keys<typeof ReactFiberConfigWithNoMutation>
+  | $Keys<typeof ReactFiberConfigWithNoPersistence>,
+>;
 
 type Container = {
   rootID: string,
@@ -383,11 +397,17 @@ function createReactNoop(
     return null;
   }
 
-  const sharedHostConfig = {
+  const sharedHostConfig: SharedHostConfig = {
     rendererVersion: ReactVersion,
     rendererPackageName: 'react-noop',
 
-    supportsSingletons: false,
+    ...ReactFiberConfigWithNoTestSelectors,
+    ...ReactFiberConfigWithNoResources,
+    ...ReactFiberConfigWithNoSingletons,
+    ...ReactFiberConfigWithNoHydration,
+    ...ReactFiberConfigWithNoScopes,
+
+    extraDevToolsConfig: null,
 
     getRootHostContext() {
       return NO_CONTEXT;
@@ -406,6 +426,8 @@ function createReactNoop(
     getPublicInstance(instance: Instance): PublicInstance {
       return (instance: any);
     },
+
+    HostTransitionContext: null,
 
     createInstance(
       type: string,
@@ -466,10 +488,6 @@ function createReactNoop(
       return inst;
     },
 
-    cloneMutableInstance(instance: Instance, keepChildren: boolean): Instance {
-      throw new Error('Not yet implemented.');
-    },
-
     appendInitialChild(
       parentInstance: Instance,
       child: Instance | TextInstance,
@@ -519,10 +537,6 @@ function createReactNoop(
         enumerable: false,
       });
       return inst;
-    },
-
-    cloneMutableTextInstance(textInstance: TextInstance): TextInstance {
-      throw new Error('Not yet implemented.');
     },
 
     createFragmentInstance(fragmentFiber: mixed) {
@@ -590,11 +604,8 @@ function createReactNoop(
       return false;
     },
 
-    now: Scheduler.unstable_now,
-
     isPrimaryRenderer: true,
     warnsIfNotActing: true,
-    supportsHydration: false,
 
     getInstanceFromNode() {
       throw new Error('Not yet implemented.');
@@ -612,17 +623,7 @@ function createReactNoop(
       // NO-OP
     },
 
-    prepareScopeUpdate() {},
-
-    getInstanceFromScope() {
-      throw new Error('Not yet implemented.');
-    },
-
     detachDeletedInstance() {},
-
-    logRecoverableError() {
-      // no-op
-    },
 
     requestPostPaintCallback(callback: (time: number) => void) {
       const endTime = Scheduler.unstable_now();
@@ -655,12 +656,6 @@ function createReactNoop(
 
     maySuspendCommitInSyncRender(type: string, props: Props): boolean {
       return true;
-    },
-
-    mayResourceSuspendCommit(resource: mixed): boolean {
-      throw new Error(
-        'Resources are not implemented for React Noop yet. This method should not be called',
-      );
     },
 
     preloadInstance(instance: Instance, type: string, props: Props): boolean {
@@ -696,20 +691,8 @@ function createReactNoop(
       }
     },
 
-    preloadResource(resource: mixed): number {
-      throw new Error(
-        'Resources are not implemented for React Noop yet. This method should not be called',
-      );
-    },
-
     startSuspendingCommit,
     suspendInstance,
-
-    suspendResource(state: SuspendedState, resource: mixed): void {
-      throw new Error(
-        'Resources are not implemented for React Noop yet. This method should not be called',
-      );
-    },
 
     suspendOnActiveViewTransition(
       state: SuspendedState,
@@ -741,271 +724,283 @@ function createReactNoop(
     },
   };
 
-  const hostConfig: HostConfig = useMutation
-    ? // $FlowFixMe[prop-missing]
-      {
-        ...sharedHostConfig,
+  const mutationHostConfig: HostConfig = {
+    ...sharedHostConfig,
 
-        supportsMutation: true,
-        supportsPersistence: false,
+    supportsMutation: true,
+    ...ReactFiberConfigWithNoPersistence,
 
-        commitMount(instance: Instance, type: string, newProps: Props): void {
-          // Noop
-        },
+    cloneMutableInstance() {
+      // required for enableGestureTransition
+      throw new Error('Not yet implemented.');
+    },
 
-        commitUpdate(
-          instance: Instance,
-          type: string,
-          oldProps: Props,
-          newProps: Props,
-        ): void {
-          if (oldProps === null) {
-            throw new Error('Should have old props');
-          }
-          hostUpdateCounter++;
-          instance.prop = newProps.prop;
-          instance.hidden = !!newProps.hidden;
+    cloneMutableTextInstance() {
+      // required for enableGestureTransition
+      throw new Error('Not yet implemented.');
+    },
 
-          if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
-            // $FlowFixMe[prop-missing]
-            instance.src = newProps.src;
-          }
+    commitMount(instance: Instance, type: string, newProps: Props): void {
+      // Noop
+    },
 
-          if (shouldSetTextContent(type, newProps)) {
-            if (__DEV__) {
-              checkPropStringCoercion(newProps.children, 'children');
-            }
-            instance.text = computeText(
-              (newProps.children: any) + '',
-              instance.context,
-            );
-          }
-        },
-
-        commitTextUpdate(
-          textInstance: TextInstance,
-          oldText: string,
-          newText: string,
-        ): void {
-          hostUpdateCounter++;
-          textInstance.text = computeText(newText, textInstance.context);
-        },
-
-        appendChild,
-        appendChildToContainer,
-        insertBefore,
-        insertInContainerBefore,
-        removeChild,
-        removeChildFromContainer,
-        clearContainer,
-
-        hideInstance(instance: Instance): void {
-          instance.hidden = true;
-        },
-
-        hideTextInstance(textInstance: TextInstance): void {
-          textInstance.hidden = true;
-        },
-
-        unhideInstance(instance: Instance, props: Props): void {
-          if (!props.hidden) {
-            instance.hidden = false;
-          }
-        },
-
-        unhideTextInstance(textInstance: TextInstance, text: string): void {
-          textInstance.hidden = false;
-        },
-
-        applyViewTransitionName(
-          instance: Instance,
-          name: string,
-          className: ?string,
-        ): void {},
-
-        restoreViewTransitionName(instance: Instance, props: Props): void {},
-
-        cancelViewTransitionName(
-          instance: Instance,
-          name: string,
-          props: Props,
-        ): void {},
-
-        cancelRootViewTransitionName(rootContainer: Container): void {},
-
-        restoreRootViewTransitionName(rootContainer: Container): void {},
-
-        cloneRootViewTransitionContainer(rootContainer: Container): Instance {
-          throw new Error('Not yet implemented.');
-        },
-
-        removeRootViewTransitionClone(
-          rootContainer: Container,
-          clone: Instance,
-        ): void {
-          throw new Error('Not implemented.');
-        },
-
-        measureInstance(instance: Instance): InstanceMeasurement {
-          return null;
-        },
-
-        measureClonedInstance(instance: Instance): InstanceMeasurement {
-          return null;
-        },
-
-        wasInstanceInViewport(measurement: InstanceMeasurement): boolean {
-          return true;
-        },
-
-        hasInstanceChanged(
-          oldMeasurement: InstanceMeasurement,
-          newMeasurement: InstanceMeasurement,
-        ): boolean {
-          return false;
-        },
-
-        hasInstanceAffectedParent(
-          oldMeasurement: InstanceMeasurement,
-          newMeasurement: InstanceMeasurement,
-        ): boolean {
-          return false;
-        },
-
-        startViewTransition(
-          rootContainer: Container,
-          transitionTypes: null | TransitionTypes,
-          mutationCallback: () => void,
-          layoutCallback: () => void,
-          afterMutationCallback: () => void,
-          spawnedWorkCallback: () => void,
-          passiveCallback: () => mixed,
-          errorCallback: mixed => void,
-          blockedCallback: string => void, // Profiling-only
-          finishedAnimation: () => void, // Profiling-only
-        ): null | RunningViewTransition {
-          mutationCallback();
-          layoutCallback();
-          // Skip afterMutationCallback(). We don't need it since we're not animating.
-          spawnedWorkCallback();
-          // Skip passiveCallback(). Spawned work will schedule a task.
-          return null;
-        },
-
-        startGestureTransition(
-          rootContainer: Container,
-          timeline: GestureTimeline,
-          rangeStart: number,
-          rangeEnd: number,
-          transitionTypes: null | TransitionTypes,
-          mutationCallback: () => void,
-          animateCallback: () => void,
-          errorCallback: mixed => void,
-        ): null | RunningViewTransition {
-          mutationCallback();
-          animateCallback();
-          return null;
-        },
-
-        stopViewTransition(transition: RunningViewTransition) {},
-
-        addViewTransitionFinishedListener(
-          transition: RunningViewTransition,
-          callback: () => void,
-        ) {
-          callback();
-        },
-
-        createViewTransitionInstance(name: string): ViewTransitionInstance {
-          return null;
-        },
-
-        getCurrentGestureOffset(provider: GestureTimeline): number {
-          return 0;
-        },
-
-        resetTextContent(instance: Instance): void {
-          instance.text = null;
-        },
+    commitUpdate(
+      instance: Instance,
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+    ): void {
+      if (oldProps === null) {
+        throw new Error('Should have old props');
       }
-    : // $FlowFixMe[prop-missing]
-      {
-        ...sharedHostConfig,
-        supportsMutation: false,
-        supportsPersistence: true,
+      hostUpdateCounter++;
+      instance.prop = newProps.prop;
+      instance.hidden = !!newProps.hidden;
 
-        cloneInstance,
-        clearContainer,
+      if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+        // $FlowFixMe[prop-missing]
+        instance.src = newProps.src;
+      }
 
-        createContainerChildSet(): Array<Instance | TextInstance> {
-          return [];
-        },
+      if (shouldSetTextContent(type, newProps)) {
+        if (__DEV__) {
+          checkPropStringCoercion(newProps.children, 'children');
+        }
+        instance.text = computeText(
+          (newProps.children: any) + '',
+          instance.context,
+        );
+      }
+    },
 
-        appendChildToContainerChildSet(
-          childSet: Array<Instance | TextInstance>,
-          child: Instance | TextInstance,
-        ): void {
-          childSet.push(child);
-        },
+    commitTextUpdate(
+      textInstance: TextInstance,
+      oldText: string,
+      newText: string,
+    ): void {
+      hostUpdateCounter++;
+      textInstance.text = computeText(newText, textInstance.context);
+    },
 
-        finalizeContainerChildren(
-          container: Container,
-          newChildren: Array<Instance | TextInstance>,
-        ): void {
-          container.pendingChildren = newChildren;
-          if (
-            newChildren.length === 1 &&
-            newChildren[0].text === 'Error when completing root'
-          ) {
-            // Trigger an error for testing purposes
-            throw Error('Error when completing root');
-          }
-        },
+    appendChild,
+    appendChildToContainer,
+    insertBefore,
+    insertInContainerBefore,
+    removeChild,
+    removeChildFromContainer,
+    clearContainer,
 
-        replaceContainerChildren(
-          container: Container,
-          newChildren: Array<Instance | TextInstance>,
-        ): void {
-          container.children = newChildren;
-        },
+    hideInstance(instance: Instance): void {
+      instance.hidden = true;
+    },
 
-        cloneHiddenInstance(
-          instance: Instance,
-          type: string,
-          props: Props,
-        ): Instance {
-          const clone = cloneInstance(instance, type, props, props, true, null);
-          clone.hidden = true;
-          return clone;
-        },
+    hideTextInstance(textInstance: TextInstance): void {
+      textInstance.hidden = true;
+    },
 
-        cloneHiddenTextInstance(
-          instance: TextInstance,
-          text: string,
-        ): TextInstance {
-          const clone = {
-            text: instance.text,
-            id: instance.id,
-            parent: instance.parent,
-            hidden: true,
-            context: instance.context,
-          };
-          // Hide from unit tests
-          Object.defineProperty(clone, 'id', {
-            value: clone.id,
-            enumerable: false,
-          });
-          Object.defineProperty(clone, 'parent', {
-            value: clone.parent,
-            enumerable: false,
-          });
-          Object.defineProperty(clone, 'context', {
-            value: clone.context,
-            enumerable: false,
-          });
-          return clone;
-        },
+    unhideInstance(instance: Instance, props: Props): void {
+      if (!props.hidden) {
+        instance.hidden = false;
+      }
+    },
+
+    unhideTextInstance(textInstance: TextInstance, text: string): void {
+      textInstance.hidden = false;
+    },
+
+    applyViewTransitionName(
+      instance: Instance,
+      name: string,
+      className: ?string,
+    ): void {},
+
+    restoreViewTransitionName(instance: Instance, props: Props): void {},
+
+    cancelViewTransitionName(
+      instance: Instance,
+      name: string,
+      props: Props,
+    ): void {},
+
+    cancelRootViewTransitionName(rootContainer: Container): void {},
+
+    restoreRootViewTransitionName(rootContainer: Container): void {},
+
+    cloneRootViewTransitionContainer(rootContainer: Container): Instance {
+      throw new Error('Not yet implemented.');
+    },
+
+    removeRootViewTransitionClone(
+      rootContainer: Container,
+      clone: Instance,
+    ): void {
+      throw new Error('Not implemented.');
+    },
+
+    measureInstance(instance: Instance): InstanceMeasurement {
+      return null;
+    },
+
+    measureClonedInstance(instance: Instance): InstanceMeasurement {
+      return null;
+    },
+
+    wasInstanceInViewport(measurement: InstanceMeasurement): boolean {
+      return true;
+    },
+
+    hasInstanceChanged(
+      oldMeasurement: InstanceMeasurement,
+      newMeasurement: InstanceMeasurement,
+    ): boolean {
+      return false;
+    },
+
+    hasInstanceAffectedParent(
+      oldMeasurement: InstanceMeasurement,
+      newMeasurement: InstanceMeasurement,
+    ): boolean {
+      return false;
+    },
+
+    startViewTransition(
+      rootContainer: Container,
+      transitionTypes: null | TransitionTypes,
+      mutationCallback: () => void,
+      layoutCallback: () => void,
+      afterMutationCallback: () => void,
+      spawnedWorkCallback: () => void,
+      passiveCallback: () => mixed,
+      errorCallback: mixed => void,
+      blockedCallback: string => void, // Profiling-only
+      finishedAnimation: () => void, // Profiling-only
+    ): null | RunningViewTransition {
+      mutationCallback();
+      layoutCallback();
+      // Skip afterMutationCallback(). We don't need it since we're not animating.
+      spawnedWorkCallback();
+      // Skip passiveCallback(). Spawned work will schedule a task.
+      return null;
+    },
+
+    startGestureTransition(
+      rootContainer: Container,
+      timeline: GestureTimeline,
+      rangeStart: number,
+      rangeEnd: number,
+      transitionTypes: null | TransitionTypes,
+      mutationCallback: () => void,
+      animateCallback: () => void,
+      errorCallback: mixed => void,
+    ): null | RunningViewTransition {
+      mutationCallback();
+      animateCallback();
+      return null;
+    },
+
+    stopViewTransition(transition: RunningViewTransition) {},
+
+    addViewTransitionFinishedListener(
+      transition: RunningViewTransition,
+      callback: () => void,
+    ) {
+      callback();
+    },
+
+    createViewTransitionInstance(name: string): ViewTransitionInstance {
+      return null;
+    },
+
+    getCurrentGestureOffset(provider: GestureTimeline): number {
+      return 0;
+    },
+
+    resetTextContent(instance: Instance): void {
+      instance.text = null;
+    },
+  };
+
+  const persistenceHostConfig: HostConfig = {
+    ...sharedHostConfig,
+    ...ReactFiberConfigWithNoMutation,
+    supportsPersistence: true,
+
+    cloneInstance,
+    clearContainer,
+
+    createContainerChildSet(): Array<Instance | TextInstance> {
+      return [];
+    },
+
+    appendChildToContainerChildSet(
+      childSet: Array<Instance | TextInstance>,
+      child: Instance | TextInstance,
+    ): void {
+      childSet.push(child);
+    },
+
+    finalizeContainerChildren(
+      container: Container,
+      newChildren: Array<Instance | TextInstance>,
+    ): void {
+      container.pendingChildren = newChildren;
+      if (
+        newChildren.length === 1 &&
+        newChildren[0].text === 'Error when completing root'
+      ) {
+        // Trigger an error for testing purposes
+        throw Error('Error when completing root');
+      }
+    },
+
+    replaceContainerChildren(
+      container: Container,
+      newChildren: Array<Instance | TextInstance>,
+    ): void {
+      container.children = newChildren;
+    },
+
+    cloneHiddenInstance(
+      instance: Instance,
+      type: string,
+      props: Props,
+    ): Instance {
+      const clone = cloneInstance(instance, type, props, props, true, null);
+      clone.hidden = true;
+      return clone;
+    },
+
+    cloneHiddenTextInstance(
+      instance: TextInstance,
+      text: string,
+    ): TextInstance {
+      const clone = {
+        text: instance.text,
+        id: instance.id,
+        parent: instance.parent,
+        hidden: true,
+        context: instance.context,
       };
+      // Hide from unit tests
+      Object.defineProperty(clone, 'id', {
+        value: clone.id,
+        enumerable: false,
+      });
+      Object.defineProperty(clone, 'parent', {
+        value: clone.parent,
+        enumerable: false,
+      });
+      Object.defineProperty(clone, 'context', {
+        value: clone.context,
+        enumerable: false,
+      });
+      return clone;
+    },
+  };
+
+  const hostConfig: HostConfig = useMutation
+    ? mutationHostConfig
+    : persistenceHostConfig;
 
   const NoopRenderer = reconciler(hostConfig);
 
