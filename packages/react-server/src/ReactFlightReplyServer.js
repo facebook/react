@@ -1810,9 +1810,6 @@ function parseModelString(
         if (!(backingEntry instanceof Blob)) {
           throw new Error('Referenced Blob is not a Blob.');
         }
-        if (arrayRoot !== null) {
-          bumpArrayCount(arrayRoot, backingEntry.size, response);
-        }
         return backingEntry;
       }
       case 'R': {
