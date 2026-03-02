@@ -1311,9 +1311,8 @@ function createReactNoop(
         container,
         LegacyRoot,
         null,
-        // $FlowFixMe[incompatible-call] -- TODO: Discovered when typechecking noop-renderer
-        null,
         false,
+        null,
         '',
         NoopRenderer.defaultOnUncaughtError,
         NoopRenderer.defaultOnCaughtError,
