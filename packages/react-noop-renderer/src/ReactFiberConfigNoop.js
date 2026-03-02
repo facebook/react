@@ -31,3 +31,9 @@ export type Instance = {
 export type PublicInstance = Instance;
 
 export type TransitionStatus = mixed;
+
+export type Container = {
+  rootID: string,
+  children: Array<Instance | TextInstance>,
+  pendingChildren: Array<Instance | TextInstance>,
+};

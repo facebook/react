@@ -26,6 +26,7 @@ import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import typeof * as HostConfig from 'react-reconciler/src/ReactFiberConfig';
 import typeof * as ReconcilerAPI from 'react-reconciler/src/ReactFiberReconciler';
 import type {
+  Container,
   HostContext,
   Instance,
   PublicInstance,
@@ -63,11 +64,6 @@ type SharedHostConfig = Omit<
   | $Keys<typeof ReactFiberConfigWithNoPersistence>,
 >;
 
-type Container = {
-  rootID: string,
-  children: Array<Instance | TextInstance>,
-  pendingChildren: Array<Instance | TextInstance>,
-};
 type Props = {
   prop: any,
   hidden: boolean,
