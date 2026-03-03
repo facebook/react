@@ -10065,8 +10065,8 @@ function commitFragmentInstanceDeletionEffects(fiber) {
               _eventListeners$i4.optionsOrUseCapture
             );
           }
-        null != childInstance.unstable_reactFragments &&
-          childInstance.unstable_reactFragments.delete(fragmentInstance);
+        null != childInstance.reactFragments &&
+          childInstance.reactFragments.delete(fragmentInstance);
       }
     }
     if (isHostParent(parent)) break;
@@ -20501,9 +20501,8 @@ function addFragmentHandleToFiber(child, fragmentInstance) {
   return !1;
 }
 function addFragmentHandleToInstance(instance, fragmentInstance) {
-  null == instance.unstable_reactFragments &&
-    (instance.unstable_reactFragments = new Set());
-  instance.unstable_reactFragments.add(fragmentInstance);
+  null == instance.reactFragments && (instance.reactFragments = new Set());
+  instance.reactFragments.add(fragmentInstance);
 }
 function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
   if (3 !== childInstance.nodeType) {
@@ -22354,14 +22353,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2402 = React.version;
 if (
-  "19.3.0-www-classic-e6f1c33a-20260303" !==
+  "19.3.0-www-classic-9c0323e2-20260303" !==
   isomorphicReactPackageVersion$jscomp$inline_2402
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2402,
-      "19.3.0-www-classic-e6f1c33a-20260303"
+      "19.3.0-www-classic-9c0323e2-20260303"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22379,10 +22378,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2404 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-e6f1c33a-20260303",
+  version: "19.3.0-www-classic-9c0323e2-20260303",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-e6f1c33a-20260303"
+  reconcilerVersion: "19.3.0-www-classic-9c0323e2-20260303"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_2404.getLaneLabelMap = getLaneLabelMap),
@@ -22815,7 +22814,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-e6f1c33a-20260303";
+exports.version = "19.3.0-www-classic-9c0323e2-20260303";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

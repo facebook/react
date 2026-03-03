@@ -14275,8 +14275,8 @@ __DEV__ &&
                   _eventListeners$i3.optionsOrUseCapture
                 );
               }
-            null != childInstance.unstable_reactFragments &&
-              childInstance.unstable_reactFragments.delete(fragmentInstance);
+            null != childInstance.reactFragments &&
+              childInstance.reactFragments.delete(fragmentInstance);
           }
         }
         if (isHostParent(parent)) break;
@@ -26691,9 +26691,8 @@ __DEV__ &&
       return !1;
     }
     function addFragmentHandleToInstance(instance, fragmentInstance) {
-      null == instance.unstable_reactFragments &&
-        (instance.unstable_reactFragments = new Set());
-      instance.unstable_reactFragments.add(fragmentInstance);
+      null == instance.reactFragments && (instance.reactFragments = new Set());
+      instance.reactFragments.add(fragmentInstance);
     }
     function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
       if (3 !== childInstance.nodeType) {
@@ -32855,11 +32854,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-modern-e6f1c33a-20260303" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-modern-9c0323e2-20260303" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-modern-e6f1c33a-20260303\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-modern-9c0323e2-20260303\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -32902,10 +32901,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-modern-e6f1c33a-20260303",
+          version: "19.3.0-www-modern-9c0323e2-20260303",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-modern-e6f1c33a-20260303"
+          reconcilerVersion: "19.3.0-www-modern-9c0323e2-20260303"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33518,7 +33517,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-modern-e6f1c33a-20260303";
+    exports.version = "19.3.0-www-modern-9c0323e2-20260303";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
