@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useLayoutEffect, createRef} from 'react';
+import {useLayoutEffect} from 'react';
 import {createPortal} from 'react-dom';
 
 import ContextMenuItem from './ContextMenuItem';
@@ -16,7 +16,6 @@ import ContextMenuItem from './ContextMenuItem';
 import type {
   ContextMenuItem as ContextMenuItemType,
   ContextMenuPosition,
-  ContextMenuRef,
 } from './types';
 
 import styles from './ContextMenu.css';
@@ -49,7 +48,6 @@ type Props = {
   items: ContextMenuItemType[],
   position: ContextMenuPosition,
   hide: () => void,
-  ref?: ContextMenuRef,
 };
 
 export default function ContextMenu({
@@ -57,7 +55,6 @@ export default function ContextMenu({
   position,
   items,
   hide,
-  ref = createRef(),
 }: Props): React.Node {
   // This works on the assumption that ContextMenu component is only rendered when it should be shown
   const anchor = anchorElementRef.current;
@@ -73,14 +70,21 @@ export default function ContextMenu({
     '[data-react-devtools-portal-root]',
   );
 
-  useLayoutEffect(() => {
-    const menu = ref.current;
+  const hideMenu = portalContainer == null || items.length === 0;
+  const menuRef = React.useRef<HTMLDivElement | null>(null);
 
-    // Match the early-return condition below. If neither of these
-    // is true, menu being null would be a bug.
-    if (portalContainer == null || items.length === 0) {
+  useLayoutEffect(() => {
+    // Match the early-return condition below.
+    if (hideMenu) {
       return;
     }
+    const maybeMenu = menuRef.current;
+    if (maybeMenu === null) {
+      throw new Error(
+        "Can't access context menu element. This is a bug in React DevTools.",
+      );
+    }
+    const menu = (maybeMenu: HTMLDivElement);
 
     function hideUnlessContains(event: Event) {
       if (!menu.contains(((event.target: any): Node))) {
@@ -104,14 +108,14 @@ export default function ContextMenu({
 
       ownerWindow.removeEventListener('resize', hide);
     };
-  }, []);
+  }, [hideMenu]);
 
-  if (portalContainer == null || items.length === 0) {
+  if (hideMenu) {
     return null;
   }
 
   return createPortal(
-    <div className={styles.ContextMenu} ref={ref}>
+    <div className={styles.ContextMenu} ref={menuRef}>
       {items.map(({onClick, content}, index) => (
         <ContextMenuItem key={index} onClick={onClick} hide={hide}>
           {content}
