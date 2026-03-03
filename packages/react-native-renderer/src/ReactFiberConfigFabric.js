@@ -422,14 +422,48 @@ export function resolveUpdatePriority(): EventPriority {
   return DefaultEventPriority;
 }
 
-export function trackSchedulerEvent(): void {}
+let schedulerEvent: void | Event = undefined;
+export function trackSchedulerEvent(): void {
+  schedulerEvent = global.event;
+}
+
+function getEventType(event: Event): null | string {
+  if (event.type) {
+    return event.type;
+  }
+
+  // Legacy implementation. RN does not define the `type` property on the event object yet.
+  // $FlowExpectedError[prop-missing]
+  const dispatchConfig = event.dispatchConfig;
+  if (
+    dispatchConfig == null ||
+    dispatchConfig.phasedRegistrationNames == null
+  ) {
+    return null;
+  }
+
+  const rawEventType =
+    dispatchConfig.phasedRegistrationNames.bubbled ||
+    dispatchConfig.phasedRegistrationNames.captured;
+  if (!rawEventType) {
+    return null;
+  }
+
+  if (rawEventType.startsWith('on')) {
+    return rawEventType.slice(2).toLowerCase();
+  }
+
+  return rawEventType.toLowerCase();
+}
 
 export function resolveEventType(): null | string {
-  return null;
+  const event = global.event;
+  return event && event !== schedulerEvent ? getEventType(event) : null;
 }
 
 export function resolveEventTimeStamp(): number {
-  return -1.1;
+  const event = global.event;
+  return event && event !== schedulerEvent ? event.timeStamp : -1.1;
 }
 
 export function shouldAttemptEagerTransition(): boolean {
