@@ -248,4 +248,42 @@ describe('when Trusted Types are available in global object', () => {
       root.render(<script>alert("I am not executed")</script>);
     });
   });
+
+  // @gate enableTrustedTypesIntegration
+  it('should not warn when rendering a data block script tag', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <script type="application/json">{'{"key": "value"}'}</script>,
+      );
+    });
+
+    assertConsoleErrorDev([
+      'Encountered a script tag while rendering React component. ' +
+        'Scripts inside React components are never executed when rendering ' +
+        'on the client. Consider using template tag instead ' +
+        '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).' +
+        '\n    in script (at **)',
+    ]);
+  });
+
+  // @gate enableTrustedTypesIntegration
+  it('should not warn when rendering a ld+json script tag', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <script type="application/ld+json">
+          {'{"@context": "https://schema.org"}'}
+        </script>,
+      );
+    });
+
+    assertConsoleErrorDev([
+      'Encountered a script tag while rendering React component. ' +
+        'Scripts inside React components are never executed when rendering ' +
+        'on the client. Consider using template tag instead ' +
+        '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).' +
+        '\n    in script (at **)',
+    ]);
+  });
 });
