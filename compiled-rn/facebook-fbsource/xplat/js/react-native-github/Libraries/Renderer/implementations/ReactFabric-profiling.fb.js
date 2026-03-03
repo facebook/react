@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fd9751a580669028770cf196ebc9b06c>>
+ * @generated SignedSource<<72a176f0ee44cfe938c08f4f139f12de>>
  */
 
 "use strict";
@@ -2560,20 +2560,28 @@ function startUpdateTimerByLane(lane) {
       blockingUpdateTime = now();
       0 !== (executionContext & 6) &&
         ((componentEffectSpawnedUpdate = !0), (blockingUpdateType = 1));
-      if (-1.1 !== blockingEventRepeatTime || null !== blockingEventType)
-        blockingEventRepeatTime = -1.1;
-      blockingEventTime = -1.1;
-      blockingEventType = null;
+      lane = resolveEventTimeStamp();
+      var newEventType$19 = resolveEventType();
+      lane !== blockingEventRepeatTime || newEventType$19 !== blockingEventType
+        ? (blockingEventRepeatTime = -1.1)
+        : null !== newEventType$19 && (blockingUpdateType = 1);
+      blockingEventTime = lane;
+      blockingEventType = newEventType$19;
     }
   } else if (
     0 !== (lane & 4194048) &&
     0 > transitionUpdateTime &&
     ((transitionUpdateTime = now()), 0 > transitionStartTime)
   ) {
-    if (-1.1 !== transitionEventRepeatTime || null !== transitionEventType)
+    lane = resolveEventTimeStamp();
+    newEventType$19 = resolveEventType();
+    if (
+      lane !== transitionEventRepeatTime ||
+      newEventType$19 !== transitionEventType
+    )
       transitionEventRepeatTime = -1.1;
-    transitionEventTime = -1.1;
-    transitionEventType = null;
+    transitionEventTime = lane;
+    transitionEventType = newEventType$19;
   }
 }
 function pushNestedEffectDurations() {
@@ -2728,6 +2736,7 @@ function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
   }
 }
 function processRootScheduleInImmediateTask() {
+  schedulerEvent = global.event;
   processRootScheduleInMicrotask();
 }
 function processRootScheduleInMicrotask() {
@@ -2866,6 +2875,7 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
 }
 function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   nestedUpdateScheduled = currentUpdateIsNested = !1;
+  schedulerEvent = global.event;
   if (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus)
     return (root.callbackNode = null), (root.callbackPriority = 0), null;
   var originalCallbackNode = root.callbackNode;
@@ -3005,10 +3015,15 @@ ReactSharedInternals.S = function (transition, returnValue) {
   ) {
     if (0 > transitionStartTime && 0 > transitionUpdateTime) {
       transitionStartTime = now();
-      if (-1.1 !== transitionEventRepeatTime || null !== transitionEventType)
+      var newEventTime = resolveEventTimeStamp(),
+        newEventType = resolveEventType();
+      if (
+        newEventTime !== transitionEventRepeatTime ||
+        newEventType !== transitionEventType
+      )
         transitionEventRepeatTime = -1.1;
-      transitionEventTime = -1.1;
-      transitionEventType = null;
+      transitionEventTime = newEventTime;
+      transitionEventType = newEventType;
     }
     entangleAsyncAction(transition, returnValue);
   }
@@ -12103,6 +12118,7 @@ function commitRoot(
     ? ((root.callbackNode = null),
       (root.callbackPriority = 0),
       scheduleCallback(NormalPriority$1, function () {
+        schedulerEvent = global.event;
         0 === pendingDelayedCommitReason && (pendingDelayedCommitReason = 2);
         flushPassiveEffects();
         return null;
@@ -13129,6 +13145,30 @@ function resolveUpdatePriority() {
     }
   return 32;
 }
+var schedulerEvent = void 0;
+function resolveEventType() {
+  var event = global.event;
+  event && event !== schedulerEvent
+    ? event.type
+      ? (event = event.type)
+      : ((event = event.dispatchConfig),
+        (event =
+          null == event || null == event.phasedRegistrationNames
+            ? null
+            : (event =
+                  event.phasedRegistrationNames.bubbled ||
+                  event.phasedRegistrationNames.captured)
+              ? event.startsWith("on")
+                ? event.slice(2).toLowerCase()
+                : event.toLowerCase()
+              : null))
+    : (event = null);
+  return event;
+}
+function resolveEventTimeStamp() {
+  var event = global.event;
+  return event && event !== schedulerEvent ? event.timeStamp : -1.1;
+}
 var scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout;
 function cloneHiddenInstance(instance) {
@@ -13375,16 +13415,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1638 = {
+  internals$jscomp$inline_1641 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-e0cc7202-20260227",
+    version: "19.3.0-native-fb-4cc5b7a9-20260303",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-e0cc7202-20260227"
+    reconcilerVersion: "19.3.0-native-fb-4cc5b7a9-20260303"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1638.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1638.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1641.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1641.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$179 = 0;
     31 > index$179;
@@ -13396,20 +13436,20 @@ internals$jscomp$inline_1638.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1638.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1641.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1991 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1999 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1991.isDisabled &&
-    hook$jscomp$inline_1991.supportsFiber
+    !hook$jscomp$inline_1999.isDisabled &&
+    hook$jscomp$inline_1999.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1991.inject(
-        internals$jscomp$inline_1638
+      (rendererID = hook$jscomp$inline_1999.inject(
+        internals$jscomp$inline_1641
       )),
-        (injectedHook = hook$jscomp$inline_1991);
+        (injectedHook = hook$jscomp$inline_1999);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
