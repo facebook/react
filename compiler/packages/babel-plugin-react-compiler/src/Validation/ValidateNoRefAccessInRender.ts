@@ -150,16 +150,9 @@ function collectTemporariesSidemap(fn: HIRFunction, env: Env): void {
           break;
         }
         case 'PropertyLoad': {
-          if (
-            isUseRefType(value.object.identifier) &&
-            value.property === 'current'
-          ) {
-            continue;
-          }
-          const temp = env.lookup(value.object);
-          if (temp != null) {
-            env.define(lvalue, temp);
-          }
+          // Property loads are not aliases of the base object. If we alias them
+          // to the base place, marking one ref-like property can overtaint the
+          // whole object and unrelated properties.
           break;
         }
       }
