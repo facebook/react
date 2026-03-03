@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<acf3a2e2ba5c8c70e4084dc8c2109940>>
+ * @generated SignedSource<<ae1a4156e04db64658106d1093ef6e33>>
  */
 
 /*
@@ -13271,6 +13271,7 @@ __DEV__ &&
                     case "script":
                       nextResource = nextResource.createElement("div");
                       didWarnScriptTags ||
+                        isScriptDataBlock(newProps) ||
                         (console.error(
                           "Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)."
                         ),
@@ -23689,6 +23690,37 @@ __DEV__ &&
         ? HostContextNamespaceNone
         : parentNamespace;
     }
+    function isScriptDataBlock(props) {
+      props = props.type;
+      if ("string" !== typeof props || "" === props) return !1;
+      props = props.toLowerCase();
+      if (
+        "module" === props ||
+        "importmap" === props ||
+        "speculationrules" === props
+      )
+        return !1;
+      switch (props) {
+        case "application/ecmascript":
+        case "application/javascript":
+        case "application/x-ecmascript":
+        case "application/x-javascript":
+        case "text/ecmascript":
+        case "text/javascript":
+        case "text/javascript1.0":
+        case "text/javascript1.1":
+        case "text/javascript1.2":
+        case "text/javascript1.3":
+        case "text/javascript1.4":
+        case "text/javascript1.5":
+        case "text/jscript":
+        case "text/livescript":
+        case "text/x-ecmascript":
+        case "text/x-javascript":
+          return !1;
+      }
+      return !0;
+    }
     function shouldSetTextContent(type, props) {
       return (
         "textarea" === type ||
@@ -30236,11 +30268,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-4cc5b7a9-20260303" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-e6f1c33a-20260303" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-4cc5b7a9-20260303\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-e6f1c33a-20260303\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30277,10 +30309,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-4cc5b7a9-20260303",
+          version: "19.3.0-native-fb-e6f1c33a-20260303",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-4cc5b7a9-20260303"
+          reconcilerVersion: "19.3.0-native-fb-e6f1c33a-20260303"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30430,5 +30462,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.3.0-native-fb-4cc5b7a9-20260303";
+    exports.version = "19.3.0-native-fb-e6f1c33a-20260303";
   })();
