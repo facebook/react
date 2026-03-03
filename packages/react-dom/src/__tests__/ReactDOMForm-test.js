@@ -2338,11 +2338,7 @@ describe('ReactDOMForm', () => {
 
     await act(() => root.render(<Form action={instance} />));
     await submit(formRef.current);
-    assertLog(
-      gate('enableTrustedTypesIntegration')
-        ? [instance]
-        : ['stringified action'],
-    );
+    assertLog([instance]);
   });
 
   it('form actions should retain status when nested state changes', async () => {
