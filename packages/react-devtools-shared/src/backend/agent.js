@@ -147,6 +147,7 @@ type OverrideSuspenseParams = {
 };
 
 type OverrideSuspenseMilestoneParams = {
+  rendererID: number,
   suspendedSet: Array<number>,
 };
 
@@ -787,15 +788,14 @@ export default class Agent extends EventEmitter<{
   };
 
   overrideSuspenseMilestone: OverrideSuspenseMilestoneParams => void = ({
+    rendererID,
     suspendedSet,
   }) => {
-    for (const rendererID in this._rendererInterfaces) {
-      const renderer = ((this._rendererInterfaces[
-        (rendererID: any)
-      ]: any): RendererInterface);
-      if (renderer.supportsTogglingSuspense) {
-        renderer.overrideSuspenseMilestone(suspendedSet);
-      }
+    const renderer = ((this._rendererInterfaces[
+      (rendererID: any)
+    ]: any): RendererInterface);
+    if (renderer.supportsTogglingSuspense) {
+      renderer.overrideSuspenseMilestone(suspendedSet);
     }
   };
 

@@ -145,6 +145,7 @@ type OverrideSuspense = {
 };
 
 type OverrideSuspenseMilestone = {
+  rendererID: number,
   suspendedSet: Array<number>,
 };
 
