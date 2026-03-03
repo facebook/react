@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ae1a4156e04db64658106d1093ef6e33>>
+ * @generated SignedSource<<49979c8011e1c248313f66182e00fab9>>
  */
 
 /*
@@ -14455,8 +14455,8 @@ __DEV__ &&
                 );
               }
             enableFragmentRefsInstanceHandles &&
-              null != childInstance.unstable_reactFragments &&
-              childInstance.unstable_reactFragments.delete(fragmentInstance);
+              null != childInstance.reactFragments &&
+              childInstance.reactFragments.delete(fragmentInstance);
           }
         }
         if (isHostParent(parent)) break;
@@ -24198,9 +24198,9 @@ __DEV__ &&
     }
     function addFragmentHandleToInstance(instance, fragmentInstance) {
       enableFragmentRefsInstanceHandles &&
-        (null == instance.unstable_reactFragments &&
-          (instance.unstable_reactFragments = new Set()),
-        instance.unstable_reactFragments.add(fragmentInstance));
+        (null == instance.reactFragments &&
+          (instance.reactFragments = new Set()),
+        instance.reactFragments.add(fragmentInstance));
     }
     function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
       if (3 !== childInstance.nodeType) {
@@ -30268,11 +30268,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-e6f1c33a-20260303" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-9c0323e2-20260303" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-e6f1c33a-20260303\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-9c0323e2-20260303\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30309,10 +30309,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-e6f1c33a-20260303",
+          version: "19.3.0-native-fb-9c0323e2-20260303",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-e6f1c33a-20260303"
+          reconcilerVersion: "19.3.0-native-fb-9c0323e2-20260303"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30462,5 +30462,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.3.0-native-fb-e6f1c33a-20260303";
+    exports.version = "19.3.0-native-fb-9c0323e2-20260303";
   })();

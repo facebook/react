@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b9921e80d8a794bccea209a697eec2b6>>
+ * @generated SignedSource<<23486dcd2bdedb70439ca7bc03fca51a>>
  */
 
 "use strict";
@@ -11564,8 +11564,8 @@ __DEV__ &&
           (enableFragmentRefsTextNodes && null == childInstance.canonical) ||
             ((childInstance = getPublicInstance(childInstance)),
             enableFragmentRefsInstanceHandles &&
-              null != childInstance.unstable_reactFragments &&
-              childInstance.unstable_reactFragments.delete(fragmentInstance));
+              null != childInstance.reactFragments &&
+              childInstance.reactFragments.delete(fragmentInstance));
         }
         if (isHostParent(parent)) break;
         parent = parent.return;
@@ -17107,9 +17107,9 @@ __DEV__ &&
     }
     function addFragmentHandleToInstance(instance, fragmentInstance) {
       enableFragmentRefsInstanceHandles &&
-        (null == instance.unstable_reactFragments &&
-          (instance.unstable_reactFragments = new Set()),
-        instance.unstable_reactFragments.add(fragmentInstance));
+        (null == instance.reactFragments &&
+          (instance.reactFragments = new Set()),
+        instance.reactFragments.add(fragmentInstance));
     }
     function commitNewChildToFragmentInstance(childInstance, fragmentInstance) {
       if (!enableFragmentRefsTextNodes || null != childInstance.canonical) {
@@ -20217,10 +20217,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-e6f1c33a-20260303",
+        version: "19.3.0-native-fb-9c0323e2-20260303",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-e6f1c33a-20260303"
+        reconcilerVersion: "19.3.0-native-fb-9c0323e2-20260303"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
