@@ -18,6 +18,14 @@ let act;
 let assertLog;
 let Scheduler;
 let textCache;
+let finishMockViewTransition;
+let originalStartViewTransition;
+let originalGetBoundingClientRect;
+let originalCSS;
+let originalGetAnimations;
+let originalInnerWidth;
+let originalInnerHeight;
+let originalFonts;
 
 describe('ReactDOMViewTransition', () => {
   let container;
@@ -38,9 +46,79 @@ describe('ReactDOMViewTransition', () => {
     document.body.appendChild(container);
 
     textCache = new Map();
+
+    finishMockViewTransition = null;
+    originalStartViewTransition = document.startViewTransition;
+    originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+    originalCSS = global.CSS;
+    originalGetAnimations = document.documentElement.getAnimations;
+    originalInnerWidth = window.innerWidth;
+    originalInnerHeight = window.innerHeight;
+    originalFonts = document.fonts;
+    if (originalCSS == null || typeof originalCSS.escape !== 'function') {
+      global.CSS = {
+        escape: value => value,
+      };
+    }
+    document.documentElement.getAnimations = function () {
+      return [];
+    };
+    document.fonts = {
+      status: 'loaded',
+      ready: Promise.resolve(),
+    };
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      value: 1024,
+    });
+    Object.defineProperty(window, 'innerHeight', {
+      configurable: true,
+      value: 768,
+    });
+    // Force visibility checks to pass in jsdom so transition callbacks run.
+    HTMLElement.prototype.getBoundingClientRect = function () {
+      return {
+        top: 1,
+        left: 1,
+        right: 11,
+        bottom: 11,
+        width: 10,
+        height: 10,
+        x: 1,
+        y: 1,
+        toJSON() {},
+      };
+    };
+    document.startViewTransition = jest.fn(({update}) => {
+      const ready = Promise.resolve().then(() => update());
+      return {
+        skipTransition() {},
+        ready,
+        finished: new Promise(resolve => {
+          finishMockViewTransition = resolve;
+        }),
+      };
+    });
   });
 
   afterEach(() => {
+    if (finishMockViewTransition !== null) {
+      finishMockViewTransition();
+      finishMockViewTransition = null;
+    }
+    document.startViewTransition = originalStartViewTransition;
+    HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+    global.CSS = originalCSS;
+    document.documentElement.getAnimations = originalGetAnimations;
+    document.fonts = originalFonts;
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      value: originalInnerWidth,
+    });
+    Object.defineProperty(window, 'innerHeight', {
+      configurable: true,
+      value: originalInnerHeight,
+    });
     document.body.removeChild(container);
   });
 
@@ -175,5 +253,54 @@ describe('ReactDOMViewTransition', () => {
     expect(container.textContent).toContain('Card 1');
     expect(container.textContent).toContain('Card 2');
     expect(container.textContent).toContain('Card 3');
+  });
+
+  // @gate enableViewTransition && enableEffectEventMutationPhase
+  it('calls onExit cleanup immediately on unmount', async () => {
+    const log = [];
+
+    function App({show}) {
+      return (
+        <div>
+          {show ? (
+            <ViewTransition
+              exit="auto"
+              onExit={() => {
+                log.push('exit');
+                return () => {
+                  log.push('cleanup');
+                };
+              }}>
+              <div>A</div>
+            </ViewTransition>
+          ) : null}
+        </div>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      React.startTransition(() => {
+        root.render(<App show={true} />);
+      });
+    });
+    document.startViewTransition.mockClear();
+
+    log.length = 0;
+    await act(async () => {
+      React.startTransition(() => {
+        root.render(<App show={false} />);
+      });
+    });
+    expect(document.startViewTransition).toHaveBeenCalledTimes(1);
+
+    expect(log).toEqual(['exit', 'cleanup']);
+
+    if (finishMockViewTransition !== null) {
+      await act(() => {
+        finishMockViewTransition();
+      });
+    }
+    expect(log).toEqual(['exit', 'cleanup']);
   });
 });
