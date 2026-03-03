@@ -16,6 +16,7 @@ let SuspenseList;
 let ViewTransition;
 let act;
 let assertLog;
+let assertConsoleWarnDev;
 let Scheduler;
 let textCache;
 let finishMockViewTransition;
@@ -37,6 +38,7 @@ describe('ReactDOMViewTransition', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
+    assertConsoleWarnDev = require('internal-test-utils').assertConsoleWarnDev;
     Suspense = React.Suspense;
     ViewTransition = React.ViewTransition;
     if (gate(flags => flags.enableSuspenseList)) {
@@ -255,27 +257,23 @@ describe('ReactDOMViewTransition', () => {
     expect(container.textContent).toContain('Card 3');
   });
 
-  // @gate enableViewTransition && enableEffectEventMutationPhase
+  // @gate enableViewTransition
   it('calls onExit cleanup immediately on unmount', async () => {
     const log = [];
 
     function App({show}) {
-      return (
-        <div>
-          {show ? (
-            <ViewTransition
-              exit="auto"
-              onExit={() => {
-                log.push('exit');
-                return () => {
-                  log.push('cleanup');
-                };
-              }}>
-              <div>A</div>
-            </ViewTransition>
-          ) : null}
-        </div>
-      );
+      return show ? (
+        <ViewTransition
+          exit="exit-class"
+          onExit={() => {
+            log.push('exit');
+            return () => {
+              log.push('cleanup');
+            };
+          }}>
+          <div>A</div>
+        </ViewTransition>
+      ) : null;
     }
 
     const root = ReactDOMClient.createRoot(container);
@@ -292,15 +290,16 @@ describe('ReactDOMViewTransition', () => {
         root.render(<App show={false} />);
       });
     });
+    if (__DEV__) {
+      assertConsoleWarnDev([
+        'A flushSync update cancelled a View Transition because it was called ' +
+          'while the View Transition was still preparing. To preserve the synchronous ' +
+          "semantics, React had to skip the View Transition. If you can, try to avoid " +
+          "flushSync() in a scenario that's likely to interfere.",
+      ]);
+    }
     expect(document.startViewTransition).toHaveBeenCalledTimes(1);
 
-    expect(log).toEqual(['exit', 'cleanup']);
-
-    if (finishMockViewTransition !== null) {
-      await act(() => {
-        finishMockViewTransition();
-      });
-    }
     expect(log).toEqual(['exit', 'cleanup']);
   });
 });
