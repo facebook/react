@@ -78,8 +78,6 @@ export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
 
-export const enableHalt: boolean = true;
-
 export const enableViewTransition: boolean = true;
 
 export const enableGestureTransition = __EXPERIMENTAL__;
@@ -123,6 +121,10 @@ export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 
 export const alwaysThrottleRetries: boolean = true;
 
+// Gate whether useEffectEvent uses the mutation phase (true) or before-mutation
+// phase (false) for updating event function references.
+export const enableEffectEventMutationPhase: boolean = false;
+
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
@@ -144,6 +146,7 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
 export const enableFragmentRefsInstanceHandles: boolean = false;
+export const enableFragmentRefsTextNodes: boolean = true;
 
 export const enableInternalInstanceMap: boolean = false;
 
@@ -158,11 +161,6 @@ export const enableInternalInstanceMap: boolean = false;
 // different section of this file.
 
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-
-/**
- * Enables a fix to run insertion effect cleanup on hidden subtrees.
- */
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = true;
 
 /**
  * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
@@ -205,7 +203,7 @@ export const disableLegacyMode: boolean = true;
 // in open source, but www codebase still relies on it. Need to remove.
 export const disableCommentsAsDOMContainers: boolean = true;
 
-export const enableTrustedTypesIntegration: boolean = false;
+export const enableTrustedTypesIntegration: boolean = true;
 
 // Prevent the value and checked attributes from syncing with their related
 // DOM properties
@@ -213,6 +211,9 @@ export const disableInputAttributeSyncing: boolean = false;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren: boolean = false;
+
+// Disables children for <textarea> elements
+export const enableParallelTransitions: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools

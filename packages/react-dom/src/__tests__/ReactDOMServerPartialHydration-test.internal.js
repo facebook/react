@@ -3668,7 +3668,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current.innerHTML).toBe('Hidden child');
   });
 
-  // @gate enableActivity
   it('a visible Activity component is surrounded by comment markers', async () => {
     const ref = React.createRef();
 
@@ -3706,7 +3705,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate enableActivity
   it('a hidden Activity component is skipped over during server rendering', async () => {
     const visibleRef = React.createRef();
 

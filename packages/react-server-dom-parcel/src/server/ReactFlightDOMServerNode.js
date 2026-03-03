@@ -159,6 +159,7 @@ type Options = {
   onError?: (error: mixed) => void,
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
+  startTime?: number,
 };
 
 type PipeableStream = {
@@ -195,9 +196,10 @@ export function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
-    debugChannel !== undefined,
+    debugChannelReadable !== undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -352,6 +354,7 @@ export function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -434,6 +437,7 @@ type PrerenderOptions = {
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
   signal?: AbortSignal,
+  startTime?: number,
 };
 
 type StaticResult = {
@@ -464,6 +468,7 @@ export function prerenderToNodeStream(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
@@ -526,6 +531,7 @@ export function prerender(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
@@ -556,12 +562,17 @@ export function registerServerActions(manifest: ServerManifest) {
 
 export function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   const response = createResponse(
     serverManifest,
     '',
     options ? options.temporaryReferences : undefined,
+    undefined,
+    options ? options.arraySizeLimit : undefined,
   );
   let pendingFiles = 0;
   const queuedFields: Array<string> = [];
@@ -626,7 +637,10 @@ export function decodeReplyFromBusboy<T>(
 
 export function decodeReply<T>(
   body: string | FormData,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
@@ -638,6 +652,7 @@ export function decodeReply<T>(
     '',
     options ? options.temporaryReferences : undefined,
     body,
+    options ? options.arraySizeLimit : undefined,
   );
   const root = getRoot<T>(response);
   close(response);
@@ -646,7 +661,10 @@ export function decodeReply<T>(
 
 export function decodeReplyFromAsyncIterable<T>(
   iterable: AsyncIterable<[string, string | File]>,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   const iterator: AsyncIterator<[string, string | File]> =
     iterable[ASYNC_ITERATOR]();
@@ -655,6 +673,8 @@ export function decodeReplyFromAsyncIterable<T>(
     serverManifest,
     '',
     options ? options.temporaryReferences : undefined,
+    undefined,
+    options ? options.arraySizeLimit : undefined,
   );
 
   function progress(

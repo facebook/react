@@ -43,9 +43,6 @@ const {createResponse, createStreamState, processBinaryChunk, getRoot, close} =
     requireModule(idx: string) {
       return readModule(idx);
     },
-    parseModel(response: Response, json) {
-      return JSON.parse(json, response._fromJSON);
-    },
     bindToConsole(methodName, args, badgeName) {
       return Function.prototype.bind.apply(
         // eslint-disable-next-line react-internal/no-production-logging
@@ -53,6 +50,7 @@ const {createResponse, createStreamState, processBinaryChunk, getRoot, close} =
         [console].concat(args),
       );
     },
+    checkEvalAvailabilityOnceDev,
   });
 
 type ReadOptions = {|
@@ -70,6 +68,7 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
     undefined,
     undefined,
     undefined,
+    false,
     options !== undefined ? options.findSourceMapURL : undefined,
     true,
     undefined,
@@ -85,6 +84,30 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
     close(response);
   }
   return getRoot(response);
+}
+
+let hasConfirmedEval = false;
+function checkEvalAvailabilityOnceDev(): void {
+  if (__DEV__) {
+    if (!hasConfirmedEval) {
+      hasConfirmedEval = true;
+      try {
+        // eslint-disable-next-line no-eval
+        (0, eval)('null');
+      } catch {
+        console.error(
+          'eval() is not supported in this environment. ' +
+            'React requires eval() in development mode for various debugging features ' +
+            'like reconstructing callstacks from a different environment.\n' +
+            'React will never use eval() in production mode',
+        );
+      }
+    }
+  } else {
+    throw new Error(
+      'checkEvalAvailabilityOnceDev should never be called in production mode. This is a bug in React.',
+    );
+  }
 }
 
 export {read};

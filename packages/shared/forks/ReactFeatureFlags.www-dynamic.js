@@ -16,7 +16,6 @@
 export const alwaysThrottleRetries: boolean = __VARIANT__;
 export const disableLegacyContextForFunctionComponents: boolean = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop: boolean = __VARIANT__;
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = __VARIANT__;
 export const enableNoCloningMemoCache: boolean = __VARIANT__;
 export const enableObjectFiber: boolean = __VARIANT__;
 export const enableRetryLaneExpiration: boolean = __VARIANT__;
@@ -31,17 +30,17 @@ export const enableInfiniteRenderLoopDetection: boolean = __VARIANT__;
 
 export const enableFastAddPropertiesInDiffing: boolean = __VARIANT__;
 export const enableViewTransition: boolean = __VARIANT__;
-export const enableComponentPerformanceTrack: boolean = __VARIANT__;
 export const enableScrollEndPolyfill: boolean = __VARIANT__;
 export const enableFragmentRefs: boolean = __VARIANT__;
 export const enableFragmentRefsScrollIntoView: boolean = __VARIANT__;
-export const enableAsyncDebugInfo: boolean = __VARIANT__;
-
+export const enableFragmentRefsTextNodes: boolean = __VARIANT__;
 export const enableInternalInstanceMap: boolean = __VARIANT__;
+export const enableParallelTransitions: boolean = __VARIANT__;
+
+export const enableEffectEventMutationPhase: boolean = __VARIANT__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.
-export const enableTrustedTypesIntegration: boolean = false;
 // You probably *don't* want to add more hardcoded ones.
 // Instead, try to add them above with the __VARIANT__ value.

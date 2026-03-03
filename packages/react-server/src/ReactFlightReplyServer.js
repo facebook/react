@@ -34,6 +34,7 @@ import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import getPrototypeOf from 'shared/getPrototypeOf';
+import isArray from 'shared/isArray';
 
 interface FlightStreamController {
   enqueueModel(json: string): void;
@@ -54,6 +55,8 @@ const BLOCKED = 'blocked';
 const RESOLVED_MODEL = 'resolved_model';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
+
+const __PROTO__ = '__proto__';
 
 type RESPONSE_SYMBOL_TYPE = 'RESPONSE_SYMBOL'; // Fake symbol type.
 const RESPONSE_SYMBOL: RESPONSE_SYMBOL_TYPE = (Symbol(): any);
@@ -79,7 +82,7 @@ type ResolvedModelChunk<T> = {
 type InitializedChunk<T> = {
   status: 'fulfilled',
   value: T,
-  reason: null,
+  reason: null | NestedArrayContext,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedStreamChunk<
@@ -194,6 +197,8 @@ export type Response = {
   _closed: boolean,
   _closedReason: mixed,
   _temporaryReferences: void | TemporaryReferenceSet,
+  _rootArrayContexts: WeakMap<$ReadOnlyArray<mixed>, NestedArrayContext>,
+  _arraySizeLimit: number,
 };
 
 export function getRoot<T>(response: Response): Thenable<T> {
@@ -210,13 +215,14 @@ function wakeChunk<T>(
   response: Response,
   listeners: Array<InitializationReference | (T => mixed)>,
   value: T,
+  chunk: InitializedChunk<T>,
 ): void {
   for (let i = 0; i < listeners.length; i++) {
     const listener = listeners[i];
     if (typeof listener === 'function') {
       listener(value);
     } else {
-      fulfillReference(response, listener, value);
+      fulfillReference(response, listener, value, chunk.reason);
     }
   }
 }
@@ -236,33 +242,6 @@ function rejectChunk(
   }
 }
 
-function resolveBlockedCycle<T>(
-  resolvedChunk: SomeChunk<T>,
-  reference: InitializationReference,
-): null | InitializationHandler {
-  const referencedChunk = reference.handler.chunk;
-  if (referencedChunk === null) {
-    return null;
-  }
-  if (referencedChunk === resolvedChunk) {
-    // We found the cycle. We can resolve the blocked cycle now.
-    return reference.handler;
-  }
-  const resolveListeners = referencedChunk.value;
-  if (resolveListeners !== null) {
-    for (let i = 0; i < resolveListeners.length; i++) {
-      const listener = resolveListeners[i];
-      if (typeof listener !== 'function') {
-        const foundHandler = resolveBlockedCycle(resolvedChunk, listener);
-        if (foundHandler !== null) {
-          return foundHandler;
-        }
-      }
-    }
-  }
-  return null;
-}
-
 function wakeChunkIfInitialized<T>(
   response: Response,
   chunk: SomeChunk<T>,
@@ -271,45 +250,9 @@ function wakeChunkIfInitialized<T>(
 ): void {
   switch (chunk.status) {
     case INITIALIZED:
-      wakeChunk(response, resolveListeners, chunk.value);
+      wakeChunk(response, resolveListeners, chunk.value, chunk);
       break;
     case BLOCKED:
-      // It is possible that we're blocked on our own chunk if it's a cycle.
-      // Before adding back the listeners to the chunk, let's check if it would
-      // result in a cycle.
-      for (let i = 0; i < resolveListeners.length; i++) {
-        const listener = resolveListeners[i];
-        if (typeof listener !== 'function') {
-          const reference: InitializationReference = listener;
-          const cyclicHandler = resolveBlockedCycle(chunk, reference);
-          if (cyclicHandler !== null) {
-            // This reference points back to this chunk. We can resolve the cycle by
-            // using the value from that handler.
-            fulfillReference(response, reference, cyclicHandler.value);
-            resolveListeners.splice(i, 1);
-            i--;
-            if (rejectListeners !== null) {
-              const rejectionIdx = rejectListeners.indexOf(reference);
-              if (rejectionIdx !== -1) {
-                rejectListeners.splice(rejectionIdx, 1);
-              }
-            }
-            // The status might have changed after fulfilling the reference.
-            switch ((chunk: SomeChunk<T>).status) {
-              case INITIALIZED:
-                const initializedChunk: InitializedChunk<T> = (chunk: any);
-                wakeChunk(response, resolveListeners, initializedChunk.value);
-                return;
-              case ERRORED:
-                if (rejectListeners !== null) {
-                  rejectChunk(response, rejectListeners, chunk.reason);
-                }
-                return;
-            }
-          }
-        }
-      }
-    // Fallthrough
     case PENDING:
       if (chunk.value) {
         for (let i = 0; i < resolveListeners.length; i++) {
@@ -331,7 +274,7 @@ function wakeChunkIfInitialized<T>(
       break;
     case ERRORED:
       if (rejectListeners) {
-        wakeChunk(response, rejectListeners, chunk.reason);
+        rejectChunk(response, rejectListeners, chunk.reason);
       }
       break;
   }
@@ -472,22 +415,73 @@ function loadServerReference<A: Iterable<any>, T>(
     // as "thenable" which reduces to ReactPromise with no other fields.
     return (null: any);
   }
+
+  // Check for a cached promise from a previous call with the same metadata.
+  // This handles deduplication when the same server reference appears multiple
+  // times in the payload.
+  const cachedPromise: SomeChunk<T> | void = (metaData: any).$$promise;
+  if (cachedPromise !== undefined) {
+    if (cachedPromise.status === INITIALIZED) {
+      // The value was already resolved by a previous call.
+      const resolvedValue: T = cachedPromise.value;
+      if (key === __PROTO__) {
+        return (null: any);
+      }
+      parentObject[key] = resolvedValue;
+      return (resolvedValue: any);
+    }
+
+    // The promise is still blocked. Increment the handler dependency count ...
+    let handler: InitializationHandler;
+    if (initializingHandler) {
+      handler = initializingHandler;
+      handler.deps++;
+    } else {
+      handler = initializingHandler = {
+        chunk: null,
+        value: null,
+        reason: null,
+        deps: 1,
+        errored: false,
+      };
+    }
+    // ... and register resolve and reject listeners on the promise.
+    cachedPromise.then(
+      resolveReference.bind(null, response, handler, parentObject, key),
+      rejectReference.bind(null, response, handler),
+    );
+
+    // Return a place holder value for now.
+    return (null: any);
+  }
+
+  // This is the first call for this server reference metadata. Create a cached
+  // promise to be used for subsequent calls.
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  const blockedPromise: BlockedChunk<T> = new ReactPromise(BLOCKED, null, null);
+  (metaData: any).$$promise = blockedPromise;
+
   const serverReference: ServerReference<T> =
     resolveServerReference<$FlowFixMe>(response._bundlerConfig, id);
   // We expect most servers to not really need this because you'd just have all
   // the relevant modules already loaded but it allows for lazy loading of code
   // if needed.
   const bound = metaData.bound;
-  let promise: null | Thenable<any> = preloadModule(serverReference);
-  if (!promise) {
+  let serverReferencePromise: null | Thenable<any> =
+    preloadModule(serverReference);
+  if (!serverReferencePromise) {
     if (bound instanceof ReactPromise) {
-      promise = Promise.resolve(bound);
+      serverReferencePromise = Promise.resolve(bound);
     } else {
       const resolvedValue = (requireModule(serverReference): any);
+      // Resolve the cached promise synchronously.
+      const initializedPromise: InitializedChunk<T> = (blockedPromise: any);
+      initializedPromise.status = INITIALIZED;
+      initializedPromise.value = resolvedValue;
       return resolvedValue;
     }
   } else if (bound instanceof ReactPromise) {
-    promise = Promise.all([promise, bound]);
+    serverReferencePromise = Promise.all([serverReferencePromise, bound]);
   }
 
   let handler: InitializationHandler;
@@ -508,59 +502,59 @@ function loadServerReference<A: Iterable<any>, T>(
     let resolvedValue = (requireModule(serverReference): any);
 
     if (metaData.bound) {
-      // This promise is coming from us and should have initilialized by now.
+      // This promise is coming from us and should have initialized by now.
       const promiseValue = (metaData.bound: any).value;
-      const boundArgs: Array<any> = Array.isArray(promiseValue)
+      const boundArgs: Array<any> = isArray(promiseValue)
         ? promiseValue.slice(0)
         : [];
+      if (boundArgs.length > MAX_BOUND_ARGS) {
+        reject(
+          new Error(
+            'Server Function has too many bound arguments. Received ' +
+              boundArgs.length +
+              ' but the limit is ' +
+              MAX_BOUND_ARGS +
+              '.',
+          ),
+        );
+        return;
+      }
       boundArgs.unshift(null); // this
       resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
     }
 
-    parentObject[key] = resolvedValue;
-
-    // If this is the root object for a model reference, where `handler.value`
-    // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && handler.value === null) {
-      handler.value = resolvedValue;
+    // Resolve the cached promise so subsequent references can use the value.
+    const resolveListeners = blockedPromise.value;
+    const initializedPromise: InitializedChunk<T> = (blockedPromise: any);
+    initializedPromise.status = INITIALIZED;
+    initializedPromise.value = resolvedValue;
+    initializedPromise.reason = null;
+    if (resolveListeners !== null) {
+      // Notify any resolve listeners that were added via .then() from
+      // subsequent loadServerReference calls for the same reference.
+      wakeChunk(response, resolveListeners, resolvedValue, initializedPromise);
     }
 
-    handler.deps--;
-
-    if (handler.deps === 0) {
-      const chunk = handler.chunk;
-      if (chunk === null || chunk.status !== BLOCKED) {
-        return;
-      }
-      const resolveListeners = chunk.value;
-      const initializedChunk: InitializedChunk<T> = (chunk: any);
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = handler.value;
-      initializedChunk.reason = null;
-      if (resolveListeners !== null) {
-        wakeChunk(response, resolveListeners, handler.value);
-      }
-    }
+    resolveReference(response, handler, parentObject, key, resolvedValue);
   }
 
   function reject(error: mixed): void {
-    if (handler.errored) {
-      // We've already errored. We could instead build up an AggregateError
-      // but if there are multiple errors we just take the first one like
-      // Promise.all.
-      return;
+    // Mark the cached promise as errored so subsequent references fail too.
+    const rejectListeners = blockedPromise.reason;
+    const erroredPromise: ErroredChunk<T> = (blockedPromise: any);
+    erroredPromise.status = ERRORED;
+    erroredPromise.value = null;
+    erroredPromise.reason = error;
+    if (rejectListeners !== null) {
+      // Notify any reject listeners that were added via .then() from subsequent
+      // loadServerReference calls for the same reference.
+      rejectChunk(response, rejectListeners, error);
     }
-    handler.errored = true;
-    handler.value = null;
-    handler.reason = error;
-    const chunk = handler.chunk;
-    if (chunk === null || chunk.status !== BLOCKED) {
-      return;
-    }
-    triggerErrorOnChunk(response, chunk, error);
+
+    rejectReference(response, handler, error);
   }
 
-  promise.then(fulfill, reject);
+  serverReferencePromise.then(fulfill, reject);
 
   // Return a place holder value for now.
   return (null: any);
@@ -572,10 +566,18 @@ function reviveModel(
   parentKey: string,
   value: JSONValue,
   reference: void | string,
+  arrayRoot: null | NestedArrayContext,
 ): any {
   if (typeof value === 'string') {
     // We can't use .bind here because we need the "this" value.
-    return parseModelString(response, parentObj, parentKey, value, reference);
+    return parseModelString(
+      response,
+      parentObj,
+      parentKey,
+      value,
+      reference,
+      arrayRoot,
+    );
   }
   if (typeof value === 'object' && value !== null) {
     if (
@@ -589,16 +591,42 @@ function reviveModel(
         reference,
       );
     }
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
+      let childContext: NestedArrayContext;
+      if (arrayRoot === null) {
+        childContext = ({
+          count: 0,
+          fork: false,
+        }: NestedArrayContext);
+        response._rootArrayContexts.set(value, childContext);
+      } else {
+        childContext = arrayRoot;
+      }
+      if (value.length > 1) {
+        childContext.fork = true;
+      }
+      bumpArrayCount(childContext, value.length + 1, response);
       for (let i = 0; i < value.length; i++) {
         const childRef =
           reference !== undefined ? reference + ':' + i : undefined;
         // $FlowFixMe[cannot-write]
-        value[i] = reviveModel(response, value, '' + i, value[i], childRef);
+        value[i] = reviveModel(
+          response,
+          value,
+          '' + i,
+          value[i],
+          childRef,
+          childContext,
+        );
       }
     } else {
       for (const key in value) {
         if (hasOwnProperty.call(value, key)) {
+          if (key === __PROTO__) {
+            // $FlowFixMe[cannot-write]
+            delete value[key];
+            continue;
+          }
           const childRef =
             reference !== undefined && key.indexOf(':') === -1
               ? reference + ':' + key
@@ -609,8 +637,9 @@ function reviveModel(
             key,
             value[key],
             childRef,
+            null, // The array context resets when we're entering a non-array
           );
-          if (newValue !== undefined || key === '__proto__') {
+          if (newValue !== undefined) {
             // $FlowFixMe[cannot-write]
             value[key] = newValue;
           } else {
@@ -624,6 +653,27 @@ function reviveModel(
   return value;
 }
 
+type NestedArrayContext = {
+  // Keeps track of how many slots, bytes or characters are in nested arrays/strings/typed arrays.
+  count: number,
+  // A single child is itself not harmful. There needs to be at least one parent array with more
+  // than one child.
+  fork: boolean,
+};
+
+function bumpArrayCount(
+  arrayContext: NestedArrayContext,
+  slots: number,
+  response: Response,
+): void {
+  const newCount = (arrayContext.count += slots);
+  if (newCount > response._arraySizeLimit && arrayContext.fork) {
+    throw new Error(
+      'Maximum array nesting exceeded. Large nested arrays can be dangerous. Try adding intermediate objects.',
+    );
+  }
+}
+
 type InitializationReference = {
   handler: InitializationHandler,
   parentObject: Object,
@@ -635,6 +685,7 @@ type InitializationReference = {
     key: string,
   ) => any,
   path: Array<string>,
+  arrayRoot: null | NestedArrayContext,
 };
 type InitializationHandler = {
   chunk: null | BlockedChunk<any>,
@@ -666,12 +717,19 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   try {
     const rawModel = JSON.parse(resolvedModel);
 
+    // The root might not be an array but if it is we want to track the count of entries.
+    const arrayRoot: NestedArrayContext = {
+      count: 0,
+      fork: false,
+    };
+
     const value: T = reviveModel(
       response,
       {'': rawModel},
       '',
       rawModel,
       rootReference,
+      arrayRoot,
     );
 
     // Invoke any listeners added while resolving this model. I.e. cyclic
@@ -686,7 +744,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
         if (typeof listener === 'function') {
           listener(value);
         } else {
-          fulfillReference(response, listener, value);
+          fulfillReference(response, listener, value, arrayRoot);
         }
       }
     }
@@ -698,6 +756,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
         // We discovered new dependencies on modules that are not yet resolved.
         // We have to keep the BLOCKED state until they're resolved.
         initializingHandler.value = value;
+        initializingHandler.reason = arrayRoot;
         initializingHandler.chunk = cyclicChunk;
         return;
       }
@@ -705,7 +764,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
-    initializedChunk.reason = null;
+    initializedChunk.reason = arrayRoot;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
@@ -727,7 +786,11 @@ export function reportGlobalError(response: Response, error: Error): void {
     if (chunk.status === PENDING) {
       triggerErrorOnChunk(response, chunk, error);
     } else if (chunk.status === INITIALIZED && chunk.reason !== null) {
-      chunk.reason.error(error);
+      const maybeController = chunk.reason;
+      // $FlowFixMe
+      if (typeof maybeController.error === 'function') {
+        maybeController.error(error);
+      }
     }
   });
 }
@@ -759,10 +822,14 @@ function fulfillReference(
   response: Response,
   reference: InitializationReference,
   value: any,
+  arrayRoot: null | NestedArrayContext,
 ): void {
   const {handler, parentObject, key, map, path} = reference;
 
+  let resolvedValue;
   try {
+    let localLength: number = 0;
+    const rootArrayContexts = response._rootArrayContexts;
     for (let i = 1; i < path.length; i++) {
       // The server doesn't have any lazy references so we don't expect to go through a Promise.
       const name = path[i];
@@ -774,25 +841,76 @@ function fulfillReference(
         hasOwnProperty.call(value, name)
       ) {
         value = value[name];
+        if (isArray(value)) {
+          localLength = 0;
+          arrayRoot = rootArrayContexts.get(value) || arrayRoot;
+        } else {
+          arrayRoot = null;
+          if (typeof value === 'string') {
+            localLength = value.length;
+          } else if (typeof value === 'bigint') {
+            // Estimate the length to avoid expensive toString() calls on large
+            // BigInt values. If the value is too large, we get Infinity, which
+            // will trigger the array size limit error.
+            // eslint-disable-next-line react-internal/no-primitive-constructors
+            const n = Math.abs(Number(value));
+            if (n === 0) {
+              localLength = 1;
+            } else {
+              localLength = Math.floor(Math.log10(n)) + 1;
+            }
+          } else if (ArrayBuffer.isView(value)) {
+            localLength = value.byteLength;
+          } else {
+            localLength = 0;
+          }
+        }
       } else {
         throw new Error('Invalid reference.');
       }
     }
 
-    const mappedValue = map(response, value, parentObject, key);
-    parentObject[key] = mappedValue;
+    resolvedValue = map(response, value, parentObject, key);
 
-    // If this is the root object for a model reference, where `handler.value`
-    // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && handler.value === null) {
-      handler.value = mappedValue;
+    // Add any array counts to the reference's array root. The value that we're
+    // resolving might have deep nesting that we need to resolve.
+    const referenceArrayRoot = reference.arrayRoot;
+    if (referenceArrayRoot !== null) {
+      if (arrayRoot !== null) {
+        if (arrayRoot.fork) {
+          referenceArrayRoot.fork = true;
+        }
+        bumpArrayCount(referenceArrayRoot, arrayRoot.count, response);
+      } else if (localLength > 0) {
+        bumpArrayCount(referenceArrayRoot, localLength, response);
+      }
     }
   } catch (error) {
-    rejectReference(response, reference.handler, error);
+    rejectReference(response, handler, error);
     return;
   }
 
   // There are no Elements or Debug Info to transfer here.
+
+  resolveReference(response, handler, parentObject, key, resolvedValue);
+}
+
+function resolveReference(
+  response: Response,
+  handler: InitializationHandler,
+  parentObject: Object,
+  key: string,
+  resolvedValue: mixed,
+): void {
+  if (key !== __PROTO__) {
+    parentObject[key] = resolvedValue;
+  }
+
+  // If this is the root object for a model reference, where `handler.value`
+  // is a stale `null`, the resolved value can be used directly.
+  if (key === '' && handler.value === null) {
+    handler.value = resolvedValue;
+  }
 
   handler.deps--;
 
@@ -807,7 +925,7 @@ function fulfillReference(
     initializedChunk.value = handler.value;
     initializedChunk.reason = handler.reason; // Used by streaming chunks
     if (resolveListeners !== null) {
-      wakeChunk(response, resolveListeners, handler.value);
+      wakeChunk(response, resolveListeners, handler.value, initializedChunk);
     }
   }
 }
@@ -835,10 +953,11 @@ function rejectReference(
 }
 
 function waitForReference<T>(
-  referencedChunk: PendingChunk<T> | BlockedChunk<T>,
+  response: Response,
+  referencedChunk: BlockedChunk<T>,
   parentObject: Object,
   key: string,
-  response: Response,
+  arrayRoot: null | NestedArrayContext,
   map: (response: Response, model: any, parentObject: Object, key: string) => T,
   path: Array<string>,
 ): T {
@@ -862,6 +981,7 @@ function waitForReference<T>(
     key,
     map,
     path,
+    arrayRoot,
   };
 
   // Add "listener".
@@ -885,6 +1005,7 @@ function getOutlinedModel<T>(
   reference: string,
   parentObject: Object,
   key: string,
+  referenceArrayRoot: null | NestedArrayContext,
   map: (response: Response, model: any, parentObject: Object, key: string) => T,
 ): T {
   const path = reference.split(':');
@@ -899,6 +1020,9 @@ function getOutlinedModel<T>(
   switch (chunk.status) {
     case INITIALIZED:
       let value = chunk.value;
+      let arrayRoot: null | NestedArrayContext = chunk.reason;
+      let localLength: number = 0;
+      const rootArrayContexts = response._rootArrayContexts;
       for (let i = 1; i < path.length; i++) {
         const name = path[i];
         if (
@@ -909,16 +1033,64 @@ function getOutlinedModel<T>(
           hasOwnProperty.call(value, name)
         ) {
           value = value[name];
+          if (isArray(value)) {
+            localLength = 0;
+            arrayRoot = rootArrayContexts.get(value) || arrayRoot;
+          } else {
+            arrayRoot = null;
+            if (typeof value === 'string') {
+              localLength = value.length;
+            } else if (typeof value === 'bigint') {
+              // Estimate the length to avoid expensive toString() calls on large
+              // BigInt values. If the value is too large, we get Infinity, which
+              // will trigger the array size limit error.
+              // eslint-disable-next-line react-internal/no-primitive-constructors
+              const n = Math.abs(Number(value));
+              if (n === 0) {
+                localLength = 1;
+              } else {
+                localLength = Math.floor(Math.log10(n)) + 1;
+              }
+            } else if (ArrayBuffer.isView(value)) {
+              localLength = value.byteLength;
+            } else {
+              localLength = 0;
+            }
+          }
         } else {
           throw new Error('Invalid reference.');
         }
       }
       const chunkValue = map(response, value, parentObject, key);
+
+      // Add any array counts to the reference's array root. The value that we're
+      // resolving might have deep nesting that we need to resolve.
+      if (referenceArrayRoot !== null) {
+        if (arrayRoot !== null) {
+          if (arrayRoot.fork) {
+            referenceArrayRoot.fork = true;
+          }
+          bumpArrayCount(referenceArrayRoot, arrayRoot.count, response);
+        } else if (localLength > 0) {
+          bumpArrayCount(referenceArrayRoot, localLength, response);
+        }
+      }
       // There's no Element nor Debug Info in the ReplyServer so we don't have to check those here.
       return chunkValue;
-    case PENDING:
     case BLOCKED:
-      return waitForReference(chunk, parentObject, key, response, map, path);
+      return waitForReference(
+        response,
+        chunk,
+        parentObject,
+        key,
+        referenceArrayRoot,
+        map,
+        path,
+      );
+    case PENDING:
+      // If we don't have the referenced chunk yet, then this must be a forward reference,
+      // which is not allowed.
+      throw new Error('Invalid forward reference.');
     default:
       // This is an error. Instead of erroring directly, we're going to encode this on
       // an initialization handler.
@@ -944,16 +1116,40 @@ function createMap(
   response: Response,
   model: Array<[any, any]>,
 ): Map<any, any> {
-  return new Map(model);
+  if (!isArray(model)) {
+    throw new Error('Invalid Map initializer.');
+  }
+  if ((model as any).$$consumed === true) {
+    throw new Error('Already initialized Map.');
+  }
+  const map = new Map(model);
+  (model as any).$$consumed = true;
+  return map;
 }
 
 function createSet(response: Response, model: Array<any>): Set<any> {
-  return new Set(model);
+  if (!isArray(model)) {
+    throw new Error('Invalid Set initializer.');
+  }
+  if ((model as any).$$consumed === true) {
+    throw new Error('Already initialized Set.');
+  }
+  const set = new Set(model);
+  (model as any).$$consumed = true;
+  return set;
 }
 
 function extractIterator(response: Response, model: Array<any>): Iterator<any> {
+  if (!isArray(model)) {
+    throw new Error('Invalid Iterator initializer.');
+  }
+  if ((model as any).$$consumed === true) {
+    throw new Error('Already initialized Iterator.');
+  }
   // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
-  return model[Symbol.iterator]();
+  const iterator = model[Symbol.iterator]();
+  (model as any).$$consumed = true;
+  return iterator;
 }
 
 function createModel(
@@ -977,6 +1173,7 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
   bytesPerElement: number,
   parentObject: Object,
   parentKey: string,
+  referenceArrayRoot: null | NestedArrayContext,
 ): null {
   const id = parseInt(reference.slice(2), 16);
   const prefix = response._prefix;
@@ -985,10 +1182,15 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
   if (chunks.has(id)) {
     throw new Error('Already initialized typed array.');
   }
+  chunks.set(
+    id,
+    // We don't need to put the actual Blob in the chunk,
+    // because it shouldn't be accessed by anything else.
+    createErroredChunk(response, new Error('Already initialized typed array.')),
+  );
 
   // We should have this backingEntry in the store already because we emitted
   // it before referencing it. It should be a Blob.
-  // TODO: Use getOutlinedModel to allow us to emit the Blob later. We should be able to do that now.
   const backingEntry: Blob = (response._formData.get(key): any);
 
   const promise: Promise<ArrayBuffer> = backingEntry.arrayBuffer();
@@ -1011,17 +1213,28 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
   }
 
   function fulfill(buffer: ArrayBuffer): void {
-    const resolvedValue: T =
-      constructor === ArrayBuffer
-        ? (buffer: any)
-        : (new constructor(buffer): any);
+    try {
+      if (referenceArrayRoot !== null) {
+        bumpArrayCount(referenceArrayRoot, buffer.byteLength, response);
+      }
 
-    parentObject[parentKey] = resolvedValue;
+      const resolvedValue: T =
+        constructor === ArrayBuffer
+          ? (buffer: any)
+          : (new constructor(buffer): any);
 
-    // If this is the root object for a model reference, where `handler.value`
-    // is a stale `null`, the resolved value can be used directly.
-    if (parentKey === '' && handler.value === null) {
-      handler.value = resolvedValue;
+      if (key !== __PROTO__) {
+        parentObject[parentKey] = resolvedValue;
+      }
+
+      // If this is the root object for a model reference, where `handler.value`
+      // is a stale `null`, the resolved value can be used directly.
+      if (parentKey === '' && handler.value === null) {
+        handler.value = resolvedValue;
+      }
+    } catch (x) {
+      reject(x);
+      return;
     }
 
     handler.deps--;
@@ -1035,9 +1248,11 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = handler.value;
+      // We don't keep an array count for this since it won't be referenced again.
+      // In fact, we don't really need to store this chunk at all.
       initializedChunk.reason = null;
       if (resolveListeners !== null) {
-        wakeChunk(response, resolveListeners, handler.value);
+        wakeChunk(response, resolveListeners, handler.value, initializedChunk);
       }
     }
   }
@@ -1111,6 +1326,13 @@ function parseReadableStream<T>(
     },
   });
   let previousBlockedChunk: SomeChunk<T> | null = null;
+  function enqueue(value: T): void {
+    if (type === 'bytes' && !ArrayBuffer.isView(value)) {
+      flightController.error(new Error('Invalid data for bytes stream.'));
+      return;
+    }
+    controller.enqueue(value);
+  }
   const flightController = {
     enqueueModel(json: string): void {
       if (previousBlockedChunk === null) {
@@ -1124,22 +1346,16 @@ function parseReadableStream<T>(
         initializeModelChunk(chunk);
         const initializedChunk: SomeChunk<T> = chunk;
         if (initializedChunk.status === INITIALIZED) {
-          controller.enqueue(initializedChunk.value);
+          enqueue(initializedChunk.value);
         } else {
-          chunk.then(
-            v => controller.enqueue(v),
-            e => controller.error((e: any)),
-          );
+          chunk.then(enqueue, flightController.error);
           previousBlockedChunk = chunk;
         }
       } else {
         // We're still waiting on a previous chunk so we can't enqueue quite yet.
         const blockedChunk = previousBlockedChunk;
         const chunk: SomeChunk<T> = createPendingChunk(response);
-        chunk.then(
-          v => controller.enqueue(v),
-          e => controller.error((e: any)),
-        );
+        chunk.then(enqueue, flightController.error);
         previousBlockedChunk = chunk;
         blockedChunk.then(function () {
           if (previousBlockedChunk === chunk) {
@@ -1185,24 +1401,23 @@ function parseReadableStream<T>(
   return stream;
 }
 
-function asyncIterator(this: $AsyncIterator<any, any, void>) {
+function FlightIterator(
+  this: {next: (arg: void) => SomeChunk<IteratorResult<any, any>>, ...},
+  next: (arg: void) => SomeChunk<IteratorResult<any, any>>,
+) {
+  this.next = next;
+  // TODO: Add return/throw as options for aborting.
+}
+// TODO: The iterator could inherit the AsyncIterator prototype which is not exposed as
+// a global but exists as a prototype of an AsyncGenerator. However, it's not needed
+// to satisfy the iterable protocol.
+FlightIterator.prototype = ({}: any);
+FlightIterator.prototype[ASYNC_ITERATOR] = function asyncIterator(
+  this: $AsyncIterator<any, any, void>,
+) {
   // Self referencing iterator.
   return this;
-}
-
-function createIterator<T>(
-  next: (arg: void) => SomeChunk<IteratorResult<T, T>>,
-): $AsyncIterator<T, T, void> {
-  const iterator: any = {
-    next: next,
-    // TODO: Add return/throw as options for aborting.
-  };
-  // TODO: The iterator could inherit the AsyncIterator prototype which is not exposed as
-  // a global but exists as a prototype of an AsyncGenerator. However, it's not needed
-  // to satisfy the iterable protocol.
-  (iterator: any)[ASYNC_ITERATOR] = asyncIterator;
-  return iterator;
-}
+};
 
 function parseAsyncIterable<T>(
   response: Response,
@@ -1285,7 +1500,8 @@ function parseAsyncIterable<T>(
   const iterable: $AsyncIterable<T, T, void> = {
     [ASYNC_ITERATOR](): $AsyncIterator<T, T, void> {
       let nextReadIndex = 0;
-      return createIterator(arg => {
+      // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+      return new FlightIterator((arg: void) => {
         if (arg !== undefined) {
           throw new Error(
             'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
@@ -1320,11 +1536,15 @@ function parseModelString(
   key: string,
   value: string,
   reference: void | string,
+  arrayRoot: null | NestedArrayContext,
 ): any {
   if (value[0] === '$') {
     switch (value[1]) {
       case '$': {
         // This was an escaped string value.
+        if (arrayRoot !== null) {
+          bumpArrayCount(arrayRoot, value.length - 1, response);
+        }
         return value.slice(1);
       }
       case '@': {
@@ -1336,7 +1556,14 @@ function parseModelString(
       case 'h': {
         // Server Reference
         const ref = value.slice(2);
-        return getOutlinedModel(response, ref, obj, key, loadServerReference);
+        return getOutlinedModel(
+          response,
+          ref,
+          obj,
+          key,
+          null,
+          loadServerReference,
+        );
       }
       case 'T': {
         // Temporary Reference
@@ -1358,12 +1585,12 @@ function parseModelString(
       case 'Q': {
         // Map
         const ref = value.slice(2);
-        return getOutlinedModel(response, ref, obj, key, createMap);
+        return getOutlinedModel(response, ref, obj, key, null, createMap);
       }
       case 'W': {
         // Set
         const ref = value.slice(2);
-        return getOutlinedModel(response, ref, obj, key, createSet);
+        return getOutlinedModel(response, ref, obj, key, null, createSet);
       }
       case 'K': {
         // FormData
@@ -1374,19 +1601,30 @@ function parseModelString(
         // We assume that the reference to FormData always comes after each
         // entry that it references so we can assume they all exist in the
         // backing store already.
-        // $FlowFixMe[prop-missing] FormData has forEach on it.
-        backingFormData.forEach((entry: File | string, entryKey: string) => {
+        // Clone the keys to workaround bugs in the delete-while-iterating
+        // algorithm of FormData.
+        const keys = Array.from(backingFormData.keys());
+        for (let i = 0; i < keys.length; i++) {
+          const entryKey = keys[i];
           if (entryKey.startsWith(formPrefix)) {
-            // $FlowFixMe[incompatible-call]
-            data.append(entryKey.slice(formPrefix.length), entry);
+            const entries = backingFormData.getAll(entryKey);
+            const newKey = entryKey.slice(formPrefix.length);
+            for (let j = 0; j < entries.length; j++) {
+              // $FlowFixMe[incompatible-call]
+              data.append(newKey, entries[j]);
+            }
+            // These entries have now all been consumed. Let's free it.
+            // This also ensures that we don't have any entries left if we
+            // see the same key twice.
+            backingFormData.delete(entryKey);
           }
-        });
+        }
         return data;
       }
       case 'i': {
         // Iterator
         const ref = value.slice(2);
-        return getOutlinedModel(response, ref, obj, key, extractIterator);
+        return getOutlinedModel(response, ref, obj, key, null, extractIterator);
       }
       case 'I': {
         // $Infinity
@@ -1415,36 +1653,151 @@ function parseModelString(
       }
       case 'n': {
         // BigInt
-        return BigInt(value.slice(2));
+        const bigIntStr = value.slice(2);
+        if (bigIntStr.length > MAX_BIGINT_DIGITS) {
+          throw new Error(
+            'BigInt is too large. Received ' +
+              bigIntStr.length +
+              ' digits but the limit is ' +
+              MAX_BIGINT_DIGITS +
+              '.',
+          );
+        }
+        if (arrayRoot !== null) {
+          bumpArrayCount(arrayRoot, bigIntStr.length, response);
+        }
+        return BigInt(bigIntStr);
       }
-    }
-    switch (value[1]) {
       case 'A':
-        return parseTypedArray(response, value, ArrayBuffer, 1, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          ArrayBuffer,
+          1,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'O':
-        return parseTypedArray(response, value, Int8Array, 1, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          Int8Array,
+          1,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'o':
-        return parseTypedArray(response, value, Uint8Array, 1, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          Uint8Array,
+          1,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'U':
-        return parseTypedArray(response, value, Uint8ClampedArray, 1, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          Uint8ClampedArray,
+          1,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'S':
-        return parseTypedArray(response, value, Int16Array, 2, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          Int16Array,
+          2,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 's':
-        return parseTypedArray(response, value, Uint16Array, 2, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          Uint16Array,
+          2,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'L':
-        return parseTypedArray(response, value, Int32Array, 4, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          Int32Array,
+          4,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'l':
-        return parseTypedArray(response, value, Uint32Array, 4, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          Uint32Array,
+          4,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'G':
-        return parseTypedArray(response, value, Float32Array, 4, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          Float32Array,
+          4,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'g':
-        return parseTypedArray(response, value, Float64Array, 8, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          Float64Array,
+          8,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'M':
-        return parseTypedArray(response, value, BigInt64Array, 8, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          BigInt64Array,
+          8,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'm':
-        return parseTypedArray(response, value, BigUint64Array, 8, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          BigUint64Array,
+          8,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'V':
-        return parseTypedArray(response, value, DataView, 1, obj, key);
+        return parseTypedArray(
+          response,
+          value,
+          DataView,
+          1,
+          obj,
+          key,
+          arrayRoot,
+        );
       case 'B': {
         // Blob
         const id = parseInt(value.slice(2), 16);
@@ -1455,8 +1808,6 @@ function parseModelString(
         const backingEntry: Blob = (response._formData.get(blobKey): any);
         return backingEntry;
       }
-    }
-    switch (value[1]) {
       case 'R': {
         return parseReadableStream(response, value, undefined, obj, key);
       }
@@ -1472,16 +1823,30 @@ function parseModelString(
     }
     // We assume that anything else is a reference ID.
     const ref = value.slice(1);
-    return getOutlinedModel(response, ref, obj, key, createModel);
+    return getOutlinedModel(response, ref, obj, key, arrayRoot, createModel);
+  }
+  if (arrayRoot !== null) {
+    bumpArrayCount(arrayRoot, value.length, response);
   }
   return value;
 }
+
+const DEFAULT_MAX_ARRAY_NESTING = 1000000;
+
+// Limit BigInt size to prevent CPU exhaustion from parsing very large values.
+// 300 digits covers most practical use cases (even 512-bit integers need only
+// ~154 digits) and aligns with the implicit limit from the Number approximation
+// checks in fulfillReference and getOutlinedModel.
+const MAX_BIGINT_DIGITS = 300;
+
+export const MAX_BOUND_ARGS = 1000;
 
 export function createResponse(
   bundlerConfig: ServerManifest,
   formFieldPrefix: string,
   temporaryReferences: void | TemporaryReferenceSet,
   backingFormData?: FormData = new FormData(),
+  arraySizeLimit?: number = DEFAULT_MAX_ARRAY_NESTING,
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
@@ -1492,6 +1857,8 @@ export function createResponse(
     _closed: false,
     _closedReason: null,
     _temporaryReferences: temporaryReferences,
+    _rootArrayContexts: new WeakMap(),
+    _arraySizeLimit: arraySizeLimit,
   };
   return response;
 }

@@ -45,6 +45,14 @@ export function useCommitFilteringAndNavigation(
     null,
   );
 
+  // Reset commit index when commitData changes (e.g., when switching roots).
+  const [previousCommitData, setPreviousCommitData] =
+    useState<Array<CommitDataFrontend>>(commitData);
+  if (previousCommitData !== commitData) {
+    setPreviousCommitData(commitData);
+    selectCommitIndex(commitData.length > 0 ? 0 : null);
+  }
+
   const calculateFilteredIndices = useCallback(
     (enabled: boolean, minDuration: number): Array<number> => {
       return commitData.reduce((reduced: Array<number>, commitDatum, index) => {
