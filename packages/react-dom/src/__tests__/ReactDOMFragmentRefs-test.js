@@ -137,26 +137,18 @@ describe('FragmentRefs', () => {
     const childB = document.querySelector('#childB');
     const childC = document.querySelector('#childC');
 
-    expect(childA.unstable_reactFragments.has(fragmentRef.current)).toBe(true);
-    expect(childB.unstable_reactFragments.has(fragmentRef.current)).toBe(true);
-    expect(childC.unstable_reactFragments.has(fragmentRef.current)).toBe(false);
-    expect(childA.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
-      true,
-    );
-    expect(childB.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
-      true,
-    );
-    expect(childC.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
-      true,
-    );
+    expect(childA.reactFragments.has(fragmentRef.current)).toBe(true);
+    expect(childB.reactFragments.has(fragmentRef.current)).toBe(true);
+    expect(childC.reactFragments.has(fragmentRef.current)).toBe(false);
+    expect(childA.reactFragments.has(fragmentParentRef.current)).toBe(true);
+    expect(childB.reactFragments.has(fragmentParentRef.current)).toBe(true);
+    expect(childC.reactFragments.has(fragmentParentRef.current)).toBe(true);
 
     await act(() => root.render(<Test show={true} />));
 
     const childD = document.querySelector('#childD');
-    expect(childD.unstable_reactFragments.has(fragmentRef.current)).toBe(false);
-    expect(childD.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
-      true,
-    );
+    expect(childD.reactFragments.has(fragmentRef.current)).toBe(false);
+    expect(childD.reactFragments.has(fragmentParentRef.current)).toBe(true);
   });
 
   describe('focus methods', () => {
@@ -1104,7 +1096,7 @@ describe('FragmentRefs', () => {
         }
         const observer = new IntersectionObserver(entries => {
           entries.forEach(entry => {
-            const fragmentInstances = entry.target.unstable_reactFragments;
+            const fragmentInstances = entry.target.reactFragments;
             if (fragmentInstances) {
               Array.from(fragmentInstances).forEach(fInstance => {
                 const cbs = targetToCallbackMap.get(fInstance) || [];
