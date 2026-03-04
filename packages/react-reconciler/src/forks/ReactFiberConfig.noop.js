@@ -27,7 +27,6 @@ export * from 'react-noop-renderer/src/ReactFiberConfigNoop';
 declare const $$$config: $FlowFixMe;
 export opaque type Type = mixed;
 export opaque type Props = mixed;
-export opaque type Container = mixed;
 export opaque type ActivityInstance = mixed;
 export opaque type SuspenseInstance = mixed;
 export opaque type HydratableInstance = mixed;

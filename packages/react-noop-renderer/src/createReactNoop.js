@@ -24,8 +24,12 @@ import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import typeof * as HostConfig from 'react-reconciler/src/ReactFiberConfig';
+import typeof * as ReactFiberConfigWithNoMutation from 'react-reconciler/src/ReactFiberConfigWithNoMutation';
+import typeof * as ReactFiberConfigWithNoPersistence from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
+
 import typeof * as ReconcilerAPI from 'react-reconciler/src/ReactFiberReconciler';
 import type {
+  Container,
   HostContext,
   Instance,
   PublicInstance,
@@ -44,17 +48,13 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
+import * as DefaultConfig from './ReactFiberConfigNoop';
+
 import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactVersion from 'shared/ReactVersion';
 
-type Container = {
-  rootID: string,
-  children: Array<Instance | TextInstance>,
-  pendingChildren: Array<Instance | TextInstance>,
-  ...
-};
 type Props = {
   prop: any,
   hidden: boolean,
@@ -107,7 +107,6 @@ if (__DEV__) {
   Object.freeze(NO_CONTEXT);
 }
 
-// $FlowFixMe[signature-verification-failure]
 function createReactNoop(
   reconciler: (hostConfig: HostConfig) => ReconcilerAPI,
   useMutation: boolean,
@@ -121,12 +120,19 @@ function createReactNoop(
     child: Instance | TextInstance,
   ): void {
     const prevParent = child.parent;
-    // $FlowFixMe[prop-missing]
-    if (prevParent !== -1 && prevParent !== parentInstance.id) {
+
+    if (
+      prevParent !== -1 &&
+      prevParent !==
+        // $FlowFixMe[prop-missing]
+        (parentInstance: Instance).id
+    ) {
       throw new Error('Reparenting is not allowed');
     }
-    // $FlowFixMe[prop-missing]
-    child.parent = parentInstance.id;
+
+    child.parent =
+      // $FlowFixMe[prop-missing]
+      (parentInstance: Instance).id;
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
       parentInstance.children.splice(index, 1);
@@ -256,11 +262,14 @@ function createReactNoop(
     if (__DEV__) {
       checkPropStringCoercion(newProps.children, 'children');
     }
-    const clone = {
+    const clone: Instance = {
       id: instance.id,
       type: type,
       parent: instance.parent,
-      children: keepChildren ? instance.children : (children ?? []),
+      children: keepChildren
+        ? instance.children
+        : // $FlowFixMe[incompatible-type] We're not typing immutable instances.
+          (children ?? []),
       text: shouldSetTextContent(type, newProps)
         ? computeText((newProps.children: any) + '', instance.context)
         : null,
@@ -291,7 +300,6 @@ function createReactNoop(
       enumerable: false,
     });
     hostCloneCounter++;
-    // $FlowFixMe[incompatible-return]
     return clone;
   }
 
@@ -315,10 +323,7 @@ function createReactNoop(
     subscriptions: Array<SuspenseyCommitSubscription> | null,
   };
 
-  let suspenseyThingCache: Map<
-    SuspenseyThingRecord,
-    'pending' | 'fulfilled',
-  > | null = null;
+  let suspenseyThingCache: Map<string, SuspenseyThingRecord> | null = null;
 
   function startSuspendingCommit(): SuspendedState {
     // Represents a subscription for all the suspensey things that block a
@@ -340,7 +345,7 @@ function createReactNoop(
       // Attach a listener to the suspensey thing and create a subscription
       // object that uses reference counting to track when all the suspensey
       // things have loaded.
-      // $FlowFixMe
+      // $FlowFixMe[incompatible-use] Still not nullable
       const record = suspenseyThingCache.get(src);
       if (record === undefined) {
         throw new Error('Could not find record for key.');
@@ -352,10 +357,8 @@ function createReactNoop(
         // Stash the subscription on the record. In `resolveSuspenseyThing`,
         // we'll use this fire the commit once all the things have loaded.
         if (record.subscriptions === null) {
-          // $FlowFixMe[incompatible-use]
           record.subscriptions = [];
         }
-        // $FlowFixMe[incompatible-use]
         record.subscriptions.push(state);
       }
     } else {
@@ -369,10 +372,9 @@ function createReactNoop(
   function waitForCommitToBeReady(
     state: SuspendedState,
     timeoutOffset: number,
-  ): ((commit: () => mixed) => () => void) | null {
+  ): ((commit: () => void) => () => void) | null {
     if (state.pendingCount > 0) {
-      return (commit: () => mixed) => {
-        // $FlowFixMe[incompatible-type]
+      return (commit: () => void) => {
         state.commit = commit;
         const cancelCommit = () => {
           state.commit = null;
@@ -383,11 +385,13 @@ function createReactNoop(
     return null;
   }
 
-  const sharedHostConfig = {
+  const sharedHostConfig: HostConfig = {
     rendererVersion: ReactVersion,
     rendererPackageName: 'react-noop',
 
-    supportsSingletons: false,
+    ...DefaultConfig,
+
+    extraDevToolsConfig: null,
 
     getRootHostContext() {
       return NO_CONTEXT;
@@ -406,6 +410,8 @@ function createReactNoop(
     getPublicInstance(instance: Instance): PublicInstance {
       return (instance: any);
     },
+
+    HostTransitionContext: null,
 
     createInstance(
       type: string,
@@ -466,10 +472,6 @@ function createReactNoop(
       return inst;
     },
 
-    cloneMutableInstance(instance: Instance, keepChildren: boolean): Instance {
-      throw new Error('Not yet implemented.');
-    },
-
     appendInitialChild(
       parentInstance: Instance,
       child: Instance | TextInstance,
@@ -519,10 +521,6 @@ function createReactNoop(
         enumerable: false,
       });
       return inst;
-    },
-
-    cloneMutableTextInstance(textInstance: TextInstance): TextInstance {
-      throw new Error('Not yet implemented.');
     },
 
     createFragmentInstance(fragmentFiber: mixed) {
@@ -590,11 +588,8 @@ function createReactNoop(
       return false;
     },
 
-    now: Scheduler.unstable_now,
-
     isPrimaryRenderer: true,
     warnsIfNotActing: true,
-    supportsHydration: false,
 
     getInstanceFromNode() {
       throw new Error('Not yet implemented.');
@@ -612,17 +607,7 @@ function createReactNoop(
       // NO-OP
     },
 
-    prepareScopeUpdate() {},
-
-    getInstanceFromScope() {
-      throw new Error('Not yet implemented.');
-    },
-
     detachDeletedInstance() {},
-
-    logRecoverableError() {
-      // no-op
-    },
 
     requestPostPaintCallback(callback: (time: number) => void) {
       const endTime = Scheduler.unstable_now();
@@ -657,16 +642,11 @@ function createReactNoop(
       return true;
     },
 
-    mayResourceSuspendCommit(resource: mixed): boolean {
-      throw new Error(
-        'Resources are not implemented for React Noop yet. This method should not be called',
-      );
-    },
-
     preloadInstance(instance: Instance, type: string, props: Props): boolean {
       if (type !== 'suspensey-thing' || typeof props.src !== 'string') {
         throw new Error('Attempted to preload unexpected instance: ' + type);
       }
+      const src = props.src;
 
       // In addition to preloading an instance, this method asks whether the
       // instance is ready to be committed. If it's not, React may yield to the
@@ -675,15 +655,14 @@ function createReactNoop(
       if (suspenseyThingCache === null) {
         suspenseyThingCache = new Map();
       }
-      // $FlowFixMe
-      const record = suspenseyThingCache.get(props.src);
+      const record = suspenseyThingCache.get(src);
       if (record === undefined) {
         const newRecord: SuspenseyThingRecord = {
           status: 'pending',
           subscriptions: null,
         };
-        // $FlowFixMe
-        suspenseyThingCache.set(props.src, newRecord);
+        // $FlowFixMe[incompatible-use] Still not nullable
+        suspenseyThingCache.set(src, newRecord);
         // $FlowFixMe[prop-missing]
         const onLoadStart = props.onLoadStart;
         if (typeof onLoadStart === 'function') {
@@ -691,25 +670,12 @@ function createReactNoop(
         }
         return false;
       } else {
-        // $FlowFixMe[prop-missing]
         return record.status === 'fulfilled';
       }
     },
 
-    preloadResource(resource: mixed): number {
-      throw new Error(
-        'Resources are not implemented for React Noop yet. This method should not be called',
-      );
-    },
-
     startSuspendingCommit,
     suspendInstance,
-
-    suspendResource(state: SuspendedState, resource: mixed): void {
-      throw new Error(
-        'Resources are not implemented for React Noop yet. This method should not be called',
-      );
-    },
 
     suspendOnActiveViewTransition(
       state: SuspendedState,
@@ -741,271 +707,283 @@ function createReactNoop(
     },
   };
 
-  const hostConfig: HostConfig = useMutation
-    ? // $FlowFixMe[prop-missing]
-      {
-        ...sharedHostConfig,
+  const mutationHostConfig: Pick<
+    HostConfig,
+    $Keys<ReactFiberConfigWithNoMutation>,
+  > = {
+    supportsMutation: true,
 
-        supportsMutation: true,
-        supportsPersistence: false,
+    cloneMutableInstance() {
+      // required for enableGestureTransition
+      throw new Error('Not yet implemented.');
+    },
 
-        commitMount(instance: Instance, type: string, newProps: Props): void {
-          // Noop
-        },
+    cloneMutableTextInstance() {
+      // required for enableGestureTransition
+      throw new Error('Not yet implemented.');
+    },
 
-        commitUpdate(
-          instance: Instance,
-          type: string,
-          oldProps: Props,
-          newProps: Props,
-        ): void {
-          if (oldProps === null) {
-            throw new Error('Should have old props');
-          }
-          hostUpdateCounter++;
-          instance.prop = newProps.prop;
-          instance.hidden = !!newProps.hidden;
+    commitMount(instance: Instance, type: string, newProps: Props): void {
+      // Noop
+    },
 
-          if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
-            // $FlowFixMe[prop-missing]
-            instance.src = newProps.src;
-          }
-
-          if (shouldSetTextContent(type, newProps)) {
-            if (__DEV__) {
-              checkPropStringCoercion(newProps.children, 'children');
-            }
-            instance.text = computeText(
-              (newProps.children: any) + '',
-              instance.context,
-            );
-          }
-        },
-
-        commitTextUpdate(
-          textInstance: TextInstance,
-          oldText: string,
-          newText: string,
-        ): void {
-          hostUpdateCounter++;
-          textInstance.text = computeText(newText, textInstance.context);
-        },
-
-        appendChild,
-        appendChildToContainer,
-        insertBefore,
-        insertInContainerBefore,
-        removeChild,
-        removeChildFromContainer,
-        clearContainer,
-
-        hideInstance(instance: Instance): void {
-          instance.hidden = true;
-        },
-
-        hideTextInstance(textInstance: TextInstance): void {
-          textInstance.hidden = true;
-        },
-
-        unhideInstance(instance: Instance, props: Props): void {
-          if (!props.hidden) {
-            instance.hidden = false;
-          }
-        },
-
-        unhideTextInstance(textInstance: TextInstance, text: string): void {
-          textInstance.hidden = false;
-        },
-
-        applyViewTransitionName(
-          instance: Instance,
-          name: string,
-          className: ?string,
-        ): void {},
-
-        restoreViewTransitionName(instance: Instance, props: Props): void {},
-
-        cancelViewTransitionName(
-          instance: Instance,
-          name: string,
-          props: Props,
-        ): void {},
-
-        cancelRootViewTransitionName(rootContainer: Container): void {},
-
-        restoreRootViewTransitionName(rootContainer: Container): void {},
-
-        cloneRootViewTransitionContainer(rootContainer: Container): Instance {
-          throw new Error('Not yet implemented.');
-        },
-
-        removeRootViewTransitionClone(
-          rootContainer: Container,
-          clone: Instance,
-        ): void {
-          throw new Error('Not implemented.');
-        },
-
-        measureInstance(instance: Instance): InstanceMeasurement {
-          return null;
-        },
-
-        measureClonedInstance(instance: Instance): InstanceMeasurement {
-          return null;
-        },
-
-        wasInstanceInViewport(measurement: InstanceMeasurement): boolean {
-          return true;
-        },
-
-        hasInstanceChanged(
-          oldMeasurement: InstanceMeasurement,
-          newMeasurement: InstanceMeasurement,
-        ): boolean {
-          return false;
-        },
-
-        hasInstanceAffectedParent(
-          oldMeasurement: InstanceMeasurement,
-          newMeasurement: InstanceMeasurement,
-        ): boolean {
-          return false;
-        },
-
-        startViewTransition(
-          rootContainer: Container,
-          transitionTypes: null | TransitionTypes,
-          mutationCallback: () => void,
-          layoutCallback: () => void,
-          afterMutationCallback: () => void,
-          spawnedWorkCallback: () => void,
-          passiveCallback: () => mixed,
-          errorCallback: mixed => void,
-          blockedCallback: string => void, // Profiling-only
-          finishedAnimation: () => void, // Profiling-only
-        ): null | RunningViewTransition {
-          mutationCallback();
-          layoutCallback();
-          // Skip afterMutationCallback(). We don't need it since we're not animating.
-          spawnedWorkCallback();
-          // Skip passiveCallback(). Spawned work will schedule a task.
-          return null;
-        },
-
-        startGestureTransition(
-          rootContainer: Container,
-          timeline: GestureTimeline,
-          rangeStart: number,
-          rangeEnd: number,
-          transitionTypes: null | TransitionTypes,
-          mutationCallback: () => void,
-          animateCallback: () => void,
-          errorCallback: mixed => void,
-        ): null | RunningViewTransition {
-          mutationCallback();
-          animateCallback();
-          return null;
-        },
-
-        stopViewTransition(transition: RunningViewTransition) {},
-
-        addViewTransitionFinishedListener(
-          transition: RunningViewTransition,
-          callback: () => void,
-        ) {
-          callback();
-        },
-
-        createViewTransitionInstance(name: string): ViewTransitionInstance {
-          return null;
-        },
-
-        getCurrentGestureOffset(provider: GestureTimeline): number {
-          return 0;
-        },
-
-        resetTextContent(instance: Instance): void {
-          instance.text = null;
-        },
+    commitUpdate(
+      instance: Instance,
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+    ): void {
+      if (oldProps === null) {
+        throw new Error('Should have old props');
       }
-    : // $FlowFixMe[prop-missing]
-      {
-        ...sharedHostConfig,
-        supportsMutation: false,
-        supportsPersistence: true,
+      hostUpdateCounter++;
+      instance.prop = newProps.prop;
+      instance.hidden = !!newProps.hidden;
 
-        cloneInstance,
-        clearContainer,
+      if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+        // $FlowFixMe[prop-missing]
+        instance.src = newProps.src;
+      }
 
-        createContainerChildSet(): Array<Instance | TextInstance> {
-          return [];
-        },
+      if (shouldSetTextContent(type, newProps)) {
+        if (__DEV__) {
+          checkPropStringCoercion(newProps.children, 'children');
+        }
+        instance.text = computeText(
+          (newProps.children: any) + '',
+          instance.context,
+        );
+      }
+    },
 
-        appendChildToContainerChildSet(
-          childSet: Array<Instance | TextInstance>,
-          child: Instance | TextInstance,
-        ): void {
-          childSet.push(child);
-        },
+    commitTextUpdate(
+      textInstance: TextInstance,
+      oldText: string,
+      newText: string,
+    ): void {
+      hostUpdateCounter++;
+      textInstance.text = computeText(newText, textInstance.context);
+    },
 
-        finalizeContainerChildren(
-          container: Container,
-          newChildren: Array<Instance | TextInstance>,
-        ): void {
-          container.pendingChildren = newChildren;
-          if (
-            newChildren.length === 1 &&
-            newChildren[0].text === 'Error when completing root'
-          ) {
-            // Trigger an error for testing purposes
-            throw Error('Error when completing root');
-          }
-        },
+    appendChild,
+    appendChildToContainer,
+    insertBefore,
+    insertInContainerBefore,
+    removeChild,
+    removeChildFromContainer,
+    clearContainer,
 
-        replaceContainerChildren(
-          container: Container,
-          newChildren: Array<Instance | TextInstance>,
-        ): void {
-          container.children = newChildren;
-        },
+    hideInstance(instance: Instance): void {
+      instance.hidden = true;
+    },
 
-        cloneHiddenInstance(
-          instance: Instance,
-          type: string,
-          props: Props,
-        ): Instance {
-          const clone = cloneInstance(instance, type, props, props, true, null);
-          clone.hidden = true;
-          return clone;
-        },
+    hideTextInstance(textInstance: TextInstance): void {
+      textInstance.hidden = true;
+    },
 
-        cloneHiddenTextInstance(
-          instance: TextInstance,
-          text: string,
-        ): TextInstance {
-          const clone = {
-            text: instance.text,
-            id: instance.id,
-            parent: instance.parent,
-            hidden: true,
-            context: instance.context,
-          };
-          // Hide from unit tests
-          Object.defineProperty(clone, 'id', {
-            value: clone.id,
-            enumerable: false,
-          });
-          Object.defineProperty(clone, 'parent', {
-            value: clone.parent,
-            enumerable: false,
-          });
-          Object.defineProperty(clone, 'context', {
-            value: clone.context,
-            enumerable: false,
-          });
-          return clone;
-        },
+    unhideInstance(instance: Instance, props: Props): void {
+      if (!props.hidden) {
+        instance.hidden = false;
+      }
+    },
+
+    unhideTextInstance(textInstance: TextInstance, text: string): void {
+      textInstance.hidden = false;
+    },
+
+    applyViewTransitionName(
+      instance: Instance,
+      name: string,
+      className: ?string,
+    ): void {},
+
+    restoreViewTransitionName(instance: Instance, props: Props): void {},
+
+    cancelViewTransitionName(
+      instance: Instance,
+      name: string,
+      props: Props,
+    ): void {},
+
+    cancelRootViewTransitionName(rootContainer: Container): void {},
+
+    restoreRootViewTransitionName(rootContainer: Container): void {},
+
+    cloneRootViewTransitionContainer(rootContainer: Container): Instance {
+      throw new Error('Not yet implemented.');
+    },
+
+    removeRootViewTransitionClone(
+      rootContainer: Container,
+      clone: Instance,
+    ): void {
+      throw new Error('Not implemented.');
+    },
+
+    measureInstance(instance: Instance): InstanceMeasurement {
+      return null;
+    },
+
+    measureClonedInstance(instance: Instance): InstanceMeasurement {
+      return null;
+    },
+
+    wasInstanceInViewport(measurement: InstanceMeasurement): boolean {
+      return true;
+    },
+
+    hasInstanceChanged(
+      oldMeasurement: InstanceMeasurement,
+      newMeasurement: InstanceMeasurement,
+    ): boolean {
+      return false;
+    },
+
+    hasInstanceAffectedParent(
+      oldMeasurement: InstanceMeasurement,
+      newMeasurement: InstanceMeasurement,
+    ): boolean {
+      return false;
+    },
+
+    startViewTransition(
+      rootContainer: Container,
+      transitionTypes: null | TransitionTypes,
+      mutationCallback: () => void,
+      layoutCallback: () => void,
+      afterMutationCallback: () => void,
+      spawnedWorkCallback: () => void,
+      passiveCallback: () => mixed,
+      errorCallback: mixed => void,
+      blockedCallback: string => void, // Profiling-only
+      finishedAnimation: () => void, // Profiling-only
+    ): null | RunningViewTransition {
+      mutationCallback();
+      layoutCallback();
+      // Skip afterMutationCallback(). We don't need it since we're not animating.
+      spawnedWorkCallback();
+      // Skip passiveCallback(). Spawned work will schedule a task.
+      return null;
+    },
+
+    startGestureTransition(
+      rootContainer: Container,
+      timeline: GestureTimeline,
+      rangeStart: number,
+      rangeEnd: number,
+      transitionTypes: null | TransitionTypes,
+      mutationCallback: () => void,
+      animateCallback: () => void,
+      errorCallback: mixed => void,
+    ): null | RunningViewTransition {
+      mutationCallback();
+      animateCallback();
+      return null;
+    },
+
+    stopViewTransition(transition: RunningViewTransition) {},
+
+    addViewTransitionFinishedListener(
+      transition: RunningViewTransition,
+      callback: () => void,
+    ) {
+      callback();
+    },
+
+    createViewTransitionInstance(name: string): ViewTransitionInstance {
+      return null;
+    },
+
+    getCurrentGestureOffset(provider: GestureTimeline): number {
+      return 0;
+    },
+
+    resetTextContent(instance: Instance): void {
+      instance.text = null;
+    },
+  };
+
+  const persistenceHostConfig: Pick<
+    HostConfig,
+    $Keys<ReactFiberConfigWithNoPersistence>,
+  > = {
+    supportsPersistence: true,
+
+    cloneInstance,
+
+    createContainerChildSet(): Array<Instance | TextInstance> {
+      return [];
+    },
+
+    appendChildToContainerChildSet(
+      childSet: Array<Instance | TextInstance>,
+      child: Instance | TextInstance,
+    ): void {
+      childSet.push(child);
+    },
+
+    finalizeContainerChildren(
+      container: Container,
+      newChildren: Array<Instance | TextInstance>,
+    ): void {
+      container.pendingChildren = newChildren;
+      if (
+        newChildren.length === 1 &&
+        newChildren[0].text === 'Error when completing root'
+      ) {
+        // Trigger an error for testing purposes
+        throw Error('Error when completing root');
+      }
+    },
+
+    replaceContainerChildren(
+      container: Container,
+      newChildren: Array<Instance | TextInstance>,
+    ): void {
+      container.children = newChildren;
+    },
+
+    cloneHiddenInstance(
+      instance: Instance,
+      type: string,
+      props: Props,
+    ): Instance {
+      const clone = cloneInstance(instance, type, props, props, true, null);
+      clone.hidden = true;
+      return clone;
+    },
+
+    cloneHiddenTextInstance(
+      instance: TextInstance,
+      text: string,
+    ): TextInstance {
+      const clone = {
+        text: instance.text,
+        id: instance.id,
+        parent: instance.parent,
+        hidden: true,
+        context: instance.context,
       };
+      // Hide from unit tests
+      Object.defineProperty(clone, 'id', {
+        value: clone.id,
+        enumerable: false,
+      });
+      Object.defineProperty(clone, 'parent', {
+        value: clone.parent,
+        enumerable: false,
+      });
+      Object.defineProperty(clone, 'context', {
+        value: clone.context,
+        enumerable: false,
+      });
+      return clone;
+    },
+  };
+
+  const hostConfig: HostConfig = useMutation
+    ? {...sharedHostConfig, ...mutationHostConfig}
+    : {...sharedHostConfig, ...persistenceHostConfig};
 
   const NoopRenderer = reconciler(hostConfig);
 
@@ -1024,8 +1002,7 @@ function createReactNoop(
 
   let currentEventPriority = DefaultEventPriority;
 
-  // $FlowFixMe[missing-local-annot]
-  function createJSXElementForTestComparison(type, props) {
+  function createJSXElementForTestComparison(type: mixed, props: mixed) {
     if (__DEV__) {
       const element = {
         type: type,
@@ -1052,8 +1029,10 @@ function createReactNoop(
     }
   }
 
-  // $FlowFixMe
-  function childToJSX(child, text) {
+  function childToJSX(
+    child: null | Instance | TextInstance | Array<Instance | TextInstance>,
+    text: ?string,
+  ): mixed {
     if (text !== null) {
       return text;
     }
@@ -1108,8 +1087,7 @@ function createReactNoop(
     return textInstance.text;
   }
 
-  // $FlowFixMe[missing-local-annot]
-  function getChildren(root) {
+  function getChildren(root: ?(Container | Instance)) {
     if (root) {
       return root.children;
     } else {
@@ -1117,8 +1095,7 @@ function createReactNoop(
     }
   }
 
-  // $FlowFixMe[missing-local-annot]
-  function getPendingChildren(root) {
+  function getPendingChildren(root: ?(Container | Instance)) {
     if (root) {
       return root.children;
     } else {
@@ -1126,8 +1103,7 @@ function createReactNoop(
     }
   }
 
-  // $FlowFixMe[missing-local-annot]
-  function getChildrenAsJSX(root) {
+  function getChildrenAsJSX(root: ?(Container | Instance)) {
     const children = childToJSX(getChildren(root), null);
     if (children === null) {
       return null;
@@ -1138,8 +1114,7 @@ function createReactNoop(
     return children;
   }
 
-  // $FlowFixMe[missing-local-annot]
-  function getPendingChildrenAsJSX(root) {
+  function getPendingChildrenAsJSX(root: ?(Container | Instance)) {
     const children = childToJSX(getChildren(root), null);
     if (children === null) {
       return null;
@@ -1150,7 +1125,7 @@ function createReactNoop(
     return children;
   }
 
-  function flushSync<R>(fn: () => R): R {
+  function flushSync<R>(fn: () => R): ?R {
     if (__DEV__) {
       if (NoopRenderer.isAlreadyRendering()) {
         console.error(
@@ -1169,7 +1144,6 @@ function createReactNoop(
         if (fn) {
           return fn();
         } else {
-          // $FlowFixMe[incompatible-return]
           return undefined;
         }
       } finally {
@@ -1228,7 +1202,10 @@ function createReactNoop(
       return getPendingChildren(container);
     },
 
-    getOrCreateRootContainer(rootID: string = DEFAULT_ROOT_ID, tag: RootTag) {
+    getOrCreateRootContainer(
+      rootID: string = DEFAULT_ROOT_ID,
+      tag: RootTag,
+    ): Container {
       let root = roots.get(rootID);
       if (!root) {
         const container: Container = {
@@ -1307,7 +1284,7 @@ function createReactNoop(
         throw new Error('createLegacyRoot: Unsupported Legacy Mode API.');
       }
 
-      const container = {
+      const container: Container = {
         rootID: '' + idCounter++,
         pendingChildren: [],
         children: [],
@@ -1317,9 +1294,8 @@ function createReactNoop(
         container,
         LegacyRoot,
         null,
-        // $FlowFixMe[incompatible-call] -- TODO: Discovered when typechecking noop-renderer
-        null,
         false,
+        null,
         '',
         NoopRenderer.defaultOnUncaughtError,
         NoopRenderer.defaultOnCaughtError,
@@ -1352,8 +1328,7 @@ function createReactNoop(
       return getPendingChildrenAsJSX(container);
     },
 
-    // $FlowFixMe[missing-local-annot]
-    getSuspenseyThingStatus(src): string | null {
+    getSuspenseyThingStatus(src: string): string | null {
       if (suspenseyThingCache === null) {
         return null;
       } else {
@@ -1367,24 +1342,19 @@ function createReactNoop(
       if (suspenseyThingCache === null) {
         suspenseyThingCache = new Map();
       }
-      // $FlowFixMe[incompatible-call]
       const record = suspenseyThingCache.get(key);
       if (record === undefined) {
         const newRecord: SuspenseyThingRecord = {
           status: 'fulfilled',
           subscriptions: null,
         };
-        // $FlowFixMe
+        // $FlowFixMe[incompatible-use] still non-nullable
         suspenseyThingCache.set(key, newRecord);
       } else {
-        // $FlowFixMe[prop-missing]
         if (record.status === 'pending') {
-          // $FlowFixMe[incompatible-use]
           record.status = 'fulfilled';
-          // $FlowFixMe[prop-missing]
           const subscriptions = record.subscriptions;
           if (subscriptions !== null) {
-            // $FlowFixMe[incompatible-use]
             record.subscriptions = null;
             for (let i = 0; i < subscriptions.length; i++) {
               const subscription = subscriptions[i];
@@ -1392,6 +1362,11 @@ function createReactNoop(
               if (subscription.pendingCount === 0) {
                 const commit = subscription.commit;
                 subscription.commit = null;
+                if (commit === null) {
+                  throw new Error(
+                    'Expected commit to be a function. This is a bug in React.',
+                  );
+                }
                 commit();
               }
             }
@@ -1413,7 +1388,7 @@ function createReactNoop(
     },
 
     // Shortcut for testing a single root
-    render(element: React$Element<any>, callback: ?Function) {
+    render(element: React$Element<any>, callback: ?Function): void {
       ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
     },
 
@@ -1462,13 +1437,11 @@ function createReactNoop(
         return component;
       }
       if (__DEV__) {
-        // $FlowFixMe[incompatible-return]
         return NoopRenderer.findHostInstanceWithWarning(
           component,
           'findInstance',
         );
       }
-      // $FlowFixMe[incompatible-return]
       return NoopRenderer.findHostInstance(component);
     },
 
@@ -1527,8 +1500,7 @@ function createReactNoop(
 
     discreteUpdates: NoopRenderer.discreteUpdates,
 
-    // $FlowFixMe[incompatible-return]
-    idleUpdates<T>(fn: () => T): T {
+    idleUpdates<T>(fn: () => T): void {
       const prevEventPriority = currentEventPriority;
       currentEventPriority = IdleEventPriority;
       try {
@@ -1552,9 +1524,7 @@ function createReactNoop(
       }
 
       const bufferedLog: string[] = [];
-      // $FlowFixMe[missing-local-annot]
       function log(...args: string[]) {
-        // $FlowFixMe[incompatible-call]
         bufferedLog.push(...args, '\n');
       }
 
@@ -1614,8 +1584,7 @@ function createReactNoop(
         }
       }
 
-      // $FlowFixMe[missing-local-annot]
-      function logFiber(fiber: Fiber, depth) {
+      function logFiber(fiber: Fiber, depth: number) {
         log(
           '  '.repeat(depth) +
             '- ' +
