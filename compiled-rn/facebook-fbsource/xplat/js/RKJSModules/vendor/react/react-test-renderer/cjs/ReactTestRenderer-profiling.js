@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<68407af48a0d6cf0202e45e57c8c4612>>
+ * @generated SignedSource<<103bc43d395761d50284aea1389ff3a1>>
  */
 
 "use strict";
@@ -3466,7 +3466,7 @@ function dispatchActionState(
   payload
 ) {
   if (isRenderPhaseUpdate(fiber))
-    throw Error("Cannot update form state while rendering.");
+    throw Error("Cannot update action state while rendering.");
   fiber = actionQueue.action;
   if (null !== fiber) {
     var actionNode = {
@@ -10848,10 +10848,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1268 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-9c0323e2-20260303",
+  version: "19.3.0-native-fb-93882bd4-20260304",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-9c0323e2-20260303",
+  reconcilerVersion: "19.3.0-native-fb-93882bd4-20260304",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$152 = 0;
@@ -11002,4 +11002,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.3.0-native-fb-9c0323e2-20260303";
+exports.version = "19.3.0-native-fb-93882bd4-20260304";

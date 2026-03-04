@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9824ca41d3b508086fa13667a9d79399>>
+ * @generated SignedSource<<e9729333a7cfd0e60c2ea953ef3297c0>>
  */
 
 "use strict";
@@ -4801,7 +4801,7 @@ function dispatchActionState(
   payload
 ) {
   if (isRenderPhaseUpdate(fiber))
-    throw Error("Cannot update form state while rendering.");
+    throw Error("Cannot update action state while rendering.");
   fiber = actionQueue.action;
   if (null !== fiber) {
     var actionNode = {
@@ -13416,10 +13416,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1641 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-9c0323e2-20260303",
+    version: "19.3.0-native-fb-93882bd4-20260304",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-9c0323e2-20260303"
+    reconcilerVersion: "19.3.0-native-fb-93882bd4-20260304"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1641.rendererConfig = extraDevToolsConfig);

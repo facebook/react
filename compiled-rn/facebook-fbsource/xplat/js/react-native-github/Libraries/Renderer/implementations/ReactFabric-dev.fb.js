@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<23486dcd2bdedb70439ca7bc03fca51a>>
+ * @generated SignedSource<<823b0bb8d93091fa50f786b9823e1352>>
  */
 
 "use strict";
@@ -6608,7 +6608,7 @@ __DEV__ &&
       payload
     ) {
       if (isRenderPhaseUpdate(fiber))
-        throw Error("Cannot update form state while rendering.");
+        throw Error("Cannot update action state while rendering.");
       fiber = actionQueue.action;
       if (null !== fiber) {
         var actionNode = {
@@ -20217,10 +20217,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-9c0323e2-20260303",
+        version: "19.3.0-native-fb-93882bd4-20260304",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-9c0323e2-20260303"
+        reconcilerVersion: "19.3.0-native-fb-93882bd4-20260304"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
