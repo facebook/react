@@ -31,12 +31,27 @@ interface ExtensionEvent<Listener: Function> {
   removeListener(callback: Listener): void;
 }
 
+/** @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/Tab} */
+// TODO: Only covers used properties. Extend as needed.
+interface ExtensionTab {
+  id?: number;
+}
+
+/** @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/MessageSender} */
+// TODO: Only covers used properties. Extend as needed.
+interface ExtensionRuntimeSender {
+  tab?: ExtensionTab;
+}
+
 /** @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/Port} */
+// TODO: Only covers used properties. Extend as needed.
 interface ExtensionRuntimePort {
+  disconnect(): void;
+  name: string;
   onMessage: ExtensionEvent<(message: any, port: ExtensionRuntimePort) => void>;
   onDisconnect: ExtensionEvent<(port: ExtensionRuntimePort) => void>;
   postMessage(message: mixed, transferable?: Array<mixed>): void;
-  disconnect(): void;
+  sender?: ExtensionRuntimeSender;
 }
 
 interface ExtensionMessageSender {
@@ -81,6 +96,17 @@ interface ExtensionRuntime {
   ): Promise<any>;
 }
 
+interface ExtensionTabs {
+  /** @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/onActivated} */
+  onActivated: ExtensionEvent<
+    (activeInfo: {
+      previousTabId: number,
+      tabId: number,
+      windowId: number,
+    }) => void,
+  >;
+}
+
 interface ExtensionAPI {
   devtools: ExtensionDevtools;
   /** @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/permissions} */
@@ -91,6 +117,8 @@ interface ExtensionAPI {
   scripting: $FlowFixMe;
   /** @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/storage} */
   storage: $FlowFixMe;
+  /** @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs} */
+  tabs: ExtensionTabs;
 }
 
 declare const chrome: ExtensionAPI;
