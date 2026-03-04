@@ -23,6 +23,14 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
+import typeof * as HostConfig from 'react-reconciler/src/ReactFiberConfig';
+import typeof * as ReconcilerAPI from 'react-reconciler/src/ReactFiberReconciler';
+import type {
+  HostContext,
+  Instance,
+  PublicInstance,
+  TextInstance,
+} from './ReactFiberConfigNoop';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -58,28 +66,19 @@ type Props = {
   src?: string,
   ...
 };
-type Instance = {
-  type: string,
-  id: number,
-  parent: number,
-  children: Array<Instance | TextInstance>,
-  text: string | null,
-  prop: any,
-  hidden: boolean,
-  context: HostContext,
-};
-type TextInstance = {
-  text: string,
-  id: number,
-  parent: number,
-  hidden: boolean,
-  context: HostContext,
-};
-type HostContext = Object;
 type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
-  onUncaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
-  onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack: ?string,
+      +errorBoundary?: ?component(...props: any),
+    },
+  ) => void,
   onDefaultTransitionIndicator?: () => void | (() => void),
   ...
 };
@@ -108,7 +107,11 @@ if (__DEV__) {
   Object.freeze(NO_CONTEXT);
 }
 
-function createReactNoop(reconciler: Function, useMutation: boolean) {
+// $FlowFixMe[signature-verification-failure]
+function createReactNoop(
+  reconciler: (hostConfig: HostConfig) => ReconcilerAPI,
+  useMutation: boolean,
+): any {
   let instanceCounter = 0;
   let hostUpdateCounter = 0;
   let hostCloneCounter = 0;
@@ -118,9 +121,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     child: Instance | TextInstance,
   ): void {
     const prevParent = child.parent;
+    // $FlowFixMe[prop-missing]
     if (prevParent !== -1 && prevParent !== parentInstance.id) {
       throw new Error('Reparenting is not allowed');
     }
+    // $FlowFixMe[prop-missing]
     child.parent = parentInstance.id;
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
@@ -265,6 +270,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     };
 
     if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+      // $FlowFixMe[prop-missing]
       clone.src = newProps.src;
     }
 
@@ -285,6 +291,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       enumerable: false,
     });
     hostCloneCounter++;
+    // $FlowFixMe[incompatible-return]
     return clone;
   }
 
@@ -299,7 +306,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     );
   }
 
-  function computeText(rawText, hostContext) {
+  function computeText(rawText: string, hostContext: HostContext) {
     return hostContext === UPPERCASE_CONTEXT ? rawText.toUpperCase() : rawText;
   }
 
@@ -333,6 +340,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       // Attach a listener to the suspensey thing and create a subscription
       // object that uses reference counting to track when all the suspensey
       // things have loaded.
+      // $FlowFixMe
       const record = suspenseyThingCache.get(src);
       if (record === undefined) {
         throw new Error('Could not find record for key.');
@@ -344,8 +352,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         // Stash the subscription on the record. In `resolveSuspenseyThing`,
         // we'll use this fire the commit once all the things have loaded.
         if (record.subscriptions === null) {
+          // $FlowFixMe[incompatible-use]
           record.subscriptions = [];
         }
+        // $FlowFixMe[incompatible-use]
         record.subscriptions.push(state);
       }
     } else {
@@ -361,7 +371,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     timeoutOffset: number,
   ): ((commit: () => mixed) => () => void) | null {
     if (state.pendingCount > 0) {
-      return (commit: () => void) => {
+      return (commit: () => mixed) => {
+        // $FlowFixMe[incompatible-type]
         state.commit = commit;
         const cancelCommit = () => {
           state.commit = null;
@@ -392,8 +403,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
-    getPublicInstance(instance) {
-      return instance;
+    getPublicInstance(instance: Instance): PublicInstance {
+      return (instance: any);
     },
 
     createInstance(
@@ -413,7 +424,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           checkPropStringCoercion(props.children, 'children');
         }
       }
-      const inst = {
+      const inst: Instance = {
         id: instanceCounter++,
         type: type,
         children: [],
@@ -428,6 +439,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
 
       if (type === 'suspensey-thing' && typeof props.src === 'string') {
+        // $FlowFixMe[prop-missing]
         inst.src = props.src;
       }
 
@@ -445,10 +457,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         value: inst.context,
         enumerable: false,
       });
+      // $FlowFixMe[prop-missing]
       Object.defineProperty(inst, 'fiber', {
         value: internalInstanceHandle,
         enumerable: false,
       });
+      // $FlowFixMe[incompatible-return]
       return inst;
     },
 
@@ -511,19 +525,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       throw new Error('Not yet implemented.');
     },
 
-    createFragmentInstance(fragmentFiber) {
+    createFragmentInstance(fragmentFiber: mixed) {
       return null;
     },
 
-    updateFragmentInstanceFiber(fragmentFiber, fragmentInstance) {
+    updateFragmentInstanceFiber(fragmentFiber: mixed, fragmentInstance: mixed) {
       // Noop
     },
 
-    commitNewChildToFragmentInstance(child, fragmentInstance) {
+    commitNewChildToFragmentInstance(child: mixed, fragmentInstance: mixed) {
       // Noop
     },
 
-    deleteChildFromFragmentInstance(child, fragmentInstance) {
+    deleteChildFromFragmentInstance(child: mixed, fragmentInstance: mixed) {
       // Noop
     },
 
@@ -536,7 +550,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       typeof queueMicrotask === 'function'
         ? queueMicrotask
         : typeof Promise !== 'undefined'
-          ? callback =>
+          ? (callback: () => void) =>
               Promise.resolve(null)
                 .then(callback)
                 .catch(error => {
@@ -610,7 +624,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       // no-op
     },
 
-    requestPostPaintCallback(callback) {
+    requestPostPaintCallback(callback: (time: number) => void) {
       const endTime = Scheduler.unstable_now();
       callback(endTime);
     },
@@ -661,19 +675,23 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (suspenseyThingCache === null) {
         suspenseyThingCache = new Map();
       }
+      // $FlowFixMe
       const record = suspenseyThingCache.get(props.src);
       if (record === undefined) {
         const newRecord: SuspenseyThingRecord = {
           status: 'pending',
           subscriptions: null,
         };
+        // $FlowFixMe
         suspenseyThingCache.set(props.src, newRecord);
+        // $FlowFixMe[prop-missing]
         const onLoadStart = props.onLoadStart;
         if (typeof onLoadStart === 'function') {
           onLoadStart();
         }
         return false;
       } else {
+        // $FlowFixMe[prop-missing]
         return record.status === 'fulfilled';
       }
     },
@@ -713,7 +731,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     resetFormInstance(form: Instance) {},
 
-    bindToConsole(methodName, args, badgeName) {
+    bindToConsole(methodName: $FlowFixMe, args: Array<any>, badgeName: string) {
+      // $FlowFixMe[incompatible-call]
       return Function.prototype.bind.apply(
         // eslint-disable-next-line react-internal/no-production-logging
         console[methodName],
@@ -722,8 +741,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
   };
 
-  const hostConfig = useMutation
-    ? {
+  const hostConfig: HostConfig = useMutation
+    ? // $FlowFixMe[prop-missing]
+      {
         ...sharedHostConfig,
 
         supportsMutation: true,
@@ -747,6 +767,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           instance.hidden = !!newProps.hidden;
 
           if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+            // $FlowFixMe[prop-missing]
             instance.src = newProps.src;
           }
 
@@ -907,7 +928,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           instance.text = null;
         },
       }
-    : {
+    : // $FlowFixMe[prop-missing]
+      {
         ...sharedHostConfig,
         supportsMutation: false,
         supportsPersistence: true,
@@ -987,8 +1009,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   const NoopRenderer = reconciler(hostConfig);
 
-  const rootContainers = new Map();
-  const roots = new Map();
+  const rootContainers = new Map<string, Container>();
+  const roots = new Map<string, Object>();
   const DEFAULT_ROOT_ID = '<default>';
 
   let currentUpdatePriority = NoEventPriority;
@@ -1002,6 +1024,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   let currentEventPriority = DefaultEventPriority;
 
+  // $FlowFixMe[missing-local-annot]
   function createJSXElementForTestComparison(type, props) {
     if (__DEV__) {
       const element = {
@@ -1012,6 +1035,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         _owner: null,
         _store: __DEV__ ? {} : undefined,
       };
+      // $FlowFixMe[prop-missing]
       Object.defineProperty(element, 'ref', {
         enumerable: false,
         value: null,
@@ -1028,6 +1052,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     }
   }
 
+  // $FlowFixMe
   function childToJSX(child, text) {
     if (text !== null) {
       return text;
@@ -1066,6 +1091,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (instance.hidden) {
         props.hidden = true;
       }
+      // $FlowFixMe[prop-missing]
       if (instance.src) {
         props.src = instance.src;
       }
@@ -1082,6 +1108,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     return textInstance.text;
   }
 
+  // $FlowFixMe[missing-local-annot]
   function getChildren(root) {
     if (root) {
       return root.children;
@@ -1090,6 +1117,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     }
   }
 
+  // $FlowFixMe[missing-local-annot]
   function getPendingChildren(root) {
     if (root) {
       return root.children;
@@ -1098,6 +1126,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     }
   }
 
+  // $FlowFixMe[missing-local-annot]
   function getChildrenAsJSX(root) {
     const children = childToJSX(getChildren(root), null);
     if (children === null) {
@@ -1109,6 +1138,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     return children;
   }
 
+  // $FlowFixMe[missing-local-annot]
   function getPendingChildrenAsJSX(root) {
     const children = childToJSX(getChildren(root), null);
     if (children === null) {
@@ -1139,6 +1169,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         if (fn) {
           return fn();
         } else {
+          // $FlowFixMe[incompatible-return]
           return undefined;
         }
       } finally {
@@ -1159,6 +1190,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   let idCounter = 0;
 
+  // $FlowFixMe
   const ReactNoop = {
     _Scheduler: Scheduler,
 
@@ -1199,12 +1231,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     getOrCreateRootContainer(rootID: string = DEFAULT_ROOT_ID, tag: RootTag) {
       let root = roots.get(rootID);
       if (!root) {
-        const container = {rootID: rootID, pendingChildren: [], children: []};
+        const container: Container = {
+          rootID: rootID,
+          pendingChildren: [],
+          children: [],
+        };
+        // $FlowFixMe[incompatible-call]
         rootContainers.set(rootID, container);
         root = NoopRenderer.createContainer(
+          // $FlowFixMe[incompatible-call] -- Discovered when typechecking noop-renderer
           container,
           tag,
           null,
+          // $FlowFixMe[incompatible-call] -- Discovered when typechecking noop-renderer
           null,
           false,
           '',
@@ -1221,15 +1260,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     // TODO: Replace ReactNoop.render with createRoot + root.render
     createRoot(options?: CreateRootOptions) {
-      const container = {
+      const container: Container = {
         rootID: '' + idCounter++,
         pendingChildren: [],
         children: [],
       };
       const fiberRoot = NoopRenderer.createContainer(
+        // $FlowFixMe[incompatible-call]
         container,
         ConcurrentRoot,
         null,
+        // $FlowFixMe[incompatible-call]
         null,
         false,
         '',
@@ -1272,9 +1313,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         children: [],
       };
       const fiberRoot = NoopRenderer.createContainer(
+        // $FlowFixMe[incompatible-call] -- TODO: Discovered when typechecking noop-renderer
         container,
         LegacyRoot,
         null,
+        // $FlowFixMe[incompatible-call] -- TODO: Discovered when typechecking noop-renderer
         null,
         false,
         '',
@@ -1309,11 +1352,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return getPendingChildrenAsJSX(container);
     },
 
+    // $FlowFixMe[missing-local-annot]
     getSuspenseyThingStatus(src): string | null {
       if (suspenseyThingCache === null) {
         return null;
       } else {
         const record = suspenseyThingCache.get(src);
+        // $FlowFixMe[prop-missing]
         return record === undefined ? null : record.status;
       }
     },
@@ -1322,18 +1367,24 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (suspenseyThingCache === null) {
         suspenseyThingCache = new Map();
       }
+      // $FlowFixMe[incompatible-call]
       const record = suspenseyThingCache.get(key);
       if (record === undefined) {
         const newRecord: SuspenseyThingRecord = {
           status: 'fulfilled',
           subscriptions: null,
         };
+        // $FlowFixMe
         suspenseyThingCache.set(key, newRecord);
       } else {
+        // $FlowFixMe[prop-missing]
         if (record.status === 'pending') {
+          // $FlowFixMe[incompatible-use]
           record.status = 'fulfilled';
+          // $FlowFixMe[prop-missing]
           const subscriptions = record.subscriptions;
           if (subscriptions !== null) {
+            // $FlowFixMe[incompatible-use]
             record.subscriptions = null;
             for (let i = 0; i < subscriptions.length; i++) {
               const subscription = subscriptions[i];
@@ -1411,11 +1462,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         return component;
       }
       if (__DEV__) {
+        // $FlowFixMe[incompatible-return]
         return NoopRenderer.findHostInstanceWithWarning(
           component,
           'findInstance',
         );
       }
+      // $FlowFixMe[incompatible-return]
       return NoopRenderer.findHostInstance(component);
     },
 
@@ -1474,6 +1527,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     discreteUpdates: NoopRenderer.discreteUpdates,
 
+    // $FlowFixMe[incompatible-return]
     idleUpdates<T>(fn: () => T): T {
       const prevEventPriority = currentEventPriority;
       currentEventPriority = IdleEventPriority;
@@ -1497,14 +1551,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         return;
       }
 
-      const bufferedLog = [];
-      function log(...args) {
+      const bufferedLog: string[] = [];
+      // $FlowFixMe[missing-local-annot]
+      function log(...args: string[]) {
+        // $FlowFixMe[incompatible-call]
         bufferedLog.push(...args, '\n');
       }
 
       function logHostInstances(
         children: Array<Instance | TextInstance>,
-        depth,
+        depth: number,
       ) {
         for (let i = 0; i < children.length; i++) {
           const child = children[i];
@@ -1512,17 +1568,23 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           if (typeof child.text === 'string') {
             log(indent + '- ' + child.text);
           } else {
+            // $FlowFixMe[unsafe-addition]
             log(indent + '- ' + child.type + '#' + child.id);
-            logHostInstances(child.children, depth + 1);
+
+            logHostInstances(
+              // $FlowFixMe[incompatible-call]
+              child.children,
+              depth + 1,
+            );
           }
         }
       }
-      function logContainer(container: Container, depth) {
+      function logContainer(container: Container, depth: number) {
         log('  '.repeat(depth) + '- [root#' + container.rootID + ']');
         logHostInstances(container.children, depth + 1);
       }
 
-      function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
+      function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth: number) {
         log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
         const first = updateQueue.firstBaseUpdate;
         const update = first;
@@ -1530,6 +1592,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           do {
             log(
               '  '.repeat(depth + 1) + '~',
+              // $FlowFixMe
               '[' + update.expirationTime + ']',
             );
           } while (update !== null);
@@ -1543,6 +1606,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             do {
               log(
                 '  '.repeat(depth + 1) + '~',
+                // $FlowFixMe
                 '[' + pendingUpdate.expirationTime + ']',
               );
             } while (pendingUpdate !== null && pendingUpdate !== firstPending);
@@ -1550,19 +1614,26 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         }
       }
 
+      // $FlowFixMe[missing-local-annot]
       function logFiber(fiber: Fiber, depth) {
         log(
           '  '.repeat(depth) +
             '- ' +
             // need to explicitly coerce Symbol to a string
             (fiber.type ? fiber.type.name || fiber.type.toString() : '[root]'),
+          // $FlowFixMe[unsafe-addition]
           '[' +
+            // $FlowFixMe[prop-missing]
             fiber.childExpirationTime +
             (fiber.pendingProps ? '*' : '') +
             ']',
         );
         if (fiber.updateQueue) {
-          logUpdateQueue(fiber.updateQueue, depth);
+          logUpdateQueue(
+            // $FlowFixMe[incompatible-call]
+            fiber.updateQueue,
+            depth,
+          );
         }
         // const childInProgress = fiber.progressedChild;
         // if (childInProgress && childInProgress !== fiber.child) {
