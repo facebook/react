@@ -1151,9 +1151,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     }
   }
 
-  function onRecoverableError(error) {
-    // TODO: Turn this on once tests are fixed
-    // console.error(error);
+  function onRecoverableError(error: mixed): void {
+    // eslint-disable-next-line react-internal/warning-args, react-internal/no-production-logging -- renderer is only used for testing.
+    console.error(error);
   }
   function onDefaultTransitionIndicator(): void | (() => void) {}
 
