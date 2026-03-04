@@ -74,6 +74,7 @@ export const enableFragmentRefsInstanceHandles: boolean = false;
 export const enableFragmentRefsTextNodes: boolean = false;
 
 export const enableInternalInstanceMap: boolean = false;
+export const disableSetStateInRenderOnMount: boolean = false;
 
 export const enableOptimisticKey: boolean = false;
 

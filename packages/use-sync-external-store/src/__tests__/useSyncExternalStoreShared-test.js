@@ -873,6 +873,15 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     await act(() => root.render(React.createElement(App, null)));
     assertLog(['INITIAL']);
     expect(container.textContent).toEqual('INITIAL');
+    if (gate('disableSetStateInRenderOnMount')) {
+      assertConsoleErrorDev([
+        'A component called setState during the initial render. ' +
+          'This is deprecated, pass the initial value to useState instead. ' +
+          'To locate the bad setState() call, follow the stack trace ' +
+          'as described in https://react.dev/link/setstate-in-render\n' +
+          '    in App (at **)',
+      ]);
+    }
     await act(() => {
       store.set('Updated');
     });
