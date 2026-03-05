@@ -82,11 +82,11 @@ export function detachDeletedInstance(node: Instance): void {
   }
   // TODO: This function is only called on host components. I don't think all of
   // these fields are relevant.
-  delete (node: any)[internalInstanceKey];
-  delete (node: any)[internalPropsKey];
-  delete (node: any)[internalEventHandlersKey];
-  delete (node: any)[internalEventHandlerListenersKey];
-  delete (node: any)[internalEventHandlesSetKey];
+  (node: any)[internalInstanceKey] = null;
+  (node: any)[internalPropsKey] = null;
+  (node: any)[internalEventHandlersKey] = null;
+  (node: any)[internalEventHandlerListenersKey] = null;
+  (node: any)[internalEventHandlesSetKey] = null;
 }
 
 export function precacheFiberNode(
