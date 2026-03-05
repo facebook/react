@@ -274,6 +274,7 @@ export const noTimeout: -1 = -1;
 // -------------------
 
 export const supportsMutation = true;
+export const supportsViewTransition = false;
 
 export function commitUpdate(
   instance: Instance,
