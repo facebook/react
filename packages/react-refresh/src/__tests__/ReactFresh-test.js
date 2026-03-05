@@ -2371,7 +2371,7 @@ describe('ReactFresh', () => {
       });
 
       expect(container.firstChild.style.color).toBe('red');
-      expect(log).toEqual(['unmount v1', 'mount v2']);
+      expect(log).toEqual(['unmount v1', 'mount v2', 'unmount v2', 'mount v2']);
     }
   });
 
@@ -2414,7 +2414,7 @@ describe('ReactFresh', () => {
       });
 
       expect(container.firstChild.style.color).toBe('red');
-      expect(log).toEqual(['mount v2']);
+      expect(log).toEqual(['mount v2', 'unmount v2', 'mount v2']);
     }
   });
 
