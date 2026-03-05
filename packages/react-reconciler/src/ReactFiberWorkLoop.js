@@ -1114,11 +1114,29 @@ export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
   return (executionContext & RenderContext) !== NoContext;
 }
 
+// When execution is interrupted by a breakpoint, alert(), or a browser
+// debugging pause, the finally blocks that reset executionContext may not run.
+// When React resumes, executionContext still has RenderContext or CommitContext
+// set even though we're not actually in the middle of work. Detect this by
+// checking whether workInProgress/workInProgressRoot are null and clear the
+// stale flags so we don't throw "Should not already be working."
+function fixStaleExecutionContext(): void {
+  if (
+    (executionContext & (RenderContext | CommitContext)) !== NoContext &&
+    workInProgress === null &&
+    workInProgressRoot === null
+  ) {
+    executionContext &= ~(RenderContext | CommitContext);
+  }
+}
+
 export function performWorkOnRoot(
   root: FiberRoot,
   lanes: Lanes,
   forceSync: boolean,
 ): void {
+  fixStaleExecutionContext();
+
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
   }
@@ -3510,6 +3528,8 @@ function completeRoot(
     flushPendingEffects();
   } while (pendingEffectsStatus !== NO_PENDING_EFFECTS);
   flushRenderPhaseStrictModeWarningsInDEV();
+
+  fixStaleExecutionContext();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
