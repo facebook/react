@@ -49,7 +49,7 @@ Later operations will reference strings by a one-based index. For example, `1` w
 
 #### Adding a root node
 
-Adding a root to the tree requires sending 5 numbers:
+Adding a root to the tree requires sending 7 numbers:
 
 1. add operation constant (`1`)
 1. fiber id
@@ -234,7 +234,7 @@ for (let i = 0; i < this._roots.length; i++) {
 }
 ```
 
-We skip the root itself because don't display them in the tree:
+We skip the root itself because we don't display them in the tree:
 ```js
 const firstChildID = root.children[0];
 ```
