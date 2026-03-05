@@ -981,6 +981,7 @@ describe('Store', () => {
 
       await actAsync(() => {
         agent.overrideSuspenseMilestone({
+          rendererID: getRendererID(),
           suspendedSet: [
             store.getElementIDAtIndex(4),
             store.getElementIDAtIndex(8),
@@ -1010,6 +1011,7 @@ describe('Store', () => {
 
       await actAsync(() => {
         agent.overrideSuspenseMilestone({
+          rendererID: getRendererID(),
           suspendedSet: [],
         });
       });

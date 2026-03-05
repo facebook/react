@@ -9449,4 +9449,192 @@ background-color: green;
       );
     });
   });
+
+  it('does not outline a boundary with suspensey CSS when flushing the shell', async () => {
+    // When flushing the shell, stylesheets with precedence are emitted in the
+    // <head> which blocks paint anyway. So there's no benefit to outlining the
+    // boundary — it would just show a higher-level fallback unnecessarily.
+    // Instead, the boundary should be inlined so the innermost fallback is shown.
+    let streamedContent = '';
+    writable.on('data', chunk => (streamedContent += chunk));
+
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="Outer Fallback">
+              <Suspense fallback="Middle Fallback">
+                <link rel="stylesheet" href="style.css" precedence="default" />
+                <Suspense fallback="Inner Fallback">
+                  <BlockedOn value="content">Async Content</BlockedOn>
+                </Suspense>
+              </Suspense>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    // The middle boundary should have been inlined (not outlined) so the
+    // middle fallback text should never appear in the streamed HTML.
+    expect(streamedContent).not.toContain('Middle Fallback');
+
+    // The stylesheet is in the head (blocks paint), and the innermost
+    // fallback is visible.
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>Inner Fallback</body>
+      </html>,
+    );
+
+    // Resolve the async content — streams in without needing to load CSS
+    // since the stylesheet was already in the head.
+    await act(() => {
+      resolveText('content');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>Async Content</body>
+      </html>,
+    );
+  });
+
+  it('outlines a boundary with suspensey CSS when flushing a streamed completion', async () => {
+    // When a boundary completes via streaming (not as part of the shell),
+    // suspensey CSS should cause the boundary to be outlined. The parent
+    // content can show sooner while the CSS loads separately.
+    let streamedContent = '';
+    writable.on('data', chunk => (streamedContent += chunk));
+
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="Root Fallback">
+              <BlockedOn value="shell">
+                <Suspense fallback="Outer Fallback">
+                  <Suspense fallback="Middle Fallback">
+                    <link
+                      rel="stylesheet"
+                      href="style.css"
+                      precedence="default"
+                    />
+                    <Suspense fallback="Inner Fallback">
+                      <BlockedOn value="content">Async Content</BlockedOn>
+                    </Suspense>
+                  </Suspense>
+                </Suspense>
+              </BlockedOn>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    // Shell is showing root fallback
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>Root Fallback</body>
+      </html>,
+    );
+
+    // Unblock the shell — content streams in. The middle boundary should
+    // be outlined because the CSS arrived via streaming, not in the shell head.
+    streamedContent = '';
+    await act(() => {
+      resolveText('shell');
+    });
+
+    // The middle fallback should appear in the streamed HTML because the
+    // boundary was outlined.
+    expect(streamedContent).toContain('Middle Fallback');
+
+    // The CSS needs to load before the boundary reveals. Until then
+    // the middle fallback is visible.
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>
+          {'Middle Fallback'}
+          <link rel="preload" href="style.css" as="style" />
+        </body>
+      </html>,
+    );
+
+    // Load the stylesheet — now the middle boundary can reveal
+    await act(() => {
+      loadStylesheets();
+    });
+    assertLog(['load stylesheet: style.css']);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>
+          {'Inner Fallback'}
+          <link rel="preload" href="style.css" as="style" />
+        </body>
+      </html>,
+    );
+
+    // Resolve the async content
+    await act(() => {
+      resolveText('content');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>
+          {'Async Content'}
+          <link rel="preload" href="style.css" as="style" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableViewTransition
+  it('still outlines a boundary with a suspensey image inside a ViewTransition when flushing the shell', async () => {
+    // Unlike stylesheets (which block paint from the <head> anyway), images
+    // inside ViewTransitions are outlined to enable animation reveals. This
+    // should happen even during the shell flush.
+    const ViewTransition = React.ViewTransition;
+
+    let streamedContent = '';
+    writable.on('data', chunk => (streamedContent += chunk));
+
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <ViewTransition>
+              <Suspense fallback="Image Fallback">
+                <link rel="stylesheet" href="style.css" precedence="default" />
+                <img src="large-image.jpg" />
+                <div>Content</div>
+              </Suspense>
+            </ViewTransition>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    // The boundary should be outlined because the suspensey image motivates
+    // outlining for animation reveals, even during the shell flush.
+    expect(streamedContent).toContain('Image Fallback');
+  });
 });
