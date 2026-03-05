@@ -24,6 +24,8 @@ import {
   pushSegmentFinale as pushSegmentFinaleImpl,
   pushStartActivityBoundary as pushStartActivityBoundaryImpl,
   pushEndActivityBoundary as pushEndActivityBoundaryImpl,
+  pushStartSuspenseListBoundary as pushStartSuspenseListBoundaryImpl,
+  pushEndSuspenseListBoundary as pushEndSuspenseListBoundaryImpl,
   writeStartCompletedSuspenseBoundary as writeStartCompletedSuspenseBoundaryImpl,
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
@@ -48,6 +50,7 @@ export type RenderState = {
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: PrecomputedChunk,
+  listPrefix: PrecomputedChunk,
   startInlineScript: PrecomputedChunk,
   startInlineStyle: PrecomputedChunk,
   preamble: PreambleState,
@@ -105,6 +108,7 @@ export function createRenderState(
     placeholderPrefix: renderState.placeholderPrefix,
     segmentPrefix: renderState.segmentPrefix,
     boundaryPrefix: renderState.boundaryPrefix,
+    listPrefix: renderState.listPrefix,
     startInlineScript: renderState.startInlineScript,
     startInlineStyle: renderState.startInlineStyle,
     preamble: renderState.preamble,
@@ -165,6 +169,11 @@ export {
   writeClientRenderBoundaryInstruction,
   writeStartPendingSuspenseBoundary,
   writeEndPendingSuspenseBoundary,
+  writePendingSuspenseListMarker,
+  writeClientRenderedSuspenseListMarker,
+  writeAppendListInstruction,
+  writeCompletedListInstruction,
+  writeClientRenderListInstruction,
   writeHoistablesForBoundary,
   writePlaceholder,
   writeCompletedRoot,
@@ -257,6 +266,28 @@ export function pushEndActivityBoundary(
     return;
   }
   pushEndActivityBoundaryImpl(target, renderState);
+}
+
+export function pushStartSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    // A completed boundary is done and doesn't need a representation in the HTML
+    // if we're not going to be hydrating it.
+    return;
+  }
+  pushStartSuspenseListBoundaryImpl(target, renderState);
+}
+
+export function pushEndSuspenseListBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  renderState: RenderState,
+): void {
+  if (renderState.generateStaticMarkup) {
+    return;
+  }
+  pushEndSuspenseListBoundaryImpl(target, renderState);
 }
 
 export function writeStartCompletedSuspenseBoundary(
