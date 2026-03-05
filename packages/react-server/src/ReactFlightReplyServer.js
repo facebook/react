@@ -1128,8 +1128,9 @@ function createMap(
   if ((model as any).$$consumed === true) {
     throw new Error('Already initialized Map.');
   }
-  const map = new Map(model);
+  // This needs to come first to prevent the model from being consumed again in case of a cyclic reference.
   (model as any).$$consumed = true;
+  const map = new Map(model);
   return map;
 }
 
@@ -1140,8 +1141,9 @@ function createSet(response: Response, model: Array<any>): Set<any> {
   if ((model as any).$$consumed === true) {
     throw new Error('Already initialized Set.');
   }
-  const set = new Set(model);
+  // This needs to come first to prevent the model from being consumed again in case of a cyclic reference.
   (model as any).$$consumed = true;
+  const set = new Set(model);
   return set;
 }
 
@@ -1152,9 +1154,10 @@ function extractIterator(response: Response, model: Array<any>): Iterator<any> {
   if ((model as any).$$consumed === true) {
     throw new Error('Already initialized Iterator.');
   }
+  // This needs to come first to prevent the model from being consumed again in case of a cyclic reference.
+  (model as any).$$consumed = true;
   // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
   const iterator = model[Symbol.iterator]();
-  (model as any).$$consumed = true;
   return iterator;
 }
 
