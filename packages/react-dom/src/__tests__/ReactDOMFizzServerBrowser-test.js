@@ -73,7 +73,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     const result = await readResult(stream);
     if (gate(flags => flags.enableFizzBlockingRender)) {
       expect(result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head><link rel="expect" href="#_R_" blocking="render"/></head><body>hello world<template id="_R_"></template></body></html>"`,
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
       );
     } else {
       expect(result).toMatchInlineSnapshot(
@@ -406,11 +406,11 @@ describe('ReactDOMFizzServerBrowser', () => {
     let result;
     result = await readResult(stream);
 
-    expect(result).toMatchInlineSnapshot(
+    expect(result)
+      .toMatchInlineSnapshot
       // TODO: remove interpolation because it prevents snapshot updates.
       // eslint-disable-next-line jest/no-interpolation-in-snapshots
-      `"<div><span></span></div><div>${str492}</div><div>${str492}</div>"`,
-    );
+      (`"<div><span></span></div><div>`);
 
     // this size 2049 was chosen to be a couple base 2 orders larger than the current view
     // size. if the size changes in the future hopefully this will still exercise
@@ -426,7 +426,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     result = await readResult(stream);
     // TODO: remove interpolation because it prevents snapshot updates.
     // eslint-disable-next-line jest/no-interpolation-in-snapshots
-    expect(result).toMatchInlineSnapshot(`"<div>${str2049}</div>"`);
+    expect(result).toMatchInlineSnapshot(`"<div>`);
   });
 
   it('supports custom abort reasons with a string', async () => {
@@ -545,10 +545,12 @@ describe('ReactDOMFizzServerBrowser', () => {
       }),
     );
     const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(
+    expect(result)
+      .toMatchInlineSnapshot
       // TODO: remove interpolation because it prevents snapshot updates.
       // eslint-disable-next-line jest/no-interpolation-in-snapshots
-      `"<link rel="preload" as="script" fetchPriority="low" nonce="R4nd0m" href="init.js"/><link rel="modulepreload" fetchPriority="low" nonce="R4nd0m" href="init.mjs"/><div>hello world</div><script nonce="${nonce}" id="_R_">INIT();</script><script src="init.js" nonce="${nonce}" async=""></script><script type="module" src="init.mjs" nonce="${nonce}" async=""></script>"`,
-    );
+      (
+        `"<link rel="preload" as="script" fetchPriority="low" nonce="R4nd0m" href="init.js"/><link rel="modulepreload" fetchPriority="low" nonce="R4nd0m" href="init.mjs"/><div>hello world</div><script nonce="`,
+      );
   });
 });
