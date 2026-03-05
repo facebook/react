@@ -832,6 +832,7 @@ function handleErrorInNextTick(error: any) {
 // -------------------
 
 export const supportsMutation = true;
+export const supportsViewTransition = true;
 
 export function commitMount(
   domElement: Instance,

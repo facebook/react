@@ -25,7 +25,7 @@ import {
   ViewTransitionNamedStatic,
 } from './ReactFiberFlags';
 import {
-  supportsMutation,
+  supportsViewTransition,
   applyViewTransitionName,
   restoreViewTransitionName,
   measureInstance,
@@ -139,7 +139,7 @@ function applyViewTransitionToHostInstancesRecursive(
   collectMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
 ): boolean {
-  if (!supportsMutation) {
+  if (!supportsViewTransition) {
     return false;
   }
   let inViewport = false;
@@ -201,7 +201,7 @@ function restoreViewTransitionOnHostInstances(
   child: null | Fiber,
   stopAtNestedViewTransitions: boolean,
 ): void {
-  if (!supportsMutation) {
+  if (!supportsViewTransition) {
     return;
   }
   while (child !== null) {
@@ -648,7 +648,7 @@ function measureViewTransitionHostInstancesRecursive(
   previousMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
 ): boolean {
-  if (!supportsMutation) {
+  if (!supportsViewTransition) {
     return true;
   }
   let inViewport = false;
