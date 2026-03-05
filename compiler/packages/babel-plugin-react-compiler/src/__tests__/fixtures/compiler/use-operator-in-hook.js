@@ -1,4 +1,4 @@
-// @compilationMode:"infer" @expectNothingCompiled
+// @compilationMode:"infer"
 import {use} from 'react';
 
 const MyContext = React.createContext(null);
