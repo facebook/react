@@ -735,9 +735,13 @@ let pendingEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
 let pendingViewTransition: null | RunningViewTransition = null;
-let pendingViewTransitionEvents: Array<
-  (types: Array<string>) => void | (() => void),
-> | null = null;
+type PendingViewTransitionEvent = {
+  callback: (types: Array<string>) => void | (() => void),
+  // If true, run the cleanup immediately after unmount.
+  cleanupOnUnmount: boolean,
+};
+let pendingViewTransitionEvents: Array<PendingViewTransitionEvent> | null =
+  null;
 let pendingTransitionTypes: null | TransitionTypes = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
 let pendingSuspendedCommitReason: SuspendedCommitReason = null; // Profiling-only
@@ -906,6 +910,7 @@ export function scheduleViewTransitionEvent(
     instance: ViewTransitionInstance,
     types: Array<string>,
   ) => void | (() => void),
+  cleanupOnUnmount?: boolean,
 ): void {
   if (enableViewTransition) {
     if (callback != null) {
@@ -919,7 +924,10 @@ export function scheduleViewTransitionEvent(
       if (pendingViewTransitionEvents === null) {
         pendingViewTransitionEvents = [];
       }
-      pendingViewTransitionEvents.push(callback.bind(null, instance));
+      pendingViewTransitionEvents.push({
+        callback: callback.bind(null, instance),
+        cleanupOnUnmount: cleanupOnUnmount === true,
+      });
     }
   }
 }
@@ -952,9 +960,10 @@ export function scheduleGestureTransitionEvent(
         if (pendingViewTransitionEvents === null) {
           pendingViewTransitionEvents = [];
         }
-        pendingViewTransitionEvents.push(
-          callback.bind(null, timeline, options, instance),
-        );
+        pendingViewTransitionEvents.push({
+          callback: callback.bind(null, timeline, options, instance),
+          cleanupOnUnmount: false,
+        });
       }
     }
   }
@@ -4276,10 +4285,18 @@ function flushSpawnedWork(): void {
       }
       if (committedViewTransition !== null) {
         for (let i = 0; i < pendingEvents.length; i++) {
-          const viewTransitionEvent = pendingEvents[i];
+          const {callback: viewTransitionEvent, cleanupOnUnmount} =
+            pendingEvents[i];
           const cleanup = viewTransitionEvent(pendingTypes);
           if (cleanup !== undefined) {
-            addViewTransitionFinishedListener(committedViewTransition, cleanup);
+            if (cleanupOnUnmount) {
+              cleanup();
+            } else {
+              addViewTransitionFinishedListener(
+                committedViewTransition,
+                cleanup,
+              );
+            }
           }
         }
       }
@@ -4554,10 +4571,15 @@ function flushGestureAnimations(): void {
         const runningTransition = appliedGesture.running;
         if (runningTransition !== null) {
           for (let i = 0; i < pendingEvents.length; i++) {
-            const viewTransitionEvent = pendingEvents[i];
+            const {callback: viewTransitionEvent, cleanupOnUnmount} =
+              pendingEvents[i];
             const cleanup = viewTransitionEvent(pendingTypes);
             if (cleanup !== undefined) {
-              addViewTransitionFinishedListener(runningTransition, cleanup);
+              if (cleanupOnUnmount) {
+                cleanup();
+              } else {
+                addViewTransitionFinishedListener(runningTransition, cleanup);
+              }
             }
           }
         }
