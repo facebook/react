@@ -159,6 +159,7 @@ import {
   supportsHydration,
   supportsResources,
   supportsSingletons,
+  supportsViewTransition,
   clearSuspenseBoundary,
   clearSuspenseBoundaryFromContainer,
   createContainerChildSet,
@@ -3713,7 +3714,10 @@ function commitPassiveMountOnFiber(
       }
 
       if (isViewTransitionEligible) {
-        if (supportsMutation && rootViewTransitionNameCanceled) {
+        if (
+          supportsViewTransition &&
+          rootViewTransitionNameCanceled
+        ) {
           restoreRootViewTransitionName(finishedRoot.containerInfo);
         } else if (
           enableViewTransitionForPersistenceMode &&
