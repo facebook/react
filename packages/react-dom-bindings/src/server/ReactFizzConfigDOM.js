@@ -5328,7 +5328,7 @@ export function writeHoistablesForBoundary(
   hoistableState.stylesheets.forEach(hasStylesToHoist);
 
   // We don't actually want to flush any hoistables until the boundary is complete so we omit
-  // any further writing here. This is becuase unlike Resources, Hoistable Elements act more like
+  // any further writing here. This is because unlike Resources, Hoistable Elements act more like
   // regular elements, each rendered element has a unique representation in the DOM. We don't want
   // these elements to appear in the DOM early, before the boundary has actually completed
 
