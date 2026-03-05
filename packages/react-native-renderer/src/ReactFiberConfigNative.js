@@ -373,6 +373,7 @@ export function shouldAttemptEagerTransition(): boolean {
 // -------------------
 
 export const supportsMutation = true;
+export const supportsViewTransition = false;
 
 export function appendChild(
   parentInstance: Instance,
