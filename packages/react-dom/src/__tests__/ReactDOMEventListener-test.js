@@ -1302,3 +1302,27 @@ describe('ReactDOMEventListener', () => {
     expect(log).toEqual([false]);
   });
 });
+
+
+
+it('should not fire onChange if preventDefault is called on click', async () => {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+
+  const onChange = jest.fn();
+
+  const root = ReactDOMClient.createRoot(container);
+  root.render(
+    <input
+      type="checkbox"
+      onClick={e => e.preventDefault()}
+      onChange={onChange}
+    />
+  );
+
+  const input = container.querySelector('input');
+
+  input.click();
+
+  expect(onChange).not.toHaveBeenCalled();
+});
