@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import MonacoEditor, {loader, type Monaco} from '@monaco-editor/react';
-import type {editor} from 'monaco-editor';
+import MonacoEditor, { loader, type Monaco } from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
 import * as monaco from 'monaco-editor';
 import React, {
   useState,
@@ -15,16 +15,16 @@ import React, {
   unstable_addTransitionType as addTransitionType,
   startTransition,
 } from 'react';
-import {Resizable} from 're-resizable';
-import {useStore, useStoreDispatch} from '../StoreContext';
-import {monacoConfigOptions} from './monacoOptions';
-import {IconChevron} from '../Icons/IconChevron';
-import {CONFIG_PANEL_TRANSITION} from '../../lib/transitionTypes';
+import { Resizable } from 're-resizable';
+import { useStore, useStoreDispatch } from '../StoreContext';
+import { monacoConfigOptions } from './monacoOptions';
+import { IconChevron } from '../Icons/IconChevron';
+import { CONFIG_PANEL_TRANSITION } from '../../lib/transitionTypes';
 
 // @ts-expect-error - webpack asset/source loader handles .d.ts files as strings
 import compilerTypeDefs from 'babel-plugin-react-compiler/dist/index.d.ts';
 
-loader.config({monaco});
+loader.config({ monaco });
 
 export default function ConfigEditor({
   formattedAppliedConfig,
@@ -33,7 +33,7 @@ export default function ConfigEditor({
 }): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // TODO: Add back <Activity> after upgrading next.js
+  // TODO: Addhbn back <Activity> after upgrading next.js
   return (
     <>
       <div
@@ -80,7 +80,8 @@ function ExpandedEditor({
 }): React.ReactElement {
   const store = useStore();
   const dispatchStore = useStoreDispatch();
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleChange: (value: string | undefined) => void = (
     value: string | undefined,
@@ -126,14 +127,14 @@ function ExpandedEditor({
 
   return (
     <ViewTransition
-      update={{[CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none'}}>
+      update={{ [CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none' }}>
       {/* enter={{[CONFIG_PANEL_TRANSITION]: 'slide-in', default: 'none'}}
       exit={{[CONFIG_PANEL_TRANSITION]: 'slide-out', default: 'none'}}> */}
       <Resizable
         minWidth={300}
         maxWidth={600}
-        defaultSize={{width: 350}}
-        enable={{right: true, bottom: false}}>
+        defaultSize={{ width: 350 }}
+        enable={{ right: true, bottom: false }}>
         <div className="bg-blue-10 relative h-full flex flex-col !h-[calc(100vh_-_3.5rem)] border border-gray-300">
           <div
             className="absolute w-8 h-16 bg-blue-10 rounded-r-full flex items-center justify-center z-[2] cursor-pointer border border-l-0 border-gray-300"
@@ -202,7 +203,7 @@ function CollapsedEditor({
   return (
     <div
       className="w-4 !h-[calc(100vh_-_3.5rem)]"
-      style={{position: 'relative'}}>
+      style={{ position: 'relative' }}>
       <div
         className="absolute w-10 h-16 bg-blue-10 hover:translate-x-2 transition-transform rounded-r-full flex items-center justify-center z-[2] cursor-pointer border border-gray-300"
         title="Expand config editor"
