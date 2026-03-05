@@ -1114,11 +1114,45 @@ export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
   return (executionContext & RenderContext) !== NoContext;
 }
 
+/**
+ * Detects and fixes stale execution context that can occur when execution
+ * is interrupted by breakpoints, alerts, or other browser interruptions
+ * (particularly in Firefox). If executionContext indicates we're working
+ * but we're not actually in the middle of work, clear the RenderContext and
+ * CommitContext flags.
+ *
+ * This can happen when:
+ * - A breakpoint interrupts execution before a finally block runs
+ * - An alert() or confirm() dialog interrupts execution
+ * - The browser pauses execution for debugging
+ *
+ * In these cases, the executionContext may still have RenderContext or
+ * CommitContext set, but workInProgress and workInProgressRoot are null,
+ * indicating we're not actually working.
+ */
+function fixStaleExecutionContext(): void {
+  const hasRenderOrCommitContext =
+    (executionContext & (RenderContext | CommitContext)) !== NoContext;
+  const isActuallyWorking =
+    workInProgress !== null || workInProgressRoot !== null;
+
+  if (hasRenderOrCommitContext && !isActuallyWorking) {
+    // The execution context is stale - we're not actually working but the
+    // context says we are. This can happen after a breakpoint/alert interruption.
+    // Clear only the RenderContext and CommitContext flags, preserving other
+    // context flags like BatchedContext.
+    executionContext &= ~(RenderContext | CommitContext);
+  }
+}
+
 export function performWorkOnRoot(
   root: FiberRoot,
   lanes: Lanes,
   forceSync: boolean,
 ): void {
+  // Fix stale execution context that may occur after breakpoint/alert interruptions
+  fixStaleExecutionContext();
+
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
   }
@@ -3510,6 +3544,9 @@ function completeRoot(
     flushPendingEffects();
   } while (pendingEffectsStatus !== NO_PENDING_EFFECTS);
   flushRenderPhaseStrictModeWarningsInDEV();
+
+  // Fix stale execution context that may occur after breakpoint/alert interruptions
+  fixStaleExecutionContext();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
