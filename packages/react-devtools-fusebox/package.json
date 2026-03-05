@@ -1,7 +1,7 @@
 {
   "name": "react-devtools-fusebox",
   "version": "0.0.0",
-  "private": "true",
+  "private": true,
   "license": "MIT",
   "files": ["dist"],
   "scripts": {
