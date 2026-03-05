@@ -1061,6 +1061,107 @@ describe('ReactDeferredValue', () => {
     },
   );
 
+  // Regression test for https://github.com/facebook/react/issues/35821
+  it('useDeferredValue with a promise catches up after rapid updates', async () => {
+    const use = React.use;
+    let setPromise;
+    const resolvers = new Map();
+
+    function createPromise(value) {
+      const promise = new Promise(resolve => {
+        resolvers.set(value, resolve);
+      });
+      // Instrument the promise so React can synchronously read the value
+      // once it resolves (similar to what a framework like Next.js does).
+      promise.then(
+        v => {
+          promise.status = 'fulfilled';
+          promise.value = v;
+        },
+        e => {
+          promise.status = 'rejected';
+          promise.reason = e;
+        },
+      );
+      return promise;
+    }
+
+    function resolvePromise(value) {
+      const resolve = resolvers.get(value);
+      if (resolve) {
+        resolvers.delete(value);
+        resolve(value);
+      }
+    }
+
+    function Resolved({promise}) {
+      const value = use(promise);
+      Scheduler.log('Resolved: ' + value);
+      return value;
+    }
+
+    // Create initial promise outside the component, matching the original
+    // issue pattern where promises come from external sources (e.g. server
+    // actions). Creating promises in state initializers is not supported.
+    const initialPromise = createPromise('initial');
+
+    function App() {
+      const [promise, _setPromise] = useState(initialPromise);
+      setPromise = _setPromise;
+      const deferred = useDeferredValue(promise);
+      Scheduler.log('Render');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Resolved promise={deferred} />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Initial render: promise is pending, shows loading
+    await act(() => root.render(<App />));
+    assertLog(['Render', 'Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Resolve initial promise
+    await act(() => resolvePromise('initial'));
+    assertLog(['Resolved: initial']);
+    expect(root).toMatchRenderedOutput('initial');
+
+    // Simulate rapid typing: multiple setState calls in quick succession.
+    // Each one creates a new unresolved promise. Use act to flush all
+    // work between keystrokes.
+    await act(() => {
+      setPromise(createPromise('a'));
+    });
+    // Urgent render shows old resolved value; deferred render suspends
+    // on 'a' (pending). The exact log depends on how far the deferred
+    // render gets before suspending.
+    Scheduler.unstable_clearLog();
+    expect(root).toMatchRenderedOutput('initial');
+
+    await act(() => {
+      setPromise(createPromise('b'));
+    });
+    Scheduler.unstable_clearLog();
+    expect(root).toMatchRenderedOutput('initial');
+
+    await act(() => {
+      setPromise(createPromise('c'));
+    });
+    Scheduler.unstable_clearLog();
+    expect(root).toMatchRenderedOutput('initial');
+
+    // Now resolve only the latest promise and let act flush everything.
+    await act(() => {
+      resolvePromise('c');
+    });
+    Scheduler.unstable_clearLog();
+    // The deferred value should eventually catch up to 'c'
+    expect(root).toMatchRenderedOutput('c');
+  });
+
   it(
     'useDeferredValue does not show "previous" value when revealing a hidden ' +
       'tree (no initial value)',

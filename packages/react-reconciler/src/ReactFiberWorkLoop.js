@@ -189,6 +189,7 @@ import {
   includesNonIdleWork,
   includesOnlyRetries,
   includesOnlyTransitions,
+  includesTransitionDeferredLanes,
   includesBlockingLane,
   includesTransitionLane,
   includesRetryLane,
@@ -2866,6 +2867,32 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes): RootExitStatus {
               workInProgressSuspendedReason = NotSuspended;
               workInProgressThrownValue = null;
               replaySuspendedUnitOfWork(unitOfWork);
+            } else if (
+              includesTransitionDeferredLanes(
+                workInProgressRootRenderLanes,
+              )
+            ) {
+              // For transition/deferred renders, wait for the data to
+              // resolve instead of immediately unwinding. This prevents
+              // an infinite retry loop where hooks like useMemo create a
+              // new promise on each retry because the committed hook
+              // state is stale. Since transition renders are not yet
+              // visible, waiting is safe — the committed UI stays on
+              // screen. New urgent updates will properly interrupt this
+              // render via scheduleUpdateOnFiber.
+              const onResolution = () => {
+                if (
+                  workInProgressSuspendedReason === SuspendedOnData &&
+                  workInProgressRoot === root
+                ) {
+                  workInProgressSuspendedReason =
+                    SuspendedAndReadyToContinue;
+                }
+                ensureRootIsScheduled(root);
+              };
+              thenable.then(onResolution, onResolution);
+              workInProgressSuspendedReason = SuspendedOnData;
+              break outer;
             } else {
               // Otherwise, unwind then continue with the normal work loop.
               workInProgressSuspendedReason = NotSuspended;
