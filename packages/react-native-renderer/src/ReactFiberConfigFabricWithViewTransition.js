@@ -40,8 +40,26 @@ export type RunningViewTransition = {
   ...
 };
 
+interface ViewTransitionPseudoElementType extends mixin$Animatable {
+  _scope: HTMLElement;
+  _selector: string;
+  getComputedStyle(): CSSStyleDeclaration;
+}
+
+function ViewTransitionPseudoElement(
+  this: ViewTransitionPseudoElementType,
+  pseudo: string,
+  name: string,
+) {
+  // TODO: Get the owner document from the root container.
+  this._pseudo = pseudo;
+  this._name = name;
+}
+
 export type ViewTransitionInstance = null | {
   name: string,
+  old: mixin$Animatable,
+  new: mixin$Animatable,
   ...
 };
 
@@ -179,7 +197,11 @@ export function addViewTransitionFinishedListener(
 export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
-  return {name};
+  return {
+    name,
+    old: new (ViewTransitionPseudoElement: any)('old', name),
+    new: new (ViewTransitionPseudoElement: any)('new', name),
+  };
 }
 
 export function applyViewTransitionName(
