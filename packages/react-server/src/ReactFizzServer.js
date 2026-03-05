@@ -479,7 +479,7 @@ function isEligibleForOutlining(
   // outlining.
   return (
     (boundary.byteSize > 500 ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, /* flushingInShell */ false) ||
       boundary.defer) &&
     // For boundaries that can possibly contribute to the preamble we don't want to outline
     // them regardless of their size since the fallbacks should only be emitted if we've
@@ -5593,7 +5593,7 @@ function flushSegment(
     !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
     (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, flushingShell) ||
       boundary.defer)
   ) {
     // Inlining this boundary would make the current sequence being written too large
@@ -5826,6 +5826,7 @@ function flushPartiallyCompletedSegment(
 }
 
 let flushingPartialBoundaries = false;
+let flushingShell = false;
 
 function flushCompletedQueues(
   request: Request,
@@ -5885,7 +5886,9 @@ function flushCompletedQueues(
         completedPreambleSegments,
         skipBlockingShell,
       );
+      flushingShell = true;
       flushSegment(request, destination, completedRootSegment, null);
+      flushingShell = false;
       request.completedRootSegment = null;
       const isComplete =
         request.allPendingTasks === 0 &&

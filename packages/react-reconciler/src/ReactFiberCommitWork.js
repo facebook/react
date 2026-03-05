@@ -48,7 +48,6 @@ import {
   alwaysThrottleRetries,
   enableCreateEventHandleAPI,
   enableEffectEventMutationPhase,
-  enableHiddenSubtreeInsertionEffectCleanup,
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableSuspenseCallback,
@@ -62,6 +61,7 @@ import {
   enableFragmentRefs,
   enableEagerAlternateStateNodeCleanup,
   enableDefaultTransitionIndicator,
+  enableFragmentRefsTextNodes,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -1533,7 +1533,11 @@ function commitDeletionEffectsOnFiber(
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
       }
-      if (enableFragmentRefs && deletedFiber.tag === HostComponent) {
+      if (
+        enableFragmentRefs &&
+        (deletedFiber.tag === HostComponent ||
+          (enableFragmentRefsTextNodes && deletedFiber.tag === HostText))
+      ) {
         commitFragmentInstanceDeletionEffects(deletedFiber);
       }
       // Intentional fallthrough to next branch
@@ -1658,17 +1662,12 @@ function commitDeletionEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
-      if (
-        enableHiddenSubtreeInsertionEffectCleanup ||
-        !offscreenSubtreeWasHidden
-      ) {
-        // TODO: Use a commitHookInsertionUnmountEffects wrapper to record timings.
-        commitHookEffectListUnmount(
-          HookInsertion,
-          deletedFiber,
-          nearestMountedAncestor,
-        );
-      }
+      // TODO: Use a commitHookInsertionUnmountEffects wrapper to record timings.
+      commitHookEffectListUnmount(
+        HookInsertion,
+        deletedFiber,
+        nearestMountedAncestor,
+      );
       if (!offscreenSubtreeWasHidden) {
         commitHookLayoutUnmountEffects(
           deletedFiber,
@@ -3028,7 +3027,11 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
 
-      if (enableFragmentRefs && finishedWork.tag === HostComponent) {
+      if (
+        enableFragmentRefs &&
+        (finishedWork.tag === HostComponent ||
+          (enableFragmentRefsTextNodes && finishedWork.tag === HostText))
+      ) {
         commitFragmentInstanceDeletionEffects(finishedWork);
       }
 
