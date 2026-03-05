@@ -429,7 +429,14 @@ describe('ReactDOMServerHydration', () => {
     });
 
     if (__DEV__) {
-      expect(log).toEqual(['layout mount', 'effect mount']);
+      expect(log).toEqual([
+        'layout mount',
+        'effect mount',
+        'layout unmount',
+        'effect unmount',
+        'layout mount',
+        'effect mount',
+      ]);
     } else {
       expect(log).toEqual(['layout mount', 'effect mount']);
     }
