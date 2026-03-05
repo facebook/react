@@ -46,7 +46,6 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {RootState} from './ReactFiberRoot';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
-import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 
 import {
   markComponentRenderStarted,
@@ -3568,18 +3567,6 @@ function updateViewTransition(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  if (workInProgress.stateNode === null) {
-    // We previously reset the work-in-progress.
-    // We need to create a new ViewTransitionState instance.
-    const instance: ViewTransitionState = {
-      autoName: null,
-      paired: null,
-      clones: null,
-      ref: null,
-    };
-    workInProgress.stateNode = instance;
-  }
-
   const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
   if (pendingProps.name != null && pendingProps.name !== 'auto') {
     // Explicitly named boundary. We track it so that we can pair it up with another explicit
