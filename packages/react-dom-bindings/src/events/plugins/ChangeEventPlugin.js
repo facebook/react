@@ -258,6 +258,13 @@ function getTargetInstForInputOrChangeEvent(
   if (domEventName === 'input' || domEventName === 'change') {
     return getInstIfValueChanged(targetInst);
   }
+  // Detect browser autofill: browsers may set input values without firing
+  // input or change events (e.g., Chrome on iOS, password managers).
+  // When the user focuses an autofilled field, check if the value changed.
+  // See https://github.com/facebook/react/issues/1159
+  if (domEventName === 'focusin') {
+    return getInstIfValueChanged(targetInst);
+  }
 }
 
 function handleControlledInputBlur(node: HTMLInputElement, props: any) {
