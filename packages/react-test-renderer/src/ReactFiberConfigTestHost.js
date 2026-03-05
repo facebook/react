@@ -8,8 +8,6 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {TransitionTypes} from 'react/src/ReactTransitionType';
-
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {
@@ -17,7 +15,6 @@ import {
   NoEventPriority,
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
 export const rendererPackageName = 'react-test-renderer';
@@ -56,6 +53,7 @@ export type EventResponder = any;
 export type RendererInspectionConfig = $ReadOnly<{}>;
 export type TransitionStatus = mixed;
 
+export * from 'react-reconciler/src/ReactFiberConfigWithNoViewTransition';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
@@ -330,148 +328,6 @@ export function unhideTextInstance(
   text: string,
 ): void {
   textInstance.isHidden = false;
-}
-
-export function applyViewTransitionName(
-  instance: Instance,
-  name: string,
-  className: ?string,
-): void {
-  // Noop
-}
-
-export function restoreViewTransitionName(
-  instance: Instance,
-  props: Props,
-): void {
-  // Noop
-}
-
-export function cancelViewTransitionName(
-  instance: Instance,
-  name: string,
-  props: Props,
-): void {
-  // Noop
-}
-
-export function cancelRootViewTransitionName(rootContainer: Container): void {
-  // Noop
-}
-
-export function restoreRootViewTransitionName(rootContainer: Container): void {
-  // Noop
-}
-
-export function cloneRootViewTransitionContainer(
-  rootContainer: Container,
-): Instance {
-  return {
-    type: 'ROOT',
-    props: {},
-    isHidden: false,
-    children: [],
-    internalInstanceHandle: null,
-    rootContainerInstance: rootContainer,
-    tag: 'INSTANCE',
-  };
-}
-
-export function removeRootViewTransitionClone(
-  rootContainer: Container,
-  clone: Instance,
-): void {
-  // Noop since it was never inserted anywhere.
-}
-
-export type InstanceMeasurement = null;
-
-export function measureInstance(instance: Instance): InstanceMeasurement {
-  return null;
-}
-
-export function measureClonedInstance(instance: Instance): InstanceMeasurement {
-  return null;
-}
-
-export function wasInstanceInViewport(
-  measurement: InstanceMeasurement,
-): boolean {
-  return true;
-}
-
-export function hasInstanceChanged(
-  oldMeasurement: InstanceMeasurement,
-  newMeasurement: InstanceMeasurement,
-): boolean {
-  return false;
-}
-
-export function hasInstanceAffectedParent(
-  oldMeasurement: InstanceMeasurement,
-  newMeasurement: InstanceMeasurement,
-): boolean {
-  return false;
-}
-
-export function startViewTransition(
-  suspendedState: null | SuspendedState,
-  rootContainer: Container,
-  transitionTypes: null | TransitionTypes,
-  mutationCallback: () => void,
-  layoutCallback: () => void,
-  afterMutationCallback: () => void,
-  spawnedWorkCallback: () => void,
-  passiveCallback: () => mixed,
-  errorCallback: mixed => void,
-  blockedCallback: string => void, // Profiling-only
-  finishedAnimation: () => void, // Profiling-only
-): null | RunningViewTransition {
-  mutationCallback();
-  layoutCallback();
-  // Skip afterMutationCallback(). We don't need it since we're not animating.
-  spawnedWorkCallback();
-  // Skip passiveCallback(). Spawned work will schedule a task.
-  return null;
-}
-
-export type RunningViewTransition = null;
-
-export function startGestureTransition(
-  suspendedState: null | SuspendedState,
-  rootContainer: Container,
-  timeline: GestureTimeline,
-  rangeStart: number,
-  rangeEnd: number,
-  transitionTypes: null | TransitionTypes,
-  mutationCallback: () => void,
-  animateCallback: () => void,
-  errorCallback: mixed => void,
-  finishedAnimation: () => void, // Profiling-only
-): null | RunningViewTransition {
-  mutationCallback();
-  animateCallback();
-  if (enableProfilerTimer) {
-    finishedAnimation();
-  }
-  return null;
-}
-
-export function stopViewTransition(transition: RunningViewTransition) {}
-
-export function addViewTransitionFinishedListener(
-  transition: RunningViewTransition,
-  callback: () => void,
-) {
-  callback();
-}
-
-export type ViewTransitionInstance = null | {name: string, ...};
-
-export function createViewTransitionInstance(
-  name: string,
-): ViewTransitionInstance {
-  return null;
 }
 
 export type FragmentInstanceType = null;
