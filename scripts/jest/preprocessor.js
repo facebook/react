@@ -66,12 +66,12 @@ module.exports = {
     if (filePath.match(/\.json$/)) {
       return {code: src};
     }
-    if (!filePath.match(/\/third_party\//)) {
+    if (!filePath.match(/[/\\]third_party[/\\]/)) {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
-      const isTestFile = !!filePath.match(/\/__tests__\//);
+      const isTestFile = !!filePath.match(/[/\\]__tests__[/\\]/);
       const isInDevToolsPackages = !!filePath.match(
-        /\/packages\/react-devtools.*\//
+        /[/\\]packages[/\\]react-devtools.*[/\\]/
       );
       const plugins = [].concat(babelOptions.plugins);
       if (isTestFile && isInDevToolsPackages) {
