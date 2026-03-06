@@ -168,46 +168,6 @@ export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 export * from './ReactFiberConfigFabricWithViewTransition';
 
-// -------------------
-//      Mutation
-//   (not supported)
-// -------------------
-
-function shim(...args: any): empty {
-  throw new Error(
-    'The current renderer does not support mutation. ' +
-      'This error is likely caused by a bug in React. ' +
-      'Please file an issue.',
-  );
-}
-
-export const supportsMutation = false;
-
-export const cloneMutableInstance = shim;
-export const cloneMutableTextInstance = shim;
-export const appendChild = shim;
-export const appendChildToContainer = shim;
-export const commitTextUpdate = shim;
-
-export function commitMount(
-  instance: Instance,
-  type: string,
-  newProps: Props,
-  internalInstanceHandle: Object,
-): void {}
-
-export const commitUpdate = shim;
-export const insertBefore = shim;
-export const insertInContainerBefore = shim;
-export const removeChild = shim;
-export const removeChildFromContainer = shim;
-export const resetTextContent = shim;
-export const hideInstance = shim;
-export const hideTextInstance = shim;
-export const unhideInstance = shim;
-export const unhideTextInstance = shim;
-export const clearContainer = shim;
-
 export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
