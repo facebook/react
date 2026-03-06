@@ -853,8 +853,10 @@ function getReactFunctionType(
 
   switch (pass.opts.compilationMode) {
     case 'annotation': {
-      // opt-ins are checked above (function-level)
-      // A module-level opt-in directive applies to all functions in the file
+      /*
+       * opt-ins are checked above (function-level)
+       * A module-level opt-in directive applies to all functions in the file
+       */
       if (hasModuleScopeOptIn) {
         return getComponentOrHookLike(fn) ?? 'Other';
       }
