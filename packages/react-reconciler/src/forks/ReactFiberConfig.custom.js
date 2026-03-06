@@ -73,6 +73,7 @@ export const warnsIfNotActing = $$$config.warnsIfNotActing;
 export const supportsMutation = $$$config.supportsMutation;
 export const supportsPersistence = $$$config.supportsPersistence;
 export const supportsHydration = $$$config.supportsHydration;
+export const supportsViewTransition = $$$config.supportsViewTransition;
 export const getInstanceFromNode = $$$config.getInstanceFromNode;
 export const beforeActiveInstanceBlur = $$$config.beforeActiveInstanceBlur;
 export const afterActiveInstanceBlur = $$$config.afterActiveInstanceBlur;
