@@ -626,6 +626,7 @@ module.exports = {
     FinalizationRegistry: 'readonly',
     Exclude: 'readonly',
     Omit: 'readonly',
+    Pick: 'readonly',
     Keyframe: 'readonly',
     PropertyIndexedKeyframes: 'readonly',
     KeyframeAnimationOptions: 'readonly',
