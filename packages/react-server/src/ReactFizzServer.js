@@ -178,7 +178,6 @@ import {
   disableLegacyContext,
   disableLegacyContextForFunctionComponents,
   enableScopeAPI,
-  enableHalt,
   enableAsyncIterableChildren,
   enableViewTransition,
   enableFizzBlockingRender,
@@ -480,7 +479,7 @@ function isEligibleForOutlining(
   // outlining.
   return (
     (boundary.byteSize > 500 ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, /* flushingInShell */ false) ||
       boundary.defer) &&
     // For boundaries that can possibly contribute to the preamble we don't want to outline
     // them regardless of their size since the fallbacks should only be emitted if we've
@@ -4643,11 +4642,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       if (replay === null) {
         // We didn't complete the root so we have nothing to show. We can close
         // the request;
-        if (
-          enableHalt &&
-          request.trackedPostpones !== null &&
-          segment !== null
-        ) {
+        if (request.trackedPostpones !== null && segment !== null) {
           const trackedPostpones = request.trackedPostpones;
           // We are aborting a prerender and must treat the shell as halted
           // We log the error but we still resolve the prerender
@@ -4693,20 +4688,18 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     // boundary the message is referring to
     const trackedPostpones = request.trackedPostpones;
     if (boundary.status !== CLIENT_RENDERED) {
-      if (enableHalt) {
-        if (trackedPostpones !== null && segment !== null) {
-          // We are aborting a prerender and must halt this boundary.
-          // We treat this like other postpones during prerendering
-          logRecoverableError(request, error, errorInfo, task.debugTask);
-          trackPostpone(request, trackedPostpones, task, segment);
-          // If this boundary was still pending then we haven't already cancelled its fallbacks.
-          // We'll need to abort the fallbacks, which will also error that parent boundary.
-          boundary.fallbackAbortableTasks.forEach(fallbackTask =>
-            abortTask(fallbackTask, request, error),
-          );
-          boundary.fallbackAbortableTasks.clear();
-          return finishedTask(request, boundary, task.row, segment);
-        }
+      if (trackedPostpones !== null && segment !== null) {
+        // We are aborting a prerender and must halt this boundary.
+        // We treat this like other postpones during prerendering
+        logRecoverableError(request, error, errorInfo, task.debugTask);
+        trackPostpone(request, trackedPostpones, task, segment);
+        // If this boundary was still pending then we haven't already cancelled its fallbacks.
+        // We'll need to abort the fallbacks, which will also error that parent boundary.
+        boundary.fallbackAbortableTasks.forEach(fallbackTask =>
+          abortTask(fallbackTask, request, error),
+        );
+        boundary.fallbackAbortableTasks.clear();
+        return finishedTask(request, boundary, task.row, segment);
       }
       boundary.status = CLIENT_RENDERED;
       // We are aborting a render or resume which should put boundaries
@@ -5110,11 +5103,7 @@ function retryRenderTask(
           ? request.fatalError
           : thrownValue;
 
-    if (
-      enableHalt &&
-      request.status === ABORTING &&
-      request.trackedPostpones !== null
-    ) {
+    if (request.status === ABORTING && request.trackedPostpones !== null) {
       // We are aborting a prerender and need to halt this task.
       const trackedPostpones = request.trackedPostpones;
       const thrownInfo = getThrownInfo(task.componentStack);
@@ -5604,7 +5593,7 @@ function flushSegment(
     !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
     (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, flushingShell) ||
       boundary.defer)
   ) {
     // Inlining this boundary would make the current sequence being written too large
@@ -5837,6 +5826,7 @@ function flushPartiallyCompletedSegment(
 }
 
 let flushingPartialBoundaries = false;
+let flushingShell = false;
 
 function flushCompletedQueues(
   request: Request,
@@ -5896,7 +5886,9 @@ function flushCompletedQueues(
         completedPreambleSegments,
         skipBlockingShell,
       );
+      flushingShell = true;
       flushSegment(request, destination, completedRootSegment, null);
+      flushingShell = false;
       request.completedRootSegment = null;
       const isComplete =
         request.allPendingTasks === 0 &&

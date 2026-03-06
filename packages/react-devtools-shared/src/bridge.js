@@ -145,6 +145,7 @@ type OverrideSuspense = {
 };
 
 type OverrideSuspenseMilestone = {
+  rendererID: number,
   suspendedSet: Array<number>,
 };
 
@@ -199,7 +200,6 @@ export type BackendEvents = {
   backendInitialized: [],
   backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
-  enableSuspenseTab: [],
   extensionBackendInitialized: [],
   fastRefreshScheduled: [],
   getSavedPreferences: [],
@@ -208,7 +208,6 @@ export type BackendEvents = {
   isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
-  overrideComponentFilters: [Array<ComponentFilter>],
   environmentNames: [Array<string>],
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],

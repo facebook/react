@@ -117,7 +117,6 @@ import {
   enableLegacyHidden,
   enableCPUSuspense,
   disableLegacyMode,
-  enableHydrationLaneScheduling,
   enableViewTransition,
   enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
@@ -129,6 +128,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
+  REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 import {setCurrentFiber} from './ReactCurrentFiber';
 import {
@@ -155,7 +155,6 @@ import {
   NoLanes,
   OffscreenLane,
   DefaultLane,
-  DefaultHydrationLane,
   SomeRetryLane,
   includesSomeLane,
   includesOnlyRetries,
@@ -2142,6 +2141,10 @@ function mountLazyComponent(
         props,
         renderLanes,
       );
+    } else if ($$typeof === REACT_CONTEXT_TYPE) {
+      workInProgress.tag = ContextProvider;
+      workInProgress.type = Component;
+      return updateContextProvider(null, workInProgress, renderLanes);
     }
   }
 
@@ -2919,9 +2922,7 @@ function mountDehydratedSuspenseComponent(
     // wrong priority associated with it and will prevent hydration of parent path.
     // Instead, we'll leave work left on it to render it in a separate commit.
     // Schedule a normal pri update to render this content.
-    workInProgress.lanes = laneToLanes(
-      enableHydrationLaneScheduling ? DefaultLane : DefaultHydrationLane,
-    );
+    workInProgress.lanes = laneToLanes(DefaultLane);
   } else {
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
@@ -3990,9 +3991,23 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         // whether to retry the primary children, or to skip over it and
         // go straight to the fallback. Check the priority of the primary
         // child fragment.
+        //
+        // Propagate context changes first. If a parent context changed
+        // and the primary children's consumer fibers were discarded
+        // during initial mount suspension, normal propagation can't find
+        // them. In that case we conservatively retry the boundary — the
+        // re-mounted children will read the updated context value.
+        const contextChanged = lazilyPropagateParentContextChanges(
+          current,
+          workInProgress,
+          renderLanes,
+        );
         const primaryChildFragment: Fiber = (workInProgress.child: any);
         const primaryChildLanes = primaryChildFragment.childLanes;
-        if (includesSomeLane(renderLanes, primaryChildLanes)) {
+        if (
+          contextChanged ||
+          includesSomeLane(renderLanes, primaryChildLanes)
+        ) {
           // The primary children have pending work. Use the normal path
           // to attempt to render the primary children again.
           return updateSuspenseComponent(current, workInProgress, renderLanes);

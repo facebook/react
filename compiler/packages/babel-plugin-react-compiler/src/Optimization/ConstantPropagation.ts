@@ -8,6 +8,7 @@
 import {isValidIdentifier} from '@babel/types';
 import {CompilerError} from '../CompilerError';
 import {
+  GeneratedSource,
   GotoVariant,
   HIRFunction,
   IdentifierId,
@@ -191,15 +192,7 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
       case 'Primitive': {
         CompilerError.invariant(value.kind === 'Primitive', {
           reason: 'value kind expected to be Primitive',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: null,
-              message: null,
-            },
-          ],
-          suggestions: null,
+          loc: GeneratedSource,
         });
 
         // different constant values, can't constant propogate
@@ -211,15 +204,7 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
       case 'LoadGlobal': {
         CompilerError.invariant(value.kind === 'LoadGlobal', {
           reason: 'value kind expected to be LoadGlobal',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: null,
-              message: null,
-            },
-          ],
-          suggestions: null,
+          loc: GeneratedSource,
         });
 
         // different global values, can't constant propogate

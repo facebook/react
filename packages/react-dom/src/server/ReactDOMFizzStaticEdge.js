@@ -34,8 +34,6 @@ import {
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-import {enableHalt} from 'shared/ReactFeatureFlags';
-
 import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
 ensureCorrectIsomorphicReactVersion();
 
@@ -89,14 +87,10 @@ function prerender(
         {highWaterMark: 0},
       );
 
-      const result: StaticResult = enableHalt
-        ? {
-            postponed: getPostponedState(request),
-            prelude: stream,
-          }
-        : ({
-            prelude: stream,
-          }: any);
+      const result: StaticResult = {
+        postponed: getPostponedState(request),
+        prelude: stream,
+      };
       resolve(result);
     }
 

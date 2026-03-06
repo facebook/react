@@ -10,6 +10,7 @@
 
 'use strict';
 
+let assertConsoleErrorDev;
 let serverExports;
 let webpackServerMap;
 let ReactServerDOMServer;
@@ -29,6 +30,9 @@ describe('ReactFlightDOMReplyEdge', () => {
     ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
     jest.resetModules();
     ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   it('can encode a reply', async () => {
@@ -372,5 +376,32 @@ describe('ReactFlightDOMReplyEdge', () => {
     );
     expect(replyResult.method).toBe(greet);
     expect(replyResult.boundMethod()).toBe('hi, there');
+  });
+
+  it('warns with a tailored message if eval is not available in dev', async () => {
+    // eslint-disable-next-line no-eval
+    const previousEval = globalThis.eval.bind(globalThis);
+    // eslint-disable-next-line no-eval
+    globalThis.eval = () => {
+      throw new Error('eval is disabled');
+    };
+
+    try {
+      const body = await ReactServerDOMClient.encodeReply({some: 'object'});
+
+      assertConsoleErrorDev([
+        'eval() is not supported in this environment. ' +
+          'React requires eval() in development mode for various debugging features ' +
+          'like reconstructing callstacks from a different environment.\n' +
+          'React will never use eval() in production mode',
+      ]);
+
+      await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+
+      assertConsoleErrorDev([]);
+    } finally {
+      // eslint-disable-next-line no-eval
+      globalThis.eval = previousEval;
+    }
   });
 });

@@ -238,9 +238,8 @@ beforeEach(() => {
 
   // Initialize filters to a known good state.
   setSavedComponentFilters(getDefaultComponentFilters());
-  global.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = getDefaultComponentFilters();
 
-  installHook(global, {
+  installHook(global, getDefaultComponentFilters(), {
     appendComponentStack: true,
     breakOnConsoleErrors: false,
     showInlineWarningsAndErrors: true,
