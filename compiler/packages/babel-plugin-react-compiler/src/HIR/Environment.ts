@@ -46,6 +46,7 @@ import {
   makeScopeId,
 } from './HIR';
 import {
+  BuiltInArrayId,
   BuiltInMixedReadonlyId,
   DefaultMutatingHook,
   DefaultNonmutatingHook,
@@ -1000,6 +1001,24 @@ export class Environment {
       }
     } else if (typeof property === 'string' && isHookName(property)) {
       return this.#getCustomHookType();
+    } else if (receiver.kind === 'Type' && typeof property === 'string') {
+      /*
+       * For unknown receiver types, try to resolve from the BuiltInArray shape
+       * but only for methods also present in MixedReadonly (the safe subset).
+       * If .map() is called on an unknown type, the value must be array-like.
+       * We use the Array shape (not MixedReadonly) because it has aliasing
+       * signatures that correctly model data flow without over-extending
+       * mutable ranges. See ObjectShape.ts BuiltInMixedReadonlyId for details.
+       */
+      const mixedShape = this.#shapes.get(BuiltInMixedReadonlyId);
+      const arrayShape = this.#shapes.get(BuiltInArrayId);
+      if (
+        mixedShape !== undefined &&
+        arrayShape !== undefined &&
+        mixedShape.properties.has(property)
+      ) {
+        return arrayShape.properties.get(property) ?? null;
+      }
     }
     return null;
   }
