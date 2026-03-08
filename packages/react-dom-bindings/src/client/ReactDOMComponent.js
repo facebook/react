@@ -230,6 +230,16 @@ function warnForPropDifference(
     if (normalizedServerValue === normalizedClientValue) {
       return;
     }
+    // Also check with attribute whitespace normalization: browsers
+    // normalize \t, \n, \r to spaces in HTML attribute values.
+    if (
+      typeof normalizedServerValue === 'string' &&
+      typeof normalizedClientValue === 'string' &&
+      normalizeAttributeValueForComparison(normalizedServerValue) ===
+        normalizeAttributeValueForComparison(normalizedClientValue)
+    ) {
+      return;
+    }
 
     serverDifferences[propName] = serverValue;
   }
@@ -343,6 +353,12 @@ function normalizeHTML(parent: Element, html: string) {
 const NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
 const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
 
+// Browsers normalize tab, newline, and carriage return characters to spaces
+// when parsing HTML attribute values. We normalize these before comparing
+// attribute values during hydration to avoid false mismatches.
+// See: https://html.spec.whatwg.org/multipage/parsing.html#attribute-value-(double-quoted)-state
+const NORMALIZE_ATTRIBUTE_WHITESPACE_REGEX = /[\t\n\r]/g;
+
 function normalizeMarkupForTextOrAttribute(markup: mixed): string {
   if (__DEV__) {
     checkHtmlStringCoercion(markup);
@@ -351,6 +367,10 @@ function normalizeMarkupForTextOrAttribute(markup: mixed): string {
   return markupString
     .replace(NORMALIZE_NEWLINES_REGEX, '\n')
     .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
+}
+
+function normalizeAttributeValueForComparison(value: string): string {
+  return value.replace(NORMALIZE_ATTRIBUTE_WHITESPACE_REGEX, ' ');
 }
 
 function checkForUnmatchedText(
@@ -2119,7 +2139,17 @@ function hydrateAttribute(
           if (__DEV__) {
             checkAttributeStringCoercion(value, propKey);
           }
-          if (serverValue === '' + value) {
+          const coercedValue = '' + value;
+          if (serverValue === coercedValue) {
+            return;
+          }
+          // Browsers may normalize whitespace characters (tab, newline,
+          // carriage return) to spaces in attribute values. If the only
+          // difference is this normalization, treat it as a match.
+          if (
+            normalizeAttributeValueForComparison(serverValue) ===
+            normalizeAttributeValueForComparison(coercedValue)
+          ) {
             return;
           }
         }

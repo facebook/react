@@ -527,6 +527,50 @@ describe('ReactDOMServerHydration', () => {
     });
   });
 
+  describe('attribute whitespace normalization', () => {
+    // @gate __DEV__
+    it('does not warn when attribute values differ only by whitespace normalization', () => {
+      function Mismatch({isClient}) {
+        return (
+          <div className="parent">
+            <main
+              className={isClient ? 'foo bar baz' : 'foo\nbar\nbaz'}
+            />
+          </div>
+        );
+      }
+      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`[]`);
+    });
+
+    // @gate __DEV__
+    it('does not warn for tab and carriage return normalization', () => {
+      function Mismatch({isClient}) {
+        return (
+          <div className="parent">
+            <main
+              className={isClient ? 'foo bar baz' : 'foo\tbar\r\nbaz'}
+            />
+          </div>
+        );
+      }
+      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`[]`);
+    });
+
+    // @gate __DEV__
+    it('does not warn for title attribute whitespace normalization', () => {
+      function Mismatch({isClient}) {
+        return (
+          <div>
+            <span
+              title={isClient ? 'line1 line2' : 'line1\nline2'}
+            />
+          </div>
+        );
+      }
+      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`[]`);
+    });
+  });
+
   describe('extra nodes on the client', () => {
     describe('extra elements on the client', () => {
       // @gate __DEV__
