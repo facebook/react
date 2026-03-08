@@ -1712,9 +1712,10 @@ function codegenInstructionValue(
       break;
     }
     case 'JsxExpression': {
+      const isBuiltinTag = instrValue.tag.kind === 'BuiltinTag';
       const attributes: Array<t.JSXAttribute | t.JSXSpreadAttribute> = [];
       for (const attribute of instrValue.props) {
-        attributes.push(codegenJsxAttribute(cx, attribute));
+        attributes.push(codegenJsxAttribute(cx, attribute, isBuiltinTag));
       }
       let tagValue =
         instrValue.tag.kind === 'Identifier'
@@ -2123,9 +2124,21 @@ function codegenInstructionValue(
  */
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
   /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}\u{010000}-\u{10FFFF}]|"|\\/u;
+
+/**
+ * Browsers normalize tab, newline, and carriage return characters to spaces
+ * when parsing HTML attribute values. Without this normalization, the compiled
+ * code preserves these characters while the browser normalizes the server-
+ * rendered HTML, causing a hydration mismatch.
+ *
+ * See: https://html.spec.whatwg.org/multipage/parsing.html#attribute-value-(double-quoted)-state
+ */
+const ATTRIBUTE_WHITESPACE_NORMALIZE_PATTERN = /[\t\n\r]/g;
+
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute,
+  isBuiltinTag: boolean,
 ): t.JSXAttribute | t.JSXSpreadAttribute {
   switch (attribute.kind) {
     case 'JsxAttribute': {
@@ -2145,6 +2158,18 @@ function codegenJsxAttribute(
       switch (innerValue.type) {
         case 'StringLiteral': {
           value = innerValue;
+          if (
+            isBuiltinTag &&
+            !cx.fbtOperands.has(attribute.place.identifier.id)
+          ) {
+            const normalized = value.value.replace(
+              ATTRIBUTE_WHITESPACE_NORMALIZE_PATTERN,
+              ' ',
+            );
+            if (normalized !== value.value) {
+              value = createStringLiteral(value.loc, normalized);
+            }
+          }
           if (
             STRING_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value) &&
             !cx.fbtOperands.has(attribute.place.identifier.id)
