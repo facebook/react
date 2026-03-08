@@ -2126,14 +2126,23 @@ const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
   /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}\u{010000}-\u{10FFFF}]|"|\\/u;
 
 /**
- * Browsers normalize tab, newline, and carriage return characters to spaces
- * when parsing HTML attribute values. Without this normalization, the compiled
- * code preserves these characters while the browser normalizes the server-
- * rendered HTML, causing a hydration mismatch.
+ * When the compiler creates new StringLiteral AST nodes (without Babel's
+ * extra.raw), strings containing \n are wrapped in JSXExpressionContainers
+ * by STRING_REQUIRES_EXPR_CONTAINER_PATTERN. Babel's code generator may then
+ * silently replace newline characters with spaces during serialization
+ * (depending on retainLines/compact options), changing the runtime value.
+ * This causes a hydration mismatch: the server renders the original value
+ * while the client gets the Babel-transformed one.
  *
- * See: https://html.spec.whatwg.org/multipage/parsing.html#attribute-value-(double-quoted)-state
+ * We normalize \t, \n, and \r to spaces in string attributes of intrinsic
+ * HTML elements before the expression container check, which both prevents
+ * the Babel serialization issue and avoids unnecessary expression containers.
+ *
+ * CRLF (\r\n) is collapsed to a single space first, matching the HTML input
+ * stream preprocessing step (https://html.spec.whatwg.org/multipage/parsing.html#preprocessing-the-input-stream).
  */
-const ATTRIBUTE_WHITESPACE_NORMALIZE_PATTERN = /[\t\n\r]/g;
+const NORMALIZE_CRLF_PATTERN = /\r\n/g;
+const NORMALIZE_WHITESPACE_PATTERN = /[\t\n\r]/g;
 
 function codegenJsxAttribute(
   cx: Context,
@@ -2162,10 +2171,9 @@ function codegenJsxAttribute(
             isBuiltinTag &&
             !cx.fbtOperands.has(attribute.place.identifier.id)
           ) {
-            const normalized = value.value.replace(
-              ATTRIBUTE_WHITESPACE_NORMALIZE_PATTERN,
-              ' ',
-            );
+            const normalized = value.value
+              .replace(NORMALIZE_CRLF_PATTERN, '\n')
+              .replace(NORMALIZE_WHITESPACE_PATTERN, ' ');
             if (normalized !== value.value) {
               value = createStringLiteral(value.loc, normalized);
             }
