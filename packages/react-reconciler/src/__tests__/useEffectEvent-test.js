@@ -938,14 +938,9 @@ describe('useEffectEvent', () => {
     assertLog([
       'Parent Insertion Create: A 3 2',
       'Parent Layout Cleanup: A 3 2',
-      ...(gate('enableHiddenSubtreeInsertionEffectCleanup')
-        ? [
-            gate('enableViewTransition') &&
-            !gate('enableEffectEventMutationPhase')
-              ? 'Child Insertion Destroy A 3 2 B 1 1 1'
-              : 'Child Insertion Destroy A 3 2 B 3 2 2',
-          ]
-        : []),
+      gate('enableViewTransition') && !gate('enableEffectEventMutationPhase')
+        ? 'Child Insertion Destroy A 3 2 B 1 1 1'
+        : 'Child Insertion Destroy A 3 2 B 3 2 2',
     ]);
   });
 

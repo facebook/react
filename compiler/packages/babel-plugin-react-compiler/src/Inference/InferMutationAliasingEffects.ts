@@ -45,7 +45,7 @@ import {
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from '../HIR/visitors';
-import {Ok, Result} from '../Utils/Result';
+
 import {
   assertExhaustive,
   getOrInsertDefault,
@@ -100,7 +100,7 @@ export function inferMutationAliasingEffects(
   {isFunctionExpression}: {isFunctionExpression: boolean} = {
     isFunctionExpression: false,
   },
-): Result<void, CompilerError> {
+): void {
   const initialState = InferenceState.empty(fn.env, isFunctionExpression);
 
   // Map of blocks to the last (merged) incoming state that was processed
@@ -220,7 +220,7 @@ export function inferMutationAliasingEffects(
       }
     }
   }
-  return Ok(undefined);
+  return;
 }
 
 function findHoistedContextDeclarations(

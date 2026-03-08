@@ -19,13 +19,11 @@ export const {
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
   enableEffectEventMutationPhase,
-  enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRetryLaneExpiration,
   enableTransitionTracing,
-  enableTrustedTypesIntegration,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
@@ -45,7 +43,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
-
+export const enableTrustedTypesIntegration: boolean = true;
 export const enableSuspenseAvoidThisFallback: boolean = true;
 
 export const enableAsyncDebugInfo: boolean = true;
