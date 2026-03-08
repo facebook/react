@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import {useMemo} from 'react';
 
 function useFoo(arr1, arr2) {
@@ -26,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import { useMemo } from "react";
 
 function useFoo(arr1, arr2) {
@@ -50,15 +51,13 @@ function useFoo(arr1, arr2) {
     y = $[4];
   }
   let t1;
-  let t2;
   if ($[5] !== y) {
-    t2 = { y };
+    t1 = { y };
     $[5] = y;
-    $[6] = t2;
+    $[6] = t1;
   } else {
-    t2 = $[6];
+    t1 = $[6];
   }
-  t1 = t2;
   return t1;
 }
 

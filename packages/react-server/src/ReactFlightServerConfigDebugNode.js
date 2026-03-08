@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactStackTrace} from 'shared/ReactTypes';
+
 import type {
   AsyncSequence,
   IONode,
@@ -24,32 +26,16 @@ import {
   UNRESOLVED_AWAIT_NODE,
 } from './ReactFlightAsyncSequence';
 import {resolveOwner} from './flight/ReactFlightCurrentOwner';
+import {resolveRequest, isAwaitInUserspace} from './ReactFlightServer';
 import {createHook, executionAsyncId, AsyncResource} from 'async_hooks';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
-import {parseStackTrace} from './ReactFlightServerConfig';
+import {parseStackTracePrivate} from './ReactFlightServerConfig';
 
 // $FlowFixMe[method-unbinding]
 const getAsyncId = AsyncResource.prototype.asyncId;
 
 const pendingOperations: Map<number, AsyncSequence> =
   __DEV__ && enableAsyncDebugInfo ? new Map() : (null: any);
-
-// This is a weird one. This map, keeps a dependent Promise alive if the child Promise is still alive.
-// A PromiseNode/AwaitNode cannot hold a strong reference to its own Promise because then it'll never get
-// GC:ed. We only need it if a dependent AwaitNode points to it. We could put a reference in the Node
-// but that would require a GC pass between every Node that gets destroyed. I.e. the root gets destroy()
-// called on it and then that release it from the pendingOperations map which allows the next one to GC
-// and so on. By putting this relationship in a WeakMap this could be done as a single pass in the VM.
-// We don't actually ever have to read from this map since we have WeakRef reference to these Promises
-// if they're still alive. It's also optional information so we could just expose only if GC didn't run.
-const awaitedPromise: WeakMap<Promise<any>, Promise<any>> = __DEV__ &&
-enableAsyncDebugInfo
-  ? new WeakMap()
-  : (null: any);
-const previousPromise: WeakMap<Promise<any>, Promise<any>> = __DEV__ &&
-enableAsyncDebugInfo
-  ? new WeakMap()
-  : (null: any);
 
 // Keep the last resolved await as a workaround for async functions missing data.
 let lastRanAwait: null | AwaitNode = null;
@@ -65,6 +51,8 @@ function resolvePromiseOrAwaitNode(
   resolvedNode.end = endTime;
   return resolvedNode;
 }
+
+const emptyStack: ReactStackTrace = [];
 
 // Initialize the tracing of async operations.
 // We do this globally since the async work can potentially eagerly
@@ -83,14 +71,6 @@ export function initAsyncDebugInfo(): void {
         const trigger = pendingOperations.get(triggerAsyncId);
         let node: AsyncSequence;
         if (type === 'PROMISE') {
-          if (trigger !== undefined && trigger.promise !== null) {
-            const triggerPromise = trigger.promise.deref();
-            if (triggerPromise !== undefined) {
-              // Keep the awaited Promise alive as long as the child is alive so we can
-              // trace its value at the end.
-              awaitedPromise.set(resource, triggerPromise);
-            }
-          }
           const currentAsyncId = executionAsyncId();
           if (currentAsyncId !== triggerAsyncId) {
             // When you call .then() on a native Promise, or await/Promise.all() a thenable,
@@ -99,32 +79,58 @@ export function initAsyncDebugInfo(): void {
               // We don't track awaits on things that started outside our tracked scope.
               return;
             }
-            const current = pendingOperations.get(currentAsyncId);
-            if (current !== undefined && current.promise !== null) {
-              const currentPromise = current.promise.deref();
-              if (currentPromise !== undefined) {
-                // Keep the previous Promise alive as long as the child is alive so we can
-                // trace its value at the end.
-                previousPromise.set(resource, currentPromise);
-              }
-            }
             // If the thing we're waiting on is another Await we still track that sequence
             // so that we can later pick the best stack trace in user space.
+            let stack = null;
+            let promiseRef: WeakRef<Promise<any>>;
+            if (
+              trigger.stack !== null &&
+              (trigger.tag === AWAIT_NODE ||
+                trigger.tag === UNRESOLVED_AWAIT_NODE)
+            ) {
+              // We already had a stack for an await. In a chain of awaits we'll only need one good stack.
+              // We mark it with an empty stack to signal to any await on this await that we have a stack.
+              stack = emptyStack;
+              if (resource._debugInfo !== undefined) {
+                // We may need to forward this debug info at the end so we need to retain this promise.
+                promiseRef = new WeakRef((resource: Promise<any>));
+              } else {
+                // Otherwise, we can just refer to the inner one since that's the one we'll log anyway.
+                promiseRef = trigger.promise;
+              }
+            } else {
+              promiseRef = new WeakRef((resource: Promise<any>));
+              const request = resolveRequest();
+              if (request === null) {
+                // We don't collect stacks for awaits that weren't in the scope of a specific render.
+              } else {
+                stack = parseStackTracePrivate(new Error(), 5);
+                if (stack !== null && !isAwaitInUserspace(request, stack)) {
+                  // If this await was not done directly in user space, then clear the stack. We won't use it
+                  // anyway. This lets future awaits on this await know that we still need to get their stacks
+                  // until we find one in user space.
+                  stack = null;
+                }
+              }
+            }
+            const current = pendingOperations.get(currentAsyncId);
             node = ({
               tag: UNRESOLVED_AWAIT_NODE,
               owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 5),
+              stack: stack,
               start: performance.now(),
               end: -1.1, // set when resolved.
-              promise: new WeakRef((resource: Promise<any>)),
+              promise: promiseRef,
               awaited: trigger, // The thing we're awaiting on. Might get overrriden when we resolve.
               previous: current === undefined ? null : current, // The path that led us here.
             }: UnresolvedAwaitNode);
           } else {
+            const owner = resolveOwner();
             node = ({
               tag: UNRESOLVED_PROMISE_NODE,
-              owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 5),
+              owner: owner,
+              stack:
+                owner === null ? null : parseStackTracePrivate(new Error(), 5),
               start: performance.now(),
               end: -1.1, // Set when we resolve.
               promise: new WeakRef((resource: Promise<any>)),
@@ -136,16 +142,36 @@ export function initAsyncDebugInfo(): void {
             }: UnresolvedPromiseNode);
           }
         } else if (
-          type !== 'Microtask' &&
-          type !== 'TickObject' &&
-          type !== 'Immediate'
+          // bound-anonymous-fn is the default name for snapshots and .bind() without a name.
+          // This isn't I/O by itself but likely just a continuation. If the bound function
+          // has a name, we might treat it as I/O but we can't tell the difference.
+          type === 'bound-anonymous-fn' ||
+          // queueMicroTask, process.nextTick and setImmediate aren't considered new I/O
+          // for our purposes but just continuation of existing I/O.
+          type === 'Microtask' ||
+          type === 'TickObject' ||
+          type === 'Immediate'
         ) {
+          // Treat the trigger as the node to carry along the sequence.
+          // For "bound-anonymous-fn" this will be the callsite of the .bind() which may not
+          // be the best if the callsite of the .run() call is within I/O which should be
+          // tracked. It might be better to track the execution context of "before()" as the
+          // execution context for anything spawned from within the run(). Basically as if
+          // it wasn't an AsyncResource at all.
+          if (trigger === undefined) {
+            return;
+          }
+          node = trigger;
+        } else {
+          // New I/O
           if (trigger === undefined) {
             // We have begun a new I/O sequence.
+            const owner = resolveOwner();
             node = ({
               tag: IO_NODE,
-              owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 3), // This is only used if no native promises are used.
+              owner: owner,
+              stack:
+                owner === null ? parseStackTracePrivate(new Error(), 3) : null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
@@ -157,10 +183,12 @@ export function initAsyncDebugInfo(): void {
             trigger.tag === UNRESOLVED_AWAIT_NODE
           ) {
             // We have begun a new I/O sequence after the await.
+            const owner = resolveOwner();
             node = ({
               tag: IO_NODE,
-              owner: resolveOwner(),
-              stack: parseStackTrace(new Error(), 3),
+              owner: owner,
+              stack:
+                owner === null ? parseStackTracePrivate(new Error(), 3) : null,
               start: performance.now(),
               end: -1.1, // Only set when pinged.
               promise: null,
@@ -171,13 +199,6 @@ export function initAsyncDebugInfo(): void {
             // Otherwise, this is just a continuation of the same I/O sequence.
             node = trigger;
           }
-        } else {
-          // Ignore nextTick and microtasks as they're not considered I/O operations.
-          // we just treat the trigger as the node to carry along the sequence.
-          if (trigger === undefined) {
-            return;
-          }
-          node = trigger;
         }
         pendingOperations.set(asyncId, node);
       },
@@ -187,10 +208,29 @@ export function initAsyncDebugInfo(): void {
           switch (node.tag) {
             case IO_NODE: {
               lastRanAwait = null;
-              // Log the end time when we resolved the I/O. This can happen
-              // more than once if it's a recurring resource like a connection.
+              // Log the end time when we resolved the I/O.
               const ioNode: IONode = (node: any);
-              ioNode.end = performance.now();
+              if (ioNode.end < 0) {
+                ioNode.end = performance.now();
+              } else {
+                // This can happen more than once if it's a recurring resource like a connection.
+                // Even for single events like setTimeout, this can happen three times due to ticks
+                // and microtasks each running its own scope.
+                // To preserve each operation's separate end time, we create a clone of the IO node.
+                // Any pre-existing reference will refer to the first resolution and any new resolutions
+                // will refer to the new node.
+                const clonedNode: IONode = {
+                  tag: IO_NODE,
+                  owner: ioNode.owner,
+                  stack: ioNode.stack,
+                  start: ioNode.start,
+                  end: performance.now(),
+                  promise: ioNode.promise,
+                  awaited: ioNode.awaited,
+                  previous: ioNode.previous,
+                };
+                pendingOperations.set(asyncId, clonedNode);
+              }
               break;
             }
             case UNRESOLVED_AWAIT_NODE: {
@@ -257,7 +297,36 @@ export function initAsyncDebugInfo(): void {
             // the trigger that we originally stored wasn't actually the dependency.
             // Instead, the current execution context is what ultimately unblocked it.
             const awaited = pendingOperations.get(currentAsyncId);
-            resolvedNode.awaited = awaited === undefined ? null : awaited;
+            if (resolvedNode.tag === PROMISE_NODE) {
+              // For a Promise we just override the await. We're not interested in
+              // what created the Promise itself.
+              resolvedNode.awaited = awaited === undefined ? null : awaited;
+            } else {
+              // For an await, there's really two things awaited here. It's the trigger
+              // that .then() was called on but there seems to also be something else
+              // in the .then() callback that blocked the returned Promise from resolving
+              // immediately. We create a fork node which essentially represents an await
+              // of the Promise returned from the .then() callback. That Promise was blocked
+              // on the original awaited thing which we stored as "previous".
+              if (awaited !== undefined) {
+                const clonedNode: AwaitNode = {
+                  tag: AWAIT_NODE,
+                  owner: resolvedNode.owner,
+                  stack: resolvedNode.stack,
+                  start: resolvedNode.start,
+                  end: resolvedNode.end,
+                  promise: resolvedNode.promise,
+                  awaited: resolvedNode.awaited,
+                  previous: resolvedNode.previous,
+                };
+                // We started awaiting on the callback when the original .then() resolved.
+                resolvedNode.start = resolvedNode.end;
+                // It resolved now. We could use the end time of "awaited" maybe.
+                resolvedNode.end = performance.now();
+                resolvedNode.previous = clonedNode;
+                resolvedNode.awaited = awaited;
+              }
+            }
           }
         }
       },

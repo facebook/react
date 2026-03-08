@@ -94,7 +94,7 @@ export function revealCompletedBoundaries(batch) {
 
     suspenseNode.data = SUSPENSE_START_DATA;
     if (suspenseNode['_reactRetry']) {
-      suspenseNode['_reactRetry']();
+      requestAnimationFrame(suspenseNode['_reactRetry']);
     }
   }
   batch.length = 0;
@@ -130,7 +130,12 @@ export function revealCompletedBoundariesWithViewTransitions(
       const idPrefix = '';
       name = '_' + idPrefix + 'T_' + autoNameIdx++ + '_';
     }
-    elementStyle['viewTransitionName'] = name;
+    // If the name isn't valid CSS identifier, base64 encode the name instead.
+    // This doesn't let you select it in custom CSS selectors but it does work in current
+    // browsers.
+    const escapedName =
+      CSS.escape(name) !== name ? 'r-' + btoa(name).replace(/=/g, '') : name;
+    elementStyle['viewTransitionName'] = escapedName;
     shouldStartViewTransition = true;
   }
   try {
@@ -297,6 +302,8 @@ export function revealCompletedBoundariesWithViewTransitions(
                 rect.top < window.innerHeight &&
                 rect.left < window.innerWidth;
               if (inViewport) {
+                // TODO: Use decode() instead of the load event here once the fix in
+                // https://issues.chromium.org/issues/420748301 has propagated fully.
                 const loadingImage = new Promise(resolve => {
                   suspenseyImage.addEventListener('load', resolve);
                   suspenseyImage.addEventListener('error', resolve);
@@ -420,21 +427,24 @@ export function completeBoundary(suspenseBoundaryID, contentID) {
   if (window['$RB'].length === 2) {
     // This is the first time we've pushed to the batch. We need to schedule a callback
     // to flush the batch. This is delayed by the throttle heuristic.
-    const globalMostRecentFallbackTime =
-      typeof window['$RT'] !== 'number' ? 0 : window['$RT'];
-    const currentTime = performance.now();
-    const msUntilTimeout =
-      // If the throttle would make us miss the target metric, then shorten the throttle.
-      // performance.now()'s zero value is assumed to be the start time of the metric.
-      currentTime < TARGET_VANITY_METRIC &&
-      currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
-        ? TARGET_VANITY_METRIC - currentTime
-        : // Otherwise it's throttled starting from last commit time.
-          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - currentTime;
-    // We always schedule the flush in a timer even if it's very low or negative to allow
-    // for multiple completeBoundary calls that are already queued to have a chance to
-    // make the batch.
-    setTimeout(window['$RV'].bind(null, window['$RB']), msUntilTimeout);
+    if (typeof window['$RT'] !== 'number') {
+      // If we haven't had our rAF callback yet, schedule everything for the first paint.
+      requestAnimationFrame(window['$RV'].bind(null, window['$RB']));
+    } else {
+      const currentTime = performance.now();
+      const msUntilTimeout =
+        // If the throttle would make us miss the target metric, then shorten the throttle.
+        // performance.now()'s zero value is assumed to be the start time of the metric.
+        currentTime < TARGET_VANITY_METRIC &&
+        currentTime > TARGET_VANITY_METRIC - FALLBACK_THROTTLE_MS
+          ? TARGET_VANITY_METRIC - currentTime
+          : // Otherwise it's throttled starting from last commit time.
+            window['$RT'] + FALLBACK_THROTTLE_MS - currentTime;
+      // We always schedule the flush in a timer even if it's very low or negative to allow
+      // for multiple completeBoundary calls that are already queued to have a chance to
+      // make the batch.
+      setTimeout(window['$RV'].bind(null, window['$RB']), msUntilTimeout);
+    }
   }
 }
 
@@ -624,25 +634,7 @@ export function listenToFormSubmissionsForReplaying() {
     event.preventDefault();
 
     // Take a snapshot of the FormData at the time of the event.
-    let formData;
-    if (formDataSubmitter) {
-      // The submitter's value should be included in the FormData.
-      // It should be in the document order in the form.
-      // Since the FormData constructor invokes the formdata event it also
-      // needs to be available before that happens so after construction it's too
-      // late. We use a temporary fake node for the duration of this event.
-      // TODO: FormData takes a second argument that it's the submitter but this
-      // is fairly new so not all browsers support it yet. Switch to that technique
-      // when available.
-      const temp = document.createElement('input');
-      temp.name = formDataSubmitter.name;
-      temp.value = formDataSubmitter.value;
-      formDataSubmitter.parentNode.insertBefore(temp, formDataSubmitter);
-      formData = new FormData(form);
-      temp.parentNode.removeChild(temp);
-    } else {
-      formData = new FormData(form);
-    }
+    const formData = new FormData(form, formDataSubmitter);
 
     // Queue for replaying later. This field could potentially be shared with multiple
     // Reacts on the same page since each one will preventDefault for the next one.

@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enablePreserveExistingMemoizationGuarantees:false
 const {identity, mutate} = require('shared-runtime');
 
 function Component(props) {
@@ -24,6 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+// @enablePreserveExistingMemoizationGuarantees:false
 const { identity, mutate } = require("shared-runtime");
 
 function Component(props) {

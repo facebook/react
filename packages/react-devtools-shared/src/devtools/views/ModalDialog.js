@@ -75,7 +75,7 @@ function dialogReducer(state: State, action: Action) {
             content: action.content,
             id: action.id,
             title: action.title || null,
-          },
+          } as Dialog,
         ],
       };
     default:

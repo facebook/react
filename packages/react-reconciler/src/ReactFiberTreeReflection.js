@@ -26,31 +26,32 @@ import {
   ActivityComponent,
   SuspenseComponent,
   OffscreenComponent,
+  Fragment,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
+import {enableFragmentRefsTextNodes} from 'shared/ReactFeatureFlags';
 
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
   let nearestMounted: null | Fiber = fiber;
-  if (!fiber.alternate) {
-    // If there is no alternate, this might be a new tree that isn't inserted
-    // yet. If it is, then it will have a pending insertion effect on it.
-    let nextNode: Fiber = node;
-    do {
-      node = nextNode;
-      if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
-        // This is an insertion or in-progress hydration. The nearest possible
-        // mounted fiber is the parent but we need to continue to figure out
-        // if that one is still mounted.
-        nearestMounted = node.return;
-      }
-      // $FlowFixMe[incompatible-type] we bail out when we get a null
-      nextNode = node.return;
-    } while (nextNode);
-  } else {
-    while (node.return) {
-      node = node.return;
+  // If there is no alternate, this might be a new tree that isn't inserted
+  // yet. If it is, then it will have a pending insertion effect on it.
+  let nextNode: Fiber = node;
+  while (nextNode && !nextNode.alternate) {
+    node = nextNode;
+    if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
+      // This is an insertion or in-progress hydration. The nearest possible
+      // mounted fiber is the parent but we need to continue to figure out
+      // if that one is still mounted.
+      nearestMounted = node.return;
     }
+    // $FlowFixMe[incompatible-type] we bail out when we get a null
+    nextNode = node.return;
+  }
+  // After we've reached an alternate, go the rest of the way to see if the
+  // tree is still mounted. If it's not, its return pointer will be disconnected.
+  while (node.return) {
+    node = node.return;
   }
   if (node.tag === HostRoot) {
     // TODO: Check if this was a nested HostRoot when used with
@@ -373,7 +374,10 @@ function traverseVisibleHostChildren<A, B, C>(
   c: C,
 ): boolean {
   while (child !== null) {
-    if (child.tag === HostComponent && fn(child, a, b, c)) {
+    const isHostNode =
+      child.tag === HostComponent ||
+      (enableFragmentRefsTextNodes && child.tag === HostText);
+    if (isHostNode && fn(child, a, b, c)) {
       return true;
     } else if (
       child.tag === OffscreenComponent &&
@@ -405,9 +409,75 @@ export function getFragmentParentHostFiber(fiber: Fiber): null | Fiber {
   return null;
 }
 
+export function fiberIsPortaledIntoHost(fiber: Fiber): boolean {
+  let foundPortalParent = false;
+  let parent = fiber.return;
+  while (parent !== null) {
+    if (parent.tag === HostPortal) {
+      foundPortalParent = true;
+    }
+    if (parent.tag === HostRoot || parent.tag === HostComponent) {
+      break;
+    }
+    parent = parent.return;
+  }
+  return foundPortalParent;
+}
+
+export function getFragmentInstanceSiblings(
+  fiber: Fiber,
+): [Fiber | null, Fiber | null] {
+  const result: [Fiber | null, Fiber | null] = [null, null];
+  const parentHostFiber = getFragmentParentHostFiber(fiber);
+  if (parentHostFiber === null) {
+    return result;
+  }
+
+  findFragmentInstanceSiblings(result, fiber, parentHostFiber.child);
+  return result;
+}
+
+function findFragmentInstanceSiblings(
+  result: [Fiber | null, Fiber | null],
+  self: Fiber,
+  child: null | Fiber,
+  foundSelf: boolean = false,
+): boolean {
+  while (child !== null) {
+    if (child === self) {
+      foundSelf = true;
+      if (child.sibling) {
+        child = child.sibling;
+      } else {
+        return true;
+      }
+    }
+    if (child.tag === HostComponent) {
+      if (foundSelf) {
+        result[1] = child;
+        return true;
+      } else {
+        result[0] = child;
+      }
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip hidden subtrees
+    } else {
+      if (findFragmentInstanceSiblings(result, self, child.child, foundSelf)) {
+        return true;
+      }
+    }
+    child = child.sibling;
+  }
+  return false;
+}
+
 export function getInstanceFromHostFiber<I>(fiber: Fiber): I {
   switch (fiber.tag) {
     case HostComponent:
+    case HostText:
       return fiber.stateNode;
     case HostRoot:
       return fiber.stateNode.containerInfo;
@@ -443,22 +513,38 @@ function findNextSibling(child: Fiber): boolean {
   return true;
 }
 
-export function isFiberContainedBy(
-  maybeChild: Fiber,
-  maybeParent: Fiber,
+export function isFiberContainedByFragment(
+  fiber: Fiber,
+  fragmentFiber: Fiber,
 ): boolean {
-  let parent = maybeParent.return;
-  if (parent === maybeChild || parent === maybeChild.alternate) {
-    return true;
-  }
-  while (parent !== null && parent !== maybeChild) {
+  let current: Fiber | null = fiber;
+  while (current !== null) {
     if (
-      (parent.tag === HostComponent || parent.tag === HostRoot) &&
-      (parent.return === maybeChild || parent.return === maybeChild.alternate)
+      current.tag === Fragment &&
+      (current === fragmentFiber || current.alternate === fragmentFiber)
     ) {
       return true;
     }
-    parent = parent.return;
+    current = current.return;
+  }
+  return false;
+}
+
+export function isFragmentContainedByFiber(
+  fragmentFiber: Fiber,
+  otherFiber: Fiber,
+): boolean {
+  let current: Fiber | null = fragmentFiber;
+  const fiberHostParent: Fiber | null =
+    getFragmentParentHostFiber(fragmentFiber);
+  while (current !== null) {
+    if (
+      (current.tag === HostComponent || current.tag === HostRoot) &&
+      (current === fiberHostParent || current.alternate === fiberHostParent)
+    ) {
+      return true;
+    }
+    current = current.return;
   }
   return false;
 }

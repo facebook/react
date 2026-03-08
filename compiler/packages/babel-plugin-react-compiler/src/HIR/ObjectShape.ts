@@ -142,6 +142,7 @@ function parseAliasingSignatureConfig(
   const effects = typeConfig.effects.map(
     (effect: AliasingEffectConfig): AliasingEffect => {
       switch (effect.kind) {
+        case 'ImmutableCapture':
         case 'CreateFrom':
         case 'Capture':
         case 'Alias':
@@ -263,9 +264,7 @@ function addShape(
 
   CompilerError.invariant(!registry.has(id), {
     reason: `[ObjectShape] Could not add shape to registry: name ${id} already exists.`,
-    description: null,
-    loc: null,
-    suggestions: null,
+    loc: GeneratedSource,
   });
   registry.set(id, shape);
   return shape;
@@ -285,6 +284,7 @@ export type HookKind =
   | 'useTransition'
   | 'useImperativeHandle'
   | 'useEffectEvent'
+  | 'useOptimistic'
   | 'Custom';
 
 /*
@@ -331,6 +331,7 @@ export type FunctionSignature = {
   mutableOnlyIfOperandsAreMutable?: boolean;
 
   impure?: boolean;
+  knownIncompatible?: string | null | undefined;
 
   canonicalName?: string;
 
@@ -379,11 +380,11 @@ export const BuiltInUseReducerId = 'BuiltInUseReducer';
 export const BuiltInDispatchId = 'BuiltInDispatch';
 export const BuiltInUseContextHookId = 'BuiltInUseContextHook';
 export const BuiltInUseTransitionId = 'BuiltInUseTransition';
+export const BuiltInUseOptimisticId = 'BuiltInUseOptimistic';
+export const BuiltInSetOptimisticId = 'BuiltInSetOptimistic';
 export const BuiltInStartTransitionId = 'BuiltInStartTransition';
-export const BuiltInFireId = 'BuiltInFire';
-export const BuiltInFireFunctionId = 'BuiltInFireFunction';
 export const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
-export const BuiltinEffectEventId = 'BuiltInEffectEventFunction';
+export const BuiltInEffectEventId = 'BuiltInEffectEventFunction';
 
 // See getReanimatedModuleType() in Globals.ts — this is part of supporting Reanimated's ref-like types
 export const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
@@ -1164,6 +1165,25 @@ addObject(BUILTIN_SHAPES, BuiltInUseTransitionId, [
   ],
 ]);
 
+addObject(BUILTIN_SHAPES, BuiltInUseOptimisticId, [
+  ['0', {kind: 'Poly'}],
+  [
+    '1',
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Primitive,
+      },
+      BuiltInSetOptimisticId,
+    ),
+  ],
+]);
+
 addObject(BUILTIN_SHAPES, BuiltInUseActionStateId, [
   ['0', {kind: 'Poly'}],
   [
@@ -1210,6 +1230,8 @@ addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
   ['*', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
 
+addObject(BUILTIN_SHAPES, ReanimatedSharedValueId, []);
+
 addFunction(
   BUILTIN_SHAPES,
   [],
@@ -1220,7 +1242,7 @@ addFunction(
     calleeEffect: Effect.ConditionallyMutate,
     returnValueKind: ValueKind.Mutable,
   },
-  BuiltinEffectEventId,
+  BuiltInEffectEventId,
 );
 
 /**

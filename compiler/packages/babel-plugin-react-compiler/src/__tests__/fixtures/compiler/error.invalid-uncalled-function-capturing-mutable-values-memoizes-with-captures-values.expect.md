@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @flow @enableNewMutationAliasingModel
+// @flow @enableNewMutationAliasingModel @enablePreserveExistingMemoizationGuarantees:false
 /**
  * This hook returns a function that when called with an input object,
  * will return the result of mapping that input with the supplied map
@@ -47,6 +47,12 @@ hook useMemoMap<TInput: interface {}, TOutput>(
 ## Error
 
 ```
+Found 1 error:
+
+Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `cache` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
   19 |   map: TInput => TOutput
   20 | ): TInput => TOutput {
 > 21 |   return useMemo(() => {
@@ -54,39 +60,23 @@ hook useMemoMap<TInput: interface {}, TOutput>(
 > 22 |     // The original issue is that `cache` was not memoized together with the returned
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 23 |     // function. This was because neither appears to ever be mutated — the function
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 24 |     // is known to mutate `cache` but the function isn't called.
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 25 |     //
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 26 |     // The fix is to detect cases like this — functions that are mutable but not called -
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 27 |     // and ensure that their mutable captures are aliased together into the same scope.
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 28 |     const cache = new WeakMap<TInput, TOutput>();
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 29 |     return input => {
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 30 |       let output = cache.get(input);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 31 |       if (output == null) {
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 32 |         output = map(input);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 33 |         cache.set(input, output);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 34 |       }
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     …
 > 35 |       return output;
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 36 |     };
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 37 |   }, [map]);
-     | ^^^^^^^^^^^^ InvalidReact: This argument is a function which may reassign or mutate local variables after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead (21:37)
-
-InvalidReact: The function modifies a local variable here (33:33)
+     | ^^^^^^^^^^^^ This function may (indirectly) reassign or modify `cache` after render
   38 | }
   39 |
+
+  31 |       if (output == null) {
+  32 |         output = map(input);
+> 33 |         cache.set(input, output);
+     |         ^^^^^ This modifies `cache`
+  34 |       }
+  35 |       return output;
+  36 |     };
 ```
           
       

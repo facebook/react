@@ -9,6 +9,7 @@
 
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
+  Container,
   PublicInstance,
   Instance,
   TextInstance,
@@ -61,6 +62,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import noop from 'shared/noop';
+import type {WorkTag} from 'react-reconciler/src/ReactWorkTags';
 
 const defaultOnDefaultTransitionIndicator: () => void | (() => void) = noop;
 
@@ -244,7 +246,7 @@ function toTree(node: null | Fiber): $FlowFixMe {
   }
 }
 
-const validWrapperTypes = new Set([
+const validWrapperTypes: Set<WorkTag> = new Set([
   FunctionComponent,
   ClassComponent,
   HostComponent,
@@ -472,7 +474,7 @@ function create(
   toTree(): mixed,
   update(newElement: React$Element<any>): any,
   unmount(): void,
-  getInstance(): React$Component<any, any> | PublicInstance | null,
+  getInstance(): component(...props: any) | PublicInstance | null,
   unstable_flushSync: typeof flushSyncFromReconciler,
 } {
   if (__DEV__) {
@@ -504,7 +506,7 @@ function create(
       isStrictMode = true;
     }
   }
-  let container = {
+  let container: Container = {
     children: ([]: Array<Instance | TextInstance>),
     createNodeMock,
     tag: 'CONTAINER',

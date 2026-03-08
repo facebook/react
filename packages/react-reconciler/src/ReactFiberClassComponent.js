@@ -179,7 +179,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      startUpdateTimerByLane(lane, 'this.setState()');
+      startUpdateTimerByLane(lane, 'this.setState()', fiber);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -205,7 +205,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      startUpdateTimerByLane(lane, 'this.replaceState()');
+      startUpdateTimerByLane(lane, 'this.replaceState()', fiber);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -231,7 +231,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      startUpdateTimerByLane(lane, 'this.forceUpdate()');
+      startUpdateTimerByLane(lane, 'this.forceUpdate()', fiber);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -858,11 +858,7 @@ function resumeMountClassInstance(
   const instance = workInProgress.stateNode;
 
   const unresolvedOldProps = workInProgress.memoizedProps;
-  const oldProps = resolveClassComponentProps(
-    ctor,
-    unresolvedOldProps,
-    workInProgress.type === workInProgress.elementType,
-  );
+  const oldProps = resolveClassComponentProps(ctor, unresolvedOldProps);
   instance.props = oldProps;
 
   const oldContext = instance.context;
@@ -1017,11 +1013,7 @@ function updateClassInstance(
   cloneUpdateQueue(current, workInProgress);
 
   const unresolvedOldProps = workInProgress.memoizedProps;
-  const oldProps = resolveClassComponentProps(
-    ctor,
-    unresolvedOldProps,
-    workInProgress.type === workInProgress.elementType,
-  );
+  const oldProps = resolveClassComponentProps(ctor, unresolvedOldProps);
   instance.props = oldProps;
   const unresolvedNewProps = workInProgress.pendingProps;
 
@@ -1192,12 +1184,6 @@ function updateClassInstance(
 export function resolveClassComponentProps(
   Component: any,
   baseProps: Object,
-  // Only resolve default props if this is a lazy component. Otherwise, they
-  // would have already been resolved by the JSX runtime.
-  // TODO: We're going to remove default prop resolution from the JSX runtime
-  // and keep it only for class components. As part of that change, we should
-  // remove this extra check.
-  alreadyResolvedDefaultProps: boolean,
 ): Object {
   let newProps = baseProps;
 

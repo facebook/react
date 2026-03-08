@@ -22,8 +22,6 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-export const enableHydrationLaneScheduling = true;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -31,11 +29,8 @@ export const enableHydrationLaneScheduling = true;
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
 
-// TODO: Finish rolling out in www
-export const favorSafetyOverHydrationPerf = true;
-
 // Need to remove didTimeout argument from Scheduler before landing
-export const disableSchedulerTimeoutInWorkLoop = false;
+export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
@@ -52,16 +47,16 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 // hydrated or deleted.
 //
 // This will eventually be replaced by the Transition Tracing proposal.
-export const enableSuspenseCallback = false;
+export const enableSuspenseCallback: boolean = false;
 
 // Experimental Scope support.
-export const enableScopeAPI = false;
+export const enableScopeAPI: boolean = false;
 
 // Experimental Create Event Handle API.
-export const enableCreateEventHandleAPI = false;
+export const enableCreateEventHandleAPI: boolean = false;
 
 // Support legacy Primer support on internal FB www
-export const enableLegacyFBSupport = false;
+export const enableLegacyFBSupport: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Ongoing experiments
@@ -72,10 +67,10 @@ export const enableLegacyFBSupport = false;
 
 // Yield to the browser event loop and not just the scheduler event loop before passive effects.
 // Fix gated tests that fail with this flag enabled before turning it back on.
-export const enableYieldingBeforePassive = false;
+export const enableYieldingBeforePassive: boolean = false;
 
 // Experiment to intentionally yield less to block high framerate animations.
-export const enableThrottledScheduling = false;
+export const enableThrottledScheduling: boolean = false;
 
 export const enableLegacyCache = __EXPERIMENTAL__;
 
@@ -83,17 +78,13 @@ export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
 
-export const enablePostpone = __EXPERIMENTAL__;
-
-export const enableHalt = __EXPERIMENTAL__;
-
-export const enableViewTransition = __EXPERIMENTAL__;
+export const enableViewTransition: boolean = true;
 
 export const enableGestureTransition = __EXPERIMENTAL__;
 
 export const enableScrollEndPolyfill = __EXPERIMENTAL__;
 
-export const enableSuspenseyImages = false;
+export const enableSuspenseyImages: boolean = false;
 
 export const enableFizzBlockingRender = __EXPERIMENTAL__; // rel="expect"
 
@@ -103,47 +94,45 @@ export const enableHydrationChangeEvent = __EXPERIMENTAL__;
 
 export const enableDefaultTransitionIndicator = __EXPERIMENTAL__;
 
+export const enableOptimisticKey = __EXPERIMENTAL__;
+
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
  */
-export const enableObjectFiber = false;
+export const enableObjectFiber: boolean = false;
 
-export const enableTransitionTracing = false;
+export const enableTransitionTracing: boolean = false;
 
 // FB-only usage. The new API has different semantics.
-export const enableLegacyHidden = false;
+export const enableLegacyHidden: boolean = false;
 
 // Enables unstable_avoidThisFallback feature in Fiber
-export const enableSuspenseAvoidThisFallback = false;
+export const enableSuspenseAvoidThisFallback: boolean = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
 // Test this at Meta before enabling.
-export const enableNoCloningMemoCache = false;
-
-export const enableUseEffectEventHook = __EXPERIMENTAL__;
+export const enableNoCloningMemoCache: boolean = false;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 
-export const alwaysThrottleRetries = true;
+export const alwaysThrottleRetries: boolean = true;
 
-export const passChildrenWhenCloningPersistedNodes = false;
+// Gate whether useEffectEvent uses the mutation phase (true) or before-mutation
+// phase (false) for updating event function references.
+export const enableEffectEventMutationPhase: boolean = false;
 
-/**
- * Enables a new Fiber flag used in persisted mode to reduce the number
- * of cloned host components.
- */
-export const enablePersistedModeClonedFlag = false;
+export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
-export const enableEagerAlternateStateNodeCleanup = true;
+export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */
-export const enableRetryLaneExpiration = false;
+export const enableRetryLaneExpiration: boolean = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
@@ -152,11 +141,14 @@ export const transitionLaneExpirationMs = 5000;
  * Enables a new error detection for infinite render loops from updates caused
  * by setState or similar outside of the component owning the state.
  */
-export const enableInfiniteRenderLoopDetection = false;
+export const enableInfiniteRenderLoopDetection: boolean = false;
 
-export const enableLazyPublicInstanceInFabric = false;
+export const enableFragmentRefs: boolean = true;
+export const enableFragmentRefsScrollIntoView: boolean = true;
+export const enableFragmentRefsInstanceHandles: boolean = false;
+export const enableFragmentRefsTextNodes: boolean = true;
 
-export const enableFragmentRefs = __EXPERIMENTAL__;
+export const enableInternalInstanceMap: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -170,36 +162,28 @@ export const enableFragmentRefs = __EXPERIMENTAL__;
 
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
-// Renames the internal symbol for elements since they have changed signature/constructor
-export const renameElementSymbol = true;
-
-/**
- * Enables a fix to run insertion effect cleanup on hidden subtrees.
- */
-export const enableHiddenSubtreeInsertionEffectCleanup = false;
-
 /**
  * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
  */
-export const disableLegacyContext = true;
+export const disableLegacyContext: boolean = true;
 /**
  * Removes legacy style context just from function components.
  */
-export const disableLegacyContextForFunctionComponents = true;
+export const disableLegacyContextForFunctionComponents: boolean = true;
 
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
-export const enableMoveBefore = false;
+export const enableMoveBefore: boolean = false;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
-export const disableClientCache = true;
+export const disableClientCache: boolean = true;
 
 // Warn on any usage of ReactTestRenderer
-export const enableReactTestRendererWarning = true;
+export const enableReactTestRendererWarning: boolean = true;
 
 // Disables legacy mode
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
-export const disableLegacyMode = true;
+export const disableLegacyMode: boolean = true;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -217,16 +201,19 @@ export const disableLegacyMode = true;
 
 // Disable support for comment nodes as React DOM containers. Already disabled
 // in open source, but www codebase still relies on it. Need to remove.
-export const disableCommentsAsDOMContainers = true;
+export const disableCommentsAsDOMContainers: boolean = true;
 
-export const enableTrustedTypesIntegration = false;
+export const enableTrustedTypesIntegration: boolean = true;
 
 // Prevent the value and checked attributes from syncing with their related
 // DOM properties
-export const disableInputAttributeSyncing = false;
+export const disableInputAttributeSyncing: boolean = false;
 
 // Disables children for <textarea> elements
-export const disableTextareaChildren = false;
+export const disableTextareaChildren: boolean = false;
+
+// Disables children for <textarea> elements
+export const enableParallelTransitions: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
@@ -239,7 +226,12 @@ export const enableProfilerTimer = __PROFILE__;
 // Component rendering tracks to show up in the Performance tab.
 // This flag will be used for both Server Component and Client Component tracks.
 // All calls should also be gated on enableProfilerTimer.
-export const enableComponentPerformanceTrack = __EXPERIMENTAL__;
+export const enableComponentPerformanceTrack: boolean = true;
+
+// Enables annotating of React performance track events with `performanceIssue`
+// metadata, to more prominently highlight performance issues to users
+// (initially, an experimental feature in React Native).
+export const enablePerformanceIssueReporting: boolean = false;
 
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 // for an experimental timeline tool.
@@ -252,7 +244,7 @@ export const enableProfilerCommitHooks = __PROFILE__;
 // Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 
-export const enableAsyncDebugInfo = __EXPERIMENTAL__;
+export const enableAsyncDebugInfo: boolean = true;
 
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;

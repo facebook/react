@@ -520,10 +520,7 @@ describe('ReactDOMFloat', () => {
     );
     await waitForAll([]);
     assertConsoleErrorDev([
-      [
-        'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
-        {withoutStack: true},
-      ],
+      'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
     ]);
 
     root.render(
@@ -580,11 +577,8 @@ describe('ReactDOMFloat', () => {
     );
     await waitForAll([]);
     assertConsoleErrorDev([
-      [
-        'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. ' +
-          'Consider adding precedence="default" or moving it into the root <head> tag.',
-        {withoutStack: true},
-      ],
+      'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. ' +
+        'Consider adding precedence="default" or moving it into the root <head> tag.',
     ]);
 
     root.render(
@@ -608,6 +602,14 @@ describe('ReactDOMFloat', () => {
         '>   <script href="foo">\n' +
         '\n' +
         '    in script (at **)',
+      ...(gate('enableTrustedTypesIntegration')
+        ? [
+            'Encountered a script tag while rendering React component. ' +
+              'Scripts inside React components are never executed when rendering on the client. ' +
+              'Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n' +
+              '     in script (at **)',
+          ]
+        : []),
     ]);
 
     root.render(
@@ -633,14 +635,11 @@ describe('ReactDOMFloat', () => {
       </>,
     );
     await waitForAll([]);
-    assertConsoleErrorDev(
-      [
-        'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
-          'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
-          'somewhere in the <body>.',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Cannot render a <link> with onLoad or onError listeners outside the main document. ' +
+        'Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or ' +
+        'somewhere in the <body>.',
+    ]);
     return;
   });
 
@@ -2754,6 +2753,14 @@ body {
         '>   <script itemProp="foo">\n' +
         '\n' +
         '    in script (at **)',
+      ...(gate('enableTrustedTypesIntegration')
+        ? [
+            'Encountered a script tag while rendering React component. ' +
+              'Scripts inside React components are never executed when rendering on the client. ' +
+              'Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n' +
+              '     in script (at **)',
+          ]
+        : []),
     ]);
   });
 
@@ -3628,7 +3635,24 @@ body {
     assertLog(['load stylesheet: foo']);
     await waitForAll([]);
     assertConsoleErrorDev([
-      "Hydration failed because the server rendered HTML didn't match the client.",
+      "Error: Hydration failed because the server rendered HTML didn't match the client. " +
+        'As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n' +
+        "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+        "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+        "- Date formatting in a user's locale which doesn't match the server.\n" +
+        '- External changing data without sending a snapshot of it along with the HTML.\n' +
+        '- Invalid HTML tag nesting.\n\n' +
+        'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n' +
+        'https://react.dev/link/hydration-mismatch\n\n' +
+        '  <html>\n' +
+        '    <body>\n' +
+        '      <div>\n' +
+        '      <div>\n' +
+        '        <Suspense fallback="loading 2...">\n' +
+        '          <Component>\n' +
+        '            <link>\n' +
+        '+           <div>' +
+        '\n    in <stack>',
     ]);
     jest.runAllTimers();
 
@@ -7391,7 +7415,6 @@ body {
       );
     });
 
-    // @gate favorSafetyOverHydrationPerf
     it('retains styles even when a new html, head, and/body mount', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -9358,7 +9381,6 @@ background-color: green;
       ]);
     });
 
-    // @gate favorSafetyOverHydrationPerf
     it('can render a title before a singleton even if that singleton clears its contents', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -9426,5 +9448,193 @@ background-color: green;
         <title data-foo="bar">another title</title>,
       );
     });
+  });
+
+  it('does not outline a boundary with suspensey CSS when flushing the shell', async () => {
+    // When flushing the shell, stylesheets with precedence are emitted in the
+    // <head> which blocks paint anyway. So there's no benefit to outlining the
+    // boundary — it would just show a higher-level fallback unnecessarily.
+    // Instead, the boundary should be inlined so the innermost fallback is shown.
+    let streamedContent = '';
+    writable.on('data', chunk => (streamedContent += chunk));
+
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="Outer Fallback">
+              <Suspense fallback="Middle Fallback">
+                <link rel="stylesheet" href="style.css" precedence="default" />
+                <Suspense fallback="Inner Fallback">
+                  <BlockedOn value="content">Async Content</BlockedOn>
+                </Suspense>
+              </Suspense>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    // The middle boundary should have been inlined (not outlined) so the
+    // middle fallback text should never appear in the streamed HTML.
+    expect(streamedContent).not.toContain('Middle Fallback');
+
+    // The stylesheet is in the head (blocks paint), and the innermost
+    // fallback is visible.
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>Inner Fallback</body>
+      </html>,
+    );
+
+    // Resolve the async content — streams in without needing to load CSS
+    // since the stylesheet was already in the head.
+    await act(() => {
+      resolveText('content');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>Async Content</body>
+      </html>,
+    );
+  });
+
+  it('outlines a boundary with suspensey CSS when flushing a streamed completion', async () => {
+    // When a boundary completes via streaming (not as part of the shell),
+    // suspensey CSS should cause the boundary to be outlined. The parent
+    // content can show sooner while the CSS loads separately.
+    let streamedContent = '';
+    writable.on('data', chunk => (streamedContent += chunk));
+
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="Root Fallback">
+              <BlockedOn value="shell">
+                <Suspense fallback="Outer Fallback">
+                  <Suspense fallback="Middle Fallback">
+                    <link
+                      rel="stylesheet"
+                      href="style.css"
+                      precedence="default"
+                    />
+                    <Suspense fallback="Inner Fallback">
+                      <BlockedOn value="content">Async Content</BlockedOn>
+                    </Suspense>
+                  </Suspense>
+                </Suspense>
+              </BlockedOn>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    // Shell is showing root fallback
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>Root Fallback</body>
+      </html>,
+    );
+
+    // Unblock the shell — content streams in. The middle boundary should
+    // be outlined because the CSS arrived via streaming, not in the shell head.
+    streamedContent = '';
+    await act(() => {
+      resolveText('shell');
+    });
+
+    // The middle fallback should appear in the streamed HTML because the
+    // boundary was outlined.
+    expect(streamedContent).toContain('Middle Fallback');
+
+    // The CSS needs to load before the boundary reveals. Until then
+    // the middle fallback is visible.
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>
+          {'Middle Fallback'}
+          <link rel="preload" href="style.css" as="style" />
+        </body>
+      </html>,
+    );
+
+    // Load the stylesheet — now the middle boundary can reveal
+    await act(() => {
+      loadStylesheets();
+    });
+    assertLog(['load stylesheet: style.css']);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>
+          {'Inner Fallback'}
+          <link rel="preload" href="style.css" as="style" />
+        </body>
+      </html>,
+    );
+
+    // Resolve the async content
+    await act(() => {
+      resolveText('content');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="style.css" data-precedence="default" />
+        </head>
+        <body>
+          {'Async Content'}
+          <link rel="preload" href="style.css" as="style" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableViewTransition
+  it('still outlines a boundary with a suspensey image inside a ViewTransition when flushing the shell', async () => {
+    // Unlike stylesheets (which block paint from the <head> anyway), images
+    // inside ViewTransitions are outlined to enable animation reveals. This
+    // should happen even during the shell flush.
+    const ViewTransition = React.ViewTransition;
+
+    let streamedContent = '';
+    writable.on('data', chunk => (streamedContent += chunk));
+
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <ViewTransition>
+              <Suspense fallback="Image Fallback">
+                <link rel="stylesheet" href="style.css" precedence="default" />
+                <img src="large-image.jpg" />
+                <div>Content</div>
+              </Suspense>
+            </ViewTransition>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    // The boundary should be outlined because the suspensey image motivates
+    // outlining for animation reveals, even during the shell flush.
+    expect(streamedContent).toContain('Image Fallback');
   });
 });

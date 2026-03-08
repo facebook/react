@@ -55,6 +55,7 @@ function Component(t0) {
     let x = [{ value: prop1 }];
     while (x.length < 2) {
       arrayPush(x, { value: prop2 });
+
       if (x[0].value === prop1) {
         x = [{ value: prop2 }];
         const y = x;

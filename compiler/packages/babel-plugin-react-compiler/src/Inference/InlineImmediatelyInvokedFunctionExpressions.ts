@@ -11,6 +11,7 @@ import {
   Environment,
   FunctionExpression,
   GeneratedSource,
+  GotoTerminal,
   GotoVariant,
   HIRFunction,
   IdentifierId,
@@ -19,6 +20,7 @@ import {
   Place,
   isStatementBlockKind,
   makeInstructionId,
+  mergeConsecutiveBlocks,
   promoteTemporary,
   reversePostorderBlocks,
 } from '../HIR';
@@ -73,6 +75,10 @@ import {retainWhere} from '../Utils/utils';
  * - All return statements in the original function expression are replaced with a
  *    StoreLocal to the temporary we allocated before plus a Goto to the fallthrough
  *    block (code following the CallExpression).
+ *
+ * Note that if the inliined function has only one return, we avoid the labeled block
+ * and fully inline the code. The original return is replaced with an assignmen to the
+ * IIFE's call expression lvalue.
  */
 export function inlineImmediatelyInvokedFunctionExpressions(
   fn: HIRFunction,
@@ -146,37 +152,75 @@ export function inlineImmediatelyInvokedFunctionExpressions(
              */
             block.instructions.length = ii;
 
-            /*
-             * To account for complex control flow within the lambda, we treat the lambda
-             * as if it were a single labeled statement, and replace all returns with gotos
-             * to the label fallthrough.
-             */
-            const newTerminal: LabelTerminal = {
-              block: body.loweredFunc.func.body.entry,
-              id: makeInstructionId(0),
-              kind: 'label',
-              fallthrough: continuationBlockId,
-              loc: block.terminal.loc,
-            };
-            block.terminal = newTerminal;
+            if (hasSingleExitReturnTerminal(body.loweredFunc.func)) {
+              block.terminal = {
+                kind: 'goto',
+                block: body.loweredFunc.func.body.entry,
+                id: block.terminal.id,
+                loc: block.terminal.loc,
+                variant: GotoVariant.Break,
+              } as GotoTerminal;
+              for (const block of body.loweredFunc.func.body.blocks.values()) {
+                if (block.terminal.kind === 'return') {
+                  block.instructions.push({
+                    id: makeInstructionId(0),
+                    loc: block.terminal.loc,
+                    lvalue: instr.lvalue,
+                    value: {
+                      kind: 'LoadLocal',
+                      loc: block.terminal.loc,
+                      place: block.terminal.value,
+                    },
+                    effects: null,
+                  });
+                  block.terminal = {
+                    kind: 'goto',
+                    block: continuationBlockId,
+                    id: block.terminal.id,
+                    loc: block.terminal.loc,
+                    variant: GotoVariant.Break,
+                  } as GotoTerminal;
+                }
+              }
+              for (const [id, block] of body.loweredFunc.func.body.blocks) {
+                block.preds.clear();
+                fn.body.blocks.set(id, block);
+              }
+            } else {
+              /*
+               * To account for multiple returns within the lambda, we treat the lambda
+               * as if it were a single labeled statement, and replace all returns with gotos
+               * to the label fallthrough.
+               */
+              const newTerminal: LabelTerminal = {
+                block: body.loweredFunc.func.body.entry,
+                id: makeInstructionId(0),
+                kind: 'label',
+                fallthrough: continuationBlockId,
+                loc: block.terminal.loc,
+              };
+              block.terminal = newTerminal;
 
-            // We store the result in the IIFE temporary
-            const result = instr.lvalue;
+              // We store the result in the IIFE temporary
+              const result = instr.lvalue;
 
-            // Declare the IIFE temporary
-            declareTemporary(fn.env, block, result);
+              // Declare the IIFE temporary
+              declareTemporary(fn.env, block, result);
 
-            // Promote the temporary with a name as we require this to persist
-            promoteTemporary(result.identifier);
+              // Promote the temporary with a name as we require this to persist
+              if (result.identifier.name == null) {
+                promoteTemporary(result.identifier);
+              }
 
-            /*
-             * Rewrite blocks from the lambda to replace any `return` with a
-             * store to the result and `goto` the continuation block
-             */
-            for (const [id, block] of body.loweredFunc.func.body.blocks) {
-              block.preds.clear();
-              rewriteBlock(fn.env, block, continuationBlockId, result);
-              fn.body.blocks.set(id, block);
+              /*
+               * Rewrite blocks from the lambda to replace any `return` with a
+               * store to the result and `goto` the continuation block
+               */
+              for (const [id, block] of body.loweredFunc.func.body.blocks) {
+                block.preds.clear();
+                rewriteBlock(fn.env, block, continuationBlockId, result);
+                fn.body.blocks.set(id, block);
+              }
             }
 
             /*
@@ -199,7 +243,7 @@ export function inlineImmediatelyInvokedFunctionExpressions(
 
   if (inlinedFunctions.size !== 0) {
     // Remove instructions that define lambdas which we inlined
-    for (const [, block] of fn.body.blocks) {
+    for (const block of fn.body.blocks.values()) {
       retainWhere(
         block.instructions,
         instr => !inlinedFunctions.has(instr.lvalue.identifier.id),
@@ -213,7 +257,23 @@ export function inlineImmediatelyInvokedFunctionExpressions(
     reversePostorderBlocks(fn.body);
     markInstructionIds(fn.body);
     markPredecessors(fn.body);
+    mergeConsecutiveBlocks(fn);
   }
+}
+
+/**
+ * Returns true if the function has a single exit terminal (throw/return) which is a return
+ */
+function hasSingleExitReturnTerminal(fn: HIRFunction): boolean {
+  let hasReturn = false;
+  let exitCount = 0;
+  for (const [, block] of fn.body.blocks) {
+    if (block.terminal.kind === 'return' || block.terminal.kind === 'throw') {
+      hasReturn ||= block.terminal.kind === 'return';
+      exitCount++;
+    }
+  }
+  return exitCount === 1 && hasReturn;
 }
 
 /*

@@ -31,12 +31,36 @@ function Component({content, refetch}) {
 ## Error
 
 ```
+Found 2 errors:
+
+Error: Cannot access variable before it is declared
+
+`data` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
    9 |   // TDZ violation!
   10 |   const onRefetch = useCallback(() => {
 > 11 |     refetch(data);
-     |             ^^^^ InvalidReact: This variable is accessed before it is declared, which may prevent it from updating as the assigned value changes over time. Variable `data` is accessed before it is declared (11:11)
+     |             ^^^^ `data` accessed before it is declared
+  12 |   }, [refetch]);
+  13 |
+  14 |   // The context variable gets frozen here since it's passed to a hook
 
-InvalidReact: This variable is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. Variable `data` is accessed before it is declared (19:19)
+  17 |   // This has to error: onRefetch needs to memoize with `content` as a
+  18 |   // dependency, but the dependency comes later
+> 19 |   const {data = null} = content;
+     |          ^^^^^^^^^^^ `data` is declared here
+  20 |
+  21 |   return <Foo data={data} onSubmit={onSubmit} />;
+  22 | }
+
+Error: Found missing memoization dependencies
+
+Missing dependencies can cause a value to update less often than it should, resulting in stale UI.
+
+   9 |   // TDZ violation!
+  10 |   const onRefetch = useCallback(() => {
+> 11 |     refetch(data);
+     |             ^^^^ Missing dependency `data`
   12 |   }, [refetch]);
   13 |
   14 |   // The context variable gets frozen here since it's passed to a hook

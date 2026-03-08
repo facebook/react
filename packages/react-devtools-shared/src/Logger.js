@@ -26,6 +26,9 @@ export type LoggerEvent =
       +event_name: 'selected-profiler-tab',
     }
   | {
+      +event_name: 'selected-suspense-tab',
+    }
+  | {
       +event_name: 'load-hook-names',
       +event_status: 'success' | 'error' | 'timeout' | 'unknown',
       +duration_ms: number,
@@ -60,7 +63,11 @@ export type LoggerEvent =
         +value: any,
         ...
       },
-    };
+    }
+  | {
+      +event_name: 'selected-editor-pane',
+    }
+  | {+event_name: 'selected-inspected-element-pane'};
 
 export type LogFunction = LoggerEvent => void | Promise<void>;
 

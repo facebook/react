@@ -885,7 +885,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "hookSource": {
             "columnNumber": 0,
             "fileName": "**",
-            "functionName": undefined,
+            "functionName": null,
             "lineNumber": 0,
           },
           "id": 0,

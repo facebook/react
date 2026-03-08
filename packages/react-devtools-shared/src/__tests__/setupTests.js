@@ -116,6 +116,16 @@ function shouldIgnoreConsoleErrorOrWarn(args) {
     return false;
   }
 
+  const maybeError = args[1];
+  if (
+    maybeError !== null &&
+    typeof maybeError === 'object' &&
+    maybeError.message === 'Simulated error coming from DevTools'
+  ) {
+    // Error from forcing an error boundary.
+    return true;
+  }
+
   return global._ignoredErrorOrWarningMessages.some(errorOrWarningMessage => {
     return firstArg.indexOf(errorOrWarningMessage) !== -1;
   });
@@ -141,7 +151,7 @@ function patchConsoleForTestingBeforeHookInstallation() {
       // if they use this code path.
       firstArg = firstArg.slice(9);
     }
-    if (firstArg === 'React instrumentation encountered an error: %s') {
+    if (firstArg === 'React instrumentation encountered an error: %o') {
       // Rethrow errors from React.
       throw args[1];
     } else if (
@@ -228,16 +238,13 @@ beforeEach(() => {
 
   // Initialize filters to a known good state.
   setSavedComponentFilters(getDefaultComponentFilters());
-  global.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = getDefaultComponentFilters();
 
-  // Also initialize inline warnings so that we can test them.
-  global.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = true;
-
-  installHook(global, {
+  installHook(global, getDefaultComponentFilters(), {
     appendComponentStack: true,
     breakOnConsoleErrors: false,
     showInlineWarningsAndErrors: true,
     hideConsoleLogsInStrictMode: false,
+    disableSecondConsoleLogDimmingInStrictMode: false,
   });
 
   const bridgeListeners = [];

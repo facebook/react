@@ -10,18 +10,21 @@
 import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {
-  Response as FlightResponse,
-  FindSourceMapURLCallback,
+  DebugChannel,
   DebugChannelCallback,
+  FindSourceMapURLCallback,
+  Response as FlightResponse,
 } from 'react-client/src/ReactFlightClient';
 
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
 import {
   createResponse,
+  createStreamState,
   getRoot,
   reportGlobalError,
   processBinaryChunk,
+  processStringChunk,
   close,
   injectIntoDevTools,
 } from 'react-client/src/ReactFlightClient';
@@ -43,11 +46,14 @@ type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
 export type Options = {
   callServer?: CallServerCallback,
-  debugChannel?: {writable?: WritableStream, ...},
+  debugChannel?: {writable?: WritableStream, readable?: ReadableStream, ...},
   temporaryReferences?: TemporaryReferenceSet,
+  unstable_allowPartialStream?: boolean,
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
   environmentName?: string,
+  startTime?: number,
+  endTime?: number,
 };
 
 function createDebugCallbackFromWritableStream(
@@ -69,6 +75,19 @@ function createDebugCallbackFromWritableStream(
 }
 
 function createResponseFromOptions(options: void | Options) {
+  const debugChannel: void | DebugChannel =
+    __DEV__ && options && options.debugChannel !== undefined
+      ? {
+          hasReadable: options.debugChannel.readable !== undefined,
+          callback:
+            options.debugChannel.writable !== undefined
+              ? createDebugCallbackFromWritableStream(
+                  options.debugChannel.writable,
+                )
+              : null,
+        }
+      : undefined;
+
   return createResponse(
     null,
     null,
@@ -79,6 +98,9 @@ function createResponseFromOptions(options: void | Options) {
     options && options.temporaryReferences
       ? options.temporaryReferences
       : undefined,
+    options && options.unstable_allowPartialStream
+      ? options.unstable_allowPartialStream
+      : false,
     __DEV__ && options && options.findSourceMapURL
       ? options.findSourceMapURL
       : undefined,
@@ -86,19 +108,59 @@ function createResponseFromOptions(options: void | Options) {
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
-    __DEV__ &&
-      options &&
-      options.debugChannel !== undefined &&
-      options.debugChannel.writable !== undefined
-      ? createDebugCallbackFromWritableStream(options.debugChannel.writable)
+    __DEV__ && options && options.startTime != null
+      ? options.startTime
       : undefined,
+    __DEV__ && options && options.endTime != null ? options.endTime : undefined,
+    debugChannel,
   );
+}
+
+function startReadingFromUniversalStream(
+  response: FlightResponse,
+  stream: ReadableStream,
+  onDone: () => void,
+): void {
+  // This is the same as startReadingFromStream except this allows WebSocketStreams which
+  // return ArrayBuffer and string chunks instead of Uint8Array chunks. We could potentially
+  // always allow streams with variable chunk types.
+  const streamState = createStreamState(response, stream);
+  const reader = stream.getReader();
+  function progress({
+    done,
+    value,
+  }: {
+    done: boolean,
+    value: any,
+    ...
+  }): void | Promise<void> {
+    if (done) {
+      return onDone();
+    }
+    if (value instanceof ArrayBuffer) {
+      // WebSockets can produce ArrayBuffer values in ReadableStreams.
+      processBinaryChunk(response, streamState, new Uint8Array(value));
+    } else if (typeof value === 'string') {
+      // WebSockets can produce string values in ReadableStreams.
+      processStringChunk(response, streamState, value);
+    } else {
+      processBinaryChunk(response, streamState, value);
+    }
+    return reader.read().then(progress).catch(error);
+  }
+  function error(e: any) {
+    reportGlobalError(response, e);
+  }
+  reader.read().then(progress).catch(error);
 }
 
 function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
+  onDone: () => void,
+  debugValue: mixed,
 ): void {
+  const streamState = createStreamState(response, debugValue);
   const reader = stream.getReader();
   function progress({
     done,
@@ -109,11 +171,10 @@ function startReadingFromStream(
     ...
   }): void | Promise<void> {
     if (done) {
-      close(response);
-      return;
+      return onDone();
     }
     const buffer: Uint8Array = (value: any);
-    processBinaryChunk(response, buffer);
+    processBinaryChunk(response, streamState, buffer);
     return reader.read().then(progress).catch(error);
   }
   function error(e: any) {
@@ -127,7 +188,32 @@ function createFromReadableStream<T>(
   options?: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
-  startReadingFromStream(response, stream);
+  if (
+    __DEV__ &&
+    options &&
+    options.debugChannel &&
+    options.debugChannel.readable
+  ) {
+    let streamDoneCount = 0;
+    const handleDone = () => {
+      if (++streamDoneCount === 2) {
+        close(response);
+      }
+    };
+    startReadingFromUniversalStream(
+      response,
+      options.debugChannel.readable,
+      handleDone,
+    );
+    startReadingFromStream(response, stream, handleDone, stream);
+  } else {
+    startReadingFromStream(
+      response,
+      stream,
+      close.bind(null, response),
+      stream,
+    );
+  }
   return getRoot(response);
 }
 
@@ -138,7 +224,32 @@ function createFromFetch<T>(
   const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(
     function (r) {
-      startReadingFromStream(response, (r.body: any));
+      if (
+        __DEV__ &&
+        options &&
+        options.debugChannel &&
+        options.debugChannel.readable
+      ) {
+        let streamDoneCount = 0;
+        const handleDone = () => {
+          if (++streamDoneCount === 2) {
+            close(response);
+          }
+        };
+        startReadingFromUniversalStream(
+          response,
+          options.debugChannel.readable,
+          handleDone,
+        );
+        startReadingFromStream(response, (r.body: any), handleDone, r);
+      } else {
+        startReadingFromStream(
+          response,
+          (r.body: any),
+          close.bind(null, response),
+          r,
+        );
+      }
     },
     function (e) {
       reportGlobalError(response, e);

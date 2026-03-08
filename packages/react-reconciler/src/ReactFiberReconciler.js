@@ -42,7 +42,6 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import isArray from 'shared/isArray';
 import {
   enableSchedulingProfiler,
-  enableHydrationLaneScheduling,
   disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -98,6 +97,7 @@ import {
   getHighestPriorityPendingLanes,
   higherPriorityLane,
   getBumpedLaneForHydrationByLane,
+  claimNextRetryLane,
 } from './ReactFiberLane';
 import {
   scheduleRefresh,
@@ -138,7 +138,7 @@ if (__DEV__) {
 }
 
 function getContextForSubtree(
-  parentComponent: ?React$Component<any, any>,
+  parentComponent: ?component(...props: any),
 ): Object {
   if (!parentComponent) {
     return emptyContextObject;
@@ -248,7 +248,7 @@ export function createContainer(
     error: mixed,
     errorInfo: {
       +componentStack?: ?string,
-      +errorBoundary?: ?React$Component<any, any>,
+      +errorBoundary?: ?component(...props: any),
     },
   ) => void,
   onRecoverableError: (
@@ -298,7 +298,7 @@ export function createHydrationContainer(
     error: mixed,
     errorInfo: {
       +componentStack?: ?string,
-      +errorBoundary?: ?React$Component<any, any>,
+      +errorBoundary?: ?component(...props: any),
     },
   ) => void,
   onRecoverableError: (
@@ -339,13 +339,12 @@ export function createHydrationContainer(
   // enqueue the callback if one is provided).
   const current = root.current;
   let lane = requestUpdateLane(current);
-  if (enableHydrationLaneScheduling) {
-    lane = getBumpedLaneForHydrationByLane(lane);
-  }
+  lane = getBumpedLaneForHydrationByLane(lane);
   const update = createUpdate(lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
   enqueueUpdate(current, update, lane);
+  startUpdateTimerByLane(lane, 'hydrateRoot()', null);
   scheduleInitialHydrationOnRoot(root, lane);
 
   return root;
@@ -354,7 +353,7 @@ export function createHydrationContainer(
 export function updateContainer(
   element: ReactNodeList,
   container: OpaqueRoot,
-  parentComponent: ?React$Component<any, any>,
+  parentComponent: ?component(...props: any),
   callback: ?Function,
 ): Lane {
   const current = container.current;
@@ -373,7 +372,7 @@ export function updateContainer(
 export function updateContainerSync(
   element: ReactNodeList,
   container: OpaqueRoot,
-  parentComponent: ?React$Component<any, any>,
+  parentComponent: ?component(...props: any),
   callback: ?Function,
 ): Lane {
   if (!disableLegacyMode && container.tag === LegacyRoot) {
@@ -396,7 +395,7 @@ function updateContainerImpl(
   lane: Lane,
   element: ReactNodeList,
   container: OpaqueRoot,
-  parentComponent: ?React$Component<any, any>,
+  parentComponent: ?component(...props: any),
   callback: ?Function,
 ): void {
   if (__DEV__) {
@@ -452,7 +451,7 @@ function updateContainerImpl(
 
   const root = enqueueUpdate(rootFiber, update, lane);
   if (root !== null) {
-    startUpdateTimerByLane(lane, 'root.render()');
+    startUpdateTimerByLane(lane, 'root.render()', null);
     scheduleUpdateOnFiber(root, rootFiber, lane);
     entangleTransitions(root, rootFiber, lane);
   }
@@ -470,7 +469,7 @@ export {
 
 export function getPublicRootInstance(
   container: OpaqueRoot,
-): React$Component<any, any> | PublicInstance | null {
+): component(...props: any) | PublicInstance | null {
   const containerFiber = container.current;
   if (!containerFiber.child) {
     return null;
@@ -555,9 +554,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     return;
   }
   let lane = requestUpdateLane(fiber);
-  if (enableHydrationLaneScheduling) {
-    lane = getBumpedLaneForHydrationByLane(lane);
-  }
+  lane = getBumpedLaneForHydrationByLane(lane);
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     scheduleUpdateOnFiber(root, fiber, lane);
@@ -598,6 +595,7 @@ let overrideProps = null;
 let overridePropsDeletePath = null;
 let overridePropsRenamePath = null;
 let scheduleUpdate = null;
+let scheduleRetry = null;
 let setErrorHandler = null;
 let setSuspenseHandler = null;
 
@@ -834,6 +832,14 @@ if (__DEV__) {
     }
   };
 
+  scheduleRetry = (fiber: Fiber) => {
+    const lane = claimNextRetryLane();
+    const root = enqueueConcurrentRenderForLane(fiber, lane);
+    if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane);
+    }
+  };
+
   setErrorHandler = (newShouldErrorImpl: Fiber => ?boolean) => {
     shouldErrorImpl = newShouldErrorImpl;
   };
@@ -885,6 +891,7 @@ export function injectIntoDevTools(): boolean {
     internals.overridePropsDeletePath = overridePropsDeletePath;
     internals.overridePropsRenamePath = overridePropsRenamePath;
     internals.scheduleUpdate = scheduleUpdate;
+    internals.scheduleRetry = scheduleRetry;
     internals.setErrorHandler = setErrorHandler;
     internals.setSuspenseHandler = setSuspenseHandler;
     // React Refresh

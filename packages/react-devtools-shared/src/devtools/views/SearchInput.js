@@ -64,8 +64,9 @@ export default function SearchInput({
     const handleKeyDown = (event: KeyboardEvent) => {
       const {key, metaKey} = event;
       if (key === 'f' && metaKey) {
-        if (inputRef.current !== null) {
-          inputRef.current.focus();
+        const inputElement = inputRef.current;
+        if (inputElement !== null) {
+          inputElement.focus();
           event.preventDefault();
           event.stopPropagation();
         }
@@ -75,10 +76,14 @@ export default function SearchInput({
     // It's important to listen to the ownerDocument to support the browser extension.
     // Here we use portals to render individual tabs (e.g. Profiler),
     // and the root document might belong to a different window.
-    const ownerDocument = inputRef.current.ownerDocument;
-    ownerDocument.addEventListener('keydown', handleKeyDown);
+    const ownerDocumentElement = inputRef.current.ownerDocument.documentElement;
+    if (ownerDocumentElement === null) {
+      return;
+    }
+    ownerDocumentElement.addEventListener('keydown', handleKeyDown);
 
-    return () => ownerDocument.removeEventListener('keydown', handleKeyDown);
+    return () =>
+      ownerDocumentElement.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   return (

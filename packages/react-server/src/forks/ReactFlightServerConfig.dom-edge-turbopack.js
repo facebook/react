@@ -25,3 +25,4 @@ export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
 export * from '../ReactFlightServerConfigDebugNoop';
 
 export * from '../ReactFlightStackConfigV8';
+export * from '../ReactServerConsoleConfigServer';

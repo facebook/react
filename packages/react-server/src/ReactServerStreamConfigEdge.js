@@ -37,7 +37,11 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-const VIEW_SIZE = 2048;
+// Chunks larger than VIEW_SIZE are written directly, without copying into the
+// internal view buffer. This must be at least half of Node's internal Buffer
+// pool size (8192) to avoid corrupting the pool when using
+// renderToReadableStream, which uses a byte stream that detaches ArrayBuffers.
+const VIEW_SIZE = 4096;
 let currentView = null;
 let writtenBytes = 0;
 
@@ -147,14 +151,7 @@ export function typedArrayToBinaryChunk(
   // If we passed through this straight to enqueue we wouldn't have to convert it but since
   // we need to copy the buffer in that case, we need to convert it to copy it.
   // When we copy it into another array using set() it needs to be a Uint8Array.
-  const buffer = new Uint8Array(
-    content.buffer,
-    content.byteOffset,
-    content.byteLength,
-  );
-  // We clone large chunks so that we can transfer them when we write them.
-  // Others get copied into the target buffer.
-  return content.byteLength > VIEW_SIZE ? buffer.slice() : buffer;
+  return new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
 }
 
 export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {

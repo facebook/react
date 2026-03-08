@@ -7,6 +7,12 @@
  * @flow
  */
 
+import type {ReactOptimisticKey} from './ReactSymbols';
+
+export type {ReactOptimisticKey};
+
+export type ReactKey = null | string | ReactOptimisticKey;
+
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -26,7 +32,7 @@ export type ReactText = string | number;
 export type ReactProvider<T> = {
   $$typeof: symbol | number,
   type: ReactContext<T>,
-  key: null | string,
+  key: ReactKey,
   ref: null,
   props: {
     value: T,
@@ -42,7 +48,7 @@ export type ReactConsumerType<T> = {
 export type ReactConsumer<T> = {
   $$typeof: symbol | number,
   type: ReactConsumerType<T>,
-  key: null | string,
+  key: ReactKey,
   ref: null,
   props: {
     children: (value: T) => ReactNodeList,
@@ -66,7 +72,7 @@ export type ReactContext<T> = {
 
 export type ReactPortal = {
   $$typeof: symbol | number,
-  key: null | string,
+  key: ReactKey,
   containerInfo: any,
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
@@ -108,6 +114,7 @@ interface ThenableImpl<T> {
     onFulfill: (value: T) => mixed,
     onReject: (error: mixed) => mixed,
   ): void | Wakeable;
+  displayName?: string;
 }
 interface UntrackedThenable<T> extends ThenableImpl<T> {
   status?: void;
@@ -188,6 +195,7 @@ export type ReactCallSite = [
   number, // column number
   number, // enclosing line number
   number, // enclosing column number
+  boolean, // async resume
 ];
 
 export type ReactStackTrace = Array<ReactCallSite>;
@@ -202,7 +210,7 @@ export type ReactFunctionLocation = [
 export type ReactComponentInfo = {
   +name: string,
   +env?: string,
-  +key?: null | string,
+  +key?: ReactKey,
   +owner?: null | ReactComponentInfo,
   +stack?: null | ReactStackTrace,
   +props?: null | {[name: string]: mixed},
@@ -220,12 +228,22 @@ export type ReactErrorInfoProd = {
   +digest: string,
 };
 
+export type JSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | {+[key: string]: JSONValue}
+  | $ReadOnlyArray<JSONValue>;
+
 export type ReactErrorInfoDev = {
   +digest?: string,
   +name: string,
   +message: string,
   +stack: ReactStackTrace,
   +env: string,
+  +owner?: null | string,
+  cause?: JSONValue,
 };
 
 export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;
@@ -235,6 +253,7 @@ export type ReactIOInfo = {
   +name: string, // the name of the async function being called (e.g. "fetch")
   +start: number, // the start time
   +end: number, // the end time (this might be different from the time the await was unblocked)
+  +byteSize?: number, // the byte size of this resource across the network. (should only be included if affecting the client.)
   +value?: null | Promise<mixed>, // the Promise that was awaited if any, may be rejected
   +env?: string, // the environment where this I/O was spawned.
   +owner?: null | ReactComponentInfo,
@@ -258,9 +277,13 @@ export type ReactTimeInfo = {
   +time: number, // performance.now
 };
 
-export type ReactDebugInfo = Array<
-  ReactComponentInfo | ReactEnvironmentInfo | ReactAsyncInfo | ReactTimeInfo,
->;
+export type ReactDebugInfoEntry =
+  | ReactComponentInfo
+  | ReactEnvironmentInfo
+  | ReactAsyncInfo
+  | ReactTimeInfo;
+
+export type ReactDebugInfo = Array<ReactDebugInfoEntry>;
 
 // Intrinsic ViewTransitionInstance. This type varies by Environment whether a particular
 // renderer supports it.
@@ -276,6 +299,11 @@ export type ViewTransitionClass =
   | string
   | ViewTransitionClassPerType;
 
+export type GestureOptionsRequired = {
+  rangeStart: number,
+  rangeEnd: number,
+};
+
 export type ViewTransitionProps = {
   name?: string,
   children?: ReactNodeList,
@@ -284,15 +312,52 @@ export type ViewTransitionProps = {
   exit?: ViewTransitionClass,
   share?: ViewTransitionClass,
   update?: ViewTransitionClass,
-  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onEnter?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onExit?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onShare?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onUpdate?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onGestureEnter?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onGestureExit?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onGestureShare?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onGestureUpdate?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
 };
 
 export type ActivityProps = {
   mode?: 'hidden' | 'visible' | null | void,
   children?: ReactNodeList,
+  name?: string,
 };
 
 export type SuspenseProps = {
@@ -303,7 +368,7 @@ export type SuspenseProps = {
   suspenseCallback?: (Set<Wakeable> | null) => mixed,
 
   unstable_avoidThisFallback?: boolean,
-  unstable_expectedLoadTime?: number,
+  defer?: boolean,
   name?: string,
 };
 

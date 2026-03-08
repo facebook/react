@@ -363,7 +363,14 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
+    externals: [
+      'react',
+      'react-dom',
+      'async_hooks',
+      'crypto',
+      'stream',
+      'util',
+    ],
   },
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
@@ -398,7 +405,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom'],
+    externals: ['react', 'react-dom', 'crypto', 'stream', 'util'],
   },
 
   /******* React DOM Fizz Server External Runtime *******/
@@ -460,19 +467,14 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
-  },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
-    entry:
-      'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
-    name: 'react-server-dom-webpack-server.node.unbundled',
-    condition: 'react-server',
-    global: 'ReactServerDOMServer',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
+    externals: [
+      'react',
+      'react-dom',
+      'async_hooks',
+      'crypto',
+      'stream',
+      'util',
+    ],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -483,7 +485,7 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
+    externals: ['react'],
   },
 
   /******* React Server DOM Webpack Client *******/
@@ -503,17 +505,6 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack/src/client/react-flight-dom-client.node',
     name: 'react-server-dom-webpack-client.node',
-    global: 'ReactServerDOMClient',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', 'util', 'crypto'],
-  },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
-    entry:
-      'react-server-dom-webpack/src/client/react-flight-dom-client.node.unbundled',
-    name: 'react-server-dom-webpack-client.node.unbundled',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -588,7 +579,14 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+    externals: [
+      'react',
+      'react-dom',
+      'async_hooks',
+      'crypto',
+      'stream',
+      'util',
+    ],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -599,7 +597,7 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+    externals: ['react'],
   },
 
   /******* React Server DOM Turbopack Client *******/
@@ -656,7 +654,14 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+    externals: [
+      'react',
+      'react-dom',
+      'async_hooks',
+      'crypto',
+      'stream',
+      'util',
+    ],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -667,7 +672,7 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+    externals: ['react', 'react-dom'],
   },
 
   /******* React Server DOM Parcel Client *******/
@@ -711,7 +716,14 @@ const bundles = [
     condition: 'react-server',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
+    externals: [
+      'react',
+      'react-dom',
+      'async_hooks',
+      'crypto',
+      'stream',
+      'util',
+    ],
   },
 
   /******* React Server DOM ESM Client *******/
@@ -729,7 +741,7 @@ const bundles = [
     entry: 'react-server-dom-esm/client.node',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', 'util', 'crypto'],
+    externals: ['react', 'react-dom', 'util'],
   },
 
   /******* React Server DOM ESM Node.js Loader *******/
@@ -742,6 +754,63 @@ const bundles = [
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['acorn'],
+  },
+
+  /******* React Server DOM Unbundled Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-unbundled/src/server/react-flight-dom-server.node',
+    name: 'react-server-dom-unbundled-server.node',
+    condition: 'react-server',
+    global: 'ReactServerDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: [
+      'react',
+      'react-dom',
+      'async_hooks',
+      'crypto',
+      'stream',
+      'util',
+    ],
+  },
+
+  /******* React Server DOM Unbundled Client *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-unbundled/src/client/react-flight-dom-client.node',
+    name: 'react-server-dom-unbundled-client.node',
+    global: 'ReactServerDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom', 'util', 'crypto'],
+  },
+
+  /******* React Server DOM Unbundled Node.js Loader *******/
+  {
+    bundleTypes: [ESM_PROD],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-server-dom-unbundled/node-loader',
+    condition: 'react-server',
+    global: 'ReactServerUnbundledNodeLoader',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['acorn'],
+  },
+
+  /******* React Server DOM Unbundled Node.js CommonJS Loader *******/
+  {
+    bundleTypes: [NODE_ES2015],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-server-dom-unbundled/src/ReactFlightUnbundledNodeRegister',
+    name: 'react-server-dom-unbundled-node-register',
+    condition: 'react-server',
+    global: 'ReactFlightUnbundledNodeRegister',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['url', 'module', 'react-server-dom-unbundled/server'],
   },
 
   /******* React Suspense Test Utils *******/
@@ -771,42 +840,6 @@ const bundles = [
           require.resolve('@babel/preset-react'),
           require.resolve('@babel/preset-flow'),
         ]),
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
-  },
-
-  /******* React Native *******/
-  {
-    bundleTypes: __EXPERIMENTAL__
-      ? []
-      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
-    moduleType: RENDERER,
-    entry: 'react-native-renderer',
-    global: 'ReactNativeRenderer',
-    externals: ['react-native', 'ReactNativeInternalFeatureFlags'],
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: true,
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
-  },
-  {
-    bundleTypes: [RN_OSS_DEV, RN_OSS_PROD, RN_OSS_PROFILING],
-    moduleType: RENDERER,
-    entry: 'react-native-renderer',
-    global: 'ReactNativeRenderer',
-    // ReactNativeInternalFeatureFlags temporary until we land enableRemoveConsolePatches.
-    // Needs to be done before the next RN OSS release.
-    externals: ['react-native', 'ReactNativeInternalFeatureFlags'],
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: true,
-    babel: opts =>
-      Object.assign({}, opts, {
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
@@ -1208,7 +1241,17 @@ const bundles = [
     global: 'ESLintPluginReactHooks',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: [],
+    preferBuiltins: true,
+    externals: [
+      '@babel/core',
+      'hermes-parser',
+      'zod',
+      'zod/v4',
+      'zod-validation-error',
+      'zod-validation-error/v4',
+      'crypto',
+      'util',
+    ],
     tsconfig: './packages/eslint-plugin-react-hooks/tsconfig.json',
     prebuild: `mkdir -p ./compiler/packages/babel-plugin-react-compiler/dist && echo "module.exports = require('../src/index.ts');" > ./compiler/packages/babel-plugin-react-compiler/dist/index.js`,
   },
@@ -1296,9 +1339,21 @@ function getFilename(bundle, bundleType) {
   }
 }
 
+let activeBundles = bundles;
+if (process.env.BUNDLES_FILTER != null) {
+  activeBundles = activeBundles.filter(
+    bundle => bundle.name === process.env.BUNDLES_FILTER
+  );
+  if (activeBundles.length === 0) {
+    throw new Error(
+      `No bundles matched for BUNDLES_FILTER=${process.env.BUNDLES_FILTER}`
+    );
+  }
+}
+
 module.exports = {
   bundleTypes,
   moduleTypes,
-  bundles,
+  bundles: activeBundles,
   getFilename,
 };

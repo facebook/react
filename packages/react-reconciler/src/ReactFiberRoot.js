@@ -115,7 +115,6 @@ function FiberRootNode(
 
   if (enableGestureTransition) {
     this.pendingGestures = null;
-    this.stoppingGestures = null;
     this.gestureClone = null;
   }
 
@@ -176,7 +175,7 @@ export function createFiberRoot(
     error: mixed,
     errorInfo: {
       +componentStack?: ?string,
-      +errorBoundary?: ?React$Component<any, any>,
+      +errorBoundary?: ?component(...props: any),
     },
   ) => void,
   onRecoverableError: (

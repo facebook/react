@@ -1,4 +1,14 @@
-/* global chrome */
+/* global chrome, ExtensionRuntimePort */
+/** @flow */
+
+import type {RootType} from 'react-dom/src/client/ReactDOMRoot';
+import type {FrontendBridge, Message} from 'react-devtools-shared/src/bridge';
+import type {
+  TabID,
+  ViewElementSource,
+} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {SourceSelection} from 'react-devtools-shared/src/devtools/views/Editor/EditorPane';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 import {createElement} from 'react';
 import {flushSync} from 'react-dom';
@@ -16,7 +26,13 @@ import {
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {logEvent} from 'react-devtools-shared/src/Logger';
-import {normalizeUrlIfValid} from 'react-devtools-shared/src/utils';
+import {
+  getAlwaysOpenInEditor,
+  getOpenInEditorURL,
+  normalizeUrlIfValid,
+} from 'react-devtools-shared/src/utils';
+import {checkConditions} from 'react-devtools-shared/src/devtools/views/Editor/utils';
+import * as parseHookNames from 'react-devtools-shared/src/hooks/parseHookNames';
 
 import {
   setBrowserSelectionFromReact,
@@ -24,8 +40,9 @@ import {
 } from './elementSelection';
 import {viewAttributeSource} from './sourceSelection';
 
+import {evalInInspectedWindow} from './evalInInspectedWindow';
 import {startReactPolling} from './reactPolling';
-import cloneStyleTags from './cloneStyleTags';
+import {cloneStyleTags} from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
 import injectBackendManager from './injectBackendManager';
 import registerEventsLogger from './registerEventsLogger';
@@ -33,10 +50,16 @@ import getProfilingFlags from './getProfilingFlags';
 import debounce from './debounce';
 import './requestAnimationFramePolyfill';
 
+const resolvedParseHookNames = Promise.resolve(parseHookNames);
+// DevTools assumes this is a dynamically imported module. Since we outline
+// workers in this bundle, we can sync require the module since it's just a thin
+// wrapper around calling the worker.
+const hookNamesModuleLoaderFunction = () => resolvedParseHookNames;
+
 function createBridge() {
   bridge = new Bridge({
     listen(fn) {
-      const bridgeListener = message => fn(message);
+      const bridgeListener = (message: Message) => fn(message);
       // Store the reference so that we unsubscribe from the same object.
       const portOnMessage = port.onMessage;
       portOnMessage.addListener(bridgeListener);
@@ -56,7 +79,7 @@ function createBridge() {
 
   bridge.addListener('reloadAppForProfiling', () => {
     localStorageSetItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
-    chrome.devtools.inspectedWindow.eval('window.location.reload();');
+    evalInInspectedWindow('reload', [], () => {});
   });
 
   bridge.addListener(
@@ -73,12 +96,48 @@ function createBridge() {
     );
   });
 
+  const sourcesPanel = chrome.devtools.panels.sources;
+
   const onBrowserElementSelectionChanged = () =>
     setReactSelectionFromBrowser(bridge);
+  const onBrowserSourceSelectionChanged = (location: {
+    url: string,
+    startLine: number,
+    startColumn: number,
+    endLine: number,
+    endColumn: number,
+  }) => {
+    if (
+      currentSelectedSource === null ||
+      currentSelectedSource.url !== location.url
+    ) {
+      currentSelectedSource = {
+        url: location.url,
+        selectionRef: {
+          // We use 1-based line and column, Chrome provides them 0-based.
+          line: location.startLine + 1,
+          column: location.startColumn + 1,
+        },
+      };
+      // Rerender with the new file selection.
+      render();
+    } else {
+      // Update the ref to the latest position without updating the url. No need to rerender.
+      const selectionRef = currentSelectedSource.selectionRef;
+      selectionRef.line = location.startLine + 1;
+      selectionRef.column = location.startColumn + 1;
+    }
+  };
   const onBridgeShutdown = () => {
     chrome.devtools.panels.elements.onSelectionChanged.removeListener(
       onBrowserElementSelectionChanged,
     );
+    if (sourcesPanel && sourcesPanel.onSelectionChanged) {
+      currentSelectedSource = null;
+      sourcesPanel.onSelectionChanged.removeListener(
+        onBrowserSourceSelectionChanged,
+      );
+    }
   };
 
   bridge.addListener('shutdown', onBridgeShutdown);
@@ -86,6 +145,11 @@ function createBridge() {
   chrome.devtools.panels.elements.onSelectionChanged.addListener(
     onBrowserElementSelectionChanged,
   );
+  if (sourcesPanel && sourcesPanel.onSelectionChanged) {
+    sourcesPanel.onSelectionChanged.addListener(
+      onBrowserSourceSelectionChanged,
+    );
+  }
 }
 
 function createBridgeAndStore() {
@@ -103,8 +167,8 @@ function createBridgeAndStore() {
     supportsClickToInspect: true,
   });
 
-  store.addListener('settingsUpdated', settings => {
-    chrome.storage.local.set(settings);
+  store.addListener('settingsUpdated', (hookSettings, componentFilters) => {
+    chrome.storage.local.set({...hookSettings, componentFilters});
   });
 
   if (!isProfiling) {
@@ -116,15 +180,21 @@ function createBridgeAndStore() {
   // Otherwise, the Store may miss important initial tree op codes.
   injectBackendManager(chrome.devtools.inspectedWindow.tabId);
 
-  const viewAttributeSourceFunction = (id, path) => {
+  const viewAttributeSourceFunction = (
+    id: Element['id'],
+    path: Array<string | number>,
+  ) => {
     const rendererID = store.getRendererIDForElement(id);
     if (rendererID != null) {
       viewAttributeSource(rendererID, id, path);
     }
   };
 
-  const viewElementSourceFunction = (source, symbolicatedSource) => {
-    const {sourceURL, line, column} = symbolicatedSource
+  const viewElementSourceFunction: ViewElementSource = (
+    source,
+    symbolicatedSource,
+  ) => {
+    const [, sourceURL, line, column] = symbolicatedSource
       ? symbolicatedSource
       : source;
 
@@ -136,15 +206,9 @@ function createBridgeAndStore() {
     );
   };
 
-  // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
-  const hookNamesModuleLoaderFunction = () =>
-    import(
-      /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
-    );
-
   root = createRoot(document.createElement('div'));
 
-  render = (overrideTab = mostRecentOverrideTab) => {
+  render = (overrideTab: TabID | null = mostRecentOverrideTab) => {
     mostRecentOverrideTab = overrideTab;
 
     root.render(
@@ -152,13 +216,17 @@ function createBridgeAndStore() {
         bridge,
         browserTheme: getBrowserTheme(),
         componentsPortalContainer,
+        inspectedElementPortalContainer,
+        profilerPortalContainer,
+        editorPortalContainer,
+        currentSelectedSource,
         enabledInspectedElementContextMenu: true,
         fetchFileWithCaching,
         hookNamesModuleLoaderFunction,
         overrideTab,
-        profilerPortalContainer,
         showTabBar: false,
         store,
+        suspensePortalContainer,
         warnIfUnsupportedVersionDetected: true,
         viewAttributeSourceFunction,
         // Firefox doesn't support chrome.devtools.panels.openResource yet
@@ -169,7 +237,9 @@ function createBridgeAndStore() {
   };
 }
 
-function ensureInitialHTMLIsCleared(container) {
+function ensureInitialHTMLIsCleared(
+  container: HTMLElement & {_hasInitialHTMLBeenCleared?: boolean},
+) {
   if (container._hasInitialHTMLBeenCleared) {
     return;
   }
@@ -221,6 +291,52 @@ function createComponentsPanel() {
   );
 }
 
+function createElementsInspectPanel() {
+  if (inspectedElementPortalContainer) {
+    // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(inspectedElementPortalContainer);
+    render();
+
+    return;
+  }
+
+  if (inspectedElementPane) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
+    return;
+  }
+
+  const elementsPanel = chrome.devtools.panels.elements;
+  if (__IS_FIREFOX__ || !elementsPanel || !elementsPanel.createSidebarPane) {
+    // Firefox will not pass the window to the onShown listener despite setPage
+    // being called.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=2010549
+
+    // May not be supported in some browsers.
+    // See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/devtools/panels/ElementsPanel/createSidebarPane#browser_compatibility
+    return;
+  }
+
+  elementsPanel.createSidebarPane('React Element ⚛', createdPane => {
+    inspectedElementPane = createdPane;
+
+    createdPane.setPage('panel.html');
+    createdPane.setHeight('75px');
+
+    createdPane.onShown.addListener(portal => {
+      inspectedElementPortalContainer = portal.container;
+      if (inspectedElementPortalContainer != null && render) {
+        ensureInitialHTMLIsCleared(inspectedElementPortalContainer);
+        bridge.send('syncSelectionFromBuiltinElementsPanel');
+
+        render();
+        portal.injectStyles(cloneStyleTags);
+
+        logEvent({event_name: 'selected-inspected-element-pane'});
+      }
+    });
+  });
+}
+
 function createProfilerPanel() {
   if (profilerPortalContainer) {
     // Panel is created and user opened it at least once
@@ -257,6 +373,82 @@ function createProfilerPanel() {
   );
 }
 
+function createSourcesEditorPanel() {
+  if (editorPortalContainer) {
+    // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(editorPortalContainer);
+    render();
+
+    return;
+  }
+
+  if (editorPane) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
+    return;
+  }
+
+  const sourcesPanel = chrome.devtools.panels.sources;
+  if (!sourcesPanel || !sourcesPanel.createSidebarPane) {
+    // Firefox doesn't currently support extending the source panel.
+    return;
+  }
+
+  sourcesPanel.createSidebarPane('Code Editor ⚛', createdPane => {
+    editorPane = createdPane;
+
+    createdPane.setPage('panel.html');
+    createdPane.setHeight('75px');
+
+    createdPane.onShown.addListener(portal => {
+      editorPortalContainer = portal.container;
+      if (editorPortalContainer != null && render) {
+        ensureInitialHTMLIsCleared(editorPortalContainer);
+
+        render();
+        portal.injectStyles(cloneStyleTags);
+
+        logEvent({event_name: 'selected-editor-pane'});
+      }
+    });
+  });
+}
+
+function createSuspensePanel() {
+  if (suspensePortalContainer) {
+    // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(suspensePortalContainer);
+    render('suspense');
+
+    return;
+  }
+
+  if (suspensePanel) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
+    return;
+  }
+
+  chrome.devtools.panels.create(
+    __IS_CHROME__ || __IS_EDGE__ ? 'Suspense ⚛' : 'Suspense',
+    __IS_EDGE__ ? 'icons/production.svg' : '',
+    'panel.html',
+    createdPanel => {
+      suspensePanel = createdPanel;
+
+      createdPanel.onShown.addListener(portal => {
+        suspensePortalContainer = portal.container;
+        if (suspensePortalContainer != null && render) {
+          ensureInitialHTMLIsCleared(suspensePortalContainer);
+
+          render('suspense');
+          portal.injectStyles(cloneStyleTags);
+
+          logEvent({event_name: 'selected-suspense-tab'});
+        }
+      });
+    },
+  );
+}
+
 function performInTabNavigationCleanup() {
   // Potentially, if react hasn't loaded yet and user performs in-tab navigation
   clearReactPollingInstance();
@@ -268,7 +460,12 @@ function performInTabNavigationCleanup() {
 
   // If panels were already created, and we have already mounted React root to display
   // tabs (Components or Profiler), we should unmount root first and render them again
-  if ((componentsPortalContainer || profilerPortalContainer) && root) {
+  if (
+    (componentsPortalContainer ||
+      profilerPortalContainer ||
+      suspensePortalContainer) &&
+    root
+  ) {
     // It's easiest to recreate the DevTools panel (to clean up potential stale state).
     // We can revisit this in the future as a small optimization.
     // This should also emit bridge.shutdown, but only if this root was mounted
@@ -288,17 +485,22 @@ function performInTabNavigationCleanup() {
   // Do not clean mostRecentOverrideTab on purpose, so we remember last opened
   // React DevTools tab, when user does in-tab navigation
 
-  store = null;
-  bridge = null;
-  render = null;
-  root = null;
+  store = (null: $FlowFixMe);
+  bridge = (null: $FlowFixMe);
+  render = (null: $FlowFixMe);
+  root = (null: $FlowFixMe);
 }
 
 function performFullCleanup() {
   // Potentially, if react hasn't loaded yet and user closed the browser DevTools
   clearReactPollingInstance();
 
-  if ((componentsPortalContainer || profilerPortalContainer) && root) {
+  if (
+    (componentsPortalContainer ||
+      profilerPortalContainer ||
+      suspensePortalContainer) &&
+    root
+  ) {
     // This should also emit bridge.shutdown, but only if this root was mounted
     flushSync(() => root.unmount());
   } else {
@@ -307,18 +509,19 @@ function performFullCleanup() {
 
   componentsPortalContainer = null;
   profilerPortalContainer = null;
-  root = null;
+  suspensePortalContainer = null;
+  root = (null: $FlowFixMe);
 
   mostRecentOverrideTab = null;
-  store = null;
-  bridge = null;
-  render = null;
+  store = (null: $FlowFixMe);
+  bridge = (null: $FlowFixMe);
+  render = (null: $FlowFixMe);
 
   port?.disconnect();
-  port = null;
+  port = (null: $FlowFixMe);
 }
 
-function connectExtensionPort() {
+function connectExtensionPort(): void {
   if (port) {
     throw new Error('DevTools port was already connected');
   }
@@ -342,7 +545,7 @@ function connectExtensionPort() {
   // so, when we call `port.disconnect()` from this script,
   // this should not trigger this callback and port reconnection
   port.onDisconnect.addListener(() => {
-    port = null;
+    port = (null: $FlowFixMe);
     connectExtensionPort();
   });
 }
@@ -356,6 +559,9 @@ function mountReactDevTools() {
 
   createComponentsPanel();
   createProfilerPanel();
+  createSourcesEditorPanel();
+  createElementsInspectPanel();
+  createSuspensePanel();
 }
 
 let reactPollingInstance = null;
@@ -376,6 +582,12 @@ function showNoReactDisclaimer() {
       '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
     delete profilerPortalContainer._hasInitialHTMLBeenCleared;
   }
+
+  if (suspensePortalContainer) {
+    suspensePortalContainer.innerHTML =
+      '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
+    delete suspensePortalContainer._hasInitialHTMLBeenCleared;
+  }
 }
 
 function mountReactDevToolsWhenReactHasLoaded() {
@@ -386,22 +598,30 @@ function mountReactDevToolsWhenReactHasLoaded() {
   );
 }
 
-let bridge = null;
+let bridge: FrontendBridge = (null: $FlowFixMe);
 let lastSubscribedBridgeListener = null;
-let store = null;
+let store: Store = (null: $FlowFixMe);
 
 let profilingData = null;
 
 let componentsPanel = null;
 let profilerPanel = null;
+let suspensePanel = null;
+let editorPane = null;
+let inspectedElementPane = null;
 let componentsPortalContainer = null;
 let profilerPortalContainer = null;
+let suspensePortalContainer = null;
+let editorPortalContainer = null;
+let inspectedElementPortalContainer = null;
 
-let mostRecentOverrideTab = null;
-let render = null;
-let root = null;
+let mostRecentOverrideTab: null | TabID = null;
+let render: (overrideTab?: TabID) => void = (null: $FlowFixMe);
+let root: RootType = (null: $FlowFixMe);
 
-let port = null;
+let currentSelectedSource: null | SourceSelection = null;
+
+let port: ExtensionRuntimePort = (null: $FlowFixMe);
 
 // In case when multiple navigation events emitted in a short period of time
 // This debounced callback primarily used to avoid mounting React DevTools multiple times, which results
@@ -433,3 +653,51 @@ if (__IS_FIREFOX__) {
 connectExtensionPort();
 
 mountReactDevToolsWhenReactHasLoaded();
+
+function onThemeChanged() {
+  // Rerender with the new theme
+  render();
+}
+
+if (chrome.devtools.panels.setThemeChangeHandler) {
+  // Chrome
+  chrome.devtools.panels.setThemeChangeHandler(onThemeChanged);
+} else if (chrome.devtools.panels.onThemeChanged) {
+  // Firefox
+  chrome.devtools.panels.onThemeChanged.addListener(onThemeChanged);
+}
+
+// Firefox doesn't support resources handlers yet.
+if (chrome.devtools.panels.setOpenResourceHandler) {
+  chrome.devtools.panels.setOpenResourceHandler(
+    (
+      resource,
+      lineNumber = 1,
+      // The column is a new feature so we have to specify a default if it doesn't exist
+      columnNumber = 1,
+    ) => {
+      const alwaysOpenInEditor = getAlwaysOpenInEditor();
+      const editorURL = getOpenInEditorURL();
+      if (alwaysOpenInEditor && editorURL) {
+        const location = ['', resource.url, lineNumber, columnNumber];
+        const {url, shouldDisableButton} = checkConditions(editorURL, location);
+        if (!shouldDisableButton) {
+          window.open(url);
+          return;
+        }
+      }
+      // Otherwise fallback to the built-in behavior.
+      chrome.devtools.panels.openResource(
+        resource.url,
+        lineNumber - 1,
+        columnNumber - 1,
+        maybeError => {
+          if (maybeError && maybeError.isError) {
+            // Not a resource Chrome can open. Fallback to browser default behavior.
+            window.open(resource.url);
+          }
+        },
+      );
+    },
+  );
+}

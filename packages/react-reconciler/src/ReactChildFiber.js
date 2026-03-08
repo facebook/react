@@ -13,7 +13,10 @@ import type {
   Thenable,
   ReactContext,
   ReactDebugInfo,
+  ReactComponentInfo,
   SuspenseListRevealOrder,
+  ReactKey,
+  ReactOptimisticKey,
 } from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
@@ -36,6 +39,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_LEGACY_ELEMENT_TYPE,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 import {
   HostRoot,
@@ -49,6 +53,7 @@ import {
   enableAsyncIterableChildren,
   disableLegacyMode,
   enableFragmentRefs,
+  enableOptimisticKey,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -68,9 +73,9 @@ import {
   SuspenseActionException,
   createThenableState,
   trackUsedThenable,
+  resolveLazy,
 } from './ReactFiberThenable';
 import {readContextDuringReconciliation} from './ReactFiberNewContext';
-import {callLazyInitInDEV} from './ReactFiberCallUserSpace';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
 
@@ -99,6 +104,25 @@ function pushDebugInfo(
     currentDebugInfo = previousDebugInfo.concat(debugInfo);
   }
   return previousDebugInfo;
+}
+
+function getCurrentDebugTask(): null | ConsoleTask {
+  // Get the debug task of the parent Server Component if there is one.
+  if (__DEV__) {
+    const debugInfo = currentDebugInfo;
+    if (debugInfo != null) {
+      for (let i = debugInfo.length - 1; i >= 0; i--) {
+        if (debugInfo[i].name != null) {
+          const componentInfo: ReactComponentInfo = debugInfo[i];
+          const debugTask: ?ConsoleTask = componentInfo.debugTask;
+          if (debugTask != null) {
+            return debugTask;
+          }
+        }
+      }
+    }
+  }
+  return null;
 }
 
 let didWarnAboutMaps;
@@ -274,7 +298,7 @@ function coerceRef(workInProgress: Fiber, element: ReactElement): void {
   workInProgress.ref = refProp !== undefined ? refProp : null;
 }
 
-function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+function throwOnInvalidObjectTypeImpl(returnFiber: Fiber, newChild: Object) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE) {
     throw new Error(
       'A React Element from an older version of React was rendered. ' +
@@ -299,7 +323,18 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   );
 }
 
-function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
+function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+  const debugTask = getCurrentDebugTask();
+  if (__DEV__ && debugTask !== null) {
+    debugTask.run(
+      throwOnInvalidObjectTypeImpl.bind(null, returnFiber, newChild),
+    );
+  } else {
+    throwOnInvalidObjectTypeImpl(returnFiber, newChild);
+  }
+}
+
+function warnOnFunctionTypeImpl(returnFiber: Fiber, invalidChild: Function) {
   if (__DEV__) {
     const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
@@ -336,7 +371,16 @@ function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
   }
 }
 
-function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
+function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
+  const debugTask = getCurrentDebugTask();
+  if (__DEV__ && debugTask !== null) {
+    debugTask.run(warnOnFunctionTypeImpl.bind(null, returnFiber, invalidChild));
+  } else {
+    warnOnFunctionTypeImpl(returnFiber, invalidChild);
+  }
+}
+
+function warnOnSymbolTypeImpl(returnFiber: Fiber, invalidChild: symbol) {
   if (__DEV__) {
     const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
@@ -364,13 +408,13 @@ function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
   }
 }
 
-function resolveLazy(lazyType: any) {
-  if (__DEV__) {
-    return callLazyInitInDEV(lazyType);
+function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
+  const debugTask = getCurrentDebugTask();
+  if (__DEV__ && debugTask !== null) {
+    debugTask.run(warnOnSymbolTypeImpl.bind(null, returnFiber, invalidChild));
+  } else {
+    warnOnSymbolTypeImpl(returnFiber, invalidChild);
   }
-  const payload = lazyType._payload;
-  const init = lazyType._init;
-  return init(payload);
 }
 
 type ChildReconciler = (
@@ -422,18 +466,33 @@ function createChildReconciler(
 
   function mapRemainingChildren(
     currentFirstChild: Fiber,
-  ): Map<string | number, Fiber> {
+  ): Map<string | number | ReactOptimisticKey, Fiber> {
     // Add the remaining children to a temporary map so that we can find them by
     // keys quickly. Implicit (null) keys get added to this set with their index
     // instead.
-    const existingChildren: Map<string | number, Fiber> = new Map();
+    const existingChildren: Map<
+      | string
+      | number
+      // This type is only here for the case when enableOptimisticKey is disabled.
+      // Remove it after it ships.
+      | ReactOptimisticKey,
+      Fiber,
+    > = new Map();
 
     let existingChild: null | Fiber = currentFirstChild;
     while (existingChild !== null) {
-      if (existingChild.key !== null) {
-        existingChildren.set(existingChild.key, existingChild);
-      } else {
+      if (existingChild.key === null) {
         existingChildren.set(existingChild.index, existingChild);
+      } else if (
+        enableOptimisticKey &&
+        existingChild.key === REACT_OPTIMISTIC_KEY
+      ) {
+        // For optimistic keys, we store the negative index (minus one) to differentiate
+        // them from the regular indices. We'll look this up regardless of what the new
+        // key is, if there's no other match.
+        existingChildren.set(-existingChild.index - 1, existingChild);
+      } else {
+        existingChildren.set(existingChild.key, existingChild);
       }
       existingChild = existingChild.sibling;
     }
@@ -596,6 +655,10 @@ function createChildReconciler(
     } else {
       // Update
       const existing = useFiber(current, portal.children || []);
+      if (enableOptimisticKey) {
+        // If the old key was optimistic we need to now save the real one.
+        existing.key = portal.key;
+      }
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugInfo = currentDebugInfo;
@@ -609,7 +672,7 @@ function createChildReconciler(
     current: Fiber | null,
     fragment: Iterable<React$Node>,
     lanes: Lanes,
-    key: null | string,
+    key: ReactKey,
   ): Fiber {
     if (current === null || current.tag !== Fragment) {
       // Insert
@@ -630,6 +693,10 @@ function createChildReconciler(
     } else {
       // Update
       const existing = useFiber(current, fragment);
+      if (enableOptimisticKey) {
+        // If the old key was optimistic we need to now save the real one.
+        existing.key = key;
+      }
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugInfo = currentDebugInfo;
@@ -698,14 +765,7 @@ function createChildReconciler(
         }
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((newChild: any));
           const created = createChild(returnFiber, resolvedChild, lanes);
           currentDebugInfo = prevDebugInfo;
           return created;
@@ -729,6 +789,7 @@ function createChildReconciler(
           // We treat the parent as the owner for stack purposes.
           created._debugOwner = returnFiber;
           created._debugTask = returnFiber._debugTask;
+          // Make sure to not push again when handling the Fragment child.
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
           created._debugInfo = currentDebugInfo;
           currentDebugInfo = prevDebugInfo;
@@ -807,7 +868,13 @@ function createChildReconciler(
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (newChild.key === key) {
+          if (
+            // If the old child was an optimisticKey, then we'd normally consider that a match,
+            // but instead, we'll bail to return null from the slot which will bail to slow path.
+            // That's to ensure that if the new key has a match elsewhere in the list, then that
+            // takes precedence over assuming the identity of an optimistic slot.
+            newChild.key === key
+          ) {
             const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
             const updated = updateElement(
               returnFiber,
@@ -822,7 +889,13 @@ function createChildReconciler(
           }
         }
         case REACT_PORTAL_TYPE: {
-          if (newChild.key === key) {
+          if (
+            // If the old child was an optimisticKey, then we'd normally consider that a match,
+            // but instead, we'll bail to return null from the slot which will bail to slow path.
+            // That's to ensure that if the new key has a match elsewhere in the list, then that
+            // takes precedence over assuming the identity of an optimistic slot.
+            newChild.key === key
+          ) {
             return updatePortal(returnFiber, oldFiber, newChild, lanes);
           } else {
             return null;
@@ -830,14 +903,7 @@ function createChildReconciler(
         }
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((newChild: any));
           const updated = updateSlot(
             returnFiber,
             oldFiber,
@@ -913,7 +979,7 @@ function createChildReconciler(
   }
 
   function updateFromMap(
-    existingChildren: Map<string | number, Fiber>,
+    existingChildren: Map<string | number | ReactOptimisticKey, Fiber>,
     returnFiber: Fiber,
     newIdx: number,
     newChild: any,
@@ -942,7 +1008,11 @@ function createChildReconciler(
           const matchedFiber =
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
-            ) || null;
+            ) ||
+            (enableOptimisticKey &&
+              // If the existing child was an optimistic key, we may still match on the index.
+              existingChildren.get(-newIdx - 1)) ||
+            null;
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
           const updated = updateElement(
             returnFiber,
@@ -957,19 +1027,16 @@ function createChildReconciler(
           const matchedFiber =
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
-            ) || null;
+            ) ||
+            (enableOptimisticKey &&
+              // If the existing child was an optimistic key, we may still match on the index.
+              existingChildren.get(-newIdx - 1)) ||
+            null;
           return updatePortal(returnFiber, matchedFiber, newChild, lanes);
         }
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((newChild: any));
           const updated = updateFromMap(
             existingChildren,
             returnFiber,
@@ -1086,14 +1153,7 @@ function createChildReconciler(
           });
           break;
         case REACT_LAZY_TYPE: {
-          let resolvedChild;
-          if (__DEV__) {
-            resolvedChild = callLazyInitInDEV((child: any));
-          } else {
-            const payload = child._payload;
-            const init = (child._init: any);
-            resolvedChild = init(payload);
-          }
+          const resolvedChild = resolveLazy((child: any));
           warnOnInvalidKey(
             returnFiber,
             workInProgress,
@@ -1262,14 +1322,22 @@ function createChildReconciler(
           );
         }
         if (shouldTrackSideEffects) {
-          if (newFiber.alternate !== null) {
+          const currentFiber = newFiber.alternate;
+          if (currentFiber !== null) {
             // The new fiber is a work in progress, but if there exists a
             // current, that means that we reused the fiber. We need to delete
             // it from the child list so that we don't add it to the deletion
             // list.
-            existingChildren.delete(
-              newFiber.key === null ? newIdx : newFiber.key,
-            );
+            if (
+              enableOptimisticKey &&
+              currentFiber.key === REACT_OPTIMISTIC_KEY
+            ) {
+              existingChildren.delete(-newIdx - 1);
+            } else {
+              existingChildren.delete(
+                currentFiber.key === null ? newIdx : currentFiber.key,
+              );
+            }
           }
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
@@ -1556,14 +1624,22 @@ function createChildReconciler(
           );
         }
         if (shouldTrackSideEffects) {
-          if (newFiber.alternate !== null) {
+          const currentFiber = newFiber.alternate;
+          if (currentFiber !== null) {
             // The new fiber is a work in progress, but if there exists a
             // current, that means that we reused the fiber. We need to delete
             // it from the child list so that we don't add it to the deletion
             // list.
-            existingChildren.delete(
-              newFiber.key === null ? newIdx : newFiber.key,
-            );
+            if (
+              enableOptimisticKey &&
+              currentFiber.key === REACT_OPTIMISTIC_KEY
+            ) {
+              existingChildren.delete(-newIdx - 1);
+            } else {
+              existingChildren.delete(
+                currentFiber.key === null ? newIdx : currentFiber.key,
+              );
+            }
           }
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
@@ -1630,12 +1706,19 @@ function createChildReconciler(
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (
+        child.key === key ||
+        (enableOptimisticKey && child.key === REACT_OPTIMISTIC_KEY)
+      ) {
         const elementType = element.type;
         if (elementType === REACT_FRAGMENT_TYPE) {
           if (child.tag === Fragment) {
             deleteRemainingChildren(returnFiber, child.sibling);
             const existing = useFiber(child, element.props.children);
+            if (enableOptimisticKey) {
+              // If the old key was optimistic we need to now save the real one.
+              existing.key = key;
+            }
             if (enableFragmentRefs) {
               coerceRef(existing, element);
             }
@@ -1665,6 +1748,10 @@ function createChildReconciler(
           ) {
             deleteRemainingChildren(returnFiber, child.sibling);
             const existing = useFiber(child, element.props);
+            if (enableOptimisticKey) {
+              // If the old key was optimistic we need to now save the real one.
+              existing.key = key;
+            }
             coerceRef(existing, element);
             existing.return = returnFiber;
             if (__DEV__) {
@@ -1724,7 +1811,10 @@ function createChildReconciler(
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (
+        child.key === key ||
+        (enableOptimisticKey && child.key === REACT_OPTIMISTIC_KEY)
+      ) {
         if (
           child.tag === HostPortal &&
           child.stateNode.containerInfo === portal.containerInfo &&
@@ -1732,6 +1822,10 @@ function createChildReconciler(
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, portal.children || []);
+          if (enableOptimisticKey) {
+            // If the old key was optimistic we need to now save the real one.
+            existing.key = key;
+          }
           existing.return = returnFiber;
           return existing;
         } else {
@@ -1809,14 +1903,7 @@ function createChildReconciler(
           );
         case REACT_LAZY_TYPE: {
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
-          let result;
-          if (__DEV__) {
-            result = callLazyInitInDEV(newChild);
-          } else {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            result = init(payload);
-          }
+          const result = resolveLazy((newChild: any));
           const firstChild = reconcileChildFibersImpl(
             returnFiber,
             currentFirstChild,
@@ -1829,26 +1916,26 @@ function createChildReconciler(
       }
 
       if (isArray(newChild)) {
-        const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
+        // We created a Fragment for this child with the debug info.
+        // No need to push again.
         const firstChild = reconcileChildrenArray(
           returnFiber,
           currentFirstChild,
           newChild,
           lanes,
         );
-        currentDebugInfo = prevDebugInfo;
         return firstChild;
       }
 
       if (getIteratorFn(newChild)) {
-        const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
+        // We created a Fragment for this child with the debug info.
+        // No need to push again.
         const firstChild = reconcileChildrenIteratable(
           returnFiber,
           currentFirstChild,
           newChild,
           lanes,
         );
-        currentDebugInfo = prevDebugInfo;
         return firstChild;
       }
 
@@ -1856,14 +1943,14 @@ function createChildReconciler(
         enableAsyncIterableChildren &&
         typeof newChild[ASYNC_ITERATOR] === 'function'
       ) {
-        const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
+        // We created a Fragment for this child with the debug info.
+        // No need to push again.
         const firstChild = reconcileChildrenAsyncIteratable(
           returnFiber,
           currentFirstChild,
           newChild,
           lanes,
         );
-        currentDebugInfo = prevDebugInfo;
         return firstChild;
       }
 
@@ -1985,12 +2072,14 @@ function createChildReconciler(
       throwFiber.return = returnFiber;
       if (__DEV__) {
         const debugInfo = (throwFiber._debugInfo = currentDebugInfo);
-        // Conceptually the error's owner/task should ideally be captured when the
-        // Error constructor is called but neither console.createTask does this,
-        // nor do we override them to capture our `owner`. So instead, we use the
-        // nearest parent as the owner/task of the error. This is usually the same
-        // thing when it's thrown from the same async component but not if you await
-        // a promise started from a different component/task.
+        // Conceptually the error's owner should ideally be captured when the
+        // Error constructor is called but we don't override them to capture our
+        // `owner`. So instead, we use the nearest parent as the owner/task of the
+        // error. This is usually the same thing when it's thrown from the same
+        // async component but not if you await a promise started from a different
+        // component/task.
+        // In newer Chrome, Error constructor does capture the Task which is what
+        // is logged by reportError. In that case this debugTask isn't used.
         throwFiber._debugOwner = returnFiber._debugOwner;
         throwFiber._debugTask = returnFiber._debugTask;
         if (debugInfo != null) {
@@ -2097,7 +2186,8 @@ export function validateSuspenseListChildren(
 ) {
   if (__DEV__) {
     if (
-      (revealOrder === 'forwards' ||
+      (revealOrder == null ||
+        revealOrder === 'forwards' ||
         revealOrder === 'backwards' ||
         revealOrder === 'unstable_legacy-backwards') &&
       children !== undefined &&

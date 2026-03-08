@@ -1,8 +1,13 @@
+/**
+ * @jest-environment node
+ */
 'use strict';
 
-const path = require('path');
-
 import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
+
+import crypto from 'crypto';
+import fs from 'fs/promises';
+import path from 'path';
 
 let React;
 let ReactServer;
@@ -10,109 +15,21 @@ let cache;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Stream;
+let observer;
+let getDebugInfo;
 
 const streamOptions = {
   objectMode: true,
 };
 
-const repoRoot = path.resolve(__dirname, '../../../../');
-
-function normalizeStack(stack) {
-  if (!stack) {
-    return stack;
-  }
-  const copy = [];
-  for (let i = 0; i < stack.length; i++) {
-    const [name, file, line, col, enclosingLine, enclosingCol] = stack[i];
-    copy.push([
-      name,
-      file.replace(repoRoot, ''),
-      line,
-      col,
-      enclosingLine,
-      enclosingCol,
-    ]);
-  }
-  return copy;
-}
-
-function normalizeIOInfo(ioInfo) {
-  const {debugTask, debugStack, debugLocation, ...copy} = ioInfo;
-  if (ioInfo.stack) {
-    copy.stack = normalizeStack(ioInfo.stack);
-  }
-  if (ioInfo.owner) {
-    copy.owner = normalizeDebugInfo(ioInfo.owner);
-  }
-  if (typeof ioInfo.start === 'number') {
-    copy.start = 0;
-  }
-  if (typeof ioInfo.end === 'number') {
-    copy.end = 0;
-  }
-  const promise = ioInfo.value;
-  if (promise) {
-    promise.then(); // init
-    if (promise.status === 'fulfilled') {
-      copy.value = {
-        value: promise.value,
-      };
-    } else if (promise.status === 'rejected') {
-      copy.value = {
-        reason: promise.reason,
-      };
-    } else {
-      copy.value = {
-        status: promise.status,
-      };
-    }
-  }
-  return copy;
-}
-
-function normalizeDebugInfo(debugInfo) {
-  if (Array.isArray(debugInfo.stack)) {
-    const {debugTask, debugStack, debugLocation, ...copy} = debugInfo;
-    copy.stack = normalizeStack(debugInfo.stack);
-    if (debugInfo.owner) {
-      copy.owner = normalizeDebugInfo(debugInfo.owner);
-    }
-    if (debugInfo.awaited) {
-      copy.awaited = normalizeIOInfo(copy.awaited);
-    }
-    if (debugInfo.props) {
-      copy.props = {};
-    }
-    return copy;
-  } else if (typeof debugInfo.time === 'number') {
-    return {...debugInfo, time: 0};
-  } else if (debugInfo.awaited) {
-    return {...debugInfo, awaited: normalizeIOInfo(debugInfo.awaited)};
-  } else {
-    return debugInfo;
-  }
-}
-
-function getDebugInfo(obj) {
-  const debugInfo = obj._debugInfo;
-  if (debugInfo) {
-    const copy = [];
-    for (let i = 0; i < debugInfo.length; i++) {
-      copy.push(normalizeDebugInfo(debugInfo[i]));
-    }
-    return copy;
-  }
-  return debugInfo;
-}
-
 function filterStackFrame(filename, functionName) {
   return (
-    filename !== '' &&
     !filename.startsWith('node:') &&
     !filename.includes('node_modules') &&
     // Filter out our own internal source code since it'll typically be in node_modules
     (!filename.includes('/packages/') || filename.includes('/__tests__/')) &&
-    !filename.includes('/build/')
+    !filename.includes('/build/') &&
+    !functionName.includes('internal_')
   );
 }
 
@@ -125,7 +42,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
 
     jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
-      require('react-server-dom-webpack/server.node'),
+      jest.requireActual('react-server-dom-webpack/server.node'),
     );
     ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
@@ -138,12 +55,22 @@ describe('ReactFlightAsyncDebugInfo', () => {
     __unmockReact();
     jest.unmock('react-server-dom-webpack/server');
     jest.mock('react-server-dom-webpack/client', () =>
-      require('react-server-dom-webpack/client.node'),
+      jest.requireActual('react-server-dom-webpack/client.node'),
     );
 
     React = require('react');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     Stream = require('stream');
+
+    getDebugInfo = require('internal-test-utils').getDebugInfo.bind(null, {
+      ignoreProps: true,
+      useFixedTime: true,
+    });
+  });
+
+  afterEach(() => {
+    observer?.disconnect();
+    observer = undefined;
   });
 
   function finishLoadingStream(readable) {
@@ -183,6 +110,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
     async function getData(text) {
       await delay(1);
       const promise = delay(2);
+      promise.displayName = 'hello';
       await Promise.all([promise]);
       return text.toUpperCase();
     }
@@ -233,9 +161,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                202,
+                130,
                 109,
-                182,
+                109,
                 50,
               ],
             ],
@@ -257,9 +185,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    202,
+                    130,
                     109,
-                    182,
+                    109,
                     50,
                   ],
                 ],
@@ -268,25 +196,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  184,
+                  111,
                   13,
-                  183,
+                  110,
                   5,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  191,
+                  119,
                   26,
-                  190,
+                  118,
                   5,
                 ],
               ],
@@ -305,9 +233,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  202,
+                  130,
                   109,
-                  182,
+                  109,
                   50,
                 ],
               ],
@@ -316,17 +244,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                184,
+                111,
                 13,
-                183,
+                110,
                 5,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                191,
+                119,
                 26,
-                190,
+                118,
                 5,
               ],
             ],
@@ -341,7 +269,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "end": 0,
               "env": "Server",
-              "name": "delay",
+              "name": "hello",
               "owner": {
                 "env": "Server",
                 "key": null,
@@ -351,9 +279,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    202,
+                    130,
                     109,
-                    182,
+                    109,
                     50,
                   ],
                 ],
@@ -362,33 +290,31 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  185,
+                  112,
                   21,
-                  183,
+                  110,
                   5,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  191,
+                  119,
                   20,
-                  190,
+                  118,
                   5,
                 ],
               ],
               "start": 0,
               "value": {
-                "value": [
-                  ,
-                ],
+                "value": undefined,
               },
             },
             "env": "Server",
@@ -401,9 +327,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  202,
+                  130,
                   109,
-                  182,
+                  109,
                   50,
                 ],
               ],
@@ -412,17 +338,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                186,
+                114,
                 21,
-                183,
+                110,
                 5,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                191,
+                119,
                 20,
-                190,
+                118,
                 5,
               ],
             ],
@@ -442,9 +368,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                193,
+                121,
                 60,
-                190,
+                118,
                 5,
               ],
             ],
@@ -456,7 +382,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "end": 0,
               "env": "Server",
-              "name": "delay",
+              "name": "hello",
               "owner": {
                 "env": "Server",
                 "key": null,
@@ -466,9 +392,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    202,
+                    130,
                     109,
-                    182,
+                    109,
                     50,
                   ],
                 ],
@@ -477,23 +403,23 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  185,
+                  112,
                   21,
-                  183,
+                  110,
                   5,
                 ],
               ],
               "start": 0,
               "value": {
-                "status": "halted",
+                "value": undefined,
               },
             },
             "env": "Server",
@@ -506,9 +432,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  193,
+                  121,
                   60,
-                  190,
+                  118,
                   5,
                 ],
               ],
@@ -517,9 +443,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "InnerComponent",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                199,
+                127,
                 35,
-                196,
+                124,
                 5,
               ],
             ],
@@ -530,8 +456,115 @@ describe('ReactFlightAsyncDebugInfo', () => {
           {
             "time": 0,
           },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
         ]
       `);
+    }
+  });
+
+  it('adds a description to I/O', async () => {
+    async function getData(url) {
+      // just wait a macrotask for this call to get picked up
+      await new Promise(resolve => {
+        setTimeout(() => {
+          const fakeResponse = {url};
+          resolve(fakeResponse);
+        }, 1);
+      });
+    }
+
+    async function Component() {
+      await getData('http://github.com/facebook/react/pulls');
+      await getData('http://github.com/facebook/react/pulls/');
+      await getData(
+        'https://this-is-a-very-long-domain-name-what-happens.app/test',
+      );
+      await getData(
+        'https://github.com/facebook/react/commit/75897c2dcd1dd3a6ca46284dd37e13d22b4b16b4',
+      );
+      await getData('/this-is-a-very-long-directory-name-what-happens/');
+      await getData('/this-is-not');
+      return 'Hi, Sebbie';
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(<Component />);
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+      {replayConsoleLogs: true},
+    );
+    stream.pipe(readable);
+
+    expect(await result).toBe('Hi, Sebbie');
+
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      let gotEntries;
+      const hasEntries = new Promise(resolve => {
+        gotEntries = resolve;
+      });
+      const entries = [];
+      observer = new PerformanceObserver(list => {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const entry of list.getEntries()) {
+          const {name} = entry;
+          entries.push({name});
+        }
+        gotEntries();
+      }).observe({type: 'measure'});
+
+      await hasEntries;
+      await finishLoadingStream(readable);
+
+      expect(entries).toMatchInlineSnapshot(`
+        [
+          {
+            "name": "\u200bComponent",
+          },
+          {
+            "name": "await getData (…/pulls)",
+          },
+          {
+            "name": "await getData (…/pulls)",
+          },
+          {
+            "name": "await getData (…/test)",
+          },
+          {
+            "name": "await getData (…/75897c2dcd…13d22b4b16b4)",
+          },
+          {
+            "name": "await getData (/this-is-a-…what-happens)",
+          },
+          {
+            "name": "await getData (/this-is-not)",
+          },
+        ]
+      `);
+    } else {
+      await finishLoadingStream(readable);
     }
   });
 
@@ -593,10 +626,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                557,
+                590,
                 40,
-                538,
+                571,
                 49,
+              ],
+              [
+                "new Promise",
+                "",
+                0,
+                0,
+                0,
+                0,
               ],
             ],
           },
@@ -617,10 +658,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    557,
+                    590,
                     40,
-                    538,
+                    571,
                     49,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                   ],
                 ],
               },
@@ -628,25 +677,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  540,
+                  573,
                   13,
-                  539,
+                  572,
                   5,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  545,
+                  578,
                   36,
-                  544,
+                  577,
                   5,
                 ],
               ],
@@ -665,10 +714,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  557,
+                  590,
                   40,
-                  538,
+                  571,
                   49,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
                 ],
               ],
             },
@@ -676,17 +733,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                540,
+                573,
                 13,
-                539,
+                572,
                 5,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                545,
+                578,
                 36,
-                544,
+                577,
                 5,
               ],
             ],
@@ -706,9 +763,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                547,
+                580,
                 60,
-                544,
+                577,
                 5,
               ],
             ],
@@ -727,10 +784,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    557,
+                    590,
                     40,
-                    538,
+                    571,
                     49,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                   ],
                 ],
               },
@@ -738,25 +803,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  540,
+                  573,
                   13,
-                  539,
+                  572,
                   5,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  546,
+                  579,
                   22,
-                  544,
+                  577,
                   5,
                 ],
               ],
@@ -775,9 +840,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  547,
+                  580,
                   60,
-                  544,
+                  577,
                   5,
                 ],
               ],
@@ -786,9 +851,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "InnerComponent",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                553,
+                586,
                 40,
-                550,
+                583,
                 5,
               ],
             ],
@@ -799,12 +864,24 @@ describe('ReactFlightAsyncDebugInfo', () => {
           {
             "time": 0,
           },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
         ]
       `);
     }
   });
 
-  it('can track the start of I/O when no native promise is used', async () => {
+  it('cannot currently track the start of I/O when no native promise is used', async () => {
     function Component() {
       const callbacks = [];
       setTimeout(function timer() {
@@ -851,10 +928,10 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                820,
+                897,
                 109,
-                807,
-                67,
+                884,
+                80,
               ],
             ],
           },
@@ -862,7 +939,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "end": 0,
               "env": "Server",
-              "name": "setTimeout",
+              "name": "",
               "owner": {
                 "env": "Server",
                 "key": null,
@@ -872,32 +949,50 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    820,
+                    897,
                     109,
-                    807,
-                    67,
+                    884,
+                    80,
                   ],
                 ],
               },
-              "stack": [
-                [
-                  "Component",
-                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  810,
-                  7,
-                  808,
-                  5,
-                ],
-              ],
               "start": 0,
             },
             "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "Object.<anonymous>",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  897,
+                  109,
+                  884,
+                  80,
+                ],
+              ],
+            },
           },
           {
             "time": 0,
           },
           {
             "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
           },
         ]
       `);
@@ -947,9 +1042,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                916,
+                1011,
                 109,
-                907,
+                1002,
                 94,
               ],
             ],
@@ -1020,9 +1115,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                989,
+                1084,
                 109,
-                965,
+                1060,
                 50,
               ],
             ],
@@ -1104,9 +1199,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1073,
+                1168,
                 109,
-                1056,
+                1151,
                 63,
               ],
             ],
@@ -1123,17 +1218,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "fetchThirdParty",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                167,
+                94,
                 40,
-                165,
+                92,
                 3,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1069,
+                1164,
                 24,
-                1068,
+                1163,
                 5,
               ],
             ],
@@ -1155,17 +1250,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "fetchThirdParty",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    167,
+                    94,
                     40,
-                    165,
+                    92,
                     3,
                   ],
                   [
                     "Component",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    1069,
+                    1164,
                     24,
-                    1068,
+                    1163,
                     5,
                   ],
                 ],
@@ -1174,25 +1269,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1058,
+                  1153,
                   13,
-                  1057,
+                  1152,
                   5,
                 ],
                 [
                   "ThirdPartyComponent",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1064,
+                  1159,
                   24,
-                  1063,
+                  1158,
                   5,
                 ],
               ],
@@ -1211,17 +1306,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "fetchThirdParty",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  167,
+                  94,
                   40,
-                  165,
+                  92,
                   3,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1069,
+                  1164,
                   24,
-                  1068,
+                  1163,
                   5,
                 ],
               ],
@@ -1230,17 +1325,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1058,
+                1153,
                 13,
-                1057,
+                1152,
                 5,
               ],
               [
                 "ThirdPartyComponent",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1064,
+                1159,
                 24,
-                1063,
+                1158,
                 5,
               ],
             ],
@@ -1265,17 +1360,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "fetchThirdParty",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    167,
+                    94,
                     40,
-                    165,
+                    92,
                     3,
                   ],
                   [
                     "Component",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    1069,
+                    1164,
                     24,
-                    1068,
+                    1163,
                     5,
                   ],
                 ],
@@ -1284,25 +1379,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1059,
+                  1154,
                   13,
-                  1057,
+                  1152,
                   5,
                 ],
                 [
                   "ThirdPartyComponent",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1064,
+                  1159,
                   18,
-                  1063,
+                  1158,
                   5,
                 ],
               ],
@@ -1321,17 +1416,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "fetchThirdParty",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  167,
+                  94,
                   40,
-                  165,
+                  92,
                   3,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1069,
+                  1164,
                   24,
-                  1068,
+                  1163,
                   5,
                 ],
               ],
@@ -1340,17 +1435,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1059,
+                1154,
                 13,
-                1057,
+                1152,
                 5,
               ],
               [
                 "ThirdPartyComponent",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1064,
+                1159,
                 18,
-                1063,
+                1158,
                 5,
               ],
             ],
@@ -1362,7 +1457,32 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "time": 0,
           },
           {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "env": "Server",
+              "name": "rsc stream",
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+            "env": "Server",
+          },
+          {
             "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
           },
         ]
       `);
@@ -1425,10 +1545,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1389,
+                1509,
                 40,
-                1372,
+                1492,
                 62,
+              ],
+              [
+                "new Promise",
+                "",
+                0,
+                0,
+                0,
+                0,
               ],
             ],
           },
@@ -1449,10 +1577,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    1389,
+                    1509,
                     40,
-                    1372,
+                    1492,
                     62,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                   ],
                 ],
               },
@@ -1460,25 +1596,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1374,
+                  1494,
                   13,
-                  1373,
+                  1493,
                   25,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1384,
+                  1504,
                   13,
-                  1383,
+                  1503,
                   5,
                 ],
               ],
@@ -1497,10 +1633,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1389,
+                  1509,
                   40,
-                  1372,
+                  1492,
                   62,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
                 ],
               ],
             },
@@ -1508,17 +1652,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1374,
+                1494,
                 13,
-                1373,
+                1493,
                 25,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1384,
+                1504,
                 13,
-                1383,
+                1503,
                 5,
               ],
             ],
@@ -1538,9 +1682,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1385,
+                1505,
                 60,
-                1383,
+                1503,
                 5,
               ],
             ],
@@ -1562,10 +1706,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    1389,
+                    1509,
                     40,
-                    1372,
+                    1492,
                     62,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                   ],
                 ],
               },
@@ -1573,25 +1725,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1374,
+                  1494,
                   13,
-                  1373,
+                  1493,
                   25,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1384,
+                  1504,
                   13,
-                  1383,
+                  1503,
                   5,
                 ],
               ],
@@ -1610,9 +1762,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1385,
+                  1505,
                   60,
-                  1383,
+                  1503,
                   5,
                 ],
               ],
@@ -1621,9 +1773,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Child",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1379,
+                1499,
                 28,
-                1378,
+                1498,
                 5,
               ],
             ],
@@ -1633,6 +1785,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
           },
           {
             "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
           },
         ]
       `);
@@ -1694,10 +1858,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1658,
+                1822,
                 40,
-                1642,
+                1806,
                 57,
+              ],
+              [
+                "new Promise",
+                "",
+                0,
+                0,
+                0,
+                0,
               ],
             ],
           },
@@ -1718,10 +1890,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    1658,
+                    1822,
                     40,
-                    1642,
+                    1806,
                     57,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                   ],
                 ],
               },
@@ -1729,25 +1909,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1644,
+                  1808,
                   13,
-                  1643,
+                  1807,
                   25,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1653,
+                  1817,
                   23,
-                  1652,
+                  1816,
                   5,
                 ],
               ],
@@ -1766,10 +1946,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1658,
+                  1822,
                   40,
-                  1642,
+                  1806,
                   57,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
                 ],
               ],
             },
@@ -1777,17 +1965,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "getData",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1644,
+                1808,
                 13,
-                1643,
+                1807,
                 25,
               ],
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1653,
+                1817,
                 23,
-                1652,
+                1816,
                 5,
               ],
             ],
@@ -1807,9 +1995,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1654,
+                1818,
                 60,
-                1652,
+                1816,
                 5,
               ],
             ],
@@ -1828,10 +2016,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    1658,
+                    1822,
                     40,
-                    1642,
+                    1806,
                     57,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                   ],
                 ],
               },
@@ -1839,25 +2035,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "getData",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1644,
+                  1808,
                   13,
-                  1643,
+                  1807,
                   25,
                 ],
                 [
                   "Component",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1653,
+                  1817,
                   23,
-                  1652,
+                  1816,
                   5,
                 ],
               ],
@@ -1867,12 +2063,34 @@ describe('ReactFlightAsyncDebugInfo', () => {
               },
             },
             "env": "Server",
+            "stack": [
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                1818,
+                60,
+                1816,
+                5,
+              ],
+            ],
           },
           {
             "time": 0,
           },
           {
             "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
           },
         ]
       `);
@@ -1936,11 +2154,19 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1900,
+                2118,
                 40,
-                1882,
+                2100,
                 80,
               ],
+              [
+                "new Promise",
+                "",
+                0,
+                0,
+                0,
+                0,
+              ],
             ],
           },
           {
@@ -1960,10 +2186,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    1900,
+                    2118,
                     40,
-                    1882,
+                    2100,
                     80,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                   ],
                 ],
               },
@@ -1971,25 +2205,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "delayTrice",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1890,
+                  2108,
                   13,
-                  1888,
+                  2106,
                   5,
                 ],
                 [
                   "Bar",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1895,
+                  2113,
                   13,
-                  1894,
+                  2112,
                   5,
                 ],
               ],
@@ -2008,10 +2242,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1900,
+                  2118,
                   40,
-                  1882,
+                  2100,
                   80,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
                 ],
               ],
             },
@@ -2019,17 +2261,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "delayTrice",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1890,
+                2108,
                 13,
-                1888,
+                2106,
                 5,
               ],
               [
                 "Bar",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1895,
+                2113,
                 13,
-                1894,
+                2112,
                 5,
               ],
             ],
@@ -2051,10 +2293,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    1900,
+                    2118,
                     40,
-                    1882,
+                    2100,
                     80,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                   ],
                 ],
               },
@@ -2062,33 +2312,33 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "delayTwice",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1884,
+                  2102,
                   13,
-                  1883,
+                  2101,
                   5,
                 ],
                 [
                   "delayTrice",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1889,
+                  2107,
                   15,
-                  1888,
+                  2106,
                   5,
                 ],
                 [
                   "Bar",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1895,
+                  2113,
                   13,
-                  1894,
+                  2112,
                   5,
                 ],
               ],
@@ -2107,10 +2357,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1900,
+                  2118,
                   40,
-                  1882,
+                  2100,
                   80,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
                 ],
               ],
             },
@@ -2118,25 +2376,25 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "delayTwice",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1884,
+                2102,
                 13,
-                1883,
+                2101,
                 5,
               ],
               [
                 "delayTrice",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1889,
+                2107,
                 15,
-                1888,
+                2106,
                 5,
               ],
               [
                 "Bar",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1895,
+                2113,
                 13,
-                1894,
+                2112,
                 5,
               ],
             ],
@@ -2158,10 +2416,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   [
                     "Object.<anonymous>",
                     "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                    1900,
+                    2118,
                     40,
-                    1882,
+                    2100,
                     80,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                   ],
                 ],
               },
@@ -2169,17 +2435,17 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "delay",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  160,
+                  87,
                   12,
-                  159,
+                  86,
                   3,
                 ],
                 [
                   "delayTwice",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1885,
+                  2103,
                   13,
-                  1883,
+                  2101,
                   5,
                 ],
               ],
@@ -2198,10 +2464,18 @@ describe('ReactFlightAsyncDebugInfo', () => {
                 [
                   "Object.<anonymous>",
                   "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  1900,
+                  2118,
                   40,
-                  1882,
+                  2100,
                   80,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
                 ],
               ],
             },
@@ -2209,9 +2483,912 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "delayTwice",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                1885,
+                2103,
                 13,
-                1883,
+                2101,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
+        ]
+      `);
+    }
+  });
+
+  it('can track IO that is chained via then(async ...)', async () => {
+    function getData(text) {
+      return delay(1).then(async () => {
+        return text.toUpperCase();
+      });
+    }
+
+    async function Component({text, promise}) {
+      return await getData('hi, sebbie');
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(<Component />);
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    expect(await result).toBe('HI, SEBBIE');
+
+    await finishLoadingStream(readable);
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Component",
+            "props": {},
+            "stack": [
+              [
+                "Object.<anonymous>",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2527,
+                109,
+                2516,
+                58,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "delay",
+              "owner": {
+                "env": "Server",
+                "key": null,
+                "name": "Component",
+                "props": {},
+                "stack": [
+                  [
+                    "Object.<anonymous>",
+                    "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                    2527,
+                    109,
+                    2516,
+                    58,
+                  ],
+                ],
+              },
+              "stack": [
+                [
+                  "delay",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  87,
+                  12,
+                  86,
+                  3,
+                ],
+                [
+                  "getData",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2518,
+                  14,
+                  2517,
+                  5,
+                ],
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2524,
+                  20,
+                  2523,
+                  5,
+                ],
+              ],
+              "start": 0,
+              "value": {
+                "value": undefined,
+              },
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "Object.<anonymous>",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2527,
+                  109,
+                  2516,
+                  58,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "getData",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2518,
+                23,
+                2517,
+                5,
+              ],
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2524,
+                20,
+                2523,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
+        ]
+      `);
+    }
+  });
+
+  it('can track IO that is not awaited in user space', async () => {
+    function internal_API(text) {
+      return delay(1).then(async () => {
+        return text.toUpperCase();
+      });
+    }
+
+    async function Component({text, promise}) {
+      return await internal_API('hi, seb');
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(
+      <Component />,
+      {},
+      {
+        filterStackFrame,
+      },
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    expect(await result).toBe('HI, SEB');
+
+    await finishLoadingStream(readable);
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Component",
+            "props": {},
+            "stack": [
+              [
+                "Object.<anonymous>",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2694,
+                40,
+                2682,
+                56,
+              ],
+              [
+                "new Promise",
+                "",
+                0,
+                0,
+                0,
+                0,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "delay",
+              "owner": {
+                "env": "Server",
+                "key": null,
+                "name": "Component",
+                "props": {},
+                "stack": [
+                  [
+                    "Object.<anonymous>",
+                    "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                    2694,
+                    40,
+                    2682,
+                    56,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                  ],
+                ],
+              },
+              "stack": [
+                [
+                  "delay",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  87,
+                  12,
+                  86,
+                  3,
+                ],
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2690,
+                  20,
+                  2689,
+                  5,
+                ],
+              ],
+              "start": 0,
+              "value": {
+                "value": "HI, SEB",
+              },
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "Object.<anonymous>",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2694,
+                  40,
+                  2682,
+                  56,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2690,
+                20,
+                2689,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
+        ]
+      `);
+    }
+  });
+
+  it('can track IO in third-party code', async () => {
+    async function thirdParty(endpoint) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve('third-party ' + endpoint);
+        }, 10);
+      }).then(async value => {
+        await new Promise(resolve => {
+          setTimeout(resolve, 10);
+        });
+
+        return value;
+      });
+    }
+
+    async function Component() {
+      const value = await thirdParty('hi');
+      return value;
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(
+      <Component />,
+      {},
+      {
+        filterStackFrame(filename, functionName) {
+          if (functionName === 'thirdParty') {
+            return false;
+          }
+          return filterStackFrame(filename, functionName);
+        },
+      },
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    expect(await result).toBe('third-party hi');
+
+    await finishLoadingStream(readable);
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Component",
+            "props": {},
+            "stack": [
+              [
+                "Object.<anonymous>",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2883,
+                40,
+                2862,
+                42,
+              ],
+              [
+                "new Promise",
+                "",
+                0,
+                0,
+                0,
+                0,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "",
+              "owner": {
+                "env": "Server",
+                "key": null,
+                "name": "Component",
+                "props": {},
+                "stack": [
+                  [
+                    "Object.<anonymous>",
+                    "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                    2883,
+                    40,
+                    2862,
+                    42,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                  ],
+                ],
+              },
+              "stack": [
+                [
+                  "",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2869,
+                  15,
+                  2868,
+                  15,
+                ],
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2878,
+                  19,
+                  2877,
+                  5,
+                ],
+              ],
+              "start": 0,
+              "value": {
+                "value": undefined,
+              },
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "Object.<anonymous>",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2883,
+                  40,
+                  2862,
+                  42,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2869,
+                15,
+                2868,
+                15,
+              ],
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2878,
+                19,
+                2877,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "thirdParty",
+              "owner": {
+                "env": "Server",
+                "key": null,
+                "name": "Component",
+                "props": {},
+                "stack": [
+                  [
+                    "Object.<anonymous>",
+                    "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                    2883,
+                    40,
+                    2862,
+                    42,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                  ],
+                ],
+              },
+              "stack": [
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2878,
+                  25,
+                  2877,
+                  5,
+                ],
+              ],
+              "start": 0,
+              "value": {
+                "value": "third-party hi",
+              },
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "Object.<anonymous>",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  2883,
+                  40,
+                  2862,
+                  42,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                2878,
+                25,
+                2877,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
+        ]
+      `);
+    }
+  });
+
+  it('can track async file reads', async () => {
+    const filename = path.join(__dirname, 'test-file.txt');
+    async function Component() {
+      const buffer = await fs
+        .readFile(filename) // This loads a Buffer.
+        // TODO: For some reason, without this we're extracting the wrong promise.
+        .then(v => v);
+      const text = buffer.toString('utf8');
+      return text.slice(0, 26);
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(
+      ReactServer.createElement(Component),
+      {},
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    expect(await result).toBe('Lorem ipsum dolor sit amet');
+
+    await finishLoadingStream(readable);
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Component",
+            "props": {},
+            "stack": [
+              [
+                "Object.<anonymous>",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                3159,
+                19,
+                3147,
+                36,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "Object.readFile",
+              "owner": {
+                "env": "Server",
+                "key": null,
+                "name": "Component",
+                "props": {},
+                "stack": [
+                  [
+                    "Object.<anonymous>",
+                    "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                    3159,
+                    19,
+                    3147,
+                    36,
+                  ],
+                ],
+              },
+              "stack": [
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  3151,
+                  7,
+                  3149,
+                  5,
+                ],
+              ],
+              "start": 0,
+              "value": {
+                "status": "halted",
+              },
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "Object.<anonymous>",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  3159,
+                  19,
+                  3147,
+                  36,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                3153,
+                7,
+                3149,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
+        ]
+      `);
+    }
+  });
+
+  it('can track a promise created fully outside first party code', async function internal_test() {
+    async function internal_API(text, timeout) {
+      let resolve;
+      const promise = new Promise(r => {
+        resolve = r;
+      });
+      promise.displayName = 'greeting';
+      setTimeout(() => resolve(text), timeout);
+      return promise;
+    }
+
+    async function Component({promise}) {
+      const result = await promise;
+      return result;
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(
+      <Component promise={internal_API('hello', 1)} />,
+      {},
+      {
+        filterStackFrame,
+      },
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    expect(await result).toBe('hello');
+
+    await finishLoadingStream(readable);
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Component",
+            "props": {},
+            "stack": [
+              [
+                "new Promise",
+                "",
+                0,
+                0,
+                0,
+                0,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "greeting",
+              "start": 0,
+              "value": {
+                "status": "halted",
+              },
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                3304,
+                20,
+                3303,
                 5,
               ],
             ],
@@ -2225,5 +3402,271 @@ describe('ReactFlightAsyncDebugInfo', () => {
         ]
       `);
     }
+  });
+
+  // Regression test: Database clients like Gel/EdgeDB with connection pools can
+  // create very long chains of async nodes linked via `previous` pointers.
+  // visitAsyncNode must handle chains of thousands of nodes without stack
+  // overflow.
+  //
+  // The pattern that creates deep chains (Event/messageWaiter):
+  // 1. Create a Promise resolved by an I/O callback
+  // 2. Start I/O, await the Promise
+  // 3. When I/O resolves, code continues in the callback context
+  // 4. The next iteration's async nodes link via `previous` to the current
+  //    context
+  it('handles deep linear async chains from connection pool patterns', async () => {
+    // Replicate Gel's Event class pattern, a Promise resolved externally by I/O
+    class Event {
+      constructor() {
+        this._resolve = null;
+        this._promise = new Promise(resolve => {
+          this._resolve = resolve;
+        });
+      }
+
+      wait() {
+        return this._promise;
+      }
+
+      set() {
+        this._resolve(true);
+      }
+    }
+
+    // Replicate Gel's _waitForMessage pattern:
+    // Each iteration creates an Event, schedules I/O to resolve it, and awaits.
+    // The next iteration runs in the context of the previous I/O callback,
+    // creating linear chains of previous pointers.
+    async function buildLinearChain(depth) {
+      for (let i = 0; i < depth; i++) {
+        const event = new Event();
+        // crypto.randomBytes uses the thread pool and is recognized as I/O
+        // (type='RANDOMBYTESREQUEST'). It's much faster than setTimeout.
+        crypto.randomBytes(1, () => event.set());
+        await event.wait();
+        // After this await resolves, we're in the crypto callback's context
+        // The next Event will be created in this context, linking prev pointers
+      }
+    }
+
+    async function Component() {
+      // Use 2000 iterations to ensure regression would be caught. Using
+      // crypto.randomBytes keeps the test fast.
+      await buildLinearChain(2000);
+      return 'done';
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(
+      <Component />,
+      {},
+      {
+        filterStackFrame: (filename, functionName) => {
+          // Custom filter that treats Event and buildLinearChain as library
+          // code. This simulates how real DB libraries like Gel/EdgeDB would be
+          // filtered.
+          if (
+            functionName === 'new Event' ||
+            functionName === 'buildLinearChain' ||
+            functionName === '_loop' // Generated name for the for-loop
+          ) {
+            return false;
+          }
+          return filterStackFrame(filename, functionName);
+        },
+      },
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    // This should not throw "Maximum call stack size exceeded"
+    expect(await result).toBe('done');
+
+    await finishLoadingStream(readable);
+    if (
+      __DEV__ &&
+      gate(
+        flags =>
+          flags.enableComponentPerformanceTrack && flags.enableAsyncDebugInfo,
+      )
+    ) {
+      // With library code filtered out, we should only see the Component's
+      // debug info, not thousands of entries from the internal
+      // Event/buildLinearChain operations.
+      expect(getDebugInfo(result)).toMatchInlineSnapshot(`
+        [
+          {
+            "time": 0,
+          },
+          {
+            "env": "Server",
+            "key": null,
+            "name": "Component",
+            "props": {},
+            "stack": [
+              [
+                "Object.<anonymous>",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                3461,
+                40,
+                3418,
+                72,
+              ],
+              [
+                "new Promise",
+                "",
+                0,
+                0,
+                0,
+                0,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "end": 0,
+              "env": "Server",
+              "name": "buildLinearChain",
+              "owner": {
+                "env": "Server",
+                "key": null,
+                "name": "Component",
+                "props": {},
+                "stack": [
+                  [
+                    "Object.<anonymous>",
+                    "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                    3461,
+                    40,
+                    3418,
+                    72,
+                  ],
+                  [
+                    "new Promise",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                  ],
+                ],
+              },
+              "stack": [
+                [
+                  "Component",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  3456,
+                  13,
+                  3453,
+                  5,
+                ],
+              ],
+              "start": 0,
+              "value": {
+                "value": undefined,
+              },
+            },
+            "env": "Server",
+            "owner": {
+              "env": "Server",
+              "key": null,
+              "name": "Component",
+              "props": {},
+              "stack": [
+                [
+                  "Object.<anonymous>",
+                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                  3461,
+                  40,
+                  3418,
+                  72,
+                ],
+                [
+                  "new Promise",
+                  "",
+                  0,
+                  0,
+                  0,
+                  0,
+                ],
+              ],
+            },
+            "stack": [
+              [
+                "Component",
+                "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
+                3456,
+                13,
+                3453,
+                5,
+              ],
+            ],
+          },
+          {
+            "time": 0,
+          },
+          {
+            "time": 0,
+          },
+          {
+            "awaited": {
+              "byteSize": 0,
+              "end": 0,
+              "name": "rsc stream",
+              "owner": null,
+              "start": 0,
+              "value": {
+                "value": "stream",
+              },
+            },
+          },
+        ]
+      `);
+    }
+  });
+
+  it('should not exponentially accumulate debug info on outlined debug chunks', async () => {
+    // Regression test: Each Level wraps its received `context` prop in a new
+    // object before passing it down. This creates props deduplication
+    // references to the parent's outlined chunk alongside the owner reference,
+    // giving 2 references per level to the direct parent's chunk. Without
+    // skipping transferReferencedDebugInfo during debug info resolution, this
+    // test would fail with an infinite loop detection error.
+    async function Level({depth, context}) {
+      await delay(0);
+      if (depth === 0) {
+        return <div>Hello, World!</div>;
+      }
+      const newContext = {prev: context, id: depth};
+      return ReactServer.createElement(Level, {
+        depth: depth - 1,
+        context: newContext,
+      });
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(
+      ReactServer.createElement(Level, {depth: 20, context: {root: true}}),
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+    const result = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: {},
+    });
+    stream.pipe(readable);
+
+    const resolved = await result;
+    expect(resolved.type).toBe('div');
+
+    await finishLoadingStream(readable);
   });
 });

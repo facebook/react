@@ -43,6 +43,7 @@ import {
 } from './ReactFiberMutationTracking';
 import {
   MutationMask,
+  Placement,
   Update,
   ContentReset,
   NoFlags,
@@ -52,6 +53,14 @@ import {
   AffectedParentLayout,
 } from './ReactFiberFlags';
 import {
+  HasEffect as HookHasEffect,
+  Insertion as HookInsertion,
+} from './ReactHookEffectTags';
+import {
+  FunctionComponent,
+  ForwardRef,
+  MemoComponent,
+  SimpleMemoComponent,
   HostComponent,
   HostHoistable,
   HostSingleton,
@@ -73,11 +82,20 @@ import {
   popViewTransitionCancelableScope,
 } from './ReactFiberCommitViewTransitions';
 import {
+  commitHookEffectListMount,
+  commitHookEffectListUnmount,
+} from './ReactFiberCommitEffects';
+import {
   getViewTransitionName,
   getViewTransitionClassName,
 } from './ReactFiberViewTransitionComponent';
 
-let didWarnForRootClone = false;
+import {
+  enableProfilerTimer,
+  enableComponentPerformanceTrack,
+} from 'shared/ReactFeatureFlags';
+import {trackAnimatingTask} from './ReactProfilerTimer';
+import {scheduleGestureTransitionEvent} from './ReactFiberWorkLoop';
 
 // Used during the apply phase to track whether a parent ViewTransition component
 // might have been affected by any mutations / relayouts below.
@@ -101,6 +119,7 @@ function applyViewTransitionToClones(
   name: string,
   className: ?string,
   clones: Array<Instance>,
+  fiber: Fiber,
 ): void {
   // This gets called when we have found a pair, but after the clone in created. The clone is
   // created by the insertion side. If the insertion side if found before the deletion side
@@ -116,6 +135,11 @@ function applyViewTransitionToClones(
           name + '_' + i,
       className,
     );
+  }
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (fiber._debugTask != null) {
+      trackAnimatingTask(fiber._debugTask);
+    }
   }
 }
 
@@ -134,7 +158,7 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
   }
   let child = deletion.child;
   while (child !== null) {
-    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+    if (child.tag === OffscreenComponent && child.memoizedState !== null) {
       // This tree was already hidden so we skip it.
     } else {
       if (
@@ -171,7 +195,7 @@ function trackDeletedPairViewTransitions(deletion: Fiber): void {
                 // If we have clones that means that we've already visited this
                 // ViewTransition boundary before and we can now apply the name
                 // to those clones. Otherwise, we have to wait until we clone it.
-                applyViewTransitionToClones(name, className, clones);
+                applyViewTransitionToClones(name, className, clones, child);
               }
             }
             if (pairs.size === 0) {
@@ -221,7 +245,7 @@ function trackEnterViewTransitions(deletion: Fiber): void {
           // If we have clones that means that we've already visited this
           // ViewTransition boundary before and we can now apply the name
           // to those clones. Otherwise, we have to wait until we clone it.
-          applyViewTransitionToClones(name, className, clones);
+          applyViewTransitionToClones(name, className, clones, deletion);
         }
       }
     }
@@ -266,8 +290,9 @@ function applyAppearingPairViewTransition(child: Fiber): void {
         // If there are no clones at this point, that should mean that there are no
         // HostComponent children in this ViewTransition.
         if (clones !== null) {
-          applyViewTransitionToClones(name, className, clones);
+          applyViewTransitionToClones(name, className, clones, child);
         }
+        scheduleGestureTransitionEvent(child, props.onGestureShare);
       }
     }
   }
@@ -296,7 +321,12 @@ function applyExitViewTransition(placement: Fiber): void {
     // If there are no clones at this point, that should mean that there are no
     // HostComponent children in this ViewTransition.
     if (clones !== null) {
-      applyViewTransitionToClones(name, className, clones);
+      applyViewTransitionToClones(name, className, clones, placement);
+    }
+    if (state.paired) {
+      scheduleGestureTransitionEvent(placement, props.onGestureShare);
+    } else {
+      scheduleGestureTransitionEvent(placement, props.onGestureExit);
     }
   }
 }
@@ -314,7 +344,7 @@ function applyNestedViewTransition(child: Fiber): void {
     // If there are no clones at this point, that should mean that there are no
     // HostComponent children in this ViewTransition.
     if (clones !== null) {
-      applyViewTransitionToClones(name, className, clones);
+      applyViewTransitionToClones(name, className, clones, child);
     }
   }
 }
@@ -346,7 +376,7 @@ function applyUpdateViewTransition(current: Fiber, finishedWork: Fiber): void {
   // If there are no clones at this point, that should mean that there are no
   // HostComponent children in this ViewTransition.
   if (clones !== null) {
-    applyViewTransitionToClones(oldName, className, clones);
+    applyViewTransitionToClones(oldName, className, clones, finishedWork);
   }
 }
 
@@ -359,9 +389,10 @@ function recursivelyInsertNew(
   if (
     visitPhase === INSERT_APPEARING_PAIR &&
     parentViewTransition === null &&
-    (parentFiber.subtreeFlags & ViewTransitionNamedStatic) === NoFlags
+    (parentFiber.subtreeFlags & (ViewTransitionNamedStatic | Placement)) ===
+      NoFlags
   ) {
-    // We're just searching for pairs but we have reached the end.
+    // We're just searching for pairs or insertion effects but we have reached the end.
     return;
   }
   let child = parentFiber.child;
@@ -383,6 +414,28 @@ function recursivelyInsertNewFiber(
   visitPhase: VisitPhase,
 ): void {
   switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case MemoComponent:
+    case SimpleMemoComponent: {
+      recursivelyInsertNew(
+        finishedWork,
+        hostParentClone,
+        parentViewTransition,
+        visitPhase,
+      );
+      if (finishedWork.flags & Update) {
+        // Insertion Effects are mounted temporarily during the rendering of the snapshot.
+        // This does not affect cloned Offscreen content since those would've been mounted
+        // while inside the offscreen tree already.
+        // Note that because we are mounting a clone of the DOM tree and the previous DOM
+        // tree remains mounted during the snapshot, we can't unmount any previous insertion
+        // effects. This can lead to conflicts but that is similar to what can happen with
+        // conflicts for two mounted Activity boundaries.
+        commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
+      }
+      break;
+    }
     case HostHoistable: {
       if (supportsResources) {
         // TODO: Hoistables should get optimistically inserted and then removed.
@@ -488,7 +541,7 @@ function recursivelyInsertNewFiber(
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
-      let nextPhase;
+      let nextPhase: VisitPhase;
       if (visitPhase === INSERT_EXIT) {
         // This was an Enter of a ViewTransition. We now move onto inserting the inner
         // HostComponents and finding inner pairs.
@@ -637,7 +690,7 @@ function recursivelyInsertClonesFromExistingTree(
         // So we need it to be cleared before we do that.
         // TODO: Use some other temporary state to track this.
         child.flags &= ~Update;
-        let nextPhase;
+        let nextPhase: VisitPhase;
         if (visitPhase === CLONE_EXIT) {
           // This was an Enter of a ViewTransition. We now move onto unhiding the inner
           // HostComponents and finding inner pairs.
@@ -894,7 +947,7 @@ function insertDestinationClonesOfFiber(
         // Only insert clones if this tree is going to be visible. No need to
         // clone invisible content.
         // TODO: If this is visible but detached it should still be cloned.
-        let nextPhase;
+        let nextPhase: VisitPhase;
         if (visitPhase === CLONE_UPDATE && (flags & Visibility) !== NoFlags) {
           // This is the root of an appear. We need to trigger Enter transitions.
           nextPhase = CLONE_EXIT;
@@ -922,7 +975,7 @@ function insertDestinationClonesOfFiber(
       const viewTransitionState: ViewTransitionState = finishedWork.stateNode;
       // TODO: If this was already cloned by a previous pass we can reuse those clones.
       viewTransitionState.clones = null;
-      let nextPhase;
+      let nextPhase: VisitPhase;
       if (visitPhase === CLONE_EXIT) {
         // This was an Enter of a ViewTransition. We now move onto unhiding the inner
         // HostComponents and finding inner pairs.
@@ -978,17 +1031,6 @@ export function insertDestinationClones(
   // we cancel the root view transition name.
   const needsClone = detectMutationOrInsertClones(finishedWork);
   if (needsClone) {
-    if (__DEV__) {
-      if (!didWarnForRootClone) {
-        didWarnForRootClone = true;
-        console.warn(
-          'startGestureTransition() caused something to mutate or relayout the root. ' +
-            'This currently requires a clone of the whole document. Make sure to ' +
-            'add a <ViewTransition> directly around an absolutely positioned DOM node ' +
-            'to minimize the impact of any changes caused by the Gesture Transition.',
-        );
-      }
-    }
     // Clone the whole root
     const rootClone = cloneRootViewTransitionContainer(root.containerInfo);
     root.gestureClone = rootClone;
@@ -1020,6 +1062,40 @@ function measureExitViewTransitions(placement: Fiber): void {
   }
 }
 
+function recursivelyRestoreNew(
+  finishedWork: Fiber,
+  nearestMountedAncestor: Fiber,
+): void {
+  // There has to be move a Placement AND an Update flag somewhere below for this
+  // pass to be relevant since we only apply insertion effects for new components here.
+  if (((Placement | Update) & finishedWork.subtreeFlags) !== NoFlags) {
+    let child = finishedWork.child;
+    while (child !== null) {
+      recursivelyRestoreNew(child, nearestMountedAncestor);
+      child = child.sibling;
+    }
+  }
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case MemoComponent:
+    case SimpleMemoComponent: {
+      const current = finishedWork.alternate;
+      if (current === null && finishedWork.flags & Update) {
+        // Insertion Effects are mounted temporarily during the rendering of the snapshot.
+        // We have now already takes a snapshot of the inserted state so we can now unmount
+        // them to get back into the original state before starting the animation.
+        commitHookEffectListUnmount(
+          HookInsertion | HookHasEffect,
+          finishedWork,
+          nearestMountedAncestor,
+        );
+      }
+      break;
+    }
+  }
+}
+
 function recursivelyApplyViewTransitions(parentFiber: Fiber) {
   const deletions = parentFiber.deletions;
   if (deletions !== null) {
@@ -1036,7 +1112,13 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
     // If we have mutations or if this is a newly inserted tree, clone as we go.
     let child = parentFiber.child;
     while (child !== null) {
-      applyViewTransitionsOnFiber(child);
+      const current = child.alternate;
+      if (current === null) {
+        measureExitViewTransitions(child);
+        recursivelyRestoreNew(child, parentFiber);
+      } else {
+        applyViewTransitionsOnFiber(child, current);
+      }
       child = child.sibling;
     }
   } else {
@@ -1047,14 +1129,7 @@ function recursivelyApplyViewTransitions(parentFiber: Fiber) {
   }
 }
 
-function applyViewTransitionsOnFiber(finishedWork: Fiber) {
-  const current = finishedWork.alternate;
-  if (current === null) {
-    measureExitViewTransitions(finishedWork);
-    return;
-  }
-
-  const flags = finishedWork.flags;
+function applyViewTransitionsOnFiber(finishedWork: Fiber, current: Fiber) {
   // The effect flag should be checked *after* we refine the type of fiber,
   // because the fiber tag is more specific. An exception is any flag related
   // to reconciliation, because those can be set on all fiber types.
@@ -1064,12 +1139,18 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
       break;
     }
     case OffscreenComponent: {
-      if (flags & Visibility) {
-        const newState: OffscreenState | null = finishedWork.memoizedState;
-        const isHidden = newState !== null;
-        if (!isHidden) {
+      const newState: OffscreenState | null = finishedWork.memoizedState;
+      const isHidden = newState !== null;
+      const wasHidden = current.memoizedState !== null;
+      if (!isHidden) {
+        if (wasHidden) {
           measureExitViewTransitions(finishedWork);
-        } else if (current !== null && current.memoizedState === null) {
+          recursivelyRestoreNew(finishedWork, finishedWork);
+        } else {
+          recursivelyApplyViewTransitions(finishedWork);
+        }
+      } else {
+        if (!wasHidden) {
           // Was previously mounted as visible but is now hidden.
           commitEnterViewTransitions(current, true);
         }
@@ -1111,7 +1192,8 @@ function applyViewTransitionsOnFiber(finishedWork: Fiber) {
         // TODO: If this doesn't end up canceled, because a parent animates,
         // then we should probably issue an event since this instance is part of it.
       } else {
-        // TODO: Schedule gesture events.
+        const props: ViewTransitionProps = finishedWork.memoizedProps;
+        scheduleGestureTransitionEvent(finishedWork, props.onGestureUpdate);
         // If this boundary did update, we cannot cancel its children so those are dropped.
         popViewTransitionCancelableScope(prevCancelableChildren);
       }

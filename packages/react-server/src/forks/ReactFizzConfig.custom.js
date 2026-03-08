@@ -104,4 +104,5 @@ export const writeHoistablesForBoundary = $$$config.writeHoistablesForBoundary;
 export const writePostamble = $$$config.writePostamble;
 export const hoistHoistables = $$$config.hoistHoistables;
 export const createHoistableState = $$$config.createHoistableState;
+export const hasSuspenseyContent = $$$config.hasSuspenseyContent;
 export const emitEarlyPreloads = $$$config.emitEarlyPreloads;

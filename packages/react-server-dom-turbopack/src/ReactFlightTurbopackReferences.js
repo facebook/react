@@ -63,7 +63,7 @@ const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
 function bind(this: ServerReference<any>): any {
-  // $FlowFixMe[prop-missing]
+  // $FlowFixMe[incompatible-call]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
     if (__DEV__) {
@@ -80,7 +80,7 @@ function bind(this: ServerReference<any>): any {
     const $$bound = {value: this.$$bound ? this.$$bound.concat(args) : args};
     return Object.defineProperties(
       (newFn: any),
-      __DEV__
+      (__DEV__
         ? {
             $$typeof,
             $$id,
@@ -96,11 +96,17 @@ function bind(this: ServerReference<any>): any {
             $$id,
             $$bound,
             bind: {value: bind, configurable: true},
-          },
+          }) as PropertyDescriptorMap,
     );
   }
   return newFn;
 }
+
+const serverReferenceToString = {
+  value: () => 'function () { [omitted code] }',
+  configurable: true,
+  writable: true,
+};
 
 export function registerServerReference<T: Function>(
   reference: T,
@@ -115,7 +121,7 @@ export function registerServerReference<T: Function>(
   const $$bound = {value: null, configurable: true};
   return Object.defineProperties(
     (reference: any),
-    __DEV__
+    (__DEV__
       ? {
           $$typeof,
           $$id,
@@ -125,19 +131,21 @@ export function registerServerReference<T: Function>(
             configurable: true,
           },
           bind: {value: bind, configurable: true},
+          toString: serverReferenceToString,
         }
       : {
           $$typeof,
           $$id,
           $$bound,
           bind: {value: bind, configurable: true},
-        },
+          toString: serverReferenceToString,
+        }) as PropertyDescriptorMap,
   );
 }
 
 const PROMISE_PROTOTYPE = Promise.prototype;
 
-const deepProxyHandlers = {
+const deepProxyHandlers: Proxy$traps<mixed> = {
   get: function (
     target: Function,
     name: string | symbol,
@@ -174,11 +182,10 @@ const deepProxyHandlers = {
         // $FlowFixMe[prop-missing]
         return Object.prototype[Symbol.toStringTag];
       case 'Provider':
-        throw new Error(
-          `Cannot render a Client Context Provider on the Server. ` +
-            `Instead, you can export a Client Component wrapper ` +
-            `that itself renders a Client Context Provider.`,
-        );
+        // Context.Provider === Context in React, so return the same reference.
+        // This allows server components to render <ClientContext.Provider>
+        // which will be serialized and executed on the client.
+        return receiver;
       case 'then':
         throw new Error(
           `Cannot await or return from a thenable. ` +

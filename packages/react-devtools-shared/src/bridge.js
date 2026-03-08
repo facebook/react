@@ -27,7 +27,7 @@ export type BridgeProtocol = {
   // Version supported by the current frontend/backend.
   version: number,
 
-  // NPM version range that also supports this version.
+  // NPM version range of `react-devtools-inline` that also supports this version.
   // Note that 'maxNpmVersion' is only set when the version is bumped.
   minNpmVersion: string,
   maxNpmVersion: string | null,
@@ -74,7 +74,7 @@ export const currentBridgeProtocol: BridgeProtocol =
 
 type ElementAndRendererID = {id: number, rendererID: RendererID};
 
-type Message = {
+export type Message = {
   event: string,
   payload: any,
 };
@@ -85,6 +85,16 @@ type HighlightHostInstance = {
   hideAfterTimeout: boolean,
   openBuiltinElementsPanel: boolean,
   scrollIntoView: boolean,
+};
+type HighlightHostInstances = {
+  elements: Array<ElementAndRendererID>,
+  displayName: string | null,
+  hideAfterTimeout: boolean,
+  scrollIntoView: boolean,
+};
+
+type ScrollToHostInstance = {
+  ...ElementAndRendererID,
 };
 
 type OverrideValue = {
@@ -134,6 +144,11 @@ type OverrideSuspense = {
   forceFallback: boolean,
 };
 
+type OverrideSuspenseMilestone = {
+  rendererID: number,
+  suspendedSet: Array<number>,
+};
+
 type CopyElementPathParams = {
   ...ElementAndRendererID,
   path: Array<string | number>,
@@ -149,6 +164,13 @@ type InspectElementParams = {
   forceFullData: boolean,
   path: Array<number | string> | null,
   requestID: number,
+};
+
+type InspectScreenParams = {
+  requestID: number,
+  id: number,
+  forceFullData: boolean,
+  path: Array<number | string> | null,
 };
 
 type StoreAsGlobalParams = {
@@ -170,7 +192,7 @@ type NativeStyleEditor_SetValueParams = {
   value: string,
 };
 
-type SavedPreferencesParams = {
+export type SavedPreferencesParams = {
   componentFilters: Array<ComponentFilter>,
 };
 
@@ -182,21 +204,27 @@ export type BackendEvents = {
   fastRefreshScheduled: [],
   getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
+  inspectedScreen: [InspectedElementPayload],
   isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
-  overrideComponentFilters: [Array<ComponentFilter>],
   environmentNames: [Array<string>],
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
   saveToClipboard: [string],
-  selectElement: [number],
+  selectElement: [number | null],
   shutdown: [],
   stopInspectingHost: [boolean],
-  syncSelectionFromBuiltinElementsPanel: [],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
   syncSelectionToBuiltinElementsPanel: [],
   unsupportedRendererVersion: [],
+
+  extensionComponentsPanelShown: [],
+  extensionComponentsPanelHidden: [],
+
+  resumeElementPolling: [],
+  pauseElementPolling: [],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
@@ -210,15 +238,13 @@ export type BackendEvents = {
 type StartProfilingParams = ProfilingSettings;
 type ReloadAndProfilingParams = ProfilingSettings;
 
-type FrontendEvents = {
+export type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForElementID: [ElementAndRendererID],
   clearHostInstanceHighlight: [],
   clearWarningsForElementID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
-  extensionComponentsPanelShown: [],
-  extensionComponentsPanelHidden: [],
   getBackendVersion: [],
   getBridgeProtocol: [],
   getIfHasUnsupportedRendererVersion: [],
@@ -226,10 +252,13 @@ type FrontendEvents = {
   getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
   highlightHostInstance: [HighlightHostInstance],
+  highlightHostInstances: [HighlightHostInstances],
   inspectElement: [InspectElementParams],
+  inspectScreen: [InspectScreenParams],
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],
   overrideSuspense: [OverrideSuspense],
+  overrideSuspenseMilestone: [OverrideSuspenseMilestone],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [ReloadAndProfilingParams],
@@ -237,9 +266,12 @@ type FrontendEvents = {
   savedPreferences: [SavedPreferencesParams],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
-  startInspectingHost: [],
+  startInspectingHost: [boolean],
   startProfiling: [StartProfilingParams],
-  stopInspectingHost: [boolean],
+  stopInspectingHost: [],
+  scrollToHostInstance: [ScrollToHostInstance],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
+  requestScrollPosition: [],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
@@ -247,6 +279,8 @@ type FrontendEvents = {
   updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
+
+  syncSelectionFromBuiltinElementsPanel: [],
 
   // React Native style editor plug-in.
   NativeStyleEditor_measure: [ElementAndRendererID],
@@ -268,19 +302,13 @@ type FrontendEvents = {
   overrideProps: [OverrideValue],
   overrideState: [OverrideValue],
 
-  resumeElementPolling: [],
-  pauseElementPolling: [],
-
   getHookSettings: [],
 };
 
 class Bridge<
   OutgoingEvents: Object,
   IncomingEvents: Object,
-> extends EventEmitter<{
-  ...IncomingEvents,
-  ...OutgoingEvents,
-}> {
+> extends EventEmitter<IncomingEvents> {
   _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];
   _scheduledFlush: boolean = false;
@@ -313,7 +341,7 @@ class Bridge<
 
   send<EventName: $Keys<OutgoingEvents>>(
     event: EventName,
-    ...payload: $ElementType<OutgoingEvents, EventName>
+    ...payload: OutgoingEvents[EventName]
   ) {
     if (this._isShutdown) {
       console.warn(
@@ -390,7 +418,8 @@ class Bridge<
     try {
       if (this._messageQueue.length) {
         for (let i = 0; i < this._messageQueue.length; i += 2) {
-          this._wall.send(this._messageQueue[i], ...this._messageQueue[i + 1]);
+          // This only supports one argument in practice but the types suggests it should support multiple.
+          this._wall.send(this._messageQueue[i], this._messageQueue[i + 1][0]);
         }
         this._messageQueue.length = 0;
       }

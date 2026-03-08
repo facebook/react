@@ -49,7 +49,6 @@ function Component() {
   if ($[0] !== params) {
     t0 = (partialParams) => {
       const nextParams = { ...params, ...partialParams };
-
       nextParams.param = "value";
       console.log(nextParams);
     };
@@ -69,7 +68,6 @@ function Component() {
         update();
       }
     };
-
     t2 = [update];
     $[2] = update;
     $[3] = t1;
@@ -79,6 +77,7 @@ function Component() {
     t2 = $[4];
   }
   useEffect(t1, t2);
+
   return "ok";
 }
 

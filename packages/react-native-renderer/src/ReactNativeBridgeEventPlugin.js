@@ -10,6 +10,7 @@
 import type {
   AnyNativeEvent,
   EventTypes,
+  LegacyPluginModule,
 } from './legacy-events/PluginModuleType';
 import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
 import SyntheticEvent from './legacy-events/SyntheticEvent';
@@ -165,7 +166,7 @@ function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
 // End of inline
 type PropagationPhases = 'bubbled' | 'captured';
 
-const ReactNativeBridgeEventPlugin = {
+const ReactNativeBridgeEventPlugin: LegacyPluginModule<AnyNativeEvent> = {
   eventTypes: ({}: EventTypes),
 
   extractEvents: function (

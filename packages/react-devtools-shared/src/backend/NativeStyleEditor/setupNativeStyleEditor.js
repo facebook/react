@@ -194,7 +194,7 @@ function renameStyle(
   const {instance, style} = data;
 
   const newStyle = newName
-    ? {[oldName]: undefined, [newName]: value}
+    ? {[oldName]: (undefined: string | void), [newName]: value}
     : {[oldName]: undefined};
 
   let customStyle;

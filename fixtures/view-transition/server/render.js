@@ -1,7 +1,7 @@
 import React from 'react';
 import {renderToPipeableStream} from 'react-dom/server';
 
-import App from '../src/components/App';
+import App from '../src/components/App.js';
 
 let assets;
 if (process.env.NODE_ENV === 'development') {

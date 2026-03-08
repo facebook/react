@@ -12,4 +12,5 @@ import * as ReactNative from './src/ReactNativeRenderer';
 // Assert that the exports line up with the type we're going to expose.
 (ReactNative: ReactNativeType);
 
+// TODO: Delete the legacy renderer, only Fabric is used now.
 export * from './src/ReactNativeRenderer';

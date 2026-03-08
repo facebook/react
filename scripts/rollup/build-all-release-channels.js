@@ -124,25 +124,34 @@ async function main() {
         throw new Error(`Unknown release channel ${argv.releaseChannel}`);
     }
   } else {
-    // Running locally, no concurrency. Move each channel's build artifacts into
-    // a temporary directory so that they don't conflict.
-    buildForChannel('stable', '', '');
-    const stableDir = tmp.dirSync().name;
-    crossDeviceRenameSync('./build', stableDir);
-    processStable(stableDir);
-    buildForChannel('experimental', '', '');
-    const experimentalDir = tmp.dirSync().name;
-    crossDeviceRenameSync('./build', experimentalDir);
-    processExperimental(experimentalDir);
+    const releaseChannel = argv.releaseChannel;
+    if (releaseChannel === 'stable') {
+      buildForChannel('stable', '', '');
+      processStable('./build');
+    } else if (releaseChannel === 'experimental') {
+      buildForChannel('experimental', '', '');
+      processExperimental('./build');
+    } else {
+      // Running locally, no concurrency. Move each channel's build artifacts into
+      // a temporary directory so that they don't conflict.
+      buildForChannel('stable', '', '');
+      const stableDir = tmp.dirSync().name;
+      crossDeviceRenameSync('./build', stableDir);
+      processStable(stableDir);
+      buildForChannel('experimental', '', '');
+      const experimentalDir = tmp.dirSync().name;
+      crossDeviceRenameSync('./build', experimentalDir);
+      processExperimental(experimentalDir);
 
-    // Then merge the experimental folder into the stable one. processExperimental
-    // will have already removed conflicting files.
-    //
-    // In CI, merging is handled by the GitHub Download Artifacts plugin.
-    mergeDirsSync(experimentalDir + '/', stableDir + '/');
+      // Then merge the experimental folder into the stable one. processExperimental
+      // will have already removed conflicting files.
+      //
+      // In CI, merging is handled by the GitHub Download Artifacts plugin.
+      mergeDirsSync(experimentalDir + '/', stableDir + '/');
 
-    // Now restore the combined directory back to its original name
-    crossDeviceRenameSync(stableDir, './build');
+      // Now restore the combined directory back to its original name
+      crossDeviceRenameSync(stableDir, './build');
+    }
   }
 }
 
@@ -231,9 +240,16 @@ function processStable(buildDir) {
     }
 
     if (fs.existsSync(buildDir + '/react-native')) {
-      updatePlaceholderReactVersionInCompiledArtifactsFb(
+      updatePlaceholderReactVersionInCompiledArtifacts(
         buildDir + '/react-native',
-        rnVersionString
+        rnVersionString,
+        filename => filename.endsWith('.fb.js')
+      );
+
+      updatePlaceholderReactVersionInCompiledArtifacts(
+        buildDir + '/react-native',
+        ReactVersion,
+        filename => !filename.endsWith('.fb.js') && filename.endsWith('.js')
       );
     }
 
@@ -340,9 +356,16 @@ function processExperimental(buildDir, version) {
   }
 
   if (fs.existsSync(buildDir + '/react-native')) {
-    updatePlaceholderReactVersionInCompiledArtifactsFb(
+    updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/react-native',
-      rnVersionString
+      rnVersionString,
+      filename => filename.endsWith('.fb.js')
+    );
+
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      buildDir + '/react-native',
+      ReactVersion,
+      filename => !filename.endsWith('.fb.js') && filename.endsWith('.js')
     );
   }
 
@@ -437,38 +460,15 @@ function updatePackageVersions(
 
 function updatePlaceholderReactVersionInCompiledArtifacts(
   artifactsDirectory,
-  newVersion
+  newVersion,
+  filteringClosure
 ) {
   // Update the version of React in the compiled artifacts by searching for
   // the placeholder string and replacing it with a new one.
-  const artifactFilenames = String(
-    spawnSync('grep', [
-      '-lr',
-      PLACEHOLDER_REACT_VERSION,
-      '--',
-      artifactsDirectory,
-    ]).stdout
-  )
-    .trim()
-    .split('\n')
-    .filter(filename => filename.endsWith('.js'));
-
-  for (const artifactFilename of artifactFilenames) {
-    const originalText = fs.readFileSync(artifactFilename, 'utf8');
-    const replacedText = originalText.replaceAll(
-      PLACEHOLDER_REACT_VERSION,
-      newVersion
-    );
-    fs.writeFileSync(artifactFilename, replacedText);
+  if (filteringClosure == null) {
+    filteringClosure = filename => filename.endsWith('.js');
   }
-}
 
-function updatePlaceholderReactVersionInCompiledArtifactsFb(
-  artifactsDirectory,
-  newVersion
-) {
-  // Update the version of React in the compiled artifacts by searching for
-  // the placeholder string and replacing it with a new one.
   const artifactFilenames = String(
     spawnSync('grep', [
       '-lr',
@@ -479,7 +479,7 @@ function updatePlaceholderReactVersionInCompiledArtifactsFb(
   )
     .trim()
     .split('\n')
-    .filter(filename => filename.endsWith('.fb.js'));
+    .filter(filteringClosure);
 
   for (const artifactFilename of artifactFilenames) {
     const originalText = fs.readFileSync(artifactFilename, 'utf8');

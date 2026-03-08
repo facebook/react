@@ -20,6 +20,7 @@ import {
   createPrerenderRequest,
   startWork,
   startFlowing,
+  startFlowingDebug,
   stopFlowing,
   abort,
   resolveDebugMessage,
@@ -56,14 +57,14 @@ export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTem
 export type {TemporaryReferenceSet};
 
 type Options = {
-  debugChannel?: {readable?: ReadableStream, ...},
+  debugChannel?: {readable?: ReadableStream, writable?: WritableStream, ...},
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
   identifierPrefix?: string,
   signal?: AbortSignal,
   temporaryReferences?: TemporaryReferenceSet,
   onError?: (error: mixed) => void,
-  onPostpone?: (reason: string) => void,
+  startTime?: number,
 };
 
 function startReadingFromDebugChannelReadableStream(
@@ -116,13 +117,17 @@ function renderToReadableStream(
     __DEV__ && options && options.debugChannel
       ? options.debugChannel.readable
       : undefined;
+  const debugChannelWritable =
+    __DEV__ && options && options.debugChannel
+      ? options.debugChannel.writable
+      : undefined;
   const request = createRequest(
     model,
     turbopackMap,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
-    options ? options.onPostpone : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -138,6 +143,19 @@ function renderToReadableStream(
       };
       signal.addEventListener('abort', listener);
     }
+  }
+  if (debugChannelWritable !== undefined) {
+    const debugStream = new ReadableStream(
+      {
+        type: 'bytes',
+        pull: (controller): ?Promise<void> => {
+          startFlowingDebug(request, controller);
+        },
+      },
+      // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+      {highWaterMark: 0},
+    );
+    debugStream.pipeTo(debugChannelWritable);
   }
   if (debugChannelReadable !== undefined) {
     startReadingFromDebugChannelReadableStream(request, debugChannelReadable);
@@ -197,8 +215,8 @@ function prerender(
       onFatalError,
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
-      options ? options.onPostpone : undefined,
       options ? options.temporaryReferences : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
@@ -224,7 +242,10 @@ function prerender(
 function decodeReply<T>(
   body: string | FormData,
   turbopackMap: ServerManifest,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
@@ -236,6 +257,7 @@ function decodeReply<T>(
     '',
     options ? options.temporaryReferences : undefined,
     body,
+    options ? options.arraySizeLimit : undefined,
   );
   const root = getRoot<T>(response);
   close(response);

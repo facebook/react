@@ -4141,4 +4141,28 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </>,
     );
   });
+
+  it('can rerender after resolving a promise', async () => {
+    const promise = Promise.resolve(null);
+    const root = ReactNoop.createRoot();
+
+    await act(() => {
+      startTransition(() => {
+        root.render(<Suspense>{promise}</Suspense>);
+      });
+    });
+
+    assertLog([]);
+    expect(root).toMatchRenderedOutput(null);
+
+    await act(() => {
+      startTransition(() => {
+        root.render(
+          <Suspense>
+            <div />
+          </Suspense>,
+        );
+      });
+    });
+  });
 });

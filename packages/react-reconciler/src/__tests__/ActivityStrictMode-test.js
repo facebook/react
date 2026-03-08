@@ -10,7 +10,7 @@ describe('Activity StrictMode', () => {
     log = [];
 
     React = require('react');
-    Activity = React.unstable_Activity;
+    Activity = React.Activity;
     ReactNoop = require('react-noop-renderer');
     act = require('internal-test-utils').act;
   });
@@ -31,7 +31,7 @@ describe('Activity StrictMode', () => {
     return <span>label</span>;
   }
 
-  // @gate __DEV__ && enableActivity
+  // @gate __DEV__
   it('should trigger strict effects when offscreen is visible', async () => {
     await act(() => {
       ReactNoop.render(
@@ -55,7 +55,7 @@ describe('Activity StrictMode', () => {
     ]);
   });
 
-  // @gate __DEV__ && enableActivity
+  // @gate __DEV__
   it('should not trigger strict effects when offscreen is hidden', async () => {
     await act(() => {
       ReactNoop.render(
@@ -154,7 +154,7 @@ describe('Activity StrictMode', () => {
     });
   });
 
-  // @gate __DEV__ && enableActivity
+  // @gate __DEV__
   it('should double invoke effects on unsuspended child', async () => {
     let shouldSuspend = true;
     let resolve;

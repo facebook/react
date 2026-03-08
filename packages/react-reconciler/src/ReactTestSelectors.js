@@ -48,7 +48,7 @@ type Type = symbol | number;
 
 type ComponentSelector = {
   $$typeof: Type,
-  value: React$ComponentType<empty>,
+  value: component(),
 };
 
 type HasPseudoClassSelector = {
@@ -79,7 +79,7 @@ type Selector =
   | TestNameSelector;
 
 export function createComponentSelector(
-  component: React$ComponentType<empty>,
+  component: component(),
 ): ComponentSelector {
   return {
     $$typeof: COMPONENT_TYPE,

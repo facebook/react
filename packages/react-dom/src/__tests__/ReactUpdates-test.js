@@ -20,6 +20,19 @@ let waitFor;
 let assertLog;
 let assertConsoleErrorDev;
 
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+      const dot = name.lastIndexOf('.');
+      if (dot !== -1) {
+        name = name.slice(dot + 1);
+      }
+      return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+    })
+  );
+}
+
 describe('ReactUpdates', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -1050,13 +1063,10 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be ' +
+        'a function. Instead received: no.',
+    ]);
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -1071,13 +1081,10 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be ' +
-          "a function. Instead received: { foo: 'bar' }.",
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be ' +
+        "a function. Instead received: { foo: 'bar' }.",
+    ]);
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -1123,13 +1130,10 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be ' +
+        'a function. Instead received: no.',
+    ]);
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -1144,13 +1148,10 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be ' +
-          "a function. Instead received: { foo: 'bar' }.",
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be ' +
+        "a function. Instead received: { foo: 'bar' }.",
+    ]);
     // Make sure the warning is deduplicated and doesn't fire again
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
@@ -1972,13 +1973,65 @@ describe('ReactUpdates', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        ReactDOM.flushSync(() => {
-          root.render(<NonTerminating />);
-        });
+    const errors = [];
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError: (error, errorInfo) => {
+        errors.push(
+          `${error.message}${normalizeCodeLocInfo(errorInfo.componentStack)}`,
+        );
+      },
+    });
+    await act(() => {
+      ReactDOM.flushSync(() => {
+        root.render(<NonTerminating />);
       });
-    }).rejects.toThrow('Maximum update depth exceeded');
+    });
+
+    expect(errors).toEqual([
+      'Maximum update depth exceeded. ' +
+        'This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. ' +
+        'React limits the number of nested updates to prevent infinite loops.' +
+        '\n    in NonTerminating (at **)',
+    ]);
+  });
+
+  it('prevents infinite update loop triggered by too many updates in ref callbacks', async () => {
+    let scheduleUpdate;
+    function TooManyRefUpdates() {
+      const [count, _scheduleUpdate] = React.useReducer(c => c + 1, 0);
+      scheduleUpdate = _scheduleUpdate;
+
+      return (
+        <div
+          ref={() => {
+            for (let i = 0; i < 50; i++) {
+              scheduleUpdate(1);
+            }
+          }}>
+          {count}
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const errors = [];
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError: (error, errorInfo) => {
+        errors.push(
+          `${error.message}${normalizeCodeLocInfo(errorInfo.componentStack)}`,
+        );
+      },
+    });
+    await act(() => {
+      root.render(<TooManyRefUpdates />);
+    });
+
+    expect(errors).toEqual([
+      'Maximum update depth exceeded. ' +
+        'This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. ' +
+        'React limits the number of nested updates to prevent infinite loops.' +
+        '\n    in div' +
+        '\n    in TooManyRefUpdates (at **)',
+    ]);
   });
 });

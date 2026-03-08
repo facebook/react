@@ -134,6 +134,7 @@ export type RenderRootOptions = {
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  onDefaultTransitionIndicator?: () => void | (() => void),
 };
 
 /**

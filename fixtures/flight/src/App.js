@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {renderToReadableStream} from 'react-server-dom-webpack/server';
+import {renderToReadableStream} from 'react-server-dom-unbundled/server';
 import {createFromReadableStream} from 'react-server-dom-webpack/client';
 import {PassThrough, Readable} from 'stream';
-
+import {ClientContext, ClientReadContext} from './ClientContext.js';
 import Container from './Container.js';
 
 import {Counter} from './Counter.js';
@@ -21,9 +21,12 @@ import {Note} from './cjs/Note.js';
 
 import {GenerateImage} from './GenerateImage.js';
 
+import LargeContent from './LargeContent.js';
+
 import {like, greet, increment} from './actions.js';
 
 import {getServerState} from './ServerState.js';
+import {sdkMethod} from './library.js';
 
 const promisedText = new Promise(resolve =>
   setTimeout(() => resolve('deferred text'), 50)
@@ -120,9 +123,69 @@ async function ServerComponent({noCache}) {
   return await fetchThirdParty(noCache);
 }
 
+let veryDeepObject = [
+  {
+    bar: {
+      baz: {
+        a: {},
+      },
+    },
+  },
+  {
+    bar: {
+      baz: {
+        a: {},
+      },
+    },
+  },
+  {
+    bar: {
+      baz: {
+        a: {},
+      },
+    },
+  },
+  {
+    bar: {
+      baz: {
+        a: {
+          b: {
+            c: {
+              d: {
+                e: {
+                  f: {
+                    g: {
+                      h: {
+                        i: {
+                          j: {
+                            k: {
+                              l: {
+                                m: {
+                                  yay: 'You reached the end',
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+];
+
 export default async function App({prerender, noCache}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
+  await sdkMethod('http://localhost:3001/todos');
+
+  console.log('Expand me:', veryDeepObject);
 
   const dedupedChild = <ServerComponent noCache={noCache} />;
   const message = getServerState();
@@ -172,6 +235,16 @@ export default async function App({prerender, noCache}) {
           <Foo>{dedupedChild}</Foo>
           <Bar>{Promise.resolve([dedupedChild])}</Bar>
           <Navigate />
+          <ClientContext value="from server">
+            <div>
+              <ClientReadContext />
+            </div>
+          </ClientContext>
+          {prerender ? null : ( // TODO: prerender is broken for large content for some reason.
+            <React.Suspense fallback={null}>
+              <LargeContent />
+            </React.Suspense>
+          )}
         </Container>
       </body>
     </html>

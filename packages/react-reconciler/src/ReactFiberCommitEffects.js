@@ -410,7 +410,6 @@ export function commitClassLayoutLifecycles(
     const prevProps = resolveClassComponentProps(
       finishedWork.type,
       current.memoizedProps,
-      finishedWork.elementType === finishedWork.type,
     );
     const prevState = current.memoizedState;
     // We could update instance props and state here,
@@ -671,7 +670,6 @@ export function commitClassSnapshot(finishedWork: Fiber, current: Fiber) {
     const resolvedPrevProps = resolveClassComponentProps(
       finishedWork.type,
       prevProps,
-      finishedWork.elementType === finishedWork.type,
     );
     let snapshot;
     if (__DEV__) {
@@ -716,7 +714,6 @@ export function safelyCallComponentWillUnmount(
   instance.props = resolveClassComponentProps(
     current.type,
     current.memoizedProps,
-    current.elementType === current.type,
   );
   instance.state = current.memoizedState;
   if (shouldProfile(current)) {

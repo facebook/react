@@ -79,7 +79,7 @@ function warnOnUndefinedDerivedState(type: any, partialState: any) {
 }
 
 function warnNoop(
-  publicInstance: React$Component<any, any>,
+  publicInstance: component(...props: any),
   callerName: string,
 ) {
   if (__DEV__) {

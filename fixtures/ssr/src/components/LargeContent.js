@@ -1,8 +1,4 @@
-import React, {
-  Fragment,
-  Suspense,
-  unstable_SuspenseList as SuspenseList,
-} from 'react';
+import React, {Suspense, unstable_SuspenseList as SuspenseList} from 'react';
 
 export default function LargeContent() {
   return (

@@ -14,12 +14,17 @@ function Component(props) {
 ## Error
 
 ```
-  1 | function Component(props) {
-> 2 |   const fbt = require('fbt');
-    |         ^^^ Todo: Support local variables named "fbt" (2:2)
+Found 1 error:
+
+Invariant: <fbt> tags should be module-level imports
+
+error.todo-locally-require-fbt.ts:4:10
+  2 |   const fbt = require('fbt');
   3 |
-  4 |   return <fbt desc="Description">{'Text'}</fbt>;
+> 4 |   return <fbt desc="Description">{'Text'}</fbt>;
+    |           ^^^ <fbt> tags should be module-level imports
   5 | }
+  6 |
 ```
           
       

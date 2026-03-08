@@ -1,0 +1,35 @@
+.StackTraceView {
+  padding: 0.25rem;
+}
+
+.CallSite, .BuiltInCallSite {
+  display: flex;
+  padding-left: 1rem;
+  white-space-collapse: preserve;
+}
+
+.IgnoredCallSite, .BuiltInCallSite {
+  display: none;
+}
+
+.CallSite + .BuiltInCallSite {
+  display: block;
+}
+
+.Link {
+  color: var(--color-link);
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  border-radius: 0.125rem;
+}
+
+.Link:hover {
+  background-color: var(--color-background-hover);
+}
+
+.ElementBadges {
+  margin-left: 0.25rem;
+}
+

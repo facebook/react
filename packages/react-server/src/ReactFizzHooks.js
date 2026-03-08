@@ -38,7 +38,6 @@ import {
 } from './ReactFizzConfig';
 import {createFastHash} from './ReactServerStreamConfig';
 
-import {enableUseEffectEventHook} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
   REACT_CONTEXT_TYPE,
@@ -833,6 +832,7 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useHostTransitionStatus,
       useMemoCache,
       useCacheRefresh,
+      useEffectEvent,
     }
   : {
       readContext,
@@ -858,11 +858,8 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useOptimistic,
       useMemoCache,
       useCacheRefresh,
+      useEffectEvent,
     };
-
-if (enableUseEffectEventHook) {
-  HooksDispatcher.useEffectEvent = useEffectEvent;
-}
 
 export let currentResumableState: null | ResumableState = (null: any);
 export function setCurrentResumableState(

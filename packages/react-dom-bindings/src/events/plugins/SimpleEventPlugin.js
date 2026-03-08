@@ -27,6 +27,7 @@ import {
   SyntheticWheelEvent,
   SyntheticClipboardEvent,
   SyntheticPointerEvent,
+  SyntheticSubmitEvent,
   SyntheticToggleEvent,
 } from '../../events/SyntheticEvent';
 
@@ -161,6 +162,9 @@ function extractEvents(
     case 'pointerover':
     case 'pointerup':
       SyntheticEventCtor = SyntheticPointerEvent;
+      break;
+    case 'submit':
+      SyntheticEventCtor = SyntheticSubmitEvent;
       break;
     case 'toggle':
     case 'beforetoggle':
