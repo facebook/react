@@ -22,7 +22,7 @@ function Component() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div className="foo bar">Hello</div>;
+    t0 = <div className={"foo\nbar"}>Hello</div>;
     $[0] = t0;
   } else {
     t0 = $[0];

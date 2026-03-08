@@ -1,9 +1,10 @@
 function Component() {
   return (
     <div
-      className="foo
-bar
-baz"
+      className="
+        flex min-h-screen items-center
+        dark:bg-black
+      "
     >
       Hello
     </div>

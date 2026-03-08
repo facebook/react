@@ -2126,23 +2126,21 @@ const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
   /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}\u{010000}-\u{10FFFF}]|"|\\/u;
 
 /**
- * When the compiler creates new StringLiteral AST nodes (without Babel's
- * extra.raw), strings containing \n are wrapped in JSXExpressionContainers
- * by STRING_REQUIRES_EXPR_CONTAINER_PATTERN. Babel's code generator may then
- * silently replace newline characters with spaces during serialization
- * (depending on retainLines/compact options), changing the runtime value.
- * This causes a hydration mismatch: the server renders the original value
- * while the client gets the Babel-transformed one.
+ * The Babel JSX transform (@babel/plugin-transform-react-jsx) normalizes
+ * newlines followed by whitespace in plain JSX string attributes:
  *
- * We normalize \t, \n, and \r to spaces in string attributes of intrinsic
- * HTML elements before the expression container check, which both prevents
- * the Babel serialization issue and avoids unnecessary expression containers.
+ *   value.value = value.value.replace(/\n\s+/g, " ");
  *
- * CRLF (\r\n) is collapsed to a single space first, matching the HTML input
- * stream preprocessing step (https://html.spec.whatwg.org/multipage/parsing.html#preprocessing-the-input-stream).
+ * However, this normalization is skipped for JSXExpressionContainer values.
+ * When the compiler wraps strings in expression containers (because they
+ * match STRING_REQUIRES_EXPR_CONTAINER_PATTERN), the JSX transform bypasses
+ * normalization. The server code (uncompiled or differently compiled) goes
+ * through the standard normalization, creating a hydration mismatch.
+ *
+ * We apply the same normalization here before the expression container check,
+ * ensuring compiled output matches the behavior of non-compiled code.
  */
-const NORMALIZE_CRLF_PATTERN = /\r\n/g;
-const NORMALIZE_WHITESPACE_PATTERN = /[\t\n\r]/g;
+const JSX_STRING_NEWLINE_PATTERN = /\n\s+/g;
 
 function codegenJsxAttribute(
   cx: Context,
@@ -2171,9 +2169,10 @@ function codegenJsxAttribute(
             isBuiltinTag &&
             !cx.fbtOperands.has(attribute.place.identifier.id)
           ) {
-            const normalized = value.value
-              .replace(NORMALIZE_CRLF_PATTERN, '\n')
-              .replace(NORMALIZE_WHITESPACE_PATTERN, ' ');
+            const normalized = value.value.replace(
+              JSX_STRING_NEWLINE_PATTERN,
+              ' ',
+            );
             if (normalized !== value.value) {
               value = createStringLiteral(value.loc, normalized);
             }

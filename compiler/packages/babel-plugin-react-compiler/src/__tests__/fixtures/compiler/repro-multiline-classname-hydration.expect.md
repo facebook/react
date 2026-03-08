@@ -5,9 +5,10 @@
 function Component() {
   return (
     <div
-      className="foo
-bar
-baz"
+      className="
+        flex min-h-screen items-center
+        dark:bg-black
+      "
     >
       Hello
     </div>
@@ -24,7 +25,11 @@ function Component() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div className="foo bar baz">Hello</div>;
+    t0 = (
+      <div className=" flex min-h-screen items-center dark:bg-black ">
+        Hello
+      </div>
+    );
     $[0] = t0;
   } else {
     t0 = $[0];
