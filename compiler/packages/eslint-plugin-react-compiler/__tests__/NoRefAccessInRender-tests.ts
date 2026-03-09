@@ -16,7 +16,20 @@ testRule(
   'no ref access in render rule',
   allRules[getRuleForCategory(ErrorCategory.Refs).name].rule,
   {
-    valid: [],
+    valid: [
+      {
+        name: 'allow null-guarded ref initialization',
+        code: normalizeIndent`
+      function Component() {
+        const ref = useRef(null);
+        if (ref.current === null) {
+          ref.current = "stable";
+        }
+        return <div />;
+      }
+    `,
+      },
+    ],
     invalid: [
       {
         name: 'validate against simple ref access in render',

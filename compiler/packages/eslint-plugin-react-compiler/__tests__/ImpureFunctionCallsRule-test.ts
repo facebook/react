@@ -34,6 +34,19 @@ testRule(
           makeTestCaseError('Cannot call impure function during render'),
         ],
       },
+      {
+        name: 'Impure ref initialization still fails purity under a null guard',
+        code: normalizeIndent`
+      function Component() {
+        const ref = useRef(null);
+        if (ref.current === null) {
+          ref.current = Date.now();
+        }
+        return <div>{ref.current}</div>;
+      }
+    `,
+        errors: [makeTestCaseError('Cannot call impure function during render')],
+      },
     ],
   },
 );

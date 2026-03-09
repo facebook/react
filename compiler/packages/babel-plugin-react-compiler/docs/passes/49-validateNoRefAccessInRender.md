@@ -29,6 +29,12 @@ if (ref.current == null) {
 }
 ```
 
+This exception only applies to the ref access pattern itself. Other validations
+still apply to the initializer expression. In particular, the initializer must
+still be predictable during render. Impure calls such as `Date.now()` or
+`Math.random()` continue to fail the `purity` rule even when they appear inside
+an allowed null-guarded ref initialization.
+
 Error messages produced:
 - Category: `Refs`
 - Reason: "Cannot access refs during render"
