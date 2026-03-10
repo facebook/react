@@ -8167,7 +8167,6 @@ eslint-plugin-no-unsanitized@4.0.2:
 
 "eslint-plugin-react-internal@link:./scripts/eslint-rules":
   version "0.0.0"
-  uid ""
 
 eslint-plugin-react@^6.7.1:
   version "6.10.3"
@@ -15767,9 +15766,9 @@ signedsource@^2.0.0:
   integrity sha512-MscTxXbMij5JVgrW1xDiMIc+vFa0+H0+HP+rRrFjwa7ef2VAxIP/4L/E75I5H4xvyb4l1X+a9ch+6Zy5uFu7Fg==
 
 simple-git@^3.10.0:
-  version "3.28.0"
-  resolved "https://registry.yarnpkg.com/simple-git/-/simple-git-3.28.0.tgz#c6345b2e387880f8450788a1e388573366ae48ac"
-  integrity sha512-Rs/vQRwsn1ILH1oBUy8NucJlXmnnLeLCfcvbSehkPzbv3wwoFWIdtfd6Ndo6ZPhlPsCZ60CPI4rxurnwAa+a2w==
+  version "3.33.0"
+  resolved "https://registry.yarnpkg.com/simple-git/-/simple-git-3.33.0.tgz#b903dc70f5b93535a4f64ff39172da43058cfb88"
+  integrity sha512-D4V/tGC2sjsoNhoMybKyGoE+v8A60hRawKQ1iFRA1zwuDgGZCBJ4ByOzZ5J8joBbi4Oam0qiPH+GhzmSBwbJng==
   dependencies:
     "@kwsites/file-exists" "^1.1.1"
     "@kwsites/promise-deferred" "^1.1.1"
