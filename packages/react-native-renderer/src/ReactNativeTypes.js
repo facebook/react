@@ -83,7 +83,7 @@ type InspectorDataProps = $ReadOnly<{
 }>;
 
 type InspectorDataGetter = (
-  <TElementType: React.ElementType>(
+  <TElementType extends React.ElementType>(
     componentOrHandle: React.ElementRef<TElementType> | number,
   ) => ?number,
 ) => $ReadOnly<{
@@ -142,10 +142,10 @@ export type RenderRootOptions = {
  * Provide minimal Flow typing for the high-level RN API and call it a day.
  */
 export type ReactNativeType = {
-  findHostInstance_DEPRECATED<TElementType: React.ElementType>(
+  findHostInstance_DEPRECATED<TElementType extends React.ElementType>(
     componentOrHandle: ?(React.ElementRef<TElementType> | number),
   ): ?PublicInstance,
-  findNodeHandle<TElementType: React.ElementType>(
+  findNodeHandle<TElementType extends React.ElementType>(
     componentOrHandle: ?(React.ElementRef<TElementType> | number),
   ): ?number,
   isChildPublicInstance(parent: PublicInstance, child: PublicInstance): boolean,
@@ -171,10 +171,10 @@ export opaque type Node = mixed;
 export opaque type InternalInstanceHandle = mixed;
 
 export type ReactFabricType = {
-  findHostInstance_DEPRECATED<TElementType: React.ElementType>(
+  findHostInstance_DEPRECATED<TElementType extends React.ElementType>(
     componentOrHandle: ?(React.ElementRef<TElementType> | number),
   ): ?PublicInstance,
-  findNodeHandle<TElementType: React.ElementType>(
+  findNodeHandle<TElementType extends React.ElementType>(
     componentOrHandle: ?(React.ElementRef<TElementType> | number),
   ): ?number,
   dispatchCommand(
