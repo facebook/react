@@ -11,7 +11,10 @@
 'use strict';
 import type {ReactBuildType} from 'react-devtools-shared/src/backend/types';
 
-function setExtensionIconAndPopup(reactBuildType: ReactBuildType, tabId) {
+function setExtensionIconAndPopup(
+  reactBuildType: ReactBuildType,
+  tabId: number,
+) {
   chrome.action.setIcon({
     tabId,
     path: {
