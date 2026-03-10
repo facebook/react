@@ -8,6 +8,7 @@
 import {CompilerDiagnostic} from '..';
 import {ErrorCategory} from '../CompilerError';
 import {HIRFunction} from '../HIR';
+import {computeAllowedImpureRefInitializers} from '../Inference/ComputeAllowedImpureRefInitializers';
 import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffects';
 
 /**
@@ -20,10 +21,15 @@ import {getFunctionCallSignature} from '../Inference/InferMutationAliasingEffect
  * and use it here.
  */
 export function validateNoImpureFunctionsInRender(fn: HIRFunction): void {
+  const allowed = computeAllowedImpureRefInitializers(fn);
+
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       const value = instr.value;
-      if (value.kind === 'MethodCall' || value.kind == 'CallExpression') {
+      if (
+        (value.kind === 'MethodCall' || value.kind === 'CallExpression') &&
+        !allowed.has(instr.id)
+      ) {
         const callee =
           value.kind === 'MethodCall' ? value.property : value.callee;
         const signature = getFunctionCallSignature(
