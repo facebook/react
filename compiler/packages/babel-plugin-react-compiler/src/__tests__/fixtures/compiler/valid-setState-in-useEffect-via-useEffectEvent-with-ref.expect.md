@@ -157,6 +157,7 @@ function Component(t0) {
     t6 = $[17];
   }
   useEffect(t5, t6);
+
   return data;
 }
 

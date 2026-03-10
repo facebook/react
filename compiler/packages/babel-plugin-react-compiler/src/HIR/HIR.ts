@@ -612,7 +612,7 @@ export type TryTerminal = {
 export type MaybeThrowTerminal = {
   kind: 'maybe-throw';
   continuation: BlockId;
-  handler: BlockId;
+  handler: BlockId | null;
   id: InstructionId;
   loc: SourceLocation;
   fallthrough?: never;
@@ -826,6 +826,7 @@ export type StartMemoize = {
    * emitting diagnostics with a suggested replacement
    */
   depsLoc: SourceLocation | null;
+  hasInvalidDeps?: true;
   loc: SourceLocation;
 };
 export type FinishMemoize = {
@@ -1373,14 +1374,7 @@ export function promoteTemporary(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
     description: `Identifier already has a name, \`${identifier.name}\``,
-    details: [
-      {
-        kind: 'error',
-        loc: GeneratedSource,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
   identifier.name = {
     kind: 'promoted',
@@ -1403,14 +1397,7 @@ export function promoteTemporaryJsxTag(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
     description: `Identifier already has a name, \`${identifier.name}\``,
-    details: [
-      {
-        kind: 'error',
-        loc: GeneratedSource,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
   identifier.name = {
     kind: 'promoted',
@@ -1576,15 +1563,7 @@ export function isMutableEffect(
     case Effect.Unknown: {
       CompilerError.invariant(false, {
         reason: 'Unexpected unknown effect',
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: location,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: location,
       });
     }
     case Effect.Read:
@@ -1661,6 +1640,7 @@ export function makePropertyLiteral(value: string | number): PropertyLiteral {
 export type DependencyPathEntry = {
   property: PropertyLiteral;
   optional: boolean;
+  loc: SourceLocation;
 };
 export type DependencyPath = Array<DependencyPathEntry>;
 export type ReactiveScopeDependency = {
@@ -1678,6 +1658,7 @@ export type ReactiveScopeDependency = {
    */
   reactive: boolean;
   path: DependencyPath;
+  loc: SourceLocation;
 };
 
 export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
@@ -1737,15 +1718,7 @@ export type BlockId = number & {[opaqueBlockId]: 'BlockId'};
 export function makeBlockId(id: number): BlockId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected block id to be a non-negative integer',
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
   return id as BlockId;
 }
@@ -1760,15 +1733,7 @@ export type ScopeId = number & {[opaqueScopeId]: 'ScopeId'};
 export function makeScopeId(id: number): ScopeId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected block id to be a non-negative integer',
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
   return id as ScopeId;
 }
@@ -1783,15 +1748,7 @@ export type IdentifierId = number & {[opaqueIdentifierId]: 'IdentifierId'};
 export function makeIdentifierId(id: number): IdentifierId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected identifier id to be a non-negative integer',
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
   return id as IdentifierId;
 }
@@ -1806,15 +1763,7 @@ export type DeclarationId = number & {[opageDeclarationId]: 'DeclarationId'};
 export function makeDeclarationId(id: number): DeclarationId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected declaration id to be a non-negative integer',
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
   return id as DeclarationId;
 }
@@ -1829,15 +1778,7 @@ export type InstructionId = number & {[opaqueInstructionId]: 'IdentifierId'};
 export function makeInstructionId(id: number): InstructionId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
     reason: 'Expected instruction id to be a non-negative integer',
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
   return id as InstructionId;
 }
@@ -1946,12 +1887,6 @@ export function isUseReducerType(id: Identifier): boolean {
 
 export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
-}
-
-export function isFireFunctionType(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction'
-  );
 }
 
 export function isEffectEventFunctionType(id: Identifier): boolean {

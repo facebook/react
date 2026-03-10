@@ -163,14 +163,7 @@ export function suppressionsToCompilerError(
 ): CompilerError {
   CompilerError.invariant(suppressionRanges.length !== 0, {
     reason: `Expected at least suppression comment source range`,
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: GeneratedSource,
-        message: null,
-      },
-    ],
+    loc: GeneratedSource,
   });
   const error = new CompilerError();
   for (const suppressionRange of suppressionRanges) {

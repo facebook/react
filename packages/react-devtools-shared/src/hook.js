@@ -18,6 +18,7 @@ import type {
   DevToolsHookSettings,
   ProfilingSettings,
 } from './backend/types';
+import type {ComponentFilter} from './frontend/types';
 
 import {
   FIREFOX_CONSOLE_DIMMING_COLOR,
@@ -57,6 +58,9 @@ const defaultProfilingSettings: ProfilingSettings = {
 
 export function installHook(
   target: any,
+  componentFiltersOrComponentFiltersPromise:
+    | Array<ComponentFilter>
+    | Promise<Array<ComponentFilter>>,
   maybeSettingsOrSettingsPromise?:
     | DevToolsHookSettings
     | Promise<DevToolsHookSettings>,
@@ -224,6 +228,7 @@ export function installHook(
       target,
       isProfiling,
       profilingSettings,
+      componentFiltersOrComponentFiltersPromise,
     );
     if (rendererInterface != null) {
       hook.rendererInterfaces.set(id, rendererInterface);

@@ -255,7 +255,6 @@ describe('ReactDOMFizzShellHydration', () => {
     },
   );
 
-  // @gate enableHydrationLaneScheduling
   it(
     'updating the root at same priority as initial hydration does not ' +
       'force a client render',

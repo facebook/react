@@ -319,3 +319,14 @@ jest.mock('async_hooks', () => {
     },
   };
 });
+
+// Ensure async hooks are disabled after each test to prevent cross-test pollution.
+// This is needed because test files that load the Node server (with async debug hooks)
+// can pollute test files that load the Edge server (which doesn't create new hooks
+// to trigger the cleanup in the mock above).
+afterEach(() => {
+  if (installedHook) {
+    installedHook.disable();
+    installedHook = null;
+  }
+});

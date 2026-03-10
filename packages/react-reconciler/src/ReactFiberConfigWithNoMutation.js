@@ -54,6 +54,7 @@ export const startViewTransition = shim;
 export type RunningViewTransition = null;
 export const startGestureTransition = shim;
 export const stopViewTransition = shim;
+export const addViewTransitionFinishedListener = shim;
 export type ViewTransitionInstance = null | {name: string, ...};
 export const createViewTransitionInstance = shim;
 export type GestureTimeline = any;

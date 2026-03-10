@@ -26,6 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 // @validateExhaustiveMemoizationDependencies:false
 function Component(props) {
   const x = props.value;
+
   return x;
 }
 
