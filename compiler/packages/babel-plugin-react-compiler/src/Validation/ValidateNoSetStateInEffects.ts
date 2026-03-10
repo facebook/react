@@ -50,85 +50,79 @@ export function validateNoSetStateInEffects(
   const errors = new CompilerError();
 
   // In order to ensure that all HIR components that could contain setState have been iterated,
-  // we run the reconnaissance logic until a stable number of state functions has been achieved.
-  // this makes setState HIR analysis order independent.
-  // We will then handle error on a separate pass.
-  let iterationSize = Number.MAX_SAFE_INTEGER;
-  while (iterationSize !== setStateFunctions.size) {
-    iterationSize = setStateFunctions.size;
-    for (const [, block] of fn.body.blocks) {
-      for (const instr of block.instructions) {
-        switch (instr.value.kind) {
-          case 'LoadLocal': {
-            if (setStateFunctions.has(instr.value.place.identifier.id)) {
-              setStateFunctions.set(
-                instr.lvalue.identifier.id,
-                instr.value.place,
-              );
-            }
-            break;
+  // we fully run the reconnaissance logic, then handle error finding on a separate pass.
+  // This makes setState HIR error analysis order independent.
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      switch (instr.value.kind) {
+        case 'LoadLocal': {
+          if (setStateFunctions.has(instr.value.place.identifier.id)) {
+            setStateFunctions.set(
+              instr.lvalue.identifier.id,
+              instr.value.place,
+            );
           }
-          case 'StoreLocal': {
-            if (setStateFunctions.has(instr.value.value.identifier.id)) {
-              setStateFunctions.set(
-                instr.value.lvalue.place.identifier.id,
-                instr.value.value,
-              );
-              setStateFunctions.set(
-                instr.lvalue.identifier.id,
-                instr.value.value,
-              );
-            }
-            break;
+          break;
+        }
+        case 'StoreLocal': {
+          if (setStateFunctions.has(instr.value.value.identifier.id)) {
+            setStateFunctions.set(
+              instr.value.lvalue.place.identifier.id,
+              instr.value.value,
+            );
+            setStateFunctions.set(
+              instr.lvalue.identifier.id,
+              instr.value.value,
+            );
           }
-          case 'FunctionExpression': {
-            if (
-              // faster-path to check if the function expression references a setState
-              [...eachInstructionValueOperand(instr.value)].some(
-                operand =>
-                  isSetStateType(operand.identifier) ||
-                  setStateFunctions.has(operand.identifier.id),
-              )
-            ) {
-              const callee = getSetStateCall(
-                instr.value.loweredFunc.func,
-                setStateFunctions,
-                env,
-              );
-              if (callee !== null) {
-                setStateFunctions.set(instr.lvalue.identifier.id, callee);
-              }
+          break;
+        }
+        case 'FunctionExpression': {
+          if (
+            // faster-path to check if the function expression references a setState
+            [...eachInstructionValueOperand(instr.value)].some(
+              operand =>
+                isSetStateType(operand.identifier) ||
+                setStateFunctions.has(operand.identifier.id),
+            )
+          ) {
+            const callee = getSetStateCall(
+              instr.value.loweredFunc.func,
+              setStateFunctions,
+              env,
+            );
+            if (callee !== null) {
+              setStateFunctions.set(instr.lvalue.identifier.id, callee);
             }
-            break;
           }
-          case 'MethodCall':
-          case 'CallExpression': {
-            const callee =
-              instr.value.kind === 'MethodCall'
-                ? instr.value.property
-                : instr.value.callee;
+          break;
+        }
+        case 'MethodCall':
+        case 'CallExpression': {
+          const callee =
+            instr.value.kind === 'MethodCall'
+              ? instr.value.property
+              : instr.value.callee;
 
-            if (isUseEffectEventType(callee.identifier)) {
-              const arg = instr.value.args[0];
-              if (arg !== undefined && arg.kind === 'Identifier') {
-                const setState = setStateFunctions.get(arg.identifier.id);
-                if (setState !== undefined) {
-                  /**
-                   * This effect event function calls setState synchonously,
-                   * treat it as a setState function for transitive tracking
-                   */
-                  setStateFunctions.set(instr.lvalue.identifier.id, setState);
-                }
+          if (isUseEffectEventType(callee.identifier)) {
+            const arg = instr.value.args[0];
+            if (arg !== undefined && arg.kind === 'Identifier') {
+              const setState = setStateFunctions.get(arg.identifier.id);
+              if (setState !== undefined) {
+                /**
+                 * This effect event function calls setState synchonously,
+                 * treat it as a setState function for transitive tracking
+                 */
+                setStateFunctions.set(instr.lvalue.identifier.id, setState);
               }
             }
-            break;
           }
+          break;
         }
       }
     }
   }
 
-  // Report errors in second pass to ensure HIR has been fully evaluated at error reporting time.
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       if (
