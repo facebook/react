@@ -1978,6 +1978,87 @@ describe('ReactFlightDOM', () => {
     expect(hintRows.length).toEqual(6);
   });
 
+  it('does not duplicate font preload links from Flight hints during Fizz SSR', async () => {
+    async function ServerComponent() {
+      return (
+        <html>
+          <head>
+            <link
+              rel="preload"
+              as="font"
+              href="font-resource"
+              type="font/woff2"
+            />
+          </head>
+        </html>
+      );
+    }
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
+    );
+    pipe(flightWritable);
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response =
+          ReactServerDOMClient.createFromReadableStream(flightReadable);
+      }
+      return response;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>{getResponse()}</body>
+        </html>
+      );
+    }
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(<App />).pipe(fizzWritable);
+    });
+
+    async function read(stream) {
+      const decoder = new TextDecoder();
+      const reader = stream.getReader();
+      let buffer = '';
+      while (true) {
+        const {done, value} = await reader.read();
+        if (done) {
+          buffer += decoder.decode();
+          break;
+        }
+        buffer += decoder.decode(value, {stream: true});
+      }
+      return buffer;
+    }
+
+    const html = await read(fizzReadable);
+    // The font preload should only appear once, from the Flight hint.
+    // It should not be duplicated by the rendered <link> element.
+    expect(html).toEqual(
+      '<!DOCTYPE html><html><head>' +
+        '<link rel="preload" href="font-resource" as="font" type="font/woff2"/>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<link rel="expect" href="#_R_" blocking="render"/>'
+          : '') +
+        '</head>' +
+        '<body><html><head></head></html>' +
+        (gate(flags => flags.enableFizzBlockingRender)
+          ? '<template id="_R_"></template>'
+          : '') +
+        '</body></html>',
+    );
+  });
+
   it('preloads resources without needing to render them', async () => {
     function NoScriptComponent() {
       return (
