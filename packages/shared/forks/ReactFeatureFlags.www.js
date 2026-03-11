@@ -98,6 +98,8 @@ export const disableLegacyMode: boolean = true;
 
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
+export const enableViewTransitionForPersistenceMode: boolean = false;
+
 export const enableGestureTransition: boolean = false;
 
 export const enableSuspenseyImages: boolean = false;
