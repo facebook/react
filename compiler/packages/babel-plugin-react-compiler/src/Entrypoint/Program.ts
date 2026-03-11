@@ -1258,6 +1258,9 @@ function getFunctionReferencedBeforeDeclarationAtTopLevel(
     TSTypeAliasDeclaration(path) {
       path.skip();
     },
+    TSDeclareFunction(path) {
+      path.skip();
+    },
     Identifier(id) {
       const fn = fnNames.get(id.node.name);
       // We're not tracking this identifier.
