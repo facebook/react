@@ -168,6 +168,8 @@ export const addViewTransitionFinishedListener =
 export const getCurrentGestureOffset = $$$config.getCurrentGestureOffset;
 export const createViewTransitionInstance =
   $$$config.createViewTransitionInstance;
+export const finalizeViewTransitionChild =
+  $$$config.finalizeViewTransitionChild;
 export const clearContainer = $$$config.clearContainer;
 export const createFragmentInstance = $$$config.createFragmentInstance;
 export const updateFragmentInstanceFiber =

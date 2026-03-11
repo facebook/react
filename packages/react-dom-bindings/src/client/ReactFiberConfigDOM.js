@@ -1498,6 +1498,14 @@ function countClientRects(rects: Array<ClientRect>): number {
   return count;
 }
 
+export function finalizeViewTransitionChild(
+  type: string,
+  props: Props,
+): Props {
+  // No-op for DOM. View flattening is a React Native concept.
+  return props;
+}
+
 export function applyViewTransitionName(
   instance: Instance,
   name: string,

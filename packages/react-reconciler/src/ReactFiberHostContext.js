@@ -23,9 +23,12 @@ import {
   NotPendingTransition,
   isPrimaryRenderer,
 } from './ReactFiberConfig';
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack';
 
 const contextStackCursor: StackCursor<HostContext | null> = createCursor(null);
+
+const viewTransitionCursor: StackCursor<boolean> = createCursor(false);
 const contextFiberStackCursor: StackCursor<Fiber | null> = createCursor(null);
 const rootInstanceStackCursor: StackCursor<Container | null> =
   createCursor(null);
@@ -93,7 +96,29 @@ function getHostContext(): HostContext {
   return context;
 }
 
+function pushViewTransitionContext(fiber: Fiber): void {
+  if (enableViewTransition) {
+    push(viewTransitionCursor, true, fiber);
+  }
+}
+
+function popViewTransitionContext(fiber: Fiber): void {
+  if (enableViewTransition) {
+    pop(viewTransitionCursor, fiber);
+  }
+}
+
+function getIsInViewTransition(): boolean {
+  return viewTransitionCursor.current;
+}
+
 function pushHostContext(fiber: Fiber): void {
+  // HostComponents act as ViewTransition boundaries. Push false so that
+  // nested HostComponents below this one are not considered direct VT children.
+  if (enableViewTransition) {
+    push(viewTransitionCursor, false, fiber);
+  }
+
   const stateHook: Hook | null = fiber.memoizedState;
   if (stateHook !== null) {
     // Propagate the current state to all the descendents.
@@ -129,6 +154,10 @@ function pushHostContext(fiber: Fiber): void {
 }
 
 function popHostContext(fiber: Fiber): void {
+  if (enableViewTransition) {
+    pop(viewTransitionCursor, fiber);
+  }
+
   if (contextFiberStackCursor.current === fiber) {
     // Do not pop unless this Fiber provided the current context.
     // pushHostContext() only pushes Fibers that provide unique contexts.
@@ -159,10 +188,13 @@ function popHostContext(fiber: Fiber): void {
 
 export {
   getHostContext,
+  getIsInViewTransition,
   getCurrentRootHostContainer,
   getRootHostContainer,
   popHostContainer,
   popHostContext,
   pushHostContainer,
   pushHostContext,
+  pushViewTransitionContext,
+  popViewTransitionContext,
 };

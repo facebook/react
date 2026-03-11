@@ -127,11 +127,14 @@ import {
   mayResourceSuspendCommit,
   preloadInstance,
   preloadResource,
+  finalizeViewTransitionChild,
 } from './ReactFiberConfig';
 import {
   getRootHostContainer,
   popHostContext,
   getHostContext,
+  getIsInViewTransition,
+  popViewTransitionContext,
   popHostContainer,
 } from './ReactFiberHostContext';
 import {
@@ -1356,16 +1359,25 @@ function completeWork(
     case HostComponent: {
       popHostContext(workInProgress);
       const type = workInProgress.type;
+
+      // After popping, check if this HostComponent is a direct host child
+      // of a ViewTransition. If so, let the renderer finalize the props
+      // (e.g. to prevent view flattening in React Native).
+      let instanceProps = newProps;
+      if (enableViewTransition && getIsInViewTransition()) {
+        instanceProps = finalizeViewTransitionChild(type, instanceProps);
+      }
+
       if (current !== null && workInProgress.stateNode != null) {
         updateHostComponent(
           current,
           workInProgress,
           type,
-          newProps,
+          instanceProps,
           renderLanes,
         );
       } else {
-        if (!newProps) {
+        if (!instanceProps) {
           if (workInProgress.stateNode === null) {
             throw new Error(
               'We must have new props for new mounts. This error is likely ' +
@@ -1397,7 +1409,7 @@ function completeWork(
             finalizeHydratedChildren(
               workInProgress.stateNode,
               type,
-              newProps,
+              instanceProps,
               currentHostContext,
             )
           ) {
@@ -1407,7 +1419,7 @@ function completeWork(
           const rootContainerInstance = getRootHostContainer();
           const instance = createInstance(
             type,
-            newProps,
+            instanceProps,
             rootContainerInstance,
             currentHostContext,
             workInProgress,
@@ -1425,7 +1437,7 @@ function completeWork(
             finalizeInitialChildren(
               instance,
               type,
-              newProps,
+              instanceProps,
               currentHostContext,
             )
           ) {
@@ -1433,6 +1445,13 @@ function completeWork(
           }
         }
       }
+
+      // Ensure memoizedProps reflects the finalized props so that
+      // future renders diff against the correct props.
+      if (instanceProps !== newProps) {
+        workInProgress.memoizedProps = instanceProps;
+      }
+
       bubbleProperties(workInProgress);
       if (enableViewTransition) {
         // Host Components act as their own View Transitions which doesn't run enter/exit animations.
@@ -2056,6 +2075,7 @@ function completeWork(
     }
     case ViewTransitionComponent: {
       if (enableViewTransition) {
+        popViewTransitionContext(workInProgress);
         // We're a component that might need an exit transition. This flag will
         // bubble up to the parent tree to indicate that there's a child that
         // might need an exit View Transition upon unmount.

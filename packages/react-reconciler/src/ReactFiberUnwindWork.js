@@ -33,15 +33,21 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {DidCapture, NoFlags, ShouldCapture, Update} from './ReactFiberFlags';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
 import {
   enableProfilerTimer,
   enableTransitionTracing,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
-import {popHostContainer, popHostContext} from './ReactFiberHostContext';
+import {
+  popHostContainer,
+  popHostContext,
+  popViewTransitionContext,
+} from './ReactFiberHostContext';
 import {
   popSuspenseListContext,
   popSuspenseHandler,
@@ -243,6 +249,11 @@ function unwindWork(
         }
       }
       return null;
+    case ViewTransitionComponent:
+      if (enableViewTransition) {
+        popViewTransitionContext(workInProgress);
+      }
+      return null;
     default:
       return null;
   }
@@ -322,6 +333,11 @@ function unwindInterruptedWork(
         if (instance !== null) {
           popMarkerInstance(interruptedWork);
         }
+      }
+      break;
+    case ViewTransitionComponent:
+      if (enableViewTransition) {
+        popViewTransitionContext(interruptedWork);
       }
       break;
     default:

@@ -204,6 +204,16 @@ export function createViewTransitionInstance(
   };
 }
 
+export function finalizeViewTransitionChild(
+  type: string,
+  props: Props,
+): Props {
+  // Prevent view flattening for direct host children of ViewTransition.
+  // Without this, Fabric's native-side optimization may remove the view
+  // from the platform hierarchy, breaking view transition animations.
+  return Object.assign({}, props, {collapsable: false});
+}
+
 export function applyViewTransitionName(
   instance: Instance,
   name: string,

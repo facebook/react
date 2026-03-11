@@ -188,6 +188,7 @@ import {shouldError, shouldSuspend} from './ReactFiberReconciler';
 import {
   pushHostContext,
   pushHostContainer,
+  pushViewTransitionContext,
   getRootHostContainer,
 } from './ReactFiberHostContext';
 import {
@@ -3571,6 +3572,10 @@ function updateViewTransition(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
+  // Mark direct host children as being inside a ViewTransition so the renderer
+  // can finalize them (e.g. prevent view flattening in React Native).
+  pushViewTransitionContext(workInProgress);
+
   if (workInProgress.stateNode === null) {
     // We previously reset the work-in-progress.
     // We need to create a new ViewTransitionState instance.
@@ -4154,6 +4159,13 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
           workInProgress,
           renderLanes,
         );
+      }
+      // Fallthrough
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        pushViewTransitionContext(workInProgress);
+        break;
       }
       // Fallthrough
     }

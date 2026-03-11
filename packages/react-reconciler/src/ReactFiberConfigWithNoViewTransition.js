@@ -40,3 +40,4 @@ export const stopViewTransition = shim;
 export const addViewTransitionFinishedListener = shim;
 export type ViewTransitionInstance = null | {name: string, ...};
 export const createViewTransitionInstance = shim;
+export const finalizeViewTransitionChild = shim;
