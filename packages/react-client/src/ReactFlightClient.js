@@ -1040,6 +1040,8 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     // Initialize any debug info and block the initializing chunk on any
     // unresolved entries.
     initializeDebugChunk(response, chunk);
+    // TODO: The chunk might have transitioned to ERRORED now.
+    // Should we return early if that happens?
   }
 
   try {
@@ -1075,6 +1077,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
+    initializedChunk.reason = null;
 
     if (__DEV__) {
       processChunkDebugInfo(response, initializedChunk, value);
