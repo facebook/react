@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>React Todo List Example</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+
+    .desc {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .toolbar input {
+      flex: 1;
+      min-width: 220px;
+      padding: 10px 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .toolbar button,
+    .filters button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #1677ff;
+      color: #fff;
+    }
+
+    .toolbar button:hover,
+    .filters button:hover {
+      opacity: 0.92;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .filters .secondary {
+      background: #eef2f6;
+      color: #222;
+    }
+
+    .filters .active {
+      background: #1677ff;
+      color: #fff;
+    }
+
+    .todo-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      background: #fafafa;
+    }
+
+    .todo-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .todo-text {
+      word-break: break-word;
+    }
+
+    .completed {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .todo-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .todo-actions button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #eef2f6;
+      color: #222;
+    }
+
+    .todo-actions .danger {
+      background: #ff4d4f;
+      color: #fff;
+    }
+
+    .stats {
+      margin-top: 18px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .empty {
+      padding: 20px;
+      text-align: center;
+      color: #888;
+      border: 1px dashed #d0d7de;
+      border-radius: 10px;
+      background: #fcfcfc;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useMemo, useCallback, createContext, useContext } = React;
+
+    const TodoContext = createContext(null);
+
+    function TodoProvider({ children }) {
+      const [todos, setTodos] = useState([
+        { id: 1, text: "阅读 React Fiber 架构", completed: false },
+        { id: 2, text: "理解 Hooks 链表存储机制", completed: true },
+        { id: 3, text: "分析 Scheduler 调度流程", completed: false }
+      ]);
+      const [filter, setFilter] = useState("all");
+
+      const addTodo = useCallback((text) => {
+        const value = String(text).trim();
+        if (!value) return;
+
+        setTodos((prev) => {
+          const newTodo = {
+            id: Date.now(),
+            text: value,
+            completed: false
+          };
+          return [...prev, newTodo];
+        });
+      }, []);
+
+      const toggleTodo = useCallback((id) => {
+        setTodos((prev) =>
+          prev.map((todo) =>
+            todo.id === id
+              ? { ...todo, completed: !todo.completed }
+              : todo
+          )
+        );
+      }, []);
+
+      const removeTodo = useCallback((id) => {
+        setTodos((prev) => prev.filter((todo) => todo.id !== id));
+      }, []);
+
+      const clearCompleted = useCallback(() => {
+        setTodos((prev) => prev.filter((todo) => !todo.completed));
+      }, []);
+
+      const filteredTodos = useMemo(() => {
+        if (filter === "active") {
+          return todos.filter((todo) => !todo.completed);
+        }
+        if (filter === "completed") {
+          return todos.filter((todo) => todo.completed);
+        }
+        return todos;
+      }, [todos, filter]);
+
+      const value = useMemo(() => {
+        return {
+          todos,
+          filter,
+          setFilter,
+          addTodo,
+          toggleTodo,
+          removeTodo,
+          clearCompleted,
+          filteredTodos
+        };
+      }, [
+        todos,
+        filter,
+        addTodo,
+        toggleTodo,
+        removeTodo,
+        clearCompleted,
+        filteredTodos
+      ]);
+
+      return (
+        <TodoContext.Provider value={value}>
+          {children}
+        </TodoContext.Provider>
+      );
+    }
+
+    function useTodo() {
+      const context = useContext(TodoContext);
+      if (!context) {
+        throw new Error("useTodo must be used inside TodoProvider");
+      }
+      return context;
+    }
+
+    function AddTodoForm() {
+      const [input, setInput] = useState("");
+      const { addTodo } = useTodo();
+
+      const handleSubmit = useCallback((event) => {
+        event.preventDefault();
+        addTodo(input);
+        setInput("");
+      }, [addTodo, input]);
+
+      return (
+        <form className="toolbar" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="请输入待办事项"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <button type="submit">添加任务</button>
+        </form>
+      );
+    }
+
+    function FilterBar() {
+      const { filter, setFilter, clearCompleted } = useTodo();
+
+      const filters = [
+        { key: "all", label: "全部" },
+        { key: "active", label: "进行中" },
+        { key: "completed", label: "已完成" }
+      ];
+
+      return (
+        <div className="filters">
+          {filters.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={filter === item.key ? "active" : "secondary"}
+              onClick={() => setFilter(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+          <button type="button" className="secondary" onClick={clearCompleted}>
+            清除已完成
+          </button>
+        </div>
+      );
+    }
+
+    function TodoItem({ todo }) {
+      const { toggleTodo, removeTodo } = useTodo();
+
+      return (
+        <li className="todo-item">
+          <div className="todo-left">
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => toggleTodo(todo.id)}
+            />
+            <span className={"todo-text " + (todo.completed ? "completed" : "")}>
+              {todo.text}
+            </span>
+          </div>
+          <div className="todo-actions">
+            <button type="button" onClick={() => toggleTodo(todo.id)}>
+              {todo.completed ? "恢复" : "完成"}
+            </button>
+            <button
+              type="button"
+              className="danger"
+              onClick={() => removeTodo(todo.id)}
+            >
+              删除
+            </button>
+          </div>
+        </li>
+      );
+    }
+
+    function TodoList() {
+      const { filteredTodos } = useTodo();
+
+      if (filteredTodos.length === 0) {
+        return <div className="empty">当前没有符合条件的任务</div>;
+      }
+
+      return (
+        <ul className="todo-list">
+          {filteredTodos.map((todo) => (
+            <TodoItem key={todo.id} todo={todo} />
+          ))}
+        </ul>
+      );
+    }
+
+    function Stats() {
+      const { todos } = useTodo();
+
+      const total = todos.length;
+      const completed = todos.filter((todo) => todo.completed).length;
+      const active = total - completed;
+
+      return (
+        <div className="stats">
+          总数：{total}，进行中：{active}，已完成：{completed}
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <TodoProvider>
+          <div className="container">
+            <h1>React Todo List 示例</h1>
+            <p className="desc">
+              该示例演示了 React 的组件化开发、useState、useMemo、useCallback、
+              Context 等核心能力。
+            </p>
+            <AddTodoForm />
+            <FilterBar />
+            <TodoList />
+            <Stats />
+          </div>
+        </TodoProvider>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
