@@ -201,10 +201,11 @@ function updateTree(
 
         i += 3;
 
+        // If the node already exists, it may be a race condition when the page
+        // reloads during profiling. In this case, remove the old node first
+        // before adding the new one.
         if (nodes.has(id)) {
-          throw new Error(
-            `Commit tree already contains fiber "${id}". This is a bug in React DevTools.`,
-          );
+          nodes.delete(id);
         }
 
         if (type === ElementTypeRoot) {
