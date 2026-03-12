@@ -1259,10 +1259,12 @@ function getFunctionReferencedBeforeDeclarationAtTopLevel(
       path.skip();
     },
     TSDeclareFunction(path) {
-      // Skip TypeScript overload signatures (function declarations without a body)
-      // to avoid false positives in reference-before-declaration detection.
-      // TSDeclareFunction.id is treated as isReferencedIdentifier() by Babel,
-      // but these are not actual runtime references.
+      /*
+       * Skip TypeScript overload signatures (function declarations without a body)
+       * to avoid false positives in reference-before-declaration detection.
+       * TSDeclareFunction.id is treated as isReferencedIdentifier() by Babel,
+       * but these are not actual runtime references.
+       */
       path.skip();
     },
     Identifier(id) {
