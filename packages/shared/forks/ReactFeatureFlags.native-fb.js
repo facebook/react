@@ -31,7 +31,6 @@ export const {
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
-export const disableClientCache: boolean = true;
 export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const disableLegacyContext: boolean = false;
