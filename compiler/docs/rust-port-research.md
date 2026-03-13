@@ -7,10 +7,11 @@
 3. [The Shared Mutable Reference Problem](#the-shared-mutable-reference-problem)
 4. [Environment as Shared Mutable State](#environment-as-shared-mutable-state)
 5. [Side Maps: Passes Storing HIR References](#side-maps-passes-storing-hir-references)
-6. [Recommended Rust Architecture](#recommended-rust-architecture)
-7. [Structural Similarity: TypeScript ↔ Rust Alignment](#structural-similarity-typescript--rust-alignment)
-8. [Pipeline Overview](#pipeline-overview)
-9. [Pass-by-Pass Analysis](#pass-by-pass-analysis)
+6. [AliasingEffect: Shared References and Rust Ownership](#aliasingeffect-shared-references-and-rust-ownership)
+7. [Recommended Rust Architecture](#recommended-rust-architecture)
+8. [Structural Similarity: TypeScript ↔ Rust Alignment](#structural-similarity-typescript--rust-alignment)
+9. [Pipeline Overview](#pipeline-overview)
+10. [Pass-by-Pass Analysis](#pass-by-pass-analysis)
    - [Phase 1: Lowering (AST to HIR)](#phase-1-lowering)
    - [Phase 2: Normalization](#phase-2-normalization)
    - [Phase 3: SSA Construction](#phase-3-ssa-construction)
@@ -27,9 +28,9 @@
    - [Phase 14: Reactive Function Transforms](#phase-14-reactive-function-transforms)
    - [Phase 15: Codegen](#phase-15-codegen)
    - [Validation Passes](#validation-passes)
-10. [External Dependencies](#external-dependencies)
-11. [Risk Assessment](#risk-assessment)
-12. [Recommended Migration Strategy](#recommended-migration-strategy)
+11. [External Dependencies](#external-dependencies)
+12. [Risk Assessment](#risk-assessment)
+13. [Recommended Migration Strategy](#recommended-migration-strategy)
 
 ---
 
@@ -56,7 +57,7 @@ Porting the React Compiler from TypeScript to Rust is **feasible and the Rust co
 - ~4 passes require significant redesign (InferMutationAliasingRanges, BuildHIR, CodegenReactiveFunction, AnalyseFunctions)
 - Input/output boundaries (Babel AST ↔ HIR) require the most new infrastructure
 
-**Note on InferMutationAliasingEffects**: Previously categorized as "significant redesign" due to 6 maps using JS reference identity with `InstructionValue` keys. An upstream refactor ([facebook/react#33650](https://github.com/facebook/react/pull/33650)) eliminates this by replacing `InstructionValue` with interned `AliasingEffect` objects as value-identity keys. Since effects are already interned by content hash, they map directly to a copyable `EffectId` index in Rust. This moves InferMutationAliasingEffects from "significant redesign" to "moderate refactoring."
+**Note on InferMutationAliasingEffects**: Previously categorized as "significant redesign" due to maps using JS reference identity with `InstructionValue` keys. An upstream refactor ([PR #33650](https://github.com/facebook/react/pull/33650)) replaces `InstructionValue` with interned `AliasingEffect` as allocation-site keys, eliminating synthetic InstructionValues and the `effectInstructionValueCache`. Since effects are already interned by content hash, they map directly to a copyable `EffectId` index in Rust. Additionally, `AliasingEffect` variants share `Place` references with `InstructionValue` fields — in Rust, Places are cloned cheaply (with arena-based `IdentifierId`). The `CreateFunction` variant's `FunctionExpression` reference is replaced with an `InstructionId` for lookup. See [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership) for the full analysis. This is "moderate refactoring" — no algorithmic redesign needed.
 
 ---
 
@@ -323,7 +324,7 @@ Maps that store references to actual `Instruction`, `FunctionExpression`, or `In
 
 **Passes**: InferMutationAliasingEffects (`Map<Instruction, InstructionSignature>`, `Map<FunctionExpression, AliasingSignature>`), DropManualMemoization (`Map<IdentifierId, TInstruction<FunctionExpression>>`, `ManualMemoCallee.loadInstr`), InlineIIFEs (`Map<IdentifierId, FunctionExpression>`), NameAnonymousFunctions (`Node.fn: FunctionExpression`).
 
-**Note**: InferMutationAliasingEffects previously also had `Map<AliasingEffect, InstructionValue>` and `Map<InstructionValue, AbstractValue>` using synthetic InstructionValues as allocation-site identity tokens. An upstream refactor ([facebook/react#33650](https://github.com/facebook/react/pull/33650)) eliminates InstructionValue from all value-identity maps, replacing it with interned `AliasingEffect` objects. Since effects are interned by content hash, they map to a copyable `EffectId` in Rust. See the InferMutationAliasingEffects pass analysis for details.
+**Note**: InferMutationAliasingEffects currently uses `Map<InstructionValue, AbstractValue>` and `Map<IdentifierId, Set<InstructionValue>>` with `InstructionValue` objects as allocation-site identity tokens (JS reference identity), including both real InstructionValues from the HIR (for `CreateFunction`) and synthetic objects fabricated as allocation-site markers. An upstream refactor ([PR #33650](https://github.com/facebook/react/pull/33650)) replaces all `InstructionValue` keys with interned `AliasingEffect` objects, eliminating the synthetic InstructionValues and `effectInstructionValueCache` entirely. Since effects are already interned by content hash, reference identity equals content identity — exactly what's needed for Rust. In Rust, the `EffectId` (index into the interning table) serves as the allocation-site key directly. See [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership) for the full analysis.
 
 **Rust approach**: Store only what is actually needed:
 - If the map is for existence checking: use `HashSet<IdentifierId>`
@@ -358,6 +359,362 @@ fn effective_mutable_range(id: &Identifier, scopes: &ScopeArena) -> MutableRange
 ```
 
 All downstream passes that read `identifier.mutableRange` (like `isMutable()`, `inRange()`) would need access to the scope arena. This is a mechanical refactor — every call site gains a `&ScopeArena` parameter.
+
+---
+
+## AliasingEffect: Shared References and Rust Ownership
+
+### Overview
+
+`AliasingEffect` is a discriminated union (17 variants) that describes data flow, mutation, and other side effects of instructions and terminals. Effects are **created** by `InferMutationAliasingEffects`, stored on `Instruction.effects` and `Terminal.effects`, and **consumed** by `InferMutationAliasingRanges`, `AnalyseFunctions`, validation passes, and `PrintHIR`. This section analyzes the shared references between `AliasingEffect` variants, `Instruction`, and `InstructionValue`, and how they map to Rust ownership.
+
+### Shared Reference Inventory
+
+Every `AliasingEffect` variant contains `Place` objects. In the TypeScript implementation, these are the **same JS object references** as the Places in the `InstructionValue` and `Instruction.lvalue` — not copies. This creates a web of shared references:
+
+#### Category A: Place Sharing (Instruction/InstructionValue → Effect)
+
+Nearly every instruction kind in `computeSignatureForInstruction` creates effects that directly reference Places from the instruction:
+
+| InstructionValue Kind | Effect Created | Shared Place Fields |
+|---|---|---|
+| `ArrayExpression` | `Create into:lvalue`, `Capture from:element into:lvalue` | `lvalue`, each `element` from `value.elements` |
+| `ObjectExpression` | `Create into:lvalue`, `Capture from:property.place into:lvalue` | `lvalue`, each `property.place` from `value.properties` |
+| `PropertyStore/ComputedStore` | `Mutate value:object`, `Capture from:value into:object` | `value.object`, `value.value`, `lvalue` |
+| `PropertyLoad/ComputedLoad` | `CreateFrom from:object into:lvalue` | `value.object`, `lvalue` |
+| `PropertyDelete/ComputedDelete` | `Mutate value:object` | `value.object`, `lvalue` |
+| `Destructure` | `CreateFrom from:value.value into:place` per pattern item | `value.value`, each pattern item place |
+| `JsxExpression` | `Freeze value:operand`, `Capture`, `Render place:tag/child` | `lvalue`, `value.tag`, each child, each prop place |
+| `GetIterator` | `Alias/Capture from:collection into:lvalue` | `value.collection`, `lvalue` |
+| `IteratorNext` | `MutateConditionally value:iterator`, `CreateFrom from:collection` | `value.iterator`, `value.collection`, `lvalue` |
+| `StoreLocal` | `Assign from:value.value into:value.lvalue.place` | `value.value`, `value.lvalue.place`, `lvalue` |
+| `LoadLocal` | `Assign from:value.place into:lvalue` | `value.place`, `lvalue` |
+| `Await` | `MutateTransitiveConditionally value:value.value`, `Capture` | `value.value`, `lvalue` |
+
+#### Category B: Call Instructions — Deep Sharing via Apply
+
+For `CallExpression`, `MethodCall`, and `NewExpression`, a single `Apply` effect is created that shares **multiple fields** including the args array itself:
+
+```typescript
+// From computeSignatureForInstruction (line 1832-1841)
+effects.push({
+  kind: 'Apply',
+  receiver,              // same Place as value.receiver or value.callee
+  function: callee,      // same Place as value.callee or value.property
+  mutatesFunction: ...,
+  args: value.args,      // THE SAME ARRAY REFERENCE from InstructionValue
+  into: lvalue,          // same Place as instruction.lvalue
+  signature,             // shared FunctionSignature from type registry
+  loc: value.loc,
+});
+```
+
+The `args` field is the **exact same array object** as the InstructionValue's `args`. In Rust, this must be either cloned or accessed via the instruction.
+
+#### Category C: FunctionExpression — The Deepest Sharing
+
+The `CreateFunction` variant holds a direct reference to the `FunctionExpression` or `ObjectMethod` InstructionValue:
+
+```typescript
+// From computeSignatureForInstruction (line 1946-1953)
+effects.push({
+  kind: 'CreateFunction',
+  into: lvalue,
+  function: value,  // THE SAME FunctionExpression/ObjectMethod InstructionValue
+  captures: value.loweredFunc.func.context.filter(
+    operand => operand.effect === Effect.Capture,
+  ),
+});
+```
+
+This is the most architecturally significant sharing because `effect.function` is used in three distinct ways:
+
+1. **As an allocation-site token** in abstract interpretation (reference identity):
+   - `state.initialize(effect.function, {...})` → `#values.set(value, kind)` — FunctionExpression as map key
+   - `state.define(effect.into, effect.function)` → `#variables.set(id, new Set([value]))` — FunctionExpression as set value
+
+2. **For deep structural access**:
+   - `effect.function.loweredFunc.func.aliasingEffects` — reads the nested function's inferred effects
+   - `effect.function.loweredFunc.func.context` — iterates captured variables
+
+3. **For mutation** of the nested function's context:
+   - `operand.effect = Effect.Read` (line 838) — mutates `Place.effect` on the nested function's context variables
+
+### Allocation-Site Identity: InstructionValue → AliasingEffect (PR #33650)
+
+The abstract interpretation in `InferenceState` tracks the abstract kind (Mutable, Frozen, Primitive, etc.) of each "allocation site" and which allocation sites each identifier points to. Currently this uses `InstructionValue` objects as allocation-site identity tokens via JS reference identity:
+
+```
+#values: Map<InstructionValue, AbstractValue>   // InstructionValue as KEY (reference identity)
+#variables: Map<IdentifierId, Set<InstructionValue>>  // InstructionValue as SET VALUE
+```
+
+Allocation sites are created from:
+- **Params/context variables**: Synthetic `{kind: 'Primitive'}` or `{kind: 'ObjectExpression'}` objects
+- **`Create`/`CreateFrom` effects**: Synthetic InstructionValues via `effectInstructionValueCache` (maps interned effect → synthetic InstructionValue)
+- **`CreateFunction` effects**: The actual `FunctionExpression` InstructionValue from the HIR
+
+**Upstream simplification** ([facebook/react#33650](https://github.com/facebook/react/pull/33650)): This PR replaces `InstructionValue` with the interned `AliasingEffect` itself as the allocation-site key:
+
+```
+#values: Map<AliasingEffect, AbstractValue>     // interned AliasingEffect as KEY
+#variables: Map<IdentifierId, Set<AliasingEffect>>
+```
+
+The changes:
+1. **Params/context**: Synthetic `InstructionValue` objects are replaced with `AliasingEffect` objects (e.g., `{kind: 'Create', into: place, value: ValueKind.Context, reason: ValueReason.Other}`)
+2. **`Create`/`CreateFrom` effects**: `effectInstructionValueCache` is eliminated entirely. `state.initialize(effect, ...)` and `state.define(place, effect)` use the interned effect directly as the key/value
+3. **`CreateFunction` effects**: `state.initialize(effect.function, ...)` → `state.initialize(effect, ...)` — the CreateFunction effect itself is the key, not the FunctionExpression
+4. **`state.values()` return type**: Changes from `Array<InstructionValue>` to `Array<AliasingEffect>`. Code that checks function values now uses `values[0].kind === 'CreateFunction'` and accesses `values[0].function` for the FunctionExpression
+5. **`freezeValue` method**: Checks `value.kind === 'CreateFunction'` and accesses `value.function.loweredFunc.func.context` instead of `value.kind === 'FunctionExpression'`
+
+Since effects are already interned by content hash (via `context.internEffect()`), reference identity equals content identity. This means the interned `AliasingEffect` maps directly to a copyable `EffectId` index in Rust — no separate `AllocationSiteId` type is needed.
+
+**Key insight for CreateFunction**: After PR #33650, the `CreateFunction` effect's `function` field (the FunctionExpression/ObjectMethod reference) is **no longer used as a map key** for allocation-site tracking. It is only used for:
+1. **Deep structural access**: `effect.function.loweredFunc.func.context` and `.aliasingEffects`
+2. **As a key in `functionSignatureCache`**: `Map<FunctionExpression, AliasingSignature>` (the one remaining reference-identity map using FunctionExpression)
+3. **Mutation**: `operand.effect = Effect.Read` on context variables
+
+In Rust, this means `CreateFunction` stores an `InstructionId` (for looking up the FunctionExpression from the HIR), while the allocation-site identity is the `EffectId` of the interned CreateFunction effect. The `functionSignatureCache` keys by `InstructionId` instead of FunctionExpression reference.
+
+### Effect Interning
+
+Effects are interned by content hash in `Context.internEffect()`:
+
+```typescript
+internEffect(effect: AliasingEffect): AliasingEffect {
+  const hash = hashEffect(effect);           // hash based on identifier IDs, not Place references
+  let interned = this.internedEffects.get(hash);
+  if (interned == null) {
+    this.internedEffects.set(hash, effect);
+    interned = effect;
+  }
+  return interned;
+}
+```
+
+The hash uses `place.identifier.id` (a number) rather than Place reference identity. The interned effect retains the Place references from whichever instruction first created that hash. In the fixpoint loop, re-processing an instruction may produce an effect with the same hash but different Place objects; interning returns the **original** effect with its original Place references. This is safe in TypeScript (both Places point to the same shared Identifier), but in Rust it means the interned effect's Places may not be the "current" instruction's Places — they are equivalent by ID but different allocations.
+
+With PR #33650, the interned effect is also the allocation-site key. Since interning guarantees that the same `EffectId` is returned for structurally identical effects, the fixpoint loop correctly converges — the same allocation site is used across iterations.
+
+### Consumers: How Effects Are Read
+
+#### InferMutationAliasingRanges (primary consumer)
+
+Iterates `instr.effects` for every instruction and reads Place fields:
+- `effect.into.identifier` → used as key in `AliasingState.nodes` and to call `state.create()`
+- `effect.from.identifier` → used in `state.assign()`, `state.capture()`, `state.maybeAlias()`
+- `effect.value.identifier` → stored in `mutations` array, passed to `state.mutate()`
+- `effect.function.loweredFunc.func` → used in `state.create()` for Function nodes
+- `effect.place.identifier` → stored in `renders` array for Render effects
+- `effect.error` → for MutateFrozen/MutateGlobal/Impure, recorded on Environment
+
+Also reads terminal effects: `block.terminal.effects` for Alias and Freeze effects on maybe-throw/return terminals.
+
+Also reads effects a second time (Part 2, lines 359-421) to compute legacy per-operand `Effect` enum values. This pass accesses `effect.*.identifier.id` and `effect.*.identifier.mutableRange.end` through effect Places.
+
+**Key observation**: InferMutationAliasingRanges reads `identifier.id`, `identifier` (for the reference-identity map key), and `identifier.mutableRange` from effect Places. It never mutates them through the effect's Places (mutations go through the graph nodes). With arena-based identifiers, `place.identifier` is an `IdentifierId` (`Copy`), and `mutableRange` is accessed via the identifier arena. No Place reference comparison is done — all passes access identifiers through their IDs, never by comparing Place object references.
+
+#### AnalyseFunctions
+
+Reads `fn.aliasingEffects` (the function-level effects from `InferMutationAliasingRanges`) to populate context variable effect annotations:
+- `effect.from.identifier.id` — for Assign/Alias/Capture/CreateFrom/MaybeAlias variants
+- `effect.value.identifier.id` — for Mutate/MutateConditionally/MutateTransitive/MutateTransitiveConditionally
+
+Only reads identifier IDs. Does not access Places beyond `.identifier.id`.
+
+#### ValidateNoFreezingKnownMutableFunctions
+
+Reads `fn.aliasingEffects` on nested `FunctionExpression` values:
+- Stores `Mutate`/`MutateTransitive` effects in `Map<IdentifierId, AliasingEffect>`
+- Reads `effect.value.identifier.id`, `effect.value.identifier.name`, `effect.value.loc`
+
+Accesses Identifier fields (name, loc) beyond just the ID, but these are read-only.
+
+#### Other Passes (do NOT read AliasingEffects)
+
+`ValidateLocalsNotReassignedAfterRender`, `ValidateNoImpureFunctionsInRender`, and `PruneNonEscapingScopes` import from AliasingEffects.ts or InferMutationAliasingEffects.ts but only use `getFunctionCallSignature` or the legacy `Effect` enum on Places — they do not read `instr.effects` or `fn.aliasingEffects`.
+
+#### PrintHIR
+
+Reads all effect fields for debug output. Read-only.
+
+### Recommended Rust Representation
+
+#### AliasingEffect Enum
+
+With arena-based identifiers, `Place` becomes a small `Copy`/`Clone` struct. Effects can own cloned Places:
+
+```rust
+#[derive(Clone)]
+enum AliasingEffect {
+    Freeze { value: Place, reason: ValueReason },
+    Mutate { value: Place, reason: Option<MutationReason> },
+    MutateConditionally { value: Place },
+    MutateTransitive { value: Place },
+    MutateTransitiveConditionally { value: Place },
+    Capture { from: Place, into: Place },
+    Alias { from: Place, into: Place },
+    MaybeAlias { from: Place, into: Place },
+    Assign { from: Place, into: Place },
+    Create { into: Place, value: ValueKind, reason: ValueReason },
+    CreateFrom { from: Place, into: Place },
+    ImmutableCapture { from: Place, into: Place },
+    Render { place: Place },
+
+    Apply {
+        receiver: Place,
+        function: Place,
+        mutates_function: bool,
+        args: Vec<PlaceOrSpreadOrHole>,    // cloned from InstructionValue
+        into: Place,
+        signature: Option<FunctionSignature>,
+        loc: SourceLocation,
+    },
+    CreateFunction {
+        into: Place,
+        /// Index into HIR to find the FunctionExpression/ObjectMethod.
+        /// Used to access loweredFunc.func for context variables, aliasing effects, etc.
+        source_instruction: InstructionId,
+        captures: Vec<Place>,              // cloned from context, filtered
+    },
+
+    MutateFrozen { place: Place, error: CompilerDiagnostic },
+    MutateGlobal { place: Place, error: CompilerDiagnostic },
+    Impure { place: Place, error: CompilerDiagnostic },
+}
+```
+
+Key design decisions:
+- **Place is cloned, not shared**: Since `Place` stores `IdentifierId` (a `Copy` type) + `Effect` + `bool` + `SourceLocation`, it is small enough to clone cheaply. No shared references needed.
+- **`CreateFunction.source_instruction`** replaces the direct `FunctionExpression` reference. Code that needs `func.context` or `func.aliasingEffects` looks up the instruction from the HIR (see [Accessing FunctionExpression](#accessing-functionexpression-from-createfunction) below).
+- **`Apply.args`** is a cloned `Vec`, not a shared reference to the InstructionValue's args. This is a shallow clone of `Place`/`SpreadPattern`/`Hole` values (all small, copyable types with arena IDs).
+
+#### EffectId as Allocation-Site Identity
+
+With PR #33650, the interned `AliasingEffect` replaces `InstructionValue` as the allocation-site key. In Rust, the `EffectId` (index into the interning table) serves directly as the allocation-site identity — no separate `AllocationSiteId` is needed:
+
+```rust
+struct InferenceState {
+    /// The kind of each value, keyed by the EffectId of its creation effect
+    values: HashMap<EffectId, AbstractValue>,
+    /// The set of allocation sites pointed to by each identifier
+    variables: HashMap<IdentifierId, SmallVec<[EffectId; 2]>>,
+}
+
+impl InferenceState {
+    /// Initialize a value at the given allocation site
+    fn initialize(&mut self, effect_id: EffectId, kind: AbstractValue) {
+        self.values.insert(effect_id, kind);
+    }
+
+    /// Define a variable to point at an allocation site
+    fn define(&mut self, place: &Place, effect_id: EffectId) {
+        self.variables.insert(place.identifier, smallvec![effect_id]);
+    }
+
+    /// Look up which allocation sites a place points to
+    fn values(&self, place: &Place) -> &[EffectId] {
+        self.variables.get(&place.identifier).expect("uninitialized").as_slice()
+    }
+}
+```
+
+Each call to `state.initialize(effect, kind)` / `state.define(place, effect)` in TypeScript becomes `state.initialize(effect_id, kind)` / `state.define(place, effect_id)` in Rust, where `effect_id` is the `EffectId` returned by the effect interner. This applies uniformly to all creation effects:
+- **`Create`/`CreateFrom`**: The interned effect's `EffectId` is both the interning key and the allocation-site key
+- **`CreateFunction`**: Same — the interned CreateFunction effect's `EffectId` is the allocation-site key (the `FunctionExpression` reference is no longer used as a key)
+- **Params/context**: Synthetic `AliasingEffect::Create` values are interned and their `EffectId` serves as the allocation site
+
+The `effectInstructionValueCache` is eliminated entirely (PR #33650 removes it). The `functionSignatureCache: Map<FunctionExpression, AliasingSignature>` becomes `HashMap<InstructionId, AliasingSignature>` — keyed by the source instruction rather than the FunctionExpression reference.
+
+#### Effect Interning
+
+```rust
+struct EffectInterner {
+    effects: Vec<AliasingEffect>,        // indexed by EffectId
+    by_hash: HashMap<String, EffectId>,  // dedup by content hash
+}
+
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
+struct EffectId(u32);
+
+impl EffectInterner {
+    fn intern(&mut self, effect: AliasingEffect) -> EffectId {
+        let hash = hash_effect(&effect);
+        *self.by_hash.entry(hash).or_insert_with(|| {
+            let id = EffectId(self.effects.len() as u32);
+            self.effects.push(effect);
+            id
+        })
+    }
+}
+```
+
+Since the interned effect IS the allocation-site key, there is no additional cache or mapping needed. The `EffectId` serves triple duty: interning dedup key, allocation-site identity, and cache key for `applySignatureCache` and `functionSignatureCache`.
+
+#### Accessing FunctionExpression from CreateFunction
+
+After PR #33650, code that previously accessed `effect.function.loweredFunc.func` now accesses `effect.function.loweredFunc.func` through the `CreateFunction` effect (where `effect.function` is the `FunctionExpression`/`ObjectMethod`). In Rust, `CreateFunction` stores `source_instruction: InstructionId`, so the function is looked up from the HIR:
+
+```rust
+fn get_function_from_instruction<'a>(
+    func: &'a HIRFunction,
+    instruction_id: InstructionId,
+) -> &'a HIRFunction {
+    let instr = func.get_instruction(instruction_id);
+    match &instr.value {
+        InstructionValue::FunctionExpression { lowered_func, .. }
+        | InstructionValue::ObjectMethod { lowered_func, .. } => {
+            &lowered_func.func
+        }
+        _ => panic!("Expected FunctionExpression or ObjectMethod"),
+    }
+}
+```
+
+This requires a way to look up instructions by ID. The recommended approach is a `(BlockId, usize)` side map built once before the pass — O(n) build, O(1) lookup:
+
+```rust
+struct InstructionIndex {
+    locations: HashMap<InstructionId, (BlockId, usize)>,
+}
+```
+
+#### Context Variable Mutation
+
+The mutation `operand.effect = Effect.Read` (in `applyEffect` for `CreateFunction`) modifies Places on the nested function's context. In Rust:
+
+```rust
+// During CreateFunction processing, after determining abstract kinds:
+let inner_func = get_function_from_instruction_mut(func, source_instruction);
+for operand in &mut inner_func.context {
+    if operand.effect == Effect::Capture {
+        let kind = state.kind(operand).kind;
+        if matches!(kind, ValueKind::Primitive | ValueKind::Frozen | ValueKind::Global) {
+            operand.effect = Effect::Read;
+        }
+    }
+}
+```
+
+Since `InferMutationAliasingEffects` processes the outer function only (nested functions are already analyzed by `AnalyseFunctions`), and the nested function is structurally inside the current instruction, the borrow is to a disjoint part of the HIR. Alternatively, collect the updates and apply them after processing all effects for the instruction to avoid any borrow conflicts.
+
+### Summary of Rust Approach for AliasingEffect
+
+| TypeScript Pattern | Rust Equivalent | Complexity |
+|---|---|---|
+| Effect Places share InstructionValue Places | Clone Places (cheap with `IdentifierId`) | Trivial |
+| `Apply.args` shares InstructionValue's args array | Clone the `Vec<PlaceOrSpreadOrHole>` | Trivial |
+| `CreateFunction.function` = the FunctionExpression | Store `InstructionId`, look up when needed | Low |
+| `InstructionValue` as allocation-site key (→ `AliasingEffect` after #33650) | `EffectId` from interning table | Trivial |
+| `effectInstructionValueCache` (eliminated by #33650) | Not needed — `EffectId` is the allocation site directly | N/A |
+| `functionSignatureCache` (FunctionExpr → Signature) | `HashMap<InstructionId, AliasingSignature>` | Trivial |
+| Effect interning by content hash | `EffectInterner` with `Vec` + `HashMap` | Low |
+| `operand.effect = Effect.Read` mutation | Collect updates, apply after; or `&mut` via instruction index | Low |
+| `applySignatureCache` (Signature × Apply → Effects) | `HashMap<(EffectId, EffectId), Vec<AliasingEffect>>` | Low |
+| `state.values(place)` returning `AliasingEffect[]` | Returns `&[EffectId]` | Trivial |
+
+**Overall assessment**: AliasingEffect translates cleanly to Rust. With PR #33650, the interned `EffectId` serves as both the dedup key and allocation-site identity, eliminating the need for a separate `AllocationSiteId`. Place sharing is resolved by cloning (cheap with arena-based identifiers), and FunctionExpression access uses `InstructionId` indirection. No fundamental algorithmic redesign is needed. The fixpoint loop, effect interning, and abstract interpretation structure remain structurally identical.
 
 ---
 
@@ -537,7 +894,7 @@ Most passes consist of these patterns that translate almost line-for-line:
 
 **Moderately similar (70-85%)**: AnalyseFunctions, InferReactiveScopeVariables, AlignReactiveScopesToBlockScopesHIR, MergeOverlappingReactiveScopesHIR, OutlineJSX, BuildReactiveFunction, PruneNonEscapingScopes, OptimizeForSSR, PruneUnusedLValues
 
-**Moderately similar (70-85%)** *(additional)*: InferMutationAliasingEffects (after upstream refactor removing InstructionValue keys — see pass analysis)
+**Moderately similar (70-85%)** *(additional)*: InferMutationAliasingEffects (after [PR #33650](https://github.com/facebook/react/pull/33650): allocation-site keys → `EffectId` via interning, Place sharing → Clone, CreateFunction → InstructionId lookup — see [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership))
 
 **Requires redesign (50-70%)**: InferMutationAliasingRanges (graph-through-HIR mutation), BuildHIR (Babel AST coupling), CodegenReactiveFunction (Babel AST output)
 
@@ -720,26 +1077,26 @@ Unification-based type inference is very natural in Rust. The `Type` enum needs 
 The recursive `lowerWithMutationAliasing` pattern works with `&mut` because it is sequential. Use `std::mem::take` to extract child `HIRFunction` from the instruction, process it, then put it back. The mutableRange reset (`identifier.mutableRange = {start: 0, end: 0}`) is a simple value write in Rust (no aliasing to break because Rust uses values, not shared objects).
 
 #### InferMutationAliasingEffects
-**Env usage**: `env.config` (3 reads), `env.getFunctionSignature`, `env.enableValidations`, `createTemporaryPlace`. InferenceState stores `env` as read-only reference. **Side maps**: `statesByBlock/queuedStates` (BlockId-keyed), Context class with caches (`Map<Instruction, InstructionSignature>`, `Map<FunctionExpression, AliasingSignature>`, `Map<AliasingSignature, Map<AliasingEffect, ...>>`), InferenceState with `#values: Map<AliasingEffect, AbstractValue>` and `#variables: Map<IdentifierId, Set<AliasingEffect>>`. **Similarity**: ~80%.
+**Env usage**: `env.config` (3 reads), `env.getFunctionSignature`, `env.enableValidations`, `createTemporaryPlace`. InferenceState stores `env` as read-only reference. **Side maps**: `statesByBlock/queuedStates` (BlockId-keyed), Context class with caches (`Map<Instruction, InstructionSignature>`, `Map<FunctionExpression, AliasingSignature>`, `Map<AliasingSignature, Map<AliasingEffect, ...>>`), InferenceState with `#values: Map<InstructionValue, AbstractValue>` and `#variables: Map<IdentifierId, Set<InstructionValue>>`. **Similarity**: ~80%.
 
-**Upstream simplification** ([facebook/react#33650](https://github.com/facebook/react/pull/33650)): The original implementation used `InstructionValue` objects as value-identity keys in the abstract interpretation state, including fabricated synthetic `ObjectExpression`/`Primitive` objects as allocation-site tokens. The refactored version replaces all `InstructionValue` keys with interned `AliasingEffect` objects. Since effects are already interned by content hash (via `context.internEffect()` / `internedEffects: Map<string, AliasingEffect>`), reference identity equals content identity — exactly what's needed for Rust. This eliminates the `effectInstructionValueCache` entirely and removes `InstructionValue` from the `#values` and `#variables` maps.
+**Shared references in AliasingEffect** (see [§AliasingEffect: Shared References and Rust Ownership](#aliasingeffect-shared-references-and-rust-ownership) for full analysis): `computeSignatureForInstruction` creates effects that share Place objects with the Instruction's `lvalue` and `InstructionValue` fields. The `Apply` effect shares the args array reference. The `CreateFunction` effect stores the actual `FunctionExpression`/`ObjectMethod` InstructionValue. In Rust, Places are cloned (cheap with `IdentifierId`) and `CreateFunction` stores an `InstructionId` for lookup.
 
-**Remaining reference-identity maps and their Rust equivalents**:
-- `instructionSignatureCache: Map<Instruction, ...>` → `HashMap<InstructionId, InstructionSignature>` (trivial — each instruction has a unique `.id`)
-- `#values: Map<AliasingEffect, AbstractValue>` → `HashMap<EffectId, AbstractValue>` (EffectId = index into interning table)
-- `#variables: Map<IdentifierId, Set<AliasingEffect>>` → `HashMap<IdentifierId, HashSet<EffectId>>`
-- `functionSignatureCache: Map<FunctionExpression, ...>` → `HashMap<EffectId, AliasingSignature>` (key by the CreateFunction effect's EffectId instead of the FunctionExpression reference)
-- `applySignatureCache: Map<AliasingSignature, Map<AliasingEffect, ...>>` → `HashMap<EffectId, HashMap<EffectId, ...>>` (compound key using originating effect IDs)
+**Allocation-site identity**: Currently uses `InstructionValue` as reference-identity keys. PR [#33650](https://github.com/facebook/react/pull/33650) replaces this with interned `AliasingEffect` objects — since effects are already interned by content hash, the interned effect IS the allocation-site key. In Rust, this maps to `EffectId` (index into the interning table). No separate `AllocationSiteId` is needed.
 
-All keys become `Copy` types (`InstructionId`, `EffectId`, `IdentifierId`), trivially `Hash + Eq`, with no reference identity needed. The interning table is:
-```rust
-struct EffectInterner {
-    effects: Vec<AliasingEffect>,       // indexed by EffectId
-    by_hash: HashMap<String, EffectId>, // dedup lookup
-}
-```
+**Reference-identity maps and their Rust equivalents** (after PR #33650):
+- `instructionSignatureCache: Map<Instruction, ...>` → `HashMap<InstructionId, InstructionSignature>`
+- `#values: Map<AliasingEffect, AbstractValue>` → `HashMap<EffectId, AbstractValue>` (EffectId = interning index = allocation-site ID)
+- `#variables: Map<IdentifierId, Set<AliasingEffect>>` → `HashMap<IdentifierId, SmallVec<[EffectId; 2]>>`
+- `effectInstructionValueCache` → eliminated by PR #33650
+- `functionSignatureCache: Map<FunctionExpression, ...>` → `HashMap<InstructionId, AliasingSignature>` (key by source instruction ID)
+- `applySignatureCache: Map<AliasingSignature, Map<AliasingEffect, ...>>` → `HashMap<EffectId, HashMap<EffectId, ...>>`
+- `internedEffects: Map<string, AliasingEffect>` → `EffectInterner { effects: Vec<AliasingEffect>, by_hash: HashMap<String, EffectId> }`
+
+All keys become `Copy` types (`InstructionId`, `EffectId`, `IdentifierId`), trivially `Hash + Eq`, with no reference identity needed.
 
 The overall structure (fixpoint loop, InferenceState clone/merge, applyEffect recursion, Context caching) can remain nearly identical. The `applyEffect` recursive method works with `&mut InferenceState` + `&mut Context` parameters — Rust's reborrowing handles the recursion naturally.
+
+**Context variable mutation**: During `CreateFunction` processing, `operand.effect = Effect.Read` mutates Places on the nested function's context. In Rust, either collect updates and apply after effect processing, or obtain `&mut` access to the nested function via the instruction index (borrows are disjoint since the nested function is inside the current instruction).
 
 #### DeadCodeElimination
 **Env usage**: `env.outputMode` (one read for SSR hook pruning). **Side maps**: `State.identifiers: Set<IdentifierId>`, `State.named: Set<string>` (both value-keyed, safe). **Similarity**: ~95%.
@@ -747,6 +1104,8 @@ Two-phase mark-and-sweep is perfectly natural in Rust. `Vec::retain` replaces `r
 
 #### InferMutationAliasingRanges (HIGH COMPLEXITY)
 **Env usage**: `env.enableValidations` (one read), `env.recordError` (error recording). **Side maps**: `AliasingState.nodes: Map<Identifier, Node>` (reference-identity keys), each Node containing `createdFrom/captures/aliases/maybeAliases: Map<Identifier, number>` and `edges: Array<{node: Identifier, ...}>`. Also `mutations/renders` arrays storing Place references. **Similarity**: ~75%.
+
+**Effect consumption**: Iterates `instr.effects` for every instruction, reading Place fields (`effect.into`, `effect.from`, `effect.value`, `effect.place`). For `CreateFunction` effects, accesses `effect.function.loweredFunc.func` to create Function graph nodes. In Rust, `CreateFunction` stores `InstructionId`; the function is looked up from the HIR (see [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership)). All other effect Place accesses only need `place.identifier` (an `IdentifierId` in Rust), with no shared reference concerns.
 
 **All Identifier-keyed maps become `HashMap<IdentifierId, T>`**. The critical `node.id.mutableRange.end = ...` pattern (mutating HIR through graph node references) needs restructuring: either store computed range updates on the Node and apply after traversal (recommended), or use arena-based identifiers. The BFS in `mutate()` collects edge targets into temporary `Vec<IdentifierId>` before pushing to queue, resolving borrow conflicts. The two-part structure (build graph → apply ranges) maps well to Rust's two-phase pattern. The temporal `index` counter and edge ordering translate directly.
 
@@ -946,7 +1305,7 @@ Recommended: JSON AST interchange format with `serde_json` serialization → JS 
 - Reactive function transforms — Visitor/MutVisitor trait design with Transformed enum
 
 ### Medium Risk *(additional)*
-- **InferMutationAliasingEffects**: After upstream refactor ([facebook/react#33650](https://github.com/facebook/react/pull/33650)), InstructionValue keys are eliminated. Remaining reference-identity maps use interned AliasingEffects (→ `EffectId`), Instructions (→ `InstructionId`), and FunctionExpressions (→ `EffectId` of CreateFunction). All become copyable ID-keyed maps. Fixpoint loop and abstract interpretation structure port directly.
+- **InferMutationAliasingEffects**: After [PR #33650](https://github.com/facebook/react/pull/33650), allocation-site identity uses interned `AliasingEffect` (→ `EffectId`), eliminating `InstructionValue` keys and `effectInstructionValueCache`. Remaining reference-identity maps use Instructions (→ `InstructionId`) and FunctionExpressions (→ `InstructionId`). All become copyable ID-keyed maps. Place sharing between effects and instructions is resolved by cloning (cheap with arena-based identifiers). `CreateFunction`'s FunctionExpression reference becomes an `InstructionId` with lookup. Fixpoint loop and abstract interpretation structure port directly. See [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership) for full analysis.
 
 ### High Risk (significant redesign)
 - **BuildHIR**: Babel AST dependency, shared mutable Environment, closure-heavy builder patterns
@@ -982,7 +1341,7 @@ Recommended: JSON AST interchange format with `serde_json` serialization → JS 
 
 ### Phase 3: Analysis Engine
 1. Port AnalyseFunctions (establishes recursive compilation pattern)
-2. Port InferMutationAliasingEffects (establish EffectId interning table — InstructionValueId arenas no longer needed after upstream refactor)
+2. Port InferMutationAliasingEffects (establish EffectId interning table — EffectId serves as allocation-site identity, InstructionId-based FunctionExpression lookup for CreateFunction)
 3. Port DeadCodeElimination
 4. Port InferMutationAliasingRanges (establish deferred-range-update pattern)
 5. Port InferReactivePlaces
