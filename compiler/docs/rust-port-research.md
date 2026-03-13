@@ -5,9 +5,12 @@
 1. [Executive Summary](#executive-summary)
 2. [Key Data Structures](#key-data-structures)
 3. [The Shared Mutable Reference Problem](#the-shared-mutable-reference-problem)
-4. [Recommended Rust Architecture](#recommended-rust-architecture)
-5. [Pipeline Overview](#pipeline-overview)
-6. [Pass-by-Pass Analysis](#pass-by-pass-analysis)
+4. [Environment as Shared Mutable State](#environment-as-shared-mutable-state)
+5. [Side Maps: Passes Storing HIR References](#side-maps-passes-storing-hir-references)
+6. [Recommended Rust Architecture](#recommended-rust-architecture)
+7. [Structural Similarity: TypeScript ↔ Rust Alignment](#structural-similarity-typescript--rust-alignment)
+8. [Pipeline Overview](#pipeline-overview)
+9. [Pass-by-Pass Analysis](#pass-by-pass-analysis)
    - [Phase 1: Lowering (AST to HIR)](#phase-1-lowering)
    - [Phase 2: Normalization](#phase-2-normalization)
    - [Phase 3: SSA Construction](#phase-3-ssa-construction)
@@ -24,21 +27,32 @@
    - [Phase 14: Reactive Function Transforms](#phase-14-reactive-function-transforms)
    - [Phase 15: Codegen](#phase-15-codegen)
    - [Validation Passes](#validation-passes)
-7. [External Dependencies](#external-dependencies)
-8. [Risk Assessment](#risk-assessment)
-9. [Recommended Migration Strategy](#recommended-migration-strategy)
+10. [External Dependencies](#external-dependencies)
+11. [Risk Assessment](#risk-assessment)
+12. [Recommended Migration Strategy](#recommended-migration-strategy)
 
 ---
 
 ## Executive Summary
 
-Porting the React Compiler from TypeScript to Rust is **feasible but requires significant architectural redesign** of the core data model. The compiler's algorithms (SSA construction, dataflow analysis, scope inference, codegen) are well-suited to Rust. However, the TypeScript implementation relies pervasively on **shared mutable references** — a pattern that fundamentally conflicts with Rust's ownership model.
+Porting the React Compiler from TypeScript to Rust is **feasible and the Rust code can remain structurally very close to the TypeScript**. The compiler's algorithms are well-suited to Rust. The TypeScript implementation relies on three patterns that conflict with Rust's ownership model, but all three have clean, well-understood solutions:
 
-**Key finding**: The single most important architectural decision for a Rust port is replacing JavaScript's shared object references with an **arena-allocated, index-based data model**. Nearly every pass in the compiler mutates `Identifier` fields (`.mutableRange`, `.scope`, `.type`, `.name`) through shared references visible across the entire IR. In Rust, this must be restructured so that `Place` objects store an `IdentifierId` index rather than an `Identifier` reference, with all `Identifier` data living in a central arena.
+1. **Shared Identifier references**: Multiple `Place` objects reference the same `Identifier` object. **Solution**: Arena-allocated identifiers referenced by `IdentifierId` index. Places store a copyable ID, not a reference.
 
-**Complexity breakdown**:
-- ~15 passes are straightforward to port (simple traversal + local mutation)
-- ~15 passes require moderate refactoring (shared scope/identifier mutation)
+2. **Shared ReactiveScope references**: Multiple identifiers share the same `ReactiveScope` object (including its mutable range). **Solution**: Arena-allocated scopes referenced by `ScopeId`. The scope's `MutableRange` lives in the arena; identifiers access it via scope lookup.
+
+3. **Environment as shared mutable singleton**: The `Environment` object is threaded through the entire compilation via `fn.env` and mutated by many passes. **Solution**: Split Environment into immutable config (shared reference) and mutable state (counters, errors, outlined functions) passed as `&mut`.
+
+**Key finding on structural similarity**: After deep analysis of every pass, the vast majority of compiler passes can be ported to Rust with **~85-95% structural correspondence** — meaning you could view the TypeScript and Rust side-by-side and easily trace the logic. The main mechanical differences are:
+- `match` instead of `switch` (exhaustive by default in Rust)
+- `HashMap<IdentifierId, T>` instead of `Map<Identifier, T>` (reference identity → value identity)
+- `Vec::retain()` instead of delete-during-Set-iteration
+- `std::mem::replace` / `std::mem::take` for in-place enum variant swaps
+- Two-phase collect/apply instead of mutate-through-stored-references
+
+**Complexity breakdown** (revised after deep per-pass analysis):
+- ~25 passes are straightforward to port (simple traversal, local mutation, ID-only side maps)
+- ~12 passes require moderate refactoring (stored references → IDs, iteration order changes)
 - ~5 passes require significant redesign (InferMutationAliasingEffects, InferMutationAliasingRanges, BuildHIR, CodegenReactiveFunction, AnalyseFunctions)
 - Input/output boundaries (Babel AST ↔ HIR) require the most new infrastructure
 
@@ -88,7 +102,7 @@ Instruction {
 ```
 Place {
   kind: 'Identifier',
-  identifier: Identifier,    // ← THIS IS A SHARED REFERENCE
+  identifier: Identifier,    // ← THIS IS A SHARED REFERENCE in TS; becomes IdentifierId in Rust
   effect: Effect,             // Read, Mutate, Capture, Freeze, etc.
   reactive: boolean,          // set by InferReactivePlaces
   loc: SourceLocation,
@@ -129,57 +143,11 @@ MutableRange {
 }
 ```
 
-### Environment
-```
-Environment {
-  // Mutable ID counters
-  #nextIdentifier: number,
-  #nextBlock: number,
-  #nextScope: number,
-
-  // Configuration (immutable after construction)
-  config: EnvironmentConfig,
-  fnType: ReactFunctionType,
-
-  // Mutable state
-  #errors: CompilerError,           // accumulated diagnostics
-  #outlinedFunctions: Array<...>,   // functions extracted during optimization
-  #globals: GlobalRegistry,
-  #shapes: ShapeRegistry,
-
-  // External references
-  #scope: BabelScope,               // Babel scope for name generation
-}
-```
-
-### AliasingEffect (~16 variants)
-```
-AliasingEffect =
-  | { kind: 'Freeze', value: Place, reason: ValueReason }
-  | { kind: 'Mutate', value: Place }
-  | { kind: 'MutateTransitive', value: Place }
-  | { kind: 'MutateConditionally', value: Place }
-  | { kind: 'MutateTransitiveConditionally', value: Place }
-  | { kind: 'Capture', from: Place, into: Place }
-  | { kind: 'Alias', from: Place, into: Place }
-  | { kind: 'MaybeAlias', from: Place, into: Place }
-  | { kind: 'Assign', from: Place, into: Place }
-  | { kind: 'Create', into: Place, value: ValueKind }
-  | { kind: 'CreateFrom', from: Place, into: Place }
-  | { kind: 'ImmutableCapture', from: Place, into: Place }
-  | { kind: 'Apply', receiver: Place, function: Place, args, into: Place, ... }
-  | { kind: 'CreateFunction', captures: Array<Place>, function, into: Place }
-  | { kind: 'MutateFrozen', place: Place, error: ... }
-  | { kind: 'MutateGlobal', place: Place, error: ... }
-  | { kind: 'Impure', place: Place, error: ... }
-  | { kind: 'Render', place: Place }
-```
-
 ---
 
 ## The Shared Mutable Reference Problem
 
-This is the **central challenge** for a Rust port. In TypeScript, the compiler relies on JavaScript's reference semantics:
+This is the **central challenge** for a Rust port. In TypeScript, the compiler relies on JavaScript's reference semantics in three pervasive patterns:
 
 ### Pattern 1: Shared Identifier Mutation
 ```typescript
@@ -194,32 +162,198 @@ place1.identifier.mutableRange.end = 42;
 console.log(place2.identifier.mutableRange.end); // 42
 ```
 
-This pattern is used by: InferMutationAliasingRanges, InferReactiveScopeVariables, InferTypes, InferReactivePlaces, RenameVariables, PromoteUsedTemporaries, EnterSSA, EliminateRedundantPhi, AnalyseFunctions, and many more.
+Used by: InferMutationAliasingRanges, InferReactiveScopeVariables, InferTypes, InferReactivePlaces, RenameVariables, PromoteUsedTemporaries, EnterSSA, EliminateRedundantPhi, AnalyseFunctions, and many more.
 
 ### Pattern 2: Shared ReactiveScope References
 ```typescript
-// Multiple Identifiers share the same ReactiveScope
-identifier1.scope = sharedScope;
-identifier2.scope = sharedScope; // same object!
+// Multiple Identifiers share the same ReactiveScope AND MutableRange
+identifier.mutableRange = scope.range;  // line 132 of InferReactiveScopeVariables
 
+// Now identifier.mutableRange IS scope.range (same JS object)
 // A pass expands the scope range...
-sharedScope.range.end = 100;
+scope.range.end = 100;
 
-// ...visible through both identifiers
+// ...visible through the identifier
+console.log(identifier.mutableRange.end); // 100
 ```
 
-This pattern is used by: AlignMethodCallScopes, AlignObjectMethodScopes, AlignReactiveScopesToBlockScopesHIR, MergeOverlappingReactiveScopesHIR, MemoizeFbtAndMacroOperandsInSameScope.
+This is explicitly noted in AnalyseFunctions.ts (line 30-34): "NOTE: inferReactiveScopeVariables makes identifiers in the scope point to the *same* mutableRange instance."
 
-### Pattern 3: Iterate-and-Mutate
+Used by: AlignMethodCallScopes, AlignObjectMethodScopes, AlignReactiveScopesToBlockScopesHIR, MergeOverlappingReactiveScopesHIR, MemoizeFbtAndMacroOperandsInSameScope.
+
+### Pattern 3: Iterate-and-Mutate / Side Map References
 ```typescript
-// Iterating over blocks while mutating them
-for (const [blockId, block] of fn.body.blocks) {
-  block.terminal = newTerminal;        // mutate during iteration
-  fn.body.blocks.delete(otherBlockId); // delete during iteration
+// Store a reference to an HIR object in a side map
+const nodes: Map<Identifier, Node> = new Map();
+nodes.set(identifier, { id: identifier, ... });
+
+// Later, mutate the object through the stored reference
+node.id.mutableRange.end = 42; // mutates HIR through map reference
+```
+
+Used by: InferMutationAliasingRanges (AliasingState.nodes), EnterSSA (SSABuilder.#states.defs), InferMutationAliasingEffects (Context caches), DropManualMemoization (sidemap.manualMemos), InlineIIFEs (functions map), AlignReactiveScopesToBlockScopesHIR (activeScopes), and others.
+
+---
+
+## Environment as Shared Mutable State
+
+### Complete Environment Analysis
+
+Environment is created once per top-level function compilation and stored on `HIRFunction.env`. It is shared via reference across the entire compilation, including nested functions.
+
+#### Mutable State (mutated by passes)
+| Field | Mutated by | Pattern |
+|-------|-----------|---------|
+| `#nextIdentifer: number` | BuildHIR, EnterSSA, OutlineJSX, InferMutationAliasingEffects (via `createTemporaryPlace`) | Auto-increment counter |
+| `#nextBlock: number` | BuildHIR, InlineIIFEs | Auto-increment counter |
+| `#nextScope: number` | InferReactiveScopeVariables | Auto-increment counter |
+| `#errors: CompilerError` | All validation passes, DropManualMemoization, InferMutationAliasingRanges, CodegenReactiveFunction | Append-only accumulator |
+| `#outlinedFunctions: Array` | OutlineJSX, OutlineFunctions | Append-only list |
+| `#moduleTypes: Map` | `getGlobalDeclaration` (lazy cache fill) | One-time lazy initialization |
+
+#### Read-Only State (accessed but never mutated)
+| Field | Accessed by |
+|-------|------------|
+| `config: EnvironmentConfig` | Pipeline.ts (feature flags), InferMutationAliasingEffects, DropManualMemoization, MemoizeFbtAndMacroOperandsInSameScope, InferReactiveScopeVariables |
+| `fnType: ReactFunctionType` | Pipeline.ts |
+| `outputMode: CompilerOutputMode` | Pipeline.ts, DeadCodeElimination |
+| `#globals: GlobalRegistry` | InferTypes (via `getGlobalDeclaration`), DropManualMemoization |
+| `#shapes: ShapeRegistry` | InferTypes (via `getPropertyType`, `getFunctionSignature`), InferMutationAliasingEffects, InferReactivePlaces, FlattenScopesWithHooksOrUseHIR, NameAnonymousFunctions |
+| `logger` | Pipeline.ts, AnalyseFunctions |
+| `programContext` | BuildHIR, CodegenReactiveFunction, OutlineJSX |
+
+#### How Environment is Shared with Nested Functions
+
+Parent and nested functions share the **exact same Environment instance**. When `lower()` is called for a nested function expression, it receives the same `env`. This means:
+- ID counters are globally unique across the entire function tree
+- Errors from inner function compilation are visible to the parent
+- Outlined functions from inner compilations accumulate on the shared list
+- Configuration is shared (same feature flags everywhere)
+
+This sharing is sequential, not concurrent: `AnalyseFunctions` processes each child function synchronously before returning to the parent.
+
+### Recommended Rust Representation
+
+```rust
+/// Immutable configuration — can be shared via &
+struct CompilerConfig {
+    enable_jsx_outlining: bool,
+    enable_function_outlining: bool,
+    enable_preserve_existing_memoization_guarantees: bool,
+    validate_hooks_usage: bool,
+    // ... all feature flags ...
+    custom_macros: Option<Vec<String>>,
+    fn_type: ReactFunctionType,
+    output_mode: CompilerOutputMode,
+}
+
+/// Read-only type registries — can be shared via &
+struct TypeRegistry {
+    globals: GlobalRegistry,
+    shapes: ShapeRegistry,
+    module_types: HashMap<String, Option<Global>>,  // lazily populated but stable after first access
+}
+
+/// Mutable compilation state — passed as &mut
+struct CompilationState {
+    next_identifier: IdentifierId,
+    next_block: BlockId,
+    next_scope: ScopeId,
+    errors: Vec<CompilerDiagnostic>,
+    outlined_functions: Vec<OutlinedFunction>,
+}
+
+/// Combined environment — threaded through passes
+struct Environment {
+    config: CompilerConfig,        // read-only after construction
+    types: TypeRegistry,           // read-only after lazy init
+    state: CompilationState,       // mutable
 }
 ```
 
-This pattern is used by: MergeConsecutiveBlocks, PruneMaybeThrows, BuildReactiveScopeTerminalsHIR, InlineImmediatelyInvokedFunctionExpressions.
+**Pass signatures** would typically be:
+
+```rust
+// Most passes: need mutable HIR + mutable state + read-only config
+fn enter_ssa(func: &mut HIRFunction, env: &mut Environment) { ... }
+
+// Read-only passes (validation): only need immutable access
+fn validate_hooks_usage(func: &HIRFunction, env: &Environment) -> Result<(), ()> { ... }
+
+// Passes that don't use env at all (many!):
+fn merge_consecutive_blocks(func: &mut HIRFunction) { ... }
+fn prune_maybe_throws(func: &mut HIRFunction) { ... }
+fn constant_propagation(func: &mut HIRFunction) { ... }
+```
+
+**Key insight from per-pass analysis**: The majority of passes (PruneMaybeThrows, MergeConsecutiveBlocks, ConstantPropagation, EliminateRedundantPhi, OptimizePropsMethodCalls, DeadCodeElimination, RewriteInstructionKinds, PruneUnusedLabelsHIR, FlattenReactiveLoopsHIR, and all reactive function transforms) do NOT use Environment at all. Only ~12 passes need `env`, and most only read config flags or call `getHookKind()`.
+
+For the `AnalyseFunctions` recursive pattern (where parent and child share the same Environment), `&mut Environment` works naturally because the recursive call completes before the parent continues — there is only one `&mut` active at a time.
+
+---
+
+## Side Maps: Passes Storing HIR References
+
+### The Core Problem
+
+Many passes store references to HIR values (Places, Identifiers, Instructions, InstructionValues, ReactiveScopes) in "side maps" (HashMaps, Sets, arrays) while simultaneously mutating the HIR. In Rust, this creates borrow conflicts because you cannot hold an immutable reference (in the map) while mutating through a different path.
+
+### Classification of Side Map Patterns
+
+After analyzing every pass, side map patterns fall into four categories:
+
+#### Category 1: ID-Only Maps (No Borrow Issues)
+Maps keyed and valued by opaque IDs (`IdentifierId`, `BlockId`, `ScopeId`, `InstructionId`, `DeclarationId`). These are `Copy` types with no aliasing concerns.
+
+**Passes**: PruneMaybeThrows, MergeConsecutiveBlocks, ConstantPropagation, DeadCodeElimination, RewriteInstructionKinds, InferReactivePlaces (reactive set), PruneUnusedLabelsHIR, FlattenReactiveLoopsHIR, FlattenScopesWithHooksOrUseHIR, StabilizeBlockIds, and most reactive function transforms.
+
+**Rust approach**: Direct `HashMap<IdType, T>` / `HashSet<IdType>`. No changes needed.
+
+#### Category 2: Reference-Identity Maps (Replace Keys with IDs)
+Maps using JavaScript object identity (`===`) as the key, typically `Map<Identifier, T>` or `Map<BasicBlock, T>` or `DisjointSet<Identifier>` / `DisjointSet<ReactiveScope>`.
+
+**Passes**: EnterSSA (`Map<BasicBlock, State>`, `Map<Identifier, Identifier>`), EliminateRedundantPhi (`Map<Identifier, Identifier>`), InferMutationAliasingRanges (`Map<Identifier, Node>`), InferReactiveScopeVariables (`DisjointSet<Identifier>`), InferReactivePlaces (`DisjointSet<Identifier>`), AlignMethodCallScopes (`DisjointSet<ReactiveScope>`), AlignObjectMethodScopes (`Set<Identifier>`, `DisjointSet<ReactiveScope>`), MergeOverlappingReactiveScopes (`DisjointSet<ReactiveScope>`).
+
+**Rust approach**: Replace with `HashMap<IdentifierId, T>`, `HashMap<BlockId, T>`, `DisjointSet<IdentifierId>`, `DisjointSet<ScopeId>`. This is **always simpler and more correct** than the TypeScript — it eliminates an entire class of bugs where cloned objects silently fail identity checks.
+
+#### Category 3: Instruction/Value Reference Maps (Store Indices Instead)
+Maps that store references to actual `Instruction`, `FunctionExpression`, or `InstructionValue` objects, then later access fields on those objects or mutate them.
+
+**Passes**: InferMutationAliasingEffects (`Map<Instruction, InstructionSignature>`, `Map<AliasingEffect, InstructionValue>`, `Map<FunctionExpression, AliasingSignature>`), DropManualMemoization (`Map<IdentifierId, TInstruction<FunctionExpression>>`, `ManualMemoCallee.loadInstr`), InlineIIFEs (`Map<IdentifierId, FunctionExpression>`), NameAnonymousFunctions (`Node.fn: FunctionExpression`).
+
+**Rust approach**: Store only what is actually needed:
+- If the map is for existence checking: use `HashSet<IdentifierId>`
+- If specific fields are needed later: extract and store those fields (e.g., store `InstructionId` instead of a reference to the instruction)
+- If the full object is needed: store `(BlockId, usize)` location indices and re-lookup when needed
+- For InferMutationAliasingEffects: introduce explicit `EffectId`, `InstructionValueId` arena indices for the interning/caching pattern
+
+#### Category 4: Scope Reference Sets with In-Place Mutation (Arena Access)
+Sets or maps of `ReactiveScope` references where the scope's `range` fields are mutated while the scope is in the collection.
+
+**Passes**: AlignReactiveScopesToBlockScopesHIR (`Set<ReactiveScope>` iterated while mutating `scope.range`), AlignMethodCallScopes (DisjointSet forEach with range mutation), AlignObjectMethodScopes (same pattern), MergeOverlappingReactiveScopesHIR (DisjointSet with range mutation), MemoizeFbtAndMacroOperandsInSameScope (scope range mutation).
+
+**Rust approach**: Store `ScopeId` in sets/DisjointSets. Mutate through arena: `scope_arena[scope_id].range.start = ...`. The set holds copyable IDs, and the mutation goes through the arena — completely disjoint borrows.
+
+### Critical Insight: The Shared MutableRange Aliasing
+
+The most architecturally significant side map pattern is in `InferReactiveScopeVariables` (line 132):
+```typescript
+identifier.mutableRange = scope.range;
+```
+
+This makes ALL identifiers in a scope share the SAME `MutableRange` object as the scope. Every subsequent scope-alignment pass relies on this: mutating `scope.range.start` automatically updates all identifiers' `mutableRange`.
+
+**Recommended Rust approach**: Identifiers store `scope: Option<ScopeId>`. The "effective mutable range" is always accessed through the scope arena:
+```rust
+fn effective_mutable_range(id: &Identifier, scopes: &ScopeArena) -> MutableRange {
+    match id.scope {
+        Some(scope_id) => scopes[scope_id].range,
+        None => id.mutable_range, // pre-scope original range
+    }
+}
+```
+
+All downstream passes that read `identifier.mutableRange` (like `isMutable()`, `inRange()`) would need access to the scope arena. This is a mechanical refactor — every call site gains a `&ScopeArena` parameter.
 
 ---
 
@@ -228,7 +362,7 @@ This pattern is used by: MergeConsecutiveBlocks, PruneMaybeThrows, BuildReactive
 ### Arena-Based Identifier Storage
 
 ```rust
-/// Central storage for all Identifiers
+/// Central storage for all Identifiers, indexed by IdentifierId
 struct IdentifierArena {
     identifiers: Vec<Identifier>,
 }
@@ -238,6 +372,7 @@ struct IdentifierArena {
 struct IdentifierId(u32);
 
 /// Place stores an ID, not a reference
+#[derive(Clone)]
 struct Place {
     identifier: IdentifierId,  // index into arena
     effect: Effect,
@@ -278,57 +413,127 @@ struct HIR {
 }
 ```
 
-### Environment with Interior Mutability
+### Pass Signature Patterns
 
 ```rust
-struct Environment {
-    next_identifier: Cell<u32>,
-    next_block: Cell<u32>,
-    next_scope: Cell<u32>,
-    config: EnvironmentConfig,        // immutable
-    errors: RefCell<Vec<CompilerDiagnostic>>,
-    outlined_functions: RefCell<Vec<OutlinedFunction>>,
-    globals: GlobalRegistry,          // immutable after construction
-    shapes: ShapeRegistry,            // immutable after construction
+/// Most passes take &mut HIRFunction (env accessed via func.env or separate param)
+fn enter_ssa(func: &mut HIRFunction, env: &mut Environment) { ... }
+
+/// Read-only passes (validation)
+fn validate_hooks_usage(func: &HIRFunction, env: &Environment) -> Result<(), ()> { ... }
+
+/// Passes that restructure the CFG (many don't need env at all)
+fn merge_consecutive_blocks(func: &mut HIRFunction) { ... }
+fn constant_propagation(func: &mut HIRFunction) { ... }
+```
+
+### Key Rust Patterns for Common TypeScript Idioms
+
+#### Pattern A: InstructionValue Variant Swap (`std::mem::replace`)
+```rust
+// TypeScript: instr.value = { kind: 'CallExpression', callee: instr.value.property, ... }
+// Rust: take ownership, destructure, construct new variant
+let old = std::mem::replace(&mut instr.value, InstructionValue::Tombstone);
+if let InstructionValue::MethodCall { property, args, loc, .. } = old {
+    instr.value = InstructionValue::CallExpression { callee: property, args, loc };
+} else {
+    instr.value = old;
 }
 ```
 
-### Pass Signature Pattern
-
+#### Pattern B: Place Cloning via Spread (`{...place}`)
 ```rust
-/// Most passes take &mut HIRFunction with arena access
-fn enter_ssa(hir: &mut HIRFunction, arena: &mut IdentifierArena) { ... }
-
-/// Read-only passes (validation)
-fn validate_hooks_usage(hir: &HIRFunction, env: &Environment) -> Result<(), CompilerError> { ... }
-
-/// Passes that restructure the CFG
-fn merge_consecutive_blocks(hir: &mut HIRFunction) { ... }
+// TypeScript: const newPlace = { ...place, effect: Effect.Read }
+// Rust: Place is Clone (or Copy if small enough)
+let new_place = Place { effect: Effect::Read, ..place.clone() };
 ```
 
-### Two-Phase Mutation Pattern
-
-For passes that need to read and write simultaneously:
-
+#### Pattern C: Delete-During-Set-Iteration (`retain`)
 ```rust
-fn infer_reactive_places(hir: &mut HIRFunction, arena: &mut IdentifierArena) {
-    // Phase 1: Collect (immutable borrow)
-    let reactive_ids: HashSet<IdentifierId> = {
-        let reactive = compute_reactive_set(&hir, &arena);
-        reactive
-    };
+// TypeScript: for (const phi of block.phis) { if (dead) block.phis.delete(phi); }
+// Rust: retain is the idiomatic equivalent
+block.phis.retain(|phi| !is_dead(phi));
+```
 
-    // Phase 2: Apply (mutable borrow)
-    for (_block_id, block) in &mut hir.body.blocks {
-        for instr in &mut block.instructions {
-            if reactive_ids.contains(&instr.lvalue.identifier) {
-                // Mutate through arena
-                arena.identifiers[instr.lvalue.identifier.0 as usize].reactive = true;
-            }
-        }
+#### Pattern D: Map Iteration with Block Deletion
+```rust
+// TypeScript: for (const [, block] of fn.body.blocks) { fn.body.blocks.delete(id); }
+// Rust: collect keys first, then remove + get_mut
+let block_ids: Vec<BlockId> = blocks.keys().copied().collect();
+for block_id in block_ids {
+    if should_merge(block_id) {
+        let removed = blocks.remove(&block_id).unwrap();
+        let pred = blocks.get_mut(&pred_id).unwrap();
+        pred.instructions.extend(removed.instructions);
     }
 }
 ```
+
+#### Pattern E: Closure Variables Set Inside Builder Callbacks
+```rust
+// TypeScript: let callee = null; builder.enter(() => { callee = ...; return terminal; });
+// Rust: closure returns the value, or use Option<T> initialized before
+let (block_id, callee) = builder.enter(|b| {
+    let callee = /* compute */;
+    let terminal = /* build */;
+    (terminal, callee)  // return both
+});
+```
+
+---
+
+## Structural Similarity: TypeScript ↔ Rust Alignment
+
+### Design Goal
+
+The Rust code should be visually and structurally aligned with the original TypeScript. A developer should be able to have the TypeScript on the left side of the screen and the Rust on the right, scroll them together, and easily see how the logic corresponds.
+
+### What Looks Nearly Identical (~95% match)
+
+Most passes consist of these patterns that translate almost line-for-line:
+
+| TypeScript Pattern | Rust Equivalent |
+|---|---|
+| `switch (value.kind) { case 'X': ... }` | `match &value { InstructionValue::X { .. } => ... }` |
+| `for (const [, block] of fn.body.blocks)` | `for block in func.body.blocks.values()` |
+| `for (const instr of block.instructions)` | `for instr in &block.instructions` |
+| `const map = new Map<K, V>()` | `let mut map: HashMap<K, V> = HashMap::new()` |
+| `map.get(key) ?? defaultValue` | `map.get(&key).copied().unwrap_or(default)` |
+| `if (x === null) { ... }` | `if x.is_none() { ... }` or `let Some(x) = x else { ... }` |
+| `CompilerError.invariant(cond, ...)` | `assert!(cond, "...")` or `panic!("...")` |
+| `do { ... } while (changed)` | `loop { ... if !changed { break; } }` |
+| `array.push(item)` | `vec.push(item)` |
+| `set.has(item)` | `set.contains(&item)` |
+
+### What Looks Slightly Different (~80% match)
+
+| TypeScript Pattern | Rust Equivalent | Reason |
+|---|---|---|
+| `Map<Identifier, T>` (reference keys) | `HashMap<IdentifierId, T>` | Reference identity → value identity |
+| `DisjointSet<ReactiveScope>` | `DisjointSet<ScopeId>` | Same reason |
+| `place.identifier.mutableRange.end = x` | `arena[place.identifier].mutable_range.end = x` | Arena indirection |
+| `identifier.scope = sharedScope` | `identifier.scope = Some(scope_id)` | Reference → ID |
+| `for...of` with `Set.delete()` | `set.retain(|x| ...)` | Different idiom, same semantics |
+| `instr.value = { kind: 'X', ... }` | `instr.value = InstructionValue::X { ... }` (with `mem::replace`) | Ownership swap |
+
+### What Looks Substantially Different (~60% match)
+
+| TypeScript Pattern | Rust Equivalent | Reason |
+|---|---|---|
+| Storing `&Instruction` in side map | Store `(BlockId, usize)` location, re-lookup | Cannot hold references during mutation |
+| Builder closures capturing outer `&mut` | Return values from closures, or split borrows | Borrow checker |
+| `node.id.mutableRange.end = x` (graph node → HIR mutation) | Collect updates, apply after traversal | Cannot mutate HIR through graph references |
+| `identifier.mutableRange = scope.range` (shared object aliasing) | `identifier.scope = Some(scope_id)` + lookup via arena | Fundamental ownership model difference |
+
+### Passes Ranked by Structural Similarity to Rust
+
+**Nearly identical (95%+)**: PruneMaybeThrows, OptimizePropsMethodCalls, FlattenReactiveLoopsHIR, FlattenScopesWithHooksOrUseHIR, MergeConsecutiveBlocks, DeadCodeElimination, PruneUnusedLabelsHIR, RewriteInstructionKindsBasedOnReassignment, EliminateRedundantPhi, all validation passes, PruneUnusedLabels, PruneUnusedScopes, PruneNonReactiveDependencies, PruneAlwaysInvalidatingScopes, StabilizeBlockIds, PruneHoistedContexts
+
+**Very similar (85-95%)**: ConstantPropagation, EnterSSA, InferTypes, InferReactivePlaces, DropManualMemoization, InlineIIFEs, MemoizeFbtAndMacroOperandsInSameScope, AlignMethodCallScopes, AlignObjectMethodScopes, OutlineFunctions, NameAnonymousFunctions, BuildReactiveScopeTerminalsHIR, PropagateScopeDependenciesHIR, PropagateEarlyReturns, MergeReactiveScopesThatInvalidateTogether, PromoteUsedTemporaries, RenameVariables, ExtractScopeDeclarationsFromDestructuring
+
+**Moderately similar (70-85%)**: AnalyseFunctions, InferReactiveScopeVariables, AlignReactiveScopesToBlockScopesHIR, MergeOverlappingReactiveScopesHIR, OutlineJSX, BuildReactiveFunction, PruneNonEscapingScopes, OptimizeForSSR, PruneUnusedLValues
+
+**Requires redesign (50-70%)**: InferMutationAliasingEffects (reference-identity caching), InferMutationAliasingRanges (graph-through-HIR mutation), BuildHIR (Babel AST coupling), CodegenReactiveFunction (Babel AST output)
 
 ---
 
@@ -432,520 +637,346 @@ Babel AST (with memoization)
 #### BuildHIR (`lower`)
 **What it does**: Converts Babel AST to HIR by traversing the AST and building a control-flow graph with BasicBlocks, Instructions, and Terminals.
 
-**Reads**: Babel AST (NodePath), Babel scope bindings, Environment configuration.
+**Environment usage**: Heavy. Uses `env.nextIdentifierId`, `env.nextBlockId` for all ID allocation. Uses `env.recordError()` for fault-tolerant error handling. Uses `env.parentFunction.scope` for Babel scope analysis. Uses `env.isContextIdentifier()` and `env.programContext`. Environment is shared with nested function lowering via recursive `lower()` calls.
 
-**Creates**: Entire HIR structure — HIRFunction, BasicBlocks, Instructions, Places, Identifiers. Mutates Environment ID counters.
+**Side maps**:
+- `#bindings: Map<string, {node, identifier}>` — caches Identifier objects by name, using Babel node reference equality to distinguish same-named variables in different scopes
+- `#context: Map<t.Identifier, SourceLocation>` — Babel node keys (reference identity)
+- `#completed: Map<BlockId, BasicBlock>` — ID-keyed (safe)
+- `followups: Array<{place, path}>` — temporary Place storage during destructuring
 
-**Rust challenges**:
-- **Babel AST dependency**: Requires a Rust-native JS parser (e.g., SWC, OXC, or Biome) or JSON interchange format
-- **Identifier sharing**: Creates Identifier objects once in `resolveBinding()`, referenced by multiple Places
-- **Environment as shared mutable state**: ID counters accessed recursively for nested functions
-- **Closure-heavy builder patterns**: `builder.enter()`, `builder.loop()` with nested mutations
+**Structural similarity**: ~65%. The HIRBuilder class maps to a Rust struct with `&mut self` methods. The `enter()/loop()/label()` closure patterns translate to methods taking `impl FnOnce(&mut Self) -> Terminal`. However, several patterns require restructuring:
+- Variables assigned inside closures and read outside (e.g., `let callee = null; builder.enter(() => { callee = ...; })`) must return values from the closure instead
+- `resolveBinding()` uses Babel node reference equality (`mapping.node === node`) — needs parser-specific node IDs
+- Recursive `lower()` for nested functions needs `std::mem::take` to extract child function data
+- The entire Babel AST dependency needs replacement with SWC/OXC
 
-**Rust approach**: Use arena allocation for Identifiers. Replace Babel with SWC/OXC AST. Environment wraps counters in `Cell<u32>`. Builder takes `&mut Environment` with arena indices. This is the highest-effort pass to port due to the Babel AST coupling.
+**Unexpected issues**: Babel bug workarounds (lines 413-418, 4488-4498) would not be needed with a different parser. The `promoteTemporary()` pattern is straightforward in Rust. The `fbtDepth` counter is trivial.
 
 ---
 
 ### Phase 2: Normalization
 
 #### PruneMaybeThrows
-**What it does**: Optimizes `maybe-throw` terminals by nulling out exception handlers for blocks that provably cannot throw (primitives, array/object literals).
-
-**Mutates**: `terminal.handler` (set to null), phi operands (delete/set entries), calls graph cleanup (reorder blocks, renumber instruction IDs).
-
-**Rust challenges**: Requires mutable access to terminals while iterating blocks. Phi operand rewiring needs simultaneous read and mutation.
-
-**Rust approach**: Two-phase: collect mutations as commands during analysis, apply after iteration. Use `IndexMap` for block storage.
+**Env usage**: None. **Side maps**: `Map<BlockId, BlockId>` (IDs only). **Similarity**: ~95%.
+Simple terminal mutation (`handler = null`), phi rewiring, and CFG cleanup. The phi operand mutation-during-iteration needs `drain().collect()` in Rust. Block iteration order must be RPO for chain resolution.
 
 #### DropManualMemoization
-**What it does**: Removes `useMemo`/`useCallback` calls by rewriting to direct function calls/loads. Optionally inserts `StartMemoize`/`FinishMemoize` markers for validation.
-
-**Mutates**: `instruction.value` (replaces CallExpression with LoadLocal), `block.instructions` (inserts markers).
-
-**Rust challenges**: Map iteration + mutation, deferred block mutation, shared Place references.
-
-**Rust approach**: Two-phase transform: collect changes, then apply. Arena allocation for Identifiers. Copy-on-write for blocks.
+**Env usage**: `getGlobalDeclaration`, `getHookKindForType`, `recordError`, `createTemporaryPlace`, config flags. **Side maps**: `IdentifierSidemap` with 6 collections — `functions` stores `TInstruction` references (use `HashSet<IdentifierId>` instead), `manualMemos.loadInstr` stores instruction reference (store `InstructionId` instead), others are ID-keyed. **Similarity**: ~85%.
+Two-phase collect+rewrite. In Rust, the `functions` map needs only existence checking (not the actual instruction reference). `manualMemos.loadInstr` only needs `.id` — store the ID directly.
 
 #### InlineImmediatelyInvokedFunctionExpressions
-**What it does**: Inlines IIFEs by merging nested HIR CFGs into the parent. Replaces `(() => {...})()` with the function body.
-
-**Mutates**: Parent `fn.body.blocks` (adds/removes blocks, rewrites terminals), child blocks (clears preds, rewrites returns to gotos).
-
-**Rust challenges**: Moving blocks between functions requires ownership transfer. In-place terminal rewriting conflicts with borrowing.
-
-**Rust approach**: Use `IndexMap` for CFG. Collect mutations during iteration, apply in second pass. `Vec::drain` to move child blocks.
+**Env usage**: `env.nextBlockId`, `env.nextIdentifierId` (via `createTemporaryPlace`). **Side maps**: `functions: Map<IdentifierId, FunctionExpression>` stores instruction value references. **Similarity**: ~80%.
+The `functions` map stores `FunctionExpression` references — in Rust, store `(BlockId, usize)` indices instead. The queue-while-iterating pattern needs index-based loop (`while i < queue.len()`). Block ownership transfer uses `blocks.remove()` + `blocks.insert()`.
 
 #### MergeConsecutiveBlocks
-**What it does**: Merges basic blocks that always execute consecutively (predecessor ends in unconditional goto, is sole predecessor of successor).
-
-**Mutates**: Deletes merged blocks, appends instructions, overwrites terminals, updates phi operand predecessor references.
-
-**Rust challenges**: Iterates `blocks` map while simultaneously mutating it (deleting entries). Mutates blocks while holding references to other blocks.
-
-**Rust approach**: Two-phase: collect merge candidates without mutation, then apply via `retain()` and index-based access. Union-find for transitive merges with path compression.
+**Env usage**: None. **Side maps**: `MergedBlocks` (ID-only map), `fallthroughBlocks` (ID-only set). **Similarity**: ~90%.
+Main Rust challenge: iteration + deletion. Collect block IDs first, then `remove()` + `get_mut()`. Phi operand rewriting needs collect-then-apply.
 
 ---
 
 ### Phase 3: SSA Construction
 
 #### EnterSSA
-**What it does**: Converts HIR to Static Single Assignment form using Braun et al. algorithm. Creates new Identifier instances for each definition, inserts phi nodes at merge points.
-
-**Mutates**: Creates new Identifiers via `Environment.nextIdentifierId`. Updates `Place.identifier` references in-place. Adds phi nodes to blocks. Modifies `func.params`.
-
-**Rust challenges**: Multiple Places share the same Identifier object pre-SSA. Maps keyed by Identifier require stable addresses or ID-based indexing. Recursive phi placement.
-
-**Rust approach**: Use `HashMap<IdentifierId, IdentifierId>` for SSA renaming (old → new). Allocate new Identifiers in arena. Two-phase: compute renaming map, then apply rewrites.
+**Env usage**: `env.nextIdentifierId` for fresh SSA identifiers. **Side maps**: `#states: Map<BasicBlock, State>` with `defs: Map<Identifier, Identifier>` (both reference-identity keyed), `unsealedPreds: Map<BasicBlock, number>`, `#unknown/#context: Set<Identifier>`. **Similarity**: ~85%.
+All reference-identity maps become ID-keyed: `Vec<State>` indexed by BlockId, `HashMap<IdentifierId, IdentifierId>` for defs. The recursive `getIdAt()` works cleanly because `IdentifierId` is `Copy` — no borrows held across recursive calls. The `enter()` closure for nested functions is just save/restore of `self.current`. `makeType()` global counter must become per-compilation.
 
 #### EliminateRedundantPhi
-**What it does**: Removes phi nodes where all operands are the same identifier. Uses fixpoint iteration with rewriting until stable.
-
-**Mutates**: `block.phis` (deletes redundant phis), `place.identifier` (direct mutation via rewrite map).
-
-**Rust challenges**: Interior mutability needed for simultaneous read/write. Delete during Set iteration. Multiple Places share same Identifier.
-
-**Rust approach**: Build `HashMap<IdentifierId, IdentifierId>` for rewrites. Update Place identifier IDs in second pass. Use `retain()` for phi deletion.
+**Env usage**: None. **Side maps**: `rewrites: Map<Identifier, Identifier>` (reference keys). **Similarity**: ~95%.
+Becomes `HashMap<IdentifierId, IdentifierId>`. `rewritePlace` becomes `place.identifier_id = new_id`. Phi deletion during iteration becomes `block.phis.retain(|phi| ...)`. The fixpoint loop and labeled `continue` translate directly.
 
 ---
 
 ### Phase 4: Optimization (Pre-Inference)
 
 #### ConstantPropagation
-**What it does**: Sparse Conditional Constant Propagation via abstract interpretation. Evaluates constant expressions at compile time, prunes unreachable branches. Uses fixpoint iteration.
-
-**Mutates**: `instr.value` (replaced with constants), `block.terminal` (if → goto), phi operands, CFG structure via cleanup passes.
-
-**Rust challenges**: Simultaneous mutable borrows (instruction + constants map). Self-referential CFG. In-place mutation during iteration. Recursive descent for nested functions.
-
-**Rust approach**: Arena allocation + indices. Separate `Constants: HashMap<IdentifierId, Constant>` from HIR. Collect changes first, apply in second pass.
+**Env usage**: None. **Side maps**: `constants: Map<IdentifierId, Constant>` (ID-keyed, safe). **Similarity**: ~90%.
+The fixpoint loop, `evaluateInstruction()` switch, and terminal rewriting all map directly. Constants map stores cloned `Primitive`/`LoadGlobal` values (small, cheap to clone). The CFG cleanup cascade after branch elimination needs shared infrastructure. The `block.kind === 'sequence'` guard translates to an enum check.
 
 #### OptimizePropsMethodCalls
-**What it does**: Rewrites method calls on props (`props.foo()`) into regular calls by extracting the property first.
-
-**Mutates**: `instr.value` (replaces MethodCall with CallExpression in-place).
-
-**Rust challenges**: Cannot destructure fields from `instr.value` while assigning to `instr.value`.
-
-**Rust approach**: Use `std::mem::replace` pattern to take ownership, destructure, then assign new value.
+**Env usage**: None. **Side maps**: None. **Similarity**: ~98%.
+The simplest pass in the compiler. A single linear scan with one `match` arm and `std::mem::replace` for the value swap. ~20 lines of Rust.
 
 ---
 
 ### Phase 5: Type and Effect Inference
 
 #### InferTypes
-**What it does**: Unification-based type inference. Generates type equations from instructions, solves with a Unifier, then mutates all `Identifier.type` fields in-place.
-
-**Mutates**: `Identifier.type` across the entire function tree including nested functions.
-
-**Rust challenges**: Multiple Places share the same Identifier — mutating `identifier.type` updates all aliases simultaneously. Recursive structures require indirect storage.
-
-**Rust approach**: Arena allocation with indices. Store Types in `Arena<Type>` indexed by `TypeId`. Unifier maps `TypeId → TypeId`. Apply phase: `arena[id].type = unifier.resolve(arena[id].type)`.
-
-#### AnalyseFunctions
-**What it does**: Recursively processes nested functions (FunctionExpression/ObjectMethod) by running the full mutation/aliasing pipeline on each, then propagates captured variable effects back to outer context.
-
-**Mutates**: `operand.identifier.mutableRange` (reset to 0), `operand.identifier.scope` (nulled), `operand.effect`, `fn.aliasingEffects`.
-
-**Rust challenges**: Deep recursion. Shared mutableRange instances (comment in source explicitly warns about this). Resetting identifier fields after child processing.
-
-**Rust approach**: Use `Rc<RefCell<MutableRange>>` or redesign to clone ranges. Consider iterative processing with work queue instead of recursion. Interior mutability for identifier mutations.
+**Env usage**: `getGlobalDeclaration`, `getPropertyType`, `getFallthroughPropertyType`, config flags. **Side maps**: `Unifier.substitutions: Map<TypeId, Type>` (ID-keyed), `names: Map<IdentifierId, string>` (ID-keyed). **Similarity**: ~90%.
+Unification-based type inference is very natural in Rust. The `Type` enum needs `Box<Type>` for recursive variants (`Function.return`, `Property.objectType`). The TypeScript generator pattern for constraint generation can be replaced with direct `unifier.unify()` calls during the walk. The `apply()` phase is straightforward mutable traversal. `makeType()` global counter needs per-compilation scope.
 
 ---
 
 ### Phase 6: Mutation/Aliasing Analysis
 
+#### AnalyseFunctions
+**Env usage**: Shares Environment between parent and child via `fn.env`. Uses logger. **Side maps**: None (operates entirely through in-place HIR mutation). **Similarity**: ~85%.
+The recursive `lowerWithMutationAliasing` pattern works with `&mut` because it is sequential. Use `std::mem::take` to extract child `HIRFunction` from the instruction, process it, then put it back. The mutableRange reset (`identifier.mutableRange = {start: 0, end: 0}`) is a simple value write in Rust (no aliasing to break because Rust uses values, not shared objects).
+
 #### InferMutationAliasingEffects (HIGHEST COMPLEXITY)
-**What it does**: The most complex pass. Performs abstract interpretation to infer aliasing effects for every instruction/terminal. Two-phase: (1) compute candidate effects from instruction semantics, (2) iteratively analyze using dataflow until fixpoint (max 100 iterations).
+**Env usage**: `env.config` (3 reads), `env.getFunctionSignature`, `env.enableValidations`, `createTemporaryPlace`. InferenceState stores `env` as read-only reference. **Side maps**: `statesByBlock/queuedStates` (BlockId-keyed), Context class with 7 caches using **reference identity** keys (`Map<Instruction, ...>`, `Map<AliasingEffect, InstructionValue>`, `Map<FunctionExpression, ...>`, `Map<AliasingSignature, ...>`), InferenceState with `#values: Map<InstructionValue, AbstractValue>` and `#variables: Map<IdentifierId, Set<InstructionValue>>`. **Similarity**: ~80%.
 
-**Mutates**: `instruction.effects`, `terminal.effects` — populates with concrete AliasingEffect arrays.
+**The central challenge**: Six maps use JS object reference identity as keys. All must be replaced with index-based keys. The recommended approach:
+- Introduce `EffectId` (arena index for interned effects — already hash-based via `internEffect()`)
+- Introduce `InstructionValueId` (arena index for synthetic allocation-site values)
+- Use `InstructionId` instead of `&Instruction` for the signature cache
+- Use function-expression indices for the function signature cache
 
-**Key data structures**:
-- `InferenceState`: Maps `InstructionValue → AbstractValue` (mutable/frozen/primitive/global) and `IdentifierId → Set<InstructionValue>` (possible values per variable)
-- `Context`: Multiple caches — instruction signatures, interned effects, signature applications, function signatures
-- `statesByBlock` / `queuedStates`: Fixpoint iteration work queue
-
-**Rust challenges**:
-- Deeply interlinked mutable state with cross-referencing caches
-- Reference equality for InstructionValue map keys (TypeScript uses object identity)
-- Recursive `applyEffect()` with mutable effects array + initialized set
-- State merging for fixpoint detection requires efficient structural comparison
-- Effect interning requires stable hashing of nested structs containing Places
-
-**Rust approach**:
-- Use `im::HashMap` (persistent hash maps) for InferenceState — O(1) clone, efficient structural sharing
-- Arena-allocated InstructionValues with stable IDs replacing reference equality
-- Builder pattern for effects (return `Vec<AliasingEffect>` instead of mutating)
-- `RefCell<HashMap>` for runtime caching in Context
-- Consider hybrid: mutation within basic blocks, immutability across blocks
+The overall structure (fixpoint loop, InferenceState clone/merge, applyEffect recursion, Context caching) can remain nearly identical. The `applyEffect` recursive method works with `&mut InferenceState` + `&mut Context` parameters — Rust's reborrowing handles the recursion naturally.
 
 #### DeadCodeElimination
-**What it does**: Two-phase DCE. Phase 1 marks referenced identifiers via reverse postorder with fixpoint iteration. Phase 2 prunes unreferenced phis, instructions, and context variables.
-
-**Mutates**: `block.phis` (deletes), `block.instructions` (filters), `fn.context` (filters), destructure patterns (replaces unused items with Holes).
-
-**Rust challenges**: In-place mutation of arrays during iteration. Conditional array replacement patterns. Shared ownership of instructions/blocks.
-
-**Rust approach**: Builder pattern for rewrites. Two-pass filtering: collect indices to remove, rebuild collections. `Cow<[T]>` for arrays sometimes modified.
+**Env usage**: `env.outputMode` (one read for SSR hook pruning). **Side maps**: `State.identifiers: Set<IdentifierId>`, `State.named: Set<string>` (both value-keyed, safe). **Similarity**: ~95%.
+Two-phase mark-and-sweep is perfectly natural in Rust. `Vec::retain` replaces `retainWhere`. Destructuring pattern rewrites use `iter_mut()` + `truncate()`.
 
 #### InferMutationAliasingRanges (HIGH COMPLEXITY)
-**What it does**: Builds an abstract heap model to compute mutable ranges for all values. Propagates mutations through alias graph. Also sets legacy `Place.effect` tags and infers function signature effects.
+**Env usage**: `env.enableValidations` (one read), `env.recordError` (error recording). **Side maps**: `AliasingState.nodes: Map<Identifier, Node>` (reference-identity keys), each Node containing `createdFrom/captures/aliases/maybeAliases: Map<Identifier, number>` and `edges: Array<{node: Identifier, ...}>`. Also `mutations/renders` arrays storing Place references. **Similarity**: ~75%.
 
-**Mutates**: `Identifier.mutableRange.start/end` — **THE critical shared mutable state**. Extended when mutations propagate through alias graph. Also `Place.effect`.
+**All Identifier-keyed maps become `HashMap<IdentifierId, T>`**. The critical `node.id.mutableRange.end = ...` pattern (mutating HIR through graph node references) needs restructuring: either store computed range updates on the Node and apply after traversal (recommended), or use arena-based identifiers. The BFS in `mutate()` collects edge targets into temporary `Vec<IdentifierId>` before pushing to queue, resolving borrow conflicts. The two-part structure (build graph → apply ranges) maps well to Rust's two-phase pattern. The temporal `index` counter and edge ordering translate directly.
 
-**Key data structures**:
-- `AliasingState`: Maps `Identifier → Node` where each Node tracks aliases, captures, edges with timestamps
-- Temporal ordering with index counter for happens-before reasoning
-- BFS/DFS worklist with direction tracking for mutation propagation
-
-**Rust challenges**: Multiple Places share the same Identifier. Mutating `Identifier.mutableRange.end` through alias graph propagation is immediately visible through ALL Places. Graph traversal with mutation.
-
-**Rust approach**: Arena-based Identifiers with `IdentifierId` indices. Batch mutation updates: collect all range changes during graph walk, apply after traversal. Use `HashMap<IdentifierId, Node>` instead of keying by reference. This is the second-hardest pass to port.
+**Potential latent issue**: The `edges` array uses `break` (line 763) assuming monotonic insertion order, but pending phi edges from back-edges could break this ordering. The Rust port should consider using `continue` instead of `break` for safety.
 
 ---
 
 ### Phase 7: Optimization (Post-Inference)
 
 #### OptimizeForSSR
-**What it does**: SSR-specific optimization. Inlines useState/useReducer with initial values, removes effects, strips event handlers and refs from JSX.
-
-**Mutates**: `instr.value` (rewrites to Primitive/LoadLocal), `value.props` (retains non-event props).
-
-**Rust challenges**: Two-pass approach needed. Type predicates need porting.
-
-**Rust approach**: `BTreeMap::values_mut()` for iteration. Collect inlined state first, then mutate.
+**Env usage**: None directly (conditional on pipeline `outputMode` check). **Side maps**: `inlinedState: Map<IdentifierId, InstructionValue>` (ID-keyed). **Similarity**: ~90%.
+Stores cloned InstructionValue objects. The two-pass pattern translates directly.
 
 ---
 
 ### Phase 8: Reactivity Inference
 
 #### InferReactivePlaces
-**What it does**: Determines which Places are "reactive" (may change between renders). Uses fixpoint iteration to propagate reactivity through data flow.
-
-**Mutates**: `Place.reactive` field. Uses `DisjointSet<Identifier>` for alias groups.
-
-**Rust challenges**: `isReactive()` mutates `place.reactive = true` as a side effect during reads. Fixpoint loop requires repeated mutable access.
-
-**Rust approach**: Decouple computation from mutation. Build `HashSet<IdentifierId>` for reactivity (immutable HIR), then batch-update Places. Use `Cell<bool>` for `Place.reactive` if needed.
+**Env usage**: `getHookKind(fn.env, ...)` for hook detection. **Side maps**: `ReactivityMap.reactive: Set<IdentifierId>` (safe), `ReactivityMap.aliasedIdentifiers: DisjointSet<Identifier>` (reference-identity), `StableSidemap.map: Map<IdentifierId, {isStable}>` (ID-keyed). **Similarity**: ~85%.
+DisjointSet becomes `DisjointSet<IdentifierId>`. The `isReactive()` side-effect pattern (sets `place.reactive = true` during reads) works in Rust as `fn is_reactive(&self, place: &mut Place) -> bool` — the ReactivityMap holds only IDs while `place` is mutably borrowed from the HIR, so borrows are disjoint. The fixpoint loop translates directly.
 
 #### RewriteInstructionKindsBasedOnReassignment
-**What it does**: Sets `InstructionKind` (Const/Let/Reassign) based on whether variables are reassigned.
-
-**Mutates**: `lvalue.kind` on LValue/LValuePattern.
-
-**Rust challenges**: Straightforward. Mutating nested struct fields needs careful borrowing.
-
-**Rust approach**: `HashMap<DeclarationId, InstructionKind>` for tracking. Mutable visitor pattern.
+**Env usage**: None. **Side maps**: `declarations: Map<DeclarationId, LValue | LValuePattern>` stores references to lvalue objects for retroactive `.kind` mutation. **Similarity**: ~85%.
+The aliased-mutation-through-map pattern is best handled with a two-pass approach: Pass 1 collects `HashSet<DeclarationId>` of reassigned variables, Pass 2 assigns `InstructionKind` values. Or use `HashMap<DeclarationId, InstructionKind>` and apply in a final pass.
 
 ---
 
 ### Phase 9: Scope Construction
 
 #### InferReactiveScopeVariables
-**What it does**: Groups mutable identifiers into reactive scopes based on co-mutation. Uses DisjointSet to union identifiers that must share a scope, creates ReactiveScope objects, assigns to `identifier.scope`.
+**Env usage**: `env.nextScopeId`, `env.config.enableForest`, `env.logger`. **Side maps**: `scopeIdentifiers: DisjointSet<Identifier>` (reference-identity), `declarations: Map<DeclarationId, Identifier>` (stores Identifier references), `scopes: Map<Identifier, ReactiveScope>` (reference keys). **Similarity**: ~75%.
 
-**Mutates**: `identifier.scope` (set to ReactiveScope), `identifier.mutableRange` (updated to scope's merged range).
-
-**Rust challenges**: DisjointSet with reference semantics. Shared mutable Identifier references. Need to mutate Identifiers discovered via iteration.
-
-**Rust approach**: Use `IdentifierId` in DisjointSet. Store scopes in `HashMap<IdentifierId, ScopeId>`. Mutate identifiers via indexed access to central arena.
+**THE CRITICAL ALIASING PASS**: Line 132 `identifier.mutableRange = scope.range` creates the shared-MutableRange aliasing that all downstream scope passes depend on. In Rust with arenas: identifiers store `scope: Option<ScopeId>`. The "effective mutable range" is accessed via scope lookup. All downstream passes that read `mutableRange` need a `&ScopeArena` parameter. DisjointSet becomes `DisjointSet<IdentifierId>`, scopes map becomes `HashMap<IdentifierId, ScopeId>`.
 
 #### MemoizeFbtAndMacroOperandsInSameScope
-**What it does**: Ensures FBT/macro call operands aren't extracted into separate scopes. Merges operand scopes into macro call scopes.
-
-**Mutates**: `Identifier.scope` (reassigns), `ReactiveScope.range` (expands).
-
-**Rust challenges**: Shared ReactiveScope references. Reverse traversal with mutations.
-
-**Rust approach**: Arena-allocated scopes with indices. Two-phase: collect mutations, then apply.
+**Env usage**: `fn.env.config.customMacros` (one read). **Side maps**: `macroKinds: Map<string, MacroDefinition>` (string keys), `macroTags: Map<IdentifierId, MacroDefinition>` (ID keys), `macroValues: Set<IdentifierId>` (IDs). **Similarity**: ~90%.
+All ID-keyed. The scope mutation (`operand.identifier.scope = scope`, `expandFbtScopeRange`) becomes `identifier.scope = Some(scope_id)` + `arena[scope_id].range.start = min(...)`. The cyclic `MacroDefinition` structure can use arena indices or hardcoded match logic.
 
 ---
 
 ### Phase 10: Scope Alignment and Merging
 
-#### OutlineJSX
-**What it does**: Outlines consecutive JSX expressions within callbacks into separate component functions.
-
-**Mutates**: Block instruction arrays, Environment (registers outlined functions), identifier promotion.
-
-**Rust approach**: Builder pattern for new HIRFunction. Separate collection from emission phase.
-
-#### OutlineFunctions
-**What it does**: Hoists function expressions without captures to module scope.
-
-**Mutates**: `loweredFunc.id`, `instr.value` (replaces FunctionExpression with LoadGlobal), `env.outlineFunction()`.
-
-**Rust approach**: Collect outlined functions during traversal, bulk-register afterward. `std::mem::replace` for node replacement.
-
-#### NameAnonymousFunctions
-**What it does**: Generates descriptive names for anonymous functions based on assignment context, call sites, JSX props.
-
-**Mutates**: `FunctionExpression.nameHint` for anonymous functions.
-
-**Rust approach**: Visitor pattern with `&mut` parameters. Arena allocation for name tree.
-
 #### AlignMethodCallScopes
-**What it does**: Ensures method calls and their receiver share the same reactive scope. Uses DisjointSet to merge scope groups.
-
-**Mutates**: `ReactiveScope.range.start/end`, `identifier.scope` (repoints to canonical scope).
-
-**Rust challenges**: Multiple Identifiers share references to same ReactiveScope. DisjointSet pattern requires interior mutability.
-
-**Rust approach**: Use scope IDs + centralized scope table. `HashMap<ScopeId, ReactiveScope>` with DisjointSet mapping `ScopeId → ScopeId`.
+**Env usage**: None. **Side maps**: `scopeMapping: Map<IdentifierId, ReactiveScope | null>` (ID keys), `mergedScopes: DisjointSet<ReactiveScope>` (reference-identity). **Similarity**: ~90%.
+DisjointSet becomes `DisjointSet<ScopeId>`. Range merging through arena: `arena[root_id].range.start = min(...)`. Scope rewriting: `identifier.scope = Some(root_id)`.
 
 #### AlignObjectMethodScopes
-**What it does**: Same as AlignMethodCallScopes but for object methods and their enclosing object expressions.
-
-**Rust approach**: Same as AlignMethodCallScopes — scope IDs + centralized table + DisjointSet.
-
-#### PruneUnusedLabelsHIR
-**What it does**: Eliminates unused label blocks by merging label-next-fallthrough sequences.
-
-**Mutates**: Merges instructions between blocks, deletes merged blocks, updates predecessors.
-
-**Rust approach**: Two-phase: collect merge candidates, apply mutations. `IndexMap` for stable iteration.
+**Env usage**: None. **Side maps**: `objectMethodDecls: Set<Identifier>` (reference-identity), `DisjointSet<ReactiveScope>`. **Similarity**: ~88%.
+Same patterns as AlignMethodCallScopes. `Set<Identifier>` becomes `HashSet<IdentifierId>`. **Porting hazard**: The lvalue-only scope repointing (Phase 2b) relies on shared Identifier references. With arena-based identifiers where each Place has its own copy, repointing must cover ALL occurrences, not just lvalues. If using a central identifier arena (recommended), lvalue-only repointing is fine.
 
 #### AlignReactiveScopesToBlockScopesHIR
-**What it does**: Adjusts reactive scope ranges to align with control-flow block boundaries (can't memoize half a loop).
-
-**Mutates**: `ReactiveScope.range` (extends start/end via Math.min/max).
-
-**Rust challenges**: Direct mutation of shared ReactiveScope objects.
-
-**Rust approach**: Arena-allocated scopes with `Cell<MutableRange>` for interior mutability. Or collect-then-apply pattern.
+**Env usage**: None. **Side maps**: `activeScopes: Set<ReactiveScope>` (reference-identity, iterated while mutating `scope.range`), `seen: Set<ReactiveScope>`, `placeScopes: Map<Place, ReactiveScope>` (**dead code — never read**), `valueBlockNodes: Map<BlockId, ValueBlockNode>`. **Similarity**: ~85%.
+`activeScopes` becomes `HashSet<ScopeId>`. Scope mutation through arena: `for &scope_id in &active_scopes { arena[scope_id].range.start = min(...); }` — perfectly clean borrows (HashSet is immutable, arena is mutable). The `placeScopes` map can be omitted entirely.
 
 #### MergeOverlappingReactiveScopesHIR
-**What it does**: Merges scopes that overlap or are improperly nested. Uses DisjointSet to group scopes, rewrites all `Identifier.scope` references.
-
-**Mutates**: `ReactiveScope.range`, `Place.identifier.scope` (global rewrite).
-
-**Rust approach**: Arena allocation with ScopeId indices. DisjointSet maps `ScopeId → ScopeId`. Iterate all identifiers to replace scope IDs.
+**Env usage**: None. **Side maps**: `joinedScopes: DisjointSet<ReactiveScope>` (reference-identity), `placeScopes: Map<Place, ReactiveScope>` (Place reference keys). **Similarity**: ~85%.
+DisjointSet becomes `DisjointSet<ScopeId>`. Same arena-based range merging pattern. Place-keyed maps become unnecessary with identifier-arena approach.
 
 ---
 
 ### Phase 11: Scope Terminal Construction
 
 #### BuildReactiveScopeTerminalsHIR
-**What it does**: Inserts ReactiveScopeTerminal and GotoTerminal nodes to demarcate scope boundaries in the CFG. Five-step algorithm: traverse scopes, split blocks, fix phis, restore invariants, fix ranges.
-
-**Mutates**: Completely rewrites `fn.body.blocks` map. Updates phi operands. Renumbers all instruction IDs. Regenerates RPO and predecessors.
-
-**Rust approach**: Represent rewrites as `Vec<RewriteOp>`. Batch mutations: collect all splits, rebuild graph atomically. `smallvec` for instruction slices.
+**Env usage**: None. **Side maps**: `rewrittenFinalBlocks: Map<BlockId, BlockId>` (IDs), `nextBlocks: Map<BlockId, BasicBlock>` (block storage), `queuedRewrites`. **Similarity**: ~85%.
+Complete blocks map replacement (`fn.body.blocks = nextBlocks`). Block splitting creates new blocks from instruction slices. Phi rewriting across old/new blocks. All structurally translatable.
 
 #### FlattenReactiveLoopsHIR
-**What it does**: Removes reactive scope memoization inside loops by converting `scope` terminals to `pruned-scope`.
-
-**Mutates**: `block.terminal` (scope → pruned-scope).
-
-**Rust approach**: Simple enum variant replacement. Use `IndexMap` for ordered iteration.
+**Env usage**: None. **Side maps**: `activeLoops: Array<BlockId>` (IDs only). **Similarity**: ~98%.
+Simple terminal variant replacement (`scope` → `pruned-scope`). Uses `Vec::retain` for the active loops stack. ~40 lines of Rust logic. The terminal swap uses `std::mem::replace` or shared inner data struct.
 
 #### FlattenScopesWithHooksOrUseHIR
-**What it does**: Removes reactive scopes containing hook/`use` calls (hooks can't execute conditionally).
-
-**Mutates**: `block.terminal` (scope → label or pruned-scope).
-
-**Rust approach**: Stack-based scope tracking with `Vec<BlockId>`. Second pass for mutations.
+**Env usage**: `getHookKind(fn.env, ...)` (one hook resolution call). **Side maps**: `activeScopes: Array<{block, fallthrough}>`, `prune: Array<BlockId>` (both ID-only). **Similarity**: ~95%.
+Two-phase detect/rewrite. Stack-based scope tracking with `Vec::retain`. Terminal variant conversion. Very clean Rust translation.
 
 ---
 
 ### Phase 12: Scope Dependency Propagation
 
 #### PropagateScopeDependenciesHIR
-**What it does**: Computes which values each reactive scope depends on. Uses CollectHoistablePropertyLoads and CollectOptionalChainDependencies as helpers.
-
-**Mutates**: `ReactiveScope.dependencies` (adds minimal dependency set), `ReactiveScope.declarations`, `ReactiveScope.reassignments`.
-
-**Rust challenges**: Dependencies reference shared Identifiers. `PropertyPathRegistry` uses tree structure with parent pointers. Fixed-point iteration for hoistable property analysis.
-
-**Rust approach**: Arena allocation for property path nodes. `HashMap<IdentifierId, ...>` for temporaries sidemap. Custom `Eq`/`Hash` for `ReactiveScopeDependency`.
+**Env usage**: None directly. **Side maps**: `temporaries: Map<IdentifierId, ReactiveScopeDependency>` (ID-keyed, but `ReactiveScopeDependency` contains `identifier: Identifier` reference), `DependencyCollectionContext` with `#declarations: Map<DeclarationId, Decl>`, `#reassignments: Map<Identifier, Decl>` (reference keys), `deps: Map<ReactiveScope, Array<...>>` (reference keys). **Similarity**: ~80%.
+Reference-keyed maps become ID-keyed. `deps` becomes `HashMap<ScopeId, Vec<ReactiveScopeDependency>>`. The PropertyPathRegistry tree with parent pointers needs arena allocation. Scope mutation (`scope.declarations.set(...)`, `scope.dependencies.add(...)`) through arena.
 
 ---
 
 ### Phase 13: Reactive Function Construction
 
 #### BuildReactiveFunction
-**What it does**: Converts HIR (CFG) to ReactiveFunction (tree). Reconstructs high-level control flow from basic blocks and terminals. Major structural transformation.
-
-**Reads**: HIRFunction (immutable input). **Creates**: new ReactiveFunction with ReactiveBlock arrays.
-
-**Rust challenges**: Mutable scheduling state during traversal. Deep recursion for value blocks. Shared ownership of Places/scopes/identifiers.
-
-**Rust approach**: Arena allocation for ReactiveBlock/ReactiveInstruction. Context as `&mut` borrowed state. `Rc<Identifier>`/`Rc<ReactiveScope>` or arena indices for shared references.
+**Env usage**: Copies `fn.env` to reactive function. **Side maps**: Scheduling/traversal state during CFG-to-tree conversion. **Similarity**: ~80%.
+Major structural transformation (CFG → tree). The builder pattern works with `&mut` state. Deep recursion for value blocks is bounded by CFG depth. Shared Places/scopes/identifiers use arena indices in the new tree structure.
 
 ---
 
 ### Phase 14: Reactive Function Transforms
 
-All these passes operate on ReactiveFunction (tree-based IR) using the `ReactiveFunctionVisitor` or `ReactiveFunctionTransform` pattern.
+All reactive function transforms use the `ReactiveFunctionVisitor` / `ReactiveFunctionTransform` pattern.
 
-#### PruneUnusedLabels
-Removes label statements not targeted by any break/continue. Returns `Transformed::ReplaceMany` for tree mutation.
+**ReactiveFunctionVisitor/Transform pattern → Rust traits**:
+```rust
+trait ReactiveFunctionTransform {
+    type State;
+    fn transform_terminal(&mut self, stmt: &mut ReactiveTerminalStatement, state: &mut Self::State)
+        -> Transformed<ReactiveStatement> { Transformed::Keep }
+    fn transform_instruction(&mut self, stmt: &mut ReactiveInstructionStatement, state: &mut Self::State)
+        -> Transformed<ReactiveStatement> { Transformed::Keep }
+    // ... default implementations for traversal ...
+}
 
-#### PruneNonEscapingScopes
-Prunes scopes whose outputs don't escape. Builds dependency graph with cycle handling (`node.seen` flag).
+enum Transformed<T> {
+    Keep,
+    Remove,
+    Replace(T),
+    ReplaceMany(Vec<T>),
+}
+```
 
-#### PruneNonReactiveDependencies
-Removes scope dependencies that are guaranteed non-reactive. Uses `HashSet::retain()` equivalent.
+The `traverseBlock` method handles `ReplaceMany` by lazily building a new `Vec` (only allocating on first mutation). This maps to Rust's `Option<Vec<T>>` pattern.
 
-#### PruneUnusedScopes
-Converts scopes without outputs to pruned-scope blocks.
+Individual passes:
 
-#### MergeReactiveScopesThatInvalidateTogether
-Merges consecutive scopes with identical dependencies. Heavy in-place mutation of scope metadata and block structure.
-
-#### PruneAlwaysInvalidatingScopes
-Prunes scopes depending on unmemoized always-invalidating values (array/object literals, JSX).
-
-#### PropagateEarlyReturns
-Transforms early returns within scopes into sentinel-initialized temporaries + break statements.
-
-#### PruneUnusedLValues (PruneTemporaryLValues)
-Nulls out lvalues for temporaries that are never read.
-
-#### PromoteUsedTemporaries
-Promotes temporary variables to named variables when used as scope dependencies/declarations. Mutates `Identifier.name` (shared across IR).
-
-#### ExtractScopeDeclarationsFromDestructuring
-Rewrites destructuring that mixes scope declarations and local-only bindings.
-
-#### StabilizeBlockIds
-Renumbers BlockIds to be dense and sequential. Two-pass: collect, then rewrite.
-
-#### RenameVariables
-Ensures unique variable names. Mutates `Identifier.name` fields throughout entire IR tree.
-
-#### PruneHoistedContexts
-Removes DeclareContext instructions for hoisted constants, converts StoreContext to reassignments.
-
-**Overall Rust approach for reactive passes**: Port `ReactiveFunctionVisitor` as Rust traits with default methods. Use arena allocation for scope/identifier graphs. Implement cursor/zipper pattern for tree transformation. Use `HashSet::retain()` for delete-during-iteration patterns. Separate `Visitor` and `MutVisitor` traits.
+| Pass | Env | Side Maps | Similarity |
+|------|-----|-----------|------------|
+| PruneUnusedLabels | None | `Set<BlockId>` | ~95% |
+| PruneNonEscapingScopes | None | Dependency graph with cycle detection | ~85% |
+| PruneNonReactiveDependencies | None | None significant | ~95% |
+| PruneUnusedScopes | None | None significant | ~95% |
+| MergeReactiveScopesThatInvalidateTogether | None | Scope metadata comparison | ~85% |
+| PruneAlwaysInvalidatingScopes | None | None significant | ~95% |
+| PropagateEarlyReturns | None | Early return tracking state | ~85% |
+| PruneUnusedLValues | None | Lvalue usage tracking | ~90% |
+| PromoteUsedTemporaries | None | Identifier name mutation | ~90% |
+| ExtractScopeDeclarationsFromDestructuring | None | None significant | ~90% |
+| StabilizeBlockIds | None | `Map<BlockId, BlockId>` remapping | ~95% |
+| RenameVariables | None | Name collision tracking | ~90% |
+| PruneHoistedContexts | None | Context declaration tracking | ~95% |
 
 ---
 
 ### Phase 15: Codegen
 
 #### CodegenReactiveFunction
-**What it does**: Converts ReactiveFunction back to Babel AST with memoization code. Generates `useMemoCache` hook calls, cache slot reads/writes, dependency checking if/else blocks.
+**Env usage**: `env.programContext` (imports, bindings), `env.getOutlinedFunctions()`, `env.recordErrors()`, `env.config`. **Side maps**: Context class with cache slot management, scope metadata tracking. **Similarity**: ~60%.
 
-**Reads**: ReactiveFunction structure, scope metadata (dependencies, declarations).
+**The most significantly different pass** due to Babel AST coupling. 1000+ lines of `t.*()` Babel API calls need Rust equivalents. Recommended approach:
+1. Define Rust mirror types for the output AST with `serde` serialization
+2. Generate JSON AST → JS deserializes to Babel AST
+3. Core scope logic (cache slot allocation, dependency checking, memoization code structure) can look structurally similar
 
-**Output**: `CodegenFunction` containing Babel `t.Node` types.
-
-**Rust challenges**:
-- **Critical coupling to Babel**: Output is Babel AST nodes (`t.BlockStatement`, `t.Expression`, etc.)
-- 1000+ lines of `t.*()` Babel API calls need Rust equivalents
-- Source location tracking throughout
-- Cannot directly generate `@babel/types` nodes from Rust
-
-**Rust approach options**:
-1. **JSON AST interchange**: Define Rust mirror types with `serde_json` serialization → JS parses to Babel AST
-2. **Direct JS codegen**: String-based code generation (loses source maps)
-3. **SWC AST output**: Generate SWC-compatible AST, use SWC for codegen
-
-Recommended: JSON AST interchange format. Port core reactive scope logic first, use JS for edge cases initially.
+The `uniqueIdentifiers` and `fbtOperands` parameters translate directly.
 
 ---
 
 ### Validation Passes
 
-~15 validation passes share a common pattern: read HIR/ReactiveFunction, report errors via `env.recordError()`. They don't transform the IR.
+~15 validation passes share a common pattern: read-only HIR/ReactiveFunction traversal + error reporting via `env.recordError()`. They are the **easiest passes to port**. Common structure:
 
-**Passes**: ValidateContextVariableLValues, ValidateUseMemo, ValidateHooksUsage, ValidateNoCapitalizedCalls, ValidateLocalsNotReassignedAfterRender, ValidateNoRefAccessInRender, ValidateNoSetStateInRender, ValidateNoSetStateInEffects, ValidateNoDerivedComputationsInEffects, ValidateNoJSXInTryStatement, ValidateNoFreezingKnownMutableFunctions, ValidateExhaustiveDependencies, ValidateStaticComponents, ValidatePreservedManualMemoization, ValidateSourceLocations.
+```rust
+fn validate_hooks_usage(func: &HIRFunction, env: &mut Environment) -> Result<(), ()> {
+    for block in func.body.blocks.values() {
+        for instr in &block.instructions {
+            match &instr.value {
+                // check for violations, record errors
+            }
+        }
+    }
+    Ok(())
+}
+```
 
-**Common structure**: Iterate blocks/instructions, match on instruction kinds, track state via `HashMap<IdentifierId, T>`, report diagnostics.
-
-**Rust approach**: Define `trait Validator` with `validate(&self, fn: &HIRFunction, env: &mut Environment) -> Result<(), ()>`. Use visitor helpers. `HashMap<IdentifierId, T>` with arena-allocated identifiers. These are the easiest passes to port.
+All use `HashMap<IdentifierId, T>` for state tracking (ID-keyed, safe). Some return `CompilerError` directly instead of recording. The `tryRecord()` wrapping pattern maps to `Result` in Rust.
 
 ---
 
 ## External Dependencies
 
 ### Input: Babel AST
-The compiler takes Babel AST as input via `@babel/traverse` NodePath objects. A Rust port must either:
-1. **Use SWC/OXC parser**: Parse JS/TS to a Rust-native AST, then lower to HIR
-2. **Accept JSON AST**: Receive serialized Babel AST from JS, deserialize in Rust
-3. **Use tree-sitter**: For parsing, though it lacks the semantic analysis Babel provides
-
-**Recommendation**: SWC or OXC for parsing. Both are mature Rust JS/TS parsers with scope analysis.
+The compiler takes Babel AST as input via `@babel/traverse` NodePath objects. A Rust port must use SWC or OXC parser. Both provide scope analysis equivalent to Babel's. The `resolveBinding()` pattern in BuildHIR (which uses Babel node reference equality) would use parser-specific node IDs instead.
 
 ### Output: Babel AST
-The compiler outputs Babel AST nodes. Options:
-1. **JSON interchange**: Serialize Rust AST to JSON, deserialize in JS as Babel AST
-2. **SWC codegen**: Use SWC's code generator
-3. **Direct codegen**: Emit JS source code as strings
-
-**Recommendation**: Start with JSON interchange for correctness, migrate to SWC codegen for performance.
-
-### Babel Scope Analysis
-`Environment` uses `BabelScope` for identifier resolution and unique name generation. Rust needs equivalent scope analysis from the chosen parser.
+Recommended: JSON AST interchange format with `serde_json` serialization → JS parses to Babel AST. Core reactive scope logic ports first; edge cases can use JS initially.
 
 ---
 
 ## Risk Assessment
 
 ### Low Risk (straightforward port)
-- All validation passes (read-only traversal + error reporting)
-- Simple transformation passes (PruneMaybeThrows, PruneUnusedLabelsHIR, FlattenReactiveLoopsHIR, FlattenScopesWithHooksOrUseHIR, StabilizeBlockIds, RewriteInstructionKindsBasedOnReassignment)
-- Reactive pruning passes (PruneUnusedLabels, PruneUnusedScopes, PruneAlwaysInvalidatingScopes)
+- All validation passes
+- Simple transformation passes (PruneMaybeThrows, PruneUnusedLabelsHIR, FlattenReactiveLoopsHIR, FlattenScopesWithHooksOrUseHIR, StabilizeBlockIds, RewriteInstructionKindsBasedOnReassignment, OptimizePropsMethodCalls, MergeConsecutiveBlocks)
+- Reactive pruning passes (PruneUnusedLabels, PruneUnusedScopes, PruneAlwaysInvalidatingScopes, PruneNonReactiveDependencies)
 
-### Medium Risk (requires architectural changes)
-- SSA passes (EnterSSA, EliminateRedundantPhi) — need arena-based identifiers
-- Scope construction passes — need centralized scope table with ID-based references
-- Reactive function transforms — need `Visitor`/`MutVisitor` trait design
-- Type inference (InferTypes) — need arena-based type storage
-- Constant propagation — need separated constants map
-- Dead code elimination — need two-phase collect/apply
+### Medium Risk (requires systematic refactoring)
+- SSA passes (EnterSSA, EliminateRedundantPhi) — reference-identity maps → ID maps
+- Scope construction passes — centralized scope arena with ID-based references
+- Type inference (InferTypes) — arena-based Type storage, TypeId generation
+- Constant propagation — separated constants map, CFG cleanup infrastructure
+- Dead code elimination — two-phase collect/apply
+- Scope alignment passes — DisjointSet<ScopeId>, arena-based range mutation
+- Reactive function transforms — Visitor/MutVisitor trait design with Transformed enum
 
 ### High Risk (significant redesign)
 - **BuildHIR**: Babel AST dependency, shared mutable Environment, closure-heavy builder patterns
-- **InferMutationAliasingEffects**: Most complex pass, deeply interlinked mutable state, fixpoint with abstract interpretation, reference equality for map keys
-- **InferMutationAliasingRanges**: Shared Identifier mutation through alias graph, temporal reasoning
+- **InferMutationAliasingEffects**: Reference-identity caching (6 maps), fixpoint with abstract interpretation, needs explicit EffectId/InstructionValueId arenas
+- **InferMutationAliasingRanges**: Graph-through-HIR mutation, temporal reasoning, deferred range updates
 - **CodegenReactiveFunction**: Babel AST output format, 1000+ lines of AST construction
-- **AnalyseFunctions**: Recursive nested function processing with shared mutable state
+- **AnalyseFunctions**: Recursive nested function processing, shared mutableRange semantics
 
-### Critical Architectural Decision
-- **Arena-based data model**: Must be designed upfront, affects every pass
-- **Parser choice**: SWC vs OXC vs custom affects entire input pipeline
-- **Output format**: JSON vs SWC vs direct codegen affects integration story
+### Critical Architectural Decisions (must be designed upfront)
+1. **Arena-based Identifier/Scope storage**: Affects every pass. `Place` stores `IdentifierId` (Copy). Identifiers live in `Vec<Identifier>` indexed by ID.
+2. **Scope-based mutableRange access**: After InferReactiveScopeVariables, effective mutable range = scope's range. All downstream `isMutable()`/`inRange()` calls need `&ScopeArena` parameter.
+3. **Parser choice**: SWC or OXC for JS/TS parsing. Affects BuildHIR entirely.
+4. **Output format**: JSON AST interchange for Babel integration.
+5. **Environment split**: Immutable config (`&CompilerConfig`) + mutable state (`&mut CompilationState`).
 
 ---
 
 ## Recommended Migration Strategy
 
-### Phase 1: Foundation (Weeks 1-4)
-1. Define Rust data model (arena-based Identifier/Scope/Type storage)
-2. Choose and integrate JS parser (SWC recommended)
-3. Implement HIR types as Rust enums/structs
-4. Build JSON serialization for HIR (enables testing against TypeScript implementation)
-5. Port Environment with `Cell`/`RefCell` interior mutability
+### Phase 1: Foundation
+1. Define Rust data model (arena-based Identifier/Scope/Type storage with all ID newtypes)
+2. Define HIR types as Rust enums/structs (InstructionValue ~40 variants, Terminal ~20 variants)
+3. Define `Environment` split (config + type registry + mutable state)
+4. Implement shared infrastructure: `DisjointSet<T: Copy>`, `IndexMap` wrappers, visitor utilities
+5. Choose and integrate JS parser (SWC recommended)
+6. Build JSON serialization for HIR (enables testing against TypeScript implementation)
 
-### Phase 2: Core Pipeline (Weeks 5-12)
-1. Port BuildHIR (highest effort, most value)
-2. Port normalization passes (PruneMaybeThrows → MergeConsecutiveBlocks)
-3. Port SSA (EnterSSA, EliminateRedundantPhi)
+### Phase 2: Core Pipeline
+1. Port BuildHIR (highest effort, most value — requires parser integration)
+2. Port normalization passes (PruneMaybeThrows, MergeConsecutiveBlocks — simple, builds confidence)
+3. Port SSA (EnterSSA, EliminateRedundantPhi — establishes arena patterns)
 4. Port ConstantPropagation, InferTypes
-5. Validate output matches TypeScript via JSON comparison
+5. Validate output matches TypeScript via JSON comparison at each stage
 
-### Phase 3: Analysis Engine (Weeks 13-20)
-1. Port AnalyseFunctions
-2. Port InferMutationAliasingEffects (highest complexity)
+### Phase 3: Analysis Engine
+1. Port AnalyseFunctions (establishes recursive compilation pattern)
+2. Port InferMutationAliasingEffects (highest complexity — establish EffectId/InstructionValueId arenas)
 3. Port DeadCodeElimination
-4. Port InferMutationAliasingRanges
+4. Port InferMutationAliasingRanges (establish deferred-range-update pattern)
 5. Port InferReactivePlaces
 
-### Phase 4: Scope System (Weeks 21-28)
-1. Port InferReactiveScopeVariables
-2. Port scope alignment passes (Align*, Merge*, Flatten*)
+### Phase 4: Scope System
+1. Port InferReactiveScopeVariables (establishes ScopeId → mutableRange indirection)
+2. Port scope alignment passes (Align*, Merge* — establish DisjointSet<ScopeId> pattern)
 3. Port BuildReactiveScopeTerminalsHIR
 4. Port PropagateScopeDependenciesHIR
 
-### Phase 5: Output (Weeks 29-36)
-1. Port BuildReactiveFunction
-2. Port reactive function transforms (Prune*, Promote*, Rename*, etc.)
+### Phase 5: Output
+1. Port BuildReactiveFunction (establishes reactive tree representation)
+2. Port reactive function transforms (Prune*, Promote*, Rename* — use trait-based visitor)
 3. Port CodegenReactiveFunction with JSON AST output
-4. Port validation passes
+4. Port validation passes (easiest, can be done in parallel)
 5. End-to-end integration testing
-
-### Phase 6: Optimization (Weeks 37+)
-1. Profile and optimize hot paths
-2. Consider SWC codegen for direct output
-3. Parallelize independent passes
-4. Benchmark against TypeScript implementation
