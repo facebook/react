@@ -52,9 +52,11 @@ Porting the React Compiler from TypeScript to Rust is **feasible and the Rust co
 
 **Complexity breakdown** (revised after deep per-pass analysis):
 - ~25 passes are straightforward to port (simple traversal, local mutation, ID-only side maps)
-- ~12 passes require moderate refactoring (stored references → IDs, iteration order changes)
-- ~5 passes require significant redesign (InferMutationAliasingEffects, InferMutationAliasingRanges, BuildHIR, CodegenReactiveFunction, AnalyseFunctions)
+- ~13 passes require moderate refactoring (stored references → IDs, iteration order changes)
+- ~4 passes require significant redesign (InferMutationAliasingRanges, BuildHIR, CodegenReactiveFunction, AnalyseFunctions)
 - Input/output boundaries (Babel AST ↔ HIR) require the most new infrastructure
+
+**Note on InferMutationAliasingEffects**: Previously categorized as "significant redesign" due to 6 maps using JS reference identity with `InstructionValue` keys. An upstream refactor ([facebook/react#33650](https://github.com/facebook/react/pull/33650)) eliminates this by replacing `InstructionValue` with interned `AliasingEffect` objects as value-identity keys. Since effects are already interned by content hash, they map directly to a copyable `EffectId` index in Rust. This moves InferMutationAliasingEffects from "significant redesign" to "moderate refactoring."
 
 ---
 
@@ -191,7 +193,7 @@ nodes.set(identifier, { id: identifier, ... });
 node.id.mutableRange.end = 42; // mutates HIR through map reference
 ```
 
-Used by: InferMutationAliasingRanges (AliasingState.nodes), EnterSSA (SSABuilder.#states.defs), InferMutationAliasingEffects (Context caches), DropManualMemoization (sidemap.manualMemos), InlineIIFEs (functions map), AlignReactiveScopesToBlockScopesHIR (activeScopes), and others.
+Used by: InferMutationAliasingRanges (AliasingState.nodes), EnterSSA (SSABuilder.#states.defs), InferMutationAliasingEffects (Context caches — see note below about upstream simplification), DropManualMemoization (sidemap.manualMemos), InlineIIFEs (functions map), AlignReactiveScopesToBlockScopesHIR (activeScopes), and others.
 
 ---
 
@@ -319,13 +321,15 @@ Maps using JavaScript object identity (`===`) as the key, typically `Map<Identif
 #### Category 3: Instruction/Value Reference Maps (Store Indices Instead)
 Maps that store references to actual `Instruction`, `FunctionExpression`, or `InstructionValue` objects, then later access fields on those objects or mutate them.
 
-**Passes**: InferMutationAliasingEffects (`Map<Instruction, InstructionSignature>`, `Map<AliasingEffect, InstructionValue>`, `Map<FunctionExpression, AliasingSignature>`), DropManualMemoization (`Map<IdentifierId, TInstruction<FunctionExpression>>`, `ManualMemoCallee.loadInstr`), InlineIIFEs (`Map<IdentifierId, FunctionExpression>`), NameAnonymousFunctions (`Node.fn: FunctionExpression`).
+**Passes**: InferMutationAliasingEffects (`Map<Instruction, InstructionSignature>`, `Map<FunctionExpression, AliasingSignature>`), DropManualMemoization (`Map<IdentifierId, TInstruction<FunctionExpression>>`, `ManualMemoCallee.loadInstr`), InlineIIFEs (`Map<IdentifierId, FunctionExpression>`), NameAnonymousFunctions (`Node.fn: FunctionExpression`).
+
+**Note**: InferMutationAliasingEffects previously also had `Map<AliasingEffect, InstructionValue>` and `Map<InstructionValue, AbstractValue>` using synthetic InstructionValues as allocation-site identity tokens. An upstream refactor ([facebook/react#33650](https://github.com/facebook/react/pull/33650)) eliminates InstructionValue from all value-identity maps, replacing it with interned `AliasingEffect` objects. Since effects are interned by content hash, they map to a copyable `EffectId` in Rust. See the InferMutationAliasingEffects pass analysis for details.
 
 **Rust approach**: Store only what is actually needed:
 - If the map is for existence checking: use `HashSet<IdentifierId>`
 - If specific fields are needed later: extract and store those fields (e.g., store `InstructionId` instead of a reference to the instruction)
 - If the full object is needed: store `(BlockId, usize)` location indices and re-lookup when needed
-- For InferMutationAliasingEffects: introduce explicit `EffectId`, `InstructionValueId` arena indices for the interning/caching pattern
+- For InferMutationAliasingEffects: use `InstructionId` for instruction signature cache, `EffectId` (interning table index) for value-identity maps and function/apply signature caches
 
 #### Category 4: Scope Reference Sets with In-Place Mutation (Arena Access)
 Sets or maps of `ReactiveScope` references where the scope's `range` fields are mutated while the scope is in the collection.
@@ -533,7 +537,9 @@ Most passes consist of these patterns that translate almost line-for-line:
 
 **Moderately similar (70-85%)**: AnalyseFunctions, InferReactiveScopeVariables, AlignReactiveScopesToBlockScopesHIR, MergeOverlappingReactiveScopesHIR, OutlineJSX, BuildReactiveFunction, PruneNonEscapingScopes, OptimizeForSSR, PruneUnusedLValues
 
-**Requires redesign (50-70%)**: InferMutationAliasingEffects (reference-identity caching), InferMutationAliasingRanges (graph-through-HIR mutation), BuildHIR (Babel AST coupling), CodegenReactiveFunction (Babel AST output)
+**Moderately similar (70-85%)** *(additional)*: InferMutationAliasingEffects (after upstream refactor removing InstructionValue keys — see pass analysis)
+
+**Requires redesign (50-70%)**: InferMutationAliasingRanges (graph-through-HIR mutation), BuildHIR (Babel AST coupling), CodegenReactiveFunction (Babel AST output)
 
 ---
 
@@ -713,14 +719,25 @@ Unification-based type inference is very natural in Rust. The `Type` enum needs 
 **Env usage**: Shares Environment between parent and child via `fn.env`. Uses logger. **Side maps**: None (operates entirely through in-place HIR mutation). **Similarity**: ~85%.
 The recursive `lowerWithMutationAliasing` pattern works with `&mut` because it is sequential. Use `std::mem::take` to extract child `HIRFunction` from the instruction, process it, then put it back. The mutableRange reset (`identifier.mutableRange = {start: 0, end: 0}`) is a simple value write in Rust (no aliasing to break because Rust uses values, not shared objects).
 
-#### InferMutationAliasingEffects (HIGHEST COMPLEXITY)
-**Env usage**: `env.config` (3 reads), `env.getFunctionSignature`, `env.enableValidations`, `createTemporaryPlace`. InferenceState stores `env` as read-only reference. **Side maps**: `statesByBlock/queuedStates` (BlockId-keyed), Context class with 7 caches using **reference identity** keys (`Map<Instruction, ...>`, `Map<AliasingEffect, InstructionValue>`, `Map<FunctionExpression, ...>`, `Map<AliasingSignature, ...>`), InferenceState with `#values: Map<InstructionValue, AbstractValue>` and `#variables: Map<IdentifierId, Set<InstructionValue>>`. **Similarity**: ~80%.
+#### InferMutationAliasingEffects
+**Env usage**: `env.config` (3 reads), `env.getFunctionSignature`, `env.enableValidations`, `createTemporaryPlace`. InferenceState stores `env` as read-only reference. **Side maps**: `statesByBlock/queuedStates` (BlockId-keyed), Context class with caches (`Map<Instruction, InstructionSignature>`, `Map<FunctionExpression, AliasingSignature>`, `Map<AliasingSignature, Map<AliasingEffect, ...>>`), InferenceState with `#values: Map<AliasingEffect, AbstractValue>` and `#variables: Map<IdentifierId, Set<AliasingEffect>>`. **Similarity**: ~80%.
 
-**The central challenge**: Six maps use JS object reference identity as keys. All must be replaced with index-based keys. The recommended approach:
-- Introduce `EffectId` (arena index for interned effects — already hash-based via `internEffect()`)
-- Introduce `InstructionValueId` (arena index for synthetic allocation-site values)
-- Use `InstructionId` instead of `&Instruction` for the signature cache
-- Use function-expression indices for the function signature cache
+**Upstream simplification** ([facebook/react#33650](https://github.com/facebook/react/pull/33650)): The original implementation used `InstructionValue` objects as value-identity keys in the abstract interpretation state, including fabricated synthetic `ObjectExpression`/`Primitive` objects as allocation-site tokens. The refactored version replaces all `InstructionValue` keys with interned `AliasingEffect` objects. Since effects are already interned by content hash (via `context.internEffect()` / `internedEffects: Map<string, AliasingEffect>`), reference identity equals content identity — exactly what's needed for Rust. This eliminates the `effectInstructionValueCache` entirely and removes `InstructionValue` from the `#values` and `#variables` maps.
+
+**Remaining reference-identity maps and their Rust equivalents**:
+- `instructionSignatureCache: Map<Instruction, ...>` → `HashMap<InstructionId, InstructionSignature>` (trivial — each instruction has a unique `.id`)
+- `#values: Map<AliasingEffect, AbstractValue>` → `HashMap<EffectId, AbstractValue>` (EffectId = index into interning table)
+- `#variables: Map<IdentifierId, Set<AliasingEffect>>` → `HashMap<IdentifierId, HashSet<EffectId>>`
+- `functionSignatureCache: Map<FunctionExpression, ...>` → `HashMap<EffectId, AliasingSignature>` (key by the CreateFunction effect's EffectId instead of the FunctionExpression reference)
+- `applySignatureCache: Map<AliasingSignature, Map<AliasingEffect, ...>>` → `HashMap<EffectId, HashMap<EffectId, ...>>` (compound key using originating effect IDs)
+
+All keys become `Copy` types (`InstructionId`, `EffectId`, `IdentifierId`), trivially `Hash + Eq`, with no reference identity needed. The interning table is:
+```rust
+struct EffectInterner {
+    effects: Vec<AliasingEffect>,       // indexed by EffectId
+    by_hash: HashMap<String, EffectId>, // dedup lookup
+}
+```
 
 The overall structure (fixpoint loop, InferenceState clone/merge, applyEffect recursion, Context caching) can remain nearly identical. The `applyEffect` recursive method works with `&mut InferenceState` + `&mut Context` parameters — Rust's reborrowing handles the recursion naturally.
 
@@ -928,9 +945,11 @@ Recommended: JSON AST interchange format with `serde_json` serialization → JS 
 - Scope alignment passes — DisjointSet<ScopeId>, arena-based range mutation
 - Reactive function transforms — Visitor/MutVisitor trait design with Transformed enum
 
+### Medium Risk *(additional)*
+- **InferMutationAliasingEffects**: After upstream refactor ([facebook/react#33650](https://github.com/facebook/react/pull/33650)), InstructionValue keys are eliminated. Remaining reference-identity maps use interned AliasingEffects (→ `EffectId`), Instructions (→ `InstructionId`), and FunctionExpressions (→ `EffectId` of CreateFunction). All become copyable ID-keyed maps. Fixpoint loop and abstract interpretation structure port directly.
+
 ### High Risk (significant redesign)
 - **BuildHIR**: Babel AST dependency, shared mutable Environment, closure-heavy builder patterns
-- **InferMutationAliasingEffects**: Reference-identity caching (6 maps), fixpoint with abstract interpretation, needs explicit EffectId/InstructionValueId arenas
 - **InferMutationAliasingRanges**: Graph-through-HIR mutation, temporal reasoning, deferred range updates
 - **CodegenReactiveFunction**: Babel AST output format, 1000+ lines of AST construction
 - **AnalyseFunctions**: Recursive nested function processing, shared mutableRange semantics
@@ -963,7 +982,7 @@ Recommended: JSON AST interchange format with `serde_json` serialization → JS 
 
 ### Phase 3: Analysis Engine
 1. Port AnalyseFunctions (establishes recursive compilation pattern)
-2. Port InferMutationAliasingEffects (highest complexity — establish EffectId/InstructionValueId arenas)
+2. Port InferMutationAliasingEffects (establish EffectId interning table — InstructionValueId arenas no longer needed after upstream refactor)
 3. Port DeadCodeElimination
 4. Port InferMutationAliasingRanges (establish deferred-range-update pattern)
 5. Port InferReactivePlaces
