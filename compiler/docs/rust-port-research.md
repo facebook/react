@@ -9,9 +9,11 @@
 5. [Side Maps: Passes Storing HIR References](#side-maps-passes-storing-hir-references)
 6. [AliasingEffect: Shared References and Rust Ownership](#aliasingeffect-shared-references-and-rust-ownership)
 7. [Recommended Rust Architecture](#recommended-rust-architecture)
-8. [Structural Similarity: TypeScript ↔ Rust Alignment](#structural-similarity-typescript--rust-alignment)
-9. [Pipeline Overview](#pipeline-overview)
-10. [Pass-by-Pass Analysis](#pass-by-pass-analysis)
+8. [Input/Output Format](#inputoutput-format)
+9. [Error Handling](#error-handling)
+10. [Structural Similarity: TypeScript ↔ Rust Alignment](#structural-similarity-typescript--rust-alignment)
+11. [Pipeline Overview](#pipeline-overview)
+12. [Pass-by-Pass Analysis](#pass-by-pass-analysis)
    - [Phase 1: Lowering (AST to HIR)](#phase-1-lowering)
    - [Phase 2: Normalization](#phase-2-normalization)
    - [Phase 3: SSA Construction](#phase-3-ssa-construction)
@@ -28,21 +30,27 @@
    - [Phase 14: Reactive Function Transforms](#phase-14-reactive-function-transforms)
    - [Phase 15: Codegen](#phase-15-codegen)
    - [Validation Passes](#validation-passes)
-11. [External Dependencies](#external-dependencies)
-12. [Risk Assessment](#risk-assessment)
-13. [Recommended Migration Strategy](#recommended-migration-strategy)
+13. [External Dependencies](#external-dependencies)
+14. [Risk Assessment](#risk-assessment)
+15. [Recommended Migration Strategy](#recommended-migration-strategy)
 
 ---
 
 ## Executive Summary
 
-Porting the React Compiler from TypeScript to Rust is **feasible and the Rust code can remain structurally very close to the TypeScript**. The compiler's algorithms are well-suited to Rust. The TypeScript implementation relies on three patterns that conflict with Rust's ownership model, but all three have clean, well-understood solutions:
+Porting the React Compiler from TypeScript to Rust is **feasible and the Rust code can remain structurally very close to the TypeScript**. The compiler's algorithms are well-suited to Rust. The TypeScript implementation relies on patterns that conflict with Rust's ownership model, but all have clean, well-understood solutions using arenas and indirect references:
 
-1. **Shared Identifier references**: Multiple `Place` objects reference the same `Identifier` object. **Solution**: Arena-allocated identifiers referenced by `IdentifierId` index. Places store a copyable ID, not a reference.
+1. **Shared Identifier references**: Multiple `Place` objects reference the same `Identifier` object. **Solution**: Arena-allocated identifiers on `Environment`, referenced by copyable `IdentifierId` index.
 
-2. **Shared ReactiveScope references**: Multiple identifiers share the same `ReactiveScope` object (including its mutable range). **Solution**: Arena-allocated scopes referenced by `ScopeId`. The scope's `MutableRange` lives in the arena; identifiers access it via scope lookup.
+2. **Shared ReactiveScope references**: Multiple identifiers share the same `ReactiveScope` object (including its mutable range). **Solution**: Arena-allocated scopes on `Environment`, referenced by `ScopeId`.
 
-3. **Environment as shared mutable singleton**: The `Environment` object is threaded through the entire compilation via `fn.env` and mutated by many passes. **Solution**: Split Environment into immutable config (shared reference) and mutable state (counters, errors, outlined functions) passed as `&mut`.
+3. **Inner function storage**: `FunctionExpression`/`ObjectMethod` instructions store inner `HIRFunction` values inline. **Solution**: Arena-allocated functions on `Environment`, referenced by `FunctionId`.
+
+4. **Type storage**: Types stored inline on identifiers. **Solution**: Arena-allocated types on `Environment`, referenced by `TypeId`.
+
+5. **Instructions stored inline in blocks**: `BasicBlock.instructions` stores `Instruction` objects directly. **Solution**: Flat instruction table on `HIRFunction`, referenced by `InstructionId`. The existing `InstructionId` (evaluation order counter) is renamed to `EvaluationOrder` since it applies to both instructions and terminals.
+
+6. **Environment as shared mutable singleton**: The `Environment` object is threaded through the entire compilation via `fn.env` and mutated by many passes. **Solution**: Remove `HIRFunction.env` and pass `env: &mut Environment` separately. Maintain existing fields (no sub-struct grouping) to allow precise sliced borrows via direct field access.
 
 **Key finding on structural similarity**: After deep analysis of every pass, the vast majority of compiler passes can be ported to Rust with **~85-95% structural correspondence** — meaning you could view the TypeScript and Rust side-by-side and easily trace the logic. The main mechanical differences are:
 - `match` instead of `switch` (exhaustive by default in Rust)
@@ -55,9 +63,13 @@ Porting the React Compiler from TypeScript to Rust is **feasible and the Rust co
 - ~25 passes are straightforward to port (simple traversal, local mutation, ID-only side maps)
 - ~13 passes require moderate refactoring (stored references → IDs, iteration order changes)
 - ~4 passes require significant redesign (InferMutationAliasingRanges, BuildHIR, CodegenReactiveFunction, AnalyseFunctions)
-- Input/output boundaries (Babel AST ↔ HIR) require the most new infrastructure
+- Input/output boundaries use JSON AST interchange via serde, with a Rust Babel AST type
 
-**Note on InferMutationAliasingEffects**: Previously categorized as "significant redesign" due to maps using JS reference identity with `InstructionValue` keys. An upstream refactor ([PR #33650](https://github.com/facebook/react/pull/33650)) replaces `InstructionValue` with interned `AliasingEffect` as allocation-site keys, eliminating synthetic InstructionValues and the `effectInstructionValueCache`. Since effects are already interned by content hash, they map directly to a copyable `EffectId` index in Rust. Additionally, `AliasingEffect` variants share `Place` references with `InstructionValue` fields — in Rust, Places are cloned cheaply (with arena-based `IdentifierId`). The `CreateFunction` variant's `FunctionExpression` reference is replaced with an `InstructionId` for lookup. See [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership) for the full analysis. This is "moderate refactoring" — no algorithmic redesign needed.
+**Input/output format**: Define a Rust representation of the Babel AST format using serde with custom serialization/deserialization (ensuring the `"type"` field is always produced, even outside of enum positions). Include full information from Babel, including source locations. A `Scope` type encodes the tree of scope information mapping to Babel's scope tree. The main public API is `compile(BabelAst, Scope) -> Option<BabelAst>`, returning `None` if no changes.
+
+**Error handling**: Two categories — errors that would have thrown in TypeScript (invariants, todo errors, short-circuiting) return `Err(CompilerDiagnostic)` via `Result`, while non-throwing accumulated diagnostics are recorded directly on `Environment`. TypeScript non-null assertions become `.unwrap()` panics.
+
+**Note on InferMutationAliasingEffects**: Previously categorized as "significant redesign" due to maps using JS reference identity with `InstructionValue` keys. An upstream refactor ([PR #33650](https://github.com/facebook/react/pull/33650)) replaces `InstructionValue` with interned `AliasingEffect` as allocation-site keys, eliminating synthetic InstructionValues and the `effectInstructionValueCache`. Since effects are already interned by content hash, they map directly to a copyable `EffectId` index in Rust. Additionally, `AliasingEffect` variants share `Place` references with `InstructionValue` fields — in Rust, Places are cloned cheaply (with arena-based `IdentifierId`). The `CreateFunction` variant's `FunctionExpression` reference is replaced with a `FunctionId` referencing the function arena on `Environment`. See [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership) for the full analysis. This is "moderate refactoring" — no algorithmic redesign needed.
 
 ---
 
@@ -70,7 +82,7 @@ HIRFunction {
     entry: BlockId,
     blocks: Map<BlockId, BasicBlock>    // ordered map, reverse postorder
   },
-  env: Environment,                      // shared mutable compilation context
+  instructions: Vec<Instruction>,        // flat instruction table, indexed by InstructionId
   params: Array<Place | SpreadPattern>,
   returns: Place,
   context: Array<Place>,                 // captured variables from outer scope
@@ -78,12 +90,14 @@ HIRFunction {
 }
 ```
 
+**Note**: `env` is removed from `HIRFunction` and passed separately as `env: &mut Environment`. Inner functions are stored in the function arena on `Environment` (see [§Recommended Rust Architecture](#recommended-rust-architecture)).
+
 ### BasicBlock
 ```
 BasicBlock {
   id: BlockId,
   kind: 'block' | 'value' | 'loop' | 'sequence' | 'catch',
-  instructions: Array<Instruction>,
+  instructions: Vec<InstructionId>,      // indices into HIRFunction.instructions
   terminal: Terminal,                    // control flow (goto, if, for, return, etc.)
   preds: Set<BlockId>,
   phis: Set<Phi>,                        // SSA join points
@@ -93,7 +107,7 @@ BasicBlock {
 ### Instruction
 ```
 Instruction {
-  id: InstructionId,
+  order: EvaluationOrder,                // evaluation order (renamed from InstructionId)
   lvalue: Place,                         // destination
   value: InstructionValue,               // discriminated union (~40 variants)
   effects: Array<AliasingEffect> | null, // populated by InferMutationAliasingEffects
@@ -101,11 +115,13 @@ Instruction {
 }
 ```
 
+**Note**: The previous `InstructionId` type is renamed to `EvaluationOrder` because it represents evaluation order and is not instruction-specific (terminals also carry it). A new `InstructionId` type is introduced as an index into the `HIRFunction.instructions` table, allowing passes to reference instructions by a single copyable ID rather than `(BlockId, usize)`.
+
 ### Place (CRITICAL for Rust port)
 ```
 Place {
   kind: 'Identifier',
-  identifier: Identifier,    // ← THIS IS A SHARED REFERENCE in TS; becomes IdentifierId in Rust
+  identifier: IdentifierId,  // ← index into Identifier arena on Environment (shared reference in TS)
   effect: Effect,             // Read, Mutate, Capture, Freeze, etc.
   reactive: boolean,          // set by InferReactivePlaces
   loc: SourceLocation,
@@ -119,11 +135,21 @@ Identifier {
   declarationId: DeclarationId,
   name: IdentifierName | null, // null for temporaries, mutated by RenameVariables
   mutableRange: MutableRange,  // { start, end } — mutated by InferMutationAliasingRanges
-  scope: ReactiveScope | null, // mutated by InferReactiveScopeVariables
-  type: Type,                  // mutated by InferTypes
+  scope: ScopeId | null,       // index into scope arena — mutated by InferReactiveScopeVariables
+  type: TypeId,                // index into type arena — mutated by InferTypes
   loc: SourceLocation,
 }
 ```
+
+### FunctionExpression / ObjectMethod
+```
+FunctionExpression {
+  loweredFunc: FunctionId,     // index into function arena on Environment
+  ...                          // other fields remain inline
+}
+```
+
+**Note**: Inner `HIRFunction` values are stored in a function arena on `Environment`, referenced by `FunctionId`. This replaces inline storage and provides a stable, copyable reference for passes that need to cache or access inner functions.
 
 ### ReactiveScope
 ```
@@ -132,8 +158,8 @@ ReactiveScope {
   range: MutableRange,                              // mutated by alignment passes
   dependencies: Set<ReactiveScopeDependency>,        // populated by PropagateScopeDependencies
   declarations: Map<IdentifierId, ReactiveScopeDeclaration>,
-  reassignments: Set<Identifier>,
-  earlyReturnValue: { value: Identifier, loc, label } | null,
+  reassignments: Set<IdentifierId>,
+  earlyReturnValue: { value: IdentifierId, loc, label } | null,
   merged: Set<ScopeId>,
 }
 ```
@@ -141,8 +167,8 @@ ReactiveScope {
 ### MutableRange
 ```
 MutableRange {
-  start: InstructionId,    // inclusive
-  end: InstructionId,      // exclusive
+  start: EvaluationOrder,  // inclusive (renamed from InstructionId)
+  end: EvaluationOrder,    // exclusive
 }
 ```
 
@@ -237,55 +263,54 @@ This sharing is sequential, not concurrent: `AnalyseFunctions` processes each ch
 
 ### Recommended Rust Representation
 
+Remove `HIRFunction.env` and pass `env: &mut Environment` as a separate parameter to passes. Maintain the existing fields and types of the `Environment` struct — do not group them into sub-structs. Use direct field access (rather than methods) to allow precise sliced borrows of portions of the environment.
+
 ```rust
-/// Immutable configuration — can be shared via &
-struct CompilerConfig {
-    enable_jsx_outlining: bool,
-    enable_function_outlining: bool,
-    enable_preserve_existing_memoization_guarantees: bool,
-    validate_hooks_usage: bool,
-    // ... all feature flags ...
-    custom_macros: Option<Vec<String>>,
+struct Environment {
+    // Configuration (read-only after construction)
+    config: EnvironmentConfig,
     fn_type: ReactFunctionType,
     output_mode: CompilerOutputMode,
-}
 
-/// Read-only type registries — can be shared via &
-struct TypeRegistry {
+    // Type registries (read-only after lazy init)
     globals: GlobalRegistry,
     shapes: ShapeRegistry,
-    module_types: HashMap<String, Option<Global>>,  // lazily populated but stable after first access
-}
+    module_types: HashMap<String, Option<Global>>,
 
-/// Mutable compilation state — passed as &mut
-struct CompilationState {
+    // Mutable counters
     next_identifier: IdentifierId,
     next_block: BlockId,
     next_scope: ScopeId,
+
+    // Arenas
+    identifiers: Vec<Identifier>,         // indexed by IdentifierId
+    scopes: Vec<ReactiveScope>,           // indexed by ScopeId
+    functions: Vec<HIRFunction>,          // indexed by FunctionId
+    types: Vec<Type>,                     // indexed by TypeId
+
+    // Accumulated state
     errors: Vec<CompilerDiagnostic>,
     outlined_functions: Vec<OutlinedFunction>,
-}
 
-/// Combined environment — threaded through passes
-struct Environment {
-    config: CompilerConfig,        // read-only after construction
-    types: TypeRegistry,           // read-only after lazy init
-    state: CompilationState,       // mutable
+    // Other
+    logger: Option<Logger>,
+    program_context: ProgramContext,
 }
 ```
 
-**Pass signatures** would typically be:
+**Why no sub-structs**: Keeping all fields flat on `Environment` allows Rust's borrow checker to reason about independent field borrows. For example, a pass can simultaneously borrow `env.identifiers` and `env.config` without conflict, because the borrow checker can see they are distinct fields. Grouping fields into sub-structs would require borrowing the entire sub-struct even when only one field is needed.
+
+**Pass signatures** return `Result` for errors that would have thrown in TypeScript:
 
 ```rust
-// Most passes: need mutable HIR + mutable state + read-only config
-fn enter_ssa(func: &mut HIRFunction, env: &mut Environment) { ... }
+// Most passes: need mutable HIR + mutable environment
+fn enter_ssa(func: &mut HIRFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> { ... }
 
-// Read-only passes (validation): only need immutable access
-fn validate_hooks_usage(func: &HIRFunction, env: &Environment) -> Result<(), ()> { ... }
+// Validation passes:
+fn validate_hooks_usage(func: &HIRFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> { ... }
 
 // Passes that don't use env at all (many!):
 fn merge_consecutive_blocks(func: &mut HIRFunction) { ... }
-fn prune_maybe_throws(func: &mut HIRFunction) { ... }
 fn constant_propagation(func: &mut HIRFunction) { ... }
 ```
 
@@ -328,16 +353,17 @@ Maps that store references to actual `Instruction`, `FunctionExpression`, or `In
 
 **Rust approach**: Store only what is actually needed:
 - If the map is for existence checking: use `HashSet<IdentifierId>`
-- If specific fields are needed later: extract and store those fields (e.g., store `InstructionId` instead of a reference to the instruction)
-- If the full object is needed: store `(BlockId, usize)` location indices and re-lookup when needed
-- For InferMutationAliasingEffects: use `InstructionId` for instruction signature cache, `EffectId` (interning table index) for value-identity maps and function/apply signature caches
+- If specific fields are needed later: extract and store those fields (e.g., store `InstructionId` to reference the instruction table)
+- Instructions are stored in a flat table on `HIRFunction`, referenced by `InstructionId` — passes can reference any instruction by a single copyable ID
+- `FunctionExpression`/`ObjectMethod` inner functions are accessed via `FunctionId` referencing the function arena on `Environment`
+- For InferMutationAliasingEffects: use `InstructionId` for instruction signature cache, `EffectId` (interning table index) for value-identity maps, `FunctionId` for function signature caches
 
 #### Category 4: Scope Reference Sets with In-Place Mutation (Arena Access)
 Sets or maps of `ReactiveScope` references where the scope's `range` fields are mutated while the scope is in the collection.
 
 **Passes**: AlignReactiveScopesToBlockScopesHIR (`Set<ReactiveScope>` iterated while mutating `scope.range`), AlignMethodCallScopes (DisjointSet forEach with range mutation), AlignObjectMethodScopes (same pattern), MergeOverlappingReactiveScopesHIR (DisjointSet with range mutation), MemoizeFbtAndMacroOperandsInSameScope (scope range mutation).
 
-**Rust approach**: Store `ScopeId` in sets/DisjointSets. Mutate through arena: `scope_arena[scope_id].range.start = ...`. The set holds copyable IDs, and the mutation goes through the arena — completely disjoint borrows.
+**Rust approach**: Store `ScopeId` in sets/DisjointSets. Mutate through arena: `env.scopes[scope_id].range.start = ...`. The set holds copyable IDs, and the mutation goes through the arena — completely disjoint borrows.
 
 ### Critical Insight: The Shared MutableRange Aliasing
 
@@ -350,15 +376,15 @@ This makes ALL identifiers in a scope share the SAME `MutableRange` object as th
 
 **Recommended Rust approach**: Identifiers store `scope: Option<ScopeId>`. The "effective mutable range" is always accessed through the scope arena:
 ```rust
-fn effective_mutable_range(id: &Identifier, scopes: &ScopeArena) -> MutableRange {
+fn effective_mutable_range(id: &Identifier, scopes: &[ReactiveScope]) -> MutableRange {
     match id.scope {
-        Some(scope_id) => scopes[scope_id].range,
+        Some(scope_id) => scopes[scope_id.index()].range,
         None => id.mutable_range, // pre-scope original range
     }
 }
 ```
 
-All downstream passes that read `identifier.mutableRange` (like `isMutable()`, `inRange()`) would need access to the scope arena. This is a mechanical refactor — every call site gains a `&ScopeArena` parameter.
+All downstream passes that read `identifier.mutableRange` (like `isMutable()`, `inRange()`) would need access to `env.scopes`. This is a mechanical refactor — every call site accesses the scope arena via `Environment`.
 
 ---
 
@@ -440,6 +466,8 @@ This is the most architecturally significant sharing because `effect.function` i
 3. **For mutation** of the nested function's context:
    - `operand.effect = Effect.Read` (line 838) — mutates `Place.effect` on the nested function's context variables
 
+**Rust approach**: `CreateFunction` stores a `FunctionId` referencing the function arena on `Environment`. Allocation-site identity uses `EffectId` (from effect interning), deep structural access uses `env.functions[function_id]`, and context mutation uses `&mut env.functions[function_id].context`.
+
 ### Allocation-Site Identity: InstructionValue → AliasingEffect (PR #33650)
 
 The abstract interpretation in `InferenceState` tracks the abstract kind (Mutable, Frozen, Primitive, etc.) of each "allocation site" and which allocation sites each identifier points to. Currently this uses `InstructionValue` objects as allocation-site identity tokens via JS reference identity:
@@ -475,7 +503,7 @@ Since effects are already interned by content hash (via `context.internEffect()`
 2. **As a key in `functionSignatureCache`**: `Map<FunctionExpression, AliasingSignature>` (the one remaining reference-identity map using FunctionExpression)
 3. **Mutation**: `operand.effect = Effect.Read` on context variables
 
-In Rust, this means `CreateFunction` stores an `InstructionId` (for looking up the FunctionExpression from the HIR), while the allocation-site identity is the `EffectId` of the interned CreateFunction effect. The `functionSignatureCache` keys by `InstructionId` instead of FunctionExpression reference.
+In Rust, `CreateFunction` stores a `FunctionId` referencing the function arena on `Environment`. The function's context and aliasing effects are accessed via `env.functions[function_id]`. The allocation-site identity is the `EffectId` of the interned CreateFunction effect. The `functionSignatureCache` keys by `FunctionId` instead of FunctionExpression reference.
 
 ### Effect Interning
 
@@ -573,9 +601,9 @@ enum AliasingEffect {
     },
     CreateFunction {
         into: Place,
-        /// Index into HIR to find the FunctionExpression/ObjectMethod.
-        /// Used to access loweredFunc.func for context variables, aliasing effects, etc.
-        source_instruction: InstructionId,
+        /// Index into function arena on Environment.
+        /// Used to access context variables, aliasing effects, etc.
+        function: FunctionId,
         captures: Vec<Place>,              // cloned from context, filtered
     },
 
@@ -587,7 +615,7 @@ enum AliasingEffect {
 
 Key design decisions:
 - **Place is cloned, not shared**: Since `Place` stores `IdentifierId` (a `Copy` type) + `Effect` + `bool` + `SourceLocation`, it is small enough to clone cheaply. No shared references needed.
-- **`CreateFunction.source_instruction`** replaces the direct `FunctionExpression` reference. Code that needs `func.context` or `func.aliasingEffects` looks up the instruction from the HIR (see [Accessing FunctionExpression](#accessing-functionexpression-from-createfunction) below).
+- **`CreateFunction.function`** stores a `FunctionId` referencing the function arena on `Environment`. Code that needs `func.context` or `func.aliasingEffects` accesses `env.functions[function_id]` directly (see [Accessing Functions from CreateFunction](#accessing-functions-from-createfunction) below).
 - **`Apply.args`** is a cloned `Vec`, not a shared reference to the InstructionValue's args. This is a shallow clone of `Place`/`SpreadPattern`/`Hole` values (all small, copyable types with arena IDs).
 
 #### EffectId as Allocation-Site Identity
@@ -625,7 +653,7 @@ Each call to `state.initialize(effect, kind)` / `state.define(place, effect)` in
 - **`CreateFunction`**: Same — the interned CreateFunction effect's `EffectId` is the allocation-site key (the `FunctionExpression` reference is no longer used as a key)
 - **Params/context**: Synthetic `AliasingEffect::Create` values are interned and their `EffectId` serves as the allocation site
 
-The `effectInstructionValueCache` is eliminated entirely (PR #33650 removes it). The `functionSignatureCache: Map<FunctionExpression, AliasingSignature>` becomes `HashMap<InstructionId, AliasingSignature>` — keyed by the source instruction rather than the FunctionExpression reference.
+The `effectInstructionValueCache` is eliminated entirely (PR #33650 removes it). The `functionSignatureCache: Map<FunctionExpression, AliasingSignature>` becomes `HashMap<FunctionId, AliasingSignature>` — keyed by the `FunctionId` rather than the FunctionExpression reference.
 
 #### Effect Interning
 
@@ -650,35 +678,21 @@ impl EffectInterner {
 }
 ```
 
-Since the interned effect IS the allocation-site key, there is no additional cache or mapping needed. The `EffectId` serves triple duty: interning dedup key, allocation-site identity, and cache key for `applySignatureCache` and `functionSignatureCache`.
+Since the interned effect IS the allocation-site key, there is no additional cache or mapping needed. The `EffectId` serves as interning dedup key, allocation-site identity, and cache key for `applySignatureCache`. The `functionSignatureCache` is keyed by `FunctionId`.
 
-#### Accessing FunctionExpression from CreateFunction
+#### Accessing Functions from CreateFunction
 
-After PR #33650, code that previously accessed `effect.function.loweredFunc.func` now accesses `effect.function.loweredFunc.func` through the `CreateFunction` effect (where `effect.function` is the `FunctionExpression`/`ObjectMethod`). In Rust, `CreateFunction` stores `source_instruction: InstructionId`, so the function is looked up from the HIR:
-
-```rust
-fn get_function_from_instruction<'a>(
-    func: &'a HIRFunction,
-    instruction_id: InstructionId,
-) -> &'a HIRFunction {
-    let instr = func.get_instruction(instruction_id);
-    match &instr.value {
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            &lowered_func.func
-        }
-        _ => panic!("Expected FunctionExpression or ObjectMethod"),
-    }
-}
-```
-
-This requires a way to look up instructions by ID. The recommended approach is a `(BlockId, usize)` side map built once before the pass — O(n) build, O(1) lookup:
+In Rust, `CreateFunction` stores `function: FunctionId`, so the inner function is accessed directly from the function arena on `Environment`:
 
 ```rust
-struct InstructionIndex {
-    locations: HashMap<InstructionId, (BlockId, usize)>,
-}
+// Read access:
+let inner_func = &env.functions[effect.function];
+
+// Mutable access:
+let inner_func = &mut env.functions[effect.function];
 ```
+
+No instruction lookup or index is needed — the `FunctionId` provides direct O(1) access to the inner function's context variables, aliasing effects, and other data.
 
 #### Context Variable Mutation
 
@@ -686,7 +700,7 @@ The mutation `operand.effect = Effect.Read` (in `applyEffect` for `CreateFunctio
 
 ```rust
 // During CreateFunction processing, after determining abstract kinds:
-let inner_func = get_function_from_instruction_mut(func, source_instruction);
+let inner_func = &mut env.functions[effect.function];
 for operand in &mut inner_func.context {
     if operand.effect == Effect::Capture {
         let kind = state.kind(operand).kind;
@@ -697,7 +711,7 @@ for operand in &mut inner_func.context {
 }
 ```
 
-Since `InferMutationAliasingEffects` processes the outer function only (nested functions are already analyzed by `AnalyseFunctions`), and the nested function is structurally inside the current instruction, the borrow is to a disjoint part of the HIR. Alternatively, collect the updates and apply them after processing all effects for the instruction to avoid any borrow conflicts.
+Since inner functions live in the function arena on `Environment` (not inline in the instruction), the borrow to `env.functions[function_id]` is completely disjoint from the outer `HIRFunction` being processed. No collect-then-apply workaround is needed.
 
 ### Summary of Rust Approach for AliasingEffect
 
@@ -705,16 +719,16 @@ Since `InferMutationAliasingEffects` processes the outer function only (nested f
 |---|---|---|
 | Effect Places share InstructionValue Places | Clone Places (cheap with `IdentifierId`) | Trivial |
 | `Apply.args` shares InstructionValue's args array | Clone the `Vec<PlaceOrSpreadOrHole>` | Trivial |
-| `CreateFunction.function` = the FunctionExpression | Store `InstructionId`, look up when needed | Low |
+| `CreateFunction.function` = the FunctionExpression | Store `FunctionId`, direct arena access | Trivial |
 | `InstructionValue` as allocation-site key (→ `AliasingEffect` after #33650) | `EffectId` from interning table | Trivial |
 | `effectInstructionValueCache` (eliminated by #33650) | Not needed — `EffectId` is the allocation site directly | N/A |
-| `functionSignatureCache` (FunctionExpr → Signature) | `HashMap<InstructionId, AliasingSignature>` | Trivial |
+| `functionSignatureCache` (FunctionExpr → Signature) | `HashMap<FunctionId, AliasingSignature>` | Trivial |
 | Effect interning by content hash | `EffectInterner` with `Vec` + `HashMap` | Low |
-| `operand.effect = Effect.Read` mutation | Collect updates, apply after; or `&mut` via instruction index | Low |
+| `operand.effect = Effect.Read` mutation | `&mut env.functions[function_id].context` — disjoint borrow | Trivial |
 | `applySignatureCache` (Signature × Apply → Effects) | `HashMap<(EffectId, EffectId), Vec<AliasingEffect>>` | Low |
 | `state.values(place)` returning `AliasingEffect[]` | Returns `&[EffectId]` | Trivial |
 
-**Overall assessment**: AliasingEffect translates cleanly to Rust. With PR #33650, the interned `EffectId` serves as both the dedup key and allocation-site identity, eliminating the need for a separate `AllocationSiteId`. Place sharing is resolved by cloning (cheap with arena-based identifiers), and FunctionExpression access uses `InstructionId` indirection. No fundamental algorithmic redesign is needed. The fixpoint loop, effect interning, and abstract interpretation structure remain structurally identical.
+**Overall assessment**: AliasingEffect translates cleanly to Rust. With PR #33650, the interned `EffectId` serves as both the dedup key and allocation-site identity, eliminating the need for a separate `AllocationSiteId`. Place sharing is resolved by cloning (cheap with arena-based identifiers), and inner function access uses `FunctionId` into the function arena on `Environment`. No fundamental algorithmic redesign is needed. The fixpoint loop, effect interning, and abstract interpretation structure remain structurally identical.
 
 ---
 
@@ -722,47 +736,71 @@ Since `InferMutationAliasingEffects` processes the outer function only (nested f
 
 ### Arena-Based Identifier Storage
 
-```rust
-/// Central storage for all Identifiers, indexed by IdentifierId
-struct IdentifierArena {
-    identifiers: Vec<Identifier>,
-}
+Stored as `identifiers: Vec<Identifier>` directly on `Environment`.
 
-/// Identifiers are referenced by index everywhere
+```rust
 #[derive(Copy, Clone, Hash, Eq, PartialEq)]
 struct IdentifierId(u32);
 
-/// Place stores an ID, not a reference
 #[derive(Clone)]
 struct Place {
-    identifier: IdentifierId,  // index into arena
+    identifier: IdentifierId,  // index into Environment.identifiers
     effect: Effect,
     reactive: bool,
     loc: SourceLocation,
 }
 
-/// Identifier data lives in the arena
 struct Identifier {
     id: IdentifierId,
     declaration_id: DeclarationId,
     name: Option<IdentifierName>,
     mutable_range: MutableRange,
-    scope: Option<ScopeId>,     // ScopeId, not ReactiveScope reference
-    ty: Type,
+    scope: Option<ScopeId>,
+    ty: TypeId,                 // index into Environment.types
     loc: SourceLocation,
 }
 ```
 
 ### Arena-Based Scope Storage
 
-```rust
-struct ScopeArena {
-    scopes: Vec<ReactiveScope>,
-}
+Stored as `scopes: Vec<ReactiveScope>` directly on `Environment`.
 
+```rust
 #[derive(Copy, Clone, Hash, Eq, PartialEq)]
 struct ScopeId(u32);
 ```
+
+### Arena-Based Function Storage
+
+Stored as `functions: Vec<HIRFunction>` directly on `Environment`. `FunctionExpression` and `ObjectMethod` instruction values store a `FunctionId` instead of inline function data.
+
+```rust
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
+struct FunctionId(u32);
+```
+
+### Arena-Based Type Storage
+
+Stored as `types: Vec<Type>` directly on `Environment`. `Identifier.ty` stores a `TypeId` instead of an inline `Type` value.
+
+```rust
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
+struct TypeId(u32);
+```
+
+### Instructions Table
+
+Instructions are stored in a flat table on `HIRFunction` (`instructions: Vec<Instruction>`), indexed by `InstructionId`. `BasicBlock.instructions` becomes `Vec<InstructionId>`, referencing into this table. The existing `InstructionId` type is renamed to `EvaluationOrder` since it represents evaluation order and is present on both instructions and terminals.
+
+```rust
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
+struct InstructionId(u32);
+
+#[derive(Copy, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
+struct EvaluationOrder(u32);
+```
+
+This allows passes to cache or reference an instruction's location via a single copyable ID, avoiding `(BlockId, usize)` tuples.
 
 ### CFG Representation
 
@@ -776,14 +814,16 @@ struct HIR {
 
 ### Pass Signature Patterns
 
+Passes return `Result` for errors that would have thrown in TypeScript.
+
 ```rust
-/// Most passes take &mut HIRFunction (env accessed via func.env or separate param)
-fn enter_ssa(func: &mut HIRFunction, env: &mut Environment) { ... }
+/// Most passes: mutable HIR + mutable environment
+fn enter_ssa(func: &mut HIRFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> { ... }
 
-/// Read-only passes (validation)
-fn validate_hooks_usage(func: &HIRFunction, env: &Environment) -> Result<(), ()> { ... }
+/// Validation passes
+fn validate_hooks_usage(func: &HIRFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> { ... }
 
-/// Passes that restructure the CFG (many don't need env at all)
+/// Passes that don't need env at all (many!)
 fn merge_consecutive_blocks(func: &mut HIRFunction) { ... }
 fn constant_propagation(func: &mut HIRFunction) { ... }
 ```
@@ -843,6 +883,68 @@ let (block_id, callee) = builder.enter(|b| {
 
 ---
 
+## Input/Output Format
+
+Define a Rust representation of the Babel AST format using serde with custom serialization/deserialization in order to ensure that the `"type"` field is always produced, even outside of enum positions. Include full information from Babel, including source locations. Define a `Scope` type that encodes the tree of scope information, mapping to the information that Babel represents in its own scope tree.
+
+The main public API is roughly:
+
+```rust
+/// Returns None if the function doesn't need changes, Some with the compiled output otherwise.
+fn compile(ast: BabelAst, scope: Scope) -> Option<BabelAst>
+```
+
+This replaces the current Babel-plugin integration pattern where the compiler receives NodePath objects. The JSON AST interchange decouples the Rust compiler from any specific JS parser or AST format at the implementation level while maintaining Babel compatibility at the serialization boundary.
+
+---
+
+## Error Handling
+
+In general there are two categories of errors:
+- Anything that would have thrown, or would have short-circuited, should return an `Err(...)` with the single diagnostic
+- Otherwise, accumulate errors directly onto the environment
+- Error handling must preserve the full details of the errors: reason, description, location, details, suggestions, category, etc
+
+### Specific Error Patterns and Approaches
+
+| TypeScript Pattern | Example | Rust Approach |
+|---|---|---|
+| Non-null assertions (`!`) | `value!.field` | Panic via `.unwrap()` or similar |
+| Throwing expressions | `throw ...`, `CompilerError.invariant()`, `CompilerError.throwTodo()`, `CompilerError.throw*()` | Make the function return `Result<_, CompilerDiagnostic>`, return `Err(...)` |
+| Non-throwing (invariant) | Local `error` + `error.pushDiagnostic()` where the error IS an invariant | Make the function return `Result<_, CompilerDiagnostic>`, change `pushDiagnostic()` to `return Err(...)` |
+| Non-throwing (non-invariant) | Local `error` + `error.pushDiagnostic()`, `env.recordError()` | Keep as-is — accumulate on environment |
+
+### Pass and Pipeline Structure
+
+```rust
+// pipeline.rs
+fn compile(
+    ast: Ast,
+    scope: Scope,
+    env: &mut Environment,
+) -> Result<CompileResult, CompilerDiagnostic> {
+    // "?" to handle cases that would have thrown or produced an invariant
+    let mut hir = lower(ast, scope, env)?;
+    some_compiler_pass(&mut hir, env)?;
+    // ...
+    let ast = codegen(...)?;
+
+    if env.has_errors() {
+        Ok(CompileResult::Failure(env.take_errors()))
+    } else {
+        Ok(CompileResult::Success(ast))
+    }
+}
+
+// <compiler_pass>.rs
+fn pass_name(
+    func: &mut HirFunction,
+    env: &mut Environment,
+) -> Result<(), CompilerDiagnostic>;
+```
+
+---
+
 ## Structural Similarity: TypeScript ↔ Rust Alignment
 
 ### Design Goal
@@ -872,7 +974,7 @@ Most passes consist of these patterns that translate almost line-for-line:
 |---|---|---|
 | `Map<Identifier, T>` (reference keys) | `HashMap<IdentifierId, T>` | Reference identity → value identity |
 | `DisjointSet<ReactiveScope>` | `DisjointSet<ScopeId>` | Same reason |
-| `place.identifier.mutableRange.end = x` | `arena[place.identifier].mutable_range.end = x` | Arena indirection |
+| `place.identifier.mutableRange.end = x` | `env.identifiers[place.identifier].mutable_range.end = x` | Arena indirection |
 | `identifier.scope = sharedScope` | `identifier.scope = Some(scope_id)` | Reference → ID |
 | `for...of` with `Set.delete()` | `set.retain(|x| ...)` | Different idiom, same semantics |
 | `instr.value = { kind: 'X', ... }` | `instr.value = InstructionValue::X { ... }` (with `mem::replace`) | Ownership swap |
@@ -881,9 +983,9 @@ Most passes consist of these patterns that translate almost line-for-line:
 
 | TypeScript Pattern | Rust Equivalent | Reason |
 |---|---|---|
-| Storing `&Instruction` in side map | Store `(BlockId, usize)` location, re-lookup | Cannot hold references during mutation |
+| Storing `&Instruction` in side map | Store `InstructionId`, access via instruction table | Cannot hold references during mutation |
 | Builder closures capturing outer `&mut` | Return values from closures, or split borrows | Borrow checker |
-| `node.id.mutableRange.end = x` (graph node → HIR mutation) | Collect updates, apply after traversal | Cannot mutate HIR through graph references |
+| `node.id.mutableRange.end = x` (graph node → HIR mutation) | Collect updates, apply to `env.identifiers` after traversal | Cannot mutate HIR through graph references |
 | `identifier.mutableRange = scope.range` (shared object aliasing) | `identifier.scope = Some(scope_id)` + lookup via arena | Fundamental ownership model difference |
 
 ### Passes Ranked by Structural Similarity to Rust
@@ -894,7 +996,7 @@ Most passes consist of these patterns that translate almost line-for-line:
 
 **Moderately similar (70-85%)**: AnalyseFunctions, InferReactiveScopeVariables, AlignReactiveScopesToBlockScopesHIR, MergeOverlappingReactiveScopesHIR, OutlineJSX, BuildReactiveFunction, PruneNonEscapingScopes, OptimizeForSSR, PruneUnusedLValues
 
-**Moderately similar (70-85%)** *(additional)*: InferMutationAliasingEffects (after [PR #33650](https://github.com/facebook/react/pull/33650): allocation-site keys → `EffectId` via interning, Place sharing → Clone, CreateFunction → InstructionId lookup — see [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership))
+**Moderately similar (70-85%)** *(additional)*: InferMutationAliasingEffects (after [PR #33650](https://github.com/facebook/react/pull/33650): allocation-site keys → `EffectId` via interning, Place sharing → Clone, CreateFunction → FunctionId arena access — see [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership))
 
 **Requires redesign (50-70%)**: InferMutationAliasingRanges (graph-through-HIR mutation), BuildHIR (Babel AST coupling), CodegenReactiveFunction (Babel AST output)
 
@@ -1012,7 +1114,7 @@ Babel AST (with memoization)
 - Variables assigned inside closures and read outside (e.g., `let callee = null; builder.enter(() => { callee = ...; })`) must return values from the closure instead
 - `resolveBinding()` uses Babel node reference equality (`mapping.node === node`) — needs parser-specific node IDs
 - Recursive `lower()` for nested functions needs `std::mem::take` to extract child function data
-- The entire Babel AST dependency needs replacement with SWC/OXC
+- The Babel AST input arrives as JSON (deserialized via serde), replacing direct Babel NodePath traversal
 
 **Unexpected issues**: Babel bug workarounds (lines 413-418, 4488-4498) would not be needed with a different parser. The `promoteTemporary()` pattern is straightforward in Rust. The `fbtDepth` counter is trivial.
 
@@ -1030,7 +1132,7 @@ Two-phase collect+rewrite. In Rust, the `functions` map needs only existence che
 
 #### InlineImmediatelyInvokedFunctionExpressions
 **Env usage**: `env.nextBlockId`, `env.nextIdentifierId` (via `createTemporaryPlace`). **Side maps**: `functions: Map<IdentifierId, FunctionExpression>` stores instruction value references. **Similarity**: ~80%.
-The `functions` map stores `FunctionExpression` references — in Rust, store `(BlockId, usize)` indices instead. The queue-while-iterating pattern needs index-based loop (`while i < queue.len()`). Block ownership transfer uses `blocks.remove()` + `blocks.insert()`.
+The `functions` map stores `FunctionExpression` references — in Rust, store `FunctionId` for the inner function. The queue-while-iterating pattern needs index-based loop (`while i < queue.len()`). Block ownership transfer uses `blocks.remove()` + `blocks.insert()`.
 
 #### MergeConsecutiveBlocks
 **Env usage**: None. **Side maps**: `MergedBlocks` (ID-only map), `fallthroughBlocks` (ID-only set). **Similarity**: ~90%.
@@ -1074,12 +1176,12 @@ Unification-based type inference is very natural in Rust. The `Type` enum needs 
 
 #### AnalyseFunctions
 **Env usage**: Shares Environment between parent and child via `fn.env`. Uses logger. **Side maps**: None (operates entirely through in-place HIR mutation). **Similarity**: ~85%.
-The recursive `lowerWithMutationAliasing` pattern works with `&mut` because it is sequential. Use `std::mem::take` to extract child `HIRFunction` from the instruction, process it, then put it back. The mutableRange reset (`identifier.mutableRange = {start: 0, end: 0}`) is a simple value write in Rust (no aliasing to break because Rust uses values, not shared objects).
+The recursive `lowerWithMutationAliasing` pattern works with `&mut` because it is sequential. Inner functions are stored in the function arena on `Environment` and accessed via `FunctionId`, so no extraction/replacement is needed. The mutableRange reset (`identifier.mutableRange = {start: 0, end: 0}`) is a simple value write in Rust (no aliasing to break because Rust uses values, not shared objects).
 
 #### InferMutationAliasingEffects
 **Env usage**: `env.config` (3 reads), `env.getFunctionSignature`, `env.enableValidations`, `createTemporaryPlace`. InferenceState stores `env` as read-only reference. **Side maps**: `statesByBlock/queuedStates` (BlockId-keyed), Context class with caches (`Map<Instruction, InstructionSignature>`, `Map<FunctionExpression, AliasingSignature>`, `Map<AliasingSignature, Map<AliasingEffect, ...>>`), InferenceState with `#values: Map<InstructionValue, AbstractValue>` and `#variables: Map<IdentifierId, Set<InstructionValue>>`. **Similarity**: ~80%.
 
-**Shared references in AliasingEffect** (see [§AliasingEffect: Shared References and Rust Ownership](#aliasingeffect-shared-references-and-rust-ownership) for full analysis): `computeSignatureForInstruction` creates effects that share Place objects with the Instruction's `lvalue` and `InstructionValue` fields. The `Apply` effect shares the args array reference. The `CreateFunction` effect stores the actual `FunctionExpression`/`ObjectMethod` InstructionValue. In Rust, Places are cloned (cheap with `IdentifierId`) and `CreateFunction` stores an `InstructionId` for lookup.
+**Shared references in AliasingEffect** (see [§AliasingEffect: Shared References and Rust Ownership](#aliasingeffect-shared-references-and-rust-ownership) for full analysis): `computeSignatureForInstruction` creates effects that share Place objects with the Instruction's `lvalue` and `InstructionValue` fields. The `Apply` effect shares the args array reference. The `CreateFunction` effect stores the actual `FunctionExpression`/`ObjectMethod` InstructionValue. In Rust, Places are cloned (cheap with `IdentifierId`) and `CreateFunction` stores a `FunctionId` for function arena access.
 
 **Allocation-site identity**: Currently uses `InstructionValue` as reference-identity keys. PR [#33650](https://github.com/facebook/react/pull/33650) replaces this with interned `AliasingEffect` objects — since effects are already interned by content hash, the interned effect IS the allocation-site key. In Rust, this maps to `EffectId` (index into the interning table). No separate `AllocationSiteId` is needed.
 
@@ -1088,7 +1190,7 @@ The recursive `lowerWithMutationAliasing` pattern works with `&mut` because it i
 - `#values: Map<AliasingEffect, AbstractValue>` → `HashMap<EffectId, AbstractValue>` (EffectId = interning index = allocation-site ID)
 - `#variables: Map<IdentifierId, Set<AliasingEffect>>` → `HashMap<IdentifierId, SmallVec<[EffectId; 2]>>`
 - `effectInstructionValueCache` → eliminated by PR #33650
-- `functionSignatureCache: Map<FunctionExpression, ...>` → `HashMap<InstructionId, AliasingSignature>` (key by source instruction ID)
+- `functionSignatureCache: Map<FunctionExpression, ...>` → `HashMap<FunctionId, AliasingSignature>` (key by FunctionId from arena)
 - `applySignatureCache: Map<AliasingSignature, Map<AliasingEffect, ...>>` → `HashMap<EffectId, HashMap<EffectId, ...>>`
 - `internedEffects: Map<string, AliasingEffect>` → `EffectInterner { effects: Vec<AliasingEffect>, by_hash: HashMap<String, EffectId> }`
 
@@ -1096,7 +1198,7 @@ All keys become `Copy` types (`InstructionId`, `EffectId`, `IdentifierId`), triv
 
 The overall structure (fixpoint loop, InferenceState clone/merge, applyEffect recursion, Context caching) can remain nearly identical. The `applyEffect` recursive method works with `&mut InferenceState` + `&mut Context` parameters — Rust's reborrowing handles the recursion naturally.
 
-**Context variable mutation**: During `CreateFunction` processing, `operand.effect = Effect.Read` mutates Places on the nested function's context. In Rust, either collect updates and apply after effect processing, or obtain `&mut` access to the nested function via the instruction index (borrows are disjoint since the nested function is inside the current instruction).
+**Context variable mutation**: During `CreateFunction` processing, `operand.effect = Effect.Read` mutates Places on the nested function's context. In Rust, the inner function is accessed via `&mut env.functions[function_id]`, which is completely disjoint from the outer `HIRFunction` being processed.
 
 #### DeadCodeElimination
 **Env usage**: `env.outputMode` (one read for SSR hook pruning). **Side maps**: `State.identifiers: Set<IdentifierId>`, `State.named: Set<string>` (both value-keyed, safe). **Similarity**: ~95%.
@@ -1105,7 +1207,7 @@ Two-phase mark-and-sweep is perfectly natural in Rust. `Vec::retain` replaces `r
 #### InferMutationAliasingRanges (HIGH COMPLEXITY)
 **Env usage**: `env.enableValidations` (one read), `env.recordError` (error recording). **Side maps**: `AliasingState.nodes: Map<Identifier, Node>` (reference-identity keys), each Node containing `createdFrom/captures/aliases/maybeAliases: Map<Identifier, number>` and `edges: Array<{node: Identifier, ...}>`. Also `mutations/renders` arrays storing Place references. **Similarity**: ~75%.
 
-**Effect consumption**: Iterates `instr.effects` for every instruction, reading Place fields (`effect.into`, `effect.from`, `effect.value`, `effect.place`). For `CreateFunction` effects, accesses `effect.function.loweredFunc.func` to create Function graph nodes. In Rust, `CreateFunction` stores `InstructionId`; the function is looked up from the HIR (see [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership)). All other effect Place accesses only need `place.identifier` (an `IdentifierId` in Rust), with no shared reference concerns.
+**Effect consumption**: Iterates `instr.effects` for every instruction, reading Place fields (`effect.into`, `effect.from`, `effect.value`, `effect.place`). For `CreateFunction` effects, accesses `effect.function.loweredFunc.func` to create Function graph nodes. In Rust, `CreateFunction` stores `FunctionId`; the function is accessed via `env.functions[function_id]` (see [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership)). All other effect Place accesses only need `place.identifier` (an `IdentifierId` in Rust), with no shared reference concerns.
 
 **All Identifier-keyed maps become `HashMap<IdentifierId, T>`**. The critical `node.id.mutableRange.end = ...` pattern (mutating HIR through graph node references) needs restructuring: either store computed range updates on the Node and apply after traversal (recommended), or use arena-based identifiers. The BFS in `mutate()` collects edge targets into temporary `Vec<IdentifierId>` before pushing to queue, resolving borrow conflicts. The two-part structure (build graph → apply ranges) maps well to Rust's two-phase pattern. The temporal `index` counter and edge ordering translate directly.
 
@@ -1138,11 +1240,11 @@ The aliased-mutation-through-map pattern is best handled with a two-pass approac
 #### InferReactiveScopeVariables
 **Env usage**: `env.nextScopeId`, `env.config.enableForest`, `env.logger`. **Side maps**: `scopeIdentifiers: DisjointSet<Identifier>` (reference-identity), `declarations: Map<DeclarationId, Identifier>` (stores Identifier references), `scopes: Map<Identifier, ReactiveScope>` (reference keys). **Similarity**: ~75%.
 
-**THE CRITICAL ALIASING PASS**: Line 132 `identifier.mutableRange = scope.range` creates the shared-MutableRange aliasing that all downstream scope passes depend on. In Rust with arenas: identifiers store `scope: Option<ScopeId>`. The "effective mutable range" is accessed via scope lookup. All downstream passes that read `mutableRange` need a `&ScopeArena` parameter. DisjointSet becomes `DisjointSet<IdentifierId>`, scopes map becomes `HashMap<IdentifierId, ScopeId>`.
+**THE CRITICAL ALIASING PASS**: Line 132 `identifier.mutableRange = scope.range` creates the shared-MutableRange aliasing that all downstream scope passes depend on. In Rust with arenas: identifiers store `scope: Option<ScopeId>`. The "effective mutable range" is accessed via scope lookup. All downstream passes that read `mutableRange` access the scope arena via `env.scopes`. DisjointSet becomes `DisjointSet<IdentifierId>`, scopes map becomes `HashMap<IdentifierId, ScopeId>`.
 
 #### MemoizeFbtAndMacroOperandsInSameScope
 **Env usage**: `fn.env.config.customMacros` (one read). **Side maps**: `macroKinds: Map<string, MacroDefinition>` (string keys), `macroTags: Map<IdentifierId, MacroDefinition>` (ID keys), `macroValues: Set<IdentifierId>` (IDs). **Similarity**: ~90%.
-All ID-keyed. The scope mutation (`operand.identifier.scope = scope`, `expandFbtScopeRange`) becomes `identifier.scope = Some(scope_id)` + `arena[scope_id].range.start = min(...)`. The cyclic `MacroDefinition` structure can use arena indices or hardcoded match logic.
+All ID-keyed. The scope mutation (`operand.identifier.scope = scope`, `expandFbtScopeRange`) becomes `identifier.scope = Some(scope_id)` + `env.scopes[scope_id].range.start = min(...)`. The cyclic `MacroDefinition` structure can use arena indices or hardcoded match logic.
 
 ---
 
@@ -1150,7 +1252,7 @@ All ID-keyed. The scope mutation (`operand.identifier.scope = scope`, `expandFbt
 
 #### AlignMethodCallScopes
 **Env usage**: None. **Side maps**: `scopeMapping: Map<IdentifierId, ReactiveScope | null>` (ID keys), `mergedScopes: DisjointSet<ReactiveScope>` (reference-identity). **Similarity**: ~90%.
-DisjointSet becomes `DisjointSet<ScopeId>`. Range merging through arena: `arena[root_id].range.start = min(...)`. Scope rewriting: `identifier.scope = Some(root_id)`.
+DisjointSet becomes `DisjointSet<ScopeId>`. Range merging through arena: `env.scopes[root_id].range.start = min(...)`. Scope rewriting: `identifier.scope = Some(root_id)`.
 
 #### AlignObjectMethodScopes
 **Env usage**: None. **Side maps**: `objectMethodDecls: Set<Identifier>` (reference-identity), `DisjointSet<ReactiveScope>`. **Similarity**: ~88%.
@@ -1158,7 +1260,7 @@ Same patterns as AlignMethodCallScopes. `Set<Identifier>` becomes `HashSet<Ident
 
 #### AlignReactiveScopesToBlockScopesHIR
 **Env usage**: None. **Side maps**: `activeScopes: Set<ReactiveScope>` (reference-identity, iterated while mutating `scope.range`), `seen: Set<ReactiveScope>`, `placeScopes: Map<Place, ReactiveScope>` (**dead code — never read**), `valueBlockNodes: Map<BlockId, ValueBlockNode>`. **Similarity**: ~85%.
-`activeScopes` becomes `HashSet<ScopeId>`. Scope mutation through arena: `for &scope_id in &active_scopes { arena[scope_id].range.start = min(...); }` — perfectly clean borrows (HashSet is immutable, arena is mutable). The `placeScopes` map can be omitted entirely.
+`activeScopes` becomes `HashSet<ScopeId>`. Scope mutation through arena: `for &scope_id in &active_scopes { env.scopes[scope_id].range.start = min(...); }` — perfectly clean borrows (HashSet is immutable, arena is mutable). The `placeScopes` map can be omitted entirely.
 
 #### MergeOverlappingReactiveScopesHIR
 **Env usage**: None. **Side maps**: `joinedScopes: DisjointSet<ReactiveScope>` (reference-identity), `placeScopes: Map<Place, ReactiveScope>` (Place reference keys). **Similarity**: ~85%.
@@ -1248,10 +1350,7 @@ Individual passes:
 #### CodegenReactiveFunction
 **Env usage**: `env.programContext` (imports, bindings), `env.getOutlinedFunctions()`, `env.recordErrors()`, `env.config`. **Side maps**: Context class with cache slot management, scope metadata tracking. **Similarity**: ~60%.
 
-**The most significantly different pass** due to Babel AST coupling. 1000+ lines of `t.*()` Babel API calls need Rust equivalents. Recommended approach:
-1. Define Rust mirror types for the output AST with `serde` serialization
-2. Generate JSON AST → JS deserializes to Babel AST
-3. Core scope logic (cache slot allocation, dependency checking, memoization code structure) can look structurally similar
+**The most significantly different pass** due to AST output generation. 1000+ lines of `t.*()` Babel API calls are replaced with constructing Rust Babel AST types that serialize to JSON via serde. Core scope logic (cache slot allocation, dependency checking, memoization code structure) can look structurally similar.
 
 The `uniqueIdentifiers` and `fbtOperands` parameters translate directly.
 
@@ -1280,11 +1379,11 @@ All use `HashMap<IdentifierId, T>` for state tracking (ID-keyed, safe). Some ret
 
 ## External Dependencies
 
-### Input: Babel AST
-The compiler takes Babel AST as input via `@babel/traverse` NodePath objects. A Rust port must use SWC or OXC parser. Both provide scope analysis equivalent to Babel's. The `resolveBinding()` pattern in BuildHIR (which uses Babel node reference equality) would use parser-specific node IDs instead.
+### Input/Output: JSON AST Interchange
 
-### Output: Babel AST
-Recommended: JSON AST interchange format with `serde_json` serialization → JS parses to Babel AST. Core reactive scope logic ports first; edge cases can use JS initially.
+The Rust compiler defines its own representation of the Babel AST format using serde with custom serialization/deserialization, ensuring the `"type"` field is always produced (even outside of enum positions). Input ASTs are deserialized from JSON, and output ASTs are serialized back to JSON for consumption by the Babel plugin. A `Scope` type encodes the scope tree information that Babel provides. The main public API is `compile(BabelAst, Scope) -> Option<BabelAst>`, returning `None` if no changes are needed.
+
+This approach decouples the Rust compiler from any specific JS parser — the JSON boundary handles the translation. The `resolveBinding()` pattern in BuildHIR (which uses Babel node reference equality in TypeScript) maps to scope-tree lookups via the `Scope` type.
 
 ---
 
@@ -1305,35 +1404,36 @@ Recommended: JSON AST interchange format with `serde_json` serialization → JS 
 - Reactive function transforms — Visitor/MutVisitor trait design with Transformed enum
 
 ### Medium Risk *(additional)*
-- **InferMutationAliasingEffects**: After [PR #33650](https://github.com/facebook/react/pull/33650), allocation-site identity uses interned `AliasingEffect` (→ `EffectId`), eliminating `InstructionValue` keys and `effectInstructionValueCache`. Remaining reference-identity maps use Instructions (→ `InstructionId`) and FunctionExpressions (→ `InstructionId`). All become copyable ID-keyed maps. Place sharing between effects and instructions is resolved by cloning (cheap with arena-based identifiers). `CreateFunction`'s FunctionExpression reference becomes an `InstructionId` with lookup. Fixpoint loop and abstract interpretation structure port directly. See [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership) for full analysis.
+- **InferMutationAliasingEffects**: After [PR #33650](https://github.com/facebook/react/pull/33650), allocation-site identity uses interned `AliasingEffect` (→ `EffectId`), eliminating `InstructionValue` keys and `effectInstructionValueCache`. Remaining reference-identity maps use Instructions (→ `InstructionId`) and FunctionExpressions (→ `FunctionId`). All become copyable ID-keyed maps. Place sharing between effects and instructions is resolved by cloning (cheap with arena-based identifiers). `CreateFunction`'s FunctionExpression reference becomes a `FunctionId` referencing the function arena. Fixpoint loop and abstract interpretation structure port directly. See [§AliasingEffect section](#aliasingeffect-shared-references-and-rust-ownership) for full analysis.
 
 ### High Risk (significant redesign)
-- **BuildHIR**: Babel AST dependency, shared mutable Environment, closure-heavy builder patterns
+- **BuildHIR**: JSON AST deserialization, scope tree integration, closure-heavy builder patterns
 - **InferMutationAliasingRanges**: Graph-through-HIR mutation, temporal reasoning, deferred range updates
-- **CodegenReactiveFunction**: Babel AST output format, 1000+ lines of AST construction
-- **AnalyseFunctions**: Recursive nested function processing, shared mutableRange semantics
+- **CodegenReactiveFunction**: JSON AST output construction via serde, 1000+ lines of AST building
+- **AnalyseFunctions**: Recursive nested function processing via function arena, shared mutableRange semantics
 
 ### Critical Architectural Decisions (must be designed upfront)
-1. **Arena-based Identifier/Scope storage**: Affects every pass. `Place` stores `IdentifierId` (Copy). Identifiers live in `Vec<Identifier>` indexed by ID.
-2. **Scope-based mutableRange access**: After InferReactiveScopeVariables, effective mutable range = scope's range. All downstream `isMutable()`/`inRange()` calls need `&ScopeArena` parameter.
-3. **Parser choice**: SWC or OXC for JS/TS parsing. Affects BuildHIR entirely.
-4. **Output format**: JSON AST interchange for Babel integration.
-5. **Environment split**: Immutable config (`&CompilerConfig`) + mutable state (`&mut CompilationState`).
+1. **Arena-based storage on Environment**: Identifiers, scopes, functions, and types are stored as flat `Vec` fields on `Environment`, referenced by copyable ID types (`IdentifierId`, `ScopeId`, `FunctionId`, `TypeId`). Affects every pass.
+2. **Instructions table**: Instructions stored in flat `Vec<Instruction>` on `HIRFunction`, referenced by `InstructionId`. Old `InstructionId` renamed to `EvaluationOrder`.
+3. **Scope-based mutableRange access**: After InferReactiveScopeVariables, effective mutable range = scope's range. All downstream `isMutable()`/`inRange()` calls access the scope arena via `env.scopes`.
+4. **JSON AST interchange**: Input/output via serde-serialized Babel AST types and a `Scope` type for scope tree information.
+5. **Environment as single `&mut`**: No sub-struct grouping — flat fields allow precise sliced borrows. Passed separately from `HIRFunction`.
+6. **Error handling**: `Result<_, CompilerDiagnostic>` for thrown errors, accumulated errors on `Environment`.
 
 ---
 
 ## Recommended Migration Strategy
 
 ### Phase 1: Foundation
-1. Define Rust data model (arena-based Identifier/Scope/Type storage with all ID newtypes)
+1. Define Rust data model (flat `Environment` with arena fields for Identifiers/Scopes/Functions/Types, all ID newtypes)
 2. Define HIR types as Rust enums/structs (InstructionValue ~40 variants, Terminal ~20 variants)
-3. Define `Environment` split (config + type registry + mutable state)
+3. Define flat `Environment` struct with arena fields, counters, config, and accumulated state
 4. Implement shared infrastructure: `DisjointSet<T: Copy>`, `IndexMap` wrappers, visitor utilities
-5. Choose and integrate JS parser (SWC recommended)
+5. Define Babel AST types with serde serialization/deserialization for JSON AST interchange
 6. Build JSON serialization for HIR (enables testing against TypeScript implementation)
 
 ### Phase 2: Core Pipeline
-1. Port BuildHIR (highest effort, most value — requires parser integration)
+1. Port BuildHIR (highest effort, most value — requires JSON AST deserialization and Scope type integration)
 2. Port normalization passes (PruneMaybeThrows, MergeConsecutiveBlocks — simple, builds confidence)
 3. Port SSA (EnterSSA, EliminateRedundantPhi — establishes arena patterns)
 4. Port ConstantPropagation, InferTypes
@@ -1341,7 +1441,7 @@ Recommended: JSON AST interchange format with `serde_json` serialization → JS 
 
 ### Phase 3: Analysis Engine
 1. Port AnalyseFunctions (establishes recursive compilation pattern)
-2. Port InferMutationAliasingEffects (establish EffectId interning table — EffectId serves as allocation-site identity, InstructionId-based FunctionExpression lookup for CreateFunction)
+2. Port InferMutationAliasingEffects (establish EffectId interning table — EffectId serves as allocation-site identity, FunctionId-based function arena access for CreateFunction)
 3. Port DeadCodeElimination
 4. Port InferMutationAliasingRanges (establish deferred-range-update pattern)
 5. Port InferReactivePlaces
