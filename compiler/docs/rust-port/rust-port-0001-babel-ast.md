@@ -6,7 +6,7 @@ Create a Rust crate (`compiler/crates/react_compiler_ast`) that precisely models
 
 This crate is the serialization boundary between the JS toolchain (Babel parser) and the Rust compiler. It must be a faithful 1:1 representation of Babel's AST output — not a simplified or custom IR.
 
-**Current status**: All 1714 compiler test fixtures round-trip successfully (0 failures). Scope tree types and Unknown-variant assertion remain to be implemented (see [Remaining Work](#remaining-work)).
+**Current status**: All 1714 compiler test fixtures round-trip successfully (0 failures). Remaining work: remove `Unknown` catch-all variants from enums, define scope tree types, and implement scope resolution testing (see [Remaining Work](#remaining-work)).
 
 ---
 
@@ -223,9 +223,11 @@ TypeScript and Flow type annotation bodies (e.g., `TSTypeAnnotation`, type param
 
 `File`, `Program`, `SourceType`, `InterpreterDirective`
 
-### Unknown catch-all variants
+### No catch-all / Unknown variants
 
-Every enum includes a catch-all `Unknown(serde_json::Value)` variant with `#[serde(untagged)]`. This preserves the raw JSON for unmodeled node types, ensuring round-tripping works even if a new node type appears. Currently all 1714 fixtures round-trip through typed variants — no fixtures rely on `Unknown`.
+Enums do **not** have catch-all `Unknown(serde_json::Value)` variants. If a fixture contains a node type that isn't modeled, deserialization fails — this is intentional. It surfaces unsupported node types immediately so the representation can be updated, rather than silently passing data through an opaque blob. (Note: the current code still has `Unknown` variants from the initial build-out — removing them is tracked in [Remaining Work](#remaining-work).)
+
+This is distinct from unknown *fields*, which are silently dropped (see design decision #6 on `deny_unknown_fields`). An unknown field on a known node is harmless — an unknown node type is a gap in the model that should be fixed.
 
 ### Union types as enums
 
@@ -480,19 +482,72 @@ bash compiler/scripts/test-babel-ast.sh
 
 ## Remaining Work
 
-### Scope tree types (from M4)
+### Remove Unknown variants from enums
 
-Define the `ScopeTree`, `ScopeData`, `BindingData`, and related types described in the [Scope Types](#scope-types-separate-from-ast) section. These are Rust struct definitions in the crate — no serialization test infrastructure yet (that's M5).
+Remove all `#[serde(untagged)] Unknown(serde_json::Value)` variants from every enum (`Statement`, `Expression`, `PatternLike`, `ObjectExpressionProperty`, `ForInit`, `ForInOfLeft`, `ImportSpecifier`, `ExportSpecifier`, `ModuleExportName`, `Declaration`, `ExportDefaultDecl`, `ObjectPatternProperty`, `ArrowFunctionBody`, `JSXChild`, `JSXElementName`, `JSXAttributeItem`, `JSXAttributeName`, `JSXAttributeValue`, `JSXExpressionContainerExpr`, `JSXMemberExprObject`). Deserialization should fail on unrecognized node types. All 1714 fixtures already pass through typed variants, so removing `Unknown` should not cause regressions — but run the round-trip test to confirm.
 
-### Unknown-variant assertion (from M4)
+### Scope tree types
 
-Add a test mode that walks the deserialized AST and asserts no `Unknown` variants were used. Currently all 1714 fixtures round-trip through typed variants, but there's no automated assertion enforcing this. The test should recursively visit every enum in the tree and flag any `Unknown` hits.
+Define the `ScopeTree`, `ScopeData`, `BindingData`, and related types described in the [Scope Types](#scope-types-separate-from-ast) section as Rust structs in the crate.
 
-### M5: Scope tree serialization
+### Scope resolution test
 
-- Extend the Node.js script (or add a new one) to serialize scope trees from `@babel/traverse`
-- Add a round-trip test for scope trees
-- Verify scope lookups work: for a subset of fixtures, test that `getBinding(name)` on the Rust `ScopeTree` returns the same result as Babel's `scope.getBinding(name)` (verified by a Node.js script that outputs expected binding resolutions)
+Verify that the Rust side resolves identifiers to the same scopes and bindings as Babel. The approach uses identifier renaming as a correctness oracle: both Babel and Rust rename every identifier to encode its scope and binding identity, then the outputs are compared.
+
+#### ID assignment
+
+Each scope and each identifier binding are assigned auto-incrementing IDs based on **preorder traversal** of the scope tree:
+
+- **Scope IDs**: Assigned in the order scopes are entered during a depth-first AST walk. The program scope is 0, the first nested scope is 1, etc.
+- **Identifier IDs**: Each unique binding declaration is assigned an ID in the order it is first encountered during the same traversal. The first declared binding is 0, the second is 1, etc. (References to the same binding share the declaration's ID.)
+
+#### Renaming scheme
+
+Every `Identifier` node that resolves to a binding is renamed from `<name>` to `<name>_s<scopeId>_b<bindingId>`, where `scopeId` is the scope the identifier appears in, and `bindingId` is the declaration's unique ID. For example:
+
+```javascript
+// Input:
+function foo(x) { let y = x; }
+
+// After renaming (scope 0 = program, scope 1 = function body):
+function foo_s0_b0(x_s1_b1) { let y_s1_b2 = x_s1_b1; }
+```
+
+Identifiers that don't resolve to any binding (globals, unresolved references) are left unchanged.
+
+#### Implementation
+
+**Babel side** (`compiler/scripts/babel-ast-to-json.mjs` or a new companion script):
+1. Parse the fixture with `@babel/parser`
+2. Traverse with `@babel/traverse`, building the scope tree
+3. Walk the AST, assigning scope IDs (preorder) and binding IDs (preorder by first declaration)
+4. Rename all bound identifiers per the scheme above
+5. Re-serialize the renamed AST to JSON
+
+**Rust side** (`compiler/crates/react_compiler_ast/tests/scope_resolution.rs`):
+1. Deserialize the original (un-renamed) AST JSON and the scope tree JSON
+2. Walk the AST with the scope tree, assigning scope IDs and binding IDs using the same preorder traversal
+3. Rename all bound identifiers per the same scheme
+4. Re-serialize the renamed AST to JSON
+5. Normalize and compare against the Babel-renamed JSON — they must match
+
+This verifies that the Rust scope tree correctly reproduces Babel's binding resolution. If an identifier is renamed differently (or renamed on one side but not the other), the diff immediately shows which binding or scope diverges.
+
+#### Integration
+
+The scope resolution test is a separate Rust test (`tests/scope_resolution.rs`), not part of `round_trip.rs`. Both tests are run from the same `compiler/scripts/test-babel-ast.sh` script:
+
+```bash
+#!/bin/bash
+set -e
+# ...generate fixture JSONs + scope JSONs into $TMPDIR...
+
+# Test 1: AST round-trip
+FIXTURE_JSON_DIR="$TMPDIR" cargo test -p react_compiler_ast --test round_trip -- --nocapture
+
+# Test 2: Scope resolution
+FIXTURE_JSON_DIR="$TMPDIR" cargo test -p react_compiler_ast --test scope_resolution -- --nocapture
+```
 
 ---
 
