@@ -6,6 +6,8 @@ Create a Rust crate (`compiler/crates/react_compiler_ast`) that precisely models
 
 This crate is the serialization boundary between the JS toolchain (Babel parser) and the Rust compiler. It must be a faithful 1:1 representation of Babel's AST output — not a simplified or custom IR.
 
+**Current status**: All 1714 compiler test fixtures round-trip successfully (0 failures). Scope tree types and Unknown-variant assertion remain to be implemented (see [Remaining Work](#remaining-work)).
+
 ---
 
 ## Crate Structure
@@ -15,21 +17,20 @@ compiler/crates/
   react_compiler_ast/
     Cargo.toml
     src/
-      lib.rs              # Re-exports, top-level File type
-      node.rs             # The Node enum (all ~100 relevant variants)
-      statements.rs       # Statement node structs
-      expressions.rs      # Expression node structs
+      lib.rs              # Re-exports, top-level File/Program types
+      statements.rs       # Statement enum and statement node structs
+      expressions.rs      # Expression enum and expression node structs
       literals.rs         # Literal node structs (StringLiteral, NumericLiteral, etc.)
-      patterns.rs         # Pattern/LVal node structs
-      jsx.rs              # JSX node structs
-      typescript.rs       # TypeScript annotation node structs (pass-through)
-      flow.rs             # Flow annotation node structs (pass-through)
-      declarations.rs     # Declaration node structs (import, export, variable, etc.)
-      classes.rs          # Class-related node structs
-      common.rs           # SourceLocation, Position, Comment, BaseNode fields
-      operators.rs        # Operator enums (BinaryOp, UnaryOp, AssignmentOp, etc.)
-      extra.rs            # The `extra` field type (serde_json::Value)
+      patterns.rs         # PatternLike enum and pattern node structs
+      jsx.rs              # JSX node structs and enums
+      declarations.rs     # Import/export, TS declaration, and Flow declaration structs
+      common.rs           # SourceLocation, Position, Comment, BaseNode, helpers
+      operators.rs        # Operator enums (BinaryOperator, UnaryOperator, etc.)
+    tests/
+      round_trip.rs       # Round-trip test harness
 ```
+
+TypeScript and Flow annotation types are co-located with the module that uses them — TS/Flow expressions live in `expressions.rs`, TS/Flow declarations live in `declarations.rs`. Class-related types are split between `expressions.rs` (ClassExpression, ClassBody) and `statements.rs` (ClassDeclaration). There is no single `Node` enum; the union types (`Statement`, `Expression`, `PatternLike`) serve as the dispatch enums directly.
 
 ### Cargo.toml
 
@@ -42,6 +43,10 @@ edition = "2024"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+[dev-dependencies]
+walkdir = "2"
+similar = "2"           # for readable diffs in round-trip test
 ```
 
 No other dependencies. The crate is pure data types + serde.
@@ -50,7 +55,7 @@ No other dependencies. The crate is pure data types + serde.
 
 ## Core Design Decisions
 
-### 1. Externally tagged via `"type"` field
+### 1. Internally tagged via `"type"` field
 
 Babel AST nodes use a `"type"` field as the discriminant (e.g., `"type": "FunctionDeclaration"`). Serde's default externally-tagged enum format doesn't match this. Use **internally tagged** enums with `#[serde(tag = "type")]`:
 
@@ -69,11 +74,13 @@ Each variant's struct contains the node-specific fields. The `"type"` field is h
 
 ### 2. BaseNode fields via flattening
 
-Every Babel node shares common fields (`start`, `end`, `loc`, `leadingComments`, etc.). Rather than repeating them on every struct, define a `BaseNode` and flatten it:
+Every Babel node shares common fields (`start`, `end`, `loc`, `leadingComments`, etc.). A `BaseNode` struct is flattened into each node struct:
 
 ```rust
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BaseNode {
+    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
+    pub node_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub start: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -93,6 +100,8 @@ pub struct BaseNode {
 }
 ```
 
+The `node_type` field captures the `"type"` string when `BaseNode` is deserialized directly (not through a `#[serde(tag = "type")]` enum, which consumes the field). It defaults to `None` and is skipped when absent, so it doesn't interfere with round-tripping in either context.
+
 Each node struct flattens this:
 
 ```rust
@@ -100,18 +109,18 @@ Each node struct flattens this:
 pub struct FunctionDeclaration {
     #[serde(flatten)]
     pub base: BaseNode,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub id: Option<Identifier>,
-    pub params: Vec<Param>,
+    pub params: Vec<PatternLike>,
     pub body: BlockStatement,
+    #[serde(default)]
     pub generator: bool,
-    #[serde(rename = "async")]
+    #[serde(default, rename = "async")]
     pub is_async: bool,
     // ...
 }
 ```
 
-**Important caveat**: `#[serde(flatten)]` combined with `#[serde(tag = "type")]` on an enclosing enum can have performance and correctness issues. If this causes problems during implementation, the fallback is to repeat the base fields on each struct directly (via a macro). Test this early.
+The `#[serde(flatten)]` + `#[serde(tag = "type")]` combination works correctly — the macro fallback described in the risk section was not needed.
 
 ### 3. Naming conventions
 
@@ -131,7 +140,15 @@ Babel's TypeScript definitions use several patterns. Map them consistently:
 | `field: Array<T \| null>` | Array with null holes | `field: Vec<Option<T>>` |
 | `field: T \| null` (required but nullable) | Present, may be `null` | `field: Option<T>` (no `skip_serializing_if` — always serialize) |
 
-**Critical subtlety**: Some fields like `FunctionDeclaration.id` are typed `id?: Identifier | null` and appear as `"id": null` in JSON (present but null), not absent. The round-trip test will catch any mismatches here. When Babel serializes `null` for a field, we must also serialize `null` — not omit it. This means for fields that Babel always emits (even as null), use `Option<T>` without `skip_serializing_if`. The round-trip test is the source of truth for which fields use which pattern.
+**Critical subtlety**: Some fields like `FunctionDeclaration.id` are typed `id?: Identifier | null` and appear as `"id": null` in JSON (present but null), not absent. The round-trip test catches any mismatches here. When Babel serializes `null` for a field, we must also serialize `null` — not omit it. The round-trip test is the source of truth for which fields use which pattern.
+
+A `nullable_value` custom deserializer in `common.rs` handles the case where a field needs to distinguish "absent" from "explicitly null" (deserializing the latter as `Some(Value::Null)`):
+
+```rust
+pub fn nullable_value<'de, D>(
+    deserializer: D,
+) -> Result<Option<Box<serde_json::Value>>, D::Error>
+```
 
 ### 5. The `extra` field
 
@@ -144,88 +161,75 @@ pub extra: Option<serde_json::Value>,
 
 ### 6. `#[serde(deny_unknown_fields)]` — do NOT use
 
-Babel's AST may include fields we don't model (e.g., from plugins, or parser-specific metadata). To ensure forward compatibility and avoid brittle failures, do **not** use `deny_unknown_fields`. Instead, unknown fields are silently dropped during deserialization. The round-trip test will detect any fields we're missing, since they'll be absent in the re-serialized output.
+Babel's AST may include fields we don't model (e.g., from plugins, or parser-specific metadata). To ensure forward compatibility and avoid brittle failures, do **not** use `deny_unknown_fields`. Instead, unknown fields are silently dropped during deserialization. The round-trip test detects any fields we're missing, since they'll be absent in the re-serialized output.
 
 ---
 
 ## Node Type Coverage
 
-### Which nodes to model
+All node types that appear in the compiler's 1714 test fixtures are modeled and round-trip successfully. The types are organized as follows:
 
-Model all node types that can appear in the output of `@babel/parser` with the plugins used by the compiler: `['typescript', 'jsx']` and Hermes with `flow: 'all'`. This is approximately 100-120 node types.
+### Statements (`statements.rs`, ~25 types)
 
-The types fall into categories:
+The `Statement` enum is the top-level dispatch for all statement and declaration nodes. It includes direct statement types and also pulls in declaration variants (import/export, TS, Flow) to avoid a separate `StatementOrDeclaration` wrapper.
 
-**Statements** (~25 types): `BlockStatement`, `ReturnStatement`, `IfStatement`, `ForStatement`, `WhileStatement`, `DoWhileStatement`, `ForInStatement`, `ForOfStatement`, `SwitchStatement`, `SwitchCase`, `ThrowStatement`, `TryStatement`, `CatchClause`, `BreakStatement`, `ContinueStatement`, `LabeledStatement`, `VariableDeclaration`, `VariableDeclarator`, `ExpressionStatement`, `EmptyStatement`, `DebuggerStatement`, `WithStatement`
+**Statement types**: `BlockStatement`, `ReturnStatement`, `IfStatement`, `ForStatement`, `WhileStatement`, `DoWhileStatement`, `ForInStatement`, `ForOfStatement`, `SwitchStatement` (+ `SwitchCase`), `ThrowStatement`, `TryStatement` (+ `CatchClause`), `BreakStatement`, `ContinueStatement`, `LabeledStatement`, `ExpressionStatement`, `EmptyStatement`, `DebuggerStatement`, `WithStatement`, `VariableDeclaration` (+ `VariableDeclarator`), `FunctionDeclaration`, `ClassDeclaration`
 
-**Declarations** (~10 types): `FunctionDeclaration`, `ClassDeclaration`, `ImportDeclaration`, `ExportNamedDeclaration`, `ExportDefaultDeclaration`, `ExportAllDeclaration`, `ImportSpecifier`, `ImportDefaultSpecifier`, `ImportNamespaceSpecifier`, `ExportSpecifier`
+**Helper enums**: `ForInit` (VariableDeclaration | Expression), `ForInOfLeft` (VariableDeclaration | PatternLike), `VariableDeclarationKind`
 
-**Expressions** (~30 types): `Identifier`, `CallExpression`, `MemberExpression`, `OptionalCallExpression`, `OptionalMemberExpression`, `BinaryExpression`, `LogicalExpression`, `UnaryExpression`, `UpdateExpression`, `ConditionalExpression`, `AssignmentExpression`, `SequenceExpression`, `ArrowFunctionExpression`, `FunctionExpression`, `ObjectExpression`, `ArrayExpression`, `NewExpression`, `TemplateLiteral`, `TaggedTemplateExpression`, `AwaitExpression`, `YieldExpression`, `SpreadElement`, `MetaProperty`, `ClassExpression`, `PrivateName`, `Super`, `Import`, `ThisExpression`, `ParenthesizedExpression`
+### Declarations (`declarations.rs`, ~20 types)
 
-**Literals** (~7 types): `StringLiteral`, `NumericLiteral`, `BooleanLiteral`, `NullLiteral`, `BigIntLiteral`, `RegExpLiteral`, `TemplateElement`
+**Import/export**: `ImportDeclaration`, `ExportNamedDeclaration`, `ExportDefaultDeclaration`, `ExportAllDeclaration`, `ImportSpecifier` enum (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier), `ExportSpecifier` enum (ExportSpecifier | ExportDefaultSpecifier | ExportNamespaceSpecifier), `ImportAttribute`, `ModuleExportName`, `Declaration` enum, `ExportDefaultDecl` enum
 
-**Patterns** (~5 types): `ObjectPattern`, `ArrayPattern`, `AssignmentPattern`, `RestElement`, `ObjectProperty`, `ObjectMethod`
+**TypeScript declarations (pass-through)**: `TSTypeAliasDeclaration`, `TSInterfaceDeclaration`, `TSEnumDeclaration`, `TSModuleDeclaration`, `TSDeclareFunction`
 
-**JSX** (~12 types): `JSXElement`, `JSXFragment`, `JSXOpeningElement`, `JSXClosingElement`, `JSXOpeningFragment`, `JSXClosingFragment`, `JSXAttribute`, `JSXSpreadAttribute`, `JSXExpressionContainer`, `JSXSpreadChild`, `JSXText`, `JSXEmptyExpression`, `JSXIdentifier`, `JSXMemberExpression`, `JSXNamespacedName`
+**Flow declarations (pass-through)**: `TypeAlias`, `OpaqueType`, `InterfaceDeclaration`, `DeclareVariable`, `DeclareFunction`, `DeclareClass`, `DeclareModule`, `DeclareModuleExports`, `DeclareExportDeclaration`, `DeclareExportAllDeclaration`, `DeclareInterface`, `DeclareTypeAlias`, `DeclareOpaqueType`, `EnumDeclaration`
 
-**TypeScript annotations** (~30 types, pass-through): These are type annotations that appear in the AST but the compiler largely ignores. Model them structurally for round-tripping: `TSTypeAnnotation`, `TSTypeParameterDeclaration`, `TSTypeParameter`, `TSAsExpression`, `TSSatisfiesExpression`, `TSNonNullExpression`, `TSInstantiationExpression`, etc. Can use a catch-all `TSType` enum with `serde_json::Value` for the body if exact modeling is too tedious — but the round-trip test will enforce correctness either way.
+### Expressions (`expressions.rs`, ~35 types)
 
-**Flow annotations** (~20 types, pass-through): Similar to TS. `TypeAnnotation`, `TypeCastExpression`, `TypeParameterDeclaration`, etc.
+**Core**: `Identifier`, `CallExpression`, `MemberExpression`, `OptionalCallExpression`, `OptionalMemberExpression`, `BinaryExpression`, `LogicalExpression`, `UnaryExpression`, `UpdateExpression`, `ConditionalExpression`, `AssignmentExpression`, `SequenceExpression`, `ArrowFunctionExpression` (+ `ArrowFunctionBody` enum), `FunctionExpression`, `ObjectExpression` (+ `ObjectExpressionProperty` enum, `ObjectProperty`, `ObjectMethod`), `ArrayExpression`, `NewExpression`, `TemplateLiteral`, `TaggedTemplateExpression`, `AwaitExpression`, `YieldExpression`, `SpreadElement`, `MetaProperty`, `ClassExpression` (+ `ClassBody`), `PrivateName`, `Super`, `Import`, `ThisExpression`, `ParenthesizedExpression`
 
-**Top-level**: `File`, `Program`, `Directive`, `DirectiveLiteral`
+**TypeScript expressions**: `TSAsExpression`, `TSSatisfiesExpression`, `TSNonNullExpression`, `TSTypeAssertion`, `TSInstantiationExpression`
+
+**Flow expressions**: `TypeCastExpression`
+
+TypeScript and Flow type annotation bodies (e.g., `TSTypeAnnotation`, type parameters) use `serde_json::Value` for pass-through round-tripping rather than fully-typed structs. This is sufficient since the compiler doesn't inspect these deeply.
+
+### Literals (`literals.rs`, 7 types)
+
+`StringLiteral`, `NumericLiteral`, `BooleanLiteral`, `NullLiteral`, `BigIntLiteral`, `RegExpLiteral`, `TemplateElement` (+ `TemplateElementValue`)
+
+### Patterns (`patterns.rs`, ~5 types)
+
+`PatternLike` enum: `Identifier`, `ObjectPattern`, `ArrayPattern`, `AssignmentPattern`, `RestElement`, `MemberExpression`
+
+`ObjectPatternProperty` enum: `ObjectProperty` (as `ObjectPatternProp`), `RestElement`
+
+### JSX (`jsx.rs`, ~15 types)
+
+`JSXElement`, `JSXFragment`, `JSXOpeningElement`, `JSXClosingElement`, `JSXOpeningFragment`, `JSXClosingFragment`, `JSXAttribute`, `JSXSpreadAttribute`, `JSXExpressionContainer`, `JSXSpreadChild`, `JSXText`, `JSXEmptyExpression`, `JSXIdentifier`, `JSXMemberExpression`, `JSXNamespacedName`
+
+**Helper enums**: `JSXChild`, `JSXElementName`, `JSXAttributeItem`, `JSXAttributeName`, `JSXAttributeValue`, `JSXExpressionContainerExpr`, `JSXMemberExprObject`
+
+### Operators (`operators.rs`, 5 enums)
+
+`BinaryOperator`, `LogicalOperator`, `UnaryOperator`, `UpdateOperator`, `AssignmentOperator` — all variants mapped to their JS string representations via `#[serde(rename)]`.
+
+### Common types (`common.rs`)
+
+`Position` (line, column, optional index), `SourceLocation` (start, end, optional filename, optional identifierName), `Comment` enum (CommentBlock | CommentLine), `CommentData`, `BaseNode`
+
+### Top-level types (`lib.rs`)
+
+`File`, `Program`, `SourceType`, `InterpreterDirective`
+
+### Unknown catch-all variants
+
+Every enum includes a catch-all `Unknown(serde_json::Value)` variant with `#[serde(untagged)]`. This preserves the raw JSON for unmodeled node types, ensuring round-tripping works even if a new node type appears. Currently all 1714 fixtures round-trip through typed variants — no fixtures rely on `Unknown`.
 
 ### Union types as enums
 
-Fields typed as `Expression`, `Statement`, `LVal`, `Pattern`, etc. in Babel become Rust enums:
-
-```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum Expression {
-    Identifier(Identifier),
-    CallExpression(CallExpression),
-    MemberExpression(MemberExpression),
-    BinaryExpression(BinaryExpression),
-    StringLiteral(StringLiteral),
-    NumericLiteral(NumericLiteral),
-    // ... all expression types
-}
-```
-
-Where fields accept a union of specific types (e.g., `ObjectExpression.properties: Array<ObjectMethod | ObjectProperty | SpreadElement>`), create purpose-specific enums.
-
-### Operator enums
-
-```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum BinaryOperator {
-    #[serde(rename = "+")]  Add,
-    #[serde(rename = "-")]  Sub,
-    #[serde(rename = "*")]  Mul,
-    #[serde(rename = "/")]  Div,
-    #[serde(rename = "%")]  Rem,
-    #[serde(rename = "**")] Exp,
-    #[serde(rename = "==")] Eq,
-    #[serde(rename = "===")] StrictEq,
-    #[serde(rename = "!=")] Neq,
-    #[serde(rename = "!==")] StrictNeq,
-    #[serde(rename = "<")]  Lt,
-    #[serde(rename = "<=")] Lte,
-    #[serde(rename = ">")]  Gt,
-    #[serde(rename = ">=")] Gte,
-    #[serde(rename = "<<")] Shl,
-    #[serde(rename = ">>")] Shr,
-    #[serde(rename = ">>>")] UShr,
-    #[serde(rename = "|")]  BitOr,
-    #[serde(rename = "^")]  BitXor,
-    #[serde(rename = "&")]  BitAnd,
-    #[serde(rename = "in")] In,
-    #[serde(rename = "instanceof")] Instanceof,
-    #[serde(rename = "|>")] Pipeline,
-}
-```
-
-Similar enums for `UnaryOperator`, `LogicalOperator`, `AssignmentOperator`, `UpdateOperator`.
+Fields typed as `Expression`, `Statement`, `LVal`, `Pattern`, etc. in Babel are Rust enums with `#[serde(tag = "type")]`. Where fields accept a union of specific types (e.g., `ObjectExpression.properties: Array<ObjectMethod | ObjectProperty | SpreadElement>`), purpose-specific enums are used.
 
 ---
 
@@ -236,14 +240,16 @@ Similar enums for `UnaryOperator`, `LogicalOperator`, `AssignmentOperator`, `Upd
 pub struct Position {
     pub line: u32,
     pub column: u32,
-    pub index: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SourceLocation {
     pub start: Position,
     pub end: Position,
-    pub filename: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub filename: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none", rename = "identifierName")]
     pub identifier_name: Option<String>,
 }
@@ -267,6 +273,8 @@ pub struct CommentData {
 }
 ```
 
+Note: `Position.index` and `SourceLocation.filename` are `Option` — Babel doesn't always emit these fields.
+
 ---
 
 ## Top-Level Types
@@ -280,7 +288,6 @@ pub struct File {
     pub program: Program,
     #[serde(default)]
     pub comments: Vec<Comment>,
-    /// Parser errors (recoverable)
     #[serde(default)]
     pub errors: Vec<serde_json::Value>,
 }
@@ -289,15 +296,14 @@ pub struct File {
 pub struct Program {
     #[serde(flatten)]
     pub base: BaseNode,
-    pub body: Vec<StatementOrDeclaration>,
+    pub body: Vec<Statement>,
     #[serde(default)]
     pub directives: Vec<Directive>,
     #[serde(rename = "sourceType")]
     pub source_type: SourceType,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub interpreter: Option<InterpreterDirective>,
-    #[serde(rename = "sourceFile")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "sourceFile", default, skip_serializing_if = "Option::is_none")]
     pub source_file: Option<String>,
 }
 
@@ -309,9 +315,13 @@ pub enum SourceType {
 }
 ```
 
+`Program.body` uses `Vec<Statement>` directly — declarations (import/export, TS, Flow) are variants of the `Statement` enum.
+
 ---
 
 ## Scope Types (Separate from AST)
+
+> **Status**: Not yet implemented. This is the main remaining work item.
 
 The compiler needs Babel's scope information. This is **not** part of the AST JSON — it's a separate data structure produced by running `@babel/traverse` on the parsed AST. Model it as a separate type for the JSON interchange:
 
@@ -404,41 +414,6 @@ The scope tree is a pre-computed flattened representation of Babel's scope chain
 
 ---
 
-## Approach to Building the Crate
-
-### Incremental, test-driven
-
-Don't try to define all ~120 node types upfront. Instead:
-
-1. Start with the top-level structure (`File`, `Program`) and a small set of common nodes (`Identifier`, `StringLiteral`, `NumericLiteral`, `FunctionDeclaration`, `BlockStatement`, `ReturnStatement`, `ExpressionStatement`, `VariableDeclaration`, `VariableDeclarator`)
-2. Run the round-trip test on fixtures — it will fail on the first fixture that uses an unmodeled node type
-3. Add that node type, re-run
-4. Repeat until all fixtures pass
-
-This approach means we never write speculative type definitions — every type is validated against real Babel output.
-
-### Handling unknown/unmodeled nodes during development
-
-During the incremental build-out, we need a way to handle node types we haven't modeled yet without panicking. Add a catch-all variant to each enum:
-
-```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum Expression {
-    Identifier(Identifier),
-    // ... known variants ...
-
-    /// Catch-all for node types not yet modeled.
-    /// Stores the raw JSON so round-tripping still works.
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
-}
-```
-
-The `Unknown` variant preserves the raw JSON for round-tripping. As we add more types, fixtures that were hitting `Unknown` will start deserializing into proper typed variants. The final goal is zero `Unknown` hits across all fixtures — add a test mode that asserts this.
-
----
-
 ## Round-Trip Test Infrastructure
 
 ### Overview
@@ -453,239 +428,92 @@ fixture.js ──> @babel/parser ──> JSON ──> serde::from_str ──> se
 
 ### Node.js script: `compiler/scripts/babel-ast-to-json.mjs`
 
-Parses each fixture file with Babel and writes the AST JSON to a temp directory.
+Parses each fixture file with Babel and writes the AST JSON to a temp directory. Takes two arguments: source directory and output directory.
 
 ```javascript
 import { parse } from '@babel/parser';
-import fs from 'fs';
-import path from 'path';
-import glob from 'fast-glob';
-
-const FIXTURE_DIR = path.resolve(
-  'packages/babel-plugin-react-compiler/src/__tests__/fixtures'
-);
-const OUTPUT_DIR = process.argv[2]; // temp dir passed as argument
-
-// Find all fixture source files
-const fixtures = glob.sync('**/*.{js,ts,tsx}', { cwd: FIXTURE_DIR });
-
-for (const fixture of fixtures) {
-  const input = fs.readFileSync(path.join(FIXTURE_DIR, fixture), 'utf8');
-  const isFlow = input.includes('@flow');
-  const isScript = input.includes('@script');
-
-  const plugins = isFlow ? ['flow', 'jsx'] : ['typescript', 'jsx'];
-  const sourceType = isScript ? 'script' : 'module';
-
-  try {
-    const ast = parse(input, {
-      sourceFilename: fixture,
-      plugins,
-      sourceType,
-    });
-
-    // Serialize with deterministic key order (JSON.stringify sorts by insertion)
-    const json = JSON.stringify(ast, null, 2);
-
-    const outPath = path.join(OUTPUT_DIR, fixture + '.json');
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, json);
-  } catch (e) {
-    // Parse errors are expected for some fixtures (e.g., intentionally invalid syntax)
-    // Write an error marker so the Rust test can skip them
-    const outPath = path.join(OUTPUT_DIR, fixture + '.parse-error');
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, e.message);
-  }
-}
+// ...
+const FIXTURE_DIR = process.argv[2]; // source dir with JS/TS files
+const OUTPUT_DIR = process.argv[3];  // output dir for JSON files
 ```
 
 **Key details**:
-- Uses `@babel/parser` directly (not Hermes) for consistency — Flow fixtures can be tested separately if needed
+- Uses `@babel/parser` directly (not Hermes) with `errorRecovery: true` and `allowReturnOutsideFunction: true`
+- Selects plugins based on content: `['flow', 'jsx']` for files containing `@flow`, otherwise `['typescript', 'jsx']`
+- Always uses `sourceType: 'module'`
+- Matches `**/*.{js,ts,tsx,jsx}` files
 - Writes each fixture's AST as a separate `.json` file
-- Writes `.parse-error` marker files for fixtures that fail to parse (these are skipped by the Rust test)
+- Writes `.parse-error` marker files for fixtures that fail to parse (skipped by the Rust test)
 
 ### JSON normalization
 
-Before diffing, both the original and round-tripped JSON must be normalized to handle legitimate serialization differences:
+Before diffing, both the original and round-tripped JSON are normalized on the Rust side:
 
-1. **Key ordering**: `JSON.stringify` output has keys in insertion order. Serde outputs keys in struct field definition order. The diff must be key-order-independent. Solution: parse both JSONs, sort keys recursively, re-serialize.
-
-2. **`undefined` vs absent**: In Babel's JSON output, `undefined` values are omitted by `JSON.stringify`. Serde's `skip_serializing_if = "Option::is_none"` does the same. Should be compatible.
-
-3. **Number precision**: JavaScript and Rust may serialize floating point numbers differently (e.g., `1.0` vs `1`). Normalize numeric values.
-
-The normalization should happen on the Rust side for efficiency (parse both JSONs as `serde_json::Value`, recursively sort, compare).
+1. **Key ordering**: Both JSONs are parsed as `serde_json::Value`, keys are recursively sorted, then compared.
+2. **`undefined` vs absent**: `JSON.stringify` omits `undefined` values; serde's `skip_serializing_if = "Option::is_none"` does the same.
+3. **Number precision**: Whole-number floats (e.g., `1.0`) are normalized to integers (e.g., `1`) for comparison.
 
 ### Rust test: `compiler/crates/react_compiler_ast/tests/round_trip.rs`
 
-```rust
-#[test]
-fn round_trip_all_fixtures() {
-    // 1. Run the Node.js script to generate JSON fixtures (or read pre-generated ones)
-    let json_dir = get_fixture_json_dir();
+The test walks all `.json` files in the fixture directory, deserializes each into `File`, re-serializes, normalizes both sides, and diffs. It reports the first 5 failures with unified diffs (capped at 50 lines per fixture) using the `similar` crate.
 
-    let mut failures: Vec<(String, String)> = Vec::new();
+The fixture JSON directory is specified via the `FIXTURE_JSON_DIR` environment variable, with a fallback to `tests/fixtures/` alongside the test file.
 
-    for entry in walkdir::WalkDir::new(&json_dir)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension() == Some("json".as_ref()))
-    {
-        let fixture_name = entry.path().strip_prefix(&json_dir).unwrap();
-        let original_json = std::fs::read_to_string(entry.path()).unwrap();
-
-        // Deserialize into our Rust types
-        let ast: react_compiler_ast::File = match serde_json::from_str(&original_json) {
-            Ok(ast) => ast,
-            Err(e) => {
-                failures.push((
-                    fixture_name.display().to_string(),
-                    format!("Deserialization error: {e}"),
-                ));
-                continue;
-            }
-        };
-
-        // Re-serialize back to JSON
-        let round_tripped = serde_json::to_string_pretty(&ast).unwrap();
-
-        // Normalize and compare
-        let original_normalized = normalize_json(&original_json);
-        let round_tripped_normalized = normalize_json(&round_tripped);
-
-        if original_normalized != round_tripped_normalized {
-            let diff = compute_diff(&original_normalized, &round_tripped_normalized);
-            failures.push((fixture_name.display().to_string(), diff));
-        }
-    }
-
-    if !failures.is_empty() {
-        let mut msg = format!("\n{} fixtures failed round-trip:\n\n", failures.len());
-        for (name, diff) in &failures {
-            msg.push_str(&format!("--- {name} ---\n{diff}\n\n"));
-        }
-        panic!("{msg}");
-    }
-}
-```
-
-**Diff output**: Use the `similar` crate for readable unified diffs. Show the fixture name, the line numbers, and colored diff of the JSON. Limit diff output per fixture (e.g., first 50 lines) to avoid overwhelming output when many types are missing.
-
-### Test runner integration
-
-Add a script `compiler/scripts/test-babel-ast.sh`:
+### Test runner: `compiler/scripts/test-babel-ast.sh`
 
 ```bash
 #!/bin/bash
 set -e
-
-# Generate fixture JSONs
-TMPDIR=$(mktemp -d)
-node compiler/scripts/babel-ast-to-json.mjs "$TMPDIR"
-
-# Run Rust round-trip test
-FIXTURE_JSON_DIR="$TMPDIR" cargo test -p react_compiler_ast --test round_trip
-
-# Clean up
-rm -rf "$TMPDIR"
+# Usage: bash compiler/scripts/test-babel-ast.sh [fixture-source-dir]
+# Defaults to the compiler's own test fixtures.
 ```
 
-Alternatively, the Rust test can invoke the Node.js script itself via `std::process::Command`, generating JSONs into a temp dir on the fly. This is simpler but makes `cargo test` depend on Node.js being available (which it always is in this repo).
+Generates fixture JSONs into a temp dir, runs the Rust round-trip test, and cleans up. Accepts an optional fixture source directory argument.
 
-### Dev dependencies for the test
+**Running the test**:
 
-```toml
-[dev-dependencies]
-walkdir = "2"
-similar = "2"           # for readable diffs
+```bash
+bash compiler/scripts/test-babel-ast.sh
 ```
 
 ---
 
-## Milestone Criteria
+## Remaining Work
 
-### M1: Scaffold + first fixture round-trips
+### Scope tree types (from M4)
 
-- Cargo workspace created at `compiler/crates/`
-- `react_compiler_ast` crate with `File`, `Program`, `Directive`, `BaseNode`, `SourceLocation`, `Position`, `Comment`
-- Basic expression/statement types: `Identifier`, `StringLiteral`, `NumericLiteral`, `BooleanLiteral`, `NullLiteral`, `ExpressionStatement`, `ReturnStatement`, `BlockStatement`, `VariableDeclaration`, `VariableDeclarator`, `FunctionDeclaration`
-- `Unknown` catch-all variant on all enums
-- Node.js script generating fixture JSONs
-- Rust round-trip test passing for at least 1 simple fixture
-- Other fixtures either pass (via `Unknown` catch-all) or produce clean diff output
+Define the `ScopeTree`, `ScopeData`, `BindingData`, and related types described in the [Scope Types](#scope-types-separate-from-ast) section. These are Rust struct definitions in the crate — no serialization test infrastructure yet (that's M5).
 
-### M2: Core expression and statement coverage
+### Unknown-variant assertion (from M4)
 
-- All statement types modeled
-- All expression types modeled
-- All literal types modeled
-- All pattern/LVal types modeled
-- All operator enums modeled
-- Target: ~80% of fixtures round-trip without hitting `Unknown`
-
-### M3: JSX + annotations
-
-- All JSX types modeled
-- TypeScript annotation types modeled (enough for round-tripping, not necessarily fully typed — `serde_json::Value` fallback acceptable for deeply nested TS type nodes)
-- Flow annotation types modeled (same strategy)
-- Target: ~95% of fixtures round-trip without `Unknown`
-
-### M4: Full coverage + zero unknowns
-
-- All fixtures round-trip exactly (0 failures, 0 `Unknown` hits)
-- Scope tree types defined (serialization tested separately — see below)
-- Test mode that asserts no `Unknown` variants were deserialized (walk the tree and check)
+Add a test mode that walks the deserialized AST and asserts no `Unknown` variants were used. Currently all 1714 fixtures round-trip through typed variants, but there's no automated assertion enforcing this. The test should recursively visit every enum in the tree and flag any `Unknown` hits.
 
 ### M5: Scope tree serialization
 
-- Node.js script extended to also serialize scope trees
-- Round-trip test for scope trees
+- Extend the Node.js script (or add a new one) to serialize scope trees from `@babel/traverse`
+- Add a round-trip test for scope trees
 - Verify scope lookups work: for a subset of fixtures, test that `getBinding(name)` on the Rust `ScopeTree` returns the same result as Babel's `scope.getBinding(name)` (verified by a Node.js script that outputs expected binding resolutions)
 
 ---
 
-## Risks and Mitigations
+## Resolved Risks
 
 ### `#[serde(flatten)]` + `#[serde(tag = "type")]` interaction
 
-Serde's `flatten` with internally tagged enums can cause issues (serde collects all fields into a map, which may reorder or lose type information). **Mitigation**: Test this combination early in M1. If it doesn't work, use a proc macro or `macro_rules!` to stamp out the common BaseNode fields on every struct:
-
-```rust
-macro_rules! ast_node {
-    (
-        $(#[$meta:meta])*
-        pub struct $name:ident {
-            $($field:tt)*
-        }
-    ) => {
-        $(#[$meta])*
-        pub struct $name {
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            pub start: Option<u32>,
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            pub end: Option<u32>,
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            pub loc: Option<SourceLocation>,
-            // ... other BaseNode fields ...
-            $($field)*
-        }
-    };
-}
-```
+This combination works correctly. No macro fallback was needed. The `BaseNode` is flattened into each node struct, and enums use `#[serde(tag = "type")]` for dispatch. The `BaseNode.node_type` field (renamed from `"type"`) handles the case where `BaseNode` is deserialized outside of a tagged enum context.
 
 ### Floating point precision
 
-JavaScript's `JSON.stringify(1.0)` produces `"1"`, but Rust's serde_json produces `"1.0"`. **Mitigation**: The JSON normalization step should normalize number representations. Alternatively, use `serde_json`'s `arbitrary_precision` feature or a custom serializer for numeric values.
+Resolved via the `normalize_json` function in the round-trip test. Whole-number f64 values are normalized to i64 before comparison (e.g., `1.0` → `1`).
 
 ### Fixture parse failures
 
-Some fixtures may use syntax that `@babel/parser` can't handle (e.g., Flow-specific syntax without the Flow plugin). **Mitigation**: The Node.js script writes `.parse-error` markers, and the Rust test skips those. Track the count of skipped fixtures and aim to minimize it (potentially by also testing with Hermes parser for Flow fixtures).
+3 of 1717 fixtures fail to parse with `@babel/parser` and are skipped (marked with `.parse-error` files). This is expected — some fixtures use intentionally invalid syntax.
 
 ### Performance
 
-~1700 fixtures is not many — even without parallelism, round-tripping all of them should complete in seconds. Not a concern for this milestone.
+All 1714 fixtures round-trip in ~12 seconds (debug build). Not a concern.
 
 ### Field presence ambiguity
 
-Some Babel fields are sometimes present as `null` and sometimes absent entirely, depending on the parser path. For example, `FunctionDeclaration.id` is `null` for `export default function() {}` but absent in some edge cases. **Mitigation**: The round-trip test is the source of truth. Start with `skip_serializing_if = "Option::is_none"` (omit when None), and if a fixture fails because Babel emits an explicit `null`, change that field to always serialize. This is exactly the kind of issue the test infrastructure is designed to catch.
+Resolved empirically via the round-trip test. Fields that Babel always emits (even as `null`) use `Option<T>` without `skip_serializing_if`. Fields that may be absent use `#[serde(default, skip_serializing_if = "Option::is_none")]`. The test is the source of truth.
