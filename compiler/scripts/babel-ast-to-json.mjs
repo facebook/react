@@ -4,13 +4,13 @@ import path from "path";
 import fg from "fast-glob";
 const { globSync } = fg;
 
-const FIXTURE_DIR = path.resolve(
-  "compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures"
-);
-const OUTPUT_DIR = process.argv[2]; // temp dir passed as argument
+const FIXTURE_DIR = process.argv[2]; // source dir with JS/TS files
+const OUTPUT_DIR = process.argv[3]; // output dir for JSON files
 
-if (!OUTPUT_DIR) {
-  console.error("Usage: node babel-ast-to-json.mjs <output-dir>");
+if (!FIXTURE_DIR || !OUTPUT_DIR) {
+  console.error(
+    "Usage: node babel-ast-to-json.mjs <fixtures-dir> <output-dir>"
+  );
   process.exit(1);
 }
 

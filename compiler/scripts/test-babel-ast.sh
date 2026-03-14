@@ -2,17 +2,20 @@
 set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-FIXTURE_DIR="$REPO_ROOT/compiler/crates/react_compiler_ast/tests/fixtures"
 
-# Regenerate fixtures if --update flag is passed
-if [ "$1" = "--update" ]; then
-  echo "Regenerating fixture JSONs..."
-  rm -rf "$FIXTURE_DIR"
-  mkdir -p "$FIXTURE_DIR"
-  node "$REPO_ROOT/compiler/scripts/babel-ast-to-json.mjs" "$FIXTURE_DIR"
+FIXTURE_SRC_DIR="$1"
+if [ -z "$FIXTURE_SRC_DIR" ]; then
+  # Default: the compiler's own test fixtures
+  FIXTURE_SRC_DIR="$REPO_ROOT/compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures"
 fi
 
-# Run Rust round-trip test
+# Parse source files into JSON in a temp directory
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
+
+echo "Parsing fixtures from $FIXTURE_SRC_DIR..."
+node "$REPO_ROOT/compiler/scripts/babel-ast-to-json.mjs" "$FIXTURE_SRC_DIR" "$TMPDIR"
+
 echo "Running round-trip test..."
 cd "$REPO_ROOT/compiler/crates"
-FIXTURE_JSON_DIR="$FIXTURE_DIR" ~/.cargo/bin/cargo test -p react_compiler_ast --test round_trip -- --nocapture
+FIXTURE_JSON_DIR="$TMPDIR" ~/.cargo/bin/cargo test -p react_compiler_ast --test round_trip -- --nocapture
