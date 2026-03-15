@@ -4,7 +4,7 @@
 
 Create a testing infrastructure that validates the Rust port produces identical results to the TypeScript compiler at every stage of the pipeline. The port proceeds incrementally — one pass at a time — so the test infrastructure must support running the pipeline up to any specified pass and comparing the intermediate state between TS and Rust.
 
-**Current status**: Plan only.
+**Current status**: Plan only. Next step: implement M1.
 
 ---
 
@@ -523,28 +523,41 @@ This asymmetry is intentional and acceptable:
 
 ### M3: Rust Test Binary Scaffold
 
-**Goal**: Scaffold the Rust binary so it can be extended pass-by-pass as the port proceeds.
+**Goal**: Scaffold the Rust binary and a `todo!`-only stub for `lower()` so the end-to-end test loop works immediately — even though every test will fail. This validates the full test infrastructure (fixture discovery, Rust binary invocation, diff output) before any real porting begins.
 
-1. **Create the Rust compiler crate** — `compiler/crates/react_compiler/` with the binary target `test-rust-port`.
+1. **Create the Rust compiler crate** — `compiler/crates/react_compiler/` with the binary target `test-rust-port`. Depends on `react_compiler_ast` for input types.
 
-2. **Implement `debug_hir()`** — Rust debug printer matching the TS format exactly. Initially tested by manually comparing output for a simple fixture.
+2. **Stub `lower()`** — Create a `lower()` function with the correct signature that immediately calls `todo!("lower not yet implemented")`. This means the Rust binary will panic for every fixture, producing a non-zero exit code. The test script treats this as a test failure (expected at this stage).
 
-3. **Implement `debug_error()`** — Rust error printer matching the TS format.
+3. **Stub pipeline** — The `run_pipeline()` function calls the stubbed `lower()` and has placeholder match arms for all other pass names. Every pass beyond `lower()` also hits `todo!()`.
 
-4. **Stub pipeline** — The `run_pipeline()` function with only the first pass (`lower`) stubbed. Returns an error like `"pass not yet implemented: SSA"` for any pass beyond what's ported.
+4. **Implement `debug_hir()`** — Rust debug printer matching the TS format exactly. This won't be exercised until `lower()` is real, but having it in place means the first real pass port immediately produces diffable output.
 
-5. **Integrate into `test-rust-port.sh`** — Run both TS and Rust binaries, diff outputs. Initially only the `HIR` pass is testable (once `lower()` is ported).
+5. **Implement `debug_error()`** — Rust error printer matching the TS format.
+
+6. **Integrate into `test-rust-port.sh`** — Run both TS and Rust binaries, diff outputs. At this stage, **all tests are expected to fail** (Rust panics on `todo!()`). The test script should report the failure count and distinguish between "Rust panicked" vs "output mismatch" failures:
+
+   ```
+   Testing 1714 fixtures up to pass: HIR
+
+   Results: 0 passed, 1714 failed (1714 total)
+     1714 rust panicked (todo!), 0 output mismatch
+   ```
+
+   This confirms the infrastructure works end-to-end. As `lower()` and subsequent passes are implemented, the "rust panicked" count drops and "passed" / "output mismatch" counts rise.
+
+**Why stub with `todo!()` now**: The goal of this phase is to validate the test infrastructure itself, not the compiler port. By having a Rust binary that compiles and runs (but panics), we prove that fixture discovery, AST JSON passing, Rust binary invocation, and diff reporting all work correctly. When the real `lower()` port begins (step 4+), the developer can immediately see their progress reflected in the test results without any infrastructure work.
 
 ### M4: Ongoing — Per-Pass Validation
 
-As each pass is ported to Rust:
+As each pass is ported to Rust, replace the `todo!()` stub with a real implementation:
 
-1. Implement the pass in Rust
+1. Replace the `todo!()` in the pass with a real implementation
 2. Run `test-rust-port.sh <pass>` to compare TS and Rust output
-3. Fix any differences
+3. Fix any differences until all (or nearly all) fixtures pass
 4. Move to the next pass
 
-The test infrastructure is complete after M3. M4 is the ongoing usage pattern.
+The first pass to port is `lower()`. Once it's real, fixtures at the `HIR` pass will transition from "rust panicked" to either "passed" or "output mismatch". The test infrastructure is complete after M3 — M4 is the ongoing usage pattern.
 
 ---
 
