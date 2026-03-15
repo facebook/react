@@ -814,6 +814,86 @@ describe('FragmentRefs', () => {
         expect(logs).toEqual([]);
       });
 
+        // @gate enableFragmentRefs
+        it(
+          'removes a capture listener registered with boolean when removed with options object',
+          async () => {
+            const fragmentRef = React.createRef(null);
+            function Test() {
+              return (
+                <Fragment ref={fragmentRef}>
+                  <div id="child-a" />
+                </Fragment>
+              );
+            }
+            const root = ReactDOMClient.createRoot(container);
+            await act(() => {
+              root.render(<Test />);
+            });
+
+            const logs = [];
+            function logCapture() {
+              logs.push('capture');
+            }
+
+            // Register with boolean `true` (capture phase)
+            fragmentRef.current.addEventListener('click', logCapture, true);
+            document.querySelector('#child-a').click();
+            expect(logs).toEqual(['capture']);
+
+            logs.length = 0;
+
+            // Remove with equivalent options object {capture: true}
+            // Per DOM spec, these are identical - the listener MUST be removed
+            fragmentRef.current.removeEventListener('click', logCapture, {
+              capture: true,
+            });
+            document.querySelector('#child-a').click();
+            // Listener should have been removed - logs must remain empty
+            expect(logs).toEqual([]);
+          },
+        );
+
+        // @gate enableFragmentRefs
+        it(
+          'removes a capture listener registered with options object when removed with boolean',
+          async () => {
+            const fragmentRef = React.createRef(null);
+            function Test() {
+              return (
+                <Fragment ref={fragmentRef}>
+                  <div id="child-b" />
+                </Fragment>
+              );
+            }
+            const root = ReactDOMClient.createRoot(container);
+            await act(() => {
+              root.render(<Test />);
+            });
+
+            const logs = [];
+            function logCapture() {
+              logs.push('capture');
+            }
+
+            // Register with options object {capture: true}
+            fragmentRef.current.addEventListener('click', logCapture, {
+              capture: true,
+            });
+            document.querySelector('#child-b').click();
+            expect(logs).toEqual(['capture']);
+
+            logs.length = 0;
+
+            // Remove with boolean `true`
+            // Per DOM spec, these are identical - the listener MUST be removed
+            fragmentRef.current.removeEventListener('click', logCapture, true);
+            document.querySelector('#child-b').click();
+            // Listener should have been removed - logs must remain empty
+            expect(logs).toEqual([]);
+          },
+        );
+
       // @gate enableFragmentRefs
       it('applies event listeners to portaled children', async () => {
         const fragmentRef = React.createRef();
