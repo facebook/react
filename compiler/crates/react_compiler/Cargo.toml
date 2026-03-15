@@ -1,0 +1,13 @@
+[package]
+name = "react_compiler"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "test-rust-port"
+path = "src/bin/test_rust_port.rs"
+
+[dependencies]
+react_compiler_ast = { path = "../react_compiler_ast" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

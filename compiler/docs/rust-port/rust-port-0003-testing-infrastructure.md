@@ -4,7 +4,7 @@
 
 Create a testing infrastructure that validates the Rust port produces identical results to the TypeScript compiler at every stage of the pipeline. The port proceeds incrementally — one pass at a time — so the test infrastructure must support running the pipeline up to any specified pass and comparing the intermediate state between TS and Rust.
 
-**Current status**: Plan only. Next step: implement M1.
+**Current status**: M1, M2, M3 implemented. All Rust tests expected to fail (todo!() stubs). Next step: port lower() (M4).
 
 ---
 
