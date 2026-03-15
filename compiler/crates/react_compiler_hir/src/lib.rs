@@ -14,8 +14,14 @@ pub struct BlockId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct IdentifierId(pub u32);
 
+/// Index into the flat instruction table on HirFunction.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct InstructionId(pub u32);
+
+/// Evaluation order assigned to instructions and terminals during numbering.
+/// This was previously called InstructionId in the TypeScript compiler.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EvaluationOrder(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct DeclarationId(pub u32);
@@ -28,6 +34,57 @@ pub struct TypeId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FunctionId(pub u32);
+
+// =============================================================================
+// FloatValue wrapper
+// =============================================================================
+
+/// Wrapper around f64 that stores raw bytes for deterministic equality and hashing.
+/// This allows use in HashMap keys and ensures NaN == NaN (bitwise comparison).
+#[derive(Debug, Clone, Copy)]
+pub struct FloatValue(u64);
+
+impl FloatValue {
+    pub fn new(value: f64) -> Self {
+        FloatValue(value.to_bits())
+    }
+
+    pub fn value(self) -> f64 {
+        f64::from_bits(self.0)
+    }
+}
+
+impl From<f64> for FloatValue {
+    fn from(value: f64) -> Self {
+        FloatValue::new(value)
+    }
+}
+
+impl From<FloatValue> for f64 {
+    fn from(value: FloatValue) -> Self {
+        value.value()
+    }
+}
+
+impl PartialEq for FloatValue {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl Eq for FloatValue {}
+
+impl std::hash::Hash for FloatValue {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl std::fmt::Display for FloatValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.value())
+    }
+}
 
 // =============================================================================
 // Core HIR types
@@ -45,6 +102,7 @@ pub struct HirFunction {
     pub returns: Place,
     pub context: Vec<Place>,
     pub body: HIR,
+    pub instructions: Vec<Instruction>,
     pub generator: bool,
     pub is_async: bool,
     pub directives: Vec<String>,
@@ -86,7 +144,7 @@ pub enum BlockKind {
 pub struct BasicBlock {
     pub kind: BlockKind,
     pub id: BlockId,
-    pub instructions: Vec<Instruction>,
+    pub instructions: Vec<InstructionId>,
     pub terminal: Terminal,
     pub preds: BTreeSet<BlockId>,
     pub phis: Vec<Phi>,
@@ -106,29 +164,29 @@ pub struct Phi {
 #[derive(Debug, Clone)]
 pub enum Terminal {
     Unsupported {
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Unreachable {
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Throw {
         value: Place,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Return {
         value: Place,
         return_variant: ReturnVariant,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
         effects: Option<Vec<()>>,
     },
     Goto {
         block: BlockId,
         variant: GotoVariant,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     If {
@@ -136,7 +194,7 @@ pub enum Terminal {
         consequent: BlockId,
         alternate: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Branch {
@@ -144,28 +202,28 @@ pub enum Terminal {
         consequent: BlockId,
         alternate: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Switch {
         test: Place,
         cases: Vec<Case>,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     DoWhile {
         loop_block: BlockId,
         test: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     While {
         test: BlockId,
         loop_block: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     For {
@@ -174,7 +232,7 @@ pub enum Terminal {
         update: Option<BlockId>,
         loop_block: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     ForOf {
@@ -182,52 +240,52 @@ pub enum Terminal {
         test: BlockId,
         loop_block: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     ForIn {
         init: BlockId,
         loop_block: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Logical {
         operator: LogicalOperator,
         test: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Ternary {
         test: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Optional {
         optional: bool,
         test: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Label {
         block: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Sequence {
         block: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     MaybeThrow {
         continuation: BlockId,
         handler: Option<BlockId>,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
         effects: Option<Vec<()>>,
     },
@@ -236,28 +294,28 @@ pub enum Terminal {
         handler_binding: Option<Place>,
         handler: BlockId,
         fallthrough: BlockId,
-        id: InstructionId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     Scope {
         fallthrough: BlockId,
         block: BlockId,
-        scope: ReactiveScope,
-        id: InstructionId,
+        scope: ScopeId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
     PrunedScope {
         fallthrough: BlockId,
         block: BlockId,
-        scope: ReactiveScope,
-        id: InstructionId,
+        scope: ScopeId,
+        id: EvaluationOrder,
         loc: Option<SourceLocation>,
     },
 }
 
 impl Terminal {
-    /// Get the instruction ID (evaluation order) of this terminal
-    pub fn id(&self) -> InstructionId {
+    /// Get the evaluation order of this terminal
+    pub fn evaluation_order(&self) -> EvaluationOrder {
         match self {
             Terminal::Unsupported { id, .. }
             | Terminal::Unreachable { id, .. }
@@ -312,8 +370,8 @@ impl Terminal {
         }
     }
 
-    /// Set the instruction ID (evaluation order) of this terminal
-    pub fn set_id(&mut self, new_id: InstructionId) {
+    /// Set the evaluation order of this terminal
+    pub fn set_evaluation_order(&mut self, new_id: EvaluationOrder) {
         match self {
             Terminal::Unsupported { id, .. }
             | Terminal::Unreachable { id, .. }
@@ -374,7 +432,7 @@ pub enum LogicalOperator {
 
 #[derive(Debug, Clone)]
 pub struct Instruction {
-    pub id: InstructionId,
+    pub id: EvaluationOrder,
     pub lvalue: Place,
     pub value: InstructionValue,
     pub loc: Option<SourceLocation>,
@@ -635,12 +693,12 @@ pub enum InstructionValue {
 // Supporting types
 // =============================================================================
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PrimitiveValue {
     Null,
     Undefined,
     Boolean(bool),
-    Number(f64),
+    Number(FloatValue),
     String(String),
 }
 
@@ -725,7 +783,7 @@ pub struct DependencyPathEntry {
 
 #[derive(Debug, Clone)]
 pub struct Place {
-    pub identifier: Identifier,
+    pub identifier: IdentifierId,
     pub effect: Effect,
     pub reactive: bool,
     pub loc: Option<SourceLocation>,
@@ -737,15 +795,15 @@ pub struct Identifier {
     pub declaration_id: DeclarationId,
     pub name: Option<IdentifierName>,
     pub mutable_range: MutableRange,
-    pub scope: Option<ReactiveScope>,
-    pub type_: Type,
+    pub scope: Option<ScopeId>,
+    pub type_: TypeId,
     pub loc: Option<SourceLocation>,
 }
 
 #[derive(Debug, Clone)]
 pub struct MutableRange {
-    pub start: InstructionId,
-    pub end: InstructionId,
+    pub start: EvaluationOrder,
+    pub end: EvaluationOrder,
 }
 
 #[derive(Debug, Clone)]
@@ -821,7 +879,7 @@ pub enum ObjectPropertyKey {
     String { name: String },
     Identifier { name: String },
     Computed { name: Place },
-    Number { name: f64 },
+    Number { name: FloatValue },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -833,7 +891,7 @@ pub enum ObjectPropertyType {
 #[derive(Debug, Clone)]
 pub enum PropertyLiteral {
     String(String),
-    Number(f64),
+    Number(FloatValue),
 }
 
 #[derive(Debug, Clone)]
@@ -851,7 +909,7 @@ pub enum ArrayElement {
 
 #[derive(Debug, Clone)]
 pub struct LoweredFunction {
-    pub func: HirFunction,
+    pub func: FunctionId,
 }
 
 #[derive(Debug, Clone)]
@@ -879,7 +937,7 @@ pub enum JsxAttribute {
 #[derive(Debug, Clone)]
 pub enum VariableBinding {
     Identifier {
-        identifier: Identifier,
+        identifier: IdentifierId,
         binding_kind: String,
     },
     Global {
@@ -970,16 +1028,4 @@ pub enum PropertyNameKind {
 pub struct ReactiveScope {
     pub id: ScopeId,
     pub range: MutableRange,
-}
-
-// =============================================================================
-// Helper functions
-// =============================================================================
-
-/// Creates a placeholder type variable with id 0.
-/// This is only used as a default for temporary identifiers created
-/// outside of an Environment context. Prefer `Environment::make_type()`
-/// when an environment is available, which allocates fresh type IDs.
-pub fn make_type() -> Type {
-    Type::TypeVar { id: TypeId(0) }
 }

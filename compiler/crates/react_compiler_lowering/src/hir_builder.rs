@@ -49,7 +49,7 @@ impl Scope {
 
 pub struct WipBlock {
     pub id: BlockId,
-    pub instructions: Vec<Instruction>,
+    pub instructions: Vec<InstructionId>,
     pub kind: BlockKind,
 }
 
@@ -73,14 +73,16 @@ pub struct HirBuilder<'a> {
     /// Context identifiers: variables captured from an outer scope.
     /// Maps the outer scope's BindingId to the source location where it was referenced.
     context: HashMap<BindingId, Option<SourceLocation>>,
-    /// Resolved bindings: maps a BindingId to the HIR Identifier created for it.
-    bindings: HashMap<BindingId, Identifier>,
+    /// Resolved bindings: maps a BindingId to the HIR IdentifierId created for it.
+    bindings: HashMap<BindingId, IdentifierId>,
     /// Names already used by bindings, for collision avoidance.
     /// Maps name string -> how many times it has been used (for appending _0, _1, ...).
     used_names: HashMap<String, BindingId>,
     env: &'a mut Environment,
     scope_info: &'a ScopeInfo,
     exception_handler_stack: Vec<BlockId>,
+    /// Flat instruction table being built up.
+    instruction_table: Vec<Instruction>,
     /// Traversal context: counts the number of `fbt` tag parents
     /// of the current babel node.
     pub fbt_depth: u32,
@@ -105,7 +107,7 @@ impl<'a> HirBuilder<'a> {
         env: &'a mut Environment,
         scope_info: &'a ScopeInfo,
         function_scope: ScopeId,
-        bindings: Option<HashMap<BindingId, Identifier>>,
+        bindings: Option<HashMap<BindingId, IdentifierId>>,
         context: Option<HashMap<BindingId, Option<SourceLocation>>>,
         entry_block_kind: Option<BlockKind>,
     ) -> Self {
@@ -122,6 +124,7 @@ impl<'a> HirBuilder<'a> {
             env,
             scope_info,
             exception_handler_stack: Vec::new(),
+            instruction_table: Vec::new(),
             fbt_depth: 0,
             function_scope,
         }
@@ -148,18 +151,23 @@ impl<'a> HirBuilder<'a> {
     }
 
     /// Access the bindings map.
-    pub fn bindings(&self) -> &HashMap<BindingId, Identifier> {
+    pub fn bindings(&self) -> &HashMap<BindingId, IdentifierId> {
         &self.bindings
     }
 
     /// Push an instruction onto the current block.
+    ///
+    /// Adds the instruction to the flat instruction table and records
+    /// its InstructionId in the current block's instruction list.
     ///
     /// If an exception handler is active, also emits a MaybeThrow terminal
     /// after the instruction to model potential control flow to the handler,
     /// then continues in a new block.
     pub fn push(&mut self, instruction: Instruction) {
         let loc = instruction.loc.clone();
-        self.current.instructions.push(instruction);
+        let instr_id = InstructionId(self.instruction_table.len() as u32);
+        self.instruction_table.push(instruction);
+        self.current.instructions.push(instr_id);
 
         if let Some(&handler) = self.exception_handler_stack.last() {
             let continuation = self.reserve(self.current_block_kind());
@@ -167,7 +175,7 @@ impl<'a> HirBuilder<'a> {
                 Terminal::MaybeThrow {
                     continuation: continuation.id,
                     handler: Some(handler),
-                    id: InstructionId(0),
+                    id: EvaluationOrder(0),
                     loc,
                     effects: None,
                 },
@@ -426,10 +434,12 @@ impl<'a> HirBuilder<'a> {
         panic!("Expected a loop to be in scope for continue");
     }
 
-    /// Create a temporary Identifier with a fresh id.
-    pub fn make_temporary(&mut self, loc: Option<SourceLocation>) -> Identifier {
+    /// Create a temporary identifier with a fresh id, returning its IdentifierId.
+    pub fn make_temporary(&mut self, loc: Option<SourceLocation>) -> IdentifierId {
         let id = self.env.next_identifier_id();
-        make_temporary_identifier(id, loc)
+        // Update the loc on the allocated identifier
+        self.env.identifiers[id.0 as usize].loc = loc;
+        id
     }
 
     /// Record an error on the environment.
@@ -442,7 +452,7 @@ impl<'a> HirBuilder<'a> {
         self.current.kind
     }
 
-    /// Construct the final HIR from the completed blocks.
+    /// Construct the final HIR and instruction table from the completed blocks.
     ///
     /// Performs these post-build passes:
     /// 1. Reverse-postorder sort + unreachable block removal
@@ -452,26 +462,28 @@ impl<'a> HirBuilder<'a> {
     /// 5. Remove unnecessary try-catch
     /// 6. Number all instructions and terminals
     /// 7. Mark predecessor blocks
-    pub fn build(mut self) -> HIR {
+    pub fn build(mut self) -> (HIR, Vec<Instruction>) {
         let mut hir = HIR {
             blocks: std::mem::take(&mut self.completed),
             entry: self.entry,
         };
 
-        let rpo_blocks = get_reverse_postordered_blocks(&hir);
+        let mut instructions = std::mem::take(&mut self.instruction_table);
+
+        let rpo_blocks = get_reverse_postordered_blocks(&hir, &instructions);
 
         // Check for unreachable blocks that contain FunctionExpression instructions.
         // These could contain hoisted declarations that we can't safely remove.
         for (id, block) in &hir.blocks {
             if !rpo_blocks.contains_key(id) {
-                let has_function_expr = block.instructions.iter().any(|instr| {
-                    matches!(instr.value, InstructionValue::FunctionExpression { .. })
+                let has_function_expr = block.instructions.iter().any(|&instr_id| {
+                    matches!(instructions[instr_id.0 as usize].value, InstructionValue::FunctionExpression { .. })
                 });
                 if has_function_expr {
                     let loc = block
                         .instructions
                         .first()
-                        .and_then(|i| i.loc.clone())
+                        .and_then(|&i| instructions[i.0 as usize].loc.clone())
                         .or_else(|| block.terminal.loc().copied());
                     self.env.record_error(CompilerErrorDetail {
                         category: ErrorCategory::Todo,
@@ -489,24 +501,24 @@ impl<'a> HirBuilder<'a> {
         remove_unreachable_for_updates(&mut hir);
         remove_dead_do_while_statements(&mut hir);
         remove_unnecessary_try_catch(&mut hir);
-        mark_instruction_ids(&mut hir);
+        mark_instruction_ids(&mut hir, &mut instructions);
         mark_predecessors(&mut hir);
 
-        hir
+        (hir, instructions)
     }
 
     // -----------------------------------------------------------------------
     // M3: Binding resolution methods
     // -----------------------------------------------------------------------
 
-    /// Map a BindingId to an HIR Identifier.
+    /// Map a BindingId to an HIR IdentifierId.
     ///
     /// On first encounter, creates a new Identifier with the given name and a fresh id.
-    /// On subsequent encounters, returns the cached identifier.
+    /// On subsequent encounters, returns the cached IdentifierId.
     /// Handles name collisions by appending `_0`, `_1`, etc.
     ///
     /// Records errors for variables named 'fbt' or 'this'.
-    pub fn resolve_binding(&mut self, name: &str, binding_id: BindingId) -> Identifier {
+    pub fn resolve_binding(&mut self, name: &str, binding_id: BindingId) -> IdentifierId {
         // Check for unsupported names
         if name == "fbt" {
             self.env.record_error(CompilerErrorDetail {
@@ -532,9 +544,9 @@ impl<'a> HirBuilder<'a> {
             });
         }
 
-        // If we've already resolved this binding, return the cached identifier
-        if let Some(identifier) = self.bindings.get(&binding_id) {
-            return identifier.clone();
+        // If we've already resolved this binding, return the cached IdentifierId
+        if let Some(&identifier_id) = self.bindings.get(&binding_id) {
+            return identifier_id;
         }
 
         // Find a unique name: start with the original name, then try name_0, name_1, ...
@@ -555,23 +567,14 @@ impl<'a> HirBuilder<'a> {
             }
         }
 
+        // Allocate identifier in the arena
         let id = self.env.next_identifier_id();
-        let identifier = Identifier {
-            id,
-            declaration_id: DeclarationId(id.0),
-            name: Some(IdentifierName::Named(candidate.clone())),
-            mutable_range: MutableRange {
-                start: InstructionId(0),
-                end: InstructionId(0),
-            },
-            scope: None,
-            type_: self.env.make_type(),
-            loc: None,
-        };
+        // Update the name on the allocated identifier
+        self.env.identifiers[id.0 as usize].name = Some(IdentifierName::Named(candidate.clone()));
 
         self.used_names.insert(candidate, binding_id);
-        self.bindings.insert(binding_id, identifier.clone());
-        identifier
+        self.bindings.insert(binding_id, id);
+        id
     }
 
     /// Resolve an identifier reference to a VariableBinding.
@@ -630,9 +633,9 @@ impl<'a> HirBuilder<'a> {
                         react_compiler_ast::scope::BindingKind::Local => "local",
                         react_compiler_ast::scope::BindingKind::Unknown => "unknown",
                     }.to_string();
-                    let identifier = self.resolve_binding(name, binding_id);
+                    let identifier_id = self.resolve_binding(name, binding_id);
                     VariableBinding::Identifier {
-                        identifier,
+                        identifier: identifier_id,
                         binding_kind,
                     }
                 }
@@ -779,7 +782,7 @@ fn terminal_fallthrough(terminal: &Terminal) -> Option<BlockId> {
 /// Blocks not reachable through successors are removed. Blocks that are
 /// only reachable as fallthroughs (not through real successor edges) are
 /// replaced with empty blocks that have an Unreachable terminal.
-fn get_reverse_postordered_blocks(hir: &HIR) -> BTreeMap<BlockId, BasicBlock> {
+fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> BTreeMap<BlockId, BasicBlock> {
     let mut visited: HashSet<BlockId> = HashSet::new();
     let mut used: HashSet<BlockId> = HashSet::new();
     let mut used_fallthroughs: HashSet<BlockId> = HashSet::new();
@@ -864,7 +867,7 @@ fn get_reverse_postordered_blocks(hir: &HIR) -> BTreeMap<BlockId, BasicBlock> {
                     id: block_id,
                     instructions: Vec::new(),
                     terminal: Terminal::Unreachable {
-                        id: block.terminal.id(),
+                        id: block.terminal.evaluation_order(),
                         loc: block.terminal.loc().copied(),
                     },
                     preds: BTreeSet::new(),
@@ -909,7 +912,7 @@ fn remove_dead_do_while_statements(hir: &mut HIR) {
             } = std::mem::replace(
                 &mut block.terminal,
                 Terminal::Unreachable {
-                    id: InstructionId(0),
+                    id: EvaluationOrder(0),
                     loc: None,
                 },
             ) {
@@ -958,7 +961,7 @@ fn remove_unnecessary_try_catch(hir: &mut HIR) {
         if let Some(block) = hir.blocks.get_mut(&block_id) {
             block.terminal = Terminal::Goto {
                 block: try_block,
-                id: InstructionId(0),
+                id: EvaluationOrder(0),
                 loc,
                 variant: GotoVariant::Break,
             };
@@ -977,15 +980,15 @@ fn remove_unnecessary_try_catch(hir: &mut HIR) {
 }
 
 /// Sequentially number all instructions and terminals starting from 1.
-fn mark_instruction_ids(hir: &mut HIR) {
-    let mut id: u32 = 0;
+fn mark_instruction_ids(hir: &mut HIR, instructions: &mut [Instruction]) {
+    let mut order: u32 = 0;
     for block in hir.blocks.values_mut() {
-        for instr in &mut block.instructions {
-            id += 1;
-            instr.id = InstructionId(id);
+        for &instr_id in &block.instructions {
+            order += 1;
+            instructions[instr_id.0 as usize].id = EvaluationOrder(order);
         }
-        id += 1;
-        block.terminal.set_id(InstructionId(id));
+        order += 1;
+        block.terminal.set_evaluation_order(EvaluationOrder(order));
     }
 }
 
@@ -1038,29 +1041,15 @@ fn mark_predecessors(hir: &mut HIR) {
 // Public helper functions
 // ---------------------------------------------------------------------------
 
-/// Create a temporary Place with a fresh identifier.
+/// Create a temporary Place with a fresh identifier allocated in the arena.
 pub fn create_temporary_place(env: &mut Environment, loc: Option<SourceLocation>) -> Place {
     let id = env.next_identifier_id();
+    // Update the loc on the allocated identifier
+    env.identifiers[id.0 as usize].loc = loc;
     Place {
-        identifier: make_temporary_identifier(id, loc),
+        identifier: id,
         reactive: false,
         effect: Effect::Unknown,
         loc: None,
-    }
-}
-
-/// Create a temporary Identifier with the given id and location.
-pub fn make_temporary_identifier(id: IdentifierId, loc: Option<SourceLocation>) -> Identifier {
-    Identifier {
-        id,
-        declaration_id: DeclarationId(id.0),
-        name: None,
-        mutable_range: MutableRange {
-            start: InstructionId(0),
-            end: InstructionId(0),
-        },
-        scope: None,
-        type_: make_type(),
-        loc,
     }
 }
