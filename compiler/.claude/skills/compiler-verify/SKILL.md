@@ -29,7 +29,11 @@ Arguments:
 4. **Always run** (from the repo root):
    - `yarn prettier-all` — format all changed files
 
-5. Report results: list each step as passed/failed. On failure, stop and show the error with suggested fixes.
+5. **If implementing a plan doc**, check:
+   - Plan doc has no unaddressed "Remaining Work" items
+   - Plan doc status is updated to reflect current state
+
+6. Report results: list each step as passed/failed. On failure, stop and show the error with suggested fixes.
 
 ## Common Mistakes
 

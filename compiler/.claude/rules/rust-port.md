@@ -15,3 +15,9 @@ When working on Rust code in `compiler/crates/`:
 - Use `/port-pass <name>` when porting a new compiler pass
 - Use `/compiler-verify` before committing to run both Rust and TS tests
 - Keep Rust code structurally close to the TypeScript (~85-95% correspondence)
+
+Before declaring work complete on a plan doc:
+- Re-read the original user prompt to ensure all requested steps are done
+- Check the plan doc for any "Remaining Work" items
+- Verify test-babel-ast.sh passes with the expected fixture count
+- Update the plan doc's status section
