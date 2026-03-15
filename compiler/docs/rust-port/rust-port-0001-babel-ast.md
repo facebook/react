@@ -6,7 +6,7 @@ Create a Rust crate (`compiler/crates/react_compiler_ast`) that precisely models
 
 This crate is the serialization boundary between the JS toolchain (Babel parser) and the Rust compiler. It must be a faithful 1:1 representation of Babel's AST output — not a simplified or custom IR.
 
-**Current status**: All 1714 compiler test fixtures round-trip successfully (0 failures). Remaining work: remove `Unknown` catch-all variants from enums, define scope tree types, and implement scope resolution testing (see [Remaining Work](#remaining-work)).
+**Current status**: All 1714 compiler test fixtures round-trip successfully (0 failures). Remaining work: remove `Unknown` catch-all variants from enums, define scope info types (normalized `ScopeInfo`/`ScopeData`/`BindingData` with `ScopeId`/`BindingId` arena indices), and implement scope resolution testing (see [Remaining Work](#remaining-work)).
 
 ---
 
@@ -325,32 +325,40 @@ pub enum SourceType {
 
 > **Status**: Not yet implemented. This is the main remaining work item.
 
-The compiler needs Babel's scope information. This is **not** part of the AST JSON — it's a separate data structure produced by running `@babel/traverse` on the parsed AST. Model it as a separate type for the JSON interchange:
+The compiler needs scope information (binding resolution, scope chain, import metadata) to lower AST into HIR. This is **not** part of the AST JSON — it's a separate normalized data structure. For Babel, it's produced by running `@babel/traverse` on the parsed AST and serialized as a companion JSON. For other parsers (OXC, SWC), it would be produced by converting their native scope representations.
+
+### Design goals
+
+1. **Normalized/flat**: All data stored in flat `Vec`s indexed by `Copy`-able ID newtypes. No reference cycles, no `Rc`/`Arc`. Scope and binding records reference each other via IDs, not pointers.
+2. **Parser-agnostic**: The scope types capture what the compiler needs, not the specifics of any parser's scope API. Any parser that can produce binding resolution and scope chain information can populate these types.
+3. **AST types stay clean**: The AST crate's serde types have no scope-related fields. Scope-to-AST linkage is via position-based lookup maps in a separate `ScopeInfo` container.
+4. **Sufficient for HIR lowering**: Must support all operations the compiler currently performs via Babel's scope API: `getBinding(name)`, `binding.kind`, `binding.scope`, `binding.path` (declaration node type), scope chain walking, `scope.bindings` iteration, and import source resolution.
+
+### Core ID types
 
 ```rust
-/// Scope tree produced by @babel/traverse, serialized separately from the AST.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ScopeTree {
-    /// All scopes, indexed by ScopeId
-    pub scopes: Vec<ScopeData>,
-    /// Map from AST node start position to its scope ID.
-    /// Used to look up which scope a given AST node belongs to.
-    pub node_scopes: HashMap<u32, ScopeId>,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Identifies a scope in the scope table. Copy-able, used as an index.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ScopeId(pub u32);
 
+/// Identifies a binding (variable declaration) in the binding table. Copy-able, used as an index.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct BindingId(pub u32);
+```
+
+Both are newtype wrappers around `u32` and implement `Copy`. They serve as indices into flat `Vec`s in the `ScopeInfo` container. This pattern matches OXC's `ScopeId`/`SymbolId` and the compiler's own HIR `IdentifierId`.
+
+### Normalized tables
+
+```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScopeData {
     pub id: ScopeId,
     pub parent: Option<ScopeId>,
     pub kind: ScopeKind,
-    pub bindings: HashMap<String, BindingData>,
-    /// Names that are referenced but not bound in this scope
-    pub references: HashSet<String>,
-    /// Names that are globals (referenced but not bound anywhere in the scope chain)
-    pub globals: HashSet<String>,
+    /// Bindings declared directly in this scope, keyed by name.
+    /// Maps to BindingId for lookup in the binding table.
+    pub bindings: HashMap<String, BindingId>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -368,16 +376,18 @@ pub enum ScopeKind {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BindingData {
+    pub id: BindingId,
+    pub name: String,
     pub kind: BindingKind,
-    /// The start offset of the binding's declaration Identifier node.
-    /// Used for identity comparison (two references to the same binding
-    /// resolve to the same declaration node start offset).
-    pub identifier_start: u32,
-    /// The name of the identifier
-    pub identifier_name: String,
-    /// For import bindings: the source module and import details
+    /// The scope this binding is declared in.
+    pub scope: ScopeId,
+    /// The type of the declaration AST node (e.g., "FunctionDeclaration",
+    /// "VariableDeclarator"). Used by the compiler to distinguish function
+    /// declarations from variable declarations during hoisting.
+    pub declaration_type: String,
+    /// For import bindings: the source module and import details.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub import_source: Option<ImportBindingSource>,
+    pub import: Option<ImportBindingData>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -387,16 +397,25 @@ pub enum BindingKind {
     Let,
     Const,
     Param,
+    /// Import bindings (import declarations).
     Module,
+    /// Function declarations (hoisted).
     Hoisted,
+    /// Other local bindings (class declarations, etc.).
     Local,
+    /// Binding kind not recognized by the serializer.
     Unknown,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ImportBindingSource {
+pub struct ImportBindingData {
+    /// The module specifier string (e.g., "react" in `import {useState} from 'react'`).
     pub source: String,
     pub kind: ImportBindingKind,
+    /// For named imports: the imported name (e.g., "bar" in `import {bar as baz} from 'foo'`).
+    /// None for default and namespace imports.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub imported: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -408,11 +427,110 @@ pub enum ImportBindingKind {
 }
 ```
 
-The scope tree is a pre-computed flattened representation of Babel's scope chain. The Node.js side traverses the AST with `@babel/traverse`, collects scope info, and serializes this structure. The Rust side can then look up bindings by walking the `parent` chain — equivalent to `scope.getBinding(name)`.
+Key differences from Babel's in-memory representation:
+- **Bindings are stored in a flat table** indexed by `BindingId`, not nested inside scope objects. Each `ScopeData` stores `HashMap<String, BindingId>` mapping names to binding IDs rather than containing full binding data inline.
+- **`declaration_type`** replaces Babel's `binding.path.isFunctionDeclaration()` / `binding.path.isVariableDeclarator()` checks. The compiler uses these to determine hoisting behavior — storing the declaration node type as a string avoids needing to cross-reference back into the AST.
+- **`ImportBindingData`** captures import source, kind, and imported name, covering all the import resolution the compiler does via `binding.path.isImportSpecifier()` etc.
 
-**Identity comparison**: Babel uses object identity (`binding1 === binding2`) to compare bindings. In the serialized form, we use the `identifier_start` offset as a unique identity key — two bindings with the same `identifier_start` are the same declaration.
+### ScopeInfo container
 
-**`generateUid`/`rename`**: These are mutating operations used during HIR lowering. In the Rust port, the scope tree is read-only input. Unique name generation moves to the Rust side (the Environment already tracks a counter). Renaming is tracked in Rust's own data structures.
+```rust
+/// Complete scope information for a program. Stored separately from the AST
+/// and linked via position-based lookup maps.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScopeInfo {
+    /// All scopes, indexed by ScopeId. scopes[id.0] gives the ScopeData for that scope.
+    pub scopes: Vec<ScopeData>,
+    /// All bindings, indexed by BindingId. bindings[id.0] gives the BindingData.
+    pub bindings: Vec<BindingData>,
+
+    /// Maps an AST node's start offset to the scope it creates.
+    /// Populated for scope-creating nodes: Program, FunctionDeclaration,
+    /// FunctionExpression, ArrowFunctionExpression, BlockStatement,
+    /// ForStatement, ForInStatement, ForOfStatement, SwitchStatement,
+    /// CatchClause, ClassDeclaration, ClassExpression.
+    pub node_to_scope: HashMap<u32, ScopeId>,
+
+    /// Maps an Identifier AST node's start offset to the binding it resolves to.
+    /// Only present for identifiers that resolve to a binding (not globals).
+    /// An identifier whose start offset is absent from this map is a global reference.
+    pub reference_to_binding: HashMap<u32, BindingId>,
+
+    /// The program-level (module) scope. Always scopes[0].
+    pub program_scope: ScopeId,
+}
+```
+
+**AST-to-scope linkage**: The AST types themselves carry no scope information — they remain pure serde data types for JSON round-tripping. The `ScopeInfo` links to AST nodes via start offsets (`u32`), which are stable across serialization. Start offsets are unique per node in Babel's output, making them reliable keys.
+
+**Resolution algorithm** — equivalent to Babel's `scope.getBinding(name)`:
+
+```rust
+impl ScopeInfo {
+    /// Look up a binding by name starting from the given scope,
+    /// walking up the parent chain. Returns None for globals.
+    pub fn get_binding(&self, scope_id: ScopeId, name: &str) -> Option<BindingId> {
+        let mut current = Some(scope_id);
+        while let Some(id) = current {
+            let scope = &self.scopes[id.0 as usize];
+            if let Some(&binding_id) = scope.bindings.get(name) {
+                return Some(binding_id);
+            }
+            current = scope.parent;
+        }
+        None
+    }
+
+    /// Look up the binding for an identifier reference by its AST node start offset.
+    /// Returns None for globals/unresolved references.
+    pub fn resolve_reference(&self, identifier_start: u32) -> Option<&BindingData> {
+        self.reference_to_binding
+            .get(&identifier_start)
+            .map(|id| &self.bindings[id.0 as usize])
+    }
+
+    /// Get all bindings declared in a scope (for hoisting iteration).
+    pub fn scope_bindings(&self, scope_id: ScopeId) -> impl Iterator<Item = &BindingData> {
+        self.scopes[scope_id.0 as usize]
+            .bindings
+            .values()
+            .map(|id| &self.bindings[id.0 as usize])
+    }
+}
+```
+
+**Identity comparison**: Babel uses object identity (`binding1.identifier === binding2.identifier`) to compare bindings. In the normalized form, `BindingId` equality serves this purpose — two references that resolve to the same `BindingId` refer to the same declaration. This is equivalent to OXC's `SymbolId` equality.
+
+**`generateUid`/`rename`**: These are mutating operations in Babel used during HIR lowering. In the Rust port, the scope info is read-only input. Unique name generation moves to the Rust side (the Environment already tracks a counter). Renaming is tracked in Rust's own data structures, same as the existing compiler does with its `HIRBuilder.#bindings` map.
+
+### Conversion from other parsers
+
+The `ScopeInfo` structure is parser-agnostic. Each parser integration produces an `(ast::File, ScopeInfo)` pair. The conversion patterns differ by parser:
+
+**From Babel** (current path): The Node.js side runs `@babel/traverse` on the parsed AST and serializes two JSON blobs: the AST (already implemented) and the `ScopeInfo`. The traversal assigns `ScopeId`s in preorder, assigns `BindingId`s in declaration order, and populates the lookup maps by recording each identifier reference's start offset and resolved binding.
+
+**From OXC**: OXC's `oxc_semantic` crate produces an arena-indexed `ScopeTree` + `SymbolTable` + `ReferenceTable` that maps closely to our structure:
+
+| OXC type | Our type | Conversion |
+|----------|----------|------------|
+| `oxc_semantic::ScopeId(u32)` | `ScopeId(u32)` | Direct ID remapping |
+| `oxc_semantic::SymbolId(u32)` | `BindingId(u32)` | Direct ID remapping |
+| `ScopeTree` (parent IDs, flags, bindings) | `Vec<ScopeData>` | Map flags to `ScopeKind`, copy parent chain, convert binding maps from `SymbolId` to `BindingId` |
+| `SymbolTable` (name, scope, flags) | `Vec<BindingData>` | Map flags to `BindingKind`, copy name and scope ID |
+| `ReferenceTable` (symbol ID per reference) | `reference_to_binding: HashMap<u32, BindingId>` | Map each reference's AST node span start to its resolved `BindingId` |
+| AST node `scope_id` fields | `node_to_scope: HashMap<u32, ScopeId>` | Map each scope-creating node's span start to its `ScopeId` |
+
+OXC is the most natural fit — both use arena-indexed flat tables with `Copy`-able ID newtypes. The conversion is essentially remapping IDs, which is O(n) with no structural transformation.
+
+**From SWC**: SWC does not produce a separate scope tree. Instead, its resolver pass annotates each `Ident` node with a `SyntaxContext` (an interned ID encoding hygiene/scope context). Converting to our model requires:
+
+1. Run SWC's resolver pass to populate `SyntaxContext` on all identifiers
+2. Traverse the resolved AST, building scope data by tracking `SyntaxContext` values and their nesting
+3. For each unique `(name, SyntaxContext)` pair, create a `BindingData` entry
+4. For each identifier reference, record its start offset → `BindingId` mapping
+5. For each scope-creating node, record its start offset → `ScopeId` mapping
+
+This is more work than the OXC path but straightforward — SWC's `SyntaxContext` uniquely identifies each binding's scope context, which gives us the information we need to reconstruct a scope tree.
 
 ---
 
@@ -486,9 +604,9 @@ bash compiler/scripts/test-babel-ast.sh
 
 Remove all `#[serde(untagged)] Unknown(serde_json::Value)` variants from every enum (`Statement`, `Expression`, `PatternLike`, `ObjectExpressionProperty`, `ForInit`, `ForInOfLeft`, `ImportSpecifier`, `ExportSpecifier`, `ModuleExportName`, `Declaration`, `ExportDefaultDecl`, `ObjectPatternProperty`, `ArrowFunctionBody`, `JSXChild`, `JSXElementName`, `JSXAttributeItem`, `JSXAttributeName`, `JSXAttributeValue`, `JSXExpressionContainerExpr`, `JSXMemberExprObject`). Deserialization should fail on unrecognized node types. All 1714 fixtures already pass through typed variants, so removing `Unknown` should not cause regressions — but run the round-trip test to confirm.
 
-### Scope tree types
+### Scope info types
 
-Define the `ScopeTree`, `ScopeData`, `BindingData`, and related types described in the [Scope Types](#scope-types-separate-from-ast) section as Rust structs in the crate.
+Define the `ScopeInfo`, `ScopeData`, `BindingData`, and related types described in the [Scope Types](#scope-types-separate-from-ast) section as Rust structs in the crate. Includes `ScopeId`, `BindingId` newtypes, `ScopeKind`, `BindingKind`, `ImportBindingData`, and the resolution methods on `ScopeInfo`.
 
 ### Scope resolution test
 
@@ -496,14 +614,16 @@ Verify that the Rust side resolves identifiers to the same scopes and bindings a
 
 #### ID assignment
 
-Each scope and each identifier binding are assigned auto-incrementing IDs based on **preorder traversal** of the scope tree:
+`ScopeId`s and `BindingId`s are assigned as auto-incrementing indices based on **preorder traversal** of the AST:
 
-- **Scope IDs**: Assigned in the order scopes are entered during a depth-first AST walk. The program scope is 0, the first nested scope is 1, etc.
-- **Identifier IDs**: Each unique binding declaration is assigned an ID in the order it is first encountered during the same traversal. The first declared binding is 0, the second is 1, etc. (References to the same binding share the declaration's ID.)
+- **ScopeId**: Assigned in the order scope-creating nodes are entered during a depth-first AST walk. The program scope is `ScopeId(0)`, the first nested scope is `ScopeId(1)`, etc.
+- **BindingId**: Each unique binding declaration is assigned an ID in the order it is first encountered during the same traversal. The first declared binding is `BindingId(0)`, the second is `BindingId(1)`, etc.
+
+These IDs match between the Babel and Rust sides because both use the same deterministic preorder traversal.
 
 #### Renaming scheme
 
-Every `Identifier` node that resolves to a binding is renamed from `<name>` to `<name>_s<scopeId>_b<bindingId>`, where `scopeId` is the scope the identifier appears in, and `bindingId` is the declaration's unique ID. For example:
+Every `Identifier` node that resolves to a binding is renamed from `<name>` to `<name>_s<scopeId>_b<bindingId>`, where `scopeId` is the scope the identifier appears in (from `node_to_scope` / the enclosing scope), and `bindingId` is the resolved binding's ID (from `reference_to_binding`). For example:
 
 ```javascript
 // Input:
@@ -519,19 +639,20 @@ Identifiers that don't resolve to any binding (globals, unresolved references) a
 
 **Babel side** (`compiler/scripts/babel-ast-to-json.mjs` or a new companion script):
 1. Parse the fixture with `@babel/parser`
-2. Traverse with `@babel/traverse`, building the scope tree
-3. Walk the AST, assigning scope IDs (preorder) and binding IDs (preorder by first declaration)
-4. Rename all bound identifiers per the scheme above
-5. Re-serialize the renamed AST to JSON
+2. Traverse with `@babel/traverse`, collecting scope and binding data
+3. Assign `ScopeId`s and `BindingId`s in preorder
+4. Build the `ScopeInfo` JSON (scopes table, bindings table, `node_to_scope` map, `reference_to_binding` map)
+5. Rename all bound identifiers per the scheme above
+6. Write both the `ScopeInfo` JSON and the renamed AST JSON
 
 **Rust side** (`compiler/crates/react_compiler_ast/tests/scope_resolution.rs`):
-1. Deserialize the original (un-renamed) AST JSON and the scope tree JSON
-2. Walk the AST with the scope tree, assigning scope IDs and binding IDs using the same preorder traversal
+1. Deserialize the original (un-renamed) AST JSON and the `ScopeInfo` JSON
+2. Walk the AST, using `ScopeInfo.reference_to_binding` to resolve each identifier and `ScopeInfo.node_to_scope` to determine enclosing scopes
 3. Rename all bound identifiers per the same scheme
 4. Re-serialize the renamed AST to JSON
 5. Normalize and compare against the Babel-renamed JSON — they must match
 
-This verifies that the Rust scope tree correctly reproduces Babel's binding resolution. If an identifier is renamed differently (or renamed on one side but not the other), the diff immediately shows which binding or scope diverges.
+This verifies that the `ScopeInfo` structure correctly reproduces Babel's binding resolution. If an identifier is renamed differently (or renamed on one side but not the other), the diff immediately shows which binding or scope diverges.
 
 #### Integration
 

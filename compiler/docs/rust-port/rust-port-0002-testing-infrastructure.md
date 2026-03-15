@@ -237,7 +237,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let scope_json = fs::read_to_string(&args[3])?;
 
     let ast: react_compiler_ast::File = serde_json::from_str(&ast_json)?;
-    let scope: react_compiler_ast::ScopeTree = serde_json::from_str(&scope_json)?;
+    let scope: react_compiler_ast::ScopeInfo = serde_json::from_str(&scope_json)?;
 
     let mut env = Environment::new(/* default config */);
 
@@ -260,7 +260,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn run_pipeline(
     target_pass: &str,
     ast: File,
-    scope: ScopeTree,
+    scope: ScopeInfo,
     env: &mut Environment,
 ) -> Result<String, CompilerDiagnostic> {
     let mut hir = lower(ast, scope, env)?;
@@ -457,7 +457,7 @@ The TS and Rust test binaries take different inputs:
 
 - **TS binary**: Takes the original fixture path. Parses with `@babel/parser`, runs `@babel/traverse` to build scope info, and calls the existing `lower()` with a real Babel `NodePath`. This is the simplest approach — `lower()` is deeply entangled with Babel's `NodePath` API (`path.get()`, `path.scope.getBinding()`, etc.), so reusing it directly avoids reimplementing those dependencies.
 
-- **Rust binary**: Takes pre-parsed AST JSON + Scope JSON (produced by the step 1 infrastructure). Deserializes into `react_compiler_ast::File` and `ScopeTree`, then calls a Rust `lower()` that works with these types directly — no Babel dependency.
+- **Rust binary**: Takes pre-parsed AST JSON + Scope JSON (produced by the step 1 infrastructure). Deserializes into `react_compiler_ast::File` and `ScopeInfo`, then calls a Rust `lower()` that works with these types directly — no Babel dependency.
 
 This asymmetry is intentional and acceptable:
 1. The AST JSON round-trip is already validated by step 1 (1714/1714 fixtures pass), so the Rust side sees the same AST data that Babel produced.
