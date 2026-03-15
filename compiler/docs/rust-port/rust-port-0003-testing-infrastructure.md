@@ -98,6 +98,7 @@ These are the valid `<pass>` arguments, matching the `log()` name strings in Pip
 | `OptimizePropsMethodCalls` | `optimizePropsMethodCalls()` |
 | `AnalyseFunctions` | `analyseFunctions()` |
 | `InferMutationAliasingEffects` | `inferMutationAliasingEffects()` |
+| `OptimizeForSSR` | `optimizeForSSR()` |
 | `DeadCodeElimination` | `deadCodeElimination()` |
 | `PruneMaybeThrows2` | `pruneMaybeThrows()` (second call) |
 | `InferMutationAliasingRanges` | `inferMutationAliasingRanges()` |
@@ -105,6 +106,8 @@ These are the valid `<pass>` arguments, matching the `log()` name strings in Pip
 | `RewriteInstructionKinds` | `rewriteInstructionKindsBasedOnReassignment()` |
 | `InferReactiveScopeVariables` | `inferReactiveScopeVariables()` |
 | `MemoizeFbtOperands` | `memoizeFbtAndMacroOperandsInSameScope()` |
+| `NameAnonymousFunctions` | `nameAnonymousFunctions()` |
+| `OutlineFunctions` | `outlineFunctions()` |
 | `AlignMethodCallScopes` | `alignMethodCallScopes()` |
 | `AlignObjectMethodScopes` | `alignObjectMethodScopes()` |
 | `PruneUnusedLabelsHIR` | `pruneUnusedLabelsHIR()` |
@@ -568,11 +571,11 @@ compiler/
   scripts/
     test-rust-port.sh              # Entrypoint script
     ts-compile-fixture.mjs         # TS test binary
-    debug-print-hir.ts             # Debug HIR printer (TS)
-    debug-print-reactive.ts        # Debug ReactiveFunction printer (TS)
-    debug-print-error.ts           # Debug error printer (TS)
+    debug-print-hir.mjs            # Debug HIR printer (TS)
+    debug-print-reactive.mjs       # Debug ReactiveFunction printer (TS)
+    debug-print-error.mjs          # Debug error printer (TS)
   crates/
-    react_compiler/                # New crate (or extend existing)
+    react_compiler/
       Cargo.toml
       src/
         bin/
@@ -580,11 +583,23 @@ compiler/
         lib.rs
         debug_print.rs             # Debug HIR/Reactive/Error printer (Rust)
         pipeline.rs                # Pipeline runner (pass-by-pass)
-        lower.rs                   # Lowering (first pass to port)
+    react_compiler_hir/
+      Cargo.toml
+      src/
+        lib.rs                     # HIR types
         environment.rs             # Environment type
-        hir.rs                     # HIR types
-        ...                        # Other passes as ported
+    react_compiler_lowering/
+      Cargo.toml
+      src/
+        lib.rs                     # pub fn lower() entry point
+        build_hir.rs               # Lowering functions
+        hir_builder.rs             # HIRBuilder struct
+    react_compiler_diagnostics/
+      Cargo.toml
+      src/
+        lib.rs                     # CompilerError, CompilerDiagnostic, etc.
     react_compiler_ast/            # Existing AST crate (from step 1)
+      ...
 ```
 
 ---
@@ -611,7 +626,7 @@ Both test binaries use the **same default configuration**. This is the `Environm
 
 For the diff to be meaningful, both test binaries must be fully deterministic:
 
-1. **Map/Set iteration order**: TS uses insertion-order Maps and Sets. Rust uses `HashMap`/`HashSet` which are unordered. The debug printer must sort by key (block IDs, identifier IDs, scope IDs) before printing.
+1. **Map/Set iteration order**: TS uses insertion-order Maps and Sets. Rust should use `IndexMap`/`IndexSet` (from the `indexmap` crate) for insertion-order maps and sets, matching TS's insertion-order `Map` and `Set`. The debug printer must sort by key (block IDs, identifier IDs, scope IDs) before printing.
 
 2. **ID assignment**: Both sides must assign the same IDs (IdentifierId, BlockId, ScopeId) in the same order. This is ensured by following the same pipeline logic.
 

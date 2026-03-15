@@ -1,6 +1,7 @@
 use std::fs;
 use std::process;
 use react_compiler::pipeline::run_pipeline;
+use react_compiler_hir::environment::Environment;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -27,11 +28,13 @@ fn main() {
         process::exit(1);
     });
 
-    match run_pipeline(pass, ast, scope) {
+    let mut env = Environment::new();
+
+    match run_pipeline(pass, &ast, &scope, &mut env) {
         Ok(output) => print!("{}", output),
         Err(e) => {
-            eprintln!("{}", e);
-            process::exit(1);
+            // Compiler errors go to stdout for diffing
+            print!("{}", react_compiler::debug_print::debug_error(&e));
         }
     }
 }

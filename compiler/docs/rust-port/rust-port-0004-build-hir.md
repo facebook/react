@@ -23,7 +23,7 @@ compiler/crates/
   react_compiler_hir/
     Cargo.toml
     src/
-      lib.rs              # HIR types: HIRFunction, BasicBlock, Instruction, Terminal, Place, etc.
+      lib.rs              # HIR types: HirFunction, BasicBlock, Instruction, Terminal, Place, etc.
       environment.rs      # Environment struct (arenas, counters, config)
   react_compiler_diagnostics/
     Cargo.toml
@@ -117,7 +117,7 @@ fn resolve_identifier(&mut self, name: &str, start_offset: u32) -> VariableBindi
 ```
 
 Key differences:
-- **`resolveBinding()` keying**: TypeScript uses Babel node reference identity (`mapping.node === node`) to distinguish same-named variables in different scopes. Rust uses `BindingId` from `ScopeInfo` — the map becomes `HashMap<BindingId, Identifier>` instead of `Map<string, {node, identifier}>`. This is simpler and more correct.
+- **`resolveBinding()` keying**: TypeScript uses Babel node reference identity (`mapping.node === node`) to distinguish same-named variables in different scopes. Rust uses `BindingId` from `ScopeInfo` — the map becomes `IndexMap<BindingId, IdentifierId>` instead of `Map<string, {node, identifier}>`. This is simpler and more correct.
 - **`isContextIdentifier()`**: TypeScript checks `env.isContextIdentifier(binding.identifier)`. Rust checks whether the binding's scope is an ancestor of the current function's scope but not the program scope — this is a `ScopeInfo` query.
 - **`gatherCapturedContext()`**: TypeScript traverses the function with Babel's traverser to find free variable references. Rust walks the AST directly using `ScopeInfo.reference_to_binding` to identify references that resolve to bindings in ancestor scopes.
 
@@ -127,12 +127,15 @@ The `HIRBuilder` class maps to a Rust struct with `&mut self` methods. The closu
 
 ```rust
 pub struct HirBuilder<'a> {
-    completed: HashMap<BlockId, BasicBlock>,
+    completed: IndexMap<BlockId, BasicBlock>,
     current: WipBlock,
     entry: BlockId,
     scopes: Vec<Scope>,
-    context: HashMap<BindingId, SourceLocation>,
-    bindings: HashMap<BindingId, Identifier>,
+    context: IndexMap<BindingId, Option<SourceLocation>>,
+    bindings: IndexMap<BindingId, IdentifierId>,
+    used_names: IndexMap<String, BindingId>,
+    instruction_table: Vec<Instruction>,
+    function_scope: ScopeId,
     env: &'a mut Environment,
     scope_info: &'a ScopeInfo,
     exception_handler_stack: Vec<BlockId>,
@@ -160,8 +163,8 @@ impl<'a> HirBuilder<'a> {
             id: completed.id,
             instructions: completed.instructions,
             terminal,
-            preds: HashSet::new(),
-            phis: HashSet::new(),
+            preds: IndexSet::new(),
+            phis: Vec::new(),
         });
     }
 
@@ -222,7 +225,7 @@ Following the port notes:
 - `builder.recordError(...)` → `builder.record_error(...)` (accumulates on Environment)
 - Non-null assertions (`!`) → `.unwrap()` or `.expect("...")`
 
-The `lower()` function returns `Result<HIRFunction, CompilerDiagnostic>` for invariant/thrown errors, while accumulated errors go to `env.errors`.
+The `lower()` function returns `Result<HirFunction, CompilerError>` for invariant/thrown errors, while accumulated errors go to `env.errors`.
 
 ### 6. `todo!()` Strategy for Incremental Implementation
 
@@ -258,7 +261,7 @@ This "fog of war" approach allows:
 
 | TypeScript (BuildHIR.ts) | Rust (build_hir.rs) | Notes |
 |---|---|---|
-| `lower(func, env, bindings, capturedRefs)` | `pub fn lower(func: &ast::Function, scope_info: &ScopeInfo, env: &mut Environment) -> Result<HIRFunction, CompilerDiagnostic>` | Entry point. `Function` is an enum over ArrowFunctionExpression, FunctionExpression, FunctionDeclaration |
+| `lower(func, env, bindings, capturedRefs)` | `pub fn lower(ast: &ast::File, scope_info: &ScopeInfo, env: &mut Environment) -> Result<HirFunction, CompilerError>` | Entry point. Takes the full File (extracts the function internally) |
 | `lowerStatement(builder, stmtPath, label)` | `fn lower_statement(builder: &mut HirBuilder, stmt: &ast::Statement, label: Option<&str>)` | ~30 match arms |
 | `lowerExpression(builder, exprPath)` | `fn lower_expression(builder: &mut HirBuilder, expr: &ast::Expression) -> InstructionValue` | ~40 match arms |
 | `lowerExpressionToTemporary(builder, exprPath)` | `fn lower_expression_to_temporary(builder: &mut HirBuilder, expr: &ast::Expression) -> Place` | |
@@ -270,7 +273,7 @@ This "fog of war" approach allows:
 | `lowerOptionalCallExpression(builder, exprPath)` | `fn lower_optional_call_expression(builder: &mut HirBuilder, expr: &ast::OptionalCallExpression) -> InstructionValue` | |
 | `lowerArguments(builder, args, isDev)` | `fn lower_arguments(builder: &mut HirBuilder, args: &[ast::Expression], is_dev: bool) -> Vec<PlaceOrSpread>` | |
 | `lowerFunctionToValue(builder, expr)` | `fn lower_function_to_value(builder: &mut HirBuilder, expr: &ast::Function) -> InstructionValue` | |
-| `lowerFunction(builder, expr)` | `fn lower_function(builder: &mut HirBuilder, expr: &ast::Function) -> LoweredFunction` | Recursive `lower()` call |
+| `lowerFunction(builder, expr)` | `fn lower_function(builder: &mut HirBuilder, expr: &ast::Function) -> LoweredFunction` | Recursive `lower()` call. Returns `LoweredFunction` (not `FunctionId`) |
 | `lowerJsxElementName(builder, name)` | `fn lower_jsx_element_name(builder: &mut HirBuilder, name: &ast::JSXElementName) -> JsxTag` | |
 | `lowerJsxElement(builder, child)` | `fn lower_jsx_element(builder: &mut HirBuilder, child: &ast::JSXChild) -> Option<Place>` | |
 | `lowerObjectMethod(builder, property)` | `fn lower_object_method(builder: &mut HirBuilder, method: &ast::ObjectMethod) -> ObjectProperty` | |
@@ -278,14 +281,14 @@ This "fog of war" approach allows:
 | `lowerReorderableExpression(builder, expr)` | `fn lower_reorderable_expression(builder: &mut HirBuilder, expr: &ast::Expression) -> Place` | |
 | `isReorderableExpression(builder, expr)` | `fn is_reorderable_expression(builder: &HirBuilder, expr: &ast::Expression) -> bool` | |
 | `lowerType(node)` | `fn lower_type(node: &ast::TypeAnnotation) -> Type` | |
-| `gatherCapturedContext(fn, componentScope)` | `fn gather_captured_context(func: &ast::Function, scope_info: &ScopeInfo, parent_scope: ScopeId) -> HashMap<BindingId, SourceLocation>` | AST walk replaces Babel traverser |
-| `captureScopes({from, to})` | `fn capture_scopes(scope_info: &ScopeInfo, from: ScopeId, to: ScopeId) -> HashSet<ScopeId>` | |
+| `gatherCapturedContext(fn, componentScope)` | `fn gather_captured_context(func: &ast::Function, scope_info: &ScopeInfo, parent_scope: ScopeId) -> IndexMap<BindingId, Option<SourceLocation>>` | AST walk replaces Babel traverser |
+| `captureScopes({from, to})` | `fn capture_scopes(scope_info: &ScopeInfo, from: ScopeId, to: ScopeId) -> IndexSet<ScopeId>` | |
 
 ### HIRBuilder Methods
 
 | TypeScript (HIRBuilder.ts) | Rust (hir_builder.rs) | Notes |
 |---|---|---|
-| `constructor(env, options?)` | `HirBuilder::new(env, scope_info, options)` | |
+| `constructor(env, options?)` | `HirBuilder::new(env, scope_info, function_scope, bindings, context, entry_block_kind)` | |
 | `push(instruction)` | `builder.push(instruction)` | |
 | `terminate(terminal, nextBlockKind)` | `builder.terminate(terminal, next_block_kind)` | |
 | `terminateWithContinuation(terminal, continuation)` | `builder.terminate_with_continuation(terminal, continuation)` | |
@@ -303,7 +306,7 @@ This "fog of war" approach allows:
 | `resolveBinding(node)` | `builder.resolve_binding(name, binding_id)` | Keyed by BindingId |
 | `isContextIdentifier(path)` | `builder.is_context_identifier(name, start_offset)` | Uses ScopeInfo |
 | `makeTemporary(loc)` | `builder.make_temporary(loc)` | |
-| `build()` | `builder.build()` | Returns `HIR` |
+| `build()` | `builder.build()` | Returns `(HIR, Vec<Instruction>)` — the HIR plus the flat instruction table |
 | `recordError(error)` | `builder.record_error(error)` | |
 
 ### Post-Build Helpers (HIRBuilder.ts)
@@ -428,18 +431,17 @@ The destructuring patterns map directly — the AST struct fields (`elements`, `
 
 1. **Shared Environment**: Parent and child share `&mut Environment`. This works because the recursive call completes before the parent continues.
 
-2. **Shared Bindings**: The parent's `bindings` map is passed to the child so inner functions can resolve references to outer variables. In Rust, this is `&HashMap<BindingId, Identifier>` — the parent's bindings are cloned or borrowed by the child.
+2. **Shared Bindings**: The parent's `bindings` map is passed to the child so inner functions can resolve references to outer variables. In Rust, this is `&IndexMap<BindingId, IdentifierId>` — the parent's bindings are cloned or borrowed by the child.
 
 3. **Context gathering**: `gatherCapturedContext()` walks the function's AST to find free variable references. In Rust, this walks the AST structs using `ScopeInfo` to identify references that resolve to bindings in ancestor scopes (between the function's scope and the component scope).
 
-4. **Function arena storage**: The returned `HIRFunction` is stored in `env.functions` (the function arena) and referenced by `FunctionId` in the `FunctionExpression` instruction value.
+4. **Function arena storage**: The returned `HirFunction` is stored in `env.functions` (the function arena) and referenced by `FunctionId` in the `FunctionExpression` instruction value.
 
 ```rust
-fn lower_function(builder: &mut HirBuilder, func: &ast::Function) -> FunctionId {
+fn lower_function(builder: &mut HirBuilder, func: &ast::Function) -> LoweredFunction {
     let captured_context = gather_captured_context(func, builder.scope_info, builder.component_scope);
-    let hir_func = lower(func, builder.scope_info, builder.env, Some(&builder.bindings), captured_context)?;
-    let function_id = builder.env.add_function(hir_func);
-    function_id
+    let lowered = lower(func, builder.scope_info, builder.env, Some(&builder.bindings), captured_context)?;
+    lowered
 }
 ```
 
@@ -454,13 +456,14 @@ fn lower_function(builder: &mut HirBuilder, func: &ast::Function) -> FunctionId 
 1. Create `compiler/crates/react_compiler_diagnostics/` with `CompilerDiagnostic`, `CompilerError`, `ErrorCategory`, `CompilerErrorDetail`, `CompilerSuggestionOperation`.
 
 2. Create `compiler/crates/react_compiler_hir/` with core types:
-   - ID newtypes: `BlockId`, `IdentifierId`, `InstructionId` (index into table), `EvaluationOrder`, `DeclarationId`, `ScopeId`, `FunctionId`, `TypeId`
-   - `HIRFunction`, `HIR`, `BasicBlock`, `WipBlock`, `BlockKind`
+   - ID newtypes: `BlockId`, `IdentifierId`, `InstructionId` (index into the flat instruction table), `EvaluationOrder` (sequential numbering assigned during `markInstructionIds()` — this was previously called `InstructionId` in the TypeScript compiler), `DeclarationId`, `ScopeId`, `FunctionId`, `TypeId`
+   - `HirFunction`, `HIR`, `BasicBlock`, `WipBlock`, `BlockKind`
    - `Instruction`, `InstructionValue` (enum with all ~40 variants, each stubbed as `todo!()` for fields)
    - `Terminal` (enum with all variants)
    - `Place`, `Identifier`, `MutableRange`, `SourceLocation`
    - `Effect`, `InstructionKind`, `GotoVariant`
    - `Environment` (counters, arenas, config, errors)
+   - `FloatValue(u64)` — wrapper type for f64 values that need `Eq`/`Hash` (stores raw bits via `f64::to_bits()` for deterministic comparison)
 
 3. Create `compiler/crates/react_compiler_lowering/` with:
    - `hir_builder.rs`: `HirBuilder` struct with all methods stubbed
@@ -493,7 +496,7 @@ fn lower_function(builder: &mut HirBuilder, func: &ast::Function) -> FunctionId 
 
 **Goal**: `resolve_identifier()` and `resolve_binding()` work with `ScopeInfo`.
 
-1. Implement `resolve_binding()` — maps `BindingId` to `Identifier`, creating new identifiers on first encounter. Uses `HashMap<BindingId, Identifier>` instead of the TypeScript `Map<string, {node, identifier}>`.
+1. Implement `resolve_binding()` — maps `BindingId` to `IdentifierId`, creating new identifiers on first encounter. Uses `IndexMap<BindingId, IdentifierId>` instead of the TypeScript `Map<string, {node, identifier}>`.
 
 2. Implement `resolve_identifier()` — dispatches to Global, ImportDefault, ImportSpecifier, ImportNamespace, ModuleLocal, or Identifier based on `ScopeInfo` lookups.
 

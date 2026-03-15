@@ -6,7 +6,7 @@ Create a Rust crate (`compiler/crates/react_compiler_ast`) that precisely models
 
 This crate is the serialization boundary between the JS toolchain (Babel parser) and the Rust compiler. It must be a faithful 1:1 representation of Babel's AST output — not a simplified or custom IR.
 
-**Current status**: Complete. All 1714 compiler test fixtures round-trip successfully (0 failures). No `Unknown` catch-all variants remain. Scope types are defined separately in [rust-port-0002-scope-types.md](rust-port-0002-scope-types.md).
+**Current status**: Complete (human reviewed). All 1714 compiler test fixtures round-trip successfully (0 failures). No `Unknown` catch-all variants remain. Scope types are defined separately in [rust-port-0002-scope-types.md](rust-port-0002-scope-types.md).
 
 ---
 
