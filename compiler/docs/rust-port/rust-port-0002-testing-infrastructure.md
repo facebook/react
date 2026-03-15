@@ -11,21 +11,24 @@ Create a testing infrastructure that validates the Rust port produces identical 
 ## Overview
 
 ```
-fixture.js ──> @babel/parser ──> AST JSON + Scope JSON
-                                       │
-                    ┌──────────────────┴──────────────────┐
-                    ▼                                      ▼
-           TS test binary                          Rust test binary
-           (compile up to                          (compile up to
-            target pass)                            target pass)
-                    │                                      │
-                    ▼                                      ▼
-              TS debug output                        Rust debug output
-                    │                                      │
-                    └──────────────── diff ────────────────┘
+                                fixture.js
+                                    │
+                 ┌──────────────────┴──────────────────┐
+                 ▼                                      ▼
+        TS test binary                     @babel/parser ──> AST JSON
+        (parse with Babel,                                 + Scope JSON
+         compile up to                                        │
+         target pass)                                         ▼
+                 │                                    Rust test binary
+                 │                                    (compile up to
+                 │                                     target pass)
+                 ▼                                         │
+           TS debug output                          Rust debug output
+                 │                                         │
+                 └──────────────── diff ───────────────────┘
 ```
 
-A single entrypoint script discovers fixtures, runs both the TS and Rust binaries on each fixture, and diffs their output. Both binaries take the same inputs (AST JSON + Scope JSON) and produce a detailed debug representation of the compiler state after the target pass.
+A single entrypoint script discovers fixtures, runs both the TS and Rust binaries on each fixture, and diffs their output. The inputs differ slightly: the TS binary takes the original fixture path (parsing with Babel internally, since the TS compiler expects a Babel `NodePath`), while the Rust binary takes pre-parsed AST JSON + Scope JSON. Both produce the same detailed debug representation of the compiler state after the target pass.
 
 ---
 
@@ -44,7 +47,7 @@ DIR="$2"         # Optional: fixture root directory (default: compiler fixtures)
 # 2. Build TS test binary (if needed)
 # 3. Build Rust test binary (cargo build)
 # 4. For each fixture:
-#    a. Run TS binary:   node compiler/scripts/ts-compile-fixture.mjs <pass> <ast.json> <scope.json>
+#    a. Run TS binary:   node compiler/scripts/ts-compile-fixture.mjs <pass> <fixture.js>
 #    b. Run Rust binary:  compiler/target/debug/test-rust-port <pass> <ast.json> <scope.json>
 #    c. Diff the outputs
 # 5. Report results (pass/fail counts, first N diffs)
@@ -138,11 +141,11 @@ These are the valid `<pass>` arguments, matching the `log()` name strings in Pip
 
 ### `compiler/scripts/ts-compile-fixture.mjs`
 
-A Node.js script that replicates Pipeline.ts logic independently, taking JSON inputs (no Babel NodePath dependency) and producing debug output.
+A Node.js script that takes the original fixture path, parses it with Babel, and runs the compiler pipeline up to the target pass. It uses the real Babel `NodePath` and the existing `lower()` function directly — no JSON intermediary on the TS side.
 
 **Interface:**
 ```
-node compiler/scripts/ts-compile-fixture.mjs <pass> <ast.json> <scope.json>
+node compiler/scripts/ts-compile-fixture.mjs <pass> <fixture-path>
 ```
 
 **Outputs to stdout:**
@@ -153,18 +156,29 @@ node compiler/scripts/ts-compile-fixture.mjs <pass> <ast.json> <scope.json>
 **Implementation approach:**
 
 ```typescript
+import { parse } from '@babel/parser';
+import traverse from '@babel/traverse';
 import { lower } from '../packages/babel-plugin-react-compiler/src/HIR/BuildHIR';
 // ... import all passes
 
 function main() {
-  const [pass, astPath, scopePath] = process.argv.slice(2);
-  const ast = JSON.parse(fs.readFileSync(astPath, 'utf8'));
-  const scope = JSON.parse(fs.readFileSync(scopePath, 'utf8'));
+  const [pass, fixturePath] = process.argv.slice(2);
+  const source = fs.readFileSync(fixturePath, 'utf8');
 
-  const env = createEnvironment(/* default config */);
+  // Parse with Babel to get a real NodePath (same as production compiler)
+  const ast = parse(source, { sourceType: 'module', plugins: [...], errorRecovery: true });
+  let functionPath;
+  traverse(ast, {
+    'FunctionDeclaration|ArrowFunctionExpression|FunctionExpression'(path) {
+      functionPath = path;
+      path.stop();
+    }
+  });
+
+  const env = createEnvironment(/* default config, with pragma overrides from source */);
 
   try {
-    const hir = lower(ast, scope, env);
+    const hir = lower(functionPath, env);
     if (pass === 'HIR') return printDebugHIR(hir, env);
 
     pruneMaybeThrows(hir);
@@ -190,11 +204,7 @@ function main() {
 
 1. **Independent pipeline**: Does NOT call `runWithEnvironment()`. Implements the pass sequence independently, exactly mirroring the Rust binary. This ensures we're testing the pass behavior, not the pipeline orchestration.
 
-2. **JSON input, not Babel NodePath**: The `lower()` function in the TS compiler takes a Babel `NodePath`. For the test binary, we need a version that takes the pre-parsed AST JSON + Scope JSON instead. Options:
-   - **Option A (preferred)**: Create a thin adapter `lowerFromJSON(ast: BabelAST, scope: ScopeTree, env: Environment): HIRFunction` that constructs the minimal context `lower()` needs from the JSON data. This adapter lives in the test script, not in the compiler source.
-   - **Option B**: Reconstruct a Babel NodePath from the JSON (using `@babel/traverse`). More complex but reuses `lower()` directly.
-
-   Option A is preferred because the Rust side will also take JSON directly — both sides should use the same input format without intermediate Babel dependencies.
+2. **Fixture path input, real Babel parse**: The TS binary takes the original fixture path and parses it with `@babel/parser` + `@babel/traverse` to get a real `NodePath` — reusing the existing `lower()` directly. This means the TS and Rust sides have slightly different inputs (fixture path vs. AST JSON + Scope JSON), but that's fine: the AST JSON is validated by the step 1 round-trip test, and the shared contract is the debug output format, not the input format.
 
 3. **Validation passes**: Validation passes that run between transform passes (e.g., `validateContextVariableLValues`, `validateHooksUsage`) are included in the pipeline. If a validation pass records errors or throws, that affects the output. The test compares the full behavior including validation.
 
@@ -437,51 +447,22 @@ The test script scans the fixture directory for `**/*.{js,jsx,ts,tsx}` files, ma
 3. Run both TS and Rust binaries
 4. Diff outputs
 
-**Fixture source for TS binary**: The TS binary also needs the original source text for config pragma parsing. The test script can pass the original fixture path as an additional argument, or embed the source in the JSON.
+**Fixture paths**: The test script passes the original fixture path to the TS binary (which handles its own parsing) and the pre-parsed AST/Scope JSON paths to the Rust binary.
 
 ---
 
-## Lowering from JSON
+## Input Asymmetry: Fixture Path vs. AST JSON
 
-Both test binaries take AST JSON + Scope JSON as input, not Babel NodePaths. This requires adapting the `lower()` / `BuildHIR` step.
+The TS and Rust test binaries take different inputs:
 
-### TS Side
+- **TS binary**: Takes the original fixture path. Parses with `@babel/parser`, runs `@babel/traverse` to build scope info, and calls the existing `lower()` with a real Babel `NodePath`. This is the simplest approach — `lower()` is deeply entangled with Babel's `NodePath` API (`path.get()`, `path.scope.getBinding()`, etc.), so reusing it directly avoids reimplementing those dependencies.
 
-The existing `lower()` in `BuildHIR.ts` takes a Babel `NodePath<Function>` and uses:
-- `node.type` — the AST node type
-- `node.params`, `node.body`, etc. — AST structure
-- `path.scope` — Babel's scope chain (for `getBinding`, `generateUid`, etc.)
-- `path.node.loc` — source locations
+- **Rust binary**: Takes pre-parsed AST JSON + Scope JSON (produced by the step 1 infrastructure). Deserializes into `react_compiler_ast::File` and `ScopeTree`, then calls a Rust `lower()` that works with these types directly — no Babel dependency.
 
-**Approach**: Create a `lowerFromJSON()` adapter that:
-1. Deserializes the AST JSON into plain objects (these already have `type`, `params`, `body`, etc.)
-2. Builds a scope lookup from the Scope JSON that provides `getBinding(name)` equivalent
-3. Passes these to the existing lowering logic, or reimplements the lowering to work with plain AST objects
-
-Since `lower()` is deeply entangled with Babel's `NodePath` API (using `path.get()`, `path.scope.getBinding()`, etc.), the most practical approach is to reconstruct a Babel NodePath from the JSON:
-
-```typescript
-// Parse the JSON back into a Babel AST
-const ast = JSON.parse(fs.readFileSync(astPath));
-// Use @babel/traverse to create paths with scope info
-const file = { type: 'File', program: ast.program };
-let targetPath;
-traverse(file, {
-  'FunctionDeclaration|ArrowFunctionExpression|FunctionExpression'(path) {
-    targetPath = path; // grab the first function
-  }
-});
-// Now targetPath is a real NodePath with scope info
-const hir = lower(targetPath, env);
-```
-
-This approach reuses `lower()` directly and avoids reimplementing its Babel API dependencies. The scope info from `@babel/traverse` should match the Scope JSON (both come from the same Babel parse). The TS test binary re-parses from JSON rather than from source to ensure the exact same AST is used as the Rust side.
-
-**Alternative**: Re-parse from the original fixture source. Simpler but means the TS and Rust sides aren't starting from the exact same AST bytes. Since the AST JSON round-trips perfectly (validated by step 1), this should be equivalent, and it avoids the JSON→AST→traverse roundtrip. This is the **preferred approach** — the TS binary takes the original fixture path, parses it with Babel normally, and runs the pipeline. The only shared contract is the debug output format.
-
-### Rust Side
-
-The Rust binary deserializes `react_compiler_ast::File` and `ScopeTree` from JSON (already implemented in step 1). The `lower()` function takes these directly — no Babel dependency.
+This asymmetry is intentional and acceptable:
+1. The AST JSON round-trip is already validated by step 1 (1714/1714 fixtures pass), so the Rust side sees the same AST data that Babel produced.
+2. The shared contract between the two sides is the **debug output format**, not the input format.
+3. Keeping the TS side on real Babel `NodePath`s means we're comparing against the production compiler's actual behavior, not a reimplementation of its input handling.
 
 ---
 
@@ -495,7 +476,7 @@ The Rust binary deserializes `react_compiler_ast::File` and `ScopeTree` from JSO
 
 2. **Define the debug error format** — Specify exact formatting for `CompilerDiagnostic` objects, including all fields.
 
-3. **Create `compiler/scripts/ts-compile-fixture.mjs`** — The TS test binary. Takes `<pass> <fixture-path>` and produces debug output. Uses the preferred approach: parses the fixture source directly with Babel, runs passes up to the target, prints debug output.
+3. **Create `compiler/scripts/ts-compile-fixture.mjs`** — The TS test binary. Takes `<pass> <fixture-path>` and produces debug output. Parses the fixture source with Babel to get a real `NodePath`, runs passes up to the target, prints debug output.
 
 4. **Validate the TS binary** — Run it on all fixtures at several pass points (`HIR`, `SSA`, `InferTypes`, `InferMutationAliasingEffects`, `InferMutationAliasingRanges`) and verify the output is sensible and deterministic (running twice produces identical output).
 
@@ -564,18 +545,9 @@ compiler/
 
 ---
 
-## Handling the `lower()` Input Difference
+## TS Binary: Parsing Strategy
 
-The most significant asymmetry between TS and Rust is the `lower()` step:
-
-- **TS**: Takes a Babel `NodePath` with full scope chain, traversal API, etc.
-- **Rust**: Takes `react_compiler_ast::File` + `ScopeTree` JSON
-
-This means the `lower()` implementations will necessarily differ in their input handling. However, the **output** (HIR) must be identical. The debug output comparison validates this.
-
-**Strategy for the TS test binary**: Use the simplest approach — parse the original fixture source with `@babel/parser`, run `@babel/traverse` to build scopes, then call the existing `lower()` with the real `NodePath`. This ensures the TS reference output is 100% faithful to what the production compiler would produce.
-
-The Rust `lower()` will take the equivalent information (AST + Scope) in JSON form. Any differences in the HIR output reveal bugs in the Rust lowering.
+The TS test binary parses the original fixture source with `@babel/parser` and `@babel/traverse`, then calls the existing `lower()` with the real `NodePath`. This ensures the TS reference output is 100% faithful to what the production compiler would produce. Any differences in the Rust side's HIR output reveal bugs in the Rust lowering — not artifacts of a reimplemented TS input layer.
 
 ---
 
