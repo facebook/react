@@ -1,0 +1,1049 @@
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+
+use react_compiler_ast::scope::{BindingId, ImportBindingKind, ScopeId, ScopeInfo};
+use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
+use react_compiler_hir::*;
+use react_compiler_hir::environment::Environment;
+
+// ---------------------------------------------------------------------------
+// Scope types for tracking break/continue targets
+// ---------------------------------------------------------------------------
+
+enum Scope {
+    Loop {
+        label: Option<String>,
+        continue_block: BlockId,
+        break_block: BlockId,
+    },
+    Label {
+        label: String,
+        break_block: BlockId,
+    },
+    Switch {
+        label: Option<String>,
+        break_block: BlockId,
+    },
+}
+
+impl Scope {
+    fn label(&self) -> Option<&str> {
+        match self {
+            Scope::Loop { label, .. } => label.as_deref(),
+            Scope::Label { label, .. } => Some(label.as_str()),
+            Scope::Switch { label, .. } => label.as_deref(),
+        }
+    }
+
+    fn break_block(&self) -> BlockId {
+        match self {
+            Scope::Loop { break_block, .. } => *break_block,
+            Scope::Label { break_block, .. } => *break_block,
+            Scope::Switch { break_block, .. } => *break_block,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// WipBlock: a block under construction that does not yet have a terminal
+// ---------------------------------------------------------------------------
+
+pub struct WipBlock {
+    pub id: BlockId,
+    pub instructions: Vec<Instruction>,
+    pub kind: BlockKind,
+}
+
+fn new_block(id: BlockId, kind: BlockKind) -> WipBlock {
+    WipBlock {
+        id,
+        kind,
+        instructions: Vec::new(),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// HirBuilder: helper struct for constructing a CFG
+// ---------------------------------------------------------------------------
+
+pub struct HirBuilder<'a> {
+    completed: BTreeMap<BlockId, BasicBlock>,
+    current: WipBlock,
+    entry: BlockId,
+    scopes: Vec<Scope>,
+    /// Context identifiers: variables captured from an outer scope.
+    /// Maps the outer scope's BindingId to the source location where it was referenced.
+    context: HashMap<BindingId, Option<SourceLocation>>,
+    /// Resolved bindings: maps a BindingId to the HIR Identifier created for it.
+    bindings: HashMap<BindingId, Identifier>,
+    /// Names already used by bindings, for collision avoidance.
+    /// Maps name string -> how many times it has been used (for appending _0, _1, ...).
+    used_names: HashMap<String, BindingId>,
+    env: &'a mut Environment,
+    scope_info: &'a ScopeInfo,
+    exception_handler_stack: Vec<BlockId>,
+    /// Traversal context: counts the number of `fbt` tag parents
+    /// of the current babel node.
+    pub fbt_depth: u32,
+    /// The scope of the function being compiled (for context identifier checks).
+    function_scope: ScopeId,
+}
+
+impl<'a> HirBuilder<'a> {
+    // -----------------------------------------------------------------------
+    // M2: Core methods
+    // -----------------------------------------------------------------------
+
+    /// Create a new HirBuilder.
+    ///
+    /// - `env`: the shared environment (counters, arenas, error accumulator)
+    /// - `scope_info`: the scope information from the AST
+    /// - `function_scope`: the ScopeId of the function being compiled
+    /// - `bindings`: optional pre-existing bindings (e.g., from a parent function)
+    /// - `context`: optional pre-existing captured context map
+    /// - `entry_block_kind`: the kind of the entry block (defaults to `Block`)
+    pub fn new(
+        env: &'a mut Environment,
+        scope_info: &'a ScopeInfo,
+        function_scope: ScopeId,
+        bindings: Option<HashMap<BindingId, Identifier>>,
+        context: Option<HashMap<BindingId, Option<SourceLocation>>>,
+        entry_block_kind: Option<BlockKind>,
+    ) -> Self {
+        let entry = env.next_block_id();
+        let kind = entry_block_kind.unwrap_or(BlockKind::Block);
+        HirBuilder {
+            completed: BTreeMap::new(),
+            current: new_block(entry, kind),
+            entry,
+            scopes: Vec::new(),
+            context: context.unwrap_or_default(),
+            bindings: bindings.unwrap_or_default(),
+            used_names: HashMap::new(),
+            env,
+            scope_info,
+            exception_handler_stack: Vec::new(),
+            fbt_depth: 0,
+            function_scope,
+        }
+    }
+
+    /// Access the environment.
+    pub fn environment(&self) -> &Environment {
+        self.env
+    }
+
+    /// Access the environment mutably.
+    pub fn environment_mut(&mut self) -> &mut Environment {
+        self.env
+    }
+
+    /// Access the scope info.
+    pub fn scope_info(&self) -> &ScopeInfo {
+        self.scope_info
+    }
+
+    /// Access the context map.
+    pub fn context(&self) -> &HashMap<BindingId, Option<SourceLocation>> {
+        &self.context
+    }
+
+    /// Access the bindings map.
+    pub fn bindings(&self) -> &HashMap<BindingId, Identifier> {
+        &self.bindings
+    }
+
+    /// Push an instruction onto the current block.
+    ///
+    /// If an exception handler is active, also emits a MaybeThrow terminal
+    /// after the instruction to model potential control flow to the handler,
+    /// then continues in a new block.
+    pub fn push(&mut self, instruction: Instruction) {
+        let loc = instruction.loc.clone();
+        self.current.instructions.push(instruction);
+
+        if let Some(&handler) = self.exception_handler_stack.last() {
+            let continuation = self.reserve(self.current_block_kind());
+            self.terminate_with_continuation(
+                Terminal::MaybeThrow {
+                    continuation: continuation.id,
+                    handler: Some(handler),
+                    id: InstructionId(0),
+                    loc,
+                    effects: None,
+                },
+                continuation,
+            );
+        }
+    }
+
+    /// Terminate the current block with the given terminal and start a new block.
+    ///
+    /// If `next_block_kind` is `Some`, a new current block is created with that kind.
+    /// Returns the BlockId of the completed block.
+    pub fn terminate(&mut self, terminal: Terminal, next_block_kind: Option<BlockKind>) -> BlockId {
+        let wip = std::mem::replace(
+            &mut self.current,
+            // Temporary placeholder; will be replaced below if next_block_kind is Some
+            new_block(BlockId(u32::MAX), BlockKind::Block),
+        );
+        let block_id = wip.id;
+
+        self.completed.insert(
+            block_id,
+            BasicBlock {
+                kind: wip.kind,
+                id: block_id,
+                instructions: wip.instructions,
+                terminal,
+                preds: BTreeSet::new(),
+                phis: Vec::new(),
+            },
+        );
+
+        if let Some(kind) = next_block_kind {
+            let next_id = self.env.next_block_id();
+            self.current = new_block(next_id, kind);
+        }
+        block_id
+    }
+
+    /// Terminate the current block with the given terminal, and set
+    /// a previously reserved block as the new current block.
+    pub fn terminate_with_continuation(&mut self, terminal: Terminal, continuation: WipBlock) {
+        let wip = std::mem::replace(&mut self.current, continuation);
+        let block_id = wip.id;
+        self.completed.insert(
+            block_id,
+            BasicBlock {
+                kind: wip.kind,
+                id: block_id,
+                instructions: wip.instructions,
+                terminal,
+                preds: BTreeSet::new(),
+                phis: Vec::new(),
+            },
+        );
+    }
+
+    /// Reserve a new block so it can be referenced before construction.
+    /// Use `terminate_with_continuation()` to make it current, or `complete()` to
+    /// save it directly.
+    pub fn reserve(&mut self, kind: BlockKind) -> WipBlock {
+        let id = self.env.next_block_id();
+        new_block(id, kind)
+    }
+
+    /// Save a previously reserved block as completed with the given terminal.
+    pub fn complete(&mut self, block: WipBlock, terminal: Terminal) {
+        let block_id = block.id;
+        self.completed.insert(
+            block_id,
+            BasicBlock {
+                kind: block.kind,
+                id: block_id,
+                instructions: block.instructions,
+                terminal,
+                preds: BTreeSet::new(),
+                phis: Vec::new(),
+            },
+        );
+    }
+
+    /// Sets the given wip block as current, executes the closure to populate
+    /// it and obtain its terminal, then completes the block and restores the
+    /// previous current block.
+    pub fn enter_reserved(&mut self, wip: WipBlock, f: impl FnOnce(&mut Self) -> Terminal) {
+        let prev = std::mem::replace(&mut self.current, wip);
+        let terminal = f(self);
+        let completed_wip = std::mem::replace(&mut self.current, prev);
+        self.completed.insert(
+            completed_wip.id,
+            BasicBlock {
+                kind: completed_wip.kind,
+                id: completed_wip.id,
+                instructions: completed_wip.instructions,
+                terminal,
+                preds: BTreeSet::new(),
+                phis: Vec::new(),
+            },
+        );
+    }
+
+    /// Create a new block, set it as current, run the closure to populate it
+    /// and obtain its terminal, complete the block, and restore the previous
+    /// current block. Returns the new block's BlockId.
+    pub fn enter(
+        &mut self,
+        kind: BlockKind,
+        f: impl FnOnce(&mut Self, BlockId) -> Terminal,
+    ) -> BlockId {
+        let wip = self.reserve(kind);
+        let wip_id = wip.id;
+        self.enter_reserved(wip, |this| f(this, wip_id));
+        wip_id
+    }
+
+    /// Push an exception handler, run the closure, then pop the handler.
+    pub fn enter_try_catch(&mut self, handler: BlockId, f: impl FnOnce(&mut Self)) {
+        self.exception_handler_stack.push(handler);
+        f(self);
+        self.exception_handler_stack.pop();
+    }
+
+    /// Return the top of the exception handler stack, or None.
+    pub fn resolve_throw_handler(&self) -> Option<BlockId> {
+        self.exception_handler_stack.last().copied()
+    }
+
+    /// Push a Loop scope, run the closure, pop and verify.
+    pub fn loop_scope<T>(
+        &mut self,
+        label: Option<String>,
+        continue_block: BlockId,
+        break_block: BlockId,
+        f: impl FnOnce(&mut Self) -> T,
+    ) -> T {
+        self.scopes.push(Scope::Loop {
+            label: label.clone(),
+            continue_block,
+            break_block,
+        });
+        let value = f(self);
+        let last = self.scopes.pop().expect("Mismatched loop scope: stack empty");
+        match &last {
+            Scope::Loop {
+                label: l,
+                continue_block: c,
+                break_block: b,
+            } => {
+                assert!(
+                    *l == label && *c == continue_block && *b == break_block,
+                    "Mismatched loop scope"
+                );
+            }
+            _ => panic!("Mismatched loop scope: expected Loop, got other"),
+        }
+        value
+    }
+
+    /// Push a Label scope, run the closure, pop and verify.
+    pub fn label_scope<T>(
+        &mut self,
+        label: String,
+        break_block: BlockId,
+        f: impl FnOnce(&mut Self) -> T,
+    ) -> T {
+        self.scopes.push(Scope::Label {
+            label: label.clone(),
+            break_block,
+        });
+        let value = f(self);
+        let last = self
+            .scopes
+            .pop()
+            .expect("Mismatched label scope: stack empty");
+        match &last {
+            Scope::Label { label: l, break_block: b } => {
+                assert!(
+                    *l == label && *b == break_block,
+                    "Mismatched label scope"
+                );
+            }
+            _ => panic!("Mismatched label scope: expected Label, got other"),
+        }
+        value
+    }
+
+    /// Push a Switch scope, run the closure, pop and verify.
+    pub fn switch_scope<T>(
+        &mut self,
+        label: Option<String>,
+        break_block: BlockId,
+        f: impl FnOnce(&mut Self) -> T,
+    ) -> T {
+        self.scopes.push(Scope::Switch {
+            label: label.clone(),
+            break_block,
+        });
+        let value = f(self);
+        let last = self
+            .scopes
+            .pop()
+            .expect("Mismatched switch scope: stack empty");
+        match &last {
+            Scope::Switch { label: l, break_block: b } => {
+                assert!(
+                    *l == label && *b == break_block,
+                    "Mismatched switch scope"
+                );
+            }
+            _ => panic!("Mismatched switch scope: expected Switch, got other"),
+        }
+        value
+    }
+
+    /// Look up the break target for the given label (or the innermost
+    /// loop/switch if label is None).
+    pub fn lookup_break(&self, label: Option<&str>) -> BlockId {
+        for scope in self.scopes.iter().rev() {
+            match scope {
+                Scope::Loop { .. } | Scope::Switch { .. } if label.is_none() => {
+                    return scope.break_block();
+                }
+                _ if label.is_some() && scope.label() == label => {
+                    return scope.break_block();
+                }
+                _ => continue,
+            }
+        }
+        panic!("Expected a loop or switch to be in scope for break");
+    }
+
+    /// Look up the continue target for the given label (or the innermost
+    /// loop if label is None). Only loops support continue.
+    pub fn lookup_continue(&self, label: Option<&str>) -> BlockId {
+        for scope in self.scopes.iter().rev() {
+            match scope {
+                Scope::Loop {
+                    label: scope_label,
+                    continue_block,
+                    ..
+                } => {
+                    if label.is_none() || label == scope_label.as_deref() {
+                        return *continue_block;
+                    }
+                }
+                _ => {
+                    if label.is_some() && scope.label() == label {
+                        panic!("Continue may only refer to a labeled loop");
+                    }
+                }
+            }
+        }
+        panic!("Expected a loop to be in scope for continue");
+    }
+
+    /// Create a temporary Identifier with a fresh id.
+    pub fn make_temporary(&mut self, loc: Option<SourceLocation>) -> Identifier {
+        let id = self.env.next_identifier_id();
+        make_temporary_identifier(id, loc)
+    }
+
+    /// Record an error on the environment.
+    pub fn record_error(&mut self, error: CompilerErrorDetail) {
+        self.env.record_error(error);
+    }
+
+    /// Return the kind of the current block.
+    pub fn current_block_kind(&self) -> BlockKind {
+        self.current.kind
+    }
+
+    /// Construct the final HIR from the completed blocks.
+    ///
+    /// Performs these post-build passes:
+    /// 1. Reverse-postorder sort + unreachable block removal
+    /// 2. Check for unreachable blocks containing FunctionExpression instructions
+    /// 3. Remove unreachable for-loop updates
+    /// 4. Remove dead do-while statements
+    /// 5. Remove unnecessary try-catch
+    /// 6. Number all instructions and terminals
+    /// 7. Mark predecessor blocks
+    pub fn build(mut self) -> HIR {
+        let mut hir = HIR {
+            blocks: std::mem::take(&mut self.completed),
+            entry: self.entry,
+        };
+
+        let rpo_blocks = get_reverse_postordered_blocks(&hir);
+
+        // Check for unreachable blocks that contain FunctionExpression instructions.
+        // These could contain hoisted declarations that we can't safely remove.
+        for (id, block) in &hir.blocks {
+            if !rpo_blocks.contains_key(id) {
+                let has_function_expr = block.instructions.iter().any(|instr| {
+                    matches!(instr.value, InstructionValue::FunctionExpression { .. })
+                });
+                if has_function_expr {
+                    let loc = block
+                        .instructions
+                        .first()
+                        .and_then(|i| i.loc.clone())
+                        .or_else(|| block.terminal.loc().clone());
+                    self.env.record_error(CompilerErrorDetail {
+                        category: ErrorCategory::Todo,
+                        reason: "Support functions with unreachable code that may contain hoisted declarations".to_string(),
+                        description: None,
+                        loc,
+                        suggestions: None,
+                    });
+                }
+            }
+        }
+
+        hir.blocks = rpo_blocks;
+
+        remove_unreachable_for_updates(&mut hir);
+        remove_dead_do_while_statements(&mut hir);
+        remove_unnecessary_try_catch(&mut hir);
+        mark_instruction_ids(&mut hir);
+        mark_predecessors(&mut hir);
+
+        hir
+    }
+
+    // -----------------------------------------------------------------------
+    // M3: Binding resolution methods
+    // -----------------------------------------------------------------------
+
+    /// Map a BindingId to an HIR Identifier.
+    ///
+    /// On first encounter, creates a new Identifier with the given name and a fresh id.
+    /// On subsequent encounters, returns the cached identifier.
+    /// Handles name collisions by appending `_0`, `_1`, etc.
+    ///
+    /// Records errors for variables named 'fbt' or 'this'.
+    pub fn resolve_binding(&mut self, name: &str, binding_id: BindingId) -> Identifier {
+        // Check for unsupported names
+        if name == "fbt" {
+            self.env.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "Support local variables named `fbt`".to_string(),
+                description: Some(
+                    "Local variables named `fbt` may conflict with the fbt plugin and are not yet supported".to_string(),
+                ),
+                loc: None,
+                suggestions: None,
+            });
+        }
+        if name == "this" {
+            self.env.record_error(CompilerErrorDetail {
+                category: ErrorCategory::UnsupportedSyntax,
+                reason: "`this` is not supported syntax".to_string(),
+                description: Some(
+                    "React Compiler does not support compiling functions that use `this`"
+                        .to_string(),
+                ),
+                loc: None,
+                suggestions: None,
+            });
+        }
+
+        // If we've already resolved this binding, return the cached identifier
+        if let Some(identifier) = self.bindings.get(&binding_id) {
+            return identifier.clone();
+        }
+
+        // Find a unique name: start with the original name, then try name_0, name_1, ...
+        let mut candidate = name.to_string();
+        let mut index = 0u32;
+        loop {
+            if let Some(&existing_binding_id) = self.used_names.get(&candidate) {
+                if existing_binding_id == binding_id {
+                    // Same binding, use this name
+                    break;
+                }
+                // Name collision with a different binding, try the next suffix
+                candidate = format!("{}_{}", name, index);
+                index += 1;
+            } else {
+                // Name is available
+                break;
+            }
+        }
+
+        let id = self.env.next_identifier_id();
+        let identifier = Identifier {
+            id,
+            declaration_id: DeclarationId(id.0),
+            name: Some(IdentifierName::Named(candidate.clone())),
+            mutable_range: MutableRange {
+                start: InstructionId(0),
+                end: InstructionId(0),
+            },
+            scope: None,
+            type_: self.env.make_type(),
+            loc: None,
+        };
+
+        self.used_names.insert(candidate, binding_id);
+        self.bindings.insert(binding_id, identifier.clone());
+        identifier
+    }
+
+    /// Resolve an identifier reference to a VariableBinding.
+    ///
+    /// Uses ScopeInfo to determine whether the reference is:
+    /// - Global (no binding found)
+    /// - ImportDefault, ImportSpecifier, ImportNamespace (program-scope import binding)
+    /// - ModuleLocal (program-scope non-import binding)
+    /// - Identifier (local binding, resolved via resolve_binding)
+    pub fn resolve_identifier(&mut self, name: &str, start_offset: u32) -> VariableBinding {
+        let binding_data = self.scope_info.resolve_reference(start_offset);
+
+        match binding_data {
+            None => {
+                // No binding found: this is a global
+                VariableBinding::Global {
+                    name: name.to_string(),
+                }
+            }
+            Some(binding) => {
+                if binding.scope == self.scope_info.program_scope {
+                    // Module-level binding: check import info
+                    match &binding.import {
+                        Some(import_info) => match import_info.kind {
+                            ImportBindingKind::Default => VariableBinding::ImportDefault {
+                                name: name.to_string(),
+                                module: import_info.source.clone(),
+                            },
+                            ImportBindingKind::Named => VariableBinding::ImportSpecifier {
+                                name: name.to_string(),
+                                module: import_info.source.clone(),
+                                imported: import_info
+                                    .imported
+                                    .clone()
+                                    .unwrap_or_else(|| name.to_string()),
+                            },
+                            ImportBindingKind::Namespace => VariableBinding::ImportNamespace {
+                                name: name.to_string(),
+                                module: import_info.source.clone(),
+                            },
+                        },
+                        None => VariableBinding::ModuleLocal {
+                            name: name.to_string(),
+                        },
+                    }
+                } else {
+                    // Local binding: resolve via resolve_binding
+                    let binding_id = binding.id;
+                    let binding_kind = format!("{:?}", binding.kind);
+                    let identifier = self.resolve_binding(name, binding_id);
+                    VariableBinding::Identifier {
+                        identifier,
+                        binding_kind,
+                    }
+                }
+            }
+        }
+    }
+
+    /// Check if an identifier reference resolves to a context identifier.
+    ///
+    /// A context identifier is a variable declared in an ancestor scope of the
+    /// current function's scope, but NOT in the program scope itself and NOT
+    /// in the function's own scope. These are "captured" variables from an
+    /// enclosing function.
+    pub fn is_context_identifier(&self, _name: &str, start_offset: u32) -> bool {
+        let binding = self.scope_info.resolve_reference(start_offset);
+
+        match binding {
+            None => false,
+            Some(binding_data) => {
+                // If in program scope, it's a module-level binding, not context
+                if binding_data.scope == self.scope_info.program_scope {
+                    return false;
+                }
+
+                // If in the function's own scope, it's local, not context
+                if binding_data.scope == self.function_scope {
+                    return false;
+                }
+
+                // Check if the binding's scope is an ancestor of function_scope
+                // (but not function_scope itself, since those are local)
+                is_ancestor_scope(
+                    self.scope_info,
+                    binding_data.scope,
+                    self.function_scope,
+                )
+            }
+        }
+    }
+}
+
+/// Check if `ancestor` is an ancestor scope of `descendant` by walking the
+/// parent chain from `descendant` upward. Returns true if `ancestor` is found
+/// in the parent chain (exclusive of `descendant` itself).
+fn is_ancestor_scope(scope_info: &ScopeInfo, ancestor: ScopeId, descendant: ScopeId) -> bool {
+    let mut current = scope_info.scopes[descendant.0 as usize].parent;
+    while let Some(scope_id) = current {
+        if scope_id == ancestor {
+            return true;
+        }
+        current = scope_info.scopes[scope_id.0 as usize].parent;
+    }
+    false
+}
+
+// ---------------------------------------------------------------------------
+// Terminal helper functions
+// ---------------------------------------------------------------------------
+
+/// Return all successor block IDs of a terminal (NOT fallthrough).
+fn each_terminal_successor(terminal: &Terminal) -> Vec<BlockId> {
+    match terminal {
+        Terminal::Goto { block, .. } => vec![*block],
+        Terminal::If {
+            consequent,
+            alternate,
+            ..
+        } => vec![*consequent, *alternate],
+        Terminal::Branch {
+            consequent,
+            alternate,
+            ..
+        } => vec![*consequent, *alternate],
+        Terminal::Switch { cases, .. } => cases.iter().map(|c| c.block).collect(),
+        Terminal::Logical { test, .. }
+        | Terminal::Ternary { test, .. }
+        | Terminal::Optional { test, .. } => vec![*test],
+        Terminal::Return { .. } => vec![],
+        Terminal::Throw { .. } => vec![],
+        Terminal::DoWhile { loop_block, .. } => vec![*loop_block],
+        Terminal::While { test, .. } => vec![*test],
+        Terminal::For { init, .. } => vec![*init],
+        Terminal::ForOf { init, .. } => vec![*init],
+        Terminal::ForIn { init, .. } => vec![*init],
+        Terminal::Label { block, .. } => vec![*block],
+        Terminal::Sequence { block, .. } => vec![*block],
+        Terminal::MaybeThrow {
+            continuation,
+            handler,
+            ..
+        } => {
+            let mut succs = vec![*continuation];
+            if let Some(h) = handler {
+                succs.push(*h);
+            }
+            succs
+        }
+        Terminal::Try { block, .. } => vec![*block],
+        Terminal::Scope { block, .. } | Terminal::PrunedScope { block, .. } => vec![*block],
+        Terminal::Unreachable { .. } | Terminal::Unsupported { .. } => vec![],
+    }
+}
+
+/// Return the fallthrough block of a terminal, if any.
+fn terminal_fallthrough(terminal: &Terminal) -> Option<BlockId> {
+    match terminal {
+        // Terminals WITH fallthrough
+        Terminal::If { fallthrough, .. }
+        | Terminal::Branch { fallthrough, .. }
+        | Terminal::Switch { fallthrough, .. }
+        | Terminal::DoWhile { fallthrough, .. }
+        | Terminal::While { fallthrough, .. }
+        | Terminal::For { fallthrough, .. }
+        | Terminal::ForOf { fallthrough, .. }
+        | Terminal::ForIn { fallthrough, .. }
+        | Terminal::Logical { fallthrough, .. }
+        | Terminal::Ternary { fallthrough, .. }
+        | Terminal::Optional { fallthrough, .. }
+        | Terminal::Label { fallthrough, .. }
+        | Terminal::Sequence { fallthrough, .. }
+        | Terminal::Try { fallthrough, .. }
+        | Terminal::Scope { fallthrough, .. }
+        | Terminal::PrunedScope { fallthrough, .. } => Some(*fallthrough),
+
+        // Terminals WITHOUT fallthrough
+        Terminal::Goto { .. }
+        | Terminal::Return { .. }
+        | Terminal::Throw { .. }
+        | Terminal::MaybeThrow { .. }
+        | Terminal::Unreachable { .. }
+        | Terminal::Unsupported { .. } => None,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Post-build helper functions
+// ---------------------------------------------------------------------------
+
+/// Compute a reverse-postorder of blocks reachable from the entry.
+///
+/// Visits successors in reverse order so that when the postorder list is
+/// reversed, sibling edges appear in program order.
+///
+/// Blocks not reachable through successors are removed. Blocks that are
+/// only reachable as fallthroughs (not through real successor edges) are
+/// replaced with empty blocks that have an Unreachable terminal.
+fn get_reverse_postordered_blocks(hir: &HIR) -> BTreeMap<BlockId, BasicBlock> {
+    let mut visited: HashSet<BlockId> = HashSet::new();
+    let mut used: HashSet<BlockId> = HashSet::new();
+    let mut used_fallthroughs: HashSet<BlockId> = HashSet::new();
+    let mut postorder: Vec<BlockId> = Vec::new();
+
+    fn visit(
+        hir: &HIR,
+        block_id: BlockId,
+        is_used: bool,
+        visited: &mut HashSet<BlockId>,
+        used: &mut HashSet<BlockId>,
+        used_fallthroughs: &mut HashSet<BlockId>,
+        postorder: &mut Vec<BlockId>,
+    ) {
+        let was_used = used.contains(&block_id);
+        let was_visited = visited.contains(&block_id);
+        visited.insert(block_id);
+        if is_used {
+            used.insert(block_id);
+        }
+        if was_visited && (was_used || !is_used) {
+            return;
+        }
+
+        let block = hir
+            .blocks
+            .get(&block_id)
+            .unwrap_or_else(|| panic!("[HIRBuilder] expected block {:?} to exist", block_id));
+
+        // Visit successors in reverse order so that when we reverse the
+        // postorder list, sibling edges come out in program order.
+        let mut successors = each_terminal_successor(&block.terminal);
+        successors.reverse();
+
+        let fallthrough = terminal_fallthrough(&block.terminal);
+
+        // Visit fallthrough first (marking as not-yet-used) to ensure its
+        // block ID is emitted in the correct position.
+        if let Some(ft) = fallthrough {
+            if is_used {
+                used_fallthroughs.insert(ft);
+            }
+            visit(hir, ft, false, visited, used, used_fallthroughs, postorder);
+        }
+        for successor in successors {
+            visit(
+                hir,
+                successor,
+                is_used,
+                visited,
+                used,
+                used_fallthroughs,
+                postorder,
+            );
+        }
+
+        if !was_visited {
+            postorder.push(block_id);
+        }
+    }
+
+    visit(
+        hir,
+        hir.entry,
+        true,
+        &mut visited,
+        &mut used,
+        &mut used_fallthroughs,
+        &mut postorder,
+    );
+
+    let mut blocks = BTreeMap::new();
+    for block_id in postorder.into_iter().rev() {
+        let block = hir.blocks.get(&block_id).unwrap();
+        if used.contains(&block_id) {
+            blocks.insert(block_id, block.clone());
+        } else if used_fallthroughs.contains(&block_id) {
+            blocks.insert(
+                block_id,
+                BasicBlock {
+                    kind: block.kind,
+                    id: block_id,
+                    instructions: Vec::new(),
+                    terminal: Terminal::Unreachable {
+                        id: block.terminal.id(),
+                        loc: block.terminal.loc().clone(),
+                    },
+                    preds: BTreeSet::new(),
+                    phis: Vec::new(),
+                },
+            );
+        }
+        // otherwise this block is unreachable and is dropped
+    }
+
+    blocks
+}
+
+/// For each block with a `For` terminal whose update block is not in the
+/// blocks map, set update to None.
+fn remove_unreachable_for_updates(hir: &mut HIR) {
+    let block_ids: HashSet<BlockId> = hir.blocks.keys().copied().collect();
+    for block in hir.blocks.values_mut() {
+        if let Terminal::For { update, .. } = &mut block.terminal {
+            if let Some(update_id) = *update {
+                if !block_ids.contains(&update_id) {
+                    *update = None;
+                }
+            }
+        }
+    }
+}
+
+/// For each block with a `DoWhile` terminal whose test block is not in
+/// the blocks map, replace the terminal with a Goto to the loop block.
+fn remove_dead_do_while_statements(hir: &mut HIR) {
+    let block_ids: HashSet<BlockId> = hir.blocks.keys().copied().collect();
+    for block in hir.blocks.values_mut() {
+        let should_replace = if let Terminal::DoWhile { test, .. } = &block.terminal {
+            !block_ids.contains(test)
+        } else {
+            false
+        };
+        if should_replace {
+            if let Terminal::DoWhile {
+                loop_block, id, loc, ..
+            } = std::mem::replace(
+                &mut block.terminal,
+                Terminal::Unreachable {
+                    id: InstructionId(0),
+                    loc: None,
+                },
+            ) {
+                block.terminal = Terminal::Goto {
+                    block: loop_block,
+                    variant: GotoVariant::Break,
+                    id,
+                    loc,
+                };
+            }
+        }
+    }
+}
+
+/// For each block with a `Try` terminal whose handler block is not in
+/// the blocks map, replace the terminal with a Goto to the try block.
+///
+/// Also cleans up the fallthrough block's predecessors if the handler
+/// was the only path to it.
+fn remove_unnecessary_try_catch(hir: &mut HIR) {
+    let block_ids: HashSet<BlockId> = hir.blocks.keys().copied().collect();
+
+    // Collect the blocks that need replacement and their associated data
+    let replacements: Vec<(BlockId, BlockId, BlockId, BlockId, Option<SourceLocation>)> = hir
+        .blocks
+        .iter()
+        .filter_map(|(&block_id, block)| {
+            if let Terminal::Try {
+                block: try_block,
+                handler,
+                fallthrough,
+                loc,
+                ..
+            } = &block.terminal
+            {
+                if !block_ids.contains(handler) {
+                    return Some((block_id, *try_block, *handler, *fallthrough, loc.clone()));
+                }
+            }
+            None
+        })
+        .collect();
+
+    for (block_id, try_block, handler_id, fallthrough_id, loc) in replacements {
+        // Replace the terminal
+        if let Some(block) = hir.blocks.get_mut(&block_id) {
+            block.terminal = Terminal::Goto {
+                block: try_block,
+                id: InstructionId(0),
+                loc,
+                variant: GotoVariant::Break,
+            };
+        }
+
+        // Clean up fallthrough predecessor info
+        if let Some(fallthrough) = hir.blocks.get_mut(&fallthrough_id) {
+            if fallthrough.preds.len() == 1 && fallthrough.preds.contains(&handler_id) {
+                // The handler was the only predecessor: remove the fallthrough block
+                hir.blocks.remove(&fallthrough_id);
+            } else {
+                fallthrough.preds.remove(&handler_id);
+            }
+        }
+    }
+}
+
+/// Sequentially number all instructions and terminals starting from 1.
+fn mark_instruction_ids(hir: &mut HIR) {
+    let mut id: u32 = 0;
+    for block in hir.blocks.values_mut() {
+        for instr in &mut block.instructions {
+            id += 1;
+            instr.id = InstructionId(id);
+        }
+        id += 1;
+        block.terminal.set_id(InstructionId(id));
+    }
+}
+
+/// DFS from entry, for each successor add the predecessor's id to
+/// the successor's preds set.
+fn mark_predecessors(hir: &mut HIR) {
+    // Clear all preds first
+    for block in hir.blocks.values_mut() {
+        block.preds.clear();
+    }
+
+    let mut visited: HashSet<BlockId> = HashSet::new();
+
+    fn visit(hir: &mut HIR, block_id: BlockId, prev_block_id: Option<BlockId>, visited: &mut HashSet<BlockId>) {
+        // Add predecessor
+        if let Some(prev_id) = prev_block_id {
+            if let Some(block) = hir.blocks.get_mut(&block_id) {
+                block.preds.insert(prev_id);
+            } else {
+                return;
+            }
+        }
+
+        if visited.contains(&block_id) {
+            return;
+        }
+        visited.insert(block_id);
+
+        // Get successors before mutating
+        let successors = if let Some(block) = hir.blocks.get(&block_id) {
+            each_terminal_successor(&block.terminal)
+        } else {
+            return;
+        };
+
+        for successor in successors {
+            visit(hir, successor, Some(block_id), visited);
+        }
+    }
+
+    visit(hir, hir.entry, None, &mut visited);
+}
+
+// ---------------------------------------------------------------------------
+// Public helper functions
+// ---------------------------------------------------------------------------
+
+/// Create a temporary Place with a fresh identifier.
+pub fn create_temporary_place(env: &mut Environment, loc: Option<SourceLocation>) -> Place {
+    let id = env.next_identifier_id();
+    Place {
+        identifier: make_temporary_identifier(id, loc),
+        reactive: false,
+        effect: Effect::Unknown,
+        loc: None,
+    }
+}
+
+/// Create a temporary Identifier with the given id and location.
+pub fn make_temporary_identifier(id: IdentifierId, loc: Option<SourceLocation>) -> Identifier {
+    Identifier {
+        id,
+        declaration_id: DeclarationId(id.0),
+        name: None,
+        mutable_range: MutableRange {
+            start: InstructionId(0),
+            end: InstructionId(0),
+        },
+        scope: None,
+        type_: make_type(),
+        loc,
+    }
+}

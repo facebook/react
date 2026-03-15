@@ -6,7 +6,7 @@ Port `BuildHIR.ts` (~4555 lines) and `HIRBuilder.ts` (~955 lines) into Rust equi
 
 The Rust port should be structurally as close to the TypeScript as possible: viewing the TS and Rust side by side, the logic should look, read, and feel similar while working naturally in Rust.
 
-**Current status**: Plan only.
+**Current status**: M1, M2, M3 implemented. Crate structure compiles, HIRBuilder core methods and binding resolution work. All lowering functions (lower_statement, lower_expression, etc.) stubbed with `todo!()`. Next step: M4 (lower() entry point + basic statements).
 
 ---
 

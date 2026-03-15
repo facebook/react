@@ -37,6 +37,9 @@ name = "react_compiler"
 version = "0.1.0"
 dependencies = [
  "react_compiler_ast",
+ "react_compiler_diagnostics",
+ "react_compiler_hir",
+ "react_compiler_lowering",
  "serde",
  "serde_json",
 ]
@@ -49,6 +52,26 @@ dependencies = [
  "serde_json",
  "similar",
  "walkdir",
+]
+
+[[package]]
+name = "react_compiler_diagnostics"
+version = "0.1.0"
+
+[[package]]
+name = "react_compiler_hir"
+version = "0.1.0"
+dependencies = [
+ "react_compiler_diagnostics",
+]
+
+[[package]]
+name = "react_compiler_lowering"
+version = "0.1.0"
+dependencies = [
+ "react_compiler_ast",
+ "react_compiler_diagnostics",
+ "react_compiler_hir",
 ]
 
 [[package]]

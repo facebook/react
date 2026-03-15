@@ -1,5 +1,9 @@
 pub mod debug_print;
-pub mod environment;
-pub mod hir;
-pub mod lower;
 pub mod pipeline;
+
+// Re-export from new crates for backwards compatibility
+pub use react_compiler_diagnostics;
+pub use react_compiler_hir;
+pub use react_compiler_hir::environment;
+pub use react_compiler_hir as hir;
+pub use react_compiler_lowering::lower;

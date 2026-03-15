@@ -1,6 +1,6 @@
 use react_compiler_ast::{File, scope::ScopeInfo};
-use crate::lower::lower;
-use crate::environment::Environment;
+use react_compiler_lowering::lower;
+use react_compiler_hir::environment::Environment;
 
 pub fn run_pipeline(
     target_pass: &str,
@@ -9,7 +9,7 @@ pub fn run_pipeline(
 ) -> Result<String, String> {
     let mut env = Environment::new();
 
-    let hir = lower(ast, scope, &mut env)?;
+    let hir = lower(&ast, &scope, &mut env).map_err(|e| format!("{}", e))?;
     if target_pass == "HIR" {
         return Ok(crate::debug_print::debug_hir(&hir, &env));
     }
