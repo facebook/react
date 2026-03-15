@@ -3090,7 +3090,7 @@ function normalizeListenerOptions(
   }
 
   if (typeof opts === 'boolean') {
-    return `c=${opts ? '1' : '0'}`;
+    return `c=${opts ? '1' : '0'}&o=0&p=0`;
   }
 
   return `c=${opts.capture ? '1' : '0'}&o=${opts.once ? '1' : '0'}&p=${opts.passive ? '1' : '0'}`;
