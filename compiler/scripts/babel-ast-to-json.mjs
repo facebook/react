@@ -185,35 +185,17 @@ function collectScopeInfo(ast) {
   };
 }
 
-function renameIdentifiersInJson(jsonValue, scopeInfo) {
-  function walk(node) {
-    if (node === null || typeof node !== "object") return;
-
-    if (Array.isArray(node)) {
-      for (const element of node) {
-        walk(element);
+function renameIdentifiers(ast, scopeInfo) {
+  traverse(ast, {
+    Identifier(path) {
+      const start = path.node.start;
+      if (start != null && String(start) in scopeInfo.reference_to_binding) {
+        const bindingId = scopeInfo.reference_to_binding[String(start)];
+        const binding = scopeInfo.bindings[bindingId];
+        path.node.name = `${path.node.name}_${binding.scope}_${bindingId}`;
       }
-      return;
-    }
-
-    // Rename Identifier nodes that have a binding
-    if (
-      node.type === "Identifier" &&
-      node.start != null &&
-      String(node.start) in scopeInfo.reference_to_binding
-    ) {
-      const bindingId = scopeInfo.reference_to_binding[String(node.start)];
-      const binding = scopeInfo.bindings[bindingId];
-      node.name = `${node.name}_${binding.scope}_${bindingId}`;
-    }
-
-    // Recurse into all properties
-    for (const key of Object.keys(node)) {
-      walk(node[key]);
-    }
-  }
-
-  walk(jsonValue);
+    },
+  });
 }
 
 let parsed = 0;
@@ -247,11 +229,13 @@ for (const fixture of fixtures) {
     const scopeOutPath = path.join(OUTPUT_DIR, fixture + ".scope.json");
     fs.writeFileSync(scopeOutPath, JSON.stringify(scopeInfo, null, 2));
 
-    // Create renamed AST for scope resolution verification
-    const renamedAst = JSON.parse(JSON.stringify(ast));
-    renameIdentifiersInJson(renamedAst, scopeInfo);
+    // Create renamed AST for scope resolution verification.
+    // Traverse the live Babel AST (already serialized above) using
+    // @babel/traverse so that identifier resolution matches what you'd
+    // get from a standard Babel visitor with NodePath.
+    renameIdentifiers(ast, scopeInfo);
     const renamedOutPath = path.join(OUTPUT_DIR, fixture + ".renamed.json");
-    fs.writeFileSync(renamedOutPath, JSON.stringify(renamedAst, null, 2));
+    fs.writeFileSync(renamedOutPath, JSON.stringify(ast, null, 2));
 
     parsed++;
   } catch (e) {
