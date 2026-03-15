@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 use crate::common::BaseNode;
+use crate::jsx::{JSXElement, JSXFragment};
 use crate::literals::*;
 use crate::operators::*;
-use crate::patterns::PatternLike;
+use crate::patterns::{AssignmentPattern, PatternLike};
 use crate::statements::BlockStatement;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -61,6 +62,11 @@ pub enum Expression {
     Import(Import),
     ThisExpression(ThisExpression),
     ParenthesizedExpression(ParenthesizedExpression),
+    // JSX expressions
+    JSXElement(Box<JSXElement>),
+    JSXFragment(JSXFragment),
+    // Pattern (can appear in expression position in error recovery)
+    AssignmentPattern(AssignmentPattern),
     // TypeScript expressions
     TSAsExpression(TSAsExpression),
     TSSatisfiesExpression(TSSatisfiesExpression),
@@ -69,9 +75,6 @@ pub enum Expression {
     TSInstantiationExpression(TSInstantiationExpression),
     // Flow expressions
     TypeCastExpression(TypeCastExpression),
-    // Catch-all for unmodeled expression types
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -278,8 +281,6 @@ pub enum ObjectExpressionProperty {
     ObjectProperty(ObjectProperty),
     ObjectMethod(ObjectMethod),
     SpreadElement(SpreadElement),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

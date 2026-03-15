@@ -6,7 +6,7 @@ Create a Rust crate (`compiler/crates/react_compiler_ast`) that precisely models
 
 This crate is the serialization boundary between the JS toolchain (Babel parser) and the Rust compiler. It must be a faithful 1:1 representation of Babel's AST output — not a simplified or custom IR.
 
-**Current status**: All 1714 compiler test fixtures round-trip successfully (0 failures). Remaining work: remove `Unknown` catch-all variants from enums (see [Remaining Work](#remaining-work)). Scope types are defined separately in [rust-port-0002-scope-types.md](rust-port-0002-scope-types.md).
+**Current status**: Complete. All 1714 compiler test fixtures round-trip successfully (0 failures). No `Unknown` catch-all variants remain. Scope types are defined separately in [rust-port-0002-scope-types.md](rust-port-0002-scope-types.md).
 
 ---
 
@@ -187,7 +187,7 @@ The `Statement` enum is the top-level dispatch for all statement and declaration
 
 ### Expressions (`expressions.rs`, ~35 types)
 
-**Core**: `Identifier`, `CallExpression`, `MemberExpression`, `OptionalCallExpression`, `OptionalMemberExpression`, `BinaryExpression`, `LogicalExpression`, `UnaryExpression`, `UpdateExpression`, `ConditionalExpression`, `AssignmentExpression`, `SequenceExpression`, `ArrowFunctionExpression` (+ `ArrowFunctionBody` enum), `FunctionExpression`, `ObjectExpression` (+ `ObjectExpressionProperty` enum, `ObjectProperty`, `ObjectMethod`), `ArrayExpression`, `NewExpression`, `TemplateLiteral`, `TaggedTemplateExpression`, `AwaitExpression`, `YieldExpression`, `SpreadElement`, `MetaProperty`, `ClassExpression` (+ `ClassBody`), `PrivateName`, `Super`, `Import`, `ThisExpression`, `ParenthesizedExpression`
+**Core**: `Identifier`, `CallExpression`, `MemberExpression`, `OptionalCallExpression`, `OptionalMemberExpression`, `BinaryExpression`, `LogicalExpression`, `UnaryExpression`, `UpdateExpression`, `ConditionalExpression`, `AssignmentExpression`, `SequenceExpression`, `ArrowFunctionExpression` (+ `ArrowFunctionBody` enum), `FunctionExpression`, `ObjectExpression` (+ `ObjectExpressionProperty` enum, `ObjectProperty`, `ObjectMethod`), `ArrayExpression`, `NewExpression`, `TemplateLiteral`, `TaggedTemplateExpression`, `AwaitExpression`, `YieldExpression`, `SpreadElement`, `MetaProperty`, `ClassExpression` (+ `ClassBody`), `PrivateName`, `Super`, `Import`, `ThisExpression`, `ParenthesizedExpression`, `JSXElement`, `JSXFragment`, `AssignmentPattern`
 
 **TypeScript expressions**: `TSAsExpression`, `TSSatisfiesExpression`, `TSNonNullExpression`, `TSTypeAssertion`, `TSInstantiationExpression`
 
@@ -225,9 +225,8 @@ TypeScript and Flow type annotation bodies (e.g., `TSTypeAnnotation`, type param
 
 ### No catch-all / Unknown variants
 
-Enums do **not** have catch-all `Unknown(serde_json::Value)` variants. If a fixture contains a node type that isn't modeled, deserialization fails — this is intentional. It surfaces unsupported node types immediately so the representation can be updated, rather than silently passing data through an opaque blob. (Note: the current code still has `Unknown` variants from the initial build-out — removing them is tracked in [Remaining Work](#remaining-work).)
-
-This is distinct from unknown *fields*, which are silently dropped (see design decision #6 on `deny_unknown_fields`). An unknown field on a known node is harmless — an unknown node type is a gap in the model that should be fixed.
+Enums do **not** have catch-all `Unknown(serde_json::Value)` variants. If a fixture contains a node type that isn't modeled, deserialization fails — this is intentional. It surfaces unsupported node types immediately so the representation can be updated, rather than silently passing data through an opaque blob. 
+This is distinct from unknown *fields*, which are silently dropped (see design decision #6 on `deny_unknown_fields`). An unknown field on a known node is harmless — an unknown node type is a gap in the model that should be fixed. All enums now use this strict approach — no `Unknown` catch-all variants remain.
 
 ### Union types as enums
 
@@ -387,9 +386,7 @@ bash compiler/scripts/test-babel-ast.sh
 
 ## Remaining Work
 
-### Remove Unknown variants from enums
-
-Remove all `#[serde(untagged)] Unknown(serde_json::Value)` variants from every enum (`Statement`, `Expression`, `PatternLike`, `ObjectExpressionProperty`, `ForInit`, `ForInOfLeft`, `ImportSpecifier`, `ExportSpecifier`, `ModuleExportName`, `Declaration`, `ExportDefaultDecl`, `ObjectPatternProperty`, `ArrowFunctionBody`, `JSXChild`, `JSXElementName`, `JSXAttributeItem`, `JSXAttributeName`, `JSXAttributeValue`, `JSXExpressionContainerExpr`, `JSXMemberExprObject`). Deserialization should fail on unrecognized node types. All 1714 fixtures already pass through typed variants, so removing `Unknown` should not cause regressions — but run the round-trip test to confirm.
+None — this plan is complete. All `Unknown` catch-all variants have been removed from every enum. During removal, three node types that were previously handled by the `Unknown` fallback were promoted to proper typed variants in the `Expression` enum: `JSXElement`, `JSXFragment`, and `AssignmentPattern`.
 
 Scope info types and scope resolution testing are tracked in [rust-port-0002-scope-types.md](rust-port-0002-scope-types.md).
 

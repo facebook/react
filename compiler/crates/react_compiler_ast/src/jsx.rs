@@ -69,8 +69,6 @@ pub enum JSXElementName {
     JSXIdentifier(JSXIdentifier),
     JSXMemberExpression(JSXMemberExpression),
     JSXNamespacedName(JSXNamespacedName),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -81,8 +79,6 @@ pub enum JSXChild {
     JSXExpressionContainer(JSXExpressionContainer),
     JSXSpreadChild(JSXSpreadChild),
     JSXText(JSXText),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,8 +86,6 @@ pub enum JSXChild {
 pub enum JSXAttributeItem {
     JSXAttribute(JSXAttribute),
     JSXSpreadAttribute(JSXSpreadAttribute),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -107,8 +101,6 @@ pub struct JSXAttribute {
 pub enum JSXAttributeName {
     JSXIdentifier(JSXIdentifier),
     JSXNamespacedName(JSXNamespacedName),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -118,8 +110,6 @@ pub enum JSXAttributeValue {
     JSXExpressionContainer(JSXExpressionContainer),
     JSXElement(Box<JSXElement>),
     JSXFragment(JSXFragment),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -184,8 +174,6 @@ pub struct JSXMemberExpression {
 pub enum JSXMemberExprObject {
     JSXIdentifier(JSXIdentifier),
     JSXMemberExpression(Box<JSXMemberExpression>),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

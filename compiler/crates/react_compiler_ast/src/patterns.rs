@@ -16,8 +16,6 @@ pub enum PatternLike {
     RestElement(RestElement),
     // Expressions can appear in pattern positions (e.g., MemberExpression as LVal)
     MemberExpression(crate::expressions::MemberExpression),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,8 +38,6 @@ pub struct ObjectPattern {
 pub enum ObjectPatternProperty {
     ObjectProperty(ObjectPatternProp),
     RestElement(RestElement),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

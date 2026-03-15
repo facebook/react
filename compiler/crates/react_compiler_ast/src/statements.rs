@@ -57,9 +57,6 @@ pub enum Statement {
     DeclareTypeAlias(crate::declarations::DeclareTypeAlias),
     DeclareOpaqueType(crate::declarations::DeclareOpaqueType),
     EnumDeclaration(crate::declarations::EnumDeclaration),
-    // Catch-all
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -21,8 +21,6 @@ pub enum Declaration {
     OpaqueType(OpaqueType),
     InterfaceDeclaration(InterfaceDeclaration),
     EnumDeclaration(EnumDeclaration),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 /// The declaration/expression that can appear in `export default <decl>`
@@ -67,8 +65,6 @@ pub enum ImportSpecifier {
     ImportSpecifier(ImportSpecifierData),
     ImportDefaultSpecifier(ImportDefaultSpecifierData),
     ImportNamespaceSpecifier(ImportNamespaceSpecifierData),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -109,8 +105,6 @@ pub struct ImportAttribute {
 pub enum ModuleExportName {
     Identifier(Identifier),
     StringLiteral(StringLiteral),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -141,8 +135,6 @@ pub enum ExportSpecifier {
     ExportSpecifier(ExportSpecifierData),
     ExportDefaultSpecifier(ExportDefaultSpecifierData),
     ExportNamespaceSpecifier(ExportNamespaceSpecifierData),
-    #[serde(untagged)]
-    Unknown(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
