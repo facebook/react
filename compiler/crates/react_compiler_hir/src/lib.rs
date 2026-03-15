@@ -285,7 +285,7 @@ impl Terminal {
     }
 
     /// Get the source location of this terminal
-    pub fn loc(&self) -> &Option<SourceLocation> {
+    pub fn loc(&self) -> Option<&SourceLocation> {
         match self {
             Terminal::Unsupported { loc, .. }
             | Terminal::Unreachable { loc, .. }
@@ -308,7 +308,7 @@ impl Terminal {
             | Terminal::MaybeThrow { loc, .. }
             | Terminal::Try { loc, .. }
             | Terminal::Scope { loc, .. }
-            | Terminal::PrunedScope { loc, .. } => loc,
+            | Terminal::PrunedScope { loc, .. } => loc.as_ref(),
         }
     }
 
@@ -976,6 +976,10 @@ pub struct ReactiveScope {
 // Helper functions
 // =============================================================================
 
+/// Creates a placeholder type variable with id 0.
+/// This is only used as a default for temporary identifiers created
+/// outside of an Environment context. Prefer `Environment::make_type()`
+/// when an environment is available, which allocates fresh type IDs.
 pub fn make_type() -> Type {
     Type::TypeVar { id: TypeId(0) }
 }

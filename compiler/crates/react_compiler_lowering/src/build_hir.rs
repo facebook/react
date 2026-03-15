@@ -151,16 +151,11 @@ fn lower_type(node: &react_compiler_ast::expressions::Expression) -> Type {
 }
 
 fn gather_captured_context(
-    func: &react_compiler_ast::expressions::Expression,
-    scope_info: &ScopeInfo,
-    parent_scope: react_compiler_ast::scope::ScopeId,
+    _func: &react_compiler_ast::expressions::Expression,
+    _scope_info: &ScopeInfo,
+    _parent_scope: react_compiler_ast::scope::ScopeId,
 ) -> std::collections::HashMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> {
-    // TODO(M9): Walk the function's AST to find free variable references.
-    // For each Identifier in the function body, look up the reference via
-    // scope_info.reference_to_binding. If the binding's scope is between
-    // parent_scope and the function's own scope (exclusive), it's a captured
-    // context variable.
-    std::collections::HashMap::new()
+    todo!("gather_captured_context not yet implemented - M9")
 }
 
 fn capture_scopes(

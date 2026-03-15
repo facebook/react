@@ -181,9 +181,12 @@ impl<'a> HirBuilder<'a> {
     /// If `next_block_kind` is `Some`, a new current block is created with that kind.
     /// Returns the BlockId of the completed block.
     pub fn terminate(&mut self, terminal: Terminal, next_block_kind: Option<BlockKind>) -> BlockId {
+        // The placeholder block created here (BlockId(u32::MAX)) is only used when
+        // next_block_kind is None, meaning this is the final terminate() call.
+        // It will never be read or completed because build() consumes self
+        // immediately after, and no further operations should occur on the builder.
         let wip = std::mem::replace(
             &mut self.current,
-            // Temporary placeholder; will be replaced below if next_block_kind is Some
             new_block(BlockId(u32::MAX), BlockKind::Block),
         );
         let block_id = wip.id;
@@ -469,7 +472,7 @@ impl<'a> HirBuilder<'a> {
                         .instructions
                         .first()
                         .and_then(|i| i.loc.clone())
-                        .or_else(|| block.terminal.loc().clone());
+                        .or_else(|| block.terminal.loc().copied());
                     self.env.record_error(CompilerErrorDetail {
                         category: ErrorCategory::Todo,
                         reason: "Support functions with unreachable code that may contain hoisted declarations".to_string(),
@@ -617,7 +620,16 @@ impl<'a> HirBuilder<'a> {
                 } else {
                     // Local binding: resolve via resolve_binding
                     let binding_id = binding.id;
-                    let binding_kind = format!("{:?}", binding.kind);
+                    let binding_kind = match &binding.kind {
+                        react_compiler_ast::scope::BindingKind::Var => "var",
+                        react_compiler_ast::scope::BindingKind::Let => "let",
+                        react_compiler_ast::scope::BindingKind::Const => "const",
+                        react_compiler_ast::scope::BindingKind::Param => "param",
+                        react_compiler_ast::scope::BindingKind::Module => "module",
+                        react_compiler_ast::scope::BindingKind::Hoisted => "hoisted",
+                        react_compiler_ast::scope::BindingKind::Local => "local",
+                        react_compiler_ast::scope::BindingKind::Unknown => "unknown",
+                    }.to_string();
                     let identifier = self.resolve_binding(name, binding_id);
                     VariableBinding::Identifier {
                         identifier,
@@ -853,7 +865,7 @@ fn get_reverse_postordered_blocks(hir: &HIR) -> BTreeMap<BlockId, BasicBlock> {
                     instructions: Vec::new(),
                     terminal: Terminal::Unreachable {
                         id: block.terminal.id(),
-                        loc: block.terminal.loc().clone(),
+                        loc: block.terminal.loc().copied(),
                     },
                     preds: BTreeSet::new(),
                     phis: Vec::new(),
@@ -979,6 +991,11 @@ fn mark_instruction_ids(hir: &mut HIR) {
 
 /// DFS from entry, for each successor add the predecessor's id to
 /// the successor's preds set.
+///
+/// Note: This only visits direct successors (via `each_terminal_successor`),
+/// not fallthrough blocks. Fallthrough blocks are reached indirectly via
+/// Goto terminals from within branching blocks, matching the TypeScript
+/// `markPredecessors` behavior.
 fn mark_predecessors(hir: &mut HIR) {
     // Clear all preds first
     for block in hir.blocks.values_mut() {
