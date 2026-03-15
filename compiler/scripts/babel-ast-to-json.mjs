@@ -186,8 +186,6 @@ function collectScopeInfo(ast) {
 }
 
 function renameIdentifiersInJson(jsonValue, scopeInfo) {
-  const scopeStack = [];
-
   function walk(node) {
     if (node === null || typeof node !== "object") return;
 
@@ -198,33 +196,20 @@ function renameIdentifiersInJson(jsonValue, scopeInfo) {
       return;
     }
 
-    // Check if this node opens a new scope
-    let pushedScope = false;
-    if (node.start != null && String(node.start) in scopeInfo.node_to_scope) {
-      scopeStack.push(scopeInfo.node_to_scope[String(node.start)]);
-      pushedScope = true;
-    }
-
     // Rename Identifier nodes that have a binding
     if (
       node.type === "Identifier" &&
       node.start != null &&
-      String(node.start) in scopeInfo.reference_to_binding &&
-      scopeStack.length > 0
+      String(node.start) in scopeInfo.reference_to_binding
     ) {
       const bindingId = scopeInfo.reference_to_binding[String(node.start)];
-      const currentScopeId = scopeStack[scopeStack.length - 1];
-      node.name = `${node.name}_s${currentScopeId}_b${bindingId}`;
+      const binding = scopeInfo.bindings[bindingId];
+      node.name = `${node.name}_${binding.scope}_${bindingId}`;
     }
 
     // Recurse into all properties
     for (const key of Object.keys(node)) {
       walk(node[key]);
-    }
-
-    // Pop scope if we pushed one
-    if (pushedScope) {
-      scopeStack.pop();
     }
   }
 

@@ -223,356 +223,238 @@ fn scope_info_round_trip() {
 // Typed AST traversal for identifier renaming
 // ============================================================================
 
-fn enter(start: Option<u32>, si: &ScopeInfo, ss: &mut Vec<u32>) -> bool {
-    if let Some(start) = start {
-        if let Some(&scope_id) = si.node_to_scope.get(&start) {
-            ss.push(scope_id.0);
-            return true;
-        }
-    }
-    false
-}
-
-fn leave(pushed: bool, ss: &mut Vec<u32>) {
-    if pushed {
-        ss.pop();
-    }
-}
-
-fn rename_id(id: &mut Identifier, si: &ScopeInfo, ss: &mut Vec<u32>) {
+/// Rename an Identifier if it has a binding in reference_to_binding.
+/// Uses the declaring scope from the binding table — no scope stack needed.
+fn rename_id(id: &mut Identifier, si: &ScopeInfo) {
     if let Some(start) = id.base.start {
         if let Some(&bid) = si.reference_to_binding.get(&start) {
-            if let Some(&scope) = ss.last() {
-                id.name = format!("{}_s{}_b{}", id.name, scope, bid.0);
-            }
+            let scope = si.bindings[bid.0 as usize].scope.0;
+            id.name = format!("{}_{}", id.name, format_args!("{scope}_{}", bid.0));
         }
     }
-    visit_json_opt(&mut id.type_annotation, si, ss);
+    visit_json_opt(&mut id.type_annotation, si);
     if let Some(decorators) = &mut id.decorators {
-        visit_json_vec(decorators, si, ss);
+        visit_json_vec(decorators, si);
     }
 }
 
 /// Fallback walker for serde_json::Value fields (class bodies, type annotations, decorators, etc.)
-fn visit_json(val: &mut serde_json::Value, si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_json(val: &mut serde_json::Value, si: &ScopeInfo) {
     match val {
         serde_json::Value::Object(map) => {
-            let pushed = if let Some(start) = map.get("start").and_then(|v| v.as_u64()) {
-                if let Some(&scope_id) = si.node_to_scope.get(&(start as u32)) {
-                    ss.push(scope_id.0);
-                    true
-                } else {
-                    false
-                }
-            } else {
-                false
-            };
-
             if map.get("type").and_then(|v| v.as_str()) == Some("Identifier") {
                 if let Some(start) = map.get("start").and_then(|v| v.as_u64()) {
                     if let Some(&bid) = si.reference_to_binding.get(&(start as u32)) {
-                        if let Some(&scope) = ss.last() {
-                            if let Some(name) = map
-                                .get("name")
-                                .and_then(|v| v.as_str())
-                                .map(|s| s.to_string())
-                            {
-                                map.insert(
-                                    "name".to_string(),
-                                    serde_json::Value::String(format!(
-                                        "{}_s{}_b{}",
-                                        name, scope, bid.0
-                                    )),
-                                );
-                            }
+                        let scope = si.bindings[bid.0 as usize].scope.0;
+                        if let Some(name) = map
+                            .get("name")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string())
+                        {
+                            map.insert(
+                                "name".to_string(),
+                                serde_json::Value::String(format!(
+                                    "{name}_{scope}_{}", bid.0
+                                )),
+                            );
                         }
                     }
                 }
             }
-
             let keys: Vec<String> = map.keys().cloned().collect();
             for key in keys {
                 if let Some(child) = map.get_mut(&key) {
-                    visit_json(child, si, ss);
+                    visit_json(child, si);
                 }
             }
-
-            leave(pushed, ss);
         }
         serde_json::Value::Array(arr) => {
             for item in arr.iter_mut() {
-                visit_json(item, si, ss);
+                visit_json(item, si);
             }
         }
         _ => {}
     }
 }
 
-fn visit_json_vec(vals: &mut [serde_json::Value], si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_json_vec(vals: &mut [serde_json::Value], si: &ScopeInfo) {
     for val in vals.iter_mut() {
-        visit_json(val, si, ss);
+        visit_json(val, si);
     }
 }
 
-fn visit_json_opt(val: &mut Option<Box<serde_json::Value>>, si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_json_opt(val: &mut Option<Box<serde_json::Value>>, si: &ScopeInfo) {
     if let Some(v) = val {
-        visit_json(v, si, ss);
+        visit_json(v, si);
     }
 }
 
 fn rename_identifiers(file: &mut react_compiler_ast::File, si: &ScopeInfo) {
-    let mut ss = Vec::new();
-    let p = enter(file.base.start, si, &mut ss);
-    visit_program(&mut file.program, si, &mut ss);
-    leave(p, &mut ss);
+    visit_program(&mut file.program, si);
 }
 
-fn visit_program(prog: &mut react_compiler_ast::Program, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    let p = enter(prog.base.start, si, ss);
+fn visit_program(prog: &mut react_compiler_ast::Program, si: &ScopeInfo) {
     for stmt in &mut prog.body {
-        visit_stmt(stmt, si, ss);
+        visit_stmt(stmt, si);
     }
-    leave(p, ss);
 }
 
-fn visit_block(block: &mut BlockStatement, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    let p = enter(block.base.start, si, ss);
+fn visit_block(block: &mut BlockStatement, si: &ScopeInfo) {
     for stmt in &mut block.body {
-        visit_stmt(stmt, si, ss);
+        visit_stmt(stmt, si);
     }
-    leave(p, ss);
 }
 
-fn visit_stmt(stmt: &mut Statement, si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_stmt(stmt: &mut Statement, si: &ScopeInfo) {
     match stmt {
-        Statement::BlockStatement(s) => visit_block(s, si, ss),
+        Statement::BlockStatement(s) => visit_block(s, si),
         Statement::ReturnStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            if let Some(arg) = &mut s.argument {
-                visit_expr(arg, si, ss);
-            }
-            leave(p, ss);
+            if let Some(arg) = &mut s.argument { visit_expr(arg, si); }
         }
-        Statement::ExpressionStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_expr(&mut s.expression, si, ss);
-            leave(p, ss);
-        }
+        Statement::ExpressionStatement(s) => visit_expr(&mut s.expression, si),
         Statement::IfStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_expr(&mut s.test, si, ss);
-            visit_stmt(&mut s.consequent, si, ss);
-            if let Some(alt) = &mut s.alternate {
-                visit_stmt(alt, si, ss);
-            }
-            leave(p, ss);
+            visit_expr(&mut s.test, si);
+            visit_stmt(&mut s.consequent, si);
+            if let Some(alt) = &mut s.alternate { visit_stmt(alt, si); }
         }
         Statement::ForStatement(s) => {
-            let p = enter(s.base.start, si, ss);
             if let Some(init) = &mut s.init {
                 match init.as_mut() {
-                    ForInit::VariableDeclaration(d) => visit_var_decl(d, si, ss),
-                    ForInit::Expression(e) => visit_expr(e, si, ss),
+                    ForInit::VariableDeclaration(d) => visit_var_decl(d, si),
+                    ForInit::Expression(e) => visit_expr(e, si),
                 }
             }
-            if let Some(test) = &mut s.test {
-                visit_expr(test, si, ss);
-            }
-            if let Some(update) = &mut s.update {
-                visit_expr(update, si, ss);
-            }
-            visit_stmt(&mut s.body, si, ss);
-            leave(p, ss);
+            if let Some(test) = &mut s.test { visit_expr(test, si); }
+            if let Some(update) = &mut s.update { visit_expr(update, si); }
+            visit_stmt(&mut s.body, si);
         }
         Statement::WhileStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_expr(&mut s.test, si, ss);
-            visit_stmt(&mut s.body, si, ss);
-            leave(p, ss);
+            visit_expr(&mut s.test, si);
+            visit_stmt(&mut s.body, si);
         }
         Statement::DoWhileStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_stmt(&mut s.body, si, ss);
-            visit_expr(&mut s.test, si, ss);
-            leave(p, ss);
+            visit_stmt(&mut s.body, si);
+            visit_expr(&mut s.test, si);
         }
         Statement::ForInStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_for_left(&mut s.left, si, ss);
-            visit_expr(&mut s.right, si, ss);
-            visit_stmt(&mut s.body, si, ss);
-            leave(p, ss);
+            visit_for_left(&mut s.left, si);
+            visit_expr(&mut s.right, si);
+            visit_stmt(&mut s.body, si);
         }
         Statement::ForOfStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_for_left(&mut s.left, si, ss);
-            visit_expr(&mut s.right, si, ss);
-            visit_stmt(&mut s.body, si, ss);
-            leave(p, ss);
+            visit_for_left(&mut s.left, si);
+            visit_expr(&mut s.right, si);
+            visit_stmt(&mut s.body, si);
         }
         Statement::SwitchStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_expr(&mut s.discriminant, si, ss);
+            visit_expr(&mut s.discriminant, si);
             for case in &mut s.cases {
-                if let Some(test) = &mut case.test {
-                    visit_expr(test, si, ss);
-                }
-                for child in &mut case.consequent {
-                    visit_stmt(child, si, ss);
-                }
+                if let Some(test) = &mut case.test { visit_expr(test, si); }
+                for child in &mut case.consequent { visit_stmt(child, si); }
             }
-            leave(p, ss);
         }
-        Statement::ThrowStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_expr(&mut s.argument, si, ss);
-            leave(p, ss);
-        }
+        Statement::ThrowStatement(s) => visit_expr(&mut s.argument, si),
         Statement::TryStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_block(&mut s.block, si, ss);
+            visit_block(&mut s.block, si);
             if let Some(handler) = &mut s.handler {
-                let hp = enter(handler.base.start, si, ss);
-                if let Some(param) = &mut handler.param {
-                    visit_pat(param, si, ss);
-                }
-                visit_block(&mut handler.body, si, ss);
-                leave(hp, ss);
+                if let Some(param) = &mut handler.param { visit_pat(param, si); }
+                visit_block(&mut handler.body, si);
             }
-            if let Some(fin) = &mut s.finalizer {
-                visit_block(fin, si, ss);
-            }
-            leave(p, ss);
+            if let Some(fin) = &mut s.finalizer { visit_block(fin, si); }
         }
-        Statement::LabeledStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_stmt(&mut s.body, si, ss);
-            leave(p, ss);
-        }
+        Statement::LabeledStatement(s) => visit_stmt(&mut s.body, si),
         Statement::WithStatement(s) => {
-            let p = enter(s.base.start, si, ss);
-            visit_expr(&mut s.object, si, ss);
-            visit_stmt(&mut s.body, si, ss);
-            leave(p, ss);
+            visit_expr(&mut s.object, si);
+            visit_stmt(&mut s.body, si);
         }
-        Statement::VariableDeclaration(d) => visit_var_decl(d, si, ss),
-        Statement::FunctionDeclaration(f) => visit_func_decl(f, si, ss),
-        Statement::ClassDeclaration(c) => visit_class_decl(c, si, ss),
-        Statement::ImportDeclaration(d) => visit_import_decl(d, si, ss),
-        Statement::ExportNamedDeclaration(d) => visit_export_named(d, si, ss),
-        Statement::ExportDefaultDeclaration(d) => visit_export_default(d, si, ss),
+        Statement::VariableDeclaration(d) => visit_var_decl(d, si),
+        Statement::FunctionDeclaration(f) => visit_func_decl(f, si),
+        Statement::ClassDeclaration(c) => visit_class_decl(c, si),
+        Statement::ImportDeclaration(d) => visit_import_decl(d, si),
+        Statement::ExportNamedDeclaration(d) => visit_export_named(d, si),
+        Statement::ExportDefaultDeclaration(d) => visit_export_default(d, si),
         Statement::TSTypeAliasDeclaration(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.type_annotation, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.type_annotation, si);
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Statement::TSInterfaceDeclaration(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
-            if let Some(ext) = &mut d.extends {
-                visit_json_vec(ext, si, ss);
-            }
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.body, si);
+            visit_json_opt(&mut d.type_parameters, si);
+            if let Some(ext) = &mut d.extends { visit_json_vec(ext, si); }
         }
         Statement::TSEnumDeclaration(d) => {
-            let p = enter(d.base.start, si, ss);
-            rename_id(&mut d.id, si, ss);
-            visit_json_vec(&mut d.members, si, ss);
-            leave(p, ss);
+            rename_id(&mut d.id, si);
+            visit_json_vec(&mut d.members, si);
         }
         Statement::TSModuleDeclaration(d) => {
-            let p = enter(d.base.start, si, ss);
-            visit_json(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
-            leave(p, ss);
+            visit_json(&mut d.id, si);
+            visit_json(&mut d.body, si);
         }
         Statement::TSDeclareFunction(d) => {
-            let p = enter(d.base.start, si, ss);
-            if let Some(id) = &mut d.id {
-                rename_id(id, si, ss);
-            }
-            visit_json_vec(&mut d.params, si, ss);
-            visit_json_opt(&mut d.return_type, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
-            leave(p, ss);
+            if let Some(id) = &mut d.id { rename_id(id, si); }
+            visit_json_vec(&mut d.params, si);
+            visit_json_opt(&mut d.return_type, si);
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Statement::TypeAlias(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.right, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.right, si);
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Statement::OpaqueType(d) => {
-            rename_id(&mut d.id, si, ss);
-            if let Some(st) = &mut d.supertype {
-                visit_json(st, si, ss);
-            }
-            visit_json(&mut d.impltype, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
+            rename_id(&mut d.id, si);
+            if let Some(st) = &mut d.supertype { visit_json(st, si); }
+            visit_json(&mut d.impltype, si);
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Statement::InterfaceDeclaration(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
-            if let Some(ext) = &mut d.extends {
-                visit_json_vec(ext, si, ss);
-            }
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.body, si);
+            visit_json_opt(&mut d.type_parameters, si);
+            if let Some(ext) = &mut d.extends { visit_json_vec(ext, si); }
         }
-        Statement::DeclareVariable(d) => rename_id(&mut d.id, si, ss),
+        Statement::DeclareVariable(d) => rename_id(&mut d.id, si),
         Statement::DeclareFunction(d) => {
-            rename_id(&mut d.id, si, ss);
-            if let Some(pred) = &mut d.predicate {
-                visit_json(pred, si, ss);
-            }
+            rename_id(&mut d.id, si);
+            if let Some(pred) = &mut d.predicate { visit_json(pred, si); }
         }
         Statement::DeclareClass(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
-            if let Some(ext) = &mut d.extends {
-                visit_json_vec(ext, si, ss);
-            }
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.body, si);
+            visit_json_opt(&mut d.type_parameters, si);
+            if let Some(ext) = &mut d.extends { visit_json_vec(ext, si); }
         }
         Statement::DeclareModule(d) => {
-            visit_json(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
+            visit_json(&mut d.id, si);
+            visit_json(&mut d.body, si);
         }
-        Statement::DeclareModuleExports(d) => {
-            visit_json(&mut d.type_annotation, si, ss);
-        }
+        Statement::DeclareModuleExports(d) => visit_json(&mut d.type_annotation, si),
         Statement::DeclareExportDeclaration(d) => {
-            if let Some(decl) = &mut d.declaration {
-                visit_json(decl, si, ss);
-            }
-            if let Some(specs) = &mut d.specifiers {
-                visit_json_vec(specs, si, ss);
-            }
+            if let Some(decl) = &mut d.declaration { visit_json(decl, si); }
+            if let Some(specs) = &mut d.specifiers { visit_json_vec(specs, si); }
         }
         Statement::DeclareInterface(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
-            if let Some(ext) = &mut d.extends {
-                visit_json_vec(ext, si, ss);
-            }
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.body, si);
+            visit_json_opt(&mut d.type_parameters, si);
+            if let Some(ext) = &mut d.extends { visit_json_vec(ext, si); }
         }
         Statement::DeclareTypeAlias(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.right, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.right, si);
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Statement::DeclareOpaqueType(d) => {
-            rename_id(&mut d.id, si, ss);
-            if let Some(st) = &mut d.supertype {
-                visit_json(st, si, ss);
-            }
-            if let Some(impl_) = &mut d.impltype {
-                visit_json(impl_, si, ss);
-            }
-            visit_json_opt(&mut d.type_parameters, si, ss);
+            rename_id(&mut d.id, si);
+            if let Some(st) = &mut d.supertype { visit_json(st, si); }
+            if let Some(impl_) = &mut d.impltype { visit_json(impl_, si); }
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Statement::EnumDeclaration(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.body, si);
         }
         Statement::BreakStatement(_)
         | Statement::ContinueStatement(_)
@@ -583,575 +465,375 @@ fn visit_stmt(stmt: &mut Statement, si: &ScopeInfo, ss: &mut Vec<u32>) {
     }
 }
 
-/// Extract the base start offset from any Expression variant.
-fn expr_start(expr: &Expression) -> Option<u32> {
+fn visit_expr(expr: &mut Expression, si: &ScopeInfo) {
     match expr {
-        Expression::Identifier(e) => e.base.start,
-        Expression::CallExpression(e) => e.base.start,
-        Expression::MemberExpression(e) => e.base.start,
-        Expression::OptionalCallExpression(e) => e.base.start,
-        Expression::OptionalMemberExpression(e) => e.base.start,
-        Expression::BinaryExpression(e) => e.base.start,
-        Expression::LogicalExpression(e) => e.base.start,
-        Expression::UnaryExpression(e) => e.base.start,
-        Expression::UpdateExpression(e) => e.base.start,
-        Expression::ConditionalExpression(e) => e.base.start,
-        Expression::AssignmentExpression(e) => e.base.start,
-        Expression::SequenceExpression(e) => e.base.start,
-        Expression::ArrowFunctionExpression(e) => e.base.start,
-        Expression::FunctionExpression(e) => e.base.start,
-        Expression::ObjectExpression(e) => e.base.start,
-        Expression::ArrayExpression(e) => e.base.start,
-        Expression::NewExpression(e) => e.base.start,
-        Expression::TemplateLiteral(e) => e.base.start,
-        Expression::TaggedTemplateExpression(e) => e.base.start,
-        Expression::AwaitExpression(e) => e.base.start,
-        Expression::YieldExpression(e) => e.base.start,
-        Expression::SpreadElement(e) => e.base.start,
-        Expression::MetaProperty(e) => e.base.start,
-        Expression::ClassExpression(e) => e.base.start,
-        Expression::PrivateName(e) => e.base.start,
-        Expression::Super(e) => e.base.start,
-        Expression::Import(e) => e.base.start,
-        Expression::ThisExpression(e) => e.base.start,
-        Expression::ParenthesizedExpression(e) => e.base.start,
-        Expression::AssignmentPattern(e) => e.base.start,
-        Expression::TSAsExpression(e) => e.base.start,
-        Expression::TSSatisfiesExpression(e) => e.base.start,
-        Expression::TSNonNullExpression(e) => e.base.start,
-        Expression::TSTypeAssertion(e) => e.base.start,
-        Expression::TSInstantiationExpression(e) => e.base.start,
-        Expression::TypeCastExpression(e) => e.base.start,
-        Expression::JSXElement(e) => e.base.start,
-        Expression::JSXFragment(e) => e.base.start,
-        Expression::StringLiteral(e) => e.base.start,
-        Expression::NumericLiteral(e) => e.base.start,
-        Expression::BooleanLiteral(e) => e.base.start,
-        Expression::NullLiteral(e) => e.base.start,
-        Expression::BigIntLiteral(e) => e.base.start,
-        Expression::RegExpLiteral(e) => e.base.start,
-    }
-}
-
-fn visit_expr(expr: &mut Expression, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    let p = enter(expr_start(expr), si, ss);
-    visit_expr_inner(expr, si, ss);
-    leave(p, ss);
-}
-
-fn visit_expr_inner(expr: &mut Expression, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    match expr {
-        Expression::Identifier(id) => rename_id(id, si, ss),
+        Expression::Identifier(id) => rename_id(id, si),
         Expression::CallExpression(e) => {
-            visit_expr(&mut e.callee, si, ss);
-            for arg in &mut e.arguments {
-                visit_expr(arg, si, ss);
-            }
-            visit_json_opt(&mut e.type_parameters, si, ss);
-            visit_json_opt(&mut e.type_arguments, si, ss);
+            visit_expr(&mut e.callee, si);
+            for arg in &mut e.arguments { visit_expr(arg, si); }
+            visit_json_opt(&mut e.type_parameters, si);
+            visit_json_opt(&mut e.type_arguments, si);
         }
         Expression::MemberExpression(e) => {
-            visit_expr(&mut e.object, si, ss);
-            visit_expr(&mut e.property, si, ss);
+            visit_expr(&mut e.object, si);
+            visit_expr(&mut e.property, si);
         }
         Expression::OptionalCallExpression(e) => {
-            visit_expr(&mut e.callee, si, ss);
-            for arg in &mut e.arguments {
-                visit_expr(arg, si, ss);
-            }
-            visit_json_opt(&mut e.type_parameters, si, ss);
-            visit_json_opt(&mut e.type_arguments, si, ss);
+            visit_expr(&mut e.callee, si);
+            for arg in &mut e.arguments { visit_expr(arg, si); }
+            visit_json_opt(&mut e.type_parameters, si);
+            visit_json_opt(&mut e.type_arguments, si);
         }
         Expression::OptionalMemberExpression(e) => {
-            visit_expr(&mut e.object, si, ss);
-            visit_expr(&mut e.property, si, ss);
+            visit_expr(&mut e.object, si);
+            visit_expr(&mut e.property, si);
         }
         Expression::BinaryExpression(e) => {
-            visit_expr(&mut e.left, si, ss);
-            visit_expr(&mut e.right, si, ss);
+            visit_expr(&mut e.left, si);
+            visit_expr(&mut e.right, si);
         }
         Expression::LogicalExpression(e) => {
-            visit_expr(&mut e.left, si, ss);
-            visit_expr(&mut e.right, si, ss);
+            visit_expr(&mut e.left, si);
+            visit_expr(&mut e.right, si);
         }
-        Expression::UnaryExpression(e) => visit_expr(&mut e.argument, si, ss),
-        Expression::UpdateExpression(e) => visit_expr(&mut e.argument, si, ss),
+        Expression::UnaryExpression(e) => visit_expr(&mut e.argument, si),
+        Expression::UpdateExpression(e) => visit_expr(&mut e.argument, si),
         Expression::ConditionalExpression(e) => {
-            visit_expr(&mut e.test, si, ss);
-            visit_expr(&mut e.consequent, si, ss);
-            visit_expr(&mut e.alternate, si, ss);
+            visit_expr(&mut e.test, si);
+            visit_expr(&mut e.consequent, si);
+            visit_expr(&mut e.alternate, si);
         }
         Expression::AssignmentExpression(e) => {
-            visit_pat(&mut e.left, si, ss);
-            visit_expr(&mut e.right, si, ss);
+            visit_pat(&mut e.left, si);
+            visit_expr(&mut e.right, si);
         }
         Expression::SequenceExpression(e) => {
-            for child in &mut e.expressions {
-                visit_expr(child, si, ss);
-            }
+            for child in &mut e.expressions { visit_expr(child, si); }
         }
         Expression::ArrowFunctionExpression(e) => {
-            if let Some(id) = &mut e.id {
-                rename_id(id, si, ss);
-            }
-            for param in &mut e.params {
-                visit_pat(param, si, ss);
-            }
+            if let Some(id) = &mut e.id { rename_id(id, si); }
+            for param in &mut e.params { visit_pat(param, si); }
             match e.body.as_mut() {
-                ArrowFunctionBody::BlockStatement(block) => visit_block(block, si, ss),
-                ArrowFunctionBody::Expression(expr) => visit_expr(expr, si, ss),
+                ArrowFunctionBody::BlockStatement(block) => visit_block(block, si),
+                ArrowFunctionBody::Expression(expr) => visit_expr(expr, si),
             }
-            visit_json_opt(&mut e.return_type, si, ss);
-            visit_json_opt(&mut e.type_parameters, si, ss);
-            visit_json_opt(&mut e.predicate, si, ss);
+            visit_json_opt(&mut e.return_type, si);
+            visit_json_opt(&mut e.type_parameters, si);
+            visit_json_opt(&mut e.predicate, si);
         }
         Expression::FunctionExpression(e) => {
-            if let Some(id) = &mut e.id {
-                rename_id(id, si, ss);
-            }
-            for param in &mut e.params {
-                visit_pat(param, si, ss);
-            }
-            visit_block(&mut e.body, si, ss);
-            visit_json_opt(&mut e.return_type, si, ss);
-            visit_json_opt(&mut e.type_parameters, si, ss);
+            if let Some(id) = &mut e.id { rename_id(id, si); }
+            for param in &mut e.params { visit_pat(param, si); }
+            visit_block(&mut e.body, si);
+            visit_json_opt(&mut e.return_type, si);
+            visit_json_opt(&mut e.type_parameters, si);
         }
         Expression::ObjectExpression(e) => {
             for prop in &mut e.properties {
                 match prop {
-                    ObjectExpressionProperty::ObjectProperty(op) => {
-                        let pp = enter(op.base.start, si, ss);
-                        visit_expr(&mut op.key, si, ss);
-                        visit_expr(&mut op.value, si, ss);
-                        leave(pp, ss);
+                    ObjectExpressionProperty::ObjectProperty(p) => {
+                        visit_expr(&mut p.key, si);
+                        visit_expr(&mut p.value, si);
                     }
                     ObjectExpressionProperty::ObjectMethod(m) => {
-                        // ObjectMethod has its own base, enter scope for it
-                        let mp = enter(m.base.start, si, ss);
-                        visit_expr(&mut m.key, si, ss);
-                        for param in &mut m.params {
-                            visit_pat(param, si, ss);
-                        }
-                        visit_block(&mut m.body, si, ss);
-                        visit_json_opt(&mut m.return_type, si, ss);
-                        visit_json_opt(&mut m.type_parameters, si, ss);
-                        leave(mp, ss);
+                        visit_expr(&mut m.key, si);
+                        for param in &mut m.params { visit_pat(param, si); }
+                        visit_block(&mut m.body, si);
+                        visit_json_opt(&mut m.return_type, si);
+                        visit_json_opt(&mut m.type_parameters, si);
                     }
-                    ObjectExpressionProperty::SpreadElement(s) => {
-                        visit_expr(&mut s.argument, si, ss);
-                    }
+                    ObjectExpressionProperty::SpreadElement(s) => visit_expr(&mut s.argument, si),
                 }
             }
         }
         Expression::ArrayExpression(e) => {
             for elem in &mut e.elements {
-                if let Some(el) = elem {
-                    visit_expr(el, si, ss);
-                }
+                if let Some(el) = elem { visit_expr(el, si); }
             }
         }
         Expression::NewExpression(e) => {
-            visit_expr(&mut e.callee, si, ss);
-            for arg in &mut e.arguments {
-                visit_expr(arg, si, ss);
-            }
-            visit_json_opt(&mut e.type_parameters, si, ss);
-            visit_json_opt(&mut e.type_arguments, si, ss);
+            visit_expr(&mut e.callee, si);
+            for arg in &mut e.arguments { visit_expr(arg, si); }
+            visit_json_opt(&mut e.type_parameters, si);
+            visit_json_opt(&mut e.type_arguments, si);
         }
         Expression::TemplateLiteral(e) => {
-            for child in &mut e.expressions {
-                visit_expr(child, si, ss);
-            }
+            for child in &mut e.expressions { visit_expr(child, si); }
         }
         Expression::TaggedTemplateExpression(e) => {
-            visit_expr(&mut e.tag, si, ss);
-            for child in &mut e.quasi.expressions {
-                visit_expr(child, si, ss);
-            }
-            visit_json_opt(&mut e.type_parameters, si, ss);
+            visit_expr(&mut e.tag, si);
+            for child in &mut e.quasi.expressions { visit_expr(child, si); }
+            visit_json_opt(&mut e.type_parameters, si);
         }
-        Expression::AwaitExpression(e) => visit_expr(&mut e.argument, si, ss),
+        Expression::AwaitExpression(e) => visit_expr(&mut e.argument, si),
         Expression::YieldExpression(e) => {
-            if let Some(arg) = &mut e.argument {
-                visit_expr(arg, si, ss);
-            }
+            if let Some(arg) = &mut e.argument { visit_expr(arg, si); }
         }
-        Expression::SpreadElement(e) => visit_expr(&mut e.argument, si, ss),
+        Expression::SpreadElement(e) => visit_expr(&mut e.argument, si),
         Expression::MetaProperty(e) => {
-            // meta and property identifiers are not binding references
-            rename_id(&mut e.meta, si, ss);
-            rename_id(&mut e.property, si, ss);
+            rename_id(&mut e.meta, si);
+            rename_id(&mut e.property, si);
         }
         Expression::ClassExpression(e) => {
-            if let Some(id) = &mut e.id {
-                rename_id(id, si, ss);
-            }
-            if let Some(sc) = &mut e.super_class {
-                visit_expr(sc, si, ss);
-            }
-            visit_json_vec(&mut e.body.body, si, ss);
-            if let Some(dec) = &mut e.decorators {
-                visit_json_vec(dec, si, ss);
-            }
-            visit_json_opt(&mut e.super_type_parameters, si, ss);
-            visit_json_opt(&mut e.type_parameters, si, ss);
-            if let Some(imp) = &mut e.implements {
-                visit_json_vec(imp, si, ss);
-            }
+            if let Some(id) = &mut e.id { rename_id(id, si); }
+            if let Some(sc) = &mut e.super_class { visit_expr(sc, si); }
+            visit_json_vec(&mut e.body.body, si);
+            if let Some(dec) = &mut e.decorators { visit_json_vec(dec, si); }
+            visit_json_opt(&mut e.super_type_parameters, si);
+            visit_json_opt(&mut e.type_parameters, si);
+            if let Some(imp) = &mut e.implements { visit_json_vec(imp, si); }
         }
-        Expression::PrivateName(e) => rename_id(&mut e.id, si, ss),
-        Expression::ParenthesizedExpression(e) => visit_expr(&mut e.expression, si, ss),
+        Expression::PrivateName(e) => rename_id(&mut e.id, si),
+        Expression::ParenthesizedExpression(e) => visit_expr(&mut e.expression, si),
         Expression::AssignmentPattern(p) => {
-            visit_pat(&mut p.left, si, ss);
-            visit_expr(&mut p.right, si, ss);
+            visit_pat(&mut p.left, si);
+            visit_expr(&mut p.right, si);
         }
         Expression::TSAsExpression(e) => {
-            visit_expr(&mut e.expression, si, ss);
-            visit_json(&mut e.type_annotation, si, ss);
+            visit_expr(&mut e.expression, si);
+            visit_json(&mut e.type_annotation, si);
         }
         Expression::TSSatisfiesExpression(e) => {
-            visit_expr(&mut e.expression, si, ss);
-            visit_json(&mut e.type_annotation, si, ss);
+            visit_expr(&mut e.expression, si);
+            visit_json(&mut e.type_annotation, si);
         }
-        Expression::TSNonNullExpression(e) => visit_expr(&mut e.expression, si, ss),
+        Expression::TSNonNullExpression(e) => visit_expr(&mut e.expression, si),
         Expression::TSTypeAssertion(e) => {
-            visit_expr(&mut e.expression, si, ss);
-            visit_json(&mut e.type_annotation, si, ss);
+            visit_expr(&mut e.expression, si);
+            visit_json(&mut e.type_annotation, si);
         }
         Expression::TSInstantiationExpression(e) => {
-            visit_expr(&mut e.expression, si, ss);
-            visit_json(&mut e.type_parameters, si, ss);
+            visit_expr(&mut e.expression, si);
+            visit_json(&mut e.type_parameters, si);
         }
         Expression::TypeCastExpression(e) => {
-            visit_expr(&mut e.expression, si, ss);
-            visit_json(&mut e.type_annotation, si, ss);
+            visit_expr(&mut e.expression, si);
+            visit_json(&mut e.type_annotation, si);
         }
-        Expression::JSXElement(e) => visit_jsx_element(e, si, ss),
+        Expression::JSXElement(e) => visit_jsx_element(e, si),
         Expression::JSXFragment(f) => {
-            for child in &mut f.children {
-                visit_jsx_child(child, si, ss);
-            }
+            for child in &mut f.children { visit_jsx_child(child, si); }
         }
-        Expression::StringLiteral(_)
-        | Expression::NumericLiteral(_)
-        | Expression::BooleanLiteral(_)
-        | Expression::NullLiteral(_)
-        | Expression::BigIntLiteral(_)
-        | Expression::RegExpLiteral(_)
-        | Expression::Super(_)
-        | Expression::Import(_)
+        Expression::StringLiteral(_) | Expression::NumericLiteral(_)
+        | Expression::BooleanLiteral(_) | Expression::NullLiteral(_)
+        | Expression::BigIntLiteral(_) | Expression::RegExpLiteral(_)
+        | Expression::Super(_) | Expression::Import(_)
         | Expression::ThisExpression(_) => {}
     }
 }
 
-fn visit_pat(pat: &mut PatternLike, si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_pat(pat: &mut PatternLike, si: &ScopeInfo) {
     match pat {
-        PatternLike::Identifier(id) => {
-            let p = enter(id.base.start, si, ss);
-            rename_id(id, si, ss);
-            leave(p, ss);
-        }
+        PatternLike::Identifier(id) => rename_id(id, si),
         PatternLike::ObjectPattern(op) => {
-            let p = enter(op.base.start, si, ss);
             for prop in &mut op.properties {
                 match prop {
                     ObjectPatternProperty::ObjectProperty(pp) => {
-                        let pp_p = enter(pp.base.start, si, ss);
-                        visit_expr(&mut pp.key, si, ss);
-                        visit_pat(&mut pp.value, si, ss);
-                        leave(pp_p, ss);
+                        visit_expr(&mut pp.key, si);
+                        visit_pat(&mut pp.value, si);
                     }
                     ObjectPatternProperty::RestElement(r) => {
-                        let rp = enter(r.base.start, si, ss);
-                        visit_pat(&mut r.argument, si, ss);
-                        visit_json_opt(&mut r.type_annotation, si, ss);
-                        leave(rp, ss);
+                        visit_pat(&mut r.argument, si);
+                        visit_json_opt(&mut r.type_annotation, si);
                     }
                 }
             }
-            visit_json_opt(&mut op.type_annotation, si, ss);
-            leave(p, ss);
+            visit_json_opt(&mut op.type_annotation, si);
         }
         PatternLike::ArrayPattern(ap) => {
-            let p = enter(ap.base.start, si, ss);
             for elem in &mut ap.elements {
-                if let Some(el) = elem {
-                    visit_pat(el, si, ss);
-                }
+                if let Some(el) = elem { visit_pat(el, si); }
             }
-            visit_json_opt(&mut ap.type_annotation, si, ss);
-            leave(p, ss);
+            visit_json_opt(&mut ap.type_annotation, si);
         }
         PatternLike::AssignmentPattern(ap) => {
-            let p = enter(ap.base.start, si, ss);
-            visit_pat(&mut ap.left, si, ss);
-            visit_expr(&mut ap.right, si, ss);
-            visit_json_opt(&mut ap.type_annotation, si, ss);
-            leave(p, ss);
+            visit_pat(&mut ap.left, si);
+            visit_expr(&mut ap.right, si);
+            visit_json_opt(&mut ap.type_annotation, si);
         }
         PatternLike::RestElement(re) => {
-            let p = enter(re.base.start, si, ss);
-            visit_pat(&mut re.argument, si, ss);
-            visit_json_opt(&mut re.type_annotation, si, ss);
-            leave(p, ss);
+            visit_pat(&mut re.argument, si);
+            visit_json_opt(&mut re.type_annotation, si);
         }
         PatternLike::MemberExpression(e) => {
-            let p = enter(e.base.start, si, ss);
-            visit_expr(&mut e.object, si, ss);
-            visit_expr(&mut e.property, si, ss);
-            leave(p, ss);
+            visit_expr(&mut e.object, si);
+            visit_expr(&mut e.property, si);
         }
     }
 }
 
-fn visit_for_left(left: &mut Box<ForInOfLeft>, si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_for_left(left: &mut Box<ForInOfLeft>, si: &ScopeInfo) {
     match left.as_mut() {
-        ForInOfLeft::VariableDeclaration(d) => visit_var_decl(d, si, ss),
-        ForInOfLeft::Pattern(p) => visit_pat(p, si, ss),
+        ForInOfLeft::VariableDeclaration(d) => visit_var_decl(d, si),
+        ForInOfLeft::Pattern(p) => visit_pat(p, si),
     }
 }
 
-fn visit_var_decl(d: &mut VariableDeclaration, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    let p = enter(d.base.start, si, ss);
+fn visit_var_decl(d: &mut VariableDeclaration, si: &ScopeInfo) {
     for decl in &mut d.declarations {
-        let dp = enter(decl.base.start, si, ss);
-        visit_pat(&mut decl.id, si, ss);
-        if let Some(init) = &mut decl.init {
-            visit_expr(init, si, ss);
-        }
-        leave(dp, ss);
+        visit_pat(&mut decl.id, si);
+        if let Some(init) = &mut decl.init { visit_expr(init, si); }
     }
-    leave(p, ss);
 }
 
-fn visit_func_decl(f: &mut FunctionDeclaration, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    let p = enter(f.base.start, si, ss);
-    if let Some(id) = &mut f.id {
-        rename_id(id, si, ss);
-    }
-    for param in &mut f.params {
-        visit_pat(param, si, ss);
-    }
-    visit_block(&mut f.body, si, ss);
-    visit_json_opt(&mut f.return_type, si, ss);
-    visit_json_opt(&mut f.type_parameters, si, ss);
-    visit_json_opt(&mut f.predicate, si, ss);
-    leave(p, ss);
+fn visit_func_decl(f: &mut FunctionDeclaration, si: &ScopeInfo) {
+    if let Some(id) = &mut f.id { rename_id(id, si); }
+    for param in &mut f.params { visit_pat(param, si); }
+    visit_block(&mut f.body, si);
+    visit_json_opt(&mut f.return_type, si);
+    visit_json_opt(&mut f.type_parameters, si);
+    visit_json_opt(&mut f.predicate, si);
 }
 
-fn visit_class_decl(c: &mut ClassDeclaration, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    let p = enter(c.base.start, si, ss);
-    if let Some(id) = &mut c.id {
-        rename_id(id, si, ss);
-    }
-    if let Some(sc) = &mut c.super_class {
-        visit_expr(sc, si, ss);
-    }
-    visit_json_vec(&mut c.body.body, si, ss);
-    if let Some(dec) = &mut c.decorators {
-        visit_json_vec(dec, si, ss);
-    }
-    visit_json_opt(&mut c.super_type_parameters, si, ss);
-    visit_json_opt(&mut c.type_parameters, si, ss);
-    if let Some(imp) = &mut c.implements {
-        visit_json_vec(imp, si, ss);
-    }
-    leave(p, ss);
+fn visit_class_decl(c: &mut ClassDeclaration, si: &ScopeInfo) {
+    if let Some(id) = &mut c.id { rename_id(id, si); }
+    if let Some(sc) = &mut c.super_class { visit_expr(sc, si); }
+    visit_json_vec(&mut c.body.body, si);
+    if let Some(dec) = &mut c.decorators { visit_json_vec(dec, si); }
+    visit_json_opt(&mut c.super_type_parameters, si);
+    visit_json_opt(&mut c.type_parameters, si);
+    if let Some(imp) = &mut c.implements { visit_json_vec(imp, si); }
 }
 
-fn visit_import_decl(d: &mut ImportDeclaration, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    let p = enter(d.base.start, si, ss);
+fn visit_import_decl(d: &mut ImportDeclaration, si: &ScopeInfo) {
     for spec in &mut d.specifiers {
         match spec {
             ImportSpecifier::ImportSpecifier(s) => {
-                let sp = enter(s.base.start, si, ss);
-                rename_id(&mut s.local, si, ss);
-                visit_module_export_name(&mut s.imported, si, ss);
-                leave(sp, ss);
+                rename_id(&mut s.local, si);
+                visit_module_export_name(&mut s.imported, si);
             }
-            ImportSpecifier::ImportDefaultSpecifier(s) => {
-                let sp = enter(s.base.start, si, ss);
-                rename_id(&mut s.local, si, ss);
-                leave(sp, ss);
-            }
-            ImportSpecifier::ImportNamespaceSpecifier(s) => {
-                let sp = enter(s.base.start, si, ss);
-                rename_id(&mut s.local, si, ss);
-                leave(sp, ss);
-            }
+            ImportSpecifier::ImportDefaultSpecifier(s) => rename_id(&mut s.local, si),
+            ImportSpecifier::ImportNamespaceSpecifier(s) => rename_id(&mut s.local, si),
         }
     }
-    leave(p, ss);
 }
 
-fn visit_export_named(d: &mut ExportNamedDeclaration, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    let p = enter(d.base.start, si, ss);
-    if let Some(decl) = &mut d.declaration {
-        visit_declaration(decl, si, ss);
-    }
+fn visit_export_named(d: &mut ExportNamedDeclaration, si: &ScopeInfo) {
+    if let Some(decl) = &mut d.declaration { visit_declaration(decl, si); }
     for spec in &mut d.specifiers {
         match spec {
             ExportSpecifier::ExportSpecifier(s) => {
-                let sp = enter(s.base.start, si, ss);
-                visit_module_export_name(&mut s.local, si, ss);
-                visit_module_export_name(&mut s.exported, si, ss);
-                leave(sp, ss);
+                visit_module_export_name(&mut s.local, si);
+                visit_module_export_name(&mut s.exported, si);
             }
-            ExportSpecifier::ExportDefaultSpecifier(s) => {
-                let sp = enter(s.base.start, si, ss);
-                rename_id(&mut s.exported, si, ss);
-                leave(sp, ss);
-            }
+            ExportSpecifier::ExportDefaultSpecifier(s) => rename_id(&mut s.exported, si),
             ExportSpecifier::ExportNamespaceSpecifier(s) => {
-                let sp = enter(s.base.start, si, ss);
-                visit_module_export_name(&mut s.exported, si, ss);
-                leave(sp, ss);
+                visit_module_export_name(&mut s.exported, si);
             }
         }
     }
-    leave(p, ss);
 }
 
-fn visit_export_default(d: &mut ExportDefaultDeclaration, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    let p = enter(d.base.start, si, ss);
+fn visit_export_default(d: &mut ExportDefaultDeclaration, si: &ScopeInfo) {
     match d.declaration.as_mut() {
-        ExportDefaultDecl::FunctionDeclaration(f) => visit_func_decl(f, si, ss),
-        ExportDefaultDecl::ClassDeclaration(c) => visit_class_decl(c, si, ss),
-        ExportDefaultDecl::Expression(e) => visit_expr(e, si, ss),
+        ExportDefaultDecl::FunctionDeclaration(f) => visit_func_decl(f, si),
+        ExportDefaultDecl::ClassDeclaration(c) => visit_class_decl(c, si),
+        ExportDefaultDecl::Expression(e) => visit_expr(e, si),
     }
-    leave(p, ss);
 }
 
-fn visit_declaration(d: &mut Declaration, si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_declaration(d: &mut Declaration, si: &ScopeInfo) {
     match d {
-        Declaration::FunctionDeclaration(f) => visit_func_decl(f, si, ss),
-        Declaration::ClassDeclaration(c) => visit_class_decl(c, si, ss),
-        Declaration::VariableDeclaration(v) => visit_var_decl(v, si, ss),
+        Declaration::FunctionDeclaration(f) => visit_func_decl(f, si),
+        Declaration::ClassDeclaration(c) => visit_class_decl(c, si),
+        Declaration::VariableDeclaration(v) => visit_var_decl(v, si),
         Declaration::TSTypeAliasDeclaration(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.type_annotation, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.type_annotation, si);
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Declaration::TSInterfaceDeclaration(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
-            if let Some(ext) = &mut d.extends {
-                visit_json_vec(ext, si, ss);
-            }
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.body, si);
+            visit_json_opt(&mut d.type_parameters, si);
+            if let Some(ext) = &mut d.extends { visit_json_vec(ext, si); }
         }
         Declaration::TSEnumDeclaration(d) => {
-            let p = enter(d.base.start, si, ss);
-            rename_id(&mut d.id, si, ss);
-            visit_json_vec(&mut d.members, si, ss);
-            leave(p, ss);
+            rename_id(&mut d.id, si);
+            visit_json_vec(&mut d.members, si);
         }
         Declaration::TSModuleDeclaration(d) => {
-            let p = enter(d.base.start, si, ss);
-            visit_json(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
-            leave(p, ss);
+            visit_json(&mut d.id, si);
+            visit_json(&mut d.body, si);
         }
         Declaration::TSDeclareFunction(d) => {
-            let p = enter(d.base.start, si, ss);
-            if let Some(id) = &mut d.id {
-                rename_id(id, si, ss);
-            }
-            visit_json_vec(&mut d.params, si, ss);
-            visit_json_opt(&mut d.return_type, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
-            leave(p, ss);
+            if let Some(id) = &mut d.id { rename_id(id, si); }
+            visit_json_vec(&mut d.params, si);
+            visit_json_opt(&mut d.return_type, si);
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Declaration::TypeAlias(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.right, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.right, si);
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Declaration::OpaqueType(d) => {
-            rename_id(&mut d.id, si, ss);
-            if let Some(st) = &mut d.supertype {
-                visit_json(st, si, ss);
-            }
-            visit_json(&mut d.impltype, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
+            rename_id(&mut d.id, si);
+            if let Some(st) = &mut d.supertype { visit_json(st, si); }
+            visit_json(&mut d.impltype, si);
+            visit_json_opt(&mut d.type_parameters, si);
         }
         Declaration::InterfaceDeclaration(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
-            visit_json_opt(&mut d.type_parameters, si, ss);
-            if let Some(ext) = &mut d.extends {
-                visit_json_vec(ext, si, ss);
-            }
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.body, si);
+            visit_json_opt(&mut d.type_parameters, si);
+            if let Some(ext) = &mut d.extends { visit_json_vec(ext, si); }
         }
         Declaration::EnumDeclaration(d) => {
-            rename_id(&mut d.id, si, ss);
-            visit_json(&mut d.body, si, ss);
+            rename_id(&mut d.id, si);
+            visit_json(&mut d.body, si);
         }
     }
 }
 
-fn visit_module_export_name(n: &mut ModuleExportName, si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_module_export_name(n: &mut ModuleExportName, si: &ScopeInfo) {
     match n {
-        ModuleExportName::Identifier(id) => rename_id(id, si, ss),
+        ModuleExportName::Identifier(id) => rename_id(id, si),
         ModuleExportName::StringLiteral(_) => {}
     }
 }
 
-fn visit_jsx_element(el: &mut JSXElement, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    visit_jsx_name(&mut el.opening_element.name, si, ss);
+fn visit_jsx_element(el: &mut JSXElement, si: &ScopeInfo) {
     for attr in &mut el.opening_element.attributes {
         match attr {
             JSXAttributeItem::JSXAttribute(a) => {
                 if let Some(val) = &mut a.value {
                     match val {
                         JSXAttributeValue::JSXExpressionContainer(c) => {
-                            visit_jsx_expr(&mut c.expression, si, ss);
+                            visit_jsx_expr(&mut c.expression, si);
                         }
-                        JSXAttributeValue::JSXElement(e) => visit_jsx_element(e, si, ss),
+                        JSXAttributeValue::JSXElement(e) => visit_jsx_element(e, si),
                         JSXAttributeValue::JSXFragment(f) => {
-                            for child in &mut f.children {
-                                visit_jsx_child(child, si, ss);
-                            }
+                            for child in &mut f.children { visit_jsx_child(child, si); }
                         }
                         JSXAttributeValue::StringLiteral(_) => {}
                     }
                 }
             }
-            JSXAttributeItem::JSXSpreadAttribute(s) => visit_expr(&mut s.argument, si, ss),
+            JSXAttributeItem::JSXSpreadAttribute(s) => visit_expr(&mut s.argument, si),
         }
     }
-    visit_json_opt(&mut el.opening_element.type_parameters, si, ss);
-    for child in &mut el.children {
-        visit_jsx_child(child, si, ss);
-    }
+    visit_json_opt(&mut el.opening_element.type_parameters, si);
+    for child in &mut el.children { visit_jsx_child(child, si); }
 }
 
-fn visit_jsx_child(child: &mut JSXChild, si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_jsx_child(child: &mut JSXChild, si: &ScopeInfo) {
     match child {
-        JSXChild::JSXElement(e) => visit_jsx_element(e, si, ss),
+        JSXChild::JSXElement(e) => visit_jsx_element(e, si),
         JSXChild::JSXFragment(f) => {
-            for child in &mut f.children {
-                visit_jsx_child(child, si, ss);
-            }
+            for child in &mut f.children { visit_jsx_child(child, si); }
         }
-        JSXChild::JSXExpressionContainer(c) => visit_jsx_expr(&mut c.expression, si, ss),
-        JSXChild::JSXSpreadChild(s) => visit_expr(&mut s.expression, si, ss),
+        JSXChild::JSXExpressionContainer(c) => visit_jsx_expr(&mut c.expression, si),
+        JSXChild::JSXSpreadChild(s) => visit_expr(&mut s.expression, si),
         JSXChild::JSXText(_) => {}
     }
 }
 
-fn visit_jsx_expr(expr: &mut JSXExpressionContainerExpr, si: &ScopeInfo, ss: &mut Vec<u32>) {
+fn visit_jsx_expr(expr: &mut JSXExpressionContainerExpr, si: &ScopeInfo) {
     match expr {
-        JSXExpressionContainerExpr::Expression(e) => visit_expr(e, si, ss),
+        JSXExpressionContainerExpr::Expression(e) => visit_expr(e, si),
         JSXExpressionContainerExpr::JSXEmptyExpression(_) => {}
     }
-}
-
-fn visit_jsx_name(name: &mut JSXElementName, si: &ScopeInfo, ss: &mut Vec<u32>) {
-    // JSXIdentifiers are not regular Identifiers — they are not in reference_to_binding.
-    // But JSXMemberExpression objects could reference bindings via their root JSXIdentifier,
-    // and those are also not regular Identifiers. No renaming needed for JSX names.
-    let _ = (name, si, ss);
 }
 
 #[test]
