@@ -19,3 +19,6 @@ node "$REPO_ROOT/compiler/scripts/babel-ast-to-json.mjs" "$FIXTURE_SRC_DIR" "$TM
 echo "Running round-trip test..."
 cd "$REPO_ROOT/compiler/crates"
 FIXTURE_JSON_DIR="$TMPDIR" ~/.cargo/bin/cargo test -p react_compiler_ast --test round_trip -- --nocapture
+
+echo "Running scope resolution test..."
+FIXTURE_JSON_DIR="$TMPDIR" ~/.cargo/bin/cargo test -p react_compiler_ast --test scope_resolution -- --nocapture

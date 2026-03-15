@@ -74,7 +74,10 @@ fn round_trip_all_fixtures() {
     for entry in walkdir::WalkDir::new(&json_dir)
         .into_iter()
         .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension().is_some_and(|ext| ext == "json"))
+        .filter(|e| {
+            e.path().extension().is_some_and(|ext| ext == "json")
+                && !e.path().to_string_lossy().ends_with(".scope.json")
+        })
     {
         let fixture_name = entry
             .path()

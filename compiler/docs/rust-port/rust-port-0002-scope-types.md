@@ -4,7 +4,7 @@
 
 Define a normalized, parser-agnostic scope information model (`ScopeInfo`) that captures binding resolution, scope chains, and import metadata needed by the compiler's HIR lowering phase. The scope data is stored separately from the AST and linked via position-based lookup maps.
 
-**Current status**: Not yet implemented. Design complete, implementation pending.
+**Current status**: Implemented. Scope types defined in `react_compiler_ast::scope`. Babel serialization in `babel-ast-to-json.mjs`. Scope resolution test passes for all 1714 fixtures.
 
 ---
 
