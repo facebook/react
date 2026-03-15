@@ -149,9 +149,9 @@ node compiler/scripts/ts-compile-fixture.mjs <pass> <fixture-path>
 ```
 
 **Outputs to stdout:**
-- On success: detailed debug representation of the HIR or ReactiveFunction (see [Debug Output Format](#debug-output-format))
-- On error (invariant/todo/thrown): formatted error with full diagnostic details
-- On completion with accumulated errors: formatted accumulated errors
+- On success: detailed debug representation of the HIR or ReactiveFunction, including outlined functions (see [Debug Output Format](#debug-output-format))
+- On error (thrown CompilerError): formatted error with full diagnostic details
+- On accumulated errors (env has errors at the target pass): formatted accumulated errors — these take priority over the debug HIR output
 
 **Implementation approach:**
 
@@ -179,23 +179,35 @@ function main() {
 
   try {
     const hir = lower(functionPath, env);
-    if (pass === 'HIR') return printDebugHIR(hir, env);
+    if (pass === 'HIR') {
+      if (env.hasErrors()) {
+        return printFormattedErrors(env.errors());
+      }
+      return printDebugHIR(hir, env); // includes outlined functions
+    }
 
     pruneMaybeThrows(hir);
-    if (pass === 'PruneMaybeThrows') return printDebugHIR(hir, env);
+    if (pass === 'PruneMaybeThrows') {
+      if (env.hasErrors()) {
+        return printFormattedErrors(env.errors());
+      }
+      return printDebugHIR(hir, env);
+    }
 
-    // ... each pass in order, checking pass name after each ...
+    // ... each pass in order, with the same pattern:
+    //   somePass(hir);
+    //   if (pass === 'PassName') {
+    //     if (env.hasErrors()) {
+    //       return printFormattedErrors(env.errors());
+    //     }
+    //     return printDebugHIR(hir, env);
+    //   }
 
   } catch (e) {
     if (e instanceof CompilerError) {
       return printFormattedError(e);
     }
     throw e; // re-throw non-compiler errors
-  }
-
-  // After target pass, check for accumulated errors
-  if (env.hasErrors()) {
-    return printFormattedErrors(env.aggregateErrors());
   }
 }
 ```
@@ -243,11 +255,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match run_pipeline(pass, ast, scope, &mut env) {
         Ok(output) => {
-            if env.has_errors() {
-                print_formatted_errors(&env.aggregate_errors());
-            } else {
-                print!("{}", output);
-            }
+            print!("{}", output);
         }
         Err(diagnostic) => {
             print_formatted_error(&diagnostic);
@@ -265,15 +273,28 @@ fn run_pipeline(
 ) -> Result<String, CompilerDiagnostic> {
     let mut hir = lower(ast, scope, env)?;
     if target_pass == "HIR" {
-        return Ok(debug_hir(&hir, env));
+        if env.has_errors() {
+            return Ok(format_errors(env.errors()));
+        }
+        return Ok(debug_hir(&hir, env)); // includes outlined functions
     }
 
     prune_maybe_throws(&mut hir);
     if target_pass == "PruneMaybeThrows" {
+        if env.has_errors() {
+            return Ok(format_errors(env.errors()));
+        }
         return Ok(debug_hir(&hir, env));
     }
 
-    // ... each pass in order ...
+    // ... each pass in order, with the same pattern:
+    //   some_pass(&mut hir, env)?;
+    //   if target_pass == "PassName" {
+    //       if env.has_errors() {
+    //           return Ok(format_errors(env.errors()));
+    //       }
+    //       return Ok(debug_hir(&hir, env));
+    //   }
 }
 ```
 
@@ -299,13 +320,14 @@ For port validation, we need a representation that prints **everything** — sim
 
 ### Debug HIR Format
 
-A structured text format that prints every field of the HIR. Both TS and Rust must produce byte-identical output for the same HIR state.
+A structured text format that prints every field of the HIR, **including outlined functions**. Both TS and Rust must produce byte-identical output for the same HIR state.
 
 **Design principles:**
 - Print every field, even defaults/empty values (no elision)
 - Deterministic ordering (blocks in RPO, instructions in order, maps by sorted key)
 - Stable identifiers (use numeric IDs, not memory addresses)
 - Indent with 2 spaces for nesting
+- Include all outlined functions (from `FunctionExpression` instructions) after the main function, each printed with the same format, numbered sequentially (`Function #0`, `Function #1`, etc.)
 
 **Example output after `InferTypes`:**
 
@@ -401,9 +423,9 @@ All fields of `CompilerDiagnostic` are included — reason, description, loc, se
 
 ### Implementation Strategy
 
-**TS side**: Create a `debugHIR(hir: HIRFunction, env: Environment): string` function in the test script that walks the HIR and prints everything. This is NOT a modification to the existing `PrintHIR.ts` — it's a separate debug printer in the test infrastructure.
+**TS side**: Create a `debugHIR(hir: HIRFunction, env: Environment): string` function in the test script that walks the HIR and prints everything, including outlined functions. The printer recursively processes all `FunctionExpression` instructions to include their lowered HIR bodies in the output. This is NOT a modification to the existing `PrintHIR.ts` — it's a separate debug printer in the test infrastructure.
 
-**Rust side**: Implement `Debug` trait (or a custom `debug_hir()` function) that produces the same format. Since Rust's `#[derive(Debug)]` output format differs from what we need (it uses Rust syntax), we need a custom formatter that matches the TS output exactly.
+**Rust side**: Implement `Debug` trait (or a custom `debug_hir()` function) that produces the same format, including outlined functions. Since Rust's `#[derive(Debug)]` output format differs from what we need (it uses Rust syntax), we need a custom formatter that matches the TS output exactly.
 
 **Shared format specification**: The format is defined once (in this document) and both sides implement it. The round-trip test validates they produce identical output.
 
@@ -411,30 +433,39 @@ All fields of `CompilerDiagnostic` are included — reason, description, loc, se
 
 ## Error Handling in Test Binaries
 
-Per the port notes, errors fall into categories:
+Both test binaries handle errors uniformly: every pass checkpoint (each `if (pass === ...)` check) first inspects the environment for accumulated errors. If errors are present, the formatted errors are returned **instead of** the debug HIR. This ensures that error output is always comparable between TS and Rust.
 
-### Thrown Errors (Result::Err path)
+### Thrown Errors (try/catch in TS, Result::Err in Rust)
 
 - `CompilerError.invariant()` — truly unexpected state
 - `CompilerError.throwTodo()` — unsupported but known pattern
 - `CompilerError.throw*()` — other throwing methods
-- Non-null assertion failures (`.unwrap()` panics in Rust)
 
-When the TS binary catches a `CompilerError`, or the Rust binary returns `Err(CompilerDiagnostic)`, the test binary prints the formatted error. Both sides must produce identical error output.
+In TS, the entire pipeline is wrapped in a `try/catch`. When a `CompilerError` is caught, the test binary prints the formatted error. Non-`CompilerError` exceptions re-throw (test binary crashes with non-zero exit code, treated as a test failure).
 
-**Non-CompilerError exceptions**: In TS, these re-throw (test binary crashes). In Rust, these panic. Both result in a test failure (the test script treats a non-zero exit code or missing output as a failure).
+In Rust, passes return `Result<_, CompilerDiagnostic>`. The `Err` case is handled at the top level by printing the formatted error. Panics (e.g., from `.unwrap()`) crash the binary with a non-zero exit code, treated as a test failure.
 
-### Accumulated Errors
+### Accumulated Errors (env.hasErrors())
 
-Errors recorded via `env.recordError()` / `env.logErrors()`. After the target pass completes, if `env.hasErrors()`, print all accumulated errors in order.
+Errors recorded via `env.recordError()` / `env.logErrors()` accumulate on the environment. At every pass checkpoint, the test binary checks `env.hasErrors()` **before** printing the debug HIR. If errors are present, the formatted error list is printed instead of the HIR — the pipeline does not continue past the target pass when errors exist.
+
+This means each pass checkpoint follows the same pattern:
+
+```
+run_pass(hir);
+if target_pass == "PassName":
+    if env.has_errors():
+        return format_errors(env.errors())   // errors take priority
+    return debug_hir(hir, env)               // no errors → print HIR
+```
 
 ### Comparison Rules
 
 1. If TS throws and Rust returns Err: compare the formatted error output
-2. If TS succeeds and Rust succeeds: compare the debug HIR/reactive output
+2. If TS succeeds and Rust succeeds: compare the debug HIR/reactive output (including outlined functions)
 3. If TS throws and Rust succeeds (or vice versa): test fails (mismatch)
 4. If TS has accumulated errors and Rust doesn't (or vice versa): test fails
-5. If both have accumulated errors: compare the formatted error lists AND the debug output (the pipeline continues after accumulated errors)
+5. If both have accumulated errors at the same pass: compare the formatted error lists
 
 ---
 
