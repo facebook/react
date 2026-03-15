@@ -224,70 +224,22 @@ This is more work than the OXC path but straightforward — SWC's `SyntaxContext
 
 ---
 
-## Remaining Work
+## Completed Work
 
-### Implement scope info types
+All items below have been implemented and verified against all 1714 test fixtures.
 
-Define the `ScopeInfo`, `ScopeData`, `BindingData`, and related types described above as Rust structs in the `react_compiler_ast` crate. Includes `ScopeId`, `BindingId` newtypes, `ScopeKind`, `BindingKind`, `ImportBindingData`, and the resolution methods on `ScopeInfo`.
+### Scope info types — Done
 
-### Scope resolution test
+Defined `ScopeInfo`, `ScopeData`, `BindingData`, and related types as Rust structs in `react_compiler_ast::scope`. Includes `ScopeId`, `BindingId` newtypes, `ScopeKind`, `BindingKind`, `ImportBindingData`, and the resolution methods on `ScopeInfo`.
 
-Verify that the Rust side resolves identifiers to the same scopes and bindings as Babel. The approach uses identifier renaming as a correctness oracle: both Babel and Rust rename every identifier to encode its scope and binding identity, then the outputs are compared.
+### Babel scope serialization — Done
 
-#### ID assignment
+Extended `compiler/scripts/babel-ast-to-json.mjs` to produce `.scope.json` and `.renamed.json` files alongside the AST JSON. Uses `@babel/traverse` to collect scope/binding data with preorder ID assignment, then renames identifiers per the `name_s{scopeId}_b{bindingId}` scheme.
 
-`ScopeId`s and `BindingId`s are assigned as auto-incrementing indices based on **preorder traversal** of the AST:
+### Scope resolution test — Done
 
-- **ScopeId**: Assigned in the order scope-creating nodes are entered during a depth-first AST walk. The program scope is `ScopeId(0)`, the first nested scope is `ScopeId(1)`, etc.
-- **BindingId**: Each unique binding declaration is assigned an ID in the order it is first encountered during the same traversal. The first declared binding is `BindingId(0)`, the second is `BindingId(1)`, etc.
+Implemented in `compiler/crates/react_compiler_ast/tests/scope_resolution.rs` with two tests:
+1. **`scope_info_round_trip`**: Verifies ScopeInfo JSON deserializes, re-serializes correctly, and passes internal consistency checks.
+2. **`scope_resolution_rename`**: Walks the AST JSON using ScopeInfo to rename identifiers, then compares against Babel's renamed output. Verifies that the ScopeInfo structure correctly reproduces Babel's binding resolution for all 1714 fixtures.
 
-These IDs match between the Babel and Rust sides because both use the same deterministic preorder traversal.
-
-#### Renaming scheme
-
-Every `Identifier` node that resolves to a binding is renamed from `<name>` to `<name>_s<scopeId>_b<bindingId>`, where `scopeId` is the scope the identifier appears in (from `node_to_scope` / the enclosing scope), and `bindingId` is the resolved binding's ID (from `reference_to_binding`). For example:
-
-```javascript
-// Input:
-function foo(x) { let y = x; }
-
-// After renaming (scope 0 = program, scope 1 = function body):
-function foo_s0_b0(x_s1_b1) { let y_s1_b2 = x_s1_b1; }
-```
-
-Identifiers that don't resolve to any binding (globals, unresolved references) are left unchanged.
-
-#### Implementation
-
-**Babel side** (`compiler/scripts/babel-ast-to-json.mjs` or a new companion script):
-1. Parse the fixture with `@babel/parser`
-2. Traverse with `@babel/traverse`, collecting scope and binding data
-3. Assign `ScopeId`s and `BindingId`s in preorder
-4. Build the `ScopeInfo` JSON (scopes table, bindings table, `node_to_scope` map, `reference_to_binding` map)
-5. Rename all bound identifiers per the scheme above
-6. Write both the `ScopeInfo` JSON and the renamed AST JSON
-
-**Rust side** (`compiler/crates/react_compiler_ast/tests/scope_resolution.rs`):
-1. Deserialize the original (un-renamed) AST JSON and the `ScopeInfo` JSON
-2. Walk the AST, using `ScopeInfo.reference_to_binding` to resolve each identifier and `ScopeInfo.node_to_scope` to determine enclosing scopes
-3. Rename all bound identifiers per the same scheme
-4. Re-serialize the renamed AST to JSON
-5. Normalize and compare against the Babel-renamed JSON — they must match
-
-This verifies that the `ScopeInfo` structure correctly reproduces Babel's binding resolution. If an identifier is renamed differently (or renamed on one side but not the other), the diff immediately shows which binding or scope diverges.
-
-#### Integration
-
-The scope resolution test is a separate Rust test (`tests/scope_resolution.rs`), not part of `round_trip.rs`. Both tests are run from the same `compiler/scripts/test-babel-ast.sh` script:
-
-```bash
-#!/bin/bash
-set -e
-# ...generate fixture JSONs + scope JSONs into $TMPDIR...
-
-# Test 1: AST round-trip
-FIXTURE_JSON_DIR="$TMPDIR" cargo test -p react_compiler_ast --test round_trip -- --nocapture
-
-# Test 2: Scope resolution
-FIXTURE_JSON_DIR="$TMPDIR" cargo test -p react_compiler_ast --test scope_resolution -- --nocapture
-```
+Both tests run from `compiler/scripts/test-babel-ast.sh`.

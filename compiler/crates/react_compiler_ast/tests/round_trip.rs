@@ -77,6 +77,7 @@ fn round_trip_all_fixtures() {
         .filter(|e| {
             e.path().extension().is_some_and(|ext| ext == "json")
                 && !e.path().to_string_lossy().ends_with(".scope.json")
+                && !e.path().to_string_lossy().ends_with(".renamed.json")
         })
     {
         let fixture_name = entry

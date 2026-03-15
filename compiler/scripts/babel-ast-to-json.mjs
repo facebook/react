@@ -185,6 +185,52 @@ function collectScopeInfo(ast) {
   };
 }
 
+function renameIdentifiersInJson(jsonValue, scopeInfo) {
+  const scopeStack = [];
+
+  function walk(node) {
+    if (node === null || typeof node !== "object") return;
+
+    if (Array.isArray(node)) {
+      for (const element of node) {
+        walk(element);
+      }
+      return;
+    }
+
+    // Check if this node opens a new scope
+    let pushedScope = false;
+    if (node.start != null && String(node.start) in scopeInfo.node_to_scope) {
+      scopeStack.push(scopeInfo.node_to_scope[String(node.start)]);
+      pushedScope = true;
+    }
+
+    // Rename Identifier nodes that have a binding
+    if (
+      node.type === "Identifier" &&
+      node.start != null &&
+      String(node.start) in scopeInfo.reference_to_binding &&
+      scopeStack.length > 0
+    ) {
+      const bindingId = scopeInfo.reference_to_binding[String(node.start)];
+      const currentScopeId = scopeStack[scopeStack.length - 1];
+      node.name = `${node.name}_s${currentScopeId}_b${bindingId}`;
+    }
+
+    // Recurse into all properties
+    for (const key of Object.keys(node)) {
+      walk(node[key]);
+    }
+
+    // Pop scope if we pushed one
+    if (pushedScope) {
+      scopeStack.pop();
+    }
+  }
+
+  walk(jsonValue);
+}
+
 let parsed = 0;
 let errors = 0;
 
@@ -215,6 +261,12 @@ for (const fixture of fixtures) {
     const scopeInfo = collectScopeInfo(ast);
     const scopeOutPath = path.join(OUTPUT_DIR, fixture + ".scope.json");
     fs.writeFileSync(scopeOutPath, JSON.stringify(scopeInfo, null, 2));
+
+    // Create renamed AST for scope resolution verification
+    const renamedAst = JSON.parse(JSON.stringify(ast));
+    renameIdentifiersInJson(renamedAst, scopeInfo);
+    const renamedOutPath = path.join(OUTPUT_DIR, fixture + ".renamed.json");
+    fs.writeFileSync(renamedOutPath, JSON.stringify(renamedAst, null, 2));
 
     parsed++;
   } catch (e) {

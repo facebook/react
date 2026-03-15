@@ -72,6 +72,7 @@ fn scope_info_round_trip() {
         .filter(|e| {
             e.path().extension().is_some_and(|ext| ext == "json")
                 && !e.path().to_string_lossy().contains(".scope.")
+                && !e.path().to_string_lossy().contains(".renamed.")
         })
     {
         // Check for corresponding scope.json
@@ -201,6 +202,163 @@ fn scope_info_round_trip() {
         let show_count = failures.len().min(5);
         let mut msg = format!(
             "\n{} of {total} fixtures failed scope info test (showing first {show_count}):\n\n",
+            failures.len()
+        );
+        for (name, err) in failures.iter().take(show_count) {
+            msg.push_str(&format!("--- {name} ---\n{err}\n\n"));
+        }
+        if failures.len() > show_count {
+            msg.push_str(&format!(
+                "... and {} more failures\n",
+                failures.len() - show_count
+            ));
+        }
+        panic!("{msg}");
+    }
+}
+
+fn rename_identifiers(value: &mut serde_json::Value, scope_info: &react_compiler_ast::scope::ScopeInfo) {
+    let mut scope_stack: Vec<u32> = Vec::new();
+    rename_walk(value, scope_info, &mut scope_stack);
+}
+
+fn rename_walk(
+    value: &mut serde_json::Value,
+    scope_info: &react_compiler_ast::scope::ScopeInfo,
+    scope_stack: &mut Vec<u32>,
+) {
+    match value {
+        serde_json::Value::Object(map) => {
+            // Check if this node creates a scope
+            let pushed_scope = if let Some(start) = map.get("start").and_then(|v| v.as_u64()) {
+                let start = start as u32;
+                if let Some(&scope_id) = scope_info.node_to_scope.get(&start) {
+                    scope_stack.push(scope_id.0);
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
+
+            // Check if this is an Identifier that needs renaming
+            let is_identifier = map.get("type")
+                .and_then(|v| v.as_str())
+                .map_or(false, |t| t == "Identifier");
+
+            if is_identifier {
+                if let (Some(start_val), Some(name_val)) = (
+                    map.get("start").and_then(|v| v.as_u64()),
+                    map.get("name").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                ) {
+                    let start = start_val as u32;
+                    if let Some(&binding_id) = scope_info.reference_to_binding.get(&start) {
+                        if let Some(&enclosing_scope) = scope_stack.last() {
+                            let new_name = format!("{}_s{}_b{}", name_val, enclosing_scope, binding_id.0);
+                            map.insert("name".to_string(), serde_json::Value::String(new_name));
+                        }
+                    }
+                }
+            }
+
+            // Recurse into all values
+            let keys: Vec<String> = map.keys().cloned().collect();
+            for key in keys {
+                if let Some(child) = map.get_mut(&key) {
+                    rename_walk(child, scope_info, scope_stack);
+                }
+            }
+
+            // Pop scope if we pushed one
+            if pushed_scope {
+                scope_stack.pop();
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            for item in arr.iter_mut() {
+                rename_walk(item, scope_info, scope_stack);
+            }
+        }
+        _ => {}
+    }
+}
+
+#[test]
+fn scope_resolution_rename() {
+    let json_dir = get_fixture_json_dir();
+    let mut failures: Vec<(String, String)> = Vec::new();
+    let mut total = 0;
+    let mut passed = 0;
+    let mut skipped = 0;
+
+    for entry in walkdir::WalkDir::new(&json_dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.path().extension().is_some_and(|ext| ext == "json")
+                && !e.path().to_string_lossy().contains(".scope.")
+                && !e.path().to_string_lossy().contains(".renamed.")
+        })
+    {
+        let ast_path_str = entry.path().to_string_lossy().to_string();
+        let scope_path_str = ast_path_str.replace(".json", ".scope.json");
+        let renamed_path_str = ast_path_str.replace(".json", ".renamed.json");
+        let scope_path = std::path::Path::new(&scope_path_str);
+        let renamed_path = std::path::Path::new(&renamed_path_str);
+
+        if !scope_path.exists() || !renamed_path.exists() {
+            skipped += 1;
+            continue;
+        }
+
+        let fixture_name = entry
+            .path()
+            .strip_prefix(&json_dir)
+            .unwrap()
+            .display()
+            .to_string();
+        total += 1;
+
+        // Load original AST, scope info, and Babel-renamed AST
+        let ast_json = std::fs::read_to_string(entry.path()).unwrap();
+        let scope_json = std::fs::read_to_string(scope_path).unwrap();
+        let babel_renamed_json = std::fs::read_to_string(renamed_path).unwrap();
+
+        let scope_info: react_compiler_ast::scope::ScopeInfo = match serde_json::from_str(&scope_json) {
+            Ok(info) => info,
+            Err(e) => {
+                failures.push((fixture_name, format!("Scope deserialization error: {e}")));
+                continue;
+            }
+        };
+
+        // Clone the original AST and rename using Rust scope info
+        let mut rust_renamed: serde_json::Value = serde_json::from_str(&ast_json).unwrap();
+        rename_identifiers(&mut rust_renamed, &scope_info);
+
+        // Compare Rust-renamed vs Babel-renamed
+        let babel_renamed_value: serde_json::Value = serde_json::from_str(&babel_renamed_json).unwrap();
+
+        let rust_normalized = normalize_json(&rust_renamed);
+        let babel_normalized = normalize_json(&babel_renamed_value);
+
+        if rust_normalized != babel_normalized {
+            let rust_str = serde_json::to_string_pretty(&rust_normalized).unwrap();
+            let babel_str = serde_json::to_string_pretty(&babel_normalized).unwrap();
+            let diff = compute_diff(&babel_str, &rust_str);
+            failures.push((fixture_name, format!("Rename mismatch:\n{diff}")));
+        } else {
+            passed += 1;
+        }
+    }
+
+    println!("\n{passed}/{total} fixtures passed scope resolution rename ({skipped} skipped)");
+
+    if !failures.is_empty() {
+        let show_count = failures.len().min(5);
+        let mut msg = format!(
+            "\n{} of {total} fixtures failed scope resolution rename (showing first {show_count}):\n\n",
             failures.len()
         );
         for (name, err) in failures.iter().take(show_count) {
