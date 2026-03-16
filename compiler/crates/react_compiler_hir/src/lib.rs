@@ -689,6 +689,56 @@ pub enum InstructionValue {
     },
 }
 
+impl InstructionValue {
+    pub fn loc(&self) -> Option<&SourceLocation> {
+        match self {
+            InstructionValue::LoadLocal { loc, .. }
+            | InstructionValue::LoadContext { loc, .. }
+            | InstructionValue::DeclareLocal { loc, .. }
+            | InstructionValue::DeclareContext { loc, .. }
+            | InstructionValue::StoreLocal { loc, .. }
+            | InstructionValue::StoreContext { loc, .. }
+            | InstructionValue::Destructure { loc, .. }
+            | InstructionValue::Primitive { loc, .. }
+            | InstructionValue::JSXText { loc, .. }
+            | InstructionValue::BinaryExpression { loc, .. }
+            | InstructionValue::NewExpression { loc, .. }
+            | InstructionValue::CallExpression { loc, .. }
+            | InstructionValue::MethodCall { loc, .. }
+            | InstructionValue::UnaryExpression { loc, .. }
+            | InstructionValue::TypeCastExpression { loc, .. }
+            | InstructionValue::JsxExpression { loc, .. }
+            | InstructionValue::ObjectExpression { loc, .. }
+            | InstructionValue::ObjectMethod { loc, .. }
+            | InstructionValue::ArrayExpression { loc, .. }
+            | InstructionValue::JsxFragment { loc, .. }
+            | InstructionValue::RegExpLiteral { loc, .. }
+            | InstructionValue::MetaProperty { loc, .. }
+            | InstructionValue::PropertyStore { loc, .. }
+            | InstructionValue::PropertyLoad { loc, .. }
+            | InstructionValue::PropertyDelete { loc, .. }
+            | InstructionValue::ComputedStore { loc, .. }
+            | InstructionValue::ComputedLoad { loc, .. }
+            | InstructionValue::ComputedDelete { loc, .. }
+            | InstructionValue::LoadGlobal { loc, .. }
+            | InstructionValue::StoreGlobal { loc, .. }
+            | InstructionValue::FunctionExpression { loc, .. }
+            | InstructionValue::TaggedTemplateExpression { loc, .. }
+            | InstructionValue::TemplateLiteral { loc, .. }
+            | InstructionValue::Await { loc, .. }
+            | InstructionValue::GetIterator { loc, .. }
+            | InstructionValue::IteratorNext { loc, .. }
+            | InstructionValue::NextPropertyOf { loc, .. }
+            | InstructionValue::PrefixUpdate { loc, .. }
+            | InstructionValue::PostfixUpdate { loc, .. }
+            | InstructionValue::Debugger { loc, .. }
+            | InstructionValue::StartMemoize { loc, .. }
+            | InstructionValue::FinishMemoize { loc, .. }
+            | InstructionValue::UnsupportedNode { loc, .. } => loc.as_ref(),
+        }
+    }
+}
+
 // =============================================================================
 // Supporting types
 // =============================================================================
