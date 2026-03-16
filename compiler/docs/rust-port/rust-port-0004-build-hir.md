@@ -6,7 +6,7 @@ Port `BuildHIR.ts` (~4555 lines) and `HIRBuilder.ts` (~955 lines) into Rust equi
 
 The Rust port should be structurally as close to the TypeScript as possible: viewing the TS and Rust side by side, the logic should look, read, and feel similar while working naturally in Rust.
 
-**Current status**: M1, M2, M3 implemented. Crate structure compiles, HIRBuilder core methods and binding resolution work. All lowering functions (lower_statement, lower_expression, etc.) stubbed with `todo!()`. Next step: M4 (lower() entry point + basic statements).
+**Current status**: M1-M13 fully implemented. All statement types, expression types, destructuring, function expressions, JSX, switch/try-catch, for-of/in, optional chaining, and recursive lowering are complete. No `todo!()` stubs remain. `cargo check` passes. Remaining work: test against fixtures and fix divergences from TypeScript output.
 
 **Known issues to fix:**
 - All collection types must use `IndexMap`/`IndexSet` (from the `indexmap` crate), not `BTreeMap`/`BTreeSet`/`HashMap`/`HashSet`. This is critical for `HIR.blocks` where `BTreeMap` destroys RPO insertion ordering.
