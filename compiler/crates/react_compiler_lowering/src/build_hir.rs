@@ -179,6 +179,100 @@ fn lower_identifier(
 }
 
 // =============================================================================
+// lower_arguments
+// =============================================================================
+
+fn lower_arguments(
+    builder: &mut HirBuilder,
+    args: &[react_compiler_ast::expressions::Expression],
+) -> Vec<PlaceOrSpread> {
+    use react_compiler_ast::expressions::Expression;
+    let mut result = Vec::new();
+    for arg in args {
+        match arg {
+            Expression::SpreadElement(spread) => {
+                let place = lower_expression_to_temporary(builder, &spread.argument);
+                result.push(PlaceOrSpread::Spread(SpreadPattern { place }));
+            }
+            _ => {
+                let place = lower_expression_to_temporary(builder, arg);
+                result.push(PlaceOrSpread::Place(place));
+            }
+        }
+    }
+    result
+}
+
+// =============================================================================
+// lower_member_expression
+// =============================================================================
+
+struct LoweredMemberExpression {
+    object: Place,
+    value: InstructionValue,
+}
+
+fn lower_member_expression(
+    builder: &mut HirBuilder,
+    member: &react_compiler_ast::expressions::MemberExpression,
+) -> LoweredMemberExpression {
+    use react_compiler_ast::expressions::Expression;
+    let loc = convert_opt_loc(&member.base.loc);
+    let object = lower_expression_to_temporary(builder, &member.object);
+
+    if !member.computed {
+        // Non-computed: property must be an identifier or numeric literal
+        let property = match member.property.as_ref() {
+            Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
+            Expression::NumericLiteral(lit) => {
+                PropertyLiteral::Number(FloatValue::new(lit.value))
+            }
+            _ => {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: format!(
+                        "(BuildHIR::lowerMemberExpression) Handle {:?} property",
+                        member.property
+                    ),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                return LoweredMemberExpression {
+                    object,
+                    value: InstructionValue::UnsupportedNode { loc },
+                };
+            }
+        };
+        let value = InstructionValue::PropertyLoad {
+            object: object.clone(),
+            property,
+            loc,
+        };
+        LoweredMemberExpression { object, value }
+    } else {
+        // Computed: check for numeric literal first (treated as PropertyLoad in TS)
+        if let Expression::NumericLiteral(lit) = member.property.as_ref() {
+            let property = PropertyLiteral::Number(FloatValue::new(lit.value));
+            let value = InstructionValue::PropertyLoad {
+                object: object.clone(),
+                property,
+                loc,
+            };
+            return LoweredMemberExpression { object, value };
+        }
+        // Otherwise lower property to temporary for ComputedLoad
+        let property = lower_expression_to_temporary(builder, &member.property);
+        let value = InstructionValue::ComputedLoad {
+            object: object.clone(),
+            property,
+            loc,
+        };
+        LoweredMemberExpression { object, value }
+    }
+}
+
+// =============================================================================
 // lower_expression
 // =============================================================================
 
@@ -260,20 +354,102 @@ fn lower_expression(
                 }
             }
         }
-        Expression::CallExpression(_) => todo!("lower CallExpression"),
-        Expression::MemberExpression(_) => todo!("lower MemberExpression"),
+        Expression::CallExpression(call) => {
+            let loc = convert_opt_loc(&call.base.loc);
+            // Check if callee is a MemberExpression => MethodCall
+            if let Expression::MemberExpression(member) = call.callee.as_ref() {
+                let lowered = lower_member_expression(builder, member);
+                let property = lower_value_to_temporary(builder, lowered.value);
+                let args = lower_arguments(builder, &call.arguments);
+                InstructionValue::MethodCall {
+                    receiver: lowered.object,
+                    property,
+                    args,
+                    loc,
+                }
+            } else {
+                let callee = lower_expression_to_temporary(builder, &call.callee);
+                let args = lower_arguments(builder, &call.arguments);
+                InstructionValue::CallExpression { callee, args, loc }
+            }
+        }
+        Expression::MemberExpression(member) => {
+            let lowered = lower_member_expression(builder, member);
+            lowered.value
+        }
         Expression::OptionalCallExpression(_) => todo!("lower OptionalCallExpression"),
         Expression::OptionalMemberExpression(_) => todo!("lower OptionalMemberExpression"),
         Expression::LogicalExpression(_) => todo!("lower LogicalExpression"),
         Expression::UpdateExpression(_) => todo!("lower UpdateExpression"),
         Expression::ConditionalExpression(_) => todo!("lower ConditionalExpression"),
         Expression::AssignmentExpression(_) => todo!("lower AssignmentExpression"),
-        Expression::SequenceExpression(_) => todo!("lower SequenceExpression"),
+        Expression::SequenceExpression(seq) => {
+            let loc = convert_opt_loc(&seq.base.loc);
+
+            if seq.expressions.is_empty() {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Syntax,
+                    reason: "Expected sequence expression to have at least one expression"
+                        .to_string(),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                return InstructionValue::UnsupportedNode { loc };
+            }
+
+            let continuation_block = builder.reserve(builder.current_block_kind());
+            let continuation_id = continuation_block.id;
+            let place = build_temporary_place(builder, loc.clone());
+
+            let sequence_block = builder.enter(BlockKind::Sequence, |builder, _block_id| {
+                let mut last: Option<Place> = None;
+                for item in &seq.expressions {
+                    last = Some(lower_expression_to_temporary(builder, item));
+                }
+                if let Some(last) = last {
+                    lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                        lvalue: LValue {
+                            kind: InstructionKind::Const,
+                            place: place.clone(),
+                        },
+                        value: last,
+                        type_annotation: None,
+                        loc: loc.clone(),
+                    });
+                }
+                Terminal::Goto {
+                    block: continuation_id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                }
+            });
+
+            builder.terminate_with_continuation(
+                Terminal::Sequence {
+                    block: sequence_block,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                continuation_block,
+            );
+            InstructionValue::LoadLocal {
+                place,
+                loc,
+            }
+        }
         Expression::ArrowFunctionExpression(_) => todo!("lower ArrowFunctionExpression"),
         Expression::FunctionExpression(_) => todo!("lower FunctionExpression"),
         Expression::ObjectExpression(_) => todo!("lower ObjectExpression"),
         Expression::ArrayExpression(_) => todo!("lower ArrayExpression"),
-        Expression::NewExpression(_) => todo!("lower NewExpression"),
+        Expression::NewExpression(new_expr) => {
+            let loc = convert_opt_loc(&new_expr.base.loc);
+            let callee = lower_expression_to_temporary(builder, &new_expr.callee);
+            let args = lower_arguments(builder, &new_expr.arguments);
+            InstructionValue::NewExpression { callee, args, loc }
+        }
         Expression::TemplateLiteral(_) => todo!("lower TemplateLiteral"),
         Expression::TaggedTemplateExpression(_) => todo!("lower TaggedTemplateExpression"),
         Expression::AwaitExpression(_) => todo!("lower AwaitExpression"),
@@ -282,9 +458,29 @@ fn lower_expression(
         Expression::MetaProperty(_) => todo!("lower MetaProperty"),
         Expression::ClassExpression(_) => todo!("lower ClassExpression"),
         Expression::PrivateName(_) => todo!("lower PrivateName"),
-        Expression::Super(_) => todo!("lower Super"),
+        Expression::Super(sup) => {
+            let loc = convert_opt_loc(&sup.base.loc);
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "super is not supported".to_string(),
+                description: None,
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            InstructionValue::UnsupportedNode { loc }
+        }
         Expression::Import(_) => todo!("lower Import"),
-        Expression::ThisExpression(_) => todo!("lower ThisExpression"),
+        Expression::ThisExpression(this) => {
+            let loc = convert_opt_loc(&this.base.loc);
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "this is not supported".to_string(),
+                description: None,
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            InstructionValue::UnsupportedNode { loc }
+        }
         Expression::ParenthesizedExpression(paren) => {
             lower_expression(builder, &paren.expression)
         }
@@ -309,7 +505,7 @@ fn lower_expression(
 fn lower_statement(
     builder: &mut HirBuilder,
     stmt: &react_compiler_ast::statements::Statement,
-    _label: Option<&str>,
+    label: Option<&str>,
 ) {
     use react_compiler_ast::statements::Statement;
 
@@ -484,15 +680,344 @@ fn lower_statement(
                 fallthrough,
             );
         }
-        Statement::IfStatement(_) => todo!("lower IfStatement"),
-        Statement::ForStatement(_) => todo!("lower ForStatement"),
-        Statement::WhileStatement(_) => todo!("lower WhileStatement"),
-        Statement::DoWhileStatement(_) => todo!("lower DoWhileStatement"),
+        Statement::IfStatement(if_stmt) => {
+            let loc = convert_opt_loc(&if_stmt.base.loc);
+            // Block for code following the if
+            let continuation_block = builder.reserve(BlockKind::Block);
+            let continuation_id = continuation_block.id;
+
+            // Block for the consequent (if the test is truthy)
+            let consequent_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                lower_statement(builder, &if_stmt.consequent, None);
+                Terminal::Goto {
+                    block: continuation_id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                }
+            });
+
+            // Block for the alternate (if the test is not truthy)
+            let alternate_block = if let Some(alternate) = &if_stmt.alternate {
+                builder.enter(BlockKind::Block, |builder, _block_id| {
+                    lower_statement(builder, alternate, None);
+                    Terminal::Goto {
+                        block: continuation_id,
+                        variant: GotoVariant::Break,
+                        id: EvaluationOrder(0),
+                        loc: loc.clone(),
+                    }
+                })
+            } else {
+                // If there is no else clause, use the continuation directly
+                continuation_id
+            };
+
+            let test = lower_expression_to_temporary(builder, &if_stmt.test);
+            builder.terminate_with_continuation(
+                Terminal::If {
+                    test,
+                    consequent: consequent_block,
+                    alternate: alternate_block,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc,
+                },
+                continuation_block,
+            );
+        }
+        Statement::ForStatement(for_stmt) => {
+            let loc = convert_opt_loc(&for_stmt.base.loc);
+
+            let test_block = builder.reserve(BlockKind::Loop);
+            let test_block_id = test_block.id;
+            // Block for code following the loop
+            let continuation_block = builder.reserve(BlockKind::Block);
+            let continuation_id = continuation_block.id;
+
+            // Init block: lower init expression/declaration, then goto test
+            let init_block = builder.enter(BlockKind::Loop, |builder, _block_id| {
+                match &for_stmt.init {
+                    None => {
+                        // No init expression (e.g., `for (; ...)`), add a placeholder
+                        let placeholder = InstructionValue::Primitive {
+                            value: PrimitiveValue::Undefined,
+                            loc: loc.clone(),
+                        };
+                        lower_value_to_temporary(builder, placeholder);
+                    }
+                    Some(init) => {
+                        match init.as_ref() {
+                            react_compiler_ast::statements::ForInit::VariableDeclaration(var_decl) => {
+                                lower_statement(builder, &Statement::VariableDeclaration(var_decl.clone()), None);
+                            }
+                            react_compiler_ast::statements::ForInit::Expression(expr) => {
+                                builder.record_error(CompilerErrorDetail {
+                                    category: ErrorCategory::Todo,
+                                    reason: "(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement".to_string(),
+                                    description: None,
+                                    loc: loc.clone(),
+                                    suggestions: None,
+                                });
+                                lower_expression_to_temporary(builder, expr);
+                            }
+                        }
+                    }
+                }
+                Terminal::Goto {
+                    block: test_block_id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                }
+            });
+
+            // Update block (optional)
+            let update_block_id = if let Some(update) = &for_stmt.update {
+                Some(builder.enter(BlockKind::Loop, |builder, _block_id| {
+                    lower_expression_to_temporary(builder, update);
+                    Terminal::Goto {
+                        block: test_block_id,
+                        variant: GotoVariant::Break,
+                        id: EvaluationOrder(0),
+                        loc: loc.clone(),
+                    }
+                }))
+            } else {
+                None
+            };
+
+            // Loop body block
+            let continue_target = update_block_id.unwrap_or(test_block_id);
+            let body_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                builder.loop_scope(
+                    label.map(|s| s.to_string()),
+                    continue_target,
+                    continuation_id,
+                    |builder| {
+                        lower_statement(builder, &for_stmt.body, None);
+                        Terminal::Goto {
+                            block: continue_target,
+                            variant: GotoVariant::Continue,
+                            id: EvaluationOrder(0),
+                            loc: loc.clone(),
+                        }
+                    },
+                )
+            });
+
+            // Emit For terminal, then fill in the test block
+            builder.terminate_with_continuation(
+                Terminal::For {
+                    init: init_block,
+                    test: test_block_id,
+                    update: update_block_id,
+                    loop_block: body_block,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                test_block,
+            );
+
+            // Fill in the test block
+            if let Some(test_expr) = &for_stmt.test {
+                let test = lower_expression_to_temporary(builder, test_expr);
+                builder.terminate_with_continuation(
+                    Terminal::Branch {
+                        test,
+                        consequent: body_block,
+                        alternate: continuation_id,
+                        fallthrough: continuation_id,
+                        id: EvaluationOrder(0),
+                        loc: loc.clone(),
+                    },
+                    continuation_block,
+                );
+            } else {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: "(BuildHIR::lowerStatement) Handle empty test in ForStatement".to_string(),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                // Treat `for(;;)` as `while(true)` to keep the builder state consistent
+                let true_val = InstructionValue::Primitive {
+                    value: PrimitiveValue::Boolean(true),
+                    loc: loc.clone(),
+                };
+                let test = lower_value_to_temporary(builder, true_val);
+                builder.terminate_with_continuation(
+                    Terminal::Branch {
+                        test,
+                        consequent: body_block,
+                        alternate: continuation_id,
+                        fallthrough: continuation_id,
+                        id: EvaluationOrder(0),
+                        loc,
+                    },
+                    continuation_block,
+                );
+            }
+        }
+        Statement::WhileStatement(while_stmt) => {
+            let loc = convert_opt_loc(&while_stmt.base.loc);
+            // Block used to evaluate whether to (re)enter or exit the loop
+            let conditional_block = builder.reserve(BlockKind::Loop);
+            let conditional_id = conditional_block.id;
+            // Block for code following the loop
+            let continuation_block = builder.reserve(BlockKind::Block);
+            let continuation_id = continuation_block.id;
+
+            // Loop body
+            let loop_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                builder.loop_scope(
+                    label.map(|s| s.to_string()),
+                    conditional_id,
+                    continuation_id,
+                    |builder| {
+                        lower_statement(builder, &while_stmt.body, None);
+                        Terminal::Goto {
+                            block: conditional_id,
+                            variant: GotoVariant::Continue,
+                            id: EvaluationOrder(0),
+                            loc: loc.clone(),
+                        }
+                    },
+                )
+            });
+
+            // Emit While terminal, jumping to the conditional block
+            builder.terminate_with_continuation(
+                Terminal::While {
+                    test: conditional_id,
+                    loop_block,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                conditional_block,
+            );
+
+            // Fill in the conditional block: lower test, branch
+            let test = lower_expression_to_temporary(builder, &while_stmt.test);
+            builder.terminate_with_continuation(
+                Terminal::Branch {
+                    test,
+                    consequent: loop_block,
+                    alternate: continuation_id,
+                    fallthrough: conditional_id,
+                    id: EvaluationOrder(0),
+                    loc,
+                },
+                continuation_block,
+            );
+        }
+        Statement::DoWhileStatement(do_while_stmt) => {
+            let loc = convert_opt_loc(&do_while_stmt.base.loc);
+            // Block used to evaluate whether to (re)enter or exit the loop
+            let conditional_block = builder.reserve(BlockKind::Loop);
+            let conditional_id = conditional_block.id;
+            // Block for code following the loop
+            let continuation_block = builder.reserve(BlockKind::Block);
+            let continuation_id = continuation_block.id;
+
+            // Loop body, executed at least once unconditionally prior to exit
+            let loop_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                builder.loop_scope(
+                    label.map(|s| s.to_string()),
+                    conditional_id,
+                    continuation_id,
+                    |builder| {
+                        lower_statement(builder, &do_while_stmt.body, None);
+                        Terminal::Goto {
+                            block: conditional_id,
+                            variant: GotoVariant::Continue,
+                            id: EvaluationOrder(0),
+                            loc: loc.clone(),
+                        }
+                    },
+                )
+            });
+
+            // Jump to the conditional block
+            builder.terminate_with_continuation(
+                Terminal::DoWhile {
+                    loop_block,
+                    test: conditional_id,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                conditional_block,
+            );
+
+            // Fill in the conditional block: lower test, branch
+            let test = lower_expression_to_temporary(builder, &do_while_stmt.test);
+            builder.terminate_with_continuation(
+                Terminal::Branch {
+                    test,
+                    consequent: loop_block,
+                    alternate: continuation_id,
+                    fallthrough: conditional_id,
+                    id: EvaluationOrder(0),
+                    loc,
+                },
+                continuation_block,
+            );
+        }
         Statement::ForInStatement(_) => todo!("lower ForInStatement"),
         Statement::ForOfStatement(_) => todo!("lower ForOfStatement"),
         Statement::SwitchStatement(_) => todo!("lower SwitchStatement"),
         Statement::TryStatement(_) => todo!("lower TryStatement"),
-        Statement::LabeledStatement(_) => todo!("lower LabeledStatement"),
+        Statement::LabeledStatement(labeled_stmt) => {
+            let label_name = &labeled_stmt.label.name;
+            let loc = convert_opt_loc(&labeled_stmt.base.loc);
+
+            // Check if the body is a loop statement - if so, delegate with label
+            match labeled_stmt.body.as_ref() {
+                Statement::ForStatement(_)
+                | Statement::WhileStatement(_)
+                | Statement::DoWhileStatement(_)
+                | Statement::ForInStatement(_)
+                | Statement::ForOfStatement(_) => {
+                    // Labeled loops are special because of continue, push the label down
+                    lower_statement(builder, &labeled_stmt.body, Some(label_name));
+                }
+                _ => {
+                    // All other statements create a continuation block to allow `break`
+                    let continuation_block = builder.reserve(BlockKind::Block);
+                    let continuation_id = continuation_block.id;
+
+                    let block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                        builder.label_scope(
+                            label_name.clone(),
+                            continuation_id,
+                            |builder| {
+                                lower_statement(builder, &labeled_stmt.body, None);
+                            },
+                        );
+                        Terminal::Goto {
+                            block: continuation_id,
+                            variant: GotoVariant::Break,
+                            id: EvaluationOrder(0),
+                            loc: loc.clone(),
+                        }
+                    });
+
+                    builder.terminate_with_continuation(
+                        Terminal::Label {
+                            block,
+                            fallthrough: continuation_id,
+                            id: EvaluationOrder(0),
+                            loc,
+                        },
+                        continuation_block,
+                    );
+                }
+            }
+        }
         Statement::WithStatement(_) => todo!("lower WithStatement"),
         Statement::FunctionDeclaration(_) => todo!("lower FunctionDeclaration"),
         Statement::ClassDeclaration(_) => todo!("lower ClassDeclaration"),
@@ -1046,13 +1571,6 @@ fn lower_assignment(
     todo!("lower_assignment not yet implemented - M11")
 }
 
-fn lower_member_expression(
-    builder: &mut HirBuilder,
-    expr: &react_compiler_ast::expressions::MemberExpression,
-) -> InstructionValue {
-    todo!("lower_member_expression not yet implemented - M6")
-}
-
 fn lower_optional_member_expression(
     builder: &mut HirBuilder,
     expr: &react_compiler_ast::expressions::OptionalMemberExpression,
@@ -1065,14 +1583,6 @@ fn lower_optional_call_expression(
     expr: &react_compiler_ast::expressions::OptionalCallExpression,
 ) -> InstructionValue {
     todo!("lower_optional_call_expression not yet implemented - M12")
-}
-
-fn lower_arguments(
-    builder: &mut HirBuilder,
-    args: &[react_compiler_ast::expressions::Expression],
-    is_dev: bool,
-) -> Vec<PlaceOrSpread> {
-    todo!("lower_arguments not yet implemented - M6")
 }
 
 fn lower_function_to_value(
