@@ -105,6 +105,18 @@ interface CapturedEntry {
   value: string;
 }
 
+interface CapturedEvent {
+  kind: string;
+  fnName: string | null;
+  detail: string;
+}
+
+interface CompileOutput {
+  entries: CapturedEntry[];
+  events: CapturedEvent[];
+  error: string | null;
+}
+
 type CompileMode = 'ts' | 'rust';
 
 // --- Discover fixtures ---
@@ -134,10 +146,7 @@ function discoverFixtures(rootPath: string): string[] {
 }
 
 // --- Compile a fixture through a Babel plugin and capture debug entries ---
-function compileFixture(
-  mode: CompileMode,
-  fixturePath: string,
-): {entries: CapturedEntry[]; error: string | null} {
+function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
   const source = fs.readFileSync(fixturePath, 'utf8');
   const firstLine = source.substring(0, source.indexOf('\n'));
 
@@ -146,12 +155,33 @@ function compileFixture(
     compilationMode: 'all',
   });
 
-  // Capture debug entries
+  // Capture debug entries and logger events
   const entries: CapturedEntry[] = [];
+  const events: CapturedEvent[] = [];
 
   const logger = {
-    logEvent(_filename: string | null, _event: unknown): void {
-      // no-op for events
+    logEvent(_filename: string | null, event: Record<string, unknown>): void {
+      const kind = event.kind as string;
+      if (
+        kind === 'CompileError' ||
+        kind === 'CompileSkip' ||
+        kind === 'CompileUnexpectedThrow' ||
+        kind === 'PipelineError'
+      ) {
+        const fnName = (event.fnName as string | null) ?? null;
+        let detail: string;
+        if (kind === 'CompileError') {
+          const d = event.detail as Record<string, unknown> | undefined;
+          detail = d
+            ? `${d.reason ?? ''}${d.description ? ': ' + d.description : ''}`
+            : '(no detail)';
+        } else if (kind === 'CompileSkip') {
+          detail = (event.reason as string) ?? '(no reason)';
+        } else {
+          detail = (event.data as string) ?? '(no data)';
+        }
+        events.push({kind, fnName, detail});
+      }
     },
     debugLogIRs(entry: CompilerPipelineValue): void {
       if (entry.kind === 'hir') {
@@ -166,8 +196,15 @@ function compileFixture(
           name: entry.name,
           value: entry.value,
         });
+      } else if (
+        (entry.kind === 'reactive' || entry.kind === 'ast') &&
+        entry.name === passArg
+      ) {
+        throw new Error(
+          `TODO: test-rust-port does not yet support '${entry.kind}' log entries ` +
+            `(pass "${entry.name}"). Extend the debugLogIRs handler to support this kind.`,
+        );
       }
-      // Ignore 'reactive' and 'ast' kinds for now
     },
   };
 
@@ -203,7 +240,14 @@ function compileFixture(
     error = e instanceof Error ? e.message : String(e);
   }
 
-  return {entries, error};
+  return {entries, events, error};
+}
+
+// --- Format events as comparable string ---
+function formatEvents(events: CapturedEvent[]): string {
+  return events
+    .map(e => `[${e.kind}]${e.fnName ? ' ' + e.fnName : ''}: ${e.detail}`)
+    .join('\n');
 }
 
 // --- Simple unified diff ---
@@ -274,20 +318,22 @@ for (const fixturePath of fixtures) {
     tsHadEntries = true;
   }
 
-  // If both produced errors and neither has entries for this pass, treat as matching
-  if (
-    tsEntries.length === 0 &&
-    rustEntries.length === 0 &&
-    ts.error != null &&
-    rust.error != null
-  ) {
-    passed++;
-    continue;
-  }
-
-  // If neither has entries (both skipped/no functions), treat as matching
+  // If neither has debug entries for this pass, compare events only
   if (tsEntries.length === 0 && rustEntries.length === 0) {
-    passed++;
+    const tsEvents = formatEvents(ts.events);
+    const rustEvents = formatEvents(rust.events);
+    if (tsEvents === rustEvents) {
+      passed++;
+    } else {
+      failed++;
+      if (failures.length < 10) {
+        failures.push({
+          fixture: relPath,
+          kind: 'content_mismatch',
+          detail: '  Events differ:\n' + unifiedDiff(tsEvents, rustEvents),
+        });
+      }
+    }
     continue;
   }
 
@@ -317,6 +363,18 @@ for (const fixturePath of fixtures) {
         firstDiff = unifiedDiff(tsEntries[i].value, rustEntries[i].value);
       }
       break;
+    }
+  }
+
+  // Compare error events
+  const tsEvents = formatEvents(ts.events);
+  const rustEvents = formatEvents(rust.events);
+  if (tsEvents !== rustEvents) {
+    allMatch = false;
+    if (!firstDiff) {
+      firstDiff = unifiedDiff(tsEvents, rustEvents);
+    } else {
+      firstDiff += '\n\n  Events differ:\n' + unifiedDiff(tsEvents, rustEvents);
     }
   }
 
