@@ -535,6 +535,11 @@ impl<'a> HirBuilder<'a> {
     ///
     /// Records errors for variables named 'fbt' or 'this'.
     pub fn resolve_binding(&mut self, name: &str, binding_id: BindingId) -> IdentifierId {
+        self.resolve_binding_with_loc(name, binding_id, None)
+    }
+
+    /// Map a BindingId to an HIR IdentifierId, with an optional source location.
+    pub fn resolve_binding_with_loc(&mut self, name: &str, binding_id: BindingId, loc: Option<SourceLocation>) -> IdentifierId {
         // Check for unsupported names
         if name == "fbt" {
             self.env.record_error(CompilerErrorDetail {
@@ -585,8 +590,11 @@ impl<'a> HirBuilder<'a> {
 
         // Allocate identifier in the arena
         let id = self.env.next_identifier_id();
-        // Update the name on the allocated identifier
+        // Update the name and loc on the allocated identifier
         self.env.identifiers[id.0 as usize].name = Some(IdentifierName::Named(candidate.clone()));
+        if let Some(ref loc) = loc {
+            self.env.identifiers[id.0 as usize].loc = Some(loc.clone());
+        }
 
         self.used_names.insert(candidate, binding_id);
         self.bindings.insert(binding_id, id);

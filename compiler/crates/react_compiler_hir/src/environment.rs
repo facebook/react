@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use crate::*;
 use react_compiler_diagnostics::{CompilerDiagnostic, CompilerError, CompilerErrorDetail};
 
@@ -29,6 +30,11 @@ pub struct Environment {
 
     // Output mode (Client, Ssr, Lint)
     pub output_mode: OutputMode,
+
+    // Hoisted identifiers: tracks which bindings have already been hoisted
+    // via DeclareContext to avoid duplicate hoisting.
+    // Uses u32 to avoid depending on react_compiler_ast types.
+    hoisted_identifiers: HashSet<u32>,
 }
 
 impl Environment {
@@ -43,6 +49,7 @@ impl Environment {
             errors: CompilerError::new(),
             fn_type: ReactFunctionType::Other,
             output_mode: OutputMode::Client,
+            hoisted_identifiers: HashSet::new(),
         }
     }
 
@@ -122,6 +129,16 @@ impl Environment {
 
     pub fn take_errors(&mut self) -> CompilerError {
         std::mem::take(&mut self.errors)
+    }
+
+    /// Check if a binding has been hoisted (via DeclareContext) already.
+    pub fn is_hoisted_identifier(&self, binding_id: u32) -> bool {
+        self.hoisted_identifiers.contains(&binding_id)
+    }
+
+    /// Mark a binding as hoisted.
+    pub fn add_hoisted_identifier(&mut self, binding_id: u32) {
+        self.hoisted_identifiers.insert(binding_id);
     }
 }
 

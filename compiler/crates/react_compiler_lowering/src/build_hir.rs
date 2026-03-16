@@ -1,5 +1,6 @@
+use std::collections::HashSet;
 use indexmap::{IndexMap, IndexSet};
-use react_compiler_ast::scope::ScopeInfo;
+use react_compiler_ast::scope::{BindingId, ScopeInfo, ScopeKind};
 use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
 use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
@@ -122,7 +123,7 @@ fn convert_binary_operator(op: &react_compiler_ast::operators::BinaryOperator) -
         AstOp::BitAnd => BinaryOperator::BitwiseAnd,
         AstOp::In => BinaryOperator::In,
         AstOp::Instanceof => BinaryOperator::InstanceOf,
-        AstOp::Pipeline => panic!("Pipeline operator is not supported"),
+        AstOp::Pipeline => unreachable!("Pipeline operator is checked before calling convert_binary_operator"),
     }
 }
 
@@ -426,6 +427,17 @@ fn lower_expression(
         }
         Expression::BinaryExpression(bin) => {
             let loc = convert_opt_loc(&bin.base.loc);
+            // Check for pipeline operator before lowering operands
+            if matches!(bin.operator, react_compiler_ast::operators::BinaryOperator::Pipeline) {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: "(BuildHIR::lowerExpression) Pipe operator not supported".to_string(),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                return InstructionValue::UnsupportedNode { loc };
+            }
             let left = lower_expression_to_temporary(builder, &bin.left);
             let right = lower_expression_to_temporary(builder, &bin.right);
             let operator = convert_binary_operator(&bin.operator);
@@ -1362,7 +1374,22 @@ fn lower_expression(
                     JSXAttributeItem::JSXAttribute(attr) => {
                         // Get the attribute name
                         let prop_name = match &attr.name {
-                            JSXAttributeName::JSXIdentifier(id) => id.name.clone(),
+                            JSXAttributeName::JSXIdentifier(id) => {
+                                let name = &id.name;
+                                if name.contains(':') {
+                                    builder.record_error(CompilerErrorDetail {
+                                        category: ErrorCategory::Todo,
+                                        reason: format!(
+                                            "(BuildHIR::lowerExpression) Unexpected colon in attribute name `{}`",
+                                            name
+                                        ),
+                                        description: None,
+                                        loc: convert_opt_loc(&id.base.loc),
+                                        suggestions: None,
+                                    });
+                                }
+                                name.clone()
+                            }
                             JSXAttributeName::JSXNamespacedName(ns) => {
                                 format!("{}:{}", ns.namespace.name, ns.name.name)
                             }
@@ -1412,10 +1439,23 @@ fn lower_expression(
                 }
             }
 
+            // Check if this is an fbt/fbs tag, which requires special whitespace handling
+            let is_fbt = matches!(&tag, JsxTag::Builtin(b) if b.name == "fbt" || b.name == "fbs");
+
+            // Increment fbt counter before traversing into children, as whitespace
+            // in jsx text is handled differently for fbt subtrees.
+            if is_fbt {
+                builder.fbt_depth += 1;
+            }
+
             // Lower children
             let children: Vec<Place> = jsx_element.children.iter()
                 .filter_map(|child| lower_jsx_element(builder, child))
                 .collect();
+
+            if is_fbt {
+                builder.fbt_depth -= 1;
+            }
 
             InstructionValue::JsxExpression {
                 tag,
@@ -1498,6 +1538,340 @@ fn lower_expression(
 }
 
 // =============================================================================
+// Statement position helpers
+// =============================================================================
+
+fn statement_start(stmt: &react_compiler_ast::statements::Statement) -> Option<u32> {
+    use react_compiler_ast::statements::Statement;
+    match stmt {
+        Statement::BlockStatement(s) => s.base.start,
+        Statement::ReturnStatement(s) => s.base.start,
+        Statement::IfStatement(s) => s.base.start,
+        Statement::ForStatement(s) => s.base.start,
+        Statement::WhileStatement(s) => s.base.start,
+        Statement::DoWhileStatement(s) => s.base.start,
+        Statement::ForInStatement(s) => s.base.start,
+        Statement::ForOfStatement(s) => s.base.start,
+        Statement::SwitchStatement(s) => s.base.start,
+        Statement::ThrowStatement(s) => s.base.start,
+        Statement::TryStatement(s) => s.base.start,
+        Statement::BreakStatement(s) => s.base.start,
+        Statement::ContinueStatement(s) => s.base.start,
+        Statement::LabeledStatement(s) => s.base.start,
+        Statement::ExpressionStatement(s) => s.base.start,
+        Statement::EmptyStatement(s) => s.base.start,
+        Statement::DebuggerStatement(s) => s.base.start,
+        Statement::WithStatement(s) => s.base.start,
+        Statement::VariableDeclaration(s) => s.base.start,
+        Statement::FunctionDeclaration(s) => s.base.start,
+        Statement::ClassDeclaration(s) => s.base.start,
+        Statement::ImportDeclaration(s) => s.base.start,
+        Statement::ExportNamedDeclaration(s) => s.base.start,
+        Statement::ExportDefaultDeclaration(s) => s.base.start,
+        Statement::ExportAllDeclaration(s) => s.base.start,
+        Statement::TSTypeAliasDeclaration(s) => s.base.start,
+        Statement::TSInterfaceDeclaration(s) => s.base.start,
+        Statement::TSEnumDeclaration(s) => s.base.start,
+        Statement::TSModuleDeclaration(s) => s.base.start,
+        Statement::TSDeclareFunction(s) => s.base.start,
+        Statement::TypeAlias(s) => s.base.start,
+        Statement::OpaqueType(s) => s.base.start,
+        Statement::InterfaceDeclaration(s) => s.base.start,
+        Statement::DeclareVariable(s) => s.base.start,
+        Statement::DeclareFunction(s) => s.base.start,
+        Statement::DeclareClass(s) => s.base.start,
+        Statement::DeclareModule(s) => s.base.start,
+        Statement::DeclareModuleExports(s) => s.base.start,
+        Statement::DeclareExportDeclaration(s) => s.base.start,
+        Statement::DeclareExportAllDeclaration(s) => s.base.start,
+        Statement::DeclareInterface(s) => s.base.start,
+        Statement::DeclareTypeAlias(s) => s.base.start,
+        Statement::DeclareOpaqueType(s) => s.base.start,
+        Statement::EnumDeclaration(s) => s.base.start,
+    }
+}
+
+fn statement_end(stmt: &react_compiler_ast::statements::Statement) -> Option<u32> {
+    use react_compiler_ast::statements::Statement;
+    match stmt {
+        Statement::BlockStatement(s) => s.base.end,
+        Statement::ReturnStatement(s) => s.base.end,
+        Statement::IfStatement(s) => s.base.end,
+        Statement::ForStatement(s) => s.base.end,
+        Statement::WhileStatement(s) => s.base.end,
+        Statement::DoWhileStatement(s) => s.base.end,
+        Statement::ForInStatement(s) => s.base.end,
+        Statement::ForOfStatement(s) => s.base.end,
+        Statement::SwitchStatement(s) => s.base.end,
+        Statement::ThrowStatement(s) => s.base.end,
+        Statement::TryStatement(s) => s.base.end,
+        Statement::BreakStatement(s) => s.base.end,
+        Statement::ContinueStatement(s) => s.base.end,
+        Statement::LabeledStatement(s) => s.base.end,
+        Statement::ExpressionStatement(s) => s.base.end,
+        Statement::EmptyStatement(s) => s.base.end,
+        Statement::DebuggerStatement(s) => s.base.end,
+        Statement::WithStatement(s) => s.base.end,
+        Statement::VariableDeclaration(s) => s.base.end,
+        Statement::FunctionDeclaration(s) => s.base.end,
+        Statement::ClassDeclaration(s) => s.base.end,
+        Statement::ImportDeclaration(s) => s.base.end,
+        Statement::ExportNamedDeclaration(s) => s.base.end,
+        Statement::ExportDefaultDeclaration(s) => s.base.end,
+        Statement::ExportAllDeclaration(s) => s.base.end,
+        Statement::TSTypeAliasDeclaration(s) => s.base.end,
+        Statement::TSInterfaceDeclaration(s) => s.base.end,
+        Statement::TSEnumDeclaration(s) => s.base.end,
+        Statement::TSModuleDeclaration(s) => s.base.end,
+        Statement::TSDeclareFunction(s) => s.base.end,
+        Statement::TypeAlias(s) => s.base.end,
+        Statement::OpaqueType(s) => s.base.end,
+        Statement::InterfaceDeclaration(s) => s.base.end,
+        Statement::DeclareVariable(s) => s.base.end,
+        Statement::DeclareFunction(s) => s.base.end,
+        Statement::DeclareClass(s) => s.base.end,
+        Statement::DeclareModule(s) => s.base.end,
+        Statement::DeclareModuleExports(s) => s.base.end,
+        Statement::DeclareExportDeclaration(s) => s.base.end,
+        Statement::DeclareExportAllDeclaration(s) => s.base.end,
+        Statement::DeclareInterface(s) => s.base.end,
+        Statement::DeclareTypeAlias(s) => s.base.end,
+        Statement::DeclareOpaqueType(s) => s.base.end,
+        Statement::EnumDeclaration(s) => s.base.end,
+    }
+}
+
+/// Collect binding names from a pattern that are declared in the given scope.
+fn collect_binding_names_from_pattern(
+    pattern: &react_compiler_ast::patterns::PatternLike,
+    scope_id: react_compiler_ast::scope::ScopeId,
+    scope_info: &ScopeInfo,
+    out: &mut HashSet<BindingId>,
+) {
+    use react_compiler_ast::patterns::PatternLike;
+    match pattern {
+        PatternLike::Identifier(id) => {
+            if let Some(&binding_id) = scope_info.scopes[scope_id.0 as usize].bindings.get(&id.name) {
+                out.insert(binding_id);
+            }
+        }
+        PatternLike::ObjectPattern(obj) => {
+            for prop in &obj.properties {
+                match prop {
+                    react_compiler_ast::patterns::ObjectPatternProperty::ObjectProperty(p) => {
+                        collect_binding_names_from_pattern(&p.value, scope_id, scope_info, out);
+                    }
+                    react_compiler_ast::patterns::ObjectPatternProperty::RestElement(r) => {
+                        collect_binding_names_from_pattern(&r.argument, scope_id, scope_info, out);
+                    }
+                }
+            }
+        }
+        PatternLike::ArrayPattern(arr) => {
+            for elem in &arr.elements {
+                if let Some(e) = elem {
+                    collect_binding_names_from_pattern(e, scope_id, scope_info, out);
+                }
+            }
+        }
+        PatternLike::AssignmentPattern(assign) => {
+            collect_binding_names_from_pattern(&assign.left, scope_id, scope_info, out);
+        }
+        PatternLike::RestElement(rest) => {
+            collect_binding_names_from_pattern(&rest.argument, scope_id, scope_info, out);
+        }
+        PatternLike::MemberExpression(_) => {}
+    }
+}
+
+// =============================================================================
+// lower_block_statement (with hoisting)
+// =============================================================================
+
+/// Lower a BlockStatement with hoisting support.
+///
+/// Implements the TS BlockStatement hoisting pass: identifies forward references to
+/// block-scoped bindings and emits DeclareContext instructions to hoist them.
+fn lower_block_statement(
+    builder: &mut HirBuilder,
+    block: &react_compiler_ast::statements::BlockStatement,
+) {
+    use react_compiler_ast::scope::BindingKind as AstBindingKind;
+    use react_compiler_ast::statements::Statement;
+
+    // Look up the block's scope to identify hoistable bindings
+    let block_scope_id = block.base.start.and_then(|start| {
+        builder.scope_info().node_to_scope.get(&start).copied()
+    });
+
+    let scope_id = match block_scope_id {
+        Some(id) => id,
+        None => {
+            // No scope found for this block, just lower statements normally
+            for body_stmt in &block.body {
+                lower_statement(builder, body_stmt, None);
+            }
+            return;
+        }
+    };
+
+    // Collect hoistable bindings from this scope (non-param bindings)
+    let hoistable: Vec<(BindingId, String, AstBindingKind, String)> = builder.scope_info()
+        .scope_bindings(scope_id)
+        .filter(|b| !matches!(b.kind, AstBindingKind::Param))
+        .map(|b| (b.id, b.name.clone(), b.kind.clone(), b.declaration_type.clone()))
+        .collect();
+
+    if hoistable.is_empty() {
+        // No hoistable bindings, just lower statements normally
+        for body_stmt in &block.body {
+            lower_statement(builder, body_stmt, None);
+        }
+        return;
+    }
+
+    // Track which bindings have been "declared" (their declaration statement has been seen)
+    let mut declared: HashSet<BindingId> = HashSet::new();
+
+    for body_stmt in &block.body {
+        let stmt_start = statement_start(body_stmt).unwrap_or(0);
+        let stmt_end = statement_end(body_stmt).unwrap_or(u32::MAX);
+        let is_function_decl = matches!(body_stmt, Statement::FunctionDeclaration(_));
+
+        // Check if statement contains nested function scopes
+        let has_nested_functions = is_function_decl || {
+            let scope_info = builder.scope_info();
+            scope_info.node_to_scope.iter().any(|(&pos, &sid)| {
+                pos > stmt_start && pos < stmt_end
+                    && matches!(scope_info.scopes[sid.0 as usize].kind, ScopeKind::Function)
+            })
+        };
+
+        // Find references to not-yet-declared hoistable bindings within this statement
+        struct HoistInfo {
+            binding_id: BindingId,
+            name: String,
+            kind: AstBindingKind,
+            declaration_type: String,
+        }
+        let mut will_hoist: Vec<HoistInfo> = Vec::new();
+
+        for (binding_id, name, kind, decl_type) in &hoistable {
+            if declared.contains(binding_id) {
+                continue;
+            }
+
+            // Check if this binding is referenced in the statement's range
+            let is_referenced = builder.scope_info().reference_to_binding.iter()
+                .any(|(&ref_start, &ref_binding_id)| {
+                    ref_start >= stmt_start && ref_start < stmt_end && ref_binding_id == *binding_id
+                });
+
+            if is_referenced {
+                // Hoist if: (1) binding is "hoisted" kind (function declaration), or
+                // (2) reference is inside a nested function
+                let should_hoist = matches!(kind, AstBindingKind::Hoisted) || has_nested_functions;
+                if should_hoist {
+                    will_hoist.push(HoistInfo {
+                        binding_id: *binding_id,
+                        name: name.clone(),
+                        kind: kind.clone(),
+                        declaration_type: decl_type.clone(),
+                    });
+                }
+            }
+        }
+
+        // Emit DeclareContext for hoisted bindings
+        for info in &will_hoist {
+            if builder.environment().is_hoisted_identifier(info.binding_id.0) {
+                continue;
+            }
+
+            let hoist_kind = match info.kind {
+                AstBindingKind::Const | AstBindingKind::Var => InstructionKind::HoistedConst,
+                AstBindingKind::Let => InstructionKind::HoistedLet,
+                AstBindingKind::Hoisted => InstructionKind::HoistedFunction,
+                _ => {
+                    if info.declaration_type == "FunctionDeclaration" {
+                        InstructionKind::HoistedFunction
+                    } else if info.declaration_type == "VariableDeclarator" {
+                        // Unsupported hoisting for this declaration kind
+                        builder.record_error(CompilerErrorDetail {
+                            category: ErrorCategory::Todo,
+                            reason: "Handle non-const declarations for hoisting".to_string(),
+                            description: Some(format!(
+                                "variable \"{}\" declared with {:?}",
+                                info.name, info.kind
+                            )),
+                            loc: None,
+                            suggestions: None,
+                        });
+                        continue;
+                    } else {
+                        builder.record_error(CompilerErrorDetail {
+                            category: ErrorCategory::Todo,
+                            reason: "Unsupported declaration type for hoisting".to_string(),
+                            description: Some(format!(
+                                "variable \"{}\" declared with {}",
+                                info.name, info.declaration_type
+                            )),
+                            loc: None,
+                            suggestions: None,
+                        });
+                        continue;
+                    }
+                }
+            };
+
+            let identifier = builder.resolve_binding(&info.name, info.binding_id);
+            let place = Place {
+                effect: Effect::Unknown,
+                identifier,
+                reactive: false,
+                loc: None,
+            };
+            lower_value_to_temporary(builder, InstructionValue::DeclareContext {
+                lvalue: LValue { kind: hoist_kind, place },
+                loc: None,
+            });
+            builder.environment_mut().add_hoisted_identifier(info.binding_id.0);
+        }
+
+        // After processing the statement, mark any bindings it declares as "seen".
+        // This must cover all statement types that can introduce bindings.
+        match body_stmt {
+            Statement::FunctionDeclaration(func) => {
+                if let Some(id) = &func.id {
+                    if let Some(&binding_id) = builder.scope_info().scopes[scope_id.0 as usize].bindings.get(&id.name) {
+                        declared.insert(binding_id);
+                    }
+                }
+            }
+            Statement::VariableDeclaration(var_decl) => {
+                for decl in &var_decl.declarations {
+                    collect_binding_names_from_pattern(&decl.id, scope_id, builder.scope_info(), &mut declared);
+                }
+            }
+            Statement::ClassDeclaration(cls) => {
+                if let Some(id) = &cls.id {
+                    if let Some(&binding_id) = builder.scope_info().scopes[scope_id.0 as usize].bindings.get(&id.name) {
+                        declared.insert(binding_id);
+                    }
+                }
+            }
+            _ => {
+                // For other statement types (e.g. ForStatement with VariableDeclaration in init),
+                // we rely on the reference_to_binding check for forward references.
+                // Any bindings declared by child scopes won't be in this block's scope anyway.
+            }
+        }
+
+        lower_statement(builder, body_stmt, None);
+    }
+}
+
+// =============================================================================
 // lower_statement
 // =============================================================================
 
@@ -1569,9 +1943,7 @@ fn lower_statement(
             );
         }
         Statement::BlockStatement(block) => {
-            for body_stmt in &block.body {
-                lower_statement(builder, body_stmt, None);
-            }
+            lower_block_statement(builder, block);
         }
         Statement::VariableDeclaration(var_decl) => {
             use react_compiler_ast::statements::VariableDeclarationKind;
@@ -2471,34 +2843,42 @@ fn lower_statement(
         Statement::ClassDeclaration(cls) => {
             let loc = convert_opt_loc(&cls.base.loc);
             builder.record_error(CompilerErrorDetail {
-                category: ErrorCategory::Todo,
-                reason: "class declarations are not yet supported".to_string(),
+                category: ErrorCategory::UnsupportedSyntax,
+                reason: "Inline `class` declarations are not supported".to_string(),
+                description: Some("Move class declarations outside of components/hooks".to_string()),
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+        }
+        Statement::ImportDeclaration(_)
+        | Statement::ExportNamedDeclaration(_)
+        | Statement::ExportDefaultDeclaration(_)
+        | Statement::ExportAllDeclaration(_) => {
+            let loc = match stmt {
+                Statement::ImportDeclaration(s) => convert_opt_loc(&s.base.loc),
+                Statement::ExportNamedDeclaration(s) => convert_opt_loc(&s.base.loc),
+                Statement::ExportDefaultDeclaration(s) => convert_opt_loc(&s.base.loc),
+                Statement::ExportAllDeclaration(s) => convert_opt_loc(&s.base.loc),
+                _ => unreachable!(),
+            };
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Syntax,
+                reason: "JavaScript `import` and `export` statements may only appear at the top level of a module".to_string(),
                 description: None,
                 loc: loc.clone(),
                 suggestions: None,
             });
             lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
         }
-        // Import/export declarations are skipped during lowering
-        Statement::ImportDeclaration(_) => {}
-        Statement::ExportNamedDeclaration(_) => {
-            // Export declarations should not appear in function bodies; skip
-        }
-        Statement::ExportDefaultDeclaration(_) => {
-            // Export declarations should not appear in function bodies; skip
-        }
-        Statement::ExportAllDeclaration(_) => {}
         // TypeScript/Flow declarations are type-only, skip them
-        Statement::TSEnumDeclaration(_) | Statement::EnumDeclaration(_) => {
-            // Enum declarations are unsupported
-            builder.record_error(CompilerErrorDetail {
-                reason: "Enum declarations are not supported".to_string(),
-                category: ErrorCategory::Todo,
-                loc: None,
-                description: None,
-                suggestions: None,
-            });
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc: None });
+        Statement::TSEnumDeclaration(e) => {
+            let loc = convert_opt_loc(&e.base.loc);
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+        }
+        Statement::EnumDeclaration(e) => {
+            let loc = convert_opt_loc(&e.base.loc);
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
         }
         // TypeScript/Flow type declarations are type-only, skip them
         Statement::TSTypeAliasDeclaration(_)
@@ -2712,7 +3092,37 @@ fn lower_assignment(
                     });
                 }
                 Some(IdentifierForAssignment::Place(place)) => {
-                    if builder.is_context_identifier(&id.name, id.base.start.unwrap_or(0)) {
+                    let start = id.base.start.unwrap_or(0);
+                    if builder.is_context_identifier(&id.name, start) {
+                        // Check if the binding is hoisted before flagging const reassignment
+                        let is_hoisted = builder.scope_info()
+                            .resolve_reference(start)
+                            .map(|b| builder.environment().is_hoisted_identifier(b.id.0))
+                            .unwrap_or(false);
+                        if kind == InstructionKind::Const && !is_hoisted {
+                            builder.record_error(CompilerErrorDetail {
+                                reason: "Expected `const` declaration not to be reassigned".to_string(),
+                                category: ErrorCategory::Syntax,
+                                loc: loc.clone(),
+                                suggestions: None,
+                                description: None,
+                            });
+                        }
+                        if kind != InstructionKind::Const
+                            && kind != InstructionKind::Reassign
+                            && kind != InstructionKind::Let
+                            && kind != InstructionKind::Function
+                        {
+                            builder.record_error(CompilerErrorDetail {
+                                reason: "Unexpected context variable kind".to_string(),
+                                category: ErrorCategory::Syntax,
+                                loc: loc.clone(),
+                                suggestions: None,
+                                description: None,
+                            });
+                            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+                            return;
+                        }
                         lower_value_to_temporary(builder, InstructionValue::StoreContext {
                             lvalue: LValue { place, kind },
                             value,
@@ -2731,6 +3141,17 @@ fn lower_assignment(
         }
 
         PatternLike::MemberExpression(member) => {
+            // MemberExpression may only appear in an assignment expression (Reassign)
+            if kind != InstructionKind::Reassign {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Invariant,
+                    reason: "MemberExpression may only appear in an assignment expression".to_string(),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                return;
+            }
             let object = lower_expression_to_temporary(builder, &member.object);
             if !member.computed {
                 match &*member.property {
@@ -3804,9 +4225,9 @@ fn lower_inner(
                 .iter()
                 .map(|d| d.value.value.clone())
                 .collect();
-            for body_stmt in &block.body {
-                lower_statement(&mut builder, body_stmt, None);
-            }
+            // Use lower_block_statement to get hoisting support for the function body,
+            // matching the TS which calls lowerStatement(builder, body) on the BlockStatement.
+            lower_block_statement(&mut builder, block);
         }
     }
 
@@ -3884,9 +4305,24 @@ fn lower_jsx_element_name(
             JsxTag::Place(place)
         }
         JSXElementName::JSXNamespacedName(ns) => {
-            let tag = format!("{}:{}", ns.namespace.name, ns.name.name);
+            let namespace = &ns.namespace.name;
+            let name = &ns.name.name;
+            let tag = format!("{}:{}", namespace, name);
             let loc = convert_opt_loc(&ns.base.loc);
-            JsxTag::Builtin(BuiltinTag { name: tag, loc })
+            if namespace.contains(':') || name.contains(':') {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Syntax,
+                    reason: "Expected JSXNamespacedName to have no colons in the namespace or name".to_string(),
+                    description: Some(format!("Got `{}` : `{}`", namespace, name)),
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+            }
+            let place = lower_value_to_temporary(builder, InstructionValue::Primitive {
+                value: PrimitiveValue::String(tag),
+                loc: loc.clone(),
+            });
+            JsxTag::Place(place)
         }
     }
 }
@@ -3930,8 +4366,15 @@ fn lower_jsx_element(
     use react_compiler_ast::jsx::JSXExpressionContainerExpr;
     match child {
         JSXChild::JSXText(text) => {
-            let trimmed = trim_jsx_text(&text.value);
-            match trimmed {
+            // FBT whitespace normalization differs from standard JSX.
+            // Since the fbt transform runs after, preserve all whitespace
+            // in FBT subtrees as is.
+            let value = if builder.fbt_depth > 0 {
+                Some(text.value.clone())
+            } else {
+                trim_jsx_text(&text.value)
+            };
+            match value {
                 None => None,
                 Some(value) => {
                     let loc = convert_opt_loc(&text.base.loc);
@@ -3965,10 +4408,41 @@ fn lower_jsx_element(
     }
 }
 
+/// Split a string on line endings, handling \r\n, \n, and \r.
+fn split_line_endings(s: &str) -> Vec<&str> {
+    let mut lines = Vec::new();
+    let mut start = 0;
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'\r' {
+            lines.push(&s[start..i]);
+            if i + 1 < bytes.len() && bytes[i + 1] == b'\n' {
+                i += 2;
+            } else {
+                i += 1;
+            }
+            start = i;
+        } else if bytes[i] == b'\n' {
+            lines.push(&s[start..i]);
+            i += 1;
+            start = i;
+        } else {
+            i += 1;
+        }
+    }
+    lines.push(&s[start..]);
+    lines
+}
+
 /// Trims whitespace according to the JSX spec.
 /// Implementation ported from Babel's cleanJSXElementLiteralChild.
 fn trim_jsx_text(original: &str) -> Option<String> {
-    let lines: Vec<&str> = original.split('\n').collect();
+    // Split on \r\n, \n, or \r to handle all line ending styles (matching TS split(/\r\n|\n|\r/))
+    let lines: Vec<&str> = split_line_endings(original);
+
+    // NOTE: when builder.fbt_depth > 0, the TS skips whitespace trimming entirely.
+    // That check is handled by the caller (lower_jsx_element) before calling this function.
 
     let mut last_non_empty_line = 0;
     for (i, line) in lines.iter().enumerate() {
@@ -4229,7 +4703,13 @@ fn gather_captured_context(
         }
         let binding = &scope_info.bindings[binding_id.0 as usize];
         if pure_scopes.contains(&binding.scope) && !captured.contains_key(&binding.id) {
-            captured.insert(binding.id, None);
+            // Use the binding's identifier location as the source location for
+            // the context variable, falling back to a generated location from the reference.
+            let loc = Some(SourceLocation {
+                start: Position { line: 0, column: ref_start },
+                end: Position { line: 0, column: ref_start },
+            });
+            captured.insert(binding.id, loc);
         }
     }
 
@@ -4258,8 +4738,6 @@ fn capture_scopes(
 pub enum AssignmentStyle {
     /// Assignment via `=`
     Assignment,
-    /// Compound assignment like `+=`, `-=`, etc.
-    Compound,
     /// Destructuring assignment
     Destructure,
 }
