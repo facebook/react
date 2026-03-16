@@ -30,6 +30,18 @@ fn convert_opt_loc(loc: &Option<react_compiler_ast::common::SourceLocation>) -> 
     loc.as_ref().map(convert_loc)
 }
 
+fn pattern_like_loc(pattern: &react_compiler_ast::patterns::PatternLike) -> Option<react_compiler_ast::common::SourceLocation> {
+    use react_compiler_ast::patterns::PatternLike;
+    match pattern {
+        PatternLike::Identifier(id) => id.base.loc.clone(),
+        PatternLike::ObjectPattern(p) => p.base.loc.clone(),
+        PatternLike::ArrayPattern(p) => p.base.loc.clone(),
+        PatternLike::AssignmentPattern(p) => p.base.loc.clone(),
+        PatternLike::RestElement(p) => p.base.loc.clone(),
+        PatternLike::MemberExpression(p) => p.base.loc.clone(),
+    }
+}
+
 // =============================================================================
 // Helper functions
 // =============================================================================
@@ -42,6 +54,15 @@ fn build_temporary_place(builder: &mut HirBuilder, loc: Option<SourceLocation>) 
         effect: Effect::Unknown,
         loc,
     }
+}
+
+/// Promote a temporary identifier to a named identifier (for destructuring).
+/// Corresponds to TS `promoteTemporary(identifier)`.
+fn promote_temporary(builder: &mut HirBuilder, identifier_id: IdentifierId) {
+    let env = builder.environment_mut();
+    let decl_id = env.identifiers[identifier_id.0 as usize].declaration_id;
+    env.identifiers[identifier_id.0 as usize].name =
+        Some(IdentifierName::Promoted(format!("#t{}", decl_id.0)));
 }
 
 fn lower_value_to_temporary(builder: &mut HirBuilder, value: InstructionValue) -> Place {
@@ -223,9 +244,76 @@ fn lower_member_expression(
     builder: &mut HirBuilder,
     member: &react_compiler_ast::expressions::MemberExpression,
 ) -> LoweredMemberExpression {
+    lower_member_expression_impl(builder, member, None)
+}
+
+fn lower_member_expression_with_object(
+    builder: &mut HirBuilder,
+    member: &react_compiler_ast::expressions::OptionalMemberExpression,
+    lowered_object: Place,
+) -> LoweredMemberExpression {
+    // OptionalMemberExpression has the same shape as MemberExpression for property access
     use react_compiler_ast::expressions::Expression;
     let loc = convert_opt_loc(&member.base.loc);
-    let object = lower_expression_to_temporary(builder, &member.object);
+    let object = lowered_object;
+
+    if !member.computed {
+        let property = match member.property.as_ref() {
+            Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
+            Expression::NumericLiteral(lit) => {
+                PropertyLiteral::Number(FloatValue::new(lit.value))
+            }
+            _ => {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: format!(
+                        "(BuildHIR::lowerMemberExpression) Handle {:?} property",
+                        member.property
+                    ),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                return LoweredMemberExpression {
+                    object,
+                    value: InstructionValue::UnsupportedNode { loc },
+                };
+            }
+        };
+        let value = InstructionValue::PropertyLoad {
+            object: object.clone(),
+            property,
+            loc,
+        };
+        LoweredMemberExpression { object, value }
+    } else {
+        if let Expression::NumericLiteral(lit) = member.property.as_ref() {
+            let property = PropertyLiteral::Number(FloatValue::new(lit.value));
+            let value = InstructionValue::PropertyLoad {
+                object: object.clone(),
+                property,
+                loc,
+            };
+            return LoweredMemberExpression { object, value };
+        }
+        let property = lower_expression_to_temporary(builder, &member.property);
+        let value = InstructionValue::ComputedLoad {
+            object: object.clone(),
+            property,
+            loc,
+        };
+        LoweredMemberExpression { object, value }
+    }
+}
+
+fn lower_member_expression_impl(
+    builder: &mut HirBuilder,
+    member: &react_compiler_ast::expressions::MemberExpression,
+    lowered_object: Option<Place>,
+) -> LoweredMemberExpression {
+    use react_compiler_ast::expressions::Expression;
+    let loc = convert_opt_loc(&member.base.loc);
+    let object = lowered_object.unwrap_or_else(|| lower_expression_to_temporary(builder, &member.object));
 
     if !member.computed {
         // Non-computed: property must be an identifier or numeric literal
@@ -384,8 +472,12 @@ fn lower_expression(
             let lowered = lower_member_expression(builder, member);
             lowered.value
         }
-        Expression::OptionalCallExpression(_) => todo!("lower OptionalCallExpression"),
-        Expression::OptionalMemberExpression(_) => todo!("lower OptionalMemberExpression"),
+        Expression::OptionalCallExpression(opt_call) => {
+            lower_optional_call_expression(builder, opt_call)
+        }
+        Expression::OptionalMemberExpression(opt_member) => {
+            lower_optional_member_expression(builder, opt_member)
+        }
         Expression::LogicalExpression(expr) => {
             let loc = convert_opt_loc(&expr.base.loc);
             let continuation_block = builder.reserve(builder.current_block_kind());
@@ -1679,10 +1771,442 @@ fn lower_statement(
                 continuation_block,
             );
         }
-        Statement::ForInStatement(_) => todo!("lower ForInStatement"),
-        Statement::ForOfStatement(_) => todo!("lower ForOfStatement"),
-        Statement::SwitchStatement(_) => todo!("lower SwitchStatement"),
-        Statement::TryStatement(_) => todo!("lower TryStatement"),
+        Statement::ForInStatement(for_in) => {
+            let loc = convert_opt_loc(&for_in.base.loc);
+            let continuation_block = builder.reserve(BlockKind::Block);
+            let continuation_id = continuation_block.id;
+            let init_block = builder.reserve(BlockKind::Loop);
+            let init_block_id = init_block.id;
+
+            let loop_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                builder.loop_scope(
+                    label.map(|s| s.to_string()),
+                    init_block_id,
+                    continuation_id,
+                    |builder| {
+                        lower_statement(builder, &for_in.body, None);
+                        Terminal::Goto {
+                            block: init_block_id,
+                            variant: GotoVariant::Continue,
+                            id: EvaluationOrder(0),
+                            loc: loc.clone(),
+                        }
+                    },
+                )
+            });
+
+            let value = lower_expression_to_temporary(builder, &for_in.right);
+            builder.terminate_with_continuation(
+                Terminal::ForIn {
+                    init: init_block_id,
+                    loop_block,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                init_block,
+            );
+
+            // Lower the init: NextPropertyOf + assignment
+            let left_loc = loc.clone(); // Use for_in loc as fallback
+            let next_property = lower_value_to_temporary(builder, InstructionValue::NextPropertyOf {
+                value,
+                loc: left_loc.clone(),
+            });
+
+            match for_in.left.as_ref() {
+                react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(var_decl) => {
+                    if var_decl.declarations.len() != 1 {
+                        builder.record_error(CompilerErrorDetail {
+                            category: ErrorCategory::Invariant,
+                            reason: format!(
+                                "Expected only one declaration in ForInStatement init, got {}",
+                                var_decl.declarations.len()
+                            ),
+                            description: None,
+                            loc: left_loc.clone(),
+                            suggestions: None,
+                        });
+                    }
+                    if let Some(declarator) = var_decl.declarations.first() {
+                        lower_assignment(
+                            builder,
+                            left_loc.clone(),
+                            InstructionKind::Let,
+                            &declarator.id,
+                            next_property.clone(),
+                            AssignmentStyle::Assignment,
+                        );
+                    }
+                    let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
+                        place: next_property,
+                        loc: left_loc.clone(),
+                    });
+                    builder.terminate_with_continuation(
+                        Terminal::Branch {
+                            test,
+                            consequent: loop_block,
+                            alternate: continuation_id,
+                            fallthrough: continuation_id,
+                            id: EvaluationOrder(0),
+                            loc: left_loc,
+                        },
+                        continuation_block,
+                    );
+                }
+                react_compiler_ast::statements::ForInOfLeft::Pattern(pattern) => {
+                    lower_assignment(
+                        builder,
+                        left_loc.clone(),
+                        InstructionKind::Reassign,
+                        pattern,
+                        next_property.clone(),
+                        AssignmentStyle::Assignment,
+                    );
+                    let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
+                        place: next_property,
+                        loc: left_loc.clone(),
+                    });
+                    builder.terminate_with_continuation(
+                        Terminal::Branch {
+                            test,
+                            consequent: loop_block,
+                            alternate: continuation_id,
+                            fallthrough: continuation_id,
+                            id: EvaluationOrder(0),
+                            loc: left_loc,
+                        },
+                        continuation_block,
+                    );
+                }
+            }
+        }
+        Statement::ForOfStatement(for_of) => {
+            let loc = convert_opt_loc(&for_of.base.loc);
+            let continuation_block = builder.reserve(BlockKind::Block);
+            let continuation_id = continuation_block.id;
+            let init_block = builder.reserve(BlockKind::Loop);
+            let init_block_id = init_block.id;
+            let test_block = builder.reserve(BlockKind::Loop);
+            let test_block_id = test_block.id;
+
+            if for_of.is_await {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: "(BuildHIR::lowerStatement) Handle for-await loops".to_string(),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                return;
+            }
+
+            let loop_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                builder.loop_scope(
+                    label.map(|s| s.to_string()),
+                    init_block_id,
+                    continuation_id,
+                    |builder| {
+                        lower_statement(builder, &for_of.body, None);
+                        Terminal::Goto {
+                            block: init_block_id,
+                            variant: GotoVariant::Continue,
+                            id: EvaluationOrder(0),
+                            loc: loc.clone(),
+                        }
+                    },
+                )
+            });
+
+            let value = lower_expression_to_temporary(builder, &for_of.right);
+            builder.terminate_with_continuation(
+                Terminal::ForOf {
+                    init: init_block_id,
+                    test: test_block_id,
+                    loop_block,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                init_block,
+            );
+
+            // Init block: GetIterator, goto test
+            let iterator = lower_value_to_temporary(builder, InstructionValue::GetIterator {
+                collection: value.clone(),
+                loc: value.loc.clone(),
+            });
+            builder.terminate_with_continuation(
+                Terminal::Goto {
+                    block: test_block_id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                test_block,
+            );
+
+            // Test block: IteratorNext, assign, branch
+            let left_loc = loc.clone();
+            let advance_iterator = lower_value_to_temporary(builder, InstructionValue::IteratorNext {
+                iterator: iterator.clone(),
+                collection: value.clone(),
+                loc: left_loc.clone(),
+            });
+
+            match for_of.left.as_ref() {
+                react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(var_decl) => {
+                    if var_decl.declarations.len() != 1 {
+                        builder.record_error(CompilerErrorDetail {
+                            category: ErrorCategory::Invariant,
+                            reason: format!(
+                                "Expected only one declaration in ForOfStatement init, got {}",
+                                var_decl.declarations.len()
+                            ),
+                            description: None,
+                            loc: left_loc.clone(),
+                            suggestions: None,
+                        });
+                    }
+                    if let Some(declarator) = var_decl.declarations.first() {
+                        lower_assignment(
+                            builder,
+                            left_loc.clone(),
+                            InstructionKind::Let,
+                            &declarator.id,
+                            advance_iterator.clone(),
+                            AssignmentStyle::Assignment,
+                        );
+                    }
+                    let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
+                        place: advance_iterator,
+                        loc: left_loc.clone(),
+                    });
+                    builder.terminate_with_continuation(
+                        Terminal::Branch {
+                            test,
+                            consequent: loop_block,
+                            alternate: continuation_id,
+                            fallthrough: continuation_id,
+                            id: EvaluationOrder(0),
+                            loc: left_loc,
+                        },
+                        continuation_block,
+                    );
+                }
+                react_compiler_ast::statements::ForInOfLeft::Pattern(pattern) => {
+                    lower_assignment(
+                        builder,
+                        left_loc.clone(),
+                        InstructionKind::Reassign,
+                        pattern,
+                        advance_iterator.clone(),
+                        AssignmentStyle::Assignment,
+                    );
+                    let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
+                        place: advance_iterator,
+                        loc: left_loc.clone(),
+                    });
+                    builder.terminate_with_continuation(
+                        Terminal::Branch {
+                            test,
+                            consequent: loop_block,
+                            alternate: continuation_id,
+                            fallthrough: continuation_id,
+                            id: EvaluationOrder(0),
+                            loc: left_loc,
+                        },
+                        continuation_block,
+                    );
+                }
+            }
+        }
+        Statement::SwitchStatement(switch_stmt) => {
+            let loc = convert_opt_loc(&switch_stmt.base.loc);
+            let continuation_block = builder.reserve(BlockKind::Block);
+            let continuation_id = continuation_block.id;
+
+            // Iterate through cases in reverse order so that previous blocks can
+            // fallthrough to successors
+            let mut fallthrough = continuation_id;
+            let mut cases: Vec<Case> = Vec::new();
+            let mut has_default = false;
+
+            for ii in (0..switch_stmt.cases.len()).rev() {
+                let case = &switch_stmt.cases[ii];
+                let case_loc = convert_opt_loc(&case.base.loc);
+
+                if case.test.is_none() {
+                    if has_default {
+                        builder.record_error(CompilerErrorDetail {
+                            category: ErrorCategory::Syntax,
+                            reason: "Expected at most one `default` branch in a switch statement".to_string(),
+                            description: None,
+                            loc: case_loc.clone(),
+                            suggestions: None,
+                        });
+                        break;
+                    }
+                    has_default = true;
+                }
+
+                let fallthrough_target = fallthrough;
+                let block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                    builder.switch_scope(
+                        label.map(|s| s.to_string()),
+                        continuation_id,
+                        |builder| {
+                            for consequent in &case.consequent {
+                                lower_statement(builder, consequent, None);
+                            }
+                            Terminal::Goto {
+                                block: fallthrough_target,
+                                variant: GotoVariant::Break,
+                                id: EvaluationOrder(0),
+                                loc: case_loc.clone(),
+                            }
+                        },
+                    )
+                });
+
+                let test = if let Some(test_expr) = &case.test {
+                    Some(lower_reorderable_expression(builder, test_expr))
+                } else {
+                    None
+                };
+
+                cases.push(Case { test, block });
+                fallthrough = block;
+            }
+
+            // Reverse back to original order
+            cases.reverse();
+
+            // If no default case, add one that jumps to continuation
+            if !has_default {
+                cases.push(Case { test: None, block: continuation_id });
+            }
+
+            let test = lower_expression_to_temporary(builder, &switch_stmt.discriminant);
+            builder.terminate_with_continuation(
+                Terminal::Switch {
+                    test,
+                    cases,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc,
+                },
+                continuation_block,
+            );
+        }
+        Statement::TryStatement(try_stmt) => {
+            let loc = convert_opt_loc(&try_stmt.base.loc);
+            let continuation_block = builder.reserve(BlockKind::Block);
+            let continuation_id = continuation_block.id;
+
+            let handler_clause = match &try_stmt.handler {
+                Some(h) => h,
+                None => {
+                    builder.record_error(CompilerErrorDetail {
+                        category: ErrorCategory::Todo,
+                        reason: "(BuildHIR::lowerStatement) Handle TryStatement without a catch clause".to_string(),
+                        description: None,
+                        loc: loc.clone(),
+                        suggestions: None,
+                    });
+                    return;
+                }
+            };
+
+            if try_stmt.finalizer.is_some() {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: "(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause".to_string(),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+            }
+
+            // Set up handler binding if catch has a param
+            let handler_binding_info: Option<(Place, react_compiler_ast::patterns::PatternLike)> =
+                if let Some(param) = &handler_clause.param {
+                    let param_loc = convert_opt_loc(&pattern_like_loc(param));
+                    let id = builder.make_temporary(param_loc.clone());
+                    let place = Place {
+                        identifier: id,
+                        effect: Effect::Unknown,
+                        reactive: false,
+                        loc: param_loc.clone(),
+                    };
+                    // Emit DeclareLocal for the catch binding
+                    lower_value_to_temporary(builder, InstructionValue::DeclareLocal {
+                        lvalue: LValue {
+                            kind: InstructionKind::Catch,
+                            place: place.clone(),
+                        },
+                        type_annotation: None,
+                        loc: param_loc,
+                    });
+                    Some((place, param.clone()))
+                } else {
+                    None
+                };
+
+            // Create the handler (catch) block
+            let handler_binding_for_block = handler_binding_info.clone();
+            let handler_loc = convert_opt_loc(&handler_clause.base.loc);
+            let handler_block = builder.enter(BlockKind::Catch, |builder, _block_id| {
+                if let Some((ref place, ref pattern)) = handler_binding_for_block {
+                    lower_assignment(
+                        builder,
+                        handler_loc.clone(),
+                        InstructionKind::Catch,
+                        pattern,
+                        place.clone(),
+                        AssignmentStyle::Assignment,
+                    );
+                }
+                // Lower the catch body
+                for stmt in &handler_clause.body.body {
+                    lower_statement(builder, stmt, None);
+                }
+                Terminal::Goto {
+                    block: continuation_id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: handler_loc.clone(),
+                }
+            });
+
+            // Create the try block
+            let try_body_loc = convert_opt_loc(&try_stmt.block.base.loc);
+            let try_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                builder.enter_try_catch(handler_block, |builder| {
+                    for stmt in &try_stmt.block.body {
+                        lower_statement(builder, stmt, None);
+                    }
+                });
+                Terminal::Goto {
+                    block: continuation_id,
+                    variant: GotoVariant::Try,
+                    id: EvaluationOrder(0),
+                    loc: try_body_loc.clone(),
+                }
+            });
+
+            builder.terminate_with_continuation(
+                Terminal::Try {
+                    block: try_block,
+                    handler_binding: handler_binding_info.map(|(place, _)| place),
+                    handler: handler_block,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc,
+                },
+                continuation_block,
+            );
+        }
         Statement::LabeledStatement(labeled_stmt) => {
             let label_name = &labeled_stmt.label.name;
             let loc = convert_opt_loc(&labeled_stmt.base.loc);
@@ -1730,11 +2254,31 @@ fn lower_statement(
                 }
             }
         }
-        Statement::WithStatement(_) => todo!("lower WithStatement"),
+        Statement::WithStatement(with_stmt) => {
+            let loc = convert_opt_loc(&with_stmt.base.loc);
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::UnsupportedSyntax,
+                reason: "JavaScript 'with' syntax is not supported".to_string(),
+                description: Some("'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives".to_string()),
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+        }
         Statement::FunctionDeclaration(func_decl) => {
             lower_function_declaration(builder, func_decl);
         }
-        Statement::ClassDeclaration(_) => todo!("lower ClassDeclaration"),
+        Statement::ClassDeclaration(cls) => {
+            let loc = convert_opt_loc(&cls.base.loc);
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "class declarations are not yet supported".to_string(),
+                description: None,
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+        }
         // Import/export declarations are skipped during lowering
         Statement::ImportDeclaration(_) => {}
         Statement::ExportNamedDeclaration(_) => todo!("lower ExportNamedDeclaration"),
@@ -2178,14 +2722,288 @@ fn lower_optional_member_expression(
     builder: &mut HirBuilder,
     expr: &react_compiler_ast::expressions::OptionalMemberExpression,
 ) -> InstructionValue {
-    todo!("lower_optional_member_expression not yet implemented - M12")
+    let place = lower_optional_member_expression_impl(builder, expr, None).1;
+    InstructionValue::LoadLocal { loc: place.loc.clone(), place }
+}
+
+/// Returns (object, value_place) pair.
+/// The `value_place` is stored into a temporary; we also return it as an InstructionValue
+/// via LoadLocal for the top-level call.
+fn lower_optional_member_expression_impl(
+    builder: &mut HirBuilder,
+    expr: &react_compiler_ast::expressions::OptionalMemberExpression,
+    parent_alternate: Option<BlockId>,
+) -> (Place, Place) {
+    use react_compiler_ast::expressions::Expression;
+    let optional = expr.optional;
+    let loc = convert_opt_loc(&expr.base.loc);
+    let place = build_temporary_place(builder, loc.clone());
+    let continuation_block = builder.reserve(builder.current_block_kind());
+    let continuation_id = continuation_block.id;
+    let consequent = builder.reserve(BlockKind::Value);
+
+    // Block to evaluate if the callee is null/undefined — sets result to undefined.
+    // Only create an alternate when first entering an optional subtree.
+    let alternate = if let Some(parent_alt) = parent_alternate {
+        parent_alt
+    } else {
+        builder.enter(BlockKind::Value, |builder, _block_id| {
+            let temp = lower_value_to_temporary(builder, InstructionValue::Primitive {
+                value: PrimitiveValue::Undefined,
+                loc: loc.clone(),
+            });
+            lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                lvalue: LValue {
+                    kind: InstructionKind::Const,
+                    place: place.clone(),
+                },
+                value: temp,
+                type_annotation: None,
+                loc: loc.clone(),
+            });
+            Terminal::Goto {
+                block: continuation_id,
+                variant: GotoVariant::Break,
+                id: EvaluationOrder(0),
+                loc: loc.clone(),
+            }
+        })
+    };
+
+    let mut object: Option<Place> = None;
+    let test_block = builder.enter(BlockKind::Value, |builder, _block_id| {
+        match expr.object.as_ref() {
+            Expression::OptionalMemberExpression(opt_member) => {
+                let (_obj, value) = lower_optional_member_expression_impl(
+                    builder,
+                    opt_member,
+                    Some(alternate),
+                );
+                object = Some(value);
+            }
+            Expression::OptionalCallExpression(opt_call) => {
+                let value = lower_optional_call_expression_impl(builder, opt_call, Some(alternate));
+                let value_place = lower_value_to_temporary(builder, value);
+                object = Some(value_place);
+            }
+            other => {
+                object = Some(lower_expression_to_temporary(builder, other));
+            }
+        }
+        let test_place = object.as_ref().unwrap().clone();
+        Terminal::Branch {
+            test: test_place,
+            consequent: consequent.id,
+            alternate,
+            fallthrough: continuation_id,
+            id: EvaluationOrder(0),
+            loc: loc.clone(),
+        }
+    });
+
+    let obj = object.unwrap();
+
+    // Block to evaluate if the callee is non-null/undefined
+    builder.enter_reserved(consequent, |builder| {
+        let lowered = lower_member_expression_with_object(builder, expr, obj.clone());
+        let temp = lower_value_to_temporary(builder, lowered.value);
+        lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+            lvalue: LValue {
+                kind: InstructionKind::Const,
+                place: place.clone(),
+            },
+            value: temp,
+            type_annotation: None,
+            loc: loc.clone(),
+        });
+        Terminal::Goto {
+            block: continuation_id,
+            variant: GotoVariant::Break,
+            id: EvaluationOrder(0),
+            loc: loc.clone(),
+        }
+    });
+
+    builder.terminate_with_continuation(
+        Terminal::Optional {
+            optional,
+            test: test_block,
+            fallthrough: continuation_id,
+            id: EvaluationOrder(0),
+            loc: loc.clone(),
+        },
+        continuation_block,
+    );
+
+    (obj, place)
 }
 
 fn lower_optional_call_expression(
     builder: &mut HirBuilder,
     expr: &react_compiler_ast::expressions::OptionalCallExpression,
 ) -> InstructionValue {
-    todo!("lower_optional_call_expression not yet implemented - M12")
+    lower_optional_call_expression_impl(builder, expr, None)
+}
+
+fn lower_optional_call_expression_impl(
+    builder: &mut HirBuilder,
+    expr: &react_compiler_ast::expressions::OptionalCallExpression,
+    parent_alternate: Option<BlockId>,
+) -> InstructionValue {
+    use react_compiler_ast::expressions::Expression;
+    let optional = expr.optional;
+    let loc = convert_opt_loc(&expr.base.loc);
+    let place = build_temporary_place(builder, loc.clone());
+    let continuation_block = builder.reserve(builder.current_block_kind());
+    let continuation_id = continuation_block.id;
+    let consequent = builder.reserve(BlockKind::Value);
+
+    // Block to evaluate if the callee is null/undefined
+    let alternate = if let Some(parent_alt) = parent_alternate {
+        parent_alt
+    } else {
+        builder.enter(BlockKind::Value, |builder, _block_id| {
+            let temp = lower_value_to_temporary(builder, InstructionValue::Primitive {
+                value: PrimitiveValue::Undefined,
+                loc: loc.clone(),
+            });
+            lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                lvalue: LValue {
+                    kind: InstructionKind::Const,
+                    place: place.clone(),
+                },
+                value: temp,
+                type_annotation: None,
+                loc: loc.clone(),
+            });
+            Terminal::Goto {
+                block: continuation_id,
+                variant: GotoVariant::Break,
+                id: EvaluationOrder(0),
+                loc: loc.clone(),
+            }
+        })
+    };
+
+    // Track callee info for building the call in the consequent block
+    enum CalleeInfo {
+        CallExpression { callee: Place },
+        MethodCall { receiver: Place, property: Place },
+    }
+
+    let mut callee_info: Option<CalleeInfo> = None;
+
+    let test_block = builder.enter(BlockKind::Value, |builder, _block_id| {
+        match expr.callee.as_ref() {
+            Expression::OptionalCallExpression(opt_call) => {
+                let value = lower_optional_call_expression_impl(builder, opt_call, Some(alternate));
+                let value_place = lower_value_to_temporary(builder, value);
+                callee_info = Some(CalleeInfo::CallExpression { callee: value_place });
+            }
+            Expression::OptionalMemberExpression(opt_member) => {
+                let (obj, value) = lower_optional_member_expression_impl(
+                    builder,
+                    opt_member,
+                    Some(alternate),
+                );
+                callee_info = Some(CalleeInfo::MethodCall {
+                    receiver: obj,
+                    property: value,
+                });
+            }
+            Expression::MemberExpression(member) => {
+                let lowered = lower_member_expression(builder, member);
+                let property_place = lower_value_to_temporary(builder, lowered.value);
+                callee_info = Some(CalleeInfo::MethodCall {
+                    receiver: lowered.object,
+                    property: property_place,
+                });
+            }
+            other => {
+                let callee_place = lower_expression_to_temporary(builder, other);
+                callee_info = Some(CalleeInfo::CallExpression { callee: callee_place });
+            }
+        }
+
+        let test_place = match callee_info.as_ref().unwrap() {
+            CalleeInfo::CallExpression { callee } => callee.clone(),
+            CalleeInfo::MethodCall { property, .. } => property.clone(),
+        };
+
+        Terminal::Branch {
+            test: test_place,
+            consequent: consequent.id,
+            alternate,
+            fallthrough: continuation_id,
+            id: EvaluationOrder(0),
+            loc: loc.clone(),
+        }
+    });
+
+    // Block to evaluate if the callee is non-null/undefined
+    builder.enter_reserved(consequent, |builder| {
+        let args = lower_arguments(builder, &expr.arguments);
+        let temp = build_temporary_place(builder, loc.clone());
+
+        match callee_info.as_ref().unwrap() {
+            CalleeInfo::CallExpression { callee } => {
+                builder.push(Instruction {
+                    id: EvaluationOrder(0),
+                    lvalue: temp.clone(),
+                    value: InstructionValue::CallExpression {
+                        callee: callee.clone(),
+                        args,
+                        loc: loc.clone(),
+                    },
+                    loc: loc.clone(),
+                    effects: None,
+                });
+            }
+            CalleeInfo::MethodCall { receiver, property } => {
+                builder.push(Instruction {
+                    id: EvaluationOrder(0),
+                    lvalue: temp.clone(),
+                    value: InstructionValue::MethodCall {
+                        receiver: receiver.clone(),
+                        property: property.clone(),
+                        args,
+                        loc: loc.clone(),
+                    },
+                    loc: loc.clone(),
+                    effects: None,
+                });
+            }
+        }
+
+        lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+            lvalue: LValue {
+                kind: InstructionKind::Const,
+                place: place.clone(),
+            },
+            value: temp,
+            type_annotation: None,
+            loc: loc.clone(),
+        });
+        Terminal::Goto {
+            block: continuation_id,
+            variant: GotoVariant::Break,
+            id: EvaluationOrder(0),
+            loc: loc.clone(),
+        }
+    });
+
+    builder.terminate_with_continuation(
+        Terminal::Optional {
+            optional,
+            test: test_block,
+            fallthrough: continuation_id,
+            id: EvaluationOrder(0),
+            loc: loc.clone(),
+        },
+        continuation_block,
+    );
+
+    InstructionValue::LoadLocal { place: place.clone(), loc: place.loc }
 }
 
 fn lower_function_to_value(
@@ -2908,14 +3726,108 @@ fn lower_reorderable_expression(
     builder: &mut HirBuilder,
     expr: &react_compiler_ast::expressions::Expression,
 ) -> Place {
-    todo!("lower_reorderable_expression not yet implemented - M12")
+    if !is_reorderable_expression(builder, expr, true) {
+        builder.record_error(CompilerErrorDetail {
+            category: ErrorCategory::Todo,
+            reason: format!(
+                "(BuildHIR::node.lowerReorderableExpression) Expression type `{:?}` cannot be safely reordered",
+                std::mem::discriminant(expr)
+            ),
+            description: None,
+            loc: None,
+            suggestions: None,
+        });
+    }
+    lower_expression_to_temporary(builder, expr)
 }
 
 fn is_reorderable_expression(
     builder: &HirBuilder,
     expr: &react_compiler_ast::expressions::Expression,
+    allow_local_identifiers: bool,
 ) -> bool {
-    todo!("is_reorderable_expression not yet implemented - M12")
+    use react_compiler_ast::expressions::Expression;
+    match expr {
+        Expression::Identifier(ident) => {
+            let start = ident.base.start.unwrap_or(0);
+            let binding = builder.scope_info().resolve_reference(start);
+            match binding {
+                None => {
+                    // global, safe to reorder
+                    true
+                }
+                Some(_) => allow_local_identifiers,
+            }
+        }
+        Expression::RegExpLiteral(_)
+        | Expression::StringLiteral(_)
+        | Expression::NumericLiteral(_)
+        | Expression::NullLiteral(_)
+        | Expression::BooleanLiteral(_)
+        | Expression::BigIntLiteral(_) => true,
+        Expression::UnaryExpression(unary) => {
+            use react_compiler_ast::operators::UnaryOperator;
+            matches!(unary.operator, UnaryOperator::Not | UnaryOperator::Plus | UnaryOperator::Neg)
+                && is_reorderable_expression(builder, &unary.argument, allow_local_identifiers)
+        }
+        Expression::LogicalExpression(logical) => {
+            is_reorderable_expression(builder, &logical.left, allow_local_identifiers)
+                && is_reorderable_expression(builder, &logical.right, allow_local_identifiers)
+        }
+        Expression::ConditionalExpression(cond) => {
+            is_reorderable_expression(builder, &cond.test, allow_local_identifiers)
+                && is_reorderable_expression(builder, &cond.consequent, allow_local_identifiers)
+                && is_reorderable_expression(builder, &cond.alternate, allow_local_identifiers)
+        }
+        Expression::ArrayExpression(arr) => {
+            arr.elements.iter().all(|element| {
+                match element {
+                    Some(e) => is_reorderable_expression(builder, e, allow_local_identifiers),
+                    None => false, // holes are not reorderable
+                }
+            })
+        }
+        Expression::ObjectExpression(obj) => {
+            obj.properties.iter().all(|prop| {
+                match prop {
+                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(p) => {
+                        !p.computed
+                            && is_reorderable_expression(builder, &p.value, allow_local_identifiers)
+                    }
+                    _ => false,
+                }
+            })
+        }
+        Expression::MemberExpression(member) => {
+            // Allow member expressions where the innermost object is a global
+            let mut inner = member.object.as_ref();
+            while let Expression::MemberExpression(m) = inner {
+                inner = m.object.as_ref();
+            }
+            if let Expression::Identifier(ident) = inner {
+                let start = ident.base.start.unwrap_or(0);
+                builder.scope_info().resolve_reference(start).is_none()
+            } else {
+                false
+            }
+        }
+        Expression::ArrowFunctionExpression(arrow) => {
+            use react_compiler_ast::expressions::ArrowFunctionBody;
+            match arrow.body.as_ref() {
+                ArrowFunctionBody::BlockStatement(block) => block.body.is_empty(),
+                ArrowFunctionBody::Expression(body_expr) => {
+                    is_reorderable_expression(builder, body_expr, false)
+                }
+            }
+        }
+        Expression::CallExpression(call) => {
+            is_reorderable_expression(builder, &call.callee, allow_local_identifiers)
+                && call.arguments.iter().all(|arg| {
+                    is_reorderable_expression(builder, arg, allow_local_identifiers)
+                })
+        }
+        _ => false,
+    }
 }
 
 fn lower_type(node: &react_compiler_ast::expressions::Expression) -> Type {
