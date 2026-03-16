@@ -12,5 +12,6 @@ react_compiler_ast = { path = "../react_compiler_ast" }
 react_compiler_diagnostics = { path = "../react_compiler_diagnostics" }
 react_compiler_hir = { path = "../react_compiler_hir" }
 react_compiler_lowering = { path = "../react_compiler_lowering" }
+regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

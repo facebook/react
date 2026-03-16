@@ -175,6 +175,7 @@ dependencies = [
  "react_compiler_diagnostics",
  "react_compiler_hir",
  "react_compiler_lowering",
+ "regex",
  "serde",
  "serde_json",
 ]
