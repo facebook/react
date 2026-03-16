@@ -66,6 +66,13 @@ fn promote_temporary(builder: &mut HirBuilder, identifier_id: IdentifierId) {
 }
 
 fn lower_value_to_temporary(builder: &mut HirBuilder, value: InstructionValue) -> Place {
+    // Optimization: if loading an unnamed temporary, skip creating a new instruction
+    if let InstructionValue::LoadLocal { ref place, .. } = value {
+        let ident = &builder.environment().identifiers[place.identifier.0 as usize];
+        if ident.name.is_none() {
+            return place.clone();
+        }
+    }
     let loc = value.loc().cloned();
     let place = build_temporary_place(builder, loc.clone());
     builder.push(Instruction {
@@ -1361,12 +1368,28 @@ fn lower_expression(
             });
             InstructionValue::UnsupportedNode { loc }
         }
-        Expression::TSAsExpression(ts) => lower_expression(builder, &ts.expression),
-        Expression::TSSatisfiesExpression(ts) => lower_expression(builder, &ts.expression),
+        Expression::TSAsExpression(ts) => {
+            let loc = convert_opt_loc(&ts.base.loc);
+            let value = lower_expression_to_temporary(builder, &ts.expression);
+            InstructionValue::TypeCastExpression { value, type_: Type::Poly, loc }
+        }
+        Expression::TSSatisfiesExpression(ts) => {
+            let loc = convert_opt_loc(&ts.base.loc);
+            let value = lower_expression_to_temporary(builder, &ts.expression);
+            InstructionValue::TypeCastExpression { value, type_: Type::Poly, loc }
+        }
         Expression::TSNonNullExpression(ts) => lower_expression(builder, &ts.expression),
-        Expression::TSTypeAssertion(ts) => lower_expression(builder, &ts.expression),
+        Expression::TSTypeAssertion(ts) => {
+            let loc = convert_opt_loc(&ts.base.loc);
+            let value = lower_expression_to_temporary(builder, &ts.expression);
+            InstructionValue::TypeCastExpression { value, type_: Type::Poly, loc }
+        }
         Expression::TSInstantiationExpression(ts) => lower_expression(builder, &ts.expression),
-        Expression::TypeCastExpression(tc) => lower_expression(builder, &tc.expression),
+        Expression::TypeCastExpression(tc) => {
+            let loc = convert_opt_loc(&tc.base.loc);
+            let value = lower_expression_to_temporary(builder, &tc.expression);
+            InstructionValue::TypeCastExpression { value, type_: Type::Poly, loc }
+        }
         Expression::BigIntLiteral(big) => {
             let loc = convert_opt_loc(&big.base.loc);
             builder.record_error(CompilerErrorDetail {
@@ -1467,23 +1490,83 @@ fn lower_statement(
         }
         Statement::VariableDeclaration(var_decl) => {
             use react_compiler_ast::statements::VariableDeclarationKind;
+            use react_compiler_ast::patterns::PatternLike;
+            if matches!(var_decl.kind, VariableDeclarationKind::Var) {
+                builder.record_error(CompilerErrorDetail {
+                    reason: "Handle var kinds in VariableDeclaration".to_string(),
+                    category: ErrorCategory::Todo,
+                    loc: convert_opt_loc(&var_decl.base.loc),
+                    description: None,
+                    suggestions: None,
+                });
+                // Treat `var` as `let` so references to the variable don't break
+            }
             let kind = match var_decl.kind {
-                VariableDeclarationKind::Const => InstructionKind::Const,
-                VariableDeclarationKind::Let => InstructionKind::Let,
-                VariableDeclarationKind::Var => InstructionKind::Const, // var treated as const in HIR
-                VariableDeclarationKind::Using => InstructionKind::Const,
+                VariableDeclarationKind::Let | VariableDeclarationKind::Var => InstructionKind::Let,
+                VariableDeclarationKind::Const | VariableDeclarationKind::Using => InstructionKind::Const,
             };
             for declarator in &var_decl.declarations {
-                let decl_loc = convert_opt_loc(&declarator.base.loc);
-                let init_place = if let Some(init) = &declarator.init {
-                    lower_expression_to_temporary(builder, init)
+                let stmt_loc = convert_opt_loc(&var_decl.base.loc);
+                if let Some(init) = &declarator.init {
+                    let value = lower_expression_to_temporary(builder, init);
+                    let assign_style = match &declarator.id {
+                        PatternLike::ObjectPattern(_) | PatternLike::ArrayPattern(_) => AssignmentStyle::Destructure,
+                        _ => AssignmentStyle::Assignment,
+                    };
+                    lower_assignment(builder, stmt_loc, kind, &declarator.id, value, assign_style);
+                } else if let PatternLike::Identifier(id) = &declarator.id {
+                    // No init: emit DeclareLocal or DeclareContext
+                    let id_loc = convert_opt_loc(&id.base.loc);
+                    let binding = builder.resolve_identifier(&id.name, id.base.start.unwrap_or(0));
+                    match binding {
+                        VariableBinding::Identifier { identifier, .. } => {
+                            let place = Place {
+                                identifier,
+                                effect: Effect::Unknown,
+                                reactive: false,
+                                loc: id_loc.clone(),
+                            };
+                            if builder.is_context_identifier(&id.name, id.base.start.unwrap_or(0)) {
+                                if kind == InstructionKind::Const {
+                                    builder.record_error(CompilerErrorDetail {
+                                        reason: "Expect `const` declaration not to be reassigned".to_string(),
+                                        category: ErrorCategory::Syntax,
+                                        loc: id_loc.clone(),
+                                        description: None,
+                                        suggestions: None,
+                                    });
+                                }
+                                lower_value_to_temporary(builder, InstructionValue::DeclareContext {
+                                    lvalue: LValue { kind: InstructionKind::Let, place },
+                                    loc: id_loc,
+                                });
+                            } else {
+                                lower_value_to_temporary(builder, InstructionValue::DeclareLocal {
+                                    lvalue: LValue { kind, place },
+                                    type_annotation: None,
+                                    loc: id_loc,
+                                });
+                            }
+                        }
+                        _ => {
+                            builder.record_error(CompilerErrorDetail {
+                                reason: "Could not find binding for declaration".to_string(),
+                                category: ErrorCategory::Invariant,
+                                loc: id_loc,
+                                description: None,
+                                suggestions: None,
+                            });
+                        }
+                    }
                 } else {
-                    lower_value_to_temporary(builder, InstructionValue::Primitive {
-                        value: PrimitiveValue::Undefined,
-                        loc: decl_loc.clone(),
-                    })
-                };
-                lower_assignment(builder, decl_loc, kind, &declarator.id, init_place, AssignmentStyle::Assignment);
+                    builder.record_error(CompilerErrorDetail {
+                        reason: "Expected variable declaration to be an identifier if no initializer was provided".to_string(),
+                        category: ErrorCategory::Syntax,
+                        loc: convert_opt_loc(&declarator.base.loc),
+                        description: None,
+                        suggestions: None,
+                    });
+                }
             }
         }
         Statement::BreakStatement(brk) => {
@@ -2734,6 +2817,7 @@ pub fn lower(
         context_map,
         extracted.scope_id,
         extracted.scope_id, // component_scope = function_scope for top-level
+        true, // is_top_level
     );
 
     Ok(hir_func)
@@ -3609,6 +3693,7 @@ fn lower_function(
         merged_context,
         function_scope,
         component_scope,
+        false, // nested function
     );
 
     let func_id = builder.environment_mut().add_function(hir_func);
@@ -3672,6 +3757,7 @@ fn lower_function_declaration(
         merged_context,
         function_scope,
         component_scope,
+        false, // nested function
     );
 
     let func_id = builder.environment_mut().add_function(hir_func);
@@ -3788,6 +3874,7 @@ fn lower_function_for_object_method(
         merged_context,
         function_scope,
         component_scope,
+        false, // nested function
     );
 
     let func_id = builder.environment_mut().add_function(hir_func);
@@ -3809,6 +3896,7 @@ fn lower_inner(
     context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>>,
     function_scope: react_compiler_ast::scope::ScopeId,
     component_scope: react_compiler_ast::scope::ScopeId,
+    is_top_level: bool,
 ) -> HirFunction {
     let mut builder = HirBuilder::new(
         env,
@@ -3964,7 +4052,7 @@ fn lower_inner(
         loc,
         id: id.map(|s| s.to_string()),
         name_hint: None,
-        fn_type: ReactFunctionType::Other,
+        fn_type: if is_top_level { env.fn_type } else { ReactFunctionType::Other },
         params: hir_params,
         return_type_annotation: None,
         returns,
@@ -4143,6 +4231,16 @@ fn lower_object_method(
     builder: &mut HirBuilder,
     method: &react_compiler_ast::expressions::ObjectMethod,
 ) -> ObjectProperty {
+    use react_compiler_ast::expressions::ObjectMethodKind;
+    if !matches!(method.kind, ObjectMethodKind::Method) {
+        builder.record_error(CompilerErrorDetail {
+            reason: "Getter and setter methods are not supported".to_string(),
+            category: ErrorCategory::Todo,
+            loc: convert_opt_loc(&method.base.loc),
+            description: None,
+            suggestions: None,
+        });
+    }
     let key = lower_object_property_key(builder, &method.key, method.computed)
         .unwrap_or(ObjectPropertyKey::String { name: String::new() });
 
@@ -4303,6 +4401,14 @@ fn is_reorderable_expression(
                     is_reorderable_expression(builder, arg, allow_local_identifiers)
                 })
         }
+        // TypeScript/Flow type wrappers: recurse into the inner expression
+        Expression::TSAsExpression(ts) => is_reorderable_expression(builder, &ts.expression, allow_local_identifiers),
+        Expression::TSSatisfiesExpression(ts) => is_reorderable_expression(builder, &ts.expression, allow_local_identifiers),
+        Expression::TSNonNullExpression(ts) => is_reorderable_expression(builder, &ts.expression, allow_local_identifiers),
+        Expression::TSInstantiationExpression(ts) => is_reorderable_expression(builder, &ts.expression, allow_local_identifiers),
+        Expression::TypeCastExpression(tc) => is_reorderable_expression(builder, &tc.expression, allow_local_identifiers),
+        Expression::TSTypeAssertion(ts) => is_reorderable_expression(builder, &ts.expression, allow_local_identifiers),
+        Expression::ParenthesizedExpression(p) => is_reorderable_expression(builder, &p.expression, allow_local_identifiers),
         _ => false,
     }
 }

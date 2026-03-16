@@ -14,6 +14,9 @@ pub struct Environment {
 
     // Error accumulation
     pub errors: CompilerError,
+
+    // Function type classification (Component, Hook, Other)
+    pub fn_type: ReactFunctionType,
 }
 
 impl Environment {
@@ -26,6 +29,7 @@ impl Environment {
             scopes: Vec::new(),
             functions: Vec::new(),
             errors: CompilerError::new(),
+            fn_type: ReactFunctionType::Other,
         }
     }
 
