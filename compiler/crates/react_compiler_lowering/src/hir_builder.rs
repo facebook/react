@@ -720,7 +720,7 @@ fn is_ancestor_scope(scope_info: &ScopeInfo, ancestor: ScopeId, descendant: Scop
 // ---------------------------------------------------------------------------
 
 /// Return all successor block IDs of a terminal (NOT fallthrough).
-fn each_terminal_successor(terminal: &Terminal) -> Vec<BlockId> {
+pub fn each_terminal_successor(terminal: &Terminal) -> Vec<BlockId> {
     match terminal {
         Terminal::Goto { block, .. } => vec![*block],
         Terminal::If {
@@ -764,7 +764,7 @@ fn each_terminal_successor(terminal: &Terminal) -> Vec<BlockId> {
 }
 
 /// Return the fallthrough block of a terminal, if any.
-fn terminal_fallthrough(terminal: &Terminal) -> Option<BlockId> {
+pub fn terminal_fallthrough(terminal: &Terminal) -> Option<BlockId> {
     match terminal {
         // Terminals WITH fallthrough
         Terminal::If { fallthrough, .. }
@@ -806,7 +806,7 @@ fn terminal_fallthrough(terminal: &Terminal) -> Option<BlockId> {
 /// Blocks not reachable through successors are removed. Blocks that are
 /// only reachable as fallthroughs (not through real successor edges) are
 /// replaced with empty blocks that have an Unreachable terminal.
-fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> IndexMap<BlockId, BasicBlock> {
+pub fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> IndexMap<BlockId, BasicBlock> {
     let mut visited: IndexSet<BlockId> = IndexSet::new();
     let mut used: IndexSet<BlockId> = IndexSet::new();
     let mut used_fallthroughs: IndexSet<BlockId> = IndexSet::new();
@@ -907,7 +907,7 @@ fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> In
 
 /// For each block with a `For` terminal whose update block is not in the
 /// blocks map, set update to None.
-fn remove_unreachable_for_updates(hir: &mut HIR) {
+pub fn remove_unreachable_for_updates(hir: &mut HIR) {
     let block_ids: IndexSet<BlockId> = hir.blocks.keys().copied().collect();
     for block in hir.blocks.values_mut() {
         if let Terminal::For { update, .. } = &mut block.terminal {
@@ -922,7 +922,7 @@ fn remove_unreachable_for_updates(hir: &mut HIR) {
 
 /// For each block with a `DoWhile` terminal whose test block is not in
 /// the blocks map, replace the terminal with a Goto to the loop block.
-fn remove_dead_do_while_statements(hir: &mut HIR) {
+pub fn remove_dead_do_while_statements(hir: &mut HIR) {
     let block_ids: IndexSet<BlockId> = hir.blocks.keys().copied().collect();
     for block in hir.blocks.values_mut() {
         let should_replace = if let Terminal::DoWhile { test, .. } = &block.terminal {
@@ -956,7 +956,7 @@ fn remove_dead_do_while_statements(hir: &mut HIR) {
 ///
 /// Also cleans up the fallthrough block's predecessors if the handler
 /// was the only path to it.
-fn remove_unnecessary_try_catch(hir: &mut HIR) {
+pub fn remove_unnecessary_try_catch(hir: &mut HIR) {
     let block_ids: IndexSet<BlockId> = hir.blocks.keys().copied().collect();
 
     // Collect the blocks that need replacement and their associated data
@@ -1004,7 +1004,7 @@ fn remove_unnecessary_try_catch(hir: &mut HIR) {
 }
 
 /// Sequentially number all instructions and terminals starting from 1.
-fn mark_instruction_ids(hir: &mut HIR, instructions: &mut [Instruction]) {
+pub fn mark_instruction_ids(hir: &mut HIR, instructions: &mut [Instruction]) {
     let mut order: u32 = 0;
     for block in hir.blocks.values_mut() {
         for &instr_id in &block.instructions {
@@ -1023,7 +1023,7 @@ fn mark_instruction_ids(hir: &mut HIR, instructions: &mut [Instruction]) {
 /// not fallthrough blocks. Fallthrough blocks are reached indirectly via
 /// Goto terminals from within branching blocks, matching the TypeScript
 /// `markPredecessors` behavior.
-fn mark_predecessors(hir: &mut HIR) {
+pub fn mark_predecessors(hir: &mut HIR) {
     // Clear all preds first
     for block in hir.blocks.values_mut() {
         block.preds.clear();
