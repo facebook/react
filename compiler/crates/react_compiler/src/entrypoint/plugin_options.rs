@@ -82,3 +82,23 @@ fn default_target() -> CompilerTarget {
 fn default_true() -> bool {
     true
 }
+
+/// Output mode for the compiler, derived from PluginOptions.
+/// Matches the TS `compilerOutputMode` logic in Program.ts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CompilerOutputMode {
+    Ssr,
+    Client,
+    Lint,
+}
+
+impl CompilerOutputMode {
+    pub fn from_opts(opts: &PluginOptions) -> Self {
+        match opts.output_mode.as_deref() {
+            Some("ssr") => Self::Ssr,
+            Some("lint") => Self::Lint,
+            _ if opts.no_emit => Self::Lint,
+            _ => Self::Client,
+        }
+    }
+}

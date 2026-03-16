@@ -10,35 +10,41 @@
 
 use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_diagnostics::CompilerError;
-use react_compiler_hir::environment::Environment;
+use react_compiler_hir::environment::{Environment, OutputMode};
 use react_compiler_hir::ReactFunctionType;
 use react_compiler_lowering::FunctionNode;
 
 use super::compile_result::{CodegenFunction, DebugLogEntry};
-use super::plugin_options::PluginOptions;
+use super::imports::ProgramContext;
+use super::plugin_options::CompilerOutputMode;
 use crate::debug_print;
 
 /// Run the compilation pipeline on a single function.
 ///
 /// Currently: creates an Environment, runs BuildHIR (lowering), and produces
-/// debug output via the callback. Returns a CodegenFunction with zeroed memo
+/// debug output via the context. Returns a CodegenFunction with zeroed memo
 /// stats on success (codegen is not yet implemented).
 pub fn compile_fn(
     func: &FunctionNode<'_>,
     fn_name: Option<&str>,
     scope_info: &ScopeInfo,
     fn_type: ReactFunctionType,
-    _options: &PluginOptions,
-    debug_log: &mut dyn FnMut(DebugLogEntry),
+    mode: CompilerOutputMode,
+    context: &mut ProgramContext,
 ) -> Result<CodegenFunction, CompilerError> {
     let mut env = Environment::new();
     env.fn_type = fn_type;
+    env.output_mode = match mode {
+        CompilerOutputMode::Ssr => OutputMode::Ssr,
+        CompilerOutputMode::Client => OutputMode::Client,
+        CompilerOutputMode::Lint => OutputMode::Lint,
+    };
 
     let hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
 
     let debug_hir = debug_print::debug_hir(&hir, &env);
 
-    debug_log(DebugLogEntry {
+    context.log_debug(DebugLogEntry {
         kind: "hir",
         name: "HIR".to_string(),
         value: debug_hir,

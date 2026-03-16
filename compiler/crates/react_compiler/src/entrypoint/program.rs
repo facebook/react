@@ -38,7 +38,7 @@ use super::imports::{
     get_react_compiler_runtime_module, validate_restricted_imports, ProgramContext,
 };
 use super::pipeline;
-use super::plugin_options::PluginOptions;
+use super::plugin_options::{CompilerOutputMode, PluginOptions};
 use super::suppression::{
     filter_suppressions_that_affect_function, find_program_suppressions,
     suppressions_to_compiler_error, SuppressionRange,
@@ -865,13 +865,12 @@ fn base_node_loc(base: &BaseNode) -> Option<SourceLocation> {
 // Error handling
 // -----------------------------------------------------------------------
 
-/// Log an error as a LoggerEvent
-fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>) -> Vec<LoggerEvent> {
-    let mut events = Vec::new();
+/// Log an error as LoggerEvent(s) directly onto the ProgramContext.
+fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>, context: &mut ProgramContext) {
     for detail in &err.details {
         match detail {
             CompilerErrorOrDiagnostic::Diagnostic(d) => {
-                events.push(LoggerEvent::CompileError {
+                context.log_event(LoggerEvent::CompileError {
                     fn_loc: fn_loc.clone(),
                     detail: CompilerErrorDetailInfo {
                         category: format!("{:?}", d.category),
@@ -882,7 +881,7 @@ fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>) -> Vec<LoggerE
                 });
             }
             CompilerErrorOrDiagnostic::ErrorDetail(d) => {
-                events.push(LoggerEvent::CompileError {
+                context.log_event(LoggerEvent::CompileError {
                     fn_loc: fn_loc.clone(),
                     detail: CompilerErrorDetailInfo {
                         category: format!("{:?}", d.category),
@@ -894,7 +893,6 @@ fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>) -> Vec<LoggerE
             }
         }
     }
-    events
 }
 
 /// Handle an error according to the panicThreshold setting.
@@ -902,15 +900,13 @@ fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>) -> Vec<LoggerE
 /// otherwise returns None (error was logged only).
 fn handle_error(
     err: &CompilerError,
-    opts: &PluginOptions,
     fn_loc: Option<SourceLocation>,
-    events: &mut Vec<LoggerEvent>,
-    debug_logs: &[DebugLogEntry],
+    context: &mut ProgramContext,
 ) -> Option<CompileResult> {
     // Log the error
-    events.extend(log_error(err, fn_loc.clone()));
+    log_error(err, fn_loc, context);
 
-    let should_panic = match opts.panic_threshold.as_str() {
+    let should_panic = match context.opts.panic_threshold.as_str() {
         "all_errors" => true,
         "critical_errors" => err.has_errors(),
         _ => false,
@@ -926,8 +922,8 @@ fn handle_error(
         let error_info = compiler_error_to_info(err);
         Some(CompileResult::Error {
             error: error_info,
-            events: events.clone(),
-            debug_logs: debug_logs.to_vec(),
+            events: context.events.clone(),
+            debug_logs: context.debug_logs.clone(),
         })
     } else {
         None
@@ -974,17 +970,16 @@ fn compiler_error_to_info(err: &CompilerError) -> CompilerErrorInfo {
 /// Attempt to compile a single function.
 ///
 /// Returns `CodegenFunction` on success or `CompilerError` on failure.
-/// Debug log entries are collected via the `debug_logs` parameter.
+/// Debug log entries are accumulated on `context.debug_logs`.
 fn try_compile_function(
     source: &CompileSource<'_>,
     scope_info: &ScopeInfo,
-    suppressions: &[SuppressionRange],
-    options: &PluginOptions,
-    debug_logs: &mut Vec<DebugLogEntry>,
+    output_mode: CompilerOutputMode,
+    context: &mut ProgramContext,
 ) -> Result<CodegenFunction, CompilerError> {
     // Check for suppressions that affect this function
     if let (Some(start), Some(end)) = (source.fn_start, source.fn_end) {
-        let affecting = filter_suppressions_that_affect_function(suppressions, start, end);
+        let affecting = filter_suppressions_that_affect_function(&context.suppressions, start, end);
         if !affecting.is_empty() {
             let owned: Vec<SuppressionRange> = affecting.into_iter().cloned().collect();
             return Err(suppressions_to_compiler_error(&owned));
@@ -997,35 +992,33 @@ fn try_compile_function(
         source.fn_name.as_deref(),
         scope_info,
         source.fn_type,
-        options,
-        &mut |entry| debug_logs.push(entry),
+        output_mode,
+        context,
     )
 }
 
 /// Process a single function: check directives, attempt compilation, handle results.
 ///
-/// Returns `Ok((events, debug_logs))` on success or non-fatal error,
+/// Returns `Ok(Some(codegen_fn))` when the function was compiled and should be applied,
+/// `Ok(None)` when the function was skipped or lint-only,
 /// or `Err(CompileResult)` if a fatal error should short-circuit the program.
 fn process_fn(
     source: &CompileSource<'_>,
     scope_info: &ScopeInfo,
-    context: &ProgramContext,
-    opts: &PluginOptions,
-) -> Result<(Vec<LoggerEvent>, Vec<DebugLogEntry>), CompileResult> {
-    let mut events = Vec::new();
-    let mut debug_logs = Vec::new();
-
+    output_mode: CompilerOutputMode,
+    context: &mut ProgramContext,
+) -> Result<Option<CodegenFunction>, CompileResult> {
     // Parse directives from the function body
     let opt_in_result =
-        try_find_directive_enabling_memoization(&source.body_directives, opts);
-    let opt_out = find_directive_disabling_memoization(&source.body_directives, opts);
+        try_find_directive_enabling_memoization(&source.body_directives, &context.opts);
+    let opt_out = find_directive_disabling_memoization(&source.body_directives, &context.opts);
 
     // If parsing opt-in directive fails, handle the error and skip
     let opt_in = match opt_in_result {
         Ok(d) => d,
         Err(err) => {
-            events.extend(log_error(&err, source.fn_loc.clone()));
-            return Ok((events, debug_logs));
+            log_error(&err, source.fn_loc.clone(), context);
+            return Ok(None);
         }
     };
 
@@ -1033,40 +1026,39 @@ fn process_fn(
     let compile_result = try_compile_function(
         source,
         scope_info,
-        &context.suppressions,
-        opts,
-        &mut debug_logs,
+        output_mode,
+        context,
     );
 
     match compile_result {
         Err(err) => {
             if opt_out.is_some() {
                 // If there's an opt-out, just log the error (don't escalate)
-                events.extend(log_error(&err, source.fn_loc.clone()));
+                log_error(&err, source.fn_loc.clone(), context);
             } else {
                 // Apply panic threshold logic
                 if let Some(result) =
-                    handle_error(&err, opts, source.fn_loc.clone(), &mut events, &debug_logs)
+                    handle_error(&err, source.fn_loc.clone(), context)
                 {
                     return Err(result);
                 }
             }
-            Ok((events, debug_logs))
+            Ok(None)
         }
         Ok(codegen_fn) => {
             // Check opt-out
-            if !opts.ignore_use_no_forget && opt_out.is_some() {
+            if !context.opts.ignore_use_no_forget && opt_out.is_some() {
                 let opt_out_value = &opt_out.unwrap().value.value;
-                events.push(LoggerEvent::CompileSkip {
+                context.log_event(LoggerEvent::CompileSkip {
                     fn_loc: source.fn_loc.clone(),
                     reason: format!("Skipped due to '{}' directive.", opt_out_value),
                     loc: opt_out.and_then(|d| d.base.loc.as_ref().map(convert_loc)),
                 });
-                return Ok((events, debug_logs));
+                return Ok(None);
             }
 
             // Log success with memo stats from CodegenFunction
-            events.push(LoggerEvent::CompileSuccess {
+            context.log_event(LoggerEvent::CompileSuccess {
                 fn_loc: source.fn_loc.clone(),
                 fn_name: source.fn_name.clone(),
                 memo_slots: codegen_fn.memo_slots_used,
@@ -1078,25 +1070,20 @@ fn process_fn(
 
             // Check module scope opt-out
             if context.has_module_scope_opt_out {
-                return Ok((events, debug_logs));
+                return Ok(None);
             }
 
-            // Check output mode
-            let output_mode = opts
-                .output_mode
-                .as_deref()
-                .unwrap_or(if opts.no_emit { "lint" } else { "client" });
-            if output_mode == "lint" {
-                return Ok((events, debug_logs));
+            // Check output mode — lint mode doesn't apply compiled functions
+            if output_mode == CompilerOutputMode::Lint {
+                return Ok(None);
             }
 
             // Check annotation mode
-            if opts.compilation_mode == "annotation" && opt_in.is_none() {
-                return Ok((events, debug_logs));
+            if context.opts.compilation_mode == "annotation" && opt_in.is_none() {
+                return Ok(None);
             }
 
-            // Here we would apply the compiled function to the AST
-            Ok((events, debug_logs))
+            Ok(Some(codegen_fn))
         }
     }
 }
@@ -1481,6 +1468,24 @@ fn find_functions_to_compile<'a>(
 // Main entry point
 // -----------------------------------------------------------------------
 
+/// A successfully compiled function, ready to be applied to the AST.
+struct CompiledFunction<'a> {
+    #[allow(dead_code)]
+    kind: CompileSourceKind,
+    #[allow(dead_code)]
+    source: &'a CompileSource<'a>,
+    #[allow(dead_code)]
+    codegen_fn: CodegenFunction,
+}
+
+/// Stub for applying compiled functions back to the AST.
+/// TODO: Implement AST rewriting (replace original functions with compiled versions).
+#[allow(dead_code)]
+fn apply_compiled_functions(_compiled_fns: &[CompiledFunction<'_>], _program: &mut Program) {
+    // Future: iterate compiled_fns and replace original function nodes with
+    // codegen output. For now this is a no-op.
+}
+
 /// Main entry point for the React Compiler.
 ///
 /// Receives a full program AST, scope information (unused for now), and resolved options.
@@ -1494,19 +1499,20 @@ fn find_functions_to_compile<'a>(
 /// - findFunctionsToCompile: traverse program to find components and hooks
 /// - processFn: per-function compilation with directive and suppression handling
 /// - applyCompiledFunctions: replace original functions with compiled versions
-///
-/// Currently, the actual compilation pipeline (compileFn) is not yet implemented,
-/// so all functions are skipped with a "not yet implemented" event.
 pub fn compile_program(
     file: File,
     scope: ScopeInfo,
     options: PluginOptions,
 ) -> CompileResult {
-    let mut events: Vec<LoggerEvent> = Vec::new();
-    let mut debug_logs: Vec<DebugLogEntry> = Vec::new();
+    // Compute output mode once, up front
+    let output_mode = CompilerOutputMode::from_opts(&options);
+
+    // Create a temporary context for early-return paths (before full context is set up)
+    let early_events: Vec<LoggerEvent> = Vec::new();
+    let mut early_debug_logs: Vec<DebugLogEntry> = Vec::new();
 
     // Log environment config for debugLogIRs
-    debug_logs.push(DebugLogEntry::new(
+    early_debug_logs.push(DebugLogEntry::new(
         "EnvironmentConfig",
         serde_json::to_string_pretty(&options.environment).unwrap_or_default(),
     ));
@@ -1515,8 +1521,8 @@ pub fn compile_program(
     if !options.should_compile {
         return CompileResult::Success {
             ast: None,
-            events,
-            debug_logs,
+            events: early_events,
+            debug_logs: early_debug_logs,
         };
     }
 
@@ -1526,8 +1532,8 @@ pub fn compile_program(
     if should_skip_compilation(program, &options) {
         return CompileResult::Success {
             ast: None,
-            events,
-            debug_logs,
+            events: early_events,
+            debug_logs: early_debug_logs,
         };
     }
 
@@ -1536,16 +1542,6 @@ pub fn compile_program(
         .environment
         .get("restrictedImports")
         .and_then(|v| serde_json::from_value(v.clone()).ok());
-    if let Some(err) = validate_restricted_imports(program, &restricted_imports) {
-        if let Some(result) = handle_error(&err, &options, None, &mut events, &debug_logs) {
-            return result;
-        }
-        return CompileResult::Success {
-            ast: None,
-            events,
-            debug_logs,
-        };
-    }
 
     // Determine if we should check for eslint suppressions
     let validate_exhaustive = options
@@ -1596,21 +1592,38 @@ pub fn compile_program(
         has_module_scope_opt_out,
     );
 
+    // Seed context with early debug logs
+    context.debug_logs.extend(early_debug_logs);
+
+    // Validate restricted imports (needs context for handle_error)
+    if let Some(err) = validate_restricted_imports(program, &restricted_imports) {
+        if let Some(result) = handle_error(&err, None, &mut context) {
+            return result;
+        }
+        return CompileResult::Success {
+            ast: None,
+            events: context.events,
+            debug_logs: context.debug_logs,
+        };
+    }
+
     // Find all functions to compile
     let queue = find_functions_to_compile(program, &options, &mut context);
 
-    // Determine output mode
-    let _output_mode = options
-        .output_mode
-        .as_deref()
-        .unwrap_or(if options.no_emit { "lint" } else { "client" });
+    // Process each function and collect compiled results
+    let mut compiled_fns: Vec<CompiledFunction<'_>> = Vec::new();
 
-    // Process each function
     for source in &queue {
-        match process_fn(source, &scope, &context, &options) {
-            Ok((fn_events, fn_debug_logs)) => {
-                events.extend(fn_events);
-                debug_logs.extend(fn_debug_logs);
+        match process_fn(source, &scope, output_mode, &mut context) {
+            Ok(Some(codegen_fn)) => {
+                compiled_fns.push(CompiledFunction {
+                    kind: source.kind,
+                    source,
+                    codegen_fn,
+                });
+            }
+            Ok(None) => {
+                // Function was skipped or lint-only
             }
             Err(fatal_result) => {
                 return fatal_result;
@@ -1618,25 +1631,30 @@ pub fn compile_program(
         }
     }
 
-    // If there's a module scope opt-out and we somehow compiled functions,
-    // that's an error
+    // TS invariant: if there's a module scope opt-out, no functions should have been compiled
     if has_module_scope_opt_out {
-        // No functions should have been compiled due to the opt-out
+        if !compiled_fns.is_empty() {
+            let mut err = CompilerError::new();
+            err.push_error_detail(CompilerErrorDetail::new(
+                ErrorCategory::Invariant,
+                "Unexpected compiled functions when module scope opt-out is present",
+            ));
+            handle_error(&err, None, &mut context);
+        }
         return CompileResult::Success {
             ast: None,
-            events,
-            debug_logs,
+            events: context.events,
+            debug_logs: context.debug_logs,
         };
     }
 
-    // Take events from context (if any were logged there directly)
-    events.extend(context.events.drain(..));
+    // Apply compiled functions to the AST (stub for now)
+    // apply_compiled_functions(&compiled_fns, &mut file.program);
 
-    // No changes to AST yet (pipeline not implemented)
     CompileResult::Success {
         ast: None,
-        events,
-        debug_logs,
+        events: context.events,
+        debug_logs: context.debug_logs,
     }
 }
 

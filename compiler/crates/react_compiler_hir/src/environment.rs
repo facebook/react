@@ -1,6 +1,15 @@
 use crate::*;
 use react_compiler_diagnostics::{CompilerDiagnostic, CompilerError, CompilerErrorDetail};
 
+/// Output mode for the compiler, mirrored from the entrypoint's CompilerOutputMode.
+/// Stored on Environment so pipeline passes can access it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OutputMode {
+    Ssr,
+    Client,
+    Lint,
+}
+
 pub struct Environment {
     // Counters
     pub next_block_id_counter: u32,
@@ -17,6 +26,9 @@ pub struct Environment {
 
     // Function type classification (Component, Hook, Other)
     pub fn_type: ReactFunctionType,
+
+    // Output mode (Client, Ssr, Lint)
+    pub output_mode: OutputMode,
 }
 
 impl Environment {
@@ -30,6 +42,7 @@ impl Environment {
             functions: Vec::new(),
             errors: CompilerError::new(),
             fn_type: ReactFunctionType::Other,
+            output_mode: OutputMode::Client,
         }
     }
 
