@@ -635,17 +635,68 @@ fn lower_expression(
         Expression::UpdateExpression(update) => {
             let loc = convert_opt_loc(&update.base.loc);
             match update.argument.as_ref() {
-                Expression::MemberExpression(_member) => {
-                    // Member expression targets for update expressions are complex
-                    // (need lowerMemberExpression + PropertyStore/ComputedStore)
-                    builder.record_error(CompilerErrorDetail {
-                        category: ErrorCategory::Todo,
-                        reason: "UpdateExpression with member expression argument is not yet supported".to_string(),
-                        description: None,
-                        loc: loc.clone(),
-                        suggestions: None,
+                Expression::MemberExpression(member) => {
+                    let binary_op = match &update.operator {
+                        react_compiler_ast::operators::UpdateOperator::Increment => BinaryOperator::Add,
+                        react_compiler_ast::operators::UpdateOperator::Decrement => BinaryOperator::Subtract,
+                    };
+                    let lowered = lower_member_expression(builder, member);
+                    let object = lowered.object;
+                    let prev_value = lower_value_to_temporary(builder, lowered.value);
+
+                    let one = lower_value_to_temporary(builder, InstructionValue::Primitive {
+                        value: PrimitiveValue::Number(FloatValue::new(1.0)),
+                        loc: None,
                     });
-                    InstructionValue::UnsupportedNode { loc }
+                    let updated = lower_value_to_temporary(builder, InstructionValue::BinaryExpression {
+                        operator: binary_op,
+                        left: prev_value.clone(),
+                        right: one,
+                        loc: loc.clone(),
+                    });
+
+                    // Store back
+                    if !member.computed {
+                        match &*member.property {
+                            Expression::Identifier(prop_id) => {
+                                lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                                    object,
+                                    property: PropertyLiteral::String(prop_id.name.clone()),
+                                    value: updated.clone(),
+                                    loc: loc.clone(),
+                                });
+                            }
+                            Expression::NumericLiteral(num) => {
+                                lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                                    object,
+                                    property: PropertyLiteral::Number(FloatValue::new(num.value)),
+                                    value: updated.clone(),
+                                    loc: loc.clone(),
+                                });
+                            }
+                            _ => {
+                                let prop = lower_expression_to_temporary(builder, &member.property);
+                                lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                                    object,
+                                    property: prop,
+                                    value: updated.clone(),
+                                    loc: loc.clone(),
+                                });
+                            }
+                        }
+                    } else {
+                        let prop = lower_expression_to_temporary(builder, &member.property);
+                        lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                            object,
+                            property: prop,
+                            value: updated.clone(),
+                            loc: loc.clone(),
+                        });
+                    }
+
+                    // Return previous for postfix, updated for prefix
+                    let result_place = if update.prefix { updated } else { prev_value };
+                    InstructionValue::LoadLocal { place: result_place.clone(), loc: result_place.loc.clone() }
                 }
                 Expression::Identifier(ident) => {
                     let start = ident.base.start.unwrap_or(0);
@@ -980,15 +1031,49 @@ fn lower_expression(
                             }
                         }
                     }
-                    react_compiler_ast::patterns::PatternLike::MemberExpression(_member) => {
-                        builder.record_error(CompilerErrorDetail {
-                            reason: "Compound assignment to member expression is not yet supported".to_string(),
-                            category: ErrorCategory::Todo,
+                    react_compiler_ast::patterns::PatternLike::MemberExpression(member) => {
+                        // a.b += right: read, compute, store
+                        let lowered = lower_member_expression(builder, member);
+                        let object = lowered.object;
+                        let current_value = lower_value_to_temporary(builder, lowered.value);
+                        let right = lower_expression_to_temporary(builder, &expr.right);
+                        let result = lower_value_to_temporary(builder, InstructionValue::BinaryExpression {
+                            operator: binary_op,
+                            left: current_value,
+                            right,
                             loc: loc.clone(),
-                            description: None,
-                            suggestions: None,
                         });
-                        InstructionValue::UnsupportedNode { loc }
+                        // Store back
+                        if !member.computed {
+                            match &*member.property {
+                                react_compiler_ast::expressions::Expression::Identifier(prop_id) => {
+                                    lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                                        object,
+                                        property: PropertyLiteral::String(prop_id.name.clone()),
+                                        value: result.clone(),
+                                        loc: loc.clone(),
+                                    });
+                                }
+                                _ => {
+                                    let prop = lower_expression_to_temporary(builder, &member.property);
+                                    lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                                        object,
+                                        property: prop,
+                                        value: result.clone(),
+                                        loc: loc.clone(),
+                                    });
+                                }
+                            }
+                        } else {
+                            let prop = lower_expression_to_temporary(builder, &member.property);
+                            lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                                object,
+                                property: prop,
+                                value: result.clone(),
+                                loc: loc.clone(),
+                            });
+                        }
+                        InstructionValue::LoadLocal { place: result.clone(), loc: result.loc.clone() }
                     }
                     _ => {
                         builder.record_error(CompilerErrorDetail {
@@ -2404,9 +2489,20 @@ fn lower_statement(
         }
         Statement::ExportAllDeclaration(_) => {}
         // TypeScript/Flow declarations are type-only, skip them
+        Statement::TSEnumDeclaration(_) | Statement::EnumDeclaration(_) => {
+            // Enum declarations are unsupported
+            builder.record_error(CompilerErrorDetail {
+                reason: "Enum declarations are not supported".to_string(),
+                category: ErrorCategory::Todo,
+                loc: None,
+                description: None,
+                suggestions: None,
+            });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc: None });
+        }
+        // TypeScript/Flow type declarations are type-only, skip them
         Statement::TSTypeAliasDeclaration(_)
         | Statement::TSInterfaceDeclaration(_)
-        | Statement::TSEnumDeclaration(_)
         | Statement::TSModuleDeclaration(_)
         | Statement::TSDeclareFunction(_)
         | Statement::TypeAlias(_)
@@ -2421,8 +2517,7 @@ fn lower_statement(
         | Statement::DeclareExportAllDeclaration(_)
         | Statement::DeclareInterface(_)
         | Statement::DeclareTypeAlias(_)
-        | Statement::DeclareOpaqueType(_)
-        | Statement::EnumDeclaration(_) => {}
+        | Statement::DeclareOpaqueType(_) => {}
     }
 }
 
