@@ -235,7 +235,7 @@ console.log('');
 
 let passed = 0;
 let failed = 0;
-let errored = 0;
+let tsHadEntries = false;
 const failures: Array<{
   fixture: string;
   kind: 'count_mismatch' | 'content_mismatch' | 'error';
@@ -250,6 +250,10 @@ for (const fixturePath of fixtures) {
   // Filter entries for the requested pass
   const tsEntries = ts.entries.filter(e => e.name === passArg);
   const rustEntries = rust.entries.filter(e => e.name === passArg);
+
+  if (tsEntries.length > 0) {
+    tsHadEntries = true;
+  }
 
   // If both produced errors and neither has entries for this pass, treat as matching
   if (
@@ -309,6 +313,20 @@ for (const fixturePath of fixtures) {
       });
     }
   }
+}
+
+// --- Check for invalid pass name ---
+if (!tsHadEntries) {
+  console.error(
+    `${RED}ERROR: TypeScript compiler produced no log entries for pass "${passArg}" across all fixtures.${RESET}`,
+  );
+  console.error('This likely means the pass name is incorrect.');
+  console.error('');
+  console.error('Pass names must match exactly as used in Pipeline.ts, e.g.:');
+  console.error(
+    '  HIR, PruneMaybeThrows, SSA, InferTypes, AnalyseFunctions, ...',
+  );
+  process.exit(1);
 }
 
 // --- Show failures ---
