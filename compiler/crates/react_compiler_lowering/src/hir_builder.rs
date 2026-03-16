@@ -159,6 +159,13 @@ impl<'a> HirBuilder<'a> {
         &self.context
     }
 
+    /// Access scope_info and environment mutably at the same time.
+    /// This is safe because they are disjoint fields, but Rust's borrow checker
+    /// can't prove this through method calls alone.
+    pub fn scope_info_and_env_mut(&mut self) -> (&ScopeInfo, &mut Environment) {
+        (self.scope_info, self.env)
+    }
+
     /// Access the bindings map.
     pub fn bindings(&self) -> &IndexMap<BindingId, IdentifierId> {
         &self.bindings

@@ -887,8 +887,12 @@ fn lower_expression(
                 loc,
             }
         }
-        Expression::ArrowFunctionExpression(_) => todo!("lower ArrowFunctionExpression"),
-        Expression::FunctionExpression(_) => todo!("lower FunctionExpression"),
+        Expression::ArrowFunctionExpression(_) => {
+            lower_function_to_value(builder, expr, FunctionExpressionType::ArrowFunctionExpression)
+        }
+        Expression::FunctionExpression(_) => {
+            lower_function_to_value(builder, expr, FunctionExpressionType::FunctionExpression)
+        }
         Expression::ObjectExpression(obj) => {
             let loc = convert_opt_loc(&obj.base.loc);
             let mut properties: Vec<ObjectPropertyOrSpread> = Vec::new();
@@ -911,9 +915,9 @@ fn lower_expression(
                         let place = lower_expression_to_temporary(builder, &spread.argument);
                         properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place }));
                     }
-                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectMethod(_method) => {
-                        // ObjectMethod lowering requires function lowering (M9)
-                        todo!("lower ObjectMethod in ObjectExpression")
+                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectMethod(method) => {
+                        let prop = lower_object_method(builder, method);
+                        properties.push(ObjectPropertyOrSpread::Property(prop));
                     }
                 }
             }
@@ -1080,8 +1084,103 @@ fn lower_expression(
         Expression::ParenthesizedExpression(paren) => {
             lower_expression(builder, &paren.expression)
         }
-        Expression::JSXElement(_) => todo!("lower JSXElement"),
-        Expression::JSXFragment(_) => todo!("lower JSXFragment"),
+        Expression::JSXElement(jsx_element) => {
+            let loc = convert_opt_loc(&jsx_element.base.loc);
+            let opening_loc = convert_opt_loc(&jsx_element.opening_element.base.loc);
+            let closing_loc = jsx_element.closing_element.as_ref().and_then(|c| convert_opt_loc(&c.base.loc));
+
+            // Lower the tag name
+            let tag = lower_jsx_element_name(builder, &jsx_element.opening_element.name);
+
+            // Lower attributes (props)
+            let mut props: Vec<JsxAttribute> = Vec::new();
+            for attr_item in &jsx_element.opening_element.attributes {
+                use react_compiler_ast::jsx::{JSXAttributeItem, JSXAttributeName, JSXAttributeValue};
+                match attr_item {
+                    JSXAttributeItem::JSXSpreadAttribute(spread) => {
+                        let argument = lower_expression_to_temporary(builder, &spread.argument);
+                        props.push(JsxAttribute::SpreadAttribute { argument });
+                    }
+                    JSXAttributeItem::JSXAttribute(attr) => {
+                        // Get the attribute name
+                        let prop_name = match &attr.name {
+                            JSXAttributeName::JSXIdentifier(id) => id.name.clone(),
+                            JSXAttributeName::JSXNamespacedName(ns) => {
+                                format!("{}:{}", ns.namespace.name, ns.name.name)
+                            }
+                        };
+
+                        // Get the attribute value
+                        let value = match &attr.value {
+                            Some(JSXAttributeValue::StringLiteral(s)) => {
+                                let str_loc = convert_opt_loc(&s.base.loc);
+                                lower_value_to_temporary(builder, InstructionValue::Primitive {
+                                    value: PrimitiveValue::String(s.value.clone()),
+                                    loc: str_loc,
+                                })
+                            }
+                            Some(JSXAttributeValue::JSXExpressionContainer(container)) => {
+                                use react_compiler_ast::jsx::JSXExpressionContainerExpr;
+                                match &container.expression {
+                                    JSXExpressionContainerExpr::JSXEmptyExpression(_) => {
+                                        // Empty expression container - skip this attribute
+                                        continue;
+                                    }
+                                    JSXExpressionContainerExpr::Expression(expr) => {
+                                        lower_expression_to_temporary(builder, expr)
+                                    }
+                                }
+                            }
+                            Some(JSXAttributeValue::JSXElement(el)) => {
+                                let val = lower_expression(builder, &react_compiler_ast::expressions::Expression::JSXElement(el.clone()));
+                                lower_value_to_temporary(builder, val)
+                            }
+                            Some(JSXAttributeValue::JSXFragment(frag)) => {
+                                let val = lower_expression(builder, &react_compiler_ast::expressions::Expression::JSXFragment(frag.clone()));
+                                lower_value_to_temporary(builder, val)
+                            }
+                            None => {
+                                // No value means boolean true (e.g., <div disabled />)
+                                let attr_loc = convert_opt_loc(&attr.base.loc);
+                                lower_value_to_temporary(builder, InstructionValue::Primitive {
+                                    value: PrimitiveValue::Boolean(true),
+                                    loc: attr_loc,
+                                })
+                            }
+                        };
+
+                        props.push(JsxAttribute::Attribute { name: prop_name, place: value });
+                    }
+                }
+            }
+
+            // Lower children
+            let children: Vec<Place> = jsx_element.children.iter()
+                .filter_map(|child| lower_jsx_element(builder, child))
+                .collect();
+
+            InstructionValue::JsxExpression {
+                tag,
+                props,
+                children: if children.is_empty() { None } else { Some(children) },
+                loc,
+                opening_loc,
+                closing_loc,
+            }
+        }
+        Expression::JSXFragment(jsx_fragment) => {
+            let loc = convert_opt_loc(&jsx_fragment.base.loc);
+
+            // Lower children
+            let children: Vec<Place> = jsx_fragment.children.iter()
+                .filter_map(|child| lower_jsx_element(builder, child))
+                .collect();
+
+            InstructionValue::JsxFragment {
+                children,
+                loc,
+            }
+        }
         Expression::AssignmentPattern(_) => todo!("lower AssignmentPattern"),
         Expression::TSAsExpression(ts) => lower_expression(builder, &ts.expression),
         Expression::TSSatisfiesExpression(ts) => lower_expression(builder, &ts.expression),
@@ -1632,7 +1731,9 @@ fn lower_statement(
             }
         }
         Statement::WithStatement(_) => todo!("lower WithStatement"),
-        Statement::FunctionDeclaration(_) => todo!("lower FunctionDeclaration"),
+        Statement::FunctionDeclaration(func_decl) => {
+            lower_function_declaration(builder, func_decl);
+        }
         Statement::ClassDeclaration(_) => todo!("lower ClassDeclaration"),
         // Import/export declarations are skipped during lowering
         Statement::ImportDeclaration(_) => {}
@@ -2040,36 +2141,410 @@ pub fn lower(
     let context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> =
         IndexMap::new();
 
+    let hir_func = lower_inner(
+        extracted.params,
+        extracted.body,
+        extracted.id,
+        extracted.generator,
+        extracted.is_async,
+        extracted.loc,
+        scope_info,
+        env,
+        None,          // no pre-existing bindings for top-level
+        context_map,
+        extracted.scope_id,
+        extracted.scope_id, // component_scope = function_scope for top-level
+    );
+
+    Ok(hir_func)
+}
+
+// =============================================================================
+// Stubs for future milestones
+// =============================================================================
+
+fn lower_assignment(
+    builder: &mut HirBuilder,
+    loc: Option<SourceLocation>,
+    kind: InstructionKind,
+    target: &react_compiler_ast::patterns::PatternLike,
+    value: Place,
+    assignment_style: AssignmentStyle,
+) {
+    todo!("lower_assignment not yet implemented - M11")
+}
+
+fn lower_optional_member_expression(
+    builder: &mut HirBuilder,
+    expr: &react_compiler_ast::expressions::OptionalMemberExpression,
+) -> InstructionValue {
+    todo!("lower_optional_member_expression not yet implemented - M12")
+}
+
+fn lower_optional_call_expression(
+    builder: &mut HirBuilder,
+    expr: &react_compiler_ast::expressions::OptionalCallExpression,
+) -> InstructionValue {
+    todo!("lower_optional_call_expression not yet implemented - M12")
+}
+
+fn lower_function_to_value(
+    builder: &mut HirBuilder,
+    expr: &react_compiler_ast::expressions::Expression,
+    expr_type: FunctionExpressionType,
+) -> InstructionValue {
+    use react_compiler_ast::expressions::Expression;
+    let loc = match expr {
+        Expression::ArrowFunctionExpression(arrow) => convert_opt_loc(&arrow.base.loc),
+        Expression::FunctionExpression(func) => convert_opt_loc(&func.base.loc),
+        _ => None,
+    };
+    let name = match expr {
+        Expression::FunctionExpression(func) => func.id.as_ref().map(|id| id.name.clone()),
+        _ => None,
+    };
+    let lowered_func = lower_function(builder, expr);
+    InstructionValue::FunctionExpression {
+        name,
+        name_hint: None,
+        lowered_func,
+        expr_type,
+        loc,
+    }
+}
+
+fn lower_function(
+    builder: &mut HirBuilder,
+    expr: &react_compiler_ast::expressions::Expression,
+) -> LoweredFunction {
+    use react_compiler_ast::expressions::Expression;
+
+    // Extract function parts from the AST node
+    let (params, body, id, generator, is_async, func_start, func_end, func_loc) = match expr {
+        Expression::ArrowFunctionExpression(arrow) => {
+            let body = match arrow.body.as_ref() {
+                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
+                    FunctionBody::Block(block)
+                }
+                react_compiler_ast::expressions::ArrowFunctionBody::Expression(expr) => {
+                    FunctionBody::Expression(expr)
+                }
+            };
+            (
+                &arrow.params[..],
+                body,
+                None::<&str>,
+                arrow.generator,
+                arrow.is_async,
+                arrow.base.start.unwrap_or(0),
+                arrow.base.end.unwrap_or(0),
+                convert_opt_loc(&arrow.base.loc),
+            )
+        }
+        Expression::FunctionExpression(func) => (
+            &func.params[..],
+            FunctionBody::Block(&func.body),
+            func.id.as_ref().map(|id| id.name.as_str()),
+            func.generator,
+            func.is_async,
+            func.base.start.unwrap_or(0),
+            func.base.end.unwrap_or(0),
+            convert_opt_loc(&func.base.loc),
+        ),
+        _ => {
+            panic!("lower_function called with non-function expression");
+        }
+    };
+
+    // Find the function's scope
+    let function_scope = builder
+        .scope_info()
+        .node_to_scope
+        .get(&func_start)
+        .copied()
+        .unwrap_or(builder.scope_info().program_scope);
+
+    let component_scope = builder.component_scope();
+    let scope_info = builder.scope_info();
+
+    // Gather captured context
+    let captured_context = gather_captured_context(
+        scope_info,
+        function_scope,
+        component_scope,
+        func_start,
+        func_end,
+    );
+
+    // Merge parent context with captured context
+    let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
+        let parent_context = builder.context().clone();
+        let mut merged = parent_context;
+        for (k, v) in captured_context {
+            merged.entry(k).or_insert(v);
+        }
+        merged
+    };
+
+    // Clone parent bindings to pass to the inner lower
+    let parent_bindings = builder.bindings().clone();
+
+    // Use scope_info_and_env_mut to avoid conflicting borrows
+    let (scope_info, env) = builder.scope_info_and_env_mut();
+    let hir_func = lower_inner(
+        params,
+        body,
+        id,
+        generator,
+        is_async,
+        func_loc,
+        scope_info,
+        env,
+        Some(parent_bindings),
+        merged_context,
+        function_scope,
+        component_scope,
+    );
+
+    let func_id = builder.environment_mut().add_function(hir_func);
+    LoweredFunction { func: func_id }
+}
+
+/// Lower a function declaration statement to a FunctionExpression + StoreLocal.
+fn lower_function_declaration(
+    builder: &mut HirBuilder,
+    func_decl: &react_compiler_ast::statements::FunctionDeclaration,
+) {
+    let loc = convert_opt_loc(&func_decl.base.loc);
+    let func_start = func_decl.base.start.unwrap_or(0);
+    let func_end = func_decl.base.end.unwrap_or(0);
+
+    let func_name = func_decl.id.as_ref().map(|id| id.name.clone());
+
+    // Find the function's scope
+    let function_scope = builder
+        .scope_info()
+        .node_to_scope
+        .get(&func_start)
+        .copied()
+        .unwrap_or(builder.scope_info().program_scope);
+
+    let component_scope = builder.component_scope();
+    let scope_info = builder.scope_info();
+
+    // Gather captured context
+    let captured_context = gather_captured_context(
+        scope_info,
+        function_scope,
+        component_scope,
+        func_start,
+        func_end,
+    );
+
+    // Merge parent context with captured context
+    let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
+        let parent_context = builder.context().clone();
+        let mut merged = parent_context;
+        for (k, v) in captured_context {
+            merged.entry(k).or_insert(v);
+        }
+        merged
+    };
+
+    let parent_bindings = builder.bindings().clone();
+
+    let (scope_info, env) = builder.scope_info_and_env_mut();
+    let hir_func = lower_inner(
+        &func_decl.params,
+        FunctionBody::Block(&func_decl.body),
+        func_decl.id.as_ref().map(|id| id.name.as_str()),
+        func_decl.generator,
+        func_decl.is_async,
+        loc.clone(),
+        scope_info,
+        env,
+        Some(parent_bindings),
+        merged_context,
+        function_scope,
+        component_scope,
+    );
+
+    let func_id = builder.environment_mut().add_function(hir_func);
+    let lowered_func = LoweredFunction { func: func_id };
+
+    // Emit FunctionExpression instruction
+    let fn_value = InstructionValue::FunctionExpression {
+        name: func_name.clone(),
+        name_hint: None,
+        lowered_func,
+        expr_type: FunctionExpressionType::FunctionDeclaration,
+        loc: loc.clone(),
+    };
+    let fn_place = lower_value_to_temporary(builder, fn_value);
+
+    // Resolve the binding for the function name and store
+    if let Some(ref name) = func_name {
+        if let Some(id_node) = &func_decl.id {
+            let start = id_node.base.start.unwrap_or(0);
+            let binding = builder.resolve_identifier(name, start);
+            match binding {
+                VariableBinding::Identifier { identifier, .. } => {
+                    let ident_loc = convert_opt_loc(&id_node.base.loc);
+                    let place = Place {
+                        identifier,
+                        reactive: false,
+                        effect: Effect::Unknown,
+                        loc: ident_loc,
+                    };
+                    if builder.is_context_identifier(name, start) {
+                        lower_value_to_temporary(builder, InstructionValue::StoreContext {
+                            lvalue: LValue {
+                                kind: InstructionKind::Function,
+                                place,
+                            },
+                            value: fn_place,
+                            loc,
+                        });
+                    } else {
+                        lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                            lvalue: LValue {
+                                kind: InstructionKind::Function,
+                                place,
+                            },
+                            value: fn_place,
+                            type_annotation: None,
+                            loc,
+                        });
+                    }
+                }
+                _ => {
+                    builder.record_error(CompilerErrorDetail {
+                        category: ErrorCategory::Invariant,
+                        reason: format!("Could not find binding for function declaration `{}`", name),
+                        description: None,
+                        loc,
+                        suggestions: None,
+                    });
+                }
+            }
+        }
+    }
+}
+
+/// Lower a function expression used as an object method.
+fn lower_function_for_object_method(
+    builder: &mut HirBuilder,
+    method: &react_compiler_ast::expressions::ObjectMethod,
+) -> LoweredFunction {
+    let func_start = method.base.start.unwrap_or(0);
+    let func_end = method.base.end.unwrap_or(0);
+    let func_loc = convert_opt_loc(&method.base.loc);
+
+    let function_scope = builder
+        .scope_info()
+        .node_to_scope
+        .get(&func_start)
+        .copied()
+        .unwrap_or(builder.scope_info().program_scope);
+
+    let component_scope = builder.component_scope();
+    let scope_info = builder.scope_info();
+
+    let captured_context = gather_captured_context(
+        scope_info,
+        function_scope,
+        component_scope,
+        func_start,
+        func_end,
+    );
+
+    let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
+        let parent_context = builder.context().clone();
+        let mut merged = parent_context;
+        for (k, v) in captured_context {
+            merged.entry(k).or_insert(v);
+        }
+        merged
+    };
+
+    let parent_bindings = builder.bindings().clone();
+
+    let (scope_info, env) = builder.scope_info_and_env_mut();
+    let hir_func = lower_inner(
+        &method.params,
+        FunctionBody::Block(&method.body),
+        None,
+        method.generator,
+        method.is_async,
+        func_loc,
+        scope_info,
+        env,
+        Some(parent_bindings),
+        merged_context,
+        function_scope,
+        component_scope,
+    );
+
+    let func_id = builder.environment_mut().add_function(hir_func);
+    LoweredFunction { func: func_id }
+}
+
+/// Internal helper: lower a function given its extracted parts.
+/// Used by both the top-level `lower()` and nested `lower_function()`.
+fn lower_inner(
+    params: &[react_compiler_ast::patterns::PatternLike],
+    body: FunctionBody<'_>,
+    id: Option<&str>,
+    generator: bool,
+    is_async: bool,
+    loc: Option<SourceLocation>,
+    scope_info: &ScopeInfo,
+    env: &mut Environment,
+    parent_bindings: Option<IndexMap<react_compiler_ast::scope::BindingId, IdentifierId>>,
+    context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>>,
+    function_scope: react_compiler_ast::scope::ScopeId,
+    component_scope: react_compiler_ast::scope::ScopeId,
+) -> HirFunction {
     let mut builder = HirBuilder::new(
         env,
         scope_info,
-        extracted.scope_id,
-        extracted.scope_id, // component_scope = function_scope for top-level
-        None,               // no pre-existing bindings
-        Some(context_map),
-        None,               // default entry block kind
+        function_scope,
+        component_scope,
+        parent_bindings,
+        Some(context_map.clone()),
+        None,
     );
 
-    // Build context places (empty for top-level)
-    let context: Vec<Place> = Vec::new();
+    // Build context places from the captured refs
+    let mut context: Vec<Place> = Vec::new();
+    for (&binding_id, ctx_loc) in &context_map {
+        let binding = &scope_info.bindings[binding_id.0 as usize];
+        let identifier = builder.resolve_binding(&binding.name, binding_id);
+        context.push(Place {
+            identifier,
+            effect: Effect::Unknown,
+            reactive: false,
+            loc: ctx_loc.clone(),
+        });
+    }
 
     // Process parameters
-    let mut params: Vec<ParamPattern> = Vec::new();
-    for param in extracted.params {
+    let mut hir_params: Vec<ParamPattern> = Vec::new();
+    for param in params {
         match param {
             react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
                 let start = ident.base.start.unwrap_or(0);
                 let binding = builder.resolve_identifier(&ident.name, start);
                 match binding {
                     VariableBinding::Identifier { identifier, .. } => {
-                        let loc = convert_opt_loc(&ident.base.loc);
+                        let param_loc = convert_opt_loc(&ident.base.loc);
                         let place = Place {
                             identifier,
                             effect: Effect::Unknown,
                             reactive: false,
-                            loc,
+                            loc: param_loc,
                         };
-                        params.push(ParamPattern::Place(place));
+                        hir_params.push(ParamPattern::Place(place));
                     }
                     _ => {
                         builder.record_error(CompilerErrorDetail {
@@ -2085,23 +2560,62 @@ pub fn lower(
                     }
                 }
             }
-            react_compiler_ast::patterns::PatternLike::ObjectPattern(_)
-            | react_compiler_ast::patterns::PatternLike::ArrayPattern(_)
-            | react_compiler_ast::patterns::PatternLike::AssignmentPattern(_) => {
-                todo!("destructuring parameters")
+            react_compiler_ast::patterns::PatternLike::RestElement(rest) => {
+                match &*rest.argument {
+                    react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
+                        let start = ident.base.start.unwrap_or(0);
+                        let binding = builder.resolve_identifier(&ident.name, start);
+                        match binding {
+                            VariableBinding::Identifier { identifier, .. } => {
+                                let param_loc = convert_opt_loc(&ident.base.loc);
+                                let place = Place {
+                                    identifier,
+                                    effect: Effect::Unknown,
+                                    reactive: false,
+                                    loc: param_loc,
+                                };
+                                hir_params.push(ParamPattern::Spread(SpreadPattern { place }));
+                            }
+                            _ => {
+                                builder.record_error(CompilerErrorDetail {
+                                    category: ErrorCategory::Invariant,
+                                    reason: format!(
+                                        "Could not find binding for rest param `{}`",
+                                        ident.name
+                                    ),
+                                    description: None,
+                                    loc: convert_opt_loc(&ident.base.loc),
+                                    suggestions: None,
+                                });
+                            }
+                        }
+                    }
+                    _ => {
+                        builder.record_error(CompilerErrorDetail {
+                            category: ErrorCategory::Todo,
+                            reason: "Destructuring in rest parameters is not yet supported".to_string(),
+                            description: None,
+                            loc: None,
+                            suggestions: None,
+                        });
+                    }
+                }
             }
-            react_compiler_ast::patterns::PatternLike::RestElement(_) => {
-                todo!("rest element parameters")
-            }
-            react_compiler_ast::patterns::PatternLike::MemberExpression(_) => {
-                todo!("member expression parameters")
+            _ => {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: "Complex parameter patterns are not yet supported in nested functions".to_string(),
+                    description: None,
+                    loc: None,
+                    suggestions: None,
+                });
             }
         }
     }
 
     // Lower the body
     let mut directives: Vec<String> = Vec::new();
-    match extracted.body {
+    match body {
         FunctionBody::Expression(expr) => {
             let fallthrough = builder.reserve(BlockKind::Block);
             let value = lower_expression_to_temporary(&mut builder, expr);
@@ -2146,91 +2660,211 @@ pub fn lower(
     );
 
     // Build the HIR
-    let (body, instructions) = builder.build();
+    let (hir_body, instructions) = builder.build();
 
     // Create the returns place
-    let returns = crate::hir_builder::create_temporary_place(env, extracted.loc.clone());
+    let returns = crate::hir_builder::create_temporary_place(env, loc.clone());
 
-    Ok(HirFunction {
-        loc: extracted.loc,
-        id: extracted.id.map(|s| s.to_string()),
+    HirFunction {
+        loc,
+        id: id.map(|s| s.to_string()),
         name_hint: None,
-        fn_type: ReactFunctionType::Other, // TODO: determine from env
-        params,
+        fn_type: ReactFunctionType::Other,
+        params: hir_params,
         return_type_annotation: None,
         returns,
         context,
-        body,
+        body: hir_body,
         instructions,
-        generator: extracted.generator,
-        is_async: extracted.is_async,
+        generator,
+        is_async,
         directives,
         aliasing_effects: None,
-    })
-}
-
-// =============================================================================
-// Stubs for future milestones
-// =============================================================================
-
-fn lower_assignment(
-    builder: &mut HirBuilder,
-    loc: Option<SourceLocation>,
-    kind: InstructionKind,
-    target: &react_compiler_ast::patterns::PatternLike,
-    value: Place,
-    assignment_style: AssignmentStyle,
-) {
-    todo!("lower_assignment not yet implemented - M11")
-}
-
-fn lower_optional_member_expression(
-    builder: &mut HirBuilder,
-    expr: &react_compiler_ast::expressions::OptionalMemberExpression,
-) -> InstructionValue {
-    todo!("lower_optional_member_expression not yet implemented - M12")
-}
-
-fn lower_optional_call_expression(
-    builder: &mut HirBuilder,
-    expr: &react_compiler_ast::expressions::OptionalCallExpression,
-) -> InstructionValue {
-    todo!("lower_optional_call_expression not yet implemented - M12")
-}
-
-fn lower_function_to_value(
-    builder: &mut HirBuilder,
-    expr: &react_compiler_ast::expressions::Expression,
-) -> InstructionValue {
-    todo!("lower_function_to_value not yet implemented - M9")
-}
-
-fn lower_function(
-    builder: &mut HirBuilder,
-    expr: &react_compiler_ast::expressions::Expression,
-) -> LoweredFunction {
-    todo!("lower_function not yet implemented - M9")
+    }
 }
 
 fn lower_jsx_element_name(
     builder: &mut HirBuilder,
     name: &react_compiler_ast::jsx::JSXElementName,
 ) -> JsxTag {
-    todo!("lower_jsx_element_name not yet implemented - M10")
+    use react_compiler_ast::jsx::JSXElementName;
+    match name {
+        JSXElementName::JSXIdentifier(id) => {
+            let tag = &id.name;
+            let loc = convert_opt_loc(&id.base.loc);
+            let start = id.base.start.unwrap_or(0);
+            if tag.starts_with(|c: char| c.is_ascii_uppercase()) {
+                // Component tag: resolve as identifier and load
+                let place = lower_identifier(builder, tag, start, loc.clone());
+                let load_value = if builder.is_context_identifier(tag, start) {
+                    InstructionValue::LoadContext { place, loc }
+                } else {
+                    InstructionValue::LoadLocal { place, loc }
+                };
+                let temp = lower_value_to_temporary(builder, load_value);
+                JsxTag::Place(temp)
+            } else {
+                // Builtin HTML tag
+                JsxTag::Builtin(BuiltinTag {
+                    name: tag.clone(),
+                    loc,
+                })
+            }
+        }
+        JSXElementName::JSXMemberExpression(member) => {
+            let place = lower_jsx_member_expression(builder, member);
+            JsxTag::Place(place)
+        }
+        JSXElementName::JSXNamespacedName(ns) => {
+            let tag = format!("{}:{}", ns.namespace.name, ns.name.name);
+            let loc = convert_opt_loc(&ns.base.loc);
+            JsxTag::Builtin(BuiltinTag { name: tag, loc })
+        }
+    }
+}
+
+fn lower_jsx_member_expression(
+    builder: &mut HirBuilder,
+    expr: &react_compiler_ast::jsx::JSXMemberExpression,
+) -> Place {
+    use react_compiler_ast::jsx::JSXMemberExprObject;
+    let object = match &*expr.object {
+        JSXMemberExprObject::JSXIdentifier(id) => {
+            let loc = convert_opt_loc(&id.base.loc);
+            let start = id.base.start.unwrap_or(0);
+            let place = lower_identifier(builder, &id.name, start, loc.clone());
+            let load_value = if builder.is_context_identifier(&id.name, start) {
+                InstructionValue::LoadContext { place, loc }
+            } else {
+                InstructionValue::LoadLocal { place, loc }
+            };
+            lower_value_to_temporary(builder, load_value)
+        }
+        JSXMemberExprObject::JSXMemberExpression(inner) => {
+            lower_jsx_member_expression(builder, inner)
+        }
+    };
+    let prop_name = &expr.property.name;
+    let loc = convert_opt_loc(&expr.property.base.loc);
+    let value = InstructionValue::PropertyLoad {
+        object,
+        property: PropertyLiteral::String(prop_name.clone()),
+        loc,
+    };
+    lower_value_to_temporary(builder, value)
 }
 
 fn lower_jsx_element(
     builder: &mut HirBuilder,
     child: &react_compiler_ast::jsx::JSXChild,
 ) -> Option<Place> {
-    todo!("lower_jsx_element not yet implemented - M10")
+    use react_compiler_ast::jsx::JSXChild;
+    use react_compiler_ast::jsx::JSXExpressionContainerExpr;
+    match child {
+        JSXChild::JSXText(text) => {
+            let trimmed = trim_jsx_text(&text.value);
+            match trimmed {
+                None => None,
+                Some(value) => {
+                    let loc = convert_opt_loc(&text.base.loc);
+                    let place = lower_value_to_temporary(builder, InstructionValue::JSXText {
+                        value,
+                        loc,
+                    });
+                    Some(place)
+                }
+            }
+        }
+        JSXChild::JSXElement(element) => {
+            let value = lower_expression(builder, &react_compiler_ast::expressions::Expression::JSXElement(element.clone()));
+            Some(lower_value_to_temporary(builder, value))
+        }
+        JSXChild::JSXFragment(fragment) => {
+            let value = lower_expression(builder, &react_compiler_ast::expressions::Expression::JSXFragment(fragment.clone()));
+            Some(lower_value_to_temporary(builder, value))
+        }
+        JSXChild::JSXExpressionContainer(container) => {
+            match &container.expression {
+                JSXExpressionContainerExpr::JSXEmptyExpression(_) => None,
+                JSXExpressionContainerExpr::Expression(expr) => {
+                    Some(lower_expression_to_temporary(builder, expr))
+                }
+            }
+        }
+        JSXChild::JSXSpreadChild(spread) => {
+            Some(lower_expression_to_temporary(builder, &spread.expression))
+        }
+    }
+}
+
+/// Trims whitespace according to the JSX spec.
+/// Implementation ported from Babel's cleanJSXElementLiteralChild.
+fn trim_jsx_text(original: &str) -> Option<String> {
+    let lines: Vec<&str> = original.split('\n').collect();
+
+    let mut last_non_empty_line = 0;
+    for (i, line) in lines.iter().enumerate() {
+        if line.contains(|c: char| c != ' ' && c != '\t') {
+            last_non_empty_line = i;
+        }
+    }
+
+    let mut str = String::new();
+
+    for (i, line) in lines.iter().enumerate() {
+        let is_first_line = i == 0;
+        let is_last_line = i == lines.len() - 1;
+        let is_last_non_empty_line = i == last_non_empty_line;
+
+        // Replace rendered whitespace tabs with spaces
+        let mut trimmed_line = line.replace('\t', " ");
+
+        // Trim whitespace touching a newline (leading whitespace on non-first lines)
+        if !is_first_line {
+            trimmed_line = trimmed_line.trim_start_matches(' ').to_string();
+        }
+
+        // Trim whitespace touching an endline (trailing whitespace on non-last lines)
+        if !is_last_line {
+            trimmed_line = trimmed_line.trim_end_matches(' ').to_string();
+        }
+
+        if !trimmed_line.is_empty() {
+            if !is_last_non_empty_line {
+                trimmed_line.push(' ');
+            }
+            str.push_str(&trimmed_line);
+        }
+    }
+
+    if str.is_empty() {
+        None
+    } else {
+        Some(str)
+    }
 }
 
 fn lower_object_method(
     builder: &mut HirBuilder,
     method: &react_compiler_ast::expressions::ObjectMethod,
 ) -> ObjectProperty {
-    todo!("lower_object_method not yet implemented - M8")
+    let key = lower_object_property_key(builder, &method.key, method.computed)
+        .unwrap_or(ObjectPropertyKey::String { name: String::new() });
+
+    let lowered_func = lower_function_for_object_method(builder, method);
+
+    let loc = convert_opt_loc(&method.base.loc);
+    let method_value = InstructionValue::ObjectMethod {
+        loc: loc.clone(),
+        lowered_func,
+    };
+    let method_place = lower_value_to_temporary(builder, method_value);
+
+    ObjectProperty {
+        key,
+        property_type: ObjectPropertyType::Method,
+        place: method_place,
+    }
 }
 
 fn lower_object_property_key(
@@ -2288,12 +2922,37 @@ fn lower_type(node: &react_compiler_ast::expressions::Expression) -> Type {
     todo!("lower_type not yet implemented - M8")
 }
 
+/// Gather captured context variables for a nested function.
+///
+/// Walks through all identifier references (via `reference_to_binding`) and checks
+/// which ones resolve to bindings declared in scopes between the function's parent scope
+/// and the component scope. These are "free variables" that become the function's `context`.
 fn gather_captured_context(
-    _func: &react_compiler_ast::expressions::Expression,
-    _scope_info: &ScopeInfo,
-    _parent_scope: react_compiler_ast::scope::ScopeId,
+    scope_info: &ScopeInfo,
+    function_scope: react_compiler_ast::scope::ScopeId,
+    component_scope: react_compiler_ast::scope::ScopeId,
+    func_start: u32,
+    func_end: u32,
 ) -> IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> {
-    todo!("gather_captured_context not yet implemented - M9")
+    let parent_scope = scope_info.scopes[function_scope.0 as usize].parent;
+    let pure_scopes = match parent_scope {
+        Some(parent) => capture_scopes(scope_info, parent, component_scope),
+        None => IndexSet::new(),
+    };
+
+    let mut captured = IndexMap::<react_compiler_ast::scope::BindingId, Option<SourceLocation>>::new();
+
+    for (&ref_start, &binding_id) in &scope_info.reference_to_binding {
+        if ref_start < func_start || ref_start >= func_end {
+            continue;
+        }
+        let binding = &scope_info.bindings[binding_id.0 as usize];
+        if pure_scopes.contains(&binding.scope) && !captured.contains_key(&binding.id) {
+            captured.insert(binding.id, None);
+        }
+    }
+
+    captured
 }
 
 fn capture_scopes(
@@ -2301,7 +2960,16 @@ fn capture_scopes(
     from: react_compiler_ast::scope::ScopeId,
     to: react_compiler_ast::scope::ScopeId,
 ) -> IndexSet<react_compiler_ast::scope::ScopeId> {
-    todo!("capture_scopes not yet implemented - M9")
+    let mut result = IndexSet::new();
+    let mut current = Some(from);
+    while let Some(scope_id) = current {
+        result.insert(scope_id);
+        if scope_id == to {
+            break;
+        }
+        current = scope_info.scopes[scope_id.0 as usize].parent;
+    }
+    result
 }
 
 /// The style of assignment (used internally by lower_assignment).
