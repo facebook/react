@@ -44,11 +44,7 @@ pub fn compile_fn(
 
     let debug_hir = debug_print::debug_hir(&hir, &env);
 
-    context.log_debug(DebugLogEntry {
-        kind: "hir",
-        name: "HIR".to_string(),
-        value: debug_hir,
-    });
+    context.log_debug(DebugLogEntry::new("HIR", debug_hir));
 
     Ok(CodegenFunction {
         loc: None,
