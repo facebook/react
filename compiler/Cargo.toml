@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "crates/*",
+  "packages/babel-plugin-react-compiler-rust/native",
 ]
 resolver = "3"
 

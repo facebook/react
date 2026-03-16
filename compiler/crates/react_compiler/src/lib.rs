@@ -1,4 +1,5 @@
 pub mod debug_print;
+pub mod entrypoint;
 pub mod fixture_utils;
 pub mod pipeline;
 

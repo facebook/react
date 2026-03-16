@@ -1,5 +1,7 @@
+use serde::{Serialize, Deserialize};
+
 /// Error categories matching the TS ErrorCategory enum
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ErrorCategory {
     Hooks,
     CapitalizedCalls,
@@ -30,7 +32,7 @@ pub enum ErrorCategory {
 }
 
 /// Error severity levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ErrorSeverity {
     Error,
     Warning,
@@ -57,7 +59,7 @@ impl ErrorCategory {
 }
 
 /// Suggestion operations for auto-fixes
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum CompilerSuggestionOperation {
     InsertBefore,
     InsertAfter,
@@ -66,7 +68,7 @@ pub enum CompilerSuggestionOperation {
 }
 
 /// A compiler suggestion for fixing an error
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct CompilerSuggestion {
     pub op: CompilerSuggestionOperation,
     pub range: (usize, usize),
@@ -77,13 +79,13 @@ pub struct CompilerSuggestion {
 /// Source location (matches Babel's SourceLocation format)
 /// This is the HIR source location, separate from AST's BaseNode location.
 /// GeneratedSource is represented as None.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SourceLocation {
     pub start: Position,
     pub end: Position,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Position {
     pub line: u32,
     pub column: u32,
@@ -93,7 +95,7 @@ pub struct Position {
 pub const GENERATED_SOURCE: Option<SourceLocation> = None;
 
 /// Detail for a diagnostic
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum CompilerDiagnosticDetail {
     Error {
         loc: Option<SourceLocation>,
@@ -147,7 +149,7 @@ impl CompilerDiagnostic {
 }
 
 /// Legacy-style error detail (matches CompilerErrorDetail in TS)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct CompilerErrorDetail {
     pub category: ErrorCategory,
     pub reason: String,

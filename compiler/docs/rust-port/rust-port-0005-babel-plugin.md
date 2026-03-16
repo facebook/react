@@ -10,7 +10,7 @@ Create a new, minimal Babel plugin package (`babel-plugin-react-compiler-rust`) 
 
 All complex logic — function detection, compilation mode decisions, directives, suppressions, gating rewrites, import insertion, outlined functions — lives in Rust. This ensures the logic is implemented once and reused across future OXC and SWC integrations.
 
-**Current status**: Specification complete. Not yet implemented.
+**Current status**: Implementation complete. JS shim package created, Rust entrypoint types and NAPI bridge implemented. The `compile_program` function is a stub that returns no changes (pending full pipeline implementation).
 
 **Prerequisites**: [rust-port-0001-babel-ast.md](rust-port-0001-babel-ast.md) (complete), [rust-port-0002-scope-types.md](rust-port-0002-scope-types.md) (complete), core compilation pipeline in Rust (in progress).
 

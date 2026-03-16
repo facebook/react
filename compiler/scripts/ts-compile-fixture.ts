@@ -221,7 +221,9 @@ const inputAst = parse(source, {
 
 // --- Find ALL top-level functions ---
 const functionPaths: Array<
-  NodePath<t.FunctionDeclaration | t.FunctionExpression | t.ArrowFunctionExpression>
+  NodePath<
+    t.FunctionDeclaration | t.FunctionExpression | t.ArrowFunctionExpression
+  >
 > = [];
 let programPath: NodePath<t.Program> | null = null;
 
