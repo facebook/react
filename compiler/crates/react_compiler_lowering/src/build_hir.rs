@@ -1379,79 +1379,24 @@ fn lower_statement(
             }
         }
         Statement::VariableDeclaration(var_decl) => {
+            use react_compiler_ast::statements::VariableDeclarationKind;
+            let kind = match var_decl.kind {
+                VariableDeclarationKind::Const => InstructionKind::Const,
+                VariableDeclarationKind::Let => InstructionKind::Let,
+                VariableDeclarationKind::Var => InstructionKind::Const, // var treated as const in HIR
+                VariableDeclarationKind::Using => InstructionKind::Const,
+            };
             for declarator in &var_decl.declarations {
-                match &declarator.id {
-                    react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
-                        let loc = convert_opt_loc(&ident.base.loc);
-                        let start = ident.base.start.unwrap_or(0);
-                        let binding = builder.resolve_identifier(&ident.name, start);
-                        let (identifier, binding_kind) = match binding {
-                            VariableBinding::Identifier {
-                                identifier,
-                                binding_kind,
-                            } => (identifier, binding_kind),
-                            _ => {
-                                builder.record_error(CompilerErrorDetail {
-                                    category: ErrorCategory::Invariant,
-                                    reason: format!(
-                                        "Expected local binding for variable `{}`",
-                                        ident.name
-                                    ),
-                                    description: None,
-                                    loc: loc.clone(),
-                                    suggestions: None,
-                                });
-                                continue;
-                            }
-                        };
-
-                        let init_place = if let Some(init) = &declarator.init {
-                            lower_expression_to_temporary(builder, init)
-                        } else {
-                            let undefined_value = InstructionValue::Primitive {
-                                value: PrimitiveValue::Undefined,
-                                loc: loc.clone(),
-                            };
-                            lower_value_to_temporary(builder, undefined_value)
-                        };
-
-                        let kind = match binding_kind {
-                            BindingKind::Const => InstructionKind::Const,
-                            BindingKind::Let | BindingKind::Var => InstructionKind::Let,
-                            _ => InstructionKind::Let,
-                        };
-
-                        let lvalue = LValue {
-                            place: Place {
-                                identifier,
-                                effect: Effect::Unknown,
-                                reactive: false,
-                                loc: loc.clone(),
-                            },
-                            kind,
-                        };
-
-                        if builder.is_context_identifier(&ident.name, start) {
-                            let store_value = InstructionValue::StoreContext {
-                                lvalue,
-                                value: init_place,
-                                loc: loc.clone(),
-                            };
-                            lower_value_to_temporary(builder, store_value);
-                        } else {
-                            let store_value = InstructionValue::StoreLocal {
-                                lvalue,
-                                value: init_place,
-                                type_annotation: None,
-                                loc: loc.clone(),
-                            };
-                            lower_value_to_temporary(builder, store_value);
-                        }
-                    }
-                    _ => {
-                        todo!("destructuring in variable declaration")
-                    }
-                }
+                let decl_loc = convert_opt_loc(&declarator.base.loc);
+                let init_place = if let Some(init) = &declarator.init {
+                    lower_expression_to_temporary(builder, init)
+                } else {
+                    lower_value_to_temporary(builder, InstructionValue::Primitive {
+                        value: PrimitiveValue::Undefined,
+                        loc: decl_loc.clone(),
+                    })
+                };
+                lower_assignment(builder, decl_loc, kind, &declarator.id, init_place, AssignmentStyle::Assignment);
             }
         }
         Statement::BreakStatement(brk) => {
@@ -2707,6 +2652,75 @@ pub fn lower(
 // Stubs for future milestones
 // =============================================================================
 
+/// Result of resolving an identifier for assignment.
+enum IdentifierForAssignment {
+    /// A local place (identifier binding)
+    Place(Place),
+    /// A global variable (non-local, non-import)
+    Global { name: String },
+}
+
+/// Resolve an identifier for use as an assignment target.
+/// Returns None if the binding could not be found (error recorded).
+fn lower_identifier_for_assignment(
+    builder: &mut HirBuilder,
+    loc: Option<SourceLocation>,
+    kind: InstructionKind,
+    name: &str,
+    start: u32,
+) -> Option<IdentifierForAssignment> {
+    let binding = builder.resolve_identifier(name, start);
+    match binding {
+        VariableBinding::Identifier { identifier, binding_kind, .. } => {
+            if binding_kind == BindingKind::Const && kind == InstructionKind::Reassign {
+                builder.record_error(CompilerErrorDetail {
+                    reason: "Cannot reassign a `const` variable".to_string(),
+                    category: ErrorCategory::Syntax,
+                    loc: loc.clone(),
+                    description: Some(format!("`{}` is declared as const", name)),
+                    suggestions: None,
+                });
+                return None;
+            }
+            Some(IdentifierForAssignment::Place(Place {
+                identifier,
+                effect: Effect::Unknown,
+                reactive: false,
+                loc,
+            }))
+        }
+        VariableBinding::Global { name: gname } => {
+            if kind == InstructionKind::Reassign {
+                Some(IdentifierForAssignment::Global { name: gname })
+            } else {
+                builder.record_error(CompilerErrorDetail {
+                    reason: "Could not find binding for declaration".to_string(),
+                    category: ErrorCategory::Invariant,
+                    loc,
+                    description: None,
+                    suggestions: None,
+                });
+                None
+            }
+        }
+        _ => {
+            // Import bindings can't be assigned to
+            if kind == InstructionKind::Reassign {
+                Some(IdentifierForAssignment::Global { name: name.to_string() })
+            } else {
+                builder.record_error(CompilerErrorDetail {
+                    reason: "Could not find binding for declaration".to_string(),
+                    category: ErrorCategory::Invariant,
+                    loc,
+                    description: None,
+                    suggestions: None,
+                });
+                None
+            }
+        }
+    }
+}
+
 fn lower_assignment(
     builder: &mut HirBuilder,
     loc: Option<SourceLocation>,
@@ -2715,7 +2729,389 @@ fn lower_assignment(
     value: Place,
     assignment_style: AssignmentStyle,
 ) {
-    todo!("lower_assignment not yet implemented - M11")
+    use react_compiler_ast::patterns::PatternLike;
+
+    match target {
+        PatternLike::Identifier(id) => {
+            let result = lower_identifier_for_assignment(
+                builder,
+                loc.clone(),
+                kind,
+                &id.name,
+                id.base.start.unwrap_or(0),
+            );
+            match result {
+                None => {
+                    // Error already recorded
+                }
+                Some(IdentifierForAssignment::Global { name }) => {
+                    lower_value_to_temporary(builder, InstructionValue::StoreGlobal {
+                        name,
+                        value,
+                        loc,
+                    });
+                }
+                Some(IdentifierForAssignment::Place(place)) => {
+                    if builder.is_context_identifier(&id.name, id.base.start.unwrap_or(0)) {
+                        lower_value_to_temporary(builder, InstructionValue::StoreContext {
+                            lvalue: LValue { place, kind },
+                            value,
+                            loc,
+                        });
+                    } else {
+                        lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                            lvalue: LValue { place, kind },
+                            value,
+                            type_annotation: None,
+                            loc,
+                        });
+                    }
+                }
+            }
+        }
+
+        PatternLike::MemberExpression(member) => {
+            let object = lower_expression_to_temporary(builder, &member.object);
+            if !member.computed {
+                match &*member.property {
+                    react_compiler_ast::expressions::Expression::Identifier(prop_id) => {
+                        lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                            object,
+                            property: PropertyLiteral::String(prop_id.name.clone()),
+                            value,
+                            loc,
+                        });
+                    }
+                    react_compiler_ast::expressions::Expression::NumericLiteral(num) => {
+                        lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                            object,
+                            property: PropertyLiteral::Number(FloatValue::new(num.value)),
+                            value,
+                            loc,
+                        });
+                    }
+                    _ => {
+                        builder.record_error(CompilerErrorDetail {
+                            reason: "Unsupported property type in MemberExpression assignment".to_string(),
+                            category: ErrorCategory::Todo,
+                            loc,
+                            description: None,
+                            suggestions: None,
+                        });
+                    }
+                }
+            } else {
+                let property_place = lower_expression_to_temporary(builder, &member.property);
+                lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                    object,
+                    property: property_place,
+                    value,
+                    loc,
+                });
+            }
+        }
+
+        PatternLike::ArrayPattern(pattern) => {
+            let mut items: Vec<ArrayPatternElement> = Vec::new();
+            let mut followups: Vec<(Place, &PatternLike)> = Vec::new();
+
+            for element in &pattern.elements {
+                match element {
+                    None => {
+                        items.push(ArrayPatternElement::Hole);
+                    }
+                    Some(PatternLike::RestElement(rest)) => {
+                        match &*rest.argument {
+                            PatternLike::Identifier(id) => {
+                                match lower_identifier_for_assignment(
+                                    builder,
+                                    convert_opt_loc(&rest.base.loc),
+                                    kind,
+                                    &id.name,
+                                    id.base.start.unwrap_or(0),
+                                ) {
+                                    Some(IdentifierForAssignment::Place(place)) => {
+                                        items.push(ArrayPatternElement::Spread(SpreadPattern { place }));
+                                    }
+                                    _ => {
+                                        let temp = build_temporary_place(builder, convert_opt_loc(&rest.base.loc));
+                                        promote_temporary(builder, temp.identifier);
+                                        items.push(ArrayPatternElement::Spread(SpreadPattern { place: temp.clone() }));
+                                        followups.push((temp, &rest.argument));
+                                    }
+                                }
+                            }
+                            _ => {
+                                let temp = build_temporary_place(builder, convert_opt_loc(&rest.base.loc));
+                                promote_temporary(builder, temp.identifier);
+                                items.push(ArrayPatternElement::Spread(SpreadPattern { place: temp.clone() }));
+                                followups.push((temp, &rest.argument));
+                            }
+                        }
+                    }
+                    Some(PatternLike::Identifier(id)) => {
+                        match lower_identifier_for_assignment(
+                            builder,
+                            convert_opt_loc(&id.base.loc),
+                            kind,
+                            &id.name,
+                            id.base.start.unwrap_or(0),
+                        ) {
+                            Some(IdentifierForAssignment::Place(place)) => {
+                                items.push(ArrayPatternElement::Place(place));
+                            }
+                            Some(IdentifierForAssignment::Global { .. }) => {
+                                let temp = build_temporary_place(builder, convert_opt_loc(&id.base.loc));
+                                promote_temporary(builder, temp.identifier);
+                                items.push(ArrayPatternElement::Place(temp.clone()));
+                                followups.push((temp, element.as_ref().unwrap()));
+                            }
+                            None => {
+                                items.push(ArrayPatternElement::Hole);
+                            }
+                        }
+                    }
+                    Some(other) => {
+                        // Nested pattern: use temporary + followup
+                        let elem_loc = pattern_like_hir_loc(other);
+                        let temp = build_temporary_place(builder, elem_loc);
+                        promote_temporary(builder, temp.identifier);
+                        items.push(ArrayPatternElement::Place(temp.clone()));
+                        followups.push((temp, other));
+                    }
+                }
+            }
+
+            lower_value_to_temporary(builder, InstructionValue::Destructure {
+                lvalue: LValuePattern {
+                    pattern: Pattern::Array(ArrayPattern {
+                        items,
+                        loc: convert_opt_loc(&pattern.base.loc),
+                    }),
+                    kind,
+                },
+                value,
+                loc: loc.clone(),
+            });
+
+            for (place, path) in followups {
+                let followup_loc = pattern_like_hir_loc(path).or(loc.clone());
+                lower_assignment(builder, followup_loc, kind, path, place, assignment_style);
+            }
+        }
+
+        PatternLike::ObjectPattern(pattern) => {
+            let mut properties: Vec<ObjectPropertyOrSpread> = Vec::new();
+            let mut followups: Vec<(Place, &PatternLike)> = Vec::new();
+
+            for prop in &pattern.properties {
+                match prop {
+                    react_compiler_ast::patterns::ObjectPatternProperty::RestElement(rest) => {
+                        match &*rest.argument {
+                            PatternLike::Identifier(id) => {
+                                match lower_identifier_for_assignment(
+                                    builder,
+                                    convert_opt_loc(&rest.base.loc),
+                                    kind,
+                                    &id.name,
+                                    id.base.start.unwrap_or(0),
+                                ) {
+                                    Some(IdentifierForAssignment::Place(place)) => {
+                                        properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place }));
+                                    }
+                                    _ => {
+                                        let temp = build_temporary_place(builder, convert_opt_loc(&rest.base.loc));
+                                        promote_temporary(builder, temp.identifier);
+                                        properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place: temp.clone() }));
+                                        followups.push((temp, &rest.argument));
+                                    }
+                                }
+                            }
+                            _ => {
+                                builder.record_error(CompilerErrorDetail {
+                                    reason: "Handle non-identifier rest element in ObjectPattern".to_string(),
+                                    category: ErrorCategory::Todo,
+                                    loc: convert_opt_loc(&rest.base.loc),
+                                    description: None,
+                                    suggestions: None,
+                                });
+                            }
+                        }
+                    }
+                    react_compiler_ast::patterns::ObjectPatternProperty::ObjectProperty(obj_prop) => {
+                        if obj_prop.computed {
+                            builder.record_error(CompilerErrorDetail {
+                                reason: "Handle computed properties in ObjectPattern".to_string(),
+                                category: ErrorCategory::Todo,
+                                loc: convert_opt_loc(&obj_prop.base.loc),
+                                description: None,
+                                suggestions: None,
+                            });
+                            continue;
+                        }
+
+                        let key = match lower_object_property_key(builder, &obj_prop.key, false) {
+                            Some(k) => k,
+                            None => continue,
+                        };
+
+                        match &*obj_prop.value {
+                            PatternLike::Identifier(id) => {
+                                match lower_identifier_for_assignment(
+                                    builder,
+                                    convert_opt_loc(&id.base.loc),
+                                    kind,
+                                    &id.name,
+                                    id.base.start.unwrap_or(0),
+                                ) {
+                                    Some(IdentifierForAssignment::Place(place)) => {
+                                        properties.push(ObjectPropertyOrSpread::Property(ObjectProperty {
+                                            key,
+                                            property_type: ObjectPropertyType::Property,
+                                            place,
+                                        }));
+                                    }
+                                    Some(IdentifierForAssignment::Global { .. }) => {
+                                        let temp = build_temporary_place(builder, convert_opt_loc(&id.base.loc));
+                                        promote_temporary(builder, temp.identifier);
+                                        properties.push(ObjectPropertyOrSpread::Property(ObjectProperty {
+                                            key,
+                                            property_type: ObjectPropertyType::Property,
+                                            place: temp.clone(),
+                                        }));
+                                        followups.push((temp, &*obj_prop.value));
+                                    }
+                                    None => {
+                                        continue;
+                                    }
+                                }
+                            }
+                            other => {
+                                // Nested pattern: use temporary + followup
+                                let elem_loc = pattern_like_hir_loc(other);
+                                let temp = build_temporary_place(builder, elem_loc);
+                                promote_temporary(builder, temp.identifier);
+                                properties.push(ObjectPropertyOrSpread::Property(ObjectProperty {
+                                    key,
+                                    property_type: ObjectPropertyType::Property,
+                                    place: temp.clone(),
+                                }));
+                                followups.push((temp, other));
+                            }
+                        }
+                    }
+                }
+            }
+
+            lower_value_to_temporary(builder, InstructionValue::Destructure {
+                lvalue: LValuePattern {
+                    pattern: Pattern::Object(ObjectPattern {
+                        properties,
+                        loc: convert_opt_loc(&pattern.base.loc),
+                    }),
+                    kind,
+                },
+                value,
+                loc: loc.clone(),
+            });
+
+            for (place, path) in followups {
+                let followup_loc = pattern_like_hir_loc(path).or(loc.clone());
+                lower_assignment(builder, followup_loc, kind, path, place, assignment_style);
+            }
+        }
+
+        PatternLike::AssignmentPattern(pattern) => {
+            // Default value: if value === undefined, use default, else use value
+            let pat_loc = convert_opt_loc(&pattern.base.loc);
+
+            let temp = build_temporary_place(builder, pat_loc.clone());
+            promote_temporary(builder, temp.identifier);
+
+            let test_block = builder.reserve(BlockKind::Value);
+            let continuation_block = builder.reserve(builder.current_block_kind());
+
+            // Consequent: use default value
+            let consequent = builder.enter(BlockKind::Value, |builder, _| {
+                let default_value = lower_reorderable_expression(builder, &pattern.right);
+                lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                    lvalue: LValue { place: temp.clone(), kind: InstructionKind::Const },
+                    value: default_value,
+                    type_annotation: None,
+                    loc: pat_loc.clone(),
+                });
+                Terminal::Goto {
+                    block: continuation_block.id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: pat_loc.clone(),
+                }
+            });
+
+            // Alternate: use the original value
+            let alternate = builder.enter(BlockKind::Value, |builder, _| {
+                lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                    lvalue: LValue { place: temp.clone(), kind: InstructionKind::Const },
+                    value: value.clone(),
+                    type_annotation: None,
+                    loc: pat_loc.clone(),
+                });
+                Terminal::Goto {
+                    block: continuation_block.id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: pat_loc.clone(),
+                }
+            });
+
+            // Ternary terminal
+            builder.terminate_with_continuation(
+                Terminal::Ternary {
+                    test: test_block.id,
+                    fallthrough: continuation_block.id,
+                    id: EvaluationOrder(0),
+                    loc: pat_loc.clone(),
+                },
+                test_block,
+            );
+
+            // In test block: check if value === undefined
+            let undef = lower_value_to_temporary(builder, InstructionValue::Primitive {
+                value: PrimitiveValue::Undefined,
+                loc: pat_loc.clone(),
+            });
+            let test = lower_value_to_temporary(builder, InstructionValue::BinaryExpression {
+                left: value,
+                operator: BinaryOperator::StrictEqual,
+                right: undef,
+                loc: pat_loc.clone(),
+            });
+            builder.terminate_with_continuation(
+                Terminal::Branch {
+                    test,
+                    consequent,
+                    alternate,
+                    fallthrough: continuation_block.id,
+                    id: EvaluationOrder(0),
+                    loc: pat_loc.clone(),
+                },
+                continuation_block,
+            );
+
+            // Recursively assign the resolved value to the left pattern
+            lower_assignment(builder, pat_loc, kind, &pattern.left, temp, assignment_style);
+        }
+
+        PatternLike::RestElement(rest) => {
+            // Delegate to the argument pattern
+            lower_assignment(builder, loc, kind, &rest.argument, value, assignment_style);
+        }
+    }
+}
+
+/// Helper to extract HIR loc from a PatternLike (converts AST loc)
+fn pattern_like_hir_loc(pat: &react_compiler_ast::patterns::PatternLike) -> Option<SourceLocation> {
+    convert_opt_loc(&pattern_like_loc(pat))
 }
 
 fn lower_optional_member_expression(
@@ -3885,6 +4281,7 @@ fn capture_scopes(
 }
 
 /// The style of assignment (used internally by lower_assignment).
+#[derive(Clone, Copy)]
 pub enum AssignmentStyle {
     /// Assignment via `=`
     Assignment,
